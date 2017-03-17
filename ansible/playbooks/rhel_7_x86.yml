@@ -1,0 +1,26 @@
+---
+
+# Usage: ansible-playbook -s --ask-sudo-pass rhel_7_x86.yml
+
+- hosts: local
+
+  tasks:
+
+  - name: Install tools
+    yum: name={{item}} state=installed
+    with_items:
+      - make
+      - gcc
+      - gcc-c++
+      - java-1.7.0-openjdk-devel # Our base JDK
+      - libXtst-devel
+      - libXt-devel
+      - libXrender-devel
+      - libXext-devel
+      - libXrender-devel
+      - libXtst-devel
+      - libXt-devel
+      - cups-devel
+      - freetype-devel
+      - ccache
+      - alsa-lib-devel
