@@ -24,7 +24,7 @@
 
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
-REPOSITORY=breadbin/openjdk-jdk8u
+REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 
 # Escape code
 esc=`echo -en "\033"`
@@ -119,8 +119,8 @@ else
 fi
 
 echo $git
-if [ -d "$WORKING_DIR"/openjdk/.git ] && [ $REPOSITORY == "breadbin/openjdk-jdk8u" ] ; then
-  # It does exist and it's a repo other than the breadbin one
+if [ -d "$WORKING_DIR"/openjdk/.git ] && [ $REPOSITORY == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
+  # It does exist and it's a repo other than the AdoptOpenJDK one
   cd $WORKING_DIR/openjdk
   echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
   sleep 10
