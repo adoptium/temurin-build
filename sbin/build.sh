@@ -112,7 +112,7 @@ echo "Retrieving cacerts file"
 # Ensure it's the latest we pull in
 rm -rf $WORKING_DIR/cacerts_area
 
-git clone https://github.com/AdoptOpenJDK/build.git cacerts_area
+git clone https://github.com/AdoptOpenJDK/openjdk-build.git cacerts_area
 echo "cacerts should be here..."
 file $WORKING_DIR/cacerts_area/security/cacerts
 
