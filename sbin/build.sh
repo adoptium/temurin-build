@@ -216,8 +216,6 @@ find . -name "*.diz" -type f -delete
 
 GZIP=-9 tar -cvzf OpenJDK.tar.gz ./j2sdk-image
 
-mkdir -p $TARGET_DIR
-
 mv OpenJDK.tar.gz $TARGET_DIR
 
 echo "${good}Your final tar.gz is here at $PWD${normal}"
