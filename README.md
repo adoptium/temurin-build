@@ -1,5 +1,7 @@
 # Repository for useful files to build OpenJDK
 
+AdoptOpenJDK makes use of these scripts to provide a build farm at http://ci.adoptopenjdk.net which produces OpenJDK binaries for consumption via http://www.adoptopenjdk.net
+
 ## This repository contains three folders and one script you should be calling to build OpenJDK
 
 1. The `ansible` folder contains Ansible playbooks that can be used to quickly configure potentially multiple target machines
