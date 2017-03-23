@@ -197,7 +197,7 @@ echo "Removing unneccessary files now..."
 
 rm -rf cacerts_area
 
-cd build/linux*/images
+cd build/*/images
 
 # Remove files we don't need
 rm -rf j2sdk-image/demo/applets
