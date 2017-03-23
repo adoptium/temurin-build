@@ -136,6 +136,10 @@ echo "Boot dir set to $JDK_BOOT_DIR"
 
 CONFIGURE_CMD=" --with-boot-jdk=$JDK_BOOT_DIR"
 
+if [ ! -z `which ccache` ]; then
+  CONFIGURE_CMD="$CONFIGURE_CMD --enable-ccache"
+fi
+
 if [ `uname -m` == "s390x" ]; then
   CONFIGURE_CMD="$CONFIGURE_CMD --with-jvm-variants=zero"
 fi
