@@ -1,4 +1,6 @@
-# Repository for useful files to build and develop OpenJDK
+# Repository for useful files to build OpenJDK
+
+AdoptOpenJDK makes use of these scripts to provide a build farm at http://ci.adoptopenjdk.net which produces OpenJDK binaries for consumption via http://www.adoptopenjdk.net
 
 ## This repository contains three folders and one script you should be calling to build OpenJDK
 
@@ -21,7 +23,6 @@ Options:
   -j, --jtreg                run jtreg after building
   -S, --ssh                  use ssh when cloning git
 ```
-
 
 The simplest way to build OpenJDK using our scripts is to run `makejdk.sh` and have your user be in the Docker group on the machine (or prefix all of your Docker commands with `sudo`. This script can be used to create a Docker container that will be configured with all of the required dependencies and a base operating system in order to build OpenJDK
 
