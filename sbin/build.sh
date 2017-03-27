@@ -136,6 +136,14 @@ echo "Boot dir set to $JDK_BOOT_DIR"
 
 CONFIGURE_CMD=" --with-boot-jdk=$JDK_BOOT_DIR"
 
+if [ ! -z `which ccache` ]; then
+  CONFIGURE_CMD="$CONFIGURE_CMD --enable-ccache"
+fi
+
+if [ `uname -m` == "s390x" ]; then
+  CONFIGURE_CMD="$CONFIGURE_CMD --with-jvm-variants=zero"
+fi
+
 CONFIGURE_CMD="$CONFIGURE_CMD --with-cacerts-file=$WORKING_DIR/cacerts_area/security/cacerts"
 CONFIGURE_CMD="$CONFIGURE_CMD --with-alsa=$WORKING_DIR/alsa-lib-1.0.27.2"
 CONFIGURE_CMD="$CONFIGURE_CMD --with-freetype=$WORKING_DIR/installedfreetype"
@@ -171,7 +179,7 @@ else
     echo "For example, on RHEL you would do export JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.131-2.6.9.0.el7_3.x86_64"
     echo "Current JDK_BOOT_DIR value: $JDK_BOOT_DIR"
     exit;
-  else 
+  else
     echo "${good}Configured the JDK"
   fi
   echo ${normal}
@@ -179,9 +187,14 @@ fi
 
 ###########################################
 
-echo "Building the JDK: calling make images"
+if [ `uname -m` == "s390x" ]; then
+  makeCMD='make CONF=linux-s390x-normal-zero-release DEBUG_BINARIES=true images'
+else
+  makeCMD='make images'
+fi
 
-make images
+echo "Building the JDK: calling $makeCMD"
+$makeCMD
 
 if [ $? -ne 0 ]; then
   echo "${fail}Failed to make the JDK, exiting"
@@ -197,7 +210,7 @@ echo "Removing unneccessary files now..."
 
 rm -rf cacerts_area
 
-cd build/linux*/images
+cd build/*/images
 
 # Remove files we don't need
 rm -rf j2sdk-image/demo/applets
@@ -206,8 +219,6 @@ rm -rf j2sdk-image/demo/jfc/SwingApplet
 find . -name "*.diz" -type f -delete
 
 GZIP=-9 tar -cvzf OpenJDK.tar.gz ./j2sdk-image
-
-mkdir -p $TARGET_DIR
 
 mv OpenJDK.tar.gz $TARGET_DIR
 
