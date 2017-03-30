@@ -90,9 +90,12 @@ else
 
   cd freetype-2.4.0
 
+  if [ `uname -m` = "ppc64le" ]; then
+    PARAMS="--build=`rpm --eval %{_host}`"
+  fi
+   
   # We get the files we need at $WORKING_DIR/installedfreetype
-
-  ./configure --prefix=$WORKING_DIR/installedfreetype && make all && make install
+  ./configure --prefix=$WORKING_DIR/installedfreetype $PARAMS && make all && make install
 
   if [ $? -ne 0 ]; then
     echo "${error}Failed to configure and build libfreetype, exiting"
