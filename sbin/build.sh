@@ -96,7 +96,7 @@ else
   fi
    
   # We get the files we need at $WORKING_DIR/installedfreetype
-  ./configure --prefix=$WORKING_DIR/openjdk/installedfreetype $PARAMS && make all && make install
+  ./configure --prefix=$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype $PARAMS && make all && make install
 
   if [ $? -ne 0 ]; then
     echo "${error}Failed to configure and build libfreetype, exiting"
@@ -165,7 +165,7 @@ CONFIGURE_CMD="$CONFIGURE_CMD --with-debug-level=release"
 
 # Make sure we're in the source directory for OpenJDK now
 
-cd $WORKING_DIR/openjdk
+cd $WORKING_DIR/$OPENJDK_REPO_NAME
 
 echo "Should have the source, I'm at $PWD"
 
