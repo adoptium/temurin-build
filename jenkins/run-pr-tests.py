@@ -127,13 +127,13 @@ def run_pr_checks():
     pr_all_checks_results.append("Foo check passes")
 
     print("Bogus check")
-    author = os.environ["ghprbActualCommitAuthorEmail"]
-    if author == "tellison":
+    title = os.environ["ghprbPullTitle"]
+    if title == "Ignore me":
         pr_all_checks_pass = False
-        pr_all_checks_results.append("Untrusted author %s" % author)
-        print_err("Failed author check : %s" % author)
+        pr_all_checks_results.append("Failed title check %s" % title)
+        print_err("Failed title check : %s" % title)
     
-    print_err("Author check : %s" % author)
+    print_err("Bogus check : %s" % title)
 
     # Ensure, after each check, that we're back on the current PR
     run_cmd(['git', 'checkout', '-f', current_pr_head])
