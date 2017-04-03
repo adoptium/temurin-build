@@ -26,16 +26,11 @@ import urllib2
 import functools
 import subprocess
 
-from utils import ERROR_CODES, BUILD_HOME
+from utils import BUILD_HOME
 from utils.shellutils import run_cmd
 
 
 def print_err(msg):
-    """
-    Prints a set of arguments on STDERR.
-
-    msg : String message
-    """
     print(msg, file=sys.stderr)
 
 
@@ -51,7 +46,7 @@ def post_message_to_github(msg, ghprb_pull_id):
 
     posted_message = json.dumps({"body": msg})
 
-    url = "https://api.github.com/repos/AdoptOpenJDK/openjdk-jdk8u/issues/" + ghprb_pull_id + "/comments"
+    url = "https://api.github.com/repos/adoptopenjdk/openjdk-jdk8u/issues/" + ghprb_pull_id + "/comments"
 
     github_oauth_key = os.environ["GITHUB_OAUTH_KEY"]
 
@@ -86,7 +81,10 @@ def pr_message(build_display_name,
                commit_url,
                msg,
                post_msg=''):
-    # align the arguments properly for string formatting
+    """
+    Formats arguments nicely for display
+    """
+
     str_args = (build_display_name,
                 msg,
                 build_url,
@@ -94,15 +92,15 @@ def pr_message(build_display_name,
                 short_commit_hash,
                 commit_url,
                 str(' ' + post_msg + '.') if post_msg else '.')
-    return '**[Test build %s %s](%stestReport)** for PR %s at commit [`%s`](%s)%s' % str_args
+    return '*[Test build %s %s](%stestReport)* for PR %s at commit [`%s`](%s)%s' % str_args
 
 
 def run_pr_checks():
     """
-    Executes a set of pull request checks and returns their results.
+    Executes a set of pull request checks and returns their results as a global
+    pass/fail flag, and a set of messages to add to the PR comment.
 
-    The plugin makes some very useful environment variables available.
-
+    The Jenkins plugin makes some very useful environment variables available.
     ghprbActualCommit
     ghprbActualCommitAuthor
     ghprbActualCommitAuthorEmail
@@ -113,11 +111,10 @@ def run_pr_checks():
     ghprbSourceBranch
     ghprbTargetBranch
     sha1
-
-    
-    Returns a list of messages to post back to Github
+    ...etc...
     """
-    # Ensure we save off the current HEAD (for revert)
+
+    # Save off the current HEAD (for revert)
     current_pr_head = run_cmd(['git', 'rev-parse', 'HEAD'], return_output=True).strip()
     pr_all_checks_pass = True
     pr_all_checks_results = list()
@@ -127,13 +124,13 @@ def run_pr_checks():
     pr_all_checks_results.append("Foo check passes")
 
     print("Bogus check")
-    title = os.environ["ghprbPullTitle"]
-    if title == "Testing Ignore me":
+    author = os.environ["ghprbPullAuthorLogin"]
+    if author == "tellison":
         pr_all_checks_pass = False
-        pr_all_checks_results.append("Failed title check %s" % title)
-        print_err("Failed title check : %s" % title)
+        pr_all_checks_results.append("Failed author check %s" % author)
+        print_err("Failed author check : %s" % author)
     
-    print_err("Bogus check : %s" % title)
+    print_err("Bogus check : %s" % author)
 
     # Ensure, after each check, that we're back on the current PR
     run_cmd(['git', 'checkout', '-f', current_pr_head])
@@ -145,10 +142,8 @@ def main():
     ghprb_pull_id = os.environ["ghprbPullId"]
     ghprb_actual_commit = os.environ["ghprbActualCommit"]
     ghprb_pull_title = os.environ["ghprbPullTitle"]
-
     build_display_name = os.environ["BUILD_DISPLAY_NAME"]
     build_url = os.environ["BUILD_URL"]
-
     commit_url = "https://github.com/adoptopenjdk/openjdk-jdk8u/commit/" + ghprb_actual_commit
 
     # GitHub doesn't auto-link short hashes when submitted via the API.
@@ -165,23 +160,24 @@ def main():
     # post start comment
     post_message_to_github(github_message('has started'), ghprb_pull_id)
 
+    # run checks
     all_checks_pass, all_checks_comments = run_pr_checks()
 
+    ## global status for this PR
     if all_checks_pass:
         result_message = ' * This patch passes all checks.'
         exit_code = 0
     else:
         result_message = ' * This patch **fails one or more checks**.'
         exit_code = 1
-    print_err(result_message)
 
     # post end comment
     result_comment = github_message('has finished')
     result_comment += '\n' + result_message + '\n'
     result_comment += '\n'.join(all_checks_comments)
-
     post_message_to_github(result_comment, ghprb_pull_id)
 
+    # tell Jenkins if we are ok
     sys.exit(exit_code)
 
 
