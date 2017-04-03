@@ -202,5 +202,5 @@ if [ "${USE_DOCKER}" ] ; then
 
 else
   echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR"
-  $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR
+  $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME
 fi
