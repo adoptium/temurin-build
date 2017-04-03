@@ -170,7 +170,7 @@ def main():
     else:
         result_message = ' * This patch **fails one or more checks**.'
         exit_code = 1
-    print_err(results_message)
+    print_err(result_message)
 
     # post end comment
     result_comment = github_message('has finished')
