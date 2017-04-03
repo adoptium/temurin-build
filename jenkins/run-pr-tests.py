@@ -192,9 +192,9 @@ def main():
     #       the first being the Github PR long commit hash, and
     #       the second the Github SHA1 hash.
     #   * return a string that will be posted to Github
+
     pr_tests = [
         "pr-mergeability"
-        # add more tests here
     ]
 
     # a function to generate comments for Github posting
