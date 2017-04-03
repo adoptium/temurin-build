@@ -132,7 +132,7 @@ def run_tests(timeout):
 
     test_result_code = subprocess.Popen(['timeout',
                                          timeout,
-                                         os.path.join(BUILD_HOME, 'jenkins', 'run-pr-tests')]).wait()
+                                         os.path.join(BUILD_HOME, 'jenkins', 'run-pr-tests.sh')]).wait()
 
     failure_message_from_errcode = {
         1: 'executing the `jenkins/run-pr-tests` script',  # error to denote this script failures
