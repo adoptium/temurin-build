@@ -99,7 +99,7 @@ def pr_message(build_display_name,
 
 def run_pr_checks(pr_tests, ghprb_actual_commit, sha1):
     """
-    Executes a set of pull request checks.
+    Executes a set of pull request checks and returns their results.
 
     pr_tests : list of tests to be run
     ghprb_actual_commit : the PR long hash value
@@ -112,6 +112,7 @@ def run_pr_checks(pr_tests, ghprb_actual_commit, sha1):
 
     for pr_test in pr_tests:
         test_name = pr_test + '.sh'
+        print_err("Running test %s" % test_name)
         pr_results.append(run_cmd(['bash', os.path.join(BUILD_HOME, 'jenkins', 'pr-tests', test_name),
                                    ghprb_actual_commit, sha1],
                                   return_output=True).rstrip())
