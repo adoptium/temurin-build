@@ -162,7 +162,7 @@ def main():
     # post start comment
     post_message_to_github(github_message('has started'), ghprb_pull_id)
 
-    all_checks_pass, all_checks_comments = run_pr_checks(ghprb_actual_commit)
+    all_checks_pass, all_checks_comments = run_pr_checks()
 
     if all_checks_pass:
         result_message = ' * This patch passes all checks.'
