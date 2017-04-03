@@ -127,7 +127,7 @@ def run_pr_checks():
     pr_all_checks_results.append("Foo check passes")
 
     print("Bogus check")
-    author = os.environ["ghprbActualCommitAuthor"]
+    author = os.environ["ghprbActualCommitAuthorEmail"]
     if author == "tellison":
         pr_all_checks_pass = False
         pr_all_checks_results.append("Untrusted author %s" % author)
