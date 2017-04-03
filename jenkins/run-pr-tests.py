@@ -51,7 +51,7 @@ def post_message_to_github(msg, ghprb_pull_id):
 
     posted_message = json.dumps({"body": msg})
 
-    url = "https://api.github.com/repos/adoptopenjdk/openjdk-jdk8u/issues" + ghprb_pull_id + "/comments"
+    url = "https://api.github.com/repos/AdoptOpenJDK/openjdk-jdk8u/issues" + ghprb_pull_id + "/comments"
 
     github_oauth_key = os.environ["GITHUB_OAUTH_KEY"]
 
@@ -68,11 +68,13 @@ def post_message_to_github(msg, ghprb_pull_id):
             print(" Success")
     except urllib2.HTTPError as http_e:
         print_err("Failed to post message to Github.")
+        print_err(" > request_url %s" % url)
         print_err(" > http_code: %s" % http_e.code)
         print_err(" > api_response: %s" % http_e.read())
         print_err(" > data: %s" % posted_message)
     except urllib2.URLError as url_e:
         print_err("Failed to post message to Github.")
+        print_err(" > request_url %s" % url)
         print_err(" > urllib2_status: %s" % url_e.reason[1])
         print_err(" > data: %s" % posted_message)
 
