@@ -128,7 +128,7 @@ def run_pr_checks():
 
     print("Bogus check")
     title = os.environ["ghprbPullTitle"]
-    if title == "Ignore me":
+    if title == "Testing Ignore me":
         pr_all_checks_pass = False
         pr_all_checks_results.append("Failed title check %s" % title)
         print_err("Failed title check : %s" % title)
