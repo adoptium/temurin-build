@@ -85,7 +85,8 @@ if [[ ! -z $FOUND_FREETYPE ]] ; then
   echo "Skipping FreeType download"
 else
   # Then FreeType for fonts: make it and use
-  wget -nc http://download.savannah.gnu.org/releases/freetype/freetype-2.4.0.tar.gz
+  
+  wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-2.4.0.tar.gz
   tar xvf freetype-2.4.0.tar.gz
   rm freetype-2.4.0.tar.gz
 
