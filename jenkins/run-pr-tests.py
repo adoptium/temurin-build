@@ -51,7 +51,7 @@ def post_message_to_github(msg, ghprb_pull_id):
 
     posted_message = json.dumps({"body": msg})
 
-    url = "https://api.github.com/repos/AdoptOpenJDK/openjdk-jdk8u/issues" + ghprb_pull_id + "/comments"
+    url = "https://api.github.com/repos/AdoptOpenJDK/openjdk-jdk8u/issues/" + ghprb_pull_id + "/comments"
 
     github_oauth_key = os.environ["GITHUB_OAUTH_KEY"]
 
