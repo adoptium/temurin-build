@@ -136,7 +136,7 @@ def run_tests(timeout):
     failure_message_from_errcode = {
         1: 'executing the `jenkins/run-pr-tests` script',  # error to denote this script failures
         ERROR_CODES["ERROR_GENERAL"]: 'some tests',
-        ERROR_CODES["ERROR_TIMEOUT"]: 'due to timeout, after a wait of \`%s\`' % (tests_timeout),
+        ERROR_CODES["ERROR_TIMEOUT"]: 'due to timeout, after a wait of \`%s\`' % (timeout),
         ERROR_CODES["ERROR_STYLE"]: 'Java style tests',
         ERROR_CODES["ERROR_BUILD"]: 'to build',
         ERROR_CODES["ERROR_SANITY"]: 'sanity tests'
