@@ -26,7 +26,7 @@ import urllib2
 import functools
 import subprocess
 
-from utils import BUILD_HOME
+from utils import ERROR_CODES, BUILD_HOME
 from utils.shellutils import run_cmd
 
 
