@@ -131,7 +131,10 @@ def run_pr_checks():
     if author == "tellison":
         pr_all_checks_pass = False
         pr_all_checks_results.append("Untrusted author %s" % author)
+        print_err("Failed author check : %s" % author)
     
+    print_err("Author check : %s" % author)
+
     # Ensure, after each check, that we're back on the current PR
     run_cmd(['git', 'checkout', '-f', current_pr_head])
 
