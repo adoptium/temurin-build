@@ -69,11 +69,6 @@ cd $WORKING_DIR/$OPENJDK_REPO_NAME
 
 make test jobs=10
 
-if [ $? -ne 0 ]; then
-  echo "Failed to run jtreg, exiting"
-  exit
-fi
-
 packageTestResultsWithJCovReports()
 {
   echo "Package test output into archives..." 
