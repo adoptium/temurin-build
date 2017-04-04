@@ -14,6 +14,8 @@
 #
 
 WORKING_DIR=$1
+OPENJDK_REPO_NAME=$2
+BINARY_FULL_NAME_S390X=$3
 
 if [[ -f /.dockerenv ]] ; then
   echo "Detected we're in docker"
@@ -25,10 +27,10 @@ fi
 
 echo "Running jtreg"
 
-cd $WORKING_DIR/jdk/test
+cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
 
 # This is the JDK we'll test
-export PRODUCT_HOME=$WORKING_DIR/build/linux-x86_64-normal-server-release/images/j2sdk-image
+export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BINARY_FULL_NAME_S390X/images/j2sdk-image
 
 echo $PRODUCT_HOME
 ls $PRODUCT_HOME
@@ -53,18 +55,59 @@ export JT_HOME=$WORKING_DIR/jtreg
 # Clean up after ourselves by removing jtreg tgz
 rm -f jtreg*.tar.gz
 
-echo "Running jtreg with: jtreg -conc:2 -a -verbose:fail -jdk:$PRODUCT_HOME ./ || true"
+echo "Running jtreg via make command"
 
-jtreg -agentvm -conc:2 -a -verbose:fail -jdk:$PRODUCT_HOME ./ || true
+echo "Apply JCov settings to Makefile..." 
+cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
+pwd
+
+sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/' Makefile
+
+# This is the JDK we'll test
+export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/linux-cx86_64-normal-server-release/images/j2sdk-image
+cd $WORKING_DIR/$OPENJDK_REPO_NAME
+
+make test jobs=10
 
 if [ $? -ne 0 ]; then
   echo "Failed to run jtreg, exiting"
   exit
 fi
 
+packageTestResultsWithJCovReports()
+{
+  echo "Package test output into archives..." 
+  pwd
+
+  cd $WORKING_DIR/$OPENJDK_REPO_NAME/build/$BINARY_FULL_NAME_S390X/
+ 
+  artifact=${JOB_NAME}-testoutput-with-jcov-reports
+  echo "Tarring and zipping the 'testoutput' folder into artefact: $artifact.tar.gz" 
+  tar -cvzf $WORKING_DIR/$artifact.tar.gz   testoutput/
+
+  if [ -d testoutput  ]; then  
+     rm -fr $WORKING_DIR/$OPENJDK_REPO_NAME/testoutput
+  fi
+  cp -fr testoutput/ $WORKING_DIR/testoutput/
+  
+  cd $WORKING_DIR
+}
+
+packageOnlyJCovReports()
+{
+  echo "Package jcov reports into archives..." 
+  pwd
+
+  cd $WORKING_DIR/$OPENJDK_REPO_NAME/build/$BINARY_FULL_NAME_S390X/
+ 
+  artifact=${JOB_NAME}-jcov-results-only
+  echo "Tarring and zipping the 'testoutput/../jcov' folder into artefact: $artifact.tar.gz" 
+  tar -cvzf $WORKING_DIR/$artifact.tar.gz   testoutput/jdk_core/JTreport/jcov/
+
+  cd $WORKING_DIR
+}
+
+
 echo "Archiving your jtreg results"
-
-zip -r jtreport.zip ./JTreport
-zip -r jtwork.zip ./JTwork
-
-mv *.zip $WORKING_DIR/
+packageTestResultsWithJCovReports
+packageOnlyJCovReports

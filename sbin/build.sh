@@ -19,6 +19,7 @@
 WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
+BINARY_FULL_NAME_S390X=$4
 
 # Escape code
 esc=`echo -en "\033"`
@@ -85,8 +86,8 @@ if [[ ! -z $FOUND_FREETYPE ]] ; then
   echo "Skipping FreeType download"
 else
   # Then FreeType for fonts: make it and use
-  
   wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-2.4.0.tar.gz
+    
   tar xvf freetype-2.4.0.tar.gz
   rm freetype-2.4.0.tar.gz
 
@@ -193,7 +194,7 @@ fi
 ###########################################
 
 if [ `uname -m` == "s390x" ]; then
-  makeCMD='make CONF=linux-s390x-normal-zero-release DEBUG_BINARIES=true images'
+  makeCMD='make CONF=$BINARY_FULL_NAME_S390X DEBUG_BINARIES=true images'
 else
   makeCMD='make images'
 fi
@@ -202,7 +203,7 @@ echo "Building the JDK: calling $makeCMD"
 $makeCMD
 
 if [ $? -ne 0 ]; then
-  echo "${fail}Failed to make the JDK, exiting"
+   echo "${fail}Failed to make the JDK, exiting"
   exit;
 else
   echo "${good}Built the JDK!"

@@ -26,6 +26,7 @@
 
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
+BINARY_FULL_NAME_S390X=linux-s390x-normal-zero-release
 
 # Escape code
 esc=`echo -en "\033"`
@@ -201,6 +202,10 @@ if [ "${USE_DOCKER}" ] ; then
   fi
 
 else
-  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR"
-  $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME
+  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $BINARY_FULL_NAME"
+  $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BINARY_FULL_NAME_S390X
+
+  if [[ ! -z $JTREG ]]; then
+    $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BINARY_FULL_NAME_S390X
+  fi
 fi
