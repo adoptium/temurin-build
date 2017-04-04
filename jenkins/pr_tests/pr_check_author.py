@@ -13,8 +13,15 @@
 # limitations under the License.
 
 def pr_check_author(author):
+    """
+    Check that the author is acceptable for this PR.
+    This could check they are not on a banned list, or that they
+    do have an OCA, etc. etc.
+
+    returns a tuple, [boolean, string] = [whether the check passed, a message to display in the PR]
+    """
     print("Bogus author check")
-    if author == "tellison":
+    if author == "untrustedguy":
         print("Failed author check : %s" % author)
         return [ False, "** Failed author check %s **" % author ]
 
