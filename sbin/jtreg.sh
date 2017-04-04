@@ -15,7 +15,7 @@
 
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
-BINARY_FULL_NAME_S390X=$3
+BUILD_FULL_NAME=$3
 
 if [[ -f /.dockerenv ]] ; then
   echo "Detected we're in docker"
@@ -30,7 +30,7 @@ echo "Running jtreg"
 cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
 
 # This is the JDK we'll test
-export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BINARY_FULL_NAME_S390X/images/j2sdk-image
+export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
 
 echo $PRODUCT_HOME
 ls $PRODUCT_HOME
@@ -64,7 +64,7 @@ pwd
 sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/' Makefile
 
 # This is the JDK we'll test
-export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/linux-cx86_64-normal-server-release/images/j2sdk-image
+export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
 cd $WORKING_DIR/$OPENJDK_REPO_NAME
 
 make test jobs=10
@@ -79,7 +79,7 @@ packageTestResultsWithJCovReports()
   echo "Package test output into archives..." 
   pwd
 
-  cd $WORKING_DIR/$OPENJDK_REPO_NAME/build/$BINARY_FULL_NAME_S390X/
+  cd $WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/
  
   artifact=${JOB_NAME}-testoutput-with-jcov-reports
   echo "Tarring and zipping the 'testoutput' folder into artefact: $artifact.tar.gz" 
@@ -98,7 +98,7 @@ packageOnlyJCovReports()
   echo "Package jcov reports into archives..." 
   pwd
 
-  cd $WORKING_DIR/$OPENJDK_REPO_NAME/build/$BINARY_FULL_NAME_S390X/
+  cd $WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/
  
   artifact=${JOB_NAME}-jcov-results-only
   echo "Tarring and zipping the 'testoutput/../jcov' folder into artefact: $artifact.tar.gz" 

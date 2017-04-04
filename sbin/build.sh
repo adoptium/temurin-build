@@ -19,7 +19,8 @@
 WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
-BINARY_FULL_NAME_S390X=$4
+BUILD_FULL_NAME=$4
+JVM_VARIANT=${5:=normal}
 
 # Escape code
 esc=`echo -en "\033"`
@@ -146,10 +147,7 @@ if [ ! -z `which ccache` ]; then
   CONFIGURE_CMD="$CONFIGURE_CMD --enable-ccache"
 fi
 
-if [ `uname -m` == "s390x" ]; then
-  CONFIGURE_CMD="$CONFIGURE_CMD --with-jvm-variants=zero"
-fi
-
+CONFIGURE_CMD="$CONFIGURE_CMD --with-jvm-variants=$JVM_VARIANT"
 CONFIGURE_CMD="$CONFIGURE_CMD --with-cacerts-file=$WORKING_DIR/cacerts_area/security/cacerts"
 CONFIGURE_CMD="$CONFIGURE_CMD --with-alsa=$WORKING_DIR/alsa-lib-1.0.27.2"
 CONFIGURE_CMD="$CONFIGURE_CMD --with-freetype=$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype"
@@ -194,7 +192,7 @@ fi
 ###########################################
 
 if [ `uname -m` == "s390x" ]; then
-  makeCMD='make CONF=$BINARY_FULL_NAME_S390X DEBUG_BINARIES=true images'
+  makeCMD='make CONF=$BUILD_FULL_NAME DEBUG_BINARIES=true images'
 else
   makeCMD='make images'
 fi
