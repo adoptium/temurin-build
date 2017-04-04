@@ -15,7 +15,7 @@
 def pr_check_author(author):
     print("Bogus author check")
     if author == "tellison":
-        print_err("Failed author check : %s" % author)
+        print("Failed author check : %s" % author)
         return [ False, "** Failed author check %s **" % author ]
 
     return [ True, "Passed author check %s" % author ]
