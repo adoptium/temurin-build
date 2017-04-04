@@ -108,6 +108,6 @@ packageOnlyJCovReports()
 }
 
 
-echo "Archiving your jtreg results"
+echo "Archiving your jtreg results (includes jcov reports)"
 packageTestResultsWithJCovReports
 packageOnlyJCovReports
