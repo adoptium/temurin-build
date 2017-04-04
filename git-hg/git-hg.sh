@@ -51,8 +51,15 @@ git remote add releases git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
 git fetch --all
 # check if git diff is the same
 if [ `git diff releases/master | wc -l` -gt 0 ]; then
-	git rebase -s theirs releases/master
+	git checkout -b staging
+	git checkout master
+	git reset --hard releases/master
+	git cherry-pick --strategy=recursive -X theirs staging
 	git push --set-upstream releases master
+	# update dev branch
+	git checkout releases/dev
+	git cherry-pick --strategy=recursive -X theirs staging
+	git push --set-upstream releases dev
 else
 	echo "already up to date"
 fi
