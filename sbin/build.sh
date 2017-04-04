@@ -18,6 +18,7 @@
 
 WORKING_DIR=$1
 TARGET_DIR=$2
+OPENJDK_REPO_NAME=$3
 
 # Escape code
 esc=`echo -en "\033"`
@@ -78,13 +79,14 @@ fi
 
 echo "Checking for freetype"
 
-FOUND_FREETYPE=$(find "$WORKING_DIR/installedfreetype/lib" -name "libfreetype.so.6.5.0")
+FOUND_FREETYPE=$(find "$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype/lib" -name "libfreetype.so.6.5.0")
 
 if [[ ! -z $FOUND_FREETYPE ]] ; then
   echo "Skipping FreeType download"
 else
   # Then FreeType for fonts: make it and use
-  wget -nc http://download.savannah.gnu.org/releases/freetype/freetype-2.4.0.tar.gz
+  
+  wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-2.4.0.tar.gz
   tar xvf freetype-2.4.0.tar.gz
   rm freetype-2.4.0.tar.gz
 
@@ -95,7 +97,7 @@ else
   fi
    
   # We get the files we need at $WORKING_DIR/installedfreetype
-  ./configure --prefix=$WORKING_DIR/installedfreetype $PARAMS && make all && make install
+  ./configure --prefix=$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype $PARAMS && make all && make install
 
   if [ $? -ne 0 ]; then
     echo "${error}Failed to configure and build libfreetype, exiting"
@@ -149,7 +151,7 @@ fi
 
 CONFIGURE_CMD="$CONFIGURE_CMD --with-cacerts-file=$WORKING_DIR/cacerts_area/security/cacerts"
 CONFIGURE_CMD="$CONFIGURE_CMD --with-alsa=$WORKING_DIR/alsa-lib-1.0.27.2"
-CONFIGURE_CMD="$CONFIGURE_CMD --with-freetype=$WORKING_DIR/installedfreetype"
+CONFIGURE_CMD="$CONFIGURE_CMD --with-freetype=$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype"
 
 # These will have been installed by the package manager (see our Dockerfile)
 CONFIGURE_CMD="$CONFIGURE_CMD --with-x=/usr/include/X11"
@@ -158,13 +160,13 @@ CONFIGURE_CMD="$CONFIGURE_CMD --with-x=/usr/include/X11"
 # other options include fastdebug and slowdebug
 CONFIGURE_CMD="$CONFIGURE_CMD --with-debug-level=release"
 
-#CONFIGURE_CMD="$CONFIGURE_CMD --with-adds-and-overrides=$WORKING_DIR/openjdk/addsandoverrides"
+#CONFIGURE_CMD="$CONFIGURE_CMD --with-adds-and-overrides=$WORKING_DIR/$OPENJDK_REPO_NAME/addsandoverrides"
 
 ###########################################
 
 # Make sure we're in the source directory for OpenJDK now
 
-cd $WORKING_DIR/openjdk
+cd $WORKING_DIR/$OPENJDK_REPO_NAME
 
 echo "Should have the source, I'm at $PWD"
 
