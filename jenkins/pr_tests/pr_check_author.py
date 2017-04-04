@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+def pr_check_author(author):
+    print("Bogus author check")
+    if author == "tellison":
+        print_err("Failed author check : %s" % author)
+        return [ False, "** Failed author check %s **" % author ]
 
-BUILD_HOME = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../../"))
-USER_HOME = os.environ.get("HOME")
+    return [ True, "Passed author check %s" % author ]
 

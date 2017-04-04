@@ -29,6 +29,7 @@ import subprocess
 from utils import BUILD_HOME
 from utils.shellutils import run_cmd
 
+from pr_tests.pr_check_author import pr_check_author
 
 def print_err(msg):
     print(msg, file=sys.stderr)
@@ -121,16 +122,18 @@ def run_pr_checks():
 
     print("Checking Foo")
     # Do a foo check here
-    pr_all_checks_results.append("Foo check passes")
+    check_passed = True
+    check_message = "Foo check passes"
 
-    print("Bogus check")
+    pr_all_checks_pass = pr_all_checks_pass and check_passed
+    pr_all_checks_results.append(check_message)
+
+    print("Checking author")
     author = os.environ["ghprbPullAuthorLogin"]
-    if author == "tellison":
-        pr_all_checks_pass = False
-        pr_all_checks_results.append("Failed author check %s" % author)
-        print_err("Failed author check : %s" % author)
-    
-    print_err("Bogus check : %s" % author)
+    check_passed, check_message = pr_check_author(author)
+
+    pr_all_checks_pass = pr_all_checks_pass and check_passed
+    pr_all_checks_results.append(check_message)
 
     # Ensure, after each check, that we're back on the current PR
     run_cmd(['git', 'checkout', '-f', current_pr_head])
