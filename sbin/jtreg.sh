@@ -67,6 +67,15 @@ sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -jcov\/classes:$(ABS_PLATFORM_
 export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
 cd $WORKING_DIR/$OPENJDK_REPO_NAME
 
+export JTREG_DIR=$WORKING_DIR/jtreg
+export JTREG_INSTALL=${JTREG_DIR}
+export JT_HOME=${JTREG_INSTALL}
+export JTREG_HOME=${JTREG_INSTALL}
+export JPRT_JTREG_HOME=${JT_HOME}
+export JPRT_JAVA_HOME=${PRODUCT_HOME}
+export JTREG_TIMEOUT_FACTOR=5
+export CONCURRENCY=8
+
 make test jobs=10 LOG=debug
 
 packageTestResultsWithJCovReports()
