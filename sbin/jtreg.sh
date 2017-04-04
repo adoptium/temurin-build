@@ -67,7 +67,7 @@ sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -jcov\/classes:$(ABS_PLATFORM_
 export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
 cd $WORKING_DIR/$OPENJDK_REPO_NAME
 
-make test jobs=10
+make test jobs=10 LOG=debug
 
 packageTestResultsWithJCovReports()
 {
