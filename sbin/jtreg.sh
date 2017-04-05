@@ -63,24 +63,6 @@ applyingJConvSettingsToMakefileForTests()
   cd $WORKING_DIR/$OPENJDK_REPO_NAME/
 }
 
-setEnvironmentVariablesForJtreg() 
-{
-  echo "Setting up environment variables for JTREG to run"
-  # This is the JDK we'll test
-  export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
-  echo $PRODUCT_HOME
-  ls $PRODUCT_HOME
-
-  export JTREG_DIR=$WORKING_DIR/jtreg
-  export JTREG_INSTALL=${JTREG_DIR}
-  export JT_HOME=${JTREG_INSTALL}
-  export JTREG_HOME=${JTREG_INSTALL}
-  export JPRT_JTREG_HOME=${JT_HOME}
-  export JPRT_JAVA_HOME=${PRODUCT_HOME}
-  export JTREG_TIMEOUT_FACTOR=5
-  export CONCURRENCY=8
-}
-
 runJtregViaMakeCommand()
 {
   echo "Running jtreg via make command (debug logs enabled)"
@@ -130,6 +112,21 @@ packageReports()
 checkIfWeAreRunningInTheDockerEnvironment
 downloadJtregAndSetupEnvironment
 applyingJConvSettingsToMakefileForTests
-setEnvironmentVariablesForJtreg
+
+echo "Setting up environment variables for JTREG to run"
+# This is the JDK we'll test
+export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
+echo $PRODUCT_HOME
+ls $PRODUCT_HOME
+
+export JTREG_DIR=$WORKING_DIR/jtreg
+export JTREG_INSTALL=${JTREG_DIR}
+export JT_HOME=${JTREG_INSTALL}
+export JTREG_HOME=${JTREG_INSTALL}
+export JPRT_JTREG_HOME=${JT_HOME}
+export JPRT_JAVA_HOME=${PRODUCT_HOME}
+export JTREG_TIMEOUT_FACTOR=5
+export CONCURRENCY=8
+
 runJtregViaMakeCommand
 packageReports
