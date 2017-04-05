@@ -28,13 +28,12 @@ checkIfWeAreRunningInTheDockerEnvironment()
   fi
 }
 
-
 downloadJtregAndSetupEnvironment() 
 {
   # Download then add jtreg to our path
   echo "Downloading Jtreg binary"
-    wget https://ci.adoptopenjdk.net/view/OpenJDK%20code-tools/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
-
+  wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
+  
   if [ $? -ne 0 ]; then
     echo "Failed to retrieve the jtreg binary, exiting"
     exit
@@ -59,7 +58,7 @@ applyingJConvSettingsToMakefileForTests()
   cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
   pwd
 
-  sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/' Makefile
+  sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/' Makefile
 
   cd $WORKING_DIR/$OPENJDK_REPO_NAME/
 }
