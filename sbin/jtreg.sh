@@ -36,7 +36,7 @@ echo $PRODUCT_HOME
 ls $PRODUCT_HOME
 
 # Download then add jtreg to our path
-wget https://adopt-openjdk.ci.cloudbees.com/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
+wget https://ci.adoptopenjdk.net/view/jdk%20tools/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
 
 if [ $? -ne 0 ]; then
   echo "Failed to retrieve the jtreg binary, exiting"
