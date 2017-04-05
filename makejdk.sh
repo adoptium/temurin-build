@@ -26,8 +26,8 @@
 
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
-OS_KERNAL_NAME=$(echo `uname` | awk '{print tolower($0)}')
-OS_MACHINE=`uname -m`
+OS_KERNAL_NAME=$(echo $(uname) | awk '{print tolower($0)}')
+OS_MACHINE=$(uname -m)
 BUILD_TYPE=normal
 JVM_VARIANT=server
 
@@ -38,14 +38,14 @@ fi
 BUILD_FULL_NAME=$OS_KERNAL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
 
 # Escape code
-esc=`echo -en "\033"`
+esc=$(echo -en "\033")
 
 # Set colors
 error="${esc}[0;31m"
 good="${esc}[0;32m"
 info="${esc}[0;33m"
 git="${esc}[0;34m"
-normal=`echo -en "${esc}[m\017"`
+normal=$(echo -en "${esc}[m\017")
 
 source sbin/signalhandler.sh
 
@@ -154,9 +154,9 @@ fi
 echo $normal
 
 if [ "${USE_DOCKER}" ] ; then
-  PS_DOCKER=`ps -ef | grep "docker" | wc -l`
+  PS_DOCKER=$(ps -ef | grep "docker" | wc -l)
 
-  if [ -z `which docker` ] || [ ${PS_DOCKER} -lt 2 ]; then
+  if [ -z $(which docker) ] || [ ${PS_DOCKER} -lt 2 ]; then
     echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"
     exit
   fi
@@ -174,7 +174,7 @@ if [ "${USE_DOCKER}" ] ; then
   # Keep is undefined so we'll kill the docker image
 
   if [[ $KEEP == true ]] ; then
-     if [ `docker ps -a | grep openjdk_container | wc -l` == 0 ]; then
+     if [ $(docker ps -a | grep openjdk_container | wc -l) == 0 ]; then
          echo "${info}No docker container found so creating one${normal}"
          docker build -t $CONTAINER docker/jdk8u/x86_64/ubuntu
      fi
