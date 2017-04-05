@@ -57,12 +57,6 @@ rm -f jtreg*.tar.gz
 
 echo "Running jtreg via make command"
 
-echo "Apply JCov settings to Makefile..." 
-cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
-pwd
-
-sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/' Makefile
-
 # This is the JDK we'll test
 export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
 cd $WORKING_DIR/$OPENJDK_REPO_NAME
@@ -74,7 +68,9 @@ export JTREG_HOME=${JTREG_INSTALL}
 export JPRT_JTREG_HOME=${JT_HOME}
 export JPRT_JAVA_HOME=${PRODUCT_HOME}
 export JTREG_TIMEOUT_FACTOR=5
-export CONCURRENCY=8
+export CONCURRENCY=2
+export EXTRA_JTREG_OPTIONS='-xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*'
+
 
 make test jobs=10 LOG=debug
 
