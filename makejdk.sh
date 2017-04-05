@@ -26,6 +26,16 @@
 
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
+OS_KERNAL_NAME=$(echo `uname` | awk '{print tolower($0)}')
+OS_MACHINE=`uname -m`
+BUILD_TYPE=normal
+JVM_VARIANT=server
+
+if [[ $OS_MACHINE == "s390x" ]] ; then
+ JVM_VARIANT=zero
+fi 
+
+BUILD_FULL_NAME=$OS_KERNAL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
 
 # Escape code
 esc=`echo -en "\033"`
@@ -200,7 +210,11 @@ if [ "${USE_DOCKER}" ] ; then
     docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm {}
   fi
 
-else
-  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR"
-  $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME
+else  
+  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $BUILD_FULL_NAME"
+  $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JVM_VARIANT
+
+  if [[ ! -z $JTREG ]]; then
+    $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME
+  fi
 fi
