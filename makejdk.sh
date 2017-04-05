@@ -211,7 +211,7 @@ if [ "${USE_DOCKER}" ] ; then
   fi
 
 else  
-  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $BUILD_FULL_NAME"
+  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $BUILD_FULL_NAME $JVM_VARIANT"
   $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JVM_VARIANT
 
   if [[ ! -z $JTREG ]]; then
