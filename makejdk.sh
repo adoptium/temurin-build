@@ -24,136 +24,168 @@
 
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
+
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
-OS_KERNAL_NAME=$(echo $(uname) | awk '{print tolower($0)}')
-OS_MACHINE=$(uname -m)
-BUILD_TYPE=normal
-JVM_VARIANT=server
 
+OS_KERNAL_NAME=$(echo $(uname) | awk '{print tolower($0)}')
+
+OS_MACHINE=$(uname -m)
+
+JVM_VARIANT=server
 if [[ $OS_MACHINE == "s390x" ]] ; then
  JVM_VARIANT=zero
 fi 
 
+BUILD_TYPE=normal
+
 BUILD_FULL_NAME=$OS_KERNAL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
 
-# Escape code
-esc=$(echo -en "\033")
+initialiseEscapeCodes() 
+{
+  # Escape code
+  esc=$(echo -en "\033")
 
-# Set colors
-error="${esc}[0;31m"
-good="${esc}[0;32m"
-info="${esc}[0;33m"
-git="${esc}[0;34m"
-normal=$(echo -en "${esc}[m\017")
+  # Set colors
+  error="${esc}[0;31m"
+  good="${esc}[0;32m"
+  info="${esc}[0;33m"
+  git="${esc}[0;34m"
+  normal=$(echo -en "${esc}[m\017")
+}
 
-source sbin/signalhandler.sh
+sourceSignalHandler()
+{
+  source sbin/signalhandler.sh
+}
 
-while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
-  opt="$1";
-  shift;
-  case "$opt" in
-    "--" ) break 2;;
+parseCommandLineArgs()
+{
+  while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
+    opt="$1";
+    shift;
+    case "$opt" in
+      "--" ) break 2;;
 
-    "--source" | "-s" )
-    WORKING_DIR="$1"; shift;;
+      "--source" | "-s" )
+      WORKING_DIR="$1"; shift;;
 
-    "--ssh" | "-S" )
-    USE_SSH=true; shift;;
+      "--ssh" | "-S" )
+      USE_SSH=true; shift;;
 
-    "--destination" | "-d" )
-    TARGET_DIR="$1"; shift;;
+      "--destination" | "-d" )
+      TARGET_DIR="$1"; shift;;
 
-    "--repository" | "-r" )
-    REPOSITORY="$1"; shift;;
+      "--repository" | "-r" )
+      REPOSITORY="$1"; shift;;
 
-    "--branch" | "-b" )
-    BRANCH="$1"; shift;;
+      "--branch" | "-b" )
+      BRANCH="$1"; shift;;
 
-    "--keep" | "-k" )
-    KEEP=true; shift;;
+      "--keep" | "-k" )
+      KEEP=true; shift;;
 
-    "--jtreg" | "-j" )
-    JTREG=true; shift;;
+      "--jtreg" | "-j" )
+      JTREG=true; shift;;
 
-    *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk.1; exit 1;;
-   esac
-done
+      *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk.1; exit 1;;
+     esac
+  done
+}
 
-# Both a working directory and a target directory provided
-if [ ! -z "${WORKING_DIR}" ] && [ ! -z "${TARGET_DIR}" ] ; then
-  # This uses sbin/build.sh directly
-  echo "${info} Not using Docker, working area will be ${WORKING_DIR}, target for the JDK will be ${TARGET_DIR} ${normal}"
-fi
-
-# No working directory and no target directory provided
-if [ -z "${WORKING_DIR}" ] && [ -z "${TARGET_DIR}" ] ; then
-  echo "${info}No parameters provided, using Docker ${normal}"
-  USE_DOCKER=true
-elif [ ! -z "${TARGET_DIR}" ] && [ -z "${WORKING_DIR}" ] ; then
-  # Target dir is defined but the working dir isn't
-  # Calls sbin/build.sh inside of Docker followed by a docker cp command
-  echo "${info}Using Docker, target directory for the tgz on the host: ${TARGET_DIR}"
-  USE_DOCKER=true
-fi
-
-echo ${info}
-if [ "${KEEP}" == true ] ; then
-  echo "We'll keep the built Docker container if you're using Docker"
-else
-  echo "We'll remove the built Docker container if you're using Docker"
-fi
-echo $normal
-
-if [ -z "${BRANCH}" ] ; then
-  echo "${info}BRANCH is undefined so checking out dev${normal}"
-  BRANCH="dev"
-fi
-
-if [ -z "${WORKING_DIR}" ] ; then
-  echo "${info}WORKING_DIR is undefined so setting to $PWD${normal}"
-  WORKING_DIR=$PWD
-else
-  echo "${info}Working dir is $WORKING_DIR${normal}"
-fi
-
-echo $info
-if [ -z "${TARGET_DIR}" ] ; then
-  echo "${info}TARGET_DIR is undefined so setting to $PWD"
-  TARGET_DIR=$PWD
-  # Only makes a difference if we're in Docker
-  echo "If you're using Docker The build artifact will not be copied to the host"
-else
-  echo "${info}Target directory is $TARGET_DIR${normal}"
-  COPY_TO_HOST=true
-  echo "If you're using Docker we'll copy the build artifact to the host"
-fi
-
-echo $git
-if [ -d "$WORKING_DIR"/$OPENJDK_REPO_NAME/.git ] && [ $REPOSITORY == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
-  # It does exist and it's a repo other than the AdoptOpenJDK one
-  cd $WORKING_DIR/$OPENJDK_REPO_NAME
-  echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
-  sleep 10
-  echo "${git}Pulling latest changes from git repo"
-  git fetch --all
-  git reset --hard origin/$BRANCH
-  echo $normal
-  cd $WORKING_DIR
-elif [ ! -d "${WORKING_DIR}"/$OPENJDK_REPO_NAME/.git ] ; then
-  # If it doesn't exixt, clone it
-  echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
-  if [[ "${USE_SSH}" == true ]] ; then
-    echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
-    git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME
-  else
-    echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
-    git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME
+checkIfDockerIsUsedForBuildingOrNot()
+{
+  # Both a working directory and a target directory provided
+  if [ ! -z "${WORKING_DIR}" ] && [ ! -z "${TARGET_DIR}" ] ; then
+    # This uses sbin/build.sh directly
+    echo "${info} Not using Docker, working area will be ${WORKING_DIR}, target for the JDK will be ${TARGET_DIR} ${normal}"
   fi
-fi
-echo $normal
 
-if [ "${USE_DOCKER}" ] ; then
+  # No working directory and no target directory provided
+  if [ -z "${WORKING_DIR}" ] && [ -z "${TARGET_DIR}" ] ; then
+    echo "${info}No parameters provided, using Docker ${normal}"
+    USE_DOCKER=true
+  elif [ ! -z "${TARGET_DIR}" ] && [ -z "${WORKING_DIR}" ] ; then
+    # Target dir is defined but the working dir isn't
+    # Calls sbin/build.sh inside of Docker followed by a docker cp command
+    echo "${info}Using Docker, target directory for the tgz on the host: ${TARGET_DIR}"
+    USE_DOCKER=true
+  fi
+}
+
+checkInCaseOfDockerShouldTheContainerBePreserved()
+{
+  echo ${info}
+  if [ "${KEEP}" == true ] ; then
+    echo "We'll keep the built Docker container if you're using Docker"
+  else
+    echo "We'll remove the built Docker container if you're using Docker"
+  fi
+  echo $normal  
+}
+
+setDefaultIfBranchIsNotProvided()
+{
+  if [ -z "${BRANCH}" ] ; then
+    echo "${info}BRANCH is undefined so checking out dev${normal}"
+    BRANCH="dev"
+  fi
+}
+
+setWorkingDirectoryIfProvided()
+{
+  if [ -z "${WORKING_DIR}" ] ; then
+    echo "${info}WORKING_DIR is undefined so setting to $PWD${normal}"
+    WORKING_DIR=$PWD
+  else
+    echo "${info}Working dir is $WORKING_DIR${normal}"
+  fi
+}
+
+setTargetDirectoryIfProvided()
+{
+  echo $info
+  if [ -z "${TARGET_DIR}" ] ; then
+    echo "${info}TARGET_DIR is undefined so setting to $PWD"
+    TARGET_DIR=$PWD
+    # Only makes a difference if we're in Docker
+    echo "If you're using Docker The build artifact will not be copied to the host"
+  else
+    echo "${info}Target directory is $TARGET_DIR${normal}"
+    COPY_TO_HOST=true
+    echo "If you're using Docker we'll copy the build artifact to the host"
+  fi
+}
+
+cloneOpenJDKGitRepo()
+{
+  echo $git
+  if [ -d "$WORKING_DIR"/$OPENJDK_REPO_NAME/.git ] && [ $REPOSITORY == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
+    # It does exist and it's a repo other than the AdoptOpenJDK one
+    cd $WORKING_DIR/$OPENJDK_REPO_NAME
+    echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
+    sleep 10
+    echo "${git}Pulling latest changes from git repo"
+    git fetch --all
+    git reset --hard origin/$BRANCH
+    echo $normal
+    cd $WORKING_DIR
+  elif [ ! -d "${WORKING_DIR}"/$OPENJDK_REPO_NAME/.git ] ; then
+    # If it doesn't exixt, clone it
+    echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
+    if [[ "${USE_SSH}" == true ]] ; then
+      echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
+      git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME
+    else
+      echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
+      git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME
+    fi
+  fi
+  echo $normal
+}
+
+buildOpenJDKViaDocker()
+{
   PS_DOCKER=$(ps -ef | grep "docker" | wc -l)
 
   if [ -z $(which docker) ] || [ ${PS_DOCKER} -lt 2 ]; then
@@ -209,12 +241,36 @@ if [ "${USE_DOCKER}" ] ; then
   if [[ -z ${KEEP} ]] ; then
     docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm {}
   fi
+}
 
-else  
+buildOpenJDKInNativeEnvironment()
+{
   echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $BUILD_FULL_NAME $JVM_VARIANT"
   $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JVM_VARIANT
 
   if [[ ! -z $JTREG ]]; then
     $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME
+  fi  
+}
+
+buildOpenJDK()
+{
+  if [ "${USE_DOCKER}" ] ; then
+    buildOpenJDKViaDocker
+  else  
+    buildOpenJDKInNativeEnvironment
   fi
-fi
+}
+
+##################################################################
+
+initialiseEscapeCodes
+sourceSignalHandler
+parseCommandLineArgs
+checkIfDockerIsUsedForBuildingOrNot
+checkInCaseOfDockerShouldTheContainerBePreserved
+setDefaultIfBranchIsNotProvided
+setWorkingDirectoryIfProvided
+setTargetDirectoryIfProvided
+cloneOpenJDKGitRepo
+buildOpenJDK
