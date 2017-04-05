@@ -33,7 +33,7 @@ downloadJtregAndSetupEnvironment()
 {
   # Download then add jtreg to our path
   echo "Downloading Jtreg binary"
-  wget https://ci.adoptopenjdk.net/view/jdk%20tools/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
+    wget https://ci.adoptopenjdk.net/view/OpenJDK%20code-tools/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
 
   if [ $? -ne 0 ]; then
     echo "Failed to retrieve the jtreg binary, exiting"
@@ -84,7 +84,7 @@ setEnvironmentVariablesForJtreg()
 
 runJtregViaMakeCommand()
 {
-  echo "Running jtreg via make command"
+  echo "Running jtreg via make command (debug logs enabled)"
   make test jobs=10 LOG=debug  
 }
 
