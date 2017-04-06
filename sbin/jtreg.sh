@@ -17,7 +17,7 @@ WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
 
-checkIfWeAreRunningInTheDockerEnvironment()
+checkIfDockerIsUsedForBuildingOrNot()
 {
   if [[ -f /.dockerenv ]] ; then
     echo "Detected we're in docker"
@@ -134,7 +134,7 @@ packageReports()
   packageOnlyJCovReports  
 }
 
-checkIfWeAreRunningInTheDockerEnvironment
+checkIfDockerIsUsedForBuildingOrNot
 downloadJtregAndSetupEnvironment
 applyingJCovSettingsToMakefileForTests
 settingUpEnvironmentVariablesForJTREG
