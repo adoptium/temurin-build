@@ -32,16 +32,19 @@ downloadJtregAndSetupEnvironment()
 {
   # Download then add jtreg to our path
   echo "Downloading Jtreg binary"
-  wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
-  
-  if [ $? -ne 0 ]; then
-    echo "Failed to retrieve the jtreg binary, exiting"
-    exit
+  if [[ ! -d $WORKING_DIR/jtreg ]]; then
+    wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
+
+    if [ $? -ne 0 ]; then
+      echo "Failed to retrieve the jtreg binary, exiting"
+      exit
+    fi
+
+    tar xvf *.tar.gz
+
+    mv jtreg* $WORKING_DIR
   fi
 
-  tar xvf *.tar.gz
-
-  mv jtreg* $WORKING_DIR
   ls $WORKING_DIR/jtreg*
 
   export PATH=$WORKING_DIR/jtreg/bin:$PATH
@@ -61,6 +64,25 @@ applyingJConvSettingsToMakefileForTests()
   sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/' Makefile
 
   cd $WORKING_DIR/$OPENJDK_REPO_NAME/
+}
+
+settingUpEnvironmentVariablesForJTREG()
+{
+  echo "Setting up environment variables for JTREG to run"
+
+  # This is the JDK we'll test
+  export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
+  echo $PRODUCT_HOME
+  ls $PRODUCT_HOME
+
+  export JTREG_DIR=$WORKING_DIR/jtreg
+  export JTREG_INSTALL=${JTREG_DIR}
+  export JT_HOME=${JTREG_INSTALL}
+  export JTREG_HOME=${JTREG_INSTALL}
+  export JPRT_JTREG_HOME=${JT_HOME}
+  export JPRT_JAVA_HOME=${PRODUCT_HOME}
+  export JTREG_TIMEOUT_FACTOR=5
+  export CONCURRENCY=8
 }
 
 runJtregViaMakeCommand()
@@ -112,21 +134,6 @@ packageReports()
 checkIfWeAreRunningInTheDockerEnvironment
 downloadJtregAndSetupEnvironment
 applyingJConvSettingsToMakefileForTests
-
-echo "Setting up environment variables for JTREG to run"
-# This is the JDK we'll test
-export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
-echo $PRODUCT_HOME
-ls $PRODUCT_HOME
-
-export JTREG_DIR=$WORKING_DIR/jtreg
-export JTREG_INSTALL=${JTREG_DIR}
-export JT_HOME=${JTREG_INSTALL}
-export JTREG_HOME=${JTREG_INSTALL}
-export JPRT_JTREG_HOME=${JT_HOME}
-export JPRT_JAVA_HOME=${PRODUCT_HOME}
-export JTREG_TIMEOUT_FACTOR=5
-export CONCURRENCY=8
-
+settingUpEnvironmentVariablesForJTREG
 runJtregViaMakeCommand
 packageReports
