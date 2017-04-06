@@ -68,8 +68,7 @@ export JTREG_HOME=${JTREG_INSTALL}
 export JPRT_JTREG_HOME=${JT_HOME}
 export JPRT_JAVA_HOME=${PRODUCT_HOME}
 export JTREG_TIMEOUT_FACTOR=5
-export CONCURRENCY=2
-export EXTRA_JTREG_OPTIONS='-xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*'
+export EXTRA_JTREG_OPTIONS='-concurrency:2 -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*'
 
 
 make test jobs=10 LOG=debug
