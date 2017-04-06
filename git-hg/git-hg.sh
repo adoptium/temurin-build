@@ -57,7 +57,7 @@ if [ `git diff releases/master | wc -l` -gt 0 ]; then
 	git cherry-pick --strategy=recursive -X theirs staging
 	git push --set-upstream releases master
 	# update dev branch
-	git checkout releases/dev
+	git reset --hard releases/dev
 	git cherry-pick --strategy=recursive -X theirs staging
 	git push --set-upstream releases dev
 else
