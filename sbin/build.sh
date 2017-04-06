@@ -99,7 +99,7 @@ else
   fi
    
   # We get the files we need at $WORKING_DIR/installedfreetype
-  ./configure --prefix=$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype $PARAMS && make all && make install
+  bash ./configure --prefix=$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype $PARAMS && make all && make install
 
   if [ $? -ne 0 ]; then
     echo "${error}Failed to configure and build libfreetype, exiting"
