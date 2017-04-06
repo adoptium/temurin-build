@@ -44,7 +44,6 @@ USE_DOCKER=false
 WORKING_DIR=""
 USE_SSH=false
 TARGET_DIR=""
-REPOSITORY=""
 BRANCH=""
 KEEP=false
 JTREG=false
