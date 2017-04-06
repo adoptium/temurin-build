@@ -18,16 +18,19 @@
 
 WORKING_DIR=$1
 TARGET_DIR=$2
+OPENJDK_REPO_NAME=$3
+BUILD_FULL_NAME=$4
+JVM_VARIANT=${5:=normal}
 
 # Escape code
-esc=`echo -en "\033"`
+esc=$(echo -en "\033")
 
 # Set colors
 error="${esc}[0;31m"
 good="${esc}[0;32m"
 info="${esc}[0;33m"
 git="${esc}[0;34m"
-normal=`echo -en "${esc}[m\017"`
+normal=$(echo -en "${esc}[m\017")
 
 
 # If on docker
@@ -78,24 +81,25 @@ fi
 
 echo "Checking for freetype"
 
-FOUND_FREETYPE=$(find "$WORKING_DIR/installedfreetype/lib" -name "libfreetype.so.6.5.0")
+FOUND_FREETYPE=$(find "$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype/lib" -name "libfreetype.so.6.5.0")
 
 if [[ ! -z $FOUND_FREETYPE ]] ; then
   echo "Skipping FreeType download"
 else
   # Then FreeType for fonts: make it and use
-  wget -nc http://download.savannah.gnu.org/releases/freetype/freetype-2.4.0.tar.gz
+  wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-2.4.0.tar.gz
+   
   tar xvf freetype-2.4.0.tar.gz
   rm freetype-2.4.0.tar.gz
 
   cd freetype-2.4.0
 
-  if [ `uname -m` = "ppc64le" ]; then
-    PARAMS="--build=`rpm --eval %{_host}`"
+  if [ $(uname -m) = "ppc64le" ]; then
+    PARAMS="--build=$(rpm --eval %{_host})"
   fi
    
   # We get the files we need at $WORKING_DIR/installedfreetype
-  ./configure --prefix=$WORKING_DIR/installedfreetype $PARAMS && make all && make install
+  ./configure --prefix=$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype $PARAMS && make all && make install
 
   if [ $? -ne 0 ]; then
     echo "${error}Failed to configure and build libfreetype, exiting"
@@ -139,17 +143,14 @@ echo "Boot dir set to $JDK_BOOT_DIR"
 
 CONFIGURE_CMD=" --with-boot-jdk=$JDK_BOOT_DIR"
 
-if [ ! -z `which ccache` ]; then
+if [ ! -z $(which ccache) ]; then
   CONFIGURE_CMD="$CONFIGURE_CMD --enable-ccache"
 fi
 
-if [ `uname -m` == "s390x" ]; then
-  CONFIGURE_CMD="$CONFIGURE_CMD --with-jvm-variants=zero"
-fi
-
+CONFIGURE_CMD="$CONFIGURE_CMD --with-jvm-variants=$JVM_VARIANT"
 CONFIGURE_CMD="$CONFIGURE_CMD --with-cacerts-file=$WORKING_DIR/cacerts_area/security/cacerts"
 CONFIGURE_CMD="$CONFIGURE_CMD --with-alsa=$WORKING_DIR/alsa-lib-1.0.27.2"
-CONFIGURE_CMD="$CONFIGURE_CMD --with-freetype=$WORKING_DIR/installedfreetype"
+CONFIGURE_CMD="$CONFIGURE_CMD --with-freetype=$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype"
 
 # These will have been installed by the package manager (see our Dockerfile)
 CONFIGURE_CMD="$CONFIGURE_CMD --with-x=/usr/include/X11"
@@ -158,13 +159,13 @@ CONFIGURE_CMD="$CONFIGURE_CMD --with-x=/usr/include/X11"
 # other options include fastdebug and slowdebug
 CONFIGURE_CMD="$CONFIGURE_CMD --with-debug-level=release"
 
-#CONFIGURE_CMD="$CONFIGURE_CMD --with-adds-and-overrides=$WORKING_DIR/openjdk/addsandoverrides"
+#CONFIGURE_CMD="$CONFIGURE_CMD --with-adds-and-overrides=$WORKING_DIR/$OPENJDK_REPO_NAME/addsandoverrides"
 
 ###########################################
 
 # Make sure we're in the source directory for OpenJDK now
 
-cd $WORKING_DIR/openjdk
+cd $WORKING_DIR/$OPENJDK_REPO_NAME
 
 echo "Should have the source, I'm at $PWD"
 
@@ -190,17 +191,17 @@ fi
 
 ###########################################
 
-if [ `uname -m` == "s390x" ]; then
-  makeCMD='make CONF=linux-s390x-normal-zero-release DEBUG_BINARIES=true images'
+if [ $(uname -m) == "s390x" ]; then
+  makeCMD="make CONF=$BUILD_FULL_NAME DEBUG_BINARIES=true images"
 else
-  makeCMD='make images'
+  makeCMD="make images"
 fi
 
 echo "Building the JDK: calling $makeCMD"
 $makeCMD
 
 if [ $? -ne 0 ]; then
-  echo "${fail}Failed to make the JDK, exiting"
+   echo "${fail}Failed to make the JDK, exiting"
   exit;
 else
   echo "${good}Built the JDK!"
