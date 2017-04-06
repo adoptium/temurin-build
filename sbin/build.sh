@@ -192,9 +192,9 @@ fi
 ###########################################
 
 if [ $(uname -m) == "s390x" ]; then
-  makeCMD='make CONF=$BUILD_FULL_NAME DEBUG_BINARIES=true images'
+  makeCMD="make CONF=$BUILD_FULL_NAME DEBUG_BINARIES=true images"
 else
-  makeCMD='make images'
+  makeCMD="make images"
 fi
 
 echo "Building the JDK: calling $makeCMD"
