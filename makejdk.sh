@@ -41,6 +41,8 @@ BUILD_TYPE=normal
 
 BUILD_FULL_NAME=$OS_KERNAL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
 
+USE_DOCKER=false
+
 initialiseEscapeCodes() 
 {
   # Escape code
@@ -184,7 +186,14 @@ cloneOpenJDKGitRepo()
   echo $normal
 }
 
-buildOpenJDKViaDocker()
+testOpenJDKViaDocker()
+{
+  if [[ ! -z $JTREG ]]; then
+    docker run --privileged -t -v $WORKING_DIR/$OPENJDK_REPO_NAME:/openjdk/jdk8u/openjdk --entrypoint jtreg.sh $CONTAINER
+  fi  
+}
+
+buildAndTestOpenJDKViaDocker()
 {
   PS_DOCKER=$(ps -ef | grep "docker" | wc -l)
 
@@ -220,9 +229,7 @@ buildOpenJDKViaDocker()
 
   docker run --privileged -t -v $WORKING_DIR/$OPENJDK_REPO_NAME:/openjdk/jdk8u/openjdk --entrypoint build.sh $CONTAINER
 
-  if [[ ! -z $JTREG ]]; then
-    docker run --privileged -t -v $WORKING_DIR/$OPENJDK_REPO_NAME:/openjdk/jdk8u/openjdk --entrypoint jtreg.sh $CONTAINER
-  fi
+  testOpenJDKViaDocker
 
   CONTAINER_ID=$(docker ps -a | awk '{ print $1,$2 }' | grep openjdk_container | awk '{print $1 }'| head -1)
 
@@ -243,22 +250,27 @@ buildOpenJDKViaDocker()
   fi
 }
 
-buildOpenJDKInNativeEnvironment()
+testOpenJDKInNativeEnvironmentIfExpected()
+{
+  if [[ ! -z $JTREG ]]; then
+    $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME
+  fi
+}
+
+buildAndTestOpenJDKInNativeEnvironment()
 {
   echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $BUILD_FULL_NAME $JVM_VARIANT"
   $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JVM_VARIANT
 
-  if [[ ! -z $JTREG ]]; then
-    $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME
-  fi  
+  testOpenJDKInNativeEnvironmentIfExpected
 }
 
-buildOpenJDK()
+buildAndTestOpenJDK()
 {
   if [ "${USE_DOCKER}" ] ; then
-    buildOpenJDKViaDocker
+    buildAndTestOpenJDKViaDocker
   else  
-    buildOpenJDKInNativeEnvironment
+    buildAndTestOpenJDKInNativeEnvironment
   fi
 }
 
@@ -273,4 +285,4 @@ setDefaultIfBranchIsNotProvided
 setWorkingDirectoryIfProvided
 setTargetDirectoryIfProvided
 cloneOpenJDKGitRepo
-buildOpenJDK
+buildAndTestOpenJDK
