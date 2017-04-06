@@ -14,6 +14,8 @@
 #
 
 WORKING_DIR=$1
+OPENJDK_REPO_NAME=$2
+BUILD_FULL_NAME=$3
 
 if [[ -f /.dockerenv ]] ; then
   echo "Detected we're in docker"
@@ -25,16 +27,16 @@ fi
 
 echo "Running jtreg"
 
-cd $WORKING_DIR/jdk/test
+cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
 
 # This is the JDK we'll test
-export PRODUCT_HOME=$WORKING_DIR/build/linux-x86_64-normal-server-release/images/j2sdk-image
+export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
 
 echo $PRODUCT_HOME
 ls $PRODUCT_HOME
 
 # Download then add jtreg to our path
-wget https://adopt-openjdk.ci.cloudbees.com/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
+wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
 
 if [ $? -ne 0 ]; then
   echo "Failed to retrieve the jtreg binary, exiting"
@@ -53,18 +55,63 @@ export JT_HOME=$WORKING_DIR/jtreg
 # Clean up after ourselves by removing jtreg tgz
 rm -f jtreg*.tar.gz
 
-echo "Running jtreg with: jtreg -conc:2 -a -verbose:fail -jdk:$PRODUCT_HOME ./ || true"
+echo "Running jtreg via make command"
 
-jtreg -agentvm -conc:2 -a -verbose:fail -jdk:$PRODUCT_HOME ./ || true
+echo "Apply JCov settings to Makefile..." 
+cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
+pwd
 
-if [ $? -ne 0 ]; then
-  echo "Failed to run jtreg, exiting"
-  exit
-fi
+sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/' Makefile
 
-echo "Archiving your jtreg results"
+# This is the JDK we'll test
+export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
+cd $WORKING_DIR/$OPENJDK_REPO_NAME
 
-zip -r jtreport.zip ./JTreport
-zip -r jtwork.zip ./JTwork
+export JTREG_DIR=$WORKING_DIR/jtreg
+export JTREG_INSTALL=${JTREG_DIR}
+export JT_HOME=${JTREG_INSTALL}
+export JTREG_HOME=${JTREG_INSTALL}
+export JPRT_JTREG_HOME=${JT_HOME}
+export JPRT_JAVA_HOME=${PRODUCT_HOME}
+export JTREG_TIMEOUT_FACTOR=5
+export CONCURRENCY=8
 
-mv *.zip $WORKING_DIR/
+make test jobs=10 LOG=debug
+
+packageTestResultsWithJCovReports()
+{
+  echo "Package test output into archives..." 
+  pwd
+
+  cd $WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/
+ 
+  artifact=${JOB_NAME}-testoutput-with-jcov-reports
+  echo "Tarring and zipping the 'testoutput' folder into artefact: $artifact.tar.gz" 
+  tar -cvzf $WORKING_DIR/$artifact.tar.gz   testoutput/
+
+  if [ -d testoutput  ]; then  
+     rm -fr $WORKING_DIR/$OPENJDK_REPO_NAME/testoutput
+  fi
+  cp -fr testoutput/ $WORKING_DIR/testoutput/
+  
+  cd $WORKING_DIR
+}
+
+packageOnlyJCovReports()
+{
+  echo "Package jcov reports into archives..." 
+  pwd
+
+  cd $WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/
+ 
+  artifact=${JOB_NAME}-jcov-results-only
+  echo "Tarring and zipping the 'testoutput/../jcov' folder into artefact: $artifact.tar.gz" 
+  tar -cvzf $WORKING_DIR/$artifact.tar.gz   testoutput/jdk_core/JTreport/jcov/
+
+  cd $WORKING_DIR
+}
+
+
+echo "Archiving your jtreg results (includes jcov reports)"
+packageTestResultsWithJCovReports
+packageOnlyJCovReports

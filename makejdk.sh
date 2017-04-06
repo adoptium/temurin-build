@@ -25,6 +25,17 @@
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
+OPENJDK_REPO_NAME=openjdk
+OS_KERNAL_NAME=$(echo `uname` | awk '{print tolower($0)}')
+OS_MACHINE=`uname -m`
+BUILD_TYPE=normal
+JVM_VARIANT=server
+
+if [[ $OS_MACHINE == "s390x" ]] ; then
+ JVM_VARIANT=zero
+fi 
+
+BUILD_FULL_NAME=$OS_KERNAL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
 
 # Escape code
 esc=`echo -en "\033"`
@@ -119,9 +130,9 @@ else
 fi
 
 echo $git
-if [ -d "$WORKING_DIR"/openjdk/.git ] && [ $REPOSITORY == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
+if [ -d "$WORKING_DIR"/$OPENJDK_REPO_NAME/.git ] && [ $REPOSITORY == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
   # It does exist and it's a repo other than the AdoptOpenJDK one
-  cd $WORKING_DIR/openjdk
+  cd $WORKING_DIR/$OPENJDK_REPO_NAME
   echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
   sleep 10
   echo "${git}Pulling latest changes from git repo"
@@ -129,15 +140,15 @@ if [ -d "$WORKING_DIR"/openjdk/.git ] && [ $REPOSITORY == "AdoptOpenJDK/openjdk-
   git reset --hard origin/$BRANCH
   echo $normal
   cd $WORKING_DIR
-elif [ ! -d "${WORKING_DIR}"/openjdk/.git ] ; then
+elif [ ! -d "${WORKING_DIR}"/$OPENJDK_REPO_NAME/.git ] ; then
   # If it doesn't exixt, clone it
   echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
   if [[ "${USE_SSH}" == true ]] ; then
-    echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/openjdk"
-    git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/openjdk
+    echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
+    git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME
   else
-    echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/openjdk"
-    git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/openjdk
+    echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
+    git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME
   fi
 fi
 echo $normal
@@ -175,10 +186,10 @@ if [ "${USE_DOCKER}" ] ; then
      echo $normal
   fi
 
-  docker run --privileged -t -v $WORKING_DIR/openjdk:/openjdk/jdk8u/openjdk --entrypoint build.sh $CONTAINER
+  docker run --privileged -t -v $WORKING_DIR/$OPENJDK_REPO_NAME:/openjdk/jdk8u/openjdk --entrypoint build.sh $CONTAINER
 
   if [[ ! -z $JTREG ]]; then
-    docker run --privileged -t -v $WORKING_DIR/openjdk:/openjdk/jdk8u/openjdk --entrypoint jtreg.sh $CONTAINER
+    docker run --privileged -t -v $WORKING_DIR/$OPENJDK_REPO_NAME:/openjdk/jdk8u/openjdk --entrypoint jtreg.sh $CONTAINER
   fi
 
   CONTAINER_ID=$(docker ps -a | awk '{ print $1,$2 }' | grep openjdk_container | awk '{print $1 }'| head -1)
@@ -199,7 +210,11 @@ if [ "${USE_DOCKER}" ] ; then
     docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm {}
   fi
 
-else
-  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR"
-  ./sbin/build.sh $WORKING_DIR $TARGET_DIR
+else  
+  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $BUILD_FULL_NAME"
+  $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JVM_VARIANT
+
+  if [[ ! -z $JTREG ]]; then
+    $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME
+  fi
 fi

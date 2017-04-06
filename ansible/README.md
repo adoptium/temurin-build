@@ -35,6 +35,6 @@ our playbook will run on the hosts defined in the Ansible install directory's `h
 we will have the following text in our `/etc/ansible/hosts` file:
 ```
 [local]
-127.0.01
+127.0.0.1
 ```
 Running `ansible --version` will display your Ansible configuration folder that contains the `hosts` file you can modify
