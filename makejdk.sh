@@ -42,6 +42,13 @@ BUILD_TYPE=normal
 BUILD_FULL_NAME=$OS_KERNAL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
 
 USE_DOCKER=false
+WORKING_DIR=""
+TARGET_DIR=""
+USE_SSH=false
+REPOSITORY=""
+BRANCH=""
+KEEP=false
+JTREG=false
 
 initialiseEscapeCodes() 
 {
