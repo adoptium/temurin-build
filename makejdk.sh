@@ -168,7 +168,7 @@ setTargetDirectoryIfProvided()
 cloneOpenJDKGitRepo()
 {
   echo $git
-  if [ -d "$WORKING_DIR/$OPENJDK_REPO_NAME/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd $WORKING_DIR/$OPENJDK_REPO_NAME
     echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
@@ -178,14 +178,14 @@ cloneOpenJDKGitRepo()
     git reset --hard origin/$BRANCH
     echo $normal
     cd $WORKING_DIR
-  elif [ ! -d "${WORKING_DIR}"/$OPENJDK_REPO_NAME/.git ] ; then
+  elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
     # If it doesn't exixt, clone it
     echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
     if [[ "${USE_SSH}" == "true" ]] ; then
-      echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
+      echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
       git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME
     else
-      echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
+      echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
       git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME
     fi
   fi
