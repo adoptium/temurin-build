@@ -66,8 +66,6 @@ checkIfDockerIsUsedForBuildingOrNot()
   cd $WORKING_DIR
 }
 
-############################################
-
 checkingAndDownloadingAsla()
 {
   # ALSA first for sound
@@ -113,13 +111,11 @@ checkingAndDownloadingFreetype()
       echo "${error}Failed to configure and build libfreetype, exiting"
       exit;
     else
-      echo "${good}Built the JDK!"
+      echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
     fi
     echo $normal
   fi  
 }
-
-###########################################
 
 checkingAndDownloadCaCerts() 
 {
@@ -137,12 +133,14 @@ checkingAndDownloadCaCerts()
   if [ $? -ne 0 ]; then
     echo "Failed to retrieve the cacerts file, exiting..."
     exit;
+  else
+    echo "${good}Successfully retrieved the cacerts file!"
   fi
 }
 
 downloadingRequiredDependencies() 
 {
-  echo "Downloading required dependencies..."
+  echo "Downloading required dependencies...: Asla, Freetype, and CaCerts."
   checkingAndDownloadingAsla
   checkingAndDownloadingFreetype
   checkingAndDownloadCaCerts
