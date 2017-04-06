@@ -24,8 +24,6 @@
 
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
-set -x
-
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
 
