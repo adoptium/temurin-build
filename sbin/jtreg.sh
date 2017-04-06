@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+  
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
@@ -31,25 +31,31 @@ checkIfWeAreRunningInTheDockerEnvironment()
 downloadJtregAndSetupEnvironment() 
 {
   # Download then add jtreg to our path
-  echo "Downloading Jtreg binary"
-  wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
-  
-  if [ $? -ne 0 ]; then
-    echo "Failed to retrieve the jtreg binary, exiting"
-    exit
+
+  JTREG_BINARY_FILE=jtreg-4.2.0-tip.tar.gz
+  JTREG_TARGET_FOLDER=jtreg
+
+  if [[ ! -d $WORKING_DIR/jtreg ]]; then
+   echo "Downloading Jtreg binary"
+   wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/$JTREG_BINARY_FILE
+
+   if [ $? -ne 0 ]; then
+     echo "Failed to retrieve the jtreg binary, exiting"
+     exit
+   fi
+
+   tar xvf $JTREG_BINARY_FILE
   fi
 
-  tar xvf *.tar.gz
+  echo "List contents of jtreg"
+  ls $WORKING_DIR/$JTREG_TARGET_FOLDER/*
 
-  mv jtreg* $WORKING_DIR
-  ls $WORKING_DIR/jtreg*
+  export PATH=$WORKING_DIR/$JTREG_TARGET_FOLDER/bin:$PATH
 
-  export PATH=$WORKING_DIR/jtreg/bin:$PATH
-
-  export JT_HOME=$WORKING_DIR/jtreg
+  export JT_HOME=$WORKING_DIR/$JTREG_TARGET_FOLDER
 
   # Clean up after ourselves by removing jtreg tgz
-  rm -f jtreg*.tar.gz
+  rm -f $JTREG_BINARY_FILE
 }
 
 applyingJConvSettingsToMakefileForTests()
@@ -63,9 +69,10 @@ applyingJConvSettingsToMakefileForTests()
   cd $WORKING_DIR/$OPENJDK_REPO_NAME/
 }
 
-setEnvironmentVariablesForJtreg() 
+settingUpEnvironmentVariablesForJTREG()
 {
   echo "Setting up environment variables for JTREG to run"
+
   # This is the JDK we'll test
   export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
   echo $PRODUCT_HOME
@@ -130,6 +137,6 @@ packageReports()
 checkIfWeAreRunningInTheDockerEnvironment
 downloadJtregAndSetupEnvironment
 applyingJConvSettingsToMakefileForTests
-setEnvironmentVariablesForJtreg
+settingUpEnvironmentVariablesForJTREG
 runJtregViaMakeCommand
 packageReports
