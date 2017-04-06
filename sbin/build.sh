@@ -23,14 +23,14 @@ BUILD_FULL_NAME=$4
 JVM_VARIANT=${5:=normal}
 
 # Escape code
-esc=`echo -en "\033"`
+esc=$(echo -en "\033")
 
 # Set colors
 error="${esc}[0;31m"
 good="${esc}[0;32m"
 info="${esc}[0;33m"
 git="${esc}[0;34m"
-normal=`echo -en "${esc}[m\017"`
+normal=$(echo -en "${esc}[m\017")
 
 
 # If on docker
@@ -94,8 +94,8 @@ else
 
   cd freetype-2.4.0
 
-  if [ `uname -m` = "ppc64le" ]; then
-    PARAMS="--build=`rpm --eval %{_host}`"
+  if [ $(uname -m) = "ppc64le" ]; then
+    PARAMS="--build=$(rpm --eval %{_host})"
   fi
    
   # We get the files we need at $WORKING_DIR/installedfreetype
@@ -143,7 +143,7 @@ echo "Boot dir set to $JDK_BOOT_DIR"
 
 CONFIGURE_CMD=" --with-boot-jdk=$JDK_BOOT_DIR"
 
-if [ ! -z `which ccache` ]; then
+if [ ! -z $(which ccache) ]; then
   CONFIGURE_CMD="$CONFIGURE_CMD --enable-ccache"
 fi
 
@@ -191,7 +191,7 @@ fi
 
 ###########################################
 
-if [ `uname -m` == "s390x" ]; then
+if [ $(uname -m) == "s390x" ]; then
   makeCMD="make CONF=$BUILD_FULL_NAME DEBUG_BINARIES=true images"
 else
   makeCMD="make images"

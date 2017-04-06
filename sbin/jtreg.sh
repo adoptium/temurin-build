@@ -12,71 +12,87 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+  
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
 
-if [[ -f /.dockerenv ]] ; then
-  echo "Detected we're in docker"
-  WORKING_DIR=/openjdk/jdk8u/openjdk
-  # Keep as a variable for potential use later
-  # if we wish to copy the results to the host
-  IN_DOCKER=true
-fi
+checkIfWeAreRunningInTheDockerEnvironment()
+{
+  if [[ -f /.dockerenv ]] ; then
+    echo "Detected we're in docker"
+    WORKING_DIR=/openjdk/jdk8u/openjdk
+    # Keep as a variable for potential use later
+    # if we wish to copy the results to the host
+    IN_DOCKER=true
+  fi
+}
 
-echo "Running jtreg"
+downloadJtregAndSetupEnvironment() 
+{
+  # Download then add jtreg to our path
 
-cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
+  JTREG_BINARY_FILE=jtreg-4.2.0-tip.tar.gz
+  JTREG_TARGET_FOLDER=jtreg
 
-# This is the JDK we'll test
-export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
+  if [[ ! -d $WORKING_DIR/jtreg ]]; then
+   echo "Downloading Jtreg binary"
+   wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/$JTREG_BINARY_FILE
 
-echo $PRODUCT_HOME
-ls $PRODUCT_HOME
+   if [ $? -ne 0 ]; then
+     echo "Failed to retrieve the jtreg binary, exiting"
+     exit
+   fi
 
-# Download then add jtreg to our path
-wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/jtreg-4.2.0-tip.tar.gz
+   tar xvf $JTREG_BINARY_FILE
+  fi
 
-if [ $? -ne 0 ]; then
-  echo "Failed to retrieve the jtreg binary, exiting"
-  exit
-fi
+  echo "List contents of jtreg"
+  ls $WORKING_DIR/$JTREG_TARGET_FOLDER/*
 
-tar xvf *.tar.gz
+  export PATH=$WORKING_DIR/$JTREG_TARGET_FOLDER/bin:$PATH
 
-mv jtreg* $WORKING_DIR
-ls $WORKING_DIR/jtreg*
+  export JT_HOME=$WORKING_DIR/$JTREG_TARGET_FOLDER
 
-export PATH=$WORKING_DIR/jtreg/bin:$PATH
+  # Clean up after ourselves by removing jtreg tgz
+  rm -f $JTREG_BINARY_FILE
+}
 
-export JT_HOME=$WORKING_DIR/jtreg
+applyingJConvSettingsToMakefileForTests()
+{
+  echo "Apply JCov settings to Makefile..." 
+  cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
+  pwd
 
-# Clean up after ourselves by removing jtreg tgz
-rm -f jtreg*.tar.gz
+  sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/' Makefile
 
-echo "Running jtreg via make command"
+  cd $WORKING_DIR/$OPENJDK_REPO_NAME/
+}
 
-echo "Apply JCov settings to Makefile..." 
-cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
-pwd
+settingUpEnvironmentVariablesForJTREG()
+{
+  echo "Setting up environment variables for JTREG to run"
 
-sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/' Makefile
+  # This is the JDK we'll test
+  export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
+  echo $PRODUCT_HOME
+  ls $PRODUCT_HOME
 
-# This is the JDK we'll test
-export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
-cd $WORKING_DIR/$OPENJDK_REPO_NAME
+  export JTREG_DIR=$WORKING_DIR/jtreg
+  export JTREG_INSTALL=${JTREG_DIR}
+  export JT_HOME=${JTREG_INSTALL}
+  export JTREG_HOME=${JTREG_INSTALL}
+  export JPRT_JTREG_HOME=${JT_HOME}
+  export JPRT_JAVA_HOME=${PRODUCT_HOME}
+  export JTREG_TIMEOUT_FACTOR=5
+  export CONCURRENCY=8
+}
 
-export JTREG_DIR=$WORKING_DIR/jtreg
-export JTREG_INSTALL=${JTREG_DIR}
-export JT_HOME=${JTREG_INSTALL}
-export JTREG_HOME=${JTREG_INSTALL}
-export JPRT_JTREG_HOME=${JT_HOME}
-export JPRT_JAVA_HOME=${PRODUCT_HOME}
-export JTREG_TIMEOUT_FACTOR=5
-export CONCURRENCY=8
-
-make test jobs=10 LOG=debug
+runJtregViaMakeCommand()
+{
+  echo "Running jtreg via make command (debug logs enabled)"
+  make test jobs=10 LOG=debug  
+}
 
 packageTestResultsWithJCovReports()
 {
@@ -111,7 +127,16 @@ packageOnlyJCovReports()
   cd $WORKING_DIR
 }
 
+packageReports()
+{
+  echo "Archiving your jtreg results (includes jcov reports)"
+  packageTestResultsWithJCovReports
+  packageOnlyJCovReports  
+}
 
-echo "Archiving your jtreg results (includes jcov reports)"
-packageTestResultsWithJCovReports
-packageOnlyJCovReports
+checkIfWeAreRunningInTheDockerEnvironment
+downloadJtregAndSetupEnvironment
+applyingJConvSettingsToMakefileForTests
+settingUpEnvironmentVariablesForJTREG
+runJtregViaMakeCommand
+packageReports
