@@ -24,6 +24,7 @@
 
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
+set -x
 
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
@@ -33,7 +34,7 @@ OS_KERNAL_NAME=$(echo $(uname) | awk '{print tolower($0)}')
 OS_MACHINE=$(uname -m)
 
 JVM_VARIANT=server
-if [[ $OS_MACHINE == "s390x" ]] || [[ $OS_MACHINE == "armv7l" ]] ; then
+if [[ "$OS_MACHINE" == "s390x" ]] || [[ "$OS_MACHINE" == "armv7l" ]] ; then
  JVM_VARIANT=zero
 fi 
 
@@ -43,8 +44,8 @@ BUILD_FULL_NAME=$OS_KERNAL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
 
 USE_DOCKER=false
 WORKING_DIR=""
-TARGET_DIR=""
 USE_SSH=false
+TARGET_DIR=""
 REPOSITORY=""
 BRANCH=""
 KEEP=false
@@ -125,7 +126,7 @@ checkIfDockerIsUsedForBuildingOrNot()
 checkInCaseOfDockerShouldTheContainerBePreserved()
 {
   echo ${info}
-  if [ "${KEEP}" == true ] ; then
+  if [ "${KEEP}" == "true" ] ; then
     echo "We'll keep the built Docker container if you're using Docker"
   else
     echo "We'll remove the built Docker container if you're using Docker"
@@ -169,7 +170,7 @@ setTargetDirectoryIfProvided()
 cloneOpenJDKGitRepo()
 {
   echo $git
-  if [ -d "$WORKING_DIR"/$OPENJDK_REPO_NAME/.git ] && [ $REPOSITORY == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
+  if [ -d "$WORKING_DIR/$OPENJDK_REPO_NAME/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd $WORKING_DIR/$OPENJDK_REPO_NAME
     echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
@@ -182,7 +183,7 @@ cloneOpenJDKGitRepo()
   elif [ ! -d "${WORKING_DIR}"/$OPENJDK_REPO_NAME/.git ] ; then
     # If it doesn't exixt, clone it
     echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
-    if [[ "${USE_SSH}" == true ]] ; then
+    if [[ "${USE_SSH}" == "true" ]] ; then
       echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
       git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME
     else
@@ -221,7 +222,7 @@ buildAndTestOpenJDKViaDocker()
   cp sbin/jtreg.sh docker/jdk8u/x86_64/ubuntu 2>/dev/null
   # Keep is undefined so we'll kill the docker image
 
-  if [[ $KEEP == true ]] ; then
+  if [[ "$KEEP" == "true" ]] ; then
      if [ $(docker ps -a | grep openjdk_container | wc -l) == 0 ]; then
          echo "${info}No docker container found so creating one${normal}"
          docker build -t $CONTAINER docker/jdk8u/x86_64/ubuntu
@@ -240,12 +241,12 @@ buildAndTestOpenJDKViaDocker()
 
   CONTAINER_ID=$(docker ps -a | awk '{ print $1,$2 }' | grep openjdk_container | awk '{print $1 }'| head -1)
 
-  if [[ ${COPY_TO_HOST} == true ]] ; then
+  if [[ "${COPY_TO_HOST}" == "true" ]] ; then
     echo "Copying to the host with docker cp $id:/openjdk/jdk8u/OpenJDK.tar.gz $TARGET_DIR"
     docker cp $CONTAINER_ID:/openjdk/jdk8u/OpenJDK.tar.gz $TARGET_DIR
   fi
 
-  if [[ ${JTREG} == true ]] ; then
+  if [[ "${JTREG}" == "true" ]] ; then
     echo "Copying jtreg reports from docker"
     docker cp $CONTAINER_ID:/openjdk/jdk8u/jtreport.zip $TARGET_DIR
     docker cp $CONTAINER_ID:/openjdk/jdk8u/jtwork.zip $TARGET_DIR
@@ -266,7 +267,7 @@ testOpenJDKInNativeEnvironmentIfExpected()
 
 buildAndTestOpenJDKInNativeEnvironment()
 {
-  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $BUILD_FULL_NAME $JVM_VARIANT"
+  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JVM_VARIANT"
   $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JVM_VARIANT
 
   testOpenJDKInNativeEnvironmentIfExpected
@@ -274,7 +275,7 @@ buildAndTestOpenJDKInNativeEnvironment()
 
 buildAndTestOpenJDK()
 {
-  if [ "${USE_DOCKER}" ] ; then
+  if [ "${USE_DOCKER}" == "true" ] ; then
     buildAndTestOpenJDKViaDocker
   else  
     buildAndTestOpenJDKInNativeEnvironment
@@ -285,7 +286,7 @@ buildAndTestOpenJDK()
 
 initialiseEscapeCodes
 sourceSignalHandler
-parseCommandLineArgs
+parseCommandLineArgs $@
 checkIfDockerIsUsedForBuildingOrNot
 checkInCaseOfDockerShouldTheContainerBePreserved
 setDefaultIfBranchIsNotProvided
