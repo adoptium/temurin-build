@@ -127,7 +127,7 @@ packageOnlyJCovReports()
  
   artifact=${JOB_NAME}-jcov-results-only
   echo "Tarring and zipping the 'testoutput/../jcov' folder into artefact: $artifact.tar.gz" 
-  tar -cvzf $WORKING_DIR/$artifact.tar.gz   testoutput/jdk_core/JTreport/jcov/
+  tar -cvzf $WORKING_DIR/$artifact.tar.gz   testoutput/*/JTreport/jcov/
 
   cd $WORKING_DIR
 }
