@@ -75,6 +75,9 @@ while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
 
     "--jtreg" | "-j" )
     JTREG=true; shift;;
+    
+    "--jtreg_subsets" )
+    JTREG=true; JTREG_TEST_SUBSETS="$1"; shift;;
 
     *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk.1; exit 1;;
    esac
@@ -215,6 +218,10 @@ else
   $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JVM_VARIANT
 
   if [[ ! -z $JTREG ]]; then
-    $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME
+    if [[ ! -z $JTREG_TEST_SUBSETS ]]; then
+      $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JTREG_TEST_SUBSETS
+    else
+      $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME
+    fi
   fi
 fi
