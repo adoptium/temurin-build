@@ -1,0 +1,30 @@
+---
+
+# Usage: ansible-playbook -s --ask-sudo-pass rhel_6_s390x.yml
+
+- hosts: 148.100.110.55
+
+  remote_user: root
+
+  tasks:
+
+  - name: Install tools
+    yum: name={{item}} state=installed
+    with_items:
+      - make
+      - gcc
+      - gcc-c++
+      - libXtst-devel
+      - libXt-devel
+      - libXrender-devel
+      - libXext-devel
+      - libXrender-devel
+      - libXtst-devel
+      - libXt-devel
+      - cups-devel
+      - freetype-devel
+      - alsa-lib-devel
+      - unzip
+      - zip
+      - wget
+      - git
