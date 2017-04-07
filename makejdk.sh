@@ -77,7 +77,7 @@ while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
     JTREG=true; shift;;
     
     "--jtreg_subsets" )
-    JTREG=true; JTREG_TEST_SUBSETS="$1" shift;;
+    JTREG=true; JTREG_TEST_SUBSETS="$1"; shift;;
 
     *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk.1; exit 1;;
    esac
