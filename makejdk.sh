@@ -48,7 +48,7 @@ BRANCH=""
 KEEP=false
 JTREG=false
 
-initialiseEscapeCodes() 
+initialiseEscapeCodes()
 {
   # Escape code
   esc=$(echo -en "\033")
@@ -95,6 +95,9 @@ parseCommandLineArgs()
       "--jtreg" | "-j" )
       JTREG=true; shift;;
 
+    "--jtreg_subsets" )
+    JTREG=true; JTREG_TEST_SUBSETS="$1"; shift;;
+
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk.1; exit 1;;
      esac
   done
@@ -128,7 +131,7 @@ checkInCaseOfDockerShouldTheContainerBePreserved()
   else
     echo "We'll remove the built Docker container if you're using Docker"
   fi
-  echo $normal  
+  echo $normal
 }
 
 setDefaultIfBranchIsNotProvided()
@@ -195,7 +198,7 @@ testOpenJDKViaDocker()
 {
   if [[ ! -z $JTREG ]]; then
     docker run --privileged -t -v $WORKING_DIR/$OPENJDK_REPO_NAME:/openjdk/jdk8u/openjdk --entrypoint jtreg.sh $CONTAINER
-  fi  
+  fi
 }
 
 buildAndTestOpenJDKViaDocker()
@@ -258,7 +261,11 @@ buildAndTestOpenJDKViaDocker()
 testOpenJDKInNativeEnvironmentIfExpected()
 {
   if [[ ! -z $JTREG ]]; then
-    $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME
+    if [[ ! -z $JTREG_TEST_SUBSETS ]]; then
+      $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JTREG_TEST_SUBSETS
+    else
+      $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME
+    fi
   fi
 }
 
@@ -274,7 +281,7 @@ buildAndTestOpenJDK()
 {
   if [ "${USE_DOCKER}" == "true" ] ; then
     buildAndTestOpenJDKViaDocker
-  else  
+  else
     buildAndTestOpenJDKInNativeEnvironment
   fi
 }
