@@ -59,7 +59,7 @@ downloadJtregAndSetupEnvironment()
   rm -f $JTREG_BINARY_FILE
 }
 
-applyingJConvSettingsToMakefileForTests()
+applyingJCovSettingsToMakefileForTests()
 {
   echo "Apply JCov settings to Makefile..." 
   cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
@@ -141,7 +141,7 @@ packageReports()
 
 checkIfWeAreRunningInTheDockerEnvironment
 downloadJtregAndSetupEnvironment
-applyingJConvSettingsToMakefileForTests
+applyingJCovSettingsToMakefileForTests
 settingUpEnvironmentVariablesForJTREG
 runJtregViaMakeCommand
 packageReports
