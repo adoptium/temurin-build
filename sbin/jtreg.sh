@@ -16,6 +16,7 @@
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
+JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
 
 checkIfWeAreRunningInTheDockerEnvironment()
 {
@@ -91,7 +92,11 @@ settingUpEnvironmentVariablesForJTREG()
 runJtregViaMakeCommand()
 {
   echo "Running jtreg via make command (debug logs enabled)"
-  make test jobs=10 LOG=debug  
+  if [ -z $JTREG_TEST_SUBSETS }; then
+    make test jobs=10 LOG=debug
+  else
+    make test jobs=10 LOG=debug TEST="$JTREG_TEST_SUBSETS"
+  fi 
 }
 
 packageTestResultsWithJCovReports()
