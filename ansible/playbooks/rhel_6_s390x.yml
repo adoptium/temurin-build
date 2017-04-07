@@ -1,0 +1,47 @@
+---
+
+# Usage: ansible-playbook -s --ask-sudo-pass rhel_6_s390x.yml
+
+- hosts: 148.100.110.55
+  remote_user: root
+  sudo: yes
+  tasks:
+    - name: Install tools
+      yum: name={{item}} state=installed
+      with_items:
+        - make
+        - gcc
+        - gcc-c++
+        - libXtst-devel
+        - libXt-devel
+        - libXrender-devel
+        - libXext-devel
+        - libXrender-devel
+        - libXtst-devel
+        - libXt-devel
+        - cups-devel
+        - freetype-devel
+        - alsa-lib-devel
+        - unzip
+        - zip
+        - wget
+        - git
+
+    - name: Create jenkins user
+      action: user name=jenkins state=present
+      ignore_errors: yes
+
+    - name: download ccache.tar.gz
+      get_url:
+        url: https://www.samba.org/ftp/ccache/ccache-3.1.9.tar.gz
+        dest: /home/jenkins/ccache.tar.gz
+        mode: 0440
+
+    - name: extract ccache
+      unarchive:
+        remote_src: True
+        src: /home/jenkins/ccache.tar.gz
+        dest: /home/jenkins
+
+    - name: Running ./configure & make for CCACHE
+      shell: cd /home/jenkins/ccache && ./configure && make && make install
