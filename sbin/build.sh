@@ -23,6 +23,11 @@ BUILD_FULL_NAME=$4
 JVM_VARIANT=${5:=normal}
 NOBUILD=$6
 
+if [ "${JVM_VARIANT}" == "--nobuild" ]; then
+  NOBUILD="--nobuild"
+  JVM_VARIANT="normal"
+fi
+
 # Escape code
 esc=$(echo -en "\033")
 
