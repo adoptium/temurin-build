@@ -92,7 +92,7 @@ settingUpEnvironmentVariablesForJTREG()
 runJtregViaMakeCommand()
 {
   echo "Running jtreg via make command (debug logs enabled)"
-  if [ -z $JTREG_TEST_SUBSETS ]; then
+  if [ -z "$JTREG_TEST_SUBSETS" ]; then
     make test jobs=10 LOG=debug
   else
     make test jobs=10 LOG=debug TEST="$JTREG_TEST_SUBSETS"
