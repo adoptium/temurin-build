@@ -16,6 +16,7 @@
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
+JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
 
 checkIfWeAreRunningInTheDockerEnvironment()
 {
@@ -58,7 +59,7 @@ downloadJtregAndSetupEnvironment()
   rm -f $JTREG_BINARY_FILE
 }
 
-applyingJConvSettingsToMakefileForTests()
+applyingJCovSettingsToMakefileForTests()
 {
   echo "Apply JCov settings to Makefile..." 
   cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
@@ -91,7 +92,11 @@ settingUpEnvironmentVariablesForJTREG()
 runJtregViaMakeCommand()
 {
   echo "Running jtreg via make command (debug logs enabled)"
-  make test jobs=10 LOG=debug  
+  if [ -z $JTREG_TEST_SUBSETS }; then
+    make test jobs=10 LOG=debug
+  else
+    make test jobs=10 LOG=debug TEST="$JTREG_TEST_SUBSETS"
+  fi 
 }
 
 packageTestResultsWithJCovReports()
@@ -122,7 +127,7 @@ packageOnlyJCovReports()
  
   artifact=${JOB_NAME}-jcov-results-only
   echo "Tarring and zipping the 'testoutput/../jcov' folder into artefact: $artifact.tar.gz" 
-  tar -cvzf $WORKING_DIR/$artifact.tar.gz   testoutput/jdk_core/JTreport/jcov/
+  tar -cvzf $WORKING_DIR/$artifact.tar.gz   testoutput/*/JTreport/jcov/
 
   cd $WORKING_DIR
 }
@@ -136,7 +141,7 @@ packageReports()
 
 checkIfWeAreRunningInTheDockerEnvironment
 downloadJtregAndSetupEnvironment
-applyingJConvSettingsToMakefileForTests
+applyingJCovSettingsToMakefileForTests
 settingUpEnvironmentVariablesForJTREG
 runJtregViaMakeCommand
 packageReports
