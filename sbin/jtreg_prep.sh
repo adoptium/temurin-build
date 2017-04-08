@@ -43,7 +43,7 @@ while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
     "--working_dir" )
     WORKING_DIR="$1"; shift;;
 
-    *) echo >&2 "Invalid option: ${opt}"; man ./makejdk.1; exit 1;;
+    *) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised. See the script jtreg_prep.sh for a full list."; exit 1;;
    esac
 done
 
