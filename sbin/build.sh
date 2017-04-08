@@ -21,6 +21,7 @@ TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 BUILD_FULL_NAME=$4
 JVM_VARIANT=${5:=normal}
+NOBUILD=$6
 
 # Escape code
 esc=$(echo -en "\033")
@@ -187,6 +188,16 @@ else
     echo "${good}Configured the JDK"
   fi
   echo ${normal}
+fi
+
+
+###########################################
+
+#If the user has specified nobuild, we do everything short of building Java, and then we stop.
+if [ "${NOBUILD}" == "--nobuild"]; then
+  rm -rf cacerts_area
+  echo "Nobuild option was set. Prep complete. Java not built."
+  exit 0
 fi
 
 ###########################################
