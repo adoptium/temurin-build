@@ -194,7 +194,7 @@ fi
 ###########################################
 
 #If the user has specified nobuild, we do everything short of building Java, and then we stop.
-if [ "${NOBUILD}" == "--nobuild"]; then
+if [ "${NOBUILD}" == "--nobuild" ]; then
   rm -rf cacerts_area
   echo "Nobuild option was set. Prep complete. Java not built."
   exit 0
