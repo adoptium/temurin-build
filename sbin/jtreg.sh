@@ -18,7 +18,7 @@ OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
 JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
 
-checkIfWeAreRunningInTheDockerEnvironment()
+checkIfDockerIsUsedForBuildingOrNot()
 {
   if [[ -f /.dockerenv ]] ; then
     echo "Detected we're in docker"
@@ -139,7 +139,7 @@ packageReports()
   packageOnlyJCovReports  
 }
 
-checkIfWeAreRunningInTheDockerEnvironment
+checkIfDockerIsUsedForBuildingOrNot
 downloadJtregAndSetupEnvironment
 applyingJCovSettingsToMakefileForTests
 settingUpEnvironmentVariablesForJTREG
