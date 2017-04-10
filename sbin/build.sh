@@ -113,7 +113,7 @@ checkingAndDownloadingFreetype()
     else
       echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
     fi
-    echo $normal
+    echo "${normal}"
   fi  
 }
 
@@ -214,7 +214,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
     else
       echo "${good}Configured the JDK"
     fi
-    echo ${normal}
+    echo "${normal}"
   fi
 }
 
@@ -235,7 +235,7 @@ buildOpenJDK()
   else
     echo "${good}Built the JDK!"
   fi
-  echo ${normal}  
+  echo "${normal}"  
 }
 
 removingUnnecessaryFiles()
