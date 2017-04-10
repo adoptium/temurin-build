@@ -4,7 +4,7 @@
 
 - hosts: 148.100.110.55
   remote_user: root
-  sudo: yes
+  become: yes
   tasks:
     - name: Install tools
       yum: name={{item}} state=installed
@@ -31,6 +31,13 @@
       action: user name=jenkins state=present
       ignore_errors: yes
 
+    - name: Set authorized key took from url
+      authorized_key:
+        user: jenkins
+        state: present
+        key: "{{ lookup('file', '/home/ubuntu/keys/id_rsa.pub') }}"
+
+
     - name: download ccache.tar.gz
       get_url:
         url: https://www.samba.org/ftp/ccache/ccache-3.1.9.tar.gz
@@ -42,7 +49,8 @@
         src: /home/jenkins/ccache.tar.gz
         dest: /home/jenkins
         remote_src: True
-        copy: false
+        copy: False
 
     - name: Running ./configure & make for CCACHE
-      shell: cd /home/jenkins/ccache && ./configure && make && make install
+      shell: cd /home/jenkins/ccache-3.1.9 && ./configure && make && sudo make install
+      become: yes
