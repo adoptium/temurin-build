@@ -20,7 +20,10 @@ WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 BUILD_FULL_NAME=$4
-JVM_VARIANT=${5:=normal}
+JVM_VARIANT=${5:-normal}
+ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
+FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
+FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
 
 initialiseEscapeCodes()
 {
@@ -66,20 +69,20 @@ checkIfDockerIsUsedForBuildingOrNot()
   cd $WORKING_DIR
 }
 
-checkingAndDownloadingAsla()
+checkingAndDownloadingAlsa()
 {
   # ALSA first for sound
 
   echo "Checking for ALSA"
 
-  FOUND_ALSA=$(find "$WORKING_DIR" -name "alsa-lib-1.0.27.2")
+  FOUND_ALSA=$(find "${WORKING_DIR}" -name "alsa-lib-${ALSA_LIB_VERSION}")
 
-  if [[ ! -z "$FOUND_ALSA" ]] ; then
+  if [[ ! -z "${FOUND_ALSA}" ]] ; then
     echo "Skipping ALSA download"
   else
-    wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-1.0.27.2.tar.bz2
-    tar xvf alsa-lib-1.0.27.2.tar.bz2
-    rm alsa-lib-1.0.27.2.tar.bz2
+    wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-$ALSA_LIB_VERSION.tar.bz2
+    tar xvf alsa-lib-$ALSA_LIB_VERSION.tar.bz2
+    rm alsa-lib-$ALSA_LIB_VERSION.tar.bz2
   fi
 }
 
@@ -87,18 +90,18 @@ checkingAndDownloadingFreetype()
 {
   echo "Checking for freetype"
 
-  FOUND_FREETYPE=$(find "$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype/lib" -name "libfreetype.so.6.5.0")
+  FOUND_FREETYPE=$(find "$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype/lib" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}")
 
   if [[ ! -z "$FOUND_FREETYPE" ]] ; then
     echo "Skipping FreeType download"
   else
     # Then FreeType for fonts: make it and use
-    wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-2.4.0.tar.gz
+    wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-$FREETYPE_FONT_VERSION.tar.gz
      
-    tar xvf freetype-2.4.0.tar.gz
-    rm freetype-2.4.0.tar.gz
+    tar xvf freetype-$FREETYPE_FONT_VERSION.tar.gz
+    rm freetype-$FREETYPE_FONT_VERSION.tar.gz
 
-    cd freetype-2.4.0
+    cd freetype-$FREETYPE_FONT_VERSION
 
     if [ $(uname -m) = "ppc64le" ]; then
       PARAMS="--build=$(rpm --eval %{_host})"
@@ -140,8 +143,8 @@ checkingAndDownloadCaCerts()
 
 downloadingRequiredDependencies() 
 {
-  echo "Downloading required dependencies...: Asla, Freetype, and CaCerts."
-  checkingAndDownloadingAsla
+  echo "Downloading required dependencies...: Alsa, Freetype, and CaCerts."
+  checkingAndDownloadingAlsa
   checkingAndDownloadingFreetype
   checkingAndDownloadCaCerts
 }
@@ -169,7 +172,7 @@ buildingTheRestOfTheConfigParameters()
 
   CONFIGURE_CMD="$CONFIGURE_CMD --with-jvm-variants=$JVM_VARIANT"
   CONFIGURE_CMD="$CONFIGURE_CMD --with-cacerts-file=$WORKING_DIR/cacerts_area/security/cacerts"
-  CONFIGURE_CMD="$CONFIGURE_CMD --with-alsa=$WORKING_DIR/alsa-lib-1.0.27.2"
+  CONFIGURE_CMD="$CONFIGURE_CMD --with-alsa=$WORKING_DIR/alsa-lib-${ALSA_LIB_VERSION}"
   CONFIGURE_CMD="$CONFIGURE_CMD --with-freetype=$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype"
 
   # These will have been installed by the package manager (see our Dockerfile)
