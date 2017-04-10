@@ -17,7 +17,7 @@ WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
 JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
-JTREG_BINARY_FILE=${JTREG_BINARY_FILE:-jtreg-4.2.0-tip.tar.gz}
+JTREG_VERSION=${JTREG_VERSION:-4.2.0-tip}
 JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
 JOB_NAME=${JOB_NAME:-OpenJDK}
 
@@ -37,6 +37,7 @@ downloadJtregAndSetupEnvironment()
   # Download then add jtreg to our path
   if [[ ! -d "${WORKING_DIR}/${JTREG_TARGET_FOLDER}" ]]; then
    echo "Downloading Jtreg binary"
+   JTREG_BINARY_FILE="jtreg-${JTREG_VERSION}.tar.gz"
    wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/$JTREG_BINARY_FILE
 
    if [ $? -ne 0 ]; then
