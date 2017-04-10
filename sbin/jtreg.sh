@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+set -eu
   
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
@@ -19,6 +21,7 @@ BUILD_FULL_NAME=$3
 JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
 JTREG_BINARY_FILE=${JTREG_BINARY_FILE:-jtreg-4.2.0-tip.tar.gz}
 JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
+JOB_NAME=${JOB_NAME:-OpenJDK}
 
 checkIfDockerIsUsedForBuildingOrNot()
 {
