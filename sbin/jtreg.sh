@@ -13,8 +13,6 @@
 # limitations under the License.
 #
 
-set -eu
-  
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
