@@ -21,6 +21,7 @@ TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 BUILD_FULL_NAME=$4
 JVM_VARIANT=${5:=normal}
+ALSA_LIB_VERSION=${ALSA_LIB_VERSION:=alsa-lib-1.0.27.2}
 
 initialiseEscapeCodes()
 {
@@ -66,20 +67,20 @@ checkIfDockerIsUsedForBuildingOrNot()
   cd $WORKING_DIR
 }
 
-checkingAndDownloadingAsla()
+checkingAndDownloadingAlsa()
 {
   # ALSA first for sound
 
   echo "Checking for ALSA"
 
-  FOUND_ALSA=$(find "$WORKING_DIR" -name "alsa-lib-1.0.27.2")
+  FOUND_ALSA=$(find "${WORKING_DIR}" -name "${ALSA_LIB_VERSION}")
 
-  if [[ ! -z "$FOUND_ALSA" ]] ; then
+  if [[ ! -z "${FOUND_ALSA}" ]] ; then
     echo "Skipping ALSA download"
   else
-    wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-1.0.27.2.tar.bz2
-    tar xvf alsa-lib-1.0.27.2.tar.bz2
-    rm alsa-lib-1.0.27.2.tar.bz2
+    wget -nc ftp://ftp.alsa-project.org/pub/lib/${ALSA_LIB_VERSION}.tar.bz2
+    tar xvf $ALSA_LIB_VERSION.tar.bz2
+    rm $ALSA_LIB_VERSION.tar.bz2
   fi
 }
 
@@ -140,8 +141,8 @@ checkingAndDownloadCaCerts()
 
 downloadingRequiredDependencies() 
 {
-  echo "Downloading required dependencies...: Asla, Freetype, and CaCerts."
-  checkingAndDownloadingAsla
+  echo "Downloading required dependencies...: Alsa, Freetype, and CaCerts."
+  checkingAndDownloadingAlsa
   checkingAndDownloadingFreetype
   checkingAndDownloadCaCerts
 }
