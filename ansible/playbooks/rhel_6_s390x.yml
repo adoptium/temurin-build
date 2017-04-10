@@ -39,9 +39,10 @@
 
     - name: extract ccache
       unarchive:
-        remote_src: True
         src: /home/jenkins/ccache.tar.gz
         dest: /home/jenkins
+        remote_src: True
+        copy: false
 
     - name: Running ./configure & make for CCACHE
       shell: cd /home/jenkins/ccache && ./configure && make && make install
