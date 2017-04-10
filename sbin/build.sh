@@ -20,8 +20,10 @@ WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 BUILD_FULL_NAME=$4
-JVM_VARIANT=${5:=normal}
-ALSA_LIB_VERSION=${ALSA_LIB_VERSION:=alsa-lib-1.0.27.2}
+JVM_VARIANT=${5:-normal}
+ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-alsa-lib-1.0.27.2}
+FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
+FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-freetype-2.4.0}
 
 initialiseEscapeCodes()
 {
@@ -78,7 +80,7 @@ checkingAndDownloadingAlsa()
   if [[ ! -z "${FOUND_ALSA}" ]] ; then
     echo "Skipping ALSA download"
   else
-    wget -nc ftp://ftp.alsa-project.org/pub/lib/${ALSA_LIB_VERSION}.tar.bz2
+    wget -nc ftp://ftp.alsa-project.org/pub/lib/$ALSA_LIB_VERSION.tar.bz2
     tar xvf $ALSA_LIB_VERSION.tar.bz2
     rm $ALSA_LIB_VERSION.tar.bz2
   fi
@@ -88,18 +90,18 @@ checkingAndDownloadingFreetype()
 {
   echo "Checking for freetype"
 
-  FOUND_FREETYPE=$(find "$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype/lib" -name "libfreetype.so.6.5.0")
+  FOUND_FREETYPE=$(find "$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype/lib" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}")
 
   if [[ ! -z "$FOUND_FREETYPE" ]] ; then
     echo "Skipping FreeType download"
   else
     # Then FreeType for fonts: make it and use
-    wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-2.4.0.tar.gz
+    wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/$FREETYPE_FONT_VERSION.tar.gz
      
-    tar xvf freetype-2.4.0.tar.gz
-    rm freetype-2.4.0.tar.gz
+    tar xvf $FREETYPE_FONT_VERSION.tar.gz
+    rm $FREETYPE_FONT_VERSION.tar.gz
 
-    cd freetype-2.4.0
+    cd $FREETYPE_FONT_VERSION
 
     if [ $(uname -m) = "ppc64le" ]; then
       PARAMS="--build=$(rpm --eval %{_host})"
