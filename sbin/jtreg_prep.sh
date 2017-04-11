@@ -19,7 +19,7 @@
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
 
-while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
+while [[ $# -gt 0 ]] && [[ ."$1" == .-* ]] ; do
   opt="$1";
   shift;
   case "$opt" in
