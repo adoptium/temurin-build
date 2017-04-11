@@ -25,10 +25,10 @@ while [[ $# -gt 0 ]] && [[ ."$1" == .-* ]] ; do
   case "$opt" in
     "--" ) break 2;;
 
-    "--java_source" )
+    "--source" )
     JAVA_SOURCE="$1"; shift;;
 
-    "--java_destination" )
+    "--destination" )
     JAVA_DESTINATION="$1"; shift;;
 
     "--ssh" | "-S" )
@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]] && [[ ."$1" == .-* ]] ; do
 done
 
 if [ -z "${JAVA_SOURCE}" ]; then
-  echo >&2 "jtreg_prep.sh failed: --java_source must be specified"; exit 1
+  echo >&2 "jtreg_prep.sh failed: --source must be specified"; exit 1
 fi
 
 if [ -z "${WORKING_DIR}" ] ; then
