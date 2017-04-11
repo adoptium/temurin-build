@@ -1,5 +1,5 @@
 ---
-- hosts: rhel6_s390x
+- hosts: centos7_arm
   remote_user: root
   become: yes
   tasks:
@@ -11,6 +11,7 @@
         - gcc-c++
         - libXtst-devel
         - libXt-devel
+        - java-1.7.0-openjdk-devel # Our base JDK
         - libXrender-devel
         - libXext-devel
         - libXrender-devel

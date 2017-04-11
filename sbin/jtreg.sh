@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-  
+
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
 JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
+JTREG_VERSION=${JTREG_VERSION:-4.2.0-tip}
+JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
+JOB_NAME=${JOB_NAME:-OpenJDK}
 
-checkIfWeAreRunningInTheDockerEnvironment()
+checkIfDockerIsUsedForBuildingOrNot()
 {
   if [[ -f /.dockerenv ]] ; then
     echo "Detected we're in docker"
@@ -32,12 +35,9 @@ checkIfWeAreRunningInTheDockerEnvironment()
 downloadJtregAndSetupEnvironment() 
 {
   # Download then add jtreg to our path
-
-  JTREG_BINARY_FILE=jtreg-4.2.0-tip.tar.gz
-  JTREG_TARGET_FOLDER=jtreg
-
-  if [[ ! -d $WORKING_DIR/jtreg ]]; then
+  if [[ ! -d "${WORKING_DIR}/${JTREG_TARGET_FOLDER}" ]]; then
    echo "Downloading Jtreg binary"
+   JTREG_BINARY_FILE="jtreg-${JTREG_VERSION}.tar.gz"
    wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/$JTREG_BINARY_FILE
 
    if [ $? -ne 0 ]; then
@@ -139,7 +139,7 @@ packageReports()
   packageOnlyJCovReports  
 }
 
-checkIfWeAreRunningInTheDockerEnvironment
+checkIfDockerIsUsedForBuildingOrNot
 downloadJtregAndSetupEnvironment
 applyingJCovSettingsToMakefileForTests
 settingUpEnvironmentVariablesForJTREG
