@@ -117,7 +117,7 @@ fi
 
 if [[ "$JAVA_SOURCE" == *\.tar\.gz ]]; then #If it's a tar file, unpack it.
   cd "${JAVA_DESTINATION}"
-  tar xvf *.tar.gz
+  tar xf *.tar.gz
   echo "Java has been untarred."
   cd "${WORKING_DIR}"
 elif [ ! -d "${JAVA_SOURCE}" ]; then #If it's not a directory, then we don't know how to unpack it. 
