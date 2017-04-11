@@ -262,12 +262,7 @@ testOpenJDKInNativeEnvironmentIfExpected()
 {
   if [[ "$JTREG" == "true" ]];
   then
-    if [[ ! -z $JTREG_TEST_SUBSETS ]];
-    then
       $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JTREG_TEST_SUBSETS
-    else
-      $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME
-    fi
   fi
 }
 
