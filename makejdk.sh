@@ -260,7 +260,7 @@ buildAndTestOpenJDKViaDocker()
 
 testOpenJDKInNativeEnvironmentIfExpected()
 {
-  if [[ "${JTREG}" == "true" ]];
+  if [[ "$JTREG" == "true" ]];
   then
       $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JTREG_TEST_SUBSETS
   fi
