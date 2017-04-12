@@ -223,7 +223,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 
 buildOpenJDK()
 {
-  if [ $(uname -m) == "s390x" ]; then
+  if [[ "$OS_MACHINE" == "s390x" ]] || [[ "$OS_MACHINE" == "armv7l" ]] ; then
     makeCMD="make CONF=$BUILD_FULL_NAME DEBUG_BINARIES=true images"
   else
     makeCMD="make images"
