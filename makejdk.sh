@@ -287,7 +287,7 @@ buildAndTestOpenJDK()
 
 initialiseEscapeCodes
 sourceSignalHandler
-parseCommandLineArgs $@
+parseCommandLineArgs "$@"
 checkIfDockerIsUsedForBuildingOrNot
 checkInCaseOfDockerShouldTheContainerBePreserved
 setDefaultIfBranchIsNotProvided
