@@ -44,7 +44,7 @@ git checkout
 rm -rf .hg .hgignore .hgtags README-builds.html README get_source.sh
 # create new README
 cp $WORKSPACE/openjdk-build/git-hg/README.md .
-echo "/build" > .gitignore
+echo ".hg/" > .gitignore
 git add .
 git commit -m "merge sources"
 git remote add releases git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
@@ -56,10 +56,11 @@ if [ `git diff releases/master | wc -l` -gt 0 ]; then
 	git reset --hard releases/master
 	git cherry-pick --strategy=recursive -X theirs staging
 	git push --set-upstream releases master
+	git push --follow-tags
 	# update dev branch
 	git reset --hard releases/dev
 	git cherry-pick --strategy=recursive -X theirs staging
-	git push --set-upstream releases dev
+	git push releases HEAD:dev
 else
 	echo "already up to date"
 fi
