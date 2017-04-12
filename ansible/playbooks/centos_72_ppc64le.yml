@@ -1,0 +1,55 @@
+---
+- hosts: centos72_ppc64le
+  remote_user: root
+  become: yes
+  tasks:
+    - name: Install tools
+      yum: name={{item}} state=installed
+      with_items:
+        - make
+        - gcc
+        - gcc-c++
+        - https://ppc.koji.fedoraproject.org/kojifiles/packages/java-1.8.0-openjdk/1.8.0.121/10.b14.fc24/ppc64le/java-1.8.0-openjdk-headless-1.8.0.121-10.b14.fc24.ppc64le.rpm
+        - https://ppc.koji.fedoraproject.org/kojifiles/packages/java-1.8.0-openjdk/1.8.0.121/10.b14.fc24/ppc64le/java-1.8.0-openjdk-1.8.0.121-10.b14.fc24.ppc64le.rpm
+        - https://ppc.koji.fedoraproject.org/kojifiles/packages/java-1.8.0-openjdk/1.8.0.121/10.b14.fc24/ppc64le/java-1.8.0-openjdk-devel-1.8.0.121-10.b14.fc24.ppc64le.rpm
+        - libXtst-devel
+        - libXt-devel
+        - libXrender-devel
+        - libXext-devel
+        - libXrender-devel
+        - libXtst-devel
+        - libXt-devel
+        - cups-devel
+        - freetype-devel
+        - alsa-lib-devel
+        - unzip
+        - zip
+        - wget
+        - git
+
+    - name: Create jenkins user
+      action: user name=jenkins state=present
+      ignore_errors: yes
+
+    - name: Set authorized key for jenkins
+      authorized_key:
+        user: jenkins
+        state: present
+        key: "{{ lookup('file', '/home/ubuntu/keys/id_rsa.pub') }}"
+
+    - name: download ccache.tar.gz
+      get_url:
+        url: https://www.samba.org/ftp/ccache/ccache-3.1.9.tar.gz
+        dest: /home/jenkins/ccache.tar.gz
+        mode: 0440
+
+    - name: extract ccache
+      unarchive:
+        src: /home/jenkins/ccache.tar.gz
+        dest: /home/jenkins
+        remote_src: True
+        copy: False
+
+    - name: Running ./configure & make for CCACHE
+      shell: cd /home/jenkins/ccache-3.1.9 && ./configure && make && sudo make install
+      become: yes
