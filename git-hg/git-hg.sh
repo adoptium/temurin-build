@@ -60,7 +60,7 @@ if [ `git diff releases/master | wc -l` -gt 0 ]; then
 	# update dev branch
 	git reset --hard releases/dev
 	git cherry-pick --strategy=recursive -X theirs staging
-	git push --set-upstream releases dev
+	git push releases HEAD:dev
 else
 	echo "already up to date"
 fi
