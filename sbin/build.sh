@@ -170,7 +170,7 @@ buildingTheRestOfTheConfigParameters()
     CONFIGURE_CMD="$CONFIGURE_CMD --enable-ccache"
   fi
   
-  if [[ "$OS_MACHINE" == "armv7l" ]] ; then
+  if [[ `uname -m` == "armv7l" ]] ; then
     CONFIGURE_CMD="$CONFIGURE_CMD --with-num-cores=4"
   fi
 
