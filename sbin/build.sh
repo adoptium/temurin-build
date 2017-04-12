@@ -21,9 +21,12 @@ TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 BUILD_FULL_NAME=$4
 JVM_VARIANT=${5:-normal}
+
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
+MAKE_ARGS_ALL_PLATFORMS=${MAKE_ARGS_ALL_PLATFORMS:-"images"}
+MAKE_ARGS_SPECIAL_PLATFORMS=${MAKE_ARGS_SPECIAL_PLATFORMS:-"CONF=$BUILD_FULL_NAME DEBUG_BINARIES=true images"}
 
 initialiseEscapeCodes()
 {
@@ -224,9 +227,9 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 buildOpenJDK()
 {
   if [[ "$OS_MACHINE" == "s390x" ]] || [[ "$OS_MACHINE" == "armv7l" ]] ; then
-    makeCMD="make CONF=$BUILD_FULL_NAME DEBUG_BINARIES=true images"
+    makeCMD="make ${MAKE_ARGS_SPECIAL_PLATFORMS}"
   else
-    makeCMD="make images"
+    makeCMD="make ${MAKE_ARGS_ALL_PLATFORMS}"
   fi
 
   echo "Building the JDK: calling $makeCMD"
