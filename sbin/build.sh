@@ -169,6 +169,10 @@ buildingTheRestOfTheConfigParameters()
   if [ ! -z $(which ccache) ]; then
     CONFIGURE_CMD="$CONFIGURE_CMD --enable-ccache"
   fi
+  
+  if [[ "$OS_MACHINE" == "armv7l" ]] ; then
+    CONFIGURE_CMD="$CONFIGURE_CMD --with-num-cores=4"
+  fi
 
   CONFIGURE_CMD="$CONFIGURE_CMD --with-jvm-variants=$JVM_VARIANT"
   CONFIGURE_CMD="$CONFIGURE_CMD --with-cacerts-file=$WORKING_DIR/cacerts_area/security/cacerts"
