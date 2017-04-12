@@ -115,14 +115,14 @@ downloadJDKArtifact()
     if [[ "${JAVA_SOURCE}" == http* ]]; then
       wget "${JAVA_SOURCE}"
       if [ $? -ne 0 ]; then
-        echo "Failed to retrieve the jtreg binary from ${JAVA_SOURCE}, exiting"
+        echo "Failed to retrieve the JDK binary from ${JAVA_SOURCE}, exiting"
         exit 1
       fi
     else #Assume it's local or on a mounted drive.
       if [ -f "${JAVA_SOURCE}" ] || [ -d "${JAVA_SOURCE}" ]; then
         cp -r "${JAVA_SOURCE}" .
       else
-        echo "Java could not be found at the java_source location: ${JAVA_SOURCE}."
+        echo "The JDK artifact could not be found at the source location: ${JAVA_SOURCE}."
         exit 1
       fi
     fi
@@ -134,7 +134,7 @@ unpackJDKTarArtifact()
     if [[ "$JAVA_SOURCE" == *\.tar\.gz ]]; then #If it's a tar file, unpack it.
       cd "${JAVA_DESTINATION}"
       tar xf *.tar.gz
-      echo "Java has been untarred at ${JAVA_DESTINATION}."
+      echo "The JDK artifact has been untarred at ${JAVA_DESTINATION}."
       cd "${WORKING_DIR}"
     elif [ ! -d "${JAVA_SOURCE}" ]; then #If it's not a directory, then we don't know how to unpack it.
       echo "The Java file you specified as source was copied to the destination, but this script doesn't know how to unpack it. Please add this logic to this script, or unpack it manually before running jtreg.";

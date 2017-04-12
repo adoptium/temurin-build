@@ -237,7 +237,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 
 buildOpenJDK()
 {
-  #If the user has specified nobuild, we do everything short of building Java, and then we stop.
+  #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
   if [ "${NOBUILD}" == "--nobuild" ]; then
     rm -rf cacerts_area
     echo "Nobuild option was set. Prep complete. Java not built."
