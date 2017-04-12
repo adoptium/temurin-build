@@ -44,7 +44,7 @@ git checkout
 rm -rf .hg .hgignore .hgtags README-builds.html README get_source.sh
 # create new README
 cp $WORKSPACE/openjdk-build/git-hg/README.md .
-echo "/build" > .gitignore
+echo ".hg/" > .gitignore
 git add .
 git commit -m "merge sources"
 git remote add releases git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
