@@ -20,6 +20,7 @@ WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 BUILD_FULL_NAME=$4
+
 JVM_VARIANT=${5:=normal}
 NOBUILD=$6
 
@@ -27,9 +28,12 @@ if [ "${JVM_VARIANT}" == "--nobuild" ]; then
   NOBUILD="--nobuild"
   JVM_VARIANT="normal"
 fi
+
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
+MAKE_ARGS_FOR_ALL_PLATFORMS=${MAKE_ARGS_FOR_ALL_PLATFORMS:-"images"}
+MAKE_ARGS_FOR_SPECIAL_PLATFORMS=${MAKE_ARGS_FOR_SPECIAL_PLATFORMS:-"CONF=${BUILD_FULL_NAME} DEBUG_BINARIES=true images"}
 
 initialiseEscapeCodes()
 {
@@ -106,7 +110,7 @@ checkingAndDownloadingFreetype()
      
     tar xvf freetype-$FREETYPE_FONT_VERSION.tar.gz
     rm freetype-$FREETYPE_FONT_VERSION.tar.gz
-    
+
     cd freetype-$FREETYPE_FONT_VERSION
 
     if [ $(uname -m) = "ppc64le" ]; then
@@ -241,9 +245,9 @@ buildOpenJDK()
   fi
 
   if [ $(uname -m) == "s390x" ]; then
-    makeCMD="make CONF=$BUILD_FULL_NAME DEBUG_BINARIES=true images"
+    makeCMD="make ${MAKE_ARGS_FOR_SPECIAL_PLATFORMS}"
   else
-    makeCMD="make images"
+    makeCMD="make ${MAKE_ARGS_FOR_ALL_PLATFORMS}"
   fi
 
   echo "Building the JDK: calling $makeCMD"
