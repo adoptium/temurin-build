@@ -38,7 +38,7 @@ downloadJtregAndSetupEnvironment()
   if [[ ! -d "${WORKING_DIR}/${JTREG_TARGET_FOLDER}" ]]; then
    echo "Downloading Jtreg binary"
    JTREG_BINARY_FILE="jtreg-${JTREG_VERSION}.tar.gz"
-   wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/$JTREG_BINARY_FILE
+   wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/${JTREG_BINARY_FILE}
 
    if [ $? -ne 0 ]; then
      echo "Failed to retrieve the jtreg binary, exiting"
@@ -48,12 +48,13 @@ downloadJtregAndSetupEnvironment()
    tar xvf $JTREG_BINARY_FILE
   fi
 
-  echo "List contents of jtreg"
-  ls $WORKING_DIR/$JTREG_TARGET_FOLDER/*
+  echo "List contents of the jtreg folder"
+  export JT_HOME=${WORKING_DIR}/${JTREG_TARGET_FOLDER}
 
-  export PATH=$WORKING_DIR/$JTREG_TARGET_FOLDER/bin:$PATH
+  export PATH=${JT_HOME}/bin:$PATH
 
-  export JT_HOME=$WORKING_DIR/$JTREG_TARGET_FOLDER
+    ls $JT_HOME/*
+
 
   # Clean up after ourselves by removing jtreg tgz
   rm -f $JTREG_BINARY_FILE
@@ -62,12 +63,12 @@ downloadJtregAndSetupEnvironment()
 applyingJCovSettingsToMakefileForTests()
 {
   echo "Apply JCov settings to Makefile..." 
-  cd $WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test
+  cd ${WORKING_DIR}/${OPENJDK_REPO_NAME}/jdk/test
   pwd
 
   sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/' Makefile
 
-  cd $WORKING_DIR/$OPENJDK_REPO_NAME/
+  cd ${WORKING_DIR}/${OPENJDK_REPO_NAME}/
 }
 
 settingUpEnvironmentVariablesForJTREG()
@@ -75,7 +76,7 @@ settingUpEnvironmentVariablesForJTREG()
   echo "Setting up environment variables for JTREG to run"
 
   # This is the JDK we'll test
-  export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
+  export PRODUCT_HOME=${WORKING_DIR}/${OPENJDK_REPO_NAME}/build/${BUILD_FULL_NAME}/images/j2sdk-image
   echo $PRODUCT_HOME
   ls $PRODUCT_HOME
 
@@ -104,16 +105,16 @@ packageTestResultsWithJCovReports()
   echo "Package test output into archives..." 
   pwd
 
-  cd $WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/
+  cd ${WORKING_DIR}/${OPENJDK_REPO_NAME}/build/${BUILD_FULL_NAME}/
  
   artifact=${JOB_NAME}-testoutput-with-jcov-reports
   echo "Tarring and zipping the 'testoutput' folder into artefact: $artifact.tar.gz" 
-  tar -cvzf $WORKING_DIR/$artifact.tar.gz   testoutput/
+  tar -cvzf ${WORKING_DIR}/${artifact}.tar.gz   testoutput/
 
   if [ -d testoutput  ]; then  
-     rm -fr $WORKING_DIR/$OPENJDK_REPO_NAME/testoutput
+     rm -fr ${WORKING_DIR}/${OPENJDK_REPO_NAME}/testoutput
   fi
-  cp -fr testoutput/ $WORKING_DIR/testoutput/
+  cp -fr testoutput/ ${WORKING_DIR}/testoutput/
   
   cd $WORKING_DIR
 }
@@ -123,11 +124,11 @@ packageOnlyJCovReports()
   echo "Package jcov reports into archives..." 
   pwd
 
-  cd $WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/
+  cd ${WORKING_DIR}/${OPENJDK_REPO_NAME}/build/${BUILD_FULL_NAME}/
  
   artifact=${JOB_NAME}-jcov-results-only
   echo "Tarring and zipping the 'testoutput/../jcov' folder into artefact: $artifact.tar.gz" 
-  tar -cvzf $WORKING_DIR/$artifact.tar.gz   testoutput/*/JTreport/jcov/
+  tar -cvzf ${WORKING_DIR}/${artifact}.tar.gz   testoutput/*/JTreport/jcov/
 
   cd $WORKING_DIR
 }
