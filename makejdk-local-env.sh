@@ -26,8 +26,6 @@
 
 set -eu
 
-OS_KERNAL_NAME=$(echo $(uname) | awk '{print tolower($0)}')
-
 OS_MACHINE=$(uname -m)
 
 if [[ "$OS_MACHINE" == "s390x" ]] || [[ "$OS_MACHINE" == "armv7l" ]] ; then
