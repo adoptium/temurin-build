@@ -81,7 +81,7 @@ parseCommandLineArgs()
 # Step 1: Fetch OpenJDK, as that's where the tests live.
 cloneOpenJDKRepo()
 {
-    if [ -d "$WORKING_DIR"/$OPENJDK_REPO_NAME/.git ] && [ $REPOSITORY == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
+    if [ -d "$WORKING_DIR/$OPENJDK_REPO_NAME/.git" ] && [ $REPOSITORY == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
       # It does exist and it's a repo other than the AdoptOpenJDK one
       cd $WORKING_DIR/$OPENJDK_REPO_NAME
       echo "Will reset the repository at $PWD in 10 seconds..."
@@ -90,10 +90,10 @@ cloneOpenJDKRepo()
       git fetch --all
       git reset --hard origin/$BRANCH
       cd $WORKING_DIR
-    elif [ ! -d "${WORKING_DIR}"/$OPENJDK_REPO_NAME/.git ] ; then
+    elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
       # If it doesn't exist, clone it
       echo "Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
-      if [[ "${USE_SSH}" == true ]] ; then
+      if [[ ${USE_SSH} == true ]] ; then
         echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
         git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME
       else
@@ -107,20 +107,20 @@ cloneOpenJDKRepo()
 downloadJDKArtifact()
 {
     if [ ! -d "${JAVA_DESTINATION}" ]; then
-      mkdir -p "${JAVA_DESTINATION}"
+      mkdir -p ${JAVA_DESTINATION}
     fi
-    cd "${JAVA_DESTINATION}"
+    cd ${JAVA_DESTINATION}
 
     #If it's a http location, use wget.
     if [[ "${JAVA_SOURCE}" == http* ]]; then
-      wget "${JAVA_SOURCE}"
+      wget ${JAVA_SOURCE}
       if [ $? -ne 0 ]; then
         echo "Failed to retrieve the JDK binary from ${JAVA_SOURCE}, exiting"
         exit 1
       fi
     else #Assume it's local or on a mounted drive.
       if [ -f "${JAVA_SOURCE}" ] || [ -d "${JAVA_SOURCE}" ]; then
-        cp -r "${JAVA_SOURCE}" .
+        cp -r ${JAVA_SOURCE} .
       else
         echo "The JDK artifact could not be found at the source location: ${JAVA_SOURCE}."
         exit 1
@@ -132,10 +132,10 @@ downloadJDKArtifact()
 unpackJDKTarArtifact()
 {
     if [[ "$JAVA_SOURCE" == *\.tar\.gz ]]; then #If it's a tar file, unpack it.
-      cd "${JAVA_DESTINATION}"
+      cd ${JAVA_DESTINATION}
       tar xf *.tar.gz
       echo "The JDK artifact has been untarred at ${JAVA_DESTINATION}."
-      cd "${WORKING_DIR}"
+      cd ${WORKING_DIR}
     elif [ ! -d "${JAVA_SOURCE}" ]; then #If it's not a directory, then we don't know how to unpack it.
       echo "The Java file you specified as source was copied to the destination, but this script doesn't know how to unpack it. Please add this logic to this script, or unpack it manually before running jtreg.";
     fi
@@ -144,7 +144,7 @@ unpackJDKTarArtifact()
 # Step 4: Finish
 printFinishedMessage()
 {
-    echo "jtreg_prep.sh has finished successfully."
+    echo "$0 has finished successfully."
 }
 
 ##################################################################
