@@ -1,3 +1,5 @@
+#!/bin/bash
+
 exit_script() {
     if [[ -z ${KEEP} ]] ; then
       docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm -f {}
