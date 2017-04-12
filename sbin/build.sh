@@ -22,10 +22,10 @@ OPENJDK_REPO_NAME=$3
 BUILD_FULL_NAME=$4
 
 JVM_VARIANT=${5:=normal}
-NOBUILD=$6
+RUN_JTREG_TESTS_ONLY=$6
 
-if [ "$JVM_VARIANT" == "--nobuild" ]; then
-  NOBUILD="--nobuild"
+if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
+  RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
   JVM_VARIANT="normal"
 fi
 
@@ -238,7 +238,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 buildOpenJDK()
 {
   #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
-  if [ "${NOBUILD}" == "--nobuild" ]; then
+  if [ "${RUN_JTREG_TESTS_ONLY}" == "--run-jtreg-tests-only" ]; then
     rm -rf cacerts_area
     echo "Nobuild option was set. Prep complete. Java not built."
     exit 0

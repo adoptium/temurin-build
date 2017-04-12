@@ -149,7 +149,7 @@ printFinishedMessage()
 
 ##################################################################
 
-parseCommandLineArgs $@
+parseCommandLineArgs "$@"
 cloneOpenJDKRepo
 downloadJDKArtifact
 unpackJDKTarArtifact
