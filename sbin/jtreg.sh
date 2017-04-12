@@ -20,6 +20,7 @@ JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
 JTREG_VERSION=${JTREG_VERSION:-4.2.0-tip}
 JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
 JOB_NAME=${JOB_NAME:-OpenJDK}
+NUM_PROCESSORS=${NUM_PROCESSORS:-$(getconf _NPROCESSORS_ONLN)}
 
 checkIfDockerIsUsedForBuildingOrNot()
 {
@@ -86,7 +87,7 @@ settingUpEnvironmentVariablesForJTREG()
   export JPRT_JTREG_HOME=${JT_HOME}
   export JPRT_JAVA_HOME=${PRODUCT_HOME}
   export JTREG_TIMEOUT_FACTOR=5
-  export CONCURRENCY=8
+  export CONCURRENCY=$NUM_PROCESSORS
 }
 
 runJtregViaMakeCommand()
