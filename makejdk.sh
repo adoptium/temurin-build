@@ -31,12 +31,8 @@ OS_KERNAL_NAME=$(echo $(uname) | awk '{print tolower($0)}')
 
 OS_MACHINE=$(uname -m)
 
-JVM_VARIANT=server
-if [[ "$OS_MACHINE" == "s390x" ]] || [[ "$OS_MACHINE" == "armv7l" ]] ; then
- JVM_VARIANT=zero
-fi 
-
-BUILD_TYPE=normal
+JVM_VARIANT=${JVM_VARIANT:-server}
+BUILD_TYPE=${BUILD_TYPE:-normal}
 
 BUILD_FULL_NAME=$OS_KERNAL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
 
