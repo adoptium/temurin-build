@@ -20,7 +20,13 @@ WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 BUILD_FULL_NAME=$4
-JVM_VARIANT=${5:-normal}
+JVM_VARIANT=${5:=normal}
+NOBUILD=$6
+
+if [ "${JVM_VARIANT}" == "--nobuild" ]; then
+  NOBUILD="--nobuild"
+  JVM_VARIANT="normal"
+fi
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
@@ -100,13 +106,13 @@ checkingAndDownloadingFreetype()
      
     tar xvf freetype-$FREETYPE_FONT_VERSION.tar.gz
     rm freetype-$FREETYPE_FONT_VERSION.tar.gz
-
+    
     cd freetype-$FREETYPE_FONT_VERSION
 
     if [ $(uname -m) = "ppc64le" ]; then
       PARAMS="--build=$(rpm --eval %{_host})"
     fi
-     
+
     # We get the files we need at $WORKING_DIR/installedfreetype
     bash ./configure --prefix=$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype $PARAMS && make all && make install
 
@@ -117,10 +123,10 @@ checkingAndDownloadingFreetype()
       echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
     fi
     echo "${normal}"
-  fi  
+  fi
 }
 
-checkingAndDownloadCaCerts() 
+checkingAndDownloadCaCerts()
 {
   cd $WORKING_DIR
 
@@ -141,7 +147,7 @@ checkingAndDownloadCaCerts()
   fi
 }
 
-downloadingRequiredDependencies() 
+downloadingRequiredDependencies()
 {
   echo "Downloading required dependencies...: Alsa, Freetype, and CaCerts."
   checkingAndDownloadingAlsa
@@ -161,7 +167,7 @@ configuringBootJDKConfigureParameter()
 
   echo "Boot dir set to $JDK_BOOT_DIR"
 
-  CONFIGURE_CMD=" --with-boot-jdk=$JDK_BOOT_DIR"  
+  CONFIGURE_CMD=" --with-boot-jdk=$JDK_BOOT_DIR"
 }
 
 buildingTheRestOfTheConfigParameters()
@@ -184,7 +190,7 @@ buildingTheRestOfTheConfigParameters()
 
   # We don't want any extra debug symbols - ensure it's set to release,
   # other options include fastdebug and slowdebug
-  CONFIGURE_CMD="$CONFIGURE_CMD --with-debug-level=release"  
+  CONFIGURE_CMD="$CONFIGURE_CMD --with-debug-level=release"
 }
 
 configureCommandParameters()
@@ -192,7 +198,7 @@ configureCommandParameters()
   echo "Building up the configure command..."
 
   configuringBootJDKConfigureParameter
-  buildingTheRestOfTheConfigParameters  
+  buildingTheRestOfTheConfigParameters
 }
 
 stepIntoTheWorkingDirectory()
@@ -227,7 +233,14 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 
 buildOpenJDK()
 {
-  if [[ "$OS_MACHINE" == "s390x" ]] || [[ "$OS_MACHINE" == "armv7l" ]] ; then
+  #If the user has specified nobuild, we do everything short of building Java, and then we stop.
+  if [ "${NOBUILD}" == "--nobuild" ]; then
+    rm -rf cacerts_area
+    echo "Nobuild option was set. Prep complete. Java not built."
+    exit 0
+  fi
+
+  if [ $(uname -m) == "s390x" ]; then
     makeCMD="make CONF=$BUILD_FULL_NAME DEBUG_BINARIES=true images"
   else
     makeCMD="make images"
@@ -242,7 +255,7 @@ buildOpenJDK()
   else
     echo "${good}Built the JDK!"
   fi
-  echo "${normal}"  
+  echo "${normal}"
 }
 
 removingUnnecessaryFiles()
@@ -266,14 +279,14 @@ createOpenJDKTarArchive()
 
   mv OpenJDK.tar.gz $TARGET_DIR
 
-  echo "${good}Your final tar.gz is here at $PWD${normal}"  
+  echo "${good}Your final tar.gz is here at $PWD${normal}"
 }
 
 stepIntoTargetDirectoryAndShowCompletionMessage()
 {
   cd $TARGET_DIR
   ls
-  echo "All done!"  
+  echo "All done!"
 }
 
 initialiseEscapeCodes
