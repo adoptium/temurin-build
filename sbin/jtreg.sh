@@ -16,7 +16,7 @@
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
-JTREG_TEST_SUBSETS=$($4//:/ ) # Replace all ':' with ' '
+JTREG_TEST_SUBSETS=$("$4"//:/ ) # Replace all ':' with ' '
 JTREG_VERSION=${JTREG_VERSION:-4.2.0-tip}
 JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
 JOB_NAME=${JOB_NAME:-OpenJDK}
@@ -29,6 +29,7 @@ checkIfDockerIsUsedForBuildingOrNot()
     WORKING_DIR=/openjdk/jdk8u/openjdk
     # Keep as a variable for potential use later
     # if we wish to copy the results to the host
+    # shellcheck disable=SC2034
     IN_DOCKER=true
   fi
 }
@@ -124,7 +125,7 @@ packageOnlyJCovReports()
   echo "Package jcov reports into archives..." 
   pwd
 
-  cd "$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/"
+  cd "$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/" || exit
  
   artifact="${JOB_NAME}-jcov-results-only"
   echo "Tarring and zipping the 'testoutput/../jcov' folder into artefact: $artifact.tar.gz" 

@@ -118,6 +118,7 @@ checkingAndDownloadingFreetype()
     cd freetype-"$FREETYPE_FONT_VERSION" || exit
 
     if [ "$OS_CPU_NAME" = "ppc64le" ]; then
+      # shellcheck disable=SC1083
       PARAMS="--build=$(rpm --eval %{_host})"
     fi
 
