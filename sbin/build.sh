@@ -34,6 +34,8 @@ FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
 MAKE_ARGS_FOR_ALL_PLATFORMS=${MAKE_ARGS_FOR_ALL_PLATFORMS:-"images"}
 MAKE_ARGS_FOR_SPECIAL_PLATFORMS=${MAKE_ARGS_FOR_SPECIAL_PLATFORMS:-"CONF=${BUILD_FULL_NAME} DEBUG_BINARIES=true images"}
 
+OS_CPU_NAME=$(uname -m)
+
 initialiseEscapeCodes()
 {
   # Escape code
@@ -42,7 +44,9 @@ initialiseEscapeCodes()
   # Set colors
   error="${esc}[0;31m"
   good="${esc}[0;32m"
+  # shellcheck disable=SC2034
   info="${esc}[0;33m"
+  # shellcheck disable=SC2034
   git="${esc}[0;34m"
   normal=$(echo -en "${esc}[m\017")
 }
@@ -75,7 +79,7 @@ checkIfDockerIsUsedForBuildingOrNot()
 
   mkdir -p $WORKING_DIR
 
-  cd $WORKING_DIR
+  cd $WORKING_DIR || exit
 }
 
 checkingAndDownloadingAlsa()
@@ -89,9 +93,9 @@ checkingAndDownloadingAlsa()
   if [[ ! -z "${FOUND_ALSA}" ]] ; then
     echo "Skipping ALSA download"
   else
-    wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-$ALSA_LIB_VERSION.tar.bz2
-    tar xvf alsa-lib-$ALSA_LIB_VERSION.tar.bz2
-    rm alsa-lib-$ALSA_LIB_VERSION.tar.bz2
+    wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    tar xvf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
   fi
 }
 
@@ -105,19 +109,20 @@ checkingAndDownloadingFreetype()
     echo "Skipping FreeType download"
   else
     # Then FreeType for fonts: make it and use
-    wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-$FREETYPE_FONT_VERSION.tar.gz
+    wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"$FREETYPE_FONT_VERSION".tar.gz
      
-    tar xvf freetype-$FREETYPE_FONT_VERSION.tar.gz
-    rm freetype-$FREETYPE_FONT_VERSION.tar.gz
+    tar xvf freetype-"$FREETYPE_FONT_VERSION".tar.gz
+    rm freetype-"$FREETYPE_FONT_VERSION".tar.gz
 
-    cd freetype-$FREETYPE_FONT_VERSION
+    cd freetype-"$FREETYPE_FONT_VERSION" || exit
 
-    if [ $(uname -m) = "ppc64le" ]; then
+    if [ "$OS_CPU_NAME" = "ppc64le" ]; then
+      # shellcheck disable=SC1083
       PARAMS="--build=$(rpm --eval %{_host})"
     fi
 
     # We get the files we need at $WORKING_DIR/installedfreetype
-    bash ./configure --prefix=$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype $PARAMS && make all && make install
+    bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${PARAMS}" && make all && make install
 
     if [ $? -ne 0 ]; then
       echo "${error}Failed to configure and build libfreetype, exiting"
@@ -131,7 +136,7 @@ checkingAndDownloadingFreetype()
 
 checkingAndDownloadCaCerts()
 {
-  cd $WORKING_DIR
+  cd "$WORKING_DIR" || exit
 
   echo "Retrieving cacerts file"
 
@@ -175,11 +180,11 @@ configuringBootJDKConfigureParameter()
 
 buildingTheRestOfTheConfigParameters()
 {
-  if [ ! -z $(which ccache) ]; then
+  if [ ! -z "$(which ccache)" ]; then
     CONFIGURE_CMD="$CONFIGURE_CMD --enable-ccache"
   fi
   
-  if [[ `uname -m` == "armv7l" ]] ; then
+  if [[ "$OS_CPU_NAME" == "armv7l" ]] ; then
     CONFIGURE_CMD="$CONFIGURE_CMD --with-num-cores=4"
   fi
 
@@ -207,7 +212,7 @@ configureCommandParameters()
 stepIntoTheWorkingDirectory()
 {
   # Make sure we're in the source directory for OpenJDK now
-  cd $WORKING_DIR/$OPENJDK_REPO_NAME
+  cd "$WORKING_DIR/$OPENJDK_REPO_NAME"  || exit
   echo "Should have the source, I'm at $PWD"
 }
 
@@ -219,9 +224,9 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
     echo "Not reconfiguring due to the presence of config.status in $WORKING_DIR"
   else
     echo "Running ./configure with $CONFIGURE_CMD"
-    bash ./configure $CONFIGURE_CMD
+    bash ./configure "$CONFIGURE_CMD"
     if [ $? -ne 0 ]; then
-      echo ${fail}
+      echo "${error}"
       echo "Failed to configure the JDK, exiting"
       echo "Did you set the JDK boot directory correctly? Override by exporting JDK_BOOT_DIR"
       echo "For example, on RHEL you would do export JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.131-2.6.9.0.el7_3.x86_64"
@@ -243,7 +248,7 @@ buildOpenJDK()
     exit 0
   fi
 
-  if [ $(uname -m) == "s390x" ]; then
+  if [ "$OS_CPU_NAME" == "s390x" ]; then
     makeCMD="make ${MAKE_ARGS_FOR_SPECIAL_PLATFORMS}"
   else
     makeCMD="make ${MAKE_ARGS_FOR_ALL_PLATFORMS}"
@@ -253,7 +258,7 @@ buildOpenJDK()
   $makeCMD
 
   if [ $? -ne 0 ]; then
-     echo "${fail}Failed to make the JDK, exiting"
+     echo "${error}Failed to make the JDK, exiting"
     exit;
   else
     echo "${good}Built the JDK!"
@@ -267,7 +272,7 @@ removingUnnecessaryFiles()
 
   rm -rf cacerts_area
 
-  cd build/*/images
+  cd build/*/images  || return
 
   # Remove files we don't need
   rm -rf j2sdk-image/demo/applets
@@ -287,7 +292,7 @@ createOpenJDKTarArchive()
 
 stepIntoTargetDirectoryAndShowCompletionMessage()
 {
-  cd $TARGET_DIR
+  cd "${TARGET_DIR}"  || return
   ls
   echo "All done!"
 }
