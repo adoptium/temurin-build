@@ -18,8 +18,14 @@
 esc=$(echo -en "\033")
 
 # Set colors
+# shellcheck disable=SC2034
 error="${esc}[0;31m"
+# shellcheck disable=SC2034
 good="${esc}[0;32m"
+# shellcheck disable=SC2034
 info="${esc}[0;33m"
+# shellcheck disable=SC2034
 git="${esc}[0;34m"
+# shellcheck disable=SC2034
 normal=$(echo -en "${esc}[m\017")
+

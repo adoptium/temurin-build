@@ -47,6 +47,7 @@ JTREG=false
 
 sourceFileWithColourCodes()
 {
+  # shellcheck disable=SC1091
   source ./colour-codes.sh
 }
 

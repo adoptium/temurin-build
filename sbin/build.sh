@@ -38,6 +38,7 @@ OS_MACHINE_NAME=$(uname -m)
 
 sourceFileWithColourCodes()
 {
+  # shellcheck disable=SC1091
   source ../colour-codes.sh
 }
 
@@ -115,11 +116,14 @@ checkingAndDownloadingFreetype()
     bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${PARAMS}" && make all && make install
 
     if [ $? -ne 0 ]; then
+      # shellcheck disable=SC2154
       echo "${error}Failed to configure and build libfreetype, exiting"
       exit;
     else
+      # shellcheck disable=SC2154
       echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
     fi
+    # shellcheck disable=SC2154
     echo "${normal}"
   fi
 }
