@@ -16,6 +16,7 @@
 # For terminal colors
 esc=$(echo -en "\033")
 error="${esc}[0;31m"
+normal=$(echo -en "${esc}[m\017")
 
 
 exit_script() {
