@@ -27,7 +27,7 @@
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
 
-OS_KERNAL_NAME=$(echo $(uname) | awk '{print tolower($0)}')
+OS_KERNEL_NAME=$(uname) | awk '{print tolower($0)}'
 
 OS_MACHINE=$(uname -m)
 
@@ -38,7 +38,7 @@ fi
 
 BUILD_TYPE=normal
 
-BUILD_FULL_NAME=$OS_KERNAL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
+BUILD_FULL_NAME=$OS_KERNEL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
 
 USE_DOCKER=false
 WORKING_DIR=""
@@ -108,12 +108,12 @@ checkIfDockerIsUsedForBuildingOrNot()
   # Both a working directory and a target directory provided
   if [ ! -z "${WORKING_DIR}" ] && [ ! -z "${TARGET_DIR}" ] ; then
     # This uses sbin/build.sh directly
-    echo "${info} Not using Docker, working area will be ${WORKING_DIR}, target for the JDK will be ${TARGET_DIR} ${normal}"
+    echo "${info}Not using Docker, working area will be ${WORKING_DIR}, target for the JDK will be ${TARGET_DIR} ${normal}"
   fi
 
   # No working directory and no target directory provided
   if [ -z "${WORKING_DIR}" ] && [ -z "${TARGET_DIR}" ] ; then
-    echo "${info}No parameters provided, using Docker ${normal}"
+    echo "${info}No parameters provided, using Docker. ${normal}"
     USE_DOCKER=true
   elif [ ! -z "${TARGET_DIR}" ] && [ -z "${WORKING_DIR}" ] ; then
     # Target dir is defined but the working dir isn't
@@ -127,9 +127,9 @@ checkInCaseOfDockerShouldTheContainerBePreserved()
 {
   echo "${info}"
   if [ "${KEEP}" == "true" ] ; then
-    echo "We'll keep the built Docker container if you're using Docker"
+    echo "We'll keep the built Docker container if you're using Docker."
   else
-    echo "We'll remove the built Docker container if you're using Docker"
+    echo "We'll remove the built Docker container if you're using Docker."
   fi
   echo "${normal}"
 }
@@ -145,10 +145,10 @@ setDefaultIfBranchIsNotProvided()
 setWorkingDirectoryIfProvided()
 {
   if [ -z "${WORKING_DIR}" ] ; then
-    echo "${info}WORKING_DIR is undefined so setting to $PWD${normal}"
+    echo "${info}WORKING_DIR is undefined so setting to $PWD${normal}."
     WORKING_DIR=$PWD
   else
-    echo "${info}Working dir is $WORKING_DIR${normal}"
+    echo "${info}Working dir is $WORKING_DIR${normal}."
   fi
 }
 
@@ -159,11 +159,11 @@ setTargetDirectoryIfProvided()
     echo "${info}TARGET_DIR is undefined so setting to $PWD"
     TARGET_DIR=$PWD
     # Only makes a difference if we're in Docker
-    echo "If you're using Docker The build artifact will not be copied to the host"
+    echo "If you're using Docker the build artifact will not be copied to the host."
   else
     echo "${info}Target directory is $TARGET_DIR${normal}"
     COPY_TO_HOST=true
-    echo "If you're using Docker we'll copy the build artifact to the host"
+    echo "If you're using Docker we'll copy the build artifact to the host."
   fi
 }
 
@@ -187,8 +187,8 @@ cloneOpenJDKGitRepo()
       echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
       git clone -b ${BRANCH} git@github.com:"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
     else
-      echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-      git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME
+      echo "git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}""
+      git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "$WORKING_DIR/$OPENJDK_REPO_NAME"
     fi
   fi
   echo "${normal}"
@@ -203,9 +203,7 @@ testOpenJDKViaDocker()
 
 buildAndTestOpenJDKViaDocker()
 {
-  PS_DOCKER=$(ps -ef | grep "docker" | wc -l)
-
-  if [ -z $(which docker) ] || [ ${PS_DOCKER} -lt 2 ]; then
+  if [ -z "$(which docker)" ] || [ -z "$(pgrep "docker")" ]; then
     echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"
     exit
   fi
@@ -223,27 +221,27 @@ buildAndTestOpenJDKViaDocker()
   # Keep is undefined so we'll kill the docker image
 
   if [[ "$KEEP" == "true" ]] ; then
-     if [ $(docker ps -a | grep openjdk_container | wc -l) == 0 ]; then
+     if [ "$(docker ps -a | grep -c openjdk_container)" == 0 ]; then
          echo "${info}No docker container found so creating one${normal}"
          docker build -t $CONTAINER docker/jdk8u/x86_64/ubuntu
      fi
   else
      echo "${info}Building as you've not specified -k or --keep"
-     echo $good
+     echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm -f {}
      docker build -t $CONTAINER docker/jdk8u/x86_64/ubuntu
-     echo $normal
+     echo "$normal"
   fi
 
-  docker run --privileged -t -v $WORKING_DIR/$OPENJDK_REPO_NAME:/openjdk/jdk8u/openjdk --entrypoint build.sh $CONTAINER
+  docker run --privileged -t -v "$WORKING_DIR/$OPENJDK_REPO_NAME:/openjdk/jdk8u/openjdk" --entrypoint build.sh "$CONTAINER"
 
   testOpenJDKViaDocker
 
   CONTAINER_ID=$(docker ps -a | awk '{ print $1,$2 }' | grep openjdk_container | awk '{print $1 }'| head -1)
 
   if [[ "${COPY_TO_HOST}" == "true" ]] ; then
-    echo "Copying to the host with docker cp $id:/openjdk/jdk8u/OpenJDK.tar.gz $TARGET_DIR"
-    docker cp $CONTAINER_ID:/openjdk/jdk8u/OpenJDK.tar.gz $TARGET_DIR
+    echo "Copying to the host with docker cp "$CONTAINER_ID":/openjdk/jdk8u/OpenJDK.tar.gz $TARGET_DIR"
+    docker cp "$CONTAINER_ID":/openjdk/jdk8u/OpenJDK.tar.gz "$TARGET_DIR"
   fi
 
   if [[ "${JTREG}" == "true" ]] ; then
@@ -262,14 +260,14 @@ testOpenJDKInNativeEnvironmentIfExpected()
 {
   if [[ "$JTREG" == "true" ]];
   then
-      $WORKING_DIR/sbin/jtreg.sh $WORKING_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JTREG_TEST_SUBSETS
+      "$WORKING_DIR"/sbin/jtreg.sh "$WORKING_DIR" "$OPENJDK_REPO_NAME" "$BUILD_FULL_NAME" "$JTREG_TEST_SUBSETS"
   fi
 }
 
 buildAndTestOpenJDKInNativeEnvironment()
 {
   echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JVM_VARIANT"
-  $WORKING_DIR/sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JVM_VARIANT
+  "$WORKING_DIR"/sbin/build.sh "$WORKING_DIR" "$TARGET_DIR" "$OPENJDK_REPO_NAME" "$BUILD_FULL_NAME" "$JVM_VARIANT"
 
   testOpenJDKInNativeEnvironmentIfExpected
 }

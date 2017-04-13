@@ -18,7 +18,7 @@ hg clone http://hg.openjdk.java.net/jdk8u/jdk8u/ openjdk_hg
 
 cd openjdk_hg || exit
 # get latest mercurial tag
-hgTag=`hg log -r "." --template "{latesttag}\n"`
+#hgTag=`hg log -r "." --template "{latesttag}\n"`
 
 bash ./get_source.sh
 for i in corba jaxp jaxws langtools jdk hotspot nashorn; do
@@ -50,7 +50,7 @@ git commit -m "merge sources"
 git remote add releases git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
 git fetch --all
 # check if git diff is the same
-if [ `git diff releases/master | wc -l` -gt 0 ]; then
+if [ $(git diff releases/master | wc -l) -gt 0 ]; then
 	git checkout -b staging
 	git checkout master
 	git reset --hard releases/master
