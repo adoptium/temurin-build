@@ -111,7 +111,7 @@ packageTestResultsWithJCovReports()
 
   artifact="${JOB_NAME}-testoutput-with-jcov-reports"
   echo "Tarring and zipping the 'testoutput' folder into artefact: $artifact.tar.gz" 
-  tar -cvzf "$WORKING_DIR/$artifact.tar.gz"   testoutput/
+  tar -czf "$WORKING_DIR/$artifact.tar.gz"   testoutput/
 
   if [ -d testoutput  ]; then  
      rm -fr "$WORKING_DIR/$OPENJDK_REPO_NAME/testoutput"
@@ -130,7 +130,7 @@ packageOnlyJCovReports()
 
   artifact="${JOB_NAME}-jcov-results-only"
   echo "Tarring and zipping the 'testoutput/../jcov' folder into artefact: $artifact.tar.gz" 
-  tar -cvzf "$WORKING_DIR/$artifact.tar.gz"   testoutput/*/JTreport/jcov/
+  tar -czf "$WORKING_DIR/$artifact.tar.gz"   testoutput/*/JTreport/jcov/
 
   cd "$WORKING_DIR" || exit
 }

@@ -94,7 +94,7 @@ checkingAndDownloadingAlsa()
     echo "Skipping ALSA download"
   else
     wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
-    tar xvf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    tar xf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
   fi
 }
@@ -111,7 +111,7 @@ checkingAndDownloadingFreeType()
     # Then FreeType for fonts: make it and use
     wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"$FREETYPE_FONT_VERSION".tar.gz
      
-    tar xvf freetype-"$FREETYPE_FONT_VERSION".tar.gz
+    tar xf freetype-"$FREETYPE_FONT_VERSION".tar.gz
     rm freetype-"$FREETYPE_FONT_VERSION".tar.gz
 
     cd freetype-"$FREETYPE_FONT_VERSION" || exit
@@ -283,7 +283,7 @@ removingUnnecessaryFiles()
 
 createOpenJDKTarArchive()
 {
-  GZIP=-9 tar -cvzf OpenJDK.tar.gz ./j2sdk-image
+  GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
 
   mv OpenJDK.tar.gz $TARGET_DIR
 
