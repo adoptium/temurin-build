@@ -34,7 +34,7 @@ FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
 MAKE_ARGS_FOR_ALL_PLATFORMS=${MAKE_ARGS_FOR_ALL_PLATFORMS:-"images"}
 MAKE_ARGS_FOR_SPECIAL_PLATFORMS=${MAKE_ARGS_FOR_SPECIAL_PLATFORMS:-"CONF=${BUILD_FULL_NAME} DEBUG_BINARIES=true images"}
 
-OS_CPU_NAME=$(uname -m)
+OS_MACHINE_NAME=$(uname -m)
 
 sourceFileWithColourCodes()
 {
@@ -106,7 +106,7 @@ checkingAndDownloadingFreetype()
 
     cd freetype-"$FREETYPE_FONT_VERSION" || exit
 
-    if [ "$OS_CPU_NAME" = "ppc64le" ]; then
+    if [ "$OS_MACHINE_NAME" = "ppc64le" ]; then
       # shellcheck disable=SC1083
       PARAMS="--build=$(rpm --eval %{_host})"
     fi
@@ -174,7 +174,7 @@ buildingTheRestOfTheConfigParameters()
     CONFIGURE_CMD="$CONFIGURE_CMD --enable-ccache"
   fi
   
-  if [[ "$OS_CPU_NAME" == "armv7l" ]] ; then
+  if [[ "$OS_MACHINE_NAME" == "armv7l" ]] ; then
     CONFIGURE_CMD="$CONFIGURE_CMD --with-num-cores=4"
   fi
 
@@ -238,7 +238,7 @@ buildOpenJDK()
     exit 0
   fi
 
-  if [ "$OS_CPU_NAME" == "s390x" ]; then
+  if [ "$OS_MACHINE_NAME" == "s390x" ]; then
     makeCMD="make ${MAKE_ARGS_FOR_SPECIAL_PLATFORMS}"
   else
     makeCMD="make ${MAKE_ARGS_FOR_ALL_PLATFORMS}"
