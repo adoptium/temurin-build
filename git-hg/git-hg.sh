@@ -37,13 +37,13 @@ git init
 "$WORKSPACE"/fast-export/hg-fast-export.sh -r "$WORKSPACE"/openjdk_hg
 for i in corba jaxp jaxws langtools jdk hotspot nashorn; do
 	# copy the additional repos in
-	cp -r "$WORKSPACE"/openjdk_hg/$i $i
+	cp -r "${WORKSPACE}"/openjdk_hg/$i $i
 done
 git checkout
 # remove remaining mercurial stuff
 rm -rf .hg .hgignore .hgtags README-builds.html README get_source.sh
 # create new README
-cp "$WORKSPACE"/openjdk-build/git-hg/README.md .
+cp "${WORKSPACE}"/openjdk-build/git-hg/README.md .
 echo ".hg/" > .gitignore
 git add .
 git commit -m "merge sources"

@@ -28,15 +28,15 @@ REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
 
 OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
-OS_CPU_NAME=$(uname -m)
+OS_MACHINE_NAME=$(uname -m)
 
 JVM_VARIANT=server
-if [[ "$OS_CPU_NAME" == "s390x" ]] || [[ "$OS_CPU_NAME" == "armv7l" ]] ; then
+if [[ "$OS_MACHINE_NAME" == "s390x" ]] || [[ "$OS_MACHINE_NAME" == "armv7l" ]] ; then
  JVM_VARIANT=zero
 fi 
 
 BUILD_TYPE=normal
-BUILD_FULL_NAME=$OS_KERNEL_NAME-$OS_CPU_NAME-$BUILD_TYPE-$JVM_VARIANT-release
+BUILD_FULL_NAME=${OS_KERNEL_NAME}-${OS_MACHINE_NAME}-${BUILD_TYPE}-${JVM_VARIANT}-release
 USE_DOCKER=false
 WORKING_DIR=""
 USE_SSH=false
@@ -142,10 +142,10 @@ setDefaultIfBranchIsNotProvided()
 setWorkingDirectoryIfProvided()
 {
   if [ -z "${WORKING_DIR}" ] ; then
-    echo "${info}WORKING_DIR is undefined so setting to $PWD${normal}."
+    echo "${info}WORKING_DIR is undefined so setting to ${PWD}${normal}."
     WORKING_DIR=$PWD
   else
-    echo "${info}Working dir is $WORKING_DIR${normal}."
+    echo "${info}Working dir is ${WORKING_DIR}${normal}."
   fi
 }
 
@@ -185,7 +185,7 @@ cloneOpenJDKGitRepo()
       git clone -b ${BRANCH} git@github.com:"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
     else
       echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-      git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "$WORKING_DIR/$OPENJDK_REPO_NAME"
+      git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
     fi
   fi
   echo "${normal}"
@@ -230,7 +230,7 @@ buildAndTestOpenJDKViaDocker()
      echo "$normal"
   fi
 
-  docker run --privileged -t -v "$WORKING_DIR/$OPENJDK_REPO_NAME:/openjdk/jdk8u/openjdk" --entrypoint build.sh "$CONTAINER"
+  docker run --privileged -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}:/openjdk/jdk8u/openjdk" --entrypoint build.sh "${CONTAINER}"
 
   testOpenJDKViaDocker
 
@@ -238,18 +238,18 @@ buildAndTestOpenJDKViaDocker()
 
   if [[ "${COPY_TO_HOST}" == "true" ]] ; then
     echo "Copying to the host with docker cp $CONTAINER_ID:/openjdk/jdk8u/OpenJDK.tar.gz $TARGET_DIR"
-    docker cp "$CONTAINER_ID":/openjdk/jdk8u/OpenJDK.tar.gz "$TARGET_DIR"
+    docker cp "${CONTAINER_ID}":/openjdk/jdk8u/OpenJDK.tar.gz "${TARGET_DIR}"
   fi
 
   if [[ "${JTREG}" == "true" ]] ; then
     echo "Copying jtreg reports from docker"
-    docker cp "$CONTAINER_ID":/openjdk/jdk8u/jtreport.zip "$TARGET_DIR"
-    docker cp "$CONTAINER_ID":/openjdk/jdk8u/jtwork.zip "$TARGET_DIR"
+    docker cp "${CONTAINER_ID}":/openjdk/jdk8u/jtreport.zip "${TARGET_DIR}"
+    docker cp "${CONTAINER_ID}":/openjdk/jdk8u/jtwork.zip "${TARGET_DIR}"
   fi
 
   # Didn't specify to keep
   if [[ -z ${KEEP} ]] ; then
-    docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm {}
+    docker ps -a | awk '{ print $1,$2 }' | grep "${CONTAINER}" | awk '{print $1 }' | xargs -I {} docker rm {}
   fi
 }
 
@@ -257,14 +257,14 @@ testOpenJDKInNativeEnvironmentIfExpected()
 {
   if [[ "$JTREG" == "true" ]];
   then
-      "$WORKING_DIR"/sbin/jtreg.sh "$WORKING_DIR" "$OPENJDK_REPO_NAME" "$BUILD_FULL_NAME" "$JTREG_TEST_SUBSETS"
+      "${WORKING_DIR}"/sbin/jtreg.sh "${WORKING_DIR}" "${OPENJDK_REPO_NAME}" "${BUILD_FULL_NAME}" "${JTREG_TEST_SUBSETS}"
   fi
 }
 
 buildAndTestOpenJDKInNativeEnvironment()
 {
   echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $BUILD_FULL_NAME $JVM_VARIANT"
-  "$WORKING_DIR"/sbin/build.sh "$WORKING_DIR" "$TARGET_DIR" "$OPENJDK_REPO_NAME" "$BUILD_FULL_NAME" "$JVM_VARIANT"
+  "${WORKING_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${BUILD_FULL_NAME}" "${JVM_VARIANT}"
 
   testOpenJDKInNativeEnvironmentIfExpected
 }

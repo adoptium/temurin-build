@@ -82,11 +82,11 @@ elif [ ! -d "${WORKING_DIR}"/$OPENJDK_REPO_NAME/.git ] ; then
   # If it doesn't exist, clone it
   echo "Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
   if [[ "${USE_SSH}" == true ]] ; then
-    echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
-    git clone -b ${BRANCH} git@github.com:"${REPOSITORY}".git "$WORKING_DIR/$OPENJDK_REPO_NAME"
+    echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+    git clone -b ${BRANCH} git@github.com:"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
   else
-    echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git $WORKING_DIR/$OPENJDK_REPO_NAME"
-    git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "$WORKING_DIR/$OPENJDK_REPO_NAME"
+    echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+    git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
   fi
 fi
 

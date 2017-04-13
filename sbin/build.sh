@@ -93,9 +93,9 @@ checkingAndDownloadingAlsa()
   if [[ ! -z "${FOUND_ALSA}" ]] ; then
     echo "Skipping ALSA download"
   else
-    wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"$ALSA_LIB_VERSION".tar.bz2
-    tar xvf alsa-lib-"$ALSA_LIB_VERSION".tar.bz2
-    rm alsa-lib-"$ALSA_LIB_VERSION".tar.bz2
+    wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    tar xvf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
   fi
 }
 
@@ -122,7 +122,7 @@ checkingAndDownloadingFreetype()
     fi
 
     # We get the files we need at $WORKING_DIR/installedfreetype
-    bash ./configure --prefix="$WORKING_DIR"/"$OPENJDK_REPO_NAME"/installedfreetype "$PARAMS" && make all && make install
+    bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${PARAMS}" && make all && make install
 
     if [ $? -ne 0 ]; then
       echo "${error}Failed to configure and build libfreetype, exiting"
@@ -292,7 +292,7 @@ createOpenJDKTarArchive()
 
 stepIntoTargetDirectoryAndShowCompletionMessage()
 {
-  cd $TARGET_DIR  || return
+  cd "${TARGET_DIR}"  || return
   ls
   echo "All done!"
 }
