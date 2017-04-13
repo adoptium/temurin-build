@@ -50,7 +50,7 @@ git commit -m "merge sources"
 git remote add releases git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
 git fetch --all
 # check if git diff is the same
-if [ $(git diff releases/master | wc -l) -gt 0 ]; then
+if [ "$(git diff releases/master | wc -l)" -gt 0 ]; then
 	git checkout -b staging
 	git checkout master
 	git reset --hard releases/master

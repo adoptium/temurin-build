@@ -27,18 +27,17 @@
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
 
-OS_KERNEL_NAME=$(uname) | awk '{print tolower($0)}'
-
-OS_MACHINE=$(uname -m)
+OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
+OS_CPU_NAME=$(uname -m)
 
 JVM_VARIANT=server
-if [[ "$OS_MACHINE" == "s390x" ]] || [[ "$OS_MACHINE" == "armv7l" ]] ; then
+if [[ "$OS_CPU_NAME" == "s390x" ]] || [[ "$OS_CPU_NAME" == "armv7l" ]] ; then
  JVM_VARIANT=zero
 fi 
 
 BUILD_TYPE=normal
 
-BUILD_FULL_NAME=$OS_KERNEL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
+BUILD_FULL_NAME=$OS_KERNEL_NAME-$OS_CPU_NAME-$BUILD_TYPE-$JVM_VARIANT-release
 
 USE_DOCKER=false
 WORKING_DIR=""
@@ -187,7 +186,7 @@ cloneOpenJDKGitRepo()
       echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
       git clone -b ${BRANCH} git@github.com:"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
     else
-      echo "git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}""
+      echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
       git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "$WORKING_DIR/$OPENJDK_REPO_NAME"
     fi
   fi
@@ -240,14 +239,14 @@ buildAndTestOpenJDKViaDocker()
   CONTAINER_ID=$(docker ps -a | awk '{ print $1,$2 }' | grep openjdk_container | awk '{print $1 }'| head -1)
 
   if [[ "${COPY_TO_HOST}" == "true" ]] ; then
-    echo "Copying to the host with docker cp "$CONTAINER_ID":/openjdk/jdk8u/OpenJDK.tar.gz $TARGET_DIR"
+    echo "Copying to the host with docker cp $CONTAINER_ID:/openjdk/jdk8u/OpenJDK.tar.gz $TARGET_DIR"
     docker cp "$CONTAINER_ID":/openjdk/jdk8u/OpenJDK.tar.gz "$TARGET_DIR"
   fi
 
   if [[ "${JTREG}" == "true" ]] ; then
     echo "Copying jtreg reports from docker"
-    docker cp $CONTAINER_ID:/openjdk/jdk8u/jtreport.zip $TARGET_DIR
-    docker cp $CONTAINER_ID:/openjdk/jdk8u/jtwork.zip $TARGET_DIR
+    docker cp "$CONTAINER_ID":/openjdk/jdk8u/jtreport.zip "$TARGET_DIR"
+    docker cp "$CONTAINER_ID":/openjdk/jdk8u/jtwork.zip "$TARGET_DIR"
   fi
 
   # Didn't specify to keep
