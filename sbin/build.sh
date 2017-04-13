@@ -212,7 +212,7 @@ configureCommandParameters()
 stepIntoTheWorkingDirectory()
 {
   # Make sure we're in the source directory for OpenJDK now
-  cd $WORKING_DIR/$OPENJDK_REPO_NAME
+  cd "$WORKING_DIR/$OPENJDK_REPO_NAME"  || exit
   echo "Should have the source, I'm at $PWD"
 }
 
@@ -258,7 +258,7 @@ buildOpenJDK()
   $makeCMD
 
   if [ $? -ne 0 ]; then
-     echo "${fail}Failed to make the JDK, exiting"
+     echo "${error}Failed to make the JDK, exiting"
     exit;
   else
     echo "${good}Built the JDK!"
