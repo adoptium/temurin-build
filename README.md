@@ -41,11 +41,20 @@ For help with getting docker follow the instructions [here](https://docs.docker.
 
 Remember that when using Ansible the changes wil be persistent on your local filesystem: the build process includes downloading and configuring a number of dependencies including gcc and various development libraries: see the Ansible playbook itself to see the full listing
 
+### Building in your local enviromment 
+
+You can use the `makejdk-local-env.sh` script by providing two parameters: the "working directory" (which is where files will be downloaded to: this includes a number of libraries used with OpenJDK itself such as FreeType and ALSA) and the "target directory" which will be used to store the final .tar.gz file containing the j2sdk-image
+
+e.g `./makejdk-local-env.sh -s /path/to/workspace -d /target/directory`
+
+Note: have a look at the usage of `makejdk.sh --help`, the exact usage is available for this script as well. 
+
 ### None of the above?
 
 You can use the `makejdk.sh` script by providing two parameters: the "working directory" (which is where files will be downloaded to: this includes a number of libraries used with OpenJDK itself such as FreeType and ALSA) and the "target directory" which will be used to store the final .tar.gz file containing the j2sdk-image
 
 e.g `./makejdk.sh -s /path/to/workspace -d /target/directory`
+
 
 #### Configuring Docker
 

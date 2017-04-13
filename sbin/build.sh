@@ -20,13 +20,12 @@ WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 BUILD_FULL_NAME=$4
-
-JVM_VARIANT=${5:=normal}
+JVM_VARIANT=${5:=server}
 NOBUILD=$6
 
 if [ "${JVM_VARIANT}" == "--nobuild" ]; then
   NOBUILD="--nobuild"
-  JVM_VARIANT="normal"
+  JVM_VARIANT="server"
 fi
 
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}

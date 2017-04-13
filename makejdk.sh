@@ -36,9 +36,7 @@ if [[ "$OS_CPU_NAME" == "s390x" ]] || [[ "$OS_CPU_NAME" == "armv7l" ]] ; then
 fi 
 
 BUILD_TYPE=normal
-
 BUILD_FULL_NAME=$OS_KERNEL_NAME-$OS_CPU_NAME-$BUILD_TYPE-$JVM_VARIANT-release
-
 USE_DOCKER=false
 WORKING_DIR=""
 USE_SSH=false
