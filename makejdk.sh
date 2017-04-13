@@ -27,18 +27,14 @@
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
 
-OS_KERNAL_NAME=$(echo $(uname) | awk '{print tolower($0)}')
+OS_KERNEL_NAME=$(echo $(uname) | awk '{print tolower($0)}')
 
 OS_MACHINE=$(uname -m)
 
-JVM_VARIANT=server
-if [[ "$OS_MACHINE" == "s390x" ]] || [[ "$OS_MACHINE" == "armv7l" ]] ; then
- JVM_VARIANT=zero
-fi 
+JVM_VARIANT=${JVM_VARIANT:-server}
+BUILD_TYPE=${BUILD_TYPE:-normal}
 
-BUILD_TYPE=normal
-
-BUILD_FULL_NAME=$OS_KERNAL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
+BUILD_FULL_NAME=$OS_KERNEL_NAME-$OS_MACHINE-$BUILD_TYPE-$JVM_VARIANT-release
 
 USE_DOCKER=false
 WORKING_DIR=""
