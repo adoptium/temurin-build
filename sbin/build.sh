@@ -36,19 +36,9 @@ MAKE_ARGS_FOR_SPECIAL_PLATFORMS=${MAKE_ARGS_FOR_SPECIAL_PLATFORMS:-"CONF=${BUILD
 
 OS_CPU_NAME=$(uname -m)
 
-initialiseEscapeCodes()
+sourceFileWithColourCodes()
 {
-  # Escape code
-  esc=$(echo -en "\033")
-
-  # Set colors
-  error="${esc}[0;31m"
-  good="${esc}[0;32m"
-  # shellcheck disable=SC2034
-  info="${esc}[0;33m"
-  # shellcheck disable=SC2034
-  git="${esc}[0;34m"
-  normal=$(echo -en "${esc}[m\017")
+  source ../colour-codes.sh
 }
 
 checkIfDockerIsUsedForBuildingOrNot()
@@ -297,7 +287,7 @@ stepIntoTargetDirectoryAndShowCompletionMessage()
   echo "All done!"
 }
 
-initialiseEscapeCodes
+sourceFileWithColourCodes
 checkIfDockerIsUsedForBuildingOrNot
 downloadingRequiredDependencies
 configureCommandParameters
