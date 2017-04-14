@@ -218,7 +218,9 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
     echo "Not reconfiguring due to the presence of config.status in $WORKING_DIR"
   else
     echo "Running ./configure with $CONFIGURE_CMD"
-    bash ./configure "$CONFIGURE_CMD"
+    # Depends upon the configure command being split for multiple args.  Dont quote it.
+    # shellcheck disable=SC2086
+    bash ./configure $CONFIGURE_CMD
     if [ $? -ne 0 ]; then
       echo "${error}"
       echo "Failed to configure the JDK, exiting"
