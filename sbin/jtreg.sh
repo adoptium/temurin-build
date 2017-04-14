@@ -16,7 +16,8 @@
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
-JTREG_TEST_SUBSETS=$("$4"//:/ ) # Replace all ':' with ' '
+# shellcheck disable=SC2001
+JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
 JTREG_VERSION=${JTREG_VERSION:-4.2.0-tip}
 JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
 JOB_NAME=${JOB_NAME:-OpenJDK}
