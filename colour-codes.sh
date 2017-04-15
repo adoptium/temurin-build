@@ -12,20 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# Purpose: This script was contains colour codes that will be commonly used across multiple scripts
 
-# For terminal colors
+# Escape code
 esc=$(echo -en "\033")
+
+# Set colors
+# shellcheck disable=SC2034
 error="${esc}[0;31m"
+# shellcheck disable=SC2034
+good="${esc}[0;32m"
+# shellcheck disable=SC2034
+info="${esc}[0;33m"
+# shellcheck disable=SC2034
+git="${esc}[0;34m"
+# shellcheck disable=SC2034
 normal=$(echo -en "${esc}[m\017")
 
-
-exit_script() {
-    if [[ -z ${KEEP} ]] ; then
-      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
-    fi
-    echo "${error}Process exited${normal}"
-    trap - SIGINT SIGTERM # clear the trap
-    kill -- -$$ # Sends SIGTERM to child/sub processes
-}
-
-trap exit_script SIGINT SIGTERM 
