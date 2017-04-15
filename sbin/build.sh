@@ -34,21 +34,12 @@ FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
 MAKE_ARGS_FOR_ALL_PLATFORMS=${MAKE_ARGS_FOR_ALL_PLATFORMS:-"images"}
 MAKE_ARGS_FOR_SPECIAL_PLATFORMS=${MAKE_ARGS_FOR_SPECIAL_PLATFORMS:-"CONF=${BUILD_FULL_NAME} DEBUG_BINARIES=true images"}
 
-OS_CPU_NAME=$(uname -m)
+OS_MACHINE_NAME=$(uname -m)
 
-initialiseEscapeCodes()
+sourceFileWithColourCodes()
 {
-  # Escape code
-  esc=$(echo -en "\033")
-
-  # Set colors
-  error="${esc}[0;31m"
-  good="${esc}[0;32m"
-  # shellcheck disable=SC2034
-  info="${esc}[0;33m"
-  # shellcheck disable=SC2034
-  git="${esc}[0;34m"
-  normal=$(echo -en "${esc}[m\017")
+  # shellcheck disable=SC1091
+  source ../colour-codes.sh
 }
 
 checkIfDockerIsUsedForBuildingOrNot()
@@ -116,7 +107,7 @@ checkingAndDownloadingFreeType()
 
     cd freetype-"$FREETYPE_FONT_VERSION" || exit
 
-    if [ "$OS_CPU_NAME" = "ppc64le" ]; then
+    if [ "$OS_MACHINE_NAME" = "ppc64le" ]; then
       # shellcheck disable=SC1083
       PARAMS="--build=$(rpm --eval %{_host})"
     fi
@@ -125,11 +116,14 @@ checkingAndDownloadingFreeType()
     bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${PARAMS}" && make all && make install
 
     if [ $? -ne 0 ]; then
+      # shellcheck disable=SC2154
       echo "${error}Failed to configure and build libfreetype, exiting"
       exit;
     else
+      # shellcheck disable=SC2154
       echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
     fi
+    # shellcheck disable=SC2154
     echo "${normal}"
   fi
 }
@@ -184,7 +178,7 @@ buildingTheRestOfTheConfigParameters()
     CONFIGURE_CMD="${CONFIGURE_CMD} --enable-ccache"
   fi
   
-  if [[ "$OS_CPU_NAME" == "armv7l" ]] ; then
+  if [[ "$OS_MACHINE_NAME" == "armv7l" ]] ; then
     CONFIGURE_CMD="${CONFIGURE_CMD} --with-num-cores=4"
   fi
 
@@ -250,7 +244,7 @@ buildOpenJDK()
     exit 0
   fi
 
-  if [ "$OS_CPU_NAME" == "s390x" ]; then
+  if [ "$OS_MACHINE_NAME" == "s390x" ]; then
     makeCMD="make ${MAKE_ARGS_FOR_SPECIAL_PLATFORMS}"
   else
     makeCMD="make ${MAKE_ARGS_FOR_ALL_PLATFORMS}"
@@ -299,7 +293,7 @@ stepIntoTargetDirectoryAndShowCompletionMessage()
   echo "All done!"
 }
 
-initialiseEscapeCodes
+sourceFileWithColourCodes
 checkIfDockerIsUsedForBuildingOrNot
 downloadingRequiredDependencies
 configureCommandParameters

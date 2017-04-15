@@ -45,17 +45,10 @@ BRANCH=""
 KEEP=false
 JTREG=false
 
-initialiseEscapeCodes()
+sourceFileWithColourCodes()
 {
-  # Escape code
-  esc=$(echo -en "\033")
-
-  # Set colors
-  error="${esc}[0;31m"
-  good="${esc}[0;32m"
-  info="${esc}[0;33m"
-  git="${esc}[0;34m"
-  normal=$(echo -en "${esc}[m\017")
+  # shellcheck disable=SC1091
+  source ./colour-codes.sh
 }
 
 sourceSignalHandler()
@@ -280,7 +273,7 @@ buildAndTestOpenJDK()
 
 ##################################################################
 
-initialiseEscapeCodes
+sourceFileWithColourCodes
 sourceSignalHandler
 parseCommandLineArgs "$@"
 checkIfDockerIsUsedForBuildingOrNot
