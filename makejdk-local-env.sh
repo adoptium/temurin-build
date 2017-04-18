@@ -32,4 +32,9 @@ if [[ "$OS_MACHINE" == "s390x" ]] || [[ "$OS_MACHINE" == "armv7l" ]] ; then
    export JVM_VARIANT=zero
 fi
 
+
+if [ "$OS_MACHINE_NAME" == "armv7l" ]; then
+    export MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"DEBUG_BINARIES=true images"}
+fi
+
 ./makejdk.sh "$@"
