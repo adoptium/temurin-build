@@ -85,7 +85,7 @@ parseCommandLineArgs()
       "--jtreg" | "-j" )
       JTREG=true; shift;;
 
-    "--jtreg_subsets" )
+      "--jtreg-subsets" | "-js" )
     JTREG=true; JTREG_TEST_SUBSETS="$1"; shift;;
 
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk.1; exit 1;;
@@ -96,7 +96,7 @@ parseCommandLineArgs()
 checkIfDockerIsUsedForBuildingOrNot()
 {
   # Both a working directory and a target directory provided
-  if [ ! -z "${WORKING_DIR}" ] && [ ! -z "${TARGET_DIR}" ] ; then
+  if [ ! -z "$WORKING_DIR" ] && [ ! -z "$TARGET_DIR" ] ; then
     # This uses sbin/build.sh directly
     echo "${info}Not using Docker, working area will be ${WORKING_DIR}, target for the JDK will be ${TARGET_DIR} ${normal}"
   fi
@@ -105,8 +105,8 @@ checkIfDockerIsUsedForBuildingOrNot()
   if [ -z "${WORKING_DIR}" ] && [ -z "${TARGET_DIR}" ] ; then
     echo "${info}No parameters provided, using Docker. ${normal}"
     USE_DOCKER=true
-  elif [ ! -z "${TARGET_DIR}" ] && [ -z "${WORKING_DIR}" ] ; then
-    # Target dir is defined but the working dir isn't
+  elif [ ! -z "$TARGET_DIR" ] && [ -z "$WORKING_DIR" ] ; then
+    # Target directory is defined but the working directory isn't
     # Calls sbin/build.sh inside of Docker followed by a docker cp command
     echo "${info}Using Docker, target directory for the tgz on the host: ${TARGET_DIR}"
     USE_DOCKER=true
@@ -126,7 +126,7 @@ checkInCaseOfDockerShouldTheContainerBePreserved()
 
 setDefaultIfBranchIsNotProvided()
 {
-  if [ -z "${BRANCH}" ] ; then
+  if [ -z "$BRANCH" ] ; then
     echo "${info}BRANCH is undefined so checking out dev${normal}"
     BRANCH="dev"
   fi
@@ -151,7 +151,7 @@ setTargetDirectoryIfProvided()
     # Only makes a difference if we're in Docker
     echo "If you're using Docker the build artifact will not be copied to the host."
   else
-    echo "${info}Target directory is $TARGET_DIR${normal}"
+    echo "${info}Target directory is ${TARGET_DIR}${normal}"
     COPY_TO_HOST=true
     echo "If you're using Docker we'll copy the build artifact to the host."
   fi
@@ -173,7 +173,7 @@ cloneOpenJDKGitRepo()
   elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
     # If it doesn't exixt, clone it
     echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
-    if [[ "${USE_SSH}" == "true" ]] ; then
+    if [[ "$USE_SSH" == "true" ]] ; then
       echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
       git clone -b ${BRANCH} git@github.com:"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
     else
@@ -234,7 +234,7 @@ buildAndTestOpenJDKViaDocker()
     docker cp "${CONTAINER_ID}":/openjdk/jdk8u/OpenJDK.tar.gz "${TARGET_DIR}"
   fi
 
-  if [[ "${JTREG}" == "true" ]] ; then
+  if [[ "$JTREG" == "true" ]] ; then
     echo "Copying jtreg reports from docker"
     docker cp "${CONTAINER_ID}":/openjdk/jdk8u/jtreport.zip "${TARGET_DIR}"
     docker cp "${CONTAINER_ID}":/openjdk/jdk8u/jtwork.zip "${TARGET_DIR}"
@@ -264,7 +264,7 @@ buildAndTestOpenJDKInNativeEnvironment()
 
 buildAndTestOpenJDK()
 {
-  if [ "${USE_DOCKER}" == "true" ] ; then
+  if [ "$USE_DOCKER" == "true" ] ; then
     buildAndTestOpenJDKViaDocker
   else
     buildAndTestOpenJDKInNativeEnvironment
