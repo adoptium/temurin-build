@@ -86,7 +86,7 @@ parseCommandLineArgs()
       JTREG=true; shift;;
 
       "--jtreg-subsets" | "-js" )
-    JTREG=true; JTREG_TEST_SUBSETS="$1"; shift;;
+      JTREG=true; JTREG_TEST_SUBSETS="$1"; shift;;
 
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk.1; exit 1;;
      esac
