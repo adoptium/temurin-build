@@ -29,10 +29,10 @@ set -eu
 OS_MACHINE_NAME=$(uname -m)
 
 if [[ "$OS_MACHINE_NAME" == "s390x" ]] ; then
-   export JVM_VARIANT=zero
+   export JVM_VARIANT=${JVM_VARIANT:-zero}
 fi
 
-if [ "$OS_MACHINE_NAME" == "armv7l" ]; then
+if [[ "$OS_MACHINE_NAME" == "armv7l" ]] ; then
    export JVM_VARIANT=zero
    export MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"DEBUG_BINARIES=true images"}
 fi
