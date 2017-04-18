@@ -41,6 +41,7 @@ downloadJtregAndSetupEnvironment()
   if [[ ! -d "${WORKING_DIR}/${JTREG_TARGET_FOLDER}" ]]; then
    echo "Downloading Jtreg binary"
    JTREG_BINARY_FILE="jtreg-${JTREG_VERSION}.tar.gz"
+
    wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/"$JTREG_BINARY_FILE"
 
    if [ $? -ne 0 ]; then
@@ -48,15 +49,15 @@ downloadJtregAndSetupEnvironment()
      exit
    fi
 
-   tar xvf "$JTREG_BINARY_FILE"
+   tar xf "$JTREG_BINARY_FILE"
   fi
 
-  echo "List contents of jtreg"
+  echo "List contents of the jtreg folder"
   ls "$WORKING_DIR/$JTREG_TARGET_FOLDER/*"
 
-  export PATH=$WORKING_DIR/$JTREG_TARGET_FOLDER/bin:$PATH
-
   export JT_HOME=$WORKING_DIR/$JTREG_TARGET_FOLDER
+
+  export PATH=$JT_HOME/bin:$PATH
 
   # Clean up after ourselves by removing jtreg tgz
   rm -f "$JTREG_BINARY_FILE"
@@ -108,16 +109,16 @@ packageTestResultsWithJCovReports()
   pwd
 
   cd "$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/" || exit
- 
+
   artifact="${JOB_NAME}-testoutput-with-jcov-reports"
   echo "Tarring and zipping the 'testoutput' folder into artefact: $artifact.tar.gz" 
-  tar -cvzf "$WORKING_DIR/$artifact.tar.gz"   testoutput/
+  tar -czf "$WORKING_DIR/$artifact.tar.gz"   testoutput/
 
   if [ -d testoutput  ]; then  
      rm -fr "$WORKING_DIR/$OPENJDK_REPO_NAME/testoutput"
   fi
   cp -fr testoutput/ "$WORKING_DIR/testoutput/"
-  
+
   cd "$WORKING_DIR" || exit
 }
 
@@ -127,10 +128,10 @@ packageOnlyJCovReports()
   pwd
 
   cd "$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/" || exit
- 
+
   artifact="${JOB_NAME}-jcov-results-only"
   echo "Tarring and zipping the 'testoutput/../jcov' folder into artefact: $artifact.tar.gz" 
-  tar -cvzf "$WORKING_DIR/$artifact.tar.gz"   testoutput/*/JTreport/jcov/
+  tar -czf "$WORKING_DIR/$artifact.tar.gz"   testoutput/*/JTreport/jcov/
 
   cd "$WORKING_DIR" || exit
 }

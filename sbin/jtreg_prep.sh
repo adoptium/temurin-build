@@ -16,114 +16,141 @@
 # Purpose: This script was designed to do any+all setup required by the jtreg.sh script in order to run it.
 # Tasks: Retrieve Java, unpack it if need-be, and store it locally in a specific location. If the location is blank, we put it in 
 
+set -eu
+
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
 
-while [[ $# -gt 0 ]] && [[ ."$1" == .-* ]] ; do
-  opt="$1";
-  shift;
-  case "$opt" in
-    "--" ) break 2;;
+JAVA_SOURCE=""
+JAVA_DESTINATION=""
+WORKING_DIR=""
+USE_SSH=false
+BRANCH=""
 
-    "--source" )
-    JAVA_SOURCE="$1"; shift;;
+parseCommandLineArgs()
+{
+    while [[ $# -gt 0 ]] && [[ ."$1" == .-* ]] ; do
+      opt="$1";
+      shift;
+      case "$opt" in
+        "--" ) break 2;;
 
-    "--destination" )
-    JAVA_DESTINATION="$1"; shift;;
+        "--source" )
+        JAVA_SOURCE="$1"; shift;;
 
-    "--ssh" | "-S" )
-    USE_SSH=true; shift;;
+        "--destination" )
+        JAVA_DESTINATION="$1"; shift;;
 
-    "--repository" | "-r" )
-    REPOSITORY="$1"; shift;;
+        "--ssh" | "-S" )
+        USE_SSH=true; shift;;
 
-    "--branch" | "-b" )
-    BRANCH="$1"; shift;;
+        "--repository" | "-r" )
+        REPOSITORY="$1"; shift;;
 
-    "--working_dir" )
-    WORKING_DIR="$1"; shift;;
+        "--branch" | "-b" )
+        BRANCH="$1"; shift;;
 
-    *) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised. See the script jtreg_prep.sh for a full list."; exit 1;;
-   esac
-done
+        "--working_dir" )
+        WORKING_DIR="$1"; shift;;
 
-if [ -z "${JAVA_SOURCE}" ]; then
-  echo >&2 "jtreg_prep.sh failed: --source must be specified"; exit 1
-fi
+        *) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised. See the script jtreg_prep.sh for a full list."; exit 1;;
+       esac
+    done
 
-if [ -z "${WORKING_DIR}" ] ; then
-  echo "WORKING_DIR is undefined so setting to $PWD"
-  WORKING_DIR=$PWD
-else
-  echo "Working dir is $WORKING_DIR"
-fi
+    if [ -z "${JAVA_SOURCE}" ]; then
+      echo >&2 "jtreg_prep.sh failed: --source must be specified"; exit 1
+    fi
 
-if [ -z "${JAVA_DESTINATION}" ]; then
-  JAVA_DESTINATION="$WORKING_DIR/$OPENJDK_REPO_NAME/build/java_home/images"
-fi
+    if [ -z "${WORKING_DIR}" ] ; then
+      echo "WORKING_DIR is undefined so setting to $PWD"
+      WORKING_DIR=$PWD
+    else
+      echo "Working dir is $WORKING_DIR"
+    fi
 
-if [ -z "${BRANCH}" ] ; then
-  echo "BRANCH is undefined so checking out dev"
-  BRANCH="dev"
-fi
+    if [ -z "${JAVA_DESTINATION}" ]; then
+      JAVA_DESTINATION="$WORKING_DIR/$OPENJDK_REPO_NAME/build/java_home/images"
+    fi
+
+    if [ -z "${BRANCH}" ] ; then
+      echo "BRANCH is undefined so checking out dev"
+      BRANCH="dev"
+    fi
+}
 
 # Step 1: Fetch OpenJDK, as that's where the tests live.
-
-if [ -d "$WORKING_DIR"/$OPENJDK_REPO_NAME/.git ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
-  # It does exist and it's a repo other than the AdoptOpenJDK one
-  cd "$WORKING_DIR/$OPENJDK_REPO_NAME"  || exit
-  echo "Will reset the repository at $PWD in 10 seconds..."
-  sleep 10
-  echo "Pulling latest changes from git repo"
-  git fetch --all
-  git reset --hard origin/$BRANCH
-  cd "$WORKING_DIR" || exit
-elif [ ! -d "${WORKING_DIR}"/$OPENJDK_REPO_NAME/.git ] ; then
-  # If it doesn't exist, clone it
-  echo "Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
-  if [[ "${USE_SSH}" == true ]] ; then
-    echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-    git clone -b ${BRANCH} git@github.com:"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-  else
-    echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-    git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-  fi
-fi
+cloneOpenJDKRepo()
+{
+    if [ -d "$WORKING_DIR/$OPENJDK_REPO_NAME/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
+      # It does exist and it's a repo other than the AdoptOpenJDK one
+      cd "$WORKING_DIR/$OPENJDK_REPO_NAME"  || exit
+      echo "Will reset the repository at $PWD in 10 seconds..."
+      sleep 10
+      echo "Pulling latest changes from git repo"
+      git fetch --all
+      git reset --hard origin/$BRANCH
+      cd "$WORKING_DIR" || exit
+    elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
+      # If it doesn't exist, clone it
+      echo "Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
+      if [[ ${USE_SSH} == true ]] ; then
+        echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+        git clone -b ${BRANCH} git@github.com:"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+      else
+        echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+        git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+      fi
+    fi
+}
 
 # Step 2: Retrieve Java
+downloadJDKArtifact()
+{
+    if [ ! -d "${JAVA_DESTINATION}" ]; then
+      mkdir -p "${JAVA_DESTINATION}"
+    fi
+    cd "${JAVA_DESTINATION}"  || exit
 
-if [ ! -d "${JAVA_DESTINATION}" ]; then
-  mkdir -p "${JAVA_DESTINATION}"
-fi
-cd "${JAVA_DESTINATION}"  || exit
-
-#If it's a http location, use wget.
-if [[ "${JAVA_SOURCE}" == http* ]]; then 
-  wget "${JAVA_SOURCE}"
-  if [ $? -ne 0 ]; then
-    echo "Failed to retrieve the jtreg binary, exiting"
-    exit 1
-  fi
-else #Assume it's local or on a mounted drive.
-  if [ -f "${JAVA_SOURCE}" ] || [ -d "${JAVA_SOURCE}" ]; then
-    cp -r "${JAVA_SOURCE}" .
-  else
-    echo "Java could not be found at the java_source location."
-    exit 1
-  fi
-fi
+    #If it's a http location, use wget.
+    if [[ "${JAVA_SOURCE}" == http* ]]; then
+      wget "${JAVA_SOURCE}"
+      if [ $? -ne 0 ]; then
+        echo "Failed to retrieve the JDK binary from ${JAVA_SOURCE}, exiting"
+        exit 1
+      fi
+    else #Assume it's local or on a mounted drive.
+      if [ -f "${JAVA_SOURCE}" ] || [ -d "${JAVA_SOURCE}" ]; then
+        cp -r "${JAVA_SOURCE}" .
+      else
+        echo "The JDK artifact could not be found at the source location: ${JAVA_SOURCE}."
+        exit 1
+      fi
+    fi
+}
 
 # Step 3: Unpack Java if we need to.
-
-if [[ "$JAVA_SOURCE" == *\.tar\.gz ]]; then #If it's a tar file, unpack it.
-  cd "${JAVA_DESTINATION}" || exit
-  tar xf ./*.tar.gz
-  echo "Java has been untarred."
-  cd "${WORKING_DIR}" || exit
-elif [ ! -d "${JAVA_SOURCE}" ]; then #If it's not a directory, then we don't know how to unpack it. 
-  echo "The Java file you specified as source was copied to the destination, but this script doesn't know how to unpack it. Please add this logic to this script, or unpack it manually before running jtreg.";
-fi
+unpackJDKTarArtifact()
+{
+    if [[ "$JAVA_SOURCE" == *\.tar\.gz ]]; then #If it's a tar file, unpack it.
+      cd "${JAVA_DESTINATION}" || exit
+      tar xf ./*.tar.gz
+      echo "The JDK artifact has been untarred at ${JAVA_DESTINATION}."
+        cd "${WORKING_DIR}" || exit
+    elif [ ! -d "${JAVA_SOURCE}" ]; then #If it's not a directory, then we don't know how to unpack it.
+      echo "The Java file you specified as source was copied to the destination, but this script doesn't know how to unpack it. Please add this logic to this script, or unpack it manually before running jtreg.";
+    fi
+}
 
 # Step 4: Finish
-echo "jtreg_prep.sh has finished successfully."
-exit 0
+printFinishedMessage()
+{
+    echo "$0 has finished successfully."
+}
+
+##################################################################
+
+parseCommandLineArgs "$@"
+cloneOpenJDKRepo
+downloadJDKArtifact
+unpackJDKTarArtifact
+printFinishedMessage
