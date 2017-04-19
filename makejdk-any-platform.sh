@@ -35,6 +35,7 @@ fi
 if [[ "$OS_MACHINE_NAME" == "armv7l" ]] ; then
    export JVM_VARIANT=zero
    export MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"DEBUG_BINARIES=true images"}
+   export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--with-num-cores=4"}
 fi
 
 ./makejdk.sh "$@"
