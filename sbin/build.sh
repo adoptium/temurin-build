@@ -242,11 +242,7 @@ buildOpenJDK()
     exit 0
   fi
 
-  if [ "$OS_MACHINE_NAME" == "s390x" ]; then
-     makeCMD="make CONF=${BUILD_FULL_NAME} DEBUG_BINARIES=true images"
-  else
-     makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}"
-  fi
+  makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}"
 
   echo "Building the JDK: calling ${makeCMD}"
   $makeCMD
