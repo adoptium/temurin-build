@@ -30,10 +30,7 @@ OPENJDK_REPO_NAME=openjdk
 OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
 OS_MACHINE_NAME=$(uname -m)
 
-JVM_VARIANT=server
-if [[ "$OS_MACHINE_NAME" == "s390x" ]] || [[ "$OS_MACHINE_NAME" == "armv7l" ]] ; then
- JVM_VARIANT=zero
-fi 
+JVM_VARIANT=${JVM_VARIANT:-server}
 
 BUILD_TYPE=normal
 BUILD_FULL_NAME=${OS_KERNEL_NAME}-${OS_MACHINE_NAME}-${BUILD_TYPE}-${JVM_VARIANT}-release
