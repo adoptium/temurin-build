@@ -168,30 +168,30 @@ configuringBootJDKConfigureParameter()
 
   echo "Boot dir set to ${JDK_BOOT_DIR}"
 
-  CONFIGURE_CMD=" --with-boot-jdk=${JDK_BOOT_DIR}"
+  CONFIGURE_ARGS=" --with-boot-jdk=${JDK_BOOT_DIR}"
 }
 
 buildingTheRestOfTheConfigParameters()
 {
   if [ ! -z "$(which ccache)" ]; then
-    CONFIGURE_CMD="${CONFIGURE_CMD} --enable-ccache"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-ccache"
   fi
   
   if [[ "$OS_MACHINE_NAME" == "armv7l" ]] ; then
-    CONFIGURE_CMD="${CONFIGURE_CMD} --with-num-cores=4"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-num-cores=4"
   fi
 
-  CONFIGURE_CMD="${CONFIGURE_CMD} --with-jvm-variants=${JVM_VARIANT}"
-  CONFIGURE_CMD="${CONFIGURE_CMD} --with-cacerts-file=${WORKING_DIR}/cacerts_area/security/cacerts"
-  CONFIGURE_CMD="${CONFIGURE_CMD} --with-alsa=${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
-  CONFIGURE_CMD="${CONFIGURE_CMD} --with-freetype=${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jvm-variants=${JVM_VARIANT}"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-cacerts-file=${WORKING_DIR}/cacerts_area/security/cacerts"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-alsa=${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freetype=${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"
 
   # These will have been installed by the package manager (see our Dockerfile)
-  CONFIGURE_CMD="${CONFIGURE_CMD} --with-x=/usr/include/X11"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-x=/usr/include/X11"
 
   # We don't want any extra debug symbols - ensure it's set to release,
   # other options include fastdebug and slowdebug
-  CONFIGURE_CMD="${CONFIGURE_CMD} --with-debug-level=release"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-debug-level=release"
 }
 
 configureCommandParameters()
@@ -216,10 +216,10 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
   if [[ ! -z "$CONFIGURED_OPENJDK_ALREADY" ]] ; then
     echo "Not reconfiguring due to the presence of config.status in ${WORKING_DIR}"
   else
-    echo "Running ./configure with $CONFIGURE_CMD"
+    echo "Running ./configure with $CONFIGURE_ARGS"
     # Depends upon the configure command being split for multiple args.  Dont quote it.
     # shellcheck disable=SC2086
-    bash ./configure $CONFIGURE_CMD
+    bash ./configure $CONFIGURE_ARGS
     if [ $? -ne 0 ]; then
       echo "${error}"
       echo "Failed to configure the JDK, exiting"
