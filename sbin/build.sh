@@ -38,9 +38,12 @@ OS_MACHINE_NAME=$(uname -m)
 
 sourceFileWithColourCodes()
 {
+  CURRENT_SCRIPT=$(realpath "$0")
+  CURRENT_SCRIPTPATH=$(dirname "$CURRENT_SCRIPT")
+
   # shellcheck disable=SC1090
   # shellcheck disable=SC1091
-  source "$WORKING_DIR"/colour-codes.sh
+  source "$CURRENT_SCRIPTPATH"/../colour-codes.sh
 }
 
 checkIfDockerIsUsedForBuildingOrNot()
