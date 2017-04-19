@@ -38,8 +38,9 @@ OS_MACHINE_NAME=$(uname -m)
 
 sourceFileWithColourCodes()
 {
+  # shellcheck disable=SC1090
   # shellcheck disable=SC1091
-  source "$WORKING_DIR/colour-codes.sh"
+  source "$WORKING_DIR"/colour-codes.sh
 }
 
 checkIfDockerIsUsedForBuildingOrNot()
