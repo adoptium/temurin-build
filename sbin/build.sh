@@ -32,6 +32,7 @@ ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
+CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-""}
 
 OS_MACHINE_NAME=$(uname -m)
 
@@ -216,6 +217,8 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
   if [[ ! -z "$CONFIGURED_OPENJDK_ALREADY" ]] ; then
     echo "Not reconfiguring due to the presence of config.status in ${WORKING_DIR}"
   else
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} ${CONFIGURE_ARGS_FOR_ANY_PLATFORM}"
+
     echo "Running ./configure with $CONFIGURE_ARGS"
     # Depends upon the configure command being split for multiple args.  Dont quote it.
     # shellcheck disable=SC2086
