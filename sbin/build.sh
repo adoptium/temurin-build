@@ -19,9 +19,8 @@
 WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
-BUILD_FULL_NAME=$4
-JVM_VARIANT=${5:=server}
-RUN_JTREG_TESTS_ONLY=$6
+JVM_VARIANT=${4:=server}
+RUN_JTREG_TESTS_ONLY=$5
 
 if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
@@ -246,11 +245,7 @@ buildOpenJDK()
     exit 0
   fi
 
-  if [ "$OS_MACHINE_NAME" == "s390x" ]; then
-     makeCMD="make CONF=${BUILD_FULL_NAME} DEBUG_BINARIES=true images"
-  else
-     makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}"
-  fi
+  makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}"
 
   echo "Building the JDK: calling ${makeCMD}"
   $makeCMD
