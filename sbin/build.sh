@@ -110,13 +110,8 @@ checkingAndDownloadingFreeType()
 
     cd freetype-"$FREETYPE_FONT_VERSION" || exit
 
-    if [ "$OS_MACHINE_NAME" = "ppc64le" ]; then
-      # shellcheck disable=SC1083
-      PARAMS="--build=$(rpm --eval %{_host})"
-    fi
-
     # We get the files we need at $WORKING_DIR/installedfreetype
-    bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${PARAMS}" && make all && make install
+    bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && make all && make install
 
     if [ $? -ne 0 ]; then
       # shellcheck disable=SC2154

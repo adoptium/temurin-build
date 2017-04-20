@@ -34,7 +34,10 @@ if [[ "$OS_MACHINE_NAME" == "s390x" ]] ; then
    S390X_MAKE_ARGS="CONF=${BUILD_FULL_NAME} DEBUG_BINARIES=true images"
    export MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-$S390X_MAKE_ARGS}
 fi
-	
+if [[ "$OS_MACHINE_NAME" = "ppc64le" ]] ; then
+  # shellcheck disable=SC1083
+  export FREETYPE_FONT_BUILD_TYPE_PARAM=${FREETYPE_FONT_BUILD_TYPE_PARAM:="--build=$(rpm --eval %{_host})"}
+fi
 if [[ "$OS_MACHINE_NAME" == "armv7l" ]] ; then
    export JVM_VARIANT=${JVM_VARIANT:-zero}
    export MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"DEBUG_BINARIES=true images"}
