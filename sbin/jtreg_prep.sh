@@ -42,7 +42,7 @@ parseCommandLineArgs()
         JAVA_DESTINATION="$1"; shift;;
 
         "--ssh" | "-S" )
-        USE_SSH=true; shift;;
+        USE_SSH=true;;
 
         "--repository" | "-r" )
         REPOSITORY="$1"; shift;;

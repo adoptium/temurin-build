@@ -67,7 +67,7 @@ parseCommandLineArgs()
       WORKING_DIR="$1"; shift;;
 
       "--ssh" | "-S" )
-      USE_SSH=true; shift;;
+      USE_SSH=true;;
 
       "--destination" | "-d" )
       TARGET_DIR="$1"; shift;;
@@ -79,10 +79,10 @@ parseCommandLineArgs()
       BRANCH="$1"; shift;;
 
       "--keep" | "-k" )
-      KEEP=true; shift;;
+      KEEP=true;;
 
       "--jtreg" | "-j" )
-      JTREG=true; shift;;
+      JTREG=true;;
 
       "--jtreg-subsets" | "-js" )
       JTREG=true; JTREG_TEST_SUBSETS="$1"; shift;;
