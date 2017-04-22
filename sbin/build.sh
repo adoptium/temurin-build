@@ -19,9 +19,8 @@
 WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
-BUILD_FULL_NAME=$4
-JVM_VARIANT=${5:=server}
-RUN_JTREG_TESTS_ONLY=$6
+JVM_VARIANT=${4:=server}
+RUN_JTREG_TESTS_ONLY=$5
 
 if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
@@ -34,12 +33,14 @@ FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-""}
 
-OS_MACHINE_NAME=$(uname -m)
-
 sourceFileWithColourCodes()
 {
+  CURRENT_SCRIPT=$(realpath "$0")
+  CURRENT_SCRIPTPATH=$(dirname "$CURRENT_SCRIPT")
+
+  # shellcheck disable=SC1090
   # shellcheck disable=SC1091
-  source ../colour-codes.sh
+  source "$CURRENT_SCRIPTPATH"/../colour-codes.sh
 }
 
 checkIfDockerIsUsedForBuildingOrNot()
@@ -107,13 +108,8 @@ checkingAndDownloadingFreeType()
 
     cd freetype-"$FREETYPE_FONT_VERSION" || exit
 
-    if [ "$OS_MACHINE_NAME" = "ppc64le" ]; then
-      # shellcheck disable=SC1083
-      PARAMS="--build=$(rpm --eval %{_host})"
-    fi
-
     # We get the files we need at $WORKING_DIR/installedfreetype
-    bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${PARAMS}" && make all && make install
+    bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && make all && make install
 
     if [ $? -ne 0 ]; then
       # shellcheck disable=SC2154
@@ -242,11 +238,7 @@ buildOpenJDK()
     exit 0
   fi
 
-  if [ "$OS_MACHINE_NAME" == "s390x" ]; then
-     makeCMD="make CONF=${BUILD_FULL_NAME} DEBUG_BINARIES=true images"
-  else
-     makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}"
-  fi
+  makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}"
 
   echo "Building the JDK: calling ${makeCMD}"
   $makeCMD
