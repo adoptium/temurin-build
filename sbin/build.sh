@@ -21,6 +21,7 @@ TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 JVM_VARIANT=${4:=server}
 RUN_JTREG_TESTS_ONLY=$5
+OPEN_JDK_DIR=$WORKING_DIR/openjdk
 
 if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
@@ -51,6 +52,7 @@ checkIfDockerIsUsedForBuildingOrNot()
     echo "Detected we're in docker"
     WORKING_DIR=/openjdk/jdk8u
     TARGET_DIR=$WORKING_DIR
+    OPEN_JDK_DIR=$WORKING_DIR/openjdk
   fi
 
   # E.g. /openjdk/jdk8u if you're building in a Docker container
@@ -204,6 +206,7 @@ stepIntoTheWorkingDirectory()
 
 runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 {
+  cd "$OPEN_JDK_DIR"
   CONFIGURED_OPENJDK_ALREADY=$(find -name "config.status")
 
   if [[ ! -z "$CONFIGURED_OPENJDK_ALREADY" ]] ; then
@@ -231,6 +234,8 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 
 buildOpenJDK()
 {
+  cd "$OPEN_JDK_DIR"
+  
   #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
   if [ "${RUN_JTREG_TESTS_ONLY}" == "--run-jtreg-tests-only" ]; then
     rm -rf cacerts_area
