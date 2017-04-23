@@ -13,6 +13,10 @@
 # limitations under the License.
 #
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# shellcheck source=sbin/functions.sh
+source "$SCRIPT_DIR/functions.sh"
+
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
@@ -24,13 +28,9 @@ JOB_NAME=${JOB_NAME:-OpenJDK}
 NUM_PROCESSORS=${NUM_PROCESSORS:-$(getconf _NPROCESSORS_ONLN)}
 TMP_DIR=/tmp/
 OPEN_JDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+TARGET_DIR="$WORKING_DIR"
 
-OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
-OS_MACHINE_NAME=$(uname -m)
-JVM_VARIANT=${JVM_VARIANT:-server}
-BUILD_TYPE=normal
-DEFAULT_BUILD_FULL_NAME=${OS_KERNEL_NAME}-${OS_MACHINE_NAME}-${BUILD_TYPE}-${JVM_VARIANT}-release
-BUILD_FULL_NAME=${BUILD_FULL_NAME:-"$DEFAULT_BUILD_FULL_NAME"}
+determineBuildProperties
 
 checkIfDockerIsUsedForBuildingOrNot()
 {
@@ -39,6 +39,7 @@ checkIfDockerIsUsedForBuildingOrNot()
     WORKING_DIR=/openjdk/jdk8u/
     OPENJDK_REPO_NAME=openjdk/
     OPEN_JDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+    TARGET_DIR=/openjdk/target/
     # Keep as a variable for potential use later
     # if we wish to copy the results to the host
     # shellcheck disable=SC2034
@@ -124,7 +125,7 @@ packageTestResultsWithJCovReports()
 
   artifact="${JOB_NAME}-testoutput-with-jcov-reports"
   echo "Tarring and zipping the 'testoutput' folder into artefact: $artifact.tar.gz" 
-  tar -czf "$WORKING_DIR/$artifact.tar.gz"   testoutput/
+  tar -czf "$TARGET_DIR/$artifact.tar.gz"   testoutput/
 
   if [ -d testoutput  ]; then  
      rm -fr "$WORKING_DIR/$OPENJDK_REPO_NAME/testoutput"
@@ -144,7 +145,7 @@ packageOnlyJCovReports()
 
   artifact="${JOB_NAME}-jcov-results-only"
   echo "Tarring and zipping the 'testoutput/../jcov' folder into artefact: $artifact.tar.gz" 
-  tar -czf "$WORKING_DIR/$artifact.tar.gz"   testoutput/*/JTreport/jcov/
+  tar -czf "$TARGET_DIR/$artifact.tar.gz"   testoutput/*/JTreport/jcov/
 
   cd "$WORKING_DIR" || exit
 }
@@ -157,6 +158,7 @@ packageReports()
 }
 
 checkIfDockerIsUsedForBuildingOrNot
+downloadingRequiredDependencies
 downloadJtregAndSetupEnvironment
 applyingJCovSettingsToMakefileForTests
 settingUpEnvironmentVariablesForJTREG

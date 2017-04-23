@@ -24,26 +24,23 @@
 
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# shellcheck source=sbin/functions.sh
+source "$SCRIPT_DIR/sbin/functions.sh"
+
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
 
-OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
-OS_MACHINE_NAME=$(uname -m)
-
-JVM_VARIANT=${JVM_VARIANT:-server}
-
-BUILD_TYPE=normal
-DEFAULT_BUILD_FULL_NAME=${OS_KERNEL_NAME}-${OS_MACHINE_NAME}-${BUILD_TYPE}-${JVM_VARIANT}-release
-BUILD_FULL_NAME=${BUILD_FULL_NAME:-"$DEFAULT_BUILD_FULL_NAME"}
-
 USE_DOCKER=false
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKING_DIR=""
 USE_SSH=false
 TARGET_DIR=""
 BRANCH=""
 KEEP=false
 JTREG=false
+
+determineBuildProperties
 
 sourceFileWithColourCodes()
 {
@@ -187,7 +184,8 @@ cloneOpenJDKGitRepo()
 testOpenJDKViaDocker()
 {
   if [[ ! -z $JTREG ]]; then
-    docker run -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}":/openjdk/jdk8u/openjdk -v "${WORKING_DIR}/sbin":/openjdk/sbin --entrypoint /openjdk/sbin/jtreg.sh "${CONTAINER}"
+    mkdir -p "${WORKING_DIR}/target"
+    docker run -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}":/openjdk/jdk8u/openjdk -v "${WORKING_DIR}/sbin":/openjdk/sbin -v "${WORKING_DIR}/target":/openjdk/target --entrypoint /openjdk/sbin/jtreg.sh "${CONTAINER}"
   fi
 }
 
@@ -223,7 +221,7 @@ buildAndTestOpenJDKViaDocker()
      echo "$normal"
   fi
 
-  docker run -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}:/openjdk/jdk8u/openjdk" -v "${WORKING_DIR}/sbin":/openjdk/sbin --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
+  docker run -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}:/openjdk/jdk8u/openjdk" -v "${WORKING_DIR}/sbin":/openjdk/sbin -v "${WORKING_DIR}/target":/openjdk/target --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
 
   testOpenJDKViaDocker
 
