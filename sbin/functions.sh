@@ -40,7 +40,7 @@ checkingAndDownloadingAlsa()
 
   echo "Checking for ALSA"
 
-  FOUND_ALSA=$(find ${WORKING_DIR} -name "alsa-lib-${ALSA_LIB_VERSION}")
+  FOUND_ALSA=$(find "${WORKING_DIR}" -name "alsa-lib-${ALSA_LIB_VERSION}")
 
   if [[ ! -z "$FOUND_ALSA" ]] ; then
     echo "Skipping ALSA download"
@@ -91,11 +91,11 @@ checkingAndDownloadCaCerts()
   echo "Retrieving cacerts file"
 
   # Ensure it's the latest we pull in
-  rm -rf ${WORKING_DIR}/cacerts_area
+  rm -rf "${WORKING_DIR}/cacerts_area"
 
   git clone https://github.com/AdoptOpenJDK/openjdk-build.git cacerts_area
   echo "cacerts should be here..."
-  file ${WORKING_DIR}/cacerts_area/security/cacerts
+  file "${WORKING_DIR}/cacerts_area/security/cacerts"
 
   if [ $? -ne 0 ]; then
     echo "Failed to retrieve the cacerts file, exiting..."
