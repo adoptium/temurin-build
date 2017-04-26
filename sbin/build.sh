@@ -18,15 +18,15 @@
 
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# shellcheck source=sbin/functions.sh
-source "$SCRIPT_DIR/functions.sh"
+# shellcheck source=sbin/common-functions.sh
+source "$SCRIPT_DIR/common-functions.sh"
 
 WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 JVM_VARIANT=${4:=server}
 RUN_JTREG_TESTS_ONLY=$5
-OPEN_JDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
+OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
 
 if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
@@ -55,7 +55,7 @@ checkIfDockerIsUsedForBuildingOrNot()
     WORKING_DIR=/openjdk/jdk8u
     TARGET_DIR=/openjdk/target
     OPENJDK_REPO_NAME=/openjdk
-    OPEN_JDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+    OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
   fi
 
   # E.g. /openjdk/jdk8u if you're building in a Docker container
@@ -130,7 +130,7 @@ stepIntoTheWorkingDirectory()
 
 runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 {
-  cd "$OPEN_JDK_DIR" || exit
+  cd "$OPENJDK_DIR" || exit
   CONFIGURED_OPENJDK_ALREADY=$(find -name "config.status")
 
   if [[ ! -z "$CONFIGURED_OPENJDK_ALREADY" ]] ; then
@@ -158,7 +158,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 
 buildOpenJDK()
 {
-  cd "$OPEN_JDK_DIR" || exit
+  cd "$OPENJDK_DIR" || exit
   
   #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
   if [ "${RUN_JTREG_TESTS_ONLY}" == "--run-jtreg-tests-only" ]; then

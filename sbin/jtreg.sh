@@ -5,7 +5,7 @@
 # You may obtain a copy of the License at
 #
 #      http://www.apache.org/licenses/LICENSE-2.0
-#
+# #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,8 +14,8 @@
 #
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# shellcheck source=sbin/functions.sh
-source "$SCRIPT_DIR/functions.sh"
+# shellcheck source=sbin/common-functions.sh
+source "$SCRIPT_DIR/common-functions.sh"
 
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
@@ -26,8 +26,8 @@ JTREG_VERSION=${JTREG_VERSION:-4.2.0-tip}
 JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
 JOB_NAME=${JOB_NAME:-OpenJDK}
 NUM_PROCESSORS=${NUM_PROCESSORS:-$(getconf _NPROCESSORS_ONLN)}
-TMP_DIR=/tmp/
-OPEN_JDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+TMP_DIR=$(dirname $(mktemp -u))
+OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
 TARGET_DIR="$WORKING_DIR"
 
 determineBuildProperties
@@ -38,7 +38,7 @@ checkIfDockerIsUsedForBuildingOrNot()
     echo "Detected we're in docker"
     WORKING_DIR=/openjdk/jdk8u/
     OPENJDK_REPO_NAME=openjdk/
-    OPEN_JDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+    OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
     TARGET_DIR=/openjdk/target/
     # Keep as a variable for potential use later
     # if we wish to copy the results to the host
@@ -79,12 +79,12 @@ downloadJtregAndSetupEnvironment()
 applyingJCovSettingsToMakefileForTests()
 {
   echo "Apply JCov settings to Makefile..." 
-  cd "$OPEN_JDK_DIR/jdk/test" || exit
+  cd "$OPENJDK_DIR/jdk/test" || exit
   pwd
 
   sed -i "s/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/" Makefile
 
-  cd "$OPEN_JDK_DIR" || exit
+  cd "$OPENJDK_DIR" || exit
 }
 
 settingUpEnvironmentVariablesForJTREG()
@@ -92,7 +92,7 @@ settingUpEnvironmentVariablesForJTREG()
   echo "Setting up environment variables for JTREG to run"
 
   # This is the JDK we'll test
-  export PRODUCT_HOME=$OPEN_JDK_DIR/build/$BUILD_FULL_NAME/images/j2sdk-image
+  export PRODUCT_HOME=$OPENJDK_DIR/build/$BUILD_FULL_NAME/images/j2sdk-image
   echo "$PRODUCT_HOME"
   ls "$PRODUCT_HOME"
 
@@ -121,7 +121,7 @@ packageTestResultsWithJCovReports()
   echo "Package test output into archives..." 
   pwd
 
-  cd "$OPEN_JDK_DIR/build/$BUILD_FULL_NAME/" || exit
+  cd "$OPENJDK_DIR/build/$BUILD_FULL_NAME/" || exit
 
   artifact="${JOB_NAME}-testoutput-with-jcov-reports"
   echo "Tarring and zipping the 'testoutput' folder into artefact: $artifact.tar.gz" 
@@ -140,7 +140,7 @@ packageOnlyJCovReports()
   echo "Package jcov reports into archives..." 
   pwd
 
-  cd "$OPEN_JDK_DIR/build/$BUILD_FULL_NAME/" || exit
+  cd "$OPENJDK_DIR/build/$BUILD_FULL_NAME/" || exit
   pwd
 
   artifact="${JOB_NAME}-jcov-results-only"

@@ -26,11 +26,11 @@
 
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# shellcheck source=sbin/functions.sh
-source "$SCRIPT_DIR/sbin/functions.sh"
+# shellcheck source=sbin/common-functions.sh
+source "$SCRIPT_DIR/sbin/common-functions.sh"
 
-REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
-OPENJDK_REPO_NAME=openjdk
+REPOSITORY=${REPOSITORY:-AdoptOpenJDK/openjdk-jdk8u}
+OPENJDK_REPO_NAME=${OPENJDK_REPO_NAME:-openjdk}
 
 USE_DOCKER=false
 WORKING_DIR=""
