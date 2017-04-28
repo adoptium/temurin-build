@@ -68,14 +68,16 @@ checkIfDockerIsUsedForBuildingOrNot()
       echo "You can override the JDK boot directory by setting the environment variable JDK_BOOT_DIR"
       exit;
   fi
+}
 
+createWorkingDirectory()
+{
   echo "Making the working directory to store source files and extensions: ${WORKING_DIR}"
 
   mkdir -p $WORKING_DIR
 
   cd $WORKING_DIR || exit
 }
-
 
 configuringBootJDKConfigureParameter()
 {
@@ -168,7 +170,7 @@ buildOpenJDK()
 
   echo "Building the JDK: calling ${makeCMD}"
   $makeCMD
-
+  
   if [ $? -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
     exit;
@@ -211,6 +213,7 @@ stepIntoTargetDirectoryAndShowCompletionMessage()
 
 sourceFileWithColourCodes
 checkIfDockerIsUsedForBuildingOrNot
+createWorkingDirectory
 downloadingRequiredDependencies
 configureCommandParameters
 stepIntoTheWorkingDirectory
