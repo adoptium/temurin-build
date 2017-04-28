@@ -14,5 +14,5 @@
 #
 
 # import-common
-cd $WORKSPACE
-export submodules="corba langtools jaxp jaxws hotspot nashorn jdk"
+cd "$WORKSPACE" || exit 1
+export modules=(corba langtools jaxp jaxws hotspot nashorn jdk)

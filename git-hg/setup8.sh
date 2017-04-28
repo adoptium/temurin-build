@@ -24,13 +24,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-rm -rf $WORKSPACE/combined $WORKSPACE/hg
-mkdir $WORKSPACE/combined
-mkdir $WORKSPACE/hg
-cd $WORKSPACE/combined
+set -euo pipefail
+rm -rf "$WORKSPACE/combined" "$WORKSPACE/hg"
+mkdir "$WORKSPACE/combined"
+mkdir "$WORKSPACE/hg"
+cd "$WORKSPACE/combined" || exit 1
 git init
-git checkout -b root-commit
-git remote add github git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
-cd -
+git checkout -b root-commit || exit 1
+git remote add github git@github.com:AdoptOpenJDK/openjdk-jdk8u.git || exit 1
+cd - || exit 1
 bash add-branch.sh jdk8u/jdk8u
