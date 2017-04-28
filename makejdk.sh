@@ -183,7 +183,7 @@ cloneOpenJDKGitRepo()
 
 testOpenJDKViaDocker()
 {
-  if [[ ! -z $JTREG ]]; then
+  if [[ "$JTREG" == "true" ]]; then
     mkdir -p "${WORKING_DIR}/target"
     docker run -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}":/openjdk/jdk8u/openjdk -v "${WORKING_DIR}/sbin":/openjdk/sbin -v "${WORKING_DIR}/target":/openjdk/target --entrypoint /openjdk/sbin/jtreg.sh "${CONTAINER}"
   fi
