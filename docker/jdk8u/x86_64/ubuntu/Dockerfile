@@ -37,6 +37,7 @@ RUN apt-get update \
     wget \
     git \
     unzip \
+    realpath \
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions
@@ -44,6 +45,8 @@ RUN mkdir -p /openjdk/jdk8u
 
 COPY build.sh /bin/
 COPY jtreg.sh /bin/
+COPY common-functions.sh /bin/
+COPY colour-codes.sh /bin
 
 WORKDIR /openjdk/jdk8u/
 

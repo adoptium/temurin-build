@@ -45,7 +45,7 @@ determineBuildProperties
 sourceFileWithColourCodes()
 {
   # shellcheck disable=SC1091
-  source ./colour-codes.sh
+  source ./sbin/colour-codes.sh
 }
 
 sourceSignalHandler()
@@ -201,8 +201,17 @@ buildAndTestOpenJDKViaDocker()
   CONTAINER=openjdk_container
 
   # Copy our script for usage inside of the container
+  rm docker/jdk8u/x86_64/ubuntu/colour-codes.sh
+  cp "${SCRIPT_DIR}/sbin/colour-codes.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
+
   rm docker/jdk8u/x86_64/ubuntu/build.sh
   cp "${SCRIPT_DIR}/sbin/build.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
+
+  rm docker/jdk8u/x86_64/ubuntu/jtreg_prep.sh
+  cp "${SCRIPT_DIR}/sbin/jtreg_prep.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
+
+  rm docker/jdk8u/x86_64/ubuntu/common_functions.sh
+  cp "${SCRIPT_DIR}/sbin/common_functions.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
 
   rm docker/jdk8u/x86_64/ubuntu/jtreg.sh
   cp "${SCRIPT_DIR}/sbin/jtreg.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null

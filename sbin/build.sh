@@ -24,7 +24,7 @@ source "$SCRIPT_DIR/common-functions.sh"
 WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
-JVM_VARIANT=${4:=server}
+JVM_VARIANT=${4:-server}
 RUN_JTREG_TESTS_ONLY=$5
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
 
@@ -38,12 +38,9 @@ CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-""}
 
 sourceFileWithColourCodes()
 {
-  CURRENT_SCRIPT=$(realpath "$0")
-  CURRENT_SCRIPTPATH=$(dirname "$CURRENT_SCRIPT")
-
   # shellcheck disable=SC1090
   # shellcheck disable=SC1091
-  source "$CURRENT_SCRIPTPATH"/../colour-codes.sh
+  source "$SCRIPT_DIR"/colour-codes.sh
 }
 
 checkIfDockerIsUsedForBuildingOrNot()
