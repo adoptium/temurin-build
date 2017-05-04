@@ -26,7 +26,7 @@ JTREG_VERSION=${JTREG_VERSION:-4.2.0-tip}
 JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
 JOB_NAME=${JOB_NAME:-OpenJDK}
 NUM_PROCESSORS=${NUM_PROCESSORS:-$(getconf _NPROCESSORS_ONLN)}
-TMP_DIR=$(dirname $(mktemp -u))
+TMP_DIR=$(dirname "$(mktemp -u)")
 OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
 TARGET_DIR="$WORKING_DIR"
 
@@ -82,7 +82,7 @@ applyingJCovSettingsToMakefileForTests()
   cd "$OPENJDK_DIR/jdk/test" || exit
   pwd
 
-  sed -i 's/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/' Makefile
+  sed -i "s/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/" Makefile
 
   cd "$OPENJDK_DIR" || exit
 }
