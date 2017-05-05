@@ -5,13 +5,17 @@
 # You may obtain a copy of the License at
 #
 #      http://www.apache.org/licenses/LICENSE-2.0
-#
+# #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# shellcheck source=sbin/common-functions.sh
+source "$SCRIPT_DIR/common-functions.sh"
 
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
@@ -22,12 +26,20 @@ JTREG_VERSION=${JTREG_VERSION:-4.2.0-tip}
 JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
 JOB_NAME=${JOB_NAME:-OpenJDK}
 NUM_PROCESSORS=${NUM_PROCESSORS:-$(getconf _NPROCESSORS_ONLN)}
+TMP_DIR=$(dirname "$(mktemp -u)")
+OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+TARGET_DIR="$WORKING_DIR"
+
+determineBuildProperties
 
 checkIfDockerIsUsedForBuildingOrNot()
 {
   if [[ -f /.dockerenv ]] ; then
     echo "Detected we're in docker"
-    WORKING_DIR=/openjdk/jdk8u/openjdk
+    WORKING_DIR=/openjdk/jdk8u/
+    OPENJDK_REPO_NAME=openjdk/
+    OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+    TARGET_DIR=/openjdk/target/
     # Keep as a variable for potential use later
     # if we wish to copy the results to the host
     # shellcheck disable=SC2034
@@ -42,14 +54,15 @@ downloadJtregAndSetupEnvironment()
    echo "Downloading Jtreg binary"
    JTREG_BINARY_FILE="jtreg-${JTREG_VERSION}.tar.gz"
 
-   wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/"$JTREG_BINARY_FILE"
+   cd "$TMP_DIR" && wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/"$JTREG_BINARY_FILE"
 
    if [ $? -ne 0 ]; then
      echo "Failed to retrieve the jtreg binary, exiting"
      exit
    fi
 
-   tar xf "$JTREG_BINARY_FILE"
+   
+   cd "$WORKING_DIR" && tar xf "$TMP_DIR/$JTREG_BINARY_FILE"
   fi
 
   echo "List contents of the jtreg folder"
@@ -66,12 +79,12 @@ downloadJtregAndSetupEnvironment()
 applyingJCovSettingsToMakefileForTests()
 {
   echo "Apply JCov settings to Makefile..." 
-  cd "$WORKING_DIR/$OPENJDK_REPO_NAME/jdk/test" || exit
+  cd "$OPENJDK_DIR/jdk/test" || exit
   pwd
 
   sed -i "s/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/" Makefile
 
-  cd "$WORKING_DIR/$OPENJDK_REPO_NAME/" || exit
+  cd "$OPENJDK_DIR" || exit
 }
 
 settingUpEnvironmentVariablesForJTREG()
@@ -79,7 +92,7 @@ settingUpEnvironmentVariablesForJTREG()
   echo "Setting up environment variables for JTREG to run"
 
   # This is the JDK we'll test
-  export PRODUCT_HOME=$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/images/j2sdk-image
+  export PRODUCT_HOME=$OPENJDK_DIR/build/$BUILD_FULL_NAME/images/j2sdk-image
   echo "$PRODUCT_HOME"
   ls "$PRODUCT_HOME"
 
@@ -108,11 +121,11 @@ packageTestResultsWithJCovReports()
   echo "Package test output into archives..." 
   pwd
 
-  cd "$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/" || exit
+  cd "$OPENJDK_DIR/build/$BUILD_FULL_NAME/" || exit
 
   artifact="${JOB_NAME}-testoutput-with-jcov-reports"
   echo "Tarring and zipping the 'testoutput' folder into artefact: $artifact.tar.gz" 
-  tar -czf "$WORKING_DIR/$artifact.tar.gz"   testoutput/
+  tar -czf "$TARGET_DIR/$artifact.tar.gz"   testoutput/
 
   if [ -d testoutput  ]; then  
      rm -fr "$WORKING_DIR/$OPENJDK_REPO_NAME/testoutput"
@@ -127,11 +140,12 @@ packageOnlyJCovReports()
   echo "Package jcov reports into archives..." 
   pwd
 
-  cd "$WORKING_DIR/$OPENJDK_REPO_NAME/build/$BUILD_FULL_NAME/" || exit
+  cd "$OPENJDK_DIR/build/$BUILD_FULL_NAME/" || exit
+  pwd
 
   artifact="${JOB_NAME}-jcov-results-only"
   echo "Tarring and zipping the 'testoutput/../jcov' folder into artefact: $artifact.tar.gz" 
-  tar -czf "$WORKING_DIR/$artifact.tar.gz"   testoutput/*/JTreport/jcov/
+  tar -czf "$TARGET_DIR/$artifact.tar.gz"   testoutput/*/JTreport/jcov/
 
   cd "$WORKING_DIR" || exit
 }
@@ -144,6 +158,7 @@ packageReports()
 }
 
 checkIfDockerIsUsedForBuildingOrNot
+downloadingRequiredDependencies
 downloadJtregAndSetupEnvironment
 applyingJCovSettingsToMakefileForTests
 settingUpEnvironmentVariablesForJTREG

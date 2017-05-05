@@ -56,7 +56,7 @@ parseCommandLineArgs()
         *) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised. See the script jtreg_prep.sh for a full list."; exit 1;;
        esac
     done
-
+    
     if [ -z "${JAVA_SOURCE}" ]; then
       echo >&2 "jtreg_prep.sh failed: --source must be specified"; exit 1
     fi

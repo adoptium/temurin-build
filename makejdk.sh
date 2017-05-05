@@ -24,17 +24,13 @@
 
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
-REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
-OPENJDK_REPO_NAME=openjdk
 
-OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
-OS_MACHINE_NAME=$(uname -m)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# shellcheck source=sbin/common-functions.sh
+source "$SCRIPT_DIR/sbin/common-functions.sh"
 
-JVM_VARIANT=${JVM_VARIANT:-server}
-
-BUILD_TYPE=normal
-DEFAULT_BUILD_FULL_NAME=${OS_KERNEL_NAME}-${OS_MACHINE_NAME}-${BUILD_TYPE}-${JVM_VARIANT}-release
-BUILD_FULL_NAME=${BUILD_FULL_NAME:-"$DEFAULT_BUILD_FULL_NAME"}
+REPOSITORY=${REPOSITORY:-AdoptOpenJDK/openjdk-jdk8u}
+OPENJDK_REPO_NAME=${OPENJDK_REPO_NAME:-openjdk}
 
 USE_DOCKER=false
 WORKING_DIR=""
@@ -44,10 +40,12 @@ BRANCH=""
 KEEP=false
 JTREG=false
 
+determineBuildProperties
+
 sourceFileWithColourCodes()
 {
   # shellcheck disable=SC1091
-  source ./colour-codes.sh
+  source ./sbin/colour-codes.sh
 }
 
 sourceSignalHandler()
@@ -185,14 +183,15 @@ cloneOpenJDKGitRepo()
 
 testOpenJDKViaDocker()
 {
-  if [[ ! -z $JTREG ]]; then
-    docker run --privileged -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}":/openjdk/jdk8u/openjdk --entrypoint jtreg.sh "${CONTAINER}"
+  if [[ "$JTREG" == "true" ]]; then
+    mkdir -p "${WORKING_DIR}/target"
+    docker run -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}":/openjdk/jdk8u/openjdk -v "${WORKING_DIR}/sbin":/openjdk/sbin -v "${WORKING_DIR}/target":/openjdk/target --entrypoint /openjdk/sbin/jtreg.sh "${CONTAINER}"
   fi
 }
 
 buildAndTestOpenJDKViaDocker()
 {
-  if [ -z "$(which docker)" ] || [ -z "$(pgrep "docker")" ]; then
+  if [ -z "$(which docker)" ]; then
     echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"
     exit
   fi
@@ -202,11 +201,20 @@ buildAndTestOpenJDKViaDocker()
   CONTAINER=openjdk_container
 
   # Copy our script for usage inside of the container
+  rm docker/jdk8u/x86_64/ubuntu/colour-codes.sh
+  cp "${SCRIPT_DIR}/sbin/colour-codes.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
+
   rm docker/jdk8u/x86_64/ubuntu/build.sh
-  cp sbin/build.sh docker/jdk8u/x86_64/ubuntu 2>/dev/null
+  cp "${SCRIPT_DIR}/sbin/build.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
+
+  rm docker/jdk8u/x86_64/ubuntu/jtreg_prep.sh
+  cp "${SCRIPT_DIR}/sbin/jtreg_prep.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
+
+  rm docker/jdk8u/x86_64/ubuntu/common_functions.sh
+  cp "${SCRIPT_DIR}/sbin/common_functions.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
 
   rm docker/jdk8u/x86_64/ubuntu/jtreg.sh
-  cp sbin/jtreg.sh docker/jdk8u/x86_64/ubuntu 2>/dev/null
+  cp "${SCRIPT_DIR}/sbin/jtreg.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
   # Keep is undefined so we'll kill the docker image
 
   if [[ "$KEEP" == "true" ]] ; then
@@ -222,7 +230,7 @@ buildAndTestOpenJDKViaDocker()
      echo "$normal"
   fi
 
-  docker run --privileged -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}:/openjdk/jdk8u/openjdk" --entrypoint build.sh "${CONTAINER}"
+  docker run -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}:/openjdk/jdk8u/openjdk" -v "${WORKING_DIR}/sbin":/openjdk/sbin -v "${WORKING_DIR}/target":/openjdk/target --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
 
   testOpenJDKViaDocker
 
@@ -249,14 +257,14 @@ testOpenJDKInNativeEnvironmentIfExpected()
 {
   if [[ "$JTREG" == "true" ]];
   then
-      "${WORKING_DIR}"/sbin/jtreg.sh "${WORKING_DIR}" "${OPENJDK_REPO_NAME}" "${BUILD_FULL_NAME}" "${JTREG_TEST_SUBSETS}"
+      "${SCRIPT_DIR}"/sbin/jtreg.sh "${WORKING_DIR}" "${OPENJDK_REPO_NAME}" "${BUILD_FULL_NAME}" "${JTREG_TEST_SUBSETS}"
   fi
 }
 
 buildAndTestOpenJDKInNativeEnvironment()
 {
   echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT"
-  "${WORKING_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}"
+  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}"
 
   testOpenJDKInNativeEnvironmentIfExpected
 }
