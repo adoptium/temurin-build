@@ -13,12 +13,14 @@ bpath=$1
 
 echo "Create $bpath"
 
-mkdir -p bpath || exit 1
+# shellcheck disable=SC2086
+mkdir -p $bpath || exit 1
 
 echo "Clone $bpath (root)"
 git hg clone "http://hg.openjdk.java.net/$bpath" "$bpath/root" || exit 1
 
-for m in "$@submodules"
+# shellcheck disable=SC2154
+for m in $submodules
 do
     echo "Clone $bpath -> $m"
     git hg clone "http://hg.openjdk.java.net/$bpath/$m" "$bpath/$m" || exit 1
@@ -37,25 +39,35 @@ git checkout -b master || exit 1
 
 echo "Add remote for (root)"
 
-git remote add imports/"$bpath"/root ../hg/"$bpath"/root || exit 1
+# shellcheck disable=SC2086
+git remote add imports/$bpath/root ../hg/$bpath/root || exit 1
 
 echo "Fetch (root)"
 
-git fetch imports/"$bpath"/root || exit 1
+# shellcheck disable=SC2086
+git fetch imports/$bpath/root || exit 1
 
 echo "Merge (root)"
 
 #git merge imports/$bpath/root/master -m "Initial merge of (root)" --no-ff || exit 1
-git merge imports/"$bpath"/root/master -m "Initial merge of (root)" || exit 1
+# shellcheck disable=SC2086
+git merge imports/$bpath/root/master -m "Initial merge of (root)" || exit 1
 
-for m in "$@submodules"
+for m in $submodules
 do
     echo "Add remote for '$m'"
-    git remote add imports/"$bpath"/"$m" ../hg/"$bpath"/"$m" || exit 1
+# shellcheck disable=SC2086
+    git remote add imports/$bpath/$m ../hg/$bpath/$m || exit 1
 
     echo "Fetch '$m'"
-    git fetch imports/"$bpath"/"$m" || exit 1
+# shellcheck disable=SC2086
+    git fetch imports/$bpath/$m || exit 1
 
     echo "Merge '$m'"
-    git subtree add --prefix="$m" imports/"$bpath"/"$m"/master -m "Initial merge of '$m'" || exit 1
+    # shellcheck disable=SC2086
+git subtree add --prefix=$m imports/$bpath/$m/master -m "Initial merge of '$m'" || exit 1
 done
+
+echo "Push"
+
+git push github master --tags || exit 1
