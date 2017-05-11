@@ -1,8 +1,9 @@
 #!/bin/bash
-
+#shellcheck disable=SC1091
+#shellcheck disable=SC2086
+#shellcheck disable=SC2154
 echo "Common defs"
 
-# shellcheck disable=SC1091
 . import-common.sh
 
 echo "Enter hg"
@@ -13,13 +14,11 @@ bpath=$1
 
 echo "Create $bpath"
 
-# shellcheck disable=SC2086
 mkdir -p $bpath || exit 1
 
 echo "Clone $bpath (root)"
 git hg clone "http://hg.openjdk.java.net/$bpath" "$bpath/root" || exit 1
 
-# shellcheck disable=SC2154
 for m in $submodules
 do
     echo "Clone $bpath -> $m"
@@ -39,33 +38,27 @@ git checkout -b master || exit 1
 
 echo "Add remote for (root)"
 
-# shellcheck disable=SC2086
 git remote add imports/$bpath/root ../hg/$bpath/root || exit 1
 
 echo "Fetch (root)"
 
-# shellcheck disable=SC2086
 git fetch imports/$bpath/root || exit 1
 
 echo "Merge (root)"
 
 #git merge imports/$bpath/root/master -m "Initial merge of (root)" --no-ff || exit 1
-# shellcheck disable=SC2086
 git merge imports/$bpath/root/master -m "Initial merge of (root)" || exit 1
 
 for m in $submodules
 do
     echo "Add remote for '$m'"
-# shellcheck disable=SC2086
     git remote add imports/$bpath/$m ../hg/$bpath/$m || exit 1
 
     echo "Fetch '$m'"
-# shellcheck disable=SC2086
     git fetch imports/$bpath/$m || exit 1
 
     echo "Merge '$m'"
-    # shellcheck disable=SC2086
-git subtree add --prefix=$m imports/$bpath/$m/master -m "Initial merge of '$m'" || exit 1
+    git subtree add --prefix=$m imports/$bpath/$m/master -m "Initial merge of '$m'" || exit 1
 done
 
 echo "Push"
