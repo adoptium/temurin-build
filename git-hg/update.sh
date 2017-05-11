@@ -9,7 +9,8 @@ echo "Enter hg"
 
 cd hg || exit 1
 
-echo "bpaths=(ls -d -1 */*)"
+# shellcheck disable=SC2034
+bpaths=(ls -d -1 */*)
 
 for bpath in "$@bpaths"
 do
