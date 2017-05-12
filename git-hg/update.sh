@@ -1,21 +1,17 @@
 #!/bin/bash
-#shellcheck disable=SC1091
-#shellcheck disable=SC2086
-#shellcheck disable=SC2154
-#shellcheck disable=SC2006
-#shellcheck disable=SC2035
-#shellcheck disable=SC2164
+
 echo "Common defs"
 
+# shellcheck disable=SC1091
 . import-common.sh
 
 echo "Enter hg"
 
 cd hg || exit 1
 
-bpaths=`ls -d -1 */*`
+echo "bpaths=(ls -d -1 */*)"
 
-for bpath in $bpaths
+for bpath in "$@bpaths"
 do
 
 pushd "$bpath/root"
@@ -24,7 +20,7 @@ git hg fetch "http://hg.openjdk.java.net/$bpath"
 git hg pull "http://hg.openjdk.java.net/$bpath"
 popd
 
-for m in $submodules
+for m in "$@submodules"
 do
     pushd "$bpath/$m"
     echo "Update $bpath -> $m"
@@ -44,25 +40,25 @@ git checkout master || exit 1
 
 echo "Fetch (root)"
 
-git fetch imports/$bpath/root || exit 1
+git fetch imports/"$bpath"/root || exit 1
 
 echo "Merge (root)"
 
-git merge imports/$bpath/root/master -m "Merge from (root)" --no-ff || exit 1
+git merge imports/"$bpath"/root/master -m "Merge from (root)" --no-ff || exit 1
 
-for m in $submodules
+for m in "$@submodules"
 do
     echo "Fetch '$m'"
-    git fetch imports/$bpath/$m || exit 1
+    git fetch imports/"$bpath"/"$m" || exit 1
 
     echo "Merge '$m'"
-    git subtree merge --prefix=$m imports/$bpath/$m/master -m "Merge from '$m'" || exit 1
+    git subtree merge --prefix="$m" imports/"$bpath"/"$m"/master -m "Merge from '$m'" || exit 1
 done
 
 echo "Push"
 
 git push github master --tags
 
-cd ../hg
+cd ../hg || exit 1
 
 done
