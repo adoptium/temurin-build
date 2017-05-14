@@ -32,6 +32,10 @@ source "$SCRIPT_DIR/sbin/common-functions.sh"
 REPOSITORY=${REPOSITORY:-AdoptOpenJDK/openjdk-jdk8u}
 OPENJDK_REPO_NAME=${OPENJDK_REPO_NAME:-openjdk}
 
+DOCKER_SOURCE_VOLUME_NAME="openjdk-source-volume"
+CONTAINER=openjdk_container
+TMP_CONTAINTER_NAME=openjdk-copy-src
+  
 USE_DOCKER=false
 WORKING_DIR=""
 USE_SSH=false
@@ -39,6 +43,7 @@ TARGET_DIR=""
 BRANCH=""
 KEEP=false
 JTREG=false
+CLEAN_DOCKER_BUILD=false
 
 determineBuildProperties
 
@@ -78,6 +83,9 @@ parseCommandLineArgs()
 
       "--keep" | "-k" )
       KEEP=true;;
+    
+      "--clean-docker-build" | "-c" )
+      CLEAN_DOCKER_BUILD=true;;
 
       "--jtreg" | "-j" )
       JTREG=true;;
@@ -185,7 +193,41 @@ testOpenJDKViaDocker()
 {
   if [[ "$JTREG" == "true" ]]; then
     mkdir -p "${WORKING_DIR}/target"
-    docker run -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}":/openjdk/jdk8u/openjdk -v "${WORKING_DIR}/sbin":/openjdk/sbin -v "${WORKING_DIR}/target":/openjdk/target --entrypoint /openjdk/sbin/jtreg.sh "${CONTAINER}"
+    docker run \
+    -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
+    -v "${WORKING_DIR}/target:/openjdk/target" \
+    --entrypoint /openjdk/sbin/jtreg.sh "${CONTAINER}"
+  fi
+}
+
+createPersistentDockerDataVolume()
+{
+  #Create a data volue called $DOCKER_SOURCE_VOLUME_NAME,
+  #this gets mounted at /openjdk/build inside the container and is persistent between builds/tests
+  #unless -c is passed to this script, in which case it is recreated using the source
+  #in the current ./openjdk directory
+  
+  docker volume inspect $DOCKER_SOURCE_VOLUME_NAME > /dev/null 2>&1
+  DATA_VOLUME_EXISTS=$?
+  
+  if [[ "$CLEAN_DOCKER_BUILD" == "true" || "$DATA_VOLUME_EXISTS" != "0" ]]; then
+  
+    echo "${info}Removing old volumes and containers${normal}"
+    docker rm -f $TMP_CONTAINTER_NAME || true
+    docker rm -f "$(docker ps -a | grep $CONTAINER | cut -d' ' -f1)" || true
+    docker volume rm "${DOCKER_SOURCE_VOLUME_NAME}" || true
+    
+    
+    echo "${info}Creating volume${normal}"
+    docker volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
+    docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name $TMP_CONTAINTER_NAME ubuntu:14.04 /bin/bash
+    docker cp openjdk $TMP_CONTAINTER_NAME:/openjdk/build/
+    
+    echo "${info}Updating source${normal}"
+    docker exec $TMP_CONTAINTER_NAME "cd /openjdk/build/openjdk && sh get_source.sh"
+    
+    echo "${info}Shutting down${normal}"
+    docker rm -f $TMP_CONTAINTER_NAME
   fi
 }
 
@@ -197,24 +239,15 @@ buildAndTestOpenJDKViaDocker()
   fi
 
   echo "${info}Using Docker to build the JDK${normal}"
+  
+  createPersistentDockerDataVolume
 
-  CONTAINER=openjdk_container
 
-  # Copy our script for usage inside of the container
-  rm docker/jdk8u/x86_64/ubuntu/colour-codes.sh
-  cp "${SCRIPT_DIR}/sbin/colour-codes.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
+  # Copy our scripts for usage inside of the container
+  rm -r docker/jdk8u/x86_64/ubuntu/sbin
+  cp -r "${SCRIPT_DIR}/sbin" docker/jdk8u/x86_64/ubuntu/sbin 2>/dev/null
+  
 
-  rm docker/jdk8u/x86_64/ubuntu/build.sh
-  cp "${SCRIPT_DIR}/sbin/build.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
-
-  rm docker/jdk8u/x86_64/ubuntu/jtreg_prep.sh
-  cp "${SCRIPT_DIR}/sbin/jtreg_prep.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
-
-  rm docker/jdk8u/x86_64/ubuntu/common_functions.sh
-  cp "${SCRIPT_DIR}/sbin/common_functions.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
-
-  rm docker/jdk8u/x86_64/ubuntu/jtreg.sh
-  cp "${SCRIPT_DIR}/sbin/jtreg.sh" docker/jdk8u/x86_64/ubuntu 2>/dev/null
   # Keep is undefined so we'll kill the docker image
 
   if [[ "$KEEP" == "true" ]] ; then
@@ -230,21 +263,21 @@ buildAndTestOpenJDKViaDocker()
      echo "$normal"
   fi
 
-  docker run -t -v "${WORKING_DIR}/${OPENJDK_REPO_NAME}:/openjdk/jdk8u/openjdk" -v "${WORKING_DIR}/sbin":/openjdk/sbin -v "${WORKING_DIR}/target":/openjdk/target --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
+  
+  mkdir -p "${WORKING_DIR}/target"
+  
+  docker run -t \
+  -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
+  -v "${WORKING_DIR}/target":/openjdk/target \
+  --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
 
   testOpenJDKViaDocker
 
   CONTAINER_ID=$(docker ps -a | awk '{ print $1,$2 }' | grep openjdk_container | awk '{print $1 }'| head -1)
 
   if [[ "${COPY_TO_HOST}" == "true" ]] ; then
-    echo "Copying to the host with docker cp $CONTAINER_ID:/openjdk/jdk8u/OpenJDK.tar.gz $TARGET_DIR"
-    docker cp "${CONTAINER_ID}":/openjdk/jdk8u/OpenJDK.tar.gz "${TARGET_DIR}"
-  fi
-
-  if [[ "$JTREG" == "true" ]] ; then
-    echo "Copying jtreg reports from docker"
-    docker cp "${CONTAINER_ID}":/openjdk/jdk8u/jtreport.zip "${TARGET_DIR}"
-    docker cp "${CONTAINER_ID}":/openjdk/jdk8u/jtwork.zip "${TARGET_DIR}"
+    echo "Copying to the host with docker cp $CONTAINER_ID:/openjdk/build/OpenJDK.tar.gz $TARGET_DIR"
+    docker cp "${CONTAINER_ID}":/openjdk/build/OpenJDK.tar.gz "${TARGET_DIR}"
   fi
 
   # Didn't specify to keep
