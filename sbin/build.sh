@@ -25,8 +25,10 @@ WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 JVM_VARIANT=${4:-server}
-RUN_JTREG_TESTS_ONLY=$5
+OPENJDK_UPDATE_VERSION=$5
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
+
+RUN_JTREG_TESTS_ONLY=""
 
 if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
@@ -104,7 +106,7 @@ configuringVersionStringParameter()
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-milestone=adoptopenjdk"
 
   # Set the update version (e.g. 131)
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${UPDATE_VERSION}"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_UPDATE_VERSION}"
 
   # Add a custom string to the version string if build number isn't set.
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-user-release-suffix=builddateb00"

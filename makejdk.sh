@@ -184,7 +184,7 @@ cloneOpenJDKGitRepo()
 }
 
 # TODO This only works fo jdk8u based releases.  Will require refactoring when jdk9 enters an update cycle
-getOpenJDKUpdateNumber()
+getOpenJDKUpdateVersion()
 {
   echo "${git}"
   if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
@@ -307,5 +307,5 @@ setDefaultIfBranchIsNotProvided
 setWorkingDirectoryIfProvided
 setTargetDirectoryIfProvided
 cloneOpenJDKGitRepo
-getOpenJDKUpdateNumber
+getOpenJDKUpdateVersion
 buildAndTestOpenJDK
