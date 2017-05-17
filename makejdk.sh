@@ -193,7 +193,7 @@ getOpenJDKUpdateNumber()
     echo "${git}Pulling latest tags and getting the latest update version"
     git fetch --tags
     tag=git describe --abbrev=0 --tags
-    $OPENJDK_UPDATE_VERSION=$tag | cut -d'u' -f 2 | cut -d'-' -f 1
+    OPENJDK_UPDATE_VERSION=$tag | cut -d'u' -f 2 | cut -d'-' -f 1
     echo "${OPENJDK_UPDATE_VERSION}"
     cd "${WORKING_DIR}" || return
   fi
