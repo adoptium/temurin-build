@@ -93,6 +93,23 @@ configuringBootJDKConfigureParameter()
   CONFIGURE_ARGS=" --with-boot-jdk=${JDK_BOOT_DIR}"
 }
 
+# Ensure that we produce builds with versions strings something like:
+#
+# openjdk version "1.8.0_131"
+# OpenJDK Runtime Environment (build 1.8.0-adoptopenjdk_2017_04_17_17_21-b00)
+# OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
+configuringVersionStringParameter()
+{
+  # Replace the default 'internal' with 'community'
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-milestone=adoptopenjdk"
+
+  # Set the update version (e.g. 131)
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${UPDATE_VERSION}"
+
+  # Add a custom string to the version string if build number isn't set.
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-user-release-suffix=builddateb00"
+}
+
 buildingTheRestOfTheConfigParameters()
 {
   if [ ! -z "$(which ccache)" ]; then
@@ -117,6 +134,7 @@ configureCommandParameters()
   echo "Building up the configure command..."
 
   configuringBootJDKConfigureParameter
+  configuringVersionStringParameter
   buildingTheRestOfTheConfigParameters
 }
 
@@ -214,7 +232,7 @@ stepIntoTargetDirectoryAndShowCompletionMessage()
 sourceFileWithColourCodes
 checkIfDockerIsUsedForBuildingOrNot
 createWorkingDirectory
-downloadingRequiredDependencies
+downloadingRequiredDependencies # This function is in common-functions.sh
 configureCommandParameters
 stepIntoTheWorkingDirectory
 runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams
