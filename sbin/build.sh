@@ -102,13 +102,15 @@ configuringBootJDKConfigureParameter()
 # OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
 configuringVersionStringParameter()
 {
-  # Replace the default 'internal' with 'community'
+  # Replace the default 'internal' with our own milestone string
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-milestone=adoptopenjdk"
 
-  # Set the update version (e.g. 131)
+  # Set the update version (e.g. 131), this gets passed in from the calling script
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_UPDATE_VERSION}"
 
-  # Add a custom string to the version string if build number isn't set.
+  # Add a custom string to the version string if build number isn't set
+  # 'builddateb00' is a special string that produces suffixes like
+  # "2017_04_17_17_21-b00".
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-user-release-suffix=builddateb00"
 }
 
