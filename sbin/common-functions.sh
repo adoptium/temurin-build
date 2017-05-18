@@ -15,7 +15,6 @@
 
 # Common functions to be used in scripts
 
-
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
@@ -32,12 +31,9 @@ determineBuildProperties() {
     BUILD_FULL_NAME=${BUILD_FULL_NAME:-"$DEFAULT_BUILD_FULL_NAME"}
 }
 
-
-
+# ALSA first for sound
 checkingAndDownloadingAlsa()
 {
-  # ALSA first for sound
-
   echo "Checking for ALSA"
 
   FOUND_ALSA=$(find "${WORKING_DIR}" -name "alsa-lib-${ALSA_LIB_VERSION}")
