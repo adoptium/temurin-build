@@ -179,7 +179,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 buildOpenJDK()
 {
   cd "$OPENJDK_DIR" || exit
-  
+
   #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
   if [ "${RUN_JTREG_TESTS_ONLY}" == "--run-jtreg-tests-only" ]; then
     rm -rf cacerts_area
@@ -191,7 +191,7 @@ buildOpenJDK()
 
   echo "Building the JDK: calling ${makeCMD}"
   $makeCMD
-  
+
   if [ $? -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
     exit;
@@ -204,7 +204,7 @@ buildOpenJDK()
 
 printJavaVersionString()
 {
-  PRODUCT_HOME=$OPENJDK_DIR/build/$BUILD_FULL_NAME/images/j2sdk-image
+  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/j2sdk-image)
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
@@ -235,11 +235,16 @@ removingUnnecessaryFiles()
 
 createOpenJDKTarArchive()
 {
-  GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
-
-  mv OpenJDK.tar.gz $TARGET_DIR
-
-  echo "${good}Your final tar.gz is here at ${PWD}${normal}"
+  case "${OS_MACHINE_NAME}" in
+    *cygwin*)
+      zip -r OpenJDK.zip ./j2sdk-image
+      EXT=".zip" ;;
+    *)
+      GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
+      EXT=".tar.gz" ;;
+  esac
+  mv "OpenJDK${EXT}" "${TARGET_DIR}"
+  echo "${good}Your final ${EXT} is here at ${PWD}${normal}"
 }
 
 stepIntoTargetDirectoryAndShowCompletionMessage()
