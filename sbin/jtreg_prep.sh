@@ -20,6 +20,7 @@ set -eu
 
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
+SHALLOW_CLONE_OPTION="--depth 1"
 
 JAVA_SOURCE=""
 JAVA_DESTINATION=""
@@ -92,14 +93,17 @@ cloneOpenJDKRepo()
       cd "$WORKING_DIR" || exit
     elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
       # If it doesn't exist, clone it
-      echo "Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
-      if [[ ${USE_SSH} == true ]] ; then
-        echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-        git clone -b ${BRANCH} git@github.com:"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-      else
-        echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-        git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-      fi
+      echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
+    if [[ "$USE_SSH" == "true" ]] ; then
+       GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
+    else
+       GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
+    fi
+
+    GIT_CLONE_ARGUMENTS="$SHALLOW_CLONE_OPTION -b ${BRANCH} ${GIT_REMOTE_REPO_ADDRESS} ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+
+    echo "git clone $GIT_CLONE_ARGUMENTS"
+    git clone $GIT_CLONE_ARGUMENTS
     fi
 }
 
