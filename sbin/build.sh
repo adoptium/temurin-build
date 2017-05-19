@@ -206,10 +206,11 @@ buildOpenJDK()
 printJavaVersionString()
 {
   PRODUCT_HOME=$OPENJDK_DIR/build/$BUILD_FULL_NAME/images/j2sdk-image
-  if [[ -d $PRODUCT_HOME ]]; then
+  if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
+    # shellcheck disable=SC2154
     echo "${info}"
-    $PRODUCT_HOME/bin/java -version || (echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}" && exit -1)
+    "$PRODUCT_HOME"/bin/java -version || (echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}" && exit -1)
     echo "${normal}"
     echo ""
   else
