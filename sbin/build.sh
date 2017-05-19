@@ -107,11 +107,6 @@ configuringVersionStringParameter()
 
   # Set the update version (e.g. 131), this gets passed in from the calling script
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_UPDATE_VERSION}"
-
-  # Add a custom string to the version string if build number isn't set
-  # 'builddateb00' is a special string that produces suffixes like
-  # "2017_04_17_17_21-b00".
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-user-release-suffix=builddateb00"
 }
 
 buildingTheRestOfTheConfigParameters()
