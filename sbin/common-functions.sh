@@ -103,7 +103,6 @@ checkingAndDownloadCaCerts()
 
 downloadingRequiredDependencies()
 {
-
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
      echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa, Freetype, and CaCerts."
   else

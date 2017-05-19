@@ -306,6 +306,10 @@ checkInCaseOfDockerShouldTheContainerBePreserved
 setDefaultIfBranchIsNotProvided
 setWorkingDirectoryIfProvided
 setTargetDirectoryIfProvided
-cloneOpenJDKGitRepo
+time (
+    echo "Cloning OpenJDK git repo"
+    cloneOpenJDKGitRepo
+)
+
 getOpenJDKUpdateVersion
 buildAndTestOpenJDK
