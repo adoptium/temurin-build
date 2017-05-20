@@ -237,7 +237,7 @@ createOpenJDKTarArchive()
 {
   case $(uname) in
     *CYGWIN*)
-      zip -r OpenJDK.zip ./j2sdk-image
+      zip -r -q OpenJDK.zip ./j2sdk-image
       EXT=".zip" ;;
     *)
       GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
