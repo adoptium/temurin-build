@@ -15,7 +15,6 @@
 
 # Common functions to be used in scripts
 
-
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
@@ -29,15 +28,12 @@ determineBuildProperties() {
 
     BUILD_TYPE=normal
     DEFAULT_BUILD_FULL_NAME=${OS_KERNEL_NAME}-${OS_MACHINE_NAME}-${BUILD_TYPE}-${JVM_VARIANT}-release
-    BUILD_FULL_NAME=${BUILD_FULL_NAME:-"$DEFAULT_BUILD_FULL_NAME"}
+    export BUILD_FULL_NAME=${BUILD_FULL_NAME:-"$DEFAULT_BUILD_FULL_NAME"}
 }
 
-
-
+# ALSA first for sound
 checkingAndDownloadingAlsa()
 {
-  # ALSA first for sound
-
   echo "Checking for ALSA"
 
   FOUND_ALSA=$(find "${WORKING_DIR}" -name "alsa-lib-${ALSA_LIB_VERSION}")
@@ -107,9 +103,12 @@ checkingAndDownloadCaCerts()
 
 downloadingRequiredDependencies()
 {
-
-  echo "Downloading required dependencies...: Alsa, Freetype, and CaCerts."
-  checkingAndDownloadingAlsa
-  checkingAndDownloadingFreeType
-  checkingAndDownloadCaCerts
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+     echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa, Freetype, and CaCerts."
+  else
+     echo "Downloading required dependencies...: Alsa, Freetype, and CaCerts."
+     checkingAndDownloadingAlsa
+     checkingAndDownloadingFreeType
+     checkingAndDownloadCaCerts
+  fi
 }

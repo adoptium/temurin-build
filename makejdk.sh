@@ -43,7 +43,8 @@ TARGET_DIR=""
 BRANCH=""
 KEEP=false
 JTREG=false
-CLEAN_DOCKER_BUILD=false
+
+OPENJDK_UPDATE_VERSION=""
 
 determineBuildProperties
 
@@ -133,7 +134,8 @@ setDefaultIfBranchIsNotProvided()
 {
   if [ -z "$BRANCH" ] ; then
     echo "${info}BRANCH is undefined so checking out dev${normal}"
-    BRANCH="dev"
+    # change this to dev when working
+    BRANCH="master"
   fi
 }
 
@@ -176,7 +178,7 @@ cloneOpenJDKGitRepo()
     echo "${normal}"
     cd "${WORKING_DIR}" || return
   elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
-    # If it doesn't exixt, clone it
+    # If it doesn't exist, clone it
     echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
     if [[ "$USE_SSH" == "true" ]] ; then
       echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
@@ -185,6 +187,22 @@ cloneOpenJDKGitRepo()
       echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
       git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
     fi
+  fi
+  echo "${normal}"
+}
+
+# TODO This only works fo jdk8u based releases.  Will require refactoring when jdk9 enters an update cycle
+getOpenJDKUpdateVersion()
+{
+  echo "${git}"
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
+    # It does exist and it's a repo other than the AdoptOpenJDK one
+    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
+    echo "${git}Pulling latest tags and getting the latest update version"
+    git fetch --tags
+    OPENJDK_UPDATE_VERSION=$(git describe --abbrev=0 --tags | cut -d'u' -f 2 | cut -d'-' -f 1)
+    echo "${OPENJDK_UPDATE_VERSION}"
+    cd "${WORKING_DIR}" || return
   fi
   echo "${normal}"
 }
@@ -296,8 +314,8 @@ testOpenJDKInNativeEnvironmentIfExpected()
 
 buildAndTestOpenJDKInNativeEnvironment()
 {
-  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT"
-  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}"
+  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT $OPENJDK_UPDATE_VERSION"
+  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}"
 
   testOpenJDKInNativeEnvironmentIfExpected
 }
@@ -321,5 +339,10 @@ checkInCaseOfDockerShouldTheContainerBePreserved
 setDefaultIfBranchIsNotProvided
 setWorkingDirectoryIfProvided
 setTargetDirectoryIfProvided
-cloneOpenJDKGitRepo
+time (
+    echo "Cloning OpenJDK git repo"
+    cloneOpenJDKGitRepo
+)
+
+getOpenJDKUpdateVersion
 buildAndTestOpenJDK

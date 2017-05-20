@@ -25,8 +25,10 @@ WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 JVM_VARIANT=${4:-server}
-RUN_JTREG_TESTS_ONLY=$5
+OPENJDK_UPDATE_VERSION=$5
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
+
+RUN_JTREG_TESTS_ONLY=""
 
 if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
@@ -93,6 +95,20 @@ configuringBootJDKConfigureParameter()
   CONFIGURE_ARGS=" --with-boot-jdk=${JDK_BOOT_DIR}"
 }
 
+# Ensure that we produce builds with versions strings something like:
+#
+# openjdk version "1.8.0_131"
+# OpenJDK Runtime Environment (build 1.8.0-adoptopenjdk_2017_04_17_17_21-b00)
+# OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
+configuringVersionStringParameter()
+{
+  # Replace the default 'internal' with our own milestone string
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-milestone=adoptopenjdk"
+
+  # Set the update version (e.g. 131), this gets passed in from the calling script
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_UPDATE_VERSION}"
+}
+
 buildingTheRestOfTheConfigParameters()
 {
   if [ ! -z "$(which ccache)" ]; then
@@ -114,10 +130,15 @@ buildingTheRestOfTheConfigParameters()
 
 configureCommandParameters()
 {
-  echo "Building up the configure command..."
+  configuringVersionStringParameter
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
 
-  configuringBootJDKConfigureParameter
-  buildingTheRestOfTheConfigParameters
+  else
+     echo "Building up the configure command..."
+     configuringBootJDKConfigureParameter
+     buildingTheRestOfTheConfigParameters
+  fi
 }
 
 stepIntoTheWorkingDirectory()
@@ -158,7 +179,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 buildOpenJDK()
 {
   cd "$OPENJDK_DIR" || exit
-  
+
   #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
   if [ "${RUN_JTREG_TESTS_ONLY}" == "--run-jtreg-tests-only" ]; then
     rm -rf cacerts_area
@@ -170,7 +191,7 @@ buildOpenJDK()
 
   echo "Building the JDK: calling ${makeCMD}"
   $makeCMD
-  
+
   if [ $? -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
     exit;
@@ -178,6 +199,23 @@ buildOpenJDK()
     echo "${good}Built the JDK!"
   fi
   echo "${normal}"
+}
+
+
+printJavaVersionString()
+{
+  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/j2sdk-image)
+  if [[ -d "$PRODUCT_HOME" ]]; then
+     echo "${good}'$PRODUCT_HOME' found${normal}"
+     # shellcheck disable=SC2154
+     echo "${info}"
+     "$PRODUCT_HOME"/bin/java -version || (echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}" && exit -1)
+     echo "${normal}"
+     echo ""
+  else
+     echo "${error}'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location.${normal}"
+     exit -1
+  fi
 }
 
 removingUnnecessaryFiles()
@@ -197,11 +235,16 @@ removingUnnecessaryFiles()
 
 createOpenJDKTarArchive()
 {
-  GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
-
-  mv OpenJDK.tar.gz $TARGET_DIR
-
-  echo "${good}Your final tar.gz is here at ${PWD}${normal}"
+  case "${OS_MACHINE_NAME}" in
+    *cygwin*)
+      zip -r OpenJDK.zip ./j2sdk-image
+      EXT=".zip" ;;
+    *)
+      GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
+      EXT=".tar.gz" ;;
+  esac
+  mv "OpenJDK${EXT}" "${TARGET_DIR}"
+  echo "${good}Your final ${EXT} is here at ${PWD}${normal}"
 }
 
 stepIntoTargetDirectoryAndShowCompletionMessage()
@@ -214,11 +257,12 @@ stepIntoTargetDirectoryAndShowCompletionMessage()
 sourceFileWithColourCodes
 checkIfDockerIsUsedForBuildingOrNot
 createWorkingDirectory
-downloadingRequiredDependencies
+downloadingRequiredDependencies # This function is in common-functions.sh
 configureCommandParameters
 stepIntoTheWorkingDirectory
 runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams
 buildOpenJDK
+printJavaVersionString
 removingUnnecessaryFiles
 createOpenJDKTarArchive
 stepIntoTargetDirectoryAndShowCompletionMessage
