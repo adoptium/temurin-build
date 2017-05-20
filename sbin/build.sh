@@ -235,8 +235,8 @@ removingUnnecessaryFiles()
 
 createOpenJDKTarArchive()
 {
-  case "${OS_MACHINE_NAME}" in
-    *cygwin*)
+  case $(uname) in
+    *CYGWIN*)
       zip -r -q OpenJDK.zip ./j2sdk-image
       EXT=".zip" ;;
     *)
