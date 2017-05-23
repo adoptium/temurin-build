@@ -26,6 +26,7 @@ TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 JVM_VARIANT=${4:-server}
 OPENJDK_UPDATE_VERSION=$5
+OPENJDK_BUILD_NUMBER=$6
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
 
 RUN_JTREG_TESTS_ONLY=""
@@ -98,7 +99,7 @@ configuringBootJDKConfigureParameter()
 # Ensure that we produce builds with versions strings something like:
 #
 # openjdk version "1.8.0_131"
-# OpenJDK Runtime Environment (build 1.8.0-adoptopenjdk_2017_04_17_17_21-b00)
+# OpenJDK Runtime Environment (build 1.8.0-adoptopenjdk-<user>_2017_04_17_17_21-b00)
 # OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
 configuringVersionStringParameter()
 {
@@ -107,6 +108,9 @@ configuringVersionStringParameter()
 
   # Set the update version (e.g. 131), this gets passed in from the calling script
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_UPDATE_VERSION}"
+
+  # Set the build number (e.g. b04), this gets passed in from the calling script
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_BUILD_NUMBER}"
 }
 
 buildingTheRestOfTheConfigParameters()
@@ -200,7 +204,6 @@ buildOpenJDK()
   fi
   echo "${normal}"
 }
-
 
 printJavaVersionString()
 {
