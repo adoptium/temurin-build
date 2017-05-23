@@ -110,7 +110,7 @@ configuringVersionStringParameter()
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_UPDATE_VERSION}"
 
   # Set the build number (e.g. b04), this gets passed in from the calling script
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_BUILD_NUMBER}"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-build-number=${OPENJDK_BUILD_NUMBER}"
 }
 
 buildingTheRestOfTheConfigParameters()
