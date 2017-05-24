@@ -45,6 +45,7 @@ KEEP=false
 JTREG=false
 
 OPENJDK_UPDATE_VERSION=""
+OPENJDK_BUILD_NUMBER=""
 
 determineBuildProperties
 
@@ -192,7 +193,7 @@ cloneOpenJDKGitRepo()
 }
 
 # TODO This only works fo jdk8u based releases.  Will require refactoring when jdk9 enters an update cycle
-getOpenJDKUpdateVersion()
+getOpenJDKUpdateAndBuildVersion()
 {
   echo "${git}"
   if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
@@ -201,7 +202,8 @@ getOpenJDKUpdateVersion()
     echo "${git}Pulling latest tags and getting the latest update version"
     git fetch --tags
     OPENJDK_UPDATE_VERSION=$(git describe --abbrev=0 --tags | cut -d'u' -f 2 | cut -d'-' -f 1)
-    echo "${OPENJDK_UPDATE_VERSION}"
+    OPENJDK_BUILD_NUMBER=$(git describe --abbrev=0 --tags | cut -d'b' -f 2 | cut -d'-' -f 1)
+    echo "${OPENJDK_UPDATE_VERSION} ${OPENJDK_BUILD_NUMBER}"
     cd "${WORKING_DIR}" || return
   fi
   echo "${normal}"
@@ -234,7 +236,6 @@ createPersistentDockerDataVolume()
     docker rm -f $TMP_CONTAINTER_NAME || true
     docker rm -f "$(docker ps -a | grep $CONTAINER | cut -d' ' -f1)" || true
     docker volume rm "${DOCKER_SOURCE_VOLUME_NAME}" || true
-    
     
     echo "${info}Creating volume${normal}"
     docker volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
@@ -314,8 +315,8 @@ testOpenJDKInNativeEnvironmentIfExpected()
 
 buildAndTestOpenJDKInNativeEnvironment()
 {
-  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT $OPENJDK_UPDATE_VERSION"
-  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}"
+  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT $OPENJDK_UPDATE_VERSION $OPENJDK_BUILD_NUMBER"
+  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}"
 
   testOpenJDKInNativeEnvironmentIfExpected
 }
@@ -344,5 +345,5 @@ time (
     cloneOpenJDKGitRepo
 )
 
-getOpenJDKUpdateVersion
+getOpenJDKUpdateAndBuildVersion
 buildAndTestOpenJDK
