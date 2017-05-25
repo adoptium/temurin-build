@@ -96,6 +96,9 @@ parseCommandLineArgs()
       "--jtreg-subsets" | "-js" )
       JTREG=true; JTREG_TEST_SUBSETS="$1"; shift;;
 
+      "--disable-shallow-git-clone" | "-dsgc" )
+      SHALLOW_CLONE_OPTION=""; shift;;
+
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk.1; exit 1;;
      esac
   done
@@ -186,6 +189,12 @@ cloneOpenJDKGitRepo()
        GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
     else
        GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
+    fi
+
+    if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
+        echo "${info}Git repo cloning mode: deep (preserves commit history)${normal}"
+    else
+       echo "${info}Git repo cloning mode: shallow (DOES NOT preserve commit history)${normal}"
     fi
 
     GIT_CLONE_ARGUMENTS="$SHALLOW_CLONE_OPTION -b ${BRANCH} ${GIT_REMOTE_REPO_ADDRESS} ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
