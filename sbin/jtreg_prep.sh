@@ -96,7 +96,7 @@ cloneOpenJDKRepo()
       cd "$WORKING_DIR" || exit
     elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
       # If it doesn't exist, clone it
-      echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
+      echo "Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
     if [[ "$USE_SSH" == "true" ]] ; then
        GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
     else
@@ -104,9 +104,9 @@ cloneOpenJDKRepo()
     fi
 
     if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
-        echo "${info}Git repo cloning mode: deep (preserves commit history)${normal}"
+        echo "Git repo cloning mode: deep (preserves commit history)"
     else
-       echo "${info}Git repo cloning mode: shallow (DOES NOT preserve commit history)${normal}"
+       echo "Git repo cloning mode: shallow (DOES NOT preserve commit history)"
     fi
 
     GIT_CLONE_ARGUMENTS="$SHALLOW_CLONE_OPTION -b ${BRANCH} ${GIT_REMOTE_REPO_ADDRESS} ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
