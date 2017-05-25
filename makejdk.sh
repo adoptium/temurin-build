@@ -31,7 +31,7 @@ source "$SCRIPT_DIR/sbin/common-functions.sh"
 
 REPOSITORY=${REPOSITORY:-AdoptOpenJDK/openjdk-jdk8u}
 OPENJDK_REPO_NAME=${OPENJDK_REPO_NAME:-openjdk}
-SHALLOW_CLONE_OPTION="--depth 1"
+SHALLOW_CLONE_OPTION="--depth=1"
 
 DOCKER_SOURCE_VOLUME_NAME="openjdk-source-volume"
 CONTAINER=openjdk_container
@@ -197,10 +197,10 @@ cloneOpenJDKGitRepo()
        echo "${info}Git repo cloning mode: shallow (DOES NOT preserve commit history)${normal}"
     fi
 
-    GIT_CLONE_ARGUMENTS="$SHALLOW_CLONE_OPTION -b ${BRANCH} ${GIT_REMOTE_REPO_ADDRESS} ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+    GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
 
-    echo "git clone $GIT_CLONE_ARGUMENTS"
-    git clone $GIT_CLONE_ARGUMENTS
+    echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
+    git clone "${GIT_CLONE_ARGUMENTS[@]}"
   fi
   echo "${normal}"
 }

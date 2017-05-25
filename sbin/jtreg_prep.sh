@@ -14,13 +14,13 @@
 #
 
 # Purpose: This script was designed to do any+all setup required by the jtreg.sh script in order to run it.
-# Tasks: Retrieve Java, unpack it if need-be, and store it locally in a specific location. If the location is blank, we put it in 
+# Tasks: Retrieve Java, unpack it if need-be, and store it locally in a specific location. If the location is blank, we put it in
 
 set -eu
 
 REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
-SHALLOW_CLONE_OPTION="--depth 1"
+SHALLOW_CLONE_OPTION="--depth=1"
 
 JAVA_SOURCE=""
 JAVA_DESTINATION=""
@@ -60,7 +60,7 @@ parseCommandLineArgs()
         *) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised. See the script jtreg_prep.sh for a full list."; exit 1;;
        esac
     done
-    
+
     if [ -z "${JAVA_SOURCE}" ]; then
       echo >&2 "jtreg_prep.sh failed: --source must be specified"; exit 1
     fi
@@ -97,22 +97,22 @@ cloneOpenJDKRepo()
     elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
       # If it doesn't exist, clone it
       echo "Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
-    if [[ "$USE_SSH" == "true" ]] ; then
-       GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
-    else
-       GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
-    fi
+      if [[ "$USE_SSH" == "true" ]] ; then
+         GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
+      else
+         GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
+      fi
 
-    if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
-        echo "Git repo cloning mode: deep (preserves commit history)"
-    else
-       echo "Git repo cloning mode: shallow (DOES NOT preserve commit history)"
-    fi
+      if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
+          echo "Git repo cloning mode: deep (preserves commit history)"
+      else
+         echo "Git repo cloning mode: shallow (DOES NOT preserve commit history)"
+      fi
 
-    GIT_CLONE_ARGUMENTS="$SHALLOW_CLONE_OPTION -b ${BRANCH} ${GIT_REMOTE_REPO_ADDRESS} ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+      GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
 
-    echo "git clone $GIT_CLONE_ARGUMENTS"
-    git clone $GIT_CLONE_ARGUMENTS
+      echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
+      git clone "${GIT_CLONE_ARGUMENTS[@]}"
     fi
 }
 
