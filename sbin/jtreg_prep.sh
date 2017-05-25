@@ -54,6 +54,9 @@ parseCommandLineArgs()
         "--working_dir" )
         WORKING_DIR="$1"; shift;;
 
+        "--disable-shallow-git-clone" | "-dsgc" )
+        SHALLOW_CLONE_OPTION=""; shift;;
+
         *) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised. See the script jtreg_prep.sh for a full list."; exit 1;;
        esac
     done
@@ -98,6 +101,12 @@ cloneOpenJDKRepo()
        GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
     else
        GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
+    fi
+
+    if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
+        echo "${info}Git repo cloning mode: deep (preserves commit history)${normal}"
+    else
+       echo "${info}Git repo cloning mode: shallow (DOES NOT preserve commit history)${normal}"
     fi
 
     GIT_CLONE_ARGUMENTS="$SHALLOW_CLONE_OPTION -b ${BRANCH} ${GIT_REMOTE_REPO_ADDRESS} ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
