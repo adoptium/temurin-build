@@ -26,6 +26,7 @@ TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 JVM_VARIANT=${4:-server}
 OPENJDK_UPDATE_VERSION=$5
+OPENJDK_BUILD_NUMBER=$6
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
 
 RUN_JTREG_TESTS_ONLY=""
@@ -51,13 +52,13 @@ checkIfDockerIsUsedForBuildingOrNot()
 
   if [[ -f /.dockerenv ]] ; then
     echo "Detected we're in docker"
-    WORKING_DIR=/openjdk/jdk8u
+    WORKING_DIR=/openjdk/build
     TARGET_DIR=/openjdk/target
     OPENJDK_REPO_NAME=/openjdk
     OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
   fi
 
-  # E.g. /openjdk/jdk8u if you're building in a Docker container
+  # E.g. /openjdk/build if you're building in a Docker container
   # otherwise ensure it's a writable area e.g. /home/youruser/myopenjdkarea
 
   if [ -z "$WORKING_DIR" ] || [ -z "$TARGET_DIR" ] ; then
@@ -98,7 +99,7 @@ configuringBootJDKConfigureParameter()
 # Ensure that we produce builds with versions strings something like:
 #
 # openjdk version "1.8.0_131"
-# OpenJDK Runtime Environment (build 1.8.0-adoptopenjdk_2017_04_17_17_21-b00)
+# OpenJDK Runtime Environment (build 1.8.0-adoptopenjdk-<user>_2017_04_17_17_21-b00)
 # OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
 configuringVersionStringParameter()
 {
@@ -107,6 +108,9 @@ configuringVersionStringParameter()
 
   # Set the update version (e.g. 131), this gets passed in from the calling script
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_UPDATE_VERSION}"
+
+  # Set the build number (e.g. b04), this gets passed in from the calling script
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-build-number=${OPENJDK_BUILD_NUMBER}"
 }
 
 buildingTheRestOfTheConfigParameters()
@@ -179,7 +183,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 buildOpenJDK()
 {
   cd "$OPENJDK_DIR" || exit
-  
+
   #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
   if [ "${RUN_JTREG_TESTS_ONLY}" == "--run-jtreg-tests-only" ]; then
     rm -rf cacerts_area
@@ -191,7 +195,7 @@ buildOpenJDK()
 
   echo "Building the JDK: calling ${makeCMD}"
   $makeCMD
-  
+
   if [ $? -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
     exit;
@@ -201,10 +205,9 @@ buildOpenJDK()
   echo "${normal}"
 }
 
-
 printJavaVersionString()
 {
-  PRODUCT_HOME=$OPENJDK_DIR/build/$BUILD_FULL_NAME/images/j2sdk-image
+  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/j2sdk-image)
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
@@ -235,11 +238,16 @@ removingUnnecessaryFiles()
 
 createOpenJDKTarArchive()
 {
-  GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
-
-  mv OpenJDK.tar.gz $TARGET_DIR
-
-  echo "${good}Your final tar.gz is here at ${PWD}${normal}"
+  case $(uname) in
+    *CYGWIN*)
+      zip -r -q OpenJDK.zip ./j2sdk-image
+      EXT=".zip" ;;
+    *)
+      GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
+      EXT=".tar.gz" ;;
+  esac
+  mv "OpenJDK${EXT}" "${TARGET_DIR}"
+  echo "${good}Your final ${EXT} is here at ${PWD}${normal}"
 }
 
 stepIntoTargetDirectoryAndShowCompletionMessage()

@@ -36,7 +36,7 @@ checkIfDockerIsUsedForBuildingOrNot()
 {
   if [[ -f /.dockerenv ]] ; then
     echo "Detected we're in docker"
-    WORKING_DIR=/openjdk/jdk8u/
+    WORKING_DIR=/openjdk/build/
     OPENJDK_REPO_NAME=openjdk/
     OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
     TARGET_DIR=/openjdk/target/
