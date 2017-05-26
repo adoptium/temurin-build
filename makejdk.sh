@@ -31,6 +31,7 @@ source "$SCRIPT_DIR/sbin/common-functions.sh"
 
 REPOSITORY=${REPOSITORY:-AdoptOpenJDK/openjdk-jdk8u}
 OPENJDK_REPO_NAME=${OPENJDK_REPO_NAME:-openjdk}
+SHALLOW_CLONE_OPTION="--depth=1"
 
 DOCKER_SOURCE_VOLUME_NAME="openjdk-source-volume"
 CONTAINER=openjdk_container
@@ -94,6 +95,9 @@ parseCommandLineArgs()
 
       "--jtreg-subsets" | "-js" )
       JTREG=true; JTREG_TEST_SUBSETS="$1"; shift;;
+
+      "--disable-shallow-git-clone" | "-dsgc" )
+      SHALLOW_CLONE_OPTION=""; shift;;
 
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk.1; exit 1;;
      esac
@@ -182,12 +186,21 @@ cloneOpenJDKGitRepo()
     # If it doesn't exist, clone it
     echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
     if [[ "$USE_SSH" == "true" ]] ; then
-      echo "git clone -b ${BRANCH} git@github.com:${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-      git clone -b ${BRANCH} git@github.com:"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+       GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
     else
-      echo "git clone -b ${BRANCH} https://github.com/${REPOSITORY}.git ${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-      git clone -b ${BRANCH} https://github.com/"${REPOSITORY}".git "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+       GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
     fi
+
+    if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
+        echo "${info}Git repo cloning mode: deep (preserves commit history)${normal}"
+    else
+       echo "${info}Git repo cloning mode: shallow (DOES NOT preserve commit history)${normal}"
+    fi
+
+    GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
+
+    echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
+    git clone "${GIT_CLONE_ARGUMENTS[@]}"
   fi
   echo "${normal}"
 }
