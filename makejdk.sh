@@ -214,8 +214,8 @@ getOpenJDKUpdateAndBuildVersion()
     cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     echo "${git}Pulling latest tags and getting the latest update version"
     git fetch --tags
-    OPENJDK_UPDATE_VERSION=$(git describe --abbrev=0 --tags | cut -d'u' -f 2 | cut -d'-' -f 1)
-    OPENJDK_BUILD_NUMBER=$(git describe --abbrev=0 --tags | cut -d'b' -f 2 | cut -d'-' -f 1)
+    OPENJDK_UPDATE_VERSION=$(git describe --abbrev=0 --tags --always | cut -d'u' -f 2 | cut -d'-' -f 1)
+    OPENJDK_BUILD_NUMBER=$(git describe --abbrev=0 --tags --always | cut -d'b' -f 2 | cut -d'-' -f 1)
     echo "${OPENJDK_UPDATE_VERSION} ${OPENJDK_BUILD_NUMBER}"
     cd "${WORKING_DIR}" || return
   fi
