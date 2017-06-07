@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+    <Product Name='OpenJDK' Manufacturer='AdoptOpenJDK project'
+        Id='bd23ba04-e6cc-4c07-ac45-d9799779ff0d' 
+        UpgradeCode='940481a8-9c9c-4ecb-a8b9-c87066971ee8'
+        Language='1033' Codepage='1252' Version='8.0.121'>
+    <Package Id='*' Keywords='Installer' Description="OpenJDK Installer"
+        Comments='xxx' Manufacturer='AdoptOpenJDK project'
+        InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+    <Media Id='1' Cabinet='openjdk.cab' EmbedCab='yes' DiskPrompt='openjdk cab' />
+    <Property Id='DiskPrompt' Value="OpenJDK cab" />
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+    <Directory Id='ProgramFilesFolder' Name='PFiles'>
+    <Directory Id='openjdk' Name='openjdk'>
+        <Directory Id='INSTALLDIR' Name='jdk1.8.0'>
+		<Component Id='docs' Guid='7b2ba430-ccde-49dd-b85d-b3c3c0b38c0e'>
+		<File Id='third_party_readme' Name='THIRD_PARTY_README' DiskId='1' Source='j2sdk-image\THIRD_PARTY_README' KeyPath='yes'/>
+		</Component>
+		</Directory>
+    </Directory>
+    </Directory>
+    </Directory>
+	
+	<Feature Id='Complete' Level='1'>
+		<ComponentRef Id='docs'/>
+	</Feature>
+	</Product>
+</Wix>
