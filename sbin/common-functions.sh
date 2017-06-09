@@ -108,7 +108,9 @@ downloadingRequiredDependencies()
   else
      echo "Downloading required dependencies...: Alsa, Freetype, and CaCerts."
      checkingAndDownloadingAlsa
-     checkingAndDownloadingFreeType
+     if [[ -z "$FREETYPE_DIRECTORY" ]]; then
+        checkingAndDownloadingFreeType
+     fi
      checkingAndDownloadCaCerts
   fi
 }
