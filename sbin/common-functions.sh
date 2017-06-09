@@ -107,10 +107,20 @@ downloadingRequiredDependencies()
      echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa, Freetype, and CaCerts."
   else
      echo "Downloading required dependencies...: Alsa, Freetype, and CaCerts."
-     checkingAndDownloadingAlsa
+     time (
+        echo "Checking and download Alsa dependency"
+        checkingAndDownloadingAlsa
+     )
+
      if [[ -z "$FREETYPE_DIRECTORY" ]]; then
-        checkingAndDownloadingFreeType
+        time (
+          echo "Checking and download FreeType Font dependency"
+          checkingAndDownloadingFreeType
+        )
      fi
-     checkingAndDownloadCaCerts
+     time (
+        echo "Checking and download CaCerts dependency"
+        checkingAndDownloadCaCerts
+     )
   fi
 }
