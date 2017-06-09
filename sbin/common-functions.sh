@@ -117,6 +117,10 @@ downloadingRequiredDependencies()
           echo "Checking and download FreeType Font dependency"
           checkingAndDownloadingFreeType
         )
+     else
+         echo ""
+         echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at $FREETYPE_DIRECTORY <---"
+         echo ""
      fi
      time (
         echo "Checking and download CaCerts dependency"
