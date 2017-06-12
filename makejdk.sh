@@ -142,8 +142,7 @@ setDefaultIfBranchIsNotProvided()
 {
   if [ -z "$BRANCH" ] ; then
     echo "${info}BRANCH is undefined so checking out dev${normal}"
-    # change this to dev when working
-    BRANCH="master"
+    BRANCH="dev"
   fi
 }
 
