@@ -171,9 +171,6 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
     if [ $? -ne 0 ]; then
       echo "${error}"
       echo "Failed to configure the JDK, exiting"
-      echo "Did you set the JDK boot directory correctly? Override by exporting JDK_BOOT_DIR"
-      echo "For example, on RHEL you would do export JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.131-2.6.9.0.el7_3.x86_64"
-      echo "Current JDK_BOOT_DIR value: ${JDK_BOOT_DIR}"
       exit;
     else
       echo "${good}Configured the JDK"
