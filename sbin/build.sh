@@ -250,7 +250,7 @@ createOpenJDKTarArchive()
   esac
   echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
 
-  if [ "$USE_DOCKER" != "true" ] ; then
+  if [ "$USE_DOCKER" == "false" ] ; then
       echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
       mv "OpenJDK${EXT}" "${TARGET_DIR}"
   fi

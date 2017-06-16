@@ -37,7 +37,7 @@ DOCKER_SOURCE_VOLUME_NAME="openjdk-source-volume"
 CONTAINER=openjdk_container
 TMP_CONTAINER_NAME=openjdk-copy-src
   
-USE_DOCKER=false
+export USE_DOCKER=false
 WORKING_DIR=""
 USE_SSH=false
 TARGET_DIR=""
