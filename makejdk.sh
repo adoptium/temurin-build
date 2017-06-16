@@ -319,8 +319,8 @@ buildAndTestOpenJDKViaDocker()
   CONTAINER_ID=$(docker ps -a | awk '{ print $1,$2 }' | grep openjdk_container | awk '{print $1 }'| head -1)
 
   if [[ "${COPY_TO_HOST}" == "true" ]] ; then
-    echo "Copying to the host with docker cp $CONTAINER_ID:/openjdk/build/OpenJDK.tar.gz $TARGET_DIR"
-    docker cp "${CONTAINER_ID}":/openjdk/build/OpenJDK.tar.gz "${TARGET_DIR}"
+    echo "Copying to the host with docker cp $CONTAINER_ID:/openjdk/build/OpenJDK.tar.gz ${WORKING_DIR}"
+    docker cp "${CONTAINER_ID}":/openjdk/build/OpenJDK.tar.gz "${WORKING_DIR}"
   fi
 
   # Didn't specify to keep
