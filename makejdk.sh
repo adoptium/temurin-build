@@ -360,5 +360,8 @@ time (
     cloneOpenJDKGitRepo
 )
 
-getOpenJDKUpdateAndBuildVersion
+time (
+    echo "Updating OpenJDK git repo"
+    getOpenJDKUpdateAndBuildVersion
+)
 buildAndTestOpenJDK
