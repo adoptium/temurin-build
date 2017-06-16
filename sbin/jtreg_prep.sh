@@ -106,7 +106,7 @@ cloneOpenJDKRepo()
       if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
           echo "Git repo cloning mode: deep (preserves commit history)"
       else
-         echo "Git repo cloning mode: shallow (DOES NOT preserve commit history)"
+         echo "Git repo cloning mode: shallow (DOES NOT contain commit history)"
       fi
 
       GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
