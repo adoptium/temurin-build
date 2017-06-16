@@ -180,12 +180,9 @@ cloneOpenJDKGitRepo()
     echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
     sleep 10
     echo "${git}Pulling latest changes from git repo"
-    if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
-        echo "${info}Git repo fetching mode: deep (preserves commit history)${normal}"
-    else
-        echo "${info}Git repo fetching mode: shallow (DOES NOT preserve commit history)${normal}"
-    fi
-    git fetch --all $SHALLOW_CLONE_OPTION
+
+    showShallowCloningMessage "fetch"
+    git fetch --all ${SHALLOW_CLONE_OPTION}
     git reset --hard origin/$BRANCH
     echo "${normal}"
     cd "${WORKING_DIR}" || return
@@ -198,12 +195,7 @@ cloneOpenJDKGitRepo()
        GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
     fi
 
-    if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
-        echo "${info}Git repo cloning mode: deep (preserves commit history)${normal}"
-    else
-        echo "${info}Git repo cloning mode: shallow (DOES NOT preserve commit history)${normal}"
-    fi
-
+    showShallowCloningMessage "cloning"
     GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
 
     echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
@@ -220,18 +212,25 @@ getOpenJDKUpdateAndBuildVersion()
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     echo "${git}Pulling latest tags and getting the latest update version"
-    if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
-        echo "${info}Git repo fetching mode: deep (preserves commit history)${normal}"
-    else
-        echo "${info}Git repo fetching mode: shallow (DOES NOT preserve commit history)${normal}"
-    fi
-    git fetch --tags $SHALLOW_CLONE_OPTION
+
+    showShallowCloningMessage "fetch"
+    git fetch --tags ${SHALLOW_CLONE_OPTION}
     OPENJDK_UPDATE_VERSION=$(git describe --abbrev=0 --tags | cut -d'u' -f 2 | cut -d'-' -f 1)
     OPENJDK_BUILD_NUMBER=$(git describe --abbrev=0 --tags | cut -d'b' -f 2 | cut -d'-' -f 1)
     echo "${OPENJDK_UPDATE_VERSION} ${OPENJDK_BUILD_NUMBER}"
     cd "${WORKING_DIR}" || return
   fi
   echo "${normal}"
+}
+
+showShallowCloningMessage()
+{
+    mode=$1
+    if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
+        echo "${info}Git repo ${mode} mode: deep (preserves commit history)${normal}"
+    else
+        echo "${info}Git repo ${mode} mode: shallow (DOES NOT contain commit history)${normal}"
+    fi
 }
 
 testOpenJDKViaDocker()
