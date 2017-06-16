@@ -248,8 +248,12 @@ createOpenJDKTarArchive()
       GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
       EXT=".tar.gz" ;;
   esac
-  mv "OpenJDK${EXT}" "${TARGET_DIR}"
-  echo "${good}Your final ${EXT} is here at ${PWD}${normal}"
+  echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
+
+  if [ "$USE_DOCKER" == "false" ] ; then
+      echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
+      mv "OpenJDK${EXT}" "${TARGET_DIR}"
+  fi
 }
 
 stepIntoTargetDirectoryAndShowCompletionMessage()
