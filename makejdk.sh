@@ -180,7 +180,7 @@ cloneOpenJDKGitRepo()
     echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
     sleep 10
     echo "${git}Pulling latest changes from git repo"
-    git fetch --all
+    git fetch --all $SHALLOW_CLONE_OPTION
     git reset --hard origin/$BRANCH
     echo "${normal}"
     cd "${WORKING_DIR}" || return
@@ -215,7 +215,7 @@ getOpenJDKUpdateAndBuildVersion()
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     echo "${git}Pulling latest tags and getting the latest update version"
-    git fetch --tags
+    git fetch --tags $SHALLOW_CLONE_OPTION
     OPENJDK_UPDATE_VERSION=$(git describe --abbrev=0 --tags | cut -d'u' -f 2 | cut -d'-' -f 1)
     OPENJDK_BUILD_NUMBER=$(git describe --abbrev=0 --tags | cut -d'b' -f 2 | cut -d'-' -f 1)
     echo "${OPENJDK_UPDATE_VERSION} ${OPENJDK_BUILD_NUMBER}"
