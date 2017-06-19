@@ -123,8 +123,10 @@ buildingTheRestOfTheConfigParameters()
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-cacerts-file=${WORKING_DIR}/cacerts_area/security/cacerts"
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-alsa=${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
 
-  FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"}
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freetype=$FREETYPE_DIRECTORY"
+  if [[ -z "${FREETYPE}" ]] ; then
+    FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"}
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freetype=$FREETYPE_DIRECTORY"
+  fi
 
   # These will have been installed by the package manager (see our Dockerfile)
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-x=/usr/include/X11"
@@ -193,7 +195,12 @@ buildOpenJDK()
     exit 0
   fi
 
-  makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}"
+  case "${OS_KERNEL_NAME}" in
+    aix)
+      makeCMD="gmake ${MAKE_ARGS_FOR_ANY_PLATFORM}" ;;
+    *)
+      makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}" ;;
+  esac
 
   echo "Building the JDK: calling ${makeCMD}"
   $makeCMD
@@ -240,10 +247,13 @@ removingUnnecessaryFiles()
 
 createOpenJDKTarArchive()
 {
-  case $(uname) in
-    *CYGWIN*)
+  case "${OS_KERNEL_NAME}" in
+    *cygwin*)
       zip -r -q OpenJDK.zip ./j2sdk-image
       EXT=".zip" ;;
+    aix)
+      GZIP=-9 tar -cf - ./j2sdk-image/ | gzip -c > OpenJDK.tar.gz
+      EXT=".tar.gz" ;;
     *)
       GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
       EXT=".tar.gz" ;;
