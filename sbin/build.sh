@@ -145,6 +145,7 @@ configureCommandParameters()
      configuringBootJDKConfigureParameter
      buildingTheRestOfTheConfigParameters
   fi
+  echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
 stepIntoTheWorkingDirectory()
@@ -229,12 +230,14 @@ removingUnnecessaryFiles()
 
   rm -rf cacerts_area
 
-  cd build/*/images  || return
+  cd build/*/images || return
+
+  mv j2sdk-image "${OPENJDK_REPO_TAG}"
 
   # Remove files we don't need
-  rm -rf j2sdk-image/demo/applets
-  rm -rf j2sdk-image/demo/jfc/Font2DTest
-  rm -rf j2sdk-image/demo/jfc/SwingApplet
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet
   find . -name "*.diz" -type f -delete
 }
 
@@ -242,10 +245,10 @@ createOpenJDKTarArchive()
 {
   case $(uname) in
     *CYGWIN*)
-      zip -r -q OpenJDK.zip ./j2sdk-image
+      zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
       EXT=".zip" ;;
     *)
-      GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
+      GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
       EXT=".tar.gz" ;;
   esac
   mv "OpenJDK${EXT}" "${TARGET_DIR}"

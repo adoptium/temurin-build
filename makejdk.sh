@@ -29,14 +29,15 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/sbin/common-functions.sh"
 
-REPOSITORY=${REPOSITORY:-AdoptOpenJDK/openjdk-jdk8u}
+REPOSITORY=${REPOSITORY:-adoptopenjdk/openjdk-jdk8u}
+REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')"
 OPENJDK_REPO_NAME=${OPENJDK_REPO_NAME:-openjdk}
 SHALLOW_CLONE_OPTION="--depth=1"
 
 DOCKER_SOURCE_VOLUME_NAME="openjdk-source-volume"
 CONTAINER=openjdk_container
 TMP_CONTAINER_NAME=openjdk-copy-src
-  
+
 USE_DOCKER=false
 WORKING_DIR=""
 USE_SSH=false
@@ -86,7 +87,7 @@ parseCommandLineArgs()
 
       "--keep" | "-k" )
       KEEP=true;;
-    
+
       "--clean-docker-build" | "-c" )
       CLEAN_DOCKER_BUILD=true;;
 
@@ -174,7 +175,7 @@ setTargetDirectoryIfProvided()
 cloneOpenJDKGitRepo()
 {
   echo "${git}"
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] ; then
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
@@ -211,15 +212,25 @@ cloneOpenJDKGitRepo()
 getOpenJDKUpdateAndBuildVersion()
 {
   echo "${git}"
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
-    # It does exist and it's a repo other than the AdoptOpenJDK one
-    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
-    echo "${git}Pulling latest tags and getting the latest update version"
-    git fetch --tags
-    OPENJDK_UPDATE_VERSION=$(git describe --abbrev=0 --tags | cut -d'u' -f 2 | cut -d'-' -f 1)
-    OPENJDK_BUILD_NUMBER=$(git describe --abbrev=0 --tags | cut -d'b' -f 2 | cut -d'-' -f 1)
-    echo "${OPENJDK_UPDATE_VERSION} ${OPENJDK_BUILD_NUMBER}"
-    cd "${WORKING_DIR}" || return
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ]; then
+    case "${REPOSITORY}" in
+      *openjdk-jdk8u)
+        # It does exist and it's a repo other than the AdoptOpenJDK one
+        cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
+        echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${SHALLOW_CLONE_OPTION}"
+        git fetch -q --tags "${SHALLOW_CLONE_OPTION}"
+        export OPENJDK_REPO_TAG=""
+        OPENJDK_REPO_TAG="$(git describe --tags "$(git rev-list --tags --max-count=1)")"
+        if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
+          echo "${error}Unable to detect git tag"
+          exit 1
+        fi
+        OPENJDK_UPDATE_VERSION=$(echo "${OPENJDK_REPO_TAG}" | cut -d'u' -f 2 | cut -d'-' -f 1)
+        OPENJDK_BUILD_NUMBER=$(echo "${OPENJDK_REPO_TAG}" | cut -d'b' -f 2 | cut -d'-' -f 1)
+        echo "Version: ${OPENJDK_UPDATE_VERSION} ${OPENJDK_BUILD_NUMBER}"
+        cd "${WORKING_DIR}" || return
+        ;;
+    esac
   fi
   echo "${normal}"
 }
@@ -241,25 +252,25 @@ createPersistentDockerDataVolume()
   #this gets mounted at /openjdk/build inside the container and is persistent between builds/tests
   #unless -c is passed to this script, in which case it is recreated using the source
   #in the current ./openjdk directory
-  
+
   docker volume inspect $DOCKER_SOURCE_VOLUME_NAME > /dev/null 2>&1
   DATA_VOLUME_EXISTS=$?
-  
+
   if [[ "$CLEAN_DOCKER_BUILD" == "true" || "$DATA_VOLUME_EXISTS" != "0" ]]; then
-  
+
     echo "${info}Removing old volumes and containers${normal}"
     docker rm -f $TMP_CONTAINER_NAME || true
     docker rm -f "$(docker ps -a | grep $CONTAINER | cut -d' ' -f1)" || true
     docker volume rm "${DOCKER_SOURCE_VOLUME_NAME}" || true
-    
+
     echo "${info}Creating volume${normal}"
     docker volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
     docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name $TMP_CONTAINER_NAME ubuntu:14.04 /bin/bash
     docker cp openjdk $TMP_CONTAINER_NAME:/openjdk/build/
-    
+
     echo "${info}Updating source${normal}"
     docker exec $TMP_CONTAINER_NAME "cd /openjdk/build/openjdk && sh get_source.sh"
-    
+
     echo "${info}Shutting down${normal}"
     docker rm -f $TMP_CONTAINER_NAME
   fi
@@ -273,14 +284,14 @@ buildAndTestOpenJDKViaDocker()
   fi
 
   echo "${info}Using Docker to build the JDK${normal}"
-  
+
   createPersistentDockerDataVolume
 
 
   # Copy our scripts for usage inside of the container
   rm -r docker/jdk8u/x86_64/ubuntu/sbin
   cp -r "${SCRIPT_DIR}/sbin" docker/jdk8u/x86_64/ubuntu/sbin 2>/dev/null
-  
+
 
   # Keep is undefined so we'll kill the docker image
 
@@ -297,9 +308,9 @@ buildAndTestOpenJDKViaDocker()
      echo "$normal"
   fi
 
-  
+
   mkdir -p "${WORKING_DIR}/target"
-  
+
   docker run -t \
   -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
   -v "${WORKING_DIR}/target":/openjdk/target \

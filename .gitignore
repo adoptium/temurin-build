@@ -1,3 +1,5 @@
 openjdk
 target
 .idea/
+alsa-lib*
+freetype*
