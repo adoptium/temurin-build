@@ -29,7 +29,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/sbin/common-functions.sh"
 
-REPOSITORY=${REPOSITORY:-AdoptOpenJDK/openjdk-jdk8u}
+REPOSITORY=${REPOSITORY:-adoptopenjdk/openjdk-jdk8u}
+REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')"
 OPENJDK_REPO_NAME=${OPENJDK_REPO_NAME:-openjdk}
 SHALLOW_CLONE_OPTION="--depth=1"
 
@@ -180,7 +181,7 @@ setTargetDirectoryIfProvided()
 cloneOpenJDKGitRepo()
 {
   echo "${git}"
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] ; then
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
@@ -217,15 +218,25 @@ cloneOpenJDKGitRepo()
 getOpenJDKUpdateAndBuildVersion()
 {
   echo "${git}"
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
-    # It does exist and it's a repo other than the AdoptOpenJDK one
-    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
-    echo "${git}Pulling latest tags and getting the latest update version"
-    git fetch --tags
-    OPENJDK_UPDATE_VERSION=$(git describe --abbrev=0 --tags --always | cut -d'u' -f 2 | cut -d'-' -f 1)
-    OPENJDK_BUILD_NUMBER=$(git describe --abbrev=0 --tags --always | cut -d'b' -f 2 | cut -d'-' -f 1)
-    echo "Update Version: ${OPENJDK_UPDATE_VERSION} Build Number: ${OPENJDK_BUILD_NUMBER}"
-    cd "${WORKING_DIR}" || return
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ]; then
+    case "${REPOSITORY}" in
+      *openjdk-jdk8u)
+        # It does exist and it's a repo other than the AdoptOpenJDK one
+        cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
+        echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${SHALLOW_CLONE_OPTION}"
+        git fetch -q --tags "${SHALLOW_CLONE_OPTION}"
+        export OPENJDK_REPO_TAG=""
+        OPENJDK_REPO_TAG="$(git describe --tags "$(git rev-list --tags --max-count=1)")"
+        if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
+          echo "${error}Unable to detect git tag"
+          exit 1
+        fi
+        OPENJDK_UPDATE_VERSION=$(echo "${OPENJDK_REPO_TAG}" | cut -d'u' -f 2 | cut -d'-' -f 1)
+        OPENJDK_BUILD_NUMBER=$(echo "${OPENJDK_REPO_TAG}" | cut -d'b' -f 2 | cut -d'-' -f 1)
+        echo "Version: ${OPENJDK_UPDATE_VERSION} ${OPENJDK_BUILD_NUMBER}"
+        cd "${WORKING_DIR}" || return
+        ;;
+    esac
   fi
   echo "${normal}"
 }
