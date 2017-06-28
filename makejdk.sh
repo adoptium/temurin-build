@@ -97,8 +97,14 @@ parseCommandLineArgs()
       "--jtreg-subsets" | "-js" )
       JTREG=true; JTREG_TEST_SUBSETS="$1"; shift;;
 
+      "--no-colour" | "-nc" )
+      COLOUR=false;;
+
       "--disable-shallow-git-clone" | "-dsgc" )
       SHALLOW_CLONE_OPTION=""; shift;;
+
+      "--skip-freetype" | "-sf" )
+      export FREETYPE=false;;
 
       "--freetype-dir" | "-ftd" )
       export FREETYPE_DIRECTORY="$1"; shift;;
@@ -358,9 +364,11 @@ buildAndTestOpenJDK()
 
 ##################################################################
 
-sourceFileWithColourCodes
 sourceSignalHandler
 parseCommandLineArgs "$@"
+if [[ -z "${COLOUR}" ]] ; then
+  sourceFileWithColourCodes
+fi
 checkIfDockerIsUsedForBuildingOrNot
 checkInCaseOfDockerShouldTheContainerBePreserved
 setDefaultIfBranchIsNotProvided
