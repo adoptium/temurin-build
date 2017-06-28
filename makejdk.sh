@@ -38,8 +38,8 @@ DOCKER_SOURCE_VOLUME_NAME="openjdk-source-volume"
 CONTAINER=openjdk_container
 TMP_CONTAINER_NAME=openjdk-copy-src
 CLEAN_DOCKER_BUILD=false
-COPY_TO_HOST=false
 
+export COPY_TO_HOST=false
 export USE_DOCKER=false
 
 WORKING_DIR=""
@@ -335,11 +335,6 @@ buildAndTestOpenJDKViaDocker()
   testOpenJDKViaDocker
 
   CONTAINER_ID=$(docker ps -a | awk '{ print $1,$2 }' | grep openjdk_container | awk '{print $1 }'| head -1)
-
-  if [[ "${COPY_TO_HOST}" == "true" ]] ; then
-    echo "Copying to the host with docker cp $CONTAINER_ID:/openjdk/build/OpenJDK.tar.gz ${TARGET_DIR}"
-    docker cp "${CONTAINER_ID}":/openjdk/build/OpenJDK.tar.gz "${TARGET_DIR}"
-  fi
 
   # Didn't specify to keep
   if [[ -z ${KEEP} ]] ; then

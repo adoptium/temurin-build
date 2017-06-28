@@ -262,6 +262,9 @@ createOpenJDKTarArchive()
   if [ "$USE_DOCKER" == "true" ] ; then
      GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
      EXT=".tar.gz"
+
+     echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
+     mv "OpenJDK${EXT}" "${TARGET_DIR}"
   else
       case "${OS_KERNEL_NAME}" in
         *cygwin*)
@@ -279,12 +282,12 @@ createOpenJDKTarArchive()
       echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
       mv "OpenJDK${EXT}" "${TARGET_DIR}"
   fi
+
 }
 
 stepIntoTargetDirectoryAndShowCompletionMessage()
 {
   cd "${TARGET_DIR}"  || return
-  ls
   echo "All done!"
 }
 
