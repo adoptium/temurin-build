@@ -39,7 +39,7 @@ checkIfDockerIsUsedForBuildingOrNot()
     WORKING_DIR=/openjdk/build/
     OPENJDK_REPO_NAME=openjdk/
     OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
-    TARGET_DIR=/openjdk/target/
+    TARGET_DIR=/openjdk/
     # Keep as a variable for potential use later
     # if we wish to copy the results to the host
     # shellcheck disable=SC2034

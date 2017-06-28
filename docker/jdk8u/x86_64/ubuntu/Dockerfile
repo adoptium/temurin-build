@@ -40,9 +40,6 @@ RUN apt-get update \
     realpath \
 && rm -rf /var/lib/apt/lists/*
 
-# Pick up build instructions
-RUN mkdir -p /openjdk/target
-
 ADD sbin /openjdk/sbin
 
 WORKDIR /openjdk/build/
