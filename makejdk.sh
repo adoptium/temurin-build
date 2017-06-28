@@ -102,6 +102,9 @@ parseCommandLineArgs()
       "--disable-shallow-git-clone" | "-dsgc" )
       SHALLOW_CLONE_OPTION=""; shift;;
 
+      "--skip-freetype" | "-sf" )
+      export FREETYPE=false;;
+
       "--freetype-dir" | "-ftd" )
       export FREETYPE_DIRECTORY="$1"; shift;;
 
