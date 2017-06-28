@@ -37,7 +37,9 @@ SHALLOW_CLONE_OPTION="--depth=1"
 DOCKER_SOURCE_VOLUME_NAME="openjdk-source-volume"
 CONTAINER=openjdk_container
 TMP_CONTAINER_NAME=openjdk-copy-src
-  
+CLEAN_DOCKER_BUILD=false
+COPY_TO_HOST=false
+
 export USE_DOCKER=false
 
 WORKING_DIR=""
@@ -135,7 +137,7 @@ checkIfDockerIsUsedForBuildingOrNot()
   fi
 }
 
-checkInCaseOfDockerShouldTheContainerBePreserved()
+checkIfDockerIsUsedShouldTheContainerBePreserved()
 {
   echo "${info}"
   if [ "${KEEP}" == "true" ] ; then
@@ -263,11 +265,10 @@ testOpenJDKViaDocker()
 
 createPersistentDockerDataVolume()
 {
-  #Create a data volue called $DOCKER_SOURCE_VOLUME_NAME,
+  #Create a data volume called $DOCKER_SOURCE_VOLUME_NAME,
   #this gets mounted at /openjdk/build inside the container and is persistent between builds/tests
   #unless -c is passed to this script, in which case it is recreated using the source
-  #in the current ./openjdk directory
-
+  #in the current ./openjdk directory on the host machine (outside the container)
   docker volume inspect $DOCKER_SOURCE_VOLUME_NAME > /dev/null 2>&1
   DATA_VOLUME_EXISTS=$?
 
@@ -312,7 +313,7 @@ buildAndTestOpenJDKViaDocker()
 
   if [[ "$KEEP" == "true" ]] ; then
      if [ "$(docker ps -a | grep -c openjdk_container)" == 0 ]; then
-         echo "${info}No docker container found so creating one${normal}"
+         echo "${info}No docker container found so creating '$CONTAINER' ${normal}"
          docker build -t $CONTAINER docker/jdk8u/x86_64/ubuntu
      fi
   else
@@ -327,17 +328,17 @@ buildAndTestOpenJDKViaDocker()
   mkdir -p "${WORKING_DIR}/target"
 
   docker run -t \
-  -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
-  -v "${WORKING_DIR}/target":/openjdk/target \
-  --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
+      -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
+      -v "${WORKING_DIR}/target":/openjdk/target \
+      --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
 
   testOpenJDKViaDocker
 
   CONTAINER_ID=$(docker ps -a | awk '{ print $1,$2 }' | grep openjdk_container | awk '{print $1 }'| head -1)
 
   if [[ "${COPY_TO_HOST}" == "true" ]] ; then
-    echo "Copying to the host with docker cp $CONTAINER_ID:/openjdk/build/OpenJDK.tar.gz ${WORKING_DIR}"
-    docker cp "${CONTAINER_ID}":/openjdk/build/OpenJDK.tar.gz "${WORKING_DIR}"
+    echo "Copying to the host with docker cp $CONTAINER_ID:/openjdk/build/OpenJDK.tar.gz ${TARGET_DIR}"
+    docker cp "${CONTAINER_ID}":/openjdk/build/OpenJDK.tar.gz "${TARGET_DIR}"
   fi
 
   # Didn't specify to keep
@@ -379,7 +380,7 @@ if [[ -z "${COLOUR}" ]] ; then
   sourceFileWithColourCodes
 fi
 checkIfDockerIsUsedForBuildingOrNot
-checkInCaseOfDockerShouldTheContainerBePreserved
+checkIfDockerIsUsedShouldTheContainerBePreserved
 setDefaultIfBranchIsNotProvided
 setWorkingDirectoryIfProvided
 setTargetDirectoryIfProvided
