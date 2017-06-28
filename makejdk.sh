@@ -189,6 +189,7 @@ cloneOpenJDKGitRepo()
     echo "${git}Pulling latest changes from git repo"
     git fetch --all
     git reset --hard origin/$BRANCH
+    git clean -fdx
     echo "${normal}"
     cd "${WORKING_DIR}" || return
   elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
