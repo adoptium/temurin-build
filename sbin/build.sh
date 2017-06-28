@@ -245,7 +245,7 @@ removingUnnecessaryFiles()
 
      cd build/*/images || return
 
-     mv j2sdk-image "${OPENJDK_REPO_TAG}"
+     mv j2sdk-image "${WORKING_DIR}"
   fi
   
   # Remove files we don't need
@@ -285,9 +285,8 @@ createOpenJDKTarArchive()
 
 }
 
-stepIntoTargetDirectoryAndShowCompletionMessage()
+showCompletionMessage()
 {
-  cd "${TARGET_DIR}"  || return
   echo "All done!"
 }
 
@@ -302,4 +301,4 @@ buildOpenJDK
 printJavaVersionString
 removingUnnecessaryFiles
 createOpenJDKTarArchive
-stepIntoTargetDirectoryAndShowCompletionMessage
+showCompletionMessage
