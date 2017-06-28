@@ -111,6 +111,8 @@ configuringVersionStringParameter()
 
   # Set the build number (e.g. b04), this gets passed in from the calling script
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-build-number=${OPENJDK_BUILD_NUMBER}"
+
+  echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
 buildingTheRestOfTheConfigParameters()
@@ -123,8 +125,10 @@ buildingTheRestOfTheConfigParameters()
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-cacerts-file=${WORKING_DIR}/cacerts_area/security/cacerts"
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-alsa=${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
 
-  FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"}
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freetype=$FREETYPE_DIRECTORY"
+  if [[ -z "${FREETYPE}" ]] ; then
+    FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"}
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freetype=$FREETYPE_DIRECTORY"
+  fi
 
   # These will have been installed by the package manager (see our Dockerfile)
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-x=/usr/include/X11"
@@ -145,6 +149,7 @@ configureCommandParameters()
      configuringBootJDKConfigureParameter
      buildingTheRestOfTheConfigParameters
   fi
+  echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
 stepIntoTheWorkingDirectory()
@@ -193,7 +198,12 @@ buildOpenJDK()
     exit 0
   fi
 
-  makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}"
+  case "${OS_KERNEL_NAME}" in
+    aix)
+      makeCMD="gmake ${MAKE_ARGS_FOR_ANY_PLATFORM}" ;;
+    *)
+      makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}" ;;
+  esac
 
   echo "Building the JDK: calling ${makeCMD}"
   $makeCMD
@@ -229,23 +239,28 @@ removingUnnecessaryFiles()
 
   rm -rf cacerts_area
 
-  cd build/*/images  || return
+  cd build/*/images || return
+
+  mv j2sdk-image "${OPENJDK_REPO_TAG}"
 
   # Remove files we don't need
-  rm -rf j2sdk-image/demo/applets
-  rm -rf j2sdk-image/demo/jfc/Font2DTest
-  rm -rf j2sdk-image/demo/jfc/SwingApplet
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet
   find . -name "*.diz" -type f -delete
 }
 
 createOpenJDKTarArchive()
 {
-  case $(uname) in
-    *CYGWIN*)
-      zip -r -q OpenJDK.zip ./j2sdk-image
+  case "${OS_KERNEL_NAME}" in
+    *cygwin*)
+      zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
       EXT=".zip" ;;
+    aix)
+      GZIP=-9 tar -cf - ./j2sdk-image/ | gzip -c > OpenJDK.tar.gz
+      EXT=".tar.gz" ;;
     *)
-      GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
+      GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
       EXT=".tar.gz" ;;
   esac
   echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
