@@ -335,8 +335,6 @@ buildAndTestOpenJDKViaDocker()
 
   testOpenJDKViaDocker
 
-  CONTAINER_ID=$(docker ps -a | awk '{ print $1,$2 }' | grep openjdk_container | awk '{print $1 }'| head -1)
-
   # Didn't specify to keep
   if [[ -z ${KEEP} ]] ; then
     docker ps -a | awk '{ print $1,$2 }' | grep "${CONTAINER}" | awk '{print $1 }' | xargs -I {} docker rm {}
