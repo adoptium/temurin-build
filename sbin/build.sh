@@ -259,6 +259,9 @@ createOpenJDKTarArchive()
 {
   echo "Archiving the build OpenJDK image..."
 
+  OPENJDK_REPO_TAG=$(getFirstGitTag)
+  echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
+
   mv j2sdk-image ${OPENJDK_REPO_TAG}
   if [ "$USE_DOCKER" == "true" ] ; then
      GZIP=-9 tar -czf OpenJDK.tar.gz ./${OPENJDK_REPO_TAG}
