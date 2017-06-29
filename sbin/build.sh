@@ -245,7 +245,7 @@ removingUnnecessaryFiles()
 
      cd build/*/images || return
 
-     mv j2sdk-image "${WORKING_DIR}"
+     mv j2sdk-image "${OPENJDK_REPO_TAG}"
   fi
   
   # Remove files we don't need
