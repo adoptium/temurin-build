@@ -39,6 +39,7 @@ CONTAINER=openjdk_container
 TMP_CONTAINER_NAME=openjdk-copy-src
 CLEAN_DOCKER_BUILD=false
 
+export OPENJDK_REPO_TAG=""
 export COPY_TO_HOST=false
 export USE_DOCKER=false
 
@@ -227,7 +228,6 @@ getOpenJDKUpdateAndBuildVersion()
         cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
         echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${SHALLOW_CLONE_OPTION}"
         git fetch -q --tags "${SHALLOW_CLONE_OPTION}"
-        export OPENJDK_REPO_TAG=""
         OPENJDK_REPO_TAG="$(git describe --tags "$(git rev-list --tags --max-count=1)")"
         if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
           echo "${error}Unable to detect git tag"
