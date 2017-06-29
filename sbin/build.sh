@@ -259,8 +259,9 @@ createOpenJDKTarArchive()
 {
   echo "Archiving the build OpenJDK image..."
 
+  mv j2sdk-image ${OPENJDK_REPO_TAG}
   if [ "$USE_DOCKER" == "true" ] ; then
-     GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
+     GZIP=-9 tar -czf OpenJDK.tar.gz ./${OPENJDK_REPO_TAG}
      EXT=".tar.gz"
 
      echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
@@ -271,7 +272,7 @@ createOpenJDKTarArchive()
           zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
           EXT=".zip" ;;
         aix)
-          GZIP=-9 tar -cf - ./j2sdk-image/ | gzip -c > OpenJDK.tar.gz
+          GZIP=-9 tar -cf - ./${OPENJDK_REPO_TAG}/ | gzip -c > OpenJDK.tar.gz
           EXT=".tar.gz" ;;
         *)
           GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
