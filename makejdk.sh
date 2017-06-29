@@ -42,6 +42,8 @@ CLEAN_DOCKER_BUILD=false
 export COPY_TO_HOST=false
 export USE_DOCKER=false
 
+TARGET_DIR_IN_THE_CONTAINER="/openjdk/target/"
+
 WORKING_DIR=""
 USE_SSH=false
 TARGET_DIR=""
@@ -260,7 +262,7 @@ testOpenJDKViaDocker()
     mkdir -p "${WORKING_DIR}/target"
     docker run \
     -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
-    -v "${WORKING_DIR}/target:/openjdk/target" \
+    -v "${WORKING_DIR}/target:${TARGET_DIR_IN_THE_CONTAINER}" \
     --entrypoint /openjdk/sbin/jtreg.sh "${CONTAINER}"
   fi
 }
@@ -331,7 +333,7 @@ buildAndTestOpenJDKViaDocker()
 
   docker run -t \
       -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
-      -v "${WORKING_DIR}/target":/openjdk/target \
+      -v "${WORKING_DIR}/target":/${TARGET_DIR_IN_THE_CONTAINER} \
       --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
 
   testOpenJDKViaDocker
