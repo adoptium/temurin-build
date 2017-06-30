@@ -196,6 +196,7 @@ cloneOpenJDKGitRepo()
     showShallowCloningMessage "fetch"
     git fetch --all ${SHALLOW_CLONE_OPTION}
     git reset --hard origin/$BRANCH
+    git clean -fdx
     echo "${normal}"
     cd "${WORKING_DIR}" || return
   elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
