@@ -53,9 +53,10 @@ checkIfDockerIsUsedForBuildingOrNot()
   if [[ -f /.dockerenv ]] ; then
     echo "Detected we're in docker"
     WORKING_DIR=/openjdk/build
-    TARGET_DIR=/openjdk/target
+    TARGET_DIR=/openjdk/target/
     OPENJDK_REPO_NAME=/openjdk
     OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+    USE_DOCKER=true
   fi
 
   # E.g. /openjdk/build if you're building in a Docker container
@@ -159,7 +160,7 @@ stepIntoTheWorkingDirectory()
   echo "Should have the source, I'm at $PWD"
 }
 
-runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
+runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
 {
   cd "$OPENJDK_DIR" || exit
   CONFIGURED_OPENJDK_ALREADY=$(find -name "config.status")
@@ -169,7 +170,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
   else
     CONFIGURE_ARGS="${CONFIGURE_ARGS} ${CONFIGURE_ARGS_FOR_ANY_PLATFORM}"
 
-    echo "Running ./configure with $CONFIGURE_ARGS"
+    echo "Running ./configure with arguments $CONFIGURE_ARGS"
     # Depends upon the configure command being split for multiple args.  Dont quote it.
     # shellcheck disable=SC2086
     bash ./configure $CONFIGURE_ARGS
@@ -235,12 +236,16 @@ printJavaVersionString()
 
 removingUnnecessaryFiles()
 {
-  echo "Removing unneccessary files now..."
-
-  rm -rf cacerts_area
+  echo "Removing unnecessary files now..."
+  
+  OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  if [ "$USE_DOCKER" != "true" ] ; then
+     rm -rf cacerts_area
+  fi
 
   cd build/*/images || return
 
+  rm -fr "${OPENJDK_REPO_TAG}" || true
   mv j2sdk-image "${OPENJDK_REPO_TAG}"
 
   # Remove files we don't need
@@ -252,25 +257,39 @@ removingUnnecessaryFiles()
 
 createOpenJDKTarArchive()
 {
-  case "${OS_KERNEL_NAME}" in
-    *cygwin*)
-      zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
-      EXT=".zip" ;;
-    aix)
-      GZIP=-9 tar -cf - ./j2sdk-image/ | gzip -c > OpenJDK.tar.gz
-      EXT=".tar.gz" ;;
-    *)
-      GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
-      EXT=".tar.gz" ;;
-  esac
-  mv "OpenJDK${EXT}" "${TARGET_DIR}"
-  echo "${good}Your final ${EXT} is here at ${PWD}${normal}"
+  echo "Archiving the build OpenJDK image..."
+
+  OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
+
+  if [ "$USE_DOCKER" == "true" ] ; then
+     GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+     EXT=".tar.gz"
+
+     echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
+     mv "OpenJDK${EXT}" "${TARGET_DIR}"
+  else
+      case "${OS_KERNEL_NAME}" in
+        *cygwin*)
+          zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
+          EXT=".zip" ;;
+        aix)
+          GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
+          EXT=".tar.gz" ;;
+        *)
+          GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+          EXT=".tar.gz" ;;
+      esac
+      echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
+
+      echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
+      mv "OpenJDK${EXT}" "${TARGET_DIR}"
+  fi
+
 }
 
-stepIntoTargetDirectoryAndShowCompletionMessage()
+showCompletionMessage()
 {
-  cd "${TARGET_DIR}"  || return
-  ls
   echo "All done!"
 }
 
@@ -280,9 +299,9 @@ createWorkingDirectory
 downloadingRequiredDependencies # This function is in common-functions.sh
 configureCommandParameters
 stepIntoTheWorkingDirectory
-runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams
+runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
 buildOpenJDK
 printJavaVersionString
 removingUnnecessaryFiles
 createOpenJDKTarArchive
-stepIntoTargetDirectoryAndShowCompletionMessage
+showCompletionMessage
