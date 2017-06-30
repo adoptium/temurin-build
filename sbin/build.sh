@@ -239,17 +239,15 @@ removingUnnecessaryFiles()
   echo "Removing unnecessary files now..."
   
   OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
-  if [ "$USE_DOCKER" == "true" ] ; then
-     cd build/*/images || return
-  else
+  if [ "$USE_DOCKER" != "true" ] ; then
      rm -rf cacerts_area
-
-     cd build/*/images || return
-
-     rm -fr "${OPENJDK_REPO_TAG}" || true
-     mv j2sdk-image "${OPENJDK_REPO_TAG}"
   fi
-  
+
+  cd build/*/images || return
+
+  rm -fr "${OPENJDK_REPO_TAG}" || true
+  mv j2sdk-image "${OPENJDK_REPO_TAG}"
+
   # Remove files we don't need
   rm -rf "${OPENJDK_REPO_TAG}"/demo/applets
   rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest
