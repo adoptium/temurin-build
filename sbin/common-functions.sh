@@ -148,7 +148,9 @@ downloadingRequiredDependencies()
   fi
 }
 
-getFirstGitTag()
+getFirstTagFromOpenJDKGitRepo()
 {
-    echo "$(git describe --tags "$(git rev-list --tags --max-count=1)")"
+    justOneFromTheRevList=$(git rev-list --tags --max-count=1)
+    tagNameFromRepo=$(git describe --tags "$justOneFromTheRevList")
+    echo "$tagNameFromRepo"
 }

@@ -237,7 +237,8 @@ printJavaVersionString()
 removingUnnecessaryFiles()
 {
   echo "Removing unnecessary files now..."
-
+  
+  OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   if [ "$USE_DOCKER" == "true" ] ; then
      cd build/*/images || return
   else
@@ -245,6 +246,7 @@ removingUnnecessaryFiles()
 
      cd build/*/images || return
 
+     rm -fr "${OPENJDK_REPO_TAG}" || true
      mv j2sdk-image "${OPENJDK_REPO_TAG}"
   fi
   
@@ -259,12 +261,11 @@ createOpenJDKTarArchive()
 {
   echo "Archiving the build OpenJDK image..."
 
-  OPENJDK_REPO_TAG=$(getFirstGitTag)
+  OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
 
-  mv j2sdk-image ${OPENJDK_REPO_TAG}
   if [ "$USE_DOCKER" == "true" ] ; then
-     GZIP=-9 tar -czf OpenJDK.tar.gz ./${OPENJDK_REPO_TAG}
+     GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
      EXT=".tar.gz"
 
      echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
@@ -275,7 +276,7 @@ createOpenJDKTarArchive()
           zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
           EXT=".zip" ;;
         aix)
-          GZIP=-9 tar -cf - ./${OPENJDK_REPO_TAG}/ | gzip -c > OpenJDK.tar.gz
+          GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
           EXT=".tar.gz" ;;
         *)
           GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"

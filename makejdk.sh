@@ -228,7 +228,7 @@ getOpenJDKUpdateAndBuildVersion()
         cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
         echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${SHALLOW_CLONE_OPTION}"
         git fetch -q --tags "${SHALLOW_CLONE_OPTION}"
-        OPENJDK_REPO_TAG=$(getFirstGitTag)
+        OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
         if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
           echo "${error}Unable to detect git tag"
           exit 1
