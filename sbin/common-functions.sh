@@ -21,7 +21,9 @@ FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
 
 determineBuildProperties() {
 
+    export OS_KERNEL_NAME=""
     OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
+    export OS_MACHINE_NAME=""
     OS_MACHINE_NAME=$(uname -m)
 
     JVM_VARIANT=${JVM_VARIANT:-server}
@@ -42,8 +44,14 @@ checkingAndDownloadingAlsa()
     echo "Skipping ALSA download"
   else
     wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
-    tar xf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
-    rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    if [[ ${OS_KERNEL_NAME} == "aix" ]] ; then
+      bzip2 -d alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+      tar xf alsa-lib-"${ALSA_LIB_VERSION}".tar
+      rm alsa-lib-"${ALSA_LIB_VERSION}".tar
+    else
+      tar xf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+      rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    fi
   fi
 }
 
@@ -58,14 +66,21 @@ checkingAndDownloadingFreeType()
   else
     # Then FreeType for fonts: make it and use
     wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"$FREETYPE_FONT_VERSION".tar.gz
-     
-    tar xf freetype-"$FREETYPE_FONT_VERSION".tar.gz
-    rm freetype-"$FREETYPE_FONT_VERSION".tar.gz
+    if [[ ${OS_KERNEL_NAME} == "aix" ]] ; then
+      gunzip xf freetype-"$FREETYPE_FONT_VERSION".tar.gz
+      tar xf freetype-"$FREETYPE_FONT_VERSION".tar
+      rm freetype-"$FREETYPE_FONT_VERSION".tar
+      MAKE=gmake
+    else
+      tar xf freetype-"$FREETYPE_FONT_VERSION".tar.gz
+      rm freetype-"$FREETYPE_FONT_VERSION".tar.gz
+      MAKE=make
+    fi
 
     cd freetype-"$FREETYPE_FONT_VERSION" || exit
 
     # We get the files we need at $WORKING_DIR/installedfreetype
-    bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && make all && make install
+    bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install
 
     if [ $? -ne 0 ]; then
       # shellcheck disable=SC2154
@@ -112,19 +127,30 @@ downloadingRequiredDependencies()
         checkingAndDownloadingAlsa
      )
 
-     if [[ -z "$FREETYPE_DIRECTORY" ]]; then
-        time (
-          echo "Checking and download FreeType Font dependency"
-          checkingAndDownloadingFreeType
-        )
+     if [[ -z "${FREETYPE}" ]] ; then
+       if [[ -z "$FREETYPE_DIRECTORY" ]]; then
+          time (
+            echo "Checking and download FreeType Font dependency"
+            checkingAndDownloadingFreeType
+          )
+       else
+           echo ""
+           echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at $FREETYPE_DIRECTORY <---"
+           echo ""
+       fi
      else
-         echo ""
-         echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at $FREETYPE_DIRECTORY <---"
-         echo ""
+        echo "Skipping Freetype"
      fi
      time (
         echo "Checking and download CaCerts dependency"
         checkingAndDownloadCaCerts
      )
   fi
+}
+
+getFirstTagFromOpenJDKGitRepo()
+{
+    justOneFromTheRevList=$(git rev-list --tags --max-count=1)
+    tagNameFromRepo=$(git describe --tags "$justOneFromTheRevList")
+    echo "$tagNameFromRepo"
 }

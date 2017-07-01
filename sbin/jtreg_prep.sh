@@ -18,7 +18,7 @@
 
 set -eu
 
-REPOSITORY=AdoptOpenJDK/openjdk-jdk8u
+REPOSITORY=adoptopenjdk/openjdk-jdk8u
 OPENJDK_REPO_NAME=openjdk
 SHALLOW_CLONE_OPTION="--depth=1"
 
@@ -85,7 +85,7 @@ parseCommandLineArgs()
 # Step 1: Fetch OpenJDK, as that's where the tests live.
 cloneOpenJDKRepo()
 {
-    if [ -d "$WORKING_DIR/$OPENJDK_REPO_NAME/.git" ] && [ "$REPOSITORY" == "AdoptOpenJDK/openjdk-jdk8u" ] ; then
+    if [ -d "$WORKING_DIR/$OPENJDK_REPO_NAME/.git" ] && [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] ; then
       # It does exist and it's a repo other than the AdoptOpenJDK one
       cd "$WORKING_DIR/$OPENJDK_REPO_NAME"  || exit
       echo "Will reset the repository at $PWD in 10 seconds..."
@@ -106,7 +106,7 @@ cloneOpenJDKRepo()
       if [[ "$SHALLOW_CLONE_OPTION" == "" ]]; then
           echo "Git repo cloning mode: deep (preserves commit history)"
       else
-         echo "Git repo cloning mode: shallow (DOES NOT preserve commit history)"
+         echo "Git repo cloning mode: shallow (DOES NOT contain commit history)"
       fi
 
       GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
