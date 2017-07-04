@@ -18,8 +18,10 @@
 DESTINATION=${1:-$HOME}
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-export OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
-export OS_MACHINE_NAME=$(uname -m)
+export OS_KERNEL_NAME=""
+OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
+export OS_MACHINE_NAME=""
+OS_MACHINE_NAME=$(uname -m)
 
 export FREETYPE_FONT_BUILD_TYPE_PARAM=""
 if [[ "$OS_MACHINE_NAME" = "ppc64le" ]] ; then
@@ -27,21 +29,21 @@ if [[ "$OS_MACHINE_NAME" = "ppc64le" ]] ; then
   FREETYPE_FONT_BUILD_TYPE_PARAM=${FREETYPE_FONT_BUILD_TYPE_PARAM:="--build=$(rpm --eval %{_host})"}
 fi
 
-# shellcheck source=colour-codes.sh
+# shellcheck source=sbin/colour-codes.sh
 source "$SCRIPT_DIR/colour-codes.sh"
 
-# shellcheck source=common-functions.sh
+# shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/common-functions.sh"
 
 echo "${info}"
 echo "Building FreeTypeFontLibrary in $DESTINATION"
 echo "${normal}"
 
-buildFreeTypeFontLibrary $DESTINATION
+buildFreeTypeFontLibrary "$DESTINATION"
 
 echo "${info}"
-echo "Finished building FreeTypeFontLibrary in $DESTINATION, see contents below"
+echo "Finished building FreeTypeFontLibrary in ${DESTINATION}, see contents below"
 echo "${normal}"
 
-ls $DESTINATION/installedfreetype -d
-ls $DESTINATION/installedfreetype
+ls "${DESTINATION}"/installedfreetype -d
+ls "${DESTINATION}"/installedfreetype

@@ -87,7 +87,7 @@ buildFreeTypeFontLibrary()
     cd freetype-"$FREETYPE_FONT_VERSION" || exit
 
     # We get the files we need at $WORKING_DIR/installedfreetype
-    bash ./configure --prefix=$DESTINATION/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install
+    bash ./configure --prefix="${DESTINATION}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install
 
     if [ $? -ne 0 ]; then
       # shellcheck disable=SC2154
