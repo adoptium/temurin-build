@@ -13,7 +13,9 @@
 # limitations under the License.
 
 # Dockerfile to create an image with AdoptOpenJDK jdk binary installed
-# Note that the installation process removes demos manual and samples directories
+# Note that the calling build process removes demos manual and samples directories before
+# the image is created
+
 # Build info is emitted to stderr
 #
 # Build example:  docker build --build-arg RELEASE=jdk8u162-b00 -t adoptopenjdk:jdk8u162 .
@@ -23,30 +25,21 @@ FROM ubuntu:16.10
 
 MAINTAINER Steve Poole <spoole167@googlemail.com>
 
-# default release / architecture to install (override with --build-arg RELEASE=?  option etc)
-
-ARG RELEASE=latest
-ARG ARCH=x64_linux
+# Java release is required to be specified. Use --build-arg RELEASE=?  on call to docker to set
+ARG RELEASE
 
 # envs
-ENV JAVA_LOC=/opt/java/openjdk-$RELEASE
-ENV API_URL=https://api.adoptopenjdk.net/releases/$ARCH/$RELEASE/binary
+ENV JAVA_LOC=/opt/java/openjdk/$RELEASE
 
-RUN ( >&2 echo "RELEASE=$RELEASE" ) && \
-    ( >&2 echo "ARCH   =$ARCH"    ) && \
-    ( >&2 echo "API URL=$API_URL" )
+RUN ( >&2 echo "RELEASE=$RELEASE" )
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   	bash curl ca-certificates \
  	  && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p $JAVA_LOC
 
-RUN curl -LJ -s -o java.tar.gz  -H 'accept-version: 1.1.0' $API_URL \
-    && mkdir -p /opt/java \
-    && cd /opt/java && gunzip -c /java.tar.gz | tar xf - \
-  	&& mv /opt/java/j2sdk-image $JAVA_LOC \
-    && rm -rf $JAVA_LOC/demo  $JAVA_LOC/man  $JAVA_LOC/sample  \
-		&& rm /java.tar.gz
+COPY $RELEASE/  $JAVA_LOC
 
 ENV JAVA_HOME=$JAVA_LOC/jre \
     PATH=$JAVA_LOC/bin:$PATH
