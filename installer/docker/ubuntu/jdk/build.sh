@@ -32,7 +32,7 @@
 
 # remove any locally built images before building
 
-images=$(docker images | grep "^$REPO"  | awk '{print $3}' | uniq)
+images=$(docker images | grep "^$REPO"  | awk '{print $3}' | sort | uniq)
 
 for i in $images
 do
