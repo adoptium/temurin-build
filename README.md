@@ -69,5 +69,6 @@ To use the Docker commands without using the sudo prefix, you will need to be in
 
 Run the below from the `sbin` folder to build the FreeType Font library in the user's home directory if no argument is provided:
 ```
-    $ ./setupFreeTypeFontLibrary.sh
+    $ ./setupFreeTypeFontLibrary.sh [/path/to/where/the/installfreetype-folder-needs-creating]
 ```
+Leaving the destination folder parameter (optional) empty defaults to `$HOME/installedfreetype`.
