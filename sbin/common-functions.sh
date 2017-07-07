@@ -70,7 +70,7 @@ checkingAndDownloadingFreeType()
 
 buildFreeTypeFontLibrary()
 {
-    DESTINATION=$1
+    DESTINATION_PARENT_FOLDER=$1
     # Then FreeType for fonts: make it and use
     wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"$FREETYPE_FONT_VERSION".tar.gz
     if [[ ${OS_KERNEL_NAME} == "aix" ]] ; then
@@ -87,7 +87,7 @@ buildFreeTypeFontLibrary()
     cd freetype-"$FREETYPE_FONT_VERSION" || exit
 
     # We get the files we need at $WORKING_DIR/installedfreetype
-    bash ./configure --prefix="${DESTINATION}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install
+    bash ./configure --prefix="${DESTINATION_PARENT_FOLDER}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install
 
     if [ $? -ne 0 ]; then
       # shellcheck disable=SC2154
