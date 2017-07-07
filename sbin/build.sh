@@ -36,6 +36,7 @@ if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   JVM_VARIANT="server"
 fi
 
+MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-""}
 
@@ -199,15 +200,8 @@ buildOpenJDK()
     exit 0
   fi
 
-  case "${OS_KERNEL_NAME}" in
-    aix)
-      makeCMD="gmake ${MAKE_ARGS_FOR_ANY_PLATFORM}" ;;
-    *)
-      makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}" ;;
-  esac
-
-  echo "Building the JDK: calling ${makeCMD}"
-  $makeCMD
+  echo "Building the JDK: calling ${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
+  ${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}
 
   if [ $? -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
