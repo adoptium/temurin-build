@@ -15,7 +15,7 @@
 #
 # A simple script to build Free Type Font Library via an existing script, into the user's home directory
 
-DESTINATION=${1:-$HOME}
+DESTINATION_PARENT_FOLDER=${1:-$HOME}
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export OS_KERNEL_NAME=""
@@ -36,14 +36,14 @@ source "$SCRIPT_DIR/colour-codes.sh"
 source "$SCRIPT_DIR/common-functions.sh"
 
 echo "${info}"
-echo "Building FreeTypeFontLibrary in $DESTINATION"
+echo "Building FreeTypeFontLibrary in $DESTINATION_PARENT_FOLDER"
 echo "${normal}"
 
-buildFreeTypeFontLibrary "$DESTINATION"
+buildFreeTypeFontLibrary "$DESTINATION_PARENT_FOLDER"
 
 echo "${info}"
-echo "Finished building FreeTypeFontLibrary in ${DESTINATION}, see contents below"
+echo "Finished building FreeTypeFontLibrary in ${DESTINATION_PARENT_FOLDER}, see contents below"
 echo "${normal}"
 
-ls "${DESTINATION}"/installedfreetype -d
-ls "${DESTINATION}"/installedfreetype
+ls "${DESTINATION_PARENT_FOLDER}"/installedfreetype -d
+ls "${DESTINDESTINATION_PARENT_FOLDERATION}"/installedfreetype
