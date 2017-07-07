@@ -16,7 +16,15 @@
 # A simple script to build Free Type Font Library via an existing script, into the user's home directory
 
 DESTINATION_PARENT_FOLDER=${1:-$HOME}
+FREE_TYPE_FONT_LIBRARY_LOCATION="${DESTINATION_PARENT_FOLDER}/installedfreetype"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+if [[ -d "${FREE_TYPE_FONT_LIBRARY_LOCATION}" ]]; then
+    echo "${info}"
+    echo "Skipping the building process, as the FreeTypeFont Library already exists at ${FREE_TYPE_FONT_LIBRARY_LOCATION}"
+    echo "${normal}"   
+    exit 0
+fi
 
 export OS_KERNEL_NAME=""
 OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
@@ -45,5 +53,5 @@ echo "${info}"
 echo "Finished building FreeTypeFontLibrary in ${DESTINATION_PARENT_FOLDER}, see contents below"
 echo "${normal}"
 
-ls "${DESTINATION_PARENT_FOLDER}"/installedfreetype -d
-ls "${DESTINDESTINATION_PARENT_FOLDERATION}"/installedfreetype
+ls "${FREE_TYPE_FONT_LIBRARY_LOCATION}" -d
+ls "${FREE_TYPE_FONT_LIBRARY_LOCATION}"
