@@ -171,10 +171,13 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
   else
     CONFIGURE_ARGS="${CONFIGURE_ARGS} ${CONFIGURE_ARGS_FOR_ANY_PLATFORM}"
 
-    echo "Running ./configure with arguments $CONFIGURE_ARGS"
-    # Depends upon the configure command being split for multiple args.  Dont quote it.
+    echo "Running ./configure with arguments '${CONFIGURE_ARGS}'"
+    # Depends upon the configure command being split for multiple args.  Don't quote it.
     # shellcheck disable=SC2086
-    if [ $(bash ./configure $CONFIGURE_ARGS) -ne 0 ]; then
+    bash ./configure ${CONFIGURE_ARGS}
+
+    # shellcheck disable=SC2181
+    if [ $? -ne 0 ]; then
       echo "${error}"
       echo "Failed to configure the JDK, exiting"
       echo "Did you set the JDK boot directory correctly? Override by exporting JDK_BOOT_DIR"
@@ -200,8 +203,11 @@ buildOpenJDK()
   fi
 
   FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
-  echo "Building the JDK: calling ${FULL_MAKE_COMMAND}"
-  if [ $(FULL_MAKE_COMMAND) -ne 0 ]; then
+  echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
+  exitCode=$(${FULL_MAKE_COMMAND})
+  
+  # shellcheck disable=SC2181
+  if [ "${exitCode}" -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
     exit;
   else
