@@ -201,6 +201,7 @@ buildOpenJDK()
   fi
 
   echo "Building the JDK: calling ${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
+  # shellcheck disable=SC2086
   ${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}
 
   if [ $? -ne 0 ]; then
