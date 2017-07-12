@@ -164,7 +164,7 @@ stepIntoTheWorkingDirectory()
 runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
 {
   cd "$OPENJDK_DIR" || exit
-  CONFIGURED_OPENJDK_ALREADY=$(find -name "config.status")
+  CONFIGURED_OPENJDK_ALREADY=$(find . -name "config.status")
 
   if [[ ! -z "$CONFIGURED_OPENJDK_ALREADY" ]] ; then
     echo "Not reconfiguring due to the presence of config.status in ${WORKING_DIR}"
@@ -174,8 +174,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
     echo "Running ./configure with arguments $CONFIGURE_ARGS"
     # Depends upon the configure command being split for multiple args.  Dont quote it.
     # shellcheck disable=SC2086
-    bash ./configure $CONFIGURE_ARGS
-    if [ $? -ne 0 ]; then
+    if [ $(bash ./configure $CONFIGURE_ARGS) -ne 0 ]; then
       echo "${error}"
       echo "Failed to configure the JDK, exiting"
       echo "Did you set the JDK boot directory correctly? Override by exporting JDK_BOOT_DIR"
@@ -200,11 +199,9 @@ buildOpenJDK()
     exit 0
   fi
 
-  echo "Building the JDK: calling ${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
-  # shellcheck disable=SC2086
-  ${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}
-
-  if [ $? -ne 0 ]; then
+  FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
+  echo "Building the JDK: calling ${FULL_MAKE_COMMAND}"
+  if [ $(FULL_MAKE_COMMAND) -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
     exit;
   else
