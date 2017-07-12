@@ -25,14 +25,18 @@ WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
 JVM_VARIANT=${4:-server}
-RUN_JTREG_TESTS_ONLY=$5
+OPENJDK_UPDATE_VERSION=$5
+OPENJDK_BUILD_NUMBER=$6
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
+
+RUN_JTREG_TESTS_ONLY=""
 
 if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
   JVM_VARIANT="server"
 fi
 
+MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-""}
 
@@ -49,13 +53,14 @@ checkIfDockerIsUsedForBuildingOrNot()
 
   if [[ -f /.dockerenv ]] ; then
     echo "Detected we're in docker"
-    WORKING_DIR=/openjdk/jdk8u
-    TARGET_DIR=/openjdk/target
+    WORKING_DIR=/openjdk/build
+    TARGET_DIR=/openjdk/target/
     OPENJDK_REPO_NAME=/openjdk
     OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+    USE_DOCKER=true
   fi
 
-  # E.g. /openjdk/jdk8u if you're building in a Docker container
+  # E.g. /openjdk/build if you're building in a Docker container
   # otherwise ensure it's a writable area e.g. /home/youruser/myopenjdkarea
 
   if [ -z "$WORKING_DIR" ] || [ -z "$TARGET_DIR" ] ; then
@@ -93,6 +98,25 @@ configuringBootJDKConfigureParameter()
   CONFIGURE_ARGS=" --with-boot-jdk=${JDK_BOOT_DIR}"
 }
 
+# Ensure that we produce builds with versions strings something like:
+#
+# openjdk version "1.8.0_131"
+# OpenJDK Runtime Environment (build 1.8.0-adoptopenjdk-<user>_2017_04_17_17_21-b00)
+# OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
+configuringVersionStringParameter()
+{
+  # Replace the default 'internal' with our own milestone string
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-milestone=adoptopenjdk"
+
+  # Set the update version (e.g. 131), this gets passed in from the calling script
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_UPDATE_VERSION}"
+
+  # Set the build number (e.g. b04), this gets passed in from the calling script
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-build-number=${OPENJDK_BUILD_NUMBER}"
+
+  echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
+}
+
 buildingTheRestOfTheConfigParameters()
 {
   if [ ! -z "$(which ccache)" ]; then
@@ -102,7 +126,11 @@ buildingTheRestOfTheConfigParameters()
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jvm-variants=${JVM_VARIANT}"
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-cacerts-file=${WORKING_DIR}/cacerts_area/security/cacerts"
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-alsa=${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freetype=${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"
+
+  if [[ -z "${FREETYPE}" ]] ; then
+    FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"}
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freetype=$FREETYPE_DIRECTORY"
+  fi
 
   # These will have been installed by the package manager (see our Dockerfile)
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-x=/usr/include/X11"
@@ -114,10 +142,16 @@ buildingTheRestOfTheConfigParameters()
 
 configureCommandParameters()
 {
-  echo "Building up the configure command..."
+  configuringVersionStringParameter
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
 
-  configuringBootJDKConfigureParameter
-  buildingTheRestOfTheConfigParameters
+  else
+     echo "Building up the configure command..."
+     configuringBootJDKConfigureParameter
+     buildingTheRestOfTheConfigParameters
+  fi
+  echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
 stepIntoTheWorkingDirectory()
@@ -127,7 +161,7 @@ stepIntoTheWorkingDirectory()
   echo "Should have the source, I'm at $PWD"
 }
 
-runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
+runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
 {
   cd "$OPENJDK_DIR" || exit
   CONFIGURED_OPENJDK_ALREADY=$(find -name "config.status")
@@ -137,7 +171,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
   else
     CONFIGURE_ARGS="${CONFIGURE_ARGS} ${CONFIGURE_ARGS_FOR_ANY_PLATFORM}"
 
-    echo "Running ./configure with $CONFIGURE_ARGS"
+    echo "Running ./configure with arguments $CONFIGURE_ARGS"
     # Depends upon the configure command being split for multiple args.  Dont quote it.
     # shellcheck disable=SC2086
     bash ./configure $CONFIGURE_ARGS
@@ -158,7 +192,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams()
 buildOpenJDK()
 {
   cd "$OPENJDK_DIR" || exit
-  
+
   #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
   if [ "${RUN_JTREG_TESTS_ONLY}" == "--run-jtreg-tests-only" ]; then
     rm -rf cacerts_area
@@ -166,11 +200,9 @@ buildOpenJDK()
     exit 0
   fi
 
-  makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}"
+  echo "Building the JDK: calling ${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
+  ${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}
 
-  echo "Building the JDK: calling ${makeCMD}"
-  $makeCMD
-  
   if [ $? -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
     exit;
@@ -180,45 +212,90 @@ buildOpenJDK()
   echo "${normal}"
 }
 
+printJavaVersionString()
+{
+  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/j2sdk-image)
+  if [[ -d "$PRODUCT_HOME" ]]; then
+     echo "${good}'$PRODUCT_HOME' found${normal}"
+     # shellcheck disable=SC2154
+     echo "${info}"
+     "$PRODUCT_HOME"/bin/java -version || (echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}" && exit -1)
+     echo "${normal}"
+     echo ""
+  else
+     echo "${error}'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location.${normal}"
+     exit -1
+  fi
+}
+
 removingUnnecessaryFiles()
 {
-  echo "Removing unneccessary files now..."
+  echo "Removing unnecessary files now..."
+  
+  OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  if [ "$USE_DOCKER" != "true" ] ; then
+     rm -rf cacerts_area
+  fi
 
-  rm -rf cacerts_area
+  cd build/*/images || return
 
-  cd build/*/images  || return
+  rm -fr "${OPENJDK_REPO_TAG}" || true
+  mv j2sdk-image "${OPENJDK_REPO_TAG}"
 
   # Remove files we don't need
-  rm -rf j2sdk-image/demo/applets
-  rm -rf j2sdk-image/demo/jfc/Font2DTest
-  rm -rf j2sdk-image/demo/jfc/SwingApplet
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet
   find . -name "*.diz" -type f -delete
 }
 
 createOpenJDKTarArchive()
 {
-  GZIP=-9 tar -czf OpenJDK.tar.gz ./j2sdk-image
+  echo "Archiving the build OpenJDK image..."
 
-  mv OpenJDK.tar.gz $TARGET_DIR
+  OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
 
-  echo "${good}Your final tar.gz is here at ${PWD}${normal}"
+  if [ "$USE_DOCKER" == "true" ] ; then
+     GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+     EXT=".tar.gz"
+
+     echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
+     mv "OpenJDK${EXT}" "${TARGET_DIR}"
+  else
+      case "${OS_KERNEL_NAME}" in
+        *cygwin*)
+          zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
+          EXT=".zip" ;;
+        aix)
+          GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
+          EXT=".tar.gz" ;;
+        *)
+          GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+          EXT=".tar.gz" ;;
+      esac
+      echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
+
+      echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
+      mv "OpenJDK${EXT}" "${TARGET_DIR}"
+  fi
+
 }
 
-stepIntoTargetDirectoryAndShowCompletionMessage()
+showCompletionMessage()
 {
-  cd "${TARGET_DIR}"  || return
-  ls
   echo "All done!"
 }
 
 sourceFileWithColourCodes
 checkIfDockerIsUsedForBuildingOrNot
 createWorkingDirectory
-downloadingRequiredDependencies
+downloadingRequiredDependencies # This function is in common-functions.sh
 configureCommandParameters
 stepIntoTheWorkingDirectory
-runTheOpenJDKConfigureCommandAndUseThePrebuildConfigParams
+runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
 buildOpenJDK
+printJavaVersionString
 removingUnnecessaryFiles
 createOpenJDKTarArchive
-stepIntoTargetDirectoryAndShowCompletionMessage
+showCompletionMessage
