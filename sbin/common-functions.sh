@@ -88,7 +88,8 @@ buildFreeTypeFontLibrary()
 
     # We get the files we need at $WORKING_DIR/installedfreetype
     bash ./configure --prefix="${DESTINATION_PARENT_FOLDER}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install
-
+    
+    # shellcheck disable=SC2181  
     if [ $? -ne 0 ]; then
       # shellcheck disable=SC2154
       echo "${error}Failed to configure and build libfreetype, exiting"
