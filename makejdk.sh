@@ -236,7 +236,7 @@ getOpenJDKUpdateAndBuildVersion()
         else
           echo "OpenJDK repo tag is $OPENJDK_REPO_TAG"
         fi
-        
+
         OPENJDK_UPDATE_VERSION=$(echo "${OPENJDK_REPO_TAG}" | cut -d'u' -f 2 | cut -d'-' -f 1)
         OPENJDK_BUILD_NUMBER=$(echo "${OPENJDK_REPO_TAG}" | cut -d'b' -f 2 | cut -d'-' -f 1)
         echo "Version: ${OPENJDK_UPDATE_VERSION} ${OPENJDK_BUILD_NUMBER}"

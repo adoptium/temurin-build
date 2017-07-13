@@ -54,9 +54,8 @@ downloadJtregAndSetupEnvironment()
    echo "Downloading Jtreg binary"
    JTREG_BINARY_FILE="jtreg-${JTREG_VERSION}.tar.gz"
 
-   cd "$TMP_DIR" && wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/"$JTREG_BINARY_FILE"
-
-   if [ $? -ne 0 ]; then
+   # shellcheck disable=SC2046
+   if [ $(cd "$TMP_DIR" && wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/"$JTREG_BINARY_FILE") -ne 0 ]; then
      echo "Failed to retrieve the jtreg binary, exiting"
      exit
    fi
