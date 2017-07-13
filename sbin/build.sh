@@ -36,6 +36,7 @@ if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   JVM_VARIANT="server"
 fi
 
+MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-""}
 
@@ -163,17 +164,19 @@ stepIntoTheWorkingDirectory()
 runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
 {
   cd "$OPENJDK_DIR" || exit
-  CONFIGURED_OPENJDK_ALREADY=$(find -name "config.status")
+  CONFIGURED_OPENJDK_ALREADY=$(find . -name "config.status")
 
   if [[ ! -z "$CONFIGURED_OPENJDK_ALREADY" ]] ; then
     echo "Not reconfiguring due to the presence of config.status in ${WORKING_DIR}"
   else
     CONFIGURE_ARGS="${CONFIGURE_ARGS} ${CONFIGURE_ARGS_FOR_ANY_PLATFORM}"
 
-    echo "Running ./configure with arguments $CONFIGURE_ARGS"
-    # Depends upon the configure command being split for multiple args.  Dont quote it.
+    echo "Running ./configure with arguments '${CONFIGURE_ARGS}'"
+    # Depends upon the configure command being split for multiple args.  Don't quote it.
     # shellcheck disable=SC2086
-    bash ./configure $CONFIGURE_ARGS
+    bash ./configure ${CONFIGURE_ARGS}
+
+    # shellcheck disable=SC2181
     if [ $? -ne 0 ]; then
       echo "${error}"
       echo "Failed to configure the JDK, exiting"
@@ -199,17 +202,12 @@ buildOpenJDK()
     exit 0
   fi
 
-  case "${OS_KERNEL_NAME}" in
-    aix)
-      makeCMD="gmake ${MAKE_ARGS_FOR_ANY_PLATFORM}" ;;
-    *)
-      makeCMD="make ${MAKE_ARGS_FOR_ANY_PLATFORM}" ;;
-  esac
-
-  echo "Building the JDK: calling ${makeCMD}"
-  $makeCMD
-
-  if [ $? -ne 0 ]; then
+  FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
+  echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
+  exitCode=$(${FULL_MAKE_COMMAND})
+  
+  # shellcheck disable=SC2181
+  if [ "${exitCode}" -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
     exit;
   else

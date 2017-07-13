@@ -112,9 +112,8 @@ checkingAndDownloadCaCerts()
 
   git clone https://github.com/AdoptOpenJDK/openjdk-build.git cacerts_area
   echo "cacerts should be here..."
-  file "${WORKING_DIR}/cacerts_area/security/cacerts"
-
-  if [ $? -ne 0 ]; then
+  # shellcheck disable=SC2046
+  if [ $(file "${WORKING_DIR}/cacerts_area/security/cacerts") -ne 0 ]; then
     echo "Failed to retrieve the cacerts file, exiting..."
     exit;
   else
