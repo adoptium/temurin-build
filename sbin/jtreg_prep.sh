@@ -126,8 +126,8 @@ downloadJDKArtifact()
 
     #If it's a http location, use wget.
     if [[ "${JAVA_SOURCE}" == http* ]]; then
-      wget "${JAVA_SOURCE}"
-      if [ $? -ne 0 ]; then
+      # shellcheck disable=SC2046
+      if [ $(wget "${JAVA_SOURCE}") -ne 0 ]; then
         echo "Failed to retrieve the JDK binary from ${JAVA_SOURCE}, exiting"
         exit 1
       fi
