@@ -29,7 +29,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/sbin/common-functions.sh"
 
-REPOSITORY=${REPOSITORY:-adoptopenjdk/openjdk-jdk8u}
+#REPOSITORY=${REPOSITORY:-adoptopenjdk/openjdk-jdk8u}
+REPOSITORY=${REPOSITORY:-adoptopenjdk/openjdk-jdk9}
 REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')"
 OPENJDK_REPO_NAME=${OPENJDK_REPO_NAME:-openjdk}
 SHALLOW_CLONE_OPTION="--depth=1"
@@ -178,7 +179,7 @@ setTargetDirectoryIfProvided()
     echo "If you're using Docker the build artifact will not be copied to the host."
   else
     echo "${info}Target directory is ${TARGET_DIR}${normal}"
-    COPY_TO_HOST=true
+    export COPY_TO_HOST=true
     echo "If you're using Docker we'll copy the build artifact to the host."
   fi
 }
@@ -310,8 +311,10 @@ buildAndTestOpenJDKViaDocker()
 
 
   # Copy our scripts for usage inside of the container
-  rm -r docker/jdk8u/x86_64/ubuntu/sbin
-  cp -r "${SCRIPT_DIR}/sbin" docker/jdk8u/x86_64/ubuntu/sbin 2>/dev/null
+  #rm -r docker/jdk8u/x86_64/ubuntu/sbin
+  rm -r  docker/jdk9/x86_64/ubuntu/sbin
+  #cp -r "${SCRIPT_DIR}/sbin" docker/jdk8u/x86_64/ubuntu/sbin 2>/dev/null
+  cp -r "${SCRIPT_DIR}/sbin" docker/jdk9/x86_64/ubuntu/ 2>/dev/null
 
 
   # Keep is undefined so we'll kill the docker image
@@ -319,13 +322,15 @@ buildAndTestOpenJDKViaDocker()
   if [[ "$KEEP" == "true" ]] ; then
      if [ "$(docker ps -a | grep -c openjdk_container)" == 0 ]; then
          echo "${info}No docker container found so creating '$CONTAINER' ${normal}"
-         docker build -t $CONTAINER docker/jdk8u/x86_64/ubuntu
+         #docker build -t $CONTAINER docker/jdk8u/x86_64/ubuntu
+         docker build -t $CONTAINER docker/jdk9/x86_64/ubuntu
      fi
   else
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     docker build -t $CONTAINER docker/jdk8u/x86_64/ubuntu
+     #docker build -t $CONTAINER docker/jdk8u/x86_64/ubuntu
+     docker build -t $CONTAINER docker/jdk9/x86_64/ubuntu
      echo "$normal"
   fi
 

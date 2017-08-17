@@ -205,7 +205,7 @@ buildOpenJDK()
   FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
   echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
   exitCode=$(${FULL_MAKE_COMMAND})
-  
+
   # shellcheck disable=SC2181
   if [ "${exitCode}" -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
@@ -218,7 +218,8 @@ buildOpenJDK()
 
 printJavaVersionString()
 {
-  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/j2sdk-image)
+  #PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/j2sdk-image)
+  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/jdk)
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
@@ -235,7 +236,7 @@ printJavaVersionString()
 removingUnnecessaryFiles()
 {
   echo "Removing unnecessary files now..."
-  
+
   OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   if [ "$USE_DOCKER" != "true" ] ; then
      rm -rf cacerts_area
@@ -244,13 +245,14 @@ removingUnnecessaryFiles()
   cd build/*/images || return
 
   rm -fr "${OPENJDK_REPO_TAG}" || true
-  mv j2sdk-image "${OPENJDK_REPO_TAG}"
+  #mv j2sdk-image "${OPENJDK_REPO_TAG}"
+  mv jdk "${OPENJDK_REPO_TAG}"
 
   # Remove files we don't need
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet
-  find . -name "*.diz" -type f -delete
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets || true
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest || true
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet || true
+  find . -name "*.diz" -type f -delete || true
 }
 
 createOpenJDKTarArchive()
