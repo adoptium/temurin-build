@@ -29,11 +29,24 @@ OPENJDK_UPDATE_VERSION=$5
 OPENJDK_BUILD_NUMBER=$6
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
 
+
 RUN_JTREG_TESTS_ONLY=""
+
 
 if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
   JVM_VARIANT="server"
+fi
+
+PATH_JDK=""
+echo "${OPENJDK_VERSION}"
+
+if [ "$OPENJDK_VERSION" == "jdk9" ]; then
+  PATH_JDK="jdk"
+elif [ "$OPENJDK_VERSION" == "jdk8u" ]; then	
+  PATH_JDK="j2sdk-image"
+else
+  echo "${error} Please specify a version with --version or -v , either jdk9 or jdk8u "
 fi
 
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
@@ -218,7 +231,9 @@ buildOpenJDK()
 
 printJavaVersionString()
 {
-  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/j2sdk-image)
+  
+  echo "PATH_ JDK : ${PATH_JDK}"
+  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${PATH_JDK})
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
@@ -244,13 +259,13 @@ removingUnnecessaryFiles()
   cd build/*/images || return
 
   rm -fr "${OPENJDK_REPO_TAG}" || true
-  mv j2sdk-image "${OPENJDK_REPO_TAG}"
+  mv $PATH_SDK "${OPENJDK_REPO_TAG}"
 
   # Remove files we don't need
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet
-  find . -name "*.diz" -type f -delete
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets || true
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest || true
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet || true
+  find . -name "*.diz" -type f -delete || true
 }
 
 createOpenJDKTarArchive()
