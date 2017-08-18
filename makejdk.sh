@@ -334,7 +334,7 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     docker build -t $CONTAINER $PATH_BUILD
+     docker build -t $CONTAINER $PATH_BUILD $OPENJDK_VERSION
      echo "$normal"
   fi
 
@@ -344,8 +344,8 @@ buildAndTestOpenJDKViaDocker()
   docker run -t \
       -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
       -v "${WORKING_DIR}/target":/${TARGET_DIR_IN_THE_CONTAINER} \
-      --entrypoint /openjdk/sbin/build.sh "${CONTAINER}" \
-      -e OPENJDK_CONTAINER
+      --entrypoint /openjdk/sbin/build.sh "${CONTAINER}" 
+      
  
  testOpenJDKViaDocker
 
