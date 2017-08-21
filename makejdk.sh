@@ -114,7 +114,7 @@ parseCommandLineArgs()
 
       "--freetype-dir" | "-ftd" )
       export FREETYPE_DIRECTORY="$1"; shift;;
-	
+
       "--version" | "-v" )
       export OPENJDK_VERSION="$1";
       REPOSITORY="adoptopenjdk/openjdk-${OPENJDK_VERSION}";
@@ -193,7 +193,9 @@ setTargetDirectoryIfProvided()
 cloneOpenJDKGitRepo()
 {
   echo "${git}"
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] || [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk9" ] )  ; then
+  GIT_VERSION=$(git --git-dir openjdk/.git/ remote -v | grep -q '${OPENJDK_VERSION}')
+  echo "${GIT_VERSION}"
+  if [ ! GIT_VERSION ] && [-d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] || [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk9" ] )  ; then
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
@@ -246,7 +248,7 @@ getOpenJDKUpdateAndBuildVersion()
     OPENJDK_BUILD_NUMBER=$(echo "${OPENJDK_REPO_TAG}" | cut -d'b' -f 2 | cut -d'-' -f 1)
     echo "Version: ${OPENJDK_UPDATE_VERSION} ${OPENJDK_BUILD_NUMBER}"
     cd "${WORKING_DIR}" || return
-        
+
   fi
   echo "${normal}"
 }
@@ -303,10 +305,10 @@ createPersistentDockerDataVolume()
 
 buildAndTestOpenJDKViaDocker()
 {
- 
+
 
   PATH_BUILD="docker/${OPENJDK_VERSION}/x86_64/ubuntu"
-	
+
   if [ -z "$(which docker)" ]; then
     echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"
     exit
@@ -343,8 +345,8 @@ buildAndTestOpenJDKViaDocker()
   docker run -ti \
       -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
       -v "${WORKING_DIR}/target":/${TARGET_DIR_IN_THE_CONTAINER} \
-      --entrypoint /openjdk/sbin/build.sh "${CONTAINER}" 
- 
+      --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
+
  testOpenJDKViaDocker
 
   # Didn't specify to keep
@@ -364,7 +366,7 @@ testOpenJDKInNativeEnvironmentIfExpected()
 buildAndTestOpenJDKInNativeEnvironment()
 {
   echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT $OPENJDK_UPDATE_VERSION $OPENJDK_BUILD_NUMBER"
-  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}" 
+  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}"
 
   testOpenJDKInNativeEnvironmentIfExpected
 }

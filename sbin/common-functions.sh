@@ -148,7 +148,6 @@ downloadingRequiredDependencies()
 
 getFirstTagFromOpenJDKGitRepo()
 {
-    echo "running git fetch --tags ${GIT_CLONE_ARGUMENTS[@]}"
     git fetch --tags "${GIT_CLONE_ARGUMENTS[@]}"
     justOneFromTheRevList=$(git rev-list --tags --max-count=1)
     tagNameFromRepo=$(git describe --tags "$justOneFromTheRevList")
