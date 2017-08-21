@@ -24,7 +24,6 @@
 
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
-
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/sbin/common-functions.sh"
@@ -194,7 +193,7 @@ setTargetDirectoryIfProvided()
 cloneOpenJDKGitRepo()
 {
   echo "${git}"
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] || [$REPOSITORY" == "adoptopenjdk/openjdk-jdk9] )  ; then
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] || [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk9" ] )  ; then
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
@@ -334,18 +333,17 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     docker build -t $CONTAINER $PATH_BUILD $OPENJDK_VERSION
+     docker build -t $CONTAINER $PATH_BUILD --build-arg OPENJDK_VERSION="${OPENJDK_VERSION}"
      echo "$normal"
   fi
 
 
   mkdir -p "${WORKING_DIR}/target"
 
-  docker run -t \
+  docker run -ti \
       -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
       -v "${WORKING_DIR}/target":/${TARGET_DIR_IN_THE_CONTAINER} \
       --entrypoint /openjdk/sbin/build.sh "${CONTAINER}" 
-      
  
  testOpenJDKViaDocker
 

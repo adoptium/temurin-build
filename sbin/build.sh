@@ -39,15 +39,16 @@ if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
 fi
 
 PATH_JDK=""
+echo "HELLO"
 echo "${OPENJDK_VERSION}"
-
 if [ "$OPENJDK_VERSION" == "jdk9" ]; then
   PATH_JDK="jdk"
-elif [ "$OPENJDK_VERSION" == "jdk8u" ]; then	
+elif [ "$OPENJDK_VERSION" == "jdk8u" ]; then
   PATH_JDK="j2sdk-image"
 else
   echo "${error} Please specify a version with --version or -v , either jdk9 or jdk8u "
 fi
+echo "${PATH_JDK}"
 
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
@@ -218,7 +219,7 @@ buildOpenJDK()
   FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
   echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
   exitCode=$(${FULL_MAKE_COMMAND})
-  
+
   # shellcheck disable=SC2181
   if [ "${exitCode}" -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
@@ -231,8 +232,9 @@ buildOpenJDK()
 
 printJavaVersionString()
 {
-  
+
   echo "PATH_ JDK : ${PATH_JDK}"
+  echo "$OPENJDK_DIR"
   PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${PATH_JDK})
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
@@ -250,7 +252,7 @@ printJavaVersionString()
 removingUnnecessaryFiles()
 {
   echo "Removing unnecessary files now..."
-  
+
   OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   if [ "$USE_DOCKER" != "true" ] ; then
      rm -rf cacerts_area
