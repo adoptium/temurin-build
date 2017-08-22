@@ -40,13 +40,13 @@ fi
 
 echo "${OPENJDK_VERSION}"
 if [ "$OPENJDK_VERSION" == "jdk9" ]; then
-  export PATH_JDK="jdk"
+  export JDK_PATH="jdk"
 elif [ "$OPENJDK_VERSION" == "jdk8u" ]; then
-  export PATH_JDK="j2sdk-image"
+  export JDK_PATH="j2sdk-image"
 else
   echo "${error} Please specify a version with --version or -v , either jdk9 or jdk8u "
 fi
-echo "${PATH_JDK}"
+echo "${JDK_PATH}"
 
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
@@ -231,9 +231,9 @@ buildOpenJDK()
 printJavaVersionString()
 {
 
-  echo "PATH_ JDK : ${PATH_JDK}"
+  echo "PATH_ JDK : ${JDK_PATH}"
   echo "$OPENJDK_DIR"
-  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${PATH_JDK})
+  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${JDK_PATH})
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
@@ -259,9 +259,9 @@ removingUnnecessaryFiles()
   cd build/*/images || return
 
 
-  echo "moving ${PATH_JDK} to ${OPENJDK_REPO_TAG}"
+  echo "moving ${JDK_PATH} to ${OPENJDK_REPO_TAG}"
   rm -rf "${OPENJDK_REPO_TAG}" || true
-  mv $PATH_JDK "${OPENJDK_REPO_TAG}"
+  mv $JDK_PATH "${OPENJDK_REPO_TAG}"
 
   # Remove files we don't need
   rm -rf "${OPENJDK_REPO_TAG}"/demo/applets || true

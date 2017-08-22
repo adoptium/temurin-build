@@ -193,9 +193,9 @@ setTargetDirectoryIfProvided()
 cloneOpenJDKGitRepo()
 {
   echo "${git}"
-  GIT_VERSION=$(git --git-dir openjdk/.git/ remote -v | grep -q '${OPENJDK_VERSION}')
-  echo "${GIT_VERSION}"
-  if [ ! GIT_VERSION ] && [-d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] || [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk9" ] )  ; then
+  # GIT_VERSION=$(git --git-dir openjdk/.git/ remote -v | grep -q '${OPENJDK_VERSION}')
+  # echo "${GIT_VERSION}"
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] || [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk9" ] )  ; then
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
@@ -293,8 +293,10 @@ createPersistentDockerDataVolume()
     echo "${info}Creating volume${normal}"
     docker volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
     docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name $TMP_CONTAINER_NAME ubuntu:14.04 /bin/bash
+    echo "HERE"
+    echo $(ls openjdk/)
     docker cp openjdk $TMP_CONTAINER_NAME:/openjdk/build/
-
+    echo $(ls $TMP_CONTAINER_NAME:/openjdk/build/)
     echo "${info}Updating source${normal}"
     docker exec $TMP_CONTAINER_NAME "cd /openjdk/build/openjdk && sh get_source.sh"
 
@@ -342,7 +344,7 @@ buildAndTestOpenJDKViaDocker()
 
   mkdir -p "${WORKING_DIR}/target"
 
-  docker run -ti \
+  docker run -t \
       -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
       -v "${WORKING_DIR}/target":/${TARGET_DIR_IN_THE_CONTAINER} \
       --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
