@@ -51,4 +51,8 @@ if [[ "$OS_KERNEL_NAME" == "aix" ]] ; then
    export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
 fi
 
+if [[ "$OS_MACHINE_NAME" == "aarch64" ]] ; then
+   export FREETYPE_FONT_VERSION="2.5.2"
+fi
+
 ./makejdk.sh "$@"
