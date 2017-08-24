@@ -206,7 +206,7 @@ checkOpenJDKGitRepo()
      else
        # The repo is not for the correct JDK Version
        echo "Incorrect Source Code for $OPENJDK_VERSION. Will re-clone"
-       rm -rf "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+       rm -rf "${WORKING_DIR:?}/${OPENJDK_REPO_NAME:?}"
        cloneOpenJDKGitRepo
      fi
      cd "${WORKING_DIR}" || return
@@ -301,10 +301,8 @@ createPersistentDockerDataVolume()
     echo "${info}Creating volume${normal}"
     docker volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
     docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name $TMP_CONTAINER_NAME ubuntu:14.04 /bin/bash
-    echo "HERE"
-    echo $(ls openjdk/)
     docker cp openjdk $TMP_CONTAINER_NAME:/openjdk/build/
-    echo $(ls $TMP_CONTAINER_NAME:/openjdk/build/)
+    ls $TMP_CONTAINER_NAME:/openjdk/build/
     echo "${info}Updating source${normal}"
     docker exec $TMP_CONTAINER_NAME "cd /openjdk/build/openjdk && sh get_source.sh"
 
@@ -345,7 +343,7 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     docker build -t $CONTAINER $PATH_BUILD --build-arg OPENJDK_VERSION="${OPENJDK_VERSION}"
+     docker build -t "${CONTAINER}" "${PATH_BUILD}" --build-arg OPENJDK_VERSION="${OPENJDK_VERSION}"
      echo "$normal"
   fi
 

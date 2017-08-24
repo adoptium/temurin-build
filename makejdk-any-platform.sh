@@ -25,7 +25,9 @@
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
 OS_MACHINE_NAME=$(uname -m)
-OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
+
+export OPENJDK_VERSION=""
+export REPOSITORY=""
 
 counter=0
 for i in "$@"; do
@@ -34,7 +36,7 @@ for i in "$@"; do
     "--version" | "-v")
       let counter++
       string="\$$counter"
-      export OPENJDK_VERSION=$(echo "$@" | awk "{print $string}")
+      OPENJDK_VERSION=$(echo "$@" | awk "{print $string}")
       ;;
   esac
 done
@@ -49,8 +51,8 @@ else
   exit 1
 fi
 
-export REPOSITORY="${REPOSITORY:-adoptopenjdk/openjdk-$OPENJDK_VERSION}";
-export REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')";
+REPOSITORY="${REPOSITORY:-adoptopenjdk/openjdk-$OPENJDK_VERSION}";
+REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')";
 
 case "$OS_MACHINE_NAME" in
 "s390x")
