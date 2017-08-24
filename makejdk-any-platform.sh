@@ -27,14 +27,16 @@
 OS_MACHINE_NAME=$(uname -m)
 OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
 
-while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
-  opt="$1";
-  shift;
-  case "$opt" in
+counter=0
+for i in "$@"; do
+  let counter++
+  case "$i" in
     "--version" | "-v")
-    export OPENJDK_VERSION="$1"; shift ;;
-    *) shift ;;
-   esac
+      let counter++
+      string="\$$counter"
+      export OPENJDK_VERSION=$(echo "$@" | awk "{print $string}")
+      ;;
+  esac
 done
 
 if [ "$OPENJDK_VERSION" == "jdk9" ]; then

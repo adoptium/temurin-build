@@ -111,6 +111,9 @@ parseCommandLineArgs()
       "--skip-freetype" | "-sf" )
       export FREETYPE=false;;
 
+      "--version" | "-v" )
+      ;;
+
       "--freetype-dir" | "-ftd" )
       export FREETYPE_DIRECTORY="$1"; shift;;
 
