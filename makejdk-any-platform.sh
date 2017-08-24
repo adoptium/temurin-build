@@ -32,9 +32,8 @@ while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
   shift;
   case "$opt" in
     "--version" | "-v")
-    export OPENJDK_VERSION="$1";
-    export REPOSITORY="${REPOSITORY:-adoptopenjdk/openjdk-$OPENJDK_VERSION}";
-    export REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')"
+    export OPENJDK_VERSION="$1"; shift ;;
+    *) shift ;;
    esac
 done
 
@@ -47,6 +46,9 @@ else
   man ./makejdk-any-platform.1
   exit 1
 fi
+
+export REPOSITORY="${REPOSITORY:-adoptopenjdk/openjdk-$OPENJDK_VERSION}";
+export REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')";
 
 if [[ "$OS_MACHINE_NAME" == "s390x" ]] ; then
    export JVM_VARIANT=${JVM_VARIANT:-zero}
