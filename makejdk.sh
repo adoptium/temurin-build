@@ -28,7 +28,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/sbin/common-functions.sh"
 
-REPOSITORY=""
 OPENJDK_REPO_NAME=${OPENJDK_REPO_NAME:-openjdk}
 SHALLOW_CLONE_OPTION="--depth=1"
 
@@ -115,13 +114,7 @@ parseCommandLineArgs()
       "--freetype-dir" | "-ftd" )
       export FREETYPE_DIRECTORY="$1"; shift;;
 
-      "--version" | "-v" )
-      export OPENJDK_VERSION="$1";
-      REPOSITORY="adoptopenjdk/openjdk-${OPENJDK_VERSION}";
-      REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')"
-      shift;;
-
-      *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk.1; exit 1;;
+      *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
   done
 }
@@ -190,40 +183,52 @@ setTargetDirectoryIfProvided()
   fi
 }
 
-cloneOpenJDKGitRepo()
+checkOpenJDKGitRepo()
 {
   echo "${git}"
-  # GIT_VERSION=$(git --git-dir openjdk/.git/ remote -v | grep -q '${OPENJDK_VERSION}')
-  # echo "${GIT_VERSION}"
   if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] || [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk9" ] )  ; then
-    # It does exist and it's a repo other than the AdoptOpenJDK one
-    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
-    echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
-    sleep 10
-    echo "${git}Pulling latest changes from git repo"
+    GIT_VERSION=$(git --git-dir "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" remote -v | grep "${OPENJDK_VERSION}")
+     echo "${GIT_VERSION}"
+     if [ "$GIT_VERSION" ]; then
+       # The repo is the correct JDK Version
+       cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
+       echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
+       sleep 10
+       echo "${git}Pulling latest changes from git repo"
 
-    showShallowCloningMessage "fetch"
-    git fetch --all ${SHALLOW_CLONE_OPTION}
-    git reset --hard origin/$BRANCH
-    git clean -fdx
-    echo "${normal}"
-    cd "${WORKING_DIR}" || return
+       showShallowCloningMessage "fetch"
+       git fetch --all ${SHALLOW_CLONE_OPTION}
+       git reset --hard origin/$BRANCH
+       git clean -fdx
+     else
+       # The repo is not for the correct JDK Version
+       echo "Incorrect Source Code for $OPENJDK_VERSION. Will re-clone"
+       rm -rf "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+       cloneOpenJDKGitRepo
+     fi
+     cd "${WORKING_DIR}" || return
   elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
     # If it doesn't exist, clone it
     echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
-    if [[ "$USE_SSH" == "true" ]] ; then
-       GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
-    else
-       GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
-    fi
-
-    showShallowCloningMessage "cloning"
-    GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
-
-    echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
-    git clone "${GIT_CLONE_ARGUMENTS[@]}"
+    cloneOpenJDKGitRepo
   fi
   echo "${normal}"
+}
+
+cloneOpenJDKGitRepo()
+{
+  echo "${git}"
+  if [[ "$USE_SSH" == "true" ]] ; then
+     GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
+  else
+     GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
+  fi
+
+  showShallowCloningMessage "cloning"
+  GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
+
+  echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
+  git clone "${GIT_CLONE_ARGUMENTS[@]}"
 }
 
 # TODO This only works fo jdk8u based releases.  Will require refactoring when jdk9 enters an update cycle
@@ -396,7 +401,7 @@ setWorkingDirectoryIfProvided
 setTargetDirectoryIfProvided
 time (
     echo "Cloning OpenJDK git repo"
-    cloneOpenJDKGitRepo
+    checkOpenJDKGitRepo
 )
 
 time (

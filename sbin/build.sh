@@ -38,14 +38,6 @@ if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   JVM_VARIANT="server"
 fi
 
-echo "${OPENJDK_VERSION}"
-if [ "$OPENJDK_VERSION" == "jdk9" ]; then
-  export JDK_PATH="jdk"
-elif [ "$OPENJDK_VERSION" == "jdk8u" ]; then
-  export JDK_PATH="j2sdk-image"
-else
-  echo "${error} Please specify a version with --version or -v , either jdk9 or jdk8u "
-fi
 echo "${JDK_PATH}"
 
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
