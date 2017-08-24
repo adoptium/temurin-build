@@ -337,7 +337,7 @@ buildAndTestOpenJDKViaDocker()
   if [[ "$KEEP" == "true" ]] ; then
      if [ "$(docker ps -a | grep -c openjdk_container)" == 0 ]; then
          echo "${info}No docker container found so creating '$CONTAINER' ${normal}"
-         docker build -t $CONTAINER $PATH_BUILD
+         docker build -t "$CONTAINER" "$PATH_BUILD"
      fi
   else
      echo "${info}Building as you've not specified -k or --keep"
