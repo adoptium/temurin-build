@@ -29,12 +29,16 @@ OPENJDK_UPDATE_VERSION=$5
 OPENJDK_BUILD_NUMBER=$6
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
 
+
 RUN_JTREG_TESTS_ONLY=""
+
 
 if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
   JVM_VARIANT="server"
 fi
+
+echo "${JDK_PATH}"
 
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
@@ -205,7 +209,7 @@ buildOpenJDK()
   FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
   echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
   exitCode=$(${FULL_MAKE_COMMAND})
-  
+
   # shellcheck disable=SC2181
   if [ "${exitCode}" -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
@@ -218,7 +222,10 @@ buildOpenJDK()
 
 printJavaVersionString()
 {
-  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/j2sdk-image)
+
+  echo "PATH_ JDK : ${JDK_PATH}"
+  echo "$OPENJDK_DIR"
+  PRODUCT_HOME=$(ls -d "$OPENJDK_DIR/build/*/images/${JDK_PATH}")
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
@@ -235,7 +242,7 @@ printJavaVersionString()
 removingUnnecessaryFiles()
 {
   echo "Removing unnecessary files now..."
-  
+
   OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   if [ "$USE_DOCKER" != "true" ] ; then
      rm -rf cacerts_area
@@ -243,14 +250,16 @@ removingUnnecessaryFiles()
 
   cd build/*/images || return
 
-  rm -fr "${OPENJDK_REPO_TAG}" || true
-  mv j2sdk-image "${OPENJDK_REPO_TAG}"
+
+  echo "moving ${JDK_PATH} to ${OPENJDK_REPO_TAG}"
+  rm -rf "${OPENJDK_REPO_TAG}" || true
+  mv "$JDK_PATH" "${OPENJDK_REPO_TAG}"
 
   # Remove files we don't need
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet
-  find . -name "*.diz" -type f -delete
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets || true
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest || true
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet || true
+  find . -name "*.diz" -type f -delete || true
 }
 
 createOpenJDKTarArchive()
