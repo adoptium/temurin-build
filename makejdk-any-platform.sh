@@ -24,6 +24,9 @@
 
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
+export OS_KERNEL_NAME=""
+OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
+export OS_MACHINE_NAME=""
 OS_MACHINE_NAME=$(uname -m)
 
 export OPENJDK_VERSION=""
@@ -86,6 +89,16 @@ case "$OS_MACHINE_NAME" in
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--with-jobs=${NUM_PROCESSORS}"}
 ;;
 
+"aarch64")
+  case "OPENJDK_VERSION" in
+    "jdk9")
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"};;
+  esac
+  export FREETYPE_FONT_VERSION="2.5.2"
+;;
+esac
+
+case "$OS_KERNEL_NAME" in
 "aix")
   case "OPENJDK_VERSION" in
     "jdk9")
@@ -94,14 +107,12 @@ case "$OS_MACHINE_NAME" in
   export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
 ;;
 
-"aarch64")
+"darwin")
   case "OPENJDK_VERSION" in
     "jdk9")
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"};;
   esac
-  export FREETYPE_FONT_VERSION="2.5.2"
 ;;
 
 esac
-
 ./makejdk.sh "$@"

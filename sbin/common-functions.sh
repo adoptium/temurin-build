@@ -20,12 +20,6 @@ FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
 
 determineBuildProperties() {
-
-    export OS_KERNEL_NAME=""
-    OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
-    export OS_MACHINE_NAME=""
-    OS_MACHINE_NAME=$(uname -m)
-
     JVM_VARIANT=${JVM_VARIANT:-server}
 
     BUILD_TYPE=normal
