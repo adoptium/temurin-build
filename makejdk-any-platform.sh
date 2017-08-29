@@ -46,6 +46,7 @@ done
 
 if [ "$OPENJDK_VERSION" == "jdk9" ]; then
   export JDK_PATH="jdk"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"}
 elif [ "$OPENJDK_VERSION" == "jdk8u" ]; then
   export JDK_PATH="j2sdk-image"
 else
@@ -62,7 +63,7 @@ case "$OS_MACHINE_NAME" in
   case "OPENJDK_VERSION" in
      "jdk9")
      export JVM_VARIANT=${JVM_VARIANT:-server}
-     export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"};;
+     ;;
      "jdk8u")
      export JVM_VARIANT=${JVM_VARIANT:-zero} ;;
   esac
@@ -73,10 +74,6 @@ case "$OS_MACHINE_NAME" in
 ;;
 
 "ppc64le")
-  case "OPENJDK_VERSION" in
-    "jdk9")
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"};;
-  esac
   export JVM_VARIANT=${JVM_VARIANT:-server}
   export BUILD_FULL_NAME=${BUILD_FULL_NAME:-linux-ppc64-normal-${JVM_VARIANT}-release}
   # shellcheck disable=SC1083
@@ -90,28 +87,13 @@ case "$OS_MACHINE_NAME" in
 ;;
 
 "aarch64")
-  case "OPENJDK_VERSION" in
-    "jdk9")
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"};;
-  esac
   export FREETYPE_FONT_VERSION="2.5.2"
 ;;
 esac
 
 case "$OS_KERNEL_NAME" in
 "aix")
-  case "OPENJDK_VERSION" in
-    "jdk9")
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"};;
-  esac
   export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
-;;
-
-"darwin")
-  case "OPENJDK_VERSION" in
-    "jdk9")
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"};;
-  esac
 ;;
 
 esac

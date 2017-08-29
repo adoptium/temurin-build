@@ -50,7 +50,7 @@ You can use the `makejdk-local-env.sh` script by providing two parameters: the "
 
 e.g `./makejdk-any-platform.sh -s /path/to/workspace -d /target/directory`
 
-Note: have a look at the usage of `makejdk.sh --help`, the exact usage is available for this script as well.
+Note: have a look at the usage of `makejdk-any-platform.sh --help`, the exact usage is available for this script as well.
 
 ### None of the above?
 

@@ -112,7 +112,7 @@ parseCommandLineArgs()
       export FREETYPE=false;;
 
       "--version" | "-v" )
-      ;;
+      shift;;
 
       "--freetype-dir" | "-ftd" )
       export FREETYPE_DIRECTORY="$1"; shift;;
@@ -189,7 +189,7 @@ setTargetDirectoryIfProvided()
 checkOpenJDKGitRepo()
 {
   echo "${git}"
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] || [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk9" ] )  ; then
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$OPENJDK_VERSION" == "jdk8u" ] || [ "$OPENJDK_VERSION" == "jdk9" ] )  ; then
     GIT_VERSION=$(git --git-dir "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" remote -v | grep "${OPENJDK_VERSION}")
      echo "${GIT_VERSION}"
      if [ "$GIT_VERSION" ]; then
