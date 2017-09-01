@@ -27,6 +27,7 @@ Options:
   -k, --keep                 reuse docker container (prevents deleting)
   -j, --jtreg                run jtreg after building
   -S, --ssh                  use ssh when cloning git
+  --variant <name>           specify an alternate variant name when building, e.g. openj9
 ```
 
 The simplest way to build OpenJDK using our scripts is to run `makejdk-any-platform.sh` and have your user be in the Docker group on the machine (or prefix all of your Docker commands with `sudo`. This script can be used to create a Docker container that will be configured with all of the required dependencies and a base operating system in order to build OpenJDK
@@ -39,6 +40,7 @@ By providing the -d option to `makejdk.sh`, the resulting zipped tarball will be
 `makejdk.sh /target/directory` will result in the JDK being built inside of your Docker container and then copied to /target/directory on the host
 
 For help with getting docker follow the instructions [here](https://docs.docker.com/engine/installation/)
+
 
 ### Prefer to use Ansible?
 

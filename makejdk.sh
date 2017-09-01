@@ -47,6 +47,8 @@ TARGET_DIR=""
 BRANCH=""
 KEEP=false
 JTREG=false
+JVM_VARIANT=""
+ALTERNATE_VARIANT=""
 
 
 OPENJDK_UPDATE_VERSION=""
@@ -119,6 +121,9 @@ parseCommandLineArgs()
 
       "--freetype-dir" | "-ftd" )
       export FREETYPE_DIRECTORY="$1"; shift;;
+
+      "--variant" )
+      export ALTERNATE_VARIANT=$1; shift;;
 
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
@@ -305,6 +310,7 @@ createPersistentDockerDataVolume()
     docker volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
     docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name $TMP_CONTAINER_NAME ubuntu:14.04 /bin/bash
     docker cp openjdk $TMP_CONTAINER_NAME:/openjdk/build/
+
     ls $TMP_CONTAINER_NAME:/openjdk/build/
     echo "${info}Updating source${normal}"
     docker exec $TMP_CONTAINER_NAME "cd /openjdk/build/openjdk && sh get_source.sh"
@@ -338,22 +344,32 @@ buildAndTestOpenJDKViaDocker()
   # Keep is undefined so we'll kill the docker image
 
   if [[ "$KEEP" == "true" ]] ; then
-     if [ "$(docker ps -a | grep -c openjdk_container)" == 0 ]; then
+     if [ "$(docker ps -a | grep -c $CONTAINER)" == 0 ]; then
          echo "${info}No docker container found so creating '$CONTAINER' ${normal}"
          docker build -t "$CONTAINER" "$PATH_BUILD"
+         if [[ "$ALTERNATE_VARIANT" != "" && -f $PATH_BUILD/Dockerfile-$ALTERNATE_VARIANT ]]; then
+             CONTAINER=${CONTAINER}-${ALTERNATE_VARIANT}
+             echo Building variant $ALTERNATE_VARIANT
+             docker build -t "$CONTAINER" -f "$PATH_BUILD/Dockerfile-$ALTERNATE_VARIANT" "$PATH_BUILD"
+         fi
      fi
   else
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm -f {}
      docker build -t "${CONTAINER}" "${PATH_BUILD}" --build-arg OPENJDK_VERSION="${OPENJDK_VERSION}"
+     if [[ "$ALTERNATE_VARIANT" != "" && -f $PATH_BUILD/Dockerfile-$ALTERNATE_VARIANT ]]; then
+         CONTAINER=${CONTAINER}-${ALTERNATE_VARIANT}
+         echo Building variant $ALTERNATE_VARIANT
+         docker build -t "${CONTAINER}" -f "${PATH_BUILD}/Dockerfile-${ALTERNATE_VARIANT}" "${PATH_BUILD}" --build-arg OPENJDK_VERSION="${OPENJDK_VERSION}"
+     fi
      echo "$normal"
   fi
-
 
   mkdir -p "${WORKING_DIR}/target"
 
   docker run -t \
+      -e ALTERNATE_VARIANT=$ALTERNATE_VARIANT \
       -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
       -v "${WORKING_DIR}/target":/${TARGET_DIR_IN_THE_CONTAINER} \
       --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
@@ -412,4 +428,5 @@ time (
     echo "Updating OpenJDK git repo"
     getOpenJDKUpdateAndBuildVersion
 )
+
 buildAndTestOpenJDK
