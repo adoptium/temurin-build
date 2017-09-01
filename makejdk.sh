@@ -120,6 +120,9 @@ parseCommandLineArgs()
       "--freetype-dir" | "-ftd" )
       export FREETYPE_DIRECTORY="$1"; shift;;
 
+      "--freemarker" | "-fm" )
+      export FREEMARKER=true;;
+
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
   done
@@ -354,6 +357,7 @@ buildAndTestOpenJDKViaDocker()
   mkdir -p "${WORKING_DIR}/target"
 
   docker run -t \
+      -e FREEMARKER="${FREEMARKER}" \
       -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
       -v "${WORKING_DIR}/target":/${TARGET_DIR_IN_THE_CONTAINER} \
       --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
