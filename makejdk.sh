@@ -105,6 +105,9 @@ parseCommandLineArgs()
       "--no-colour" | "-nc" )
       COLOUR=false;;
 
+      "--sign" )
+      export SIGN=true; export CERTIFICATE="$1"; shift;;
+
       "--disable-shallow-git-clone" | "-dsgc" )
       SHALLOW_CLONE_OPTION=""; shift;;
 

@@ -205,7 +205,7 @@ buildOpenJDK()
   FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
   echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
   exitCode=$(${FULL_MAKE_COMMAND})
-  
+
   # shellcheck disable=SC2181
   if [ "${exitCode}" -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
@@ -235,7 +235,7 @@ printJavaVersionString()
 removingUnnecessaryFiles()
 {
   echo "Removing unnecessary files now..."
-  
+
   OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   if [ "$USE_DOCKER" != "true" ] ; then
      rm -rf cacerts_area
@@ -251,6 +251,24 @@ removingUnnecessaryFiles()
   rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest
   rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet
   find . -name "*.diz" -type f -delete
+}
+
+signRelease()
+{
+  if [ "$SIGN" ]; then
+    if [[ "$OSTYPE" == "cygwin" ]]; then
+      echo "Signing release"
+      signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
+      # Sign .exe files
+      FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.exe')
+      "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$FILES"
+      # Sign .dll files
+      FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.dll')
+      "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$FILES"
+    else
+      echo "Skiping code signing as it's only supported on Windows"
+    fi
+  fi
 }
 
 createOpenJDKTarArchive()
@@ -301,5 +319,6 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
 buildOpenJDK
 printJavaVersionString
 removingUnnecessaryFiles
+signRelease
 createOpenJDKTarArchive
 showCompletionMessage
