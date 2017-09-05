@@ -261,10 +261,14 @@ signRelease()
       signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
       # Sign .exe files
       FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.exe')
-      "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$FILES"
+      for f in $FILES; do
+        "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
+      done
       # Sign .dll files
       FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.dll')
-      "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$FILES"
+      for f in $FILES; do
+        "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
+      done
     else
       echo "Skiping code signing as it's only supported on Windows"
     fi
