@@ -60,7 +60,7 @@ REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')";
 
 case "$OS_MACHINE_NAME" in
 "s390x")
-  case "OPENJDK_VERSION" in
+  case "$OPENJDK_VERSION" in
      "jdk9")
      export JVM_VARIANT=${JVM_VARIANT:-server}
      ;;
