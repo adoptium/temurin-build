@@ -53,3 +53,6 @@ ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-amd64
 ENTRYPOINT ["/openjdk/sbin/build.sh"]
 
 CMD ["images"]
+
+ARG OPENJDK_VERSION
+ENV OPENJDK_VERSION=$OPENJDK_VERSION
