@@ -68,14 +68,14 @@ checkIfDockerIsUsedForBuildingOrNot()
   # otherwise ensure it's a writable area e.g. /home/youruser/myopenjdkarea
 
   if [ -z "$WORKING_DIR" ] || [ -z "$TARGET_DIR" ] ; then
-      echo "build.sh is called by makejdk.sh and requires two parameters"
-      echo "Are you sure you want to call it directly?"
-      echo "Usage: bash ./${0} <workingarea> <targetforjdk>"
-      echo "Note that you must have the OpenJDK source before using this script!"
-      echo "This script will try to move ./openjdk to the source directory for you, "
-      echo "and this will be your working area where all required files will be downloaded to."
-      echo "You can override the JDK boot directory by setting the environment variable JDK_BOOT_DIR"
-      exit;
+    echo "build.sh is called by makejdk.sh and requires two parameters"
+    echo "Are you sure you want to call it directly?"
+    echo "Usage: bash ./${0} <workingarea> <targetforjdk>"
+    echo "Note that you must have the OpenJDK source before using this script!"
+    echo "This script will try to move ./openjdk to the source directory for you, "
+    echo "and this will be your working area where all required files will be downloaded to."
+    echo "You can override the JDK boot directory by setting the environment variable JDK_BOOT_DIR"
+    exit;
   fi
 }
 
@@ -148,12 +148,12 @@ configureCommandParameters()
 {
   configuringVersionStringParameter
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
+    echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
 
   else
-     echo "Building up the configure command..."
-     configuringBootJDKConfigureParameter
-     buildingTheRestOfTheConfigParameters
+    echo "Building up the configure command..."
+    configuringBootJDKConfigureParameter
+    buildingTheRestOfTheConfigParameters
   fi
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
@@ -212,7 +212,7 @@ buildOpenJDK()
 
   # shellcheck disable=SC2181
   if [ "${exitCode}" -ne 0 ]; then
-     echo "${error}Failed to make the JDK, exiting"
+    echo "${error}Failed to make the JDK, exiting"
     exit;
   else
     echo "${good}Built the JDK!"
@@ -225,15 +225,15 @@ printJavaVersionString()
   # shellcheck disable=SC2086
   PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${JDK_PATH})
   if [[ -d "$PRODUCT_HOME" ]]; then
-     echo "${good}'$PRODUCT_HOME' found${normal}"
-     # shellcheck disable=SC2154
-     echo "${info}"
-     "$PRODUCT_HOME"/bin/java -version || (echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}" && exit -1)
-     echo "${normal}"
-     echo ""
+    echo "${good}'$PRODUCT_HOME' found${normal}"
+    # shellcheck disable=SC2154
+    echo "${info}"
+    "$PRODUCT_HOME"/bin/java -version || (echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}" && exit -1)
+    echo "${normal}"
+    echo ""
   else
-     echo "${error}'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location.${normal}"
-     exit -1
+    echo "${error}'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location.${normal}"
+    exit -1
   fi
 }
 
@@ -243,7 +243,7 @@ removingUnnecessaryFiles()
 
   OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   if [ "$USE_DOCKER" != "true" ] ; then
-     rm -rf cacerts_area
+    rm -rf cacerts_area
   fi
 
   cd build/*/images || return
@@ -263,22 +263,27 @@ removingUnnecessaryFiles()
 signRelease()
 {
   if [ "$SIGN" ]; then
-    if [[ "$OSTYPE" == "cygwin" ]]; then
-      echo "Signing release"
-      signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
-      # Sign .exe files
-      FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.exe')
-      for f in $FILES; do
-        "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
-      done
-      # Sign .dll files
-      FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.dll')
-      for f in $FILES; do
-        "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
-      done
-    else
-      echo "Skiping code signing as it's only supported on Windows"
-    fi
+    case "$OSTYPE" in
+      "cygwin")
+        echo "Signing Windows release"
+        signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
+        # Sign .exe files
+        FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.exe')
+        echo "$FILES" | while read -r f; do "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
+        # Sign .dll files
+        FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.dll')
+        echo "$FILES" | while read -r f; do "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
+      ;;
+      "darwin"*)
+        echo "Signing OSX release"
+        # Sign all executables
+        FILES=$(find "${OPENJDK_REPO_TAG}" -perm +111 -type f || find "${OPENJDK_REPO_TAG}" -perm /111 -type f)
+        echo "$FILES" | while read -r f; do codesign -s "$CERTIFICATE" "$f"; done
+      ;;
+      *)
+        echo "Skipping code signing as it's not supported on $OSTYPE"
+      ;;
+    esac
   fi
 }
 
@@ -290,27 +295,27 @@ createOpenJDKTarArchive()
   echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
 
   if [ "$USE_DOCKER" == "true" ] ; then
-     GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
-     EXT=".tar.gz"
+    GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+    EXT=".tar.gz"
 
-     echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
-     mv "OpenJDK${EXT}" "${TARGET_DIR}"
+    echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
+    mv "OpenJDK${EXT}" "${TARGET_DIR}"
   else
-      case "${OS_KERNEL_NAME}" in
-        *cygwin*)
-          zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
-          EXT=".zip" ;;
-        aix)
-          GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
-          EXT=".tar.gz" ;;
-        *)
-          GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
-          EXT=".tar.gz" ;;
-      esac
-      echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
+    case "${OS_KERNEL_NAME}" in
+      *cygwin*)
+        zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
+      EXT=".zip" ;;
+      aix)
+        GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
+      EXT=".tar.gz" ;;
+      *)
+        GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+      EXT=".tar.gz" ;;
+    esac
+    echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
 
-      echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
-      mv "OpenJDK${EXT}" "${TARGET_DIR}"
+    echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
+    mv "OpenJDK${EXT}" "${TARGET_DIR}"
   fi
 
 }
