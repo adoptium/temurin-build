@@ -132,7 +132,7 @@ buildingTheRestOfTheConfigParameters()
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-alsa=${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
 
   # Point-in-time dependency for openj9 only
-  if [[ "${ALTERNATE_VARIANT}" == "openj9" ]] ; then
+  if [[ "${BUILD_VARIANT}" == "openj9" ]] ; then
     CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freemarker-jar=${WORKING_DIR}/freemarker-${FREEMARKER_LIB_VERSION}/lib/freemarker.jar"
   fi
 

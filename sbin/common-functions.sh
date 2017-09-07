@@ -151,7 +151,7 @@ downloadingRequiredDependencies()
      else
         echo "Skipping Freetype"
      fi
-     if [[ "$ALTERNATE_VARIANT" == "openj9" ]]; then
+     if [[ "$BUILD_VARIANT" == "openj9" ]]; then
         time (
            echo "Checking and download Freemarker dependency"
            checkingAndDownloadingFreemarker
