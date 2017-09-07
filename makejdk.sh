@@ -320,6 +320,17 @@ createPersistentDockerDataVolume()
   fi
 }
 
+buildDockerContainer()
+{
+  echo Building docker container
+  docker build -t "${CONTAINER}" "${PATH_BUILD}" "$1" "$2"
+  if [[ "${ALTERNATE_VARIANT}" != "" && -f "${PATH_BUILD}/Dockerfile-${ALTERNATE_VARIANT}" ]]; then
+    CONTAINER="${CONTAINER}-${ALTERNATE_VARIANT}"
+    echo Building dockerfile variant "${ALTERNATE_VARIANT}"
+    docker build -t "${CONTAINER}" -f "${PATH_BUILD}/Dockerfile-${ALTERNATE_VARIANT}" "${PATH_BUILD}" "$1" "$2"
+  fi
+}
+
 buildAndTestOpenJDKViaDocker()
 {
 
@@ -347,30 +358,20 @@ buildAndTestOpenJDKViaDocker()
      # shellcheck disable=SC2086
      if [ "$(docker ps -a | grep -c \"$CONTAINER\")" == 0 ]; then
          echo "${info}No docker container found so creating '$CONTAINER' ${normal}"
-         docker build -t "$CONTAINER" "$PATH_BUILD"
-         if [[ "$ALTERNATE_VARIANT" != "" && -f $PATH_BUILD/Dockerfile-$ALTERNATE_VARIANT ]]; then
-             CONTAINER=${CONTAINER}-${ALTERNATE_VARIANT}
-             echo Building variant "$ALTERNATE_VARIANT"
-             docker build -t "$CONTAINER" -f "$PATH_BUILD/Dockerfile-$ALTERNATE_VARIANT" "$PATH_BUILD"
-         fi
+         buildDockerContainer
      fi
   else
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     docker build -t "${CONTAINER}" "${PATH_BUILD}" --build-arg OPENJDK_VERSION="${OPENJDK_VERSION}"
-     if [[ "$ALTERNATE_VARIANT" != "" && -f "$PATH_BUILD/Dockerfile-$ALTERNATE_VARIANT" ]]; then
-         CONTAINER="${CONTAINER}-${ALTERNATE_VARIANT}"
-         echo Building variant "$ALTERNATE_VARIANT"
-         docker build -t "${CONTAINER}" -f "${PATH_BUILD}/Dockerfile-${ALTERNATE_VARIANT}" "${PATH_BUILD}" --build-arg OPENJDK_VERSION="${OPENJDK_VERSION}"
-     fi
+     buildDockerContainer --build-arg "OPENJDK_VERSION=${OPENJDK_VERSION}"
      echo "$normal"
   fi
 
   mkdir -p "${WORKING_DIR}/target"
 
   docker run -t \
-      -e ALTERNATE_VARIANT=$ALTERNATE_VARIANT \
+      -e ALTERNATE_VARIANT="$ALTERNATE_VARIANT" \
       -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
       -v "${WORKING_DIR}/target":/${TARGET_DIR_IN_THE_CONTAINER} \
       --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
