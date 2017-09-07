@@ -303,7 +303,7 @@ createPersistentDockerDataVolume()
 
     echo "${info}Removing old volumes and containers${normal}"
     docker rm -f $TMP_CONTAINER_NAME || true
-    docker rm -f "$(docker ps -a | grep $CONTAINER | cut -d' ' -f1)" || true
+    docker rm -f "$(docker ps -a | grep \"$CONTAINER\" | cut -d' ' -f1)" || true
     docker volume rm "${DOCKER_SOURCE_VOLUME_NAME}" || true
 
     echo "${info}Creating volume${normal}"
@@ -344,23 +344,24 @@ buildAndTestOpenJDKViaDocker()
   # Keep is undefined so we'll kill the docker image
 
   if [[ "$KEEP" == "true" ]] ; then
-     if [ "$(docker ps -a | grep -c $CONTAINER)" == 0 ]; then
+     # shellcheck disable=SC2086
+     if [ "$(docker ps -a | grep -c \"$CONTAINER\")" == 0 ]; then
          echo "${info}No docker container found so creating '$CONTAINER' ${normal}"
          docker build -t "$CONTAINER" "$PATH_BUILD"
          if [[ "$ALTERNATE_VARIANT" != "" && -f $PATH_BUILD/Dockerfile-$ALTERNATE_VARIANT ]]; then
              CONTAINER=${CONTAINER}-${ALTERNATE_VARIANT}
-             echo Building variant $ALTERNATE_VARIANT
+             echo Building variant "$ALTERNATE_VARIANT"
              docker build -t "$CONTAINER" -f "$PATH_BUILD/Dockerfile-$ALTERNATE_VARIANT" "$PATH_BUILD"
          fi
      fi
   else
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
-     docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm -f {}
+     docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
      docker build -t "${CONTAINER}" "${PATH_BUILD}" --build-arg OPENJDK_VERSION="${OPENJDK_VERSION}"
-     if [[ "$ALTERNATE_VARIANT" != "" && -f $PATH_BUILD/Dockerfile-$ALTERNATE_VARIANT ]]; then
-         CONTAINER=${CONTAINER}-${ALTERNATE_VARIANT}
-         echo Building variant $ALTERNATE_VARIANT
+     if [[ "$ALTERNATE_VARIANT" != "" && -f "$PATH_BUILD/Dockerfile-$ALTERNATE_VARIANT" ]]; then
+         CONTAINER="${CONTAINER}-${ALTERNATE_VARIANT}"
+         echo Building variant "$ALTERNATE_VARIANT"
          docker build -t "${CONTAINER}" -f "${PATH_BUILD}/Dockerfile-${ALTERNATE_VARIANT}" "${PATH_BUILD}" --build-arg OPENJDK_VERSION="${OPENJDK_VERSION}"
      fi
      echo "$normal"
