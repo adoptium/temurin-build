@@ -19,8 +19,6 @@ MAINTAINER Mark Stoodley <mstoodle@ca.ibm.com>
 RUN apt-get update \
   && apt-get install -qq -y --no-install-recommends \
     autoconf \
-    bison \
-    libffi-dev \
     libnuma-dev \
 && rm -rf /var/lib/apt/lists/*
 
