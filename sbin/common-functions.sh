@@ -55,7 +55,7 @@ checkingAndDownloadingFreemarker()
 {
   echo "Checking for FREEMARKER"
 
-  FOUND_FREEMARKER=$(find "${WORKING_DIR}" -name "freemarker-${FREEMARKER_LIB_VERSION}")
+  FOUND_FREEMARKER=$(find "${WORKING_DIR}" -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
 
   if [[ ! -z "$FOUND_FREEMARKER" ]] ; then
     echo "Skipping FREEMARKER download"
