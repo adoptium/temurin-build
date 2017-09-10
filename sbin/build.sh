@@ -29,12 +29,16 @@ OPENJDK_UPDATE_VERSION=$5
 OPENJDK_BUILD_NUMBER=$6
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
 
+
 RUN_JTREG_TESTS_ONLY=""
+
 
 if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
   JVM_VARIANT="server"
 fi
+
+echo "${JDK_PATH}"
 
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
@@ -205,7 +209,7 @@ buildOpenJDK()
   FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
   echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
   exitCode=$(${FULL_MAKE_COMMAND})
-  
+
   # shellcheck disable=SC2181
   if [ "${exitCode}" -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
@@ -218,7 +222,8 @@ buildOpenJDK()
 
 printJavaVersionString()
 {
-  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/j2sdk-image)
+  # shellcheck disable=SC2086
+  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${JDK_PATH})
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
@@ -235,7 +240,7 @@ printJavaVersionString()
 removingUnnecessaryFiles()
 {
   echo "Removing unnecessary files now..."
-  
+
   OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   if [ "$USE_DOCKER" != "true" ] ; then
      rm -rf cacerts_area
@@ -243,14 +248,38 @@ removingUnnecessaryFiles()
 
   cd build/*/images || return
 
-  rm -fr "${OPENJDK_REPO_TAG}" || true
-  mv j2sdk-image "${OPENJDK_REPO_TAG}"
+
+  echo "moving ${JDK_PATH} to ${OPENJDK_REPO_TAG}"
+  rm -rf "${OPENJDK_REPO_TAG}" || true
+  mv "$JDK_PATH" "${OPENJDK_REPO_TAG}"
 
   # Remove files we don't need
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet
-  find . -name "*.diz" -type f -delete
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets || true
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest || true
+  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet || true
+  find . -name "*.diz" -type f -delete || true
+}
+
+signRelease()
+{
+  if [ "$SIGN" ]; then
+    if [[ "$OSTYPE" == "cygwin" ]]; then
+      echo "Signing release"
+      signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
+      # Sign .exe files
+      FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.exe')
+      for f in $FILES; do
+        "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
+      done
+      # Sign .dll files
+      FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.dll')
+      for f in $FILES; do
+        "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
+      done
+    else
+      echo "Skiping code signing as it's only supported on Windows"
+    fi
+  fi
 }
 
 createOpenJDKTarArchive()
@@ -301,5 +330,6 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
 buildOpenJDK
 printJavaVersionString
 removingUnnecessaryFiles
+signRelease
 createOpenJDKTarArchive
 showCompletionMessage
