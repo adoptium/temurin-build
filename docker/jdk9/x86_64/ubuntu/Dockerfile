@@ -19,7 +19,9 @@ MAINTAINER George Adams <george.adams@uk.ibm.com>
 # Install required OS tools
 RUN apt-get update \
   && apt-get install -qq -y --no-install-recommends \
+    autoconf \
     cpio \
+    libnuma-dev \
     make \
     gcc \
     g++ \
