@@ -123,6 +123,9 @@ parseCommandLineArgs()
       "--freemarker" | "-fm" )
       export FREEMARKER=true;;
 
+      "--get-source" | "-gs" )
+      export GET_SOURCE=true;;
+
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
   done
@@ -238,6 +241,12 @@ cloneOpenJDKGitRepo()
 
   echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
   git clone "${GIT_CLONE_ARGUMENTS[@]}"
+
+  # run get_source.sh after cloning if requested
+  if [[ -n "${GET_SOURCE}" ]]; then
+    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
+    bash get_source.sh
+  fi
 }
 
 # TODO This only works fo jdk8u based releases.  Will require refactoring when jdk9 enters an update cycle
