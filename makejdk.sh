@@ -243,7 +243,7 @@ cloneOpenJDKGitRepo()
 
   # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
   if [ "$BUILD_VARIANT" == "openj9" ]; then
-    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     bash get_source.sh
   fi
 
