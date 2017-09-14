@@ -1,5 +1,3 @@
-# Copyright IBM Corporation 2017.
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -19,7 +17,9 @@ MAINTAINER George Adams <george.adams@uk.ibm.com>
 # Install required OS tools
 RUN apt-get update \
   && apt-get install -qq -y --no-install-recommends \
+    autoconf \
     cpio \
+    libnuma-dev \
     make \
     gcc \
     g++ \
@@ -40,7 +40,17 @@ RUN apt-get update \
     git \
     unzip \
     realpath \
+    g++-4.8 \
+    gcc-4.8 \
 && rm -rf /var/lib/apt/lists/*
+
+# Make sure build uses 4.8
+RUN rm /usr/bin/gcc \
+    && rm /usr/bin/g++ \
+    && rm /usr/bin/c++ \
+    && ln -s /usr/bin/gcc-4.8 /usr/bin/gcc \
+    && ln -s /usr/bin/g++-4.8 /usr/bin/g++ \
+    && ln -s /usr/bin/g++-4.8 /usr/bin/c++
 
 # Pick up build instructions
 RUN mkdir -p /openjdk/target
@@ -59,3 +69,4 @@ CMD ["images"]
 
 ARG OPENJDK_VERSION
 ENV OPENJDK_VERSION=$OPENJDK_VERSION
+ENV JDK_PATH=jdk
