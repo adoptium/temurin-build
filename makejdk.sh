@@ -130,6 +130,15 @@ parseCommandLineArgs()
   done
 }
 
+doAnyBuildVariantOverrides()
+{
+  if [[ "${BUILD_VARIANT}" == "openj9" ]]; then
+    # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
+    REPOSITORY="ibmruntimes/openj9-openjdk-$OPENJDK_VERSION"
+    BRANCH="openj9"
+  fi
+}
+
 checkIfDockerIsUsedForBuildingOrNot()
 {
   # Both a working directory and a target directory provided
@@ -421,6 +430,7 @@ buildAndTestOpenJDK()
 
 sourceSignalHandler
 parseCommandLineArgs "$@"
+doAnyBuildVariantOverrides
 if [[ -z "${COLOUR}" ]] ; then
   sourceFileWithColourCodes
 fi
