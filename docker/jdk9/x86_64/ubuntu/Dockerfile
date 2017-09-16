@@ -39,17 +39,7 @@ RUN apt-get update \
     git \
     unzip \
     realpath \
-    g++-4.8 \
-    gcc-4.8 \
 && rm -rf /var/lib/apt/lists/*
-
-# Make sure build uses 4.8
-RUN rm /usr/bin/gcc \
-    && rm /usr/bin/g++ \
-    && rm /usr/bin/c++ \
-    && ln -s /usr/bin/gcc-4.8 /usr/bin/gcc \
-    && ln -s /usr/bin/g++-4.8 /usr/bin/g++ \
-    && ln -s /usr/bin/g++-4.8 /usr/bin/c++
 
 # Pick up build instructions
 RUN mkdir -p /openjdk/target
