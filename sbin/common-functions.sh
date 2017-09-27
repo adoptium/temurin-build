@@ -60,7 +60,9 @@ checkingAndDownloadingFreemarker()
   if [[ ! -z "$FOUND_FREEMARKER" ]] ; then
     echo "Skipping FREEMARKER download"
   else
-    wget --no-check-certificate "https://sourceforge.net/projects/freemarker/files/freemarker/${FREEMARKER_LIB_VERSION}/freemarker-${FREEMARKER_LIB_VERSION}.tar.gz/download" -O "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+    # wget --no-check-certificate "https://sourceforge.net/projects/freemarker/files/freemarker/${FREEMARKER_LIB_VERSION}/freemarker-${FREEMARKER_LIB_VERSION}.tar.gz/download" -O "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+    # Temp fix as sourceforge is broken
+    wget --no-check-certificate https://ci.adoptopenjdk.net/userContent/freemarker-2.3.8.tar.gz
     tar -xzf "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
     rm "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
   fi
