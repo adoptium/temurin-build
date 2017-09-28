@@ -47,6 +47,8 @@ TARGET_DIR=""
 BRANCH=""
 KEEP=false
 JTREG=false
+JVM_VARIANT=""
+BUILD_VARIANT=""
 
 
 OPENJDK_UPDATE_VERSION=""
@@ -120,9 +122,21 @@ parseCommandLineArgs()
       "--freetype-dir" | "-ftd" )
       export FREETYPE_DIRECTORY="$1"; shift;;
 
+      "--variant"  | "-bv" )
+      export BUILD_VARIANT=$1; shift;;
+
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
   done
+}
+
+doAnyBuildVariantOverrides()
+{
+  if [[ "${BUILD_VARIANT}" == "openj9" ]]; then
+    # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
+    REPOSITORY="ibmruntimes/openj9-openjdk-$OPENJDK_VERSION"
+    BRANCH="openj9"
+  fi
 }
 
 checkIfDockerIsUsedForBuildingOrNot()
@@ -235,6 +249,13 @@ cloneOpenJDKGitRepo()
 
   echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
   git clone "${GIT_CLONE_ARGUMENTS[@]}"
+
+  # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
+  if [ "$BUILD_VARIANT" == "openj9" ]; then
+    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
+    bash get_source.sh
+  fi
+
 }
 
 # TODO This only works fo jdk8u based releases.  Will require refactoring when jdk9 enters an update cycle
@@ -261,6 +282,7 @@ getOpenJDKUpdateAndBuildVersion()
     cd "${WORKING_DIR}" || return
 
   fi
+
   echo "${normal}"
 }
 
@@ -298,19 +320,31 @@ createPersistentDockerDataVolume()
 
     echo "${info}Removing old volumes and containers${normal}"
     docker rm -f $TMP_CONTAINER_NAME || true
-    docker rm -f "$(docker ps -a | grep $CONTAINER | cut -d' ' -f1)" || true
+    docker rm -f "$(docker ps -a | grep \"$CONTAINER\" | cut -d' ' -f1)" || true
     docker volume rm "${DOCKER_SOURCE_VOLUME_NAME}" || true
 
     echo "${info}Creating volume${normal}"
     docker volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
     docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name $TMP_CONTAINER_NAME ubuntu:14.04 /bin/bash
     docker cp openjdk $TMP_CONTAINER_NAME:/openjdk/build/
+
     ls $TMP_CONTAINER_NAME:/openjdk/build/
     echo "${info}Updating source${normal}"
     docker exec $TMP_CONTAINER_NAME "cd /openjdk/build/openjdk && sh get_source.sh"
 
     echo "${info}Shutting down${normal}"
     docker rm -f $TMP_CONTAINER_NAME
+  fi
+}
+
+buildDockerContainer()
+{
+  echo Building docker container
+  docker build -t "${CONTAINER}" "${PATH_BUILD}" "$1" "$2"
+  if [[ "${BUILD_VARIANT}" != "" && -f "${PATH_BUILD}/Dockerfile-${BUILD_VARIANT}" ]]; then
+    CONTAINER="${CONTAINER}-${BUILD_VARIANT}"
+    echo Building dockerfile variant "${BUILD_VARIANT}"
+    docker build -t "${CONTAINER}" -f "${PATH_BUILD}/Dockerfile-${BUILD_VARIANT}" "${PATH_BUILD}" "$1" "$2"
   fi
 }
 
@@ -338,22 +372,23 @@ buildAndTestOpenJDKViaDocker()
   # Keep is undefined so we'll kill the docker image
 
   if [[ "$KEEP" == "true" ]] ; then
-     if [ "$(docker ps -a | grep -c openjdk_container)" == 0 ]; then
+     # shellcheck disable=SC2086
+     if [ "$(docker ps -a | grep -c \"$CONTAINER\")" == 0 ]; then
          echo "${info}No docker container found so creating '$CONTAINER' ${normal}"
-         docker build -t "$CONTAINER" "$PATH_BUILD"
+         buildDockerContainer
      fi
   else
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
-     docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     docker build -t "${CONTAINER}" "${PATH_BUILD}" --build-arg OPENJDK_VERSION="${OPENJDK_VERSION}"
+     docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
+     buildDockerContainer --build-arg "OPENJDK_VERSION=${OPENJDK_VERSION}"
      echo "$normal"
   fi
-
 
   mkdir -p "${WORKING_DIR}/target"
 
   docker run -t \
+      -e BUILD_VARIANT="$BUILD_VARIANT" \
       -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
       -v "${WORKING_DIR}/target":/${TARGET_DIR_IN_THE_CONTAINER} \
       --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
@@ -393,6 +428,7 @@ buildAndTestOpenJDK()
 
 sourceSignalHandler
 parseCommandLineArgs "$@"
+doAnyBuildVariantOverrides
 if [[ -z "${COLOUR}" ]] ; then
   sourceFileWithColourCodes
 fi
@@ -410,4 +446,5 @@ time (
     echo "Updating OpenJDK git repo"
     getOpenJDKUpdateAndBuildVersion
 )
+
 buildAndTestOpenJDK
