@@ -75,7 +75,7 @@ checkingAndDownloadingFreeType()
 
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if [ $(bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install) -ne 0 ]; then
+    if ! (bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install); then
       # shellcheck disable=SC2154
       echo "${error}Failed to configure and build libfreetype, exiting"
       exit;
@@ -100,7 +100,7 @@ checkingAndDownloadCaCerts()
   git clone https://github.com/AdoptOpenJDK/openjdk-build.git cacerts_area
   echo "cacerts should be here..."
   # shellcheck disable=SC2046
-  if [ $(file "${WORKING_DIR}/cacerts_area/security/cacerts") -ne 0 ]; then
+  if ! (file "${WORKING_DIR}/cacerts_area/security/cacerts"); then
     echo "Failed to retrieve the cacerts file, exiting..."
     exit;
   else
