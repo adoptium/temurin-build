@@ -47,7 +47,6 @@ TARGET_DIR=""
 BRANCH=""
 KEEP=false
 JTREG=false
-JVM_VARIANT=""
 BUILD_VARIANT=""
 
 
