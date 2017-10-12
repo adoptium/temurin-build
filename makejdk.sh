@@ -380,8 +380,9 @@ buildAndTestOpenJDKViaDocker()
   else
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
-     docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     buildDockerContainer --build-arg "OPENJDK_VERSION=${OPENJDK_VERSION}"
+     
+     docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm -f {}
+     docker build -t "${CONTAINER}" "${PATH_BUILD}" --build-arg OPENJDK_VERSION="${OPENJDK_VERSION}" JDK_PATH="${JDK_PATH}"
      echo "$normal"
   fi
 
