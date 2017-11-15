@@ -74,7 +74,7 @@ case "$OS_MACHINE_NAME" in
     export JVM_VARIANT=${JVM_VARIANT:-zero}
   else
     export JVM_VARIANT=${JVM_VARIANT:-server}
-  esac
+  fi
 
   export BUILD_FULL_NAME=${BUILD_FULL_NAME:-linux-s390x-normal-${JVM_VARIANT}-release}
   S390X_MAKE_ARGS="CONF=${BUILD_FULL_NAME} DEBUG_BINARIES=true images"
