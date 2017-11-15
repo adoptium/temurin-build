@@ -47,7 +47,7 @@ TARGET_DIR=""
 BRANCH=""
 KEEP=false
 JTREG=false
-BUILD_VARIANT=""
+BUILD_VARIANT=${BUILD_VARIANT-:""}
 
 JVM_VARIANT=${JVM_VARIANT-:server}
 
@@ -123,7 +123,7 @@ parseCommandLineArgs()
       export FREETYPE_DIRECTORY="$1"; shift;;
 
       "--variant"  | "-bv" )
-      export BUILD_VARIANT=$1; shift;;
+      export BUILD_VARIANT=="$1"; shift;;
 
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
@@ -134,7 +134,7 @@ doAnyBuildVariantOverrides()
 {
   if [[ "${BUILD_VARIANT}" == "openj9" ]]; then
     # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
-    REPOSITORY="ibmruntimes/openj9-openjdk-$OPENJDK_VERSION"
+    REPOSITORY="ibmruntimes/openj9-openjdk-${OPENJDK_VERSION}
     BRANCH="openj9"
   fi
 }
@@ -206,7 +206,7 @@ setTargetDirectoryIfProvided()
 checkOpenJDKGitRepo()
 {
   echo "${git}"
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$OPENJDK_VERSION" == "jdk8u" ] || [ "$OPENJDK_VERSION" == "jdk9" ] )  ; then
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$OPENJDK_VERSION" == "jdk8${OPENJDK_VERSION_U}" ] || [ "$OPENJDK_VERSION" == "jdk9${OPENJDK_VERSION_U}" ] )  ; then
     GIT_VERSION=$(git --git-dir "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" remote -v | grep "${OPENJDK_VERSION}")
      echo "${GIT_VERSION}"
      if [ "$GIT_VERSION" ]; then
@@ -222,7 +222,7 @@ checkOpenJDKGitRepo()
        git clean -fdx
      else
        # The repo is not for the correct JDK Version
-       echo "Incorrect Source Code for $OPENJDK_VERSION. Will re-clone"
+       echo "Incorrect Source Code for ${OPENJDK_VERSION}${OPENJDK_VERSION_U}. Will re-clone"
        rm -rf "${WORKING_DIR:?}/${OPENJDK_REPO_NAME:?}"
        cloneOpenJDKGitRepo
      fi
@@ -381,7 +381,7 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     buildDockerContainer --build-arg "OPENJDK_VERSION=${OPENJDK_VERSION}"
+     buildDockerContainer --build-arg "OPENJDK_VERSION=${OPENJDK_VERSION}${OPENJDK_VERSION_U}"
      echo "$normal"
   fi
 

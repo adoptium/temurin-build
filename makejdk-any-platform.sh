@@ -30,6 +30,7 @@ export OS_MACHINE_NAME=""
 OS_MACHINE_NAME=$(uname -m)
 
 export OPENJDK_VERSION=""
+export BUILD_VARIANT=""
 export REPOSITORY=""
 
 counter=0
@@ -40,6 +41,15 @@ for i in "$@"; do
       let counter++
       string="\$$counter"
       OPENJDK_VERSION=$(echo "$@" | awk "{print $string}")
+      if [[ $OPENJDK_VERSION == *u ]]; then
+        OPENJDK_VERSION=${OPENJDK_VERSION::-1}
+        export OPENJDK_VERSION_U="u"
+      fi
+      ;;
+    "--variant" | "-bv")
+      let counter++
+      string="\$$counter"
+      BUILD_VARIANT=$(echo "$@" | awk "{print $string}")
       ;;
   esac
 done
@@ -47,25 +57,23 @@ done
 if [ "$OPENJDK_VERSION" == "jdk9" ]; then
   export JDK_PATH="jdk"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"}
-elif [ "$OPENJDK_VERSION" == "jdk8u" ]; then
+elif [ "$OPENJDK_VERSION" == "jdk8" ]; then
   export JDK_PATH="j2sdk-image"
 else
-  echo "Please specify a version with --version or -v , either jdk9 or jdk8u"
+  echo "Please specify a version with --version or -v , either jdk9 or jdk8, with or without a \'u\' suffix."
   man ./makejdk-any-platform.1
   exit 1
 fi
 
-REPOSITORY="${REPOSITORY:-adoptopenjdk/openjdk-$OPENJDK_VERSION}";
+REPOSITORY="${REPOSITORY:-adoptopenjdk/openjdk-$OPENJDK_VERSION$OPENJDK_VERSION_U}";
 REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')";
 
 case "$OS_MACHINE_NAME" in
 "s390x")
-  case "$OPENJDK_VERSION" in
-     "jdk9")
-     export JVM_VARIANT=${JVM_VARIANT:-server}
-     ;;
-     "jdk8u")
-     export JVM_VARIANT=${JVM_VARIANT:-zero} ;;
+  if [ "$OPENJDK_VERSION" == "jdk8" ] && [ "$BUILD_VARIANT" != "openj9" ]; then
+    export JVM_VARIANT=${JVM_VARIANT:-zero} ;;
+  else
+    export JVM_VARIANT=${JVM_VARIANT:-server}
   esac
 
   export BUILD_FULL_NAME=${BUILD_FULL_NAME:-linux-s390x-normal-${JVM_VARIANT}-release}
