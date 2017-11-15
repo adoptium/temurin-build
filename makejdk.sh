@@ -123,7 +123,7 @@ parseCommandLineArgs()
       export FREETYPE_DIRECTORY="$1"; shift;;
 
       "--variant"  | "-bv" )
-      export BUILD_VARIANT=="$1"; shift;;
+      export BUILD_VARIANT="$1"; shift;;
 
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac

@@ -71,7 +71,7 @@ REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')";
 case "$OS_MACHINE_NAME" in
 "s390x")
   if [ "$OPENJDK_VERSION" == "jdk8" ] && [ "$BUILD_VARIANT" != "openj9" ]; then
-    export JVM_VARIANT=${JVM_VARIANT:-zero} ;;
+    export JVM_VARIANT=${JVM_VARIANT:-zero}
   else
     export JVM_VARIANT=${JVM_VARIANT:-server}
   esac
