@@ -27,6 +27,7 @@ Options:
   -k, --keep                 reuse docker container (prevents deleting)
   -j, --jtreg                run jtreg after building
   -S, --ssh                  use ssh when cloning git
+  --variant <name>           specify a build variant name, e.g. openj9
 ```
 
 The simplest way to build OpenJDK using our scripts is to run `makejdk-any-platform.sh` and have your user be in the Docker group on the machine (or prefix all of your Docker commands with `sudo`. This script can be used to create a Docker container that will be configured with all of the required dependencies and a base operating system in order to build OpenJDK
@@ -40,13 +41,14 @@ By providing the -d option to `makejdk.sh`, the resulting zipped tarball will be
 
 For help with getting docker follow the instructions [here](https://docs.docker.com/engine/installation/)
 
+
 ### Prefer to use Ansible?
 
-Remember that when using Ansible the changes wil be persistent on your local filesystem: the build process includes downloading and configuring a number of dependencies including gcc and various development libraries: see the Ansible playbook itself to see the full listing
+Remember that when using Ansible the changes will be persistent on your local filesystem: the build process includes downloading and configuring a number of dependencies including gcc and various development libraries: see the Ansible playbook itself to see the full listing
 
 ### Building in your local enviromment
 
-You can use the `makejdk-local-env.sh` script by providing two parameters: the "working directory" (which is where files will be downloaded to: this includes a number of libraries used with OpenJDK itself such as FreeType and ALSA) and the "target directory" which will be used to store the final .tar.gz file containing the j2sdk-image
+You can use the `makejdk-any-platform.sh` script by providing two parameters: the "working directory" (which is where files will be downloaded to: this includes a number of libraries used with OpenJDK itself such as FreeType and ALSA) and the "target directory" which will be used to store the final .tar.gz file containing the j2sdk-image
 
 e.g `./makejdk-any-platform.sh -s /path/to/workspace -d /target/directory`
 
@@ -56,7 +58,7 @@ Note: have a look at the usage of `makejdk-any-platform.sh --help`, the exact us
 
 You can use the `makejdk.sh` script by providing two parameters: the "working directory" (which is where files will be downloaded to: this includes a number of libraries used with OpenJDK itself such as FreeType and ALSA) and the "target directory" which will be used to store the final .tar.gz file containing the j2sdk-image
 
-e.g `./makejdk-any-platform.sh -s /path/to/workspace -d /target/directory`
+e.g `./makejdk.sh -s /path/to/workspace -d /target/directory`
 
 
 #### Configuring Docker

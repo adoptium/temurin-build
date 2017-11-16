@@ -1,4 +1,3 @@
-# Copyright IBM Corporation 2017.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -59,3 +58,4 @@ CMD ["images"]
 
 ARG OPENJDK_VERSION
 ENV OPENJDK_VERSION=$OPENJDK_VERSION
+ENV JDK_PATH=jdk

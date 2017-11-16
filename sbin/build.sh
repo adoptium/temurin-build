@@ -24,7 +24,7 @@ source "$SCRIPT_DIR/common-functions.sh"
 WORKING_DIR=$1
 TARGET_DIR=$2
 OPENJDK_REPO_NAME=$3
-JVM_VARIANT=${4:-server}
+JVM_VARIANT=${JVM_VARIANT:-server}
 OPENJDK_UPDATE_VERSION=$5
 OPENJDK_BUILD_NUMBER=$6
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
@@ -130,6 +130,11 @@ buildingTheRestOfTheConfigParameters()
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jvm-variants=${JVM_VARIANT}"
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-cacerts-file=${WORKING_DIR}/cacerts_area/security/cacerts"
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-alsa=${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
+
+  # Point-in-time dependency for openj9 only
+  if [[ "${BUILD_VARIANT}" == "openj9" ]] ; then
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freemarker-jar=${WORKING_DIR}/freemarker-${FREEMARKER_LIB_VERSION}/lib/freemarker.jar"
+  fi
 
   if [[ -z "${FREETYPE}" ]] ; then
     FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"}
