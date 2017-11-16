@@ -44,7 +44,7 @@ for i in "$@"; do
   esac
 done
 
-if [ "$OPENJDK_VERSION" == "jdk9" ]; then
+if [ "$OPENJDK_VERSION" == "jdk9" ] || [ "$OPENJDK_VERSION" == "jdk10" ]; then
   export JDK_PATH="jdk"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"}
 elif [ "$OPENJDK_VERSION" == "jdk8u" ]; then
@@ -61,9 +61,10 @@ REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')";
 case "$OS_MACHINE_NAME" in
 "s390x")
   case "$OPENJDK_VERSION" in
+     "jdk10")
+     export JVM_VARIANT=${JVM_VARIANT:-server} ;;
      "jdk9")
-     export JVM_VARIANT=${JVM_VARIANT:-server}
-     ;;
+     export JVM_VARIANT=${JVM_VARIANT:-server} ;;
      "jdk8u")
      export JVM_VARIANT=${JVM_VARIANT:-zero} ;;
   esac
