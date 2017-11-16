@@ -1,4 +1,3 @@
-# (C) Copyright IBM Corporation 2017.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,49 +11,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:14.04
+FROM openjdk_container
 
-MAINTAINER Tim Ellison <tim_ellison@uk.ibm.com>
+MAINTAINER Mark Stoodley <mstoodle@ca.ibm.com>
 
 # Install required OS tools
 RUN apt-get update \
   && apt-get install -qq -y --no-install-recommends \
-    cpio \
-    make \
-    gcc \
-    g++ \
-    libx11-dev \
-    libxext-dev \
-    libxrender-dev \
-    libxtst-dev \
-    libxt-dev \
-    libcups2-dev \
+    autoconf \
     libfontconfig \
-    libfreetype6-dev \
-    libasound2-dev \
-    openjdk-7-jdk \
-    ccache \
-    zip \
-    wget \
-    git \
-    unzip \
-    realpath \
+    libnuma-dev \
+    g++-4.8 \
+    gcc-4.8 \
 && rm -rf /var/lib/apt/lists/*
 
-# Pick up build instructions
-RUN mkdir -p /openjdk/target
-
-ADD sbin /openjdk/sbin
-
-WORKDIR /openjdk/build/
-
-ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-amd64
-
-# Default actions
-ENTRYPOINT ["/openjdk/sbin/build.sh"]
-
-CMD ["images"]
+# Make sure build uses 4.8
+RUN rm /usr/bin/gcc \
+    && rm /usr/bin/g++ \
+    && rm /usr/bin/c++ \
+    && ln -s /usr/bin/gcc-4.8 /usr/bin/gcc \
+    && ln -s /usr/bin/g++-4.8 /usr/bin/g++ \
+    && ln -s /usr/bin/g++-4.8 /usr/bin/c++
 
 ARG OPENJDK_VERSION
 ENV OPENJDK_VERSION=$OPENJDK_VERSION
-ENV JDK_PATH=j2sdk-image
+ENV JDK_PATH=jdk
