@@ -47,7 +47,7 @@ TARGET_DIR=""
 BRANCH=""
 KEEP=false
 JTREG=false
-BUILD_VARIANT=""
+BUILD_VARIANT=${BUILD_VARIANT-:""}
 
 JVM_VARIANT=${JVM_VARIANT-:server}
 
@@ -123,7 +123,7 @@ parseCommandLineArgs()
       export FREETYPE_DIRECTORY="$1"; shift;;
 
       "--variant"  | "-bv" )
-      export BUILD_VARIANT=$1; shift;;
+      export BUILD_VARIANT="$1"; shift;;
 
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
@@ -134,7 +134,7 @@ doAnyBuildVariantOverrides()
 {
   if [[ "${BUILD_VARIANT}" == "openj9" ]]; then
     # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
-    REPOSITORY="ibmruntimes/openj9-openjdk-$OPENJDK_VERSION"
+    REPOSITORY="ibmruntimes/openj9-openjdk-${OPENJDK_CORE_VERSION}"
     BRANCH="openj9"
   fi
 }
@@ -206,8 +206,8 @@ setTargetDirectoryIfProvided()
 checkOpenJDKGitRepo()
 {
   echo "${git}"
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$OPENJDK_VERSION" == "jdk8u" ] || [ "$OPENJDK_VERSION" == "jdk9" ] || [ "$OPENJDK_VERSION" == "jdk10" ])  ; then
-    GIT_VERSION=$(git --git-dir "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" remote -v | grep "${OPENJDK_VERSION}")
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$OPENJDK_CORE_VERSION" == "jdk8" ] || [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_VERSION" == "jdk10" ])  ; then
+    GIT_VERSION=$(git --git-dir "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" remote -v | grep "${OPENJDK_CORE_VERSION}")
      echo "${GIT_VERSION}"
      if [ "$GIT_VERSION" ]; then
        # The repo is the correct JDK Version
@@ -222,7 +222,7 @@ checkOpenJDKGitRepo()
        git clean -fdx
      else
        # The repo is not for the correct JDK Version
-       echo "Incorrect Source Code for $OPENJDK_VERSION. Will re-clone"
+       echo "Incorrect Source Code for ${OPENJDK_FOREST_NAME}. Will re-clone"
        rm -rf "${WORKING_DIR:?}/${OPENJDK_REPO_NAME:?}"
        cloneOpenJDKGitRepo
      fi
@@ -258,7 +258,7 @@ cloneOpenJDKGitRepo()
 
 }
 
-# TODO This only works fo jdk8u based releases.  Will require refactoring when jdk9 enters an update cycle
+# TODO This only works for jdk8u based releases.  Will require refactoring when jdk9 enters an update cycle
 getOpenJDKUpdateAndBuildVersion()
 {
   echo "${git}"
@@ -352,7 +352,7 @@ buildAndTestOpenJDKViaDocker()
 {
 
 
-  PATH_BUILD="docker/${OPENJDK_VERSION}/x86_64/ubuntu"
+  PATH_BUILD="docker/${OPENJDK_FOREST_NAME}/x86_64/ubuntu"
 
   if [ -z "$(which docker)" ]; then
     echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"
@@ -381,7 +381,7 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     buildDockerContainer --build-arg "OPENJDK_VERSION=${OPENJDK_VERSION}"
+     buildDockerContainer --build-arg "OPENJDK_VERSION=${OPENJDK_FOREST_NAME}"
      echo "$normal"
   fi
 
