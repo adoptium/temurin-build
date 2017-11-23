@@ -13,7 +13,7 @@ AdoptOpenJDK makes use of these scripts to provide a build farm at http://ci.ado
 ### Got Docker?
 
 ```
-Usage: ./makejdk-any-platform.sh --version [versions] [options]
+Usage: ./makejdk-any-platform.sh --version [version] [options]
 
 Versions:
   jdk8u - https://github.com/AdoptOpenJDK/openjdk-jdk8u
