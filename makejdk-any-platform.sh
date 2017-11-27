@@ -108,6 +108,9 @@ case "$OS_KERNEL_NAME" in
 "aix")
   export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
 ;;
+"sunos")
+  export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
+ ;;
 
 esac
 ./makejdk.sh "$@"
