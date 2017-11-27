@@ -1,6 +1,6 @@
 # Repository for useful files to build OpenJDK
 
-[![Build Status](https://travis-ci.org/AdoptOpenJDK/openjdk-build.svg?branch=master)](https://travis-ci.org/AdoptOpenJDK/openjdk-build)
+[![Build Status](https://travis-ci.org/AdoptOpenJDK/openjdk-build.svg?branch=master)](https://travis-ci.org/AdoptOpenJDK/openjdk-build) [![Slack](https://slackin-jmnmplfpdu.now.sh/badge.svg)](https://slackin-jmnmplfpdu.now.sh/)
 
 AdoptOpenJDK makes use of these scripts to provide a build farm at http://ci.adoptopenjdk.net which produces OpenJDK binaries for consumption via http://www.adoptopenjdk.net
 
