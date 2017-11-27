@@ -110,7 +110,7 @@ case "$OS_KERNEL_NAME" in
 ;;
 "sunos")
   export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
- ;;
+;;
 
 esac
 ./makejdk.sh "$@"
