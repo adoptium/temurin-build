@@ -48,7 +48,7 @@ for i in "$@"; do
       OPENJDK_FOREST_NAME=$(echo "$@" | awk "{print $string}")
       OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME}
       if [[ $OPENJDK_FOREST_NAME == *u ]]; then
-        OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME::-1}
+        OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME%?}
       fi
       ;;
     "--variant" | "-bv")
