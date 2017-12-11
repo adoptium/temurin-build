@@ -352,7 +352,7 @@ buildAndTestOpenJDKViaDocker()
 {
 
 
-  PATH_BUILD="docker/${OPENJDK_FOREST_NAME}/x86_64/ubuntu"
+  PATH_BUILD="docker/${OPENJDK_CORE_VERSION}/x86_64/ubuntu"
 
   if [ -z "$(which docker)" ]; then
     echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"
