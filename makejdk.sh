@@ -320,7 +320,7 @@ createPersistentDockerDataVolume()
 
     echo "${info}Removing old volumes and containers${normal}"
     docker rm -f $TMP_CONTAINER_NAME || true
-    docker rm -f "$(docker ps -a | grep \"$CONTAINER\" | cut -d' ' -f1)" || true
+    docker rm -f "$(docker ps -a --no-trunc | grep \"$CONTAINER\" | cut -d' ' -f1)" || true
     docker volume rm "${DOCKER_SOURCE_VOLUME_NAME}" || true
 
     echo "${info}Creating volume${normal}"
