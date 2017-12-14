@@ -16,7 +16,8 @@ FROM ubuntu:16.04
 MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools
-RUN add-apt-repository deb http://repos.azulsystems.com/ubuntu stable main \
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \
+  && add-apt-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \
   && apt-get update \
   && apt-get install -qq -y --no-install-recommends \
     cpio \
