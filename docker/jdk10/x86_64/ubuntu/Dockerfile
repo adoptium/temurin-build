@@ -16,7 +16,8 @@ FROM ubuntu:16.04
 MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools
-RUN apt-get install -qq -y --no-install-recommends \
+RUN apt-get update \
+  && apt-get install -qq -y --no-install-recommends \
     software-properties-common \
     python-software-properties \
   && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \
