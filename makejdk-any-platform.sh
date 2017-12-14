@@ -59,13 +59,14 @@ for i in "$@"; do
   esac
 done
 
-if [ "$OPENJDK_CORE_VERSION" == "jdk9" ]; then
+echo $OPENJDK_CORE_VERSION
+if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ]; then
   export JDK_PATH="jdk"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"}
 elif [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
   export JDK_PATH="j2sdk-image"
 else
-  echo "Please specify a version with --version or -v , either jdk9 or jdk8, with or without a \'u\' suffix."
+  echo "Please specify a version with --version or -v , either jdk9, jdk10 or jdk8, with or without a \'u\' suffix."
   man ./makejdk-any-platform.1
   exit 1
 fi
