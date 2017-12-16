@@ -59,7 +59,6 @@ for i in "$@"; do
   esac
 done
 
-echo $OPENJDK_CORE_VERSION
 if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ]; then
   export JDK_PATH="jdk"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"}
