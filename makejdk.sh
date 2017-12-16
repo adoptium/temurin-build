@@ -317,23 +317,18 @@ createPersistentDockerDataVolume()
   DATA_VOLUME_EXISTS=$?
 
   if [[ "$CLEAN_DOCKER_BUILD" == "true" || "$DATA_VOLUME_EXISTS" != "0" ]]; then
-
+  
     echo "${info}Removing old volumes and containers${normal}"
-    docker rm -f $TMP_CONTAINER_NAME || true
-    docker rm -f "$(docker ps -a --no-trunc | grep \"$CONTAINER\" | cut -d' ' -f1)" || true
+    docker rm -f "$(docker ps -a --no-trunc | grep $CONTAINER | cut -d' ' -f1)" || true
     docker volume rm "${DOCKER_SOURCE_VOLUME_NAME}" || true
 
-    echo "${info}Creating volume${normal}"
+    echo "${info}Creating tmp container and copying src${normal}"
     docker volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
-    docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name $TMP_CONTAINER_NAME ubuntu:14.04 /bin/bash
-    docker cp openjdk $TMP_CONTAINER_NAME:/openjdk/build/
+    docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name "$TMP_CONTAINER_NAME" ubuntu:14.04 /bin/bash
+    docker cp openjdk "$TMP_CONTAINER_NAME":/openjdk/build/
 
-    ls $TMP_CONTAINER_NAME:/openjdk/build/
-    echo "${info}Updating source${normal}"
-    docker exec $TMP_CONTAINER_NAME "cd /openjdk/build/openjdk && sh get_source.sh"
-
-    echo "${info}Shutting down${normal}"
-    docker rm -f $TMP_CONTAINER_NAME
+    echo "${info}Removing tmp container${normal}"
+    docker rm -f "$TMP_CONTAINER_NAME"
   fi
 }
 
