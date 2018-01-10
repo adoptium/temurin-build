@@ -50,11 +50,15 @@ for i in "$@"; do
       if [[ $OPENJDK_FOREST_NAME == *u ]]; then
         OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME%?}
       fi
+      # Switch it back to stop it being out of sync with i
+      let counter--
       ;;
     "--variant" | "-bv")
       let counter++
       string="\$$counter"
       BUILD_VARIANT=$(echo "$@" | awk "{print $string}")
+      # Switch it back to stop it being out of sync with i
+      let counter--
       ;;
   esac
 done
