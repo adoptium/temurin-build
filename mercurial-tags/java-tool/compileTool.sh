@@ -7,6 +7,6 @@ javac -version
 echo ""
 echo ""
 echo "*********** Compiling the mercurial tracker tool... "
-cd ${SCRIPT_DIR}
+cd "${SCRIPT_DIR}" || true
 javac MercurialTracker.java
 echo "*********** Finished compiling ******************** "

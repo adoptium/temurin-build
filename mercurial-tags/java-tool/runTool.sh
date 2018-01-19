@@ -7,8 +7,8 @@ java -version
 echo ""
 echo ""
 echo "*********** Running the mercurial tracker tool..."
-cd ${SCRIPT_DIR}
-java MercurialTracker $@
+cd "${SCRIPT_DIR}" || true
+java MercurialTracker "$@"
 
 echo ""
 echo "*********** Thank you @judovana (Jiri Vanek) & Redhat for your contribution ************"
