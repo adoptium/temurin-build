@@ -206,7 +206,7 @@ setTargetDirectoryIfProvided()
 checkOpenJDKGitRepo()
 {
   echo "${git}"
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$OPENJDK_CORE_VERSION" == "jdk8" ] || [ "$OPENJDK_CORE_VERSION" == "jdk9" ] )  ; then
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$OPENJDK_CORE_VERSION" == "jdk8" ] || [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ])  ; then
     GIT_VERSION=$(git --git-dir "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" remote -v | grep "${OPENJDK_CORE_VERSION}")
      echo "${GIT_VERSION}"
      if [ "$GIT_VERSION" ]; then
@@ -317,23 +317,18 @@ createPersistentDockerDataVolume()
   DATA_VOLUME_EXISTS=$?
 
   if [[ "$CLEAN_DOCKER_BUILD" == "true" || "$DATA_VOLUME_EXISTS" != "0" ]]; then
-
+  
     echo "${info}Removing old volumes and containers${normal}"
-    docker rm -f $TMP_CONTAINER_NAME || true
-    docker rm -f "$(docker ps -a | grep \"$CONTAINER\" | cut -d' ' -f1)" || true
+    docker rm -f "$(docker ps -a --no-trunc | grep $CONTAINER | cut -d' ' -f1)" || true
     docker volume rm "${DOCKER_SOURCE_VOLUME_NAME}" || true
 
-    echo "${info}Creating volume${normal}"
+    echo "${info}Creating tmp container and copying src${normal}"
     docker volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
-    docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name $TMP_CONTAINER_NAME ubuntu:14.04 /bin/bash
-    docker cp openjdk $TMP_CONTAINER_NAME:/openjdk/build/
+    docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name "$TMP_CONTAINER_NAME" ubuntu:14.04 /bin/bash
+    docker cp openjdk "$TMP_CONTAINER_NAME":/openjdk/build/
 
-    ls $TMP_CONTAINER_NAME:/openjdk/build/
-    echo "${info}Updating source${normal}"
-    docker exec $TMP_CONTAINER_NAME "cd /openjdk/build/openjdk && sh get_source.sh"
-
-    echo "${info}Shutting down${normal}"
-    docker rm -f $TMP_CONTAINER_NAME
+    echo "${info}Removing tmp container${normal}"
+    docker rm -f "$TMP_CONTAINER_NAME"
   fi
 }
 
@@ -352,7 +347,7 @@ buildAndTestOpenJDKViaDocker()
 {
 
 
-  PATH_BUILD="docker/${OPENJDK_FOREST_NAME}/x86_64/ubuntu"
+  PATH_BUILD="docker/${OPENJDK_CORE_VERSION}/x86_64/ubuntu"
 
   if [ -z "$(which docker)" ]; then
     echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"
@@ -381,7 +376,7 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     buildDockerContainer --build-arg "OPENJDK_VERSION=${OPENJDK_FOREST_NAME}"
+     buildDockerContainer --build-arg "OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME}"
      echo "$normal"
   fi
 

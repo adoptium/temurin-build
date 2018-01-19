@@ -48,24 +48,28 @@ for i in "$@"; do
       OPENJDK_FOREST_NAME=$(echo "$@" | awk "{print $string}")
       OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME}
       if [[ $OPENJDK_FOREST_NAME == *u ]]; then
-        OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME::-1}
+        OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME%?}
       fi
+      # Switch it back to stop it being out of sync with i
+      let counter--
       ;;
     "--variant" | "-bv")
       let counter++
       string="\$$counter"
       BUILD_VARIANT=$(echo "$@" | awk "{print $string}")
+      # Switch it back to stop it being out of sync with i
+      let counter--
       ;;
   esac
 done
 
-if [ "$OPENJDK_CORE_VERSION" == "jdk9" ]; then
+if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ]; then
   export JDK_PATH="jdk"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"}
 elif [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
   export JDK_PATH="j2sdk-image"
 else
-  echo "Please specify a version with --version or -v , either jdk9 or jdk8, with or without a \'u\' suffix."
+  echo "Please specify a version with --version or -v , either jdk9, jdk10 or jdk8, with or without a \'u\' suffix."
   man ./makejdk-any-platform.1
   exit 1
 fi
@@ -106,6 +110,9 @@ esac
 
 case "$OS_KERNEL_NAME" in
 "aix")
+  export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
+;;
+"SunOS")
   export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
 ;;
 
