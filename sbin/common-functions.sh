@@ -18,14 +18,9 @@
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
+FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
 
 determineBuildProperties() {
-
-    export OS_KERNEL_NAME=""
-    OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
-    export OS_MACHINE_NAME=""
-    OS_MACHINE_NAME=$(uname -m)
-
     JVM_VARIANT=${JVM_VARIANT:-server}
 
     BUILD_TYPE=normal
@@ -52,6 +47,24 @@ checkingAndDownloadingAlsa()
       tar xf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
       rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     fi
+  fi
+}
+
+# Freemarker for OpenJ9
+checkingAndDownloadingFreemarker()
+{
+  echo "Checking for FREEMARKER"
+
+  FOUND_FREEMARKER=$(find "${WORKING_DIR}" -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
+
+  if [[ ! -z "$FOUND_FREEMARKER" ]] ; then
+    echo "Skipping FREEMARKER download"
+  else
+    # wget --no-check-certificate "https://sourceforge.net/projects/freemarker/files/freemarker/${FREEMARKER_LIB_VERSION}/freemarker-${FREEMARKER_LIB_VERSION}.tar.gz/download" -O "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+    # Temp fix as sourceforge is broken
+    wget --no-check-certificate https://ci.adoptopenjdk.net/userContent/freemarker-2.3.8.tar.gz
+    tar -xzf "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+    rm "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
   fi
 }
 
@@ -113,8 +126,9 @@ checkingAndDownloadCaCerts()
 
   git clone https://github.com/AdoptOpenJDK/openjdk-build.git cacerts_area
   echo "cacerts should be here..."
+
   # shellcheck disable=SC2046
-  if [ $(file "${WORKING_DIR}/cacerts_area/security/cacerts") -ne 0 ]; then
+  if ! (file "${WORKING_DIR}/cacerts_area/security/cacerts"); then
     echo "Failed to retrieve the cacerts file, exiting..."
     exit;
   else
@@ -127,7 +141,7 @@ downloadingRequiredDependencies()
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
      echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa, Freetype, and CaCerts."
   else
-     echo "Downloading required dependencies...: Alsa, Freetype, and CaCerts."
+     echo "Downloading required dependencies...: Alsa, Freetype, Freemarker, and CaCerts."
      time (
         echo "Checking and download Alsa dependency"
         checkingAndDownloadingAlsa
@@ -147,6 +161,12 @@ downloadingRequiredDependencies()
      else
         echo "Skipping Freetype"
      fi
+     if [[ "$BUILD_VARIANT" == "openj9" ]]; then
+        time (
+           echo "Checking and download Freemarker dependency"
+           checkingAndDownloadingFreemarker
+        )
+     fi
      time (
         echo "Checking and download CaCerts dependency"
         checkingAndDownloadCaCerts
@@ -156,6 +176,7 @@ downloadingRequiredDependencies()
 
 getFirstTagFromOpenJDKGitRepo()
 {
+    git fetch --tags "${GIT_CLONE_ARGUMENTS[@]}"
     justOneFromTheRevList=$(git rev-list --tags --max-count=1)
     tagNameFromRepo=$(git describe --tags "$justOneFromTheRevList")
     echo "$tagNameFromRepo"

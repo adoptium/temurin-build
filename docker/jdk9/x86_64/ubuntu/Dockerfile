@@ -1,4 +1,3 @@
-# (C) Copyright IBM Corporation 2017.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
-MAINTAINER Tim Ellison <tim_ellison@uk.ibm.com>
+MAINTAINER George Adams <george.adams@uk.ibm.com>
 
 # Install required OS tools
 RUN apt-get update \
@@ -23,15 +22,17 @@ RUN apt-get update \
     make \
     gcc \
     g++ \
+    file \
     libx11-dev \
     libxext-dev \
     libxrender-dev \
     libxtst-dev \
     libxt-dev \
+    libelf-dev \
     libcups2-dev \
     libfreetype6-dev \
     libasound2-dev \
-    openjdk-7-jdk \
+    openjdk-8-jdk \
     ccache \
     zip \
     wget \
@@ -47,9 +48,14 @@ ADD sbin /openjdk/sbin
 
 WORKDIR /openjdk/build/
 
-ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-amd64
+ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.8.0-openjdk-amd64
 
 # Default actions
 ENTRYPOINT ["/openjdk/sbin/build.sh"]
 
 CMD ["images"]
+
+
+ARG OPENJDK_CORE_VERSION
+ENV OPENJDK_CORE_VERSION=$OPENJDK_CORE_VERSION
+ENV JDK_PATH=jdk

@@ -24,13 +24,10 @@
 
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
-
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/sbin/common-functions.sh"
 
-REPOSITORY=${REPOSITORY:-adoptopenjdk/openjdk-jdk8u}
-REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')"
 OPENJDK_REPO_NAME=${OPENJDK_REPO_NAME:-openjdk}
 SHALLOW_CLONE_OPTION="--depth=1"
 
@@ -50,9 +47,14 @@ TARGET_DIR=""
 BRANCH=""
 KEEP=false
 JTREG=false
+BUILD_VARIANT=${BUILD_VARIANT-:""}
+
+JVM_VARIANT=${JVM_VARIANT-:server}
 
 OPENJDK_UPDATE_VERSION=""
 OPENJDK_BUILD_NUMBER=""
+
+PATH_BUILD=""
 
 determineBuildProperties
 
@@ -105,18 +107,36 @@ parseCommandLineArgs()
       "--no-colour" | "-nc" )
       COLOUR=false;;
 
+      "--sign" )
+      export SIGN=true; export CERTIFICATE="$1"; shift;;
+
       "--disable-shallow-git-clone" | "-dsgc" )
       SHALLOW_CLONE_OPTION=""; shift;;
 
       "--skip-freetype" | "-sf" )
       export FREETYPE=false;;
 
+      "--version" | "-v" )
+      shift;;
+
       "--freetype-dir" | "-ftd" )
       export FREETYPE_DIRECTORY="$1"; shift;;
 
-      *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk.1; exit 1;;
+      "--variant"  | "-bv" )
+      export BUILD_VARIANT="$1"; shift;;
+
+      *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
   done
+}
+
+doAnyBuildVariantOverrides()
+{
+  if [[ "${BUILD_VARIANT}" == "openj9" ]]; then
+    # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
+    REPOSITORY="ibmruntimes/openj9-openjdk-${OPENJDK_CORE_VERSION}"
+    BRANCH="openj9"
+  fi
 }
 
 checkIfDockerIsUsedForBuildingOrNot()
@@ -183,67 +203,86 @@ setTargetDirectoryIfProvided()
   fi
 }
 
-cloneOpenJDKGitRepo()
+checkOpenJDKGitRepo()
 {
   echo "${git}"
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] ; then
-    # It does exist and it's a repo other than the AdoptOpenJDK one
-    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
-    echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
-    sleep 10
-    echo "${git}Pulling latest changes from git repo"
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && ( [ "$OPENJDK_CORE_VERSION" == "jdk8" ] || [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ])  ; then
+    GIT_VERSION=$(git --git-dir "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" remote -v | grep "${OPENJDK_CORE_VERSION}")
+     echo "${GIT_VERSION}"
+     if [ "$GIT_VERSION" ]; then
+       # The repo is the correct JDK Version
+       cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
+       echo "${info}Will reset the repository at $PWD in 10 seconds...${git}"
+       sleep 10
+       echo "${git}Pulling latest changes from git repo"
 
-    showShallowCloningMessage "fetch"
-    git fetch --all ${SHALLOW_CLONE_OPTION}
-    git reset --hard origin/$BRANCH
-    git clean -fdx
-    echo "${normal}"
-    cd "${WORKING_DIR}" || return
+       showShallowCloningMessage "fetch"
+       git fetch --all ${SHALLOW_CLONE_OPTION}
+       git reset --hard origin/$BRANCH
+       git clean -fdx
+     else
+       # The repo is not for the correct JDK Version
+       echo "Incorrect Source Code for ${OPENJDK_FOREST_NAME}. Will re-clone"
+       rm -rf "${WORKING_DIR:?}/${OPENJDK_REPO_NAME:?}"
+       cloneOpenJDKGitRepo
+     fi
+     cd "${WORKING_DIR}" || return
   elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
     # If it doesn't exist, clone it
     echo "${info}Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
-    if [[ "$USE_SSH" == "true" ]] ; then
-       GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
-    else
-       GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
-    fi
-
-    showShallowCloningMessage "cloning"
-    GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
-
-    echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
-    git clone "${GIT_CLONE_ARGUMENTS[@]}"
+    cloneOpenJDKGitRepo
   fi
   echo "${normal}"
 }
 
-# TODO This only works fo jdk8u based releases.  Will require refactoring when jdk9 enters an update cycle
+cloneOpenJDKGitRepo()
+{
+  echo "${git}"
+  if [[ "$USE_SSH" == "true" ]] ; then
+     GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
+  else
+     GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
+  fi
+
+  showShallowCloningMessage "cloning"
+  GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
+
+  echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
+  git clone "${GIT_CLONE_ARGUMENTS[@]}"
+
+  # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
+  if [ "$BUILD_VARIANT" == "openj9" ]; then
+    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
+    bash get_source.sh
+  fi
+
+}
+
+# TODO This only works for jdk8u based releases.  Will require refactoring when jdk9 enters an update cycle
 getOpenJDKUpdateAndBuildVersion()
 {
   echo "${git}"
 
   if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ]; then
-    case "${REPOSITORY}" in
-      *openjdk-jdk8u)
-        # It does exist and it's a repo other than the AdoptOpenJDK one
-        cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
-        echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${SHALLOW_CLONE_OPTION}"
-        git fetch -q --tags "${SHALLOW_CLONE_OPTION}"
-        OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
-        if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
-          echo "${error}Unable to detect git tag"
-          exit 1
-        else
-          echo "OpenJDK repo tag is $OPENJDK_REPO_TAG"
-        fi
+    # It does exist and it's a repo other than the AdoptOpenJDK one
+    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
+    echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${SHALLOW_CLONE_OPTION}"
+    git fetch -q --tags "${SHALLOW_CLONE_OPTION}"
+    OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+    if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
+     echo "${error}Unable to detect git tag"
+     exit 1
+    else
+     echo "OpenJDK repo tag is $OPENJDK_REPO_TAG"
+    fi
 
-        OPENJDK_UPDATE_VERSION=$(echo "${OPENJDK_REPO_TAG}" | cut -d'u' -f 2 | cut -d'-' -f 1)
-        OPENJDK_BUILD_NUMBER=$(echo "${OPENJDK_REPO_TAG}" | cut -d'b' -f 2 | cut -d'-' -f 1)
-        echo "Version: ${OPENJDK_UPDATE_VERSION} ${OPENJDK_BUILD_NUMBER}"
-        cd "${WORKING_DIR}" || return
-        ;;
-    esac
+    OPENJDK_UPDATE_VERSION=$(echo "${OPENJDK_REPO_TAG}" | cut -d'u' -f 2 | cut -d'-' -f 1)
+    OPENJDK_BUILD_NUMBER=$(echo "${OPENJDK_REPO_TAG}" | cut -d'b' -f 2 | cut -d'-' -f 1)
+    echo "Version: ${OPENJDK_UPDATE_VERSION} ${OPENJDK_BUILD_NUMBER}"
+    cd "${WORKING_DIR}" || return
+
   fi
+
   echo "${normal}"
 }
 
@@ -278,27 +317,38 @@ createPersistentDockerDataVolume()
   DATA_VOLUME_EXISTS=$?
 
   if [[ "$CLEAN_DOCKER_BUILD" == "true" || "$DATA_VOLUME_EXISTS" != "0" ]]; then
-
+  
     echo "${info}Removing old volumes and containers${normal}"
-    docker rm -f $TMP_CONTAINER_NAME || true
-    docker rm -f "$(docker ps -a | grep $CONTAINER | cut -d' ' -f1)" || true
+    docker rm -f "$(docker ps -a --no-trunc | grep $CONTAINER | cut -d' ' -f1)" || true
     docker volume rm "${DOCKER_SOURCE_VOLUME_NAME}" || true
 
-    echo "${info}Creating volume${normal}"
+    echo "${info}Creating tmp container and copying src${normal}"
     docker volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
-    docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name $TMP_CONTAINER_NAME ubuntu:14.04 /bin/bash
-    docker cp openjdk $TMP_CONTAINER_NAME:/openjdk/build/
+    docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name "$TMP_CONTAINER_NAME" ubuntu:14.04 /bin/bash
+    docker cp openjdk "$TMP_CONTAINER_NAME":/openjdk/build/
 
-    echo "${info}Updating source${normal}"
-    docker exec $TMP_CONTAINER_NAME "cd /openjdk/build/openjdk && sh get_source.sh"
+    echo "${info}Removing tmp container${normal}"
+    docker rm -f "$TMP_CONTAINER_NAME"
+  fi
+}
 
-    echo "${info}Shutting down${normal}"
-    docker rm -f $TMP_CONTAINER_NAME
+buildDockerContainer()
+{
+  echo Building docker container
+  docker build -t "${CONTAINER}" "${PATH_BUILD}" "$1" "$2"
+  if [[ "${BUILD_VARIANT}" != "" && -f "${PATH_BUILD}/Dockerfile-${BUILD_VARIANT}" ]]; then
+    CONTAINER="${CONTAINER}-${BUILD_VARIANT}"
+    echo Building dockerfile variant "${BUILD_VARIANT}"
+    docker build -t "${CONTAINER}" -f "${PATH_BUILD}/Dockerfile-${BUILD_VARIANT}" "${PATH_BUILD}" "$1" "$2"
   fi
 }
 
 buildAndTestOpenJDKViaDocker()
 {
+
+
+  PATH_BUILD="docker/${OPENJDK_CORE_VERSION}/x86_64/ubuntu"
+
   if [ -z "$(which docker)" ]; then
     echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"
     exit
@@ -310,34 +360,35 @@ buildAndTestOpenJDKViaDocker()
 
 
   # Copy our scripts for usage inside of the container
-  rm -r docker/jdk8u/x86_64/ubuntu/sbin
-  cp -r "${SCRIPT_DIR}/sbin" docker/jdk8u/x86_64/ubuntu/sbin 2>/dev/null
+  rm -r "${PATH_BUILD}/sbin"
+  cp -r "${SCRIPT_DIR}/sbin" "${PATH_BUILD}/sbin" 2>/dev/null
 
 
   # Keep is undefined so we'll kill the docker image
 
   if [[ "$KEEP" == "true" ]] ; then
-     if [ "$(docker ps -a | grep -c openjdk_container)" == 0 ]; then
+     # shellcheck disable=SC2086
+     if [ "$(docker ps -a | grep -c \"$CONTAINER\")" == 0 ]; then
          echo "${info}No docker container found so creating '$CONTAINER' ${normal}"
-         docker build -t $CONTAINER docker/jdk8u/x86_64/ubuntu
+         buildDockerContainer
      fi
   else
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
-     docker ps -a | awk '{ print $1,$2 }' | grep $CONTAINER | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     docker build -t $CONTAINER docker/jdk8u/x86_64/ubuntu
+     docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
+     buildDockerContainer --build-arg "OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME}"
      echo "$normal"
   fi
-
 
   mkdir -p "${WORKING_DIR}/target"
 
   docker run -t \
+      -e BUILD_VARIANT="$BUILD_VARIANT" \
       -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
       -v "${WORKING_DIR}/target":/${TARGET_DIR_IN_THE_CONTAINER} \
       --entrypoint /openjdk/sbin/build.sh "${CONTAINER}"
 
-  testOpenJDKViaDocker
+ testOpenJDKViaDocker
 
   # Didn't specify to keep
   if [[ -z ${KEEP} ]] ; then
@@ -374,6 +425,7 @@ buildAndTestOpenJDK()
 
 sourceSignalHandler
 parseCommandLineArgs "$@"
+doAnyBuildVariantOverrides
 if [[ -z "${COLOUR}" ]] ; then
   sourceFileWithColourCodes
 fi
@@ -384,11 +436,12 @@ setWorkingDirectoryIfProvided
 setTargetDirectoryIfProvided
 time (
     echo "Cloning OpenJDK git repo"
-    cloneOpenJDKGitRepo
+    checkOpenJDKGitRepo
 )
 
 time (
     echo "Updating OpenJDK git repo"
     getOpenJDKUpdateAndBuildVersion
 )
+
 buildAndTestOpenJDK

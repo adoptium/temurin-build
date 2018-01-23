@@ -1,11 +1,24 @@
-.\" Manpage for makejdk.sh
+.\" Manpage for makejdk-any-platform.sh
 .TH "0.1.0" "Apache 2"
 .SH NAME
 makejdk.sh
 .SH SYNOPSIS
-"./makejdk [options]"
+"./makejdk-any-platform.sh --version [version] [options]"
 .SH DESCRIPTION
-The simplest way to build OpenJDK using our scripts is to run makejdk.sh and have your user be in the Docker group on the machine (or prefix all of your Docker commands with sudo. This script can be used to create a Docker container that will be configured with all of the required dependencies and a base operating system in order to build OpenJDK.
+The simplest way to build OpenJDK using our scripts is to run makejdk-any-platform.sh --version <jdk8u/jdk9> and have your user be in the Docker group on the machine (or prefix all of your Docker commands with sudo. This script can be used to create a Docker container that will be configured with all of the required dependencies and a base operating system in order to build OpenJDK.
+
+.SH VERSIONS
+.TP
+.BR \jdk8u
+https://github.com/AdoptOpenJDK/openjdk-jdk8u
+.TP
+.BR \jdk9
+https://github.com/AdoptOpenJDK/openjdk-jdk9
+.TP
+.BR \jdk10
+https://github.com/AdoptOpenJDK/openjdk-jdk10
+.TP
+
 .SH OPTIONS
 .TP
 .BR \-s ", " \-\-source " " \fI<path>\fR
@@ -42,4 +55,7 @@ use ssh when cloning git
 .TP
 .BR \-dsgc ", " \-\-disable-shallow-git-clone
 disable shallow cloning of git repo(s) using the --depth=1 CLI option
+.TP
+.BR \-bv ", " \-\-variant " " \fI<variant name>\fR
+specify a custom build variant (eg. openj9)
 .TP

@@ -67,7 +67,7 @@ git merge "imports/$bpath/root/master" -m "Initial merge of (root)" || exit 1
 for module in "${modules[@]}"
 do
     echo "Add remote for '$module'"
-    git remote add "imports/$bpath/$m" "../hg/$bpath/$module" || exit 1
+    git remote add "imports/$bpath/$module" "../hg/$bpath/$module" || exit 1
 
     echo "Fetch '$module'"
     git fetch "imports/$bpath/$module" || exit 1
