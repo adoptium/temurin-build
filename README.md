@@ -68,3 +68,12 @@ To use the Docker commands without using the sudo prefix, you will need to be in
 1. `sudo groupadd docker`: creates the Docker group if it doesn't already exist
 2. `sudo gpasswd -a yourusernamehere docker`: adds a user to the Docker group
 3. `sudo service docker restart`: restarts the Docker service so the above changes can take effect
+
+
+### Building FreeType Font library separately
+
+Run the below from the `sbin` folder to build the FreeType Font library in the user's home directory if no argument is provided:
+```
+    $ ./setupFreeTypeFontLibrary.sh [/path/to/where/the/installfreetype-folder-needs-creating]
+```
+Leaving the destination folder parameter (optional) empty defaults to `$HOME/installedfreetype`.

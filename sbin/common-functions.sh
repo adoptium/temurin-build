@@ -77,6 +77,13 @@ checkingAndDownloadingFreeType()
   if [[ ! -z "$FOUND_FREETYPE" ]] ; then
     echo "Skipping FreeType download"
   else
+    buildFreeTypeFontLibrary "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+  fi
+}
+
+buildFreeTypeFontLibrary()
+{
+    DESTINATION_PARENT_FOLDER=$1
     # Then FreeType for fonts: make it and use
     wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"$FREETYPE_FONT_VERSION".tar.gz
     if [[ ${OS_KERNEL_NAME} == "aix" ]] ; then
@@ -93,8 +100,10 @@ checkingAndDownloadingFreeType()
     cd freetype-"$FREETYPE_FONT_VERSION" || exit
 
     # We get the files we need at $WORKING_DIR/installedfreetype
-    # shellcheck disable=SC2046
-    if ! (bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install); then
+    bash ./configure --prefix="${DESTINATION_PARENT_FOLDER}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install
+    
+    # shellcheck disable=SC2181  
+    if [ $? -ne 0 ]; then
       # shellcheck disable=SC2154
       echo "${error}Failed to configure and build libfreetype, exiting"
       exit;
@@ -104,7 +113,6 @@ checkingAndDownloadingFreeType()
     fi
     # shellcheck disable=SC2154
     echo "${normal}"
-  fi
 }
 
 checkingAndDownloadCaCerts()
