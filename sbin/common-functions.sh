@@ -90,7 +90,11 @@ checkingAndDownloadingFreeType()
       MAKE=make
 
       if [[ ${OS_KERNEL_NAME} == "darwin" ]] ; then
-        install_name_tool -id @rpath/libfreetype.6.dylib "${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype/lib/libfreetype.6.dylib
+        TARGET_DYNAMIC_LIB="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype/lib/libfreetype.6.dylib
+        echo "Releasing the runpath dependency of the dynamic library ${TARGET_DYNAMIC_LIB}"
+        set -x
+        install_name_tool -id @rpath/libfreetype.6.dylib "${TARGET_DYNAMIC_LIB}"
+        set +x
       fi
     fi
 
