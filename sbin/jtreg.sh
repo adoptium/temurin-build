@@ -65,7 +65,7 @@ downloadJtregAndSetupEnvironment()
   fi
 
   echo "List contents of the jtreg folder"
-  ls "$WORKING_DIR/$JTREG_TARGET_FOLDER/*"
+  ls "$WORKING_DIR/$JTREG_TARGET_FOLDER"/*
 
   export JT_HOME=$WORKING_DIR/$JTREG_TARGET_FOLDER
 
