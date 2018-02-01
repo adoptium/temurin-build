@@ -107,7 +107,7 @@ checkingAndDownloadingFreeType()
         TARGET_DYNAMIC_LIB="${TARGET_DYNAMIC_LIB_DIR}"/libfreetype.6.dylib
         echo ""
         echo "Listing the contents of ${TARGET_DYNAMIC_LIB_DIR} to see if the dynamic library 'libfreetype.6.dylib' has been created..."
-        ls ${TARGET_DYNAMIC_LIB_DIR}
+        ls "${TARGET_DYNAMIC_LIB_DIR}"
 
         echo ""
         echo "Releasing the runpath dependency of the dynamic library ${TARGET_DYNAMIC_LIB}"
@@ -115,6 +115,7 @@ checkingAndDownloadingFreeType()
         install_name_tool -id @rpath/libfreetype.6.dylib "${TARGET_DYNAMIC_LIB}"
         set +x
 
+        # shellcheck disable=SC2181
         if [[ $? == 0 ]]; then
           echo "Successfully released the runpath dependency of the dynamic library ${TARGET_DYNAMIC_LIB}"
         else
