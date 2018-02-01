@@ -23,58 +23,60 @@ echo "Enter hg"
 cd hg || exit 1
 
 # shellcheck disable=SC2035
-bpaths=$(ls -d -1 */*)
+bpaths=${1:-$(ls -d -1 */*)}     # maintain backward compatibility
 
 for bpath in $bpaths
 do
+    bpathAsArray=(${bpath//\// })      # for e.g. jdk10/jdk10 or jdk/jdk, becomes:
+    hg_root_forest=${bpathAsArray[0]}  #          jdk10 or jdk
+    hg_repo=${bpathAsArray[1]}         #          jdk10 or jdk
 
-pushd "$bpath/root"
-echo "Update $bpath -> (root)"
-git hg fetch "http://hg.openjdk.java.net/$bpath"
-git hg pull "http://hg.openjdk.java.net/$bpath"
-popd
-
-# shellcheck disable=SC2154
-for module in "${modules[@]}"
-do
-    pushd "$bpath/$module"
-    echo "Update $bpath -> $module"
-    git hg fetch "http://hg.openjdk.java.net/$bpath/$module"
-    git hg pull "http://hg.openjdk.java.net/$bpath/$module"
+    pushd "$hg_root_forest/$hg_repo/root"
+    echo "Update $hg_root_forest/$hg_repo -> (root)"
+    git hg fetch "http://hg.openjdk.java.net/$hg_root_forest/$hg_repo"
+    git hg pull "http://hg.openjdk.java.net/$hg_root_forest/$hg_repo"
     popd
-done
 
-echo "Exit hg"
-echo "Enter combined"
+    # shellcheck disable=SC2154
+    for module in "${modules[@]}"
+    do
+        pushd "$hg_root_forest/$hg_repo/$module"
+        echo "Update $hg_root_forest/$hg_repo -> $module"
+        git hg fetch "http://hg.openjdk.java.net/$hg_root_forest/$hg_repo/$module"
+        git hg pull "http://hg.openjdk.java.net/$hg_root_forest/$hg_repo/$module"
+        popd
+    done
 
-cd ../combined || exit 1
+    echo "Exit hg"
+    echo "Enter combined"
 
-echo "Check out master"
+    cd ../combined || exit 1
 
-git checkout master || exit 1
+    echo "Check out master"
 
-echo "Fetch (root)"
+    git checkout master || exit 1
 
-git fetch "imports/$bpath/root" || exit 1
+    echo "Fetch (root)"
 
-echo "Merge (root)"
+    git fetch "imports/$hg_root_forest/$hg_repo/root" || exit 1
 
-git merge "imports/$bpath/root/master" -m "Merge from (root)" --no-ff || exit 1
+    echo "Merge (root)"
 
-# shellcheck disable=SC2154
-for module in "${modules[@]}"
-do
-    echo "Fetch '$module'"
-    git fetch "imports/$bpath/$module" || exit 1
+    git merge "imports/$hg_root_forest/$hg_repo/root/master" -m "Merge from (root)" --no-ff || exit 1
 
-    echo "Merge '$module'"
-    git subtree merge --prefix="$module" "imports/$bpath/$module/master" -m "Merge from '$module'" || exit 1
-done
+    # shellcheck disable=SC2154
+    for module in "${modules[@]}"
+    do
+        echo "Fetch '$module'"
+        git fetch "imports/$hg_root_forest/$hg_repo/$module" || exit 1
 
-echo "Push"
+        echo "Merge '$module'"
+        git subtree merge --prefix="$module" "imports/$hg_root_forest/$hg_repo/$module/master" -m "Merge from '$module'" || exit 1
+    done
 
-git push github master --tags
+    echo "Push"
 
-cd ../hg || exit 1
+    git push github master --tags
 
+    cd ../hg || exit 1
 done
