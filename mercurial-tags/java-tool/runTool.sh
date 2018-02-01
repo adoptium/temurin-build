@@ -2,10 +2,6 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-echo ""
-java -version
-echo ""
-echo ""
 echo "*********** Running the mercurial tracker tool..."
 cd "${SCRIPT_DIR}" || true
 java MercurialTracker "$@"
