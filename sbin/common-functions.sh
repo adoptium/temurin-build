@@ -88,6 +88,10 @@ checkingAndDownloadingFreeType()
       tar xf freetype-"$FREETYPE_FONT_VERSION".tar.gz
       rm freetype-"$FREETYPE_FONT_VERSION".tar.gz
       MAKE=make
+
+      if [[ ${OS_KERNEL_NAME} == "darwin" ]] ; then
+        install_name_tool -id @rpath/libfreetype.6.dylib "${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype/lib/libfreetype.6.dylib
+      fi
     fi
 
     cd freetype-"$FREETYPE_FONT_VERSION" || exit
