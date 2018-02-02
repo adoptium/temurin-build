@@ -21,4 +21,4 @@ git init
 git checkout -b root-commit || exit 1
 git remote add github git@github.com:AdoptOpenJDK/openjdk-jdk9.git
 cd - || exit 1
-bash add-branch-without-modules.sh jdk9/jdk9
+bash add-branch.sh jdk9/jdk9
