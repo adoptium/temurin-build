@@ -19,6 +19,6 @@ mkdir "$WORKSPACE/hg"
 cd "$WORKSPACE/combined" || exit 1
 git init
 git checkout -b root-commit || exit 1
-git remote add github git@github.com:AdoptOpenJDK/openjdk-jdk10.git
+git remote add github git@github.com:AdoptOpenJDK/openjdk-"${1}".git
 cd - || exit 1
-bash add-branch-without-modules.sh jdk/jdk10
+bash add-branch-without-modules.sh "${2:-jdk/jdk}"
