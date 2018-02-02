@@ -137,6 +137,11 @@ doAnyBuildVariantOverrides()
     REPOSITORY="ibmruntimes/openj9-openjdk-${OPENJDK_CORE_VERSION}"
     BRANCH="openj9"
   fi
+  if [[ "${BUILD_VARIANT}" == "SapMachine" ]]; then
+    # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
+    REPOSITORY="SAP/SapMachine"
+    BRANCH="sapmachine"
+  fi
 }
 
 checkIfDockerIsUsedForBuildingOrNot()
@@ -245,7 +250,7 @@ cloneOpenJDKGitRepo()
   fi
 
   showShallowCloningMessage "cloning"
-  GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
+  GIT_CLONE_ARGUMENTS=($SHALLOW_CLONE_OPTION '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
 
   echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
   git clone "${GIT_CLONE_ARGUMENTS[@]}"
