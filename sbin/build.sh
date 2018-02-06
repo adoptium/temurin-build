@@ -277,11 +277,12 @@ removingUnnecessaryFiles()
 }
 
 makeACopyOfLibFreeFontForMacOSX() {
+    IMAGE_DIRECTORY=$1
     if [[ "$OS_KERNEL_NAME" == "darwin" ]]; then
-        SOURCE_LIB_NAME="${OPENJDK_REPO_TAG}/lib/libfreetype.dylib.6"
-        TARGET_LIB_NAME="${OPENJDK_REPO_TAG}/lib/libfreetype.6.dylib"
+        SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
+        TARGET_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.6.dylib"
 
-        INVOKED_BY_FONT_MANAGER="${OPENJDK_REPO_TAG}/lib/libfontmanager.dylib"
+        INVOKED_BY_FONT_MANAGER="${IMAGE_DIRECTORY}/lib/libfontmanager.dylib"
 
         echo "Currently at '${PWD}'"
         echo "Copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
@@ -367,7 +368,8 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
 buildOpenJDK
 printJavaVersionString
 removingUnnecessaryFiles
-makeACopyOfLibFreeFontForMacOSX
+makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}"
+makeACopyOfLibFreeFontForMacOSX "jre"
 signRelease
 createOpenJDKTarArchive
 showCompletionMessage
