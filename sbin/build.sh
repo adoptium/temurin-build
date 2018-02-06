@@ -276,6 +276,27 @@ removingUnnecessaryFiles()
   echo "Finished removing unnecessary files from ${OPENJDK_REPO_TAG}"
 }
 
+makeACopyOfLibFreeFontForMacOSX() {
+    if [[ "$OS_KERNEL_NAME" == "darwin" ]]; then
+        SOURCE_LIB_NAME="${OPENJDK_REPO_TAG}/lib/libfreetype.dylib.6"
+        TARGET_LIB_NAME="${OPENJDK_REPO_TAG}/lib/libfreetype.6.dylib"
+
+        INVOKED_BY_FONT_MANAGER="${OPENJDK_REPO_TAG}/lib/libfontmanager.dylib"
+
+        echo "Currently at '${PWD}'"
+        echo "Copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
+        echo " *** Workaround to fix the MacOSX issue where invocation to ${INVOKED_BY_FONT_MANAGER} fails to find ${TARGET_LIB_NAME} ***"
+        
+        set -x
+        cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
+        otool -L "${INVOKED_BY_FONT_MANAGER}"
+        otool -L "${TARGET_LIB_NAME}"
+        set +x
+
+        echo "Finished copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
+    fi
+}
+
 signRelease()
 { 
   if [ "$SIGN" ]; then
@@ -346,6 +367,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
 buildOpenJDK
 printJavaVersionString
 removingUnnecessaryFiles
+makeACopyOfLibFreeFontForMacOSX
 signRelease
 createOpenJDKTarArchive
 showCompletionMessage
