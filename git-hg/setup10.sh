@@ -21,4 +21,4 @@ git init
 git checkout -b root-commit || exit 1
 git remote add github git@github.com:AdoptOpenJDK/openjdk-jdk10.git
 cd - || exit 1
-bash add-branch.sh jdk/jdk10
+bash add-branch-without-modules.sh jdk/jdk10

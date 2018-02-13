@@ -137,6 +137,11 @@ doAnyBuildVariantOverrides()
     REPOSITORY="ibmruntimes/openj9-openjdk-${OPENJDK_CORE_VERSION}"
     BRANCH="openj9"
   fi
+  if [[ "${BUILD_VARIANT}" == "SapMachine" ]]; then
+    # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
+    REPOSITORY="SAP/SapMachine"
+    BRANCH="sapmachine"
+  fi
 }
 
 checkIfDockerIsUsedForBuildingOrNot()
