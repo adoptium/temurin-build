@@ -45,6 +45,7 @@ WORKING_DIR=""
 USE_SSH=false
 TARGET_DIR=""
 BRANCH=""
+TAG=""
 KEEP=false
 JTREG=false
 BUILD_VARIANT=${BUILD_VARIANT-:""}
@@ -91,6 +92,9 @@ parseCommandLineArgs()
 
       "--branch" | "-b" )
       BRANCH="$1"; shift;;
+
+      "--tag" | "-t" )
+      TAG="$1"; SHALLOW_CLONE_OPTION=""; shift;;
 
       "--keep" | "-k" )
       KEEP=true;;
@@ -224,6 +228,9 @@ checkOpenJDKGitRepo()
        showShallowCloningMessage "fetch"
        git fetch --all ${SHALLOW_CLONE_OPTION}
        git reset --hard origin/$BRANCH
+       if [ ! -z "$TAG" ]; then
+         git checkout "$TAG"
+       fi
        git clean -fdx
      else
        # The repo is not for the correct JDK Version
@@ -254,6 +261,10 @@ cloneOpenJDKGitRepo()
 
   echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
   git clone "${GIT_CLONE_ARGUMENTS[@]}"
+  if [ ! -z "$TAG" ]; then
+    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || exit 1
+    git checkout "$TAG"
+  fi
 
   # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
   if [ "$BUILD_VARIANT" == "openj9" ]; then
