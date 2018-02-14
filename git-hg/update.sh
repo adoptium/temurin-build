@@ -76,7 +76,7 @@ do
 
     echo "Push"
 
-    git push github master --tags
+    git push github master --tags || exit 1
 
     cd ../hg || exit 1
 done
