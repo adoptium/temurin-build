@@ -27,6 +27,7 @@ OPENJDK_REPO_NAME=$3
 JVM_VARIANT=${JVM_VARIANT:-server}
 OPENJDK_UPDATE_VERSION=$5
 OPENJDK_BUILD_NUMBER=$6
+OPENJDK_REPO_TAG=$7
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
 
 
@@ -252,7 +253,9 @@ removingUnnecessaryFiles()
   echo "Removing unnecessary files now..."
 
   echo "Fetching the first tag from the OpenJDK git repo..."
-  OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  if [ -z "$OPENJDK_REPO_TAG" ]; then
+    OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  fi
   if [ "$USE_DOCKER" != "true" ] ; then
      rm -rf cacerts_area
   fi
@@ -324,7 +327,9 @@ createOpenJDKTarArchive()
 {
   echo "Archiving the build OpenJDK image..."
 
-  OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  if [ -z "$OPENJDK_REPO_TAG" ]; then
+    OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  fi
   echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
 
   if [ "$USE_DOCKER" == "true" ] ; then

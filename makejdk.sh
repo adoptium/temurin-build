@@ -284,7 +284,7 @@ getOpenJDKUpdateAndBuildVersion()
     cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${SHALLOW_CLONE_OPTION}"
     git fetch -q --tags "${SHALLOW_CLONE_OPTION}"
-    OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+    OPENJDK_REPO_TAG=${TAG:-$(getFirstTagFromOpenJDKGitRepo)}
     if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
      echo "${error}Unable to detect git tag"
      exit 1
@@ -422,8 +422,8 @@ testOpenJDKInNativeEnvironmentIfExpected()
 
 buildAndTestOpenJDKInNativeEnvironment()
 {
-  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT $OPENJDK_UPDATE_VERSION $OPENJDK_BUILD_NUMBER"
-  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}"
+  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT $OPENJDK_UPDATE_VERSION $OPENJDK_BUILD_NUMBER $TAG"
+  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}" "${TAG}"
 
   testOpenJDKInNativeEnvironmentIfExpected
 }
