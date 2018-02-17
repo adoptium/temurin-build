@@ -63,11 +63,13 @@ for i in "$@"; do
   esac
 done
 
+export SKIP_COPYING_MACOSX_FREE_FONT_LIB_FOR_JDK=false
 if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ]; then
   export JDK_PATH="jdk"
   export JRE_PATH="jre"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"}
 elif [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
+  export SKIP_COPYING_MACOSX_FREE_FONT_LIB_FOR_JDK=true
   export JDK_PATH="j2sdk-image"
   export JRE_PATH="j2re-image"
 else

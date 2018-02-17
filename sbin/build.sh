@@ -283,6 +283,10 @@ removingUnnecessaryFiles()
 makeACopyOfLibFreeFontForMacOSX() {
     IMAGE_DIRECTORY=$1
     if [[ "$OS_KERNEL_NAME" == "darwin" ]]; then
+        if [ "${SKIP_COPYING_MACOSX_FREE_FONT_LIB_FOR_JDK}" == "true" ]; then
+            echo "${info} Skipping copying of the free font library to ${IMAGE_DIRECTORY}, does not apply for this version of the JDK. ${normal}"
+        fi
+
         SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
         if [ ! -f "${SOURCE_LIB_NAME}" ]; then
             echo "${error}[Error] ${SOURCE_LIB_NAME} does not exists in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process...${normal}"
