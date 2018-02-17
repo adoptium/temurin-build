@@ -285,7 +285,9 @@ removingUnnecessaryFiles()
 makeACopyOfLibFreeFontForMacOSX() {
     IMAGE_DIRECTORY=$1
     PERFORM_COPYING=$2
+
     if [[ "$OS_KERNEL_NAME" == "darwin" ]]; then
+        echo "PERFORM_COPYING=${PERFORM_COPYING}"
         if [ "${PERFORM_COPYING}" == "false" ]; then
             echo "${info} Skipping copying of the free font library to ${IMAGE_DIRECTORY}, does not apply for this version of the JDK. ${normal}"
             return
