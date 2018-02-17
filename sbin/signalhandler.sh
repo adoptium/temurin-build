@@ -15,7 +15,8 @@
 
 # For terminal colors
 esc=$(echo -en "\033")
-error="${esc}[0;31m"
+error="${esc}[0;31m"  #red
+warning="${esc}[0;33m"  #yellow
 normal=$(echo -en "${esc}[m\017")
 
 

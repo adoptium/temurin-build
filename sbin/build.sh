@@ -284,6 +284,10 @@ makeACopyOfLibFreeFontForMacOSX() {
     IMAGE_DIRECTORY=$1
     if [[ "$OS_KERNEL_NAME" == "darwin" ]]; then
         SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
+        if [ ! -f "${SOURCE_LIB_NAME}" ]; then
+            echo "${error}[Error] ${SOURCE_LIB_NAME} does not exists in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process...${normal}"
+            exit -1
+        fi
         TARGET_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.6.dylib"
 
         INVOKED_BY_FONT_MANAGER="${IMAGE_DIRECTORY}/lib/libfontmanager.dylib"
@@ -294,7 +298,12 @@ makeACopyOfLibFreeFontForMacOSX() {
         
         set -x
         cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
-        otool -L "${INVOKED_BY_FONT_MANAGER}"
+        if [ -f "${INVOKED_BY_FONT_MANAGER}" ]; then
+            otool -L "${INVOKED_BY_FONT_MANAGER}"
+        else
+            echo "${warning}[Warning] ${INVOKED_BY_FONT_MANAGER} does not exists in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, this may cause runtime issues, please beware...${normal}"
+        fi
+
         otool -L "${TARGET_LIB_NAME}"
         set +x
 
