@@ -64,6 +64,7 @@ for i in "$@"; do
 done
 
 export SKIP_COPYING_MACOSX_FREE_FONT_LIB_FOR_JDK=false
+export SKIP_COPYING_MACOSX_FREE_FONT_LIB_FOR_JRE=false
 if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ]; then
   export JDK_PATH="jdk"
   export JRE_PATH="jre"
@@ -73,6 +74,8 @@ elif [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
   export JDK_PATH="j2sdk-image"
   export JRE_PATH="j2re-image"
 else
+  SKIP_COPYING_MACOSX_FREE_FONT_LIB_FOR_JDK=true
+  SKIP_COPYING_MACOSX_FREE_FONT_LIB_FOR_JRE=true
   echo "Please specify a version with --version or -v , either jdk9, jdk10 or jdk8, with or without a \'u\' suffix."
   man ./makejdk-any-platform.1
   exit 1
