@@ -282,12 +282,14 @@ removingUnnecessaryFiles()
 
 makeACopyOfLibFreeFontForMacOSX() {
     IMAGE_DIRECTORY=$1
+    PERFORM_COPYING=$2
     if [[ "$OS_KERNEL_NAME" == "darwin" ]]; then
-        if [ "${SKIP_COPYING_MACOSX_FREE_FONT_LIB_FOR_JDK}" == "true" ] || [ "${SKIP_COPYING_MACOSX_FREE_FONT_LIB_FOR_JRE}" == "true" ] ; then
+        if [ "${PERFORM_COPYING}" == "false" ]; then
             echo "${info} Skipping copying of the free font library to ${IMAGE_DIRECTORY}, does not apply for this version of the JDK. ${normal}"
             return
         fi
 
+       echo "${info} Performing copying of the free font library to ${IMAGE_DIRECTORY}, applicable for this version of the JDK. ${normal}"
         SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
         if [ ! -f "${SOURCE_LIB_NAME}" ]; then
             echo "${error}[Error] ${SOURCE_LIB_NAME} does not exists in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process...${normal}"
@@ -389,8 +391,8 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
 buildOpenJDK
 printJavaVersionString
 removingUnnecessaryFiles
-makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}"
-makeACopyOfLibFreeFontForMacOSX "${JRE_PATH}"
+makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG}"
+makeACopyOfLibFreeFontForMacOSX "${JRE_PATH}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG}"
 signRelease
 createOpenJDKTarArchive
 showCompletionMessage
