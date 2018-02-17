@@ -301,6 +301,7 @@ makeACopyOfLibFreeFontForMacOSX() {
         if [ -f "${INVOKED_BY_FONT_MANAGER}" ]; then
             otool -L "${INVOKED_BY_FONT_MANAGER}"
         else
+            # shellcheck disable=SC2154
             echo "${warning}[Warning] ${INVOKED_BY_FONT_MANAGER} does not exists in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, this may cause runtime issues, please beware...${normal}"
         fi
 
