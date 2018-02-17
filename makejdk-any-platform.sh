@@ -65,9 +65,11 @@ done
 
 if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ]; then
   export JDK_PATH="jdk"
+  export JRE_PATH="jre"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"}
 elif [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
   export JDK_PATH="j2sdk-image"
+  export JRE_PATH="j2re-image"
 else
   echo "Please specify a version with --version or -v , either jdk9, jdk10 or jdk8, with or without a \'u\' suffix."
   man ./makejdk-any-platform.1

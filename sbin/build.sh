@@ -39,7 +39,8 @@ if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   JVM_VARIANT="server"
 fi
 
-echo "${JDK_PATH}"
+echo "JDK Image folder name: ${JDK_PATH}"
+echo "JRE Image folder name: ${JRE_PATH}"
 
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
@@ -374,7 +375,7 @@ buildOpenJDK
 printJavaVersionString
 removingUnnecessaryFiles
 makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}"
-makeACopyOfLibFreeFontForMacOSX "jre"
+makeACopyOfLibFreeFontForMacOSX "${JRE_PATH}"
 signRelease
 createOpenJDKTarArchive
 showCompletionMessage
