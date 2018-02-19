@@ -296,7 +296,7 @@ makeACopyOfLibFreeFontForMacOSX() {
        echo "${info} Performing copying of the free font library to ${IMAGE_DIRECTORY}, applicable for this version of the JDK. ${normal}"
         SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
         if [ ! -f "${SOURCE_LIB_NAME}" ]; then
-            echo "${error}[Error] ${SOURCE_LIB_NAME} does not exists in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process...${normal}"
+            echo "${error}[Error] ${SOURCE_LIB_NAME} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process...${normal}"
             exit -1
         fi
         TARGET_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.6.dylib"
@@ -313,7 +313,7 @@ makeACopyOfLibFreeFontForMacOSX() {
             otool -L "${INVOKED_BY_FONT_MANAGER}"
         else
             # shellcheck disable=SC2154
-            echo "${warning}[Warning] ${INVOKED_BY_FONT_MANAGER} does not exists in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, this may cause runtime issues, please beware...${normal}"
+            echo "${warning}[Warning] ${INVOKED_BY_FONT_MANAGER} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, this may cause runtime issues, please beware...${normal}"
         fi
 
         otool -L "${TARGET_LIB_NAME}"
