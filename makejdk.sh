@@ -141,7 +141,9 @@ doAnyBuildVariantOverrides()
     REPOSITORY="ibmruntimes/openj9-openjdk-${OPENJDK_CORE_VERSION}"
     BRANCH="openj9"
     if [[ "$OSTYPE" != "cygwin" ]]; then
+      # shellcheck disable=SC2155
       export CC=$(which gcc-4.8)
+      # shellcheck disable=SC2155
       export CXX=$(which g++-4.8)
     fi
   fi
