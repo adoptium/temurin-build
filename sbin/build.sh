@@ -100,7 +100,7 @@ configuringBootJDKConfigureParameter()
 
   echo "Boot dir set to ${JDK_BOOT_DIR}"
 
-  CONFIGURE_ARGS=" --with-boot-jdk=${JDK_BOOT_DIR}"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-boot-jdk=${JDK_BOOT_DIR}"
 }
 
 # Ensure that we produce builds with versions strings something like:
