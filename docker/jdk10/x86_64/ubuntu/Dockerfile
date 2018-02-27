@@ -37,6 +37,7 @@ RUN apt-get update \
     libelf-dev \
     libcups2-dev \
     libfreetype6-dev \
+    libfontconfig1-dev \
     libasound2-dev \
     zulu-9 \
     ccache \
