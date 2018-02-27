@@ -49,6 +49,7 @@ TAG=""
 KEEP=false
 JTREG=false
 BUILD_VARIANT=${BUILD_VARIANT-:""}
+USER_SUPPLIED_CONFIGURE_ARGS=""
 
 JVM_VARIANT=${JVM_VARIANT-:server}
 
@@ -128,6 +129,9 @@ parseCommandLineArgs()
 
       "--variant"  | "-bv" )
       export BUILD_VARIANT="$1"; shift;;
+
+      "--configure-args"  | "-ca" )
+      export USER_SUPPLIED_CONFIGURE_ARGS="$1"; shift;;
 
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
@@ -429,7 +433,7 @@ testOpenJDKInNativeEnvironmentIfExpected()
 buildAndTestOpenJDKInNativeEnvironment()
 {
   echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT $OPENJDK_UPDATE_VERSION $OPENJDK_BUILD_NUMBER $TAG"
-  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}" "${TAG}"
+  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${USER_SUPPLIED_CONFIGURE_ARGS}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}" "${TAG}"
 
   testOpenJDKInNativeEnvironmentIfExpected
 }
