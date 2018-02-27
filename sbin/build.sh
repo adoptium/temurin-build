@@ -28,6 +28,7 @@ JVM_VARIANT=${JVM_VARIANT:-server}
 OPENJDK_UPDATE_VERSION=$5
 OPENJDK_BUILD_NUMBER=$6
 OPENJDK_REPO_TAG=$7
+USER_SUPPLIED_CONFIGURE_ARGS=$8
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
 
 
@@ -161,6 +162,10 @@ configureCommandParameters()
      configuringBootJDKConfigureParameter
      buildingTheRestOfTheConfigParameters
   fi
+  
+  #Now we add any configure arguments the user has specified on the command line.
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} ${USER_SUPPLIED_CONFIGURE_ARGS}"
+  
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
