@@ -112,7 +112,9 @@ configuringBootJDKConfigureParameter()
 configuringVersionStringParameter()
 {
   # Replace the default 'internal' with our own milestone string
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-milestone=adoptopenjdk"
+  if [[ "$USER_SUPPLIED_CONFIGURE_ARGS" != *"with-milestone"* ]]; then
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-milestone=adoptopenjdk"
+  fi
 
   # Set the update version (e.g. 131), this gets passed in from the calling script
   CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_UPDATE_VERSION}"
