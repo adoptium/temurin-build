@@ -426,8 +426,22 @@ testOpenJDKInNativeEnvironmentIfExpected()
 
 buildAndTestOpenJDKInNativeEnvironment()
 {
-  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT $OPENJDK_UPDATE_VERSION $OPENJDK_BUILD_NUMBER $TAG"
-  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}" "${TAG}" "${USER_SUPPLIED_CONFIGURE_ARGS}"
+  BUILD_ARGUMENTS=""
+  declare -a BUILD_ARGUMENT_NAMES=("--source" "--destination" "--repository" "--variant" "--update-version" "--build-number" "--repository-tag" "--configure-args")
+  declare -a BUILD_ARGUMENT_VALUES=("${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}" "${TAG}" "${USER_SUPPLIED_CONFIGURE_ARGS}")
+
+  BUILD_ARGS_ARRAY_INDEX=0
+  while [[ ${BUILD_ARGS_ARRAY_INDEX} < ${#BUILD_ARGUMENT_NAMES[@]} ]]; do
+    if [[ ${BUILD_ARGUMENT_VALUES[${BUILD_ARGS_ARRAY_INDEX}]} != "" ]];
+    then
+        BUILD_ARGUMENTS="${BUILD_ARGUMENTS}${BUILD_ARGUMENT_NAMES[${BUILD_ARGS_ARRAY_INDEX}]} ${BUILD_ARGUMENT_VALUES[${BUILD_ARGS_ARRAY_INDEX}]} "
+    fi
+    ((BUILD_ARGS_ARRAY_INDEX++))
+  done
+  
+  echo "Calling ${SCRIPT_DIR}/sbin/build.sh ${BUILD_ARGUMENTS}"
+  # shellcheck disable=SC2086
+  "${SCRIPT_DIR}"/sbin/build.sh ${BUILD_ARGUMENTS}
 
   testOpenJDKInNativeEnvironmentIfExpected
 }
