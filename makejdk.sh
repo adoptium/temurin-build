@@ -143,7 +143,11 @@ doAnyBuildVariantOverrides()
   if [[ "${BUILD_VARIANT}" == "openj9" ]]; then
     # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
     REPOSITORY="ibmruntimes/openj9-openjdk-${OPENJDK_CORE_VERSION}"
-    BRANCH="openj9"
+    if [ "${OPENJDK_CORE_VERSION}" == "jdk8" ]; then
+      BRANCH="openj9-0.8"
+    else
+      BRANCH="openj9"
+    fi
   fi
   if [[ "${BUILD_VARIANT}" == "SapMachine" ]]; then
     # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
