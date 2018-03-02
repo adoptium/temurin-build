@@ -21,14 +21,49 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/common-functions.sh"
 
-WORKING_DIR=$1
-TARGET_DIR=$2
-OPENJDK_REPO_NAME=$3
-JVM_VARIANT=${JVM_VARIANT:-server}
-OPENJDK_UPDATE_VERSION=$5
-OPENJDK_BUILD_NUMBER=$6
-OPENJDK_REPO_TAG=$7
-USER_SUPPLIED_CONFIGURE_ARGS=$8
+WORKING_DIR=""
+TARGET_DIR=""
+OPENJDK_REPO_NAME=""
+JVM_VARIANT="-server"
+OPENJDK_UPDATE_VERSION=""
+OPENJDK_BUILD_NUMBER=""
+OPENJDK_REPO_TAG=""
+USER_SUPPLIED_CONFIGURE_ARGS=""
+
+while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
+  opt="$1";
+  shift;
+  case "$opt" in
+    "--" ) break 2;;
+
+    "--source" | "-s" )
+    WORKING_DIR="$1"; shift;;
+
+    "--destination" | "-d" )
+    TARGET_DIR="$1"; shift;;
+
+    "--repository" | "-r" )
+    OPENJDK_REPO_NAME="$1"; shift;;
+
+    "--variant"  | "-jv" )
+    JVM_VARIANT="$1"; shift;;
+
+    "--update-version"  | "-uv" )
+    OPENJDK_UPDATE_VERSION="$1"; shift;;
+
+    "--build-number"  | "-bn" )
+    OPENJDK_BUILD_NUMBER="$1"; shift;;
+
+    "--repository-tag"  | "-rt" )
+    OPENJDK_REPO_TAG="$1"; shift;;
+
+    "--configure-args"  | "-ca" )
+    USER_SUPPLIED_CONFIGURE_ARGS="$1"; shift;;
+
+    *) echo >&2 "${error}Invalid build.sh option: ${opt}${normal}"; exit 1;;
+  esac
+done
+
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
 
 
@@ -45,6 +80,14 @@ echo "${JDK_PATH}"
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-""}
+
+addConfigureArg()
+{
+  #Only add an arg if it is not overridden by a user-specified arg.
+  if [[ ${CONFIGURE_ARGS_FOR_ANY_PLATFORM} != *"$1"* ]] && [[ ${USER_SUPPLIED_CONFIGURE_ARGS} != *"$1"* ]]; then
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} ${1}${2}"
+  fi
+}
 
 sourceFileWithColourCodes()
 {
@@ -101,7 +144,7 @@ configuringBootJDKConfigureParameter()
 
   echo "Boot dir set to ${JDK_BOOT_DIR}"
 
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-boot-jdk=${JDK_BOOT_DIR}"
+  addConfigureArg "--with-boot-jdk=" "${JDK_BOOT_DIR}"
 }
 
 # Ensure that we produce builds with versions strings something like:
@@ -112,15 +155,13 @@ configuringBootJDKConfigureParameter()
 configuringVersionStringParameter()
 {
   # Replace the default 'internal' with our own milestone string
-  if [[ "$USER_SUPPLIED_CONFIGURE_ARGS" != *"with-milestone"* ]]; then
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-milestone=adoptopenjdk"
-  fi
+  addConfigureArg "--with-milestone=" "adoptopenjdk"
 
   # Set the update version (e.g. 131), this gets passed in from the calling script
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_UPDATE_VERSION}"
+  addConfigureArg "--with-update-version=" "${OPENJDK_UPDATE_VERSION}"
 
   # Set the build number (e.g. b04), this gets passed in from the calling script
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-build-number=${OPENJDK_BUILD_NUMBER}"
+  addConfigureArg "--with-build-number=" "${OPENJDK_BUILD_NUMBER}"
 
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
@@ -128,29 +169,29 @@ configuringVersionStringParameter()
 buildingTheRestOfTheConfigParameters()
 {
   if [ ! -z "$(which ccache)" ]; then
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-ccache"
+    addConfigureArg "--enable-ccache" ""
   fi
 
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jvm-variants=${JVM_VARIANT}"
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-cacerts-file=${WORKING_DIR}/cacerts_area/security/cacerts"
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-alsa=${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
+  addConfigureArg "--with-jvm-variants=" "${JVM_VARIANT}"
+  addConfigureArg "--with-cacerts-file=" "${WORKING_DIR}/cacerts_area/security/cacerts"
+  addConfigureArg "--with-alsa=" "${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
 
   # Point-in-time dependency for openj9 only
   if [[ "${BUILD_VARIANT}" == "openj9" ]] ; then
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freemarker-jar=${WORKING_DIR}/freemarker-${FREEMARKER_LIB_VERSION}/lib/freemarker.jar"
+    addConfigureArg "--with-freemarker-jar=" "${WORKING_DIR}/freemarker-${FREEMARKER_LIB_VERSION}/lib/freemarker.jar"
   fi
 
   if [[ -z "${FREETYPE}" ]] ; then
     FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"}
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freetype=$FREETYPE_DIRECTORY"
+    addConfigureArg "--with-freetype=" "$FREETYPE_DIRECTORY"
   fi
 
   # These will have been installed by the package manager (see our Dockerfile)
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-x=/usr/include/X11"
+  addConfigureArg "--with-x=" "/usr/include/X11"
 
   # We don't want any extra debug symbols - ensure it's set to release,
   # other options include fastdebug and slowdebug
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-debug-level=release"
+  addConfigureArg "--with-debug-level=" "release"
 }
 
 configureCommandParameters()
