@@ -459,6 +459,8 @@ buildAndTestOpenJDK()
   fi
 }
 
+##################################################################
+
 sourceSignalHandler
 parseCommandLineArgs "$@"
 doAnyBuildVariantOverrides
