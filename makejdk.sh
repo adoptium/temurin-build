@@ -45,11 +45,13 @@ WORKING_DIR=""
 USE_SSH=false
 TARGET_DIR=""
 BRANCH=""
+TAG=""
 KEEP=false
 JTREG=false
 BUILD_VARIANT=${BUILD_VARIANT-:""}
+USER_SUPPLIED_CONFIGURE_ARGS=""
 
-JVM_VARIANT=${JVM_VARIANT-:server}
+JVM_VARIANT=${JVM_VARIANT:-server}
 
 OPENJDK_UPDATE_VERSION=""
 OPENJDK_BUILD_NUMBER=""
@@ -92,6 +94,9 @@ parseCommandLineArgs()
       "--branch" | "-b" )
       BRANCH="$1"; shift;;
 
+      "--tag" | "-t" )
+      TAG="$1"; SHALLOW_CLONE_OPTION=""; shift;;
+
       "--keep" | "-k" )
       KEEP=true;;
 
@@ -125,6 +130,9 @@ parseCommandLineArgs()
       "--variant"  | "-bv" )
       export BUILD_VARIANT="$1"; shift;;
 
+      "--configure-args"  | "-ca" )
+      export USER_SUPPLIED_CONFIGURE_ARGS="$1"; shift;;
+
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
   done
@@ -135,7 +143,16 @@ doAnyBuildVariantOverrides()
   if [[ "${BUILD_VARIANT}" == "openj9" ]]; then
     # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
     REPOSITORY="ibmruntimes/openj9-openjdk-${OPENJDK_CORE_VERSION}"
-    BRANCH="openj9"
+    if [ "${OPENJDK_CORE_VERSION}" == "jdk8" ]; then
+      BRANCH="openj9-0.8"
+    else
+      BRANCH="openj9"
+    fi
+  fi
+  if [[ "${BUILD_VARIANT}" == "SapMachine" ]]; then
+    # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
+    REPOSITORY="SAP/SapMachine"
+    BRANCH="sapmachine"
   fi
 }
 
@@ -219,6 +236,9 @@ checkOpenJDKGitRepo()
        showShallowCloningMessage "fetch"
        git fetch --all ${SHALLOW_CLONE_OPTION}
        git reset --hard origin/$BRANCH
+       if [ ! -z "$TAG" ]; then
+         git checkout "$TAG"
+       fi
        git clean -fdx
      else
        # The repo is not for the correct JDK Version
@@ -245,10 +265,14 @@ cloneOpenJDKGitRepo()
   fi
 
   showShallowCloningMessage "cloning"
-  GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
+  GIT_CLONE_ARGUMENTS=($SHALLOW_CLONE_OPTION '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
 
   echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
   git clone "${GIT_CLONE_ARGUMENTS[@]}"
+  if [ ! -z "$TAG" ]; then
+    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || exit 1
+    git checkout "$TAG"
+  fi
 
   # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
   if [ "$BUILD_VARIANT" == "openj9" ]; then
@@ -268,7 +292,7 @@ getOpenJDKUpdateAndBuildVersion()
     cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${SHALLOW_CLONE_OPTION}"
     git fetch -q --tags "${SHALLOW_CLONE_OPTION}"
-    OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+    OPENJDK_REPO_TAG=${TAG:-$(getFirstTagFromOpenJDKGitRepo)}
     if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
      echo "${error}Unable to detect git tag"
      exit 1
@@ -406,8 +430,22 @@ testOpenJDKInNativeEnvironmentIfExpected()
 
 buildAndTestOpenJDKInNativeEnvironment()
 {
-  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT $OPENJDK_UPDATE_VERSION $OPENJDK_BUILD_NUMBER"
-  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}"
+  BUILD_ARGUMENTS=""
+  declare -a BUILD_ARGUMENT_NAMES=("--source" "--destination" "--repository" "--variant" "--update-version" "--build-number" "--repository-tag" "--configure-args")
+  declare -a BUILD_ARGUMENT_VALUES=("${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}" "${TAG}" "${USER_SUPPLIED_CONFIGURE_ARGS}")
+
+  BUILD_ARGS_ARRAY_INDEX=0
+  while [[ ${BUILD_ARGS_ARRAY_INDEX} < ${#BUILD_ARGUMENT_NAMES[@]} ]]; do
+    if [[ ${BUILD_ARGUMENT_VALUES[${BUILD_ARGS_ARRAY_INDEX}]} != "" ]];
+    then
+        BUILD_ARGUMENTS="${BUILD_ARGUMENTS}${BUILD_ARGUMENT_NAMES[${BUILD_ARGS_ARRAY_INDEX}]} ${BUILD_ARGUMENT_VALUES[${BUILD_ARGS_ARRAY_INDEX}]} "
+    fi
+    ((BUILD_ARGS_ARRAY_INDEX++))
+  done
+  
+  echo "Calling ${SCRIPT_DIR}/sbin/build.sh ${BUILD_ARGUMENTS}"
+  # shellcheck disable=SC2086
+  "${SCRIPT_DIR}"/sbin/build.sh ${BUILD_ARGUMENTS}
 
   testOpenJDKInNativeEnvironmentIfExpected
 }
