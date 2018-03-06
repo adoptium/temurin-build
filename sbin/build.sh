@@ -89,6 +89,14 @@ addConfigureArg()
   fi
 }
 
+addConfigureArgIfValueIsNotEmpty()
+{
+  #Only try to add an arg if the second argument is not empty.
+  if [ ! -z "$1" ]; then
+    addConfigureArg "$1" "$2"
+  fi
+}
+
 sourceFileWithColourCodes()
 {
   # shellcheck disable=SC1090
@@ -144,7 +152,7 @@ configuringBootJDKConfigureParameter()
 
   echo "Boot dir set to ${JDK_BOOT_DIR}"
 
-  addConfigureArg "--with-boot-jdk=" "${JDK_BOOT_DIR}"
+  addConfigureArgIfValueIsNotEmpty "--with-boot-jdk=" "${JDK_BOOT_DIR}"
 }
 
 # Ensure that we produce builds with versions strings something like:
@@ -158,10 +166,10 @@ configuringVersionStringParameter()
   addConfigureArg "--with-milestone=" "adoptopenjdk"
 
   # Set the update version (e.g. 131), this gets passed in from the calling script
-  addConfigureArg "--with-update-version=" "${OPENJDK_UPDATE_VERSION}"
+  addConfigureArgIfValueIsNotEmpty "--with-update-version=" "${OPENJDK_UPDATE_VERSION}"
 
   # Set the build number (e.g. b04), this gets passed in from the calling script
-  addConfigureArg "--with-build-number=" "${OPENJDK_BUILD_NUMBER}"
+  addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${OPENJDK_BUILD_NUMBER}"
 
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
@@ -172,8 +180,8 @@ buildingTheRestOfTheConfigParameters()
     addConfigureArg "--enable-ccache" ""
   fi
 
-  addConfigureArg "--with-jvm-variants=" "${JVM_VARIANT}"
-  addConfigureArg "--with-cacerts-file=" "${WORKING_DIR}/cacerts_area/security/cacerts"
+  addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${JVM_VARIANT}"
+  addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${WORKING_DIR}/cacerts_area/security/cacerts"
   addConfigureArg "--with-alsa=" "${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
 
   # Point-in-time dependency for openj9 only
