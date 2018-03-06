@@ -92,7 +92,7 @@ addConfigureArg()
 addConfigureArgIfValueIsNotEmpty()
 {
   #Only try to add an arg if the second argument is not empty.
-  if [ ! -z "$1" ]; then
+  if [ ! -z "$2" ]; then
     addConfigureArg "$1" "$2"
   fi
 }
