@@ -42,7 +42,7 @@ Options:
 ```
 
 The simplest way to build OpenJDK using our scripts is to run `makejdk-any-platform.sh` and have your user be in the Docker group on the machine 
-(or prefix all of your Docker commands with `sudo`. This script can be used to create a Docker container that will be configured with all of the required 
+(or prefix all of your Docker commands with `sudo`). This script can be used to create a Docker container that will be configured with all of the required 
 dependencies and a base operating system in order to build OpenJDK
 
 By default the docker container is removed each time and your build will be copied from the container to the host
