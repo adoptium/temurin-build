@@ -21,4 +21,4 @@ git init
 git checkout -b root-commit || exit 1
 git remote add github git@github.com:AdoptOpenJDK/openjdk-amber.git
 cd - || exit 1
-bash add-branch-without-modules.sh amber/amber
+bash add-branch-without-modules.sh amber/amber raw-string-literal
