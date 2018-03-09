@@ -35,7 +35,9 @@ echo "Clone $bpath (root)"
 git hg clone "http://hg.openjdk.java.net/$bpath" "$bpath/root" || exit 1
 
 if [ "$branch" != "" ]; then
+  cd "$bpath/root" || exit 1
   git-hg checkout "$branch" || exit 1
+  cd - || exit 1
 fi
 
 echo "Exit hg"
