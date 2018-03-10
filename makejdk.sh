@@ -49,8 +49,9 @@ TAG=""
 KEEP=false
 JTREG=false
 BUILD_VARIANT=${BUILD_VARIANT-:""}
+USER_SUPPLIED_CONFIGURE_ARGS=""
 
-JVM_VARIANT=${JVM_VARIANT-:server}
+JVM_VARIANT=${JVM_VARIANT:-server}
 
 OPENJDK_UPDATE_VERSION=""
 OPENJDK_BUILD_NUMBER=""
@@ -129,6 +130,9 @@ parseCommandLineArgs()
       "--variant"  | "-bv" )
       export BUILD_VARIANT="$1"; shift;;
 
+      "--configure-args"  | "-ca" )
+      export USER_SUPPLIED_CONFIGURE_ARGS="$1"; shift;;
+
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
   done
@@ -139,7 +143,11 @@ doAnyBuildVariantOverrides()
   if [[ "${BUILD_VARIANT}" == "openj9" ]]; then
     # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
     REPOSITORY="ibmruntimes/openj9-openjdk-${OPENJDK_CORE_VERSION}"
-    BRANCH="openj9"
+    if [ "${OPENJDK_CORE_VERSION}" == "jdk8" ]; then
+      BRANCH="openj9-0.8"
+    else
+      BRANCH="openj9"
+    fi
   fi
   if [[ "${BUILD_VARIANT}" == "SapMachine" ]]; then
     # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
@@ -422,8 +430,22 @@ testOpenJDKInNativeEnvironmentIfExpected()
 
 buildAndTestOpenJDKInNativeEnvironment()
 {
-  echo "Calling sbin/build.sh $WORKING_DIR $TARGET_DIR $OPENJDK_REPO_NAME $JVM_VARIANT $OPENJDK_UPDATE_VERSION $OPENJDK_BUILD_NUMBER $TAG"
-  "${SCRIPT_DIR}"/sbin/build.sh "${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}" "${TAG}"
+  BUILD_ARGUMENTS=""
+  declare -a BUILD_ARGUMENT_NAMES=("--source" "--destination" "--repository" "--variant" "--update-version" "--build-number" "--repository-tag" "--configure-args")
+  declare -a BUILD_ARGUMENT_VALUES=("${WORKING_DIR}" "${TARGET_DIR}" "${OPENJDK_REPO_NAME}" "${JVM_VARIANT}" "${OPENJDK_UPDATE_VERSION}" "${OPENJDK_BUILD_NUMBER}" "${TAG}" "${USER_SUPPLIED_CONFIGURE_ARGS}")
+
+  BUILD_ARGS_ARRAY_INDEX=0
+  while [[ ${BUILD_ARGS_ARRAY_INDEX} < ${#BUILD_ARGUMENT_NAMES[@]} ]]; do
+    if [[ ${BUILD_ARGUMENT_VALUES[${BUILD_ARGS_ARRAY_INDEX}]} != "" ]];
+    then
+        BUILD_ARGUMENTS="${BUILD_ARGUMENTS}${BUILD_ARGUMENT_NAMES[${BUILD_ARGS_ARRAY_INDEX}]} ${BUILD_ARGUMENT_VALUES[${BUILD_ARGS_ARRAY_INDEX}]} "
+    fi
+    ((BUILD_ARGS_ARRAY_INDEX++))
+  done
+  
+  echo "Calling ${SCRIPT_DIR}/sbin/build.sh ${BUILD_ARGUMENTS}"
+  # shellcheck disable=SC2086
+  "${SCRIPT_DIR}"/sbin/build.sh ${BUILD_ARGUMENTS}
 
   testOpenJDKInNativeEnvironmentIfExpected
 }

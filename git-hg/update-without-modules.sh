@@ -27,9 +27,9 @@ bpaths=${1:-$(ls -d -1 */*)}     # maintain backward compatibility
 
 for bpath in $bpaths
 do
-    bpathAsArray=(${bpath//\// })      # for e.g. jdk10/jdk10 or jdk/jdk, becomes:
-    hg_root_forest=${bpathAsArray[0]}  #          jdk10 or jdk
-    hg_repo=${bpathAsArray[1]}         #          jdk10 or jdk
+    bpathAsArray=(${bpath/\// })       # for e.g. jdk10/jdk10 or jdk/jdk or openjfx/jfx-dev/rt, becomes:
+    hg_root_forest=${bpathAsArray[0]}  #          jdk10 or jdk or openjfx
+    hg_repo=${bpathAsArray[1]}         #          jdk10 or jdk or jfx-dev/rt
 
     pushd "$hg_root_forest/$hg_repo/root"
     echo "Update $hg_root_forest/$hg_repo -> (root)"
