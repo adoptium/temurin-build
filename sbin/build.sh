@@ -28,6 +28,7 @@ JVM_VARIANT="${JVM_VARIANT:-server}"
 OPENJDK_UPDATE_VERSION=""
 OPENJDK_BUILD_NUMBER=""
 OPENJDK_REPO_TAG=""
+TRIMMED_TAG=""
 USER_SUPPLIED_CONFIGURE_ARGS=""
 
 while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
@@ -89,6 +90,14 @@ addConfigureArg()
   fi
 }
 
+addConfigureArgIfValueIsNotEmpty()
+{
+  #Only try to add an arg if the second argument is not empty.
+  if [ ! -z "$2" ]; then
+    addConfigureArg "$1" "$2"
+  fi
+}
+
 sourceFileWithColourCodes()
 {
   # shellcheck disable=SC1090
@@ -144,7 +153,7 @@ configuringBootJDKConfigureParameter()
 
   echo "Boot dir set to ${JDK_BOOT_DIR}"
 
-  addConfigureArg "--with-boot-jdk=" "${JDK_BOOT_DIR}"
+  addConfigureArgIfValueIsNotEmpty "--with-boot-jdk=" "${JDK_BOOT_DIR}"
 }
 
 # Ensure that we produce builds with versions strings something like:
@@ -154,15 +163,27 @@ configuringBootJDKConfigureParameter()
 # OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
 configuringVersionStringParameter()
 {
-  # Replace the default 'internal' with our own milestone string
-  addConfigureArg "--with-milestone=" "adoptopenjdk"
+  if [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
+    # Replace the default 'internal' with our own milestone string
+    addConfigureArg "--with-milestone=" "adoptopenjdk"
 
-  # Set the update version (e.g. 131), this gets passed in from the calling script
-  addConfigureArg "--with-update-version=" "${OPENJDK_UPDATE_VERSION}"
+    # Set the update version (e.g. 131), this gets passed in from the calling script
+    addConfigureArgIfValueIsNotEmpty "--with-update-version=" "${OPENJDK_UPDATE_VERSION}"
 
-  # Set the build number (e.g. b04), this gets passed in from the calling script
-  addConfigureArg "--with-build-number=" "${OPENJDK_BUILD_NUMBER}"
+    # Set the build number (e.g. b04), this gets passed in from the calling script
+    addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${OPENJDK_BUILD_NUMBER}"
+  else
+    if [ -z "$OPENJDK_REPO_TAG" ]; then
+      OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+      echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
+    fi
+    # > JDK 8
+    addConfigureArg "--with-version-pre=" "adoptopenjdk"
 
+    TRIMMED_TAG=$(echo "$OPENJDK_REPO_TAG" | cut -f2 -d"-")
+    addConfigureArg "--with-version-string=" "${TRIMMED_TAG}"
+
+  fi
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
@@ -172,8 +193,8 @@ buildingTheRestOfTheConfigParameters()
     addConfigureArg "--enable-ccache" ""
   fi
 
-  addConfigureArg "--with-jvm-variants=" "${JVM_VARIANT}"
-  addConfigureArg "--with-cacerts-file=" "${WORKING_DIR}/cacerts_area/security/cacerts"
+  addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${JVM_VARIANT}"
+  addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${WORKING_DIR}/cacerts_area/security/cacerts"
   addConfigureArg "--with-alsa=" "${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
 
   # Point-in-time dependency for openj9 only
@@ -205,10 +226,10 @@ configureCommandParameters()
      configuringBootJDKConfigureParameter
      buildingTheRestOfTheConfigParameters
   fi
-  
+
   #Now we add any configure arguments the user has specified on the command line.
   CONFIGURE_ARGS="${CONFIGURE_ARGS} ${USER_SUPPLIED_CONFIGURE_ARGS}"
-  
+
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
@@ -338,7 +359,7 @@ makeACopyOfLibFreeFontForMacOSX() {
         echo "Currently at '${PWD}'"
         echo "Copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
         echo " *** Workaround to fix the MacOSX issue where invocation to ${INVOKED_BY_FONT_MANAGER} fails to find ${TARGET_LIB_NAME} ***"
-        
+
         set -x
         cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
         otool -L "${INVOKED_BY_FONT_MANAGER}"
@@ -350,7 +371,7 @@ makeACopyOfLibFreeFontForMacOSX() {
 }
 
 signRelease()
-{ 
+{
   if [ "$SIGN" ]; then
     if [[ "$OSTYPE" == "cygwin" ]]; then
       echo "Signing release"
