@@ -6,7 +6,7 @@ println "building ${JDK_VERSION}"
 stage('build OpenJDK') {
     def Platforms = [:]
     Platforms["Linux"] = {
-        build job: 'openjdk9_build_x86-64_linux', propagate: false
+        build job: 'openjdk9_build_x86-64_linux'
     }
     Platforms["Windows"] = {
         build job: 'openjdk9_build_x86-64_windows'

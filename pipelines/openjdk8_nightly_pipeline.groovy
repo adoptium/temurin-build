@@ -9,7 +9,7 @@ stage('build OpenJDK') {
         build job: 'openjdk8_build_x86-64_macos'
     }
     Platforms["Linux"] = {
-        build job: 'openjdk8_build_x86-64_linux', propagate: false
+        build job: 'openjdk8_build_x86-64_linux'
     }
     Platforms["zLinux"] = {
         build job: 'openjdk8_build_s390x_linux'
