@@ -6,7 +6,11 @@ println "building ${JDK_VERSION}"
 stage('build OpenJDK') {
     def Platforms = [:]
     Platforms["Mac"] = {
-        build job: 'openjdk8_build_x86-64_macos'
+        def buildJob = build job: 'openjdk8_build_x86-64_macos'
+        def buildJobNumber = buildJob.getNumber()
+        build job:'openjdk8_hs_openjdktest_x86-64_macos',
+            propagate: false,
+            parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJob.getNumber()}")]
     }
     Platforms["Linux"] = {
         build job: 'openjdk8_build_x86-64_linux'
