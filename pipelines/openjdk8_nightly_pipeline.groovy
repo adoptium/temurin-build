@@ -1,3 +1,8 @@
+/*
+ * DO NOT EDIT DIRECTLY!  This code comes from https://github.com/AdoptOpenJDK/openjdk-build/pipelines/
+ * please create a PR there before copying the code over
+ */
+println "building ${JDK_VERSION}"
 stage('build OpenJDK') {
     def Platforms = [:]
     Platforms["Mac"] = {
@@ -21,12 +26,8 @@ stage('build OpenJDK') {
     parallel Platforms
 }
 stage('checksums') {
-    node {
-        def job = build job: 'openjdk8_build_checksum'
-    }
+    build job: 'openjdk8_build_checksum'
 }
 stage('publish nightly') {
-    node {
-        def job = build job: 'openjdk_release_tool', parameters: [string(name: 'REPO', value: 'nightly'), string(name: 'TAG', value: 'jdk8u172-b00'), string(name: 'VERSION', value: 'jdk8')]
-    }
+    build job: 'openjdk_release_tool', parameters: [string(name: 'REPO', value: 'nightly'), string(name: 'TAG', value: 'jdk8u172-b00'), string(name: 'VERSION', value: 'jdk8')]
 }

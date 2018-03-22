@@ -1,4 +1,8 @@
-println "building OpenJDK10"
+/*
+ * DO NOT EDIT DIRECTLY!  This code comes from https://github.com/AdoptOpenJDK/openjdk-build/pipelines/
+ * please create a PR there before copying the code over
+ */
+println "building ${JDK_VERSION}"
 stage('build OpenJDK') {
     def Platforms = [:]
     Platforms["Linux"] = {
@@ -22,12 +26,8 @@ stage('build OpenJDK') {
     parallel Platforms
 }
 stage('checksums') {
-    node {
-        def job = build job: 'openjdk10_build_checksum'
-    }
+    build job: 'openjdk10_build_checksum'
 }
 stage('publish release') {
-    node {
-        def job = build job: 'openjdk_release_tool', parameters: [string(name: 'REPO', value: 'nightly'), string(name: 'TAG', value: "${JDK_TAG}"), string(name: 'VERSION', value: 'jdk10')]
-    }
+    build job: 'openjdk_release_tool', parameters: [string(name: 'REPO', value: 'nightly'), string(name: 'TAG', value: "${JDK_TAG}"), string(name: 'VERSION', value: 'jdk10')]
 }
