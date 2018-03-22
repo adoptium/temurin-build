@@ -76,7 +76,10 @@ if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   JVM_VARIANT="server"
 fi
 
-echo "${JDK_PATH}"
+echo "JDK Image folder name: ${JDK_PATH}"
+echo "JRE Image folder name: ${JRE_PATH}"
+echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=${COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG}"
+echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG}"
 
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
@@ -350,8 +353,21 @@ removingUnnecessaryFiles()
 
 makeACopyOfLibFreeFontForMacOSX() {
     IMAGE_DIRECTORY=$1
+    PERFORM_COPYING=$2
+
     if [[ "$OS_KERNEL_NAME" == "darwin" ]]; then
+        echo "PERFORM_COPYING=${PERFORM_COPYING}"
+        if [ "${PERFORM_COPYING}" == "false" ]; then
+            echo "${info} Skipping copying of the free font library to ${IMAGE_DIRECTORY}, does not apply for this version of the JDK. ${normal}"
+            return
+        fi
+
+       echo "${info} Performing copying of the free font library to ${IMAGE_DIRECTORY}, applicable for this version of the JDK. ${normal}"
         SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
+        if [ ! -f "${SOURCE_LIB_NAME}" ]; then
+            echo "${error}[Error] ${SOURCE_LIB_NAME} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process...${normal}"
+            exit -1
+        fi
         TARGET_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.6.dylib"
 
         INVOKED_BY_FONT_MANAGER="${IMAGE_DIRECTORY}/lib/libfontmanager.dylib"
@@ -362,7 +378,13 @@ makeACopyOfLibFreeFontForMacOSX() {
 
         set -x
         cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
-        otool -L "${INVOKED_BY_FONT_MANAGER}"
+        if [ -f "${INVOKED_BY_FONT_MANAGER}" ]; then
+            otool -L "${INVOKED_BY_FONT_MANAGER}"
+        else
+            # shellcheck disable=SC2154
+            echo "${warning}[Warning] ${INVOKED_BY_FONT_MANAGER} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, this may cause runtime issues, please beware...${normal}"
+        fi
+
         otool -L "${TARGET_LIB_NAME}"
         set +x
 
@@ -442,8 +464,8 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
 buildOpenJDK
 printJavaVersionString
 removingUnnecessaryFiles
-makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}"
-makeACopyOfLibFreeFontForMacOSX "jre"
+makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG}"
+makeACopyOfLibFreeFontForMacOSX "${JRE_PATH}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG}"
 signRelease
 createOpenJDKTarArchive
 showCompletionMessage
