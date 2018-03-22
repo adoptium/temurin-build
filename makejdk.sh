@@ -148,7 +148,7 @@ doAnyBuildVariantOverrides()
   if [[ "${BUILD_VARIANT}" == "SapMachine" ]]; then
     # current location of SAP variant
     REPOSITORY="SAP/SapMachine"
-    BRANCH="sapmachine" # sapmachine is the current branch for OpenJDK mainline (equivalent to jdk/jdk)
+    BRANCH="sapmachine10" # sapmachine10 is the current branch for OpenJDK10 mainline (equivalent to jdk/jdk10)
   fi
 }
 
