@@ -28,6 +28,8 @@ In order to build an OpenJDK variant on the build farm you need to follow the
 
 ### Building locally via Docker
 
+**WARN: As of 23rd March 2018 these instructions do not work, there are several issues that need resolving**
+
 Make sure you have started your Docker Daemon first!  For help with getting docker follow the instructions [here](https://docs.docker.com/engine/installation/). 
 Once you have Docker started you can then use the script below to build OpenJDK.
 

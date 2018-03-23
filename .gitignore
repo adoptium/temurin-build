@@ -1,4 +1,4 @@
-openjdk
+openjdk/
 target
 .idea/
 alsa-lib*
