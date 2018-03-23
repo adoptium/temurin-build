@@ -83,6 +83,8 @@ echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${COPY_MACOSX_FREE_FONT_LIB
 
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
+# Defaults to not building this target, for Java 9+ we set this to test-image in order to build the native test libraries
+MAKE_TEST_IMAGE=""
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-""}
 
 addConfigureArg()
@@ -289,7 +291,14 @@ buildOpenJDK()
     exit 0
   fi
 
-  FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
+  # If it's Java 9+ then we also make test-image to build the native test libraries
+  JDK_PREFIX="jdk"
+  JDK_VERSION_NUMBER="${OPENJDK_CORE_VERSION#$JDK_PREFIX}"
+  if [ "$JDK_VERSION_NUMBER" -gt 8 ]; then
+    MAKE_TEST_IMAGE=" test-image" # the added white space is deliberate as it's the last arg
+  fi
+
+  FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM} ${MAKE_TEST_IMAGE}"
   echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
   exitCode=$(${FULL_MAKE_COMMAND})
 
