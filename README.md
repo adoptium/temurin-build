@@ -12,15 +12,24 @@ This repository contains several useful scripts in order to build OpenJDK person
 1. The `docker` folder contains a Docker file which can be used to create a Docker container for building OpenJDK
 2. The `git-hg` folder contains scripts to clone an OpenJDK  mercurial forest into a GitHub repo and regularly update it
 3. The `mercurial-tags/java-tool` folder contains scripts for TODO
-4. The `sbin` folder contains the scripts called by the main script.
-5. The `security` folder contains a script and `cacerts` file that is bundled with the JDK and used when building OpenJDK: the `cacerts` file is an important 
+4. The `pipelines` folder contains the Groovy pipeline scripts for Jenkins (e.g. build | test | checksum |release)
+5. The `sbin` folder contains the scripts called by the main script.
+6. The `security` folder contains a script and `cacerts` file that is bundled with the JDK and used when building OpenJDK: the `cacerts` file is an important 
 file that's used to enable SSL connections
 
 The main script to build OpenJDK is `makejdk-any-platform.sh`
 
 ## Building OpenJDK
 
-### Building via Docker
+### Building on the Build Farm
+
+In order to build an OpenJDK variant on the build farm you need to follow the 
+[Adding-a-new-build-variant](https://github.com/AdoptOpenJDK/TSC/wiki/Adding-a-new-build-variant) instructions
+
+### Building locally via Docker
+
+Make sure you have started your Docker Daemon first!  For help with getting docker follow the instructions [here](https://docs.docker.com/engine/installation/). 
+Once you have Docker started you can then use the script below to build OpenJDK.
 
 ```
 Usage: ./makejdk-any-platform.sh --version [version] [options]
@@ -31,7 +40,7 @@ Versions:
   jdk10 - https://github.com/AdoptOpenJDK/openjdk-jdk10
 
 Options:
-  -s, --source <path>        specify the location for the source and dependencies to be cloned
+  -s, --source <path>        specify the location for the source and dependencies to be cloned, defaults to ./openjdk
   -d, --destination <path>   specify the location for the tarball (eg. /path/ or /path/here.tar.gz)
   -r, --repository <repo>    specify a custom repository (eg. username/openjdk-jdk8u)
   -b, --branch <branch>      specify a custom branch (eg. dev)
@@ -42,17 +51,18 @@ Options:
 ```
 
 The simplest way to build OpenJDK using our scripts is to run `makejdk-any-platform.sh` and have your user be in the Docker group on the machine 
-(or prefix all of your Docker commands with `sudo`). This script can be used to create a Docker container that will be configured with all of the required 
-dependencies and a base operating system in order to build OpenJDK
+(or prefix all of your Docker commands with `sudo`). This script will create a Docker container that will be configured with all of the required 
+dependencies and a base operating system in order to build OpenJDK. For example:
 
-By default the docker container is removed each time and your build will be copied from the container to the host
+`./makejdk-any-platform.sh --keep --version --ssh jdk8u`
 
-To override this behaviour, specify the `-k` or `--keep` options.
-
-By providing the -d option to `makejdk.sh`, the resulting zipped tarball will be copied to the value for -d, for example:
-`makejdk.sh /target/directory` will result in the JDK being built inside of your Docker container and then copied to /target/directory on the host
-
-For help with getting docker follow the instructions [here](https://docs.docker.com/engine/installation/)
+NOTE: If you don't use SSH keys (if you do then pass `-ssh`) to connect to GitHub then the script will challenge you for your GitHub username and password.
+NOTE: The script will clone source code into the `--source` directory (defaults to `openjdk`).
+NOTE: By default the docker container is removed each time and your build will be copied from the container to the host. 
+To override this behaviour, specify the `-k` or `--keep` option.
+NOTE: The entire process will take some time, especially if you have not saved the Docker image from a previous run. 
+NOTE: If you set the `-d` option it will pass that through to `makejdk.sh`, the resulting zipped tarball will be copied to the value for -d, for example:
+`makejdk.sh /target/directory` will result in the JDK being built inside of your Docker container and then copied to `/target/directory` on the host
 
 #### Configuring Docker for non sudo use
 
@@ -62,7 +72,6 @@ To use the Docker commands without using the sudo prefix, you will need to be in
 1. `sudo groupadd docker`: creates the Docker group if it doesn't already exist
 2. `sudo gpasswd -a yourusernamehere docker`: adds a user to the Docker group
 3. `sudo service docker restart`: restarts the Docker service so the above changes can take effect
-
 
 ### Building in your local environment
 
