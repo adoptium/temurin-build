@@ -24,7 +24,7 @@ The main script to build OpenJDK is `makejdk-any-platform.sh`
 ### Building on the Build Farm
 
 In order to build an OpenJDK variant on the build farm you need to follow the 
-[Adding-a-new-build-variant](https://github.com/AdoptOpenJDK/TSC/wiki/Adding-a-new-build-variant) instructions
+[Adding-a-new-build-variant](https://github.com/AdoptOpenJDK/TSC/wiki/Adding-a-new-build-variant) instructions.
 
 ### Building locally via Docker
 
@@ -56,12 +56,12 @@ dependencies and a base operating system in order to build OpenJDK. For example:
 
 `./makejdk-any-platform.sh --keep --version --ssh jdk8u`
 
-NOTE: If you don't use SSH keys (if you do then pass `-ssh`) to connect to GitHub then the script will challenge you for your GitHub username and password.
-NOTE: The script will clone source code into the `--source` directory (defaults to `openjdk`).
-NOTE: By default the docker container is removed each time and your build will be copied from the container to the host. 
+* **NOTE:** If you don't use SSH keys (if you do then pass `-ssh`) to connect to GitHub then the script will challenge you for your GitHub username and password.
+* **NOTE:** The script will clone source code into the `--source` directory (defaults to `openjdk`).
+* **NOTE:** By default the docker container is removed each time and your build will be copied from the container to the host. 
 To override this behaviour, specify the `-k` or `--keep` option.
-NOTE: The entire process will take some time, especially if you have not saved the Docker image from a previous run. 
-NOTE: If you set the `-d` option it will pass that through to `makejdk.sh`, the resulting zipped tarball will be copied to the value for -d, for example:
+* **NOTE:** The entire process will take some time, especially if you have not saved the Docker image from a previous run. 
+* **NOTE:** If you set the `-d` option it will pass that through to `makejdk.sh`, the resulting zipped tarball will be copied to the value for -d, for example:
 `makejdk.sh /target/directory` will result in the JDK being built inside of your Docker container and then copied to `/target/directory` on the host
 
 #### Configuring Docker for non sudo use
