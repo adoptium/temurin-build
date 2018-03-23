@@ -3,19 +3,23 @@
  * please create a PR there before copying the code over
  */
 println "building ${JDK_VERSION}"
+
+def buildPlatforms = ['Mac', 'Linux', 'Windows']
+def buildArchOSs = ['x86-64_macos', 'x86-64_linux', 'x86-64_windows']
+def buildjobMap = [:]
 stage('build OpenJDK') {
-    def Platforms = [:]
-    Platforms["Linux"] = {
-        build job: 'openjdk_amber_build_x86-64_linux'
-    }
-    Platforms["Mac"] = {
-        build job: 'openjdk_amber_build_x86-64_macos'
-    }
-    Platforms["Windows"] = {
-        build job: 'openjdk_amber_build_x86-64_windows'
-    }
-    parallel Platforms
+	def buildJobs = [:]
+    for ( int i = 0; i < buildPlatforms.size(); i++ ) {
+    	def index = i
+    	def platform = buildPlatforms[index]
+    	def archOS = buildArchOSs[index]
+		buildJobs[platform] = {
+			buildjobMap[platform] = build job: "openjdk_amber_build_${archOS}"
+		}
+	}
+	parallel buildJobs
 }
+
 stage('checksums') {
     build job: 'openjdk_amber_build_checksum'
 }
