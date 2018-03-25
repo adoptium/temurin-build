@@ -17,6 +17,8 @@
 # Script to prepare the AdoptOpenJDK build script for any platform and then call it (makejdk.sh)
 ###########################################################################################
 
+# TODO 9 should become 9u as will 10 shortly....
+
 # TODO remove this once we've finished
 set -x
 

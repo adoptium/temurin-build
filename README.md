@@ -34,7 +34,7 @@ Make sure you have started your Docker Daemon first!  For help with getting dock
 Once you have Docker started you can then use the script below to build OpenJDK.
 
 ```
-Usage: ./makejdk-any-platform.sh --version [version] [options]
+Usage: ./makejdk-any-platform.sh [options] openjdk-version
 
 Versions:
   jdk8u - https://github.com/AdoptOpenJDK/openjdk-jdk8u
@@ -56,7 +56,7 @@ The simplest way to build OpenJDK using our scripts is to run `makejdk-any-platf
 (or prefix all of your Docker commands with `sudo`). This script will create a Docker container that will be configured with all of the required 
 dependencies and a base operating system in order to build OpenJDK. For example:
 
-`./makejdk-any-platform.sh --keep --version --ssh jdk8u`
+`./makejdk-any-platform.sh --keep --ssh jdk8u`
 
 * **NOTE:** If you don't use SSH keys (if you do then pass `-ssh`) to connect to GitHub then the script will challenge you for your GitHub username and password.
 * **NOTE:** The script will clone source code into the `--source` directory (defaults to `openjdk`).
