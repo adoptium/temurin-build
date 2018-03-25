@@ -21,7 +21,7 @@ normal=$(echo -en "${esc}[m\017")
 
 exit_script() {
     if [[ -z ${KEEP} ]] ; then
-      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
+      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER_NAME" | awk '{print $1 }' | xargs -I {} docker rm -f {}
     fi
     echo "${error}Process exited${normal}"
     trap - SIGINT SIGTERM # clear the trap

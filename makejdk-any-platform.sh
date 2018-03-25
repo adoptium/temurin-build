@@ -14,8 +14,10 @@
 #
 
 ################################################################################################
+#
 # Script to prepare the AdoptOpenJDK build script for any platform and then call it (makejdk.sh)
-###########################################################################################
+#
+################################################################################################
 
 # TODO 9 should become 9u as will 10 shortly....
 
@@ -81,7 +83,6 @@ setVariablesBeforeCallingConfigure() {
     echo "Please specify a version, either jdk8, jdk9, jdk10 etc, with or without a 'u' suffix. e.g. $0 jdk8u"
     exit 1
   fi
-
 }
 
 # Set the repository, defaults to AdoptOpenJDK/openjdk-$OPENJDK_FOREST_NAME

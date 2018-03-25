@@ -19,7 +19,7 @@
 set -eu
 
 REPOSITORY=adoptopenjdk/openjdk-jdk8u
-OPENJDK_REPO_NAME=openjdk
+OPENJDK_SOURCE_DIR=openjdk
 SHALLOW_CLONE_OPTION="--depth=1"
 
 JAVA_SOURCE=""
@@ -73,7 +73,7 @@ parseCommandLineArgs()
     fi
 
     if [ -z "${JAVA_DESTINATION}" ]; then
-      JAVA_DESTINATION="$WORKING_DIR/$OPENJDK_REPO_NAME/build/java_home/images"
+      JAVA_DESTINATION="$WORKING_DIR/$OPENJDK_SOURCE_DIR/build/java_home/images"
     fi
 
     if [ -z "${BRANCH}" ] ; then
@@ -85,16 +85,16 @@ parseCommandLineArgs()
 # Step 1: Fetch OpenJDK, as that's where the tests live.
 cloneOpenJDKRepo()
 {
-    if [ -d "$WORKING_DIR/$OPENJDK_REPO_NAME/.git" ] && [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] ; then
+    if [ -d "$WORKING_DIR/$OPENJDK_SOURCE_DIR/.git" ] && [ "$REPOSITORY" == "adoptopenjdk/openjdk-jdk8u" ] ; then
       # It does exist and it's a repo other than the AdoptOpenJDK one
-      cd "$WORKING_DIR/$OPENJDK_REPO_NAME"  || exit
+      cd "$WORKING_DIR/$OPENJDK_SOURCE_DIR"  || exit
       echo "Will reset the repository at $PWD in 10 seconds..."
       sleep 10
       echo "Pulling latest changes from git repo"
       git fetch --all
       git reset --hard origin/$BRANCH
       cd "$WORKING_DIR" || exit
-    elif [ ! -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] ; then
+    elif [ ! -d "${WORKING_DIR}/${OPENJDK_SOURCE_DIR}/.git" ] ; then
       # If it doesn't exist, clone it
       echo "Didn't find any existing openjdk repository at WORKING_DIR (set to ${WORKING_DIR}) so cloning the source to openjdk"
       if [[ "$USE_SSH" == "true" ]] ; then
@@ -109,7 +109,7 @@ cloneOpenJDKRepo()
          echo "Git repo cloning mode: shallow (DOES NOT contain commit history)"
       fi
 
-      GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
+      GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_SOURCE_DIR}")
 
       echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
       git clone "${GIT_CLONE_ARGUMENTS[@]}"

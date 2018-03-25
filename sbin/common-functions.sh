@@ -70,9 +70,9 @@ checkingAndDownloadingFreemarker()
 
 checkingAndDownloadingFreeType()
 {
-  echo "Checking for freetype $WORKING_DIR $OPENJDK_REPO_NAME "
+  echo "Checking for freetype $WORKING_DIR $OPENJDK_SOURCE_DIR "
 
-  FOUND_FREETYPE=$(find "$WORKING_DIR/$OPENJDK_REPO_NAME/installedfreetype/lib" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}")
+  FOUND_FREETYPE=$(find "$WORKING_DIR/$OPENJDK_SOURCE_DIR/installedfreetype/lib" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}")
 
   if [[ ! -z "$FOUND_FREETYPE" ]] ; then
     echo "Skipping FreeType download"
@@ -94,7 +94,7 @@ checkingAndDownloadingFreeType()
 
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if ! (bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install); then
+    if ! (bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_SOURCE_DIR}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install); then
       # shellcheck disable=SC2154
       echo "${error}Failed to configure and build libfreetype, exiting"
       exit;
@@ -103,7 +103,7 @@ checkingAndDownloadingFreeType()
       echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
 
      if [[ ${OS_KERNEL_NAME} == "darwin" ]] ; then
-        TARGET_DYNAMIC_LIB_DIR="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype/lib/
+        TARGET_DYNAMIC_LIB_DIR="${WORKING_DIR}"/"${OPENJDK_SOURCE_DIR}"/installedfreetype/lib/
         TARGET_DYNAMIC_LIB="${TARGET_DYNAMIC_LIB_DIR}"/libfreetype.6.dylib
         echo ""
         echo "Listing the contents of ${TARGET_DYNAMIC_LIB_DIR} to see if the dynamic library 'libfreetype.6.dylib' has been created..."

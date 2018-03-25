@@ -23,7 +23,7 @@ source "$SCRIPT_DIR/common-functions.sh"
 
 WORKING_DIR=""
 TARGET_DIR=""
-OPENJDK_REPO_NAME=""
+OPENJDK_SOURCE_DIR=""
 JVM_VARIANT="${JVM_VARIANT:-server}"
 OPENJDK_UPDATE_VERSION=""
 OPENJDK_BUILD_NUMBER=""
@@ -44,7 +44,7 @@ while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
     TARGET_DIR="$1"; shift;;
 
     "--repository" | "-r" )
-    OPENJDK_REPO_NAME="$1"; shift;;
+    OPENJDK_SOURCE_DIR="$1"; shift;;
 
     "--variant"  | "-jv" )
     JVM_VARIANT="$1"; shift;;
@@ -65,7 +65,7 @@ while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
   esac
 done
 
-OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
+OPENJDK_DIR=$WORKING_DIR/$OPENJDK_SOURCE_DIR
 
 
 RUN_JTREG_TESTS_ONLY=""
@@ -118,8 +118,8 @@ checkIfDockerIsUsedForBuildingOrNot()
     echo "Detected we're in docker"
     WORKING_DIR=/openjdk/build
     TARGET_DIR=/openjdk/target/
-    OPENJDK_REPO_NAME=/openjdk
-    OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+    OPENJDK_SOURCE_DIR=/openjdk
+    OPENJDK_DIR="$WORKING_DIR/$OPENJDK_SOURCE_DIR"
     USE_DOCKER=true
   fi
 
@@ -208,7 +208,7 @@ buildingTheRestOfTheConfigParameters()
   fi
 
   if [[ -z "${FREETYPE}" ]] ; then
-    FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"}
+    FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_SOURCE_DIR}/installedfreetype"}
     addConfigureArg "--with-freetype=" "$FREETYPE_DIRECTORY"
   fi
 
@@ -241,7 +241,7 @@ configureCommandParameters()
 stepIntoTheWorkingDirectory()
 {
   # Make sure we're in the source directory for OpenJDK now
-  cd "$WORKING_DIR/$OPENJDK_REPO_NAME"  || exit
+  cd "$WORKING_DIR/$OPENJDK_SOURCE_DIR"  || exit
   echo "Should have the source, I'm at $PWD"
 }
 
@@ -341,7 +341,7 @@ removingUnnecessaryFiles()
      rm -rf cacerts_area
   fi
 
-  cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
+  cd "${WORKING_DIR}/${OPENJDK_SOURCE_DIR}" || return
 
   cd build/*/images || return
 

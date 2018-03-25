@@ -18,7 +18,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/common-functions.sh"
 
 WORKING_DIR=$1
-OPENJDK_REPO_NAME=$2
+OPENJDK_SOURCE_DIR=$2
 BUILD_FULL_NAME=$3
 # shellcheck disable=SC2001
 JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
@@ -27,7 +27,7 @@ JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
 JOB_NAME=${JOB_NAME:-OpenJDK}
 NUM_PROCESSORS=${NUM_PROCESSORS:-$(getconf _NPROCESSORS_ONLN)}
 TMP_DIR=$(dirname "$(mktemp -u)")
-OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+OPENJDK_DIR="$WORKING_DIR/$OPENJDK_SOURCE_DIR"
 TARGET_DIR="$WORKING_DIR"
 
 determineBuildProperties
@@ -37,8 +37,8 @@ checkIfDockerIsUsedForBuildingOrNot()
   if [[ -f /.dockerenv ]] ; then
     echo "Detected we're in docker"
     WORKING_DIR=/openjdk/build/
-    OPENJDK_REPO_NAME=openjdk/
-    OPENJDK_DIR="$WORKING_DIR/$OPENJDK_REPO_NAME"
+    OPENJDK_SOURCE_DIR=openjdk/
+    OPENJDK_DIR="$WORKING_DIR/$OPENJDK_SOURCE_DIR"
     TARGET_DIR=/openjdk/target/
     # Keep as a variable for potential use later
     # if we wish to copy the results to the host
@@ -127,7 +127,7 @@ packageTestResultsWithJCovReports()
   tar -czf "$TARGET_DIR/$artifact.tar.gz"   testoutput/
 
   if [ -d testoutput  ]; then  
-     rm -fr "$WORKING_DIR/$OPENJDK_REPO_NAME/testoutput"
+     rm -fr "$WORKING_DIR/$OPENJDK_SOURCE_DIR/testoutput"
   fi
   cp -fr testoutput/ "$WORKING_DIR/testoutput/"
 
