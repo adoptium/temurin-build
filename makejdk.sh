@@ -121,7 +121,7 @@ parseCommandLineArgs()
       "--skip-freetype" | "-sf" )
       export FREETYPE=false;;
 
-      "--version" | "-v" )
+      "--openjdk-version" | "-o" )
       shift;;
 
       "--freetype-dir" | "-ftd" )
