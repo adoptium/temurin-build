@@ -30,7 +30,7 @@
 #
 ################################################################################################
 
-set -x # TODO remove once we've finished debugging
+# set -x # TODO remove once we've finished debugging
 
 # TODO This only exists for backwards compatibility - remove once all jenkins jobs have migrated
 OS_ARCHITECTURE=$OS_MACHINE_NAME
@@ -256,7 +256,7 @@ setWorkingDirectory()
     echo "${info}WORKING_DIR is undefined so setting to ${PWD}${normal}."
     WORKING_DIR=$PWD
   else
-    echo "${info}Working dir is ${WORKING_DIR}${normal}."
+    echo "${info}Working dir is ${WORKING_DIR}${normal}"
   fi
 }
 
@@ -345,7 +345,7 @@ getOpenJDKUpdateAndBuildVersion()
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${WORKING_DIR}/${OPENJDK_SOURCE_DIR}" || return
     echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${SHALLOW_CLONE_OPTION}"
-    git fetch -v --tags "${SHALLOW_CLONE_OPTION}"
+    git fetch -q --tags "${SHALLOW_CLONE_OPTION}"
     OPENJDK_REPO_TAG=${TAG:-$(getFirstTagFromOpenJDKGitRepo)} # getFirstTagFromOpenJDKGitRepo resides in sbin/common-functions.sh
     if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
      echo "${error}Unable to detect git tag, exiting..."

@@ -21,7 +21,7 @@
 
 # TODO 9 should become 9u as will 10 shortly....
 
-set -x # TODO remove this once we've finished
+# set -x # TODO remove this once we've finished
 
 # The OS kernel name, e.g. 'darwin' for Mac OS X
 export OS_KERNEL_NAME=""
@@ -53,20 +53,26 @@ parseCommandLineArgs()
       "--variant" | "-bv")
         BUILD_VARIANT=$(echo "$1" | awk "{print $string}")
         shift;;
-
-      # Bypass the other flags (we'll process them again in makejdk.sh
-      *) shift;;
     esac
+
+    # Ignore all of the remaining arguments except for the last one
+    if [[ $# -gt 1 ]] && [[ ."$1" != .-* ]]; then
+      shift;
+    fi
   done
 
   # Now that we've processed the flags, grab the mandatory argument(s)
   OPENJDK_FOREST_NAME=$(echo "$1" | awk "{print $string}")
+  echo "OPENJDK_FOREST_NAME=${OPENJDK_FOREST_NAME}"
   export OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME}
 
   # 'u' means it's an update repo, e.g. jdk8u
   if [[ ${OPENJDK_FOREST_NAME} == *u ]]; then
     export OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME%?}
   fi
+
+  echo "OPENJDK_CORE_VERSION=${OPENJDK_CORE_VERSION}"
+
 }
 
 setVariablesBeforeCallingConfigure() {
@@ -84,6 +90,12 @@ setVariablesBeforeCallingConfigure() {
     echo "Please specify a version, either jdk8, jdk9, jdk10 etc, with or without a 'u' suffix. e.g. $0 [options] jdk8u"
     exit 1
   fi
+
+  echo "JDK_PATH=${JDK_PATH}"
+  echo "JRE_PATH=${JRE_PATH}"
+  echo "CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM}"
+  echo "COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=${COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG}"
+  echo "COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG}"
 }
 
 # Set the repository, defaults to AdoptOpenJDK/openjdk-$OPENJDK_FOREST_NAME
@@ -138,10 +150,13 @@ setMakeCommandForOS() {
   esac
 }
 
+echo "Starting $0 to set environment variables before calling makejdk.sh"
 parseCommandLineArgs "$@"
 setVariablesBeforeCallingConfigure
 setRepository
 processArgumentsforSpecificArchitectures
 setMakeCommandForOS
+
+echo "About to call makejdk.sh"
 
 ./makejdk.sh "$@"
