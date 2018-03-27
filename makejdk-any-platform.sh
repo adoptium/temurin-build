@@ -21,8 +21,7 @@
 
 # TODO 9 should become 9u as will 10 shortly....
 
-# TODO remove this once we've finished
-set -x
+set -x # TODO remove this once we've finished
 
 # The OS kernel name, e.g. 'darwin' for Mac OS X
 export OS_KERNEL_NAME=""
@@ -44,7 +43,6 @@ export BUILD_VARIANT=""
 # The OpenJDK source code repository to build from, could be a GitHub AdoptOpenJDK repo, mercurial forest etc
 export REPOSITORY=""
 
-# TODO Maybe refactor later into common-functions.sh
 parseCommandLineArgs()
 {
   # While we have flags, (that start with a '-' char) then process them
@@ -55,6 +53,9 @@ parseCommandLineArgs()
       "--variant" | "-bv")
         BUILD_VARIANT=$(echo "$1" | awk "{print $string}")
         shift;;
+
+      # Bypass the other flags (we'll process them again in makejdk.sh
+      *) shift;;
     esac
   done
 
@@ -80,7 +81,7 @@ setVariablesBeforeCallingConfigure() {
     export JDK_PATH="j2sdk-image"
     export JRE_PATH="j2re-image"
   else
-    echo "Please specify a version, either jdk8, jdk9, jdk10 etc, with or without a 'u' suffix. e.g. $0 jdk8u"
+    echo "Please specify a version, either jdk8, jdk9, jdk10 etc, with or without a 'u' suffix. e.g. $0 [options] jdk8u"
     exit 1
   fi
 }

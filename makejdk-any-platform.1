@@ -5,9 +5,9 @@ makejdk.sh
 .SH SYNOPSIS
 "./makejdk-any-platform.sh [options] version"
 .SH DESCRIPTION
-The simplest way to build OpenJDK using our scripts is to run makejdk-any-platform.sh <jdk8u|jdk9|jdk10|jdk11> and have your user be in the Docker group on
+"The simplest way to build OpenJDK using our scripts is to run (./makejdk-any-platform.sh version) and have your user be in the Docker group on
 the machine (or prefix all of your Docker commands with sudo. This script can be used to create a Docker container that will be configured with all of the
-required dependencies and a base operating system in order to build OpenJDK.
+required dependencies and a base operating system in order to build OpenJDK."
 
 .SH VERSIONS
 .TP
@@ -19,7 +19,6 @@ https://github.com/AdoptOpenJDK/openjdk-jdk9
 .TP
 .BR \jdk10
 https://github.com/AdoptOpenJDK/openjdk-jdk10
-.TP
 
 .SH OPTIONS
 .TP
@@ -46,6 +45,7 @@ select one or more jtreg tests to run
 .TP
 .BR \-sf ", " \-\-skip-freetype
 skip building freetype
+.TP
 .BR \-nc ", " \-\-no-colour
 disable colour output
 .TP
@@ -60,4 +60,4 @@ disable shallow cloning of git repo(s) using the --depth=1 CLI option
 .TP
 .BR \-bv ", " \-\-variant " " \fI<variant name>\fR
 specify a custom build variant (eg. openj9)
-.TP
+
