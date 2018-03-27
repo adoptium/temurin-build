@@ -104,6 +104,8 @@ JTREG=false
 # Any extra args provided by the user
 USER_SUPPLIED_CONFIGURE_ARGS=""
 
+DOCKER="docker"
+
 # TODO This function is in sbin/common-functions.sh
 determineBuildProperties
 
@@ -178,6 +180,9 @@ parseCommandLineArgs()
 
       "--configure-args"  | "-ca" )
       export USER_SUPPLIED_CONFIGURE_ARGS="$1"; shift;;
+
+      "--sudo" | "-s" )
+      export DOCKER="sudo /usr/bin/docker";;
 
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
@@ -378,7 +383,7 @@ testOpenJDKViaDocker()
 {
   if [[ "$JTREG" == "true" ]]; then
     mkdir -p "${WORKING_DIR}/target"
-    docker run \
+    $DOCKER run \
     -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
     -v "${WORKING_DIR}/target:${TARGET_DIR_IN_THE_CONTAINER}" \
     --entrypoint /openjdk/sbin/jtreg.sh "${CONTAINER_NAME}"
@@ -391,22 +396,22 @@ testOpenJDKViaDocker()
 # in the current ./openjdk directory on the host machine (outside the container)
 createPersistentDockerDataVolume()
 {
-  docker volume inspect $DOCKER_SOURCE_VOLUME_NAME > /dev/null 2>&1
+  $DOCKER volume inspect $DOCKER_SOURCE_VOLUME_NAME > /dev/null 2>&1
   DATA_VOLUME_EXISTS=$?
 
   if [[ "$CLEAN_DOCKER_BUILD" == "true" || "$DATA_VOLUME_EXISTS" != "0" ]]; then
   
     echo "${info}Removing old volumes and containers${normal}"
-    docker rm -f "$(docker ps -a --no-trunc | grep $CONTAINER_NAME | cut -d' ' -f1)" || true
-    docker volume rm "${DOCKER_SOURCE_VOLUME_NAME}" || true
+    $DOCKER rm -f "$(docker ps -a --no-trunc | grep $CONTAINER_NAME | cut -d' ' -f1)" || true
+    $DOCKER volume rm "${DOCKER_SOURCE_VOLUME_NAME}" || true
 
     echo "${info}Creating tmp container and copying src${normal}"
-    docker volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
-    docker run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name "$TMP_CONTAINER_NAME" ubuntu:14.04 /bin/bash
-    docker cp openjdk "$TMP_CONTAINER_NAME":/openjdk/build/
+    $DOCKER volume create --name "${DOCKER_SOURCE_VOLUME_NAME}"
+    $DOCKER run -v "${DOCKER_SOURCE_VOLUME_NAME}":/openjdk/build --name "$TMP_CONTAINER_NAME" ubuntu:14.04 /bin/bash
+    $DOCKER cp openjdk "$TMP_CONTAINER_NAME":/openjdk/build/
 
     echo "${info}Removing tmp container${normal}"
-    docker rm -f "$TMP_CONTAINER_NAME"
+    $DOCKER rm -f "$TMP_CONTAINER_NAME"
   fi
 }
 
@@ -414,11 +419,11 @@ createPersistentDockerDataVolume()
 buildDockerContainer()
 {
   echo "Building docker container"
-  docker build -t "${CONTAINER_NAME}" "${DOCKER_BUILD_PATH}" "$1" "$2"
+  $DOCKER build -t "${CONTAINER_NAME}" "${DOCKER_BUILD_PATH}" "$1" "$2"
   if [[ "${BUILD_VARIANT}" != "" && -f "${DOCKER_BUILD_PATH}/Dockerfile-${BUILD_VARIANT}" ]]; then
     CONTAINER_NAME="${CONTAINER_NAME}-${BUILD_VARIANT}"
     echo "Building DockerFile variant ${BUILD_VARIANT}"
-    docker build -t "${CONTAINER_NAME}" -f "${DOCKER_BUILD_PATH}/Dockerfile-${BUILD_VARIANT}" "${DOCKER_BUILD_PATH}" "$1" "$2"
+    $DOCKER build -t "${CONTAINER_NAME}" -f "${DOCKER_BUILD_PATH}/Dockerfile-${BUILD_VARIANT}" "${DOCKER_BUILD_PATH}" "$1" "$2"
   fi
 }
 
@@ -445,7 +450,7 @@ buildAndTestOpenJDKViaDocker()
   if [[ "$KEEP" == "true" ]] ; then
      # shellcheck disable=SC2086
      # If we can't find the previous Docker container then build a new one
-     if [ "$(docker ps -a | grep -c \"$CONTAINER_NAME\")" == 0 ]; then
+     if [ "$($DOCKER ps -a | grep -c \"$CONTAINER_NAME\")" == 0 ]; then
          echo "${info}No docker container found so creating '$CONTAINER_NAME' ${normal}"
          buildDockerContainer
      fi
@@ -453,7 +458,7 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Since you did not specify -k or --keep, we are removing the existing container (if it exists) and building you a new one"
      echo "$good"
      # Find the previous Docker container and remove it (if it exists)
-     docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER_NAME" | awk '{print $1 }' | xargs -I {} docker rm -f {}
+     $DOCKER ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER_NAME" | awk '{print $1 }' | xargs -I {} docker rm -f {}
 
      # Build a new container
      buildDockerContainer --build-arg "OPENJDK_CORE_VERSION=${OPENJDK_CORE_VERSION}"
@@ -462,7 +467,7 @@ buildAndTestOpenJDKViaDocker()
 
   mkdir -p "${WORKING_DIR}/target"
 
-  docker run -t \
+  $DOCKER run -t \
       -e BUILD_VARIANT="$BUILD_VARIANT" \
       -v "${DOCKER_SOURCE_VOLUME_NAME}:/openjdk/build" \
       -v "${WORKING_DIR}/target":/${TARGET_DIR_IN_THE_CONTAINER} \
@@ -472,7 +477,7 @@ buildAndTestOpenJDKViaDocker()
 
   # If we didn't specify to keep the container then remove it
   if [[ -z ${KEEP} ]] ; then
-    docker ps -a | awk '{ print $1,$2 }' | grep "${CONTAINER_NAME}" | awk '{print $1 }' | xargs -I {} docker rm {}
+    $DOCKER ps -a | awk '{ print $1,$2 }' | grep "${CONTAINER_NAME}" | awk '{print $1 }' | xargs -I {} docker rm {}
   fi
 }
 

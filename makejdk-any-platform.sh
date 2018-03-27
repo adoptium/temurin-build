@@ -53,10 +53,11 @@ parseCommandLineArgs()
       "--variant" | "-bv")
         BUILD_VARIANT=$(echo "$1" | awk "{print $string}")
         shift;;
-
-      # Bypass the other flags (we'll process them again in makejdk.sh
-      *) shift;;
     esac
+
+    if [[ $# -gt 1 ]] && [[ ."$1" != .-* ]]; then
+     shift;
+    fi
   done
 
   # Now that we've processed the flags, grab the mandatory argument(s)
