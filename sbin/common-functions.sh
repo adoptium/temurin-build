@@ -15,6 +15,8 @@
 
 # Common functions to be used in scripts
 
+# set -x
+
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
@@ -70,7 +72,7 @@ checkingAndDownloadingFreemarker()
 
 checkingAndDownloadingFreeType()
 {
-  echo "Checking for freetype $WORKING_DIR $OPENJDK_SOURCE_DIR "
+  echo "Checking for freetype at $WORKING_DIR/$OPENJDK_SOURCE_DIR"
 
   FOUND_FREETYPE=$(find "$WORKING_DIR/$OPENJDK_SOURCE_DIR/installedfreetype/lib" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}")
 

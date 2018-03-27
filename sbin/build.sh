@@ -333,11 +333,13 @@ removingUnnecessaryFiles()
 {
   echo "Removing unnecessary files now..."
 
-  echo "Fetching the first tag from the OpenJDK git repo..."
   if [ -z "$OPENJDK_REPO_TAG" ]; then
+    echo "Fetching the first tag from the OpenJDK git repo..."
+    echo "Dir=${PWD}"
     OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   fi
   if [ "$USE_DOCKER" != "true" ] ; then
+     echo "Removing cacerrts"
      rm -rf cacerts_area
   fi
 
