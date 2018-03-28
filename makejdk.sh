@@ -396,7 +396,7 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     buildDockerContainer --build-arg "OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME}"
+     buildDockerContainer --build-arg "OPENJDK_CORE_VERSION=${OPENJDK_CORE_VERSION}"
      echo "$normal"
   fi
 
