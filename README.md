@@ -42,21 +42,30 @@ Versions:
   jdk10 - https://github.com/AdoptOpenJDK/openjdk-jdk10
 
 Options:
-  -s, --source <path>        specify the location for the source and dependencies to be cloned, defaults to ./openjdk
-  -d, --destination <path>   specify the location for the tarball (eg. /path/ or /path/here.tar.gz)
-  -r, --repository <repo>    specify a custom repository (eg. username/openjdk-jdk8u)
-  -b, --branch <branch>      specify a custom branch (eg. dev)
-  -k, --keep                 reuse docker container (prevents deleting)
-  -j, --jtreg                run jtreg after building
-  -S, --ssh                  use ssh when cloning git
-  --variant <name>           specify a build variant name, e.g. openj9
+  -s,   --source <path>              specify the location for the source and dependencies to be cloned, defaults to ./openjdk. If it is specified, docker is not used
+  -d,   --destination <path>         specify the location for the tarball (eg. /path/ or /path/here.tar.gz)
+  -r,   --repository <repo>          specify a custom repository (eg. username/openjdk-jdk8u)
+  -b,   --branch <branch>            specify a custom branch (eg. dev)
+  -k,   --keep                       reuse docker container (prevents deleting)
+  -j,   --jtreg                      run jtreg after building
+  -js,  --jtreg-subsets              select one or more jtreg tests to run
+  -S,   --ssh                        use ssh when cloning git
+  -sf   --skip-freetype              skip building freetype
+  -nc   --no-colour                  disable colour output
+  -ftd  --freetype-dir               specify the location of an existing FreeType library that can be used for the OpenJDK build process
+  -dsgc --disable-shallow-git-clone  disable shallow cloning of git repo(s) using the --depth=1 CLI option
+  -bv   --variant <name>             specify a build variant name, e.g. openj9
+  -c    --clean-docker-build         clean docker data volume
+  -t    --tag <tag>                  specify a custom tag
+  --sign <path>                      specify the location for the windows p12 certificate. Used only for windows builds to sign DLL
+  -ca   --configure-args <args>      specify a custom configuration arguments
 ```
 
 The simplest way to build OpenJDK using our scripts is to run `makejdk-any-platform.sh` and have your user be in the Docker group on the machine 
 (or prefix all of your Docker commands with `sudo`). This script will create a Docker container that will be configured with all of the required 
 dependencies and a base operating system in order to build OpenJDK. For example:
 
-`./makejdk-any-platform.sh --keep --version --ssh jdk8u`
+`./makejdk-any-platform.sh -c --version --ssh jdk8u`
 
 * **NOTE:** If you don't use SSH keys (if you do then pass `-ssh`) to connect to GitHub then the script will challenge you for your GitHub username and password.
 * **NOTE:** The script will clone source code into the `--source` directory (defaults to `openjdk`).
