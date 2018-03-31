@@ -13,7 +13,7 @@
 
 FROM openjdk_container
 
-MAINTAINER Mark Stoodley <mstoodle@ca.ibm.com>
+MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools
 RUN apt-get update \
