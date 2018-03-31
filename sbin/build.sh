@@ -28,6 +28,7 @@ JVM_VARIANT="${JVM_VARIANT:-server}"
 OPENJDK_UPDATE_VERSION=""
 OPENJDK_BUILD_NUMBER=""
 OPENJDK_REPO_TAG=""
+TRIMMED_TAG=""
 USER_SUPPLIED_CONFIGURE_ARGS=""
 
 while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
@@ -82,6 +83,8 @@ echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${COPY_MACOSX_FREE_FONT_LIB
 
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
+# Defaults to not building this target, for Java 9+ we set this to test-image in order to build the native test libraries
+MAKE_TEST_IMAGE=""
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-""}
 
 addConfigureArg()
@@ -165,15 +168,27 @@ configuringBootJDKConfigureParameter()
 # OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
 configuringVersionStringParameter()
 {
-  # Replace the default 'internal' with our own milestone string
-  addConfigureArg "--with-milestone=" "adoptopenjdk"
+  if [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
+    # Replace the default 'internal' with our own milestone string
+    addConfigureArg "--with-milestone=" "adoptopenjdk"
 
-  # Set the update version (e.g. 131), this gets passed in from the calling script
-  addConfigureArgIfValueIsNotEmpty "--with-update-version=" "${OPENJDK_UPDATE_VERSION}"
+    # Set the update version (e.g. 131), this gets passed in from the calling script
+    addConfigureArgIfValueIsNotEmpty "--with-update-version=" "${OPENJDK_UPDATE_VERSION}"
 
-  # Set the build number (e.g. b04), this gets passed in from the calling script
-  addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${OPENJDK_BUILD_NUMBER}"
+    # Set the build number (e.g. b04), this gets passed in from the calling script
+    addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${OPENJDK_BUILD_NUMBER}"
+  else
+    if [ -z "$OPENJDK_REPO_TAG" ]; then
+      OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+      echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
+    fi
+    # > JDK 8
+    addConfigureArg "--with-version-pre=" "adoptopenjdk"
 
+    TRIMMED_TAG=$(echo "$OPENJDK_REPO_TAG" | cut -f2 -d"-")
+    addConfigureArg "--with-version-string=" "${TRIMMED_TAG}"
+
+  fi
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
@@ -216,10 +231,10 @@ configureCommandParameters()
      configuringBootJDKConfigureParameter
      buildingTheRestOfTheConfigParameters
   fi
-  
+
   #Now we add any configure arguments the user has specified on the command line.
   CONFIGURE_ARGS="${CONFIGURE_ARGS} ${USER_SUPPLIED_CONFIGURE_ARGS}"
-  
+
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
@@ -276,7 +291,14 @@ buildOpenJDK()
     exit 0
   fi
 
-  FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
+  # If it's Java 9+ then we also make test-image to build the native test libraries
+  JDK_PREFIX="jdk"
+  JDK_VERSION_NUMBER="${OPENJDK_CORE_VERSION#$JDK_PREFIX}"
+  if [ "$JDK_VERSION_NUMBER" -gt 8 ]; then
+    MAKE_TEST_IMAGE=" test-image" # the added white space is deliberate as it's the last arg
+  fi
+
+  FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM} ${MAKE_TEST_IMAGE}"
   echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
   exitCode=$(${FULL_MAKE_COMMAND})
 
@@ -362,7 +384,7 @@ makeACopyOfLibFreeFontForMacOSX() {
         echo "Currently at '${PWD}'"
         echo "Copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
         echo " *** Workaround to fix the MacOSX issue where invocation to ${INVOKED_BY_FONT_MANAGER} fails to find ${TARGET_LIB_NAME} ***"
-        
+
         set -x
         cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
         if [ -f "${INVOKED_BY_FONT_MANAGER}" ]; then
@@ -380,7 +402,7 @@ makeACopyOfLibFreeFontForMacOSX() {
 }
 
 signRelease()
-{ 
+{
   if [ "$SIGN" ]; then
     if [[ "$OSTYPE" == "cygwin" ]]; then
       echo "Signing release"

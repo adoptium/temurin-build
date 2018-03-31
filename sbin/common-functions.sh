@@ -141,7 +141,7 @@ checkingAndDownloadCaCerts()
   echo "cacerts should be here..."
 
   # shellcheck disable=SC2046
-  if ! (file "${WORKING_DIR}/cacerts_area/security/cacerts"); then
+  if ! [ -r "${WORKING_DIR}/cacerts_area/security/cacerts" ]; then
     echo "Failed to retrieve the cacerts file, exiting..."
     exit;
   else

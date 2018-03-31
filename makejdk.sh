@@ -143,16 +143,12 @@ doAnyBuildVariantOverrides()
   if [[ "${BUILD_VARIANT}" == "openj9" ]]; then
     # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
     REPOSITORY="ibmruntimes/openj9-openjdk-${OPENJDK_CORE_VERSION}"
-    if [ "${OPENJDK_CORE_VERSION}" == "jdk8" ]; then
-      BRANCH="openj9-0.8"
-    else
-      BRANCH="openj9"
-    fi
+    BRANCH="openj9"
   fi
   if [[ "${BUILD_VARIANT}" == "SapMachine" ]]; then
-    # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
+    # current location of SAP variant
     REPOSITORY="SAP/SapMachine"
-    BRANCH="sapmachine"
+    BRANCH="sapmachine10" # sapmachine10 is the current branch for OpenJDK10 mainline (equivalent to jdk/jdk10)
   fi
 }
 
@@ -400,7 +396,7 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     buildDockerContainer --build-arg "OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME}"
+     buildDockerContainer --build-arg "OPENJDK_CORE_VERSION=${OPENJDK_CORE_VERSION}"
      echo "$normal"
   fi
 
