@@ -1,7 +1,3 @@
-/*
- * DO NOT EDIT DIRECTLY!  This code comes from https://github.com/AdoptOpenJDK/openjdk-build/pipelines/
- * please create a PR there before copying the code over
- */
 println "building ${JDK_VERSION}"
 
 def buildPlatforms = ['Mac', 'Linux', 'zLinux', 'ppc64le', 'Windows', 'AIX']

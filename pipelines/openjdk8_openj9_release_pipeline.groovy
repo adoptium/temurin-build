@@ -1,7 +1,3 @@
-/*
- * DO NOT EDIT DIRECTLY!  This code comes from https://github.com/AdoptOpenJDK/openjdk-build/pipelines/
- * please create a PR there before copying the code over
- */
 println "building ${JDK_VERSION}"
 def buildPlatforms = ['Linux', 'zLinux', 'ppc64le', 'AIX']
 def buildArchOSs = ['x86-64_linux', 's390x_linux', 'ppc64le_linux', 'ppc64_aix']
