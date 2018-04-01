@@ -63,9 +63,15 @@ for i in "$@"; do
   esac
 done
 
+export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG="false"
+export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG="false"
 if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ] || [ "$OPENJDK_CORE_VERSION" == "amber" ]; then
   export JDK_PATH="jdk"
   export JRE_PATH="jre"
+  if [ "$OPENJDK_CORE_VERSION" == "jdk9" ]; then
+      export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG="true"
+      export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG="true"
+  fi
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"}
 elif [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
   export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG="false"
