@@ -2,10 +2,10 @@ println "building ${JDK_VERSION}"
 
 def buildPlatforms = ['Linux', 'zLinux', 'ppc64le', 'AIX']
 def buildMaps = [:]
-buildMaps['Linux'] = [build:true, test:true, ArchOSs:'x86-64_linux']
-buildMaps['zLinux'] = [build:true, test:true, ArchOSs:'s390x_linux']
-buildMaps['ppc64le'] = [build:true, test:true, ArchOSs:'ppc64le_linux']
-buildMaps['AIX'] = [build:true, test:false, ArchOSs:'ppc64_aix']
+buildMaps['Linux'] = [test:true, ArchOSs:'x86-64_linux']
+buildMaps['zLinux'] = [test:true, ArchOSs:'s390x_linux']
+buildMaps['ppc64le'] = [test:true, ArchOSs:'ppc64le_linux']
+buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
 def typeTests = ['openjdktest', 'systemtest']
 
 def jobs = [:]
