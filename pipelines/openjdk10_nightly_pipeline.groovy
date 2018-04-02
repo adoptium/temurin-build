@@ -37,6 +37,6 @@ parallel jobs
 stage('checksums') {
 	build job: 'openjdk10_build_checksum'
 }
-stage('publish release') {
+stage('publish nightly') {
 	build job: 'openjdk_release_tool', parameters: [string(name: 'REPO', value: 'nightly'), string(name: 'TAG', value: "${JDK_TAG}"), string(name: 'VERSION', value: 'jdk10')]
 }
