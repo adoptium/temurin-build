@@ -8,7 +8,7 @@ buildMaps['Linux'] = [test:true, ArchOSs:'x86-64_linux']
 buildMaps['zLinux'] = [test:true, ArchOSs:'s390x_linux']
 buildMaps['ppc64le'] = [test:true, ArchOSs:'ppc64le_linux']
 buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
-buildMaps['arm64'] = [test:true, ArchOSs:'aarch64_linux']
+buildMaps['arm64'] = [test:true, ArchOSs:'arm64_linux']
 def typeTests = ['openjdktest', 'systemtest']
 
 def jobs = [:]
