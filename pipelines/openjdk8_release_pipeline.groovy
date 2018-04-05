@@ -34,12 +34,20 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 }
 parallel jobs
 
+def checksumJob
 stage('checksums') {
 	build job: 'openjdk8_build_checksum'
+	checksumJob = build job: 'openjdk8_build_checksum',
+							parameters: [string(name: 'PRODUCT', value: 'releases')]
 }
 stage('installers') {
 	build job: 'openjdk8_build_installer', parameters: [string(name: 'VERSION', value: "${JDK_VERSION}")]
 }
 stage('publish release') {
-	build job: 'openjdk_release_tool', parameters: [string(name: 'REPO', value: 'release'), string(name: 'TAG', value: "${JDK_TAG}"), string(name: 'VERSION', value: 'jdk8')]
+	build job: 'openjdk_release_tool', 
+				parameters: [string(name: 'REPO', value: 'release'),
+							string(name: 'TAG', value: "${JDK_TAG}"),
+							string(name: 'VERSION', value: 'jdk8'),
+							string(name: 'CHECKSUM_JOB_NAME', value: "openjdk8_build_checksum"),
+							string(name: 'CHECKSUM_JOB_NUMBER', value: "${checksumJob.getNumber()}")]
 }
