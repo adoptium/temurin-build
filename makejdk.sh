@@ -355,11 +355,11 @@ createPersistentDockerDataVolume()
 buildDockerContainer()
 {
   echo Building docker container
-  docker build -t "${CONTAINER}" "${PATH_BUILD}" "$1" "$2"
+  docker build -t "${CONTAINER}" "${PATH_BUILD}" --build-arg "OPENJDK_CORE_VERSION=${OPENJDK_CORE_VERSION}"
   if [[ "${BUILD_VARIANT}" != "" && -f "${PATH_BUILD}/Dockerfile-${BUILD_VARIANT}" ]]; then
     CONTAINER="${CONTAINER}-${BUILD_VARIANT}"
     echo Building dockerfile variant "${BUILD_VARIANT}"
-    docker build -t "${CONTAINER}" -f "${PATH_BUILD}/Dockerfile-${BUILD_VARIANT}" "${PATH_BUILD}" "$1" "$2"
+    docker build -t "${CONTAINER}" -f "${PATH_BUILD}/Dockerfile-${BUILD_VARIANT}" "${PATH_BUILD}" --build-arg "OPENJDK_CORE_VERSION=${OPENJDK_CORE_VERSION}"
   fi
 }
 
@@ -396,7 +396,7 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Building as you've not specified -k or --keep"
      echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
-     buildDockerContainer --build-arg "OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME}"
+     buildDockerContainer
      echo "$normal"
   fi
 

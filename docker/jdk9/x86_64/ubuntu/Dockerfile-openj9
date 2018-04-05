@@ -13,16 +13,25 @@
 
 FROM openjdk_container
 
-MAINTAINER Mark Stoodley <mstoodle@ca.ibm.com>
+MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools
 RUN apt-get update \
-  && apt-get install -qq -y --no-install-recommends \
-    autoconf \
-    libnuma-dev \
-    g++-4.8 \
-    gcc-4.8 \
-&& rm -rf /var/lib/apt/lists/*
+    && apt-get install -qq -y --no-install-recommends \
+       autoconf \
+       ccache \
+       cpio \
+       file \
+       g++-4.8 \
+       gcc-4.8 \
+       libdwarf-dev \
+       libelf-dev \
+       libfontconfig \
+       libfreetype6-dev \
+       libnuma-dev \
+       pkg-config \
+       ssh \
+    && rm -rf /var/lib/apt/lists/*
 
 # Make sure build uses 4.8
 RUN rm /usr/bin/gcc \

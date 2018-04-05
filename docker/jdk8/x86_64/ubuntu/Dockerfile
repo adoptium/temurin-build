@@ -14,7 +14,7 @@
 
 FROM ubuntu:14.04
 
-MAINTAINER Tim Ellison <tim_ellison@uk.ibm.com>
+MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools
 RUN apt-get update \
