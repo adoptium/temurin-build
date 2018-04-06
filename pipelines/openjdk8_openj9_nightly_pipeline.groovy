@@ -27,7 +27,7 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 				typeTests.each {
 					build job:"openjdk8_j9_${it}_${archOS}",
 							propagate: false,
-							parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJobNum)}"),
+							parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJobNum}"),
 									string(name: 'UPSTREAM_JOB_NAME', value: "openjdk8_openj9_build_${archOS}")]
 				}
 			}
