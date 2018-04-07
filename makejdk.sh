@@ -44,67 +44,67 @@ source "$SCRIPT_DIR/sbin/common-functions.sh"
 
 # The name of the directory where we clone the OpenJDK source code for building, defaults to 'openjdk'
 # TODO Note sure if setting this openjdk default is a good idea...
-OPENJDK_SOURCE_DIR=${OPENJDK_SOURCE_DIR:-openjdk}
+BUILD_CONFIG[OPENJDK_SOURCE_DIR]=${BUILD_CONFIG[OPENJDK_SOURCE_DIR]:-openjdk}
 
 # The repository to pull the OpenJDK source from, defaults to AdoptOpenJDK/openjdk-jdk8u
-REPOSITORY=${REPOSITORY:-"AdoptOpenJDK/openjdk-jdk8u"}
+BUILD_CONFIG[REPOSITORY]=${BUILD_CONFIG[REPOSITORY]:-"AdoptOpenJDK/openjdk-jdk8u"}
 
 # By default only git clone the HEAD commit
-SHALLOW_CLONE_OPTION="--depth=1"
+BUILD_CONFIG[SHALLOW_CLONE_OPTION]="--depth=1"
 
 # Set Docker Container names and defaults
-DOCKER_SOURCE_VOLUME_NAME="openjdk-source-volume"
-CONTAINER_NAME=openjdk_container
-TMP_CONTAINER_NAME=openjdk-copy-src
-CLEAN_DOCKER_BUILD=false
-TARGET_DIR_IN_THE_CONTAINER="/openjdk/target/"
+BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]="openjdk-source-volume"
+BUILD_CONFIG[CONTAINER_NAME]=openjdk_container
+BUILD_CONFIG[TMP_CONTAINER_NAME]=openjdk-copy-src
+BUILD_CONFIG[CLEAN_DOCKER_BUILD]=false
+BUILD_CONFIG[TARGET_DIR_IN_THE_CONTAINER]="/openjdk/target/"
 
 # Copy the results of the docker build (defaults to false)
-export COPY_TO_HOST=false
+BUILD_CONFIG[COPY_TO_HOST]=false
 
 # Use Docker to build (defaults to false)
-export USE_DOCKER=false
+BUILD_CONFIG[USE_DOCKER]=false
 
 # The location of the DockerFile and where scripts get copied to for a build inside a Docker container
-DOCKER_BUILD_PATH=""
+BUILD_CONFIG[DOCKER_BUILD_PATH]=""
 
 # Whether we keep the Docker image after we build it
-KEEP=false
+BUILD_CONFIG[KEEP]=false
 
 # The current working directory
-WORKING_DIR=""
+BUILD_CONFIG[WORKING_DIR]=""
 
 # Use SSH for the GitHub connection (defaults to false)
-USE_SSH=false
+BUILD_CONFIG[USE_SSH]=false
 
 # Director where OpenJDK binary gets built to
-TARGET_DIR=""
+BUILD_CONFIG[TARGET_DIR]=""
 
 # Which repo branch to build, e.g. dev
-BRANCH=""
+BUILD_CONFIG[BRANCH]=""
 
 # Which repo tag to build, e.g. jdk8u172-b03
-TAG=""
+BUILD_CONFIG[TAG]=""
 
 # Update version e.g. 172
-OPENJDK_UPDATE_VERSION=""
+BUILD_CONFIG[OPENJDK_UPDATE_VERSION]=""
 
 # build number e.g. b03
-OPENJDK_BUILD_NUMBER=""
+BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=""
 
 # Build variant, e.g. openj9, defaults to "" which means hotspot
-BUILD_VARIANT=${BUILD_VARIANT:-""}
+BUILD_CONFIG[BUILD_VARIANT]=${BUILD_CONFIG[BUILD_VARIANT]:-""}
 
 # JVM variant, e.g. client or server, defaults to server
-JVM_VARIANT=${JVM_VARIANT:-server}
+BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-server}
 
 # Whether we execute the jtreg tests
-JTREG=false
+BUILD_CONFIG[JTREG]=false
 
 # Any extra args provided by the user
-USER_SUPPLIED_CONFIGURE_ARGS=""
+BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=""
 
-DOCKER="docker"
+BUILD_CONFIG[DOCKER]="docker"
 
 # TODO This function is in sbin/common-functions.sh
 determineBuildProperties
@@ -532,12 +532,15 @@ checkIfDockerIsUsedShouldTheContainerBePreserved
 setDefaultBranchIfNotProvided
 setWorkingDirectory
 setTargetDirectory
-time (
-    checkoutAndCloneOpenJDKGitRepo
-)
 
-time (
-    getOpenJDKUpdateAndBuildVersion
-)
+echo "==============================="
+printenv
+#time (
+    #checkoutAndCloneOpenJDKGitRepo
+#)
 
-buildAndTestOpenJDK
+#time (
+    #getOpenJDKUpdateAndBuildVersion
+#)
+
+#buildAndTestOpenJDK
