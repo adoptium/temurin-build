@@ -23,7 +23,7 @@
 
 set -x # TODO remove this once we've finished
 
-declare -A BUILD_CONFIG
+declare -A -x BUILD_CONFIG
 export BUILD_CONFIG
 
 # The OS kernel name, e.g. 'darwin' for Mac OS X
@@ -174,8 +174,20 @@ setMakeCommandForOS
 
 echo "About to call makejdk.sh"
 
-#./makejdk.sh "$@"
+source configureBuild.sh
+source build.sh
+
+configure_build "$(declare -p BUILD_CONFIG)" UPDATED_BUILD_CONFIG "$@"
+declare -A BUILD_CONFIG=${UPDATED_BUILD_CONFIG#*=}
 
 set +x
-for K in "${!BUILD_CONFIG[@]}"; do echo BUILD_CONFIG[$K]=${BUILD_CONFIG[$K]}; done | sort
+echo "BUILDING WITH CONFIGURATION:"
+echo "============================"
+for K in "${!BUILD_CONFIG[@]}";
+do
+  echo BUILD_CONFIG[$K]=${BUILD_CONFIG[$K]};
+done | sort
 set -x
+
+#perform_build
+
