@@ -318,9 +318,11 @@ printJavaVersionString()
   PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${JDK_PATH})
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
-     # shellcheck disable=SC2154
      echo "${info}"
-     "$PRODUCT_HOME"/bin/java -version || (echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}" && exit -1)
+     if ! "$PRODUCT_HOME"/bin/java -version; then
+       echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}"
+       exit -1
+     fi
      echo "${normal}"
      echo ""
   else
