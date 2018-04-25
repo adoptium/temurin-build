@@ -19,16 +19,36 @@
 #
 ################################################################################################
 
-# TODO 9 should become 9u as will 10 shortly....
-
 #set -x # TODO remove this once we've finished
 set -eux
 
-declare -A -x BUILD_CONFIG
+# Give the array indexes all meaningful names, we can't use meaningful names until bash 4.x which Apple/Mac doesn't support because of GPL3
+# This is why we can't have nice things.
+export OS_KERNEL_NAME=0
+export OS_ARCHITECTURE=1
+export OPENJDK_FOREST_NAME=2
+export OPENJDK_CORE_VERSION=3
+export BUILD_VARIANT=4
+export REPOSITORY=5
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM=6
+export JDK_PATH=7
+export JRE_PATH=8
+export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=9
+export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=10
+export FREETYPE_FONT_BUILD_TYPE_PARAM=11
+export FREETYPE_FONT_VERSION=12
+export JVM_VARIANT=13
+export BUILD_FULL_NAME=14
+export MAKE_ARGS_FOR_ANY_PLATFORM=15
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM=16
+export MAKE_COMMAND_NAME=17
+
+declare -a -x BUILD_CONFIG
 export BUILD_CONFIG
 
 # The OS kernel name, e.g. 'darwin' for Mac OS X
 BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
+#BUILD_CONFIG[0]=$(uname | awk '{print tolower($0)}')
 
 # The O/S architecture, e.g. x86_64 for a modern intel / Mac OS X
 BUILD_CONFIG[OS_ARCHITECTURE]=$(uname -m)
@@ -84,6 +104,7 @@ setVariablesForConfigure() {
   local openjdk_core_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
 
   # TODO Regex this in the if or use cut to grab out the number and see if >= 9
+  # TODO 9 should become 9u as will 10 shortly....
   if [ "$openjdk_core_version" == "jdk9" ] || [ "$openjdk_core_version" == "jdk10" ] || [ "$openjdk_core_version" == "jdk11" ] || [ "$openjdk_core_version" == "amber" ]; then
     local jdk_path="jdk"
     local jre_path="jre"
