@@ -1,4 +1,6 @@
 #!/bin/bash
+
+################################################################################
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,19 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-################################################################################################
+################################################################################
 #
-# Script to prepare the AdoptOpenJDK build script for any platform and then call it (makejdk.sh)
+# Prepare the AdoptOpenJDK OpenJDK build for any platform and then call it
 #
-################################################################################################
+################################################################################
 
-#set -x # TODO remove this once we've finished
-set -ex
+set -ex # TODO remove this once we've finished debugging
 
+# Pull in configuration support (read / write / display)
 source sbin/config_init.sh
 
-# Parse the command line options and the mandatory argument
 parseCommandLineArgs()
 {
   # While we have flags, (that start with a '-' char) then process them
@@ -47,7 +47,8 @@ parseCommandLineArgs()
   local forest_name=$1
   local openjdk_version=${forest_name}
 
-  # Derive the openjdk_core_version from the forest name.  'u' means it's an update repo, e.g. jdk8u
+  # Derive the openjdk_core_version from the forest name.
+  # 'u' means it's an update repo, e.g. jdk8u
   local openjdk_core_version=${forest_name}
   if [[ ${forest_name} == *u ]]; then
     openjdk_core_version=${forest_name%?}
@@ -80,7 +81,7 @@ setVariablesForConfigure() {
   BUILD_CONFIG[JRE_PATH]=$jre_path
 }
 
-# Set the repository, defaults to AdoptOpenJDK/openjdk-$OPENJDK_FOREST_NAME
+# Set the repository to build from
 setRepository() {
   local repository="${BUILD_CONFIG[REPOSITORY]:-adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
   repository="$(echo "${repository}" | awk '{print tolower($0)}')";
@@ -159,7 +160,8 @@ setMakeCommandForOS() {
   BUILD_CONFIG[MAKE_COMMAND_NAME]=${BUILD_CONFIG[MAKE_COMMAND_NAME]:-$make_command_name}
 }
 
-echo "Starting $0 to set environment variables before calling makejdk.sh"
+# Let's do lots of platform, arch and variant config set up before we build
+echo "Starting $0 to configure and build AdoptOpenJDK binary"
 parseCommandLineArgs "$@"
 setVariablesForConfigure
 setRepository
@@ -167,15 +169,17 @@ processArgumentsforSpecificPlatforms
 processArgumentsforSpecificArchitectures
 setMakeCommandForOS
 
-echo "About to call makejdk.sh"
-
+# Pull in support to configure and then build the binary
 source configureBuild.sh
 source build.sh
 
+# Configure the AdoptOpenJDK build with everything we've set
 configure_build "$@"
 
+# Display and write out the AdoptOpenJDK configuration
 displayParams
 writeConfigToFile
 
+# Let's build the AdoptOpenJDK binary
 perform_build
 

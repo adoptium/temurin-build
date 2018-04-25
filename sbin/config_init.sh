@@ -1,10 +1,35 @@
 #!/usr/bin/env bash
 
+################################################################################
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+################################################################################
 
+################################################################################
+#
+# This shell script deals with writing the AdoptOpenJDK build configuration to
+# the file system so it can be picked up by further build steps, Docker
+# containers etc
+#
+# We are deliberately writing to shell because this needs to work on some truly
+# esoteric platforms to fulfil the Java Write Once Run Anywhere (WORA) promise
+#
+################################################################################
 
-# Give the array indexes all meaningful names, we can't use meaningful names until bash 4.x which Apple/Mac doesn't support because of GPL3
-# This is why we can't have nice things.
-
+# We can't use Bash 4.x+ associative arrays as as Apple won't support bash 4.0
+# (because of GPL3), we therefore have to name the indexes of the CONFIG_PARAMS
+# map. This is why we can't have nice things.
 CONFIG_PARAMS=(
 OS_KERNEL_NAME
 OS_ARCHITECTURE
@@ -48,6 +73,7 @@ COLOUR
 WORKSPACE_DIR
 )
 
+# Helper code to perform index lookups by name
 declare -a -x PARAM_LOOKUP
 for index in $(seq 0 $(expr ${#CONFIG_PARAMS[@]} - 1))
 do
@@ -58,6 +84,7 @@ done
 
 function displayParams() {
     set +x
+    echo "# ============================"
     echo "# OPENJDK BUILD CONFIGURATION:"
     echo "# ============================"
     for K in "${!BUILD_CONFIG[@]}";
@@ -102,5 +129,5 @@ BUILD_CONFIG[OPENJDK_CORE_VERSION]=""
 # The build variant, e.g. openj9
 BUILD_CONFIG[BUILD_VARIANT]=""
 
-# The OpenJDK source code repository to build from, could be a GitHub AdoptOpenJDK repo, a mercurial forest etc
+# The OpenJDK source code repository to build from, e.g. an AdoptOpenJDK repo
 BUILD_CONFIG[REPOSITORY]=""
