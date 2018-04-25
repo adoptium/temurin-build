@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 ################################################################################
+
+################################################################################
 #
 # Prepare the AdoptOpenJDK OpenJDK build for any platform and then call it
 #

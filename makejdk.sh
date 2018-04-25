@@ -12,23 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+################################################################################
 
-################################################################################################
 # TODO rewrite the doc here
 
 #
 # Script to clone the OpenJDK source then build it
 
 # Optionally uses Docker, otherwise you can provide two arguments:
-# the area to build the JDK e.g. $HOME/mybuilddir as -s or --source
-# and the target destination for the tar.gz e.g. -d or --destination $HOME/mytargetdir
+# the area to build the JDK e.g. $HOME/mybuilddir as -s or --source and the
+# target destination for the tar.gz e.g. -d or --destination $HOME/mytargetdir
 # Both must be absolute paths! You can use $PWD/mytargetdir
 
-# A simple way to install dependencies persistently is to use our Ansible playbooks
+# To install dependencies persistently is to use our Ansible playbooks
 
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 #
-################################################################################################
+################################################################################
 
 source configureBuild.sh
 source build.sh

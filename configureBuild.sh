@@ -1,5 +1,6 @@
 #!/bin/bash
-#
+
+################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,26 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+################################################################################
 
-################################################################################################
+################################################################################
 # TODO rewrite the doc here
-
 #
 # Script to clone the OpenJDK source then build it
-
+#
 # Optionally uses Docker, otherwise you can provide two arguments:
-# the area to build the JDK e.g. $HOME/mybuilddir as -s or --source
-# and the target destination for the tar.gz e.g. -d or --destination $HOME/mytargetdir
+# the area to build the JDK e.g. $HOME/mybuilddir as -s or --source and the
+# target destination for the tar.gz e.g. -d or --destination $HOME/mytargetdir
 # Both must be absolute paths! You can use $PWD/mytargetdir
-
-# A simple way to install dependencies persistently is to use our Ansible playbooks
-
+#
+# To install dependencies persistently is to use our Ansible playbooks
+#
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 #
-################################################################################################
+################################################################################
 
-# set -x # TODO remove once we've finished debugging
-set -eux
+set -eux # TODO remove once we've finished debugging
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -41,12 +41,13 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #source "$SCRIPT_DIR/sbin/common-functions.sh"
 
 init_build_config() {
-  # The name of the directory where we clone the OpenJDK source code for building, defaults to 'openjdk'
+  # The name of the directory where we clone the OpenJDK source code for
+  # building, defaults to 'openjdk'
   # TODO Note sure if setting this openjdk default is a good idea...
 
   BUILD_CONFIG[OPENJDK_SOURCE_DIR]=${BUILD_CONFIG[OPENJDK_SOURCE_DIR]:-openjdk}
 
-  # The repository to pull the OpenJDK source from, defaults to AdoptOpenJDK/openjdk-jdk8u
+  # Repo to pull the OpenJDK source from, defaults to AdoptOpenJDK/openjdk-jdk8u
   BUILD_CONFIG[REPOSITORY]=${BUILD_CONFIG[REPOSITORY]:-"AdoptOpenJDK/openjdk-jdk8u"}
 
   # By default only git clone the HEAD commit
@@ -65,7 +66,7 @@ init_build_config() {
   # Use Docker to build (defaults to false)
   BUILD_CONFIG[USE_DOCKER]=false
 
-  # The location of the DockerFile and where scripts get copied to for a build inside a Docker container
+  # Location of DockerFile and where scripts get copied to inside the container
   BUILD_CONFIG[DOCKER_BUILD_PATH]=""
 
   # Whether we keep the Docker image after we build it
@@ -207,14 +208,16 @@ parseCommandLineArgs()
 doAnyBuildVariantOverrides()
 {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
-    # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
+    # current (not final) location of Extensions for OpenJDK9 for OpenJ9 project
     local repository="ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
     local branch="openj9"
   fi
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]; then
     # current location of SAP variant
     local repository="SAP/SapMachine"
-    local branch="sapmachine10" # sapmachine10 is the current branch for OpenJDK10 mainline (equivalent to jdk/jdk10)
+     # sapmachine10 is the current branch for OpenJDK10 mainline
+     # (equivalent to jdk/jdk10 on hotspot)
+    local branch="sapmachine10"
   fi
 
   BUILD_CONFIG[REPOSITORY]=${repository:-${BUILD_CONFIG[REPOSITORY]}};
@@ -224,7 +227,7 @@ doAnyBuildVariantOverrides()
 # TODO refactor - surely we just want to check if the user has passed in a useDocker flag
 checkIfDockerIsUsedForBuildingOrNot()
 {
-  # If both a working directory and a target directory provided then build natively
+  # If both a working dir and a target dir provided then build natively
   if [ ! -z "${BUILD_CONFIG[WORKING_DIR]}" ] && [ ! -z "${BUILD_CONFIG[TARGET_DIR]}" ] ; then
     # This uses sbin/build.sh directly
     echo "${info}Not using Docker, working area will be ${BUILD_CONFIG[WORKING_DIR]}, target for the JDK will be ${BUILD_CONFIG[TARGET_DIR]} ${normal}"
@@ -308,15 +311,10 @@ determineBuildProperties() {
     BUILD_CONFIG[BUILD_FULL_NAME]=${BUILD_CONFIG[BUILD_FULL_NAME]:-"$default_build_full_name"}
 }
 
+################################################################################
 
-##################################################################
-
-
-## Call with
 configure_build() {
-    # TODO This function is in sbin/common-functions.sh
     determineBuildProperties
-
     init_build_config
     sourceSignalHandler
     parseCommandLineArgs "$@"
@@ -328,4 +326,3 @@ configure_build() {
     setWorkingDirectory
     setTargetDirectory
 }
-

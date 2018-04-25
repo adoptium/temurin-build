@@ -1,5 +1,6 @@
 #!/bin/bash
-#
+
+################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,11 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+################################################################################
 
-
-# set -x # TODO remove once we've finished debugging
-set -ex
+set -ex # TODO remove once we've finished debugging
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -27,11 +26,11 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # TODO refactor this for SRP
 checkoutAndCloneOpenJDKGitRepo()
 {
-  # Check that we have a git repo of a valid openjdk version on our local file system
+  # Check that we have a git repo of a valid openjdk version on our local fs
   if [ -d "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && ( [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk9" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk10" ]) ; then
     local openjdk_git_repo_owner=$(git --git-dir "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}")
 
-    # If the local copy of the git source repo is valid then we reset appropriately
+    # If the local copy of git source repo is valid then we reset appropriately
     if [ "${openjdk_git_repo_owner}" ]; then
       cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "${info}Resetting the git openjdk source repository at $PWD in 10 seconds...${normal}"
@@ -78,7 +77,8 @@ cloneOpenJDKGitRepo()
   fi
 
   # TODO extract this to its own function
-  # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
+  # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and
+  # openj9-omr repositories
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
     cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     bash get_source.sh
@@ -94,7 +94,8 @@ getOpenJDKUpdateAndBuildVersion()
     cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
     git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
-    openjdk_repo_tag=${TAG:-$(getFirstTagFromOpenJDKGitRepo)} # getFirstTagFromOpenJDKGitRepo resides in sbin/common-functions.sh
+    # getFirstTagFromOpenJDKGitRepo resides in sbin/common-functions.sh
+    openjdk_repo_tag=${TAG:-$(getFirstTagFromOpenJDKGitRepo)}
     if [[ "${openjdk_repo_tag}" == "" ]] ; then
      echo "${error}Unable to detect git tag, exiting..."
      exit 1
@@ -135,9 +136,10 @@ testOpenJDKViaDocker()
 }
 
 # Create a data volume called ${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]},
-# this gets mounted at /openjdk/build inside the container and is persistent between builds/tests
-# unless -c is passed to this script, in which case it is recreated using the source
-# in the current ./openjdk directory on the host machine (outside the container)
+# this gets mounted at /openjdk/build inside the container and is persistent
+# between builds/tests unless -c is passed to this script, in which case it is
+# recreated using the source in the current ./openjdk directory on the host
+# machine (outside the container)
 createPersistentDockerDataVolume()
 {
   set +e
@@ -156,7 +158,8 @@ createPersistentDockerDataVolume()
   fi
 }
 
-# TODO I think we have a few bugs here - if you're passing a variant you override? the hotspot version
+# TODO I think we have a few bugs here - if you're passing a variant you
+# override? the hotspot version
 buildDockerContainer()
 {
   echo "Building docker container"
@@ -175,7 +178,8 @@ buildDockerContainer()
 
 buildAndTestOpenJDKViaDocker()
 {
-  # This could be extracted overridden by the user if we support more architectures going forwards
+  # This could be extracted overridden by the user if we support more
+  # architectures going forwards
   local container_architecture="x86_64/ubuntu"
 
   #TODO dont modify config in build
@@ -190,7 +194,8 @@ buildAndTestOpenJDKViaDocker()
 
   createPersistentDockerDataVolume
 
-  # If keep is true then use the existing container (or build a new one if we can't find it)
+  # If keep is true then use the existing container (or build a new one if we
+  # can't find it)
   if [[ "${BUILD_CONFIG[KEEP]}" == "true" ]] ; then
      # shellcheck disable=SC2086
      # If we can't find the previous Docker container then build a new one
@@ -267,7 +272,7 @@ buildAndTestOpenJDK()
   fi
 }
 
-##################################################################
+################################################################################
 
 function perform_build {
 
