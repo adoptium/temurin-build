@@ -20,6 +20,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/common-functions.sh"
+source "$SCRIPT_DIR/prepareWorkspace.sh"
 
 WORKING_DIR=""
 TARGET_DIR=""
@@ -464,6 +465,17 @@ showCompletionMessage()
 {
   echo "All done!"
 }
+
+source $SCRIPT_DIR/config_init.sh
+
+loadConfigFromFile
+
+cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+
+configureWorkspace
+
+exit
+
 
 sourceFileWithColourCodes
 checkIfDockerIsUsedForBuildingOrNot

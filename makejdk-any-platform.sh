@@ -22,70 +22,7 @@
 #set -x # TODO remove this once we've finished
 set -ex
 
-# Give the array indexes all meaningful names, we can't use meaningful names until bash 4.x which Apple/Mac doesn't support because of GPL3
-# This is why we can't have nice things.
-export OS_KERNEL_NAME=0
-export OS_ARCHITECTURE=1
-export OPENJDK_FOREST_NAME=2
-export OPENJDK_CORE_VERSION=3
-export BUILD_VARIANT=4
-export REPOSITORY=5
-export CONFIGURE_ARGS_FOR_ANY_PLATFORM=6
-export JDK_PATH=7
-export JRE_PATH=8
-export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=9
-export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=10
-export FREETYPE_FONT_BUILD_TYPE_PARAM=11
-export FREETYPE_FONT_VERSION=12
-export JVM_VARIANT=13
-export BUILD_FULL_NAME=14
-export MAKE_ARGS_FOR_ANY_PLATFORM=15
-export CONFIGURE_ARGS_FOR_ANY_PLATFORM=16
-export MAKE_COMMAND_NAME=17
-export OPENJDK_SOURCE_DIR=18
-export SHALLOW_CLONE_OPTION=19
-export DOCKER_SOURCE_VOLUME_NAME=20
-export CONTAINER_NAME=21
-export TMP_CONTAINER_NAME=22
-export CLEAN_DOCKER_BUILD=23
-export TARGET_DIR_IN_THE_CONTAINER=24
-export COPY_TO_HOST=25
-export USE_DOCKER=26
-export DOCKER_BUILD_PATH=27
-export KEEP=28
-export WORKING_DIR=29
-export USE_SSH=30
-export TARGET_DIR=31
-export BRANCH=32
-export TAG=33
-export OPENJDK_UPDATE_VERSION=34
-export OPENJDK_BUILD_NUMBER=35
-export JTREG=36
-export USER_SUPPLIED_CONFIGURE_ARGS=37
-export DOCKER=38
-export COLOUR=39
-
-# Declare the map of build configuration that we're going to use
-declare -a BUILD_CONFIG
-export BUILD_CONFIG
-
-# The OS kernel name, e.g. 'darwin' for Mac OS X
-BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
-
-# The O/S architecture, e.g. x86_64 for a modern intel / Mac OS X
-BUILD_CONFIG[OS_ARCHITECTURE]=$(uname -m)
-
-# The full forest name, e.g. jdk8, jdk8u, jdk9, jdk9u, etc.
-BUILD_CONFIG[OPENJDK_FOREST_NAME]=""
-
-# The abridged openjdk core version name, e.g. jdk8, jdk9, etc.
-BUILD_CONFIG[OPENJDK_CORE_VERSION]=""
-
-# The build variant, e.g. openj9
-BUILD_CONFIG[BUILD_VARIANT]=""
-
-# The OpenJDK source code repository to build from, could be a GitHub AdoptOpenJDK repo, a mercurial forest etc
-BUILD_CONFIG[REPOSITORY]=""
+source sbin/config_init.sh
 
 # Parse the command line options and the mandatory argument
 parseCommandLineArgs()
@@ -235,18 +172,10 @@ echo "About to call makejdk.sh"
 source configureBuild.sh
 source build.sh
 
-configure_build BUILD_CONFIG[@] UPDATED_BUILD_CONFIG "$@"
+configure_build "$@"
 
-declare -a BUILD_CONFIG=("${!UPDATED_BUILD_CONFIG}"); shift;
-
-echo $BUILD_CONFIG[3]
-exit
-
-echo "BUILDING WITH CONFIGURATION:"
-echo "============================"
-for K in "${!BUILD_CONFIG[@]}";
-do
-  echo BUILD_CONFIG[$K]=${BUILD_CONFIG[$K]};
-done | sort
+displayParams
+writeConfigToFile
 
 perform_build
+

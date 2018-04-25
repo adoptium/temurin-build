@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 MAINTAINER Tim Ellison <tim_ellison@uk.ibm.com>
 
 # Install required OS tools
 RUN apt-get update \
   && apt-get install -qq -y --no-install-recommends \
+    git \
     cpio \
     make \
     gcc \
@@ -31,7 +32,7 @@ RUN apt-get update \
     libcups2-dev \
     libfreetype6-dev \
     libasound2-dev \
-    openjdk-7-jdk \
+    openjdk-8-jdk \
     ccache \
     zip \
     wget \
@@ -44,6 +45,7 @@ RUN apt-get update \
 RUN mkdir -p /openjdk/target
 
 ADD sbin /openjdk/sbin
+ADD config /openjdk/config
 
 WORKDIR /openjdk/build/
 

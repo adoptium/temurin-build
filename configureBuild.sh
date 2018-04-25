@@ -38,7 +38,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Load the common functions
 # shellcheck source=sbin/common-functions.sh
-source "$SCRIPT_DIR/sbin/common-functions.sh"
+#source "$SCRIPT_DIR/sbin/common-functions.sh"
 
 init_build_config() {
   # The name of the directory where we clone the OpenJDK source code for building, defaults to 'openjdk'
@@ -73,6 +73,9 @@ init_build_config() {
 
   # The current working directory
   BUILD_CONFIG[WORKING_DIR]=""
+
+  # Root of the workspace
+  BUILD_CONFIG[WORKSPACE_DIR]=""
 
   # Use SSH for the GitHub connection (defaults to false)
   BUILD_CONFIG[USE_SSH]=false
@@ -261,9 +264,21 @@ setDefaultBranchIfNotProvided()
 
 setWorkingDirectory()
 {
+  if [ -z "${BUILD_CONFIG[WORKSPACE_DIR]}" ] ; then
+    if [[ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ]];
+    then
+       BUILD_CONFIG[WORKSPACE_DIR]="/openjdk/";
+     else
+       BUILD_CONFIG[WORKSPACE_DIR]=$PWD;
+    fi
+  else
+    echo "${info}Workspace dir is ${BUILD_CONFIG[WORKSPACE_DIR]}${normal}"
+  fi
+
+
   if [ -z "${BUILD_CONFIG[WORKING_DIR]}" ] ; then
     echo "${info}WORKING_DIR is undefined so setting to ${PWD}${normal}."
-    BUILD_CONFIG[WORKING_DIR]=$PWD
+    BUILD_CONFIG[WORKING_DIR]="./build/"
   else
     echo "${info}Working dir is ${BUILD_CONFIG[WORKING_DIR]}${normal}"
   fi
@@ -272,7 +287,7 @@ setWorkingDirectory()
 setTargetDirectory()
 {
   if [ -z "${BUILD_CONFIG[TARGET_DIR]}" ] ; then
-    echo "${info}TARGET_DIR is undefined so setting to $PWD."
+    echo "${info}TARGET_DIR is undefined so setting to $PWD.${normal}"
     BUILD_CONFIG[TARGET_DIR]=$PWD
     # Only makes a difference if we're in Docker
     echo "If you're using Docker, the build artifact will *NOT* be copied to the host (as you did not specify your own TARGET_DIR)."
@@ -283,15 +298,22 @@ setTargetDirectory()
   fi
 }
 
+
+determineBuildProperties() {
+    BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-server}
+
+    local build_type=normal
+    local default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${build_type}-${BUILD_CONFIG[JVM_VARIANT]}-release
+
+    BUILD_CONFIG[BUILD_FULL_NAME]=${BUILD_CONFIG[BUILD_FULL_NAME]:-"$default_build_full_name"}
+}
+
+
 ##################################################################
 
 
 ## Call with
 configure_build() {
-
-    declare -a BUILD_CONFIG=("${!1}"); shift;
-    local __resultvar=$1; shift;
-
     # TODO This function is in sbin/common-functions.sh
     determineBuildProperties
 
@@ -305,9 +327,5 @@ configure_build() {
     setDefaultBranchIfNotProvided
     setWorkingDirectory
     setTargetDirectory
-
-    # Return built configuration
-    echo $__resultvar
-    eval $__resultvar=BUILD_CONFIG[@]
 }
 

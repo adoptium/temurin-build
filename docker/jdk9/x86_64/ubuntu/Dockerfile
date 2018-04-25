@@ -18,6 +18,7 @@ MAINTAINER George Adams <george.adams@uk.ibm.com>
 # Install required OS tools
 RUN apt-get update \
   && apt-get install -qq -y --no-install-recommends \
+    git \
     cpio \
     make \
     gcc \
@@ -45,6 +46,7 @@ RUN apt-get update \
 RUN mkdir -p /openjdk/target
 
 ADD sbin /openjdk/sbin
+ADD config /openjdk/config
 
 WORKDIR /openjdk/build/
 

@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,20 +21,16 @@ set -ex
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Load the common functions
-# shellcheck source=sbin/common-functions.sh
-#source "${SCRIPT_DIR}/sbin/common-functions.sh"
-
 # TODO refactor this for SRP
 checkoutAndCloneOpenJDKGitRepo()
 {
   # Check that we have a git repo of a valid openjdk version on our local file system
-  if [ -d "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && ( [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk9" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk10" ]) ; then
-    local openjdk_git_repo_owner=$(git --git-dir "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}")
+  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && ( [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk9" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk10" ]) ; then
+    local openjdk_git_repo_owner=$(git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}")
 
     # If the local copy of the git source repo is valid then we reset appropriately
     if [ "${openjdk_git_repo_owner}" ]; then
-      cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
+      cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "${info}Resetting the git openjdk source repository at $PWD in 10 seconds...${normal}"
       sleep 10
       echo "${git}Pulling latest changes from git openjdk source repository${normal}"
@@ -49,12 +46,15 @@ checkoutAndCloneOpenJDKGitRepo()
       echo "Incorrect Source Code for ${BUILD_CONFIG[OPENJDK_FOREST_NAME]}.  This is an error, please check what is in $PWD and manually remove, exiting..."
       exit 1
     fi
+    pwd
+    ls -alh
     cd "${BUILD_CONFIG[WORKING_DIR]}" || return
-  elif [ ! -d "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] ; then
+  elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] ; then
     # If it doesn't exist, clone it
-    echo "${info}Didn't find any existing openjdk repository at ${BUILD_CONFIG[WORKING_DIR]} so cloning the source to openjdk${normal}"
+    echo "${info}Didn't find any existing openjdk repository at $(pwd)/${BUILD_CONFIG[WORKING_DIR]} so cloning the source to openjdk${normal}"
     cloneOpenJDKGitRepo
   fi
+
 }
 
 cloneOpenJDKGitRepo()
@@ -108,6 +108,7 @@ getOpenJDKUpdateAndBuildVersion()
     BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=$(echo "${openjdk_repo_tag}" | cut -d'b' -f 2 | cut -d'-' -f 1)
     echo "Version: ${BUILD_CONFIG[openjdk_update_version]} ${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
     cd "${BUILD_CONFIG[WORKING_DIR]}" || return
+
   fi
 
   echo "${normal}"
@@ -134,44 +135,6 @@ testOpenJDKViaDocker()
   fi
 }
 
-# Create a data volume called ${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]},
-# this gets mounted at /openjdk/build inside the container and is persistent between builds/tests
-# unless -c is passed to this script, in which case it is recreated using the source
-# in the current ./openjdk directory on the host machine (outside the container)
-createPersistentDockerDataVolume()
-{
-  set +e
-  ${BUILD_CONFIG[DOCKER]} volume inspect ${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]} > /dev/null 2>&1
-  local data_volume_exists=$?
-  set -e
-
-  if [[ "${BUILD_CONFIG[CLEAN_DOCKER_BUILD]}" == "true" || "$data_volume_exists" != "0" ]]; then
-
-    echo "${info}Removing old volumes and containers${normal}"
-    ${BUILD_CONFIG[DOCKER]} rm -f "$(${BUILD_CONFIG[DOCKER]} ps -a --no-trunc | grep ${BUILD_CONFIG[CONTAINER_NAME]} | cut -d' ' -f1)" || true
-    ${BUILD_CONFIG[DOCKER]} volume rm "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
-
-    echo "${info}Creating tmp container${normal}"
-    ${BUILD_CONFIG[DOCKER]} volume create --name "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}"
-  fi
-}
-
-# TODO I think we have a few bugs here - if you're passing a variant you override? the hotspot version
-buildDockerContainer()
-{
-  echo "Building docker container"
-
-  local dockerFile="${BUILD_CONFIG[DOCKER_BUILD_PATH]}/Dockerfile"
-
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "" && -f "${BUILD_CONFIG[DOCKER_BUILD_PATH]}/Dockerfile-${BUILD_CONFIG[BUILD_VARIANT]}" ]]; then
-    #TODO dont modify config in build
-    BUILD_CONFIG[CONTAINER_NAME]="${BUILD_CONFIG[CONTAINER_NAME]}-${BUILD_CONFIG[BUILD_VARIANT]}"
-    echo "Building DockerFile variant ${BUILD_CONFIG[BUILD_VARIANT]}"
-    dockerFile="${BUILD_CONFIG[DOCKER_BUILD_PATH]}/Dockerfile-${BUILD_CONFIG[BUILD_VARIANT]}"
-  fi
-
-  ${BUILD_CONFIG[DOCKER]} build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
-}
 
 buildAndTestOpenJDKViaDocker()
 {
@@ -190,6 +153,10 @@ buildAndTestOpenJDKViaDocker()
 
   createPersistentDockerDataVolume
 
+  # Copy our scripts for usage inside of the container
+  rm -r "${BUILD_CONFIG[DOCKER_BUILD_PATH]}/sbin"
+  cp -r "${SCRIPT_DIR}/sbin" "${BUILD_CONFIG[DOCKER_BUILD_PATH]}/sbin" 2>/dev/null
+
   # If keep is true then use the existing container (or build a new one if we can't find it)
   if [[ "${BUILD_CONFIG[KEEP]}" == "true" ]] ; then
      # shellcheck disable=SC2086
@@ -202,28 +169,26 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Since you did not specify -k or --keep, we are removing the existing container (if it exists) and building you a new one"
      echo "$good"
      # Find the previous Docker container and remove it (if it exists)
-     ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} ${BUILD_CONFIG[DOCKER]} rm -f {}
+     ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} docker rm -f {}
 
      # Build a new container
-     buildDockerContainer
+     buildDockerContainer --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
      echo "$normal"
   fi
 
   mkdir -p "${BUILD_CONFIG[WORKING_DIR]}/target"
 
-#     -v "${BUILD_CONFIG[WORKING_DIR]}/target":/${BUILD_CONFIG[TARGET_DIR_IN_THE_CONTAINER]} \
-
-  ${BUILD_CONFIG[DOCKER]} run -lst \
+  ${BUILD_CONFIG[DOCKER]} run -t \
       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
       -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
+      -v "${BUILD_CONFIG[WORKING_DIR]}/target":/${BUILD_CONFIG[TARGET_DIR_IN_THE_CONTAINER]} \
       --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
 
-exit
  testOpenJDKViaDocker
 
   # If we didn't specify to keep the container then remove it
   if [[ -z ${BUILD_CONFIG[KEEP]} ]] ; then
-    ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} ${BUILD_CONFIG[DOCKER]} rm {}
+    ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} docker rm {}
   fi
 }
 
@@ -269,16 +234,16 @@ buildAndTestOpenJDK()
 
 ##################################################################
 
-function perform_build {
+function configureWorkspace() {
 
-#  time (
-#    checkoutAndCloneOpenJDKGitRepo
-#  )
+  time (
+    checkoutAndCloneOpenJDKGitRepo
+  )
 
-#  time (
-#    getOpenJDKUpdateAndBuildVersion
-#  )
+  #time (
+  #  getOpenJDKUpdateAndBuildVersion
+  #)
 
-  buildAndTestOpenJDK
+  #buildAndTestOpenJDK
 }
 

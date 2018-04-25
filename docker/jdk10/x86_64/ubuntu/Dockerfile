@@ -24,6 +24,7 @@ RUN apt-get update \
   && add-apt-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \
   && apt-get update \
   && apt-get install -qq -y --no-install-recommends \
+    git \
     cpio \
     make \
     gcc \
@@ -52,6 +53,7 @@ RUN apt-get update \
 RUN mkdir -p /openjdk/target
 
 ADD sbin /openjdk/sbin
+ADD config /openjdk/config
 
 WORKDIR /openjdk/build/
 
