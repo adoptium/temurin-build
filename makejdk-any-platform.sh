@@ -20,7 +20,7 @@
 ################################################################################################
 
 #set -x # TODO remove this once we've finished
-set -eux
+set -ex
 
 # Give the array indexes all meaningful names, we can't use meaningful names until bash 4.x which Apple/Mac doesn't support because of GPL3
 # This is why we can't have nice things.
@@ -42,13 +42,35 @@ export BUILD_FULL_NAME=14
 export MAKE_ARGS_FOR_ANY_PLATFORM=15
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM=16
 export MAKE_COMMAND_NAME=17
+export OPENJDK_SOURCE_DIR=18
+export SHALLOW_CLONE_OPTION=19
+export DOCKER_SOURCE_VOLUME_NAME=20
+export CONTAINER_NAME=21
+export TMP_CONTAINER_NAME=22
+export CLEAN_DOCKER_BUILD=23
+export TARGET_DIR_IN_THE_CONTAINER=24
+export COPY_TO_HOST=25
+export USE_DOCKER=26
+export DOCKER_BUILD_PATH=27
+export KEEP=28
+export WORKING_DIR=29
+export USE_SSH=30
+export TARGET_DIR=31
+export BRANCH=32
+export TAG=33
+export OPENJDK_UPDATE_VERSION=34
+export OPENJDK_BUILD_NUMBER=35
+export JTREG=36
+export USER_SUPPLIED_CONFIGURE_ARGS=37
+export DOCKER=38
+export COLOUR=39
 
-declare -a -x BUILD_CONFIG
+# Declare the map of build configuration that we're going to use
+declare -a BUILD_CONFIG
 export BUILD_CONFIG
 
 # The OS kernel name, e.g. 'darwin' for Mac OS X
 BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
-#BUILD_CONFIG[0]=$(uname | awk '{print tolower($0)}')
 
 # The O/S architecture, e.g. x86_64 for a modern intel / Mac OS X
 BUILD_CONFIG[OS_ARCHITECTURE]=$(uname -m)
@@ -56,15 +78,16 @@ BUILD_CONFIG[OS_ARCHITECTURE]=$(uname -m)
 # The full forest name, e.g. jdk8, jdk8u, jdk9, jdk9u, etc.
 BUILD_CONFIG[OPENJDK_FOREST_NAME]=""
 
-# The abridged, core version name, e.g. jdk8, jdk9, etc. No "u"s.
+# The abridged openjdk core version name, e.g. jdk8, jdk9, etc.
 BUILD_CONFIG[OPENJDK_CORE_VERSION]=""
 
 # The build variant, e.g. openj9
 BUILD_CONFIG[BUILD_VARIANT]=""
 
-# The OpenJDK source code repository to build from, could be a GitHub AdoptOpenJDK repo, mercurial forest etc
+# The OpenJDK source code repository to build from, could be a GitHub AdoptOpenJDK repo, a mercurial forest etc
 BUILD_CONFIG[REPOSITORY]=""
 
+# Parse the command line options and the mandatory argument
 parseCommandLineArgs()
 {
   # While we have flags, (that start with a '-' char) then process them
@@ -87,8 +110,7 @@ parseCommandLineArgs()
   local forest_name=$1
   local openjdk_version=${forest_name}
 
-  # Derive the openjdk_core_version from the forest name
-  # 'u' means it's an update repo, e.g. jdk8u
+  # Derive the openjdk_core_version from the forest name.  'u' means it's an update repo, e.g. jdk8u
   local openjdk_core_version=${forest_name}
   if [[ ${forest_name} == *u ]]; then
     openjdk_core_version=${forest_name%?}
@@ -213,8 +235,12 @@ echo "About to call makejdk.sh"
 source configureBuild.sh
 source build.sh
 
-configure_build "$(declare -p BUILD_CONFIG)" UPDATED_BUILD_CONFIG "$@"
-declare -A BUILD_CONFIG=${UPDATED_BUILD_CONFIG#*=}
+configure_build BUILD_CONFIG[@] UPDATED_BUILD_CONFIG "$@"
+
+declare -a BUILD_CONFIG=("${!UPDATED_BUILD_CONFIG}"); shift;
+
+echo $BUILD_CONFIG[3]
+exit
 
 echo "BUILDING WITH CONFIGURATION:"
 echo "============================"
@@ -224,4 +250,3 @@ do
 done | sort
 
 perform_build
-

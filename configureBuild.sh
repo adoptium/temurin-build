@@ -14,7 +14,7 @@
 #
 
 ################################################################################################
-# TODO rewrite hte doc here
+# TODO rewrite the doc here
 
 #
 # Script to clone the OpenJDK source then build it
@@ -31,7 +31,7 @@
 ################################################################################################
 
 # set -x # TODO remove once we've finished debugging
-#set -e
+set -eux
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -41,11 +41,9 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/sbin/common-functions.sh"
 
 init_build_config() {
-  # TODO This only exists for backwards compatibility - remove once all jenkins jobs have migrated
-  BUILD_CONFIG[OS_ARCHITECTURE]=$OS_MACHINE_NAME
-
   # The name of the directory where we clone the OpenJDK source code for building, defaults to 'openjdk'
   # TODO Note sure if setting this openjdk default is a good idea...
+
   BUILD_CONFIG[OPENJDK_SOURCE_DIR]=${BUILD_CONFIG[OPENJDK_SOURCE_DIR]:-openjdk}
 
   # The repository to pull the OpenJDK source from, defaults to AdoptOpenJDK/openjdk-jdk8u
@@ -107,11 +105,14 @@ init_build_config() {
   BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=""
 
   BUILD_CONFIG[DOCKER]="docker"
+
+  # Print to console using colour codes
+  BUILD_CONFIG[COLOUR]="true"
 }
 
 sourceFileWithColourCodes()
 {
-  if [[ -z "${BUILD_CONFIG[COLOUR]}" ]] ; then
+  if [[ "${BUILD_CONFIG[COLOUR]}" = true ]] ; then
     # shellcheck disable=SC1091
     source ./sbin/colour-codes.sh
   fi
@@ -189,7 +190,7 @@ parseCommandLineArgs()
   done
 
   # Now that we've processed the flags, grab the mandatory argument(s)
-  BUILD_CONFIG[OPENJDK_FOREST_NAME]=$(echo "$1" | awk "{print $string}")
+  BUILD_CONFIG[OPENJDK_FOREST_NAME]=$1
   BUILD_CONFIG[OPENJDK_CORE_VERSION]=${BUILD_CONFIG[OPENJDK_FOREST_NAME]}
 
   # 'u' means it's an update repo, e.g. jdk8u
@@ -204,17 +205,17 @@ doAnyBuildVariantOverrides()
 {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
     # current (hoping not final) location of Extensions for OpenJDK9 for OpenJ9 project
-    repository="ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
-    branch="openj9"
+    local repository="ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
+    local branch="openj9"
   fi
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]; then
     # current location of SAP variant
-    repository="SAP/SapMachine"
-    branch="sapmachine10" # sapmachine10 is the current branch for OpenJDK10 mainline (equivalent to jdk/jdk10)
+    local repository="SAP/SapMachine"
+    local branch="sapmachine10" # sapmachine10 is the current branch for OpenJDK10 mainline (equivalent to jdk/jdk10)
   fi
 
   BUILD_CONFIG[REPOSITORY]=${repository:-${BUILD_CONFIG[REPOSITORY]}};
-  BUILD_CONFIG[BRANCH]=$branch;
+  BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
 }
 
 # TODO refactor - surely we just want to check if the user has passed in a useDocker flag
@@ -287,8 +288,9 @@ setTargetDirectory()
 
 ## Call with
 configure_build() {
-    declare -A local BUILD_CONFIG=${1#*=}; shift;
-    local  __resultvar=$1; shift;
+
+    declare -a BUILD_CONFIG=("${!1}"); shift;
+    local __resultvar=$1; shift;
 
     # TODO This function is in sbin/common-functions.sh
     determineBuildProperties
@@ -304,7 +306,8 @@ configure_build() {
     setWorkingDirectory
     setTargetDirectory
 
-    #Return built configuration
-    eval $__resultvar="'$(declare -p BUILD_CONFIG)'"
+    # Return built configuration
+    echo $__resultvar
+    eval $__resultvar=BUILD_CONFIG[@]
 }
 

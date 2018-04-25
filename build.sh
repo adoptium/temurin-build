@@ -15,6 +15,7 @@
 
 
 # set -x # TODO remove once we've finished debugging
+set -ex
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -26,7 +27,10 @@ source "${SCRIPT_DIR}/sbin/common-functions.sh"
 # TODO refactor this for SRP
 checkoutAndCloneOpenJDKGitRepo()
 {
-  echo "${git}"
+  declare -p BUILD_CONFIG
+  echo $WORKING_DIR
+  echo ${BUILD_CONFIG[$WORKING_DIR]}
+
   # Check that we have a git repo of a valid openjdk version on our local file system
   if [ -d "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && ( [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk9" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk10" ]) ; then
     local openjdk_git_repo_owner=$(git --git-dir "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}")
@@ -276,16 +280,14 @@ buildAndTestOpenJDK()
 
 function perform_build {
 
+  time (
+    checkoutAndCloneOpenJDKGitRepo
+  )
 
-trap read debug
-    time (
-        checkoutAndCloneOpenJDKGitRepo
-    )
+  time (
+    getOpenJDKUpdateAndBuildVersion
+  )
 
-    time (
-        getOpenJDKUpdateAndBuildVersion
-    )
-
-    buildAndTestOpenJDK
+  buildAndTestOpenJDK
 }
 
