@@ -67,38 +67,37 @@ parseCommandLineArgs()
   local forest_name=$1
   local openjdk_version=${forest_name}
 
+  # Derive the openjdk_core_version from the forest name
   # 'u' means it's an update repo, e.g. jdk8u
+  local openjdk_core_version=${forest_name}
   if [[ ${forest_name} == *u ]]; then
-    openjdk_version=${forest_name%?}
+    openjdk_core_version=${forest_name%?}
   fi
 
-  BUILD_CONFIG[OPENJDK_CORE_VERSION]=$openjdk_version;
+  BUILD_CONFIG[OPENJDK_CORE_VERSION]=$openjdk_core_version;
   BUILD_CONFIG[OPENJDK_FOREST_NAME]=$forest_name;
 }
 
-setVariablesBeforeCallingConfigure() {
+# Set variables that the `configure` command (which builds OpenJDK) will need
+setVariablesForConfigure() {
 
-  local openjdk_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
+  local openjdk_core_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
 
   # TODO Regex this in the if or use cut to grab out the number and see if >= 9
-  if [ "$openjdk_version" == "jdk9" ] || [ "$openjdk_version" == "jdk10" ] || [ "$openjdk_version" == "jdk11" ] || [ "$openjdk_version" == "amber" ]; then
+  if [ "$openjdk_core_version" == "jdk9" ] || [ "$openjdk_core_version" == "jdk10" ] || [ "$openjdk_core_version" == "jdk11" ] || [ "$openjdk_core_version" == "amber" ]; then
     local jdk_path="jdk"
-    local JRE_PATH="jre"
-
+    local jre_path="jre"
     BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-"--disable-warnings-as-errors"}
-  elif [ "$openjdk_version" == "jdk8" ]; then
+  elif [ "$openjdk_core_version" == "jdk8" ]; then
     local jdk_path="j2sdk-image"
-    local JRE_PATH="j2re-image"
-
-    BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false"
-    BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true"
+    local jre_path="j2re-image"
   else
-    echo "Please specify a version, either jdk8, jdk9, jdk10 etc, with or without a 'u' suffix. e.g. $0 [options] jdk8u"
+    echo "Please specify a version, either jdk8u, jdk9, jdk10, amber etc, with or without a 'u' suffix. e.g. $0 [options] jdk8u"
     exit 1
   fi
 
   BUILD_CONFIG[JDK_PATH]=$jdk_path
-  BUILD_CONFIG[JRE_PATH]=$JRE_PATH
+  BUILD_CONFIG[JRE_PATH]=$jre_path
 }
 
 # Set the repository, defaults to AdoptOpenJDK/openjdk-$OPENJDK_FOREST_NAME
@@ -109,7 +108,21 @@ setRepository() {
   BUILD_CONFIG[REPOSITORY]=$repository
 }
 
-# Specific architectures needs to have special build settings
+# Specific platforms need to have special build settings
+processArgumentsforSpecificPlatforms() {
+
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+  "darwin")
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] ; then
+      BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false"
+      BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true"
+    fi
+  ;;
+  esac
+
+}
+
+# Specific architectures need to have special build settings
 processArgumentsforSpecificArchitectures() {
   local jvm_variant=server
   local build_full_name
@@ -168,8 +181,9 @@ setMakeCommandForOS() {
 
 echo "Starting $0 to set environment variables before calling makejdk.sh"
 parseCommandLineArgs "$@"
-setVariablesBeforeCallingConfigure
+setVariablesForConfigure
 setRepository
+processArgumentsforSpecificPlatforms
 processArgumentsforSpecificArchitectures
 setMakeCommandForOS
 

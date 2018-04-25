@@ -14,7 +14,7 @@
 #
 
 ################################################################################################
-# TODO rewrite hte doc here
+# TODO rewrite the doc here
 
 #
 # Script to clone the OpenJDK source then build it
