@@ -21,7 +21,8 @@
 
 # TODO 9 should become 9u as will 10 shortly....
 
-set -x # TODO remove this once we've finished
+#set -x # TODO remove this once we've finished
+set -eux
 
 declare -A -x BUILD_CONFIG
 export BUILD_CONFIG
@@ -52,7 +53,7 @@ parseCommandLineArgs()
     shift;
     case "$opt" in
       "--variant" | "-bv")
-        BUILD_CONFIG[BUILD_VARIANT]=$(echo "$1" | awk "{print $string}")
+        BUILD_CONFIG[BUILD_VARIANT]=$1
         shift;;
     esac
 
@@ -63,7 +64,7 @@ parseCommandLineArgs()
   done
 
   # Now that we've processed the flags, grab the mandatory argument(s)
-  local forest_name=$(echo "$1" | awk "{print $string}")
+  local forest_name=$1
   local openjdk_version=${forest_name}
 
   # 'u' means it's an update repo, e.g. jdk8u
@@ -110,7 +111,7 @@ setRepository() {
 
 # Specific architectures needs to have special build settings
 processArgumentsforSpecificArchitectures() {
-  local jvm_variant
+  local jvm_variant=server
   local build_full_name
   local make_args_for_any_platform
   local configure_args_for_any_platform
@@ -180,14 +181,12 @@ source build.sh
 configure_build "$(declare -p BUILD_CONFIG)" UPDATED_BUILD_CONFIG "$@"
 declare -A BUILD_CONFIG=${UPDATED_BUILD_CONFIG#*=}
 
-set +x
 echo "BUILDING WITH CONFIGURATION:"
 echo "============================"
 for K in "${!BUILD_CONFIG[@]}";
 do
   echo BUILD_CONFIG[$K]=${BUILD_CONFIG[$K]};
 done | sort
-set -x
 
-#perform_build
+perform_build
 

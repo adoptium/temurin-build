@@ -33,7 +33,7 @@
 source configureBuild.sh
 source build.sh
 
-set -x
+set -xe
 
 unset BUILD_CONFIG
 
@@ -55,4 +55,4 @@ do
 done | sort
 set -x
 
-#perform_build
+perform_build

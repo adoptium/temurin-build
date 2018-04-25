@@ -31,6 +31,7 @@
 ################################################################################################
 
 # set -x # TODO remove once we've finished debugging
+#set -e
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -213,7 +214,7 @@ doAnyBuildVariantOverrides()
   fi
 
   BUILD_CONFIG[REPOSITORY]=${repository:-${BUILD_CONFIG[REPOSITORY]}};
-  BUILD_CONFIG[BRANCH]=branch;
+  BUILD_CONFIG[BRANCH]=$branch;
 }
 
 # TODO refactor - surely we just want to check if the user has passed in a useDocker flag
