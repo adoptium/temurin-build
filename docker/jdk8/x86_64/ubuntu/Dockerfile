@@ -16,8 +16,15 @@ FROM ubuntu:16.04
 
 MAINTAINER Tim Ellison <tim_ellison@uk.ibm.com>
 
-# Install required OS tools
+# Install required OS tools.  Yes we have to apt-get update first in order to
+# get to software-properties-common, which includes the apt-add-repository
+# package, so we can add the Azul repo and then apt-get update that so we cam
+# get zulu-7.  This is why we can't have nice things.
 RUN apt-get update \
+  && apt-get install -y software-properties-common \
+  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \
+  && apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \
+  && apt-get update \
   && apt-get install -qq -y --no-install-recommends \
     git \
     cpio \
@@ -33,7 +40,7 @@ RUN apt-get update \
     libcups2-dev \
     libfreetype6-dev \
     libasound2-dev \
-    openjdk-7-jdk \
+    zulu-7 \
     ccache \
     zip \
     wget \
@@ -50,7 +57,7 @@ ADD config /openjdk/config
 
 WORKDIR /openjdk/build/
 
-ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-amd64
+ENV JDK_BOOT_DIR=/usr/lib/jvm/zulu-7-amd64
 
 # Default actions
 ENTRYPOINT ["/openjdk/sbin/build.sh"]
