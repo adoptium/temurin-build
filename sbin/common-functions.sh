@@ -20,9 +20,10 @@
 #
 ################################################################################
 
+set -eux
+
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
-FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
 FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
 
 # ALSA first for sound
@@ -30,13 +31,13 @@ checkingAndDownloadingAlsa()
 {
   echo "Checking for ALSA"
 
-  FOUND_ALSA=$(find "${WORKING_DIR}" -name "alsa-lib-${ALSA_LIB_VERSION}")
+  FOUND_ALSA=$(find "${BUILD_CONFIG[WORKING_DIR]}" -name "alsa-lib-${ALSA_LIB_VERSION}")
 
   if [[ ! -z "$FOUND_ALSA" ]] ; then
     echo "Skipping ALSA download"
   else
     wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
-    if [[ ${OS_KERNEL_NAME} == "aix" ]] ; then
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
       bzip2 -d alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
       tar xf alsa-lib-"${ALSA_LIB_VERSION}".tar
       rm alsa-lib-"${ALSA_LIB_VERSION}".tar
@@ -52,7 +53,7 @@ checkingAndDownloadingFreemarker()
 {
   echo "Checking for FREEMARKER"
 
-  FOUND_FREEMARKER=$(find "${WORKING_DIR}" -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
+  FOUND_FREEMARKER=$(find "${BUILD_CONFIG[WORKING_DIR]}" -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
 
   if [[ ! -z "$FOUND_FREEMARKER" ]] ; then
     echo "Skipping FREEMARKER download"
@@ -67,31 +68,31 @@ checkingAndDownloadingFreemarker()
 
 checkingAndDownloadingFreeType()
 {
-  echo "Checking for freetype at $WORKING_DIR/$OPENJDK_SOURCE_DIR"
+  pwd
+  ls -alh
+  echo "Checking for freetype at ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
-  FOUND_FREETYPE=$(find "$WORKING_DIR/$OPENJDK_SOURCE_DIR/installedfreetype/lib" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}")
+  FOUND_FREETYPE=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/installedfreetype/lib" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}" || true)
 
   if [[ ! -z "$FOUND_FREETYPE" ]] ; then
     echo "Skipping FreeType download"
   else
     # Then FreeType for fonts: make it and use
-    wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"$FREETYPE_FONT_VERSION".tar.gz
-    if [[ ${OS_KERNEL_NAME} == "aix" ]] ; then
-      gunzip xf freetype-"$FREETYPE_FONT_VERSION".tar.gz
-      tar xf freetype-"$FREETYPE_FONT_VERSION".tar
-      rm freetype-"$FREETYPE_FONT_VERSION".tar
-      MAKE=gmake
+    wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
+      gunzip xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
+      tar xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar
+      rm freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar
     else
-      tar xf freetype-"$FREETYPE_FONT_VERSION".tar.gz
-      rm freetype-"$FREETYPE_FONT_VERSION".tar.gz
-      MAKE=make
+      tar xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
+      rm freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
     fi
 
-    cd freetype-"$FREETYPE_FONT_VERSION" || exit
+    cd freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}" || exit
 
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if ! (bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_SOURCE_DIR}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install); then
+    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"/installedfreetype "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
       echo "${error}Failed to configure and build libfreetype, exiting"
       exit;
@@ -100,7 +101,7 @@ checkingAndDownloadingFreeType()
       echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
 
      if [[ ${OS_KERNEL_NAME} == "darwin" ]] ; then
-        TARGET_DYNAMIC_LIB_DIR="${WORKING_DIR}"/"${OPENJDK_SOURCE_DIR}"/installedfreetype/lib/
+        TARGET_DYNAMIC_LIB_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"/installedfreetype/lib/
         TARGET_DYNAMIC_LIB="${TARGET_DYNAMIC_LIB_DIR}"/libfreetype.6.dylib
         echo ""
         echo "Listing the contents of ${TARGET_DYNAMIC_LIB_DIR} to see if the dynamic library 'libfreetype.6.dylib' has been created..."
@@ -127,18 +128,18 @@ checkingAndDownloadingFreeType()
 
 checkingAndDownloadCaCerts()
 {
-  cd "$WORKING_DIR" || exit
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 
   echo "Retrieving cacerts file"
 
   # Ensure it's the latest we pull in
-  rm -rf "${WORKING_DIR}/cacerts_area"
+  rm -rf "cacerts_area"
 
   git clone https://github.com/AdoptOpenJDK/openjdk-build.git cacerts_area
   echo "cacerts should be here..."
 
   # shellcheck disable=SC2046
-  if ! [ -r "${WORKING_DIR}/cacerts_area/security/cacerts" ]; then
+  if ! [ -r "cacerts_area/security/cacerts" ]; then
     echo "Failed to retrieve the cacerts file, exiting..."
     exit;
   else
@@ -157,21 +158,21 @@ downloadingRequiredDependencies()
         checkingAndDownloadingAlsa
      )
 
-     if [[ -z "${FREETYPE}" ]] ; then
-       if [[ -z "$FREETYPE_DIRECTORY" ]]; then
+     if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
+       if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
           time (
             echo "Checking and download FreeType Font dependency"
             checkingAndDownloadingFreeType
           )
        else
            echo ""
-           echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at $FREETYPE_DIRECTORY <---"
+           echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
            echo ""
        fi
      else
         echo "Skipping Freetype"
      fi
-     if [[ "$BUILD_VARIANT" == "openj9" ]]; then
+     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
         time (
            echo "Checking and download Freemarker dependency"
            checkingAndDownloadingFreemarker

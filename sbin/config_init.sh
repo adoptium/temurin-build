@@ -27,6 +27,7 @@
 #
 ################################################################################
 
+
 # We can't use Bash 4.x+ associative arrays as as Apple won't support bash 4.0
 # (because of GPL3), we therefore have to name the indexes of the CONFIG_PARAMS
 # map. This is why we can't have nice things.
@@ -71,7 +72,20 @@ USER_SUPPLIED_CONFIGURE_ARGS
 DOCKER
 COLOUR
 WORKSPACE_DIR
+FREETYPE
+FREETYPE_DIRECTORY
 )
+
+
+# Directory structure of build environment:
+#  Dir                                                        Purpose                              Docker Default
+#  <WORKSPACE_DIR>                                            Root                                 /openjdk/
+#  <WORKSPACE_DIR>/config                                     Configuration                        /openjdk/config
+#  <WORKSPACE_DIR>/<WORKING_DIR>                              Build area                           /openjdk/build
+#  <WORKSPACE_DIR>/<WORKING_DIR>/<OPENJDK_SOURCE_DIR>         Source code                          /openjdk/build/src
+#  <WORKSPACE_DIR>/<WORKING_DIR>/target                       Destination of built artifacts       /openjdk/build/target
+
+
 
 # Helper code to perform index lookups by name
 declare -a -x PARAM_LOOKUP
@@ -103,10 +117,6 @@ function writeConfigToFile() {
 }
 
 function loadConfigFromFile() {
-  if [ ! -d "config" ]
-  then
-    mkdir config
-  fi
   source $SCRIPT_DIR/../config/built_config.cfg
 }
 
@@ -131,3 +141,12 @@ BUILD_CONFIG[BUILD_VARIANT]=""
 
 # The OpenJDK source code repository to build from, e.g. an AdoptOpenJDK repo
 BUILD_CONFIG[REPOSITORY]=""
+
+BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]=""
+BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]=""
+BUILD_CONFIG[FREETYPE]=true
+BUILD_CONFIG[FREETYPE_DIRECTORY]=""
+BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.4.0"
+BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
+
+BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
