@@ -1,4 +1,6 @@
 #!/bin/bash
+
+################################################################################
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+################################################################################
+
+################################################################################
 #
-# Purpose: This script was contains colour codes that will be commonly used across multiple scripts
+# Contains colour codes that will be commonly used across multiple scripts
+#
+################################################################################
 
 # Escape code
 esc=$(echo -en "\033")
@@ -21,7 +28,7 @@ esc=$(echo -en "\033")
 # shellcheck disable=SC2034
 error="${esc}[0;31m"
 # shellcheck disable=SC2034
-warning="${esc}[0;33m"  #yellow
+warning="${esc}[0;33m" # yellow
 # shellcheck disable=SC2034
 good="${esc}[0;32m"
 # shellcheck disable=SC2034
@@ -30,4 +37,3 @@ info="${esc}[0;33m"
 git="${esc}[0;34m"
 # shellcheck disable=SC2034
 normal=$(echo -en "${esc}[m\017")
-

@@ -1,5 +1,6 @@
 #!/bin/bash
-#
+
+################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,11 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+################################################################################
 
-
-# set -x # TODO remove once we've finished debugging
-set -ex
+set -ex # TODO remove once we've finished debugging
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -23,7 +22,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Load the common functions
 # shellcheck source=sbin/common-functions.sh
 #source "${SCRIPT_DIR}/sbin/common-functions.sh"
-
 
 testOpenJDKViaDocker()
 {
@@ -37,9 +35,10 @@ testOpenJDKViaDocker()
 }
 
 # Create a data volume called ${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]},
-# this gets mounted at /openjdk/build inside the container and is persistent between builds/tests
-# unless -c is passed to this script, in which case it is recreated using the source
-# in the current ./openjdk directory on the host machine (outside the container)
+# this gets mounted at /openjdk/build inside the container and is persistent
+# between builds/tests unless -c is passed to this script, in which case it is
+# recreated using the source in the current ./openjdk directory on the host
+# machine (outside the container)
 createPersistentDockerDataVolume()
 {
   set +e
@@ -58,7 +57,8 @@ createPersistentDockerDataVolume()
   fi
 }
 
-# TODO I think we have a few bugs here - if you're passing a variant you override? the hotspot version
+# TODO I think we have a few bugs here - if you're passing a variant you
+# override? the hotspot version
 buildDockerContainer()
 {
   echo "Building docker container"
@@ -77,7 +77,8 @@ buildDockerContainer()
 
 buildAndTestOpenJDKViaDocker()
 {
-  # This could be extracted overridden by the user if we support more architectures going forwards
+  # This could be extracted overridden by the user if we support more
+  # architectures going forwards
   local container_architecture="x86_64/ubuntu"
 
   #TODO dont modify config in build
@@ -92,7 +93,8 @@ buildAndTestOpenJDKViaDocker()
 
   createPersistentDockerDataVolume
 
-  # If keep is true then use the existing container (or build a new one if we can't find it)
+  # If keep is true then use the existing container (or build a new one if we
+  # can't find it)
   if [[ "${BUILD_CONFIG[KEEP]}" == "true" ]] ; then
      # shellcheck disable=SC2086
      # If we can't find the previous Docker container then build a new one
@@ -170,7 +172,7 @@ buildAndTestOpenJDK()
   fi
 }
 
-##################################################################
+################################################################################
 
 function perform_build {
 
