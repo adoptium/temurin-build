@@ -44,7 +44,7 @@ init_build_config() {
   # The name of the directory where we clone the OpenJDK source code for building, defaults to 'openjdk'
   # TODO Note sure if setting this openjdk default is a good idea...
 
-  BUILD_CONFIG[OPENJDK_SOURCE_DIR]=${BUILD_CONFIG[OPENJDK_SOURCE_DIR]:-openjdk}
+  BUILD_CONFIG[OPENJDK_SOURCE_DIR]=${BUILD_CONFIG[OPENJDK_SOURCE_DIR]:-src}
 
   # The repository to pull the OpenJDK source from, defaults to AdoptOpenJDK/openjdk-jdk8u
   BUILD_CONFIG[REPOSITORY]=${BUILD_CONFIG[REPOSITORY]:-"AdoptOpenJDK/openjdk-jdk8u"}
@@ -57,7 +57,7 @@ init_build_config() {
   BUILD_CONFIG[CONTAINER_NAME]=openjdk_container
   BUILD_CONFIG[TMP_CONTAINER_NAME]=openjdk-copy-src
   BUILD_CONFIG[CLEAN_DOCKER_BUILD]=false
-  BUILD_CONFIG[TARGET_DIR_IN_THE_CONTAINER]="/openjdk/target/"
+  BUILD_CONFIG[TARGET_DIR_IN_THE_CONTAINER]="/openjdk/build/target/"
 
   # Copy the results of the docker build (defaults to false)
   BUILD_CONFIG[COPY_TO_HOST]=false
@@ -115,7 +115,7 @@ init_build_config() {
 
 sourceFileWithColourCodes()
 {
-  if [[ "${BUILD_CONFIG[COLOUR]}" = true ]] ; then
+  if [[ "${BUILD_CONFIG[COLOUR]}" == "true" ]] ; then
     # shellcheck disable=SC1091
     source ./sbin/colour-codes.sh
   fi

@@ -24,6 +24,7 @@ RUN apt-get update \
     make \
     gcc \
     g++ \
+    file \
     libx11-dev \
     libxext-dev \
     libxrender-dev \
@@ -49,7 +50,7 @@ ADD config /openjdk/config
 
 WORKDIR /openjdk/build/
 
-ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-amd64
+ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.8.0-openjdk-amd64
 
 # Default actions
 ENTRYPOINT ["/openjdk/sbin/build.sh"]

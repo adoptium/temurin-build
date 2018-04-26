@@ -16,21 +16,28 @@
 # Script to download any additional packages for building OpenJDK
 # before calling ./configure (using JDK 7 as the base)
 
+set -eux
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
+source "$SCRIPT_DIR/colour-codes.sh"
 source "$SCRIPT_DIR/common-functions.sh"
 source "$SCRIPT_DIR/prepareWorkspace.sh"
 
-WORKING_DIR=""
-TARGET_DIR=""
-OPENJDK_SOURCE_DIR=""
-JVM_VARIANT="${JVM_VARIANT:-server}"
-OPENJDK_UPDATE_VERSION=""
-OPENJDK_BUILD_NUMBER=""
-OPENJDK_REPO_TAG=""
-TRIMMED_TAG=""
-USER_SUPPLIED_CONFIGURE_ARGS=""
+source $SCRIPT_DIR/config_init.sh
+
+loadConfigFromFile
+
+#WORKING_DIR=""
+#TARGET_DIR=""
+#OPENJDK_SOURCE_DIR=""
+#JVM_VARIANT="${JVM_VARIANT:-server}"
+#OPENJDK_UPDATE_VERSION=""
+#OPENJDK_BUILD_NUMBER=""
+#OPENJDK_REPO_TAG=""
+#TRIMMED_TAG=""
+#USER_SUPPLIED_CONFIGURE_ARGS=""
+
 
 while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
   opt="$1";
@@ -39,59 +46,59 @@ while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
     "--" ) break 2;;
 
     "--source" | "-s" )
-    WORKING_DIR="$1"; shift;;
+    BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
 
     "--destination" | "-d" )
-    TARGET_DIR="$1"; shift;;
+    BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
 
     "--repository" | "-r" )
-    OPENJDK_SOURCE_DIR="$1"; shift;;
+    BUILD_CONFIG[OPENJDK_SOURCE_DIR]="$1"; shift;;
 
     "--variant"  | "-jv" )
-    JVM_VARIANT="$1"; shift;;
+    BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
 
     "--update-version"  | "-uv" )
-    OPENJDK_UPDATE_VERSION="$1"; shift;;
+    BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
 
     "--build-number"  | "-bn" )
-    OPENJDK_BUILD_NUMBER="$1"; shift;;
+    BUILD_CONFIG[OPENJDK_BUILD_NUMBER]="$1"; shift;;
 
     "--repository-tag"  | "-rt" )
-    OPENJDK_REPO_TAG="$1"; shift;;
+    BUILD_CONFIG[OPENJDK_REPO_TAG]="$1"; shift;;
 
     "--configure-args"  | "-ca" )
-    USER_SUPPLIED_CONFIGURE_ARGS="$1"; shift;;
+    BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
 
     *) echo >&2 "${error}Invalid build.sh option: ${opt}${normal}"; exit 1;;
   esac
 done
 
-OPENJDK_DIR=$WORKING_DIR/$OPENJDK_SOURCE_DIR
+OPENJDK_DIR="${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
 
+CONFIGURE_ARGS=""
 RUN_JTREG_TESTS_ONLY=""
 
 
-if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
+if [ "${BUILD_CONFIG[JVM_VARIANT]}" == "--run-jtreg-tests-only" ]; then
   RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
-  JVM_VARIANT="server"
+  BUILD_CONFIG[JVM_VARIANT]="server"
 fi
 
-echo "JDK Image folder name: ${JDK_PATH}"
-echo "JRE Image folder name: ${JRE_PATH}"
-echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=${COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG}"
-echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG}"
+echo "JDK Image folder name: ${BUILD_CONFIG[JDK_PATH]}"
+echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
+echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
+echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
 
-MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
-MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
+BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}
 # Defaults to not building this target, for Java 9+ we set this to test-image in order to build the native test libraries
 MAKE_TEST_IMAGE=""
-CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-""}
+BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-""}
 
 addConfigureArg()
 {
   #Only add an arg if it is not overridden by a user-specified arg.
-  if [[ ${CONFIGURE_ARGS_FOR_ANY_PLATFORM} != *"$1"* ]] && [[ ${USER_SUPPLIED_CONFIGURE_ARGS} != *"$1"* ]]; then
+  if [[ ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]} != *"$1"* ]] && [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]} != *"$1"* ]]; then
     CONFIGURE_ARGS="${CONFIGURE_ARGS} ${1}${2}"
   fi
 }
@@ -108,45 +115,12 @@ sourceFileWithColourCodes()
 {
   # shellcheck disable=SC1090
   # shellcheck disable=SC1091
-  source "$SCRIPT_DIR"/colour-codes.sh
-}
-
-checkIfDockerIsUsedForBuildingOrNot()
-{
-  # If on docker
-
-  if [[ -f /.dockerenv ]] ; then
-    echo "Detected we're in docker"
-    WORKING_DIR=/openjdk/build
-    TARGET_DIR=/openjdk/target/
-    OPENJDK_SOURCE_DIR=/openjdk
-    OPENJDK_DIR="$WORKING_DIR/$OPENJDK_SOURCE_DIR"
-    USE_DOCKER=true
-  fi
-
-  # E.g. /openjdk/build if you're building in a Docker container
-  # otherwise ensure it's a writable area e.g. /home/youruser/myopenjdkarea
-
-  if [ -z "$WORKING_DIR" ] || [ -z "$TARGET_DIR" ] ; then
-      echo "build.sh is called by makejdk.sh and requires two parameters"
-      echo "Are you sure you want to call it directly?"
-      echo "Usage: bash ./${0} <workingarea> <targetforjdk>"
-      echo "Note that you must have the OpenJDK source before using this script!"
-      echo "This script will try to move ./openjdk to the source directory for you, "
-      echo "and this will be your working area where all required files will be downloaded to."
-      echo "You can override the JDK boot directory by setting the environment variable JDK_BOOT_DIR"
-      exit;
+  if [[ "${BUILD_CONFIG[COLOUR]}" == "true" ]] ; then
+    # shellcheck disable=SC1091
+    source ./sbin/colour-codes.sh
   fi
 }
 
-createWorkingDirectory()
-{
-  echo "Making the working directory to store source files and extensions: ${WORKING_DIR}"
-
-  mkdir -p $WORKING_DIR
-
-  cd $WORKING_DIR || exit
-}
 
 configuringBootJDKConfigureParameter()
 {
@@ -162,6 +136,37 @@ configuringBootJDKConfigureParameter()
   addConfigureArgIfValueIsNotEmpty "--with-boot-jdk=" "${JDK_BOOT_DIR}"
 }
 
+getOpenJDKUpdateAndBuildVersion()
+{
+  cd "${BUILD_CONFIG[WORKING_DIR]}"
+
+  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
+
+    export OPENJDK_REPO_TAG;
+    # It does exist and it's a repo other than the AdoptOpenJDK one
+    cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
+    echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}${normal}"
+    git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
+    OPENJDK_REPO_TAG=${TAG:-$(getFirstTagFromOpenJDKGitRepo)} # getFirstTagFromOpenJDKGitRepo resides in sbin/common-functions.sh
+    if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
+     echo "${error}Unable to detect git tag, exiting...${normal}"
+     exit 1
+    else
+     echo "OpenJDK repo tag is $OPENJDK_REPO_TAG"
+    fi
+
+    local openjdk_update_version=$(echo "${OPENJDK_REPO_TAG}" | cut -d'u' -f 2 | cut -d'-' -f 1)
+
+    # TODO dont modify config in build script
+    BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=$(echo "${OPENJDK_REPO_TAG}" | cut -d'b' -f 2 | cut -d'-' -f 1)
+    echo "Version: ${BUILD_CONFIG[openjdk_update_version]} ${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
+  fi
+
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+
+  echo "${normal}"
+}
+
 # Ensure that we produce builds with versions strings something like:
 #
 # openjdk version "1.8.0_131"
@@ -169,15 +174,15 @@ configuringBootJDKConfigureParameter()
 # OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
 configuringVersionStringParameter()
 {
-  if [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ]; then
     # Replace the default 'internal' with our own milestone string
     addConfigureArg "--with-milestone=" "adoptopenjdk"
 
     # Set the update version (e.g. 131), this gets passed in from the calling script
-    addConfigureArgIfValueIsNotEmpty "--with-update-version=" "${OPENJDK_UPDATE_VERSION}"
+    addConfigureArgIfValueIsNotEmpty "--with-update-version=" "${BUILD_CONFIG[OPENJDK_UPDATE_VERSION]}"
 
     # Set the build number (e.g. b04), this gets passed in from the calling script
-    addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${OPENJDK_BUILD_NUMBER}"
+    addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
   else
     if [ -z "$OPENJDK_REPO_TAG" ]; then
       OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
@@ -199,18 +204,18 @@ buildingTheRestOfTheConfigParameters()
     addConfigureArg "--enable-ccache" ""
   fi
 
-  addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${JVM_VARIANT}"
-  addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${WORKING_DIR}/cacerts_area/security/cacerts"
-  addConfigureArg "--with-alsa=" "${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
+  addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
+  addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${BUILD_CONFIG[WORKING_DIR]}/cacerts_area/security/cacerts"
+  addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKING_DIR]}/alsa-lib-${ALSA_LIB_VERSION}"
 
   # Point-in-time dependency for openj9 only
-  if [[ "${BUILD_VARIANT}" == "openj9" ]] ; then
-    addConfigureArg "--with-freemarker-jar=" "${WORKING_DIR}/freemarker-${FREEMARKER_LIB_VERSION}/lib/freemarker.jar"
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]] ; then
+    addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/lib/freemarker.jar"
   fi
 
-  if [[ -z "${FREETYPE}" ]] ; then
-    FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_SOURCE_DIR}/installedfreetype"}
-    addConfigureArg "--with-freetype=" "$FREETYPE_DIRECTORY"
+  if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
+    BUILD_CONFIG[FREETYPE_DIRECTORY]=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-"${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/installedfreetype"}
+    addConfigureArg "--with-freetype=" "${BUILD_CONFIG[FREETYPE_DIRECTORY]}"
   fi
 
   # These will have been installed by the package manager (see our Dockerfile)
@@ -234,15 +239,14 @@ configureCommandParameters()
   fi
 
   #Now we add any configure arguments the user has specified on the command line.
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} ${USER_SUPPLIED_CONFIGURE_ARGS}"
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}"
 
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
-stepIntoTheWorkingDirectory()
-{
+stepIntoTheWorkingDirectory() {
   # Make sure we're in the source directory for OpenJDK now
-  cd "$WORKING_DIR/$OPENJDK_SOURCE_DIR"  || exit
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"  || exit
   echo "Should have the source, I'm at $PWD"
 }
 
@@ -250,16 +254,16 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
 {
   echo "Configuring command and using the pre-built config params..."
 
-  cd "$OPENJDK_DIR" || exit
+  stepIntoTheWorkingDirectory
 
   echo "Currently at '${PWD}'"
 
   CONFIGURED_OPENJDK_ALREADY=$(find . -name "config.status")
 
   if [[ ! -z "$CONFIGURED_OPENJDK_ALREADY" ]] ; then
-    echo "Not reconfiguring due to the presence of config.status in ${WORKING_DIR}"
+    echo "Not reconfiguring due to the presence of config.status in ${BUILD_CONFIG[WORKING_DIR]}"
   else
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} ${CONFIGURE_ARGS_FOR_ANY_PLATFORM}"
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
 
     echo "Running ./configure with arguments '${CONFIGURE_ARGS}'"
     # Depends upon the configure command being split for multiple args.  Don't quote it.
@@ -283,7 +287,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
 
 buildOpenJDK()
 {
-  cd "$OPENJDK_DIR" || exit
+  stepIntoTheWorkingDirectory
 
   #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
   if [ "${RUN_JTREG_TESTS_ONLY}" == "--run-jtreg-tests-only" ]; then
@@ -294,12 +298,12 @@ buildOpenJDK()
 
   # If it's Java 9+ then we also make test-image to build the native test libraries
   JDK_PREFIX="jdk"
-  JDK_VERSION_NUMBER="${OPENJDK_CORE_VERSION#$JDK_PREFIX}"
+  JDK_VERSION_NUMBER="${BUILD_CONFIG[OPENJDK_CORE_VERSION]#$JDK_PREFIX}"
   if [ "$JDK_VERSION_NUMBER" -gt 8 ]; then
     MAKE_TEST_IMAGE=" test-image" # the added white space is deliberate as it's the last arg
   fi
 
-  FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM} ${MAKE_TEST_IMAGE}"
+  FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${MAKE_TEST_IMAGE}"
   echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
   exitCode=$(${FULL_MAKE_COMMAND})
 
@@ -339,20 +343,20 @@ removingUnnecessaryFiles()
     echo "Dir=${PWD}"
     OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   fi
-  if [ "$USE_DOCKER" != "true" ] ; then
+  if [ "${BUILD_CONFIG[USE_DOCKER]}" != "true" ] ; then
      echo "Removing cacerrts"
      rm -rf cacerts_area
   fi
 
-  cd "${WORKING_DIR}/${OPENJDK_SOURCE_DIR}" || return
+  cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
 
   cd build/*/images || return
 
   echo "Currently at '${PWD}'"
 
-  echo "moving ${JDK_PATH} to ${OPENJDK_REPO_TAG}"
+  echo "moving ${BUILD_CONFIG[JDK_PATH]} to ${OPENJDK_REPO_TAG}"
   rm -rf "${OPENJDK_REPO_TAG}" || true
-  mv "$JDK_PATH" "${OPENJDK_REPO_TAG}"
+  mv "${BUILD_CONFIG[JDK_PATH]}" "${OPENJDK_REPO_TAG}"
 
   # Remove files we don't need
   rm -rf "${OPENJDK_REPO_TAG}"/demo/applets || true
@@ -367,7 +371,7 @@ makeACopyOfLibFreeFontForMacOSX() {
     IMAGE_DIRECTORY=$1
     PERFORM_COPYING=$2
 
-    if [[ "$OS_KERNEL_NAME" == "darwin" ]]; then
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
         echo "PERFORM_COPYING=${PERFORM_COPYING}"
         if [ "${PERFORM_COPYING}" == "false" ]; then
             echo "${info} Skipping copying of the free font library to ${IMAGE_DIRECTORY}, does not apply for this version of the JDK. ${normal}"
@@ -388,7 +392,6 @@ makeACopyOfLibFreeFontForMacOSX() {
         echo "Copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
         echo " *** Workaround to fix the MacOSX issue where invocation to ${INVOKED_BY_FONT_MANAGER} fails to find ${TARGET_LIB_NAME} ***"
 
-        set -x
         cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
         if [ -f "${INVOKED_BY_FONT_MANAGER}" ]; then
             otool -L "${INVOKED_BY_FONT_MANAGER}"
@@ -398,7 +401,6 @@ makeACopyOfLibFreeFontForMacOSX() {
         fi
 
         otool -L "${TARGET_LIB_NAME}"
-        set +x
 
         echo "Finished copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
     fi
@@ -435,12 +437,12 @@ createOpenJDKTarArchive()
   fi
   echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
 
-  if [ "$USE_DOCKER" == "true" ] ; then
+  if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
      GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
      EXT=".tar.gz"
 
-     echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
-     mv "OpenJDK${EXT}" "${TARGET_DIR}"
+     echo "${good}Moving the artifact to ${BUILD_CONFIG[TARGET_DIR]}${normal}"
+     mv "OpenJDK${EXT}" "${BUILD_CONFIG[TARGET_DIR]}"
   else
       case "${OS_KERNEL_NAME}" in
         *cygwin*)
@@ -455,8 +457,8 @@ createOpenJDKTarArchive()
       esac
       echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
 
-      echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
-      mv "OpenJDK${EXT}" "${TARGET_DIR}"
+      echo "${good}Moving the artifact to ${BUILD_CONFIG[TARGET_DIR]}${normal}"
+      mv "OpenJDK${EXT}" "${BUILD_CONFIG[TARGET_DIR]}"
   fi
 
 }
@@ -466,25 +468,18 @@ showCompletionMessage()
   echo "All done!"
 }
 
-source $SCRIPT_DIR/config_init.sh
-
-loadConfigFromFile
 
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
+sourceFileWithColourCodes
 configureWorkspace
 
-exit
-
-
-sourceFileWithColourCodes
-checkIfDockerIsUsedForBuildingOrNot
-createWorkingDirectory
-downloadingRequiredDependencies # This function is in common-functions.sh
+getOpenJDKUpdateAndBuildVersion
 configureCommandParameters
 stepIntoTheWorkingDirectory
 runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
 buildOpenJDK
+exit
 printJavaVersionString
 removingUnnecessaryFiles
 makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG}"

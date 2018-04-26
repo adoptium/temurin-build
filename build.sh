@@ -24,104 +24,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
 #source "${SCRIPT_DIR}/sbin/common-functions.sh"
 
-# TODO refactor this for SRP
-checkoutAndCloneOpenJDKGitRepo()
-{
-  # Check that we have a git repo of a valid openjdk version on our local file system
-  if [ -d "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && ( [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk9" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk10" ]) ; then
-    local openjdk_git_repo_owner=$(git --git-dir "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}")
-
-    # If the local copy of the git source repo is valid then we reset appropriately
-    if [ "${openjdk_git_repo_owner}" ]; then
-      cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-      echo "${info}Resetting the git openjdk source repository at $PWD in 10 seconds...${normal}"
-      sleep 10
-      echo "${git}Pulling latest changes from git openjdk source repository${normal}"
-
-      showShallowCloningMessage "fetch"
-      git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
-      git reset --hard origin/${BUILD_CONFIG[BRANCH]}
-      if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
-        git checkout "${BUILD_CONFIG[TAG]}"
-      fi
-      git clean -fdx
-    else
-      echo "Incorrect Source Code for ${BUILD_CONFIG[OPENJDK_FOREST_NAME]}.  This is an error, please check what is in $PWD and manually remove, exiting..."
-      exit 1
-    fi
-    cd "${BUILD_CONFIG[WORKING_DIR]}" || return
-  elif [ ! -d "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] ; then
-    # If it doesn't exist, clone it
-    echo "${info}Didn't find any existing openjdk repository at ${BUILD_CONFIG[WORKING_DIR]} so cloning the source to openjdk${normal}"
-    cloneOpenJDKGitRepo
-  fi
-}
-
-cloneOpenJDKGitRepo()
-{
-  echo "${git}"
-  local git_remote_repo_address;
-  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-     git_remote_repo_address="git@github.com:${BUILD_CONFIG[REPOSITORY]}.git"
-  else
-     git_remote_repo_address="https://github.com/${BUILD_CONFIG[REPOSITORY]}.git"
-  fi
-
-  showShallowCloningMessage "cloning"
-  local git_clone_arguments=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} '-b' "${BUILD_CONFIG[BRANCH]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
-
-  echo "git clone ${git_clone_arguments[*]}"
-  git clone "${git_clone_arguments[@]}"
-  if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
-    cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || exit 1
-    git checkout "${BUILD_CONFIG[TAG]}"
-  fi
-
-  # TODO extract this to its own function
-  # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
-    cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    bash get_source.sh
-  fi
-}
-
-getOpenJDKUpdateAndBuildVersion()
-{
-  if [ -d "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
-
-    local openjdk_repo_tag;
-    # It does exist and it's a repo other than the AdoptOpenJDK one
-    cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
-    git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
-    openjdk_repo_tag=${TAG:-$(getFirstTagFromOpenJDKGitRepo)} # getFirstTagFromOpenJDKGitRepo resides in sbin/common-functions.sh
-    if [[ "${openjdk_repo_tag}" == "" ]] ; then
-     echo "${error}Unable to detect git tag, exiting..."
-     exit 1
-    else
-     echo "OpenJDK repo tag is $openjdk_repo_tag"
-    fi
-
-     local openjdk_update_version=$(echo "${openjdk_repo_tag}" | cut -d'u' -f 2 | cut -d'-' -f 1)
-
-     # TODO dont modify config in build script
-    BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=$(echo "${openjdk_repo_tag}" | cut -d'b' -f 2 | cut -d'-' -f 1)
-    echo "Version: ${BUILD_CONFIG[openjdk_update_version]} ${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
-    cd "${BUILD_CONFIG[WORKING_DIR]}" || return
-  fi
-
-  echo "${normal}"
-}
-
-showShallowCloningMessage()
-{
-    mode=$1
-    if [[ "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}" == "" ]]; then
-        echo "${info}Git repo ${mode} mode: deep (preserves commit history)${normal}"
-    else
-        echo "${info}Git repo ${mode} mode: shallow (DOES NOT contain commit history)${normal}"
-    fi
-}
 
 testOpenJDKViaDocker()
 {
@@ -209,13 +111,14 @@ buildAndTestOpenJDKViaDocker()
      echo "$normal"
   fi
 
-  mkdir -p "${BUILD_CONFIG[WORKING_DIR]}/target"
+#  mkdir -p "${BUILD_CONFIG[WORKING_DIR]}/target"
 
 #     -v "${BUILD_CONFIG[WORKING_DIR]}/target":/${BUILD_CONFIG[TARGET_DIR_IN_THE_CONTAINER]} \
+#
 
   ${BUILD_CONFIG[DOCKER]} run -lst \
+       -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
-      -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
       --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
 
 exit
