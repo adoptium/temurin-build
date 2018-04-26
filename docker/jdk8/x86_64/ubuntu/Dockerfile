@@ -33,7 +33,7 @@ RUN apt-get update \
     libcups2-dev \
     libfreetype6-dev \
     libasound2-dev \
-    openjdk-8-jdk \
+    openjdk-7-jdk \
     ccache \
     zip \
     wget \
@@ -50,7 +50,7 @@ ADD config /openjdk/config
 
 WORKDIR /openjdk/build/
 
-ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.8.0-openjdk-amd64
+ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-amd64
 
 # Default actions
 ENTRYPOINT ["/openjdk/sbin/build.sh"]
