@@ -209,6 +209,7 @@ buildingTheRestOfTheConfigParameters()
   addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${BUILD_CONFIG[WORKING_DIR]}/cacerts_area/security/cacerts"
   addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKING_DIR]}/alsa-lib-${ALSA_LIB_VERSION}"
 
+
   # Point-in-time dependency for openj9 only
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]] ; then
     addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/lib/freemarker.jar"
@@ -225,6 +226,8 @@ buildingTheRestOfTheConfigParameters()
   # We don't want any extra debug symbols - ensure it's set to release,
   # other options include fastdebug and slowdebug
   addConfigureArg "--with-debug-level=" "release"
+  addConfigureArg "--disable-zip-debug-info" ""
+  addConfigureArg "--disable-debug-symbols" ""
 }
 
 configureCommandParameters()
