@@ -22,10 +22,17 @@
 #
 ################################################################################
 
-set -ex # TODO remove this once we've finished debugging
+set -eux
+
+# i.e. Where we are
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Pull in configuration support (read / write / display)
-source sbin/config_init.sh
+source ${SCRIPT_DIR}/sbin/config_init.sh
+source ${SCRIPT_DIR}/docker-build.sh
+source ${SCRIPT_DIR}/native-build.sh
+source ${SCRIPT_DIR}/configureBuild.sh
+
 
 # Set variables that the `configure` command (which builds OpenJDK) will need
 setVariablesForConfigure() {
@@ -129,9 +136,6 @@ setMakeCommandForOS() {
   BUILD_CONFIG[MAKE_COMMAND_NAME]=${BUILD_CONFIG[MAKE_COMMAND_NAME]:-$make_command_name}
 }
 
-# Pull in support to configure and then build the binary
-source configureBuild.sh
-source prepare-build.sh
 
 # Let's do lots of platform, arch and variant config set up before we build
 echo "Starting $0 to configure and build AdoptOpenJDK binary"
@@ -151,7 +155,11 @@ displayParams
 writeConfigToFile
 
 # Let's build the AdoptOpenJDK binary
-perform_build
+if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
+  buildAndTestOpenJDKViaDocker
+else
+  buildAndTestOpenJDKInNativeEnvironment
+fi
 
 
 

@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +16,9 @@
 # limitations under the License.
 ################################################################################
 
-set -ex # TODO remove once we've finished debugging
+
+
+set -eux
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -133,59 +137,3 @@ exit
     ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} ${BUILD_CONFIG[DOCKER]} rm {}
   fi
 }
-
-testOpenJDKInNativeEnvironmentIfExpected()
-{
-  if [[ "${BUILD_CONFIG[JTREG]}" == "true" ]];
-  then
-      "${SCRIPT_DIR}"/sbin/jtreg.sh "${BUILD_CONFIG[WORKING_DIR]}" "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" "${BUILD_CONFIG[BUILD_FULL_NAME]}" "${BUILD_CONFIG[JTREG_TEST_SUBSETS]}"
-  fi
-}
-
-buildAndTestOpenJDKInNativeEnvironment()
-{
-  local build_arguments=""
-  declare -a build_argument_names=("--source" "--destination" "--repository" "--variant" "--update-version" "--build-number" "--repository-tag" "--configure-args")
-  declare -a build_argument_values=("${BUILD_CONFIG[WORKING_DIR]}" "${BUILD_CONFIG[TARGET_DIR]}" "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" "${BUILD_CONFIG[JVM_VARIANT]}" "${BUILD_CONFIG[OPENJDK_UPDATE_VERSION]}" "${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}" "${BUILD_CONFIG[TAG]}" "${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}")
-
-  local build_args_array_index=0
-  while [[ ${build_args_array_index} < ${#build_argument_names[@]} ]]; do
-    if [[ ${build_argument_values[${build_args_array_index}]} != "" ]];
-    then
-        build_arguments="${build_arguments} ${build_argument_names[${build_args_array_index}]} ${build_argument_values[${build_args_array_index}]} "
-    fi
-    ((build_args_array_index++))
-  done
-
-  echo "Calling ${SCRIPT_DIR}/sbin/build.sh ${build_arguments}"
-  # shellcheck disable=SC2086
-  "${SCRIPT_DIR}"/sbin/build.sh ${build_arguments}
-
-  #testOpenJDKInNativeEnvironmentIfExpected
-}
-
-# TODO Refactor all Docker related functionality to its own script
-buildAndTestOpenJDK()
-{
-  if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
-    buildAndTestOpenJDKViaDocker
-  else
-    buildAndTestOpenJDKInNativeEnvironment
-  fi
-}
-
-################################################################################
-
-function perform_build {
-
-#  time (
-#    checkoutAndCloneOpenJDKGitRepo
-#  )
-
-#  time (
-#    getOpenJDKUpdateAndBuildVersion
-#  )
-
-  buildAndTestOpenJDK
-}
-

@@ -30,10 +30,16 @@
 #
 ################################################################################
 
-source configureBuild.sh
-source prepare-build.sh
+set -eux
 
-set -xe
+# i.e. Where we are
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Pull in configuration support (read / write / display)
+source ${SCRIPT_DIR}/configureBuild.sh
+source ${SCRIPT_DIR}/docker-build.sh
+source ${SCRIPT_DIR}/native-build.sh
+
 
 unset BUILD_CONFIG
 
@@ -55,4 +61,9 @@ do
 done | sort
 set -x
 
-perform_build
+if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
+  buildAndTestOpenJDKViaDocker
+else
+  buildAndTestOpenJDKInNativeEnvironment
+fi
+
