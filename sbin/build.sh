@@ -140,7 +140,7 @@ getOpenJDKUpdateAndBuildVersion()
 
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}${normal}"
+    echo "${git_colour}Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}${normal}"
     echo "${info}NOTE: This can take quite some time!  Please be patient"
     git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
     OPENJDK_REPO_TAG=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)} # getFirstTagFromOpenJDKGitRepo resides in sbin/common-functions.sh
@@ -155,7 +155,7 @@ getOpenJDKUpdateAndBuildVersion()
 
     # TODO dont modify config in build script
     BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=$(echo "${OPENJDK_REPO_TAG}" | cut -d'b' -f 2 | cut -d'-' -f 1)
-    echo "Version: ${BUILD_CONFIG[openjdk_update_version]} ${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
+    echo "Version: ${openjdk_update_version} ${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
   fi
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"

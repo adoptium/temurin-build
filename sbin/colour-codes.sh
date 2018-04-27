@@ -34,6 +34,6 @@ good="${esc}[0;32m"
 # shellcheck disable=SC2034
 info="${esc}[0;33m"
 # shellcheck disable=SC2034
-git="${esc}[0;38m"
+git_colour="${esc}[0;38m"
 # shellcheck disable=SC2034
 normal=$(echo -en "${esc}[m\017")

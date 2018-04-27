@@ -187,9 +187,7 @@ downloadingRequiredDependencies()
 
 getFirstTagFromOpenJDKGitRepo()
 {
-    setGitCloneArguments
-
-    git fetch --tags "${GIT_CLONE_ARGUMENTS[@]}"
+    git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     justOneFromTheRevList=$(git rev-list --tags --max-count=1)
     tagNameFromRepo=$(git describe --tags "$justOneFromTheRevList")
     echo "$tagNameFromRepo"

@@ -38,7 +38,7 @@ checkoutAndCloneOpenJDKGitRepo()
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "${info}Resetting the git openjdk source repository at $PWD in 10 seconds...${normal}"
       sleep 10
-      echo "${git}Pulling latest changes from git openjdk source repository${normal}"
+      echo "${git_colour}Pulling latest changes from git openjdk source repository${normal}"
 
       git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
       git reset --hard origin/${BUILD_CONFIG[BRANCH]}
@@ -61,7 +61,6 @@ checkoutAndCloneOpenJDKGitRepo()
 
 setGitCloneArguments() {
   cd ${BUILD_CONFIG[WORKSPACE_DIR]}
-  echo "${git}"
   local git_remote_repo_address;
   if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
      git_remote_repo_address="git@github.com:${BUILD_CONFIG[REPOSITORY]}.git"
