@@ -187,8 +187,10 @@ parseCommandLineArgs()
       BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
 
       "--sudo" | "-s" )
-      #BUILD_CONFIG[DOCKER]="sudo /usr/bin/docker";;
       BUILD_CONFIG[DOCKER]="sudo docker";;
+
+      "--docker" | "-D" )
+      BUILD_CONFIG[USE_DOCKER]="true";;
 
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac
@@ -234,27 +236,6 @@ doAnyBuildVariantOverrides()
 
   BUILD_CONFIG[REPOSITORY]=${repository:-${BUILD_CONFIG[REPOSITORY]}};
   BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
-}
-
-# TODO refactor - surely we just want to check if the user has passed in a useDocker flag
-checkIfDockerIsUsedForBuildingOrNot()
-{
-  # If both a working dir and a target dir provided then build natively
-  if [ ! -z "${BUILD_CONFIG[WORKING_DIR]}" ] && [ ! -z "${BUILD_CONFIG[TARGET_DIR]}" ] ; then
-    # This uses sbin/build.sh directly
-    echo "${info}Not using Docker, working area will be ${BUILD_CONFIG[WORKING_DIR]}, target for the JDK will be ${BUILD_CONFIG[TARGET_DIR]} ${normal}"
-  fi
-
-  # If working directory and target directory are not provided, then use docker
-  if [ -z "${BUILD_CONFIG[WORKING_DIR]}" ] && [ -z "${BUILD_CONFIG[TARGET_DIR]}" ] ; then
-    echo "${info}No parameters provided, using Docker. ${normal}"
-    BUILD_CONFIG[USE_DOCKER]=true
-  elif [ ! -z "${BUILD_CONFIG[TARGET_DIR]}" ] && [ -z "${BUILD_CONFIG[WORKING_DIR]}" ] ; then
-    # Target directory is defined but the working directory isn't
-    # Calls sbin/build.sh inside of Docker followed by a docker cp command
-    echo "${info}Using Docker, target directory for the tgz on the host: ${BUILD_CONFIG[TARGET_DIR]}"
-    BUILD_CONFIG[USE_DOCKER]=true
-  fi
 }
 
 # TODO Check what this flag does when not using docker
@@ -330,7 +311,6 @@ configure_build() {
     parseCommandLineArgs "$@"
     doAnyBuildVariantOverrides
     sourceFileWithColourCodes
-    checkIfDockerIsUsedForBuildingOrNot
     checkIfDockerIsUsedShouldTheContainerBePreserved
     setDefaultBranchIfNotProvided
     setWorkingDirectory
