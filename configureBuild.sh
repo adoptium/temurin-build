@@ -58,7 +58,6 @@ init_build_config() {
   BUILD_CONFIG[CONTAINER_NAME]=openjdk_container
   BUILD_CONFIG[TMP_CONTAINER_NAME]=openjdk-copy-src
   BUILD_CONFIG[CLEAN_DOCKER_BUILD]=false
-  BUILD_CONFIG[TARGET_DIR_IN_THE_CONTAINER]="/openjdk/build/target/"
 
   # Copy the results of the docker build (defaults to false)
   BUILD_CONFIG[COPY_TO_HOST]=false
@@ -161,6 +160,9 @@ parseCommandLineArgs()
 
       "--jtreg" | "-j" )
       BUILD_CONFIG[JTREG]=true;;
+
+      "--jdk-boot-dir" | "-J" )
+      BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
 
       "--jtreg-subsets" | "-js" )
       BUILD_CONFIG[JTREG]=true; BUILD_CONFIG[JTREG_TEST_SUBSETS]="$1"; shift;;
@@ -265,7 +267,8 @@ setWorkingDirectory()
     then
        BUILD_CONFIG[WORKSPACE_DIR]="/openjdk/";
      else
-       BUILD_CONFIG[WORKSPACE_DIR]=$PWD;
+       BUILD_CONFIG[WORKSPACE_DIR]="$PWD/workspace";
+       mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
     fi
   else
     echo "${info}Workspace dir is ${BUILD_CONFIG[WORKSPACE_DIR]}${normal}"

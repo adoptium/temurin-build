@@ -53,11 +53,9 @@ RUN apt-get update \
 RUN mkdir -p /openjdk/target
 
 ADD sbin /openjdk/sbin
-ADD config /openjdk/config
+ADD workspace/config /openjdk/config
 
 WORKDIR /openjdk/build/
-
-ENV JDK_BOOT_DIR=/usr/lib/jvm/zulu-7-amd64
 
 # Default actions
 ENTRYPOINT ["/openjdk/sbin/build.sh"]

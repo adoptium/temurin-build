@@ -20,7 +20,6 @@ set -eux
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
-source "$SCRIPT_DIR/colour-codes.sh"
 source "$SCRIPT_DIR/common-functions.sh"
 source "$SCRIPT_DIR/prepareWorkspace.sh"
 
@@ -113,23 +112,27 @@ sourceFileWithColourCodes()
   # shellcheck disable=SC1091
   if [[ "${BUILD_CONFIG[COLOUR]}" == "true" ]] ; then
     # shellcheck disable=SC1091
-    source ./sbin/colour-codes.sh
+    source $SCRIPT_DIR/colour-codes.sh
   fi
 }
 
 
 configuringBootJDKConfigureParameter()
 {
-  if [ -z "$JDK_BOOT_DIR" ] ; then
-    echo "JDK_BOOT_DIR is ${JDK_BOOT_DIR}"
-    JDK_BOOT_DIR=/usr/lib/java-1.7.0
+  if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
+    echo "Searching for JDK_BOOT_DIR"
+
+    BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
+
+    echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+    echo "If this is incorrect explicitly configure JDK_BOOT_DIR"
   else
-    echo "Overriding JDK_BOOT_DIR, set to ${JDK_BOOT_DIR}"
+    echo "Overriding JDK_BOOT_DIR, set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
   fi
 
-  echo "Boot dir set to ${JDK_BOOT_DIR}"
+  echo "Boot dir set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
 
-  addConfigureArgIfValueIsNotEmpty "--with-boot-jdk=" "${JDK_BOOT_DIR}"
+  addConfigureArgIfValueIsNotEmpty "--with-boot-jdk=" "${BUILD_CONFIG[JDK_BOOT_DIR]}"
 }
 
 getOpenJDKUpdateAndBuildVersion()
@@ -202,20 +205,19 @@ buildingTheRestOfTheConfigParameters()
 
   addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
   addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/cacerts_area/security/cacerts"
-  addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKING_DIR]}/alsa-lib-${ALSA_LIB_VERSION}"
+  addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
 
 
   # Point-in-time dependency for openj9 only
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]] ; then
-    addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/lib/freemarker.jar"
+    addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKING_DIR]}/libs/freemarker-${FREEMARKER_LIB_VERSION}/lib/freemarker.jar"
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
-    BUILD_CONFIG[FREETYPE_DIRECTORY]=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-"${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/installedfreetype"}
+    BUILD_CONFIG[FREETYPE_DIRECTORY]=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-"${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype"}
     addConfigureArg "--with-freetype=" "${BUILD_CONFIG[FREETYPE_DIRECTORY]}"
   fi
 
-  # These will have been installed by the package manager (see our Dockerfile)
   addConfigureArg "--with-x=" "/usr/include/X11"
 
   # We don't want any extra debug symbols - ensure it's set to release,
@@ -432,30 +434,23 @@ createOpenJDKTarArchive()
   fi
   echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
 
-  if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
-     GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
-     EXT=".tar.gz"
+  case "${OS_KERNEL_NAME}" in
+    *cygwin*)
+      zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
+      EXT=".zip" ;;
+    aix)
+      GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
+      EXT=".tar.gz" ;;
+    *)
+      GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+      EXT=".tar.gz" ;;
+  esac
+  echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
 
-     echo "${good}Moving the artifact to ${BUILD_CONFIG[TARGET_DIR]}${normal}"
-     mv "OpenJDK${EXT}" "${BUILD_CONFIG[TARGET_DIR]}"
-  else
-      case "${OS_KERNEL_NAME}" in
-        *cygwin*)
-          zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
-          EXT=".zip" ;;
-        aix)
-          GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
-          EXT=".tar.gz" ;;
-        *)
-          GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
-          EXT=".tar.gz" ;;
-      esac
-      echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
+  mkdir -p "${BUILD_CONFIG[TARGET_DIR]}" || exit
 
-      echo "${good}Moving the artifact to ${BUILD_CONFIG[TARGET_DIR]}${normal}"
-      mv "OpenJDK${EXT}" "${BUILD_CONFIG[TARGET_DIR]}"
-  fi
-
+  echo "${good}Moving the artifact to ${BUILD_CONFIG[TARGET_DIR]}${normal}"
+  mv "OpenJDK${EXT}" "${BUILD_CONFIG[TARGET_DIR]}"
 }
 
 showCompletionMessage()

@@ -91,10 +91,18 @@ cloneOpenJDKGitRepo()
   cd ${BUILD_CONFIG[WORKSPACE_DIR]}
 }
 
+
+createWorkspace()
+{
+   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
+   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
+ }
+
 ##################################################################
 
 function configureWorkspace() {
   time (
+    createWorkspace
     checkoutAndCloneOpenJDKGitRepo
     downloadingRequiredDependencies
   )

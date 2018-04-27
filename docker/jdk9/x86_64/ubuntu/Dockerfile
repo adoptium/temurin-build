@@ -46,11 +46,9 @@ RUN apt-get update \
 RUN mkdir -p /openjdk/target
 
 ADD sbin /openjdk/sbin
-ADD config /openjdk/config
+ADD workspace/config /openjdk/config
 
 WORKDIR /openjdk/build/
-
-ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.8.0-openjdk-amd64
 
 # Default actions
 ENTRYPOINT ["/openjdk/sbin/build.sh"]

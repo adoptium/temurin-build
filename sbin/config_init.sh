@@ -55,7 +55,6 @@ DOCKER_SOURCE_VOLUME_NAME
 CONTAINER_NAME
 TMP_CONTAINER_NAME
 CLEAN_DOCKER_BUILD
-TARGET_DIR_IN_THE_CONTAINER
 COPY_TO_HOST
 USE_DOCKER
 DOCKER_BUILD_PATH
@@ -75,16 +74,19 @@ WORKSPACE_DIR
 FREETYPE
 FREETYPE_DIRECTORY
 SIGN
+JDK_BOOT_DIR
 )
 
 
 # Directory structure of build environment:
-#  Dir                                                        Purpose                              Docker Default
-#  <WORKSPACE_DIR>                                            Root                                 /openjdk/
-#  <WORKSPACE_DIR>/config                                     Configuration                        /openjdk/config
-#  <WORKSPACE_DIR>/<WORKING_DIR>                              Build area                           /openjdk/build
-#  <WORKSPACE_DIR>/<WORKING_DIR>/<OPENJDK_SOURCE_DIR>         Source code                          /openjdk/build/src
-#  <WORKSPACE_DIR>/<WORKING_DIR>/target                       Destination of built artifacts       /openjdk/build/target
+###########################################################################################################################################
+#  Dir                                                 Purpose                              Docker Default            Native default
+###########################################################################################################################################
+#  <WORKSPACE_DIR>                                     Root                                 /openjdk/                   $(pwd)/workspace/
+#  <WORKSPACE_DIR>/config                              Configuration                        /openjdk/config             $(pwd)/workspace/config
+#  <WORKSPACE_DIR>/<WORKING_DIR>                       Build area                           /openjdk/build              $(pwd)/workspace/build/
+#  <WORKSPACE_DIR>/<WORKING_DIR>/<OPENJDK_SOURCE_DIR>  Source code                          /openjdk/build/src          $(pwd)/workspace/build/src
+#  <WORKSPACE_DIR>/target                              Destination of built artifacts       /openjdk/target             $(pwd)/workspace/target
 
 
 
@@ -110,15 +112,30 @@ function displayParams() {
 }
 
 function writeConfigToFile() {
-  if [ ! -d "config" ]
+  if [ ! -d "workspace/config" ]
   then
-    mkdir config
+    mkdir -p "workspace/config"
   fi
-  displayParams > ./config/built_config.cfg
+  displayParams > ./workspace/config/built_config.cfg
 }
 
 function loadConfigFromFile() {
-  source $SCRIPT_DIR/../config/built_config.cfg
+  if [ -f "$SCRIPT_DIR/../config/built_config.cfg" ]
+  then
+    source $SCRIPT_DIR/../config/built_config.cfg
+  elif [ -f "config/built_config.cfg" ]
+  then
+    source config/built_config.cfg
+  elif [ -f "workspace/config/built_config.cfg" ]
+  then
+    source workspace/config/built_config.cfg
+  elif [ -f "built_config.cfg" ]
+  then
+    source built_config.cfg
+  else
+    echo "Failed to find configuration"
+    exit
+  fi
 }
 
 # Declare the map of build configuration that we're going to use
@@ -152,4 +169,4 @@ BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
 
 BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
 BUILD_CONFIG[SIGN]="false"
-
+BUILD_CONFIG[JDK_BOOT_DIR]=""

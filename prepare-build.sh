@@ -26,10 +26,10 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 testOpenJDKViaDocker()
 {
   if [[ "${BUILD_CONFIG[JTREG]}" == "true" ]]; then
-    mkdir -p "${BUILD_CONFIG[WORKING_DIR]}/target"
+    mkdir -p "${BUILD_CONFIG[WORKING_DIR]}/workspace/target"
     ${BUILD_CONFIG[DOCKER]} run \
     -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
-    -v "${BUILD_CONFIG[WORKING_DIR]}/target:${BUILD_CONFIG[TARGET_DIR_IN_THE_CONTAINER]}" \
+    -v "${BUILD_CONFIG[WORKING_DIR]}/workspace/target:${BUILD_CONFIG[TARGET_DIR]}" \
     --entrypoint /openjdk/sbin/jtreg.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
   fi
 }
@@ -152,7 +152,7 @@ buildAndTestOpenJDKInNativeEnvironment()
   while [[ ${build_args_array_index} < ${#build_argument_names[@]} ]]; do
     if [[ ${build_argument_values[${build_args_array_index}]} != "" ]];
     then
-        build_arguments="${BUILD_CONFIG[BUILD_ARGUMENTS]}${BUILD_ARGUMENT_NAMES[${BUILD_CONFIG[BUILD_ARGS_ARRAY_INDEX]}]} ${BUILD_ARGUMENT_VALUES[${BUILD_CONFIG[BUILD_ARGS_ARRAY_INDEX]}]} "
+        build_arguments="${build_arguments} ${build_argument_names[${build_args_array_index}]} ${build_argument_values[${build_args_array_index}]} "
     fi
     ((build_args_array_index++))
   done
@@ -161,7 +161,7 @@ buildAndTestOpenJDKInNativeEnvironment()
   # shellcheck disable=SC2086
   "${SCRIPT_DIR}"/sbin/build.sh ${build_arguments}
 
-  testOpenJDKInNativeEnvironmentIfExpected
+  #testOpenJDKInNativeEnvironmentIfExpected
 }
 
 # TODO Refactor all Docker related functionality to its own script

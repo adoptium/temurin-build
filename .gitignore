@@ -1,7 +1,2 @@
-openjdk
-openjdk/
-target
 .idea/
-alsa-lib*
-freetype*
-config/
+workspace

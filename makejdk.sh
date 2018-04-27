@@ -31,7 +31,7 @@
 ################################################################################
 
 source configureBuild.sh
-source build.sh
+source prepare-build.sh
 
 set -xe
 

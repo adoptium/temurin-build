@@ -29,9 +29,11 @@ FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
 # ALSA first for sound
 checkingAndDownloadingAlsa()
 {
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
+
   echo "Checking for ALSA"
 
-  FOUND_ALSA=$(find "${BUILD_CONFIG[WORKING_DIR]}" -name "alsa-lib-${ALSA_LIB_VERSION}")
+  FOUND_ALSA=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/" -name "installedalsa")
 
   if [[ ! -z "$FOUND_ALSA" ]] ; then
     echo "Skipping ALSA download"
@@ -45,6 +47,14 @@ checkingAndDownloadingAlsa()
       tar xf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
       rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     fi
+
+    cd ${BUILD_CONFIG[WORKSPACE_DIR]}/libs/alsa-lib*/
+
+    if ! (./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedalsa && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+      # shellcheck disable=SC2154
+      echo "${error}Failed to configure and build alsa, exiting"
+      exit;
+    fi
   fi
 }
 
@@ -53,7 +63,8 @@ checkingAndDownloadingFreemarker()
 {
   echo "Checking for FREEMARKER"
 
-  FOUND_FREEMARKER=$(find "${BUILD_CONFIG[WORKING_DIR]}" -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
+  FOUND_FREEMARKER=$(find "." -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
 
   if [[ ! -z "$FOUND_FREEMARKER" ]] ; then
     echo "Skipping FREEMARKER download"
@@ -68,11 +79,11 @@ checkingAndDownloadingFreemarker()
 
 checkingAndDownloadingFreeType()
 {
-  pwd
-  ls -alh
-  echo "Checking for freetype at ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
-  FOUND_FREETYPE=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/installedfreetype/lib" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}" || true)
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
+  echo "Checking for freetype at ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
+
+  FOUND_FREETYPE=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}" || true)
 
   if [[ ! -z "$FOUND_FREETYPE" ]] ; then
     echo "Skipping FreeType download"
@@ -92,7 +103,7 @@ checkingAndDownloadingFreeType()
 
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"/installedfreetype "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
       echo "${error}Failed to configure and build libfreetype, exiting"
       exit;
@@ -101,7 +112,7 @@ checkingAndDownloadingFreeType()
       echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
 
      if [[ ${OS_KERNEL_NAME} == "darwin" ]] ; then
-        TARGET_DYNAMIC_LIB_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"/installedfreetype/lib/
+        TARGET_DYNAMIC_LIB_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype/lib/
         TARGET_DYNAMIC_LIB="${TARGET_DYNAMIC_LIB_DIR}"/libfreetype.6.dylib
         echo ""
         echo "Listing the contents of ${TARGET_DYNAMIC_LIB_DIR} to see if the dynamic library 'libfreetype.6.dylib' has been created..."
@@ -134,21 +145,32 @@ checkingAndDownloadCaCerts()
 
   # Ensure it's the latest we pull in
   rm -rf "cacerts_area"
+  mkdir "cacerts_area" || exit
+  cd "cacerts_area" || exit
 
-  git clone https://github.com/AdoptOpenJDK/openjdk-build.git cacerts_area
+  git init
+  git remote add origin -f https://github.com/AdoptOpenJDK/openjdk-build.git
+  git config core.sparsecheckout true
+  echo "security/*" >> .git/info/sparse-checkout
+  git pull origin master
+
   echo "cacerts should be here..."
 
   # shellcheck disable=SC2046
-  if ! [ -r "cacerts_area/security/cacerts" ]; then
+  if ! [ -r "security/cacerts" ]; then
     echo "Failed to retrieve the cacerts file, exiting..."
     exit;
   else
     echo "${good}Successfully retrieved the cacerts file!"
   fi
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 }
 
 downloadingRequiredDependencies()
 {
+  mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
+
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
      echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa, Freetype, and CaCerts."
   else

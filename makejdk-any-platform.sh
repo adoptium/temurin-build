@@ -131,7 +131,7 @@ setMakeCommandForOS() {
 
 # Pull in support to configure and then build the binary
 source configureBuild.sh
-source build.sh
+source prepare-build.sh
 
 # Let's do lots of platform, arch and variant config set up before we build
 echo "Starting $0 to configure and build AdoptOpenJDK binary"
