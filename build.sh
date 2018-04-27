@@ -113,14 +113,15 @@ buildAndTestOpenJDKViaDocker()
      echo "$normal"
   fi
 
-#  mkdir -p "${BUILD_CONFIG[WORKING_DIR]}/target"
+  local hostDir="$(pwd)";
 
-#     -v "${BUILD_CONFIG[WORKING_DIR]}/target":/${BUILD_CONFIG[TARGET_DIR_IN_THE_CONTAINER]} \
-#
+  echo "Target binary directory on host machine: ${hostDir}/target"
+  mkdir -p "${hostDir}/target"
 
   ${BUILD_CONFIG[DOCKER]} run -lst \
       --cpuset-cpus="0-3" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
+       -v "${hostDir}/target":/${BUILD_CONFIG[TARGET_DIR]} \
       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
       --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
 

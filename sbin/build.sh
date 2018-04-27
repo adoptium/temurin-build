@@ -26,74 +26,70 @@ source "$SCRIPT_DIR/prepareWorkspace.sh"
 
 source $SCRIPT_DIR/config_init.sh
 
-loadConfigFromFile
+export OPENJDK_REPO_TAG
+export OPENJDK_DIR
+export CONFIGURE_ARGS=""
+export RUN_JTREG_TESTS_ONLY=""
+export MAKE_TEST_IMAGE=""
+export GIT_CLONE_ARGUMENTS="";
 
-#WORKING_DIR=""
-#TARGET_DIR=""
-#OPENJDK_SOURCE_DIR=""
-#JVM_VARIANT="${JVM_VARIANT:-server}"
-#OPENJDK_UPDATE_VERSION=""
-#OPENJDK_BUILD_NUMBER=""
-#OPENJDK_REPO_TAG=""
-#TRIMMED_TAG=""
-#USER_SUPPLIED_CONFIGURE_ARGS=""
+function parseArguments() {
+    # TODO: can change all this to config file
+    while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
+      opt="$1";
+      shift;
+      case "$opt" in
+        "--" ) break 2;;
 
+        "--source" | "-s" )
+        BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
 
-while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
-  opt="$1";
-  shift;
-  case "$opt" in
-    "--" ) break 2;;
+        "--sign" | "-S" )
+        BUILD_CONFIG[SIGN]="true";;
 
-    "--source" | "-s" )
-    BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
+        "--destination" | "-d" )
+        BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
 
-    "--destination" | "-d" )
-    BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
+        "--repository" | "-r" )
+        BUILD_CONFIG[OPENJDK_SOURCE_DIR]="$1"; shift;;
 
-    "--repository" | "-r" )
-    BUILD_CONFIG[OPENJDK_SOURCE_DIR]="$1"; shift;;
+        "--variant"  | "-jv" )
+        BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
 
-    "--variant"  | "-jv" )
-    BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
+        "--update-version"  | "-uv" )
+        BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
 
-    "--update-version"  | "-uv" )
-    BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
+        "--build-number"  | "-bn" )
+        BUILD_CONFIG[OPENJDK_BUILD_NUMBER]="$1"; shift;;
 
-    "--build-number"  | "-bn" )
-    BUILD_CONFIG[OPENJDK_BUILD_NUMBER]="$1"; shift;;
+        "--repository-tag"  | "-rt" )
+        OPENJDK_REPO_TAG="$1"; shift;;
 
-    "--repository-tag"  | "-rt" )
-    BUILD_CONFIG[OPENJDK_REPO_TAG]="$1"; shift;;
+        "--configure-args"  | "-ca" )
+        BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
 
-    "--configure-args"  | "-ca" )
-    BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
+        *) echo >&2 "${error}Invalid build.sh option: ${opt}${normal}"; exit 1;;
+      esac
+    done
 
-    *) echo >&2 "${error}Invalid build.sh option: ${opt}${normal}"; exit 1;;
-  esac
-done
+    OPENJDK_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
-OPENJDK_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    if [ "${BUILD_CONFIG[JVM_VARIANT]}" == "--run-jtreg-tests-only" ]; then
+      RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
+      BUILD_CONFIG[JVM_VARIANT]="server"
+    fi
 
+    echo "JDK Image folder name: ${BUILD_CONFIG[JDK_PATH]}"
+    echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
+    echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
+    echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
 
-CONFIGURE_ARGS=""
-RUN_JTREG_TESTS_ONLY=""
+    BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}
+    # Defaults to not building this target, for Java 9+ we set this to test-image in order to build the native test libraries
 
+    BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-""}
+}
 
-if [ "${BUILD_CONFIG[JVM_VARIANT]}" == "--run-jtreg-tests-only" ]; then
-  RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
-  BUILD_CONFIG[JVM_VARIANT]="server"
-fi
-
-echo "JDK Image folder name: ${BUILD_CONFIG[JDK_PATH]}"
-echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
-echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
-echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
-
-BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}
-# Defaults to not building this target, for Java 9+ we set this to test-image in order to build the native test libraries
-MAKE_TEST_IMAGE=""
-BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-""}
 
 addConfigureArg()
 {
@@ -142,13 +138,12 @@ getOpenJDKUpdateAndBuildVersion()
 
   if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
 
-    export OPENJDK_REPO_TAG;
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}${normal}"
     echo "${info}NOTE: This can take quite some time!  Please be patient"
     git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
-    OPENJDK_REPO_TAG=${TAG:-$(getFirstTagFromOpenJDKGitRepo)} # getFirstTagFromOpenJDKGitRepo resides in sbin/common-functions.sh
+    OPENJDK_REPO_TAG=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)} # getFirstTagFromOpenJDKGitRepo resides in sbin/common-functions.sh
     if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
      echo "${error}Unable to detect git tag, exiting...${normal}"
      exit 1
@@ -408,7 +403,7 @@ makeACopyOfLibFreeFontForMacOSX() {
 
 signRelease()
 {
-  if [ -z "$SIGN" ]; then
+  if [ -z "${BUILD_CONFIG[SIGN]}" ]; then
     if [[ "$OSTYPE" == "cygwin" ]]; then
       echo "Signing release"
       signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
@@ -469,9 +464,13 @@ showCompletionMessage()
 }
 
 
+loadConfigFromFile
+
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
 sourceFileWithColourCodes
+
+parseArguments "$@"
 configureWorkspace
 
 getOpenJDKUpdateAndBuildVersion
@@ -485,6 +484,5 @@ removingUnnecessaryFiles
 makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG}"
 makeACopyOfLibFreeFontForMacOSX "${JRE_PATH}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG}"
 signRelease
-exit
 createOpenJDKTarArchive
 showCompletionMessage

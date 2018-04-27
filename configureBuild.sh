@@ -194,9 +194,20 @@ parseCommandLineArgs()
      esac
   done
 
+
   # Now that we've processed the flags, grab the mandatory argument(s)
-  BUILD_CONFIG[OPENJDK_FOREST_NAME]=$1
-  BUILD_CONFIG[OPENJDK_CORE_VERSION]=${BUILD_CONFIG[OPENJDK_FOREST_NAME]}
+  local forest_name=$1
+  local openjdk_version=${forest_name}
+
+  # Derive the openjdk_core_version from the forest name.
+  # 'u' means it's an update repo, e.g. jdk8u
+  local openjdk_core_version=${forest_name}
+  if [[ ${forest_name} == *u ]]; then
+    openjdk_core_version=${forest_name%?}
+  fi
+
+  BUILD_CONFIG[OPENJDK_CORE_VERSION]=$openjdk_core_version;
+  BUILD_CONFIG[OPENJDK_FOREST_NAME]=$forest_name;
 
   # 'u' means it's an update repo, e.g. jdk8u
   if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} == *u ]]; then
@@ -292,9 +303,7 @@ setTargetDirectory()
 {
   if [ -z "${BUILD_CONFIG[TARGET_DIR]}" ] ; then
     echo "${info}TARGET_DIR is undefined so setting to $PWD.${normal}"
-    BUILD_CONFIG[TARGET_DIR]=$PWD
-    # Only makes a difference if we're in Docker
-    echo "If you're using Docker, the build artifact will *NOT* be copied to the host (as you did not specify your own TARGET_DIR)."
+    BUILD_CONFIG[TARGET_DIR]="${BUILD_CONFIG[WORKSPACE_DIR]}/target/"
   else
     echo "${info}Target directory is ${BUILD_CONFIG[TARGET_DIR]}${normal}"
     BUILD_CONFIG[COPY_TO_HOST]=true

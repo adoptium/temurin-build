@@ -27,39 +27,6 @@ set -ex # TODO remove this once we've finished debugging
 # Pull in configuration support (read / write / display)
 source sbin/config_init.sh
 
-parseCommandLineArgs()
-{
-  # While we have flags, (that start with a '-' char) then process them
-  while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
-    opt="$1";
-    shift;
-    case "$opt" in
-      "--variant" | "-bv")
-        BUILD_CONFIG[BUILD_VARIANT]=$1
-        shift;;
-    esac
-
-    # Ignore all of the remaining arguments except for the last one
-    if [[ $# -gt 1 ]] && [[ ."$1" != .-* ]]; then
-      shift;
-    fi
-  done
-
-  # Now that we've processed the flags, grab the mandatory argument(s)
-  local forest_name=$1
-  local openjdk_version=${forest_name}
-
-  # Derive the openjdk_core_version from the forest name.
-  # 'u' means it's an update repo, e.g. jdk8u
-  local openjdk_core_version=${forest_name}
-  if [[ ${forest_name} == *u ]]; then
-    openjdk_core_version=${forest_name%?}
-  fi
-
-  BUILD_CONFIG[OPENJDK_CORE_VERSION]=$openjdk_core_version;
-  BUILD_CONFIG[OPENJDK_FOREST_NAME]=$forest_name;
-}
-
 # Set variables that the `configure` command (which builds OpenJDK) will need
 setVariablesForConfigure() {
 
@@ -162,6 +129,10 @@ setMakeCommandForOS() {
   BUILD_CONFIG[MAKE_COMMAND_NAME]=${BUILD_CONFIG[MAKE_COMMAND_NAME]:-$make_command_name}
 }
 
+# Pull in support to configure and then build the binary
+source configureBuild.sh
+source build.sh
+
 # Let's do lots of platform, arch and variant config set up before we build
 echo "Starting $0 to configure and build AdoptOpenJDK binary"
 parseCommandLineArgs "$@"
@@ -171,9 +142,6 @@ processArgumentsforSpecificPlatforms
 processArgumentsforSpecificArchitectures
 setMakeCommandForOS
 
-# Pull in support to configure and then build the binary
-source configureBuild.sh
-source build.sh
 
 # Configure the AdoptOpenJDK build with everything we've set
 configure_build "$@"
@@ -184,4 +152,6 @@ writeConfigToFile
 
 # Let's build the AdoptOpenJDK binary
 perform_build
+
+
 
