@@ -73,7 +73,7 @@ while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
   esac
 done
 
-OPENJDK_DIR="${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+OPENJDK_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
 
 CONFIGURE_ARGS=""
@@ -205,7 +205,7 @@ buildingTheRestOfTheConfigParameters()
   fi
 
   addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
-  addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${BUILD_CONFIG[WORKING_DIR]}/cacerts_area/security/cacerts"
+  addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/cacerts_area/security/cacerts"
   addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKING_DIR]}/alsa-lib-${ALSA_LIB_VERSION}"
 
 
@@ -323,7 +323,7 @@ buildOpenJDK()
 printJavaVersionString()
 {
   # shellcheck disable=SC2086
-  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${JDK_PATH})
+  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${BUILD_CONFIG[JDK_PATH]})
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
@@ -346,12 +346,8 @@ removingUnnecessaryFiles()
     echo "Dir=${PWD}"
     OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   fi
-  if [ "${BUILD_CONFIG[USE_DOCKER]}" != "true" ] ; then
-     echo "Removing cacerrts"
-     rm -rf cacerts_area
-  fi
 
-  cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
 
   cd build/*/images || return
 
@@ -411,7 +407,7 @@ makeACopyOfLibFreeFontForMacOSX() {
 
 signRelease()
 {
-  if [ "$SIGN" ]; then
+  if [ -z "$SIGN" ]; then
     if [[ "$OSTYPE" == "cygwin" ]]; then
       echo "Signing release"
       signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
@@ -482,11 +478,12 @@ configureCommandParameters
 stepIntoTheWorkingDirectory
 runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
 buildOpenJDK
-exit
+
 printJavaVersionString
 removingUnnecessaryFiles
 makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG}"
 makeACopyOfLibFreeFontForMacOSX "${JRE_PATH}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG}"
 signRelease
+exit
 createOpenJDKTarArchive
 showCompletionMessage

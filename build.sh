@@ -119,6 +119,7 @@ buildAndTestOpenJDKViaDocker()
 #
 
   ${BUILD_CONFIG[DOCKER]} run -lst \
+      --cpuset-cpus="0-3" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
       --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
