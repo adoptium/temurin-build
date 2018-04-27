@@ -4,3 +4,4 @@ target
 .idea/
 alsa-lib*
 freetype*
+config/
