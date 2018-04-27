@@ -463,9 +463,7 @@ showCompletionMessage()
   echo "All done!"
 }
 
-
 loadConfigFromFile
-
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
 sourceFileWithColourCodes
@@ -481,8 +479,8 @@ buildOpenJDK
 
 printJavaVersionString
 removingUnnecessaryFiles
-makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG}"
-makeACopyOfLibFreeFontForMacOSX "${JRE_PATH}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG}"
+makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
+makeACopyOfLibFreeFontForMacOSX "${BUILD_CONFIG[JRE_PATH]}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
 signRelease
 createOpenJDKTarArchive
 showCompletionMessage
