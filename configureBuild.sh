@@ -187,7 +187,8 @@ parseCommandLineArgs()
       BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
 
       "--sudo" | "-s" )
-      BUILD_CONFIG[DOCKER]="sudo /usr/bin/docker";;
+      #BUILD_CONFIG[DOCKER]="sudo /usr/bin/docker";;
+      BUILD_CONFIG[DOCKER]="sudo docker";;
 
       *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
      esac

@@ -146,6 +146,7 @@ getOpenJDKUpdateAndBuildVersion()
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     echo "${git}Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}${normal}"
+    echo "${info}NOTE: This can take quite some time!  Please be patient"
     git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
     OPENJDK_REPO_TAG=${TAG:-$(getFirstTagFromOpenJDKGitRepo)} # getFirstTagFromOpenJDKGitRepo resides in sbin/common-functions.sh
     if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
