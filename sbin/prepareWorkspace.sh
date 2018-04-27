@@ -16,7 +16,7 @@
 
 
 # set -x # TODO remove once we've finished debugging
-set -ex
+set -eux
 
 source "$SCRIPT_DIR/common-functions.sh"
 
@@ -40,7 +40,6 @@ checkoutAndCloneOpenJDKGitRepo()
       sleep 10
       echo "${git}Pulling latest changes from git openjdk source repository${normal}"
 
-      showShallowCloningMessage "fetch"
       git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
       git reset --hard origin/${BUILD_CONFIG[BRANCH]}
       if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
@@ -60,8 +59,7 @@ checkoutAndCloneOpenJDKGitRepo()
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
 
-cloneOpenJDKGitRepo()
-{
+setGitCloneArguments() {
   cd ${BUILD_CONFIG[WORKSPACE_DIR]}
   echo "${git}"
   local git_remote_repo_address;
@@ -71,11 +69,15 @@ cloneOpenJDKGitRepo()
      git_remote_repo_address="https://github.com/${BUILD_CONFIG[REPOSITORY]}.git"
   fi
 
-  showShallowCloningMessage "cloning"
-  local git_clone_arguments=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} '-b' "${BUILD_CONFIG[BRANCH]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
+  GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} '-b' "${BUILD_CONFIG[BRANCH]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
+}
 
-  echo "git clone ${git_clone_arguments[*]}"
-  git clone "${git_clone_arguments[@]}"
+cloneOpenJDKGitRepo()
+{
+  setGitCloneArguments
+
+  echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
+  git clone "${GIT_CLONE_ARGUMENTS[@]}"
   if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
     cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || exit 1
     git checkout "${BUILD_CONFIG[TAG]}"
@@ -88,16 +90,6 @@ cloneOpenJDKGitRepo()
     bash get_source.sh
   fi
   cd ${BUILD_CONFIG[WORKSPACE_DIR]}
-}
-
-showShallowCloningMessage()
-{
-    mode=$1
-    if [[ "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}" == "" ]]; then
-        echo "${info}Git repo ${mode} mode: deep (preserves commit history)${normal}"
-    else
-        echo "${info}Git repo ${mode} mode: shallow (DOES NOT contain commit history)${normal}"
-    fi
 }
 
 ##################################################################
