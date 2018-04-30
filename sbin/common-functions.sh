@@ -97,6 +97,10 @@ parseConfigurationArguments() {
         "--tag" | "-t" )
         BUILD_CONFIG[TAG]="$1"; BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
 
+        "--tests-only" | "-T" )
+        BUILD_CONFIG[JVM_VARIANT]="server"
+        BUILD_CONFIG[TESTS_ONLY]=true;;
+
         "--update-version"  | "-u" )
         BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
 

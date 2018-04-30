@@ -16,102 +16,77 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ## shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/common-functions.sh"
+source "$SCRIPT_DIR/prepareWorkspace.sh"
+source "$SCRIPT_DIR/config_init.sh"
+source "$SCRIPT_DIR/colour-codes.sh"
 
-WORKING_DIR=$1
-OPENJDK_SOURCE_DIR=$2
-BUILD_FULL_NAME=$3
-# shellcheck disable=SC2001
-JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
-JTREG_VERSION=${JTREG_VERSION:-4.2.0-tip}
-JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
-JOB_NAME=${JOB_NAME:-OpenJDK}
-NUM_PROCESSORS=${NUM_PROCESSORS:-$(getconf _NPROCESSORS_ONLN)}
-TMP_DIR=$(dirname "$(mktemp -u)")
-OPENJDK_DIR="$WORKING_DIR/$OPENJDK_SOURCE_DIR"
-TARGET_DIR="$WORKING_DIR"
 
-determineBuildProperties
+#WORKING_DIR=$1
+#OPENJDK_SOURCE_DIR=$2
+#BUILD_FULL_NAME=$3
+## shellcheck disable=SC2001
+#JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
+#JTREG_VERSION=${JTREG_VERSION:-4.2.0-tip}
+#JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
+#JOB_NAME=${JOB_NAME:-OpenJDK}
+#NUM_PROCESSORS=${NUM_PROCESSORS:-$(getconf _NPROCESSORS_ONLN)}
+#TMP_DIR=$(dirname "$(mktemp -u)")
+#OPENJDK_DIR="$WORKING_DIR/$OPENJDK_SOURCE_DIR"
+#TARGET_DIR="$WORKING_DIR"
 
-checkIfDockerIsUsedForBuildingOrNot()
-{
-  if [[ -f /.dockerenv ]] ; then
-    echo "Detected we're in docker"
-    WORKING_DIR=/openjdk/build/
-    OPENJDK_SOURCE_DIR=openjdk/
-    OPENJDK_DIR="$WORKING_DIR/$OPENJDK_SOURCE_DIR"
-    TARGET_DIR=/openjdk/target/
-    # Keep as a variable for potential use later
-    # if we wish to copy the results to the host
-    # shellcheck disable=SC2034
-    IN_DOCKER=true
-  fi
-}
 
 downloadJtregAndSetupEnvironment() 
 {
+  local jtregDir
+  jtregDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/jtreg"
+
+
   # Download then add jtreg to our path
-  if [[ ! -d "${WORKING_DIR}/${JTREG_TARGET_FOLDER}" ]]; then
+  if [[ ! -d "${jtregDir}" ]]; then
+
+   local download_dir="${BUILD_CONFIG[WORKSPACE_DIR]}/libs/jtreg"
+
+   mkdir -p "${download_dir}" || exit 1
    echo "Downloading Jtreg binary"
-   JTREG_BINARY_FILE="jtreg-${JTREG_VERSION}.tar.gz"
+   local jtreg_binary_file="jtreg-${BUILD_CONFIG[JTREG_VERSION]}.tar.gz"
 
    # shellcheck disable=SC2046
-   if ! (cd "$TMP_DIR" && wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/"$JTREG_BINARY_FILE"); then
+   if ! (cd "${download_dir}" && wget https://ci.adoptopenjdk.net/job/jtreg/lastSuccessfulBuild/artifact/"${jtreg_binary_file}"); then
      echo "Failed to retrieve the jtreg binary, exiting"
      exit
    fi
 
-   
-   cd "$WORKING_DIR" && tar xf "$TMP_DIR/$JTREG_BINARY_FILE"
+   mkdir -p "${jtregDir}" || exit 1
+   cd "${jtregDir}" && tar  -xf "${download_dir}/${jtreg_binary_file}" --strip 1
   fi
 
-  echo "List contents of the jtreg folder"
-  ls "$WORKING_DIR/$JTREG_TARGET_FOLDER"/*
+  export JT_HOME="${jtregDir}"
 
-  export JT_HOME=$WORKING_DIR/$JTREG_TARGET_FOLDER
-
-  export PATH=$JT_HOME/bin:$PATH
-
-  # Clean up after ourselves by removing jtreg tgz
-  rm -f "$JTREG_BINARY_FILE"
+  export PATH="${jtregDir}/bin:$PATH"
 }
 
 applyingJCovSettingsToMakefileForTests()
 {
   echo "Apply JCov settings to Makefile..." 
-  cd "$OPENJDK_DIR/jdk/test" || exit
-  pwd
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/jdk/test" || exit
 
-  sed -i "s/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(ABS_PLATFORM_BUILD_ROOT)\/jdk\/classes\/  -jcov\/source:$(ABS_PLATFORM_BUILD_ROOT)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/" Makefile
+  local abs_platform_build_root="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
-  cd "$OPENJDK_DIR" || exit
-}
-
-settingUpEnvironmentVariablesForJTREG()
-{
-  echo "Setting up environment variables for JTREG to run"
-
-  # This is the JDK we'll test
-  export PRODUCT_HOME=$OPENJDK_DIR/build/$BUILD_FULL_NAME/images/j2sdk-image
-  echo "$PRODUCT_HOME"
-  ls "$PRODUCT_HOME"
-
-  export JTREG_DIR=$WORKING_DIR/jtreg
-  export JTREG_INSTALL=${JTREG_DIR}
-  export JT_HOME=${JTREG_INSTALL}
-  export JTREG_HOME=${JTREG_INSTALL}
-  export JPRT_JTREG_HOME=${JT_HOME}
-  export JPRT_JAVA_HOME=${PRODUCT_HOME}
-  export JTREG_TIMEOUT_FACTOR=5
-  export CONCURRENCY=$NUM_PROCESSORS
+  sed -i "s/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:$(abs_platform_build_root)\/jdk\/classes\/  -jcov\/source:$(abs_platform_build_root)\/..\/..\/jdk\/src\/java\/share\/classes  -jcov\/include:*/" Makefile
 }
 
 runJtregViaMakeCommand()
 {
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+
+  export CONCURRENCY=${BUILD_CONFIG[NUM_PROCESSORS]}:-$(getconf _NPROCESSORS_ONLN)}
+  export JPRT_JTREG_HOME="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/jtreg"
+
   echo "Running jtreg via make command (debug logs enabled)"
-  if [ -z "$JTREG_TEST_SUBSETS" ]; then
+  if [ -z "${BUILD_CONFIG[JTREG_TEST_SUBSETS]}" ]; then
     make test jobs=10 LOG=debug
   else
-    make test jobs=10 LOG=debug TEST="$JTREG_TEST_SUBSETS"
+    make test jobs=10 LOG=debug TEST="${BUILD_CONFIG[JTREG_TEST_SUBSETS]}"
   fi 
 }
 
@@ -156,10 +131,13 @@ packageReports()
   packageOnlyJCovReports  
 }
 
-checkIfDockerIsUsedForBuildingOrNot
+loadConfigFromFile
+cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+
+parseConfigurationArguments "$@"
 downloadingRequiredDependencies
 downloadJtregAndSetupEnvironment
-applyingJCovSettingsToMakefileForTests
-settingUpEnvironmentVariablesForJTREG
+
 runJtregViaMakeCommand
+exit 1
 packageReports

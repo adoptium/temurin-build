@@ -28,7 +28,6 @@ source "$SCRIPT_DIR/config_init.sh"
 export OPENJDK_REPO_TAG
 export OPENJDK_DIR
 export CONFIGURE_ARGS=""
-export RUN_JTREG_TESTS_ONLY=""
 export MAKE_TEST_IMAGE=""
 export GIT_CLONE_ARGUMENTS="";
 
@@ -36,11 +35,6 @@ function parseArguments() {
     parseConfigurationArguments "$@"
 
     OPENJDK_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-
-    if [ "${BUILD_CONFIG[JVM_VARIANT]}" == "--run-jtreg-tests-only" ]; then
-      RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
-      BUILD_CONFIG[JVM_VARIANT]="server"
-    fi
 
     echo "JDK Image folder name: ${BUILD_CONFIG[JDK_PATH]}"
     echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
@@ -51,8 +45,6 @@ function parseArguments() {
     # Defaults to not building this target, for Java 9+ we set this to test-image in order to build the native test libraries
 
     BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-""}
-
-
 }
 
 
@@ -259,7 +251,7 @@ buildOpenJDK()
   stepIntoTheWorkingDirectory
 
   #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
-  if [ "${RUN_JTREG_TESTS_ONLY}" == "--run-jtreg-tests-only" ]; then
+  if [ "${BUILD_CONFIG[TESTS_ONLY]}" == "true" ]; then
     rm -rf cacerts_area
     echo "Nobuild option was set. Prep complete. Java not built."
     exit 0

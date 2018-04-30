@@ -25,13 +25,16 @@ testOpenJDKInNativeEnvironmentIfExpected()
 {
   if [[ "${BUILD_CONFIG[JTREG]}" == "true" ]];
   then
-      "${SCRIPT_DIR}"/sbin/jtreg.sh "${BUILD_CONFIG[WORKING_DIR]}" "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" "${BUILD_CONFIG[BUILD_FULL_NAME]}" "${BUILD_CONFIG[JTREG_TEST_SUBSETS]}"
+      "${SCRIPT_DIR}"/sbin/jtreg.sh
   fi
 }
 
 buildAndTestOpenJDKInNativeEnvironment()
 {
-  "${SCRIPT_DIR}"/sbin/build.sh
+  if [[ "${BUILD_CONFIG[TESTS_ONLY]}" != "true" ]];
+  then
+    "${SCRIPT_DIR}"/sbin/build.sh
+  fi
 
-  #testOpenJDKInNativeEnvironmentIfExpected
+  testOpenJDKInNativeEnvironmentIfExpected
 }
