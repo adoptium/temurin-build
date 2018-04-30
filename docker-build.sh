@@ -81,11 +81,19 @@ buildDockerContainer()
 
 buildAndTestOpenJDKViaDocker()
 {
+
   # TODO This could be extracted overridden by the user if we support more
   # architectures going forwards
   local container_architecture="x86_64/ubuntu"
+
   BUILD_CONFIG[OS_KERNEL_NAME]="linux"
   BUILD_CONFIG[OS_ARCHITECTURE]="x86_64"
+  BUILD_CONFIG[BUILD_FULL_NAME]="linux-x86_64-normal-server-release"
+
+  # TODO We're writing config twice since we have to override 3 vars
+  # would be nicer to detect Docker flag and set these from docker file
+  # in config step
+  writeConfigToFile
 
   # TODO dont modify config in build
   BUILD_CONFIG[DOCKER_BUILD_PATH]="docker/${BUILD_CONFIG[OPENJDK_CORE_VERSION]}/$container_architecture"

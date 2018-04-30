@@ -41,10 +41,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #source "$SCRIPT_DIR/sbin/common-functions.sh"
 
 init_build_config() {
-  # The name of the directory where we clone the OpenJDK source code for
-  # building, defaults to 'openjdk'
-  # TODO Note sure if setting this openjdk default is a good idea...
-
+  # Dir where we clone the OpenJDK source code for building, defaults to 'src'
   BUILD_CONFIG[OPENJDK_SOURCE_DIR]=${BUILD_CONFIG[OPENJDK_SOURCE_DIR]:-src}
 
   # Repo to pull the OpenJDK source from, defaults to AdoptOpenJDK/openjdk-jdk8u
@@ -198,13 +195,11 @@ parseCommandLineArgs()
      esac
   done
 
-
   # Now that we've processed the flags, grab the mandatory argument(s)
   local forest_name=$1
   local openjdk_version=${forest_name}
 
   # Derive the openjdk_core_version from the forest name.
-  # 'u' means it's an update repo, e.g. jdk8u
   local openjdk_core_version=${forest_name}
   if [[ ${forest_name} == *u ]]; then
     openjdk_core_version=${forest_name%?}
@@ -218,7 +213,7 @@ parseCommandLineArgs()
     BUILD_CONFIG[OPENJDK_CORE_VERSION]=${BUILD_CONFIG[OPENJDK_FOREST_NAME]%?}
   fi
 
-  # TODO check that OPENJDK_CORE_VERSION and other mandatory flags have been set by the caller
+  # TODO check that OPENJDK_CORE_VERSION has been set by the caller
 }
 
 doAnyBuildVariantOverrides()
