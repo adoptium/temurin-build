@@ -26,6 +26,92 @@ ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
 
+parseConfigurationArguments() {
+    # TODO: can change all this to config file
+    while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
+      opt="$1";
+      shift;
+      case "$opt" in
+        "--" ) break 2;;
+
+        "--build-number"  | "-b" )
+        BUILD_CONFIG[OPENJDK_BUILD_NUMBER]="$1"; shift;;
+
+        "--branch" | "-B" )
+        BUILD_CONFIG[BRANCH]="$1"; shift;;
+
+        "--configure-args"  | "-C" )
+        BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
+
+        "--clean-docker-build" | "-c" )
+        BUILD_CONFIG[CLEAN_DOCKER_BUILD]=true;;
+
+        "--destination" | "-d" )
+        BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
+
+        "--docker" | "-D" )
+        BUILD_CONFIG[USE_DOCKER]="true";;
+
+        "--disable-shallow-git-clone" )
+        BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
+
+        "--freetype-dir" | "-f" )
+        BUILD_CONFIG[FREETYPE_DIRECTORY]="$1"; shift;;
+
+        "--skip-freetype" | "-F" )
+        BUILD_CONFIG[FREETYPE]=false;;
+
+        "--jdk-boot-dir" | "-J" )
+        BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
+
+        "--jtreg" | "-j" )
+        BUILD_CONFIG[JTREG]=true;;
+
+        "--jtreg-subsets" )
+        BUILD_CONFIG[JTREG]=true; BUILD_CONFIG[JTREG_TEST_SUBSETS]="$1"; shift;;
+
+        "--keep" | "-k" )
+        BUILD_CONFIG[KEEP]=true;;
+
+        "--no-colour" | "-n" )
+        BUILD_CONFIG[COLOUR]=false;;
+
+        "--repository" | "-r" )
+        BUILD_CONFIG[REPOSITORY]="$1"; shift;;
+
+        "--repository-tag"  | "-R" )
+        OPENJDK_REPO_TAG="$1"; shift;;
+
+        "--source" | "-s" )
+        BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
+
+        "--ssh" | "-S" )
+        BUILD_CONFIG[USE_SSH]=true;;
+
+        "--sign" )
+        BUILD_CONFIG[SIGN]=true; BUILD_CONFIG[CERTIFICATE]="$1"; shift;;
+
+        "--sudo" )
+        BUILD_CONFIG[DOCKER]="sudo docker";;
+
+        "--tag" | "-t" )
+        BUILD_CONFIG[TAG]="$1"; BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
+
+        "--update-version"  | "-u" )
+        BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
+
+        "--build-variant"  | "-v" )
+        BUILD_CONFIG[BUILD_VARIANT]="$1"; shift;;
+
+        "--jvm-variant"  | "-V" )
+        BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
+
+        *) echo >&2 "${error}Invalid build.sh option: ${opt}${normal}"; exit 1;;
+      esac
+    done
+}
+
+
 # ALSA first for sound
 checkingAndDownloadingAlsa()
 {
@@ -48,7 +134,7 @@ checkingAndDownloadingAlsa()
       rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     fi
 
-    cd ${BUILD_CONFIG[WORKSPACE_DIR]}/libs/alsa-lib*/
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/alsa-lib*/"
 
     if ! (./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedalsa && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
@@ -175,17 +261,13 @@ downloadingRequiredDependencies()
      echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa, Freetype, and CaCerts."
   else
      echo "Downloading required dependencies...: Alsa, Freetype, Freemarker, and CaCerts."
-     time (
         echo "Checking and download Alsa dependency"
         checkingAndDownloadingAlsa
-     )
 
      if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
        if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
-          time (
             echo "Checking and download FreeType Font dependency"
             checkingAndDownloadingFreeType
-          )
        else
            echo ""
            echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
@@ -195,15 +277,11 @@ downloadingRequiredDependencies()
         echo "Skipping Freetype"
      fi
      if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
-        time (
            echo "Checking and download Freemarker dependency"
            checkingAndDownloadingFreemarker
-        )
      fi
-     time (
-        echo "Checking and download CaCerts dependency"
-        checkingAndDownloadCaCerts
-     )
+      echo "Checking and download CaCerts dependency"
+      checkingAndDownloadCaCerts
   fi
 }
 

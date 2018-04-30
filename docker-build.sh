@@ -20,11 +20,8 @@
 
 set -eux
 
-# i.e. Where we are
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 # Load the common functions
-# shellcheck source=sbin/common-functions.sh
+## shellcheck source=sbin/common-functions.sh
 #source "${SCRIPT_DIR}/sbin/common-functions.sh"
 
 testOpenJDKViaDocker()
@@ -46,14 +43,14 @@ testOpenJDKViaDocker()
 createPersistentDockerDataVolume()
 {
   set +e
-  ${BUILD_CONFIG[DOCKER]} volume inspect ${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]} > /dev/null 2>&1
+  ${BUILD_CONFIG[DOCKER]} volume inspect "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" > /dev/null 2>&1
   local data_volume_exists=$?
   set -e
 
   if [[ "${BUILD_CONFIG[CLEAN_DOCKER_BUILD]}" == "true" || "$data_volume_exists" != "0" ]]; then
 
     echo "${info}Removing old volumes and containers${normal}"
-    ${BUILD_CONFIG[DOCKER]} rm -f "$(${BUILD_CONFIG[DOCKER]} ps -a --no-trunc | grep ${BUILD_CONFIG[CONTAINER_NAME]} | cut -d' ' -f1)" || true
+    ${BUILD_CONFIG[DOCKER]} rm -f "$(${BUILD_CONFIG[DOCKER]} ps -a --no-trunc | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | cut -d' ' -f1)" || true
     ${BUILD_CONFIG[DOCKER]} volume rm "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
 
     echo "${info}Creating tmp container${normal}"
@@ -110,22 +107,23 @@ buildAndTestOpenJDKViaDocker()
      echo "${info}Since you did not specify -k or --keep, we are removing the existing container (if it exists) and building you a new one"
      echo "$good"
      # Find the previous Docker container and remove it (if it exists)
-     ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} ${BUILD_CONFIG[DOCKER]} rm -f {}
+     ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm -f {}
 
      # Build a new container
      buildDockerContainer
      echo "$normal"
   fi
 
-  local hostDir="$(pwd)";
+  local hostDir;
+  hostDir="$(pwd)";
 
   echo "Target binary directory on host machine: ${hostDir}/target"
-  mkdir -p "${hostDir}/target"
+  mkdir -p "${hostDir}/workspace/target"
 
   ${BUILD_CONFIG[DOCKER]} run -lst \
       --cpuset-cpus="0-3" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
-       -v "${hostDir}/target":/${BUILD_CONFIG[TARGET_DIR]} \
+       -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[TARGET_DIR]}" \
       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
       --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
 
@@ -134,6 +132,6 @@ exit
 
   # If we didn't specify to keep the container then remove it
   if [[ -z ${BUILD_CONFIG[KEEP]} ]] ; then
-    ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} ${BUILD_CONFIG[DOCKER]} rm {}
+    ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm {}
   fi
 }

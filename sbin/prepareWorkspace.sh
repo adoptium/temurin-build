@@ -31,17 +31,24 @@ checkoutAndCloneOpenJDKGitRepo()
 
   # Check that we have a git repo of a valid openjdk version on our local file system
   if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && ( [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk9" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk10" ]) ; then
-    local openjdk_git_repo_owner=$(git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}")
+
+    set +e
+    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
+    echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
+    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep --quiet "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
+    local isCorrectGitRepo=$?
+    set -e
+
 
     # If the local copy of the git source repo is valid then we reset appropriately
-    if [ "${openjdk_git_repo_owner}" ]; then
+    if [ "${isCorrectGitRepo}" == "0" ]; then
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "${info}Resetting the git openjdk source repository at $PWD in 10 seconds...${normal}"
       sleep 10
       echo "${git_colour}Pulling latest changes from git openjdk source repository${normal}"
 
-      git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
-      git reset --hard origin/${BUILD_CONFIG[BRANCH]}
+      git fetch --all "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
+      git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
       if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
         git checkout "${BUILD_CONFIG[TAG]}"
       fi
@@ -60,7 +67,7 @@ checkoutAndCloneOpenJDKGitRepo()
 }
 
 setGitCloneArguments() {
-  cd ${BUILD_CONFIG[WORKSPACE_DIR]}
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   local git_remote_repo_address;
   if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
      git_remote_repo_address="git@github.com:${BUILD_CONFIG[REPOSITORY]}.git"
@@ -88,7 +95,7 @@ cloneOpenJDKGitRepo()
     cd "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     bash get_source.sh
   fi
-  cd ${BUILD_CONFIG[WORKSPACE_DIR]}
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
 
 
@@ -101,10 +108,8 @@ createWorkspace()
 ##################################################################
 
 function configureWorkspace() {
-  time (
     createWorkspace
     checkoutAndCloneOpenJDKGitRepo
     downloadingRequiredDependencies
-  )
 }
 

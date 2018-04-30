@@ -95,7 +95,7 @@ declare -a -x PARAM_LOOKUP
 for index in $(seq 0 $(expr ${#CONFIG_PARAMS[@]} - 1))
 do
     paramName=${CONFIG_PARAMS[$index]};
-    eval declare -r -x $paramName=$index
+    eval declare -r -x "$paramName=$index"
     PARAM_LOOKUP[$index]=$paramName
 done
 
@@ -106,7 +106,7 @@ function displayParams() {
     echo "# ============================"
     for K in "${!BUILD_CONFIG[@]}";
     do
-      echo BUILD_CONFIG[${PARAM_LOOKUP[$K]}]="\"${BUILD_CONFIG[$K]}\""
+      echo "BUILD_CONFIG[${PARAM_LOOKUP[$K]}]=\"${BUILD_CONFIG[$K]}\""
     done | sort
     set -x
 }
@@ -122,7 +122,7 @@ function writeConfigToFile() {
 function loadConfigFromFile() {
   if [ -f "$SCRIPT_DIR/../config/built_config.cfg" ]
   then
-    source $SCRIPT_DIR/../config/built_config.cfg
+    source "$SCRIPT_DIR/../config/built_config.cfg"
   elif [ -f "config/built_config.cfg" ]
   then
     source config/built_config.cfg

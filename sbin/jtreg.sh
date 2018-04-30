@@ -14,7 +14,7 @@
 #
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# shellcheck source=sbin/common-functions.sh
+## shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/common-functions.sh"
 
 WORKING_DIR=$1

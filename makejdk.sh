@@ -36,17 +36,16 @@ set -eux
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Pull in configuration support (read / write / display)
-source ${SCRIPT_DIR}/configureBuild.sh
-source ${SCRIPT_DIR}/docker-build.sh
-source ${SCRIPT_DIR}/native-build.sh
+source "${SCRIPT_DIR}/configureBuild.sh"
+source "${SCRIPT_DIR}/docker-build.sh"
+source "${SCRIPT_DIR}/native-build.sh"
 
 
 unset BUILD_CONFIG
 
-if [ -z ${BUILD_CONFIG+x} ]
+if [ -z "${BUILD_CONFIG+x}" ]
 then
   declare -A BUILD_CONFIG
-  BUILD_CONFIG[foo]="bar"
 fi
 
 configure_build "$(declare -p BUILD_CONFIG)" UPDATED_BUILD_CONFIG "$@"
@@ -57,7 +56,7 @@ echo "BUILDING WITH CONFIGURATION:"
 echo "============================"
 for K in "${!BUILD_CONFIG[@]}";
 do
-  echo BUILD_CONFIG[$K]=${BUILD_CONFIG[$K]};
+  echo BUILD_CONFIG[$K]="${BUILD_CONFIG[$K]}";
 done | sort
 set -x
 
