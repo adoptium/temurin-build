@@ -2,10 +2,9 @@ println "building ${JDK_VERSION}"
 
 def buildPlatforms = ['Mac', 'Linux', 'Windows']
 def buildMaps = [:]
-buildMaps['Mac'] = [test:false, ArchOSs:'x86-64_macos']
+buildMaps['Mac'] = [test:['openjdktest'], ArchOSs:'x86-64_macos']
 buildMaps['Windows'] = [test:false, ArchOSs:'x86-64_windows']
-buildMaps['Linux'] = [test:false, ArchOSs:'x86-64_linux']
-def typeTests = ['openjdktest', 'systemtest']
+buildMaps['Linux'] = [test:['openjdktest'], ArchOSs:'x86-64_linux']
 
 def jobs = [:]
 for ( int i = 0; i < buildPlatforms.size(); i++ ) {
@@ -14,13 +13,25 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 	def archOS = buildMaps[platform].ArchOSs
 	jobs[platform] = {
 		def buildJob
+		def buildJobNum
 		def checksumJob
 		stage('build') {
 			buildJob = build job: "openjdk_amber_build_${archOS}"
+			buildJobNum = buildJob.getNumber()
+		}
+		if (buildMaps[platform].test) {
+			stage('test') {
+				buildMaps[platform].test.each {
+					build job:"amber-rsl_hs_${it}_${archOS}",
+							propagate: false,
+							parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJobNum}"),
+									string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_amber_build_${archOS}")]
+				}
+			}
 		}
 		stage('checksums') {
 			checksumJob = build job: 'openjdk_amber_build_checksum',
-							parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJob.getNumber()}"),
+							parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJobNum}"),
 									string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_amber_build_${archOS}")]
 		}
 		stage('publish nightly') {
