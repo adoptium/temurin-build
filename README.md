@@ -47,7 +47,6 @@ Options:
   -r, --repository <repo>    specify a custom repository (eg. username/openjdk-jdk8u)
   -b, --branch <branch>      specify a custom branch (eg. dev)
   -k, --keep                 reuse docker container (prevents deleting)
-  -j, --jtreg                run jtreg after building
   -S, --ssh                  use ssh when cloning git
   --variant <name>           specify a build variant name, e.g. openj9
 ```

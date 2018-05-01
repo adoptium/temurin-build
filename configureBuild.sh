@@ -98,9 +98,6 @@ init_build_config() {
   # JVM variant, e.g. client or server, defaults to server
   BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-server}
 
-  # Whether we execute the jtreg tests
-  BUILD_CONFIG[JTREG]=false
-
   # Any extra args provided by the user
   BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=""
 
@@ -154,9 +151,6 @@ parseCommandLineArgs()
 
       "--clean-docker-build" | "-c" )
       BUILD_CONFIG[CLEAN_DOCKER_BUILD]=true;;
-
-      "--jtreg" | "-j" )
-      BUILD_CONFIG[JTREG]=true;;
 
       "--jdk-boot-dir" | "-J" )
       BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
