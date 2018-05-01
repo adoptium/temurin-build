@@ -65,8 +65,13 @@ init_build_config() {
   # Location of DockerFile and where scripts get copied to inside the container
   BUILD_CONFIG[DOCKER_FILE_PATH]=""
 
-  # Whether we keep the Docker image after we build it
-  BUILD_CONFIG[KEEP]=false
+  # Whether we keep the Docker container after we build it
+  # TODO Please note that the persistent volume is managed separately
+  BUILD_CONFIG[KEEP_CONTAINER]=false
+
+  # Whether we use an existing container
+  # TODO Please note that the persistent volume is managed separately
+  BUILD_CONFIG[REUSE_CONTAINER]=true
 
   # The current working directory
   BUILD_CONFIG[WORKING_DIR]=""
@@ -167,18 +172,6 @@ doAnyBuildVariantOverrides()
   BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
 }
 
-# TODO Check what this flag does when not using docker
-checkIfDockerIsUsedShouldTheContainerBePreserved()
-{
-  echo "${info}"
-  if [ "${BUILD_CONFIG[KEEP]}" == "true" ] ; then
-    echo "We'll keep the built Docker container."
-  else
-    echo "The --keep, -k flag was not set so we'll remove any pre-existing Docker container and build a new one."
-  fi
-  echo "${normal}"
-}
-
 setDefaultBranchIfNotProvided()
 {
   if [ -z "${BUILD_CONFIG[BRANCH]}" ] ; then
@@ -222,7 +215,6 @@ setTargetDirectory()
   fi
 }
 
-
 determineBuildProperties() {
     BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-server}
 
@@ -230,17 +222,6 @@ determineBuildProperties() {
     local default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${build_type}-${BUILD_CONFIG[JVM_VARIANT]}-release
 
     BUILD_CONFIG[BUILD_FULL_NAME]=${BUILD_CONFIG[BUILD_FULL_NAME]:-"$default_build_full_name"}
-}
-
-setDockerSpecificConfig() {
-
-  # TODO This could be extracted overridden by the user if we support more
-  # architectures going forwards
-  local container_architecture="x86_64/ubuntu"
-
-  BUILD_CONFIG[DOCKER_FILE_PATH]="docker/${BUILD_CONFIG[OPENJDK_CORE_VERSION]}/$container_architecture"
-
-  source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
 }
 
 ################################################################################
@@ -252,11 +233,7 @@ configure_build() {
     parseCommandLineArgs "$@"
     doAnyBuildVariantOverrides
     sourceFileWithColourCodes
-    checkIfDockerIsUsedShouldTheContainerBePreserved
     setDefaultBranchIfNotProvided
     setWorkingDirectory
     setTargetDirectory
-    if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
-       setDockerSpecificConfig
-    fi
 }

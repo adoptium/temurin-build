@@ -61,11 +61,14 @@ parseConfigurationArguments() {
         "--skip-freetype" | "-F" )
         BUILD_CONFIG[FREETYPE]=false;;
 
+        "--ignore-container" | "-i" )
+        BUILD_CONFIG[REUSE_CONTAINER]=false;;
+
         "--jdk-boot-dir" | "-J" )
         BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
 
         "--keep" | "-k" )
-        BUILD_CONFIG[KEEP]=true;;
+        BUILD_CONFIG[KEEP_CONTAINER]=true;;
 
         "--no-colour" | "-n" )
         BUILD_CONFIG[COLOUR]=false;;
@@ -128,7 +131,7 @@ checkingAndDownloadingAlsa()
       rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     fi
 
-    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/alsa-lib*/"
+    cd ${BUILD_CONFIG[WORKSPACE_DIR]}/libs/alsa-lib*/
 
     if ! (./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedalsa && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154

@@ -18,13 +18,13 @@
 
 ################################################################################
 #
-# Entry point to build and test (Adopt) OpenJDK binaries for any platform.
+# Entry point to build (Adopt) OpenJDK binaries for any platform.
 #
 # 1. Source scripts to support configuration, docker builds and native builds.
 # 2. Parse the Command Line Args
 # 3. Set a host of configuration options based on args, platform etc
 # 4. Display and then persist those configuration options
-# 5. Build and test the binary in Docker or natively
+# 5. Build the binary in Docker or natively
 #
 ################################################################################
 
@@ -143,7 +143,7 @@ setMakeCommandForOS() {
   BUILD_CONFIG[MAKE_COMMAND_NAME]=${BUILD_CONFIG[MAKE_COMMAND_NAME]:-$make_command_name}
 }
 
-echo "Starting $0 to configure, build and test (Adopt)OpenJDK binary"
+echo "Starting $0 to configure, build (Adopt)OpenJDK binary"
 
 # Parse the CL Args, see ${SCRIPT_DIR}/configureBuild.sh for details
 parseCommandLineArgs "$@"
@@ -158,7 +158,6 @@ setMakeCommandForOS
 # Configure the build, display the parameters and write the config to disk
 # see ${SCRIPT_DIR}/sbin/config_init.sh for details
 configure_build "$@"
-displayParams
 writeConfigToFile
 
 # Let's build and test the (Adopt) OpenJDK binary in Docker or natively
