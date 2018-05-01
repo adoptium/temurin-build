@@ -37,8 +37,8 @@ set -eux # TODO remove once we've finished debugging
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Load the common functions
-# shellcheck source=sbin/common-functions.sh
-#source "$SCRIPT_DIR/sbin/common-functions.sh"
+## shellcheck source=sbin/common-functions.sh
+source "$SCRIPT_DIR/sbin/common-functions.sh"
 
 init_build_config() {
   # Dir where we clone the OpenJDK source code for building, defaults to 'src'
@@ -122,76 +122,14 @@ sourceSignalHandler()
 
 parseCommandLineArgs()
 {
-  while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
-    opt="$1";
+  parseConfigurationArguments "$@"
+
+  while [[ $# -gt 1 ]] ; do
     shift;
-    case "$opt" in
-      "--" ) break 2;;
-
-      "--source" | "-s" )
-      BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
-
-      "--ssh" | "-S" )
-      BUILD_CONFIG[USE_SSH]=true;;
-
-      "--destination" | "-d" )
-      BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
-
-      "--repository" | "-r" )
-      BUILD_CONFIG[REPOSITORY]="$1"; shift;;
-
-      "--branch" | "-b" )
-      BUILD_CONFIG[BRANCH]="$1"; shift;;
-
-      "--tag" | "-t" )
-      BUILD_CONFIG[TAG]="$1"; BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
-
-      "--keep" | "-k" )
-      BUILD_CONFIG[KEEP]=true;;
-
-      "--clean-docker-build" | "-c" )
-      BUILD_CONFIG[CLEAN_DOCKER_BUILD]=true;;
-
-      "--jdk-boot-dir" | "-J" )
-      BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
-
-      "--jtreg-subsets" | "-js" )
-      BUILD_CONFIG[JTREG]=true; BUILD_CONFIG[JTREG_TEST_SUBSETS]="$1"; shift;;
-
-      "--no-colour" | "-nc" )
-      BUILD_CONFIG[COLOUR]=false;;
-
-      "--sign" )
-      BUILD_CONFIG[SIGN]=true; BUILD_CONFIG[CERTIFICATE]="$1"; shift;;
-
-      "--disable-shallow-git-clone" | "-dsgc" )
-      BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
-
-      "--skip-freetype" | "-sf" )
-      BUILD_CONFIG[FREETYPE]=false;;
-
-      "--freetype-dir" | "-ftd" )
-      BUILD_CONFIG[FREETYPE_DIRECTORY]="$1"; shift;;
-
-      "--variant"  | "-bv" )
-      BUILD_CONFIG[BUILD_VARIANT]="$1"; shift;;
-
-      "--configure-args"  | "-ca" )
-      BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
-
-      "--sudo" | "-s" )
-      BUILD_CONFIG[DOCKER]="sudo docker";;
-
-      "--docker" | "-D" )
-      BUILD_CONFIG[USE_DOCKER]="true";;
-
-      *) echo >&2 "${error}Invalid option: ${opt}${normal}"; man ./makejdk-any-platform.1; exit 1;;
-     esac
   done
 
   # Now that we've processed the flags, grab the mandatory argument(s)
   local forest_name=$1
-  local openjdk_version=${forest_name}
 
   # Derive the openjdk_core_version from the forest name.
   local openjdk_core_version=${forest_name}

@@ -35,10 +35,10 @@ set -eux
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Pull in configuration and build support
-source ${SCRIPT_DIR}/sbin/config_init.sh
-source ${SCRIPT_DIR}/docker-build.sh
-source ${SCRIPT_DIR}/native-build.sh
-source ${SCRIPT_DIR}/configureBuild.sh
+source "${SCRIPT_DIR}/sbin/config_init.sh"
+source "${SCRIPT_DIR}/docker-build.sh"
+source "${SCRIPT_DIR}/native-build.sh"
+source "${SCRIPT_DIR}/configureBuild.sh"
 
 # Set variables that the `configure` command (which builds OpenJDK) will need
 setVariablesForConfigure() {
@@ -88,9 +88,9 @@ processArgumentsforSpecificPlatforms() {
 # Specific architectures need to have special build settings
 processArgumentsforSpecificArchitectures() {
   local jvm_variant=server
-  local build_full_name
-  local make_args_for_any_platform
-  local configure_args_for_any_platform
+  local build_full_name=""
+  local make_args_for_any_platform=""
+  local configure_args_for_any_platform=""
 
   case "${BUILD_CONFIG[OS_ARCHITECTURE]}" in
   "s390x")
@@ -100,7 +100,7 @@ processArgumentsforSpecificArchitectures() {
       jvm_variant=server
     fi
 
-    build_full_name=linux-s390x-normal-${jvm_variant}-release}
+    build_full_name=linux-s390x-normal-${jvm_variant}-release
     make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true images"
   ;;
 

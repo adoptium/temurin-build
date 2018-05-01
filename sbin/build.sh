@@ -19,64 +19,22 @@
 set -eux
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# shellcheck source=sbin/common-functions.sh
+
+
 source "$SCRIPT_DIR/common-functions.sh"
 source "$SCRIPT_DIR/prepareWorkspace.sh"
-
-source $SCRIPT_DIR/config_init.sh
+source "$SCRIPT_DIR/config_init.sh"
 
 export OPENJDK_REPO_TAG
 export OPENJDK_DIR
 export CONFIGURE_ARGS=""
-export RUN_JTREG_TESTS_ONLY=""
 export MAKE_TEST_IMAGE=""
 export GIT_CLONE_ARGUMENTS="";
 
 function parseArguments() {
-    # TODO: can change all this to config file
-    while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
-      opt="$1";
-      shift;
-      case "$opt" in
-        "--" ) break 2;;
-
-        "--source" | "-s" )
-        BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
-
-        "--sign" | "-S" )
-        BUILD_CONFIG[SIGN]="true";;
-
-        "--destination" | "-d" )
-        BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
-
-        "--repository" | "-r" )
-        BUILD_CONFIG[OPENJDK_SOURCE_DIR]="$1"; shift;;
-
-        "--variant"  | "-jv" )
-        BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
-
-        "--update-version"  | "-uv" )
-        BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
-
-        "--build-number"  | "-bn" )
-        BUILD_CONFIG[OPENJDK_BUILD_NUMBER]="$1"; shift;;
-
-        "--repository-tag"  | "-rt" )
-        OPENJDK_REPO_TAG="$1"; shift;;
-
-        "--configure-args"  | "-ca" )
-        BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
-
-        *) echo >&2 "${error}Invalid build.sh option: ${opt}${normal}"; exit 1;;
-      esac
-    done
+    parseConfigurationArguments "$@"
 
     OPENJDK_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-
-    if [ "${BUILD_CONFIG[JVM_VARIANT]}" == "--run-jtreg-tests-only" ]; then
-      RUN_JTREG_TESTS_ONLY="--run-jtreg-tests-only"
-      BUILD_CONFIG[JVM_VARIANT]="server"
-    fi
 
     echo "JDK Image folder name: ${BUILD_CONFIG[JDK_PATH]}"
     echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
@@ -112,7 +70,7 @@ sourceFileWithColourCodes()
   # shellcheck disable=SC1091
   if [[ "${BUILD_CONFIG[COLOUR]}" == "true" ]] ; then
     # shellcheck disable=SC1091
-    source $SCRIPT_DIR/colour-codes.sh
+    source "$SCRIPT_DIR/colour-codes.sh"
   fi
 }
 
@@ -122,6 +80,7 @@ configuringBootJDKConfigureParameter()
   if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
     echo "Searching for JDK_BOOT_DIR"
 
+  # shellcheck disable=SC2046
     BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
 
     echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
@@ -137,7 +96,7 @@ configuringBootJDKConfigureParameter()
 
 getOpenJDKUpdateAndBuildVersion()
 {
-  cd "${BUILD_CONFIG[WORKING_DIR]}"
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
 
   if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
 
@@ -154,7 +113,8 @@ getOpenJDKUpdateAndBuildVersion()
      echo "OpenJDK repo tag is $OPENJDK_REPO_TAG"
     fi
 
-    local openjdk_update_version=$(echo "${OPENJDK_REPO_TAG}" | cut -d'u' -f 2 | cut -d'-' -f 1)
+    local openjdk_update_version;
+    openjdk_update_version=$(echo "${OPENJDK_REPO_TAG}" | cut -d'u' -f 2 | cut -d'-' -f 1)
 
     # TODO dont modify config in build script
     BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=$(echo "${OPENJDK_REPO_TAG}" | cut -d'b' -f 2 | cut -d'-' -f 1)
@@ -291,7 +251,7 @@ buildOpenJDK()
   stepIntoTheWorkingDirectory
 
   #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
-  if [ "${RUN_JTREG_TESTS_ONLY}" == "--run-jtreg-tests-only" ]; then
+  if [ "${BUILD_CONFIG[TESTS_ONLY]}" == "true" ]; then
     rm -rf cacerts_area
     echo "Nobuild option was set. Prep complete. Java not built."
     exit 0
