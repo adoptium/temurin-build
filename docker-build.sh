@@ -67,13 +67,13 @@ buildDockerContainer()
 {
   echo "Building docker container"
 
-  local dockerFile="${BUILD_CONFIG[DOCKER_BUILD_PATH]}/Dockerfile"
+  local dockerFile="${BUILD_CONFIG[DOCKER_FILE_PATH]}/Dockerfile"
 
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "" && -f "${BUILD_CONFIG[DOCKER_BUILD_PATH]}/Dockerfile-${BUILD_CONFIG[BUILD_VARIANT]}" ]]; then
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "" && -f "${BUILD_CONFIG[DOCKER_FILE_PATH]}/Dockerfile-${BUILD_CONFIG[BUILD_VARIANT]}" ]]; then
     #TODO dont modify config in build
     BUILD_CONFIG[CONTAINER_NAME]="${BUILD_CONFIG[CONTAINER_NAME]}-${BUILD_CONFIG[BUILD_VARIANT]}"
     echo "Building DockerFile variant ${BUILD_CONFIG[BUILD_VARIANT]}"
-    dockerFile="${BUILD_CONFIG[DOCKER_BUILD_PATH]}/Dockerfile-${BUILD_CONFIG[BUILD_VARIANT]}"
+    dockerFile="${BUILD_CONFIG[DOCKER_FILE_PATH]}/Dockerfile-${BUILD_CONFIG[BUILD_VARIANT]}"
   fi
 
   ${BUILD_CONFIG[DOCKER]} build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
@@ -81,22 +81,6 @@ buildDockerContainer()
 
 buildAndTestOpenJDKViaDocker()
 {
-
-  # TODO This could be extracted overridden by the user if we support more
-  # architectures going forwards
-  local container_architecture="x86_64/ubuntu"
-
-  BUILD_CONFIG[OS_KERNEL_NAME]="linux"
-  BUILD_CONFIG[OS_ARCHITECTURE]="x86_64"
-  BUILD_CONFIG[BUILD_FULL_NAME]="linux-x86_64-normal-server-release"
-
-  # TODO We're writing config twice since we have to override 3 vars
-  # would be nicer to detect Docker flag and set these from docker file
-  # in config step
-  writeConfigToFile
-
-  # TODO dont modify config in build
-  BUILD_CONFIG[DOCKER_BUILD_PATH]="docker/${BUILD_CONFIG[OPENJDK_CORE_VERSION]}/$container_architecture"
 
   if [ -z "$(which docker)" ]; then
     echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"

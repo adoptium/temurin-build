@@ -63,7 +63,7 @@ init_build_config() {
   BUILD_CONFIG[USE_DOCKER]=false
 
   # Location of DockerFile and where scripts get copied to inside the container
-  BUILD_CONFIG[DOCKER_BUILD_PATH]=""
+  BUILD_CONFIG[DOCKER_FILE_PATH]=""
 
   # Whether we keep the Docker image after we build it
   BUILD_CONFIG[KEEP]=false
@@ -300,6 +300,17 @@ determineBuildProperties() {
     BUILD_CONFIG[BUILD_FULL_NAME]=${BUILD_CONFIG[BUILD_FULL_NAME]:-"$default_build_full_name"}
 }
 
+setDockerSpecificConfig() {
+
+  # TODO This could be extracted overridden by the user if we support more
+  # architectures going forwards
+  local container_architecture="x86_64/ubuntu"
+
+  BUILD_CONFIG[DOCKER_FILE_PATH]="docker/${BUILD_CONFIG[OPENJDK_CORE_VERSION]}/$container_architecture"
+
+  source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
+}
+
 ################################################################################
 
 configure_build() {
@@ -313,4 +324,7 @@ configure_build() {
     setDefaultBranchIfNotProvided
     setWorkingDirectory
     setTargetDirectory
+    if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
+       setDockerSpecificConfig
+    fi
 }
