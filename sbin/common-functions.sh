@@ -64,12 +64,6 @@ parseConfigurationArguments() {
         "--jdk-boot-dir" | "-J" )
         BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
 
-        "--jtreg" | "-j" )
-        BUILD_CONFIG[JTREG]=true;;
-
-        "--jtreg-subsets" )
-        BUILD_CONFIG[JTREG]=true; BUILD_CONFIG[JTREG_TEST_SUBSETS]="$1"; shift;;
-
         "--keep" | "-k" )
         BUILD_CONFIG[KEEP]=true;;
 
@@ -96,10 +90,6 @@ parseConfigurationArguments() {
 
         "--tag" | "-t" )
         BUILD_CONFIG[TAG]="$1"; BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
-
-        "--tests-only" | "-T" )
-        BUILD_CONFIG[JVM_VARIANT]="server"
-        BUILD_CONFIG[TESTS_ONLY]=true;;
 
         "--update-version"  | "-u" )
         BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;

@@ -163,9 +163,9 @@ writeConfigToFile
 
 # Let's build and test the (Adopt) OpenJDK binary in Docker or natively
 if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
-  buildAndTestOpenJDKViaDocker
+  buildOpenJDKViaDocker
 else
-  buildAndTestOpenJDKInNativeEnvironment
+  buildOpenJDKInNativeEnvironment
 fi
 
 

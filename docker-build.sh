@@ -16,24 +16,7 @@
 # limitations under the License.
 ################################################################################
 
-
-
 set -eux
-
-# Load the common functions
-## shellcheck source=sbin/common-functions.sh
-#source "${SCRIPT_DIR}/sbin/common-functions.sh"
-
-testOpenJDKViaDocker()
-{
-  if [[ "${BUILD_CONFIG[JTREG]}" == "true" ]]; then
-    mkdir -p "${BUILD_CONFIG[WORKING_DIR]}/workspace/target"
-    ${BUILD_CONFIG[DOCKER]} run \
-    -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
-    -v "${BUILD_CONFIG[WORKING_DIR]}/workspace/target:${BUILD_CONFIG[TARGET_DIR]}" \
-    --entrypoint /openjdk/sbin/jtreg.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
-  fi
-}
 
 # Create a data volume called ${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]},
 # this gets mounted at /openjdk/build inside the container and is persistent
@@ -76,7 +59,7 @@ buildDockerContainer()
   ${BUILD_CONFIG[DOCKER]} build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
 }
 
-buildAndTestOpenJDKViaDocker()
+buildOpenJDKViaDocker()
 {
 
   if [ -z "$(which docker)" ]; then
@@ -120,9 +103,6 @@ buildAndTestOpenJDKViaDocker()
        -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[TARGET_DIR]}" \
       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
       --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
-
-exit
- testOpenJDKViaDocker
 
   # If we didn't specify to keep the container then remove it
   if [[ -z ${BUILD_CONFIG[KEEP]} ]] ; then

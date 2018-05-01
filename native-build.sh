@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-
+#!/bin/bash
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,21 +19,7 @@ set -eux
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-
-testOpenJDKInNativeEnvironmentIfExpected()
+buildOpenJDKInNativeEnvironment()
 {
-  if [[ "${BUILD_CONFIG[JTREG]}" == "true" ]];
-  then
-      "${SCRIPT_DIR}"/sbin/jtreg.sh
-  fi
-}
-
-buildAndTestOpenJDKInNativeEnvironment()
-{
-  if [[ "${BUILD_CONFIG[TESTS_ONLY]}" != "true" ]];
-  then
     "${SCRIPT_DIR}"/sbin/build.sh
-  fi
-
-  testOpenJDKInNativeEnvironmentIfExpected
 }
