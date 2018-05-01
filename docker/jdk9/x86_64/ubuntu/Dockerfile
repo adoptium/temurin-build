@@ -17,6 +17,7 @@ MAINTAINER George Adams <george.adams@uk.ibm.com>
 
 # Install required OS tools
 RUN apt-get update \
+  && apt-get -y upgrade \
   && apt-get install -qq -y --no-install-recommends \
     git \
     cpio \

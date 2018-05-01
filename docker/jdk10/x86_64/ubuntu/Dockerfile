@@ -23,6 +23,7 @@ RUN apt-get update \
   && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \
   && add-apt-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \
   && apt-get update \
+  && apt-get -y upgrade \
   && apt-get install -qq -y --no-install-recommends \
     git \
     cpio \

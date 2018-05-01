@@ -14,7 +14,7 @@
 
 FROM ubuntu:16.04
 
-MAINTAINER Tim Ellison <tim_ellison@uk.ibm.com>
+MAINTAINER Adopt OpenJDK <adoptopenjdk@gmail.com>
 
 # Install required OS tools.  Yes we have to apt-get update first in order to
 # get to software-properties-common, which includes the apt-add-repository
@@ -25,6 +25,7 @@ RUN apt-get update \
   && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \
   && apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \
   && apt-get update \
+  && apt-get -y upgrade \
   && apt-get install -qq -y --no-install-recommends \
     git \
     cpio \
@@ -46,7 +47,6 @@ RUN apt-get update \
     wget \
     git \
     unzip \
-    realpath \
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions

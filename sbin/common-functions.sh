@@ -20,14 +20,20 @@
 #
 ################################################################################
 
+# TODO Remove the x once we're done
 set -eux
 
-ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
-FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
-FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
+# Set default versions for 3 libraries that OpenJDK relies on to build
+# TODO Can we bump ALSA?
+#ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
+ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
+FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so*
+#FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
+FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.28}
 
+# Parse the configuration args from the CL, please keep this in alpha order
 parseConfigurationArguments() {
-    # TODO: can change all this to config file
+
     while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
       opt="$1";
       shift;
@@ -103,13 +109,12 @@ parseConfigurationArguments() {
         "--jvm-variant"  | "-V" )
         BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
 
-        *) echo >&2 "${error}Invalid build.sh option: ${opt}${normal}"; exit 1;;
+        *) echo >&2 "${error}Invalid option: ${opt}${normal}"; exit 1;;
       esac
     done
 }
 
-
-# ALSA first for sound
+# ALSA for sound
 checkingAndDownloadingAlsa()
 {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
@@ -121,6 +126,7 @@ checkingAndDownloadingAlsa()
   if [[ ! -z "$FOUND_ALSA" ]] ; then
     echo "Skipping ALSA download"
   else
+    # TODO Holy security problem Batman!
     wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
       bzip2 -d alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
@@ -154,9 +160,9 @@ checkingAndDownloadingFreemarker()
   else
     # wget --no-check-certificate "https://sourceforge.net/projects/freemarker/files/freemarker/${FREEMARKER_LIB_VERSION}/freemarker-${FREEMARKER_LIB_VERSION}.tar.gz/download" -O "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
     # Temp fix as sourceforge is broken
-    wget --no-check-certificate https://ci.adoptopenjdk.net/userContent/freemarker-2.3.8.tar.gz
-    tar -xzf "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
-    rm "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+    wget -nc --no-check-certificate http://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz
+    tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
+    rm "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
   fi
 }
 
@@ -172,7 +178,7 @@ checkingAndDownloadingFreeType()
     echo "Skipping FreeType download"
   else
     # Then FreeType for fonts: make it and use
-    wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
+    wget -nc --no-check-certificate https://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
       gunzip xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
       tar xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar

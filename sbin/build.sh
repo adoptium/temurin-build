@@ -432,3 +432,7 @@ makeACopyOfLibFreeFontForMacOSX "${BUILD_CONFIG[JRE_PATH]}" "${BUILD_CONFIG[COPY
 signRelease
 createOpenJDKTarArchive
 showCompletionMessage
+
+# ccache is not detected properly TODO
+# change grep to something like $GREP -e '^1.*' -e '^2.*' -e '^3\.0.*' -e '^3\.1\.[0123]$'`]
+# See https://github.com/AdoptOpenJDK/openjdk-jdk8u/blob/dev/common/autoconf/build-performance.m4
