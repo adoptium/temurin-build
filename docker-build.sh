@@ -32,7 +32,7 @@ createPersistentDockerDataVolume()
 
     echo "${info}Removing old volumes and containers${normal}"
     ${BUILD_CONFIG[DOCKER]} rm -f "$(${BUILD_CONFIG[DOCKER]} ps -a --no-trunc | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | cut -d' ' -f1)" || true
-    ${BUILD_CONFIG[DOCKER]} volume rm "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
+    ${BUILD_CONFIG[DOCKER]} volume rm -f "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
 
     echo "${info}Creating tmp container${normal}"
     ${BUILD_CONFIG[DOCKER]} volume create --name "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}"
