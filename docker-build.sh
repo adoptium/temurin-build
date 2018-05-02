@@ -1,6 +1,4 @@
-#!/usr/bin/env bash
-
-
+#!/bin/bash
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,24 +14,7 @@
 # limitations under the License.
 ################################################################################
 
-
-
 set -eux
-
-# Load the common functions
-## shellcheck source=sbin/common-functions.sh
-#source "${SCRIPT_DIR}/sbin/common-functions.sh"
-
-testOpenJDKViaDocker()
-{
-  if [[ "${BUILD_CONFIG[JTREG]}" == "true" ]]; then
-    mkdir -p "${BUILD_CONFIG[WORKING_DIR]}/workspace/target"
-    ${BUILD_CONFIG[DOCKER]} run \
-    -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
-    -v "${BUILD_CONFIG[WORKING_DIR]}/workspace/target:${BUILD_CONFIG[TARGET_DIR]}" \
-    --entrypoint /openjdk/sbin/jtreg.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
-  fi
-}
 
 # Create a data volume called ${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]},
 # this gets mounted at /openjdk/build inside the container and is persistent
@@ -58,32 +39,35 @@ createPersistentDockerDataVolume()
   fi
 }
 
-# TODO I think we have a few bugs here - if you're passing a variant you
-# override? the hotspot version
+# Build the docker container
 buildDockerContainer()
 {
   echo "Building docker container"
 
-  local dockerFile="${BUILD_CONFIG[DOCKER_BUILD_PATH]}/Dockerfile"
+  local dockerFile="${BUILD_CONFIG[DOCKER_FILE_PATH]}/Dockerfile"
 
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "" && -f "${BUILD_CONFIG[DOCKER_BUILD_PATH]}/Dockerfile-${BUILD_CONFIG[BUILD_VARIANT]}" ]]; then
-    #TODO dont modify config in build
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "" && -f "${BUILD_CONFIG[DOCKER_FILE_PATH]}/Dockerfile-${BUILD_CONFIG[BUILD_VARIANT]}" ]]; then
+    # TODO dont modify config in build
     BUILD_CONFIG[CONTAINER_NAME]="${BUILD_CONFIG[CONTAINER_NAME]}-${BUILD_CONFIG[BUILD_VARIANT]}"
     echo "Building DockerFile variant ${BUILD_CONFIG[BUILD_VARIANT]}"
-    dockerFile="${BUILD_CONFIG[DOCKER_BUILD_PATH]}/Dockerfile-${BUILD_CONFIG[BUILD_VARIANT]}"
+    dockerFile="${BUILD_CONFIG[DOCKER_FILE_PATH]}/Dockerfile-${BUILD_CONFIG[BUILD_VARIANT]}"
   fi
+
+  writeConfigToFile
 
   ${BUILD_CONFIG[DOCKER]} build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
 }
 
-buildAndTestOpenJDKViaDocker()
+buildOpenJDKViaDocker()
 {
-  # This could be extracted overridden by the user if we support more
+
+  # TODO This could be extracted overridden by the user if we support more
   # architectures going forwards
   local container_architecture="x86_64/ubuntu"
 
-  #TODO dont modify config in build
-  BUILD_CONFIG[DOCKER_BUILD_PATH]="docker/${BUILD_CONFIG[OPENJDK_CORE_VERSION]}/$container_architecture"
+  BUILD_CONFIG[DOCKER_FILE_PATH]="docker/${BUILD_CONFIG[OPENJDK_CORE_VERSION]}/$container_architecture"
+
+  source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
 
   if [ -z "$(which docker)" ]; then
     echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"
@@ -96,15 +80,15 @@ buildAndTestOpenJDKViaDocker()
 
   # If keep is true then use the existing container (or build a new one if we
   # can't find it)
-  if [[ "${BUILD_CONFIG[KEEP]}" == "true" ]] ; then
+  if [[ "${BUILD_CONFIG[REUSE_CONTAINER]}" == "true" ]] ; then
      # shellcheck disable=SC2086
      # If we can't find the previous Docker container then build a new one
      if [ "$(${BUILD_CONFIG[DOCKER]} ps -a | grep -c \"${BUILD_CONFIG[CONTAINER_NAME]}\")" == 0 ]; then
-         echo "${info}No docker container found so creating '${BUILD_CONFIG[CONTAINER_NAME]}' ${normal}"
+         echo "${info}No docker container for reuse was found, so creating '${BUILD_CONFIG[CONTAINER_NAME]}' ${normal}"
          buildDockerContainer
      fi
   else
-     echo "${info}Since you did not specify -k or --keep, we are removing the existing container (if it exists) and building you a new one"
+     echo "${info}Since you specified --ignore-container, we are removing the existing container (if it exists) and building you a new one"
      echo "$good"
      # Find the previous Docker container and remove it (if it exists)
      ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm -f {}
@@ -114,12 +98,17 @@ buildAndTestOpenJDKViaDocker()
      echo "$normal"
   fi
 
+  # Show the user all of the config before we build
+  displayParams
+
   local hostDir;
   hostDir="$(pwd)";
 
   echo "Target binary directory on host machine: ${hostDir}/target"
   mkdir -p "${hostDir}/workspace/target"
 
+  # Pass in the last important variables into the Docker container and call
+  # the /openjdk/sbin/build.sh script inside
   ${BUILD_CONFIG[DOCKER]} run -lst \
       --cpuset-cpus="0-3" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
@@ -127,11 +116,8 @@ buildAndTestOpenJDKViaDocker()
       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
       --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
 
-exit
- testOpenJDKViaDocker
-
   # If we didn't specify to keep the container then remove it
-  if [[ -z ${BUILD_CONFIG[KEEP]} ]] ; then
+  if [[ -z ${BUILD_CONFIG[KEEP_CONTAINER]} ]] ; then
     ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm {}
   fi
 }

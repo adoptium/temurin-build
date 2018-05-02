@@ -41,10 +41,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/sbin/common-functions.sh"
 
 init_build_config() {
-  # The name of the directory where we clone the OpenJDK source code for
-  # building, defaults to 'openjdk'
-  # TODO Note sure if setting this openjdk default is a good idea...
-
+  # Dir where we clone the OpenJDK source code for building, defaults to 'src'
   BUILD_CONFIG[OPENJDK_SOURCE_DIR]=${BUILD_CONFIG[OPENJDK_SOURCE_DIR]:-src}
 
   # Repo to pull the OpenJDK source from, defaults to AdoptOpenJDK/openjdk-jdk8u
@@ -66,10 +63,15 @@ init_build_config() {
   BUILD_CONFIG[USE_DOCKER]=false
 
   # Location of DockerFile and where scripts get copied to inside the container
-  BUILD_CONFIG[DOCKER_BUILD_PATH]=""
+  BUILD_CONFIG[DOCKER_FILE_PATH]=""
 
-  # Whether we keep the Docker image after we build it
-  BUILD_CONFIG[KEEP]=false
+  # Whether we keep the Docker container after we build it
+  # TODO Please note that the persistent volume is managed separately
+  BUILD_CONFIG[KEEP_CONTAINER]=false
+
+  # Whether we use an existing container
+  # TODO Please note that the persistent volume is managed separately
+  BUILD_CONFIG[REUSE_CONTAINER]=true
 
   # The current working directory
   BUILD_CONFIG[WORKING_DIR]=""
@@ -100,9 +102,6 @@ init_build_config() {
 
   # JVM variant, e.g. client or server, defaults to server
   BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-server}
-
-  # Whether we execute the jtreg tests
-  BUILD_CONFIG[JTREG]=false
 
   # Any extra args provided by the user
   BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=""
@@ -138,7 +137,6 @@ parseCommandLineArgs()
   local forest_name=$1
 
   # Derive the openjdk_core_version from the forest name.
-  # 'u' means it's an update repo, e.g. jdk8u
   local openjdk_core_version=${forest_name}
   if [[ ${forest_name} == *u ]]; then
     openjdk_core_version=${forest_name%?}
@@ -152,7 +150,7 @@ parseCommandLineArgs()
     BUILD_CONFIG[OPENJDK_CORE_VERSION]=${BUILD_CONFIG[OPENJDK_FOREST_NAME]%?}
   fi
 
-  # TODO check that OPENJDK_CORE_VERSION and other mandatory flags have been set by the caller
+  # TODO check that OPENJDK_CORE_VERSION has been set by the caller
 }
 
 doAnyBuildVariantOverrides()
@@ -172,18 +170,6 @@ doAnyBuildVariantOverrides()
 
   BUILD_CONFIG[REPOSITORY]=${repository:-${BUILD_CONFIG[REPOSITORY]}};
   BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
-}
-
-# TODO Check what this flag does when not using docker
-checkIfDockerIsUsedShouldTheContainerBePreserved()
-{
-  echo "${info}"
-  if [ "${BUILD_CONFIG[KEEP]}" == "true" ] ; then
-    echo "We'll keep the built Docker container."
-  else
-    echo "The --keep, -k flag was not set so we'll remove any pre-existing Docker container and build a new one."
-  fi
-  echo "${normal}"
 }
 
 setDefaultBranchIfNotProvided()
@@ -229,7 +215,6 @@ setTargetDirectory()
   fi
 }
 
-
 determineBuildProperties() {
     BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-server}
 
@@ -248,7 +233,6 @@ configure_build() {
     parseCommandLineArgs "$@"
     doAnyBuildVariantOverrides
     sourceFileWithColourCodes
-    checkIfDockerIsUsedShouldTheContainerBePreserved
     setDefaultBranchIfNotProvided
     setWorkingDirectory
     setTargetDirectory

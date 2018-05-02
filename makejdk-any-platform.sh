@@ -18,21 +18,27 @@
 
 ################################################################################
 #
-# Prepare the AdoptOpenJDK OpenJDK build for any platform and then call it
+# Entry point to build (Adopt) OpenJDK binaries for any platform.
+#
+# 1. Source scripts to support configuration, docker builds and native builds.
+# 2. Parse the Command Line Args
+# 3. Set a host of configuration options based on args, platform etc
+# 4. Display and then persist those configuration options
+# 5. Build the binary in Docker or natively
 #
 ################################################################################
 
+# TODO Comment out once script is stable.
 set -eux
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Pull in configuration support (read / write / display)
+# Pull in configuration and build support
 source "${SCRIPT_DIR}/sbin/config_init.sh"
 source "${SCRIPT_DIR}/docker-build.sh"
 source "${SCRIPT_DIR}/native-build.sh"
 source "${SCRIPT_DIR}/configureBuild.sh"
-
 
 # Set variables that the `configure` command (which builds OpenJDK) will need
 setVariablesForConfigure() {
@@ -122,6 +128,7 @@ processArgumentsforSpecificArchitectures() {
   BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-$configure_args_for_any_platform}
 }
 
+# Different platforms have different default make commands
 setMakeCommandForOS() {
   local make_command_name
   case "$OS_KERNEL_NAME" in
@@ -136,29 +143,28 @@ setMakeCommandForOS() {
   BUILD_CONFIG[MAKE_COMMAND_NAME]=${BUILD_CONFIG[MAKE_COMMAND_NAME]:-$make_command_name}
 }
 
+echo "Starting $0 to configure, build (Adopt)OpenJDK binary"
 
-# Let's do lots of platform, arch and variant config set up before we build
-echo "Starting $0 to configure and build AdoptOpenJDK binary"
+# Parse the CL Args, see ${SCRIPT_DIR}/configureBuild.sh for details
 parseCommandLineArgs "$@"
+
+# Update the configuration with the arguments passed in, the platform etc
 setVariablesForConfigure
 setRepository
 processArgumentsforSpecificPlatforms
 processArgumentsforSpecificArchitectures
 setMakeCommandForOS
 
-
-# Configure the AdoptOpenJDK build with everything we've set
+# Configure the build, display the parameters and write the config to disk
+# see ${SCRIPT_DIR}/sbin/config_init.sh for details
 configure_build "$@"
-
-# Display and write out the AdoptOpenJDK configuration
-displayParams
 writeConfigToFile
 
-# Let's build the AdoptOpenJDK binary
+# Let's build and test the (Adopt) OpenJDK binary in Docker or natively
 if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
-  buildAndTestOpenJDKViaDocker
+  buildOpenJDKViaDocker
 else
-  buildAndTestOpenJDKInNativeEnvironment
+  buildOpenJDKInNativeEnvironment
 fi
 
 

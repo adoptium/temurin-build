@@ -250,13 +250,6 @@ buildOpenJDK()
 {
   stepIntoTheWorkingDirectory
 
-  #If the user has specified nobuild, we do everything short of building the JDK, and then we stop.
-  if [ "${BUILD_CONFIG[TESTS_ONLY]}" == "true" ]; then
-    rm -rf cacerts_area
-    echo "Nobuild option was set. Prep complete. Java not built."
-    exit 0
-  fi
-
   # If it's Java 9+ then we also make test-image to build the native test libraries
   JDK_PREFIX="jdk"
   JDK_VERSION_NUMBER="${BUILD_CONFIG[OPENJDK_CORE_VERSION]#$JDK_PREFIX}"

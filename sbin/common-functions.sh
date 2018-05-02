@@ -61,17 +61,14 @@ parseConfigurationArguments() {
         "--skip-freetype" | "-F" )
         BUILD_CONFIG[FREETYPE]=false;;
 
+        "--ignore-container" | "-i" )
+        BUILD_CONFIG[REUSE_CONTAINER]=false;;
+
         "--jdk-boot-dir" | "-J" )
         BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
 
-        "--jtreg" | "-j" )
-        BUILD_CONFIG[JTREG]=true;;
-
-        "--jtreg-subsets" )
-        BUILD_CONFIG[JTREG]=true; BUILD_CONFIG[JTREG_TEST_SUBSETS]="$1"; shift;;
-
         "--keep" | "-k" )
-        BUILD_CONFIG[KEEP]=true;;
+        BUILD_CONFIG[KEEP_CONTAINER]=true;;
 
         "--no-colour" | "-n" )
         BUILD_CONFIG[COLOUR]=false;;
@@ -96,10 +93,6 @@ parseConfigurationArguments() {
 
         "--tag" | "-t" )
         BUILD_CONFIG[TAG]="$1"; BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
-
-        "--tests-only" | "-T" )
-        BUILD_CONFIG[JVM_VARIANT]="server"
-        BUILD_CONFIG[TESTS_ONLY]=true;;
 
         "--update-version"  | "-u" )
         BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
@@ -138,7 +131,7 @@ checkingAndDownloadingAlsa()
       rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     fi
 
-    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/alsa-lib*/"
+    cd ${BUILD_CONFIG[WORKSPACE_DIR]}/libs/alsa-lib*/
 
     if ! (./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedalsa && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
