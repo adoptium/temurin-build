@@ -112,7 +112,7 @@ function removeTmpDir {
 
 relocateToTmpIfNeeded()
 {
-   if [ "${TMP_SPACE_BUILD}" == "true" ]
+   if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
    then
      export TMP_WORKSPACE=$(mktemp -d)
      ln -s "${BUILD_CONFIG[WORKSPACE_DIR]}" "${tmp_dir}/workspace"
