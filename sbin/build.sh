@@ -259,8 +259,12 @@ buildOpenJDK()
 
   FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${MAKE_TEST_IMAGE}"
   echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
-  exitCode=$(${FULL_MAKE_COMMAND})
 
+  set +e
+  ${FULL_MAKE_COMMAND}
+  exitCode=$?
+  set -e
+  
   # shellcheck disable=SC2181
   if [ "${exitCode}" -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
