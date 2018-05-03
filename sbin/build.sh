@@ -403,7 +403,7 @@ createOpenJDKTarArchive()
   mkdir -p "${BUILD_CONFIG[TARGET_DIR]}" || exit
 
   echo "${good}Moving the artifact to ${BUILD_CONFIG[TARGET_DIR]}${normal}"
-  mv "OpenJDK${EXT}" "${BUILD_CONFIG[TARGET_DIR]}/${BUILD_CONFIG[TARGET_FILE_NAME]}${EXT}"
+  mv "OpenJDK${EXT}" "${BUILD_CONFIG[TARGET_DIR]}/${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
 showCompletionMessage()
