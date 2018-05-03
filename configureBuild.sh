@@ -70,7 +70,7 @@ init_build_config() {
   # Use SSH for the GitHub connection (defaults to false)
   BUILD_CONFIG[USE_SSH]=false
 
-  # Director where OpenJDK binary gets built to
+  # Directory where OpenJDK binary gets built to
   BUILD_CONFIG[TARGET_DIR]=""
 
   # Which repo branch to build, e.g. dev
