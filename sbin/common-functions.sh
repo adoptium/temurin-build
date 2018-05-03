@@ -142,11 +142,13 @@ checkingAndDownloadingAlsa()
 
     cd ${BUILD_CONFIG[WORKSPACE_DIR]}/libs/alsa-lib*/
 
-    if ! (./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+    cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/alsa-lib*/" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
+
+    #if ! (./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
-      echo "${error}Failed to configure and build alsa, exiting"
-      exit;
-    fi
+    #  echo "${error}Failed to configure and build alsa, exiting"
+    #  exit;
+    #fi
   fi
 }
 
