@@ -50,6 +50,13 @@ RUN mkdir -p /openjdk/target
 ADD sbin /openjdk/sbin
 ADD workspace/config /openjdk/config
 
+RUN mkdir -p /openjdk/build
+RUN useradd -ms /bin/bash build
+RUN chown -R build: /openjdk/
+USER build
+WORKDIR /openjdk/build/
+
+
 WORKDIR /openjdk/build/
 
 # Default actions
