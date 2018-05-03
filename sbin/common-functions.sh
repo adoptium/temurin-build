@@ -73,6 +73,9 @@ parseConfigurationArguments() {
         "--no-colour" | "-n" )
         BUILD_CONFIG[COLOUR]=false;;
 
+        "--processors" | "-p" )
+        BUILD_CONFIG[NUM_PROCESSORS]="$1"; shift;;
+
         "--repository" | "-r" )
         BUILD_CONFIG[REPOSITORY]="$1"; shift;;
 
@@ -93,6 +96,9 @@ parseConfigurationArguments() {
 
         "--tag" | "-t" )
         BUILD_CONFIG[TAG]="$1"; BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
+
+        "--target-file-name"  | "-T" )
+        BUILD_CONFIG[TARGET_FILE_NAME]="$1"; shift;;
 
         "--update-version"  | "-u" )
         BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
