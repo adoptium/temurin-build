@@ -107,6 +107,8 @@ buildOpenJDKViaDocker()
   echo "Target binary directory on host machine: ${hostDir}/target"
   mkdir -p "${hostDir}/workspace/target"
 
+  local cpuSet="0-$(expr ${BUILD_CONFIG[NUM_PROCESSORS]} - 1)"
+
   # Pass in the last important variables into the Docker container and call
   # the /openjdk/sbin/build.sh script inside
 
@@ -118,7 +120,7 @@ buildOpenJDKViaDocker()
       --entrypoint /openjdk/sbin/build.sh \"${BUILD_CONFIG[CONTAINER_NAME]}\""
 
   ${BUILD_CONFIG[DOCKER]} run -lst \
-      --cpuset-cpus="0-3" \
+      --cpuset-cpus="${cpuSet}" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
        -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[TARGET_DIR]}" \
       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \

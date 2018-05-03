@@ -27,7 +27,6 @@
 #
 ################################################################################
 
-
 # We can't use Bash 4.x+ associative arrays as as Apple won't support bash 4.0
 # (because of GPL3), we therefore have to name the indexes of the CONFIG_PARAMS
 # map. This is why we can't have nice things.
@@ -70,6 +69,7 @@ SHALLOW_CLONE_OPTION
 SIGN
 TAG
 TARGET_DIR
+TARGET_FILE_NAME
 TMP_CONTAINER_NAME
 USE_DOCKER
 USE_SSH
@@ -173,4 +173,5 @@ BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
 BUILD_CONFIG[SIGN]="false"
 BUILD_CONFIG[JDK_BOOT_DIR]=""
 
-BUILD_CONFIG[NUM_PROCESSORS]=""
+BUILD_CONFIG[NUM_PROCESSORS]="1"
+BUILD_CONFIG[TARGET_FILE_NAME]="OpenJDK"
