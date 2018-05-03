@@ -83,7 +83,7 @@ parseConfigurationArguments() {
         OPENJDK_REPO_TAG="$1"; shift;;
 
         "--tmp-space-build" )
-        BUILD_CONFIG[TMP_SPACE_BUILD]="$1"; shift;;
+        BUILD_CONFIG[TMP_SPACE_BUILD]="true"; shift;;
 
         "--source" | "-s" )
         BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
