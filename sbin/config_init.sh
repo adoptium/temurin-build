@@ -78,7 +78,6 @@ WORKING_DIR
 WORKSPACE_DIR
 )
 
-
 # Directory structure of build environment:
 ###########################################################################################################################################
 #  Dir                                                 Purpose                              Docker Default            Native default
