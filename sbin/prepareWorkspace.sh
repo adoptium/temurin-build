@@ -114,7 +114,9 @@ relocateToTmpIfNeeded()
 {
    if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
    then
-     export TMP_WORKSPACE=$(mktemp -d)
+     local tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir'`
+     export TMP_WORKSPACE="${tmpdir}"
+
      ln -s "${BUILD_CONFIG[WORKSPACE_DIR]}" "${tmp_dir}/workspace"
      BUILD_CONFIG[WORKSPACE_DIR]="${tmp_dir}/workspace"
      trap removeTmpDir EXIT
