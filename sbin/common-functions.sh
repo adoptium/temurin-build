@@ -82,6 +82,9 @@ parseConfigurationArguments() {
         "--repository-tag"  | "-R" )
         OPENJDK_REPO_TAG="$1"; shift;;
 
+        "--tmp-space-build" )
+        BUILD_CONFIG[BUILD_VARIANT]="$1"; shift;;
+
         "--source" | "-s" )
         BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
 

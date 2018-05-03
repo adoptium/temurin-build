@@ -404,10 +404,10 @@ createOpenJDKTarArchive()
   esac
   echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
 
-  mkdir -p "${BUILD_CONFIG[TARGET_DIR]}" || exit
+  mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 
-  echo "${good}Moving the artifact to ${BUILD_CONFIG[TARGET_DIR]}${normal}"
-  mv "OpenJDK${EXT}" "${BUILD_CONFIG[TARGET_DIR]}/${BUILD_CONFIG[TARGET_FILE_NAME]}"
+  echo "${good}Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}${normal}"
+  mv "OpenJDK${EXT}" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
 showCompletionMessage()
