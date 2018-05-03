@@ -259,7 +259,11 @@ buildOpenJDK()
 
   FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${MAKE_TEST_IMAGE}"
   echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
-  exitCode=$(${FULL_MAKE_COMMAND})
+
+  set +e
+  ${FULL_MAKE_COMMAND}
+  exitCode=$?
+  set -e
 
   # shellcheck disable=SC2181
   if [ "${exitCode}" -ne 0 ]; then
@@ -400,10 +404,10 @@ createOpenJDKTarArchive()
   esac
   echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
 
-  mkdir -p "${BUILD_CONFIG[TARGET_DIR]}" || exit
+  mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 
-  echo "${good}Moving the artifact to ${BUILD_CONFIG[TARGET_DIR]}${normal}"
-  mv "OpenJDK${EXT}" "${BUILD_CONFIG[TARGET_DIR]}/${BUILD_CONFIG[TARGET_FILE_NAME]}"
+  echo "${good}Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}${normal}"
+  mv "OpenJDK${EXT}" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
 showCompletionMessage()

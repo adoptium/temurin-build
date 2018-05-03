@@ -182,7 +182,6 @@ setWorkingDirectory()
     echo "${info}Workspace dir is ${BUILD_CONFIG[WORKSPACE_DIR]}${normal}"
   fi
 
-
   if [ -z "${BUILD_CONFIG[WORKING_DIR]}" ] ; then
     echo "${info}WORKING_DIR is undefined so setting to ${PWD}${normal}."
     BUILD_CONFIG[WORKING_DIR]="./build/"
@@ -195,7 +194,7 @@ setTargetDirectory()
 {
   if [ -z "${BUILD_CONFIG[TARGET_DIR]}" ] ; then
     echo "${info}TARGET_DIR is undefined so setting to $PWD.${normal}"
-    BUILD_CONFIG[TARGET_DIR]="${BUILD_CONFIG[WORKSPACE_DIR]}/target/"
+    BUILD_CONFIG[TARGET_DIR]="target/"
   else
     echo "${info}Target directory is ${BUILD_CONFIG[TARGET_DIR]}${normal}"
     BUILD_CONFIG[COPY_TO_HOST]=true

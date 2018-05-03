@@ -97,17 +97,42 @@ cloneOpenJDKGitRepo()
   fi
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
-
-
 createWorkspace()
 {
    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
- }
+}
+
+
+function moveTmpToWorkspaceLocation {
+  if [ ! -z "${TMP_WORKSPACE}" ]; then
+    rm -rf "${ORIGINAL_WORKSPACE}"
+    mv "${TMP_WORKSPACE}/workspace" "${ORIGINAL_WORKSPACE}"
+  fi
+}
+
+relocateToTmpIfNeeded()
+{
+   if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
+   then
+     local tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir'`
+     export TMP_WORKSPACE="${tmpdir}"
+     export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
+
+     if [ -d "${ORIGINAL_WORKSPACE}" ]
+     then
+        cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
+     fi
+     BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
+
+     trap moveTmpToWorkspaceLocation EXIT
+   fi
+}
 
 ##################################################################
 
 function configureWorkspace() {
+    relocateToTmpIfNeeded
     createWorkspace
     checkoutAndCloneOpenJDKGitRepo
     downloadingRequiredDependencies

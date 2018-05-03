@@ -88,6 +88,9 @@ parseConfigurationArguments() {
         "--repository-tag"  | "-R" )
         OPENJDK_REPO_TAG="$1"; shift;;
 
+        "--tmp-space-build" )
+        BUILD_CONFIG[TMP_SPACE_BUILD]="true"; shift;;
+
         "--source" | "-s" )
         BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
 
@@ -129,6 +132,8 @@ checkingAndDownloadingAlsa()
 
   FOUND_ALSA=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/" -name "installedalsa")
 
+  mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/" || exit
+
   if [[ ! -z "$FOUND_ALSA" ]] ; then
     echo "Skipping ALSA download"
   else
@@ -136,20 +141,18 @@ checkingAndDownloadingAlsa()
     wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
       bzip2 -d alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
-      tar xf alsa-lib-"${ALSA_LIB_VERSION}".tar
+      tar -xf alsa-lib-"${ALSA_LIB_VERSION}".tar --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
       rm alsa-lib-"${ALSA_LIB_VERSION}".tar
     else
-      tar xf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+      tar -xf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2 --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
       rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     fi
 
-    cd ${BUILD_CONFIG[WORKSPACE_DIR]}/libs/alsa-lib*/
-
-    if ! (./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedalsa && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+    #if ! (./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
-      echo "${error}Failed to configure and build alsa, exiting"
-      exit;
-    fi
+    #  echo "${error}Failed to configure and build alsa, exiting"
+    #  exit;
+    #fi
   fi
 }
 

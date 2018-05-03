@@ -122,7 +122,7 @@ buildOpenJDKViaDocker()
   ${BUILD_CONFIG[DOCKER]} run -lst \
       --cpuset-cpus="${cpuSet}" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
-       -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[TARGET_DIR]}" \
+       -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" \
       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
       --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
 

@@ -71,6 +71,7 @@ TAG
 TARGET_DIR
 TARGET_FILE_NAME
 TMP_CONTAINER_NAME
+TMP_SPACE_BUILD
 USE_DOCKER
 USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
@@ -87,8 +88,6 @@ WORKSPACE_DIR
 #  <WORKSPACE_DIR>/<WORKING_DIR>                       Build area                           /openjdk/build              $(pwd)/workspace/build/
 #  <WORKSPACE_DIR>/<WORKING_DIR>/<OPENJDK_SOURCE_DIR>  Source code                          /openjdk/build/src          $(pwd)/workspace/build/src
 #  <WORKSPACE_DIR>/target                              Destination of built artifacts       /openjdk/target             $(pwd)/workspace/target
-
-
 
 # Helper code to perform index lookups by name
 declare -a -x PARAM_LOOKUP
@@ -174,3 +173,4 @@ BUILD_CONFIG[JDK_BOOT_DIR]=""
 
 BUILD_CONFIG[NUM_PROCESSORS]="1"
 BUILD_CONFIG[TARGET_FILE_NAME]="OpenJDK"
+BUILD_CONFIG[TMP_SPACE_BUILD]="false"
