@@ -194,7 +194,6 @@ setWorkingDirectory()
     echo "${info}Workspace dir is ${BUILD_CONFIG[WORKSPACE_DIR]}${normal}"
   fi
 
-
   if [ -z "${BUILD_CONFIG[WORKING_DIR]}" ] ; then
     echo "${info}WORKING_DIR is undefined so setting to ${PWD}${normal}."
     BUILD_CONFIG[WORKING_DIR]="./build/"

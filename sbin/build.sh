@@ -264,7 +264,7 @@ buildOpenJDK()
   ${FULL_MAKE_COMMAND}
   exitCode=$?
   set -e
-  
+
   # shellcheck disable=SC2181
   if [ "${exitCode}" -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
