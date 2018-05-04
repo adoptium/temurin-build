@@ -1,5 +1,4 @@
-
-def doBuild(buildConfigurations) {
+def doBuild(javaToBuild, buildConfigurations) {
     if (osTarget != "all") {
         buildConfigurations = buildConfigurations
                 .findAll { it.key == osTarget }
@@ -15,7 +14,11 @@ def doBuild(buildConfigurations) {
 
         jobs[buildType] = {
             stage("build-${buildType}") {
-                def buildJob = build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]]
+                def buildJob = build job: "openjdk_build-refactor", parameters: [
+                        string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
+                        [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
+                ]
+
                 buildJobs.add([
                         job        : buildJob,
                         config     : configuration,
@@ -32,7 +35,7 @@ def doBuild(buildConfigurations) {
             buildJob ->
                 if (buildJob.job.getResult() == 'SUCCESS') {
                     copyArtifacts(
-                            projectName: 'openjdk8_build-refactor',
+                            projectName: 'openjdk_build-refactor',
                             selector: specific("${buildJob.job.getNumber()}"),
                             filter: 'workspace/target/*',
                             fingerprintArtifacts: true,

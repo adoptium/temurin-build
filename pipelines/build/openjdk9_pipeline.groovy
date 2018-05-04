@@ -16,5 +16,5 @@ node {
     def rootDir = pwd()
     def OpenJDKBuild = load("${rootDir}/pipelines/build/OpenJDKBuild.groovy")
 
-    OpenJDKBuild.doBuild("jdk8u", buildConfigurations)
+    OpenJDKBuild.doBuild("jdk9", buildConfigurations)
 }
