@@ -5,7 +5,7 @@ def buildConfigurations = [
 
 if (osTarget != "all") {
     buildConfigurations = buildConfigurations
-            .findAll { it.value.targetLabel == osTarget }
+            .findAll { it.key == osTarget }
 }
 
 def buildJobs = []
