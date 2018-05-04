@@ -1,5 +1,3 @@
-println "building ${JDK_VERSION}"
-
 def buildPlatforms = ['mac', 'linux']
 
 def jobs = [:]
