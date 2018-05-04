@@ -11,6 +11,8 @@ if (osTarget != "all") {
             .findAll { it.key == osTarget }
 }
 
-def OpenJDKBuild = load("OpenJDKBuild.groovy")
+node {
+    def OpenJDKBuild = load("OpenJDKBuild.groovy")
 
-OpenJDKBuild.build(buildConfigurations)
+    OpenJDKBuild.build(buildConfigurations)
+}
