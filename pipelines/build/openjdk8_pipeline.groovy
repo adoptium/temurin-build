@@ -12,13 +12,13 @@ def buildJobs = []
 def jobs = [:]
 
 buildConfigurations.each { buildConfiguration ->
-    config = buildConfiguration.value
+    def configuration = buildConfiguration.value
 
-    def buildType = "${config.os}-${config.arch}"
+    def buildType = "${configuration.os}-${configuration.arch}"
 
     jobs[buildType] = {
         stage("build-${buildType}") {
-            def buildJob = build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&${config.arch}&&build"]]
+            def buildJob = build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.os}&&${configuration.arch}&&build"]]
             buildJobs.add([
                     jobNumber   : buildJob.getNumber(),
                     config: config,
