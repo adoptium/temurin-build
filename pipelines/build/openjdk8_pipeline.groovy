@@ -1,7 +1,11 @@
 def buildConfigurations = [
-        [os: 'mac', arch: 'x64', targetLabel:'mac'],
-        [os: 'centos6', arch: 'x64', targetLabel:'linux']
+        mac  : [os: 'mac', arch: 'x64', targetLabel: 'mac'],
+        linux: [os: 'centos6', arch: 'x64', targetLabel: 'linux']
 ]
+
+if (osTarget != "all") {
+    buildConfigurations = buildConfigurations[osTarget];
+}
 
 def buildJobs = []
 def jobs = [:]
@@ -30,7 +34,7 @@ node {
             if (buildJob.job.getResult() == 'SUCCESS') {
                 copyArtifacts(
                         projectName: 'openjdk8_build-refactor',
-                        selector: specific(buildJob.getNumber()),
+                        selector: specific(buildJob.job.getNumber()),
                         filter: 'workspace/target/*',
                         fingerprintArtifacts: true,
                         target: "target/${buildJob.config.targetLabel}/${buildJob.config.arch}/",
