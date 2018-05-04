@@ -11,7 +11,7 @@ if (osTarget != "all") {
 def buildJobs = []
 def jobs = [:]
 
-buildConfigurations.each { buildConfiguration ->
+buildConfi gurations.each { buildConfiguration ->
     def configuration = buildConfiguration.value
 
     def buildType = "${configuration.os}-${configuration.arch}"
@@ -20,8 +20,8 @@ buildConfigurations.each { buildConfiguration ->
         stage("build-${buildType}") {
             def buildJob = build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.os}&&${configuration.arch}&&build"]]
             buildJobs.add([
-                    jobNumber   : buildJob.getNumber(),
-                    config: config,
+                    job   : buildJob,
+                    config: configuration,
                     targetLabel: buildConfiguration.key
             ]);
         }
@@ -36,7 +36,7 @@ node {
             if (buildJob.job.getResult() == 'SUCCESS') {
                 copyArtifacts(
                         projectName: 'openjdk8_build-refactor',
-                        selector: specific("${buildJob.jobNumber}"),
+                        selector: specific("${buildJob.job.jobNumber}"),
                         filter: 'workspace/target/*',
                         fingerprintArtifacts: true,
                         target: "target/${buildJob.targetLabel}/${buildJob.config.arch}/",
