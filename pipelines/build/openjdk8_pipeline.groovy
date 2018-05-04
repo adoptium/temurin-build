@@ -13,16 +13,6 @@ for (int i = 0; i < buildConfigurations.size(); i++) {
 
     jobs[buildType] = {
         stage("build-${buildType}") {
-
-            node {
-                copyArtifacts(
-                        projectName: 'openjdk8_build-refactor',
-                        selector: specific("13"),
-                        filter: 'workspace/target/*',
-                        fingerprintArtifacts: true,
-                        target: 'target/${config.arch}/',
-                        flatten: true)
-            }
             //buildJob = build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&${config.arch}&&build"]]
             //buildJobNum = buildJob.getNumber()
             //archiveArtifacts artifacts: 'workspace/target/*.tar.gz, workspace/target/*.zip'
@@ -35,5 +25,12 @@ for (int i = 0; i < buildConfigurations.size(); i++) {
 parallel jobs
 
 node {
-    archiveArtifacts artifacts: 'target/*/*.tar.gz, target/*/*.zip'
+    copyArtifacts(
+            projectName: 'openjdk8_build-refactor',
+            selector: specific("13"),
+            filter: 'workspace/target/*',
+            fingerprintArtifacts: true,
+            target: 'target/${config.arch}/',
+            flatten: true)
+    archiveArtifacts artifacts: 'target/*/*'
 }
