@@ -1,4 +1,4 @@
-def buildPlatforms = ['mac', 'linux']
+def buildPlatforms = ['mac', 'centos6']
 
 def jobs = [:]
 for (int i = 0; i < buildPlatforms.size(); i++) {
