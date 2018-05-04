@@ -1,6 +1,6 @@
 def buildConfigurations = [
-        mac  : [os: 'mac', arch: 'x64'],
-        linux: [os: 'centos6', arch: 'x64'],
+        mac    : [os: 'mac', arch: 'x64'],
+        linux  : [os: 'centos6', arch: 'x64'],
         windows: [os: 'windows', arch: 'x64']
 ]
 
@@ -21,8 +21,8 @@ buildConfigurations.each { buildConfiguration ->
         stage("build-${buildType}") {
             def buildJob = build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.os}&&${configuration.arch}&&build"]]
             buildJobs.add([
-                    job   : buildJob,
-                    config: configuration,
+                    job        : buildJob,
+                    config     : configuration,
                     targetLabel: buildConfiguration.key
             ]);
         }
@@ -31,7 +31,7 @@ buildConfigurations.each { buildConfiguration ->
 }
 parallel jobs
 
-node {
+node('centos6&&x64&&build') {
     buildJobs.each {
         buildJob ->
             if (buildJob.job.getResult() == 'SUCCESS') {
