@@ -1,16 +1,22 @@
-def buildPlatforms = ['mac', 'centos6']
+def buildConfigurations = [
+        [os: 'mac', arch: 'x64'],
+        [os: 'centos6', arch: 'x64']
+]
 
 def jobs = [:]
-for (int i = 0; i < buildPlatforms.size(); i++) {
+for (int i = 0; i < buildConfigurations.size(); i++) {
     def index = i
-    def platform = buildPlatforms[index]
-    jobs[platform] = {
-        def buildJob
-        stage('build') {
-            buildJob = build job: "openjdk8_build_x86-64_linux-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${platform}&&x64&&build"]]
-        }
+    def config = buildConfigurations[index]
 
-        archiveArtifacts artifacts: 'workspace/target/*.tar.gz, workspace/target/*.zip'
+    def buildType = "${config.os}-${config.arch}"
+
+    jobs[buildType] = {
+        stage("build-${buildType}") {
+            build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&${config.arch}&&build"]]
+        }
+        stage("archive-${buildType}") {
+            archiveArtifacts artifacts: 'workspace/target/*.tar.gz, workspace/target/*.zip'
+        }
     }
 }
 parallel jobs
