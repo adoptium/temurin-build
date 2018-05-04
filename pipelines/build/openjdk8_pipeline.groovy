@@ -1,6 +1,6 @@
 def buildConfigurations = [
-        [os: 'mac', arch: 'x64'],
-        [os: 'centos6', arch: 'x64']
+        [os: 'mac', arch: 'x64', targetLabel:'mac'],
+        [os: 'centos6', arch: 'x64', targetLabel:'linux']
 ]
 
 def buildJobs = []
@@ -33,10 +33,10 @@ node {
                         selector: specific(buildJob.getNumber()),
                         filter: 'workspace/target/*',
                         fingerprintArtifacts: true,
-                        target: "target/${buildJob.config.arch}/",
+                        target: "target/${buildJob.config.targetLabel}/${buildJob.config.arch}/",
                         flatten: true)
             }
     }
 
-    archiveArtifacts artifacts: 'target/*/*'
+    archiveArtifacts artifacts: 'target/*/*/*'
 }
