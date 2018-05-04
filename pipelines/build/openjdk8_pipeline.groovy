@@ -12,6 +12,7 @@ if (osTarget != "all") {
 }
 
 node {
+    checkout scm
     def rootDir = pwd()
     def OpenJDKBuild = load("${rootDir}/pipelines/build/OpenJDKBuild.groovy")
 
