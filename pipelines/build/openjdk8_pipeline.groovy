@@ -18,14 +18,7 @@ for (int i = 0; i < buildConfigurations.size(); i++) {
                 copyArtifacts(
                         projectName: 'openjdk8_build-refactor',
                         selector: specific("13"),
-                        filter: 'workspace/target/*.tar.gz',
-                        fingerprintArtifacts: true,
-                        target: 'target/${config.arch}/',
-                        flatten: true)
-                copyArtifacts(
-                        projectName: 'openjdk8_build-refactor',
-                        selector: specific("13"),
-                        filter: 'workspace/target/*.zip',
+                        filter: 'workspace/target/*',
                         fingerprintArtifacts: true,
                         target: 'target/${config.arch}/',
                         flatten: true)
