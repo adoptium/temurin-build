@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux
+set -ex
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -15,7 +15,7 @@ if [[ $NODE_LABELS = *"linux"* ]] ; then
   EXTENSION=tar.gz
 
   export JDK_BOOT_DIR=$JDK7_BOOT_DIR
-  if [ ! -z "$TAG" ]; then
+  if [ ! -z "${TAG}" ]; then
     OPTIONS="${OPTIONS} --tag $TAG"
   fi
   #OPTIONS="${OPTIONS} --tmp-space-build"
