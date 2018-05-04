@@ -36,7 +36,7 @@ node {
             if (buildJob.job.getResult() == 'SUCCESS') {
                 copyArtifacts(
                         projectName: 'openjdk8_build-refactor',
-                        selector: specific("${buildJob.job.jobNumber}"),
+                        selector: specific("${buildJob.job.getNumber()}"),
                         filter: 'workspace/target/*',
                         fingerprintArtifacts: true,
                         target: "target/${buildJob.targetLabel}/${buildJob.config.arch}/",
