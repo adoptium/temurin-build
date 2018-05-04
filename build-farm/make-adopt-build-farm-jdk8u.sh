@@ -42,6 +42,7 @@ FILENAME="OpenJDK8_x64_$PLATFORM_$TIMESTAMP.$EXTENSION"
 echo "Filename will be: $FILENAME"
 
 echo "foo">bar.txt
+mkdir -p "workspace/target/"
 tar -cvzf "workspace/target/test.$EXTENSION" bar.txt
 
 #bash "$SCRIPT_DIR/../makejdk-any-platform.sh" --jdk-boot-dir "$JDK_BOOT_DIR" --target-file-name "$FILENAME" $GIT_SHALLOW_CLONE_OPTION $TAG_OPTION $OPTIONS jdk8u
