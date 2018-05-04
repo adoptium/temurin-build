@@ -7,7 +7,7 @@ for (int i = 0; i < buildPlatforms.size(); i++) {
     jobs[platform] = {
         def buildJob
         stage('build') {
-            buildJob = build job: "openjdk8_build_x86-64_linux-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: '${platform}&&x64&&build']]
+            buildJob = build job: "openjdk8_build_x86-64_linux-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${platform}&&x64&&build"]]
         }
     }
 }
