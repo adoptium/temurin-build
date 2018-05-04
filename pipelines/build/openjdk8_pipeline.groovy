@@ -9,6 +9,8 @@ for (int i = 0; i < buildPlatforms.size(); i++) {
         stage('build') {
             buildJob = build job: "openjdk8_build_x86-64_linux-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${platform}&&x64&&build"]]
         }
+
+        archiveArtifacts artifacts: 'workspace/target/*.tar.gz, workspace/target/*.zip'
     }
 }
 parallel jobs
