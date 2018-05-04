@@ -28,7 +28,7 @@
 #
 ################################################################################
 
-# TODO Comment out once script is stable.
+# TODO Comment out the 'x' once script is stable.
 set -eux
 
 # i.e. Where we are
@@ -45,7 +45,7 @@ setVariablesForConfigure() {
 
   local openjdk_core_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
 
-  # TODO Regex this in the if or use cut to grab out the number and see if >= 9
+  # TODO Could regex this in the if statement or use cut to grab out the number and see if >= 9
   # TODO 9 should become 9u as will 10 shortly....
   if [ "$openjdk_core_version" == "jdk9" ] || [ "$openjdk_core_version" == "jdk10" ] || [ "$openjdk_core_version" == "jdk11" ] || [ "$openjdk_core_version" == "amber" ]; then
     local jdk_path="jdk"
@@ -63,15 +63,15 @@ setVariablesForConfigure() {
   BUILD_CONFIG[JRE_PATH]=$jre_path
 }
 
-# Set the repository to build from
-setRepository() {
+# Set the repository to build from, defaults to adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}
+setRepositoryToBuildFrom() {
   local repository="${BUILD_CONFIG[REPOSITORY]:-adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
   repository="$(echo "${repository}" | awk '{print tolower($0)}')";
 
   BUILD_CONFIG[REPOSITORY]=$repository
 }
 
-# Specific platforms need to have special build settings
+# Set specific platform (e.g. Mac OS X (darwin) configuration settings
 processArgumentsforSpecificPlatforms() {
 
   case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
@@ -85,7 +85,7 @@ processArgumentsforSpecificPlatforms() {
 
 }
 
-# Specific architectures need to have special build settings
+# Set specific architecture (e.g. s390x) configuration settings
 processArgumentsforSpecificArchitectures() {
   local jvm_variant=server
   local build_full_name=""
@@ -128,7 +128,7 @@ processArgumentsforSpecificArchitectures() {
   BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-$configure_args_for_any_platform}
 }
 
-# Different platforms have different default make commands
+# Set the make command (that's used to build OpenJDK) depending on the platform
 setMakeCommandForOS() {
   local make_command_name
   case "$OS_KERNEL_NAME" in
@@ -143,14 +143,14 @@ setMakeCommandForOS() {
   BUILD_CONFIG[MAKE_COMMAND_NAME]=${BUILD_CONFIG[MAKE_COMMAND_NAME]:-$make_command_name}
 }
 
-echo "Starting $0 to configure, build (Adopt)OpenJDK binary"
+echo "Starting $0 to configure and build an (Adopt)OpenJDK binary"
 
 # Parse the CL Args, see ${SCRIPT_DIR}/configureBuild.sh for details
 parseCommandLineArgs "$@"
 
 # Update the configuration with the arguments passed in, the platform etc
 setVariablesForConfigure
-setRepository
+setRepositoryToBuildFrom
 processArgumentsforSpecificPlatforms
 processArgumentsforSpecificArchitectures
 setMakeCommandForOS

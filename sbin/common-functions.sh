@@ -88,9 +88,6 @@ parseConfigurationArguments() {
         "--repository-tag"  | "-R" )
         OPENJDK_REPO_TAG="$1"; shift;;
 
-        "--tmp-space-build" )
-        BUILD_CONFIG[TMP_SPACE_BUILD]="true"; shift;;
-
         "--source" | "-s" )
         BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
 
@@ -108,6 +105,9 @@ parseConfigurationArguments() {
 
         "--target-file-name"  | "-T" )
         BUILD_CONFIG[TARGET_FILE_NAME]="$1"; shift;;
+
+        "--tmp-space-build" )
+        BUILD_CONFIG[TMP_SPACE_BUILD]="true"; shift;;
 
         "--update-version"  | "-u" )
         BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
