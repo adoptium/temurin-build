@@ -1,6 +1,6 @@
 def buildConfigurations = [
-        mac  : [os: 'mac', arch: 'x64', targetLabel: 'mac'],
-        linux: [os: 'centos6', arch: 'x64', targetLabel: 'linux']
+        mac  : [os: 'mac', arch: 'x64'],
+        linux: [os: 'centos6', arch: 'x64']
 ]
 
 if (osTarget != "all") {
@@ -21,7 +21,8 @@ buildConfigurations.each { buildConfiguration ->
             def buildJob = build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&${config.arch}&&build"]]
             buildJobs.add([
                     job   : buildJob,
-                    config: config
+                    config: config,
+                    targetLabel: buildConfiguration.key
             ]);
         }
 
@@ -39,7 +40,7 @@ node {
                         selector: specific("${buildNum}"),
                         filter: 'workspace/target/*',
                         fingerprintArtifacts: true,
-                        target: "target/${buildJob.config.targetLabel}/${buildJob.config.arch}/",
+                        target: "target/${buildJob.targetLabel}/${buildJob.config.arch}/",
                         flatten: true)
             }
     }
