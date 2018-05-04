@@ -20,7 +20,7 @@ buildConfigurations.each { buildConfiguration ->
         stage("build-${buildType}") {
             def buildJob = build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&${config.arch}&&build"]]
             buildJobs.add([
-                    job   : buildJob,
+                    jobNumber   : buildJob.getNumber(),
                     config: config,
                     targetLabel: buildConfiguration.key
             ]);
@@ -34,10 +34,9 @@ node {
     buildJobs.each {
         buildJob ->
             if (buildJob.job.getResult() == 'SUCCESS') {
-                def buildNum =buildJob.job.getNumber();
                 copyArtifacts(
                         projectName: 'openjdk8_build-refactor',
-                        selector: specific("${buildNum}"),
+                        selector: specific("${buildJob.jobNumber}"),
                         filter: 'workspace/target/*',
                         fingerprintArtifacts: true,
                         target: "target/${buildJob.targetLabel}/${buildJob.config.arch}/",
