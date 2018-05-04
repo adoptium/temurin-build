@@ -18,10 +18,17 @@ for (int i = 0; i < buildConfigurations.size(); i++) {
                 copyArtifacts(
                         projectName: 'openjdk8_build-refactor',
                         selector: specific("13"),
-                        filter: 'workspace/target/*.tar.gz,workspace/target/*.zip',
+                        filter: 'workspace/target/*.tar.gz',
                         fingerprintArtifacts: true,
                         target: 'target/${config.arch}/',
-                        flatten: true,)
+                        flatten: true)
+                copyArtifacts(
+                        projectName: 'openjdk8_build-refactor',
+                        selector: specific("13"),
+                        filter: 'workspace/target/*.zip',
+                        fingerprintArtifacts: true,
+                        target: 'target/${config.arch}/',
+                        flatten: true)
             }
             //buildJob = build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&${config.arch}&&build"]]
             //buildJobNum = buildJob.getNumber()
