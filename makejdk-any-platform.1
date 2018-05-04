@@ -5,9 +5,15 @@ makejdk-any-platform.sh
 .SH SYNOPSIS
 "./makejdk-any-platform.sh [options] version"
 .SH DESCRIPTION
-"This script is the entry point for building (Adopt) OpenJDK binaries. Building
+This script is the entry point for building (Adopt) OpenJDK binaries. Building
 natively or in a docker container are both supported. This script (and its
 supporting scripts) have defaults, but you can override these as needed.
+
+makejdk-any-platform.sh and it's supporting scripts will auto detect the
+platform and architecture it is running on and configures the OpenJDK build
+accordingly.  The supporting scripts will also download and locally install any
+required dependencies for the OpenJDK build, e.g. The ALSA sound and Freetype
+font libraries.
 
 Many of the configuration options are passed through to the \fBconfigure\fR and
 \fBmake\fR commands that OpenJDK uses to build binaries.  Please see the
@@ -18,104 +24,122 @@ that you are building for further details.
 
 "./makejdk-any-platform.sh --docker jdk8u"
 
-This will build you the latest Java 8 AdoptOpenJDK binary from
-https://github.com/AdoptOpenJDK/openjdk-jdk8u in a Docker container
+This will start a Docker container and build you the latest Java 8 AdoptOpenJDK
+binary from the source at https://github.com/AdoptOpenJDK/openjdk-jdk8u
 
-Please visit https://www.adoptopenjdk.net for further support"
+Please visit https://www.adoptopenjdk.net for further support
 
 .SH VERSIONS
 .TP
-.BR \jdk8u
+.BR jdk8u
 Build Java 8, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk8u
 .TP
-.BR \jdk9
+.BR jdk9
 Build Java 9, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk9
 .TP
-.BR \jdk10
+.BR jdk10
 Build Java 10, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk10
 .TP
-.BR \jfx
+.BR jfx
 Build OpenJFX, defaults to https://github.com/AdoptOpenJDK/openjdk-jfx
 .TP
-.BR \amber
+.BR amber
 Build Project Amber, defaults to https://github.com/AdoptOpenJDK/openjdk-amber
 
 .SH OPTIONS
 .TP
-.BR \-b ", " \-\-build-number " " \fI<build number>\fR
-specify the OpenJDK build number to build from, e.g. b10
+.BR \-b ", " \-\-build-number " " \fI<build_number>\fR
+specify the OpenJDK build number to build from, e.g. b12.
+For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
+9.0.4+11 (for Java 9+) with the build number being the suffix at the end.
 .TP
 .BR \-B ", " \-\-branch " " \fI<branch>\fR
-specify a custom branch to build, e.g. dev
+specify a custom branch to build from, e.g. dev.
+For reference, AdoptOpenJDK GitHub source repos default to the \fI<dev>\fR
+branch which may contain a very small diff set to the \fI<master>\fR branch
+(which is a clone from the OpenJDK mercurial forest).
 .TP
 .BR \-c ", " \-\-clean-docker-build
-TODO
+removes the existing docker container and persistent volume before starting
+a new docker based build.
 .TP
 .BR \-C ", " \-\-configure-args " " \fI<args>\fR
-specify any custom user configuration arguments
+specify any custom user configuration arguments.
 .TP
 .BR \-d ", " \-\-destination " " \fI<path>\fR
-specify the location for the built binary, e.g. /path/ or /path/here.tar.gz
+specify the location for the built binary, e.g. /path/.
+This is typically used in conjunction with \fB<-T>\fR to create a custom path
+/ file name for the resulting binary.
 .TP
 .BR \-D ", " \-\-docker
-build OpenJDK in a docker container
+build OpenJDK in a docker container.
 .TP
 .BR \-\-disable-shallow-git-clone
-disable the default --depth=1 shallow cloning of git repo(s)
+disable the default \fB--depth=1\fR shallow cloning of git repo(s).
 .TP
 .BR \-f ", " \-\-freetype-dir
-specify the location of an existing FreeType library (OpenJDK build dependency)
+specify the location of an existing FreeType library.
+This is typically used in conjunction with \fB<-F>\fR.
 .TP
 .BR \-F ", " \-\-skip-freetype
-skip building freetype
+skip building Freetype automatically.
+This is typically used in conjunction with \fB<-f>\fR.
 .TP
 .BR \-i ", " \-\-ignore-container
-ignore the existing docker container if you have one already
+ignore the existing docker container if you have one already.
 .TP
-.BR \-J ", " \-\-jdk-boot-dir " " \fI<jdk boot dir>\fR
-specify the JDK boot dir
+.BR \-J ", " \-\-jdk-boot-dir " " \fI<jdk_boot_dir>\fR
+specify the JDK boot dir.
+For reference, OpenJDK needs the previous version of a JDK in order to build
+itself. You should select the path to a JDK install that is N-1 versions below
+the one you are trying to build.
 .TP
 .BR \-k ", " \-\-keep
-if using docker, keep the container after the build
+if using docker, keep the container after the build.
 .TP
 .BR \-n ", " \-\-no-colour
-disable colour output
+disable colour output.
 .TP
 .BR \-p ", " \-\-processors " " \fI<args>\fR
-specify the number of processors to use for the docker build
+specify the number of processors to use for the docker build.
 .TP
 .BR \-r ", " \-\-repository " " \fI<repository>\fR
-specify the repository to clone OpenJDK source from, e.g. username/openjdk-jdk8u
-.TP
-.BR \-R ", " \-\-repository-tag " " \fI<repository_tag>\fR
-specify the tag in the repository that you want to clone OpenJDK source from
+specify the repository to clone OpenJDK source from,
+e.g. https://github.com/karianna/openjdk-jdk8u.
 .TP
 .BR \-s ", " \-\-source " " \fI<path>\fR
-specify the location to clone the OpenJDK source (and dependencies) to
+specify the location to clone the OpenJDK source (and dependencies) to.
 .TP
 .BR \-S ", " \-\-ssh
-use ssh when cloning git
+use ssh when cloning git.
 .TP
 .BR \-\-sign
-sign the OpenJDK binary that you build
+sign the OpenJDK binary that you build.
 .TP
 .BR \-\-sudo
-run the docker container as root
+run the docker container as root.
 .TP
 .BR \-t ", " \-\-tag " " \fI<tag>\fR
-specify the build tag that you want to build OpenJDK from
+specify the repository tag that you want to build OpenJDK from.
 .TP
 .BR \-T ", " \-\-target-file-name " " \fI<file_name>\fR
-specify the final name of the OpenJDK binary
+specify the final name of the OpenJDK binary.
+This is typically used in conjunction with \fB<-D>\fR to create a custom file
+name for the resulting binary.
 .TP
 .BR \-\-tmp-space-build
 TODO
 .TP
 .BR \-u ", " \-\-update-version " " \fI<update_version>\fR
-specify the update version to build OpenJDK from, e.g. 172
+specify the update version to build OpenJDK from, e.g. 162.
+For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
+9.0.4+11 (for Java 9+) with the update number being the number after the '_'
+(162) or the 3rd position in the semVer version string (4).
+This is typically used in conjunction with \fB<-b>\fR.
 .TP
 .BR \-v ", " \-\-build-variant " " \fI<variant_name>\fR
-specify a custom OpenJDK build variant, e.g. openj9
+specify a OpenJDK build variant, e.g. openj9.
+For reference, the default variant is hotspot and does not need to be specified.
 .TP
 .BR \-V ", " \-\-jvm-variant " " \fI<jvm_variant>\fR
-TODO
+specify the JVM variant (server or client), defaults to server.
