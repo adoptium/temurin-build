@@ -12,7 +12,8 @@ if (osTarget != "all") {
 }
 
 node {
-    def OpenJDKBuild = load("pipelines/build/OpenJDKBuild.groovy")
+    def rootDir = pwd()
+    def OpenJDKBuild = load("${rootDir}@pipelines/build/OpenJDKBuild.groovy")
 
     OpenJDKBuild.build(buildConfigurations)
 }
