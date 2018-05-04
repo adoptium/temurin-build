@@ -4,15 +4,14 @@ def buildConfigurations = [
 ]
 
 if (osTarget != "all") {
-    buildConfigurations = buildConfigurations[osTarget];
+    buildConfigurations = buildConfigurations
+            .findAll { it.value.targetLabel == osTarget }
 }
 
 def buildJobs = []
 def jobs = [:]
-for (int i = 0; i < buildConfigurations.size(); i++) {
-    def index = i
-    def config = buildConfigurations[index]
 
+buildConfigurations.each { config ->
     def buildType = "${config.os}-${config.arch}"
 
     jobs[buildType] = {
