@@ -1,6 +1,7 @@
 def buildConfigurations = [
         mac  : [os: 'mac', arch: 'x64'],
-        linux: [os: 'centos6', arch: 'x64']
+        linux: [os: 'centos6', arch: 'x64'],
+        windows: [os: 'windows', arch: 'x64']
 ]
 
 if (osTarget != "all") {
