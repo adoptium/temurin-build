@@ -278,7 +278,7 @@ buildOpenJDK()
 printJavaVersionString()
 {
   # shellcheck disable=SC2086
-  PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${BUILD_CONFIG[JDK_PATH]})
+  PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
