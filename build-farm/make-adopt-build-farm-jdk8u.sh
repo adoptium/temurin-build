@@ -16,7 +16,7 @@ if [[ $NODE_LABELS = *"linux"* ]] ; then
   if [ ! -z "$TAG" ]; then
     OPTIONS="${OPTIONS} --tag $TAG"
   fi
-  OPTIONS="${OPTIONS} --tmp-space-build"
+  #OPTIONS="${OPTIONS} --tmp-space-build"
 elif [[ $NODE_LABELS = *"mac"* ]] ; then
   PLATFORM=Mac
   EXTENSION=tar.gz
@@ -24,7 +24,7 @@ elif [[ $NODE_LABELS = *"mac"* ]] ; then
   export MACOSX_DEPLOYMENT_TARGET=10.8
   export JDK_BOOT_DIR=$JDK7_BOOT_DIR
   sudo xcode-select --switch /Applications/Xcode.app
-  OPTIONS="${OPTIONS} --tmp-space-build"
+  #OPTIONS="${OPTIONS} --tmp-space-build"
 elif [[ $NODE_LABELS = *"windows"* ]] ; then
   PLATFORM=Windows
   EXTENSION=zip
