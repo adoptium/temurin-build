@@ -11,7 +11,7 @@ if (osTarget != "all") {
 def buildJobs = []
 def jobs = [:]
 
-buildConfi gurations.each { buildConfiguration ->
+buildConfigurations.each { buildConfiguration ->
     def configuration = buildConfiguration.value
 
     def buildType = "${configuration.os}-${configuration.arch}"
