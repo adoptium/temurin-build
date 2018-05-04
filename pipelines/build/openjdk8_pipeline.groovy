@@ -13,7 +13,7 @@ for (int i = 0; i < buildConfigurations.size(); i++) {
 
     jobs[buildType] = {
         stage("build-${buildType}") {
-            buildJob = build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&${config.arch}&&build"]]
+            def buildJob = build job: "openjdk8_build-refactor", parameters: [[$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&${config.arch}&&build"]]
             buildJobs.add([
                     job   : buildJob,
                     config: config
