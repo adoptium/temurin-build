@@ -10,11 +10,10 @@ if (osTarget != "all") {
     buildConfigurations = buildConfigurations
             .findAll { it.key == osTarget }
 }
-
+def OpenJDKBuild
 node {
     checkout scm
     def rootDir = pwd()
-    def OpenJDKBuild = load("${rootDir}/pipelines/build/OpenJDKBuild.groovy")
-
-    OpenJDKBuild.doBuild("jdk9", buildConfigurations)
+    OpenJDKBuild = load("${rootDir}/pipelines/build/OpenJDKBuild.groovy")
 }
+OpenJDKBuild.doBuild("jdk9", buildConfigurations)
