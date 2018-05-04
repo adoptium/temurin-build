@@ -10,10 +10,11 @@ if (osTarget != "all") {
     buildConfigurations = buildConfigurations
             .findAll { it.key == osTarget }
 }
-def OpenJDKBuild
+// Todo actually do this in a shared lib to avoid tying up a node
 node {
     checkout scm
     def rootDir = pwd()
-    OpenJDKBuild = load("${rootDir}/pipelines/build/OpenJDKBuild.groovy")
+    def OpenJDKBuild = load("${rootDir}/pipelines/build/OpenJDKBuild.groovy")
+
+    OpenJDKBuild.doBuild("jdk9", buildConfigurations)
 }
-OpenJDKBuild.doBuild("jdk9", buildConfigurations)

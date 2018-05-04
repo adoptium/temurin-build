@@ -11,6 +11,8 @@ if (osTarget != "all") {
             .findAll { it.key == osTarget }
 }
 
+
+// Todo actually do this in a shared lib to avoid tying up a node
 node {
     checkout scm
     def rootDir = pwd()
