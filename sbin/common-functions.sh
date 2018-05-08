@@ -24,11 +24,8 @@
 set -eux
 
 # Set default versions for 3 libraries that OpenJDK relies on to build
-# TODO Can we bump ALSA?
-#ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so*
-#FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
 FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.28}
 
 # Parse the configuration args from the CL, please keep this in alpha order
@@ -175,6 +172,7 @@ checkingAndDownloadingFreemarker()
   fi
 }
 
+# FreeType
 checkingAndDownloadingFreeType()
 {
 
@@ -235,6 +233,7 @@ checkingAndDownloadingFreeType()
   fi
 }
 
+# Certificate Authority Certs (CA Certs)
 checkingAndDownloadCaCerts()
 {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
@@ -264,6 +263,7 @@ checkingAndDownloadCaCerts()
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 }
 
+# Download all of the dependencies for OpenJDK (Alsa, FreeType, CACerts et al)
 downloadingRequiredDependencies()
 {
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
@@ -297,6 +297,7 @@ downloadingRequiredDependencies()
   fi
 }
 
+# Get the first tag to build from
 getFirstTagFromOpenJDKGitRepo()
 {
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"

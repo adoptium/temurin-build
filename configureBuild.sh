@@ -16,7 +16,11 @@
 ################################################################################
 
 ################################################################################
-# TBA
+#
+# This script sets up the initial configuration for an (Adopt) OpenJDK Build.
+# See the configure_build function and its child functions for details.
+# It's sourced by the makejdk-any-platform.sh script.
+#
 ################################################################################
 
 set -eux # TODO remove once we've finished debugging
@@ -28,6 +32,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ## shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/sbin/common-functions.sh"
 
+# Set defaults for most of the configuration for this build
 init_build_config() {
   # Dir where we clone the OpenJDK source code for building, defaults to 'src'
   BUILD_CONFIG[OPENJDK_SOURCE_DIR]=${BUILD_CONFIG[OPENJDK_SOURCE_DIR]:-src}
@@ -100,6 +105,7 @@ init_build_config() {
   BUILD_CONFIG[COLOUR]="true"
 }
 
+# Bring in the color coding for the terminal output
 sourceFileWithColourCodes()
 {
   if [[ "${BUILD_CONFIG[COLOUR]}" == "true" ]] ; then
@@ -108,13 +114,16 @@ sourceFileWithColourCodes()
   fi
 }
 
+# Bring in the source signal handler
 sourceSignalHandler()
 {
   source sbin/signalhandler.sh
 }
 
+# Parse the command line arguments
 parseCommandLineArgs()
 {
+  # Defer most of the work to the shared function in common-functions.sh
   parseConfigurationArguments "$@"
 
   while [[ $# -gt 1 ]] ; do
@@ -141,6 +150,7 @@ parseCommandLineArgs()
   # TODO check that OPENJDK_CORE_VERSION has been set by the caller
 }
 
+# Extra config for OpenJDK variants such as OpenJ9, SAP et al
 doAnyBuildVariantOverrides()
 {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
@@ -160,14 +170,17 @@ doAnyBuildVariantOverrides()
   BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
 }
 
+# Set the default branch to clone OpenJDK source from
 setDefaultBranchIfNotProvided()
 {
+  local default_branch="dev"
   if [ -z "${BUILD_CONFIG[BRANCH]}" ] ; then
-    echo "${info}BRANCH is undefined so checking out dev${normal}."
-    BUILD_CONFIG[BRANCH]="dev"
+    echo "${info}BRANCH is undefined so checking out ${default_branch}${normal}."
+    BUILD_CONFIG[BRANCH]=$default_branch
   fi
 }
 
+# Set the working directory for this build
 setWorkingDirectory()
 {
   if [ -z "${BUILD_CONFIG[WORKSPACE_DIR]}" ] ; then
@@ -190,6 +203,7 @@ setWorkingDirectory()
   fi
 }
 
+# Set where the OpenJDK binary will be built to
 setTargetDirectory()
 {
   if [ -z "${BUILD_CONFIG[TARGET_DIR]}" ] ; then
@@ -202,6 +216,7 @@ setTargetDirectory()
   fi
 }
 
+# Determines the JVM Variant (normal, server, debug etc) and the build name
 determineBuildProperties() {
     BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-server}
 

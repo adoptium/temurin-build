@@ -14,7 +14,14 @@
 # limitations under the License.
 ################################################################################
 
-set -eux
+################################################################################
+#
+# This script deals with the configuration to build (Adopt) OpenJDK natively.
+# It's sourced by the makejdk-any-platform.sh script.
+#
+################################################################################
+
+set -eu
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

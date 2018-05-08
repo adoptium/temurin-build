@@ -14,6 +14,13 @@
 # limitations under the License.
 ################################################################################
 
+################################################################################
+#
+# This script deals with the configuration to build (Adopt) OpenJDK in a docker
+# container. It's sourced by the makejdk-any-platform.sh script.
+#
+################################################################################
+
 set -eux
 
 # Create a data volume called ${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]},
@@ -58,6 +65,7 @@ buildDockerContainer()
   ${BUILD_CONFIG[DOCKER]} build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
 }
 
+# Execute the (Adopt) OpenJDK build inside the Docker Container
 buildOpenJDKViaDocker()
 {
 

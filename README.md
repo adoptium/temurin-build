@@ -13,21 +13,28 @@ personally or at build farm scale.
 
 1. The `build-farm` folder contains shell scripts for multi configuration Jenkins 
 build jobs used for building Adopt OpenJDK binaries.  TODO This may get removed.
-1. The `docker` folder contains DockerFiles which can be used as part of building 
+2. The `docker` folder contains DockerFiles which can be used as part of building 
 OpenJDK inside a Docker container.
-2. The `git-hg` folder contains scripts to clone an OpenJDK mercurial forest into 
+3. The `git-hg` folder contains scripts to clone an OpenJDK mercurial forest into 
 a GitHub repo ()and regularly update it).
-3. The `mercurial-tags/java-tool` folder contains scripts for TODO.
-4. The `pipelines` folder contains the Groovy pipeline scripts for Jenkins 
+4. The `images` folder contains diagrams to aid understanding.
+5. The `mercurial-tags/java-tool` folder contains scripts for TODO.
+6. The `pipelines` folder contains the Groovy pipeline scripts for Jenkins 
 (e.g. build | test | checksum | release).
-5. The `sbin` folder contains the scripts called by the main script. 
-TODO better description.
-6. The `security` folder contains a script and `cacerts` file that is bundled 
+7. The `sbin` folder contains the scripts that actually build (AdoptOpenJDK). 
+`build.sh` is the entry point which can be used stand alone but is typically 
+called by the `native-build.sh` or `docker-build.sh` scripts (which themselves
+are typically called by `makejdk-any-platform.sh`).
+8. The `security` folder contains a script and `cacerts` file that is bundled 
 with the JDK and used when building OpenJDK: the `cacerts` file is an important 
 file that's used to enable SSL connections.
 
+### Script Relationships
+
+![Build Variant Workflow](images/AdoptOpenJDK_Build_Script_Relationships.png)
+
 The main script to build OpenJDK is `makejdk-any-platform.sh`, which itself uses 
-calls `configureBuild.sh`, `docker-build.sh` and/or `native-build.sh`. 
+and/or calls `configureBuild.sh`, `docker-build.sh` and/or `native-build.sh`. 
 
 ## The makejdk-any-platform.sh script
 
