@@ -18,6 +18,7 @@
 #
 # This script prepares the workspace to build (Adopt) OpenJDK.
 # See the configureWorkspace function for details
+# It is sourced by build.sh
 #
 ################################################################################
 

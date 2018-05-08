@@ -23,7 +23,7 @@
 # containers etc
 #
 # We are deliberately writing to shell because this needs to work on some truly
-# esoteric platforms to fulfil the Java Write Once Run Anywhere (WORA) promise
+# esoteric platforms to fulfil the Java Write Once Run Anywhere (WORA) promise.
 #
 ################################################################################
 

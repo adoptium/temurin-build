@@ -17,8 +17,10 @@
 ################################################################################
 #
 # Build OpenJDK - can be called directly but is typically called by
-# makejdk-any-platform.sh.  See bottom of the script for the call order and each
-# function for further details.
+# docker-build.sh or native-build.sh.
+#
+# See bottom of the script for the call order and each function for further
+# details.
 #
 # Calls 'configure' then 'make' in order to build OpenJDK
 #

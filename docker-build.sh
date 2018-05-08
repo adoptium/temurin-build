@@ -17,7 +17,8 @@
 ################################################################################
 #
 # This script deals with the configuration to build (Adopt) OpenJDK in a docker
-# container. It's sourced by the makejdk-any-platform.sh script.
+# container.
+# It's sourced by the makejdk-any-platform.sh script.
 #
 ################################################################################
 
