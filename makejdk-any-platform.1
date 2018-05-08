@@ -3,9 +3,9 @@
 .SH NAME
 makejdk.sh
 .SH SYNOPSIS
-"./makejdk-any-platform.sh --versions [versions] [options]"
+"./makejdk-any-platform.sh --version [version] [options]"
 .SH DESCRIPTION
-The simplest way to build OpenJDK using our scripts is to run makejdk-any-platform.sh --version <jdk8u/jdk9> and have your user be in the Docker group on the machine (or prefix all of your Docker commands with sudo. This script can be used to create a Docker container that will be configured with all of the required dependencies and a base operating system in order to build OpenJDK.
+The simplest way to build OpenJDK using our scripts is to run makejdk-any-platform.sh -c --version <jdk8u/jdk9> and have your user be in the Docker group on the machine (or prefix all of your Docker commands with sudo. This script can be used to create a Docker container that will be configured with all of the required dependencies and a base operating system in order to build OpenJDK.
 
 .SH VERSIONS
 .TP
@@ -15,11 +15,14 @@ https://github.com/AdoptOpenJDK/openjdk-jdk8u
 .BR \jdk9
 https://github.com/AdoptOpenJDK/openjdk-jdk9
 .TP
+.BR \jdk10
+https://github.com/AdoptOpenJDK/openjdk-jdk10
+.TP
 
 .SH OPTIONS
 .TP
 .BR \-s ", " \-\-source " " \fI<path>\fR
-specify the location for the source and dependencies to be cloned
+specify the location for the source and dependencies to be cloned, defaults to ./openjdk. If it is specified, docker is not used
 .TP
 .BR \-d ", " \-\-destination " " \fI<path>\fR
 specify the location for the tarball (eg. /path/ or /path/here.tar.gz)
@@ -52,4 +55,23 @@ use ssh when cloning git
 .TP
 .BR \-dsgc ", " \-\-disable-shallow-git-clone
 disable shallow cloning of git repo(s) using the --depth=1 CLI option
+.TP
+.BR \-bv ", " \-\-variant " " \fI<variant name>\fR
+specify a custom build variant (eg. openj9)
+.TP
+.TP
+.BR \-c ", " \-\-clean-docker-build
+clean docker data volume
+.TP
+.TP
+.BR \-t ", " \-\-tag " " \fI<tag>\fR
+specify a custom tag
+.TP
+.TP
+.BR \-\-sign " " \fI<path>\fR
+specify the location for the windows p12 certificate. Used only for windows builds to sign DLL
+.TP
+.TP
+.BR \-ca ", " \-\-configure-args " " \fI<args>\fR
+specify a custom configuration arguments 
 .TP

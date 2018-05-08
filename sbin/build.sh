@@ -21,12 +21,50 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common-functions.sh
 source "$SCRIPT_DIR/common-functions.sh"
 
-WORKING_DIR=$1
-TARGET_DIR=$2
-OPENJDK_REPO_NAME=$3
-JVM_VARIANT=${4:-server}
-OPENJDK_UPDATE_VERSION=$5
-OPENJDK_BUILD_NUMBER=$6
+WORKING_DIR=""
+TARGET_DIR=""
+OPENJDK_REPO_NAME=""
+JVM_VARIANT="${JVM_VARIANT:-server}"
+OPENJDK_UPDATE_VERSION=""
+OPENJDK_BUILD_NUMBER=""
+OPENJDK_REPO_TAG=""
+TRIMMED_TAG=""
+USER_SUPPLIED_CONFIGURE_ARGS=""
+
+while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
+  opt="$1";
+  shift;
+  case "$opt" in
+    "--" ) break 2;;
+
+    "--source" | "-s" )
+    WORKING_DIR="$1"; shift;;
+
+    "--destination" | "-d" )
+    TARGET_DIR="$1"; shift;;
+
+    "--repository" | "-r" )
+    OPENJDK_REPO_NAME="$1"; shift;;
+
+    "--variant"  | "-jv" )
+    JVM_VARIANT="$1"; shift;;
+
+    "--update-version"  | "-uv" )
+    OPENJDK_UPDATE_VERSION="$1"; shift;;
+
+    "--build-number"  | "-bn" )
+    OPENJDK_BUILD_NUMBER="$1"; shift;;
+
+    "--repository-tag"  | "-rt" )
+    OPENJDK_REPO_TAG="$1"; shift;;
+
+    "--configure-args"  | "-ca" )
+    USER_SUPPLIED_CONFIGURE_ARGS="$1"; shift;;
+
+    *) echo >&2 "${error}Invalid build.sh option: ${opt}${normal}"; exit 1;;
+  esac
+done
+
 OPENJDK_DIR=$WORKING_DIR/$OPENJDK_REPO_NAME
 
 
@@ -38,11 +76,32 @@ if [ "$JVM_VARIANT" == "--run-jtreg-tests-only" ]; then
   JVM_VARIANT="server"
 fi
 
-echo "${JDK_PATH}"
+echo "JDK Image folder name: ${JDK_PATH}"
+echo "JRE Image folder name: ${JRE_PATH}"
+echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=${COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG}"
+echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG}"
 
 MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"make"}
 MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"images"}
+# Defaults to not building this target, for Java 9+ we set this to test-image in order to build the native test libraries
+MAKE_TEST_IMAGE=""
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-""}
+
+addConfigureArg()
+{
+  #Only add an arg if it is not overridden by a user-specified arg.
+  if [[ ${CONFIGURE_ARGS_FOR_ANY_PLATFORM} != *"$1"* ]] && [[ ${USER_SUPPLIED_CONFIGURE_ARGS} != *"$1"* ]]; then
+    CONFIGURE_ARGS="${CONFIGURE_ARGS} ${1}${2}"
+  fi
+}
+
+addConfigureArgIfValueIsNotEmpty()
+{
+  #Only try to add an arg if the second argument is not empty.
+  if [ ! -z "$2" ]; then
+    addConfigureArg "$1" "$2"
+  fi
+}
 
 sourceFileWithColourCodes()
 {
@@ -99,7 +158,7 @@ configuringBootJDKConfigureParameter()
 
   echo "Boot dir set to ${JDK_BOOT_DIR}"
 
-  CONFIGURE_ARGS=" --with-boot-jdk=${JDK_BOOT_DIR}"
+  addConfigureArgIfValueIsNotEmpty "--with-boot-jdk=" "${JDK_BOOT_DIR}"
 }
 
 # Ensure that we produce builds with versions strings something like:
@@ -109,39 +168,56 @@ configuringBootJDKConfigureParameter()
 # OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
 configuringVersionStringParameter()
 {
-  # Replace the default 'internal' with our own milestone string
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-milestone=adoptopenjdk"
+  if [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
+    # Replace the default 'internal' with our own milestone string
+    addConfigureArg "--with-milestone=" "adoptopenjdk"
 
-  # Set the update version (e.g. 131), this gets passed in from the calling script
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-update-version=${OPENJDK_UPDATE_VERSION}"
+    # Set the update version (e.g. 131), this gets passed in from the calling script
+    addConfigureArgIfValueIsNotEmpty "--with-update-version=" "${OPENJDK_UPDATE_VERSION}"
 
-  # Set the build number (e.g. b04), this gets passed in from the calling script
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-build-number=${OPENJDK_BUILD_NUMBER}"
+    # Set the build number (e.g. b04), this gets passed in from the calling script
+    addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${OPENJDK_BUILD_NUMBER}"
+  else
+    if [ -z "$OPENJDK_REPO_TAG" ]; then
+      OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+      echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
+    fi
+    # > JDK 8
+    addConfigureArg "--with-version-pre=" "adoptopenjdk"
 
+    TRIMMED_TAG=$(echo "$OPENJDK_REPO_TAG" | cut -f2 -d"-")
+    addConfigureArg "--with-version-string=" "${TRIMMED_TAG}"
+
+  fi
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
 buildingTheRestOfTheConfigParameters()
 {
   if [ ! -z "$(which ccache)" ]; then
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-ccache"
+    addConfigureArg "--enable-ccache" ""
   fi
 
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-jvm-variants=${JVM_VARIANT}"
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-cacerts-file=${WORKING_DIR}/cacerts_area/security/cacerts"
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-alsa=${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
+  addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${JVM_VARIANT}"
+  addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${WORKING_DIR}/cacerts_area/security/cacerts"
+  addConfigureArg "--with-alsa=" "${WORKING_DIR}/alsa-lib-${ALSA_LIB_VERSION}"
+
+  # Point-in-time dependency for openj9 only
+  if [[ "${BUILD_VARIANT}" == "openj9" ]] ; then
+    addConfigureArg "--with-freemarker-jar=" "${WORKING_DIR}/freemarker-${FREEMARKER_LIB_VERSION}/lib/freemarker.jar"
+  fi
 
   if [[ -z "${FREETYPE}" ]] ; then
     FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"}
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-freetype=$FREETYPE_DIRECTORY"
+    addConfigureArg "--with-freetype=" "$FREETYPE_DIRECTORY"
   fi
 
   # These will have been installed by the package manager (see our Dockerfile)
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-x=/usr/include/X11"
+  addConfigureArg "--with-x=" "/usr/include/X11"
 
   # We don't want any extra debug symbols - ensure it's set to release,
   # other options include fastdebug and slowdebug
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-debug-level=release"
+  addConfigureArg "--with-debug-level=" "release"
 }
 
 configureCommandParameters()
@@ -155,6 +231,10 @@ configureCommandParameters()
     configuringBootJDKConfigureParameter
     buildingTheRestOfTheConfigParameters
   fi
+
+  #Now we add any configure arguments the user has specified on the command line.
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} ${USER_SUPPLIED_CONFIGURE_ARGS}"
+
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
@@ -167,7 +247,12 @@ stepIntoTheWorkingDirectory()
 
 runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
 {
+  echo "Configuring command and using the pre-built config params..."
+
   cd "$OPENJDK_DIR" || exit
+
+  echo "Currently at '${PWD}'"
+
   CONFIGURED_OPENJDK_ALREADY=$(find . -name "config.status")
 
   if [[ ! -z "$CONFIGURED_OPENJDK_ALREADY" ]] ; then
@@ -206,14 +291,19 @@ buildOpenJDK()
     exit 0
   fi
 
-  FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM}"
-  echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
-  exitCode=$(${FULL_MAKE_COMMAND})
+  # If it's Java 9+ then we also make test-image to build the native test libraries
+  JDK_PREFIX="jdk"
+  JDK_VERSION_NUMBER="${OPENJDK_CORE_VERSION#$JDK_PREFIX}"
+  if [ "$JDK_VERSION_NUMBER" -gt 8 ]; then
+    MAKE_TEST_IMAGE=" test-image" # the added white space is deliberate as it's the last arg
+  fi
 
-  # shellcheck disable=SC2181
-  if [ "${exitCode}" -ne 0 ]; then
+  FULL_MAKE_COMMAND="${MAKE_COMMAND_NAME} ${MAKE_ARGS_FOR_ANY_PLATFORM} ${MAKE_TEST_IMAGE}"
+  echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
+
+  if ! ${FULL_MAKE_COMMAND}; then
     echo "${error}Failed to make the JDK, exiting"
-    exit;
+    exit 1;
   else
     echo "${good}Built the JDK!"
   fi
@@ -225,12 +315,14 @@ printJavaVersionString()
   # shellcheck disable=SC2086
   PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${JDK_PATH})
   if [[ -d "$PRODUCT_HOME" ]]; then
-    echo "${good}'$PRODUCT_HOME' found${normal}"
-    # shellcheck disable=SC2154
-    echo "${info}"
-    "$PRODUCT_HOME"/bin/java -version || (echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}" && exit -1)
-    echo "${normal}"
-    echo ""
+     echo "${good}'$PRODUCT_HOME' found${normal}"
+     echo "${info}"
+     if ! "$PRODUCT_HOME"/bin/java -version; then
+       echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}"
+       exit -1
+     fi
+     echo "${normal}"
+     echo ""
   else
     echo "${error}'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location.${normal}"
     exit -1
@@ -241,13 +333,19 @@ removingUnnecessaryFiles()
 {
   echo "Removing unnecessary files now..."
 
-  OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  echo "Fetching the first tag from the OpenJDK git repo..."
+  if [ -z "$OPENJDK_REPO_TAG" ]; then
+    OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  fi
   if [ "$USE_DOCKER" != "true" ] ; then
     rm -rf cacerts_area
   fi
 
+  cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
+
   cd build/*/images || return
 
+  echo "Currently at '${PWD}'"
 
   echo "moving ${JDK_PATH} to ${OPENJDK_REPO_TAG}"
   rm -rf "${OPENJDK_REPO_TAG}" || true
@@ -258,6 +356,49 @@ removingUnnecessaryFiles()
   rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest || true
   rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet || true
   find . -name "*.diz" -type f -delete || true
+
+  echo "Finished removing unnecessary files from ${OPENJDK_REPO_TAG}"
+}
+
+makeACopyOfLibFreeFontForMacOSX() {
+    IMAGE_DIRECTORY=$1
+    PERFORM_COPYING=$2
+
+    if [[ "$OS_KERNEL_NAME" == "darwin" ]]; then
+        echo "PERFORM_COPYING=${PERFORM_COPYING}"
+        if [ "${PERFORM_COPYING}" == "false" ]; then
+            echo "${info} Skipping copying of the free font library to ${IMAGE_DIRECTORY}, does not apply for this version of the JDK. ${normal}"
+            return
+        fi
+
+       echo "${info} Performing copying of the free font library to ${IMAGE_DIRECTORY}, applicable for this version of the JDK. ${normal}"
+        SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
+        if [ ! -f "${SOURCE_LIB_NAME}" ]; then
+            echo "${error}[Error] ${SOURCE_LIB_NAME} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process...${normal}"
+            exit -1
+        fi
+        TARGET_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.6.dylib"
+
+        INVOKED_BY_FONT_MANAGER="${IMAGE_DIRECTORY}/lib/libfontmanager.dylib"
+
+        echo "Currently at '${PWD}'"
+        echo "Copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
+        echo " *** Workaround to fix the MacOSX issue where invocation to ${INVOKED_BY_FONT_MANAGER} fails to find ${TARGET_LIB_NAME} ***"
+
+        set -x
+        cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
+        if [ -f "${INVOKED_BY_FONT_MANAGER}" ]; then
+            otool -L "${INVOKED_BY_FONT_MANAGER}"
+        else
+            # shellcheck disable=SC2154
+            echo "${warning}[Warning] ${INVOKED_BY_FONT_MANAGER} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, this may cause runtime issues, please beware...${normal}"
+        fi
+
+        otool -L "${TARGET_LIB_NAME}"
+        set +x
+
+        echo "Finished copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
+    fi
 }
 
 signRelease()
@@ -276,7 +417,7 @@ signRelease()
       ;;
       "darwin"*)
         echo "Signing OSX release"
-        # Sign all executables
+        # Sign all files with the executable permission bit set.
         FILES=$(find "${OPENJDK_REPO_TAG}" -perm +111 -type f || find "${OPENJDK_REPO_TAG}" -perm /111 -type f)
         echo "$FILES" | while read -r f; do codesign -s "$CERTIFICATE" "$f"; done
       ;;
@@ -291,7 +432,9 @@ createOpenJDKTarArchive()
 {
   echo "Archiving the build OpenJDK image..."
 
-  OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  if [ -z "$OPENJDK_REPO_TAG" ]; then
+    OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+  fi
   echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
 
   if [ "$USE_DOCKER" == "true" ] ; then
@@ -335,6 +478,8 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
 buildOpenJDK
 printJavaVersionString
 removingUnnecessaryFiles
+makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG}"
+makeACopyOfLibFreeFontForMacOSX "${JRE_PATH}" "${COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG}"
 signRelease
 createOpenJDKTarArchive
 showCompletionMessage

@@ -11,50 +11,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:16.04
+FROM openjdk_container
 
 MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools
 RUN apt-get update \
-  && apt-get install -qq -y --no-install-recommends \
-    cpio \
-    make \
-    gcc \
-    g++ \
-    file \
-    libx11-dev \
-    libxext-dev \
-    libxrender-dev \
-    libxtst-dev \
-    libxt-dev \
-    libelf-dev \
-    libcups2-dev \
-    libfreetype6-dev \
-    libasound2-dev \
-    openjdk-8-jdk \
-    ccache \
-    zip \
-    wget \
-    git \
-    unzip \
-    realpath \
-&& rm -rf /var/lib/apt/lists/*
+    && apt-get install -qq -y --no-install-recommends \
+       autoconf \
+       ccache \
+       cpio \
+       file \
+       g++-4.8 \
+       gcc-4.8 \
+       libdwarf-dev \
+       libelf-dev \
+       libfontconfig \
+       libfreetype6-dev \
+       libnuma-dev \
+       pkg-config \
+       ssh \
+    && rm -rf /var/lib/apt/lists/*
 
-# Pick up build instructions
-RUN mkdir -p /openjdk/target
-
-ADD sbin /openjdk/sbin
-
-WORKDIR /openjdk/build/
-
-ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.8.0-openjdk-amd64
-
-# Default actions
-ENTRYPOINT ["/openjdk/sbin/build.sh"]
-
-CMD ["images"]
-
+# Make sure build uses 4.8
+RUN rm /usr/bin/gcc \
+    && rm /usr/bin/g++ \
+    && rm /usr/bin/c++ \
+    && ln -s /usr/bin/gcc-4.8 /usr/bin/gcc \
+    && ln -s /usr/bin/g++-4.8 /usr/bin/g++ \
+    && ln -s /usr/bin/g++-4.8 /usr/bin/c++
 
 ARG OPENJDK_CORE_VERSION
 ENV OPENJDK_CORE_VERSION=$OPENJDK_CORE_VERSION

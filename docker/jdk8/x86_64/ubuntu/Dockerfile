@@ -14,7 +14,7 @@
 
 FROM ubuntu:14.04
 
-MAINTAINER Tim Ellison <tim_ellison@uk.ibm.com>
+MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools
 RUN apt-get update \
@@ -54,5 +54,7 @@ ENTRYPOINT ["/openjdk/sbin/build.sh"]
 
 CMD ["images"]
 
-ARG OPENJDK_VERSION
-ENV OPENJDK_VERSION=$OPENJDK_VERSION
+ARG OPENJDK_CORE_VERSION
+ENV OPENJDK_CORE_VERSION=$OPENJDK_CORE_VERSION
+ENV JDK_PATH=j2sdk-image
+ENV JRE_PATH=j2re-image

@@ -29,7 +29,13 @@ OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
 export OS_MACHINE_NAME=""
 OS_MACHINE_NAME=$(uname -m)
 
-export OPENJDK_VERSION=""
+# The full forest name, e.g. jdk8, jdk8u, jdk9, jdk9u, etc.
+export OPENJDK_FOREST_NAME=""
+
+# The abridged, core version name, e.g. jdk8, jdk9, etc. No "u"s.
+export OPENJDK_CORE_VERSION=""
+
+export BUILD_VARIANT=""
 export REPOSITORY=""
 
 counter=0
@@ -39,34 +45,55 @@ for i in "$@"; do
     "--version" | "-v")
       let counter++
       string="\$$counter"
-      OPENJDK_VERSION=$(echo "$@" | awk "{print $string}")
+      OPENJDK_FOREST_NAME=$(echo "$@" | awk "{print $string}")
+      export OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME}
+      if [[ $OPENJDK_FOREST_NAME == *u ]]; then
+        export OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME%?}
+      fi
+      # Switch it back to stop it being out of sync with i
+      let counter--
+      ;;
+    "--variant" | "-bv")
+      let counter++
+      string="\$$counter"
+      BUILD_VARIANT=$(echo "$@" | awk "{print $string}")
+      # Switch it back to stop it being out of sync with i
+      let counter--
       ;;
   esac
 done
 
-if [ "$OPENJDK_VERSION" == "jdk9" ]; then
+export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG="false"
+export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG="false"
+if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ] || [ "$OPENJDK_CORE_VERSION" == "amber" ]; then
   export JDK_PATH="jdk"
+  export JRE_PATH="jre"
+  if [ "$OPENJDK_CORE_VERSION" == "jdk9" ]; then
+      export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG="true"
+      export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG="true"
+  fi
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"}
-elif [ "$OPENJDK_VERSION" == "jdk8u" ]; then
+elif [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
+  export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG="false"
+  export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG="true"
   export JDK_PATH="j2sdk-image"
+  export JRE_PATH="j2re-image"
 else
-  echo "Please specify a version with --version or -v , either jdk9 or jdk8u"
+  echo "Please specify a version with --version or -v , either jdk9, jdk10 or jdk8, with or without a \'u\' suffix."
   man ./makejdk-any-platform.1
   exit 1
 fi
 
-REPOSITORY="${REPOSITORY:-adoptopenjdk/openjdk-$OPENJDK_VERSION}";
+REPOSITORY="${REPOSITORY:-adoptopenjdk/openjdk-$OPENJDK_FOREST_NAME}";
 REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')";
 
 case "$OS_MACHINE_NAME" in
 "s390x")
-  case "$OPENJDK_VERSION" in
-     "jdk9")
-     export JVM_VARIANT=${JVM_VARIANT:-server}
-     ;;
-     "jdk8u")
-     export JVM_VARIANT=${JVM_VARIANT:-zero} ;;
-  esac
+  if [ "$OPENJDK_CORE_VERSION" == "jdk8" ] && [ "$BUILD_VARIANT" != "openj9" ]; then
+    export JVM_VARIANT=${JVM_VARIANT:-zero}
+  else
+    export JVM_VARIANT=${JVM_VARIANT:-server}
+  fi
 
   export BUILD_FULL_NAME=${BUILD_FULL_NAME:-linux-s390x-normal-${JVM_VARIANT}-release}
   S390X_MAKE_ARGS="CONF=${BUILD_FULL_NAME} DEBUG_BINARIES=true images"
@@ -93,6 +120,9 @@ esac
 
 case "$OS_KERNEL_NAME" in
 "aix")
+  export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
+;;
+"SunOS")
   export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
 ;;
 

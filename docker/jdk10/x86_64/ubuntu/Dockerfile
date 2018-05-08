@@ -18,6 +18,12 @@ MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 # Install required OS tools
 RUN apt-get update \
   && apt-get install -qq -y --no-install-recommends \
+    software-properties-common \
+    python-software-properties \
+  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \
+  && add-apt-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \
+  && apt-get update \
+  && apt-get install -qq -y --no-install-recommends \
     cpio \
     make \
     gcc \
@@ -31,8 +37,9 @@ RUN apt-get update \
     libelf-dev \
     libcups2-dev \
     libfreetype6-dev \
+    libfontconfig1-dev \
     libasound2-dev \
-    openjdk-8-jdk \
+    zulu-9 \
     ccache \
     zip \
     wget \
@@ -48,7 +55,7 @@ ADD sbin /openjdk/sbin
 
 WORKDIR /openjdk/build/
 
-ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.8.0-openjdk-amd64
+ENV JDK_BOOT_DIR=/usr/lib/jvm/zulu-9-amd64/
 
 # Default actions
 ENTRYPOINT ["/openjdk/sbin/build.sh"]
@@ -56,6 +63,6 @@ ENTRYPOINT ["/openjdk/sbin/build.sh"]
 CMD ["images"]
 
 
-ARG OPENJDK_CORE_VERSION
-ENV OPENJDK_CORE_VERSION=$OPENJDK_CORE_VERSION
+ARG OPENJDK_VERSION
+ENV OPENJDK_VERSION=$OPENJDK_VERSION
 ENV JDK_PATH=jdk

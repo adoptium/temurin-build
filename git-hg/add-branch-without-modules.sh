@@ -25,6 +25,7 @@ echo "Enter hg"
 cd hg || exit 1
 
 bpath=$1
+branch=$2
 
 echo "Create $bpath"
 
@@ -33,12 +34,11 @@ mkdir -p "$bpath" || exit 1
 echo "Clone $bpath (root)"
 git hg clone "http://hg.openjdk.java.net/$bpath" "$bpath/root" || exit 1
 
-# shellcheck disable=SC2154
-for module in "${modules[@]}"
-do
-    echo "Clone $bpath -> $module"
-    git hg clone "http://hg.openjdk.java.net/$bpath/$module" "$bpath/$module" || exit 1
-done
+if [ "$branch" != "" ]; then
+  cd "$bpath/root" || exit 1
+  git-hg checkout "$branch" || exit 1
+  cd - || exit 1
+fi
 
 echo "Exit hg"
 echo "Enter combined"
@@ -62,19 +62,6 @@ git fetch "imports/$bpath/root" || exit 1
 echo "Merge (root)"
 
 git merge "imports/$bpath/root/master" -m "Initial merge of (root)" || exit 1
-
-# shellcheck disable=SC2154
-for module in "${modules[@]}"
-do
-    echo "Add remote for '$module'"
-    git remote add "imports/$bpath/$module" "../hg/$bpath/$module" || exit 1
-
-    echo "Fetch '$module'"
-    git fetch "imports/$bpath/$module" || exit 1
-
-    echo "Merge '$module'"
-    git subtree add --prefix="$module" "imports/$bpath/$module/master" -m "Initial merge of '$module'" || exit 1
-done
 
 echo "Push"
 

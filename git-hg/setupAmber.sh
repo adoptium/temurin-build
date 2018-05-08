@@ -12,20 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-# For terminal colors
-esc=$(echo -en "\033")
-error="${esc}[0;31m"  #red
-normal=$(echo -en "${esc}[m\017")
-
-
-exit_script() {
-    if [[ -z ${KEEP} ]] ; then
-      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
-    fi
-    echo "${error}Process exited${normal}"
-    trap - SIGINT SIGTERM # clear the trap
-    kill -- -$$ # Sends SIGTERM to child/sub processes
-}
-
-trap exit_script SIGINT SIGTERM 
+set -euo pipefail
+rm -rf "$WORKSPACE/combined" "$WORKSPACE/hg"
+mkdir "$WORKSPACE/combined"
+mkdir "$WORKSPACE/hg"
+cd "$WORKSPACE/combined" || exit 1
+git init
+git checkout -b root-commit || exit 1
+git remote add github git@github.com:AdoptOpenJDK/openjdk-amber.git
+cd - || exit 1
+bash add-branch-without-modules.sh amber/amber raw-string-literal

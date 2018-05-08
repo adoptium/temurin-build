@@ -18,6 +18,7 @@
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
+FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
 
 determineBuildProperties() {
     JVM_VARIANT=${JVM_VARIANT:-server}
@@ -49,6 +50,24 @@ checkingAndDownloadingAlsa()
   fi
 }
 
+# Freemarker for OpenJ9
+checkingAndDownloadingFreemarker()
+{
+  echo "Checking for FREEMARKER"
+
+  FOUND_FREEMARKER=$(find "${WORKING_DIR}" -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
+
+  if [[ ! -z "$FOUND_FREEMARKER" ]] ; then
+    echo "Skipping FREEMARKER download"
+  else
+    # wget --no-check-certificate "https://sourceforge.net/projects/freemarker/files/freemarker/${FREEMARKER_LIB_VERSION}/freemarker-${FREEMARKER_LIB_VERSION}.tar.gz/download" -O "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+    # Temp fix as sourceforge is broken
+    wget --no-check-certificate https://ci.adoptopenjdk.net/userContent/freemarker-2.3.8.tar.gz
+    tar -xzf "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+    rm "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+  fi
+}
+
 checkingAndDownloadingFreeType()
 {
   echo "Checking for freetype $WORKING_DIR $OPENJDK_REPO_NAME "
@@ -75,13 +94,34 @@ checkingAndDownloadingFreeType()
 
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if [ $(bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install) -ne 0 ]; then
+    if ! (bash ./configure --prefix="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype "${FREETYPE_FONT_BUILD_TYPE_PARAM}" && $MAKE all && $MAKE install); then
       # shellcheck disable=SC2154
       echo "${error}Failed to configure and build libfreetype, exiting"
       exit;
     else
       # shellcheck disable=SC2154
       echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
+
+     if [[ ${OS_KERNEL_NAME} == "darwin" ]] ; then
+        TARGET_DYNAMIC_LIB_DIR="${WORKING_DIR}"/"${OPENJDK_REPO_NAME}"/installedfreetype/lib/
+        TARGET_DYNAMIC_LIB="${TARGET_DYNAMIC_LIB_DIR}"/libfreetype.6.dylib
+        echo ""
+        echo "Listing the contents of ${TARGET_DYNAMIC_LIB_DIR} to see if the dynamic library 'libfreetype.6.dylib' has been created..."
+        ls "${TARGET_DYNAMIC_LIB_DIR}"
+
+        echo ""
+        echo "Releasing the runpath dependency of the dynamic library ${TARGET_DYNAMIC_LIB}"
+        set -x
+        install_name_tool -id @rpath/libfreetype.6.dylib "${TARGET_DYNAMIC_LIB}"
+        set +x
+
+        # shellcheck disable=SC2181
+        if [[ $? == 0 ]]; then
+          echo "Successfully released the runpath dependency of the dynamic library ${TARGET_DYNAMIC_LIB}"
+        else
+          echo "Failed to release the runpath dependency of the dynamic library ${TARGET_DYNAMIC_LIB}"
+        fi
+      fi
     fi
     # shellcheck disable=SC2154
     echo "${normal}"
@@ -99,8 +139,9 @@ checkingAndDownloadCaCerts()
 
   git clone https://github.com/AdoptOpenJDK/openjdk-build.git cacerts_area
   echo "cacerts should be here..."
+
   # shellcheck disable=SC2046
-  if [ $(file "${WORKING_DIR}/cacerts_area/security/cacerts") -ne 0 ]; then
+  if ! [ -r "${WORKING_DIR}/cacerts_area/security/cacerts" ]; then
     echo "Failed to retrieve the cacerts file, exiting..."
     exit;
   else
@@ -113,7 +154,7 @@ downloadingRequiredDependencies()
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
      echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa, Freetype, and CaCerts."
   else
-     echo "Downloading required dependencies...: Alsa, Freetype, and CaCerts."
+     echo "Downloading required dependencies...: Alsa, Freetype, Freemarker, and CaCerts."
      time (
         echo "Checking and download Alsa dependency"
         checkingAndDownloadingAlsa
@@ -132,6 +173,12 @@ downloadingRequiredDependencies()
        fi
      else
         echo "Skipping Freetype"
+     fi
+     if [[ "$BUILD_VARIANT" == "openj9" ]]; then
+        time (
+           echo "Checking and download Freemarker dependency"
+           checkingAndDownloadingFreemarker
+        )
      fi
      time (
         echo "Checking and download CaCerts dependency"

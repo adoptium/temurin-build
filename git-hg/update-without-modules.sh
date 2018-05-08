@@ -27,25 +27,15 @@ bpaths=${1:-$(ls -d -1 */*)}     # maintain backward compatibility
 
 for bpath in $bpaths
 do
-    bpathAsArray=(${bpath//\// })      # for e.g. jdk10/jdk10 or jdk/jdk, becomes:
-    hg_root_forest=${bpathAsArray[0]}  #          jdk10 or jdk
-    hg_repo=${bpathAsArray[1]}         #          jdk10 or jdk
+    bpathAsArray=(${bpath/\// })       # for e.g. jdk10/jdk10 or jdk/jdk or openjfx/jfx-dev/rt, becomes:
+    hg_root_forest=${bpathAsArray[0]}  #          jdk10 or jdk or openjfx
+    hg_repo=${bpathAsArray[1]}         #          jdk10 or jdk or jfx-dev/rt
 
     pushd "$hg_root_forest/$hg_repo/root"
     echo "Update $hg_root_forest/$hg_repo -> (root)"
     git hg fetch "http://hg.openjdk.java.net/$hg_root_forest/$hg_repo"
     git hg pull "http://hg.openjdk.java.net/$hg_root_forest/$hg_repo"
     popd
-
-    # shellcheck disable=SC2154
-    for module in "${modules[@]}"
-    do
-        pushd "$hg_root_forest/$hg_repo/$module"
-        echo "Update $hg_root_forest/$hg_repo -> $module"
-        git hg fetch "http://hg.openjdk.java.net/$hg_root_forest/$hg_repo/$module"
-        git hg pull "http://hg.openjdk.java.net/$hg_root_forest/$hg_repo/$module"
-        popd
-    done
 
     echo "Exit hg"
     echo "Enter combined"
@@ -64,19 +54,9 @@ do
 
     git merge "imports/$hg_root_forest/$hg_repo/root/master" -m "Merge from (root)" --no-ff || exit 1
 
-    # shellcheck disable=SC2154
-    for module in "${modules[@]}"
-    do
-        echo "Fetch '$module'"
-        git fetch "imports/$hg_root_forest/$hg_repo/$module" || exit 1
-
-        echo "Merge '$module'"
-        git subtree merge --prefix="$module" "imports/$hg_root_forest/$hg_repo/$module/master" -m "Merge from '$module'" || exit 1
-    done
-
     echo "Push"
 
-    git push github master --tags || exit 1
+    git push github master --tags
 
     cd ../hg || exit 1
 done
