@@ -143,3 +143,11 @@ For reference, the default variant is hotspot and does not need to be specified.
 .TP
 .BR \-V ", " \-\-jvm-variant " " \fI<jvm_variant>\fR
 specify the JVM variant (server or client), defaults to server.
+
+.SH EXAMPLE USAGE
+
+Some common example usages:
+
+"./makejdk-any-platform --docker jdk8u"
+
+"./makejdk-any-platform -s /home/openjdk10/src -d /home/openjdk/target -T MyOpenJDK10.tar.gz jdk10"

@@ -67,6 +67,9 @@ parseConfigurationArguments() {
         "--skip-freetype" | "-F" )
         BUILD_CONFIG[FREETYPE]=false;;
 
+        "--help" | "-h" )
+        man ./makejdk-any-platform.1;;
+
         "--ignore-container" | "-i" )
         BUILD_CONFIG[REUSE_CONTAINER]=false;;
 
