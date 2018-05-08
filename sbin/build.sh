@@ -217,7 +217,7 @@ stepIntoTheWorkingDirectory() {
   echo "Should have the source, I'm at $PWD"
 }
 
-#Run 'configure'
+# Run 'configure'
 runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
 {
   echo "Configuring command and using the pre-built config params..."

@@ -27,14 +27,10 @@ set -eux
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-<<<<<<< HEAD
-
-=======
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
 
->>>>>>> 71d799c9ef97bd81067106ea214972bd975a519c
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for SRP
 checkoutAndCloneOpenJDKGitRepo()
@@ -121,18 +117,6 @@ createWorkspace()
    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 }
 
-<<<<<<< HEAD
-# Use the temp workspace instead
-function moveTmpToWorkspaceLocation {
-  if [ ! -z "${TMP_WORKSPACE}" ]; then
-    rm -rf "${ORIGINAL_WORKSPACE}"
-    mv "${TMP_WORKSPACE}/workspace" "${ORIGINAL_WORKSPACE}"
-  fi
-}
-
-# Use a temporary worspace instead (possibly due to restrictions on a host)
-relocateToTmpIfNeeded()
-=======
 # ALSA first for sound
 checkingAndDownloadingAlsa()
 {
@@ -168,7 +152,6 @@ checkingAndDownloadingAlsa()
 
 # Freemarker for OpenJ9
 checkingAndDownloadingFreemarker()
->>>>>>> 71d799c9ef97bd81067106ea214972bd975a519c
 {
   echo "Checking for FREEMARKER"
 
