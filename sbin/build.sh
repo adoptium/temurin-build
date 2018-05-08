@@ -21,9 +21,8 @@ set -eux
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 
-source "$SCRIPT_DIR/common-functions.sh"
 source "$SCRIPT_DIR/prepareWorkspace.sh"
-source "$SCRIPT_DIR/config_init.sh"
+source "$SCRIPT_DIR/common/config_init.sh"
 
 export OPENJDK_REPO_TAG
 export OPENJDK_DIR
@@ -70,7 +69,7 @@ sourceFileWithColourCodes()
   # shellcheck disable=SC1091
   if [[ "${BUILD_CONFIG[COLOUR]}" == "true" ]] ; then
     # shellcheck disable=SC1091
-    source "$SCRIPT_DIR/colour-codes.sh"
+    source "$SCRIPT_DIR/common/colour-codes.sh"
   fi
 }
 
@@ -105,7 +104,7 @@ getOpenJDKUpdateAndBuildVersion()
     echo "${git_colour}Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}${normal}"
     echo "${info}NOTE: This can take quite some time!  Please be patient"
     git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
-    OPENJDK_REPO_TAG=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)} # getFirstTagFromOpenJDKGitRepo resides in sbin/common-functions.sh
+    OPENJDK_REPO_TAG=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
     if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
      echo "${error}Unable to detect git tag, exiting...${normal}"
      exit 1
@@ -380,6 +379,14 @@ signRelease()
       echo "Skiping code signing as it's only supported on Windows"
     fi
   fi
+}
+
+getFirstTagFromOpenJDKGitRepo()
+{
+    git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    justOneFromTheRevList=$(git rev-list --tags --max-count=1)
+    tagNameFromRepo=$(git describe --tags "$justOneFromTheRevList")
+    echo "$tagNameFromRepo"
 }
 
 createOpenJDKTarArchive()

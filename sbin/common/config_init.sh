@@ -1,0 +1,335 @@
+#!/usr/bin/env bash
+
+################################################################################
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+################################################################################
+
+################################################################################
+#
+# This shell script deals with writing the AdoptOpenJDK build configuration to
+# the file system so it can be picked up by further build steps, Docker
+# containers etc
+#
+# We are deliberately writing to shell because this needs to work on some truly
+# esoteric platforms to fulfil the Java Write Once Run Anywhere (WORA) promise
+#
+################################################################################
+
+
+# We can't use Bash 4.x+ associative arrays as as Apple won't support bash 4.0
+# (because of GPL3), we therefore have to name the indexes of the CONFIG_PARAMS
+# map. This is why we can't have nice things.
+CONFIG_PARAMS=(
+OS_KERNEL_NAME
+OS_ARCHITECTURE
+OPENJDK_FOREST_NAME
+OPENJDK_CORE_VERSION
+BUILD_VARIANT
+REPOSITORY
+CONFIGURE_ARGS_FOR_ANY_PLATFORM
+JDK_PATH
+JRE_PATH
+COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
+COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
+FREETYPE_FONT_BUILD_TYPE_PARAM
+FREETYPE_FONT_VERSION
+JVM_VARIANT
+BUILD_FULL_NAME
+MAKE_ARGS_FOR_ANY_PLATFORM
+MAKE_COMMAND_NAME
+OPENJDK_SOURCE_DIR
+SHALLOW_CLONE_OPTION
+DOCKER_SOURCE_VOLUME_NAME
+CONTAINER_NAME
+TMP_CONTAINER_NAME
+CLEAN_DOCKER_BUILD
+USE_DOCKER
+DOCKER_FILE_PATH
+KEEP_CONTAINER
+REUSE_CONTAINER
+WORKING_DIR
+USE_SSH
+TARGET_DIR
+BRANCH
+TAG
+OPENJDK_UPDATE_VERSION
+OPENJDK_BUILD_NUMBER
+USER_SUPPLIED_CONFIGURE_ARGS
+DOCKER
+COLOUR
+WORKSPACE_DIR
+FREETYPE
+FREETYPE_DIRECTORY
+SIGN
+JDK_BOOT_DIR
+NUM_PROCESSORS
+TARGET_FILE_NAME
+)
+
+
+# Directory structure of build environment:
+###########################################################################################################################################
+#  Dir                                                 Purpose                              Docker Default            Native default
+###########################################################################################################################################
+#  <WORKSPACE_DIR>                                     Root                                 /openjdk/                   $(pwd)/workspace/
+#  <WORKSPACE_DIR>/config                              Configuration                        /openjdk/config             $(pwd)/workspace/config
+#  <WORKSPACE_DIR>/<WORKING_DIR>                       Build area                           /openjdk/build              $(pwd)/workspace/build/
+#  <WORKSPACE_DIR>/<WORKING_DIR>/<OPENJDK_SOURCE_DIR>  Source code                          /openjdk/build/src          $(pwd)/workspace/build/src
+#  <WORKSPACE_DIR>/target                              Destination of built artifacts       /openjdk/target             $(pwd)/workspace/target
+
+
+
+# Helper code to perform index lookups by name
+declare -a -x PARAM_LOOKUP
+for index in $(seq 0 $(expr ${#CONFIG_PARAMS[@]} - 1))
+do
+    paramName=${CONFIG_PARAMS[$index]};
+    eval declare -r -x "$paramName=$index"
+    PARAM_LOOKUP[$index]=$paramName
+done
+
+function displayParams() {
+    set +x
+    echo "# ============================"
+    echo "# OPENJDK BUILD CONFIGURATION:"
+    echo "# ============================"
+    for K in "${!BUILD_CONFIG[@]}";
+    do
+      echo "BUILD_CONFIG[${PARAM_LOOKUP[$K]}]=\"${BUILD_CONFIG[$K]}\""
+    done | sort
+    set -x
+}
+
+function writeConfigToFile() {
+  if [ ! -d "workspace/config" ]
+  then
+    mkdir -p "workspace/config"
+  fi
+  displayParams > ./workspace/config/built_config.cfg
+}
+
+function loadConfigFromFile() {
+  if [ -f "$SCRIPT_DIR/../config/built_config.cfg" ]
+  then
+    source "$SCRIPT_DIR/../config/built_config.cfg"
+  elif [ -f "config/built_config.cfg" ]
+  then
+    source config/built_config.cfg
+  elif [ -f "workspace/config/built_config.cfg" ]
+  then
+    source workspace/config/built_config.cfg
+  elif [ -f "built_config.cfg" ]
+  then
+    source built_config.cfg
+  else
+    echo "Failed to find configuration"
+    exit
+  fi
+}
+
+parseConfigurationArguments() {
+    # TODO: can change all this to config file
+    while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
+      opt="$1";
+      shift;
+      case "$opt" in
+        "--" ) break 2;;
+
+        "--build-number"  | "-b" )
+        BUILD_CONFIG[OPENJDK_BUILD_NUMBER]="$1"; shift;;
+
+        "--branch" | "-B" )
+        BUILD_CONFIG[BRANCH]="$1"; shift;;
+
+        "--configure-args"  | "-C" )
+        BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
+
+        "--clean-docker-build" | "-c" )
+        BUILD_CONFIG[CLEAN_DOCKER_BUILD]=true;;
+
+        "--destination" | "-d" )
+        BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
+
+        "--docker" | "-D" )
+        BUILD_CONFIG[USE_DOCKER]="true";;
+
+        "--disable-shallow-git-clone" )
+        BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
+
+        "--freetype-dir" | "-f" )
+        BUILD_CONFIG[FREETYPE_DIRECTORY]="$1"; shift;;
+
+        "--skip-freetype" | "-F" )
+        BUILD_CONFIG[FREETYPE]=false;;
+
+        "--ignore-container" | "-i" )
+        BUILD_CONFIG[REUSE_CONTAINER]=false;;
+
+        "--jdk-boot-dir" | "-J" )
+        BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
+
+        "--keep" | "-k" )
+        BUILD_CONFIG[KEEP_CONTAINER]=true;;
+
+        "--no-colour" | "-n" )
+        BUILD_CONFIG[COLOUR]=false;;
+
+        "--processors" | "-p" )
+        BUILD_CONFIG[NUM_PROCESSORS]="$1"; shift;;
+
+        "--repository" | "-r" )
+        BUILD_CONFIG[REPOSITORY]="$1"; shift;;
+
+        "--repository-tag"  | "-R" )
+        OPENJDK_REPO_TAG="$1"; shift;;
+
+        "--source" | "-s" )
+        BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
+
+        "--ssh" | "-S" )
+        BUILD_CONFIG[USE_SSH]=true;;
+
+        "--sign" )
+        BUILD_CONFIG[SIGN]=true; BUILD_CONFIG[CERTIFICATE]="$1"; shift;;
+
+        "--sudo" )
+        BUILD_CONFIG[DOCKER]="sudo docker";;
+
+        "--tag" | "-t" )
+        BUILD_CONFIG[TAG]="$1"; BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
+
+        "--target-file-name"  | "-T" )
+        BUILD_CONFIG[TARGET_FILE_NAME]="$1"; shift;;
+
+        "--update-version"  | "-u" )
+        BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
+
+        "--build-variant"  | "-v" )
+        BUILD_CONFIG[BUILD_VARIANT]="$1"; shift;;
+
+        "--jvm-variant"  | "-V" )
+        BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
+
+        *) echo >&2 "${error}Invalid build.sh option: ${opt}${normal}"; exit 1;;
+      esac
+    done
+}
+
+
+configDefaults() {
+  # The OS kernel name, e.g. 'darwin' for Mac OS X
+  BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
+
+  # The O/S architecture, e.g. x86_64 for a modern intel / Mac OS X
+  BUILD_CONFIG[OS_ARCHITECTURE]=$(uname -m)
+
+  # The full forest name, e.g. jdk8, jdk8u, jdk9, jdk9u, etc.
+  BUILD_CONFIG[OPENJDK_FOREST_NAME]=""
+
+  # The abridged openjdk core version name, e.g. jdk8, jdk9, etc.
+  BUILD_CONFIG[OPENJDK_CORE_VERSION]=""
+
+  # The build variant, e.g. openj9
+  BUILD_CONFIG[BUILD_VARIANT]=""
+
+  # The OpenJDK source code repository to build from, e.g. an AdoptOpenJDK repo
+  BUILD_CONFIG[REPOSITORY]=""
+
+  BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]=""
+  BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]=""
+  BUILD_CONFIG[FREETYPE]=true
+  BUILD_CONFIG[FREETYPE_DIRECTORY]=""
+  BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.4.0"
+  BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
+
+  BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
+  BUILD_CONFIG[SIGN]="false"
+  BUILD_CONFIG[JDK_BOOT_DIR]=""
+
+  BUILD_CONFIG[NUM_PROCESSORS]="1"
+  BUILD_CONFIG[TARGET_FILE_NAME]="OpenJDK"
+
+  # Dir where we clone the OpenJDK source code for building, defaults to 'src'
+  BUILD_CONFIG[OPENJDK_SOURCE_DIR]="src"
+
+  # By default only git clone the HEAD commit
+  BUILD_CONFIG[SHALLOW_CLONE_OPTION]=${BUILD_CONFIG[SHALLOW_CLONE_OPTION]:-"--depth=1"}
+
+  # Set Docker Container names and defaults
+  BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]=${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]:-"openjdk-source-volume"}
+
+
+  BUILD_CONFIG[CONTAINER_NAME]=${BUILD_CONFIG[CONTAINER_NAME]:-openjdk_container}
+
+  BUILD_CONFIG[TMP_CONTAINER_NAME]=${BUILD_CONFIG[TMP_CONTAINER_NAME]:-openjdk-copy-src}
+  BUILD_CONFIG[CLEAN_DOCKER_BUILD]=${BUILD_CONFIG[CLEAN_DOCKER_BUILD]:-false}
+
+  # Use Docker to build (defaults to false)
+  BUILD_CONFIG[USE_DOCKER]=${BUILD_CONFIG[USE_DOCKER]:-false}
+
+  # Location of DockerFile and where scripts get copied to inside the container
+  BUILD_CONFIG[DOCKER_FILE_PATH]=${BUILD_CONFIG[DOCKER_FILE_PATH]:-""}
+
+  # Whether we keep the Docker container after we build it
+  # TODO Please note that the persistent volume is managed separately
+  BUILD_CONFIG[KEEP_CONTAINER]=${BUILD_CONFIG[KEEP_CONTAINER]:-false}
+
+  # Whether we use an existing container
+  # TODO Please note that the persistent volume is managed separately
+  BUILD_CONFIG[REUSE_CONTAINER]=${BUILD_CONFIG[REUSE_CONTAINER]:-true}
+
+  # The current working directory
+  BUILD_CONFIG[WORKING_DIR]=${BUILD_CONFIG[WORKING_DIR]:-"./build/"}
+
+  # Root of the workspace
+  BUILD_CONFIG[WORKSPACE_DIR]=${BUILD_CONFIG[WORKSPACE_DIR]:-""}
+
+
+  # Use SSH for the GitHub connection (defaults to false)
+  BUILD_CONFIG[USE_SSH]=${BUILD_CONFIG[USE_SSH]:-false}
+
+  # Director where OpenJDK binary gets built to
+  BUILD_CONFIG[TARGET_DIR]=${BUILD_CONFIG[TARGET_DIR]:-"target/"}
+
+  # Which repo branch to build, e.g. dev
+  BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-"dev"}
+
+  # Which repo tag to build, e.g. jdk8u172-b03
+  BUILD_CONFIG[TAG]=${BUILD_CONFIG[TAG]:-""}
+
+  # Update version e.g. 172
+  BUILD_CONFIG[OPENJDK_UPDATE_VERSION]=${BUILD_CONFIG[OPENJDK_UPDATE_VERSION]:-""}
+
+  # build number e.g. b03
+  BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]:-""}
+
+  # Build variant, e.g. openj9, defaults to "" which means hotspot
+  BUILD_CONFIG[BUILD_VARIANT]=${BUILD_CONFIG[BUILD_VARIANT]:-""}
+
+  # JVM variant, e.g. client or server, defaults to server
+  BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-""}
+
+  # Any extra args provided by the user
+  BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""}
+
+  BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-"docker"}
+
+  # Print to console using colour codes
+  BUILD_CONFIG[COLOUR]=${BUILD_CONFIG[COLOUR]:-"true"}
+}
+
+# Declare the map of build configuration that we're going to use
+declare -ax BUILD_CONFIG
+export BUILD_CONFIG
