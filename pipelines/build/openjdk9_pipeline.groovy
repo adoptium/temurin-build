@@ -11,7 +11,8 @@ if (osTarget != "all") {
             .findAll { it.key == osTarget }
 }
 
-doBuild("jdk8u", buildConfigurations)
+doBuild("jdk9", buildConfigurations)
+
 
 
 
