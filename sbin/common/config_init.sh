@@ -192,9 +192,6 @@ function parseConfigurationArguments() {
         "--repository" | "-r" )
         BUILD_CONFIG[REPOSITORY]="$1"; shift;;
 
-        "--repository-tag"  | "-R" )
-        OPENJDK_REPO_TAG="$1"; shift;;
-
         "--source" | "-s" )
         BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
 

@@ -117,7 +117,8 @@ checkingAndDownloadingAlsa()
 
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/" || exit
 
-  if [[ ! -z "$FOUND_ALSA" ]] ; then
+  if [[ ! -z "$FOUND_ALSA" ]]
+  then
     echo "Skipping ALSA download"
   else
     wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
