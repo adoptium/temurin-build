@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-#
+################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,10 +12,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+################################################################################
+
+################################################################################
 #
+# This script prepares the workspace to build (Adopt) OpenJDK.
+# See the configureWorkspace function for details
+#
+################################################################################
 
-
-# set -x # TODO remove once we've finished debugging
+# TODO remove `x` once we've finished debugging
 set -eux
 
 source "$SCRIPT_DIR/common-functions.sh"
@@ -23,6 +29,7 @@ source "$SCRIPT_DIR/common-functions.sh"
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for SRP
 checkoutAndCloneOpenJDKGitRepo()
 {
@@ -66,6 +73,7 @@ checkoutAndCloneOpenJDKGitRepo()
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
 
+# Set the git clone arguments
 setGitCloneArguments() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   local git_remote_repo_address;
@@ -78,6 +86,7 @@ setGitCloneArguments() {
   GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} '-b' "${BUILD_CONFIG[BRANCH]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
 }
 
+# Clone the git repo
 cloneOpenJDKGitRepo()
 {
   setGitCloneArguments
@@ -97,13 +106,15 @@ cloneOpenJDKGitRepo()
   fi
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
+
+# Create the workspace
 createWorkspace()
 {
    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 }
 
-
+# Use the temp workspace instead
 function moveTmpToWorkspaceLocation {
   if [ ! -z "${TMP_WORKSPACE}" ]; then
     rm -rf "${ORIGINAL_WORKSPACE}"
@@ -111,6 +122,7 @@ function moveTmpToWorkspaceLocation {
   fi
 }
 
+# Use a temporary worspace instead (possibly due to restrictions on a host)
 relocateToTmpIfNeeded()
 {
    if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
