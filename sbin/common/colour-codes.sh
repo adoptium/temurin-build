@@ -21,19 +21,22 @@
 #
 ################################################################################
 
-# Escape code
-esc=$(echo -en "\033")
 
-# Set colors
-# shellcheck disable=SC2034
-error="${esc}[0;31m"
-# shellcheck disable=SC2034
-warning="${esc}[0;33m" # yellow
-# shellcheck disable=SC2034
-good="${esc}[0;32m"
-# shellcheck disable=SC2034
-info="${esc}[0;33m"
-# shellcheck disable=SC2034
-git_colour="${esc}[0;38m"
-# shellcheck disable=SC2034
-normal=$(echo -en "${esc}[m\017")
+if [[ "${BUILD_CONFIG[COLOUR]}" == "true" ]] ; then
+  # Escape code
+  esc=$(echo -en "\033")
+
+  # Set colors
+  # shellcheck disable=SC2034
+  error="${esc}[0;31m"
+  # shellcheck disable=SC2034
+  warning="${esc}[0;33m" # yellow
+  # shellcheck disable=SC2034
+  good="${esc}[0;32m"
+  # shellcheck disable=SC2034
+  info="${esc}[0;33m"
+  # shellcheck disable=SC2034
+  git_colour="${esc}[0;38m"
+  # shellcheck disable=SC2034
+  normal=$(echo -en "${esc}[m\017")
+fi

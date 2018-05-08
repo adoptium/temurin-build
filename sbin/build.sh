@@ -65,12 +65,7 @@ addConfigureArgIfValueIsNotEmpty()
 
 sourceFileWithColourCodes()
 {
-  # shellcheck disable=SC1090
-  # shellcheck disable=SC1091
-  if [[ "${BUILD_CONFIG[COLOUR]}" == "true" ]] ; then
-    # shellcheck disable=SC1091
-    source "$SCRIPT_DIR/common/colour-codes.sh"
-  fi
+  source "$SCRIPT_DIR/common/colour-codes.sh"
 }
 
 

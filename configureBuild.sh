@@ -40,10 +40,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 sourceFileWithColourCodes()
 {
-  if [[ "${BUILD_CONFIG[COLOUR]}" == "true" ]] ; then
-    # shellcheck disable=SC1091
-    source "$SCRIPT_DIR/sbin/common/colour-codes.sh"
-  fi
+  source "$SCRIPT_DIR/sbin/common/colour-codes.sh"
 }
 
 sourceSignalHandler()

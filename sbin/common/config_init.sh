@@ -139,7 +139,7 @@ function loadConfigFromFile() {
   fi
 }
 
-parseConfigurationArguments() {
+function parseConfigurationArguments() {
     # TODO: can change all this to config file
     while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
       opt="$1";
@@ -228,7 +228,7 @@ parseConfigurationArguments() {
 }
 
 
-configDefaults() {
+function configDefaults() {
   # The OS kernel name, e.g. 'darwin' for Mac OS X
   BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
 
