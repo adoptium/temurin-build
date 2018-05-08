@@ -28,96 +28,16 @@ set -eux # TODO remove once we've finished debugging
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Load the common functions
-## shellcheck source=sbin/common-functions.sh
-source "$SCRIPT_DIR/sbin/common-functions.sh"
-
-# Set defaults for most of the configuration for this build
-init_build_config() {
-  # Dir where we clone the OpenJDK source code for building, defaults to 'src'
-  BUILD_CONFIG[OPENJDK_SOURCE_DIR]=${BUILD_CONFIG[OPENJDK_SOURCE_DIR]:-src}
-
-  # Repo to pull the OpenJDK source from, defaults to AdoptOpenJDK/openjdk-jdk8u
-  BUILD_CONFIG[REPOSITORY]=${BUILD_CONFIG[REPOSITORY]:-"AdoptOpenJDK/openjdk-jdk8u"}
-
-  # By default only git clone the HEAD commit
-  BUILD_CONFIG[SHALLOW_CLONE_OPTION]="--depth=1"
-
-  # Set Docker Container names and defaults
-  BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]="openjdk-source-volume"
-  BUILD_CONFIG[CONTAINER_NAME]=openjdk_container
-  BUILD_CONFIG[TMP_CONTAINER_NAME]=openjdk-copy-src
-  BUILD_CONFIG[CLEAN_DOCKER_BUILD]=false
-
-  # Copy the results of the docker build (defaults to false)
-  BUILD_CONFIG[COPY_TO_HOST]=false
-
-  # Use Docker to build (defaults to false)
-  BUILD_CONFIG[USE_DOCKER]=false
-
-  # Location of DockerFile and where scripts get copied to inside the container
-  BUILD_CONFIG[DOCKER_FILE_PATH]=""
-
-  # Whether we keep the Docker container after we build it
-  # TODO Please note that the persistent volume is managed separately
-  BUILD_CONFIG[KEEP_CONTAINER]=false
-
-  # Whether we use an existing container
-  # TODO Please note that the persistent volume is managed separately
-  BUILD_CONFIG[REUSE_CONTAINER]=true
-
-  # The current working directory
-  BUILD_CONFIG[WORKING_DIR]=""
-
-  # Root of the workspace
-  BUILD_CONFIG[WORKSPACE_DIR]=""
-
-  # Use SSH for the GitHub connection (defaults to false)
-  BUILD_CONFIG[USE_SSH]=false
-
-  # Directory where OpenJDK binary gets built to
-  BUILD_CONFIG[TARGET_DIR]=""
-
-  # Which repo branch to build, e.g. dev
-  BUILD_CONFIG[BRANCH]=""
-
-  # Which repo tag to build, e.g. jdk8u172-b03
-  BUILD_CONFIG[TAG]=""
-
-  # Update version e.g. 172
-  BUILD_CONFIG[OPENJDK_UPDATE_VERSION]=""
-
-  # build number e.g. b03
-  BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=""
-
-  # Build variant, e.g. openj9, defaults to "" which means hotspot
-  BUILD_CONFIG[BUILD_VARIANT]=${BUILD_CONFIG[BUILD_VARIANT]:-""}
-
-  # JVM variant, e.g. client or server, defaults to server
-  BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-server}
-
-  # Any extra args provided by the user
-  BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=""
-
-  BUILD_CONFIG[DOCKER]="docker"
-
-  # Print to console using colour codes
-  BUILD_CONFIG[COLOUR]="true"
-}
-
 # Bring in the color coding for the terminal output
 sourceFileWithColourCodes()
 {
-  if [[ "${BUILD_CONFIG[COLOUR]}" == "true" ]] ; then
-    # shellcheck disable=SC1091
-    source ./sbin/colour-codes.sh
-  fi
+  source "$SCRIPT_DIR/sbin/common/colour-codes.sh"
 }
 
 # Bring in the source signal handler
 sourceSignalHandler()
 {
-  source sbin/signalhandler.sh
+  source "$SCRIPT_DIR/signalhandler.sh"
 }
 
 # Parse the command line arguments
@@ -170,16 +90,6 @@ doAnyBuildVariantOverrides()
   BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
 }
 
-# Set the default branch to clone OpenJDK source from
-setDefaultBranchIfNotProvided()
-{
-  local default_branch="dev"
-  if [ -z "${BUILD_CONFIG[BRANCH]}" ] ; then
-    echo "${info}BRANCH is undefined so checking out ${default_branch}${normal}."
-    BUILD_CONFIG[BRANCH]=$default_branch
-  fi
-}
-
 # Set the working directory for this build
 setWorkingDirectory()
 {
@@ -195,47 +105,137 @@ setWorkingDirectory()
     echo "${info}Workspace dir is ${BUILD_CONFIG[WORKSPACE_DIR]}${normal}"
   fi
 
-  if [ -z "${BUILD_CONFIG[WORKING_DIR]}" ] ; then
-    echo "${info}WORKING_DIR is undefined so setting to ${PWD}${normal}."
-    BUILD_CONFIG[WORKING_DIR]="./build/"
-  else
-    echo "${info}Working dir is ${BUILD_CONFIG[WORKING_DIR]}${normal}"
-  fi
+  echo "${info}Working dir is ${BUILD_CONFIG[WORKING_DIR]}${normal}"
 }
 
-# Set where the OpenJDK binary will be built to
-setTargetDirectory()
-{
-  if [ -z "${BUILD_CONFIG[TARGET_DIR]}" ] ; then
-    echo "${info}TARGET_DIR is undefined so setting to $PWD.${normal}"
-    BUILD_CONFIG[TARGET_DIR]="target/"
-  else
-    echo "${info}Target directory is ${BUILD_CONFIG[TARGET_DIR]}${normal}"
-    BUILD_CONFIG[COPY_TO_HOST]=true
-    echo "If you're using Docker, the build artifact will be copied to the host."
-  fi
-}
-
-# Determines the JVM Variant (normal, server, debug etc) and the build name
 determineBuildProperties() {
-    BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-server}
-
     local build_type=normal
     local default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${build_type}-${BUILD_CONFIG[JVM_VARIANT]}-release
 
     BUILD_CONFIG[BUILD_FULL_NAME]=${BUILD_CONFIG[BUILD_FULL_NAME]:-"$default_build_full_name"}
 }
 
+# Set variables that the `configure` command (which builds OpenJDK) will need
+setVariablesForConfigure() {
+
+  local openjdk_core_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
+
+  # TODO Regex this in the if or use cut to grab out the number and see if >= 9
+  # TODO 9 should become 9u as will 10 shortly....
+  if [ "$openjdk_core_version" == "jdk9" ] || [ "$openjdk_core_version" == "jdk10" ] || [ "$openjdk_core_version" == "jdk11" ] || [ "$openjdk_core_version" == "amber" ]; then
+    local jdk_path="jdk"
+    local jre_path="jre"
+    BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-"--disable-warnings-as-errors"}
+  elif [ "$openjdk_core_version" == "jdk8" ]; then
+    local jdk_path="j2sdk-image"
+    local jre_path="j2re-image"
+  else
+    echo "Please specify a version, either jdk8u, jdk9, jdk10, amber etc, with or without a 'u' suffix. e.g. $0 [options] jdk8u"
+    exit 1
+  fi
+
+  BUILD_CONFIG[JDK_PATH]=$jdk_path
+  BUILD_CONFIG[JRE_PATH]=$jre_path
+}
+
+# Set the repository to build from
+setRepository() {
+  local repository="${BUILD_CONFIG[REPOSITORY]:-adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+  repository="$(echo "${repository}" | awk '{print tolower($0)}')";
+
+  BUILD_CONFIG[REPOSITORY]=$repository
+}
+
+# Specific platforms need to have special build settings
+processArgumentsforSpecificPlatforms() {
+
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+  "darwin")
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] ; then
+      BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false"
+      BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true"
+    fi
+  ;;
+  esac
+
+}
+
+# Specific architectures need to have special build settings
+processArgumentsforSpecificArchitectures() {
+  local jvm_variant=server
+  local build_full_name=""
+  local make_args_for_any_platform=""
+  local configure_args_for_any_platform=""
+
+  case "${BUILD_CONFIG[OS_ARCHITECTURE]}" in
+  "s390x")
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] && [ "$jvm_variant" != "openj9" ]; then
+      jvm_variant=zero
+    else
+      jvm_variant=server
+    fi
+
+    build_full_name=linux-s390x-normal-${jvm_variant}-release
+    make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true images"
+  ;;
+
+  "ppc64le")
+    jvm_variant=server
+    build_full_name=linux-ppc64-normal-${jvm_variant}-release
+    # shellcheck disable=SC1083
+    BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]:="--build=$(rpm --eval %{_host})"}
+  ;;
+
+  "armv7l")
+    jvm_variant=zero
+    make_args_for_any_platform="DEBUG_BINARIES=true images"
+    configure_args_for_any_platform="--with-jobs=${NUM_PROCESSORS}"
+  ;;
+
+  "aarch64")
+    BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.5.2"
+  ;;
+  esac
+
+  BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-$jvm_variant}
+  BUILD_CONFIG[BUILD_FULL_NAME]=${BUILD_CONFIG[BUILD_FULL_NAME]:-$build_full_name}
+  BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-$make_args_for_any_platform}
+  BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-$configure_args_for_any_platform}
+}
+
+# Different platforms have different default make commands
+setMakeCommandForOS() {
+  local make_command_name
+  case "$OS_KERNEL_NAME" in
+  "aix")
+    make_command_name="gmake"
+  ;;
+  "SunOS")
+    make_command_name="gmake"
+  ;;
+  esac
+
+  BUILD_CONFIG[MAKE_COMMAND_NAME]=${BUILD_CONFIG[MAKE_COMMAND_NAME]:-$make_command_name}
+}
+
 ################################################################################
 
 configure_build() {
-    determineBuildProperties
-    init_build_config
-    sourceSignalHandler
+    configDefaults
+
+    # Parse the CL Args, see ${SCRIPT_DIR}/configureBuild.sh for details
     parseCommandLineArgs "$@"
+
+    # Update the configuration with the arguments passed in, the platform etc
+    setVariablesForConfigure
+    setRepository
+    processArgumentsforSpecificPlatforms
+    processArgumentsforSpecificArchitectures
+    setMakeCommandForOS
+
+    determineBuildProperties
+    sourceSignalHandler
     doAnyBuildVariantOverrides
     sourceFileWithColourCodes
-    setDefaultBranchIfNotProvided
     setWorkingDirectory
-    setTargetDirectory
 }

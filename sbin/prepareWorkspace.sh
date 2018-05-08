@@ -24,11 +24,17 @@
 # TODO remove `x` once we've finished debugging
 set -eux
 
-source "$SCRIPT_DIR/common-functions.sh"
-
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+<<<<<<< HEAD
+
+=======
+ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
+FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
+FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
+
+>>>>>>> 71d799c9ef97bd81067106ea214972bd975a519c
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for SRP
 checkoutAndCloneOpenJDKGitRepo()
@@ -62,6 +68,7 @@ checkoutAndCloneOpenJDKGitRepo()
       git clean -fdx
     else
       echo "Incorrect Source Code for ${BUILD_CONFIG[OPENJDK_FOREST_NAME]}.  This is an error, please check what is in $PWD and manually remove, exiting..."
+      echo "If this is inside a docker you can purge the existing source by passing --clean-docker-build"
       exit 1
     fi
   elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] ; then
@@ -114,6 +121,7 @@ createWorkspace()
    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 }
 
+<<<<<<< HEAD
 # Use the temp workspace instead
 function moveTmpToWorkspaceLocation {
   if [ ! -z "${TMP_WORKSPACE}" ]; then
@@ -124,27 +132,187 @@ function moveTmpToWorkspaceLocation {
 
 # Use a temporary worspace instead (possibly due to restrictions on a host)
 relocateToTmpIfNeeded()
+=======
+# ALSA first for sound
+checkingAndDownloadingAlsa()
 {
-   if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
-   then
-     local tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir'`
-     export TMP_WORKSPACE="${tmpdir}"
-     export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
 
-     if [ -d "${ORIGINAL_WORKSPACE}" ]
-     then
-        cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
-     fi
-     BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
+  echo "Checking for ALSA"
 
-     trap moveTmpToWorkspaceLocation EXIT
-   fi
+  FOUND_ALSA=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/" -name "installedalsa")
+
+  mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/" || exit
+
+  if [[ ! -z "$FOUND_ALSA" ]]
+  then
+    echo "Skipping ALSA download"
+  else
+    wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
+      bzip2 -d alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+      tar -xf alsa-lib-"${ALSA_LIB_VERSION}".tar --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
+      rm alsa-lib-"${ALSA_LIB_VERSION}".tar
+    else
+      tar -xf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2 --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
+      rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    fi
+
+    #if ! (./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+      # shellcheck disable=SC2154
+    #  echo "${error}Failed to configure and build alsa, exiting"
+    #  exit;
+    #fi
+  fi
 }
+
+# Freemarker for OpenJ9
+checkingAndDownloadingFreemarker()
+>>>>>>> 71d799c9ef97bd81067106ea214972bd975a519c
+{
+  echo "Checking for FREEMARKER"
+
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
+  FOUND_FREEMARKER=$(find "." -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
+
+  if [[ ! -z "$FOUND_FREEMARKER" ]] ; then
+    echo "Skipping FREEMARKER download"
+  else
+    # wget --no-check-certificate "https://sourceforge.net/projects/freemarker/files/freemarker/${FREEMARKER_LIB_VERSION}/freemarker-${FREEMARKER_LIB_VERSION}.tar.gz/download" -O "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+    # Temp fix as sourceforge is broken
+    wget --no-check-certificate https://ci.adoptopenjdk.net/userContent/freemarker-2.3.8.tar.gz
+    tar -xzf "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+    rm "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+  fi
+}
+
+checkingAndDownloadingFreeType()
+{
+
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
+  echo "Checking for freetype at ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
+
+  FOUND_FREETYPE=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}" || true)
+
+  if [[ ! -z "$FOUND_FREETYPE" ]] ; then
+    echo "Skipping FreeType download"
+  else
+    # Then FreeType for fonts: make it and use
+    wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
+      gunzip xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
+      tar xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar
+      rm freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar
+    else
+      tar xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
+      rm freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
+    fi
+
+    cd freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}" || exit
+
+    # We get the files we need at $WORKING_DIR/installedfreetype
+    # shellcheck disable=SC2046
+    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+      # shellcheck disable=SC2154
+      echo "${error}Failed to configure and build libfreetype, exiting"
+      exit;
+    else
+      # shellcheck disable=SC2154
+      echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
+
+     if [[ ${OS_KERNEL_NAME} == "darwin" ]] ; then
+        TARGET_DYNAMIC_LIB_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype/lib/
+        TARGET_DYNAMIC_LIB="${TARGET_DYNAMIC_LIB_DIR}"/libfreetype.6.dylib
+        echo ""
+        echo "Listing the contents of ${TARGET_DYNAMIC_LIB_DIR} to see if the dynamic library 'libfreetype.6.dylib' has been created..."
+        ls "${TARGET_DYNAMIC_LIB_DIR}"
+
+        echo ""
+        echo "Releasing the runpath dependency of the dynamic library ${TARGET_DYNAMIC_LIB}"
+        set -x
+        install_name_tool -id @rpath/libfreetype.6.dylib "${TARGET_DYNAMIC_LIB}"
+        set +x
+
+        # shellcheck disable=SC2181
+        if [[ $? == 0 ]]; then
+          echo "Successfully released the runpath dependency of the dynamic library ${TARGET_DYNAMIC_LIB}"
+        else
+          echo "Failed to release the runpath dependency of the dynamic library ${TARGET_DYNAMIC_LIB}"
+        fi
+      fi
+    fi
+    # shellcheck disable=SC2154
+    echo "${normal}"
+  fi
+}
+
+checkingAndDownloadCaCerts()
+{
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
+
+  echo "Retrieving cacerts file"
+
+  # Ensure it's the latest we pull in
+  rm -rf "cacerts_area"
+  mkdir "cacerts_area" || exit
+  cd "cacerts_area" || exit
+
+  git init
+  git remote add origin -f https://github.com/AdoptOpenJDK/openjdk-build.git
+  git config core.sparsecheckout true
+  echo "security/*" >> .git/info/sparse-checkout
+  git pull origin master
+
+  echo "cacerts should be here..."
+
+  # shellcheck disable=SC2046
+  if ! [ -r "security/cacerts" ]; then
+    echo "Failed to retrieve the cacerts file, exiting..."
+    exit;
+  else
+    echo "${good}Successfully retrieved the cacerts file!"
+  fi
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
+}
+
+
+downloadingRequiredDependencies()
+{
+  mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
+
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+     echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa, Freetype, and CaCerts."
+  else
+     echo "Downloading required dependencies...: Alsa, Freetype, Freemarker, and CaCerts."
+        echo "Checking and download Alsa dependency"
+        checkingAndDownloadingAlsa
+
+     if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
+       if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
+            echo "Checking and download FreeType Font dependency"
+            checkingAndDownloadingFreeType
+       else
+           echo ""
+           echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
+           echo ""
+       fi
+     else
+        echo "Skipping Freetype"
+     fi
+     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
+           echo "Checking and download Freemarker dependency"
+           checkingAndDownloadingFreemarker
+     fi
+      echo "Checking and download CaCerts dependency"
+      checkingAndDownloadCaCerts
+  fi
+}
+
 
 ##################################################################
 
 function configureWorkspace() {
-    relocateToTmpIfNeeded
     createWorkspace
     checkoutAndCloneOpenJDKGitRepo
     downloadingRequiredDependencies
