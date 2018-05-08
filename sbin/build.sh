@@ -417,6 +417,8 @@ signRelease()
       ;;
       "darwin"*)
         echo "Signing OSX release"
+        # Login to KeyChain
+        security unlock-keychain -p `cat ~/.password`
         # Sign all files with the executable permission bit set.
         FILES=$(find "${OPENJDK_REPO_TAG}" -perm +111 -type f || find "${OPENJDK_REPO_TAG}" -perm /111 -type f)
         echo "$FILES" | while read -r f; do codesign -s "$CERTIFICATE" "$f"; done
