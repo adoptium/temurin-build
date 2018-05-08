@@ -250,7 +250,7 @@ function configDefaults() {
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]=""
   BUILD_CONFIG[FREETYPE]=true
   BUILD_CONFIG[FREETYPE_DIRECTORY]=""
-  BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.4.0"
+  BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.9"
   BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
 
   BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
@@ -259,6 +259,7 @@ function configDefaults() {
 
   BUILD_CONFIG[NUM_PROCESSORS]="1"
   BUILD_CONFIG[TARGET_FILE_NAME]="OpenJDK"
+  BUILD_CONFIG[TMP_SPACE_BUILD]="false"
 
   # Dir where we clone the OpenJDK source code for building, defaults to 'src'
   BUILD_CONFIG[OPENJDK_SOURCE_DIR]="src"
@@ -268,7 +269,6 @@ function configDefaults() {
 
   # Set Docker Container names and defaults
   BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]=${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]:-"openjdk-source-volume"}
-
 
   BUILD_CONFIG[CONTAINER_NAME]=${BUILD_CONFIG[CONTAINER_NAME]:-openjdk_container}
 
@@ -294,7 +294,6 @@ function configDefaults() {
 
   # Root of the workspace
   BUILD_CONFIG[WORKSPACE_DIR]=${BUILD_CONFIG[WORKSPACE_DIR]:-""}
-
 
   # Use SSH for the GitHub connection (defaults to false)
   BUILD_CONFIG[USE_SSH]=${BUILD_CONFIG[USE_SSH]:-false}
