@@ -218,8 +218,6 @@ platform and and optional arguments provided
 general preparation.
 - Rest of the build and packaging is then handled from `sbin/build.sh` 
  
- 
-
 ## Building OpenJDK
 
 ### Building on the Build Farm
@@ -228,6 +226,9 @@ In order to build an OpenJDK variant on the build farm you need to follow the
 [Adding-a-new-build-variant](https://github.com/AdoptOpenJDK/TSC/wiki/Adding-a-new-build-variant) 
 instructions.  The configuration options are often set in the Jenkins job and 
 passed into `makejdk-any-platform.sh` script.
+
+Note that the build nodes (list of hosts on the LH side) also have configuration 
+where things like the BOOT_JDK environment variable is set.
 
 ### Building via Docker in your local environment
 
