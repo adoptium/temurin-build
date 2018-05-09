@@ -6,6 +6,36 @@ AdoptOpenJDK makes use of these scripts to build binaries on the build farm at
 http://ci.adoptopenjdk.net, which produces OpenJDK binaries for consumption via 
 https://www.adoptopenjdk.net and https://api.adoptopenjdk.net.
 
+## TLDR I want to build a JDK NOW!
+
+##### Build jdk natively on your system
+
+```
+./makejdk-any-platform.sh <jdk8u|jdk9|jdk10>
+i.e:
+./makejdk-any-platform.sh jdk8u
+```
+
+##### Build jdk inside a docker container
+```
+./makejdk-any-platform.sh --docker jdk8u
+```
+If you need sudo to run docker on your system.
+```
+./makejdk-any-platform.sh --sudo --docker jdk8u
+```
+
+## Build
+The build has 2 modes, native and docker.
+
+### Native 
+Native builds run on whatever platform the script is invoked on, i.e 
+if you invoke a native build on MacOS it will build a JDK for MacOS.
+
+### Docker
+This runs a build inside a docker container. Currently this will always 
+build a linux JDK.
+
 ## Repository contents
 
 This repository contains several useful scripts in order to build OpenJDK 
@@ -28,13 +58,6 @@ are typically called by `makejdk-any-platform.sh`).
 8. The `security` folder contains a script and `cacerts` file that is bundled 
 with the JDK and used when building OpenJDK: the `cacerts` file is an important 
 file that's used to enable SSL connections.
-
-### Script Relationships
-
-![Build Variant Workflow](images/AdoptOpenJDK_Build_Script_Relationships.png)
-
-The main script to build OpenJDK is `makejdk-any-platform.sh`, which itself uses 
-and/or calls `configureBuild.sh`, `docker-build.sh` and/or `native-build.sh`. 
 
 ## The makejdk-any-platform.sh script
 
@@ -166,9 +189,36 @@ specify the JVM variant (server or client), defaults to server.
 Example usage:
 
 ./makejdk-any-platform --docker jdk8u
-./makejdk-any-platform -s /home/openjdk10/src -d /home/openjdk/target -T MyOpenJDK10.tar.gz jdk10
+./makejdk-any-platform -T MyOpenJDK10.tar.gz jdk10
 
 ```
+
+### Script Relationships
+
+![Build Variant Workflow](images/AdoptOpenJDK_Build_Script_Relationships.png)
+
+The main script to build OpenJDK is `makejdk-any-platform.sh`, which itself uses 
+and/or calls `configureBuild.sh`, `docker-build.sh` and/or `native-build.sh`. 
+
+The structure of a build is:
+ 
+ 1. Configuration phase determines what the configuration of the build is based on your current
+platform and and optional arguments provided
+ 1. Configuration is written out to `built_config.cfg`
+ 1. Build is kicked off by either creating a docker container or running the native build script
+ 1. Build reads in configuration from `built_config.cfg`
+ 1. Downloads source, dependencies and prepares build workspace
+ 1. Configure and invoke OpenJDK build via `make`
+ 1. Package up built artifacts
+ 
+- Configuration phase is primarily performed by `configureBuild.sh` and `makejdk-any-platform.sh`.
+- If a docker container is required it is built by `docker-build.sh`.
+- In the build phase `sbin/build.sh` is invoked either natively or inside the docker container.
+`sbin/build.sh` invokes `sbin/prepareWorkspace.sh` to download dependencies, source and perform 
+general preparation.
+- Rest of the build and packaging is then handled from `sbin/build.sh` 
+ 
+ 
 
 ## Building OpenJDK
 
