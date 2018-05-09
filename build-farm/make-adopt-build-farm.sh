@@ -35,7 +35,7 @@ fi
 
 if [ -n "${USER_PATH}" ]
 then
-  export PATH="$PATH:${USER_PATH}"
+  export PATH="${USER_PATH}:$PATH"
 fi
 
 
