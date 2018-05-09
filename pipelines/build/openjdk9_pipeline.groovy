@@ -22,7 +22,7 @@ def buildConfigurations = [
                 arch               : 'x64',
                 bootJDK            : "7",
                 path               : "/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
-                configureArgs      : "with_freetype=/cygdrive/C/openjdk/freetype",
+                configureArgs      : "with_freetype=/cygdrive/C/openjdk/freetype --disable-ccache",
                 aditionalNodeLabels: 'build&&win2012'
         ]
 ]
