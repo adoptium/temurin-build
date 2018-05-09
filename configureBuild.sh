@@ -122,10 +122,10 @@ setVariablesForConfigure() {
 
   # TODO Regex this in the if or use cut to grab out the number and see if >= 9
   # TODO 9 should become 9u as will 10 shortly....
-  if [ "$openjdk_core_version" == "jdk10" ] || [ "$openjdk_core_version" == "jdk11" ] || [ "$openjdk_core_version" == "amber" ]; then
+  if [ "$openjdk_core_version" == "jdk9" ] || [ "$openjdk_core_version" == "jdk10" ] || [ "$openjdk_core_version" == "jdk11" ] || [ "$openjdk_core_version" == "amber" ]; then
     local jdk_path="jdk"
     local jre_path="jre"
-    BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-"--disable-warnings-as-errors"}
+    #BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-"--disable-warnings-as-errors"}
   elif [ "$openjdk_core_version" == "jdk8" ]; then
     local jdk_path="j2sdk-image"
     local jre_path="j2re-image"
