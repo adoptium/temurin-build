@@ -51,15 +51,19 @@ def doBuild(javaToBuild, buildConfigurations) {
 
         jobs[buildType] = {
             stage("build-${buildType}") {
-                def buildJob = build job: "openjdk_build-refactor", parameters: [
+
+                def buildParams = [
                         string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
                         [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
-                ]
+                ];
 
-                if (configuration.containsKey('bootJDK')) buildJob += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
-                if (configuration.containsKey('path')) buildJob += string(name: 'USER_PATH', value: "${configuration.path}");
-                if (configuration.containsKey('configureArgs')) buildJob += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
-                if (configuration.containsKey('xCodeSwitchPath')) buildJob += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+                if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
+                if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
+                if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
+                if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+
+                def buildJob = build job: "openjdk_build-refactor", parameters: buildParams
+
 
                 buildJobs.add([
                         job        : buildJob,
