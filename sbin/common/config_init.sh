@@ -114,7 +114,7 @@ function writeConfigToFile() {
   then
     mkdir -p "workspace/config"
   fi
-  displayParams > ./workspace/config/built_config.cfg
+  displayParams | sed 's/\r$//' > ./workspace/config/built_config.cfg
 }
 
 function loadConfigFromFile() {
