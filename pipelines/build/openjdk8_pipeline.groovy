@@ -62,7 +62,7 @@ def doBuild(javaToBuild, buildConfigurations) {
                 if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
                 if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
 
-                def buildJob = build job: "openjdk_build-refactor", parameters: buildParams
+                def buildJob = build job: "openjdk_build_refactor", parameters: buildParams
 
 
                 buildJobs.add([
@@ -81,7 +81,7 @@ def doBuild(javaToBuild, buildConfigurations) {
             buildJob ->
                 if (buildJob.job.getResult() == 'SUCCESS') {
                     copyArtifacts(
-                            projectName: 'openjdk_build-refactor',
+                            projectName: 'openjdk_build_refactor',
                             selector: specific("${buildJob.job.getNumber()}"),
                             filter: 'workspace/target/*',
                             fingerprintArtifacts: true,
