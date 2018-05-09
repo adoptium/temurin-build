@@ -56,10 +56,10 @@ def doBuild(javaToBuild, buildConfigurations) {
                         [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
                 ]
 
-                if (configuration.bootJDK != null) buildJob += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
-                if (configuration.path != null) buildJob += string(name: 'USER_PATH', value: "${configuration.path}");
-                if (configuration.configureArgs != null) buildJob += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
-                if (configuration.xCodeSwitchPath != null) buildJob += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+                if (configuration.containsKey('bootJDK')) buildJob += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
+                if (configuration.containsKey('path')) buildJob += string(name: 'USER_PATH', value: "${configuration.path}");
+                if (configuration.containsKey('configureArgs')) buildJob += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
+                if (configuration.containsKey('xCodeSwitchPath')) buildJob += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
 
                 buildJobs.add([
                         job        : buildJob,
