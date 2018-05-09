@@ -29,13 +29,9 @@ set -eux
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Set default versions for 3 libraries that OpenJDK relies on to build
-ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
-FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
-FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
-
-#ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
-#FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so*
-#FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.28}
+ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
+FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so*
+FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.28}
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for SRP
