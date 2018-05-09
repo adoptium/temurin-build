@@ -1,9 +1,30 @@
 def buildConfigurations = [
-        mac    : [os: 'mac', arch: 'x64', bootJDK: "8", aditionalNodeLabels: 'build'],
-        linux  : [os: 'centos6', arch: 'x64', bootJDK: "8", aditionalNodeLabels: 'build'],
+        mac    : [
+                os                 : 'mac',
+                arch               : 'x64',
+                bootJDK            : "8",
+                path               : "/Users/jenkins/ccache-3.2.4",
+                configureArgs      : "--disable-warnings-as-errors",
+                xCodeSwitchPath    : "/",
+                aditionalNodeLabels: 'build'
+        ],
+
+        linux  : [
+                os                 : 'centos6',
+                arch               : 'x64',
+                bootJDK            : "8",
+                path               : "",
+                aditionalNodeLabels: 'build'
+        ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
-        windows: [os: 'windows', arch: 'x64', bootJDK: "8", aditionalNodeLabels: 'build&&win2008']
+        windows: [
+                os                 : 'windows',
+                arch               : 'x64',
+                bootJDK            : "8",
+                path               : "",
+                aditionalNodeLabels: 'build&&win2008'
+        ]
 ]
 
 if (osTarget != "all") {
@@ -35,6 +56,9 @@ def doBuild(javaToBuild, buildConfigurations) {
                 def buildJob = build job: "openjdk_build-refactor", parameters: [
                         string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
                         string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}"),
+                        string(name: 'USER_PATH', value: "${configuration.path}"),
+                        string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}"),
+                        string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}"),
                         [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
                 ]
 
