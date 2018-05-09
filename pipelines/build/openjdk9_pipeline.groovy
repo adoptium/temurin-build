@@ -83,7 +83,7 @@ def doBuild(javaToBuild, buildConfigurations) {
             buildJob ->
                 if (buildJob.job.getResult() == 'SUCCESS') {
                     copyArtifacts(
-                            projectName: 'openjdk_build-refactor',
+                            projectName: 'openjdk_build_refactor',
                             selector: specific("${buildJob.job.getNumber()}"),
                             filter: 'workspace/target/*',
                             fingerprintArtifacts: true,
