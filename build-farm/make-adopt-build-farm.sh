@@ -38,10 +38,6 @@ then
   export PATH="${USER_PATH}:$PATH"
 fi
 
-if [ -n "${XCODE_SWITCH_PATH}" ]
-then
-  sudo xcode-select --switch ${XCODE_SWITCH_PATH}
-fi
 
 
 
@@ -57,7 +53,12 @@ elif [[ $NODE_LABELS = *"mac"* ]] ; then
   EXTENSION="tar.gz"
 
   export MACOSX_DEPLOYMENT_TARGET=10.8
-  sudo xcode-select --switch /Applications/Xcode.app
+  if [ -n "${XCODE_SWITCH_PATH}" ]
+  then
+    sudo xcode-select --switch ${XCODE_SWITCH_PATH}
+  else
+    sudo xcode-select --switch /Applications/Xcode.app
+  fi
 elif [[ $NODE_LABELS = *"windows"* ]] ; then
   PLATFORM=Windows
   EXTENSION=zip
