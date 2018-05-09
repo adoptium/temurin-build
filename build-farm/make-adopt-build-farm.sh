@@ -53,22 +53,15 @@ elif [[ $NODE_LABELS = *"mac"* ]] ; then
   EXTENSION="tar.gz"
 
   export MACOSX_DEPLOYMENT_TARGET=10.8
-  if [ -n "${XCODE_SWITCH_PATH}" ]
-  then
-    sudo xcode-select --switch ${XCODE_SWITCH_PATH}
-  else
-    sudo xcode-select --switch /Applications/Xcode.app
-  fi
+  sudo xcode-select --switch ${XCODE_SWITCH_PATH}
 elif [[ $NODE_LABELS = *"windows"* ]] ; then
   PLATFORM=Windows
   EXTENSION=zip
 
   export ANT_HOME=/cygdrive/C/Projects/OpenJDK/apache-ant-1.10.1
   export ALLOW_DOWNLOADS=true
-  export PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:/cygdrive/C/Projects/OpenJDK/make-3.82/:$PATH"
   export LANG=C
   export JAVA_HOME=$JDK_BOOT_DIR
-  CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} with_freetype=/cygdrive/C/Projects/OpenJDK/freetype --disable-ccache"
 fi
 
 # Set the file name
