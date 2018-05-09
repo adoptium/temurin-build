@@ -6,6 +6,26 @@ AdoptOpenJDK makes use of these scripts to build binaries on the build farm at
 http://ci.adoptopenjdk.net, which produces OpenJDK binaries for consumption via 
 https://www.adoptopenjdk.net and https://api.adoptopenjdk.net.
 
+### tldr I want to build a JDK how?
+
+#### Build jdk natively on your system
+
+```
+./makejdk-any-platform.sh <jdk8u|jdk9|jdk10>
+i.e:
+./makejdk-any-platform.sh jdk8u
+```
+
+#### Build jdk inside a docker container
+```
+./makejdk-any-platform.sh --docker jdk8u
+```
+If you need sudo to run docker on your system.
+```
+./makejdk-any-platform.sh --sudo --docker jdk8u
+```
+
+
 ## Repository contents
 
 This repository contains several useful scripts in order to build OpenJDK 
