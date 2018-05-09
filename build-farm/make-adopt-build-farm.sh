@@ -13,7 +13,24 @@ PLATFORM=""
 EXTENSION=""
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=""
 
-export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}"
+if [ -x "${JDK_BOOT_VERSION}" ]
+then
+  case "${JDK_BOOT_VERSION}" in
+        7)
+            export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";;
+        8)
+            export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK8_BOOT_DIR}";;
+
+        9)  export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK9_BOOT_DIR}";;
+
+        10) export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK10_BOOT_DIR}";;
+
+        *)
+            echo "Unknown boot jdk version ${JDK_BOOT_VERSION}"
+            exit 1
+  esac
+fi
+
 
 if [[ $NODE_LABELS = *"linux"* ]] ; then
   PLATFORM="Linux"
