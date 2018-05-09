@@ -28,7 +28,7 @@
 #
 ################################################################################
 
-# TODO Comment out once script is stable.
+# TODO Comment out the 'x' once script is stable.
 set -eux
 
 # i.e. Where we are
@@ -53,6 +53,3 @@ if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
 else
   buildOpenJDKInNativeEnvironment
 fi
-
-
-

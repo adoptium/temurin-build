@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-#
+################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,19 +12,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+################################################################################
+
+################################################################################
 #
+# This script prepares the workspace to build (Adopt) OpenJDK.
+# See the configureWorkspace function for details
+# It is sourced by build.sh
+#
+################################################################################
 
-
-# set -x # TODO remove once we've finished debugging
+# TODO remove `x` once we've finished debugging
 set -eux
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# Set default versions for 3 libraries that OpenJDK relies on to build
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
 
+#ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
+#FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so*
+#FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.28}
+
+# Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for SRP
 checkoutAndCloneOpenJDKGitRepo()
 {
@@ -69,6 +82,7 @@ checkoutAndCloneOpenJDKGitRepo()
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
 
+# Set the git clone arguments
 setGitCloneArguments() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   local git_remote_repo_address;
@@ -81,6 +95,7 @@ setGitCloneArguments() {
   GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} '-b' "${BUILD_CONFIG[BRANCH]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
 }
 
+# Clone the git repo
 cloneOpenJDKGitRepo()
 {
   setGitCloneArguments
@@ -100,6 +115,8 @@ cloneOpenJDKGitRepo()
   fi
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
+
+# Create the workspace
 createWorkspace()
 {
    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
@@ -121,6 +138,7 @@ checkingAndDownloadingAlsa()
   then
     echo "Skipping ALSA download"
   else
+    # TODO Holy security problem Batman!
     wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
       bzip2 -d alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
@@ -150,14 +168,13 @@ checkingAndDownloadingFreemarker()
   if [[ ! -z "$FOUND_FREEMARKER" ]] ; then
     echo "Skipping FREEMARKER download"
   else
-    # wget --no-check-certificate "https://sourceforge.net/projects/freemarker/files/freemarker/${FREEMARKER_LIB_VERSION}/freemarker-${FREEMARKER_LIB_VERSION}.tar.gz/download" -O "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
-    # Temp fix as sourceforge is broken
-    wget --no-check-certificate https://ci.adoptopenjdk.net/userContent/freemarker-2.3.8.tar.gz
-    tar -xzf "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
-    rm "freemarker-${FREEMARKER_LIB_VERSION}.tar.gz"
+    wget -nc --no-check-certificate http://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz
+    tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
+    rm "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
   fi
 }
 
+# Get Freetype
 checkingAndDownloadingFreeType()
 {
 
@@ -170,7 +187,7 @@ checkingAndDownloadingFreeType()
     echo "Skipping FreeType download"
   else
     # Then FreeType for fonts: make it and use
-    wget -nc http://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
+    wget -nc --no-check-certificate https://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
       gunzip xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
       tar xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar
@@ -218,6 +235,7 @@ checkingAndDownloadingFreeType()
   fi
 }
 
+# Certificate Authority Certs (CA Certs)
 checkingAndDownloadCaCerts()
 {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
@@ -247,7 +265,7 @@ checkingAndDownloadCaCerts()
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 }
 
-
+# Download all of the dependencies for OpenJDK (Alsa, FreeType, CACerts et al)
 downloadingRequiredDependencies()
 {
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
@@ -280,7 +298,6 @@ downloadingRequiredDependencies()
       checkingAndDownloadCaCerts
   fi
 }
-
 
 ##################################################################
 

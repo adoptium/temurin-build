@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 ################################################################################
 #
@@ -23,61 +23,61 @@
 # containers etc
 #
 # We are deliberately writing to shell because this needs to work on some truly
-# esoteric platforms to fulfil the Java Write Once Run Anywhere (WORA) promise
+# esoteric platforms to fulfil the Java Write Once Run Anywhere (WORA) promise.
 #
 ################################################################################
-
 
 # We can't use Bash 4.x+ associative arrays as as Apple won't support bash 4.0
 # (because of GPL3), we therefore have to name the indexes of the CONFIG_PARAMS
 # map. This is why we can't have nice things.
 CONFIG_PARAMS=(
-OS_KERNEL_NAME
-OS_ARCHITECTURE
-OPENJDK_FOREST_NAME
-OPENJDK_CORE_VERSION
+BRANCH
+BUILD_FULL_NAME
 BUILD_VARIANT
-REPOSITORY
+CLEAN_DOCKER_BUILD
 CONFIGURE_ARGS_FOR_ANY_PLATFORM
-JDK_PATH
-JRE_PATH
+COLOUR
+CONTAINER_NAME
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
-FREETYPE_FONT_BUILD_TYPE_PARAM
-FREETYPE_FONT_VERSION
-JVM_VARIANT
-BUILD_FULL_NAME
-MAKE_ARGS_FOR_ANY_PLATFORM
-MAKE_COMMAND_NAME
-OPENJDK_SOURCE_DIR
-SHALLOW_CLONE_OPTION
-DOCKER_SOURCE_VOLUME_NAME
-CONTAINER_NAME
-TMP_CONTAINER_NAME
-CLEAN_DOCKER_BUILD
-USE_DOCKER
-DOCKER_FILE_PATH
-KEEP_CONTAINER
-REUSE_CONTAINER
-WORKING_DIR
-USE_SSH
-TARGET_DIR
-BRANCH
-TAG
-OPENJDK_UPDATE_VERSION
-OPENJDK_BUILD_NUMBER
-USER_SUPPLIED_CONFIGURE_ARGS
+COPY_TO_HOST
 DOCKER
-COLOUR
-WORKSPACE_DIR
+DOCKER_FILE_PATH
+DOCKER_SOURCE_VOLUME_NAME
 FREETYPE
 FREETYPE_DIRECTORY
-SIGN
+FREETYPE_FONT_BUILD_TYPE_PARAM
+FREETYPE_FONT_VERSION
+KEEP_CONTAINER
 JDK_BOOT_DIR
+JDK_PATH
+JRE_PATH
+JVM_VARIANT
+MAKE_ARGS_FOR_ANY_PLATFORM
+MAKE_COMMAND_NAME
 NUM_PROCESSORS
+OPENJDK_BUILD_NUMBER
+OPENJDK_CORE_VERSION
+OPENJDK_FOREST_NAME
+OPENJDK_SOURCE_DIR
+OPENJDK_UPDATE_VERSION
+OS_KERNEL_NAME
+OS_ARCHITECTURE
+REPOSITORY
+REUSE_CONTAINER
+SHALLOW_CLONE_OPTION
+SIGN
+TAG
+TARGET_DIR
 TARGET_FILE_NAME
+TMP_CONTAINER_NAME
+TMP_SPACE_BUILD
+USE_DOCKER
+USE_SSH
+USER_SUPPLIED_CONFIGURE_ARGS
+WORKING_DIR
+WORKSPACE_DIR
 )
-
 
 # Directory structure of build environment:
 ###########################################################################################################################################
@@ -88,8 +88,6 @@ TARGET_FILE_NAME
 #  <WORKSPACE_DIR>/<WORKING_DIR>                       Build area                           /openjdk/build              $(pwd)/workspace/build/
 #  <WORKSPACE_DIR>/<WORKING_DIR>/<OPENJDK_SOURCE_DIR>  Source code                          /openjdk/build/src          $(pwd)/workspace/build/src
 #  <WORKSPACE_DIR>/target                              Destination of built artifacts       /openjdk/target             $(pwd)/workspace/target
-
-
 
 # Helper code to perform index lookups by name
 declare -a -x PARAM_LOOKUP
@@ -139,8 +137,9 @@ function loadConfigFromFile() {
   fi
 }
 
+# Parse the configuration args from the CL, please keep this in alpha order
 function parseConfigurationArguments() {
-    # TODO: can change all this to config file
+
     while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
       opt="$1";
       shift;
@@ -173,6 +172,9 @@ function parseConfigurationArguments() {
 
         "--skip-freetype" | "-F" )
         BUILD_CONFIG[FREETYPE]=false;;
+
+        "--help" | "-h" )
+        man ./makejdk-any-platform.1;;
 
         "--ignore-container" | "-i" )
         BUILD_CONFIG[REUSE_CONTAINER]=false;;
@@ -224,7 +226,7 @@ function parseConfigurationArguments() {
     done
 }
 
-
+# Set the config defaults
 function configDefaults() {
   # The OS kernel name, e.g. 'darwin' for Mac OS X
   BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
@@ -248,7 +250,7 @@ function configDefaults() {
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]=""
   BUILD_CONFIG[FREETYPE]=true
   BUILD_CONFIG[FREETYPE_DIRECTORY]=""
-  BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.4.0"
+  BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.9"
   BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
 
   BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
@@ -257,6 +259,7 @@ function configDefaults() {
 
   BUILD_CONFIG[NUM_PROCESSORS]="1"
   BUILD_CONFIG[TARGET_FILE_NAME]="OpenJDK"
+  BUILD_CONFIG[TMP_SPACE_BUILD]="false"
 
   # Dir where we clone the OpenJDK source code for building, defaults to 'src'
   BUILD_CONFIG[OPENJDK_SOURCE_DIR]="src"
@@ -266,7 +269,6 @@ function configDefaults() {
 
   # Set Docker Container names and defaults
   BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]=${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]:-"openjdk-source-volume"}
-
 
   BUILD_CONFIG[CONTAINER_NAME]=${BUILD_CONFIG[CONTAINER_NAME]:-openjdk_container}
 
@@ -292,7 +294,6 @@ function configDefaults() {
 
   # Root of the workspace
   BUILD_CONFIG[WORKSPACE_DIR]=${BUILD_CONFIG[WORKSPACE_DIR]:-""}
-
 
   # Use SSH for the GitHub connection (defaults to false)
   BUILD_CONFIG[USE_SSH]=${BUILD_CONFIG[USE_SSH]:-false}

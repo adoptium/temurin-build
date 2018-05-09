@@ -16,18 +16,10 @@
 ################################################################################
 
 ################################################################################
-# TODO rewrite the doc here
 #
-# Script to clone the OpenJDK source then build it
-#
-# Optionally uses Docker, otherwise you can provide two arguments:
-# the area to build the JDK e.g. $HOME/mybuilddir as -s or --source and the
-# target destination for the tar.gz e.g. -d or --destination $HOME/mytargetdir
-# Both must be absolute paths! You can use $PWD/mytargetdir
-#
-# To install dependencies persistently is to use our Ansible playbooks
-#
-# You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
+# This script sets up the initial configuration for an (Adopt) OpenJDK Build.
+# See the configure_build function and its child functions for details.
+# It's sourced by the makejdk-any-platform.sh script.
 #
 ################################################################################
 
@@ -36,20 +28,22 @@ set -eux # TODO remove once we've finished debugging
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Load the common functions
-
+# Bring in the color coding for the terminal output
 sourceFileWithColourCodes()
 {
   source "$SCRIPT_DIR/sbin/common/colour-codes.sh"
 }
 
+# Bring in the source signal handler
 sourceSignalHandler()
 {
   source "$SCRIPT_DIR/signalhandler.sh"
 }
 
+# Parse the command line arguments
 parseCommandLineArgs()
 {
+  # Defer most of the work to the shared function in common-functions.sh
   parseConfigurationArguments "$@"
 
   while [[ $# -gt 1 ]] ; do
@@ -76,6 +70,7 @@ parseCommandLineArgs()
   # TODO check that OPENJDK_CORE_VERSION has been set by the caller
 }
 
+# Extra config for OpenJDK variants such as OpenJ9, SAP et al
 doAnyBuildVariantOverrides()
 {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
@@ -95,6 +90,7 @@ doAnyBuildVariantOverrides()
   BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
 }
 
+# Set the working directory for this build
 setWorkingDirectory()
 {
   if [ -z "${BUILD_CONFIG[WORKSPACE_DIR]}" ] ; then
@@ -118,7 +114,6 @@ determineBuildProperties() {
 
     BUILD_CONFIG[BUILD_FULL_NAME]=${BUILD_CONFIG[BUILD_FULL_NAME]:-"$default_build_full_name"}
 }
-
 
 # Set variables that the `configure` command (which builds OpenJDK) will need
 setVariablesForConfigure() {

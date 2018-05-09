@@ -1,5 +1,6 @@
 #!/bin/bash
-#
+
+################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,15 +12,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+################################################################################
+
+################################################################################
 #
+# Build OpenJDK - can be called directly but is typically called by
+# docker-build.sh or native-build.sh.
+#
+# See bottom of the script for the call order and each function for further
+# details.
+#
+# Calls 'configure' then 'make' in order to build OpenJDK
+#
+################################################################################
 
-# Script to download any additional packages for building OpenJDK
-# before calling ./configure (using JDK 7 as the base)
-
+# TODO remove `x` once we're done
 set -eux
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 
 source "$SCRIPT_DIR/prepareWorkspace.sh"
 source "$SCRIPT_DIR/common/config_init.sh"
@@ -30,6 +40,7 @@ export CONFIGURE_ARGS=""
 export MAKE_TEST_IMAGE=""
 export GIT_CLONE_ARGUMENTS="";
 
+# Parse the CL arguments, defers to the shared function in common-functions.sh
 function parseArguments() {
     parseConfigurationArguments "$@"
 
@@ -41,20 +52,20 @@ function parseArguments() {
     echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
 
     BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}
-    # Defaults to not building this target, for Java 9+ we set this to test-image in order to build the native test libraries
 
     BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-""}
 }
 
-
+# Add an argument to the configure call
 addConfigureArg()
 {
-  #Only add an arg if it is not overridden by a user-specified arg.
+  # Only add an arg if it is not overridden by a user-specified arg.
   if [[ ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]} != *"$1"* ]] && [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]} != *"$1"* ]]; then
     CONFIGURE_ARGS="${CONFIGURE_ARGS} ${1}${2}"
   fi
 }
 
+# Add an argument to the configure call (if it's not empty)
 addConfigureArgIfValueIsNotEmpty()
 {
   #Only try to add an arg if the second argument is not empty.
@@ -63,12 +74,13 @@ addConfigureArgIfValueIsNotEmpty()
   fi
 }
 
+# Use colours for the terminal output
 sourceFileWithColourCodes()
 {
   source "$SCRIPT_DIR/common/colour-codes.sh"
 }
 
-
+# Configure the boot JDK
 configuringBootJDKConfigureParameter()
 {
   if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
@@ -88,6 +100,7 @@ configuringBootJDKConfigureParameter()
   addConfigureArgIfValueIsNotEmpty "--with-boot-jdk=" "${BUILD_CONFIG[JDK_BOOT_DIR]}"
 }
 
+# Get the OpenJDK update version and build version
 getOpenJDKUpdateAndBuildVersion()
 {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
@@ -151,6 +164,7 @@ configuringVersionStringParameter()
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
+# Construct all of the 'configure' parameters
 buildingTheRestOfTheConfigParameters()
 {
   if [ ! -z "$(which ccache)" ]; then
@@ -160,7 +174,6 @@ buildingTheRestOfTheConfigParameters()
   addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
   addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/cacerts_area/security/cacerts"
   addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
-
 
   # Point-in-time dependency for openj9 only
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]] ; then
@@ -181,6 +194,7 @@ buildingTheRestOfTheConfigParameters()
   addConfigureArg "--disable-debug-symbols" ""
 }
 
+# Configure the command parameters
 configureCommandParameters()
 {
   configuringVersionStringParameter
@@ -193,18 +207,19 @@ configureCommandParameters()
      buildingTheRestOfTheConfigParameters
   fi
 
-  #Now we add any configure arguments the user has specified on the command line.
+  # Now we add any configure arguments the user has specified on the command line.
   CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}"
 
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
+# Make sure we're in the source directory for OpenJDK now
 stepIntoTheWorkingDirectory() {
-  # Make sure we're in the source directory for OpenJDK now
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"  || exit
   echo "Should have the source, I'm at $PWD"
 }
 
+# Run 'configure'
 runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
 {
   echo "Configuring command and using the pre-built config params..."
@@ -240,6 +255,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
   fi
 }
 
+# Build OpenJDK using make
 buildOpenJDK()
 {
   stepIntoTheWorkingDirectory
@@ -269,6 +285,7 @@ buildOpenJDK()
   echo "${normal}"
 }
 
+# Print the version string so we know what we've produced
 printJavaVersionString()
 {
   # shellcheck disable=SC2086
@@ -286,6 +303,7 @@ printJavaVersionString()
   fi
 }
 
+# Clean up
 removingUnnecessaryFiles()
 {
   echo "Removing unnecessary files now..."
@@ -315,6 +333,7 @@ removingUnnecessaryFiles()
   echo "Finished removing unnecessary files from ${OPENJDK_REPO_TAG}"
 }
 
+# If on a Mac, mac a copy of the font lib as required
 makeACopyOfLibFreeFontForMacOSX() {
     IMAGE_DIRECTORY=$1
     PERFORM_COPYING=$2
@@ -354,6 +373,7 @@ makeACopyOfLibFreeFontForMacOSX() {
     fi
 }
 
+# Sign the built binary
 signRelease()
 {
   if [ -z "${BUILD_CONFIG[SIGN]}" ]; then
@@ -376,6 +396,7 @@ signRelease()
   fi
 }
 
+# Get the first tag from the git repo
 getFirstTagFromOpenJDKGitRepo()
 {
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
@@ -384,6 +405,7 @@ getFirstTagFromOpenJDKGitRepo()
     echo "$tagNameFromRepo"
 }
 
+# Create a Tar ball
 createOpenJDKTarArchive()
 {
   echo "Archiving the build OpenJDK image..."
@@ -412,10 +434,13 @@ createOpenJDKTarArchive()
   mv "OpenJDK${EXT}" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
+# Echo success
 showCompletionMessage()
 {
   echo "All done!"
 }
+
+################################################################################
 
 loadConfigFromFile
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
@@ -438,3 +463,7 @@ makeACopyOfLibFreeFontForMacOSX "${BUILD_CONFIG[JRE_PATH]}" "${BUILD_CONFIG[COPY
 signRelease
 createOpenJDKTarArchive
 showCompletionMessage
+
+# ccache is not detected properly TODO
+# change grep to something like $GREP -e '^1.*' -e '^2.*' -e '^3\.0.*' -e '^3\.1\.[0123]$'`]
+# See https://github.com/AdoptOpenJDK/openjdk-jdk8u/blob/dev/common/autoconf/build-performance.m4
