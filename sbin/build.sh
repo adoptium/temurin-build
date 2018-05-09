@@ -86,7 +86,7 @@ configuringBootJDKConfigureParameter()
   if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
     echo "Searching for JDK_BOOT_DIR"
 
-  # shellcheck disable=SC2046
+    # shellcheck disable=SC2046
     BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
 
     echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
@@ -199,12 +199,12 @@ configureCommandParameters()
 {
   configuringVersionStringParameter
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
+    echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
 
   else
-     echo "Building up the configure command..."
-     configuringBootJDKConfigureParameter
-     buildingTheRestOfTheConfigParameters
+    echo "Building up the configure command..."
+    configuringBootJDKConfigureParameter
+    buildingTheRestOfTheConfigParameters
   fi
 
   # Now we add any configure arguments the user has specified on the command line.
@@ -269,8 +269,7 @@ buildOpenJDK()
 
   FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${MAKE_TEST_IMAGE}"
   echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
-
-  set +e
+set +e
   ${FULL_MAKE_COMMAND}
   exitCode=$?
   set -e
@@ -278,7 +277,7 @@ buildOpenJDK()
   # shellcheck disable=SC2181
   if [ "${exitCode}" -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
-    exit;
+     exit 1;
   else
     echo "${good}Built the JDK!"
   fi
@@ -292,14 +291,16 @@ printJavaVersionString()
   PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
-     # shellcheck disable=SC2154
      echo "${info}"
-     "$PRODUCT_HOME"/bin/java -version || (echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}" && exit -1)
+     if ! "$PRODUCT_HOME"/bin/java -version; then
+       echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}"
+       exit -1
+     fi
      echo "${normal}"
      echo ""
   else
-     echo "${error}'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location.${normal}"
-     exit -1
+    echo "${error}'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location.${normal}"
+    exit -1
   fi
 }
 
