@@ -1,9 +1,9 @@
 def buildConfigurations = [
-        mac    : [os: 'mac', arch: 'x64', bootJDK: "${JDK8_BOOT_DIR}", aditionalNodeLabels: 'build'],
-        linux  : [os: 'centos6', arch: 'x64', bootJDK: "${JDK8_BOOT_DIR}", aditionalNodeLabels: 'build'],
+        mac    : [os: 'mac', arch: 'x64', bootJDK: "${env.JDK8_BOOT_DIR}", aditionalNodeLabels: 'build'],
+        linux  : [os: 'centos6', arch: 'x64', bootJDK: "${env.JDK8_BOOT_DIR}", aditionalNodeLabels: 'build'],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
-        windows: [os: 'windows', arch: 'x64', bootJDK: "${JDK8_BOOT_DIR}", aditionalNodeLabels: 'build&&win2008']
+        windows: [os: 'windows', arch: 'x64', bootJDK: "${env.JDK8_BOOT_DIR}", aditionalNodeLabels: 'build&&win2008']
 ]
 
 if (osTarget != "all") {
