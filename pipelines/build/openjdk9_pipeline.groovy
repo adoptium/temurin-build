@@ -1,9 +1,9 @@
 def buildConfigurations = [
-        mac    : [os: 'mac', arch: 'x64', aditionalNodeLabels: 'build'],
-        linux  : [os: 'centos6', arch: 'x64', aditionalNodeLabels: 'build'],
+        mac    : [os: 'mac', arch: 'x64', bootJDK: "${JDK8_BOOT_DIR}", aditionalNodeLabels: 'build'],
+        linux  : [os: 'centos6', arch: 'x64', bootJDK: "${JDK8_BOOT_DIR}", aditionalNodeLabels: 'build'],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
-        windows: [os: 'windows', arch: 'x64', aditionalNodeLabels: 'build&&win2008']
+        windows: [os: 'windows', arch: 'x64', bootJDK: "${JDK8_BOOT_DIR}", aditionalNodeLabels: 'build&&win2008']
 ]
 
 if (osTarget != "all") {
@@ -12,9 +12,6 @@ if (osTarget != "all") {
 }
 
 doBuild("jdk9", buildConfigurations)
-
-
-
 
 ///////////////////////////////////////////////////
 //Do build is the same for all pipelines
@@ -37,6 +34,7 @@ def doBuild(javaToBuild, buildConfigurations) {
             stage("build-${buildType}") {
                 def buildJob = build job: "openjdk_build-refactor", parameters: [
                         string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
+                        string(name: 'JDK_BOOT_DIR', value: "${configuration.bootJDK}"),
                         [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
                 ]
 
