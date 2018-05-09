@@ -29,13 +29,9 @@ set -eux
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Set default versions for 3 libraries that OpenJDK relies on to build
-ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
-FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
-FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
-
-#ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
-#FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so*
-#FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.28}
+ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
+FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so*
+FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.28}
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for SRP
@@ -139,7 +135,8 @@ checkingAndDownloadingAlsa()
     echo "Skipping ALSA download"
   else
     # TODO Holy security problem Batman!
-    wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    #wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    wget -nc https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
       bzip2 -d alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
       tar -xf alsa-lib-"${ALSA_LIB_VERSION}".tar --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
