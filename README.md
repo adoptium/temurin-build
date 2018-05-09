@@ -244,7 +244,7 @@ Once you have Docker started you can then use the script below to build OpenJDK.
 
 Example Usage (TODO Add example of openj9):
 
-`./makejdk-any-platform.sh --docker jdk8u`
+`./makejdk-any-platform.sh --docker --sudo jdk8u`
 
 #### Configuring Docker for non sudo use
 
