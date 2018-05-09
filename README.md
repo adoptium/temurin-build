@@ -6,7 +6,7 @@ AdoptOpenJDK makes use of these scripts to build binaries on the build farm at
 http://ci.adoptopenjdk.net, which produces OpenJDK binaries for consumption via 
 https://www.adoptopenjdk.net and https://api.adoptopenjdk.net.
 
-### tldr I want to build a JDK NOW?
+## TLDR I want to build a JDK NOW!
 
 ##### Build jdk natively on your system
 
@@ -35,9 +35,6 @@ if you invoke a native build on MacOS it will build a JDK for MacOS.
 ### Docker
 This runs a build inside a docker container. Currently this will always 
 build a linux JDK.
-
-
-
 
 ## Repository contents
 
@@ -207,11 +204,11 @@ The structure of a build is:
  
  1. Configuration phase determines what the configuration of the build is based on your current
 platform and and optional arguments provided
- 1. Configuration is written out to built_config.cfg
+ 1. Configuration is written out to `built_config.cfg`
  1. Build is kicked off by either creating a docker container or running the native build script
- 1. Build reads in configuration
+ 1. Build reads in configuration from `built_config.cfg`
  1. Downloads source, dependencies and prepares build workspace
- 1. configure and invoke OpenJDK build
+ 1. Configure and invoke OpenJDK build via `make`
  1. Package up built artifacts
  
 - Configuration phase is primarily performed by `configureBuild.sh` and `makejdk-any-platform.sh`.
