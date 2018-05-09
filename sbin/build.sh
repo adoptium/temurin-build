@@ -278,7 +278,7 @@ buildOpenJDK()
   # shellcheck disable=SC2181
   if [ "${exitCode}" -ne 0 ]; then
      echo "${error}Failed to make the JDK, exiting"
-    exit;
+     exit 1;
   else
     echo "${good}Built the JDK!"
   fi
@@ -294,7 +294,10 @@ printJavaVersionString()
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
      echo "${info}"
-     "$PRODUCT_HOME"/bin/java -version || (echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}" && exit -1)
+     if ! "$PRODUCT_HOME"/bin/java -version; then
+       echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}"
+       exit -1
+     fi
      echo "${normal}"
      echo ""
   else
