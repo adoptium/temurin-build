@@ -1,9 +1,28 @@
 def buildConfigurations = [
-        mac    : [os: 'mac', arch: 'x64', bootJDK: "7", aditionalNodeLabels: 'build'],
-        linux  : [os: 'centos6', arch: 'x64', bootJDK: "7", aditionalNodeLabels: 'build'],
+        mac    : [
+                os                 : 'mac',
+                arch               : 'x64',
+                bootJDK            : "7",
+                xCodeSwitchPath    : "/Applications/Xcode.app",
+                aditionalNodeLabels: 'build'
+        ],
+
+        linux  : [
+                os                 : 'centos6',
+                arch               : 'x64',
+                bootJDK            : "7",
+                aditionalNodeLabels: 'build'
+        ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
-        windows: [os: 'windows', arch: 'x64', bootJDK: "7", aditionalNodeLabels: 'build&&win2008']
+        windows: [
+                os                 : 'windows',
+                arch               : 'x64',
+                bootJDK            : "7",
+                path               : "/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:/cygdrive/C/Projects/OpenJDK/make-3.82/",
+                configureArgs      : "with_freetype=/cygdrive/C/Projects/OpenJDK/freetype --disable-ccache",
+                aditionalNodeLabels: 'build&&win2008'
+        ]
 ]
 
 if (osTarget != "all") {
@@ -12,7 +31,6 @@ if (osTarget != "all") {
 }
 
 doBuild("jdk8u", buildConfigurations)
-
 
 ///////////////////////////////////////////////////
 //Do build is the same for all pipelines
@@ -33,11 +51,19 @@ def doBuild(javaToBuild, buildConfigurations) {
 
         jobs[buildType] = {
             stage("build-${buildType}") {
-                def buildJob = build job: "openjdk_build-refactor", parameters: [
+
+                def buildParams = [
                         string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
-                        string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}"),
                         [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
-                ]
+                ];
+
+                if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
+                if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
+                if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
+                if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+
+                def buildJob = build job: "openjdk_build-refactor", parameters: buildParams
+
 
                 buildJobs.add([
                         job        : buildJob,

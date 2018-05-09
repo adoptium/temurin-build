@@ -377,22 +377,27 @@ makeACopyOfLibFreeFontForMacOSX() {
 signRelease()
 {
   if [ -z "${BUILD_CONFIG[SIGN]}" ]; then
-    if [[ "$OSTYPE" == "cygwin" ]]; then
-      echo "Signing release"
-      signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
-      # Sign .exe files
-      FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.exe')
-      for f in $FILES; do
-        "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
-      done
-      # Sign .dll files
-      FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.dll')
-      for f in $FILES; do
-        "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
-      done
-    else
-      echo "Skiping code signing as it's only supported on Windows"
-    fi
+    case "$OSTYPE" in
+      "cygwin")
+        echo "Signing Windows release"
+        signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
+        # Sign .exe files
+        FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.exe')
+        echo "$FILES" | while read -r f; do "$signToolPath" sign /f "${BUILD_CONFIG[CERTIFICATE]}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
+        # Sign .dll files
+        FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.dll')
+        echo "$FILES" | while read -r f; do "$signToolPath" sign /f "${BUILD_CONFIG[CERTIFICATE]}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
+      ;;
+      "darwin"*)
+        echo "Signing OSX release"
+        # Sign all files with the executable permission bit set.
+        FILES=$(find "${OPENJDK_REPO_TAG}" -perm +111 -type f || find "${OPENJDK_REPO_TAG}" -perm /111 -type f)
+        echo "$FILES" | while read -r f; do codesign -s "${BUILD_CONFIG[CERTIFICATE]}" "$f"; done
+      ;;
+      *)
+        echo "Skipping code signing as it's not supported on $OSTYPE"
+      ;;
+    esac
   fi
 }
 
@@ -429,7 +434,7 @@ createOpenJDKTarArchive()
   echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
 
   ## clean out old builds
-  rm -r "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}"
+  rm -r "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || true
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 
   echo "${good}Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}${normal}"
