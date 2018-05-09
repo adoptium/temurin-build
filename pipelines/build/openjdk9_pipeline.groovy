@@ -13,7 +13,6 @@ def buildConfigurations = [
                 os                 : 'centos6',
                 arch               : 'x64',
                 bootJDK            : "8",
-                path               : "",
                 aditionalNodeLabels: 'build'
         ],
 
@@ -22,7 +21,6 @@ def buildConfigurations = [
                 os                 : 'windows',
                 arch               : 'x64',
                 bootJDK            : "8",
-                path               : "",
                 aditionalNodeLabels: 'build&&win2008'
         ]
 ]
@@ -55,12 +53,13 @@ def doBuild(javaToBuild, buildConfigurations) {
             stage("build-${buildType}") {
                 def buildJob = build job: "openjdk_build-refactor", parameters: [
                         string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
-                        string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}"),
-                        string(name: 'USER_PATH', value: "${configuration.path}"),
-                        string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}"),
-                        string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}"),
                         [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
                 ]
+
+                if (configuration.bootJDK != null) buildJob += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
+                if (configuration.path != null) buildJob += string(name: 'USER_PATH', value: "${configuration.path}");
+                if (configuration.configureArgs != null) buildJob += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
+                if (configuration.xCodeSwitchPath != null) buildJob += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
 
                 buildJobs.add([
                         job        : buildJob,
