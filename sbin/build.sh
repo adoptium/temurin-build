@@ -228,7 +228,7 @@ runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
 
   echo "Currently at '${PWD}'"
 
-  CONFIGURED_OPENJDK_ALREADY=$(find . -name "config.status")
+  CONFIGURED_OPENJDK_ALREADY=$(/usr/bin/find . -name "config.status")
 
   if [[ ! -z "$CONFIGURED_OPENJDK_ALREADY" ]] ; then
     echo "Not reconfiguring due to the presence of config.status in ${BUILD_CONFIG[WORKING_DIR]}"
