@@ -198,12 +198,12 @@ buildingTheRestOfTheConfigParameters()
 configureCommandParameters()
 {
   configuringVersionStringParameter
-  configuringBootJDKConfigureParameter
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
 
   else
     echo "Building up the configure command..."
+    configuringBootJDKConfigureParameter
     buildingTheRestOfTheConfigParameters
   fi
 
