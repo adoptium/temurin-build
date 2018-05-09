@@ -175,9 +175,6 @@ specify the final name of the OpenJDK binary.
 This is typically used in conjunction with -D to create a custom file
 name for the resulting binary.
 
---tmp-space-build
-TODO
-
 -u, --update-version <update_version>
 specify the update version to build OpenJDK from, e.g. 162.
 For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
