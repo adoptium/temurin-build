@@ -13,7 +13,7 @@
 
 FROM ubuntu:16.04
 
-MAINTAINER George Adams <george.adams@uk.ibm.com>
+MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools
 RUN apt-get update \

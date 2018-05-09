@@ -14,7 +14,7 @@
 
 FROM ubuntu:16.04
 
-MAINTAINER Adopt OpenJDK <adoptopenjdk@gmail.com>
+MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools.  Yes we have to apt-get update first in order to
 # get to software-properties-common, which includes the apt-add-repository
