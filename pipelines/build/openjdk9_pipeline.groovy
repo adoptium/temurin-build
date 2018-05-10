@@ -20,7 +20,7 @@ def buildConfigurations = [
         windows: [
                 os                 : 'windows',
                 arch               : 'x64',
-                bootJDK            : "7",
+                bootJDK            : "8",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
                 configureArgs      : "--with-freetype=/cygdrive/C/openjdk/freetype --disable-ccache",
                 aditionalNodeLabels: 'buildj9&&win2012'
