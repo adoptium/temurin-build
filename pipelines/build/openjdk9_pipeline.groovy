@@ -23,7 +23,7 @@ def buildConfigurations = [
                 bootJDK            : "8",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
                 configureArgs      : "--with-freetype=/cygdrive/C/openjdk/freetype --disable-ccache --disable-javac-server",
-                aditionalNodeLabels: 'build&&win2012'
+                aditionalNodeLabels: 'buildj9&&win2012'
         ]
 ]
 
