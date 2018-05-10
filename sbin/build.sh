@@ -83,6 +83,7 @@ sourceFileWithColourCodes()
 # Configure the boot JDK
 configuringBootJDKConfigureParameter()
 {
+
   if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
     echo "Searching for JDK_BOOT_DIR"
 
@@ -198,7 +199,7 @@ buildingTheRestOfTheConfigParameters()
 configureCommandParameters()
 {
   configuringVersionStringParameter
-    configuringBootJDKConfigureParameter
+  configuringBootJDKConfigureParameter
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
 
@@ -452,6 +453,13 @@ showCompletionMessage()
 
 loadConfigFromFile
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+
+
+  ls -alh "/cygdrive/c/Program Files/Java/"
+  ls -alh "/cygdrive/c/ProgramData/Oracle/Java/"
+  ls -alh "/cygdrive/c/openjdk/"
+  ls -alh "/cygdrive/c/progra~1/java/"
+
 
 sourceFileWithColourCodes
 
