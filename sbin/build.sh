@@ -422,10 +422,10 @@ createOpenJDKTarArchive()
   fi
   echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
 
-  if [[ "${OS_KERNEL_NAME}" = *"cygwin"* ]]; then
+  if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = *"cygwin"* ]]; then
       zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
       EXT=".zip"
-  elif [[ "${OS_KERNEL_NAME}" == "aix" ]]; then
+  elif [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]]; then
       GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
       EXT=".tar.gz"
   else
