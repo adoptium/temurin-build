@@ -13,22 +13,15 @@ PLATFORM=""
 EXTENSION=""
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
 
-if [ -x "${JDK_BOOT_VERSION}" ]
+export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";
+if [ -n "${JDK_BOOT_VERSION}" ]
 then
-  export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";
-else
   case "${JDK_BOOT_VERSION}" in
-        7)
-            export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";;
-        8)
-            export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK8_BOOT_DIR}";;
-
+        7)  export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";;
+        8)  export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK8_BOOT_DIR}";;
         9)  export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK9_BOOT_DIR}";;
-
         10) export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK10_BOOT_DIR}";;
-
-        *)
-            export JDK_BOOT_DIR="${JDK_BOOT_VERSION}";;
+        *)  export JDK_BOOT_DIR="${JDK_BOOT_VERSION}";;
   esac
 fi
 
