@@ -309,7 +309,7 @@ function moveTmpToWorkspaceLocation {
 
     mkdir "${ORIGINAL_WORKSPACE}"
     chmod 755 "${ORIGINAL_WORKSPACE}" || true
-    mv "${TMP_WORKSPACE}/workspace/*" "${ORIGINAL_WORKSPACE}"
+    mv ${TMP_WORKSPACE}/workspace/* "${ORIGINAL_WORKSPACE}"
     rm -r "${TMP_WORKSPACE}/workspace/"
     rm -r "${TMP_WORKSPACE}"
   fi
