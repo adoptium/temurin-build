@@ -298,6 +298,7 @@ downloadingRequiredDependencies()
 
 function moveTmpToWorkspaceLocation {
   if [ ! -z "${TMP_WORKSPACE}" ]; then
+    rm "${TMP_WORKSPACE}/workspace"
     rm "${TMP_WORKSPACE}"
   fi
 }
