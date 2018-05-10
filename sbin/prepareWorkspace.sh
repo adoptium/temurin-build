@@ -299,23 +299,33 @@ downloadingRequiredDependencies()
 function moveTmpToWorkspaceLocation {
   if [ ! -z "${TMP_WORKSPACE}" ]; then
     rm "${TMP_WORKSPACE}/workspace"
-    rm "${TMP_WORKSPACE}"
+    rm -r "${TMP_WORKSPACE}"
   fi
 }
+
+function moveTmpToWorkspaceLocation {
+  if [ ! -z "${TMP_WORKSPACE}" ]; then
+    rm -rf "${ORIGINAL_WORKSPACE}"
+    mv "${TMP_WORKSPACE}/workspace" "${ORIGINAL_WORKSPACE}"
+    rm -r "${TMP_WORKSPACE}"
+  fi
+}
+
 
 relocateToTmpIfNeeded()
 {
    local tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir'`
    export TMP_WORKSPACE="${tmpdir}"
-
    export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
 
-   ln -s "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
+   if [ -d "${ORIGINAL_WORKSPACE}" ]
+   then
+      cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
+   fi
    BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
 
    trap moveTmpToWorkspaceLocation EXIT
 }
-
 
 ##################################################################
 
