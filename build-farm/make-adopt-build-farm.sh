@@ -28,8 +28,7 @@ else
         10) export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK10_BOOT_DIR}";;
 
         *)
-            echo "Unknown boot jdk version ${JDK_BOOT_VERSION}"
-            exit 1
+            export JDK_BOOT_DIR="${JDK_BOOT_VERSION}";;
   esac
 fi
 

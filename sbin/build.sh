@@ -454,13 +454,6 @@ showCompletionMessage()
 loadConfigFromFile
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
-
-  ls -alh "/cygdrive/c/Program Files/Java/"
-  ls -alh "/cygdrive/c/ProgramData/Oracle/Java/"
-  ls -alh "/cygdrive/c/openjdk/"
-  ls -alh "/cygdrive/c/progra~1/java/"
-
-
 sourceFileWithColourCodes
 
 parseArguments "$@"
