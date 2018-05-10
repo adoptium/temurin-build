@@ -81,22 +81,24 @@ def doBuild(javaToBuild, buildConfigurations) {
 
         }
     }
-    parallel jobs
+    try {
+        parallel jobs
+    } finally {
+        node('centos6&&x64&&build') {
+            buildJobs.each {
+                buildJob ->
+                    if (buildJob.job.getResult() == 'SUCCESS') {
+                        copyArtifacts(
+                                projectName: 'openjdk_build_refactor',
+                                selector: specific("${buildJob.job.getNumber()}"),
+                                filter: 'workspace/target/*',
+                                fingerprintArtifacts: true,
+                                target: "target/${buildJob.targetLabel}/${buildJob.config.arch}/",
+                                flatten: true)
+                    }
+            }
 
-    node('centos6&&x64&&build') {
-        buildJobs.each {
-            buildJob ->
-                if (buildJob.job.getResult() == 'SUCCESS') {
-                    copyArtifacts(
-                            projectName: 'openjdk_build_refactor',
-                            selector: specific("${buildJob.job.getNumber()}"),
-                            filter: 'workspace/target/*',
-                            fingerprintArtifacts: true,
-                            target: "target/${buildJob.targetLabel}/${buildJob.config.arch}/",
-                            flatten: true)
-                }
+            archiveArtifacts artifacts: 'target/*/*/*'
         }
-
-        archiveArtifacts artifacts: 'target/*/*/*'
     }
 }
