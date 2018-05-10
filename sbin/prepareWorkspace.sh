@@ -296,10 +296,34 @@ downloadingRequiredDependencies()
   fi
 }
 
+function moveTmpToWorkspaceLocation {
+  if [ ! -z "${TMP_WORKSPACE}" ]; then
+    rm "${TMP_WORKSPACE}"
+  fi
+}
+
+relocateToTmpIfNeeded()
+{
+   local tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir'`
+   export TMP_WORKSPACE="${tmpdir}"
+
+   export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
+
+   if [ -d "${ORIGINAL_WORKSPACE}" ]
+   then
+      ln "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
+   fi
+   BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
+
+   trap moveTmpToWorkspaceLocation EXIT
+}
+
+
 ##################################################################
 
 function configureWorkspace() {
     createWorkspace
+    relocateToTmpIfNeeded
     checkoutAndCloneOpenJDKGitRepo
     downloadingRequiredDependencies
 }
