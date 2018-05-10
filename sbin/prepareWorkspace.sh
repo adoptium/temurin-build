@@ -314,17 +314,20 @@ function moveTmpToWorkspaceLocation {
 
 relocateToTmpIfNeeded()
 {
-   local tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir'`
-   export TMP_WORKSPACE="${tmpdir}"
-   export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
-
-   if [ -d "${ORIGINAL_WORKSPACE}" ]
+   if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
    then
-      cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
-   fi
-   BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
+     local tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir'`
+     export TMP_WORKSPACE="${tmpdir}"
+     export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
 
-   trap moveTmpToWorkspaceLocation EXIT
+     if [ -d "${ORIGINAL_WORKSPACE}" ]
+     then
+        cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
+     fi
+     BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
+
+     trap moveTmpToWorkspaceLocation EXIT SIGINT SIGTERMSIGINT SIGTERM
+   fi
 }
 
 ##################################################################

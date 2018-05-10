@@ -71,6 +71,7 @@ TAG
 TARGET_DIR
 TARGET_FILE_NAME
 TMP_CONTAINER_NAME
+TMP_SPACE_BUILD
 USE_DOCKER
 USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
@@ -211,6 +212,9 @@ function parseConfigurationArguments() {
         "--target-file-name"  | "-T" )
         BUILD_CONFIG[TARGET_FILE_NAME]="$1"; shift;;
 
+        "--tmp-space-build")
+        BUILD_CONFIG[TMP_SPACE_BUILD]=true;;
+
         "--update-version"  | "-u" )
         BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
 
@@ -324,6 +328,8 @@ function configDefaults() {
 
   # Print to console using colour codes
   BUILD_CONFIG[COLOUR]=${BUILD_CONFIG[COLOUR]:-"true"}
+
+  BUILD_CONFIG[TMP_SPACE_BUILD]=${BUILD_CONFIG[TMP_SPACE_BUILD]:-false}
 }
 
 # Declare the map of build configuration that we're going to use

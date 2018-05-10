@@ -22,7 +22,8 @@ def buildConfigurations = [
                 arch               : 'x64',
                 bootJDK            : "8",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
-                configureArgs      : "--with-freetype=/cygdrive/C/openjdk/freetype --disable-ccache --disable-javac-server",
+                configureArgs      : "--with-freetype=/cygdrive/C/openjdk/freetype --disable-ccache",
+                buildArgs          : "--tmp-space-build",
                 aditionalNodeLabels: 'buildj9&&win2012'
         ]
 ]
@@ -63,6 +64,7 @@ def doBuild(javaToBuild, buildConfigurations) {
                 if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
                 if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
                 if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+                if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
                 def buildJob = build job: "openjdk_build_refactor", parameters: buildParams
 

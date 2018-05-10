@@ -12,6 +12,7 @@ OPTIONS=""
 PLATFORM=""
 EXTENSION=""
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
+BUILD_ARGS=${BUILD_ARGS:-""}
 
 if [ -n "${JDK_BOOT_VERSION}" ]
 then
@@ -61,4 +62,4 @@ fi
 FILENAME="OpenJDK8_x64_${PLATFORM}_${TIMESTAMP}.${EXTENSION}"
 echo "Filename will be: $FILENAME"
 
-bash "$SCRIPT_DIR/../makejdk-any-platform.sh" --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" "${GIT_SHALLOW_CLONE_OPTION}" "${TAG_OPTION}" "${OPTIONS}" "${JAVA_TO_BUILD}"
+bash "$SCRIPT_DIR/../makejdk-any-platform.sh" "${BUILD_ARGS}" --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" "${GIT_SHALLOW_CLONE_OPTION}" "${TAG_OPTION}" "${OPTIONS}" "${JAVA_TO_BUILD}"
