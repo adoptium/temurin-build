@@ -13,7 +13,6 @@ PLATFORM=""
 EXTENSION=""
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
 
-export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";
 if [ -n "${JDK_BOOT_VERSION}" ]
 then
   case ${JDK_BOOT_VERSION} in
@@ -23,6 +22,8 @@ then
         10) export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK10_BOOT_DIR}";;
         *)  export JDK_BOOT_DIR="${JDK_BOOT_VERSION}";;
   esac
+else
+  export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";
 fi
 
 if [ -n "${USER_PATH}" ]
