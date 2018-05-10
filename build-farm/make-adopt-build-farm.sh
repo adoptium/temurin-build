@@ -16,7 +16,7 @@ CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
 export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";
 if [ -n "${JDK_BOOT_VERSION}" ]
 then
-  case "${JDK_BOOT_VERSION}" in
+  case ${JDK_BOOT_VERSION} in
         7)  export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";;
         8)  export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK8_BOOT_DIR}";;
         9)  export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK9_BOOT_DIR}";;
