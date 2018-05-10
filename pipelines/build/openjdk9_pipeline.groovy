@@ -13,6 +13,7 @@ def buildConfigurations = [
                 os                 : 'centos6',
                 arch               : 'x64',
                 bootJDK            : "8",
+                configureArgs      : "--disable-warnings-as-errors",
                 aditionalNodeLabels: 'build'
         ],
 
