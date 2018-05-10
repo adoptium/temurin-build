@@ -319,6 +319,7 @@ relocateToTmpIfNeeded()
      local tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir'`
      export TMP_WORKSPACE="${tmpdir}"
      export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
+     ls -alh "${ORIGINAL_WORKSPACE}"
 
      if [ -d "${ORIGINAL_WORKSPACE}" ]
      then
