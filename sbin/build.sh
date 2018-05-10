@@ -158,7 +158,7 @@ configuringVersionStringParameter()
     # > JDK 8
     addConfigureArg "--with-version-pre=" "adoptopenjdk"
 
-    TRIMMED_TAG=$(echo "$OPENJDK_REPO_TAG" | cut -f2 -d"-")
+    TRIMMED_TAG=$(echo "$OPENJDK_REPO_TAG" | cut -f2 -d"-" )
     addConfigureArg "--with-version-string=" "${TRIMMED_TAG}"
 
   fi
