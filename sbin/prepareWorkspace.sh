@@ -327,7 +327,7 @@ relocateToTmpIfNeeded()
      fi
      BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
 
-     trap moveTmpToWorkspaceLocation EXIT SIGINT SIGTERMSIGINT SIGTERM
+     trap moveTmpToWorkspaceLocation EXIT SIGINT SIGTERM
    fi
 }
 
