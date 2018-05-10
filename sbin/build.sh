@@ -455,7 +455,7 @@ loadConfigFromFile
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
 
-ls -alh "${ORIGINAL_WORKSPACE}"
+ls -alh "${BUILD_CONFIG[WORKSPACE_DIR]}"
 sourceFileWithColourCodes
 
 parseArguments "$@"
