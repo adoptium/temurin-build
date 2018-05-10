@@ -310,10 +310,7 @@ relocateToTmpIfNeeded()
 
    export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
 
-   if [ -d "${ORIGINAL_WORKSPACE}" ]
-   then
-      ln "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
-   fi
+   ln -s "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
    BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
 
    trap moveTmpToWorkspaceLocation EXIT
