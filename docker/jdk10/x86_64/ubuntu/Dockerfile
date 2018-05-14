@@ -53,8 +53,8 @@ RUN apt-get update \
 # Pick up build instructions
 RUN mkdir -p /openjdk/target
 
-ADD sbin /openjdk/sbin
-ADD workspace/config /openjdk/config
+COPY sbin /openjdk/sbin
+COPY workspace/config /openjdk/config
 
 RUN mkdir -p /openjdk/build
 RUN useradd -ms /bin/bash build
@@ -66,7 +66,6 @@ WORKDIR /openjdk/build/
 ENTRYPOINT ["/openjdk/sbin/build.sh"]
 
 CMD ["images"]
-
 
 ARG OPENJDK_VERSION
 ENV OPENJDK_VERSION=$OPENJDK_VERSION

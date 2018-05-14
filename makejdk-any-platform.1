@@ -1,5 +1,5 @@
 .\" Manpage for makejdk-any-platform.sh
-.TH "0.2.0" "Apache 2"
+.TH "2.0.0" "Apache 2"
 .SH NAME
 makejdk-any-platform.sh
 .SH SYNOPSIS
@@ -48,16 +48,16 @@ Build Project Amber, defaults to https://github.com/AdoptOpenJDK/openjdk-amber
 
 .SH OPTIONS
 .TP
-.BR \-b ", " \-\-build-number " " \fI<build_number>\fR
-specify the OpenJDK build number to build from, e.g. b12.
-For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
-9.0.4+11 (for Java 9+) with the build number being the suffix at the end.
-.TP
-.BR \-B ", " \-\-branch " " \fI<branch>\fR
+.BR \-b ", " \-\-branch " " \fI<branch>\fR
 specify a custom branch to build from, e.g. dev.
 For reference, AdoptOpenJDK GitHub source repos default to the \fI<dev>\fR
 branch which may contain a very small diff set to the \fI<master>\fR branch
 (which is a clone from the OpenJDK mercurial forest).
+.TP
+.BR \-B ", " \-\-build-number " " \fI<build_number>\fR
+specify the OpenJDK build number to build from, e.g. b12.
+For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
+9.0.4+11 (for Java 9+) with the build number being the suffix at the end.
 .TP
 .BR \-c ", " \-\-clean-docker-build
 removes the existing docker container and persistent volume before starting
@@ -116,8 +116,9 @@ specify the location to clone the OpenJDK source (and dependencies) to.
 .BR \-S ", " \-\-ssh
 use ssh when cloning git.
 .TP
-.BR \-\-sign
-sign the OpenJDK binary that you build.
+.BR \-\-sign \fI<path>\fR
+specify the location for the certificate.  For windows this is the p12
+certificate to sign the DLL.
 .TP
 .BR \-\-sudo
 run the docker container as root.
