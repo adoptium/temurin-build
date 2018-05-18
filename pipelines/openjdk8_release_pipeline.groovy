@@ -18,7 +18,8 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 	jobs[platform] = {
 		def buildJob
 		stage('build') {
-			buildJob = build job: "openjdk8_build_${archOS}"
+			buildJob = build job: "openjdk8_build_${archOS}",
+			parameters: [string(name: 'TAG', value: "${JDK_TAG}")]
 		}
 		if (buildMaps[platform].test) {
 			stage('test') {
@@ -44,7 +45,7 @@ stage('installers') {
 	build job: 'openjdk8_build_installer', parameters: [string(name: 'VERSION', value: "${JDK_VERSION}")]
 }
 stage('publish release') {
-	build job: 'openjdk_release_tool', 
+	build job: 'openjdk_release_tool',
 				parameters: [string(name: 'REPO', value: 'release'),
 							string(name: 'TAG', value: "${JDK_TAG}"),
 							string(name: 'VERSION', value: 'jdk8'),
