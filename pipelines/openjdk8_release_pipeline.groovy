@@ -37,7 +37,6 @@ parallel jobs
 
 def checksumJob
 stage('checksums') {
-	build job: 'openjdk8_build_checksum'
 	checksumJob = build job: 'openjdk8_build_checksum',
 							parameters: [string(name: 'PRODUCT', value: 'releases')]
 }
