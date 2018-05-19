@@ -45,7 +45,7 @@ stage('installers') {
 }
 stage('publish release') {
 	build job: 'openjdk_release_tool',
-				parameters: [string(name: 'REPO', value: 'release'),
+				parameters: [string(name: 'REPO', value: 'releases'),
 							string(name: 'TAG', value: "${JDK_TAG}"),
 							string(name: 'VERSION', value: 'jdk8'),
 							string(name: 'CHECKSUM_JOB_NAME', value: "openjdk8_build_checksum"),
