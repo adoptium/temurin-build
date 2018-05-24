@@ -7,8 +7,11 @@ addons:
   apt:
     sources:
     - debian-sid    # Grab shellcheck from the Debian repo (o_O)
-    packages:
-    - shellcheck
+
+before_install:
+ - sudo apt-get install -y cabal-install shunit2
+ - cabal update
+ - cabal install shellcheck
 
 script:
  - bash -c 'shopt -s globstar; shellcheck **/*.sh'
