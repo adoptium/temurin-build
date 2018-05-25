@@ -36,7 +36,7 @@ echo "You are in $WORKSPACE"
 
 # TODO generalise this for the non adopt build farm case
 function checkArgs() {
-  if [ $# -lt 1 ]; then
+  if [ $1 -lt 1 ]; then
      echo Usage: "$0" '[jdk-updates/jdk10u|jdk/jdk] (branch)'
      echo "Hg Repo supplied should match a repository in http://hg.openjdk.java.net/"
      echo "For example, to get the latest jdk development repo:"
@@ -80,7 +80,7 @@ function performMergeFromMercurialIntoGit() {
 }
 
 # TODO Need to cover always merging mercurial master into our GitHub dev branch
-checkArgs
+checkArgs $#
 checkGitVersion
 installGitRemoteHg
 cloneGitHubRepo
