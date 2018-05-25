@@ -81,7 +81,7 @@ function performMergeFromMercurialIntoGit() {
 
 # TODO Need to cover always merging mercurial master into our GitHub dev branch
 checkArgs $#
-checkGitVersion
+#checkGitVersion
 installGitRemoteHg
 cloneGitHubRepo
 addMercurialUpstream
