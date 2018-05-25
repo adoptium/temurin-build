@@ -62,9 +62,14 @@ function cloneGitHubRepo() {
 
 function addMercurialUpstream() {
   cd "$GITHUB_REPO" || exit 1
+
   git fetch origin
-  git checkout "$BRANCH" || git checkout -b "$BRANCH" || exit 1
-  git reset --hard origin/"$BRANCH"
+  if ! git checkout "$BRANCH" ; then
+    git checkout -b "$BRANCH" || exit 1
+  else
+    git reset --hard origin/"$BRANCH"
+  fi
+
   git remote -v | grep 'hg'
   if [ $? -ne 0 ] ; then
     echo "Initial setup of hg::http://hg.openjdk.java.net/$HG_REPO"
