@@ -63,6 +63,7 @@ function cloneGitHubRepo() {
 function addMercurialUpstream() {
   cd "$GITHUB_REPO" || exit 1
   git fetch origin
+  git checkout "$BRANCH" || git checkout -b "$BRANCH" || exit 1
   git reset --hard origin/"$BRANCH"
   git remote -v | grep 'hg'
   if [ $? -ne 0 ] ; then
@@ -72,8 +73,6 @@ function addMercurialUpstream() {
 }
 
 function performMergeFromMercurialIntoGit() {
-  # TODO make sure $BRANCH exists
-  git checkout "$BRANCH" || git checkout -b "$BRANCH" || exit 1
   git gc --auto
   git pull hg branches/"$BRANCH" -m "Merging from Mercurial into GitHub" || echo "The automatic update failed, time for manual intervention!" && exit 1
   git push origin "$BRANCH" --tags || exit 1
