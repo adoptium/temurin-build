@@ -30,28 +30,29 @@ MODULES=(corba langtools jaxp jaxws nashorn jdk hotspot)
 
 OPENJDK_VERSION="$1"
 shift
+# shellcheck disable SC2124
 TAGS="$@"
 GITHUB_PROJECT=git@github.com:AdoptOpenJDK
 GITHUB_REPO="openjdk-$OPENJDK_VERSION"
 
-case $OPENJDK_VERSION in
+case "$OPENJDK_VERSION" in
    jdk8*) HG_REPO=http://hg.openjdk.java.net/jdk8u/jdk8u
           [ -z "$TAGS" ] && TAGS="jdk8u144-b34 jdk8u151-b12 jdk8u152-b16 jdk8u161-b12 jdk8u162-b12 jdk8u172-b03 jdk8u172-b11";;
    jdk9*) HG_REPO=http://hg.openjdk.java.net/jdk_updates/jdk9u
-          [ -z "$TAGS" ] && TAGS="jdk-9+181 jdk-9.0.1+11 jdk-9.0.3+9 jdk-9.0.4+11" ;;
+          [ -z "$TAGS" ] && TAGS="jdk-9+181 jdk-9.0.1+11 jdk-9.0.3+9 jdk-9.0.4+11";;
        *) Unknown JDK version - only jdk8u and jdk9 are supported; exit 1;;
 esac
 
 # Clean up
-rm    -rf ${WORKSPACE}/${GITHUB_REPO} ${WORKSPACE}/openjdk
-mkdir -p  ${WORKSPACE}/${GITHUB_REPO} ${WORKSPACE}/openjdk/mirror
+rm    -rf "$WORKSPACE"/"$GITHUB_REPO" "$WORKSPACE"/openjdk
+mkdir -p  "$WORKSPACE"/"$GITHUB_REPO" "$WORKSPACE"/openjdk/mirror
 
 git --version || exit 1
 GIT_VERSION=$(git --version | awk '{print$NF}')
 GIT_MAJOR_VERSION=$(echo "$GIT_VERSION" | cut -d. -f1)
 GIT_MINOR_VERSION=$(echo "$GIT_VERSION" | cut -d. -f2)
-[ "$GIT_MAJOR_VERSION" -eq 1 ] && echo I need git version 2.16 or later and you have $GIT_VERSION && exit 1
-[ "$GIT_MAJOR_VERSION" -eq 2 -a "$GIT_MINOR_VERSION" -lt 16 ] && echo I need git version 2.16 or later and you have $GIT_VERSION && exit 1
+[ "$GIT_MAJOR_VERSION" -eq 1 ] && echo I need git version 2.16 or later and you have "$GIT_VERSION" && exit 1
+[ "$GIT_MAJOR_VERSION" -eq 2 -a "$GIT_MINOR_VERSION" -lt 16 ] && echo I need git version 2.16 or later and you have "$GIT_VERSION" && exit 1
 
 if ! which git-remote-hg 2>/dev/null; then
   echo I need git-remote-hg and could not find it
@@ -61,8 +62,8 @@ fi
 
 # Clone current AdoptOpenJDK repo
 cd "$WORKSPACE"/"$GITHUB_REPO"
-echo "Clone current $GITHUB_REPO"
-git clone $GITHUB_PROJECT/$GITHUB_REPO.git
+echo Clone current "$GITHUB_REPO"
+git clone "$GITHUB_PROJECT"/"$GITHUB_REPO".git
 cd "$GITHUB_REPO" || exit
 git fetch --tags
 OLDTAG=$(git describe --abbrev=0 --tags) 
@@ -85,10 +86,10 @@ for NEWTAG in $TAGS ; do
   cd "$WORKSPACE"/openjdk/mirror || exit
   git reset --hard "$NEWTAG"
 
-  echo $(date +%T): "Updating master branch for $NEWTAG"
-  cd $WORKSPACE/$GITHUB_REPO/$GITHUB_REPO || exit
+  echo "$(date +%T)": "Updating master branch for $NEWTAG"
+  cd "$WORKSPACE"/"$GITHUB_REPO"/"$GITHUB_REPO" || exit
   git checkout master
-  git fetch $WORKSPACE/openjdk/mirror
+  git fetch "$WORKSPACE"/openjdk/mirror
   git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
 
   for module in "${MODULES[@]}"
@@ -96,55 +97,55 @@ for NEWTAG in $TAGS ; do
       if [ ! -d "$WORKSPACE/openjdk/$module" ]; then
         rm -rf  "$WORKSPACE/openjdk/$module"
         mkdir   "$WORKSPACE/openjdk/$module"
-        cd $WORKSPACE/openjdk/$module || exit
+        cd "$WORKSPACE"/openjdk/$module || exit
         git init
-        echo $(date +%T): "Clone $module"
+        echo "$(date +%T)": "Clone $module"
         git clone --bare "hg::${HG_REPO}/$module" || exit 1
-        echo $(date +%T): "GIT filter on $module"
+        echo "$(date +%T)": "GIT filter on $module"
         cd $module.git || exit
         git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
         cd .. || exit
       fi
-      echo $(date +%T): "GIT pull/reset on $module at $NEWTAG"
+      echo "$(date +%T)": "GIT pull/reset on $module at $NEWTAG"
       cd "$WORKSPACE"/openjdk/$module || exit
       git pull $module
       git fetch --tags $module
-      git reset --hard $NEWTAG
+      git reset --hard "$NEWTAG"
       cd "$WORKSPACE"/"$GITHUB_REPO"/"$GITHUB_REPO" || exit
       git fetch "$WORKSPACE"/openjdk/$module
-      echo $(date +%T): "GIT filter on $module"
+      echo "$(date +%T)": "GIT filter on $module"
       if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
         if ! tty; then
           echo Aborting - not running on a real tty therefore cannot allow manual intervention
           exit 10
         else
-          echo Please resolve them in another window then press return to continue
+          echo "Please resolve them in another window then press return to continue"
           read _
         fi
-         echo Please resolve the conflicts above in "$WORKSPACE"/"$GITHUB_REPO"/"$GITHUB_REPO", then press return to continue
+         echo Please resolve the conflicts above in "$WORKSPACE"/"$GITHUB_REPO"/"$GITHUB_REPO", and press return to continue
          read _
       fi
     done
-  cd $WORKSPACE/$GITHUB_REPO/$GITHUB_REPO || exit
+  cd "$WORKSPACE"/"$GITHUB_REPO"/"$GITHUB_REPO" || exit
   git push origin master
   
   echo "Pulling in changes to $GITHUB_REPO branch"
   git checkout master
   git fetch origin master
   if ! git merge --allow-unrelated-histories -m "Merge $NEWTAG into $GITHUB_REPO" FETCH_HEAD; then
-    echo Conflict resolution needed in $WORKSPACE/$GITHUB_REPO/$GITHUB_REPO
+    echo Conflict resolution needed in "$WORKSPACE"/"$GITHUB_REPO"/"$GITHUB_REPO"
     if ! tty; then
       echo Aborting - not running on a real tty therefore cannot allow manual intervention
       exit 10
     else
-      echo Please resolve them in another window then press return to continue
+      echo "Please resolve them in another window then press return to continue"
       read _
     fi
   fi
-  [ "$NEWTAG" != "HEAD" ] && git tag -f -a $NEWTAG -m "Merge $NEWTAG into master"
+  [ "$NEWTAG" != "HEAD" ] && git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
   echo Deleting the old version of the tag from the server if it is present or push will fail
   # shellcheck disable=SC2015
-  [ "$NEWTAG" != "HEAD" ] && git push origin :refs/tags/$NEWTAG || true
+  [ "$NEWTAG" != "HEAD" ] && git push origin :refs/tags/"$NEWTAG" || true
   [ "$NEWTAG" == "HEAD" ] && git push origin master
   [ "$NEWTAG" != "HEAD" ] && git push origin master --tags
 done
