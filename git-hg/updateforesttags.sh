@@ -30,7 +30,7 @@ MODULES=(corba langtools jaxp jaxws nashorn jdk hotspot)
 
 OPENJDK_VERSION="$1"
 shift
-# shellcheck disable SC2124
+# shellcheck disable=SC2124
 TAGS="$@"
 GITHUB_PROJECT=git@github.com:AdoptOpenJDK
 GITHUB_REPO="openjdk-$OPENJDK_VERSION"
