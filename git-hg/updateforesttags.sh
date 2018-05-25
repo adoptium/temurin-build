@@ -21,7 +21,7 @@
 
 if [ $# -lt 1 ]; then
    echo Usage: "$0" '[jdk8u|jdk9] (TAGS)'
-   echo Version supplied should match a repository in AdoptOpenJDK/openjdk-VERSION
+   echo "Version supplied should match a repository in AdoptOpenJDK/openjdk-VERSION"
    exit 1
 fi
 [ -z "$WORKSPACE" ] || [ ! -d "$WORKSPACE" ] && echo Cannot access \$WORKSPACE: "$WORKSPACE" && exit 2
@@ -44,8 +44,8 @@ case "$OPENJDK_VERSION" in
 esac
 
 # Clean up
-rm    -rf "${WORKSPACE:?}"/"${GITHUB_REPO}" "${WORKSPACE:?}"/openjdk
-mkdir -p  "$WORKSPACE"/"$GITHUB_REPO" "$WORKSPACE"/openjdk/mirror
+rm    -rf "${WORKSPACE:?}/$GITHUB_REPO" "${WORKSPACE:?}/openjdk"
+mkdir -p  "$WORKSPACE/$GITHUB_REPO" "$WORKSPACE/openjdk/mirror"
 
 git --version || exit 1
 GIT_VERSION=$(git --version | awk '{print$NF}')
@@ -55,15 +55,15 @@ GIT_MINOR_VERSION=$(echo "$GIT_VERSION" | cut -d. -f2)
 [ "$GIT_MAJOR_VERSION" -eq 2 ] && [ "$GIT_MINOR_VERSION" -lt 16 ] && echo I need git version 2.16 or later and you have "$GIT_VERSION" && exit 1
 
 if ! which git-remote-hg 2>/dev/null; then
-  echo I need git-remote-hg and could not find it
-  echo Get it from http://raw.githubusercontent.com/felipec/git-remote-hg/master/git-remote-hg
+  echo "I need git-remote-hg and could not find it"
+  echo "Get it from http://raw.githubusercontent.com/felipec/git-remote-hg/master/git-remote-hg"
   exit 1
 fi
 
 # Clone current AdoptOpenJDK repo
-cd "$WORKSPACE"/"$GITHUB_REPO" || exit
-echo Clone current "$GITHUB_REPO"
-git clone "$GITHUB_PROJECT"/"$GITHUB_REPO".git
+cd "$WORKSPACE/$GITHUB_REPO" || exit 1
+echo "Clone current $GITHUB_REPO"
+git clone "$GITHUB_PROJECT/$GITHUB_REPO.git"
 cd "$GITHUB_REPO" || exit
 git fetch --tags
 OLDTAG=$(git describe --abbrev=0 --tags) 
@@ -71,11 +71,11 @@ echo "Current openjdk level is $OLDTAG"
 
 # Clone current openjdk from Mercurial
 echo "Get base openjdk repository" 
-cd "$WORKSPACE"/openjdk/mirror || exit
+cd "$WORKSPACE/openjdk/mirror" || exit 1
 git init
 git clone --bare "hg::${HG_REPO}"
 
-cd "$OPENJDK_VERSION.git" || exit
+cd "$OPENJDK_VERSION.git" || exit 1
 
 git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 
@@ -83,13 +83,13 @@ cd .. || exit
 git pull "$OPENJDK_VERSION"
 git fetch --tags "$OPENJDK_VERSION"
 for NEWTAG in $TAGS ; do
-  cd "$WORKSPACE"/openjdk/mirror || exit
+  cd "$WORKSPACE/openjdk/mirror" || exit 1
   git reset --hard "$NEWTAG"
 
   echo "$(date +%T)": "Updating master branch for $NEWTAG"
-  cd "$WORKSPACE"/"$GITHUB_REPO"/"$GITHUB_REPO" || exit
+  cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
   git checkout master
-  git fetch "$WORKSPACE"/openjdk/mirror
+  git fetch "$WORKSPACE/openjdk/mirror"
   git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
 
   for module in "${MODULES[@]}"
@@ -97,45 +97,45 @@ for NEWTAG in $TAGS ; do
       if [ ! -d "$WORKSPACE/openjdk/$module" ]; then
         rm -rf  "$WORKSPACE/openjdk/$module"
         mkdir   "$WORKSPACE/openjdk/$module"
-        cd "$WORKSPACE"/openjdk/"$module" || exit
+        cd "$WORKSPACE/openjdk/$module" || exit 1
         git init
         echo "$(date +%T)": "Clone $module"
         git clone --bare "hg::${HG_REPO}/$module" || exit 1
         echo "$(date +%T)": "GIT filter on $module"
-        cd "$module".git || exit
+        cd "$module.git" || exit
         git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
         cd .. || exit
       fi
       echo "$(date +%T)": "GIT pull/reset on $module at $NEWTAG"
-      cd "$WORKSPACE"/openjdk/"$module" || exit
+      cd "$WORKSPACE/openjdk/$module" || exit 1
       git pull "$module"
       git fetch --tags "$module"
       git reset --hard "$NEWTAG"
-      cd "$WORKSPACE"/"$GITHUB_REPO"/"$GITHUB_REPO" || exit
-      git fetch "$WORKSPACE"/openjdk/"$module"
-      echo "$(date +%T)": "GIT filter on $module"
+      cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+      git fetch "$WORKSPACE/openjdk/$module"
+      echo "$(date +%T)": GIT filter on "$module"
       if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
         if ! tty; then
-          echo Aborting - not running on a real tty therefore cannot allow manual intervention
+          echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
           exit 10
         else
           echo "Please resolve them in another window then press return to continue"
           read -r _
         fi
-         echo Please resolve the conflicts above in "$WORKSPACE"/"$GITHUB_REPO"/"$GITHUB_REPO", and press return to continue
+         echo Please resolve the conflicts above in "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO", and press return to continue
          read -r _
       fi
     done
-  cd "$WORKSPACE"/"$GITHUB_REPO"/"$GITHUB_REPO" || exit
+  cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
   git push origin master
   
   echo "Pulling in changes to $GITHUB_REPO branch"
   git checkout master
   git fetch origin master
   if ! git merge --allow-unrelated-histories -m "Merge $NEWTAG into $GITHUB_REPO" FETCH_HEAD; then
-    echo Conflict resolution needed in "$WORKSPACE"/"$GITHUB_REPO"/"$GITHUB_REPO"
+    echo Conflict resolution needed in "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO"
     if ! tty; then
-      echo Aborting - not running on a real tty therefore cannot allow manual intervention
+      echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
       exit 10
     else
       echo "Please resolve them in another window then press return to continue"
