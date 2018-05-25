@@ -24,7 +24,7 @@
 #
 ################################################################################
 
-set -euo
+set -euo pipefail
 
 echo "Import common functionality"
 # shellcheck disable=SC1091
@@ -70,8 +70,7 @@ function addMercurialUpstream() {
     git reset --hard origin/"$BRANCH"
   fi
 
-  git remote -v | grep 'hg'
-  if [ $? -ne 0 ] ; then
+  if [ -z "$(git remote -v | grep 'hg')" ] ; then
     echo "Initial setup of hg::http://hg.openjdk.java.net/$HG_REPO"
     git remote add hg hg::http://hg.openjdk.java.net/"$HG_REPO"
   fi
