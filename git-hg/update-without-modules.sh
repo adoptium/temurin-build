@@ -13,13 +13,12 @@
 # limitations under the License.
 #
 
-echo "Common defs"
 
+echo "Import common functionality"
 # shellcheck disable=SC1091
 source import-common.sh
 
 echo "Enter hg"
-
 cd hg || exit 1
 
 # shellcheck disable=SC2035
@@ -38,25 +37,22 @@ do
     popd
 
     echo "Exit hg"
-    echo "Enter combined"
 
+    echo "Enter ../combined"
     cd ../combined || exit 1
 
     echo "Check out master"
-
     git checkout master || exit 1
 
-    echo "Fetch (root)"
-
+    echo "Fetch (root) of the mercurial forest/repo"
     git fetch "imports/$hg_root_forest/$hg_repo/root" || exit 1
 
     echo "Merge (root)"
-
     git merge "imports/$hg_root_forest/$hg_repo/root/master" -m "Merge from (root)" --no-ff || exit 1
 
-    echo "Push"
-
+    echo "Push to GitHub"
     git push github master --tags
 
+    echo "Exit back to ../hg"
     cd ../hg || exit 1
 done
