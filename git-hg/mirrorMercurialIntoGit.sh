@@ -24,7 +24,7 @@
 #
 ################################################################################
 
-set -euo pipefail
+set -euo
 
 echo "Import common functionality"
 # shellcheck disable=SC1091
