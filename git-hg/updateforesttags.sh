@@ -44,7 +44,7 @@ case "$OPENJDK_VERSION" in
 esac
 
 # Clean up
-rm    -rf "${WORKSPACE}/${GITHUB_REPO}" "${WORKSPACE}"/openjdk
+rm    -rf "${WORKSPACE:?}"/"${GITHUB_REPO}" "${WORKSPACE:?}"/openjdk
 mkdir -p  "$WORKSPACE"/"$GITHUB_REPO" "$WORKSPACE"/openjdk/mirror
 
 git --version || exit 1
