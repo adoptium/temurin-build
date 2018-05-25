@@ -77,8 +77,8 @@ function addMercurialUpstream() {
 }
 
 function performMergeFromMercurialIntoGit() {
+  git pull hg branches/"$BRANCH" || echo "The automatic update failed, time for manual intervention!" && exit 1
   git gc --auto
-  git pull hg branches/"$BRANCH" -m "Merging from Mercurial into GitHub" || echo "The automatic update failed, time for manual intervention!" && exit 1
   git push origin "$BRANCH" --tags || exit 1
 }
 
