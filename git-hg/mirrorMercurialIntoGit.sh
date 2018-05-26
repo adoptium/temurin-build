@@ -67,7 +67,7 @@ function addMercurialUpstream() {
   if ! git checkout "$BRANCH" ; then
     git checkout -b "$BRANCH" || exit 1
   else
-    git reset --hard origin/"$BRANCH"
+    git reset --hard origin/"$BRANCH" || echo "Not resetting as no upstream exists"
   fi
 
   if [ -z "$(git remote -v | grep 'hg')" ] ; then
