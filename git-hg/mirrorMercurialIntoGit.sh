@@ -84,6 +84,14 @@ function performMergeFromMercurialIntoGit() {
   git push origin "$BRANCH" --tags || exit 1
 }
 
+# Merge master into dev as we build off dev at the AdoptOpenJDK Build farm
+# dev contains patches that AdoptOpenJDK has beyond upstream OpenJDK
+function performMergeIntoDevFromMaster() {
+  git checkout dev || git checkout -b dev
+  git rebase master || exit 1
+  git push origin dev || exit 1
+}
+
 # TODO Need to cover always merging mercurial master into our GitHub dev branch
 checkArgs $#
 #checkGitVersion
@@ -91,3 +99,4 @@ installGitRemoteHg
 cloneGitHubRepo
 addMercurialUpstream
 performMergeFromMercurialIntoGit
+performMergeIntoDevFromMaster
