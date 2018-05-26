@@ -78,7 +78,7 @@ function addMercurialUpstream() {
 
 function performMergeFromMercurialIntoGit() {
   git fetch hg
-  git merge hg/"$BRANCH" -m "Merge $BRANCH" || echo "The automatic update failed, time for manual intervention!" && exit 1
+  git merge hg/"$BRANCH" -m "Merge $BRANCH" || (echo "The automatic update failed, time for manual intervention!" && exit 1)
   git gc --auto
   git push origin "$BRANCH" --tags || exit 1
 }
