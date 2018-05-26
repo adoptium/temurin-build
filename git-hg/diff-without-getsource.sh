@@ -39,7 +39,7 @@ fi
 # get latest git tag
 
 cd openjdk-git || exit 1
-gitTag=$(git describe --tags `git rev-list --tags --max-count=1`) || exit 1
+gitTag=$(git describe --tags $(git rev-list --tags --max-count=1)) || exit 1
 cd - || exit 1
 
 cd openjdk-hg || exit 1
