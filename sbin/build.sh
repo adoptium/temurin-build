@@ -241,14 +241,14 @@ buildTemplatedFile() {
 
   cat "$SCRIPT_DIR/build-template.sh" | \
       sed -e "s|{configureArg}|${FULL_CONFIGURE}|" \
-      -e "s|{makeCommandArg}|${FULL_MAKE_COMMAND}|" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/configure-and-build.sh"
+      -e "s|{makeCommandArg}|${FULL_MAKE_COMMAND}|" > "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
 }
 
 executeTemplatedFile() {
   stepIntoTheWorkingDirectory
 
   echo "Currently at '${PWD}'"
-  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/configure-and-build.sh"
+  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
   exitCode=$?
 
   if [ "${exitCode}" -eq 1 ]; then
@@ -415,9 +415,6 @@ createOpenJDKTarArchive()
 
   echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
 
-  ## clean out old builds
-  rm -r "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || true
-  mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 
   echo "${good}Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}${normal}"
   mv "OpenJDK${EXT}" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${BUILD_CONFIG[TARGET_FILE_NAME]}"
@@ -443,7 +440,6 @@ configureWorkspace
 
 getOpenJDKUpdateAndBuildVersion
 configureCommandParameters
-stepIntoTheWorkingDirectory
 buildTemplatedFile
 executeTemplatedFile
 
