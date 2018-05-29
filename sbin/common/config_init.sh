@@ -242,7 +242,7 @@ function parseConfigurationArguments() {
         "--version"  | "-v" )
         setOpenJdkVersion "$1"; shift;;
 
-        "--version"  | "-V" )
+        "--jvm-variant"  | "-V" )
         BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
 
         *) echo >&2 "${error}Invalid build.sh option: ${opt}${normal}"; exit 1;;
