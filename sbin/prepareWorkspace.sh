@@ -206,7 +206,7 @@ checkingAndDownloadingFreeType()
       # shellcheck disable=SC2154
       echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
 
-     if [[ ${OS_KERNEL_NAME} == "darwin" ]] ; then
+     if [[ ${BUILD_CONFIG[OS_KERNEL_NAME]} == "darwin" ]] ; then
         TARGET_DYNAMIC_LIB_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype/lib/
         TARGET_DYNAMIC_LIB="${TARGET_DYNAMIC_LIB_DIR}"/libfreetype.6.dylib
         echo ""
