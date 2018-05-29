@@ -52,8 +52,8 @@ RUN apt-get update \
 # Pick up build instructions
 RUN mkdir -p /openjdk/target
 
-ADD sbin /openjdk/sbin
-ADD workspace/config /openjdk/config
+COPY sbin /openjdk/sbin
+COPY workspace/config /openjdk/config
 
 RUN mkdir -p /openjdk/build
 RUN useradd -ms /bin/bash build

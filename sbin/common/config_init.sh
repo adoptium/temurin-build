@@ -146,11 +146,11 @@ function parseConfigurationArguments() {
       case "$opt" in
         "--" ) break 2;;
 
-        "--build-number"  | "-b" )
-        BUILD_CONFIG[OPENJDK_BUILD_NUMBER]="$1"; shift;;
-
-        "--branch" | "-B" )
+        "--branch" | "-b" )
         BUILD_CONFIG[BRANCH]="$1"; shift;;
+
+        "--build-number"  | "-B" )
+        BUILD_CONFIG[OPENJDK_BUILD_NUMBER]="$1"; shift;;
 
         "--configure-args"  | "-C" )
         BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;

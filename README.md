@@ -93,16 +93,16 @@ amber - Build Project Amber, defaults to https://github.com/AdoptOpenJDK/openjdk
 
 OPTIONS
 
--b, --build-number <build_number>
-specify the OpenJDK build number to build from, e.g. b12.
-For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
-9.0.4+11 (for Java 9+) with the build number being the suffix at the end.
-
--B, --branch <branch>
+-b, --branch <branch>
 specify a custom branch to build from, e.g. dev.
 For reference, AdoptOpenJDK GitHub source repos default to the dev
 branch which may contain a very small diff set to the master branch
 (which is a clone from the OpenJDK mercurial forest).
+
+-B, --build-number <build_number>
+specify the OpenJDK build number to build from, e.g. b12.
+For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
+9.0.4+11 (for Java 9+) with the build number being the suffix at the end.
 
 -c, --clean-docker-build
 removes the existing docker container and persistent volume before starting
@@ -218,8 +218,6 @@ platform and and optional arguments provided
 general preparation.
 - Rest of the build and packaging is then handled from `sbin/build.sh` 
  
- 
-
 ## Building OpenJDK
 
 ### Building on the Build Farm
@@ -228,6 +226,9 @@ In order to build an OpenJDK variant on the build farm you need to follow the
 [Adding-a-new-build-variant](https://github.com/AdoptOpenJDK/TSC/wiki/Adding-a-new-build-variant) 
 instructions.  The configuration options are often set in the Jenkins job and 
 passed into `makejdk-any-platform.sh` script.
+
+Note that the build nodes (list of hosts on the LH side) also have configuration 
+where things like the BOOT_JDK environment variable is set.
 
 ### Building via Docker in your local environment
 
