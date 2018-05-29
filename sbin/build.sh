@@ -220,46 +220,15 @@ stepIntoTheWorkingDirectory() {
   echo "Should have the source, I'm at $PWD"
 }
 
-# Run 'configure'
-runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
-{
+buildTemplatedFile() {
   echo "Configuring command and using the pre-built config params..."
 
   stepIntoTheWorkingDirectory
 
   echo "Currently at '${PWD}'"
 
-  CONFIGURED_OPENJDK_ALREADY=$(/usr/bin/find . -name "config.status")
-
-  if [[ ! -z "$CONFIGURED_OPENJDK_ALREADY" ]] ; then
-    echo "Not reconfiguring due to the presence of config.status in ${BUILD_CONFIG[WORKING_DIR]}"
-  else
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
-
-    echo "Running ./configure with arguments '${CONFIGURE_ARGS}'"
-    # Depends upon the configure command being split for multiple args.  Don't quote it.
-    # shellcheck disable=SC2086
-    bash ./configure ${CONFIGURE_ARGS}
-
-    # shellcheck disable=SC2181
-    if [ $? -ne 0 ]; then
-      echo "${error}"
-      echo "Failed to configure the JDK, exiting"
-      echo "Did you set the JDK boot directory correctly? Override by exporting JDK_BOOT_DIR"
-      echo "For example, on RHEL you would do export JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.131-2.6.9.0.el7_3.x86_64"
-      echo "Current JDK_BOOT_DIR value: ${JDK_BOOT_DIR}"
-      exit;
-    else
-      echo "${good}Configured the JDK"
-    fi
-    echo "${normal}"
-  fi
-}
-
-# Build OpenJDK using make
-buildOpenJDK()
-{
-  stepIntoTheWorkingDirectory
+  FULL_CONFIGURE="bash ./configure ${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
+  echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
 
   # If it's Java 9+ then we also make test-image to build the native test libraries
   JDK_PREFIX="jdk"
@@ -269,21 +238,32 @@ buildOpenJDK()
   fi
 
   FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${MAKE_TEST_IMAGE}"
-  echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
-set +e
-  ${FULL_MAKE_COMMAND}
-  exitCode=$?
-  set -e
 
-  # shellcheck disable=SC2181
-  if [ "${exitCode}" -ne 0 ]; then
-     echo "${error}Failed to make the JDK, exiting"
-     exit 1;
-  else
-    echo "${good}Built the JDK!"
-  fi
-  echo "${normal}"
+  cat "$SCRIPT_DIR/build-template.sh" | \
+      sed -e "s|{configureArg}|${FULL_CONFIGURE}|" \
+      -e "s|{makeCommandArg}|${FULL_MAKE_COMMAND}|" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/configure-and-build.sh"
 }
+
+executeTemplatedFile() {
+  stepIntoTheWorkingDirectory
+
+  echo "Currently at '${PWD}'"
+  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/configure-and-build.sh"
+  exitCode=$?
+
+  if [ "${exitCode}" -eq 1 ]; then
+    echo "Failed to make the JDK, exiting"
+    exit 1;
+  elif [ "${exitCode}" -eq 2 ]; then
+    echo "Failed to configure the JDK, exiting"
+    echo "Did you set the JDK boot directory correctly? Override by exporting JDK_BOOT_DIR"
+    echo "For example, on RHEL you would do export JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.131-2.6.9.0.el7_3.x86_64"
+    echo "Current JDK_BOOT_DIR value: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+    exit 2;
+  fi
+
+}
+
 
 # Print the version string so we know what we've produced
 printJavaVersionString()
@@ -464,8 +444,8 @@ configureWorkspace
 getOpenJDKUpdateAndBuildVersion
 configureCommandParameters
 stepIntoTheWorkingDirectory
-runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
-buildOpenJDK
+buildTemplatedFile
+executeTemplatedFile
 
 printJavaVersionString
 removingUnnecessaryFiles
