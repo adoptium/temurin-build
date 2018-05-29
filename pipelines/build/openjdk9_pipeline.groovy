@@ -84,7 +84,7 @@ def doBuild(javaToBuild, buildConfigurations) {
     try {
         parallel jobs
     } finally {
-        node('centos6&&x64&&build') {
+        node('linux&&build') {
             buildJobs.each {
                 buildJob ->
                     if (buildJob.job.getResult() == 'SUCCESS') {
