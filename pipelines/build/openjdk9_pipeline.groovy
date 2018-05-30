@@ -76,11 +76,29 @@ def doBuild(javaToBuild, buildConfigurations) {
                             targetLabel: buildConfiguration.key
                     ]);
                 }
-                stage("archive-${buildType}") {
-                    archiveArtifacts artifacts: 'workspace/target/*'
-                }
             }
+
         }
     }
-    parallel jobs
+    try {
+        parallel jobs
+    } finally {
+        node('linux&&build') {
+            buildJobs.each {
+                buildJob ->
+                    if (buildJob.job.getResult() == 'SUCCESS') {
+                        copyArtifacts(
+                                projectName: 'openjdk_build_refactor',
+                                selector: specific("${buildJob.job.getNumber()}"),
+                                filter: 'workspace/target/*',
+                                fingerprintArtifacts: true,
+                                target: "target/${buildJob.targetLabel}/${buildJob.config.arch}/",
+                                flatten: true)
+                    }
+            }
+
+            archiveArtifacts artifacts: 'target/*/*/*'
+        }
+    }
 }
+
