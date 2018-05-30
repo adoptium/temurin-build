@@ -4,7 +4,6 @@ def buildConfigurations = [
                 arch               : 'x64',
                 bootJDK            : "9",
                 path               : "/Users/jenkins/ccache-3.2.4",
-                configureArgs      : "",
                 xCodeSwitchPath    : "/",
                 aditionalNodeLabels: 'x64&&build'
         ],

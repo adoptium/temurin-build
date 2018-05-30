@@ -88,7 +88,12 @@ configuringBootJDKConfigureParameter()
     echo "Searching for JDK_BOOT_DIR"
 
     # shellcheck disable=SC2046
-    BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
+
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink $(which javac))))
+    else
+      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
+    fi
 
     echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
     echo "If this is incorrect explicitly configure JDK_BOOT_DIR"
