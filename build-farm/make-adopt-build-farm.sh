@@ -58,6 +58,16 @@ elif [[ $NODE_LABELS = *"windows"* ]] ; then
   export JAVA_HOME=$JDK_BOOT_DIR
 fi
 
+
+
+additionalSetupScript="${SCRIPT_DIR}/${JAVA_TO_BUILD}/${PLATFORM}/${ARCHITECTURE}/setup.sh"
+
+if [ -e "${additionalSetupScript}" ]
+then
+    echo "loading ${additionalSetupScript}"
+    source "${additionalSetupScript}"
+fi
+
 # Set the file name
 FILENAME="OpenJDK8_x64_${PLATFORM}_${TIMESTAMP}.${EXTENSION}"
 echo "Filename will be: $FILENAME"
