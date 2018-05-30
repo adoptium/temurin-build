@@ -2,7 +2,7 @@ def buildConfigurations = [
         mac    : [
                 os                 : 'mac',
                 arch               : 'x64',
-                bootJDK            : "9",
+                bootJDK            : "8",
                 path               : "/Users/jenkins/ccache-3.2.4",
                 xCodeSwitchPath    : "/",
                 aditionalNodeLabels: 'x64&&build'
@@ -11,7 +11,7 @@ def buildConfigurations = [
         linux  : [
                 os                 : 'centos6',
                 arch               : 'x64',
-                bootJDK            : "9",
+                bootJDK            : "8",
                 configureArgs      : "--disable-warnings-as-errors",
                 aditionalNodeLabels: 'x64&&build'
         ],
@@ -20,7 +20,7 @@ def buildConfigurations = [
         windows: [
                 os                 : 'windows',
                 arch               : 'x64',
-                bootJDK            : "9",
+                bootJDK            : "8",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
                 configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
                 aditionalNodeLabels: 'build&&x64&&win2012'
