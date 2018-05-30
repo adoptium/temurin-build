@@ -75,6 +75,7 @@ fi
 FILENAME="OpenJDK8_x64_${PLATFORM}_${TIMESTAMP}.${EXTENSION}"
 echo "Filename will be: $FILENAME"
 
+mkdir -p "$SCRIPT_DIR/../workspace/target/"
 echo "foo" > "$SCRIPT_DIR/../workspace/target/OpenJDK_test.tar.gz"
 
 #bash "$SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${GIT_SHALLOW_CLONE_OPTION} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} "${JAVA_TO_BUILD}"
