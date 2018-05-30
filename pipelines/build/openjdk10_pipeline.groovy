@@ -5,6 +5,7 @@ def buildConfigurations = [
                 bootJDK            : "/Users/jenkins/tools/hudson.model.JDK/JDK9.0.1",
                 path               : "/Users/jenkins/ccache-3.2.4",
                 xCodeSwitchPath    : "/",
+                configureArgs      : "--disable-warnings-as-errors",
                 aditionalNodeLabels: 'x64&&build'
         ],
 
