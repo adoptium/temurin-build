@@ -24,7 +24,6 @@ def buildConfigurations = [
                 bootJDK            : "8",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
                 configureArgs      : "--with-freetype=/cygdrive/C/openjdk/freetype --disable-ccache",
-                buildArgs          : "--tmp-space-build",
                 aditionalNodeLabels: 'build&&win2012'
         ]
 ]

@@ -56,6 +56,8 @@ elif [[ $NODE_LABELS = *"windows"* ]] ; then
   export ALLOW_DOWNLOADS=true
   export LANG=C
   export JAVA_HOME=$JDK_BOOT_DIR
+
+  export BUILD_ARGS="--tmp-space-build ${BUILD_ARGS}"
 fi
 
 
