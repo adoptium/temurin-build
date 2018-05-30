@@ -2,7 +2,7 @@ def buildConfigurations = [
         mac    : [
                 os                 : 'mac',
                 arch               : 'x64',
-                bootJDK            : "home",
+                bootJDK            : "/Users/jenkins/tools/hudson.model.JDK/JDK9.0.1",
                 path               : "/Users/jenkins/ccache-3.2.4",
                 xCodeSwitchPath    : "/",
                 aditionalNodeLabels: 'x64&&build'
