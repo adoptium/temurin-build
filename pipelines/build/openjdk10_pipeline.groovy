@@ -34,7 +34,7 @@ if (osTarget != "all") {
             .findAll { it.key == osTarget }
 }
 
-doBuild("jdk9", buildConfigurations)
+doBuild("jdk10u", buildConfigurations)
 
 ///////////////////////////////////////////////////
 //Do build is the same for all pipelines
