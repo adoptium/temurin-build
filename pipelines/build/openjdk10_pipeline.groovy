@@ -85,7 +85,7 @@ def doBuild(javaToBuild, buildConfigurations, variants) {
 
                     variants.each { variant ->
                         def parameters = buildParams.clone();
-                        parameters += string(name: 'VARIANT', value: "${configuration.variant}");
+                        parameters += string(name: 'VARIANT', value: "${variant}");
                         def buildJob = build job: "openjdk_build_refactor", parameters: parameters
 
                         buildJobs.add([
