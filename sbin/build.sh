@@ -291,6 +291,7 @@ printJavaVersionString()
   PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
+     # shellcheck disable=SC2154
      echo "${info}"
      if ! "$PRODUCT_HOME"/bin/java -version; then
        echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}"
@@ -391,6 +392,10 @@ signRelease()
       ;;
       "darwin"*)
         echo "Signing OSX release"
+        # Login to KeyChain
+        # shellcheck disable=SC2046
+        # shellcheck disable=SC2006
+        security unlock-keychain -p `cat ~/.password`
         # Sign all files with the executable permission bit set.
         FILES=$(find "${OPENJDK_REPO_TAG}" -perm +111 -type f || find "${OPENJDK_REPO_TAG}" -perm /111 -type f)
         echo "$FILES" | while read -r f; do codesign -s "${BUILD_CONFIG[CERTIFICATE]}" "$f"; done
