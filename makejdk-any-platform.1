@@ -59,6 +59,10 @@ specify the OpenJDK build number to build from, e.g. b12.
 For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 9.0.4+11 (for Java 9+) with the build number being the suffix at the end.
 .TP
+.BR \-\-build-variant " " \fI<variant_name>\fR
+specify a OpenJDK build variant, e.g. openj9.
+For reference, the default variant is hotspot and does not need to be specified.
+.TP
 .BR \-c ", " \-\-clean-docker-build
 removes the existing docker container and persistent volume before starting
 a new docker based build.
@@ -126,6 +130,9 @@ run the docker container as root.
 .BR \-t ", " \-\-tag " " \fI<tag>\fR
 specify the repository tag that you want to build OpenJDK from.
 .TP
+.BR \-\-tmp-space-build
+use a temporary workspace if the main one is unavailable.
+.TP
 .BR \-T ", " \-\-target-file-name " " \fI<file_name>\fR
 specify the final name of the OpenJDK binary.
 This is typically used in conjunction with \fB<-D>\fR to create a custom file
@@ -137,10 +144,6 @@ For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 9.0.4+11 (for Java 9+) with the update number being the number after the '_'
 (162) or the 3rd position in the semVer version string (4).
 This is typically used in conjunction with \fB<-b>\fR.
-.TP
-.BR \-v ", " \-\-build-variant " " \fI<variant_name>\fR
-specify a OpenJDK build variant, e.g. openj9.
-For reference, the default variant is hotspot and does not need to be specified.
 .TP
 .BR \-V ", " \-\-jvm-variant " " \fI<jvm_variant>\fR
 specify the JVM variant (server or client), defaults to server.

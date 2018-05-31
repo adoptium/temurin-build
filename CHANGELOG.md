@@ -21,7 +21,8 @@ binaries natively.
 1. _makejdk.sh_ removed - please use _makejdk-any-platform.sh_ or (rarely) 
 _sbin/build.sh_ instead. 
 1. _sbin/common-functions.sh_ removed and its logic split 
-1. _sbin/common/config_init.sh_ added 
+1. _sbin/common/config_init.sh_ added
+1. _sbin/common/build-template.sh_ added for saving off the configure configuration. 
 1. _sbin/signalhandler.sh_ moved to _signalhandler.sh_
 1. _sbin/build.sh_ enhanced, now requires a 'saved' build configuration to run. 
 This 'saved' build configuration is created by _makejdk-any-platform.sh_ but 
@@ -29,12 +30,9 @@ can be generated manually as well.
 
 #### _makejdk-any-platform.sh_, _build.sh_, _makejdk.sh_ usage changes
 
-1. `--version` flag is removed as version is a mandatory argument. Use 
-`<version>` instead. e.g. `./makejdk-any-platform.sh --version jdk8u` changes to 
-`./makejdk-any-platform.sh jdk8u`
 1. More versions added, `jdk8u | jdk9 | jdk10 | jfx | amber` are now all supported
 1. `-B` is now used for specifying the build number (long form `--build-number`).
-1. `-bv` changes to `-v`, (long form `--variant` changes to `--build-variant`).
+1. `-bv` is removed, (long form `--variant` changes to `--build-variant`).
 1. `-c` (long form `--clean-docker-build`) added to build from a clean docker container.
 1. `-ca` changes to `-C`, (long form `--configure-args` stays the same).
 1. `-D` (long form `--docker`) added for building in a docker container.
@@ -49,6 +47,7 @@ via the openjdk-tests repo / project.
 1. `-p` (long form `--processors`) added to set number of processors in docker build.
 1. `-sf` changes to `-F`, (long form `--skip-freetype` stays the same).
 1. `--sudo` added to run the docker container as root.
+1. `--tmp-space-build` (set a temporary build space if regular workspace is unavailable).
 1. `-T` (long form `--target-file-name` added to specify the final name of the binary.
 1. `-u` (long form `--update-version`) added to specify the update version.
 1. `-V` (long form `--jvm-variant` specify the JVM variant (server or client).
@@ -78,13 +77,16 @@ opposed to falsely picking up the underlying native env).
 
 ### Build Farm Support
 
-1. New `build-farm/make-adopt-build-farm.sh` added for the new AdoptOpenJDK 
+1. New _build-farm/make-adopt-build-farm.sh_ added for the new AdoptOpenJDK 
 Build Farm jenkins pipeline to build Adopt OpenJDK binaries.  Sets the default 
 environment variables that are currently set in individual jobs.  This allows 
 us to now track and version these variables.
-1. _pipelines/build/openjdk<X>\_pipeline.groovy_ files added.  These will 
+1. _pipelines/build/openjdk\<version\>\_pipeline.groovy_ files added.  These will 
 eventually replace the existing individual jobs with a Pipeline for each version 
 and variant.
+1. _build-farm/\<version\>/\<platform\>/\<architecture\>/setup.sh_ files added. 
+These are to help set up environment variables specifically for AdoptOpenJDK 
+build farm nodes.
 
 ### Documentation and Misc
 
