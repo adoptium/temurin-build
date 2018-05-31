@@ -63,7 +63,7 @@ fi
 
 
 
-additionalSetupScript="${SCRIPT_DIR}/${JAVA_TO_BUILD}/${PLATFORM}/${ARCHITECTURE}/setup.sh"
+additionalSetupScript="${SCRIPT_DIR}/${JAVA_TO_BUILD}/${PLATFORM}/${ARCHITECTURE}/${VARIANT}/setup.sh"
 
 if [ -e "${additionalSetupScript}" ]
 then

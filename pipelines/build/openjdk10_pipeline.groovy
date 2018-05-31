@@ -6,7 +6,7 @@ def buildConfigurations = [
                 path               : "/Users/jenkins/ccache-3.2.4",
                 xCodeSwitchPath    : "/",
                 configureArgs      : "--disable-warnings-as-errors",
-                aditionalNodeLabels: 'x64&&build'
+                aditionalNodeLabels: 'build'
         ],
 
         linux  : [
@@ -14,7 +14,7 @@ def buildConfigurations = [
                 arch               : 'x64',
                 bootJDK            : "9",
                 configureArgs      : "--disable-warnings-as-errors",
-                aditionalNodeLabels: 'x64&&build'
+                aditionalNodeLabels: 'build'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -24,7 +24,27 @@ def buildConfigurations = [
                 bootJDK            : "9",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
                 configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
-                aditionalNodeLabels: 'build&&x64&&win2012'
+                aditionalNodeLabels: 'build&&win2012'
+        ],
+
+        aix: [
+                os                 : 'aix',
+                arch               : 'ppc64',
+                bootJDK            : "9",
+                path               : "/opt/freeware/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin",
+                configureArgs      : "--disable-warnings-as-errors --with-memory-size=18000 --with-cups-include=/opt/freeware/include --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread",
+                aditionalNodeLabels: 'build'
+        ],
+
+
+
+        linuxOpenJ9  : [
+                os                 : 'centos6',
+                arch               : 'x64',
+                bootJDK            : "9",
+                configureArgs      : "--disable-warnings-as-errors",
+                aditionalNodeLabels: 'build',
+                variant            : 'openj9'
         ]
 ]
 
@@ -66,6 +86,7 @@ def doBuild(javaToBuild, buildConfigurations) {
                     if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
                     if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
                     if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
+                    if (configuration.containsKey('variant')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.variant}");
 
                     def buildJob = build job: "openjdk_build_refactor", parameters: buildParams
 
