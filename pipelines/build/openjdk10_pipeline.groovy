@@ -86,7 +86,7 @@ def doBuild(javaToBuild, buildConfigurations) {
                     if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
                     if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
                     if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
-                    if (configuration.containsKey('variant')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.variant}");
+                    if (configuration.containsKey('variant')) buildParams += string(name: 'VARIANT', value: "${configuration.variant}");
 
                     def buildJob = build job: "openjdk_build_refactor", parameters: buildParams
 
