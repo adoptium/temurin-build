@@ -79,7 +79,7 @@ fi
 
 # Set the file name
 JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr a-z A-Z)
-FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_x64_${PLATFORM}_${TIMESTAMP}.${EXTENSION}"
+FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${PLATFORM}_${VARIANT}_${TIMESTAMP}.${EXTENSION}"
 echo "Filename will be: $FILENAME"
 
 bash "$SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${GIT_SHALLOW_CLONE_OPTION} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
