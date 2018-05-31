@@ -80,7 +80,7 @@ def doBuild(javaToBuild, buildConfigurations) {
     try {
         parallel jobs
     } finally {
-        node('linux&&build') {
+        node('master') {
             buildJobs.each {
                 buildJob ->
                     if (buildJob.job.getResult() == 'SUCCESS') {
