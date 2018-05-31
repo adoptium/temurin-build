@@ -72,7 +72,7 @@ then
     source "${additionalSetupScript}"
 fi
 
-if [ "${VARIANT}" !== "hotspot" ]
+if [ "${VARIANT}" != "hotspot" ]
 then
   VARIANT_ARG="--variant ${VARIANT}"
 fi
