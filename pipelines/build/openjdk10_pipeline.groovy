@@ -5,7 +5,7 @@ def buildConfigurations = [
                 bootJDK            : "/Users/jenkins/tools/hudson.model.JDK/JDK9.0.1",
                 path               : "/Users/jenkins/ccache-3.2.4",
                 xCodeSwitchPath    : "/",
-                configureArgs      : "--disable-warnings-as-errors",
+                configureArgs      : "--disable-warnings-as-errors --with-native-debug-symbols=none",
                 aditionalNodeLabels: 'x64&&build'
         ],
 
@@ -13,7 +13,7 @@ def buildConfigurations = [
                 os                 : 'centos6',
                 arch               : 'x64',
                 bootJDK            : "9",
-                configureArgs      : "--disable-warnings-as-errors",
+                configureArgs      : "--disable-warnings-as-errors --with-native-debug-symbols=none",
                 aditionalNodeLabels: 'x64&&build'
         ],
 
@@ -23,7 +23,7 @@ def buildConfigurations = [
                 arch               : 'x64',
                 bootJDK            : "9",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
-                configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
+                configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache --with-native-debug-symbols=none",
                 aditionalNodeLabels: 'build&&x64&&win2012'
         ]
 ]
