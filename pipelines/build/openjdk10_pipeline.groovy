@@ -35,22 +35,17 @@ def buildConfigurations = [
                 configureArgs      : "--disable-warnings-as-errors --with-memory-size=18000 --with-cups-include=/opt/freeware/include --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread",
                 aditionalNodeLabels: 'build'
         ],
-
-
-
-        linuxOpenJ9  : [
-                os                 : 'centos6',
-                arch               : 'x64',
-                bootJDK            : "9",
-                configureArgs      : "--disable-warnings-as-errors",
-                aditionalNodeLabels: 'build',
-                variant            : 'openj9'
-        ]
 ]
+
+def variants=["hotspot", "openj9"]
 
 if (osTarget != "all") {
     buildConfigurations = buildConfigurations
             .findAll { it.key == osTarget }
+}
+
+if (variant != "all") {
+    variants = [variant];
 }
 
 doBuild("jdk10u", buildConfigurations)
@@ -86,19 +81,20 @@ def doBuild(javaToBuild, buildConfigurations) {
                     if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
                     if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
                     if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
-                    if (configuration.containsKey('variant')) buildParams += string(name: 'VARIANT', value: "${configuration.variant}");
 
-                    def buildJob = build job: "openjdk_build_refactor", parameters: buildParams
+                    variants.each { variant ->
+                        def parameters = buildParams.clone();
+                        parameters += string(name: 'VARIANT', value: "${configuration.variant}");
+                        def buildJob = build job: "openjdk_build_refactor", parameters: parameters
 
-
-                    buildJobs.add([
-                            job        : buildJob,
-                            config     : configuration,
-                            targetLabel: buildConfiguration.key
-                    ]);
+                        buildJobs.add([
+                                job        : buildJob,
+                                config     : configuration,
+                                targetLabel: buildConfiguration.key
+                        ]);
+                    }
                 }
             }
-
         }
     }
     try {
