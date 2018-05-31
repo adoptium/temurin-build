@@ -29,12 +29,9 @@ can be generated manually as well.
 
 #### _makejdk-any-platform.sh_, _build.sh_, _makejdk.sh_ usage changes
 
-1. `--version` flag is removed as version is a mandatory argument. Use 
-`<version>` instead. e.g. `./makejdk-any-platform.sh --version jdk8u` changes to 
-`./makejdk-any-platform.sh jdk8u`
 1. More versions added, `jdk8u | jdk9 | jdk10 | jfx | amber` are now all supported
 1. `-B` is now used for specifying the build number (long form `--build-number`).
-1. `-bv` changes to `-v`, (long form `--variant` changes to `--build-variant`).
+1. `-bv` is removed, (long form `--variant` changes to `--build-variant`).
 1. `-c` (long form `--clean-docker-build`) added to build from a clean docker container.
 1. `-ca` changes to `-C`, (long form `--configure-args` stays the same).
 1. `-D` (long form `--docker`) added for building in a docker container.
@@ -49,6 +46,7 @@ via the openjdk-tests repo / project.
 1. `-p` (long form `--processors`) added to set number of processors in docker build.
 1. `-sf` changes to `-F`, (long form `--skip-freetype` stays the same).
 1. `--sudo` added to run the docker container as root.
+1. `--tmp-space-build` (set a temporary build space if regular workspace is unavailable).
 1. `-T` (long form `--target-file-name` added to specify the final name of the binary.
 1. `-u` (long form `--update-version`) added to specify the update version.
 1. `-V` (long form `--jvm-variant` specify the JVM variant (server or client).
