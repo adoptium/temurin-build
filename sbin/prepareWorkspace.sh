@@ -206,7 +206,7 @@ checkingAndDownloadingFreeType()
       # shellcheck disable=SC2154
       echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
 
-     if [[ ${OS_KERNEL_NAME} == "darwin" ]] ; then
+     if [[ ${BUILD_CONFIG[OS_KERNEL_NAME]} == "darwin" ]] ; then
         TARGET_DYNAMIC_LIB_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype/lib/
         TARGET_DYNAMIC_LIB="${TARGET_DYNAMIC_LIB_DIR}"/libfreetype.6.dylib
         echo ""
@@ -296,10 +296,53 @@ downloadingRequiredDependencies()
   fi
 }
 
+function moveTmpToWorkspaceLocation {
+  if [ ! -z "${TMP_WORKSPACE}" ]; then
+    rm "${TMP_WORKSPACE}/workspace"
+    rm -r "${TMP_WORKSPACE}"
+  fi
+}
+
+function moveTmpToWorkspaceLocation {
+  if [ ! -z "${TMP_WORKSPACE}" ]; then
+    rm -rf "${ORIGINAL_WORKSPACE}"
+
+    mkdir "${ORIGINAL_WORKSPACE}"
+
+    chmod 755 ${TMP_WORKSPACE}/workspace/* || true
+    chmod 755 "${ORIGINAL_WORKSPACE}" || true
+
+    cp -r ${TMP_WORKSPACE}/workspace/* "${ORIGINAL_WORKSPACE}"
+    rm -rf "${TMP_WORKSPACE}/workspace/"
+    rm -r "${TMP_WORKSPACE}"
+  fi
+}
+
+
+relocateToTmpIfNeeded()
+{
+   if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
+   then
+     local tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir'`
+     export TMP_WORKSPACE="${tmpdir}"
+     export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
+     ls -alh "${ORIGINAL_WORKSPACE}"
+
+     if [ -d "${ORIGINAL_WORKSPACE}" ]
+     then
+        cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
+     fi
+     BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
+
+     trap moveTmpToWorkspaceLocation EXIT SIGINT SIGTERM
+   fi
+}
+
 ##################################################################
 
 function configureWorkspace() {
     createWorkspace
+    relocateToTmpIfNeeded
     checkoutAndCloneOpenJDKGitRepo
     downloadingRequiredDependencies
 }

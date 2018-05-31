@@ -2,29 +2,29 @@ def buildConfigurations = [
         mac    : [
                 os                 : 'mac',
                 arch               : 'x64',
-                bootJDK            : "8",
+                bootJDK            : "/Users/jenkins/tools/hudson.model.JDK/JDK9.0.1",
                 path               : "/Users/jenkins/ccache-3.2.4",
-                configureArgs      : "--disable-warnings-as-errors",
                 xCodeSwitchPath    : "/",
-                aditionalNodeLabels: 'build'
+                configureArgs      : "--disable-warnings-as-errors",
+                aditionalNodeLabels: 'x64&&build'
         ],
 
         linux  : [
                 os                 : 'centos6',
                 arch               : 'x64',
-                bootJDK            : "8",
+                bootJDK            : "9",
                 configureArgs      : "--disable-warnings-as-errors",
-                aditionalNodeLabels: 'build'
+                aditionalNodeLabels: 'x64&&build'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         windows: [
                 os                 : 'windows',
                 arch               : 'x64',
-                bootJDK            : "8",
+                bootJDK            : "9",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
-                configureArgs      : "--with-freetype=/cygdrive/C/openjdk/freetype --disable-ccache",
-                aditionalNodeLabels: 'build&&win2012'
+                configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
+                aditionalNodeLabels: 'build&&x64&&win2012'
         ]
 ]
 
@@ -33,7 +33,7 @@ if (osTarget != "all") {
             .findAll { it.key == osTarget }
 }
 
-doBuild("jdk9", buildConfigurations)
+doBuild("jdk10u", buildConfigurations)
 
 ///////////////////////////////////////////////////
 //Do build is the same for all pipelines
@@ -101,4 +101,3 @@ def doBuild(javaToBuild, buildConfigurations) {
         }
     }
 }
-

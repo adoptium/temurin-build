@@ -46,28 +46,23 @@ parseCommandLineArgs()
   # Defer most of the work to the shared function in common-functions.sh
   parseConfigurationArguments "$@"
 
-  while [[ $# -gt 1 ]] ; do
-    shift;
-  done
+  # this check is to maintain backwards compatibility and allow user to use
+  # -v rather than the mandatory argument
+  if [[ "${BUILD_CONFIG[OPENJDK_FOREST_NAME]}" == "" ]]
+  then
+    if [[ $# -eq 0 ]]
+    then
+      echo "Please provide a java version to build as an argument"
+      exit 1
+    fi
 
-  # Now that we've processed the flags, grab the mandatory argument(s)
-  local forest_name=$1
+    while [[ $# -gt 1 ]] ; do
+      shift;
+    done
 
-  # Derive the openjdk_core_version from the forest name.
-  local openjdk_core_version=${forest_name}
-  if [[ ${forest_name} == *u ]]; then
-    openjdk_core_version=${forest_name%?}
+    # Now that we've processed the flags, grab the mandatory argument(s)
+    setOpenJdkVersion "$1"
   fi
-
-  BUILD_CONFIG[OPENJDK_CORE_VERSION]=$openjdk_core_version;
-  BUILD_CONFIG[OPENJDK_FOREST_NAME]=$forest_name;
-
-  # 'u' means it's an update repo, e.g. jdk8u
-  if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} == *u ]]; then
-    BUILD_CONFIG[OPENJDK_CORE_VERSION]=${BUILD_CONFIG[OPENJDK_FOREST_NAME]%?}
-  fi
-
-  # TODO check that OPENJDK_CORE_VERSION has been set by the caller
 }
 
 # Extra config for OpenJDK variants such as OpenJ9, SAP et al
@@ -125,7 +120,7 @@ setVariablesForConfigure() {
   if [ "$openjdk_core_version" == "jdk9" ] || [ "$openjdk_core_version" == "jdk10" ] || [ "$openjdk_core_version" == "jdk11" ] || [ "$openjdk_core_version" == "amber" ]; then
     local jdk_path="jdk"
     local jre_path="jre"
-    BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-"--disable-warnings-as-errors"}
+    #BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-"--disable-warnings-as-errors"}
   elif [ "$openjdk_core_version" == "jdk8" ]; then
     local jdk_path="j2sdk-image"
     local jre_path="j2re-image"

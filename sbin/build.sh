@@ -83,11 +83,17 @@ sourceFileWithColourCodes()
 # Configure the boot JDK
 configuringBootJDKConfigureParameter()
 {
+
   if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
     echo "Searching for JDK_BOOT_DIR"
 
     # shellcheck disable=SC2046
-    BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
+
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink $(which javac))))
+    else
+      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
+    fi
 
     echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
     echo "If this is incorrect explicitly configure JDK_BOOT_DIR"
@@ -157,7 +163,7 @@ configuringVersionStringParameter()
     # > JDK 8
     addConfigureArg "--with-version-pre=" "adoptopenjdk"
 
-    TRIMMED_TAG=$(echo "$OPENJDK_REPO_TAG" | cut -f2 -d"-")
+    TRIMMED_TAG=$(echo "$OPENJDK_REPO_TAG" | cut -f2 -d"-" )
     addConfigureArg "--with-version-string=" "${TRIMMED_TAG}"
 
   fi
@@ -198,12 +204,12 @@ buildingTheRestOfTheConfigParameters()
 configureCommandParameters()
 {
   configuringVersionStringParameter
+  configuringBootJDKConfigureParameter
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
 
   else
     echo "Building up the configure command..."
-    configuringBootJDKConfigureParameter
     buildingTheRestOfTheConfigParameters
   fi
 
@@ -219,46 +225,15 @@ stepIntoTheWorkingDirectory() {
   echo "Should have the source, I'm at $PWD"
 }
 
-# Run 'configure'
-runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams()
-{
+buildTemplatedFile() {
   echo "Configuring command and using the pre-built config params..."
 
   stepIntoTheWorkingDirectory
 
   echo "Currently at '${PWD}'"
 
-  CONFIGURED_OPENJDK_ALREADY=$(find . -name "config.status")
-
-  if [[ ! -z "$CONFIGURED_OPENJDK_ALREADY" ]] ; then
-    echo "Not reconfiguring due to the presence of config.status in ${BUILD_CONFIG[WORKING_DIR]}"
-  else
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
-
-    echo "Running ./configure with arguments '${CONFIGURE_ARGS}'"
-    # Depends upon the configure command being split for multiple args.  Don't quote it.
-    # shellcheck disable=SC2086
-    bash ./configure ${CONFIGURE_ARGS}
-
-    # shellcheck disable=SC2181
-    if [ $? -ne 0 ]; then
-      echo "${error}"
-      echo "Failed to configure the JDK, exiting"
-      echo "Did you set the JDK boot directory correctly? Override by exporting JDK_BOOT_DIR"
-      echo "For example, on RHEL you would do export JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.131-2.6.9.0.el7_3.x86_64"
-      echo "Current JDK_BOOT_DIR value: ${JDK_BOOT_DIR}"
-      exit;
-    else
-      echo "${good}Configured the JDK"
-    fi
-    echo "${normal}"
-  fi
-}
-
-# Build OpenJDK using make
-buildOpenJDK()
-{
-  stepIntoTheWorkingDirectory
+  FULL_CONFIGURE="bash ./configure ${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
+  echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
 
   # If it's Java 9+ then we also make test-image to build the native test libraries
   JDK_PREFIX="jdk"
@@ -268,21 +243,32 @@ buildOpenJDK()
   fi
 
   FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${MAKE_TEST_IMAGE}"
-  echo "Building the JDK: calling '${FULL_MAKE_COMMAND}'"
-set +e
-  ${FULL_MAKE_COMMAND}
-  exitCode=$?
-  set -e
 
-  # shellcheck disable=SC2181
-  if [ "${exitCode}" -ne 0 ]; then
-     echo "${error}Failed to make the JDK, exiting"
-     exit 1;
-  else
-    echo "${good}Built the JDK!"
-  fi
-  echo "${normal}"
+  cat "$SCRIPT_DIR/build-template.sh" | \
+      sed -e "s|{configureArg}|${FULL_CONFIGURE}|" \
+      -e "s|{makeCommandArg}|${FULL_MAKE_COMMAND}|" > "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
 }
+
+executeTemplatedFile() {
+  stepIntoTheWorkingDirectory
+
+  echo "Currently at '${PWD}'"
+  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
+  exitCode=$?
+
+  if [ "${exitCode}" -eq 1 ]; then
+    echo "Failed to make the JDK, exiting"
+    exit 1;
+  elif [ "${exitCode}" -eq 2 ]; then
+    echo "Failed to configure the JDK, exiting"
+    echo "Did you set the JDK boot directory correctly? Override by exporting JDK_BOOT_DIR"
+    echo "For example, on RHEL you would do export JDK_BOOT_DIR=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.131-2.6.9.0.el7_3.x86_64"
+    echo "Current JDK_BOOT_DIR value: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+    exit 2;
+  fi
+
+}
+
 
 # Print the version string so we know what we've produced
 printJavaVersionString()
@@ -426,10 +412,10 @@ createOpenJDKTarArchive()
   fi
   echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
 
-  if [[ "${OS_KERNEL_NAME}" = *"cygwin"* ]]; then
+  if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = *"cygwin"* ]]; then
       zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
       EXT=".zip"
-  elif [[ "${OS_KERNEL_NAME}" == "aix" ]]; then
+  elif [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]]; then
       GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
       EXT=".tar.gz"
   else
@@ -458,6 +444,8 @@ showCompletionMessage()
 loadConfigFromFile
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
+
+ls -alh "${BUILD_CONFIG[WORKSPACE_DIR]}"
 sourceFileWithColourCodes
 
 parseArguments "$@"
@@ -465,9 +453,8 @@ configureWorkspace
 
 getOpenJDKUpdateAndBuildVersion
 configureCommandParameters
-stepIntoTheWorkingDirectory
-runTheOpenJDKConfigureCommandAndUseThePrebuiltConfigParams
-buildOpenJDK
+buildTemplatedFile
+executeTemplatedFile
 
 printJavaVersionString
 removingUnnecessaryFiles

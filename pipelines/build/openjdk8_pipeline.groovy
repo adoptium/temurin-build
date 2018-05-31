@@ -50,46 +50,51 @@ def doBuild(javaToBuild, buildConfigurations) {
         def buildType = "${configuration.os}-${configuration.arch}"
 
         jobs[buildType] = {
-            stage("build-${buildType}") {
 
-                def buildParams = [
-                        string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
-                        [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
-                ];
+            catchError {
+                stage("build-${buildType}") {
+                    def buildParams = [
+                            string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
+                            [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
+                    ];
 
-                if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
-                if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
-                if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
-                if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+                    if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
+                    if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
+                    if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
+                    if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+                    if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
-                def buildJob = build job: "openjdk_build-refactor", parameters: buildParams
+                    def buildJob = build job: "openjdk_build_refactor", parameters: buildParams
 
 
-                buildJobs.add([
-                        job        : buildJob,
-                        config     : configuration,
-                        targetLabel: buildConfiguration.key
-                ]);
+                    buildJobs.add([
+                            job        : buildJob,
+                            config     : configuration,
+                            targetLabel: buildConfiguration.key
+                    ]);
+                }
             }
 
         }
     }
-    parallel jobs
+    try {
+        parallel jobs
+    } finally {
+        node('linux&&build') {
+            buildJobs.each {
+                buildJob ->
+                    if (buildJob.job.getResult() == 'SUCCESS') {
+                        copyArtifacts(
+                                projectName: 'openjdk_build_refactor',
+                                selector: specific("${buildJob.job.getNumber()}"),
+                                filter: 'workspace/target/*',
+                                fingerprintArtifacts: true,
+                                target: "target/${buildJob.targetLabel}/${buildJob.config.arch}/",
+                                flatten: true)
+                    }
+            }
 
-    node('centos6&&x64&&build') {
-        buildJobs.each {
-            buildJob ->
-                if (buildJob.job.getResult() == 'SUCCESS') {
-                    copyArtifacts(
-                            projectName: 'openjdk_build-refactor',
-                            selector: specific("${buildJob.job.getNumber()}"),
-                            filter: 'workspace/target/*',
-                            fingerprintArtifacts: true,
-                            target: "target/${buildJob.targetLabel}/${buildJob.config.arch}/",
-                            flatten: true)
-                }
+            archiveArtifacts artifacts: 'target/*/*/*'
         }
-
-        archiveArtifacts artifacts: 'target/*/*/*'
     }
 }

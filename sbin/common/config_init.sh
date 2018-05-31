@@ -71,6 +71,7 @@ TAG
 TARGET_DIR
 TARGET_FILE_NAME
 TMP_CONTAINER_NAME
+TMP_SPACE_BUILD
 USE_DOCKER
 USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
@@ -114,7 +115,7 @@ function writeConfigToFile() {
   then
     mkdir -p "workspace/config"
   fi
-  displayParams > ./workspace/config/built_config.cfg
+  displayParams | sed 's/\r$//' > ./workspace/config/built_config.cfg
 }
 
 function loadConfigFromFile() {
@@ -136,6 +137,24 @@ function loadConfigFromFile() {
   fi
 }
 
+function setOpenJdkVersion() {
+  local forest_name=$1
+
+  # Derive the openjdk_core_version from the forest name.
+  local openjdk_core_version=${forest_name}
+  if [[ ${forest_name} == *u ]]; then
+    openjdk_core_version=${forest_name%?}
+  fi
+
+  BUILD_CONFIG[OPENJDK_CORE_VERSION]=$openjdk_core_version;
+  BUILD_CONFIG[OPENJDK_FOREST_NAME]=$forest_name;
+
+  # 'u' means it's an update repo, e.g. jdk8u
+  if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} == *u ]]; then
+    BUILD_CONFIG[OPENJDK_CORE_VERSION]=${BUILD_CONFIG[OPENJDK_FOREST_NAME]%?}
+  fi
+}
+
 # Parse the configuration args from the CL, please keep this in alpha order
 function parseConfigurationArguments() {
 
@@ -144,6 +163,9 @@ function parseConfigurationArguments() {
       shift;
       case "$opt" in
         "--" ) break 2;;
+
+        "--build-variant" )
+        BUILD_CONFIG[BUILD_VARIANT]="$1"; shift;;
 
         "--branch" | "-b" )
         BUILD_CONFIG[BRANCH]="$1"; shift;;
@@ -211,11 +233,14 @@ function parseConfigurationArguments() {
         "--target-file-name"  | "-T" )
         BUILD_CONFIG[TARGET_FILE_NAME]="$1"; shift;;
 
+        "--tmp-space-build")
+        BUILD_CONFIG[TMP_SPACE_BUILD]=true;;
+
         "--update-version"  | "-u" )
         BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
 
-        "--build-variant"  | "-v" )
-        BUILD_CONFIG[BUILD_VARIANT]="$1"; shift;;
+        "--version"  | "-v" )
+        setOpenJdkVersion "$1"; shift;;
 
         "--jvm-variant"  | "-V" )
         BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
@@ -249,7 +274,7 @@ function configDefaults() {
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]=""
   BUILD_CONFIG[FREETYPE]=true
   BUILD_CONFIG[FREETYPE_DIRECTORY]=""
-  BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.9"
+  BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.4.0"
   BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
 
   BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
@@ -324,6 +349,8 @@ function configDefaults() {
 
   # Print to console using colour codes
   BUILD_CONFIG[COLOUR]=${BUILD_CONFIG[COLOUR]:-"true"}
+
+  BUILD_CONFIG[TMP_SPACE_BUILD]=${BUILD_CONFIG[TMP_SPACE_BUILD]:-false}
 }
 
 # Declare the map of build configuration that we're going to use
