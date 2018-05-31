@@ -26,7 +26,7 @@ def buildConfigurations = [
                 configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
                 aditionalNodeLabels: 'build&&win2012'
         ],
-
+/*
         aix: [
                 os                 : 'aix',
                 arch               : 'ppc64',
@@ -35,6 +35,7 @@ def buildConfigurations = [
                 configureArgs      : "--disable-warnings-as-errors --with-memory-size=18000 --with-cups-include=/opt/freeware/include --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread",
                 aditionalNodeLabels: 'build'
         ],
+        */
 ]
 
 def variants=["hotspot", "openj9"]
@@ -48,12 +49,12 @@ if (variant != "all") {
     variants = [variant];
 }
 
-doBuild("jdk10u", buildConfigurations)
+doBuild("jdk10u", buildConfigurations, variants)
 
 ///////////////////////////////////////////////////
 //Do build is the same for all pipelines
 //TODO: make it a shared library
-def doBuild(javaToBuild, buildConfigurations) {
+def doBuild(javaToBuild, buildConfigurations, variants) {
     if (osTarget != "all") {
         buildConfigurations = buildConfigurations
                 .findAll { it.key == osTarget }
