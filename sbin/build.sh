@@ -202,7 +202,6 @@ buildingTheRestOfTheConfigParameters()
     else
       addConfigureArg "--with-debug-level=" "release"
       addConfigureArg "--with-native-debug-symbols=" "none"
-      addConfigureArg "--disable-debug-symbols" ""
     fi
 }
 
