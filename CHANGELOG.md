@@ -21,7 +21,8 @@ binaries natively.
 1. _makejdk.sh_ removed - please use _makejdk-any-platform.sh_ or (rarely) 
 _sbin/build.sh_ instead. 
 1. _sbin/common-functions.sh_ removed and its logic split 
-1. _sbin/common/config_init.sh_ added 
+1. _sbin/common/config_init.sh_ added
+1. _sbin/common/build-template.sh_ added for saving off the configure configuration. 
 1. _sbin/signalhandler.sh_ moved to _signalhandler.sh_
 1. _sbin/build.sh_ enhanced, now requires a 'saved' build configuration to run. 
 This 'saved' build configuration is created by _makejdk-any-platform.sh_ but 
@@ -76,13 +77,16 @@ opposed to falsely picking up the underlying native env).
 
 ### Build Farm Support
 
-1. New `build-farm/make-adopt-build-farm.sh` added for the new AdoptOpenJDK 
+1. New _build-farm/make-adopt-build-farm.sh_ added for the new AdoptOpenJDK 
 Build Farm jenkins pipeline to build Adopt OpenJDK binaries.  Sets the default 
 environment variables that are currently set in individual jobs.  This allows 
 us to now track and version these variables.
-1. _pipelines/build/openjdk<X>\_pipeline.groovy_ files added.  These will 
+1. _pipelines/build/openjdk\<version\>\_pipeline.groovy_ files added.  These will 
 eventually replace the existing individual jobs with a Pipeline for each version 
 and variant.
+1. _build-farm/\<version\>/\<platform\>/\<architecture\>/setup.sh_ files added. 
+These are to help set up environment variables specifically for AdoptOpenJDK 
+build farm nodes.
 
 ### Documentation and Misc
 
