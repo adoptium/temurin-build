@@ -74,7 +74,7 @@ fi
 
 if [ "${VARIANT}" != "hotspot" ]
 then
-  VARIANT_ARG="--variant ${VARIANT}"
+  VARIANT_ARG="--build-variant ${VARIANT}"
 fi
 
 # Set the file name
