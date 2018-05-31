@@ -183,7 +183,7 @@ buildingTheRestOfTheConfigParameters()
 
   # Point-in-time dependency for openj9 only
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]] ; then
-    addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKING_DIR]}/libs/freemarker-${FREEMARKER_LIB_VERSION}/freemarker.jar"
+    addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/freemarker.jar"
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then

@@ -159,7 +159,7 @@ checkingAndDownloadingFreemarker()
 {
   echo "Checking for FREEMARKER"
 
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/" || exit
   FOUND_FREEMARKER=$(find "." -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
 
   if [[ ! -z "$FOUND_FREEMARKER" ]] ; then
@@ -168,7 +168,7 @@ checkingAndDownloadingFreemarker()
 
     wget -nc --no-check-certificate http://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz
     mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freemarker-${FREEMARKER_LIB_VERSION}/" || exit
-    tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freemarker-${FREEMARKER_LIB_VERSION}/"
+    tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/"
     rm "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
   fi
 }
