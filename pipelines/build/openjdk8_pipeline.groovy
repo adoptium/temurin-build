@@ -62,25 +62,25 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
 
         def buildType = "${configuration.os}-${configuration.arch}"
 
-        jobs[buildType] = {
-            def buildParams = [
-                    string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
-                    [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
-            ];
+        def buildParams = [
+                string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
+                [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
+        ];
 
-            if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
-            if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
-            if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
-            if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
-            if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
+        if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
+        if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
+        if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
+        if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+        if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
-            variants.each { variant ->
-                if (excludedConfigurations.containsKey(buildConfiguration.key)) {
-                    if (excludedConfigurations.get(buildConfiguration.key).contains(variant)) {
-                        return
-                    }
+        variants.each { variant ->
+            if (excludedConfigurations.containsKey(buildConfiguration.key)) {
+                if (excludedConfigurations.get(buildConfiguration.key).contains(variant)) {
+                    return
                 }
+            }
 
+            jobs[buildType] = {
                 catchError {
                     stage("${buildType}-${variant}") {
 
