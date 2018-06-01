@@ -20,7 +20,7 @@ def buildConfigurations = [
                 arch               : 'x64',
                 bootJDK            : "7",
                 path               : "/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:/cygdrive/C/Projects/OpenJDK/make-3.82/",
-                configureArgs      : "with_freetype=/cygdrive/C/Projects/OpenJDK/freetype --with-freetype-lib=/cygdrive/c/openjdk/freetype-2.5.3/lib64 --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache",
+                configureArgs      : "with_freetype=/cygdrive/C/Projects/OpenJDK/freetype --with-tools-dir='/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/' --with-freetype-lib=/cygdrive/c/openjdk/freetype-2.5.3/lib64 --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache",
                 aditionalNodeLabels: 'build&&win2008'
         ],
 ]
