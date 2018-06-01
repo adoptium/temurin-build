@@ -27,7 +27,6 @@ def buildConfigurations = [
                 aditionalNodeLabels: 'build&&win2012'
         ],
 
-        /*
         aix    : [
                 os                 : 'aix',
                 arch               : 'ppc64',
@@ -36,7 +35,7 @@ def buildConfigurations = [
                 configureArgs      : "--disable-warnings-as-errors --with-memory-size=18000 --with-cups-include=/opt/freeware/include --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread",
                 buildArgs          : '--skip-freetype',
                 aditionalNodeLabels: 'build',
-        ],*/
+        ],
 ]
 
 def excludedConfigurations = [
