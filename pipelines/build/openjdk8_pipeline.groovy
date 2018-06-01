@@ -54,7 +54,7 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
                 .findAll { it.key == osTarget }
     }
 
-    def jobs = []
+    def jobConfigurations = [:]
 
     buildConfigurations.each { buildConfiguration ->
         def configuration = buildConfiguration.value
@@ -82,42 +82,49 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
             def parameters = buildParams.clone();
             parameters += string(name: 'VARIANT', value: "${variant}");
 
-            jobs.add([
+            def name = "${buildType}-${variant}"
+
+            jobConfigurations[name] = [
                     config     : configuration,
                     targetLabel: buildConfiguration.key,
                     parameters : parameters,
                     name       : "${buildType}-${variant}"
-            ]);
+            ]
         }
     }
 
+    def jobs = [:]
     def buildJobs = [:]
-    def buildContexts = []
 
-    jobs.each { job ->
-        buildJobs[job.name] = {
+    jobConfigurations.each { configuration ->
+        jobs[configuration.key] = {
             catchError {
-                stage(job.name) {
-                    def buildJob = build job: "openjdk_build_refactor", parameters: job.parameters
-                    buildContexts.add(buildJob)
+                stage(configuration.key) {
+                    buildJobs[configuration.key] = build job: "openjdk_build_refactor", parameters: configuration.value.parameters
                 }
             }
         }
     }
 
     try {
-        parallel buildJobs
+        parallel jobs
     } finally {
         node('master') {
-            buildContexts.each {
+            buildJobs.each {
                 buildJob ->
-                    if (buildJob.job.getResult() == 'SUCCESS') {
+                    def job = buildJob.value
+                    def name = buildJob.key
+                    def configuration = jobConfigurations[name];
+
+
+                    if (job.getResult() == 'SUCCESS') {
+
                         copyArtifacts(
                                 projectName: 'openjdk_build_refactor',
-                                selector: specific("${buildJob.job.getNumber()}"),
+                                selector: specific("${job.getNumber()}"),
                                 filter: 'workspace/target/*',
                                 fingerprintArtifacts: true,
-                                target: "target/${buildJob.targetLabel}/${buildJob.config.arch}/",
+                                target: "target/${configuration.targetLabel}/${configuration.config.arch}/",
                                 flatten: true)
                     }
             }
