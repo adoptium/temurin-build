@@ -44,6 +44,9 @@ if [[ $NODE_LABELS = *"linux"* ]] ; then
   if [ ! -z "${TAG}" ]; then
     OPTIONS="${OPTIONS} --tag $TAG"
   fi
+elif [[ $NODE_LABELS = *"aix"* ]] ; then
+  PLATFORM="Aix"
+  EXTENSION="tar.gz"
 elif [[ $NODE_LABELS = *"mac"* ]] ; then
   PLATFORM="Mac"
   EXTENSION="tar.gz"
