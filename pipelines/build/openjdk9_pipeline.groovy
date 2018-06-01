@@ -28,7 +28,7 @@ def buildConfigurations = [
         ],
 ]
 
-def excludedConfigurations = []
+def excludedConfigurations = [:]
 
 def variants = ["hotspot", "openj9"]
 
