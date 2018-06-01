@@ -54,8 +54,7 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
                 .findAll { it.key == osTarget }
     }
 
-    def buildJobs = []
-    def jobs = [:]
+    def jobs = []
 
     buildConfigurations.each { buildConfiguration ->
         def configuration = buildConfiguration.value
@@ -80,29 +79,37 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
                 }
             }
 
-            jobs[buildType] = {
-                catchError {
-                    stage("${buildType}-${variant}") {
+            def parameters = buildParams.clone();
+            parameters += string(name: 'VARIANT', value: "${variant}");
 
-                        def parameters = buildParams.clone();
-                        parameters += string(name: 'VARIANT', value: "${variant}");
-                        def buildJob = build job: "openjdk_build_refactor", parameters: parameters
+            jobs.add([
+                    config     : configuration,
+                    targetLabel: buildConfiguration.key,
+                    parameters : parameters,
+                    name       : "${buildType}-${variant}"
+            ]);
+        }
+    }
 
-                        buildJobs.add([
-                                job        : buildJob,
-                                config     : configuration,
-                                targetLabel: buildConfiguration.key
-                        ]);
-                    }
+    def buildJobs = [:]
+    def buildContexts = []
+
+    jobs.each { job ->
+        buildJobs[job.name] = {
+            catchError {
+                stage(job.name) {
+                    def buildJob = build job: "openjdk_build_refactor", parameters: job.parameters
+                    buildContexts.add(buildJob)
                 }
             }
         }
     }
+
     try {
-        parallel jobs
+        parallel buildJobs
     } finally {
         node('master') {
-            buildJobs.each {
+            buildContexts.each {
                 buildJob ->
                     if (buildJob.job.getResult() == 'SUCCESS') {
                         copyArtifacts(
@@ -119,4 +126,3 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
         }
     }
 }
-

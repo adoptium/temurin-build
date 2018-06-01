@@ -110,9 +110,11 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
 
     jobs.each { job ->
         buildJobs[job.name] = {
-            stage(job.name) {
-                def buildJob = build job: "openjdk_build_refactor", parameters: job.parameters
-                buildContexts.add(buildJob)
+            catchError {
+                stage(job.name) {
+                    def buildJob = build job: "openjdk_build_refactor", parameters: job.parameters
+                    buildContexts.add(buildJob)
+                }
             }
         }
     }
