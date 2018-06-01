@@ -68,7 +68,7 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
                 .findAll { it.key == osTarget }
     }
 
-    def buildJobs = []
+    def jobs = []
 
     buildConfigurations.each { buildConfiguration ->
         def configuration = buildConfiguration.value
@@ -93,40 +93,34 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
                 }
             }
 
-            jobs[buildType] = {
-                def parameters = buildParams.clone();
-                parameters += string(name: 'VARIANT', value: "${variant}");
+            def parameters = buildParams.clone();
+            parameters += string(name: 'VARIANT', value: "${variant}");
 
-                buildJobs.add([
-                        job        : buildJob,
-                        config     : configuration,
-                        targetLabel: buildConfiguration.key,
-                        parameters : parameters,
-                        name       : "${buildType}-${variant}"
-                ]);
-            }
-        }
-    }
-
-    def jobs = [:]
-    buildJobs.each { job ->
-        jobs[job.name] = stage(job.name) {
-            def buildJob = build job: "openjdk_build_refactor", parameters: job.parameters
-
-            buildJobs.add([
-                    job        : buildJob,
+            jobs.add([
                     config     : configuration,
                     targetLabel: buildConfiguration.key,
-                    parameters : parameters
+                    parameters : parameters,
+                    name       : "${buildType}-${variant}"
             ]);
         }
     }
 
+    def buildJobs = []
+    def buildContexts = []
+
+    jobs.each { job ->
+        def buildStage = stage(job.name) {
+            def buildJob = build job: "openjdk_build_refactor", parameters: job.parameters
+            buildContexts.add(buildJob)
+        }
+        buildJobs.add(buildStage)
+    }
+
     try {
-        parallel jobs
+        parallel buildJobs
     } finally {
         node('master') {
-            buildJobs.each {
+            buildContexts.each {
                 buildJob ->
                     if (buildJob.job.getResult() == 'SUCCESS') {
                         copyArtifacts(
