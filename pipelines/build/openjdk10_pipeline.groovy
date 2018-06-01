@@ -26,7 +26,6 @@ def buildConfigurations = [
                 configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
                 aditionalNodeLabels: 'build&&win2012'
         ],
-/*
         aix: [
                 os                 : 'aix',
                 arch               : 'ppc64',
@@ -35,10 +34,20 @@ def buildConfigurations = [
                 configureArgs      : "--disable-warnings-as-errors --with-memory-size=18000 --with-cups-include=/opt/freeware/include --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread",
                 aditionalNodeLabels: 'build'
         ],
-        */
+]
+
+def excludedConfigurations = [
+        mac: ["openj9"]
 ]
 
 def variants=["hotspot", "openj9"]
+
+def javaToBuild = "jdk10u"
+
+
+
+///////////////////////////////////////////////////
+//Do build is the same for all pipelines
 
 if (osTarget != "all") {
     buildConfigurations = buildConfigurations
@@ -49,12 +58,10 @@ if (variant != "all") {
     variants = [variant];
 }
 
-doBuild("jdk10u", buildConfigurations, variants)
+doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations)
 
-///////////////////////////////////////////////////
-//Do build is the same for all pipelines
 //TODO: make it a shared library
-def doBuild(javaToBuild, buildConfigurations, variants) {
+def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) {
     if (osTarget != "all") {
         buildConfigurations = buildConfigurations
                 .findAll { it.key == osTarget }
@@ -84,6 +91,12 @@ def doBuild(javaToBuild, buildConfigurations, variants) {
                     if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
                     variants.each { variant ->
+                        if(excludedConfigurations.containsKey(buildConfiguration.key)) {
+                            if(excludedConfigurations.get(buildConfiguration.key).contains(variant)) {
+                                return
+                            }
+                        }
+
                         def parameters = buildParams.clone();
                         parameters += string(name: 'VARIANT', value: "${variant}");
                         def buildJob = build job: "openjdk_build_refactor", parameters: parameters
