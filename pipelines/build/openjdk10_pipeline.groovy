@@ -69,7 +69,6 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
     }
 
     def buildJobs = []
-    def jobs = [:]
 
     buildConfigurations.each { buildConfiguration ->
         def configuration = buildConfiguration.value
@@ -95,23 +94,34 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
             }
 
             jobs[buildType] = {
-                catchError {
-                    stage("${buildType}-${variant}") {
+                def parameters = buildParams.clone();
+                parameters += string(name: 'VARIANT', value: "${variant}");
 
-                        def parameters = buildParams.clone();
-                        parameters += string(name: 'VARIANT', value: "${variant}");
-                        def buildJob = build job: "openjdk_build_refactor", parameters: parameters
-
-                        buildJobs.add([
-                                job        : buildJob,
-                                config     : configuration,
-                                targetLabel: buildConfiguration.key
-                        ]);
-                    }
-                }
+                buildJobs.add([
+                        job        : buildJob,
+                        config     : configuration,
+                        targetLabel: buildConfiguration.key,
+                        parameters : parameters,
+                        name       : "${buildType}-${variant}"
+                ]);
             }
         }
     }
+
+    def jobs = [:]
+    buildJobs.each { job ->
+        jobs[job.name] = stage(job.name) {
+            def buildJob = build job: "openjdk_build_refactor", parameters: job.parameters
+
+            buildJobs.add([
+                    job        : buildJob,
+                    config     : configuration,
+                    targetLabel: buildConfiguration.key,
+                    parameters : parameters
+            ]);
+        }
+    }
+
     try {
         parallel jobs
     } finally {
