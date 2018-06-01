@@ -28,7 +28,10 @@ def buildConfigurations = [
         ],
 ]
 
-def excludedConfigurations = [:]
+
+def excludedConfigurations = [
+        mac: ["openj9"]
+]
 
 def variants = ["hotspot", "openj9"]
 
@@ -83,7 +86,7 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
                 }
 
                 catchError {
-                    stage("build-${buildType}-${variant}") {
+                    stage("${buildType}-${variant}") {
 
                         def parameters = buildParams.clone();
                         parameters += string(name: 'VARIANT', value: "${variant}");

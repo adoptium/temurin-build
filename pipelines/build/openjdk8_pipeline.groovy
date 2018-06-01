@@ -23,27 +23,32 @@ def buildConfigurations = [
                 configureArgs      : "with_freetype=/cygdrive/C/Projects/OpenJDK/freetype --disable-ccache",
                 aditionalNodeLabels: 'build&&win2008'
         ],
-
-        linuxOpenJ9  : [
-                os                 : 'centos6',
-                arch               : 'x64',
-                bootJDK            : "7",
-                aditionalNodeLabels: 'build',
-                variant            : 'openj9'
-        ]
 ]
+
+def excludedConfigurations = [
+        mac: ["openj9"]
+]
+
+def variants = ["hotspot", "openj9"]
+
+def javaToBuild = "jdk8u"
+
+///////////////////////////////////////////////////
+//Do build is the same for all pipelines
 
 if (osTarget != "all") {
     buildConfigurations = buildConfigurations
             .findAll { it.key == osTarget }
 }
 
-doBuild("jdk8u", buildConfigurations)
+if (variant != "all") {
+    variants = [variant];
+}
 
-///////////////////////////////////////////////////
-//Do build is the same for all pipelines
+doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations)
+
 //TODO: make it a shared library
-def doBuild(javaToBuild, buildConfigurations) {
+def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) {
     if (osTarget != "all") {
         buildConfigurations = buildConfigurations
                 .findAll { it.key == osTarget }
@@ -58,32 +63,39 @@ def doBuild(javaToBuild, buildConfigurations) {
         def buildType = "${configuration.os}-${configuration.arch}"
 
         jobs[buildType] = {
+            def buildParams = [
+                    string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
+                    [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
+            ];
 
-            catchError {
-                stage("build-${buildType}") {
-                    def buildParams = [
-                            string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
-                            [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
-                    ];
+            if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
+            if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
+            if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
+            if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+            if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
-                    if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
-                    if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
-                    if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
-                    if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
-                    if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
-                    if (configuration.containsKey('variant')) buildParams += string(name: 'VARIANT', value: "${configuration.variant}");
+            variants.each { variant ->
+                if (excludedConfigurations.containsKey(buildConfiguration.key)) {
+                    if (excludedConfigurations.get(buildConfiguration.key).contains(variant)) {
+                        return
+                    }
+                }
 
-                    def buildJob = build job: "openjdk_build_refactor", parameters: buildParams
+                catchError {
+                    stage("${buildType}-${variant}") {
 
+                        def parameters = buildParams.clone();
+                        parameters += string(name: 'VARIANT', value: "${variant}");
+                        def buildJob = build job: "openjdk_build_refactor", parameters: parameters
 
-                    buildJobs.add([
-                            job        : buildJob,
-                            config     : configuration,
-                            targetLabel: buildConfiguration.key
-                    ]);
+                        buildJobs.add([
+                                job        : buildJob,
+                                config     : configuration,
+                                targetLabel: buildConfiguration.key
+                        ]);
+                    }
                 }
             }
-
         }
     }
     try {
@@ -107,3 +119,4 @@ def doBuild(javaToBuild, buildConfigurations) {
         }
     }
 }
+
