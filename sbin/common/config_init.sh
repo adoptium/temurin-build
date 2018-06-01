@@ -91,13 +91,16 @@ WORKSPACE_DIR
 
 # Helper code to perform index lookups by name
 declare -a -x PARAM_LOOKUP
-numParams=$(expr ${#CONFIG_PARAMS[@]} - 1)
+numParams=$(expr ${#CONFIG_PARAMS[@]})
 
-for index in {0..$numParams}
-do
+# seq not available on aix
+index=0
+while [  $index -lt $numParams ]; do
     paramName=${CONFIG_PARAMS[$index]};
     eval declare -r -x "$paramName=$index"
     PARAM_LOOKUP[$index]=$paramName
+
+    let index=index+1
 done
 
 function displayParams() {

@@ -71,7 +71,7 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
     buildConfigurations.each { buildConfiguration ->
         def configuration = buildConfiguration.value
 
-        def buildType = "${configuration.os}-${configuration.arch}"
+        def buildType = "${configuration.os}-${configuration.arch}-"
 
         jobs[buildType] = {
             def buildParams = [
@@ -93,7 +93,7 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
                 }
 
                 catchError {
-                    stage("build-${buildType}") {
+                    stage("build-${buildType}-${variant}") {
 
                         def parameters = buildParams.clone();
                         parameters += string(name: 'VARIANT', value: "${variant}");
