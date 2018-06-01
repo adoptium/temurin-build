@@ -449,8 +449,6 @@ showCompletionMessage()
 loadConfigFromFile
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
-
-ls -alh "${BUILD_CONFIG[WORKSPACE_DIR]}"
 sourceFileWithColourCodes
 
 parseArguments "$@"
