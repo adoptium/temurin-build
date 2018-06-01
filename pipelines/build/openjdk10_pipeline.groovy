@@ -26,7 +26,7 @@ def buildConfigurations = [
                 configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
                 aditionalNodeLabels: 'build&&win2012'
         ],
-        aix: [
+        aix    : [
                 os                 : 'aix',
                 arch               : 'ppc64',
                 bootJDK            : "9",
@@ -40,11 +40,9 @@ def excludedConfigurations = [
         mac: ["openj9"]
 ]
 
-def variants=["hotspot", "openj9"]
+def variants = ["hotspot", "openj9"]
 
 def javaToBuild = "jdk10u"
-
-
 
 ///////////////////////////////////////////////////
 //Do build is the same for all pipelines
@@ -76,26 +74,26 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
         def buildType = "${configuration.os}-${configuration.arch}"
 
         jobs[buildType] = {
+            def buildParams = [
+                    string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
+                    [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
+            ];
 
-            catchError {
-                stage("build-${buildType}") {
-                    def buildParams = [
-                            string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
-                            [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
-                    ];
+            if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
+            if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
+            if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
+            if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+            if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
-                    if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
-                    if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
-                    if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
-                    if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
-                    if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
+            variants.each { variant ->
+                if (excludedConfigurations.containsKey(buildConfiguration.key)) {
+                    if (excludedConfigurations.get(buildConfiguration.key).contains(variant)) {
+                        return
+                    }
+                }
 
-                    variants.each { variant ->
-                        if(excludedConfigurations.containsKey(buildConfiguration.key)) {
-                            if(excludedConfigurations.get(buildConfiguration.key).contains(variant)) {
-                                return
-                            }
-                        }
+                catchError {
+                    stage("build-${buildType}") {
 
                         def parameters = buildParams.clone();
                         parameters += string(name: 'VARIANT', value: "${variant}");

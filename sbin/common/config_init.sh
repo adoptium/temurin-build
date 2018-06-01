@@ -91,7 +91,9 @@ WORKSPACE_DIR
 
 # Helper code to perform index lookups by name
 declare -a -x PARAM_LOOKUP
-for index in $(seq 0 $(expr ${#CONFIG_PARAMS[@]} - 1))
+numParams=$(expr ${#CONFIG_PARAMS[@]} - 1)
+
+for index in {0..$numParams}
 do
     paramName=${CONFIG_PARAMS[$index]};
     eval declare -r -x "$paramName=$index"
