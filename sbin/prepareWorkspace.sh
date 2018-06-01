@@ -187,14 +187,9 @@ checkingAndDownloadingFreeType()
   else
     # Then FreeType for fonts: make it and use
     wget -nc --no-check-certificate https://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
-    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
-      gunzip xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
-      tar xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar
-      rm freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar
-    else
-      tar xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
-      rm freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
-    fi
+
+    gunzip -dc freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz | tar xf - -C .
+    rm freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
 
     cd freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}" || exit
 
