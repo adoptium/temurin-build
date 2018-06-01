@@ -32,7 +32,8 @@ def buildConfigurations = [
                 bootJDK            : "9",
                 path               : "/opt/freeware/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin",
                 configureArgs      : "--disable-warnings-as-errors --with-memory-size=18000 --with-cups-include=/opt/freeware/include --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread",
-                aditionalNodeLabels: 'build'
+                buildArgs          : '--skip-freetype',
+                aditionalNodeLabels: 'build',
         ],
 ]
 
@@ -71,7 +72,7 @@ def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) 
     buildConfigurations.each { buildConfiguration ->
         def configuration = buildConfiguration.value
 
-        def buildType = "${configuration.os}-${configuration.arch}-"
+        def buildType = "${configuration.os}-${configuration.arch}"
 
         jobs[buildType] = {
             def buildParams = [
