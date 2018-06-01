@@ -23,10 +23,10 @@ def buildConfigurations = [
                 arch               : 'x64',
                 bootJDK            : "9",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
-                configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
+                configureArgs      : "--disable-warnings-as-errors --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
                 aditionalNodeLabels: 'build&&win2012'
         ],
-
+/*
         aix    : [
                 os                 : 'aix',
                 arch               : 'ppc64',
@@ -36,6 +36,7 @@ def buildConfigurations = [
                 buildArgs          : '--skip-freetype',
                 aditionalNodeLabels: 'build',
         ],
+        */
 ]
 
 def excludedConfigurations = [
