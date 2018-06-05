@@ -3,7 +3,7 @@ println "building ${JDK_VERSION}"
 def buildPlatforms = ['Linux', 'zLinux', 'ppc64le', 'AIX', 'Windows', 'Windows32', 'LinuxXL']
 def buildMaps = [:]
 buildMaps['Linux'] = [test:['openjdktest', 'systemtest', 'perftest', 'externaltest'], ArchOSs:'x86-64_linux']
-buildMaps['LinuxXL'] = buildMaps['AIX'] = [test:false, ArchOSs:'x86-64_linux_largeHeap']
+buildMaps['LinuxXL'] = [test:['openjdktest'], ArchOSs:'x86-64_linux_largeHeap']
 buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
 buildMaps['ppc64le'] = [test:['openjdktest', 'systemtest'], ArchOSs:'ppc64le_linux']
 buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
