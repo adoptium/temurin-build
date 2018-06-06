@@ -20,4 +20,5 @@
 #
 ################################################################################
 
+export PATH="/usr/bin:$PATH"
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
