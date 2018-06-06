@@ -47,11 +47,9 @@ doBuild(javaToBuild, buildConfigurations, osTarget)
 
 //TODO: make it a shared library
 def doBuild(javaToBuild, buildConfigurations, osTarget) {
-    def targets = new JsonSlurper().parseText(osTarget)
-
     def jobConfigurations = [:]
 
-    targets.each { target ->
+    new JsonSlurper().parseText(osTarget).each { target ->
         if (buildConfigurations.containsKey(target.key)) {
             def configuration = buildConfigurations.get(target.key)
 
