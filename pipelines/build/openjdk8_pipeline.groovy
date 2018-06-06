@@ -69,12 +69,6 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
             if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
             target.value.each { variant ->
-                if (excludedConfigurations.containsKey(target.key)) {
-                    if (excludedConfigurations.get(target.key).contains(variant)) {
-                        return
-                    }
-                }
-
                 def parameters = buildParams.clone();
                 parameters += string(name: 'VARIANT', value: "${variant}");
 
