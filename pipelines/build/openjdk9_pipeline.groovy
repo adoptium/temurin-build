@@ -28,6 +28,8 @@ def buildConfigurations = [
         ],
 ]
 
+def javaToBuild = "jdk9"
+
 doBuild(javaToBuild, buildConfigurations, osTarget)
 
 //TODO: make it a shared library

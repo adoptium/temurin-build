@@ -39,6 +39,8 @@ def buildConfigurations = [
         */
 ]
 
+def javaToBuild = "jdk10u"
+
 doBuild(javaToBuild, buildConfigurations, osTarget)
 
 //TODO: make it a shared library
