@@ -44,13 +44,6 @@ def targets = '''{
 
 def targets = new JsonSlurper().parseText(osTarget)
 
-buildConfigurations = buildConfigurations
-        .findAll {
-    if (targets.containsKey(it.key)) {
-        return targets.get()
-    }
-}
-
 doBuild(javaToBuild, buildConfigurations, targets)
 
 //TODO: make it a shared library
