@@ -26,7 +26,6 @@ def buildConfigurations = [
                 configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
                 aditionalNodeLabels: 'build&&win2012'
         ],
-/*
         aix    : [
                 os                 : 'aix',
                 arch               : 'ppc64',
@@ -36,7 +35,6 @@ def buildConfigurations = [
                 buildArgs          : '--skip-freetype',
                 aditionalNodeLabels: 'build',
         ],
-        */
 ]
 
 doBuild(javaToBuild, buildConfigurations, osTarget)
@@ -85,7 +83,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
         jobs[configuration.key] = {
             catchError {
                 stage(configuration.key) {
-                    buildJobs[configuration.key] = build job: "openjdk_build_refactor", parameters: configuration.value.parameters
+                    buildJobs[configuration.key] = build job: "openjdk_build_refactor", propagate: false, parameters: configuration.value.parameters
                 }
             }
         }
