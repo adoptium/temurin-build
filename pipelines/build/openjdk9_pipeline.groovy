@@ -23,7 +23,7 @@ def buildConfigurations = [
                 arch               : 'x64',
                 bootJDK            : "8",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
-                configureArgs      : "--disable-warnings-as-errors --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-freetype=/cygdrive/C/openjdk/freetype --disable-ccache",
+                configureArgs      : "--disable-warnings-as-errors --with-freetype=/cygdrive/C/openjdk/freetype --disable-ccache",
                 aditionalNodeLabels: 'build&&win2012'
         ],
 ]
@@ -40,10 +40,9 @@ def javaToBuild = "jdk9"
 ///////////////////////////////////////////////////
 //Do build is the same for all pipelines
 
-if (osTarget != "all") {
-    buildConfigurations = buildConfigurations
-            .findAll { it.key == osTarget }
-}
+def targets = osTarget.tokenize( ',' )
+buildConfigurations = buildConfigurations
+        .findAll { targets.contains(it.key) }
 
 if (variant != "all") {
     variants = [variant];
