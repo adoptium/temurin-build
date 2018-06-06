@@ -26,6 +26,16 @@ def buildConfigurations = [
                 configureArgs      : "--disable-warnings-as-errors --with-freetype=/cygdrive/C/openjdk/freetype --disable-ccache",
                 aditionalNodeLabels: 'build&&win2012'
         ],
+
+        aix    : [
+                os                 : 'aix',
+                arch               : 'ppc64',
+                bootJDK            : "8",
+                path               : "/opt/freeware/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin",
+                configureArgs      : "--disable-warnings-as-errors --with-memory-size=18000 --with-cups-include=/opt/freeware/include --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread",
+                buildArgs          : '--skip-freetype',
+                aditionalNodeLabels: 'build',
+        ],
 ]
 
 doBuild(javaToBuild, buildConfigurations, osTarget)
