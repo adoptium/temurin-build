@@ -28,71 +28,42 @@ def buildConfigurations = [
         ],
 ]
 
-
-def excludedConfigurations = [
-        mac: ["openj9"]
-]
-
-def variants = ["hotspot", "openj9"]
-
-def javaToBuild = "jdk9"
-
-///////////////////////////////////////////////////
-//Do build is the same for all pipelines
-
-def targets = osTarget.tokenize( ',' )
-buildConfigurations = buildConfigurations
-        .findAll { targets.contains(it.key) }
-
-if (variant != "all") {
-    variants = [variant];
-}
-
-doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations)
+doBuild(javaToBuild, buildConfigurations, osTarget)
 
 //TODO: make it a shared library
-def doBuild(javaToBuild, buildConfigurations, variants, excludedConfigurations) {
-    if (osTarget != "all") {
-        buildConfigurations = buildConfigurations
-                .findAll { it.key == osTarget }
-    }
-
+def doBuild(javaToBuild, buildConfigurations, osTarget) {
     def jobConfigurations = [:]
 
-    buildConfigurations.each { buildConfiguration ->
-        def configuration = buildConfiguration.value
+    new JsonSlurper().parseText(osTarget).each { target ->
+        if (buildConfigurations.containsKey(target.key)) {
+            def configuration = buildConfigurations.get(target.key)
 
-        def buildType = "${configuration.os}-${configuration.arch}"
+            def buildType = "${configuration.os}-${configuration.arch}"
 
-        def buildParams = [
-                string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
-                [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
-        ];
+            def buildParams = [
+                    string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
+                    [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
+            ];
 
-        if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
-        if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
-        if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
-        if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
-        if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
+            if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
+            if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
+            if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
+            if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+            if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
-        variants.each { variant ->
-            if (excludedConfigurations.containsKey(buildConfiguration.key)) {
-                if (excludedConfigurations.get(buildConfiguration.key).contains(variant)) {
-                    return
-                }
+            target.value.each { variant ->
+                def parameters = buildParams.clone();
+                parameters += string(name: 'VARIANT', value: "${variant}");
+
+                def name = "${buildType}-${variant}"
+
+                jobConfigurations[name] = [
+                        config     : configuration,
+                        targetLabel: target.key,
+                        parameters : parameters,
+                        name       : "${buildType}-${variant}"
+                ]
             }
-
-            def parameters = buildParams.clone();
-            parameters += string(name: 'VARIANT', value: "${variant}");
-
-            def name = "${buildType}-${variant}"
-
-            jobConfigurations[name] = [
-                    config     : configuration,
-                    targetLabel: buildConfiguration.key,
-                    parameters : parameters,
-                    name       : "${buildType}-${variant}"
-            ]
         }
     }
 
