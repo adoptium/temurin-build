@@ -34,7 +34,7 @@ def javaToBuild = "jdk8u"
 //Do build is the same for all pipelines
 
 /*
-def targets = '''{
+def osTarget = '''{
     "windows": ["hotspot", "openj9"],
     "linux": ["hotspot", "openj9"],
     "aix": ["hotspot", "openj9"],
@@ -42,16 +42,12 @@ def targets = '''{
 }'''
 */
 
-def targets = new JsonSlurper().parseText(osTarget)
 
-doBuild(javaToBuild, buildConfigurations, targets)
+doBuild(javaToBuild, buildConfigurations, osTarget)
 
 //TODO: make it a shared library
-def doBuild(javaToBuild, buildConfigurations, targets) {
-    if (osTarget != "all") {
-        buildConfigurations = buildConfigurations
-                .findAll { it.key == osTarget }
-    }
+def doBuild(javaToBuild, buildConfigurations, osTarget) {
+    def targets = new JsonSlurper().parseText(osTarget)
 
     def jobConfigurations = [:]
 
