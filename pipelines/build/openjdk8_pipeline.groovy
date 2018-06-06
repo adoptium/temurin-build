@@ -1,5 +1,3 @@
-import groovy.json.JsonSlurper
-
 def buildConfigurations = [
         mac    : [
                 os                 : 'mac',
@@ -49,7 +47,7 @@ doBuild(javaToBuild, buildConfigurations, osTarget)
 def doBuild(javaToBuild, buildConfigurations, osTarget) {
     def jobConfigurations = [:]
 
-    new JsonSlurper().parseText(osTarget).each { target ->
+    new groovy.json.JsonSlurper().parseText(osTarget).each { target ->
         if (buildConfigurations.containsKey(target.key)) {
             def configuration = buildConfigurations.get(target.key)
 
