@@ -16,16 +16,11 @@
 #
 ################################################################################
 
-# For terminal colors
-esc=$(echo -en "\033")
-error="${esc}[0;31m"  #red
-normal=$(echo -en "${esc}[m\017")
-
 exit_script() {
     if [[ -z ${KEEP_CONTAINER} ]] ; then
       docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER_NAME" | awk '{print $1 }' | xargs -I {} docker rm -f {}
     fi
-    echo "${error}Process exited${normal}"
+    echo "Process exited"
     trap - SIGINT SIGTERM # clear the trap
     kill -- -$$ # Sends SIGTERM to child/sub processes
 }

@@ -39,12 +39,12 @@ createPersistentDockerDataVolume()
   if [[ "${BUILD_CONFIG[CLEAN_DOCKER_BUILD]}" == "true" || "$data_volume_exists" != "0" ]]; then
 
     # shellcheck disable=SC2154
-    echo "${info}Removing old volumes and containers${normal}"
+    echo "Removing old volumes and containers"
     ${BUILD_CONFIG[DOCKER]} rm -f "$(${BUILD_CONFIG[DOCKER]} ps -a --no-trunc | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | cut -d' ' -f1)" || true
     ${BUILD_CONFIG[DOCKER]} volume rm -f "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
 
     # shellcheck disable=SC2154
-    echo "${info}Creating tmp container${normal}"
+    echo "Creating tmp container"
     ${BUILD_CONFIG[DOCKER]} volume create --name "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}"
   fi
 }
@@ -82,11 +82,11 @@ buildOpenJDKViaDocker()
 
   if [ -z "$(which docker)" ]; then
      # shellcheck disable=SC2154
-    echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"
+    echo "Error, please install docker and ensure that it is in your path and running!"
     exit
   fi
 
-  echo "${info}Using Docker to build the JDK${normal}"
+  echo "Using Docker to build the JDK"
 
   createPersistentDockerDataVolume
 
@@ -96,20 +96,17 @@ buildOpenJDKViaDocker()
      # shellcheck disable=SC2086
      # If we can't find the previous Docker container then build a new one
      if [ "$(${BUILD_CONFIG[DOCKER]} ps -a | grep -c \"${BUILD_CONFIG[CONTAINER_NAME]}\")" == 0 ]; then
-         echo "${info}No docker container for reuse was found, so creating '${BUILD_CONFIG[CONTAINER_NAME]}' ${normal}"
+         echo "No docker container for reuse was found, so creating '${BUILD_CONFIG[CONTAINER_NAME]}' "
          buildDockerContainer
      fi
   else
      # shellcheck disable=SC2154
-     echo "${info}Since you specified --ignore-container, we are removing the existing container (if it exists) and building you a new one{$good}"
+     echo "Since you specified --ignore-container, we are removing the existing container (if it exists) and building you a new one{$good}"
      # Find the previous Docker container and remove it (if it exists)
      ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm -f {}
 
      # Build a new container
      buildDockerContainer
-
-     # shellcheck disable=SC2154
-     echo "${normal}"
   fi
 
   # Show the user all of the config before we build
