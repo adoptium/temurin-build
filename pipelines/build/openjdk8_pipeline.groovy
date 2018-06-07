@@ -21,7 +21,7 @@ def buildConfigurations = [
                 bootJDK            : "7",
                 path               : "/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:/cygdrive/C/Projects/OpenJDK/make-3.82/",
                 configureArgs      : "with_freetype=/cygdrive/C/Projects/OpenJDK/freetype  --disable-ccache",
-                aditionalNodeLabels: 'build&&win2008'
+                aditionalNodeLabels: 'win2008'
         ],
 
         aix    : [

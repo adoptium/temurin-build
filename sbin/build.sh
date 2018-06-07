@@ -31,7 +31,10 @@ set -eux
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# shellcheck source=prepareWorkspace.sh
 source "$SCRIPT_DIR/prepareWorkspace.sh"
+
+# shellcheck source=common/config_init.sh
 source "$SCRIPT_DIR/common/config_init.sh"
 
 export OPENJDK_REPO_TAG

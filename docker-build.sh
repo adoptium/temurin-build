@@ -78,6 +78,7 @@ buildOpenJDKViaDocker()
 
   BUILD_CONFIG[DOCKER_FILE_PATH]="docker/${BUILD_CONFIG[OPENJDK_CORE_VERSION]}/$container_architecture"
 
+  # shellcheck disable=SC1090
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
 
   if [ -z "$(which docker)" ]; then

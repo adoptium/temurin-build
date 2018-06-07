@@ -61,6 +61,7 @@ parseCommandLineArgs()
 }
 
 # Extra config for OpenJDK variants such as OpenJ9, SAP et al
+# shellcheck disable=SC2153
 doAnyBuildVariantOverrides()
 {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
@@ -98,6 +99,7 @@ setWorkingDirectory()
   echo "Working dir is ${BUILD_CONFIG[WORKING_DIR]}"
 }
 
+# shellcheck disable=SC2153
 determineBuildProperties() {
     local build_type=normal
     local default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${build_type}-${BUILD_CONFIG[JVM_VARIANT]}-release
@@ -106,6 +108,7 @@ determineBuildProperties() {
 }
 
 # Set variables that the `configure` command (which builds OpenJDK) will need
+# shellcheck disable=SC2153
 setVariablesForConfigure() {
 
   local openjdk_core_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
@@ -151,6 +154,7 @@ processArgumentsforSpecificPlatforms() {
 }
 
 # Specific architectures need to have special build settings
+# shellcheck disable=SC2153
 processArgumentsforSpecificArchitectures() {
   local jvm_variant=server
   local build_full_name=""
@@ -194,6 +198,7 @@ processArgumentsforSpecificArchitectures() {
 }
 
 # Different platforms have different default make commands
+# shellcheck disable=SC2153
 setMakeCommandForOS() {
   local make_command_name
   case "$OS_KERNEL_NAME" in
