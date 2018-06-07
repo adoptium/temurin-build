@@ -31,12 +31,14 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Bring in the color coding for the terminal output
 sourceFileWithColourCodes()
 {
+  #shellcheck source=sbin/common/colour-codes.sh
   source "$SCRIPT_DIR/sbin/common/colour-codes.sh"
 }
 
 # Bring in the source signal handler
 sourceSignalHandler()
 {
+  #shellcheck source=signalhandler.sh
   source "$SCRIPT_DIR/signalhandler.sh"
 }
 

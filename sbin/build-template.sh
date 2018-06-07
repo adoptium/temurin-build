@@ -30,6 +30,7 @@ if [[ ! -z "$alreadyConfigured" ]] ; then
   echo "Not reconfiguring due to the presence of config.status"
 else
   #Templated var that, gets replaced by build.sh
+  # shellcheck disable=SC1073,SC1054,SC1083
   {configureArg}
 
   exitCode=$?

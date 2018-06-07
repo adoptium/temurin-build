@@ -11,6 +11,7 @@ TIMESTAMP="$(date +'%Y%d%m%H%M')"
 OPTIONS=""
 PLATFORM=""
 EXTENSION=""
+# shellcheck disable=SC2034
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
 BUILD_ARGS=${BUILD_ARGS:-""}
 VARIANT_ARG=""
@@ -52,7 +53,7 @@ elif [[ $NODE_LABELS = *"mac"* ]] ; then
   EXTENSION="tar.gz"
 
   export MACOSX_DEPLOYMENT_TARGET=10.8
-  sudo xcode-select --switch ${XCODE_SWITCH_PATH}
+  sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 elif [[ $NODE_LABELS = *"windows"* ]] ; then
   PLATFORM=Windows
   EXTENSION=zip
@@ -72,6 +73,7 @@ additionalSetupScript="${SCRIPT_DIR}/${JAVA_TO_BUILD}/${PLATFORM}/${ARCHITECTURE
 if [ -e "${additionalSetupScript}" ]
 then
     echo "loading ${additionalSetupScript}"
+    # shellcheck disable=SC1090
     source "${additionalSetupScript}"
 fi
 
@@ -81,8 +83,10 @@ then
 fi
 
 # Set the file name
-JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr a-z A-Z)
+JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr '[:lower:]' '[:upper:]')
 FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${PLATFORM}_${VARIANT}_${TIMESTAMP}.${EXTENSION}"
 echo "Filename will be: $FILENAME"
 
+
+    # shellcheck disable=SC2086
 bash "$SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${GIT_SHALLOW_CLONE_OPTION} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"

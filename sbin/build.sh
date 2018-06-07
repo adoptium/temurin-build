@@ -115,11 +115,15 @@ getOpenJDKUpdateAndBuildVersion()
 
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
+
+    # shellcheck disable=SC2154
     echo "${git_colour}Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}${normal}"
+    # shellcheck disable=SC2154
     echo "${info}NOTE: This can take quite some time!  Please be patient"
     git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
     OPENJDK_REPO_TAG=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
     if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
+     # shellcheck disable=SC2154
      echo "${error}Unable to detect git tag, exiting...${normal}"
      exit 1
     else
@@ -136,6 +140,7 @@ getOpenJDKUpdateAndBuildVersion()
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
+  # shellcheck disable=SC2154
   echo "${normal}"
 }
 
@@ -249,6 +254,7 @@ buildTemplatedFile() {
 
   FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${MAKE_TEST_IMAGE}"
 
+  # shellcheck disable=SC2002
   cat "$SCRIPT_DIR/build-template.sh" | \
       sed -e "s|{configureArg}|${FULL_CONFIGURE}|" \
       -e "s|{makeCommandArg}|${FULL_MAKE_COMMAND}|" > "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
@@ -281,6 +287,7 @@ printJavaVersionString()
   # shellcheck disable=SC2086
   PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
   if [[ -d "$PRODUCT_HOME" ]]; then
+     # shellcheck disable=SC2154
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
      echo "${info}"
@@ -431,7 +438,7 @@ createOpenJDKTarArchive()
   echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
 
   ## clean out old builds
-  rm -r "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || true
+  rm -r "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[TARGET_DIR]}" || true
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 
   echo "${good}Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}${normal}"

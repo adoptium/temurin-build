@@ -91,10 +91,11 @@ WORKSPACE_DIR
 
 # Helper code to perform index lookups by name
 declare -a -x PARAM_LOOKUP
-numParams=$(expr ${#CONFIG_PARAMS[@]})
+numParams=$((${#CONFIG_PARAMS[@]}))
 
 # seq not available on aix
 index=0
+# shellcheck disable=SC2086
 while [  $index -lt $numParams ]; do
     paramName=${CONFIG_PARAMS[$index]};
     eval declare -r -x "$paramName=$index"
@@ -142,6 +143,7 @@ function loadConfigFromFile() {
   fi
 }
 
+# shellcheck disable=SC2153
 function setOpenJdkVersion() {
   local forest_name=$1
 
