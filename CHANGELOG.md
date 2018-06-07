@@ -17,7 +17,7 @@ this script.
 1. _native-build.sh_ added.  This script is invoked for building (Adopt) OpenJDK 
 binaries natively.
 1. _sbin/prepareWorkspace.sh_ added
-1. _sbin/colour-codes.sh_ moved to _sbin/common/colour-codes.sh_
+1. _sbin/colour-codes.sh_ removed to simplify code
 1. _makejdk.sh_ removed - please use _makejdk-any-platform.sh_ or (rarely) 
 _sbin/build.sh_ instead. 
 1. _sbin/common-functions.sh_ removed and its logic split 
