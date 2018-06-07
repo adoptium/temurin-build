@@ -274,7 +274,6 @@ executeTemplatedFile() {
 
 }
 
-
 # Print the version string so we know what we've produced
 printJavaVersionString()
 {
