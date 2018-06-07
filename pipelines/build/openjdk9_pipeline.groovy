@@ -108,6 +108,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
 
 
                     if (job.getResult() == 'SUCCESS') {
+                        currentBuild.result = 'SUCCESS'
 
                         copyArtifacts(
                                 projectName: 'openjdk_build_refactor',
