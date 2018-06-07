@@ -55,7 +55,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
             target.value.each { variant ->
 
                 if(target.key == "windows" && variant == "openj9") {
-                    configuration.aditionalNodeLabels = configuration.aditionalNodeLabels + "&&buildj9"
+                    configuration.aditionalNodeLabels = configuration.aditionalNodeLabels.replace("build", "buildj9")
                 }
 
                 def buildParams = [
