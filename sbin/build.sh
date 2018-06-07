@@ -115,11 +115,15 @@ getOpenJDKUpdateAndBuildVersion()
 
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
+
+    # shellcheck disable=SC2154
     echo "${git_colour}Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}${normal}"
+    # shellcheck disable=SC2154
     echo "${info}NOTE: This can take quite some time!  Please be patient"
     git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
     OPENJDK_REPO_TAG=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
     if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
+     # shellcheck disable=SC2154
      echo "${error}Unable to detect git tag, exiting...${normal}"
      exit 1
     else
@@ -136,6 +140,7 @@ getOpenJDKUpdateAndBuildVersion()
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
+  # shellcheck disable=SC2154
   echo "${normal}"
 }
 
@@ -183,7 +188,7 @@ buildingTheRestOfTheConfigParameters()
 
   # Point-in-time dependency for openj9 only
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]] ; then
-    addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKING_DIR]}/libs/freemarker-${FREEMARKER_LIB_VERSION}/lib/freemarker.jar"
+    addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/freemarker.jar"
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
@@ -193,11 +198,16 @@ buildingTheRestOfTheConfigParameters()
 
   addConfigureArg "--with-x=" "/usr/include/X11"
 
-  # We don't want any extra debug symbols - ensure it's set to release,
-  # other options include fastdebug and slowdebug
-  addConfigureArg "--with-debug-level=" "release"
-  addConfigureArg "--disable-zip-debug-info" ""
-  addConfigureArg "--disable-debug-symbols" ""
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] ; then
+      # We don't want any extra debug symbols - ensure it's set to release,
+      # other options include fastdebug and slowdebug
+      addConfigureArg "--with-debug-level=" "release"
+      addConfigureArg "--disable-zip-debug-info" ""
+      addConfigureArg "--disable-debug-symbols" ""
+    else
+      addConfigureArg "--with-debug-level=" "release"
+      addConfigureArg "--with-native-debug-symbols=" "none"
+    fi
 }
 
 # Configure the command parameters
@@ -244,6 +254,7 @@ buildTemplatedFile() {
 
   FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${MAKE_TEST_IMAGE}"
 
+  # shellcheck disable=SC2002
   cat "$SCRIPT_DIR/build-template.sh" | \
       sed -e "s|{configureArg}|${FULL_CONFIGURE}|" \
       -e "s|{makeCommandArg}|${FULL_MAKE_COMMAND}|" > "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
@@ -276,6 +287,7 @@ printJavaVersionString()
   # shellcheck disable=SC2086
   PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
   if [[ -d "$PRODUCT_HOME" ]]; then
+     # shellcheck disable=SC2154
      echo "${good}'$PRODUCT_HOME' found${normal}"
      # shellcheck disable=SC2154
      echo "${info}"
@@ -426,7 +438,7 @@ createOpenJDKTarArchive()
   echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
 
   ## clean out old builds
-  rm -r "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || true
+  rm -r "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[TARGET_DIR]}" || true
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 
   echo "${good}Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}${normal}"
@@ -444,8 +456,6 @@ showCompletionMessage()
 loadConfigFromFile
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
-
-ls -alh "${BUILD_CONFIG[WORKSPACE_DIR]}"
 sourceFileWithColourCodes
 
 parseArguments "$@"

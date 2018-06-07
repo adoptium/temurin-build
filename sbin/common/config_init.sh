@@ -91,11 +91,17 @@ WORKSPACE_DIR
 
 # Helper code to perform index lookups by name
 declare -a -x PARAM_LOOKUP
-for index in $(seq 0 $(expr ${#CONFIG_PARAMS[@]} - 1))
-do
+numParams=$((${#CONFIG_PARAMS[@]}))
+
+# seq not available on aix
+index=0
+# shellcheck disable=SC2086
+while [  $index -lt $numParams ]; do
     paramName=${CONFIG_PARAMS[$index]};
     eval declare -r -x "$paramName=$index"
     PARAM_LOOKUP[$index]=$paramName
+
+    let index=index+1
 done
 
 function displayParams() {
@@ -137,6 +143,7 @@ function loadConfigFromFile() {
   fi
 }
 
+# shellcheck disable=SC2153
 function setOpenJdkVersion() {
   local forest_name=$1
 
@@ -270,8 +277,8 @@ function configDefaults() {
   # The OpenJDK source code repository to build from, e.g. an AdoptOpenJDK repo
   BUILD_CONFIG[REPOSITORY]=""
 
-  BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]=""
-  BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]=""
+  BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false"
+  BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="false"
   BUILD_CONFIG[FREETYPE]=true
   BUILD_CONFIG[FREETYPE_DIRECTORY]=""
   BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.4.0"

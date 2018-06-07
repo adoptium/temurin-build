@@ -16,34 +16,10 @@
 
 ################################################################################
 #
-# build-template.sh
-#
-# Writes the configure configuration to disk (config.status) for reuse
+# Setup for JDK 8 builds on AdoptOpenJDK build farm nodes
 #
 ################################################################################
 
-set +e
-
-alreadyConfigured=$(/usr/bin/find . -name "config.status")
-
-if [[ ! -z "$alreadyConfigured" ]] ; then
-  echo "Not reconfiguring due to the presence of config.status"
-else
-  #Templated var that, gets replaced by build.sh
-  # shellcheck disable=SC1073,SC1054,SC1083
-  {configureArg}
-
-  exitCode=$?
-  if [ "${exitCode}" -ne 0 ]; then
-    exit 2;
-  fi
-fi
-
-#Templated var that, gets replaced by build.sh
-{makeCommandArg}
-
-exitCode=$?
-# shellcheck disable=SC2181
-if [ "${exitCode}" -ne 0 ]; then
-   exit 3;
-fi
+export PATH="/usr/bin:$PATH"
+export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;%INCLUDE%"
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-include=/cygdrive/c/openjdk/freetype-2.5.3/include --with-freetype-lib=/cygdrive/c/openjdk/freetype-2.5.3/lib64 --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"

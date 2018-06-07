@@ -38,10 +38,12 @@ createPersistentDockerDataVolume()
 
   if [[ "${BUILD_CONFIG[CLEAN_DOCKER_BUILD]}" == "true" || "$data_volume_exists" != "0" ]]; then
 
+    # shellcheck disable=SC2154
     echo "${info}Removing old volumes and containers${normal}"
     ${BUILD_CONFIG[DOCKER]} rm -f "$(${BUILD_CONFIG[DOCKER]} ps -a --no-trunc | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | cut -d' ' -f1)" || true
     ${BUILD_CONFIG[DOCKER]} volume rm -f "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
 
+    # shellcheck disable=SC2154
     echo "${info}Creating tmp container${normal}"
     ${BUILD_CONFIG[DOCKER]} volume create --name "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}"
   fi
@@ -79,6 +81,7 @@ buildOpenJDKViaDocker()
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
 
   if [ -z "$(which docker)" ]; then
+     # shellcheck disable=SC2154
     echo "${error}Error, please install docker and ensure that it is in your path and running!${normal}"
     exit
   fi
@@ -97,14 +100,16 @@ buildOpenJDKViaDocker()
          buildDockerContainer
      fi
   else
-     echo "${info}Since you specified --ignore-container, we are removing the existing container (if it exists) and building you a new one"
-     echo "$good"
+     # shellcheck disable=SC2154
+     echo "${info}Since you specified --ignore-container, we are removing the existing container (if it exists) and building you a new one{$good}"
      # Find the previous Docker container and remove it (if it exists)
      ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm -f {}
 
      # Build a new container
      buildDockerContainer
-     echo "$normal"
+
+     # shellcheck disable=SC2154
+     echo "${normal}"
   fi
 
   # Show the user all of the config before we build
@@ -116,8 +121,10 @@ buildOpenJDKViaDocker()
   echo "Target binary directory on host machine: ${hostDir}/target"
   mkdir -p "${hostDir}/workspace/target"
 
-  local cpuSet="0-$(expr ${BUILD_CONFIG[NUM_PROCESSORS]} - 1)"
+  local cpuSet;
+  cpuSet="0-$((BUILD_CONFIG[NUM_PROCESSORS] - 1))"
 
+  # shellcheck disable=SC2140
   # Pass in the last important variables into the Docker container and call
   # the /openjdk/sbin/build.sh script inside
   ${BUILD_CONFIG[DOCKER]} run -lst \

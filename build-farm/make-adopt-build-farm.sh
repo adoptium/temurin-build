@@ -11,8 +11,10 @@ TIMESTAMP="$(date +'%Y%d%m%H%M')"
 OPTIONS=""
 PLATFORM=""
 EXTENSION=""
+# shellcheck disable=SC2034
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
 BUILD_ARGS=${BUILD_ARGS:-""}
+VARIANT_ARG=""
 
 if [ -n "${JDK_BOOT_VERSION}" ]
 then
@@ -43,12 +45,15 @@ if [[ $NODE_LABELS = *"linux"* ]] ; then
   if [ ! -z "${TAG}" ]; then
     OPTIONS="${OPTIONS} --tag $TAG"
   fi
+elif [[ $NODE_LABELS = *"aix"* ]] ; then
+  PLATFORM="Aix"
+  EXTENSION="tar.gz"
 elif [[ $NODE_LABELS = *"mac"* ]] ; then
   PLATFORM="Mac"
   EXTENSION="tar.gz"
 
   export MACOSX_DEPLOYMENT_TARGET=10.8
-  sudo xcode-select --switch ${XCODE_SWITCH_PATH}
+  sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 elif [[ $NODE_LABELS = *"windows"* ]] ; then
   PLATFORM=Windows
   EXTENSION=zip
@@ -63,19 +68,25 @@ fi
 
 
 
-additionalSetupScript="${SCRIPT_DIR}/${JAVA_TO_BUILD}/${PLATFORM}/${ARCHITECTURE}/setup.sh"
+additionalSetupScript="${SCRIPT_DIR}/${JAVA_TO_BUILD}/${PLATFORM}/${ARCHITECTURE}/${VARIANT}/setup.sh"
 
 if [ -e "${additionalSetupScript}" ]
 then
     echo "loading ${additionalSetupScript}"
+    # shellcheck disable=SC1090
     source "${additionalSetupScript}"
 fi
 
+if [ "${VARIANT}" != "hotspot" ]
+then
+  VARIANT_ARG="--build-variant ${VARIANT}"
+fi
+
 # Set the file name
-FILENAME="OpenJDK8_x64_${PLATFORM}_${TIMESTAMP}.${EXTENSION}"
+JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr '[:lower:]' '[:upper:]')
+FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${PLATFORM}_${VARIANT}_${TIMESTAMP}.${EXTENSION}"
 echo "Filename will be: $FILENAME"
 
-mkdir -p "$SCRIPT_DIR/../workspace/target/"
-echo "foo" > "$SCRIPT_DIR/../workspace/target/OpenJDK_test.tar.gz"
 
-#bash "$SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${GIT_SHALLOW_CLONE_OPTION} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} "${JAVA_TO_BUILD}"
+    # shellcheck disable=SC2086
+bash "$SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${GIT_SHALLOW_CLONE_OPTION} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"

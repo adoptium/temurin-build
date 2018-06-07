@@ -159,14 +159,16 @@ checkingAndDownloadingFreemarker()
 {
   echo "Checking for FREEMARKER"
 
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/" || exit
   FOUND_FREEMARKER=$(find "." -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
 
   if [[ ! -z "$FOUND_FREEMARKER" ]] ; then
     echo "Skipping FREEMARKER download"
   else
+
     wget -nc --no-check-certificate http://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz
-    tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
+    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/" || exit
+    tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/"
     rm "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
   fi
 }
@@ -185,14 +187,9 @@ checkingAndDownloadingFreeType()
   else
     # Then FreeType for fonts: make it and use
     wget -nc --no-check-certificate https://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
-    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
-      gunzip xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
-      tar xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar
-      rm freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar
-    else
-      tar xf freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
-      rm freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
-    fi
+
+    gunzip -dc freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz | tar xf - -C .
+    rm freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
 
     cd freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}" || exit
 
@@ -326,7 +323,6 @@ relocateToTmpIfNeeded()
      local tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir'`
      export TMP_WORKSPACE="${tmpdir}"
      export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
-     ls -alh "${ORIGINAL_WORKSPACE}"
 
      if [ -d "${ORIGINAL_WORKSPACE}" ]
      then
