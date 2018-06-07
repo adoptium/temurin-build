@@ -13,56 +13,55 @@
 # limitations under the License.
 #
 
+################################################################################
+# add-branch-without-modules
+#
+# Local setup of the Git clone branches for the OpenJDK10 (updates) mercurial
+# repository
+#
+# Initial repo will be pushed to git@github.com:AdoptOpenJDK/openjdk-jdk10u.git
+#
+################################################################################
+
 set -euo pipefail
 
-echo "Common defs"
-
+echo "Import common functionality"
 # shellcheck disable=SC1091
 source import-common.sh
 
 echo "Enter hg"
-
 cd hg || exit 1
 
 bpath=$1
 branch=$2
 
 echo "Create $bpath"
-
 mkdir -p "$bpath" || exit 1
 
-echo "Clone $bpath (root)"
+echo "git hg clone $bpath (root)"
 git hg clone "http://hg.openjdk.java.net/$bpath" "$bpath/root" || exit 1
 
+echo "checkout the $branch"
 if [ "$branch" != "" ]; then
   cd "$bpath/root" || exit 1
   git-hg checkout "$branch" || exit 1
   cd - || exit 1
 fi
 
-echo "Exit hg"
-echo "Enter combined"
-
+echo "Enter ../combined"
 cd ../combined || exit 1
 
-echo "Branch $bpath"
-
-pwd
-
+echo "checkout the master branch"
 git checkout -b master || exit 1
 
 echo "Add remote for (root)"
-
 git remote add "imports/$bpath/root" "../hg/$bpath/root" || exit 1
 
 echo "Fetch (root)"
-
 git fetch "imports/$bpath/root" || exit 1
 
 echo "Merge (root)"
-
 git merge "imports/$bpath/root/master" -m "Initial merge of (root)" || exit 1
 
-echo "Push"
-
+echo "Push the tags to the master branch"
 git push github master --tags || exit 1

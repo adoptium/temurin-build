@@ -1,14 +1,14 @@
 println "building ${JDK_VERSION}"
 
-def buildPlatforms = ['Mac', 'Windows', 'Linux', 'zLinux', 'ppc64le', 'AIX']
+def buildPlatforms = ['Mac', 'Windows', 'Linux', 'zLinux', 'ppc64le', 'AIX', 'arm64']
 def buildMaps = [:]
-buildMaps['Mac'] = [test:true, ArchOSs:'x86-64_macos']
-buildMaps['Windows'] = [test:false, ArchOSs:'x86-64_windows']
-buildMaps['Linux'] = [test:true, ArchOSs:'x86-64_linux']
-buildMaps['zLinux'] = [test:true, ArchOSs:'s390x_linux']
-buildMaps['ppc64le'] = [test:true, ArchOSs:'ppc64le_linux']
+buildMaps['Mac'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_macos']
+buildMaps['Windows'] = [test:['openjdktest'], ArchOSs:'x86-64_windows']
+buildMaps['Linux'] = [test:['openjdktest', 'systemtest', 'externaltest'], ArchOSs:'x86-64_linux']
+buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
+buildMaps['ppc64le'] = [test:['openjdktest', 'systemtest'], ArchOSs:'ppc64le_linux']
 buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
-def typeTests = ['openjdktest', 'systemtest']
+buildMaps['arm64'] = [test:['openjdktest'], ArchOSs:'arm64_linux']
 
 def jobs = [:]
 for ( int i = 0; i < buildPlatforms.size(); i++ ) {
@@ -25,7 +25,7 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 		}
 		if (buildMaps[platform].test) {
 			stage('test') {
-				typeTests.each {
+				buildMaps[platform].test.each {
 					build job:"openjdk10_hs_${it}_${archOS}",
 							propagate: false,
 							parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJobNum}"),
