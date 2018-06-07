@@ -145,12 +145,6 @@ checkingAndDownloadingAlsa()
       tar -xf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2 --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
       rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     fi
-
-    #if ! (./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
-      # shellcheck disable=SC2154
-    #  echo "Failed to configure and build alsa, exiting"
-    #  exit;
-    #fi
   fi
 }
 

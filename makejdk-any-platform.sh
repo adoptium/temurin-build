@@ -35,9 +35,16 @@ set -eux
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Pull in configuration and build support
+# shellcheck source=sbin/common/config_init.sh
 source "${SCRIPT_DIR}/sbin/common/config_init.sh"
+
+# shellcheck source=docker-build.sh
 source "${SCRIPT_DIR}/docker-build.sh"
+
+# shellcheck source=native-build.sh
 source "${SCRIPT_DIR}/native-build.sh"
+
+# shellcheck source=configureBuild.sh
 source "${SCRIPT_DIR}/configureBuild.sh"
 
 echo "Starting $0 to configure, build (Adopt)OpenJDK binary"
