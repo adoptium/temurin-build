@@ -24,7 +24,7 @@ def buildConfigurations = [
                 bootJDK            : "9",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
                 configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
-                aditionalNodeLabels: 'build&&win2012'
+                aditionalNodeLabels: 'build-softlayer-win2012r2-x64-1'
         ],
         aix    : [
                 os                 : 'aix',
