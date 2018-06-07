@@ -281,7 +281,6 @@ printJavaVersionString()
   # shellcheck disable=SC2086
   PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
   if [[ -d "$PRODUCT_HOME" ]]; then
-     # shellcheck disable=SC2154
      echo "'$PRODUCT_HOME' found"
      if ! "$PRODUCT_HOME"/bin/java -version; then
        echo " Error executing 'java' does not exist in '$PRODUCT_HOME'."
