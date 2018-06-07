@@ -142,9 +142,7 @@ function cloneMercurialOpenJDKRepo() {
       done
     cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
     git push origin master
-}
 
-function mergeIntoGitRepo() {
     echo "Pulling in changes to $GITHUB_REPO branch"
     git checkout master
     git fetch origin master
@@ -175,4 +173,3 @@ checkGitVersion
 installGitRemoteHg
 cloneGitOpenJDKRepo
 cloneMercurialOpenJDKRepo
-mergeIntoGitRepo
