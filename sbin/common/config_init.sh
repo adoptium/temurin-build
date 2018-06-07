@@ -36,7 +36,6 @@ BUILD_FULL_NAME
 BUILD_VARIANT
 CLEAN_DOCKER_BUILD
 CONFIGURE_ARGS_FOR_ANY_PLATFORM
-COLOUR
 CONTAINER_NAME
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
@@ -213,9 +212,6 @@ function parseConfigurationArguments() {
         "--keep" | "-k" )
         BUILD_CONFIG[KEEP_CONTAINER]=true;;
 
-        "--no-colour" | "-n" )
-        BUILD_CONFIG[COLOUR]=false;;
-
         "--processors" | "-p" )
         BUILD_CONFIG[NUM_PROCESSORS]="$1"; shift;;
 
@@ -252,7 +248,7 @@ function parseConfigurationArguments() {
         "--jvm-variant"  | "-V" )
         BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
 
-        *) echo >&2 "${error}Invalid build.sh option: ${opt}${normal}"; exit 1;;
+        *) echo >&2 "Invalid build.sh option: ${opt}"; exit 1;;
       esac
     done
 }
@@ -353,9 +349,6 @@ function configDefaults() {
   BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""}
 
   BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-"docker"}
-
-  # Print to console using colour codes
-  BUILD_CONFIG[COLOUR]=${BUILD_CONFIG[COLOUR]:-"true"}
 
   BUILD_CONFIG[TMP_SPACE_BUILD]=${BUILD_CONFIG[TMP_SPACE_BUILD]:-false}
 }

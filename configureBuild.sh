@@ -28,13 +28,6 @@ set -eux # TODO remove once we've finished debugging
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Bring in the color coding for the terminal output
-sourceFileWithColourCodes()
-{
-  #shellcheck source=sbin/common/colour-codes.sh
-  source "$SCRIPT_DIR/sbin/common/colour-codes.sh"
-}
-
 # Bring in the source signal handler
 sourceSignalHandler()
 {
@@ -99,10 +92,10 @@ setWorkingDirectory()
        mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
     fi
   else
-    echo "${info}Workspace dir is ${BUILD_CONFIG[WORKSPACE_DIR]}${normal}"
+    echo "Workspace dir is ${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 
-  echo "${info}Working dir is ${BUILD_CONFIG[WORKING_DIR]}${normal}"
+  echo "Working dir is ${BUILD_CONFIG[WORKING_DIR]}"
 }
 
 determineBuildProperties() {
@@ -233,6 +226,5 @@ configure_build() {
     determineBuildProperties
     sourceSignalHandler
     doAnyBuildVariantOverrides
-    sourceFileWithColourCodes
     setWorkingDirectory
 }

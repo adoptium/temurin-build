@@ -54,9 +54,9 @@ checkoutAndCloneOpenJDKGitRepo()
     # If the local copy of the git source repo is valid then we reset appropriately
     if [ "${isCorrectGitRepo}" == "0" ]; then
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-      echo "${info}Resetting the git openjdk source repository at $PWD in 10 seconds...${normal}"
+      echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
       sleep 10
-      echo "${git_colour}Pulling latest changes from git openjdk source repository${normal}"
+      echo "Pulling latest changes from git openjdk source repository"
 
       git fetch --all "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
       git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
@@ -71,7 +71,7 @@ checkoutAndCloneOpenJDKGitRepo()
     fi
   elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] ; then
     # If it doesn't exist, clone it
-    echo "${info}Didn't find any existing openjdk repository at $(pwd)/${BUILD_CONFIG[WORKING_DIR]} so cloning the source to openjdk${normal}"
+    echo "Didn't find any existing openjdk repository at $(pwd)/${BUILD_CONFIG[WORKING_DIR]} so cloning the source to openjdk"
     cloneOpenJDKGitRepo
   fi
 
@@ -148,7 +148,7 @@ checkingAndDownloadingAlsa()
 
     #if ! (./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
-    #  echo "${error}Failed to configure and build alsa, exiting"
+    #  echo "Failed to configure and build alsa, exiting"
     #  exit;
     #fi
   fi
@@ -197,20 +197,19 @@ checkingAndDownloadingFreeType()
     # shellcheck disable=SC2046
     if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
-      echo "${error}Failed to configure and build libfreetype, exiting"
+      echo "Failed to configure and build libfreetype, exiting"
       exit;
     else
       # shellcheck disable=SC2154
-      echo "${good}Successfully configured OpenJDK with the FreeType library (libfreetype)!"
+      echo "Successfully configured OpenJDK with the FreeType library (libfreetype)!"
 
      if [[ ${BUILD_CONFIG[OS_KERNEL_NAME]} == "darwin" ]] ; then
         TARGET_DYNAMIC_LIB_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype/lib/
         TARGET_DYNAMIC_LIB="${TARGET_DYNAMIC_LIB_DIR}"/libfreetype.6.dylib
-        echo ""
+
         echo "Listing the contents of ${TARGET_DYNAMIC_LIB_DIR} to see if the dynamic library 'libfreetype.6.dylib' has been created..."
         ls "${TARGET_DYNAMIC_LIB_DIR}"
 
-        echo ""
         echo "Releasing the runpath dependency of the dynamic library ${TARGET_DYNAMIC_LIB}"
         set -x
         install_name_tool -id @rpath/libfreetype.6.dylib "${TARGET_DYNAMIC_LIB}"
@@ -224,8 +223,6 @@ checkingAndDownloadingFreeType()
         fi
       fi
     fi
-    # shellcheck disable=SC2154
-    echo "${normal}"
   fi
 }
 
@@ -254,7 +251,7 @@ checkingAndDownloadCaCerts()
     echo "Failed to retrieve the cacerts file, exiting..."
     exit;
   else
-    echo "${good}Successfully retrieved the cacerts file!"
+    echo "Successfully retrieved the cacerts file!"
   fi
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 }

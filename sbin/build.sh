@@ -74,12 +74,6 @@ addConfigureArgIfValueIsNotEmpty()
   fi
 }
 
-# Use colours for the terminal output
-sourceFileWithColourCodes()
-{
-  source "$SCRIPT_DIR/common/colour-codes.sh"
-}
-
 # Configure the boot JDK
 configuringBootJDKConfigureParameter()
 {
@@ -117,14 +111,14 @@ getOpenJDKUpdateAndBuildVersion()
     cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
 
     # shellcheck disable=SC2154
-    echo "${git_colour}Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}${normal}"
+    echo "Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
     # shellcheck disable=SC2154
-    echo "${info}NOTE: This can take quite some time!  Please be patient"
+    echo "NOTE: This can take quite some time!  Please be patient"
     git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
     OPENJDK_REPO_TAG=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
     if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
      # shellcheck disable=SC2154
-     echo "${error}Unable to detect git tag, exiting...${normal}"
+     echo "Unable to detect git tag, exiting..."
      exit 1
     else
      echo "OpenJDK repo tag is $OPENJDK_REPO_TAG"
@@ -139,9 +133,6 @@ getOpenJDKUpdateAndBuildVersion()
   fi
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
-
-  # shellcheck disable=SC2154
-  echo "${normal}"
 }
 
 # Ensure that we produce builds with versions strings something like:
@@ -288,17 +279,13 @@ printJavaVersionString()
   PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
   if [[ -d "$PRODUCT_HOME" ]]; then
      # shellcheck disable=SC2154
-     echo "${good}'$PRODUCT_HOME' found${normal}"
-     # shellcheck disable=SC2154
-     echo "${info}"
+     echo "'$PRODUCT_HOME' found"
      if ! "$PRODUCT_HOME"/bin/java -version; then
-       echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}"
+       echo " Error executing 'java' does not exist in '$PRODUCT_HOME'."
        exit -1
      fi
-     echo "${normal}"
-     echo ""
   else
-    echo "${error}'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location.${normal}"
+    echo "'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location."
     exit -1
   fi
 }
@@ -341,14 +328,14 @@ makeACopyOfLibFreeFontForMacOSX() {
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
         echo "PERFORM_COPYING=${PERFORM_COPYING}"
         if [ "${PERFORM_COPYING}" == "false" ]; then
-            echo "${info} Skipping copying of the free font library to ${IMAGE_DIRECTORY}, does not apply for this version of the JDK. ${normal}"
+            echo " Skipping copying of the free font library to ${IMAGE_DIRECTORY}, does not apply for this version of the JDK. "
             return
         fi
 
-       echo "${info} Performing copying of the free font library to ${IMAGE_DIRECTORY}, applicable for this version of the JDK. ${normal}"
+       echo " Performing copying of the free font library to ${IMAGE_DIRECTORY}, applicable for this version of the JDK. "
         SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
         if [ ! -f "${SOURCE_LIB_NAME}" ]; then
-            echo "${error}[Error] ${SOURCE_LIB_NAME} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process...${normal}"
+            echo "[Error] ${SOURCE_LIB_NAME} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process..."
             exit -1
         fi
         TARGET_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.6.dylib"
@@ -364,7 +351,7 @@ makeACopyOfLibFreeFontForMacOSX() {
             otool -L "${INVOKED_BY_FONT_MANAGER}"
         else
             # shellcheck disable=SC2154
-            echo "${warning}[Warning] ${INVOKED_BY_FONT_MANAGER} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, this may cause runtime issues, please beware...${normal}"
+            echo "[Warning] ${INVOKED_BY_FONT_MANAGER} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, this may cause runtime issues, please beware..."
         fi
 
         otool -L "${TARGET_LIB_NAME}"
@@ -435,13 +422,13 @@ createOpenJDKTarArchive()
       EXT=".tar.gz"
   fi
 
-  echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
+  echo "Your final ${EXT} was created at ${PWD}"
 
   ## clean out old builds
   rm -r "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[TARGET_DIR]}" || true
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 
-  echo "${good}Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}${normal}"
+  echo "Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}"
   mv "OpenJDK${EXT}" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
@@ -455,8 +442,6 @@ showCompletionMessage()
 
 loadConfigFromFile
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
-
-sourceFileWithColourCodes
 
 parseArguments "$@"
 configureWorkspace
