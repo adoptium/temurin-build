@@ -24,7 +24,7 @@ def buildConfigurations = [
                 bootJDK            : "9",
                 path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
                 configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
-                aditionalNodeLabels: 'build-softlayer-win2012r2-x64-1'
+                aditionalNodeLabels: 'build&&win2012'
         ],
         aix    : [
                 os                 : 'aix',
@@ -51,27 +51,31 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
 
             def buildType = "${configuration.os}-${configuration.arch}"
 
-            def buildParams = [
-                    string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
-                    [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
-            ];
-
-            if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
-            if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
-            if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
-            if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
-            if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
-
             target.value.each { variant ->
-                def parameters = buildParams.clone();
-                parameters += string(name: 'VARIANT', value: "${variant}");
+
+                if(target.key == "windows" && variant == "openj9") {
+                    configuration.aditionalNodeLabels = configuration.aditionalNodeLabels + "&&buildj9"
+                }
+
+                def buildParams = [
+                        string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
+                        [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
+                ];
+
+                if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
+                if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
+                if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
+                if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
+                if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
+
+                buildParams += string(name: 'VARIANT', value: "${variant}");
 
                 def name = "${buildType}-${variant}"
 
                 jobConfigurations[name] = [
                         config     : configuration,
                         targetLabel: target.key,
-                        parameters : parameters,
+                        parameters : buildParams,
                         name       : "${buildType}-${variant}"
                 ]
             }
