@@ -157,7 +157,7 @@ checkingAndDownloadingFreemarker()
     echo "Skipping FREEMARKER download"
   else
 
-    wget -nc --no-check-certificate http://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz
+    wget -nc --no-check-certificate "http://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
     mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/" || exit
     tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/"
     rm "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
@@ -294,9 +294,11 @@ function moveTmpToWorkspaceLocation {
 
     mkdir "${ORIGINAL_WORKSPACE}"
 
+    # shellcheck disable=SC2086
     chmod 755 ${TMP_WORKSPACE}/workspace/* || true
     chmod 755 "${ORIGINAL_WORKSPACE}" || true
 
+    # shellcheck disable=SC2086
     cp -r ${TMP_WORKSPACE}/workspace/* "${ORIGINAL_WORKSPACE}"
     rm -rf "${TMP_WORKSPACE}/workspace/"
     rm -r "${TMP_WORKSPACE}"
@@ -308,7 +310,8 @@ relocateToTmpIfNeeded()
 {
    if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
    then
-     local tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir')
+     local tmpdir
+     tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir')
      export TMP_WORKSPACE="${tmpdir}"
      export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
 

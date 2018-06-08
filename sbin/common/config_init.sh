@@ -126,19 +126,19 @@ function writeConfigToFile() {
 function loadConfigFromFile() {
   if [ -f "$SCRIPT_DIR/../config/built_config.cfg" ]
   then
-    # shellcheck source=config/built_config.cfg
+    # shellcheck disable=SC1091
     source "$SCRIPT_DIR/../config/built_config.cfg"
   elif [ -f "config/built_config.cfg" ]
   then
-    # shellcheck source=config/built_config.cfg
+    # shellcheck disable=SC1091
     source config/built_config.cfg
   elif [ -f "workspace/config/built_config.cfg" ]
   then
-    # shellcheck source=config/built_config.cfg
+    # shellcheck disable=SC1091
     source workspace/config/built_config.cfg
   elif [ -f "built_config.cfg" ]
   then
-    # shellcheck source=config/built_config.cfg
+    # shellcheck disable=SC1091
     source built_config.cfg
   else
     echo "Failed to find configuration"
