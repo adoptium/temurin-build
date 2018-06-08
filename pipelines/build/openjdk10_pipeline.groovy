@@ -3,9 +3,6 @@ def buildConfigurations = [
                 os                 : 'mac',
                 arch               : 'x64',
                 bootJDK            : "/Users/jenkins/tools/hudson.model.JDK/JDK9.0.1",
-                path               : "/Users/jenkins/ccache-3.2.4",
-                xCodeSwitchPath    : "/",
-                configureArgs      : "--disable-warnings-as-errors",
                 aditionalNodeLabels: 'build'
         ],
 
@@ -13,7 +10,6 @@ def buildConfigurations = [
                 os                 : 'centos6',
                 arch               : 'x64',
                 bootJDK            : "9",
-                configureArgs      : "--disable-warnings-as-errors",
                 aditionalNodeLabels: 'build'
         ],
 
@@ -22,17 +18,12 @@ def buildConfigurations = [
                 os                 : 'windows',
                 arch               : 'x64',
                 bootJDK            : "9",
-                path               : "/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/",
-                configureArgs      : "--disable-warnings-as-errors --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache",
                 aditionalNodeLabels: 'build&&win2012'
         ],
         aix    : [
                 os                 : 'aix',
                 arch               : 'ppc64',
                 bootJDK            : "9",
-                path               : "/opt/freeware/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin",
-                configureArgs      : "--disable-warnings-as-errors --with-memory-size=18000 --with-cups-include=/opt/freeware/include --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread",
-                buildArgs          : '--skip-freetype',
                 aditionalNodeLabels: 'build',
         ],
 ]
