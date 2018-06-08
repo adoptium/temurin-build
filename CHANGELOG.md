@@ -22,7 +22,7 @@ binaries natively.
 _sbin/build.sh_ instead. 
 1. _sbin/common-functions.sh_ removed and its logic split 
 1. _sbin/common/config_init.sh_ added
-1. _sbin/common/build-template.sh_ added for saving off the configure configuration. 
+1. _sbin/common/build.template_ added for saving off the configure configuration. 
 1. _sbin/signalhandler.sh_ moved to _signalhandler.sh_
 1. _sbin/build.sh_ enhanced, now requires a 'saved' build configuration to run. 
 This 'saved' build configuration is created by _makejdk-any-platform.sh_ but 

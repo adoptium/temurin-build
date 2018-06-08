@@ -16,7 +16,7 @@
 
 ################################################################################
 #
-# build-template.sh
+# build.template
 #
 # Writes the configure configuration to disk (config.status) for reuse
 #

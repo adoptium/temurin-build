@@ -25,12 +25,9 @@
 # TODO remove `x` once we've finished debugging
 set -eux
 
-# i.e. Where we are
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 # Set default versions for 3 libraries that OpenJDK relies on to build
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
-FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so*
+FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.28}
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
@@ -311,7 +308,7 @@ relocateToTmpIfNeeded()
 {
    if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
    then
-     local tmpdir=`mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir'`
+     local tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir')
      export TMP_WORKSPACE="${tmpdir}"
      export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
 

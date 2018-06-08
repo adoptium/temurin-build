@@ -249,7 +249,7 @@ buildTemplatedFile() {
   FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${MAKE_TEST_IMAGE}"
 
   # shellcheck disable=SC2002
-  cat "$SCRIPT_DIR/build-template.sh" | \
+  cat "$SCRIPT_DIR/build.template" | \
       sed -e "s|{configureArg}|${FULL_CONFIGURE}|" \
       -e "s|{makeCommandArg}|${FULL_MAKE_COMMAND}|" > "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
 }
