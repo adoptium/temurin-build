@@ -9,7 +9,7 @@ fi
 
 if [ "${VARIANT}" != "hotspot" ]
 then
-  VARIANT_ARG="--build-variant ${VARIANT}"
+  export VARIANT_ARG="--build-variant ${VARIANT}"
 fi
 
 # shellcheck disable=SC1091,SC1090
