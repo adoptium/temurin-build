@@ -51,31 +51,13 @@ elif [[ $NODE_LABELS = *"aix"* ]] ; then
 elif [[ $NODE_LABELS = *"mac"* ]] ; then
   PLATFORM="Mac"
   EXTENSION="tar.gz"
-
-  export MACOSX_DEPLOYMENT_TARGET=10.8
-  sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 elif [[ $NODE_LABELS = *"windows"* ]] ; then
   PLATFORM=Windows
   EXTENSION=zip
-
-  export ANT_HOME=/cygdrive/C/Projects/OpenJDK/apache-ant-1.10.1
-  export ALLOW_DOWNLOADS=true
-  export LANG=C
-  export JAVA_HOME=$JDK_BOOT_DIR
-
-  export BUILD_ARGS="--tmp-space-build ${BUILD_ARGS}"
 fi
 
-
-
-additionalSetupScript="${SCRIPT_DIR}/${JAVA_TO_BUILD}/${PLATFORM}/${ARCHITECTURE}/${VARIANT}/setup.sh"
-
-if [ -e "${additionalSetupScript}" ]
-then
-    echo "loading ${additionalSetupScript}"
-    # shellcheck disable=SC1090
-    source "${additionalSetupScript}"
-fi
+# shellcheck source=build-farm/set-platform-specific-configurations.sh
+source "set-platform-specific-configurations.sh"
 
 if [ "${VARIANT}" != "hotspot" ]
 then
@@ -88,5 +70,5 @@ FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${PLATFORM}_${VARIANT}_
 echo "Filename will be: $FILENAME"
 
 
-    # shellcheck disable=SC2086
+# shellcheck disable=SC2086
 bash "$SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${GIT_SHALLOW_CLONE_OPTION} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
