@@ -126,7 +126,7 @@ function writeConfigToFile() {
 function loadConfigFromFile() {
   if [ -f "$SCRIPT_DIR/../config/built_config.cfg" ]
   then
-    # shellcheck disable=SC1091
+    # shellcheck disable=SC1091,SC1090
     source "$SCRIPT_DIR/../config/built_config.cfg"
   elif [ -f "config/built_config.cfg" ]
   then

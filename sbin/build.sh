@@ -31,10 +31,10 @@ set -eux
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# shellcheck source=prepareWorkspace.sh
+# shellcheck source=sbin/prepareWorkspace.sh
 source "$SCRIPT_DIR/prepareWorkspace.sh"
 
-# shellcheck source=common/config_init.sh
+# shellcheck source=sbin/common/config_init.sh
 source "$SCRIPT_DIR/common/config_init.sh"
 
 export OPENJDK_REPO_TAG
@@ -85,7 +85,6 @@ configuringBootJDKConfigureParameter()
     echo "Searching for JDK_BOOT_DIR"
 
     # shellcheck disable=SC2046
-
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
       BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink $(which javac))))
     else
