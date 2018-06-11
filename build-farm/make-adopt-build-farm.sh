@@ -6,7 +6,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ## Very very build farm specific configuration
 
-TIMESTAMP="$(date +'%Y%d%m%H%M')"
+TIMESTAMP="$(date +'%Y-%m-%d-%H-%M')"
 
 OPTIONS=""
 PLATFORM=""
