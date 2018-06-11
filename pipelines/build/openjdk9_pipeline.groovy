@@ -92,9 +92,6 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
         parallel jobs
     } finally {
         node('master') {
-            sh "rm -rf target || true"
-            sh "mkdir target || true"
-
             buildJobs.each {
                 buildJob ->
                     def job = buildJob.value
