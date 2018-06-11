@@ -97,14 +97,14 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
 
                     if (job.getResult() == 'SUCCESS') {
                         currentBuild.result = 'SUCCESS'
-                        sh "rm target/${configuration.targetLabel}/${configuration.config.arch}/${variant}/* || true"
+                        sh "rm target/${configuration.targetLabel}/${configuration.config.arch}/${configuration.variant}/* || true"
 
                         copyArtifacts(
                                 projectName: 'openjdk_build_refactor',
                                 selector: specific("${job.getNumber()}"),
                                 filter: 'workspace/target/*',
                                 fingerprintArtifacts: true,
-                                target: "target/${configuration.targetLabel}/${configuration.config.arch}/${variant}/",
+                                target: "target/${configuration.targetLabel}/${configuration.config.arch}/${configuration.variant}/",
                                 flatten: true)
                     }
             }
