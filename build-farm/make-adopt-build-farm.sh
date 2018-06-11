@@ -49,7 +49,7 @@ elif [[ $NODE_LABELS = *"windows"* ]] ; then
 fi
 
 # shellcheck source=build-farm/set-platform-specific-configurations.sh
-source "set-platform-specific-configurations.sh"
+source "${SCRIPT_DIR}/set-platform-specific-configurations.sh"
 
 # Set the file name
 JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr '[:lower:]' '[:upper:]')
