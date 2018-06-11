@@ -92,6 +92,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
         node('master') {
 
             // remove all but the most recent for each build
+            sh "rm target/*.tar.gz || true"
             sh 'find ./workspace/target/* -type d | while read directory; do keep=$(find $directory/* | sort | tail -n 1); find "$directory" -type f | grep -v "$keep" | xargs -r rm ; done'
 
             buildJobs.each {
