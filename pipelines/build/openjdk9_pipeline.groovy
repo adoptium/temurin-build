@@ -45,7 +45,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
 
             target.value.each { variant ->
 
-                if(target.key == "windows" && variant == "openj9") {
+                if (target.key == "windows" && variant == "openj9") {
                     configuration.aditionalNodeLabels = configuration.aditionalNodeLabels.replace("build", "buildj9")
                 }
 
@@ -81,7 +81,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
         jobs[configuration.key] = {
             catchError {
                 stage(configuration.key) {
-                    buildJobs[configuration.key] = build job: "openjdk_build_refactor", propagate: false, parameters: configuration.value.parameters
+                    buildJobs[configuration.key] = build job: "openjdk_build_refactor", parameters: configuration.value.parameters
                 }
             }
         }
@@ -91,15 +91,20 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
         parallel jobs
     } finally {
         node('master') {
+
+            // remove all but the most recent for each build
+            sh 'find ./workspace/target/* -type d | while read directory; do keep=$(find $directory/* | sort | tail -n 1); find "$directory" -type f | grep -v "$keep" | xargs -r rm ; done'
+
             buildJobs.each {
                 buildJob ->
                     def job = buildJob.value
                     def name = buildJob.key
                     def configuration = jobConfigurations[name];
 
-
                     if (job.getResult() == 'SUCCESS') {
                         currentBuild.result = 'SUCCESS'
+
+                        sh "rm target/${configuration.targetLabel}/${configuration.config.arch}/* || true"
 
                         copyArtifacts(
                                 projectName: 'openjdk_build_refactor',
