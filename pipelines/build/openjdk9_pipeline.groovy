@@ -55,9 +55,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                 ];
 
                 if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
-                if (configuration.containsKey('path')) buildParams += string(name: 'USER_PATH', value: "${configuration.path}");
                 if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
-                if (configuration.containsKey('xCodeSwitchPath')) buildParams += string(name: 'XCODE_SWITCH_PATH', value: "${configuration.xCodeSwitchPath}");
                 if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
                 buildParams += string(name: 'VARIANT', value: "${variant}");
@@ -116,4 +114,5 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
         }
     }
 }
+
 

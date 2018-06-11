@@ -30,14 +30,6 @@ else
   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";
 fi
 
-if [ -n "${USER_PATH}" ]
-then
-  export PATH="${USER_PATH}:$PATH"
-fi
-
-
-
-
 if [[ $NODE_LABELS = *"linux"* ]] ; then
   PLATFORM="Linux"
   EXTENSION="tar.gz"
@@ -65,5 +57,5 @@ FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${PLATFORM}_${VARIANT}_
 echo "Filename will be: $FILENAME"
 
 # shellcheck disable=SC2086
-bash "$SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${GIT_SHALLOW_CLONE_OPTION} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
+bash "$SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
 
