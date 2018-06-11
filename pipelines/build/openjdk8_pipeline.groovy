@@ -80,6 +80,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
 
                 jobConfigurations[name] = [
                         config     : configuration,
+                        variant    : variant,
                         targetLabel: target.key,
                         parameters : buildParams,
                         name       : "${buildType}-${variant}"
@@ -105,11 +106,6 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
         parallel jobs
     } finally {
         node('master') {
-
-            // remove all but the most recent for each build
-            sh "rm target/*.tar.gz || true"
-            sh 'find ./target/* -type d | while read directory; do keep=$(find $directory/* | sort | tail -n 1); find "$directory" -type f | grep -v "$keep" | xargs -r rm ; done'
-
             buildJobs.each {
                 buildJob ->
                     def job = buildJob.value
@@ -118,20 +114,19 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
 
                     if (job.getResult() == 'SUCCESS') {
                         currentBuild.result = 'SUCCESS'
-
-                        sh "rm target/${configuration.targetLabel}/${configuration.config.arch}/* || true"
+                        sh "rm target/${configuration.targetLabel}/${configuration.config.arch}/${variant}/* || true"
 
                         copyArtifacts(
                                 projectName: 'openjdk_build_refactor',
                                 selector: specific("${job.getNumber()}"),
                                 filter: 'workspace/target/*',
                                 fingerprintArtifacts: true,
-                                target: "target/${configuration.targetLabel}/${configuration.config.arch}/",
+                                target: "target/${configuration.targetLabel}/${configuration.config.arch}/${variant}/",
                                 flatten: true)
                     }
             }
 
-            archiveArtifacts artifacts: 'target/*/*/*'
+            archiveArtifacts artifacts: 'target/*/*/*/*'
         }
     }
 }
