@@ -49,7 +49,8 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                 }
 
                 if (configuration.containsKey("additionalNodeLabels")) {
-                    if (configuration.additionalNodeLabels instanceof Map) {
+                    // hack as jenkins sandbox wont allow instanceof
+                    if ("java.util.LinkedHashMap".equals(configuration.additionalNodeLabels.getClass().getName())) {
                         configuration.additionalNodeLabels = configuration.additionalNodeLabels.get(variant)
                     }
                     configuration.additionalNodeLabels = "${configuration.additionalNodeLabels}&&${buildTag}";
