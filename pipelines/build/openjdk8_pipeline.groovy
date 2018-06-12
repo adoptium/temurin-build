@@ -94,7 +94,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
         jobs[configuration.key] = {
             catchError {
                 stage(configuration.key) {
-                    buildJobs[configuration.key] = build job: "openjdk_build_refactor", parameters: configuration.value.parameters
+                    buildJobs[configuration.key] = build job: "openjdk_build_refactor", propagate: false, parameters: configuration.value.parameters
                 }
             }
         }
