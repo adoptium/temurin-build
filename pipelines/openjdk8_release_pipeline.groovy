@@ -8,7 +8,7 @@ buildMaps['Linux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_linux'
 buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
 buildMaps['ppc64le'] = [test:['openjdktest', 'systemtest'], ArchOSs:'ppc64le_linux']
 buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
-buildMaps['aarch64'] = [test:['openjdktest'], ArchOSs:'arm64_linux']
+buildMaps['aarch64'] = [test:['openjdktest'], ArchOSs:'aarch64_linux']
 
 def jobs = [:]
 for ( int i = 0; i < buildPlatforms.size(); i++ ) {
