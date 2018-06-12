@@ -1,6 +1,6 @@
 println "building ${JDK_VERSION}"
 
-def buildPlatforms = ['Mac', 'Windows', 'Linux', 'zLinux', 'ppc64le', 'AIX', 'aarch64']
+def buildPlatforms = ['Mac', 'Windows', 'Linux', 'zLinux', 'ppc64le', 'AIX']
 def buildMaps = [:]
 buildMaps['Mac'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_macos']
 buildMaps['Windows'] = [test:['openjdktest'], ArchOSs:'x86-64_windows']
@@ -8,7 +8,6 @@ buildMaps['Linux'] = [test:['openjdktest', 'systemtest', 'perftest', 'externalte
 buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
 buildMaps['ppc64le'] = [test:['openjdktest', 'systemtest'], ArchOSs:'ppc64le_linux']
 buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
-buildMaps['aarch64'] = [test:['openjdktest'], ArchOSs:'aarch64_linux']
 
 def jobs = [:]
 for ( int i = 0; i < buildPlatforms.size(); i++ ) {
