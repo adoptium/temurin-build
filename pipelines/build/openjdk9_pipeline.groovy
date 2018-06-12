@@ -2,30 +2,27 @@ def buildConfigurations = [
         mac    : [
                 os                 : 'mac',
                 arch               : 'x64',
-                bootJDK            : "8",
-                aditionalNodeLabels: 'build'
+                bootJDK            : "8"
         ],
 
         linux  : [
                 os                 : 'centos6',
                 arch               : 'x64',
-                bootJDK            : "8",
-                aditionalNodeLabels: 'build'
+                bootJDK            : "8"
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         windows: [
-                os                 : 'windows',
-                arch               : 'x64',
-                bootJDK            : "8",
-                aditionalNodeLabels: 'build&&win2012'
+                os                  : 'windows',
+                arch                : 'x64',
+                bootJDK             : "8",
+                additionalNodeLabels: 'win2012'
         ],
 
         aix    : [
                 os                 : 'aix',
                 arch               : 'ppc64',
-                bootJDK            : "8",
-                aditionalNodeLabels: 'build',
+                bootJDK            : "8"
         ],
 ]
 
@@ -45,13 +42,24 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
 
             target.value.each { variant ->
 
+                def buildTag = "build"
+
                 if (target.key == "windows" && variant == "openj9") {
-                    configuration.aditionalNodeLabels = configuration.aditionalNodeLabels.replace("build", "buildj9")
+                    buildTag = "buildj9"
+                }
+
+                if (configuration.containsKey("additionalNodeLabels")) {
+                    if (configuration.additionalNodeLabels instanceof Map) {
+                        configuration.additionalNodeLabels = configuration.additionalNodeLabels.get(variant)
+                    }
+                    configuration.additionalNodeLabels = "${configuration.additionalNodeLabels}&&${buildTag}";
+                } else {
+                    configuration.additionalNodeLabels = buildTag;
                 }
 
                 def buildParams = [
                         string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
-                        [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.aditionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
+                        [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.additionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
                 ];
 
                 if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
@@ -114,4 +122,3 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
         }
     }
 }
-
