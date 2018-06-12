@@ -16,7 +16,7 @@ def buildConfigurations = [
                 os                 : 'windows',
                 arch               : 'x64',
                 bootJDK            : "7",
-                aditionalNodeLabels: [
+                additionalNodeLabels: [
                         hotspot: 'win2008',
                         openj9:  'win2012'
                 ]
