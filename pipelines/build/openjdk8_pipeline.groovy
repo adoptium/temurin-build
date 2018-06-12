@@ -65,19 +65,23 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                     buildTag = "buildj9"
                 }
 
+                def additionalNodeLabels;
                 if (configuration.containsKey("additionalNodeLabels")) {
                     // hack as jenkins sandbox wont allow instanceof
                     if ("java.util.LinkedHashMap".equals(configuration.additionalNodeLabels.getClass().getName())) {
-                        configuration.additionalNodeLabels = configuration.additionalNodeLabels.get(variant)
+                        additionalNodeLabels = configuration.additionalNodeLabels.get(variant)
+                    } else {
+                        additionalNodeLabels = configuration.additionalNodeLabels;
                     }
-                    configuration.additionalNodeLabels = "${configuration.additionalNodeLabels}&&${buildTag}";
+
+                    additionalNodeLabels = "${additionalNodeLabels}&&${buildTag}";
                 } else {
-                    configuration.additionalNodeLabels = buildTag;
+                    additionalNodeLabels = buildTag;
                 }
 
                 def buildParams = [
                         string(name: 'JAVA_TO_BUILD', value: "${javaToBuild}"),
-                        [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${configuration.additionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
+                        [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${additionalNodeLabels}&&${configuration.os}&&${configuration.arch}"]
                 ];
 
                 if (configuration.containsKey('bootJDK')) buildParams += string(name: 'JDK_BOOT_VERSION', value: "${configuration.bootJDK}");
