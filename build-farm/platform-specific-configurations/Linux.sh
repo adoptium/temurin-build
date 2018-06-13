@@ -24,7 +24,16 @@ then
         export CC=gcc-4.8
         export CXX=g++-4.8
       fi
-    elif [ "${JAVA_TO_BUILD}" == "jdk10u" ]
+    fi
+  fi
+elif [ "${ARCHITECTURE}" == "ppc64le" ]
+then
+  export LANG=C
+fi
+
+if [ "${ARCHITECTURE}" == "s390x" ] || [ "${ARCHITECTURE}" == "ppc64le" ]
+then
+    if [ "${JAVA_TO_BUILD}" == "jdk10u" ] && [ "${VARIANT}" == "openj9" ]
     then
       if [ -z "$JDK9_BOOT_DIR" ]; then
         export JDK9_BOOT_DIR=$PWD/jdk-9+181
@@ -37,5 +46,4 @@ then
       export CC=gcc-4.8
       export CXX=g++-4.8
     fi
-  fi
 fi

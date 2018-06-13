@@ -31,6 +31,13 @@ def buildConfigurations = [
                 bootJDK            : "9",
                 additionalNodeLabels: 'ubuntu'
         ],
+
+        ppc64le    : [
+                os                 : 'linux',
+                arch               : 'ppc64le',
+                bootJDK            : "9",
+                additionalNodeLabels: 'ubuntu'
+        ],
 ]
 
 def javaToBuild = "jdk10u"
