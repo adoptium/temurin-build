@@ -29,7 +29,7 @@ def buildConfigurations = [
                 os                 : 'linux',
                 arch               : 's390x',
                 bootJDK            : "8",
-                additionalNodeLabels: 'rhel7'
+                additionalNodeLabels: 'ubuntu'
         ],
 ]
 

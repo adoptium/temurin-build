@@ -28,7 +28,8 @@ def buildConfigurations = [
         s390x    : [
                 os                 : 'linux',
                 arch               : 's390x',
-                bootJDK            : "9"
+                bootJDK            : "9",
+                additionalNodeLabels: 'ubuntu'
         ],
 ]
 
