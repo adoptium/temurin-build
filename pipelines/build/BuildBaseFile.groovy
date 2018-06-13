@@ -99,3 +99,5 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
         }
     }
 }
+
+return this

@@ -57,9 +57,6 @@ def javaToBuild = "jdk9"
 
 node ("master") {
     checkout scm
-    sh "ls -alh ${WORKSPACE}"
-    sh "ls -alh ${WORKSPACE}/pipelines/"
-    sh "ls -alh ${WORKSPACE}/pipelines/build/"
     def buildFile = load "${WORKSPACE}/pipelines/build/BuildBaseFile.groovy"
     buildFile.doBuild(javaToBuild, buildConfigurations, osTarget)
 }

@@ -60,4 +60,3 @@ node ("master") {
     def buildFile = load "${WORKSPACE}/pipelines/build/BuildBaseFile.groovy"
     buildFile.doBuild(javaToBuild, buildConfigurations, osTarget)
 }
-

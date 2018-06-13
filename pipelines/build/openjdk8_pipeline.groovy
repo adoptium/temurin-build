@@ -63,9 +63,9 @@ def osTarget = '''{
     "mac": ["hotspot"]
 }'''
 */
-
 node ("master") {
     checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/BuildBaseFile.groovy"
     buildFile.doBuild(javaToBuild, buildConfigurations, osTarget)
 }
+
