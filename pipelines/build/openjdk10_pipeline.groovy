@@ -80,7 +80,8 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                 if (configuration.containsKey('configureArgs')) buildParams += string(name: 'CONFIGURE_ARGS', value: "${configuration.configureArgs}");
                 if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
-                buildParams += string(name: 'VARIANT', value: "${variant}");
+                buildParams += string(name: 'VARIANT', value: "${variant}")
+                buildParams += string(name: 'ARCHITECTURE', value: "${configuration.arch}");;
 
                 def name = "${buildType}-${variant}"
 
