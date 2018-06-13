@@ -37,6 +37,19 @@ def buildConfigurations = [
                 arch               : 'ppc64le',
                 bootJDK            : "8"
         ],
+
+        arm32    : [
+                os                 : 'linux',
+                arch               : 'arm',
+                bootJDK            : "8"
+        ],
+
+        aarch64    : [
+                os                 : 'linux',
+                arch               : 'aarch64',
+                bootJDK            : "8",
+                additionalNodeLabels: 'centos7'
+        ],
 ]
 
 def javaToBuild = "jdk9"

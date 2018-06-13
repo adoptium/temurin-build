@@ -8,6 +8,12 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 TIMESTAMP="$(date +'%Y-%m-%d-%H-%M')"
 
+
+echo "BUILD TYPE: "
+echo "VERSION: ${JAVA_TO_BUILD}"
+echo "ARCHITECTURE ${ARCHITECTURE}"
+echo "VARIANT: ${VARIANT}"
+
 OPTIONS=""
 PLATFORM=""
 EXTENSION=""

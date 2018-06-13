@@ -38,6 +38,19 @@ def buildConfigurations = [
                 bootJDK            : "9",
                 additionalNodeLabels: 'ubuntu'
         ],
+
+        arm32    : [
+                os                 : 'linux',
+                arch               : 'arm',
+                bootJDK            : "9"
+        ],
+
+        aarch64    : [
+                os                 : 'linux',
+                arch               : 'aarch64',
+                bootJDK            : "9",
+                additionalNodeLabels: 'centos7'
+        ],
 ]
 
 def javaToBuild = "jdk10u"

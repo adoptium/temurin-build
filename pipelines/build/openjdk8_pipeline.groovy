@@ -41,6 +41,12 @@ def buildConfigurations = [
                 bootJDK            : "7",
                 additionalNodeLabels: 'centos7'
         ],
+
+        arm32    : [
+                os                 : 'linux',
+                arch               : 'arm',
+                bootJDK            : "7"
+        ],
 ]
 
 
