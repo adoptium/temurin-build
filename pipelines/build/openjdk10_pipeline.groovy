@@ -18,10 +18,17 @@ def buildConfigurations = [
                 bootJDK             : "9",
                 additionalNodeLabels: 'win2012'
         ],
+
         aix    : [
                 os                  : 'aix',
                 arch                : 'ppc64',
                 bootJDK             : "9"
+        ],
+
+        s390x    : [
+                os                 : 'linux',
+                arch               : 's390x',
+                bootJDK            : "9"
         ],
 ]
 
@@ -45,6 +52,8 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
 
                 if (target.key == "windows" && variant == "openj9") {
                     buildTag = "buildj9"
+                } else if (target.key == "s390x" && variant == "openj9") {
+                    buildTag = "openj9"
                 }
 
                 def additionalNodeLabels;
