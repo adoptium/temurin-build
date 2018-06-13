@@ -36,7 +36,7 @@ def buildConfigurations = [
                 os                 : 'linux',
                 arch               : 'ppc64le',
                 bootJDK            : "9",
-                additionalNodeLabels: 'ubuntu'
+                additionalNodeLabels: 'centos7'
         ],
 
         arm32    : [

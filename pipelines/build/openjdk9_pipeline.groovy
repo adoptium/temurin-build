@@ -35,7 +35,8 @@ def buildConfigurations = [
         ppc64le    : [
                 os                 : 'linux',
                 arch               : 'ppc64le',
-                bootJDK            : "8"
+                bootJDK            : "8",
+                additionalNodeLabels: 'centos7'
         ],
 
         arm32    : [
