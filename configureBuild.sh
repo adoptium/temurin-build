@@ -163,7 +163,7 @@ processArgumentsforSpecificArchitectures() {
 
   case "${BUILD_CONFIG[OS_ARCHITECTURE]}" in
   "s390x")
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] && [ "$jvm_variant" != "openj9" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "openj9" ]; then
       jvm_variant=zero
     else
       jvm_variant=server
