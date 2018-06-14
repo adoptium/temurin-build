@@ -175,9 +175,8 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
 
                         sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
                     }
+                    archiveArtifacts artifacts: 'target/*/*/*/*'
             }
-
-            archiveArtifacts artifacts: 'target/*/*/*/*'
         }
     }
 }
