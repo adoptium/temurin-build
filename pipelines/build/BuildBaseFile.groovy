@@ -1,7 +1,7 @@
 //TODO: make it a shared library
 
 
-def buildConfiguration(javaToBuild, buildType, variant, configuration) {
+def buildConfiguration(javaToBuild, buildType, target, variant, configuration) {
 
     def buildTag = "build"
 
@@ -58,7 +58,7 @@ def getJobConfigurations(javaToBuild, buildConfigurations, osTarget) {
             def buildType = "${configuration.os}-${configuration.arch}"
             target.value.each { variant ->
                 def name = "${buildType}-${variant}"
-                jobConfigurations[name] = buildConfiguration(javaToBuild, buildType, variant, configuration);
+                jobConfigurations[name] = buildConfiguration(javaToBuild, buildType, target, variant, configuration);
             }
         }
     }
