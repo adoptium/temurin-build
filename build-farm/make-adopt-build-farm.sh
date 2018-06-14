@@ -6,7 +6,13 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ## Very very build farm specific configuration
 
-TIMESTAMP="$(date +'%Y%d%m%H%M')"
+TIMESTAMP="$(date +'%Y-%m-%d-%H-%M')"
+
+
+echo "BUILD TYPE: "
+echo "VERSION: ${JAVA_TO_BUILD}"
+echo "ARCHITECTURE ${ARCHITECTURE}"
+echo "VARIANT: ${VARIANT}"
 
 OPTIONS=""
 PLATFORM=""
@@ -30,14 +36,6 @@ else
   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";
 fi
 
-if [ -n "${USER_PATH}" ]
-then
-  export PATH="${USER_PATH}:$PATH"
-fi
-
-
-
-
 if [[ $NODE_LABELS = *"linux"* ]] ; then
   PLATFORM="Linux"
   EXTENSION="tar.gz"
@@ -57,7 +55,7 @@ elif [[ $NODE_LABELS = *"windows"* ]] ; then
 fi
 
 # shellcheck source=build-farm/set-platform-specific-configurations.sh
-source "set-platform-specific-configurations.sh"
+source "${SCRIPT_DIR}/set-platform-specific-configurations.sh"
 
 # Set the file name
 JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr '[:lower:]' '[:upper:]')
@@ -65,5 +63,5 @@ FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${PLATFORM}_${VARIANT}_
 echo "Filename will be: $FILENAME"
 
 # shellcheck disable=SC2086
-bash "$SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${GIT_SHALLOW_CLONE_OPTION} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
+bash "$SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
 

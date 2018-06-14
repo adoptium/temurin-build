@@ -41,7 +41,7 @@ export OPENJDK_REPO_TAG
 export OPENJDK_DIR
 export CONFIGURE_ARGS=""
 export MAKE_TEST_IMAGE=""
-export GIT_CLONE_ARGUMENTS="";
+export GIT_CLONE_ARGUMENTS=()
 
 # Parse the CL arguments, defers to the shared function in common-functions.sh
 function parseArguments() {
