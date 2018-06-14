@@ -66,7 +66,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                 def job;
                 stage(configuration.key) {
 
-                    sh "echo \"a build stage of openjdk_build_refactor ${configuration.key} ${job.getNumber()}\""
+                    sh "echo \"a build stage of openjdk_build_refactor ${configuration.key}\""
                     /*
                     job = build job: "openjdk_build_refactor", propagate: false, parameters: configuration.value.parameters
                     buildJobs[configuration.key];
@@ -74,7 +74,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                 }
 
                 stage("test ${configuration.key}") {
-                    sh "echo \"a test stage of openjdk_build_refactor ${configuration.key} ${job.getNumber()}\""
+                    sh "echo \"a test stage of openjdk_build_refactor ${configuration.key}\""
                     /*
                     build job: "openjdk8_hs_${it}_${archOS}",
                             propagate: false,
@@ -84,7 +84,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                 }
 
                 stage("publish nightly ${configuration.key}") {
-                    sh "echo \"a publish stage of openjdk_build_refactor ${configuration.key} ${job.getNumber()}\""
+                    sh "echo \"a publish stage of openjdk_build_refactor ${configuration.key}\""
                     /*
                     build job: 'openjdk_release_tool',
                             parameters: [string(name: 'REPO', value: 'nightly'),
