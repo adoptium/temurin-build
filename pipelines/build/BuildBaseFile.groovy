@@ -1,13 +1,13 @@
 //TODO: make it a shared library
 
 
-def buildConfiguration(javaToBuild, buildType, target, variant, configuration) {
+def buildConfiguration(javaToBuild, variant, configuration) {
 
     def buildTag = "build"
 
-    if (target.os == "windows" && variant == "openj9") {
+    if (configuration.os == "windows" && variant == "openj9") {
         buildTag = "buildj9"
-    } else if (target.arch == "s390x" && variant == "openj9") {
+    } else if (configuration.arch == "s390x" && variant == "openj9") {
         buildTag = "openj9"
     }
 
@@ -43,7 +43,6 @@ def buildConfiguration(javaToBuild, buildType, target, variant, configuration) {
             os         : configuration.os,
             variant    : variant,
             parameters : buildParams,
-            name       : "${buildType}-${variant}",
             test       : configuration.test,
             publish    : true
     ]
@@ -55,10 +54,9 @@ def getJobConfigurations(javaToBuild, buildConfigurations, osTarget) {
     new groovy.json.JsonSlurper().parseText(osTarget).each { target ->
         if (buildConfigurations.containsKey(target.key)) {
             def configuration = buildConfigurations.get(target.key)
-            def buildType = "${configuration.os}-${configuration.arch}"
             target.value.each { variant ->
-                def name = "${buildType}-${variant}"
-                jobConfigurations[name] = buildConfiguration(javaToBuild, buildType, target, variant, configuration);
+                def name = "${configuration.os}-${configuration.arch}-${variant}"
+                jobConfigurations[name] = buildConfiguration(javaToBuild, variant, configuration);
             }
         }
     }
