@@ -1,14 +1,16 @@
 def buildConfigurations = [
         mac    : [
-                os                 : 'mac',
-                arch               : 'x64',
-                bootJDK            : "7"
+                os                  : 'mac',
+                arch                : 'x64',
+                bootJDK             : "7",
+                test                : ['openjdktest', 'systemtest']
         ],
 
         linux  : [
                 os                 : 'centos6',
                 arch               : 'x64',
-                bootJDK            : "7"
+                bootJDK            : "7",
+                test                : ['openjdktest', 'systemtest', 'perftest', 'externaltest']
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -19,33 +21,38 @@ def buildConfigurations = [
                 additionalNodeLabels: [
                         hotspot: 'win2008',
                         openj9:  'win2012'
-                ]
+                ],
+                test                : ['openjdktest']
         ],
 
         aix    : [
                 os                 : 'aix',
                 arch               : 'ppc64',
-                bootJDK            : "7"
+                bootJDK            : "7",
+                test               : false
         ],
 
         s390x    : [
                 os                 : 'linux',
                 arch               : 's390x',
                 bootJDK            : "7",
-                additionalNodeLabels: 'ubuntu'
+                additionalNodeLabels: 'ubuntu',
+                test                : ['openjdktest', 'systemtest']
         ],
 
         ppc64le    : [
                 os                 : 'linux',
                 arch               : 'ppc64le',
                 bootJDK            : "7",
-                additionalNodeLabels: 'centos7'
+                additionalNodeLabels: 'centos7',
+                test                : ['openjdktest', 'systemtest']
         ],
 
         arm32    : [
                 os                 : 'linux',
                 arch               : 'arm',
-                bootJDK            : "7"
+                bootJDK            : "7",
+                test                : ['openjdktest']
         ],
 ]
 
