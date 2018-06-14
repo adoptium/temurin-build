@@ -66,27 +66,25 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                 def job;
                 stage(configuration.key) {
 
-                    sh "echo a test stage of openjdk_build_refactor ${configuration.key} {job.getNumber()}"
+                    sh "echo \"a build stage of openjdk_build_refactor ${configuration.key} ${job.getNumber()}\""
                     /*
                     job = build job: "openjdk_build_refactor", propagate: false, parameters: configuration.value.parameters
                     buildJobs[configuration.key];
                     */
                 }
 
-                if (configuration.test) {
-                    stage("test ${configuration.key}") {
-                        sh "echo a test stage of openjdk_build_refactor ${configuration.key} {job.getNumber()}"
-                        /*
-                        build job: "openjdk8_hs_${it}_${archOS}",
-                                propagate: false,
-                                parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
-                                             string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_build_refactor")]
-                                             */
-                    }
+                stage("test ${configuration.key}") {
+                    sh "echo \"a test stage of openjdk_build_refactor ${configuration.key} ${job.getNumber()}\""
+                    /*
+                    build job: "openjdk8_hs_${it}_${archOS}",
+                            propagate: false,
+                            parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
+                                         string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_build_refactor")]
+                                         */
                 }
 
                 stage("publish nightly ${configuration.key}") {
-                    sh "echo a publish stage of openjdk_build_refactor ${configuration.key} {job.getNumber()}"
+                    sh "echo \"a publish stage of openjdk_build_refactor ${configuration.key} ${job.getNumber()}\""
                     /*
                     build job: 'openjdk_release_tool',
                             parameters: [string(name: 'REPO', value: 'nightly'),
