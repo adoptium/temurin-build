@@ -5,9 +5,9 @@ def buildConfiguration(javaToBuild, buildType, target, variant, configuration) {
 
     def buildTag = "build"
 
-    if (target.key == "windows" && variant == "openj9") {
+    if (target.os == "windows" && variant == "openj9") {
         buildTag = "buildj9"
-    } else if (target.key == "s390x" && variant == "openj9") {
+    } else if (target.arch == "s390x" && variant == "openj9") {
         buildTag = "openj9"
     }
 
@@ -38,14 +38,14 @@ def buildConfiguration(javaToBuild, buildType, target, variant, configuration) {
     buildParams += string(name: 'ARCHITECTURE', value: "${configuration.arch}"); ;
 
     return [
+            javaVersion: javaToBuild,
             arch       : configuration.arch,
             os         : configuration.os,
             variant    : variant,
-            targetLabel: target.key,
             parameters : buildParams,
             name       : "${buildType}-${variant}",
             test       : configuration.test,
-            publish    : false
+            publish    : true
     ]
 }
 
@@ -64,6 +64,39 @@ def getJobConfigurations(javaToBuild, buildConfigurations, osTarget) {
     }
 
     return jobConfigurations;
+}
+
+def determineTestJobName(config, testType) {
+
+    def variant;
+    def number;
+
+
+    if (config.javaVersion == "jdk8u") {
+        number = 8
+    } else if (config.javaVersion == "jdk9") {
+        number = 9
+    } else if (config.javaVersion == "jdk10u") {
+        number = 10
+    }
+
+    if (config.variant == "hotspot") {
+        variant = "hs"
+    } else if (config.variant == "openj9") {
+        variant = "j9"
+    }
+
+    def arch = config.arch
+    if (arch == "x64") {
+        arch = "x64-86"
+    }
+
+    def os = config.os;
+    if (os == "mac") {
+        os = "macos"
+    }
+
+    return "openjdk${number}_${variant}_${testType}_${arch}_${os}"
 }
 
 
@@ -86,10 +119,11 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                     stage("test ${configuration.key}") {
                         if (job.getResult() == 'SUCCESS') {
 
-                            config.test.each {
-                                sh "echo execute openjdk8_hs_${it}_${config.arch}_${config.os}, UPSTREAM_JOB_NUMBER: ${job.getNumber()}, UPSTREAM_JOB_NAME: openjdk_build_refactor"
+                            config.test.each { testType ->
+                                def jobName = determineTestJobName(config, testType)
+                                sh "echo execute ${jobName}, UPSTREAM_JOB_NUMBER: ${job.getNumber()}, UPSTREAM_JOB_NAME: openjdk_build_refactor"
                                 /*
-                            build job: "openjdk8_hs_${it}_${archOS}",
+                            build job: jobName,
                                     propagate: false,
                                     parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
                                                  string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_build_refactor")]
@@ -100,7 +134,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                 }
 
                 if (config.publish) {
-                    sh "echo execute openjdk_release_tool"
+                    sh "echo execute openjdk_release_tool REPO: nightly, TAG: jdk8u172-b00"
                     /*
                         stage("publish nightly ${configuration.key}") {
                             build job: 'openjdk_release_tool',
@@ -128,14 +162,14 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
 
                     if (job.getResult() == 'SUCCESS') {
                         currentBuild.result = 'SUCCESS'
-                        sh "rm target/${configuration.targetLabel}/${configuration.arch}/${configuration.variant}/* || true"
+                        sh "rm target/${configuration.os}/${configuration.arch}/${configuration.variant}/* || true"
 
                         copyArtifacts(
                                 projectName: 'openjdk_build_refactor',
                                 selector: specific("${job.getNumber()}"),
                                 filter: 'workspace/target/*',
                                 fingerprintArtifacts: true,
-                                target: "target/${configuration.targetLabel}/${configuration.arch}/${configuration.variant}/",
+                                target: "target/${configuration.os}/${configuration.arch}/${configuration.variant}/",
                                 flatten: true)
 
 

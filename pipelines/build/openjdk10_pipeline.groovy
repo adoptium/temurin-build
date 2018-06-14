@@ -1,51 +1,52 @@
 def buildConfigurations = [
-        mac    : [
+        x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
                 bootJDK             : "/Users/jenkins/tools/hudson.model.JDK/JDK9.0.1"
         ],
 
-        linux  : [
-                os                  : 'centos6',
+        x64Linux  : [
+                os                  : 'linux',
                 arch                : 'x64',
-                bootJDK             : "9"
+                bootJDK             : "9",
+                additionalNodeLabels: 'centos6'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
-        windows: [
+        x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
                 bootJDK             : "9",
                 additionalNodeLabels: 'win2012'
         ],
 
-        aix    : [
+        ppc64Aix    : [
                 os                  : 'aix',
                 arch                : 'ppc64',
                 bootJDK             : "9"
         ],
 
-        s390x    : [
+        s390xLinux    : [
                 os                 : 'linux',
                 arch               : 's390x',
                 bootJDK            : "9",
                 additionalNodeLabels: 'ubuntu'
         ],
 
-        ppc64le    : [
+        ppc64leLinux    : [
                 os                 : 'linux',
                 arch               : 'ppc64le',
                 bootJDK            : "9",
                 additionalNodeLabels: 'centos7'
         ],
 
-        arm32    : [
+        arm32Linux    : [
                 os                 : 'linux',
                 arch               : 'arm',
                 bootJDK            : "9"
         ],
 
-        aarch64    : [
+        aarch64Linux    : [
                 os                 : 'linux',
                 arch               : 'aarch64',
                 bootJDK            : "9",

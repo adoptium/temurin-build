@@ -1,20 +1,21 @@
 def buildConfigurations = [
-        mac    : [
+        x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
                 bootJDK             : "7",
                 test                : ['openjdktest', 'systemtest']
         ],
 
-        linux  : [
-                os                 : 'centos6',
+        x64Linux  : [
+                os                 : 'linux',
                 arch               : 'x64',
                 bootJDK            : "7",
+                additionalNodeLabels: 'centos6',
                 test                : ['openjdktest', 'systemtest', 'perftest', 'externaltest']
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
-        windows: [
+        x64Windows: [
                 os                 : 'windows',
                 arch               : 'x64',
                 bootJDK            : "7",
@@ -25,14 +26,14 @@ def buildConfigurations = [
                 test                : ['openjdktest']
         ],
 
-        aix    : [
+        ppc64Aix    : [
                 os                 : 'aix',
                 arch               : 'ppc64',
                 bootJDK            : "7",
                 test               : false
         ],
 
-        s390x    : [
+        s390xLinux    : [
                 os                 : 'linux',
                 arch               : 's390x',
                 bootJDK            : "7",
@@ -40,7 +41,7 @@ def buildConfigurations = [
                 test                : ['openjdktest', 'systemtest']
         ],
 
-        ppc64le    : [
+        ppc64leLinux    : [
                 os                 : 'linux',
                 arch               : 'ppc64le',
                 bootJDK            : "7",
@@ -48,7 +49,7 @@ def buildConfigurations = [
                 test                : ['openjdktest', 'systemtest']
         ],
 
-        arm32    : [
+        arm32Linux    : [
                 os                 : 'linux',
                 arch               : 'arm',
                 bootJDK            : "7",
