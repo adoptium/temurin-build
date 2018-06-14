@@ -1,4 +1,3 @@
-
 //TODO: make it a shared library
 def doBuild(javaToBuild, buildConfigurations, osTarget) {
     def jobConfigurations = [:]
@@ -43,7 +42,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                 if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
                 buildParams += string(name: 'VARIANT', value: "${variant}")
-                buildParams += string(name: 'ARCHITECTURE', value: "${configuration.arch}");;
+                buildParams += string(name: 'ARCHITECTURE', value: "${configuration.arch}"); ;
 
                 def name = "${buildType}-${variant}"
 
@@ -64,8 +63,38 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
     jobConfigurations.each { configuration ->
         jobs[configuration.key] = {
             catchError {
+                def job;
                 stage(configuration.key) {
-                    buildJobs[configuration.key] = build job: "openjdk_build_refactor", propagate: false, parameters: configuration.value.parameters
+
+                    sh "echo a test stage of openjdk_build_refactor ${configuration.key} {job.getNumber()}"
+                    /*
+                    job = build job: "openjdk_build_refactor", propagate: false, parameters: configuration.value.parameters
+                    buildJobs[configuration.key];
+                    */
+                }
+
+                if (configuration.test) {
+                    stage("test ${configuration.key}") {
+                        sh "echo a test stage of openjdk_build_refactor ${configuration.key} {job.getNumber()}"
+                        /*
+                        build job: "openjdk8_hs_${it}_${archOS}",
+                                propagate: false,
+                                parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
+                                             string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_build_refactor")]
+                                             */
+                    }
+                }
+
+                stage("publish nightly ${configuration.key}") {
+                    sh "echo a publish stage of openjdk_build_refactor ${configuration.key} {job.getNumber()}"
+                    /*
+                    build job: 'openjdk_release_tool',
+                            parameters: [string(name: 'REPO', value: 'nightly'),
+                                         string(name: 'TAG', value: 'jdk8u172-b00'),
+                                         string(name: 'VERSION', value: 'jdk8'),
+                                         string(name: 'CHECKSUM_JOB_NAME', value: "openjdk8_build_checksum"),
+                                         string(name: 'CHECKSUM_JOB_NUMBER', value: "${checksumJob.getNumber()}")]
+                                         */
                 }
             }
         }
@@ -92,6 +121,9 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                                 fingerprintArtifacts: true,
                                 target: "target/${configuration.targetLabel}/${configuration.config.arch}/${configuration.variant}/",
                                 flatten: true)
+
+
+                        sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
                     }
             }
 
