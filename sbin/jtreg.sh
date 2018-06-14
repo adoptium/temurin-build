@@ -80,9 +80,9 @@ applyingJCovSettingsToMakefileForTests()
   echo "Apply JCov settings to Makefile..." 
   cd "$OPENJDK_DIR/jdk/test" || exit
   pwd
-
+  
   sed -i "s/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:\$\(ABS_PLATFORM_BUILD_ROOT\)\/jdk\/classes\/  -jcov\/source:\$\(ABS_PLATFORM_BUILD_ROOT\)\/..\/..\/jdk\/src\/share\/classes  -jcov\/include:*/" Makefile
-
+  
   cd "$OPENJDK_DIR" || exit
 }
 
