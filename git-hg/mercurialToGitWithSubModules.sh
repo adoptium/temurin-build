@@ -38,11 +38,14 @@ source import-common.sh
 
 function checkArgs() {
   if [ $# -lt 1 ]; then
-     echo Usage: "$0" '[jdk8u|jdk9] (TAGS)'
+     echo Usage: "$0" '[jdk8u|jdk9u] (TAGS)'
      echo "Version supplied should match a repository in AdoptOpenJDK/openjdk-VERSION"
      exit 1
   fi
-  [ -z "$WORKSPACE" ] || [ ! -d "$WORKSPACE" ] && echo Cannot access \$WORKSPACE: "$WORKSPACE" && exit 2
+  if [ -z "$WORKSPACE" ] || [ ! -d "$WORKSPACE" ] ; then
+    echo Cannot access \$WORKSPACE: "$WORKSPACE"
+    exit 2
+  fi
 }
 
 # These the the modules in the mercurial forest that we'll have to iterate over
@@ -110,40 +113,39 @@ function cloneMercurialOpenJDKRepo() {
     git fetch "$WORKSPACE/openjdk/mirror"
     git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
 
-    for module in "${MODULES[@]}"
-      do
-        if [ ! -d "$WORKSPACE/openjdk/$module" ]; then
-          rm -rf  "$WORKSPACE/openjdk/$module"
-          mkdir   "$WORKSPACE/openjdk/$module"
-          cd "$WORKSPACE/openjdk/$module" || exit 1
-          git init
-          echo "$(date +%T)": "Clone $module"
-          git clone --bare "hg::${HG_REPO}/$module" || exit 1
-          echo "$(date +%T)": "GIT filter on $module"
-          cd "$module.git" || exit
-          git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
-          cd .. || exit
-        fi
-        echo "$(date +%T)": "GIT pull/reset on $module at $NEWTAG"
+    for module in "${MODULES[@]}" ; do
+      if [ ! -d "$WORKSPACE/openjdk/$module" ]; then
+        rm -rf  "$WORKSPACE/openjdk/$module"
+        mkdir   "$WORKSPACE/openjdk/$module"
         cd "$WORKSPACE/openjdk/$module" || exit 1
-        git pull "$module"
-        git fetch --tags "$module"
-        git reset --hard "$NEWTAG"
-        cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
-        git fetch "$WORKSPACE/openjdk/$module"
-        echo "$(date +%T)": GIT filter on "$module"
-        if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
-          if ! tty; then
-            echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
-            exit 10
-          else
-            echo "Please resolve them in another window then press return to continue"
-            read -r _
-          fi
-           echo Please resolve the conflicts above in "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO", and press return to continue
-           read -r _
+        git init
+        echo "$(date +%T)": "Clone $module"
+        git clone --bare "hg::${HG_REPO}/$module" || exit 1
+        echo "$(date +%T)": "GIT filter on $module"
+        cd "$module.git" || exit
+        git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
+        cd .. || exit
+      fi
+      echo "$(date +%T)": "GIT pull/reset on $module at $NEWTAG"
+      cd "$WORKSPACE/openjdk/$module" || exit 1
+      git pull "$module"
+      git fetch --tags "$module"
+      git reset --hard "$NEWTAG"
+      cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+      git fetch "$WORKSPACE/openjdk/$module"
+      echo "$(date +%T)": GIT filter on "$module"
+      if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
+        if ! tty; then
+          echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
+          exit 10
+        else
+          echo "Please resolve them in another window then press return to continue"
+          read -r _
         fi
-      done
+        echo Please resolve the conflicts above in "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO", and press return to continue
+        read -r _
+      fi
+    done
     cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
     git push origin master
 
