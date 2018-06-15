@@ -70,35 +70,43 @@ function setMercurialRepoAndTagsToRetrieve() {
   esac
 }
 
-function cleanUp() {
-  # Clean up
-  rm    -rf "${WORKSPACE:?}/$GITHUB_REPO" "${WORKSPACE:?}/openjdk"
+function createDirectories() {
   mkdir -p  "$WORKSPACE/$GITHUB_REPO" "$WORKSPACE/openjdk/mirror"
 }
 
 # Clone current Git repo
 function cloneGitOpenJDKRepo() {
-  cd "$WORKSPACE/$GITHUB_REPO" || exit 1
+  cd "$WORKSPACE/$GITHUB_REPO" || exit 1;
   echo "Clone current $GITHUB_REPO"
-  git clone "$GITHUB_PROJECT/$GITHUB_REPO.git"
-  cd "$GITHUB_REPO" || exit
+  if [ ! -d "$GITHUB_REPO" ] ; then
+    git clone "$GITHUB_PROJECT/$GITHUB_REPO.git"
+    cd "$GITHUB_REPO" || exit 1;
+  else
+    cd "$GITHUB_REPO" || exit 1;
+    git pull
+  fi
+
   git fetch --tags
-  OLDTAG=$(git describe --abbrev=0 --tags)
-  echo "Current openjdk level is $OLDTAG"
+  local oldtag=$(git describe --abbrev=0 --tags)
+  echo "Current openjdk level is $oldtag"
 }
 
 # Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
   echo "Get base openjdk repository"
   cd "$WORKSPACE/openjdk/mirror" || exit 1
-  git init
-  git clone --bare "hg::${HG_REPO}"
+
+  if [ ! -d "$OPENJDK_VERSION.git" ] ; then
+    git init
+    git clone --bare "hg::${HG_REPO}"
+  fi
 
   cd "$OPENJDK_VERSION.git" || exit 1
+  git pull
 
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 
-  cd .. || exit
+  cd "$WORKSPACE/openjdk/mirror" || exit
   git pull "$OPENJDK_VERSION"
   git fetch --tags "$OPENJDK_VERSION"
 
@@ -115,8 +123,7 @@ function cloneMercurialOpenJDKRepo() {
 
     for module in "${MODULES[@]}" ; do
       if [ ! -d "$WORKSPACE/openjdk/$module" ]; then
-        rm -rf  "$WORKSPACE/openjdk/$module"
-        mkdir   "$WORKSPACE/openjdk/$module"
+        mkdir -p "$WORKSPACE/openjdk/$module"
         cd "$WORKSPACE/openjdk/$module" || exit 1
         git init
         echo "$(date +%T)": "Clone $module"
@@ -163,7 +170,7 @@ function cloneMercurialOpenJDKRepo() {
       fi
     fi
     [ "$NEWTAG" != "HEAD" ] && git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
-    echo Deleting the old version of the tag from the server if it is present or push will fail
+    echo "Deleting the old version of the tag from the server if it is present or push will fail"
     # shellcheck disable=SC2015
     [ "$NEWTAG" != "HEAD" ] && git push origin :refs/tags/"$NEWTAG" || true
     [ "$NEWTAG" == "HEAD" ] && git push origin master
