@@ -102,7 +102,8 @@ function cloneMercurialOpenJDKRepo() {
   fi
 
   cd "$OPENJDK_VERSION" || exit 1
-  git pull
+  git fetch origin
+  git reset --hard origin/master
 
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 
