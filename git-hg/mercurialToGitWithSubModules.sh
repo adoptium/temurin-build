@@ -129,7 +129,7 @@ function cloneMercurialOpenJDKRepo() {
         echo "$(date +%T)": "Clone $module"
         git clone "hg::${HG_REPO}/$module" || exit 1
         echo "$(date +%T)": "GIT filter on $module"
-        cd "$module.git" || exit
+        cd "$module" || exit
         git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
         cd .. || exit
       fi
