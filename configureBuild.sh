@@ -139,7 +139,7 @@ setRepository() {
     forest="jdk9u";
   fi
   local repository="${BUILD_CONFIG[REPOSITORY]:-adoptopenjdk/openjdk-${forest}";
-  repository="$(echo "${repository}" | awk '{print tolower($0)}')";
+  repository="$(echo ${repository} | awk '{print tolower($0)}')";
 
   BUILD_CONFIG[REPOSITORY]=$repository;
 }
