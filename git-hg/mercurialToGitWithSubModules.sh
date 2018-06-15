@@ -83,7 +83,8 @@ function cloneGitOpenJDKRepo() {
     cd "$GITHUB_REPO" || exit 1;
   else
     cd "$GITHUB_REPO" || exit 1;
-    git pull
+    git fetch origin
+    git reset --hard origin/master
   fi
 
   git fetch --tags
@@ -108,6 +109,7 @@ function cloneMercurialOpenJDKRepo() {
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 
   cd "$WORKSPACE/openjdk/mirror" || exit
+
   git pull "$OPENJDK_VERSION"
   git fetch --tags "$OPENJDK_VERSION"
 
