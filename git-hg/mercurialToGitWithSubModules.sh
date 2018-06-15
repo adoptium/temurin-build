@@ -181,7 +181,7 @@ function cloneMercurialOpenJDKRepo() {
 # TODO Need to cover always merging mercurial master into our GitHub dev branch
 checkArgs $#
 setMercurialRepoAndTagsToRetrieve
-cleanUp
+createDirectories
 checkGitVersion
 installGitRemoteHg
 cloneGitOpenJDKRepo
