@@ -345,9 +345,9 @@ makeACopyOfLibFreeFontForMacOSX() {
 
        echo " Performing copying of the free font library to ${IMAGE_DIRECTORY}, applicable for this version of the JDK. "
 
-        if [ ! -f "${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6" ]; then
-          SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
-        elif [ ! -f "${IMAGE_DIRECTORY}/lib/libfreetype.dylib" ]; then
+        SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
+
+        if [ ! -f "${SOURCE_LIB_NAME}" ]; then
           SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib"
         fi
 
