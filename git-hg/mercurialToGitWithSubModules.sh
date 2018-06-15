@@ -96,12 +96,12 @@ function cloneMercurialOpenJDKRepo() {
   echo "Get base openjdk repository"
   cd "$WORKSPACE/openjdk/mirror" || exit 1
 
-  if [ ! -d "$OPENJDK_VERSION.git" ] ; then
+  if [ ! -d "$OPENJDK_VERSION" ] ; then
     git init
     git clone "hg::${HG_REPO}"
   fi
 
-  cd "$OPENJDK_VERSION.git" || exit 1
+  cd "$OPENJDK_VERSION" || exit 1
   git pull
 
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
