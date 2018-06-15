@@ -11,7 +11,7 @@ fi
 sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
 
-if [ "${JAVA_TO_BUILD}" == "jdk9" ] || [ "${JAVA_TO_BUILD}" == "jdk10u" ]
+if [ "${JAVA_TO_BUILD}" == "jdk9u" ] || [ "${JAVA_TO_BUILD}" == "jdk10u" ]
 then
     export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
 fi

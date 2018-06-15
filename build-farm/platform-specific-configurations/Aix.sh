@@ -12,7 +12,7 @@ then
   if [ "${JAVA_TO_BUILD}" == "jdk8u" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk8_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar"
-  elif [ "${JAVA_TO_BUILD}" == "jdk9" ]
+  elif [ "${JAVA_TO_BUILD}" == "jdk9u" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk9_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar"
   elif [ "${JAVA_TO_BUILD}" == "jdk10u" ]

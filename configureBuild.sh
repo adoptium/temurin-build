@@ -133,11 +133,7 @@ setVariablesForConfigure() {
 
 # Set the repository to build from
 setRepository() {
-  local forestName="${BUILD_CONFIG[OPENJDK_FOREST_NAME]}";
-  if [ "$forestName" == "jdk9" ]; then
-    forestName="jdk9u";
-  fi
-  local repository="${BUILD_CONFIG[REPOSITORY]:-adoptopenjdk/openjdk-$forestName}";
+  local repository="${BUILD_CONFIG[REPOSITORY]:-adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
   repository="$(echo "${repository}" | awk '{print tolower($0)}')";
 
   BUILD_CONFIG[REPOSITORY]=$repository;

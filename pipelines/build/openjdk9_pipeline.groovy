@@ -54,7 +54,7 @@ def buildConfigurations = [
         ],
 ]
 
-def javaToBuild = "jdk9"
+def javaToBuild = "jdk9u"
 
 node ("master") {
     checkout scm

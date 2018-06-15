@@ -72,7 +72,7 @@ def determineTestJobName(config, testType) {
 
     if (config.javaVersion == "jdk8u") {
         number = 8
-    } else if (config.javaVersion == "jdk9") {
+    } else if (config.javaVersion == "jdk9u") {
         number = 9
     } else if (config.javaVersion == "jdk10u") {
         number = 10

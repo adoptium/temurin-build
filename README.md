@@ -11,7 +11,7 @@ https://www.adoptopenjdk.net and https://api.adoptopenjdk.net.
 ##### Build jdk natively on your system
 
 ```
-./makejdk-any-platform.sh <jdk8u|jdk9|jdk10>
+./makejdk-any-platform.sh <jdk8u|jdk9u|jdk10u>
 i.e:
 ./makejdk-any-platform.sh jdk8u
 ```
@@ -86,8 +86,8 @@ Please visit https://www.adoptopenjdk.net for further support.
 VERSIONS
 
 jdk8u - Build Java 8, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk8u
-jdk9 - Build Java 9, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk9
-jdk10 - Build Java 10, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk10
+jdk9u - Build Java 9, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk9u
+jdk10u - Build Java 10, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk10u
 jfx - Build OpenJFX, defaults to https://github.com/AdoptOpenJDK/openjdk-jfx
 amber - Build Project Amber, defaults to https://github.com/AdoptOpenJDK/openjdk-amber
 
