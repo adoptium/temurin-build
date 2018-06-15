@@ -98,7 +98,7 @@ function cloneMercurialOpenJDKRepo() {
 
   if [ ! -d "$OPENJDK_VERSION.git" ] ; then
     git init
-    git clone --bare "hg::${HG_REPO}"
+    git clone "hg::${HG_REPO}"
   fi
 
   cd "$OPENJDK_VERSION.git" || exit 1
@@ -127,7 +127,7 @@ function cloneMercurialOpenJDKRepo() {
         cd "$WORKSPACE/openjdk/$module" || exit 1
         git init
         echo "$(date +%T)": "Clone $module"
-        git clone --bare "hg::${HG_REPO}/$module" || exit 1
+        git clone "hg::${HG_REPO}/$module" || exit 1
         echo "$(date +%T)": "GIT filter on $module"
         cd "$module.git" || exit
         git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
