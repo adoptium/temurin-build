@@ -115,40 +115,62 @@ function cloneMercurialOpenJDKRepo() {
 
   # Processing each TAG in turn (including HEAD)
   for NEWTAG in $TAGS ; do
-    cd "$WORKSPACE/openjdk/mirror" || exit 1
-    git reset --hard "$NEWTAG"
-
-    echo "$(date +%T)": "Updating master branch for $NEWTAG"
-    cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
-    git checkout master
-    git fetch "$WORKSPACE/openjdk/mirror"
-    git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
-
-    for module in "${MODULES[@]}" ; do
-      if [ ! -d "$WORKSPACE/openjdk/$module" ]; then
-        mkdir -p "$WORKSPACE/openjdk/$module"
-        cd "$WORKSPACE/openjdk/$module" || exit 1
-        git init
-        echo "$(date +%T)": "Clone $module"
-        git clone "hg::${HG_REPO}/$module" || exit 1
-        echo "$(date +%T)": "GIT filter on $module"
-        cd "$module" || exit
-        git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
-        cd .. || exit
-      fi
-      echo "$(date +%T)": "GIT pull/reset on $module at $NEWTAG"
-      cd "$WORKSPACE/openjdk/$module" || exit 1
-      git pull "$module"
-      git fetch --tags "$module"
+    if git tag | grep "^$NEWTAG$" ; then
+      echo "Skipping $NEWTAG as it already exists"
+    else
+      cd "$WORKSPACE/openjdk/mirror" || exit 1
       git reset --hard "$NEWTAG"
+
+      echo "$(date +%T)": "Updating master branch for $NEWTAG"
       cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
-      if [ ! -d "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" ] ; then
-        mkdir -p "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module"
-      fi
-      cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" || exit 1
-      git fetch "$WORKSPACE/openjdk/$module"
-      echo "$(date +%T)": GIT filter on "$module"
-      if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
+      git checkout master
+      git fetch "$WORKSPACE/openjdk/mirror"
+      git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
+
+      for module in "${MODULES[@]}" ; do
+        if [ ! -d "$WORKSPACE/openjdk/$module" ]; then
+          mkdir -p "$WORKSPACE/openjdk/$module"
+          cd "$WORKSPACE/openjdk/$module" || exit 1
+          git init
+          echo "$(date +%T)": "Clone $module"
+          git clone "hg::${HG_REPO}/$module" || exit 1
+          echo "$(date +%T)": "GIT filter on $module"
+          cd "$module" || exit
+          git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
+          cd .. || exit
+        fi
+        echo "$(date +%T)": "GIT pull/reset on $module at $NEWTAG"
+        cd "$WORKSPACE/openjdk/$module" || exit 1
+        git pull "$module"
+        git fetch --tags "$module"
+        git reset --hard "$NEWTAG"
+        cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+        if [ ! -d "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" ] ; then
+          mkdir -p "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module"
+        fi
+        cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" || exit 1
+        git fetch "$WORKSPACE/openjdk/$module"
+        echo "$(date +%T)": GIT filter on "$module"
+        if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
+          if ! tty; then
+            echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
+            exit 10
+          else
+            echo "Please resolve them in another window then press return to continue"
+            read -r _
+          fi
+          echo Please resolve the conflicts above in "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO", and press return to continue
+          read -r _
+        fi
+      done
+      cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+      git push origin master
+
+      echo "Pulling in changes to $GITHUB_REPO branch"
+      git checkout master
+      git fetch origin master
+      if ! git merge --allow-unrelated-histories -m "Merge $NEWTAG into $GITHUB_REPO" FETCH_HEAD; then
+        echo Conflict resolution needed in "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO"
         if ! tty; then
           echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
           exit 10
@@ -156,32 +178,14 @@ function cloneMercurialOpenJDKRepo() {
           echo "Please resolve them in another window then press return to continue"
           read -r _
         fi
-        echo Please resolve the conflicts above in "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO", and press return to continue
-        read -r _
       fi
-    done
-    cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
-    git push origin master
-
-    echo "Pulling in changes to $GITHUB_REPO branch"
-    git checkout master
-    git fetch origin master
-    if ! git merge --allow-unrelated-histories -m "Merge $NEWTAG into $GITHUB_REPO" FETCH_HEAD; then
-      echo Conflict resolution needed in "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO"
-      if ! tty; then
-        echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
-        exit 10
-      else
-        echo "Please resolve them in another window then press return to continue"
-        read -r _
-      fi
+      [ "$NEWTAG" != "HEAD" ] && git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
+      echo "Deleting the old version of the tag from the server if it is present or push will fail"
+      # shellcheck disable=SC2015
+      [ "$NEWTAG" != "HEAD" ] && git push origin :refs/tags/"$NEWTAG" || true
+      [ "$NEWTAG" == "HEAD" ] && git push origin master
+      [ "$NEWTAG" != "HEAD" ] && git push origin master --tags
     fi
-    [ "$NEWTAG" != "HEAD" ] && git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
-    echo "Deleting the old version of the tag from the server if it is present or push will fail"
-    # shellcheck disable=SC2015
-    [ "$NEWTAG" != "HEAD" ] && git push origin :refs/tags/"$NEWTAG" || true
-    [ "$NEWTAG" == "HEAD" ] && git push origin master
-    [ "$NEWTAG" != "HEAD" ] && git push origin master --tags
   done
 }
 
