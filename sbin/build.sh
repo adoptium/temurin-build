@@ -344,7 +344,18 @@ makeACopyOfLibFreeFontForMacOSX() {
         fi
 
        echo " Performing copying of the free font library to ${IMAGE_DIRECTORY}, applicable for this version of the JDK. "
-        SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
+
+        if [ ! -f "${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6" ]; then
+          SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
+        elif [ ! -f "${IMAGE_DIRECTORY}/lib/libfreetype.dylib" ]; then
+          SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib"
+        fi
+
+        if [ ! -f "${SOURCE_LIB_NAME}" ]; then
+            echo "[Error] ${SOURCE_LIB_NAME} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process..."
+            exit -1
+        fi
+
         if [ ! -f "${SOURCE_LIB_NAME}" ]; then
             echo "[Error] ${SOURCE_LIB_NAME} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process..."
             exit -1
