@@ -140,9 +140,10 @@ function cloneMercurialOpenJDKRepo() {
           cd .. || exit
         fi
         echo "$(date +%T)": "GIT pull/reset on $module at $NEWTAG"
-        cd "$WORKSPACE/openjdk/$module" || exit 1
-        git pull "$module"
-        git fetch --tags "$module"
+        cd "$WORKSPACE/openjdk/$module/$module" || exit 1
+        git fetch origin
+        git reset --hard origin/master
+        git fetch --tags
         git reset --hard "$NEWTAG"
         cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
         if [ ! -d "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" ] ; then
