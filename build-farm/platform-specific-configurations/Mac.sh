@@ -5,6 +5,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
 export MACOSX_DEPLOYMENT_TARGET=10.8
+export BUILD_ARGS="${BUILD_ARGS} --sign 'Developer ID Application: London Jamocha Community CIC'"
 
 XCODE_SWITCH_PATH="/";
 
