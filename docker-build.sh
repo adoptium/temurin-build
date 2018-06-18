@@ -22,7 +22,7 @@
 #
 ################################################################################
 
-set -eux
+set -eu
 
 # Create a data volume called ${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]},
 # this gets mounted at /openjdk/build inside the container and is persistent

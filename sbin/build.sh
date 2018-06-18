@@ -26,8 +26,7 @@
 #
 ################################################################################
 
-# TODO remove `x` once we're done
-set -eux
+set -eu
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 

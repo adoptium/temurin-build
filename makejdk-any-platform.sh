@@ -29,7 +29,7 @@
 ################################################################################
 
 # TODO Comment out the 'x' once script is stable.
-set -eux
+set -eu
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

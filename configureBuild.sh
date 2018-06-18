@@ -23,7 +23,7 @@
 #
 ################################################################################
 
-set -eux # TODO remove once we've finished debugging
+set -eu
 
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

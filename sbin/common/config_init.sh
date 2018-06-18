@@ -104,7 +104,6 @@ while [  $index -lt $numParams ]; do
 done
 
 function displayParams() {
-    set +x
     echo "# ============================"
     echo "# OPENJDK BUILD CONFIGURATION:"
     echo "# ============================"
@@ -112,7 +111,6 @@ function displayParams() {
     do
       echo "BUILD_CONFIG[${PARAM_LOOKUP[$K]}]=\"${BUILD_CONFIG[$K]}\""
     done | sort
-    set -x
 }
 
 function writeConfigToFile() {

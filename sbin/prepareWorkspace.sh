@@ -22,8 +22,7 @@
 #
 ################################################################################
 
-# TODO remove `x` once we've finished debugging
-set -eux
+set -eu
 
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -208,9 +207,7 @@ checkingAndDownloadingFreeType()
         ls "${TARGET_DYNAMIC_LIB_DIR}"
 
         echo "Releasing the runpath dependency of the dynamic library ${TARGET_DYNAMIC_LIB}"
-        set -x
         install_name_tool -id @rpath/libfreetype.6.dylib "${TARGET_DYNAMIC_LIB}"
-        set +x
 
         # shellcheck disable=SC2181
         if [[ $? == 0 ]]; then
