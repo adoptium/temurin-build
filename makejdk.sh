@@ -50,6 +50,7 @@ KEEP=false
 JTREG=false
 BUILD_VARIANT=${BUILD_VARIANT-:""}
 USER_SUPPLIED_CONFIGURE_ARGS=""
+VERSION=""
 
 JVM_VARIANT=${JVM_VARIANT:-server}
 
@@ -122,7 +123,7 @@ parseCommandLineArgs()
       export FREETYPE=false;;
 
       "--version" | "-v" )
-      shift;;
+      VERSION="$1"; shift;;
 
       "--freetype-dir" | "-ftd" )
       export FREETYPE_DIRECTORY="$1"; shift;;
@@ -420,7 +421,7 @@ testOpenJDKInNativeEnvironmentIfExpected()
 {
   if [[ "$JTREG" == "true" ]];
   then
-      "${SCRIPT_DIR}"/sbin/jtreg.sh "${WORKING_DIR}" "${OPENJDK_REPO_NAME}" "${BUILD_FULL_NAME}" "${JTREG_TEST_SUBSETS}"
+      "${SCRIPT_DIR}"/sbin/jtreg.sh "${WORKING_DIR}" "${OPENJDK_REPO_NAME}" "${BUILD_FULL_NAME}" "${VERSION}" "${JTREG_TEST_SUBSETS}"
   fi
 }
 
