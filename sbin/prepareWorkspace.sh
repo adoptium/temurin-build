@@ -338,7 +338,7 @@ checkSignConfiguration() {
           exit 1
         fi
 
-        if [ -z "$SIGN_PASSWORD" ]
+        if [ -z "${SIGN_PASSWORD+x}" ]
         then
           echo "If signing is enabled on window you must set SIGN_PASSWORD"
           exit 1
