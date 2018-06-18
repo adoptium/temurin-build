@@ -25,6 +25,12 @@
 # TODO remove `x` once we've finished debugging
 set -eux
 
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# shellcheck source=sbin/common/constants.sh
+source "$SCRIPT_DIR/common/constants.sh"
+
 # Set default versions for 3 libraries that OpenJDK relies on to build
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
@@ -38,7 +44,7 @@ checkoutAndCloneOpenJDKGitRepo()
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
 
   # Check that we have a git repo of a valid openjdk version on our local file system
-  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && ( [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk9" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk10" ]) ; then
+  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && ( [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK10_CORE_VERSION}" ]) ; then
 
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v

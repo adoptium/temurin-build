@@ -37,6 +37,9 @@ source "$SCRIPT_DIR/prepareWorkspace.sh"
 # shellcheck source=sbin/common/config_init.sh
 source "$SCRIPT_DIR/common/config_init.sh"
 
+# shellcheck source=sbin/common/constants.sh
+source "$SCRIPT_DIR/common/constants.sh"
+
 export OPENJDK_REPO_TAG
 export OPENJDK_DIR
 export CONFIGURE_ARGS=""
@@ -49,12 +52,12 @@ function parseArguments() {
 
     OPENJDK_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk9u" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_VERSION}" ]; then
         BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="true";
         BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true";
     fi
 
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8u" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_VERSION}" ]; then
         BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false";
         BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true";
     fi
@@ -154,7 +157,7 @@ getOpenJDKUpdateAndBuildVersion()
 # OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
 configuringVersionStringParameter()
 {
-  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
     # Replace the default 'internal' with our own milestone string
     addConfigureArg "--with-milestone=" "adoptopenjdk"
 
@@ -202,7 +205,7 @@ buildingTheRestOfTheConfigParameters()
 
   addConfigureArg "--with-x=" "/usr/include/X11"
 
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] ; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
       # We don't want any extra debug symbols - ensure it's set to release,
       # other options include fastdebug and slowdebug
       addConfigureArg "--with-debug-level=" "release"

@@ -28,6 +28,9 @@ set -eux # TODO remove once we've finished debugging
 # i.e. Where we are
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# shellcheck source=sbin/common/constants.sh
+source "$SCRIPT_DIR/sbin/common/constants.sh"
+
 # Bring in the source signal handler
 sourceSignalHandler()
 {
@@ -115,11 +118,11 @@ setVariablesForConfigure() {
 
   # TODO Regex this in the if or use cut to grab out the number and see if >= 9
   # TODO 9 should become 9u as will 10 shortly....
-  if [ "$openjdk_core_version" == "jdk9" ] || [ "$openjdk_core_version" == "jdk10" ] || [ "$openjdk_core_version" == "jdk11" ] || [ "$openjdk_core_version" == "amber" ]; then
+  if [ "$openjdk_core_version" == "${JDK9_CORE_VERSION}" ] || [ "$openjdk_core_version" == "${JDK10_CORE_VERSION}" ] || [ "$openjdk_core_version" == "${JDK11_CORE_VERSION}" ] || [ "$openjdk_core_version" == "${AMBER_CORE_VERSION}" ]; then
     local jdk_path="jdk"
     local jre_path="jre"
     #BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-"--disable-warnings-as-errors"}
-  elif [ "$openjdk_core_version" == "jdk8" ]; then
+  elif [ "$openjdk_core_version" == "${JDK8_CORE_VERSION}" ]; then
     local jdk_path="j2sdk-image"
     local jre_path="j2re-image"
   else
@@ -144,7 +147,7 @@ processArgumentsforSpecificPlatforms() {
 
   case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
   "darwin")
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] ; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
       BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false"
       BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true"
     fi
@@ -163,7 +166,7 @@ processArgumentsforSpecificArchitectures() {
 
   case "${BUILD_CONFIG[OS_ARCHITECTURE]}" in
   "s390x")
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "jdk8" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "openj9" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "openj9" ]; then
       jvm_variant=zero
     else
       jvm_variant=server

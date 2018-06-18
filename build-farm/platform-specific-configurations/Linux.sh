@@ -1,5 +1,9 @@
 #!/bin/bash
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# shellcheck source=sbin/common/constants.sh
+source "$SCRIPT_DIR/../../sbin/common/constants.sh"
+
 if [ "${ARCHITECTURE}" == "x64" ]
 then
   export PATH=/opt/rh/devtoolset-2/root/usr/bin:$PATH
@@ -18,7 +22,7 @@ then
   then
     export PATH="/usr/bin:$PATH"
 
-    if [ "${JAVA_TO_BUILD}" == "jdk8u" ]
+    if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
       if which g++-4.8; then
         export CC=gcc-4.8
@@ -36,7 +40,7 @@ fi
 
 if [ "${ARCHITECTURE}" == "s390x" ] || [ "${ARCHITECTURE}" == "ppc64le" ]
 then
-    if [ "${JAVA_TO_BUILD}" == "jdk10u" ] && [ "${VARIANT}" == "openj9" ]
+    if [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
     then
       if [ -z "$JDK9_BOOT_DIR" ]; then
         export JDK9_BOOT_DIR=$PWD/jdk-9+181

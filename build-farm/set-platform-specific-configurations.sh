@@ -1,8 +1,10 @@
 #!/bin/bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# shellcheck source=sbin/common/constants.sh
+source "$SCRIPT_DIR/../sbin/common/constants.sh"
 
-if [ "${JAVA_TO_BUILD}" == "jdk9u" ] || [ "${JAVA_TO_BUILD}" == "jdk10u" ]
+if [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
 then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
 fi
