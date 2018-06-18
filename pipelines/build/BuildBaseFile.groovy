@@ -118,11 +118,12 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                         if (job.getResult() == 'SUCCESS') {
                             config.test.each { testType ->
                                 def jobName = determineTestJobName(config, testType)
-                                sh "echo execute ${jobName}, UPSTREAM_JOB_NUMBER: ${job.getNumber()}, UPSTREAM_JOB_NAME: openjdk_build_refactor"
-                                build job: jobName,
-                                        propagate: false,
-                                        parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
-                                                     string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_build_refactor")]
+                                catchError {
+                                    build job: jobName,
+                                            propagate: false,
+                                            parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
+                                                         string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_build_refactor")]
+                                }
                             }
                         }
                     }
