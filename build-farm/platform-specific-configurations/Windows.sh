@@ -12,6 +12,8 @@ export JAVA_HOME=$JDK_BOOT_DIR
 export BUILD_ARGS="--tmp-space-build ${BUILD_ARGS}"
 
 
+
+
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   export PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:/cygdrive/C/Projects/OpenJDK/make-3.82/:$PATH"
@@ -44,3 +46,6 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
   fi
 fi
+
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --sign 'C:\Users\jenkins\windows.p12'"
+

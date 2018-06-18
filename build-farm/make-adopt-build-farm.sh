@@ -22,19 +22,21 @@ CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
 BUILD_ARGS=${BUILD_ARGS:-""}
 VARIANT_ARG=""
 
-if [ -n "${JDK_BOOT_VERSION}" ]
+
+if [ -z "${JDK_BOOT_VERSION}" ]
 then
-  case "${JDK_BOOT_VERSION}" in
-        "7")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";;
-        "8")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK8_BOOT_DIR}";;
-        "9")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK9_BOOT_DIR}";;
-        "10")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK10_BOOT_DIR}";;
-        "home") export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JAVA_HOME}";;
-        *)    export JDK_BOOT_DIR="${JDK_BOOT_VERSION}";;
-  esac
-else
-  export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";
+  currentBuildNumber=$(echo "${JAVA_TO_BUILD}" | egrep -o "[0-9]+")
+  JDK_BOOT_VERSION=$(($currentBuildNumber-1))
 fi
+
+case "${JDK_BOOT_VERSION}" in
+      "7")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";;
+      "8")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK8_BOOT_DIR}";;
+      "9")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK9_BOOT_DIR}";;
+      "10")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK10_BOOT_DIR}";;
+      "home") export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JAVA_HOME}";;
+      *)    export JDK_BOOT_DIR="${JDK_BOOT_VERSION}";;
+esac
 
 if [[ $NODE_LABELS = *"linux"* ]] ; then
   PLATFORM="Linux"

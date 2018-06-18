@@ -2,14 +2,12 @@ def buildConfigurations = [
         x64Mac    : [
                 os                 : 'mac',
                 arch               : 'x64',
-                bootJDK            : "8",
                 test                : ['openjdktest', 'systemtest']
         ],
 
         x64Linux  : [
                 os                 : 'linux',
                 arch               : 'x64',
-                bootJDK            : "8",
                 additionalNodeLabels: 'centos6',
                 test                : ['openjdktest', 'systemtest', 'externaltest']
         ],
@@ -18,7 +16,6 @@ def buildConfigurations = [
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
-                bootJDK             : "8",
                 additionalNodeLabels: 'win2012',
                 test                : ['openjdktest']
         ],
@@ -26,14 +23,12 @@ def buildConfigurations = [
         ppc64Aix    : [
                 os                 : 'aix',
                 arch               : 'ppc64',
-                bootJDK            : "8",
                 test                : false
         ],
 
         s390xLinux    : [
                 os                 : 'linux',
                 arch               : 's390x',
-                bootJDK            : "8",
                 additionalNodeLabels: 'ubuntu',
                 test                : ['openjdktest', 'systemtest']
         ],
@@ -41,7 +36,6 @@ def buildConfigurations = [
         ppc64leLinux    : [
                 os                 : 'linux',
                 arch               : 'ppc64le',
-                bootJDK            : "8",
                 additionalNodeLabels: 'centos7',
                 test                : ['openjdktest', 'systemtest']
         ],
@@ -49,14 +43,12 @@ def buildConfigurations = [
         arm32Linux    : [
                 os                 : 'linux',
                 arch               : 'arm',
-                bootJDK            : "8",
                 test                : ['openjdktest']
         ],
 
         aarch64Linux    : [
                 os                 : 'linux',
                 arch               : 'aarch64',
-                bootJDK            : "8",
                 additionalNodeLabels: 'centos7',
                 test                : ['openjdktest']
         ],
