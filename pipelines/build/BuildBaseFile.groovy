@@ -86,7 +86,7 @@ def determineTestJobName(config, testType) {
 
     def arch = config.arch
     if (arch == "x64") {
-        arch = "x64-86"
+        arch = "x86-64"
     }
 
     def os = config.os;
@@ -109,22 +109,22 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                 def job;
                 def config = configuration.value;
                 stage(configuration.key) {
-                    job = build job: "openjdk_build_refactor", propagate: false, parameters: configuration.value.parameters
-                    buildJobs[configuration.key] = job;
+                    //job = build job: "openjdk_build_refactor", propagate: false, parameters: configuration.value.parameters
+                    //buildJobs[configuration.key] = job;
                 }
 
                 if (config.test) {
                     stage("test ${configuration.key}") {
-                        if (job.getResult() == 'SUCCESS') {
+//                        if (job.getResult() == 'SUCCESS') {
                             config.test.each { testType ->
                                 def jobName = determineTestJobName(config, testType)
-                                sh "echo execute ${jobName}, UPSTREAM_JOB_NUMBER: ${job.getNumber()}, UPSTREAM_JOB_NAME: openjdk_build_refactor"
+                                sh "echo execute ${jobName}, UPSTREAM_JOB_NUMBER: 476, UPSTREAM_JOB_NAME: openjdk_build_refactor"
                                 build job: jobName,
                                         propagate: false,
-                                        parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
+                                        parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "476"),
                                                      string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_build_refactor")]
                             }
-                        }
+//                        }
                     }
                 }
 
