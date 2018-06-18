@@ -150,7 +150,7 @@ function cloneMercurialOpenJDKRepo() {
           mkdir -p "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module"
         fi
         cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" || exit 1
-        git fetch "$WORKSPACE/openjdk/$module"
+        git fetch "$WORKSPACE/openjdk/$module/$module"
         echo "$(date +%T)": GIT filter on "$module"
         if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
           if ! tty; then
