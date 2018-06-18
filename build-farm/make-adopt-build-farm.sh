@@ -2,7 +2,7 @@
 
 set -ex
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ## Very very build farm specific configuration
 
@@ -55,7 +55,7 @@ elif [[ $NODE_LABELS = *"windows"* ]] ; then
 fi
 
 # shellcheck source=build-farm/set-platform-specific-configurations.sh
-source "${SCRIPT_DIR}/set-platform-specific-configurations.sh"
+source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
 
 # Set the file name
 JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr '[:lower:]' '[:upper:]')
@@ -63,5 +63,5 @@ FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${PLATFORM}_${VARIANT}_
 echo "Filename will be: $FILENAME"
 
 # shellcheck disable=SC2086
-bash "$SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
+bash "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh"  --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
 
