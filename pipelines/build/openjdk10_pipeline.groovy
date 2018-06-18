@@ -9,7 +9,8 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'x64',
                 bootJDK             : "9",
-                additionalNodeLabels: 'centos6'
+                additionalNodeLabels: 'centos6',
+                test                : ['openjdktest']
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
