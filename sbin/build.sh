@@ -179,6 +179,7 @@ configuringVersionStringParameter()
     addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${OPENJDK_BUILD_NUMBER}"
   else
     if [ -z "$OPENJDK_REPO_TAG" ]; then
+      cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || echo Cannot change to "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
       OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
       echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
     fi
