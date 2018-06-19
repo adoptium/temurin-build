@@ -3,13 +3,15 @@ def buildConfigurations = [
                 os                  : 'mac',
                 arch                : 'x64',
                 bootJDK             : "/Users/jenkins/tools/hudson.model.JDK/JDK9.0.1",
-                test                : ['openjdktest', 'systemtest']
+                test                : ['openjdktest']
+                //should be ['openjdktest', 'systemtest'], reduced for testing
         ],
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
                 test                : ['openjdktest']
+                //should be ['openjdktest', 'systemtest', 'perftest', 'externaltest'], reduced for testing
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
