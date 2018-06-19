@@ -19,7 +19,8 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 		def buildJob
 		stage('build') {
 			buildJob = build job: "openjdk8_build_${archOS}",
-			parameters: [string(name: 'TAG', value: "${JDK_TAG}")]
+			parameters: [string(name: 'TAG', value: "${JDK_TAG}"),
+				     string(name: 'BRANCH', value: "${ALT_BRANCH}")]
 		}
 		if (buildMaps[platform].test) {
 			buildMaps[platform].test.each {

@@ -16,7 +16,8 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 		def buildJobNum
 		def checksumJob
 		stage('build') {
-			buildJob = build job: "openjdk_amber_build_${archOS}"
+			buildJob = build job: "openjdk_amber_build_${archOS}",
+					parameters: [string(name: 'BRANCH', value: "$ALT_BRANCH")]
 			buildJobNum = buildJob.getNumber()
 		}
 		if (buildMaps[platform].test) {
