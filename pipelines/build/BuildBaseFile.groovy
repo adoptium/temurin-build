@@ -94,7 +94,7 @@ def determineTestJobName(config, testType) {
         os = "macos"
     }
 
-    return "openjdk${number}_${variant}_${testType}_${arch}_${os}"
+    return "refactor-openjdk${number}_${variant}_${testType}_${arch}_${os}"
 }
 
 

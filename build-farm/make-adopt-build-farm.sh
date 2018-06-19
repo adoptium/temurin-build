@@ -25,8 +25,11 @@ VARIANT_ARG=""
 
 if [ -z "${JDK_BOOT_VERSION}" ]
 then
+  echo "Detecting boot jdk for: ${JAVA_TO_BUILD}"
   currentBuildNumber=$(echo "${JAVA_TO_BUILD}" | egrep -o "[0-9]+")
+  echo "Found build version: ${currentBuildNumber}"
   JDK_BOOT_VERSION=$(($currentBuildNumber-1))
+  echo "Boot jdk version: ${JDK_BOOT_VERSION}"
 fi
 
 case "${JDK_BOOT_VERSION}" in
@@ -37,6 +40,8 @@ case "${JDK_BOOT_VERSION}" in
       "home") export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JAVA_HOME}";;
       *)    export JDK_BOOT_DIR="${JDK_BOOT_VERSION}";;
 esac
+
+echo "Boot jdk: ${JDK_BOOT_DIR}"
 
 if [[ $NODE_LABELS = *"linux"* ]] ; then
   PLATFORM="Linux"
