@@ -132,9 +132,6 @@ def setKeepFlagsForThisBuild(build) {
     }
 }
 
-lastSuccessfullBuild(currentBuild.getPreviousBuild());
-
-
 def doBuild(javaToBuild, buildConfigurations, osTarget) {
     def jobConfigurations = getJobConfigurations(javaToBuild, buildConfigurations, osTarget)
     def jobs = [:]
