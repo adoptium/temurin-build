@@ -35,8 +35,8 @@ def buildConfiguration(javaToBuild, variant, configuration) {
     if (configuration.containsKey('buildArgs')) buildParams += string(name: 'BUILD_ARGS', value: "${configuration.buildArgs}");
 
     buildParams += string(name: 'VARIANT', value: "${variant}")
-    buildParams += string(name: 'ARCHITECTURE', value: "${configuration.arch}"); ;
-    buildParams += string(name: 'OS', value: "${configuration.os}"); ;
+    buildParams += string(name: 'ARCHITECTURE', value: "${configuration.arch}")
+    buildParams += choice(name: 'OS', value: "${configuration.os}")
 
     return [
             javaVersion: javaToBuild,
