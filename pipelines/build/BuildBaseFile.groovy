@@ -109,7 +109,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                 def job;
                 def config = configuration.value;
                 stage(configuration.key) {
-                    job = build job: "openjdk_build_refactor", displayName: configuration.key, propagate: false, parameters: configuration.value.parameters
+                    job = build job: "openjdk_build_refactor_pipeline", displayName: configuration.key, propagate: false, parameters: configuration.value.parameters
                     buildJobs[configuration.key] = job;
                 }
 
