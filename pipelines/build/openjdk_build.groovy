@@ -1,4 +1,3 @@
-
 //Params:
 // TAG
 // NODE_LABEL
@@ -9,9 +8,54 @@
 // ARCHITECTURE
 // VARIANT
 
-currentBuild.displayName="${JAVA_TO_BUILD}-${ARCHITECTURE}-${VARIANT}"
-node (NODE_LABEL) {
+
+def unkeepAllBuildsOfType(buildName, build) {
+    if (build != null) {
+        if (build.displayName == buildName) {
+            build.keepLog(false)
+        }
+        lastSuccessfullBuild(buildName, build.getPreviousBuild())
+    }
+}
+
+def keepLastSuccessfulBuildOfType(buildName, build, found) {
+    if (build != null) {
+        if (displayName == buildName && build.result == 'SUCCESS') {
+            if (found == false) {
+                build.keepLog(true)
+                found = true
+            } else {
+                build.keepLog(false)
+            }
+        }
+        keepLastSuccessfulAllBuildsOfType(buildName, build.getPreviousBuild(), found)
+    }
+}
+
+def setKeepFlagsForThisBuild(build, success) {
+    build.keepLog(true)
+    lastBuild = build.getPreviousBuild()
+    if (success) {
+        //build successful so allow all other builds to be removed if needed
+        unkeepAllBuildsOfType(build.displayName, lastBuild)
+    } else {
+        //build unsuccessful so keep last success and this one
+        keepLastSuccessfulBuildOfType(build.displayName, lastBuild, false)
+    }
+}
+
+currentBuild.displayName = "${JAVA_TO_BUILD}-${ARCHITECTURE}-${VARIANT}"
+node(NODE_LABEL) {
     checkout scm
-    sh "${WORKSPACE}/build-farm/make-adopt-build-farm.sh"
+
+    def status = 1;
+    try {
+        status = sh "${WORKSPACE}/build-farm/make-adopt-build-farm.sh"
+    } finally {
+        setKeepFlagsForThisBuild(currentBuild, status == 0);
+        if (status != 0) {
+            currentBuild.result = 'FAILURE'
+        }
+    }
 }
 

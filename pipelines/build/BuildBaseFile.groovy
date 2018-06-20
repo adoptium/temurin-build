@@ -97,40 +97,6 @@ def determineTestJobName(config, testType) {
     return "openjdk${number}_${variant}_${testType}_${arch}_${os}"
 }
 
-def unkeepAllBuildsOfType(buildName, build) {
-    if (build != null) {
-        if (build.displayName == buildName) {
-            build.keepLog(false)
-        }
-        lastSuccessfullBuild(buildName, build.getPreviousBuild())
-    }
-}
-
-def keepLastSuccessfulBuildOfType(buildName, build, found) {
-    if (build != null) {
-        if (displayName == buildName && build.result == 'SUCCESS') {
-            if (found == false) {
-                build.keepLog(true)
-                found = true
-            } else {
-                build.keepLog(false)
-            }
-        }
-        keepLastSuccessfulAllBuildsOfType(buildName, build.getPreviousBuild(), found)
-    }
-}
-
-def setKeepFlagsForThisBuild(build) {
-    build.keepLog(true)
-    lastBuild = build.getPreviousBuild()
-    if (build.result == 'SUCCESS') {
-        //build successful so allow all other builds to be removed if needed
-        unkeepAllBuildsOfType(build.displayName, lastBuild)
-    } else {
-        //build unsuccessful so keep last success and this one
-        keepLastSuccessfulBuildOfType(build.displayName, lastBuild, false)
-    }
-}
 
 def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
     def jobConfigurations = getJobConfigurations(javaToBuild, buildConfigurations, osTarget)
@@ -144,8 +110,6 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                 def config = configuration.value;
                 stage(configuration.key) {
                     job = build job: "openjdk_build_refactor", displayName: configuration.key, propagate: false, parameters: configuration.value.parameters
-                    job.setDisplayName(configuration.key)
-                    job.keepLog(true)
                     buildJobs[configuration.key] = job;
                 }
 
@@ -191,8 +155,6 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                     def job = buildJob.value
                     def name = buildJob.key
                     def configuration = jobConfigurations[name];
-
-                    setKeepFlagsForThisBuild(job)
 
                     if (job.getResult() == 'SUCCESS') {
                         currentBuild.result = 'SUCCESS'
