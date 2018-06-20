@@ -161,7 +161,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                         sh "rm target/${configuration.os}/${configuration.arch}/${configuration.variant}/* || true"
 
                         copyArtifacts(
-                                projectName: 'openjdk_build_refactor',
+                                projectName: 'openjdk_build_refactor_pipeline',
                                 selector: specific("${job.getNumber()}"),
                                 filter: 'workspace/target/*',
                                 fingerprintArtifacts: true,
