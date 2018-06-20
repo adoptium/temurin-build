@@ -103,13 +103,15 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
     def jobs = [:]
     def buildJobs = [:]
 
+    def downstreamJob="openjdk_build_refactor_pipeline"
+
     jobConfigurations.each { configuration ->
         jobs[configuration.key] = {
             catchError {
                 def job;
                 def config = configuration.value;
                 stage(configuration.key) {
-                    job = build job: "openjdk_build_refactor", displayName: configuration.key, propagate: false, parameters: configuration.value.parameters
+                    job = build job: downstreamJob, displayName: configuration.key, propagate: false, parameters: configuration.value.parameters
                     buildJobs[configuration.key] = job;
                 }
 
@@ -161,7 +163,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                         sh "rm target/${configuration.os}/${configuration.arch}/${configuration.variant}/* || true"
 
                         copyArtifacts(
-                                projectName: 'openjdk_build_refactor',
+                                projectName: downstreamJob,
                                 selector: specific("${job.getNumber()}"),
                                 filter: 'workspace/target/*',
                                 fingerprintArtifacts: true,
