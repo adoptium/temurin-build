@@ -1,14 +1,3 @@
-//Params:
-// TAG
-// NODE_LABEL
-// JAVA_TO_BUILD
-// JDK_BOOT_VERSION
-// CONFIGURE_ARGS
-// BUILD_ARGS
-// ARCHITECTURE
-// VARIANT
-
-
 def unkeepAllBuildsOfType(buildName, build) {
     if (build != null) {
         if (build.displayName == buildName) {
@@ -22,10 +11,10 @@ def keepLastSuccessfulBuildOfType(buildName, build, found) {
     if (build != null) {
         if (displayName == buildName && build.result == 'SUCCESS') {
             if (found == false) {
-                build.getRawBuild().keepLog(true)
+                build.keepLog(true)
                 found = true
             } else {
-                build.getRawBuild().keepLog(false)
+                build.keepLog(false)
             }
         }
         keepLastSuccessfulAllBuildsOfType(buildName, build.getPreviousBuild(), found)
@@ -33,7 +22,7 @@ def keepLastSuccessfulBuildOfType(buildName, build, found) {
 }
 
 def setKeepFlagsForThisBuild(build, success) {
-    build.getRawBuild().keepLog(true)
+    build.keepLog(true)
     lastBuild = build.getPreviousBuild()
     if (success) {
         //build successful so allow all other builds to be removed if needed
@@ -45,19 +34,19 @@ def setKeepFlagsForThisBuild(build, success) {
 }
 
 currentBuild.displayName = "${JAVA_TO_BUILD}-${ARCHITECTURE}-${VARIANT}"
-node(NODE_LABEL) {
-    checkout scm
-    currentBuild.getRawBuild().keepLog(true)
 
-    def status = 1;
-    try {
-        status = sh "${WORKSPACE}/build-farm/make-adopt-build-farm.sh"
-        archiveArtifacts artifacts: "workspace/target/${configuration.os}/${configuration.arch}/${configuration.variant}/*"
-    } finally {
-        setKeepFlagsForThisBuild(currentBuild, status == 0);
-        if (status != 0) {
-            currentBuild.result = 'FAILURE'
-        }
+def status = 1;
+try {
+    status = shell("${WORKSPACE}/build-farm/make-adopt-build-farm.sh")
+    archiveArtifacts("workspace/target/${configuration.os}/${configuration.arch}/${configuration.variant}/*")
+} finally {
+
+    // Enable this if we want to allow this script to run outside a sandbox
+    setKeepFlagsForThisBuild(currentBuild, status == 0);
+
+    if (status != 0) {
+        currentBuild.result = 'FAILURE'
     }
 }
+
 

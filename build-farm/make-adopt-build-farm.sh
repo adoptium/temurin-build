@@ -22,14 +22,12 @@ CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
 BUILD_ARGS=${BUILD_ARGS:-""}
 VARIANT_ARG="${JAVA_TO_BUILD}-"
 
-BUILD_DISPLAY_NAME="${JAVA_TO_BUILD}-${ARCHITECTURE}-${VARIANT}"
-
 if [ -z "${JDK_BOOT_VERSION}" ]
 then
   echo "Detecting boot jdk for: ${JAVA_TO_BUILD}"
   currentBuildNumber=$(echo "${JAVA_TO_BUILD}" | egrep -o "[0-9]+")
   echo "Found build version: ${currentBuildNumber}"
-  JDK_BOOT_VERSION=$(($currentBuildNumber-1))
+  JDK_BOOT_VERSION=$((currentBuildNumber-1))
   echo "Boot jdk version: ${JDK_BOOT_VERSION}"
 fi
 
