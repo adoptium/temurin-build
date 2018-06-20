@@ -132,7 +132,7 @@ def setKeepFlagsForThisBuild(build) {
     }
 }
 
-def doBuild(javaToBuild, buildConfigurations, osTarget) {
+def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
     def jobConfigurations = getJobConfigurations(javaToBuild, buildConfigurations, osTarget)
     def jobs = [:]
     def buildJobs = [:]
@@ -149,7 +149,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                     buildJobs[configuration.key] = job;
                 }
 
-                if (config.test) {
+                if (enableTests && config.test) {
                     stage("test ${configuration.key}") {
                         if (job.getResult() == 'SUCCESS') {
                             config.test.each { testType ->
@@ -165,7 +165,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                     }
                 }
 
-                if (config.publish) {
+                if (publish && config.publish) {
                     sh "echo execute openjdk_release_tool REPO: nightly, TAG: jdk8u172-b00"
                     /*
                         stage("publish nightly ${configuration.key}") {
