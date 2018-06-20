@@ -42,18 +42,17 @@ esac
 
 echo "Boot jdk: ${JDK_BOOT_DIR}"
 
-PLATFORM="${OS}"
-if [ "${OS}" == "Linux" ] ; then
+if [ "${PLATFORM}" == "Linux" ] ; then
   EXTENSION="tar.gz"
 
   if [ ! -z "${TAG}" ]; then
     OPTIONS="${OPTIONS} --tag $TAG"
   fi
-elif [ "${OS}" == "Aix" ] ; then
+elif [ "${PLATFORM}" == "Aix" ] ; then
   EXTENSION="tar.gz"
-elif [ "${OS}" == "Mac" ] ; then
+elif [ "${PLATFORM}" == "Mac" ] ; then
   EXTENSION="tar.gz"
-elif [ "${OS}" == "Windows" ] ; then
+elif [ "${PLATFORM}" == "Windows" ] ; then
   EXTENSION=zip
 fi
 

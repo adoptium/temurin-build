@@ -36,7 +36,7 @@ def buildConfiguration(javaToBuild, variant, configuration) {
 
     buildParams += string(name: 'VARIANT', value: "${variant}")
     buildParams += string(name: 'ARCHITECTURE', value: "${configuration.arch}")
-    buildParams += string(name: 'OS', value: "${configuration.os}")
+    buildParams += string(name: 'PLATFORM', value: "${configuration.os}")
 
     return [
             javaVersion: javaToBuild,
