@@ -2,7 +2,7 @@ println "building ${JDK_VERSION}"
 
 def buildPlatforms = ['Linux', 'zLinux', 'ppc64le', 'AIX', 'Windows', 'Windows32', 'LinuxXL']
 def buildMaps = [:]
-def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyddMMHHmm")
+def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyMMddHHmm")
 
 buildMaps['Linux'] = [test:['openjdktest', 'systemtest', 'perftest', 'externaltest'], ArchOSs:'x86-64_linux']
 buildMaps['LinuxXL'] = [test:['openjdktest'], ArchOSs:'x86-64_linux_largeHeap']
