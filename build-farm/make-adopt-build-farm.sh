@@ -42,21 +42,18 @@ esac
 
 echo "Boot jdk: ${JDK_BOOT_DIR}"
 
-if [[ $NODE_LABELS = *"linux"* ]] ; then
-  PLATFORM="Linux"
+PLATFORM="${OS}"
+if [ "${OS}" == "Linux" ] ; then
   EXTENSION="tar.gz"
 
   if [ ! -z "${TAG}" ]; then
     OPTIONS="${OPTIONS} --tag $TAG"
   fi
-elif [[ $NODE_LABELS = *"aix"* ]] ; then
-  PLATFORM="Aix"
+elif [ "${OS}" == "Aix" ] ; then
   EXTENSION="tar.gz"
-elif [[ $NODE_LABELS = *"mac"* ]] ; then
-  PLATFORM="Mac"
+elif [ "${OS}" == "Mac" ] ; then
   EXTENSION="tar.gz"
-elif [[ $NODE_LABELS = *"windows"* ]] ; then
-  PLATFORM=Windows
+elif [ "${OS}" == "Windows" ] ; then
   EXTENSION=zip
 fi
 
