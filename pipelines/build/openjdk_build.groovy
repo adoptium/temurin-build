@@ -22,10 +22,10 @@ def keepLastSuccessfulBuildOfType(buildName, build, found) {
     if (build != null) {
         if (displayName == buildName && build.result == 'SUCCESS') {
             if (found == false) {
-                build.keepLog(true)
+                build.getRawBuild().keepLog(true)
                 found = true
             } else {
-                build.keepLog(false)
+                build.getRawBuild().keepLog(false)
             }
         }
         keepLastSuccessfulAllBuildsOfType(buildName, build.getPreviousBuild(), found)
@@ -33,7 +33,7 @@ def keepLastSuccessfulBuildOfType(buildName, build, found) {
 }
 
 def setKeepFlagsForThisBuild(build, success) {
-    build.keepLog(true)
+    build.getRawBuild().keepLog(true)
     lastBuild = build.getPreviousBuild()
     if (success) {
         //build successful so allow all other builds to be removed if needed
@@ -47,6 +47,7 @@ def setKeepFlagsForThisBuild(build, success) {
 currentBuild.displayName = "${JAVA_TO_BUILD}-${ARCHITECTURE}-${VARIANT}"
 node(NODE_LABEL) {
     checkout scm
+    currentBuild.getRawBuild().keepLog(true)
 
     def status = 1;
     try {
