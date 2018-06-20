@@ -144,7 +144,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget) {
                 def config = configuration.value;
                 stage(configuration.key) {
                     job = build job: "openjdk_build_refactor", propagate: false, parameters: configuration.value.parameters
-                    job.displayName = configuration.key;
+                    job.setDisplayName(configuration.key)
                     job.keepLog(true)
                     buildJobs[configuration.key] = job;
                 }
