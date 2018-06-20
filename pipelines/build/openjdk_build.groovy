@@ -36,17 +36,21 @@ def setKeepFlagsForThisBuild(build, success) {
 currentBuild.displayName = "${JAVA_TO_BUILD}-${ARCHITECTURE}-${VARIANT}"
 
 def status = 1;
-try {
-    status = shell("${WORKSPACE}/build-farm/make-adopt-build-farm.sh")
-    archiveArtifacts("${WORKSPACE}/workspace/target/${configuration.os}/${configuration.arch}/${configuration.variant}/*")
-} finally {
+job('build-'+currentBuild.displayName) {
+    try {
+        steps {
+            shell("${WORKSPACE}/build-farm/make-adopt-build-farm.sh")
+        }
+        publishers {
+            archiveArtifacts("${WORKSPACE}/workspace/target/${configuration.os}/${configuration.arch}/${configuration.variant}/*")
+        }
+    } finally {
+        // Enable this if we want to allow this script to run outside a sandbox
+        setKeepFlagsForThisBuild(currentBuild, status == 0);
 
-    // Enable this if we want to allow this script to run outside a sandbox
-    setKeepFlagsForThisBuild(currentBuild, status == 0);
-
-    if (status != 0) {
-        currentBuild.result = 'FAILURE'
+        if (status != 0) {
+            currentBuild.result = 'FAILURE'
+        }
     }
 }
-
 
