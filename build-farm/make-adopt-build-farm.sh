@@ -42,6 +42,8 @@ esac
 
 echo "Boot jdk: ${JDK_BOOT_DIR}"
 
+export PLATFORM
+
 if [ "${PLATFORM}" == "Linux" ] ; then
   EXTENSION="tar.gz"
 
