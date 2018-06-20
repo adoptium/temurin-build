@@ -38,7 +38,7 @@ currentBuild.displayName = "${JAVA_TO_BUILD}-${ARCHITECTURE}-${VARIANT}"
 def status = 1;
 try {
     status = shell("${WORKSPACE}/build-farm/make-adopt-build-farm.sh")
-    archiveArtifacts("workspace/target/${configuration.os}/${configuration.arch}/${configuration.variant}/*")
+    archiveArtifacts("${WORKSPACE}/workspace/target/${configuration.os}/${configuration.arch}/${configuration.variant}/*")
 } finally {
 
     // Enable this if we want to allow this script to run outside a sandbox
