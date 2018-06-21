@@ -109,7 +109,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
     echo "Enable tests: ${enableTests}"
     echo "Publish: ${publish}"
 
-    def downstreamJob="openjdk_build_refactor_pipeline"
+    def downstreamJob = "openjdk_build_refactor_pipeline"
 
     jobConfigurations.each { configuration ->
         jobs[configuration.key] = {
@@ -124,15 +124,16 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                 if (enableTests && config.test) {
                     stage("test ${configuration.key}") {
                         if (job.getResult() == 'SUCCESS') {
-                            config.test.each { testType ->
-                                def jobName = determineTestJobName(config, testType)
-                                catchError {
+                            testJobs = config.test.collect { testType ->
+                                return catchError {
+                                    def jobName = determineTestJobName(config, testType)
                                     build job: jobName,
                                             propagate: false,
                                             parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
                                                          string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob)]
                                 }
                             }
+                            parallel testJobs
                         }
                     }
                 }
