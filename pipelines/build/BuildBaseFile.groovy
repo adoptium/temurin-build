@@ -104,6 +104,11 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
     def jobs = [:]
     def buildJobs = [:]
 
+    echo "Java: ${javaToBuild}"
+    echo "OS: ${osTarget}"
+    echo "Enable tests: ${enableTests}"
+    echo "Publish: ${publish}"
+
     def downstreamJob="openjdk_build_refactor_pipeline"
 
     jobConfigurations.each { configuration ->
@@ -125,7 +130,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                                     build job: jobName,
                                             propagate: false,
                                             parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
-                                                         string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_build_refactor")]
+                                                         string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob)]
                                 }
                             }
                         }
