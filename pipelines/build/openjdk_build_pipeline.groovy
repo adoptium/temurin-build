@@ -41,7 +41,7 @@ node(NODE_LABEL) {
     def status = 1;
     try {
         status = sh "${WORKSPACE}/build-farm/make-adopt-build-farm.sh"
-        archiveArtifacts artifacts: "workspace/target/${OS}/${ARCHITECTURE}/${VARIANT}/*"
+        archiveArtifacts artifacts: "workspace/target/${PLATFORM}/${ARCHITECTURE}/${VARIANT}/*"
     } finally {
 
         // Enable this if we want to allow this script to run outside a sandbox
