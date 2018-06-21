@@ -1,4 +1,3 @@
-
 def unkeepAllBuildsOfType(buildName, build) {
     if (build != null) {
         if (build.displayName == buildName) {
@@ -23,6 +22,10 @@ def keepLastSuccessfulBuildOfType(buildName, build, found) {
 }
 
 def setKeepFlagsForThisBuild(build, success) {
+    // Currently disabled as this script runs in sandbox and cannot access build.getRawBuild()
+    // Enable this if we want to allow this script to run outside a sandbox
+    return
+
     build.getRawBuild().keepLog(true)
     lastBuild = build.getPreviousBuild()
     if (success) {
@@ -38,18 +41,16 @@ currentBuild.displayName = "${JAVA_TO_BUILD}-${ARCHITECTURE}-${VARIANT}"
 node(NODE_LABEL) {
     checkout scm
 
-    def status = 1;
+    success = false;
     try {
-        status = sh "${WORKSPACE}/build-farm/make-adopt-build-farm.sh"
+        sh "${WORKSPACE}/build-farm/make-adopt-build-farm.sh"
         archiveArtifacts artifacts: "workspace/target/*"
+        success = true
+    } catch (Exception e) {
+        success = false
+        currentBuild.result = 'FAILURE'
     } finally {
-
-        // Enable this if we want to allow this script to run outside a sandbox
-        //setKeepFlagsForThisBuild(currentBuild, status == 0);
-
-        if (status != 0) {
-            currentBuild.result = 'FAILURE'
-        }
+        setKeepFlagsForThisBuild(currentBuild, success);
     }
 }
 

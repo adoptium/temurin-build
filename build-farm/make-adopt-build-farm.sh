@@ -8,14 +8,15 @@ PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 TIMESTAMP="$(date +'%Y-%m-%d-%H-%M')"
 
+export OPERATING_SYSTEM=$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')
 
 echo "BUILD TYPE: "
 echo "VERSION: ${JAVA_TO_BUILD}"
 echo "ARCHITECTURE ${ARCHITECTURE}"
 echo "VARIANT: ${VARIANT}"
+echo "OS: ${OPERATING_SYSTEM}"
 
 OPTIONS=""
-PLATFORM=""
 EXTENSION=""
 # shellcheck disable=SC2034
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
@@ -42,19 +43,18 @@ esac
 
 echo "Boot jdk: ${JDK_BOOT_DIR}"
 
-export PLATFORM=$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')
 
-if [ "${PLATFORM}" == "linux" ] ; then
+if [ "${OPERATING_SYSTEM}" == "linux" ] ; then
   EXTENSION="tar.gz"
 
   if [ ! -z "${TAG}" ]; then
     OPTIONS="${OPTIONS} --tag $TAG"
   fi
-elif [ "${PLATFORM}" == "aix" ] ; then
+elif [ "${OPERATING_SYSTEM}" == "aix" ] ; then
   EXTENSION="tar.gz"
-elif [ "${PLATFORM}" == "mac" ] ; then
+elif [ "${OPERATING_SYSTEM}" == "mac" ] ; then
   EXTENSION="tar.gz"
-elif [ "${PLATFORM}" == "windows" ] ; then
+elif [ "${OPERATING_SYSTEM}" == "windows" ] ; then
   EXTENSION=zip
 fi
 
@@ -63,7 +63,7 @@ source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
 
 # Set the file name
 JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr '[:lower:]' '[:upper:]')
-FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${PLATFORM}_${VARIANT}_${TIMESTAMP}.${EXTENSION}"
+FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${OPERATING_SYSTEM}_${VARIANT}_${TIMESTAMP}.${EXTENSION}"
 echo "Filename will be: $FILENAME"
 
 # shellcheck disable=SC2086

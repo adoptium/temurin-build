@@ -15,4 +15,4 @@ then
 fi
 
 # shellcheck disable=SC1091,SC1090
-source "$SCRIPT_DIR/platform-specific-configurations/${PLATFORM}.sh"
+source "$SCRIPT_DIR/platform-specific-configurations/${OPERATING_SYSTEM}.sh"
