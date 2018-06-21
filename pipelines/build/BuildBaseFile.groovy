@@ -122,18 +122,18 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                 }
 
                 if (enableTests && config.test) {
-                    if (job.getResult() == 'SUCCESS') {
-                        testJobs = config.test.collect { testType ->
-                            return stage("test ${configuration.key} ${testType}") {
-                                return catchError {
-                                    build job: determineTestJobName(config, testType),
+                    stage("test ${configuration.key}") {
+                        if (job.getResult() == 'SUCCESS') {
+                            config.test.each { testType ->
+                                def jobName = determineTestJobName(config, testType)
+                                catchError {
+                                    build job: jobName,
                                             propagate: false,
                                             parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
                                                          string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob)]
                                 }
                             }
                         }
-                        parallel testJobs
                     }
                 }
 
