@@ -135,7 +135,9 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                     job = build job: downstreamJob, displayName: configuration.key, propagate: false, parameters: configuration.value.parameters
                     buildJobs[configuration.key] = job;
                 }
+                */
 
+                /*
                 if (enableTests && config.test) {
                     stage("test ${configuration.key}") {
                         if (job.getResult() == 'SUCCESS') {
@@ -151,26 +153,25 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                         }
                     }
                 }*/
-
                 node('master') {
                     //def jobNumber = job.getNumber()
-                    def jobNumber="15"
+                    def jobNumber = "15"
 
                     //if (job.getResult() == 'SUCCESS') {
-                        //currentBuild.result = 'SUCCESS'
-                        sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
+                    //currentBuild.result = 'SUCCESS'
+                    sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
 
-                        copyArtifacts(
-                                projectName: downstreamJob,
-                                selector: specific("${jobNumber}"),
-                                filter: 'workspace/target/*',
-                                fingerprintArtifacts: true,
-                                target: "target/${config.os}/${config.arch}/${config.variant}/",
-                                flatten: true)
+                    copyArtifacts(
+                            projectName: downstreamJob,
+                            selector: specific("${jobNumber}"),
+                            filter: 'workspace/target/*',
+                            fingerprintArtifacts: true,
+                            target: "target/${config.os}/${config.arch}/${config.variant}/",
+                            flatten: true)
 
 
-                        sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
-                        archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
+                    sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+                    archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
                     //}
                 }
 
@@ -180,8 +181,8 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                         build job: 'refactor_openjdk_release_tool',
                                 parameters: [string(name: 'REPO', value: 'nightly'),
                                              string(name: 'TAG', value: 'jdk8u172-b00'),
-                                             string(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
-                                             string(name: 'UPSTREAM_JOB_NUMBER', value: env.BUILD_NUMBER),
+                                             string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob),
+                                             string(name: 'UPSTREAM_JOB_NUMBER', value: jobNumber),
                                              string(name: 'VERSION', value: determineReleaseRepoVersion(config))]
                     }
                 }
