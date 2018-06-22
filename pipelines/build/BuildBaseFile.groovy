@@ -153,9 +153,9 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                         }
                     }
                 }*/
+                def jobNumber = "15"
                 node('master') {
                     //def jobNumber = job.getNumber()
-                    def jobNumber = "15"
 
                     //if (job.getResult() == 'SUCCESS') {
                     //currentBuild.result = 'SUCCESS'
@@ -178,6 +178,13 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                 if (publish && config.publish) {
                     sh "echo execute refactor_openjdk_release_tool REPO: nightly, TAG: jdk8u172-b00"
                     stage("publish nightly ${configuration.key}") {
+                        copyArtifacts(
+                                projectName: downstreamJob,
+                                selector: specific("${jobNumber}"),
+                                filter: 'workspace/target/*',
+                                fingerprintArtifacts: true,
+                                target: "",
+                                flatten: true)
                         build job: 'refactor_openjdk_release_tool',
                                 parameters: [string(name: 'REPO', value: 'nightly'),
                                              string(name: 'TAG', value: 'jdk8u172-b00'),
