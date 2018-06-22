@@ -98,6 +98,20 @@ def determineTestJobName(config, testType) {
     return "openjdk${number}_${variant}_${testType}_${arch}_${os}"
 }
 
+def determineReleaseRepoVersion(config) {
+    def number;
+
+    if (config.javaVersion == "jdk8u") {
+        number = 8
+    } else if (config.javaVersion == "jdk9u") {
+        number = 9
+    } else if (config.javaVersion == "jdk10u") {
+        number = 10
+    }
+
+    return "jdk${number}-test"
+}
+
 
 def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
     def jobConfigurations = getJobConfigurations(javaToBuild, buildConfigurations, osTarget)
@@ -116,6 +130,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
             catchError {
                 def job;
                 def config = configuration.value;
+                /*
                 stage(configuration.key) {
                     job = build job: downstreamJob, displayName: configuration.key, propagate: false, parameters: configuration.value.parameters
                     buildJobs[configuration.key] = job;
@@ -135,20 +150,18 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                             }
                         }
                     }
-                }
+                }*/
 
                 if (publish && config.publish) {
-                    sh "echo execute openjdk_release_tool REPO: nightly, TAG: jdk8u172-b00"
-                    /*
-                        stage("publish nightly ${configuration.key}") {
-                            build job: 'openjdk_release_tool',
-                                    parameters: [string(name: 'REPO', value: 'nightly'),
-                                                 string(name: 'TAG', value: 'jdk8u172-b00'),
-                                                 string(name: 'VERSION', value: 'jdk8'),
-                                                 string(name: 'CHECKSUM_JOB_NAME', value: "openjdk8_build_checksum"),
-                                                 string(name: 'CHECKSUM_JOB_NUMBER', value: "${checksumJob.getNumber()}")]
-                        }
-                */
+                    sh "echo execute refactor_openjdk_release_tool REPO: nightly, TAG: jdk8u172-b00"
+                    stage("publish nightly ${configuration.key}") {
+                        build job: 'refactor_openjdk_release_tool',
+                                parameters: [string(name: 'REPO', value: 'nightly'),
+                                             string(name: 'TAG', value: 'jdk8u172-b00'),
+                                             string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob),
+                                             string(name: 'UPSTREAM_JOB_NUMBER', value: "114"),
+                                             string(name: 'VERSION', value: determineReleaseRepoVersion(config))]
+                    }
                 }
             }
         }
