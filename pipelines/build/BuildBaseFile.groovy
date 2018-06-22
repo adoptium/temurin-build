@@ -152,38 +152,17 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                     }
                 }*/
 
-                if (publish && config.publish) {
-                    sh "echo execute refactor_openjdk_release_tool REPO: nightly, TAG: jdk8u172-b00"
-                    stage("publish nightly ${configuration.key}") {
-                        build job: 'refactor_openjdk_release_tool',
-                                parameters: [string(name: 'REPO', value: 'nightly'),
-                                             string(name: 'TAG', value: 'jdk8u172-b00'),
-                                             string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob),
-                                             string(name: 'UPSTREAM_JOB_NUMBER', value: "114"),
-                                             string(name: 'VERSION', value: determineReleaseRepoVersion(config))]
-                    }
-                }
-            }
-        }
-    }
+                node('master') {
+                    //def jobNumber = job.getNumber()
+                    def jobNumber="114"
 
-    try {
-        parallel jobs
-    } finally {
-        node('master') {
-            buildJobs.each {
-                buildJob ->
-                    def job = buildJob.value
-                    def name = buildJob.key
-                    def configuration = jobConfigurations[name];
-
-                    if (job.getResult() == 'SUCCESS') {
-                        currentBuild.result = 'SUCCESS'
+                    //if (job.getResult() == 'SUCCESS') {
+                        //currentBuild.result = 'SUCCESS'
                         sh "rm target/${configuration.os}/${configuration.arch}/${configuration.variant}/* || true"
 
                         copyArtifacts(
                                 projectName: downstreamJob,
-                                selector: specific("${job.getNumber()}"),
+                                selector: specific("${jobNumber}"),
                                 filter: 'workspace/target/*',
                                 fingerprintArtifacts: true,
                                 target: "target/${configuration.os}/${configuration.arch}/${configuration.variant}/",
@@ -192,10 +171,25 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
 
                         sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
                         archiveArtifacts artifacts: "target/${configuration.os}/${configuration.arch}/${configuration.variant}/*"
+                    //}
+                }
+
+                if (publish && config.publish) {
+                    sh "echo execute refactor_openjdk_release_tool REPO: nightly, TAG: jdk8u172-b00"
+                    stage("publish nightly ${configuration.key}") {
+                        build job: 'refactor_openjdk_release_tool',
+                                parameters: [string(name: 'REPO', value: 'nightly'),
+                                             string(name: 'TAG', value: 'jdk8u172-b00'),
+                                             string(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
+                                             string(name: 'UPSTREAM_JOB_NUMBER', value: JOB_NAME.BUILD_NUMBER),
+                                             string(name: 'VERSION', value: determineReleaseRepoVersion(config))]
                     }
+                }
             }
         }
     }
+
+    parallel jobs
 }
 
 return this
