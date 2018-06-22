@@ -158,19 +158,19 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
 
                     //if (job.getResult() == 'SUCCESS') {
                         //currentBuild.result = 'SUCCESS'
-                        sh "rm target/${configuration.os}/${configuration.arch}/${configuration.variant}/* || true"
+                        sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
 
                         copyArtifacts(
                                 projectName: downstreamJob,
                                 selector: specific("${jobNumber}"),
                                 filter: 'workspace/target/*',
                                 fingerprintArtifacts: true,
-                                target: "target/${configuration.os}/${configuration.arch}/${configuration.variant}/",
+                                target: "target/${config.os}/${config.arch}/${config.variant}/",
                                 flatten: true)
 
 
                         sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
-                        archiveArtifacts artifacts: "target/${configuration.os}/${configuration.arch}/${configuration.variant}/*"
+                        archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
                     //}
                 }
 
