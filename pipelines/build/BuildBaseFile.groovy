@@ -181,7 +181,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                                 parameters: [string(name: 'REPO', value: 'nightly'),
                                              string(name: 'TAG', value: 'jdk8u172-b00'),
                                              string(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
-                                             string(name: 'UPSTREAM_JOB_NUMBER', value: JOB_NAME.BUILD_NUMBER),
+                                             string(name: 'UPSTREAM_JOB_NUMBER', value: env.BUILD_NUMBER),
                                              string(name: 'VERSION', value: determineReleaseRepoVersion(config))]
                     }
                 }
