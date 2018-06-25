@@ -48,7 +48,7 @@ checkoutAndCloneOpenJDKGitRepo()
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
-    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep --quiet "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
+    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep --quiet "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep --quiet "${BUILD_CONFIG[REPOSITORY]}"
     local isCorrectGitRepo=$?
     set -e
 
