@@ -23,8 +23,7 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 		def checksumJob
 		stage('build') {
 			buildJob = build job: "openjdk10_build_${archOS}",
-					parameters: [string(name: 'BRANCH', value: "$ALT_BRANCH"),
-					string(name: 'PIPELINE_TIMESTAMP', value: "${PIPELINE_TIMESTAMP}")]
+					parameters: [string(name: 'PIPELINE_TIMESTAMP', value: "${PIPELINE_TIMESTAMP}")]
 			buildJobNum = buildJob.getNumber()
 		}
 		if (buildMaps[platform].test) {

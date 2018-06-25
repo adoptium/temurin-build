@@ -22,8 +22,7 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 		stage('build') {
 			buildJob = build job: "openjdk8_build_${archOS}",
 			parameters: [string(name: 'TAG', value: "${JDK_TAG}"),
-				     string(name: 'BRANCH', value: "${ALT_BRANCH}"),
-					string(name: 'PIPELINE_TIMESTAMP', value: "${PIPELINE_TIMESTAMP}")]
+				     string(name: 'PIPELINE_TIMESTAMP', value: "${PIPELINE_TIMESTAMP}")]
 		}
 		if (buildMaps[platform].test) {
 			buildMaps[platform].test.each {
