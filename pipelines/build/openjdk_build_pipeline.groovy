@@ -43,7 +43,7 @@ node(NODE_LABEL) {
 
     success = false;
     try {
-        sh "${WORKSPACE}/build-farm/make-adopt-build-farm.sh"
+        sh "./build-farm/make-adopt-build-farm.sh"
         archiveArtifacts artifacts: "workspace/target/*"
         success = true
     } catch (Exception e) {
