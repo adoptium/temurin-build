@@ -36,6 +36,7 @@ BUILD_FULL_NAME
 BUILD_VARIANT
 CERTIFICATE
 CLEAN_DOCKER_BUILD
+CLEAN_GIT_REPO
 CONFIGURE_ARGS_FOR_ANY_PLATFORM
 CONTAINER_NAME
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
@@ -187,6 +188,9 @@ function parseConfigurationArguments() {
 
         "--clean-docker-build" | "-c" )
         BUILD_CONFIG[CLEAN_DOCKER_BUILD]=true;;
+
+        "--clean-git-repo" )
+        BUILD_CONFIG[CLEAN_GIT_REPO]=true;;
 
         "--destination" | "-d" )
         BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
@@ -354,6 +358,9 @@ function configDefaults() {
   BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-"docker"}
 
   BUILD_CONFIG[TMP_SPACE_BUILD]=${BUILD_CONFIG[TMP_SPACE_BUILD]:-false}
+
+  # If the wrong git repo is there allow it to be removed
+  BUILD_CONFIG[CLEAN_GIT_REPO]=false
 }
 
 # Declare the map of build configuration that we're going to use

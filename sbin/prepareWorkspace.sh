@@ -66,6 +66,10 @@ checkoutAndCloneOpenJDKGitRepo()
         git checkout "${BUILD_CONFIG[TAG]}"
       fi
       git clean -fdx
+    elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
+      echo "Removing current git repo as it is the wrong type"
+      rm -rf "${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+      cloneOpenJDKGitRepo
     else
       echo "Incorrect Source Code for ${BUILD_CONFIG[OPENJDK_FOREST_NAME]}.  This is an error, please check what is in $PWD and manually remove, exiting..."
       echo "If this is inside a docker you can purge the existing source by passing --clean-docker-build"
