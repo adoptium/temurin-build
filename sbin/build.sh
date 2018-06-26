@@ -39,6 +39,9 @@ source "$SCRIPT_DIR/common/config_init.sh"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/common/constants.sh"
 
+# shellcheck source=sbin/common/common.sh
+source "$SCRIPT_DIR/common/common.sh"
+
 export OPENJDK_REPO_TAG
 export OPENJDK_DIR
 export CONFIGURE_ARGS=""
@@ -384,37 +387,6 @@ makeACopyOfLibFreeFontForMacOSX() {
     fi
 }
 
-# Sign the built binary
-signRelease()
-{
-  if [ -z "${BUILD_CONFIG[SIGN]}" ]; then
-    case "$OSTYPE" in
-      "cygwin")
-        echo "Signing Windows release"
-        signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
-        # Sign .exe files
-        FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.exe')
-        echo "$FILES" | while read -r f; do "$signToolPath" sign /f "${BUILD_CONFIG[CERTIFICATE]}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
-        # Sign .dll files
-        FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.dll')
-        echo "$FILES" | while read -r f; do "$signToolPath" sign /f "${BUILD_CONFIG[CERTIFICATE]}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
-      ;;
-      "darwin"*)
-        echo "Signing OSX release"
-        # Login to KeyChain
-        # shellcheck disable=SC2046
-        # shellcheck disable=SC2006
-        security unlock-keychain -p `cat ~/.password`
-        # Sign all files with the executable permission bit set.
-        FILES=$(find "${OPENJDK_REPO_TAG}" -perm +111 -type f || find "${OPENJDK_REPO_TAG}" -perm /111 -type f)
-        echo "$FILES" | while read -r f; do codesign -s "${BUILD_CONFIG[CERTIFICATE]}" "$f"; done
-      ;;
-      *)
-        echo "Skipping code signing as it's not supported on $OSTYPE"
-      ;;
-    esac
-  fi
-}
 
 # Get the first tag from the git repo
 getFirstTagFromOpenJDKGitRepo()
@@ -435,25 +407,16 @@ createOpenJDKTarArchive()
   fi
   echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
 
-  if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = *"cygwin"* ]]; then
-      zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
-      EXT=".zip"
-  elif [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]]; then
-      GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
-      EXT=".tar.gz"
-  else
-      GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
-      EXT=".tar.gz"
-  fi
+  archive=$(createOpenJDKArchive "${OPENJDK_REPO_TAG}")
 
-  echo "Your final ${EXT} was created at ${PWD}"
+  echo "Your final archive was created at ${archive}"
 
   ## clean out old builds
   rm -r "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[TARGET_DIR]}" || true
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 
   echo "Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}"
-  mv "OpenJDK${EXT}" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${BUILD_CONFIG[TARGET_FILE_NAME]}"
+  mv "${archive}" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
 # Echo success
@@ -479,7 +442,6 @@ printJavaVersionString
 removingUnnecessaryFiles
 makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
 makeACopyOfLibFreeFontForMacOSX "${BUILD_CONFIG[JRE_PATH]}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
-signRelease
 createOpenJDKTarArchive
 showCompletionMessage
 

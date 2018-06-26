@@ -31,6 +31,9 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/sbin/common/constants.sh"
 
+# shellcheck source=sbin/common/common.sh
+source "$SCRIPT_DIR/sbin/common/common.sh"
+
 # Bring in the source signal handler
 sourceSignalHandler()
 {

@@ -332,24 +332,6 @@ relocateToTmpIfNeeded()
    fi
 }
 
-checkSignConfiguration() {
-   if [ "${BUILD_CONFIG[SIGN]}" == "true" ]
-   then
-      if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-        if [ ! -f "${BUILD_CONFIG[CERTIFICATE]}" ]
-        then
-          echo "Could not find certificate at: ${BUILD_CONFIG[CERTIFICATE]}"
-          exit 1
-        fi
-
-        if [ -z "${SIGN_PASSWORD+x}" ]
-        then
-          echo "If signing is enabled on window you must set SIGN_PASSWORD"
-          exit 1
-        fi
-      fi
-   fi
-}
 ##################################################################
 
 function configureWorkspace() {

@@ -146,25 +146,6 @@ function loadConfigFromFile() {
   fi
 }
 
-# shellcheck disable=SC2153
-function setOpenJdkVersion() {
-  local forest_name=$1
-
-  # Derive the openjdk_core_version from the forest name.
-  local openjdk_core_version=${forest_name}
-  if [[ ${forest_name} == *u ]]; then
-    openjdk_core_version=${forest_name%?}
-  fi
-
-  BUILD_CONFIG[OPENJDK_CORE_VERSION]=$openjdk_core_version;
-  BUILD_CONFIG[OPENJDK_FOREST_NAME]=$forest_name;
-
-  # 'u' means it's an update repo, e.g. jdk8u
-  if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} == *u ]]; then
-    BUILD_CONFIG[OPENJDK_CORE_VERSION]=${BUILD_CONFIG[OPENJDK_FOREST_NAME]%?}
-  fi
-}
-
 # Parse the configuration args from the CL, please keep this in alpha order
 function parseConfigurationArguments() {
 
