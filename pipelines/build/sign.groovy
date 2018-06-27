@@ -5,17 +5,15 @@ if (OPERATING_SYSTEM == "mac") {
     filter = '**/*.zip'
 }
 
-job("sign ${OPERATING_SYSTEM}") {
-    steps {
-        copyArtifacts("${UPSTREAM_JOB_NAME}") {
-            includePatterns(filter)
-            buildSelector {
-                specific {
-                    buildNumber("${UPSTREAM_JOB_NUMBER}")
-                }
+steps {
+    copyArtifacts("${UPSTREAM_JOB_NAME}") {
+        includePatterns(filter)
+        buildSelector {
+            specific {
+                buildNumber("${UPSTREAM_JOB_NUMBER}")
             }
         }
-
-        shell(readFileFromWorkspace('build-farm/sign-releases.sh'))
     }
+
+    shell(readFileFromWorkspace('build-farm/sign-releases.sh'))
 }
