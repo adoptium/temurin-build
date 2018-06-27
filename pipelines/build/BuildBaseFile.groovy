@@ -135,7 +135,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                     buildJobs[configuration.key] = job;
                 }
 
-                if (enableTests && config.test) {
+                if (enableTests == true && config.test) {
                     stage("test ${configuration.key}") {
                         if (job.getResult() == 'SUCCESS') {
                             config.test.each { testType ->
