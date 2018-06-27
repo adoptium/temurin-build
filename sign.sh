@@ -64,7 +64,7 @@ signRelease()
         echo "$FILES" | while read -r f; do codesign -s "${BUILD_CONFIG[CERTIFICATE]}" "$f"; done
       ;;
       *)
-        echo "Skipping code signing as it's not supported on $OSTYPE"
+        echo "Skipping code signing as it's not supported on BUILD_CONFIG"
       ;;
     esac
   fi
@@ -92,7 +92,7 @@ function extractArchive {
   fi
 }
 
-if [ "$OSTYPE" != "cygwin" ] && [ "$OSTYPE" != "darwin" ]; then
+if [ "${OPERATING_SYSTEM}" != "windows" ] && [ "${OPERATING_SYSTEM}" != "mac" ]; then
     echo "Skipping code signing as it's not supported on $OSTYPE"
     exit 0;
 fi
