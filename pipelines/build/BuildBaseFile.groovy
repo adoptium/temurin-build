@@ -166,7 +166,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                                 buildArgs = "--sign \"Developer ID Application: London Jamocha Community CIC\""
                             }
 
-                            signJob = build job: sign_build,
+                            signJob = build job: "sign_build",
                                     parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
                                                  string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob),
                                                  string(name: 'OPERATING_SYSTEM', value: "${config.os}"),
