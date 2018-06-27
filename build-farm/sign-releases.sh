@@ -11,7 +11,7 @@ else
   exit 0
 fi
 
-for file in $(ls "./target/*/*/*/*.${EXTENSION}");
+for file in $(ls "./OpenJDK*.${EXTENSION}");
 do
   sha256sum "$file" > $file.sha256.txt;
 
