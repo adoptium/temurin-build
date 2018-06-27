@@ -13,7 +13,7 @@ else
   exit 0
 fi
 
-for file in $(find target/ | egrep "OpenJDK*.${EXTENSION}^");
+for file in $(find workspace/target/ | egrep "OpenJDK*.${EXTENSION}^");
 do
   sha256sum "$file" > $file.sha256.txt;
 

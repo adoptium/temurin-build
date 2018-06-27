@@ -158,11 +158,15 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
 
                     if (config.os == "windows" || config.os == "mac") {
                         stage("sign") {
-                            filter = "**/OpenJDK*_${config.os}_*.tar.gz"
+                            filter = ""
                             buildArgs = ""
+
                             if (config.os == "windows") {
+                                filter = "**/OpenJDK*_windows_*.zip"
                                 buildArgs = "--sign C:\\Users\\jenkins\\windows.p12"
+
                             } else if (config.os == "mac") {
+                                filter = "**/OpenJDK*_mac_*.tar.gz"
                                 buildArgs = "--sign \"Developer ID Application: London Jamocha Community CIC\""
                             }
 
