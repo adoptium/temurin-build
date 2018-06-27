@@ -15,7 +15,8 @@ source "$SCRIPT_DIR/sbin/common/common.sh"
 
 ARCHIVE=""
 WORKSPACE=$(pwd)
-TMP_DIR="${WORKSPACE}/tmp/"
+TMP_DIR_NAME="tmp"
+TMP_DIR="${WORKSPACE}/${TMP_DIR_NAME}/"
 
 checkSignConfiguration() {
    if [ "${BUILD_CONFIG[SIGN]}" == "true" ]
@@ -101,6 +102,7 @@ parseArguments "$@"
 extractArchive
 signRelease
 jdkDir=$(ls "${TMP_DIR}" | head -n1)
-signedArchive=$(createOpenJDKArchive "${TMP_DIR}/${jdkDir}")
+cd "${WORKSPACE}"
+signedArchive=$(createOpenJDKArchive "${TMP_DIR_NAME}/${jdkDir}")
 mv "${signedArchive}" "${ARCHIVE}"
 rm -rf "${TMP_DIR}"
