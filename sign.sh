@@ -101,6 +101,6 @@ parseArguments "$@"
 extractArchive
 signRelease
 jdkDir=$(ls "${TMP_DIR}" | head -n1)
-signedArchive=$(createOpenJDKArchive "${jdkDir}")
+signedArchive=$(createOpenJDKArchive "${TMP_DIR}/${jdkDir}")
 mv "${signedArchive}" "${ARCHIVE}"
 rm -rf "${TMP_DIR}"
