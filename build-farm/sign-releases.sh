@@ -14,5 +14,7 @@ fi
 for file in $(ls "./target/*/*/*/*.${EXTENSION}");
 do
   sha256sum "$file" > $file.sha256.txt;
-  bash "${SCRIPT_DIR}/../sign.sh" ${BUILD_ARGS} "$file"
+
+  echo "${SCRIPT_DIR}/../sign.sh ${BUILD_ARGS} ${file}"
+  bash "${SCRIPT_DIR}/../sign.sh" ${BUILD_ARGS} "${file}"
 done
