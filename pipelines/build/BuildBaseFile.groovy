@@ -174,45 +174,40 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                                                  string(name: 'BUILD_ARGS', value: "${buildArgs}"),
                                                  [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}"],
                                     ]
-                            downstreamJobName="sign_build";
-                            jobNumber=signJob.getNumber();
+                            downstreamJobName = "sign_build";
+                            jobNumber = signJob.getNumber();
                         }
                     }
 
 
-                    stage("publish") {
-                        if (job.getResult() == 'SUCCESS') {
-                            currentBuild.result = 'SUCCESS'
-                            sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
+                    if (publish && config.publish) {
+                        stage("publish nightly ${configuration.key}") {
+                            if (job.getResult() == 'SUCCESS') {
+                                currentBuild.result = 'SUCCESS'
+                                sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
 
-                            copyArtifacts(
-                                    projectName: downstreamJobName,
-                                    selector: specific("${jobNumber}"),
-                                    filter: 'workspace/target/*',
-                                    fingerprintArtifacts: true,
-                                    target: "target/${config.os}/${config.arch}/${config.variant}/",
-                                    flatten: true)
+                                copyArtifacts(
+                                        projectName: downstreamJobName,
+                                        selector: specific("${jobNumber}"),
+                                        filter: 'workspace/target/*',
+                                        fingerprintArtifacts: true,
+                                        target: "target/${config.os}/${config.arch}/${config.variant}/",
+                                        flatten: true)
 
 
-                            sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
-                            archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
+                                sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+                                archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
+
+
+                                build job: 'refactor_openjdk_release_tool',
+                                        parameters: [string(name: 'REPO', value: 'nightly'),
+                                                     string(name: 'TAG', value: 'jdk8u172-b00'),
+                                                     string(name: 'UPSTREAM_JOB_NAME', value: downstreamJobName),
+                                                     string(name: 'UPSTREAM_JOB_NUMBER', value: jobNumber),
+                                                     string(name: 'VERSION', value: determineReleaseRepoVersion(config))]
+                            }
                         }
                     }
-                }
-
-                if (publish && config.publish) {
-                    sh "echo execute refactor_openjdk_release_tool REPO: nightly, TAG: jdk8u172-b00"
-                    /*
-                    stage("publish nightly ${configuration.key}") {
-                        node('master') {
-                            build job: 'refactor_openjdk_release_tool',
-                                    parameters: [string(name: 'REPO', value: 'nightly'),
-                                                 string(name: 'TAG', value: 'jdk8u172-b00'),
-                                                 string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob),
-                                                 string(name: 'UPSTREAM_JOB_NUMBER', value: jobNumber),
-                                                 string(name: 'VERSION', value: determineReleaseRepoVersion(config))]
-                        }
-                    }*/
                 }
             }
         }
