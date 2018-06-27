@@ -15,7 +15,7 @@ source "$SCRIPT_DIR/sbin/common/common.sh"
 
 CODE_TO_SIGN=""
 WORKSPACE=$(pwd)
-TARGET_DIR="${WORKSPACE}/target/"
+TMP_DIR="${WORKSPACE}/tmp/"
 
 checkSignConfiguration() {
    if [ "${BUILD_CONFIG[SIGN]}" == "true" ]
@@ -81,11 +81,11 @@ function parseArguments() {
 }
 
 function extractArchive {
-  rm -rf "${TARGET_DIR}" || true
+  rm -rf "${TMP_DIR}" || true
   if [[ "${ARCHIVE}" = *".zip"* ]]; then
-      unzip "${ARCHIVE}" -d "${TARGET_DIR}"
+      unzip "${ARCHIVE}" -d "${TMP_DIR}"
   elif [[ "${ARCHIVE}" == ".tar.gz" ]]; then
-      tar -xv "${ARCHIVE}" -C "${TARGET_DIR}"
+      tar -xv "${ARCHIVE}" -C "${TMP_DIR}"
   else
       echo "could not detect archive type"
       exit 1
@@ -101,7 +101,7 @@ fi
 parseArguments "$@"
 extractArchive
 signRelease
-jdkDir=$(ls "${TARGET_DIR}" | head -n1)
+jdkDir=$(ls "${TMP_DIR}" | head -n1)
 signedArchive=$(createOpenJDKArchive "${jdkDir}")
 mv "${signedArchive}" "${ARCHIVE}"
-rm -rf "${TARGET_DIR}"
+rm -rf "${TMP_DIR}"
