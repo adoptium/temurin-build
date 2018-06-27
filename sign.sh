@@ -80,9 +80,9 @@ function parseArguments() {
 
 function extractArchive {
   rm -rf "${TMP_DIR}" || true
-  if [[ "${ARCHIVE}" = *".zip"* ]]; then
+  if [[ "${OPERATING_SYSTEM}" == "windows" ]]; then
       unzip "${ARCHIVE}" -d "${TMP_DIR}"
-  elif [[ "${ARCHIVE}" == ".tar.gz" ]]; then
+  elif [[ "${OPERATING_SYSTEM}" == "mac" ]]; then
       tar -xv "${ARCHIVE}" -C "${TMP_DIR}"
   else
       echo "could not detect archive type"
@@ -91,7 +91,7 @@ function extractArchive {
 }
 
 if [ "${OPERATING_SYSTEM}" != "windows" ] && [ "${OPERATING_SYSTEM}" != "mac" ]; then
-    echo "Skipping code signing as it's not supported on $OSTYPE"
+    echo "Skipping code signing as it's not supported on ${OPERATING_SYSTEM}"
     exit 0;
 fi
 
