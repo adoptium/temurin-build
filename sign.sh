@@ -96,7 +96,7 @@ if [ "${OPERATING_SYSTEM}" != "windows" ] && [ "${OPERATING_SYSTEM}" != "mac" ];
     exit 0;
 fi
 
-
+configDefaults
 parseArguments "$@"
 extractArchive
 signRelease
