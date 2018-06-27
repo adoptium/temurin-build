@@ -84,7 +84,7 @@ function extractArchive {
   if [[ "${OPERATING_SYSTEM}" == "windows" ]]; then
       unzip "${ARCHIVE}" -d "${TMP_DIR}"
   elif [[ "${OPERATING_SYSTEM}" == "mac" ]]; then
-      gunzip -dc "${ARCHIVE}".tar.gz | tar xf - -C "${TMP_DIR}"
+      gunzip -dc "${ARCHIVE}" | tar xf - -C "${TMP_DIR}"
   else
       echo "could not detect archive type"
       exit 1
