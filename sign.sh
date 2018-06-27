@@ -13,7 +13,7 @@ source "$SCRIPT_DIR/sbin/common/constants.sh"
 # shellcheck source=sbin/common/common.sh
 source "$SCRIPT_DIR/sbin/common/common.sh"
 
-CODE_TO_SIGN=""
+ARCHIVE=""
 WORKSPACE=$(pwd)
 TMP_DIR="${WORKSPACE}/tmp/"
 
@@ -39,18 +39,16 @@ checkSignConfiguration() {
 # Sign the built binary
 signRelease()
 {
-  CODE_TO_SIGN="$1"
-
   if [ -z "${BUILD_CONFIG[SIGN]}" ]; then
     case "$OPERATING_SYSTEM" in
       "windows")
         echo "Signing Windows release"
         signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
         # Sign .exe files
-        FILES=$(find "${CODE_TO_SIGN}" -type f -name '*.exe')
+        FILES=$(find "${TMP_DIR}" -type f -name '*.exe')
         echo "$FILES" | while read -r f; do "$signToolPath" sign /f "${BUILD_CONFIG[CERTIFICATE]}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
         # Sign .dll files
-        FILES=$(find "${CODE_TO_SIGN}" -type f -name '*.dll')
+        FILES=$(find "${TMP_DIR}" -type f -name '*.dll')
         echo "$FILES" | while read -r f; do "$signToolPath" sign /f "${BUILD_CONFIG[CERTIFICATE]}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
       ;;
       "mac"*)
@@ -60,7 +58,7 @@ signRelease()
         # shellcheck disable=SC2006
         security unlock-keychain -p `cat ~/.password`
         # Sign all files with the executable permission bit set.
-        FILES=$(find "${CODE_TO_SIGN}" -perm +111 -type f || find "${CODE_TO_SIGN}" -perm /111 -type f)
+        FILES=$(find "${TMP_DIR}" -perm +111 -type f || find "${TMP_DIR}" -perm /111 -type f)
         echo "$FILES" | while read -r f; do codesign -s "${BUILD_CONFIG[CERTIFICATE]}" "$f"; done
       ;;
       *)
@@ -77,7 +75,7 @@ function parseArguments() {
       shift;
     done
 
-    CODE_TO_SIGN="$1";
+    ARCHIVE="$1";
 }
 
 function extractArchive {
