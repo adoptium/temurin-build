@@ -152,14 +152,33 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                 }
 
 
-                stage("sign") {
-                    build job: sign_build,
-                            parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
-                                         string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob)]
-                }
-
                 node('master') {
                     def jobNumber = job.getNumber()
+                    def downstreamJobName = downstreamJob;
+
+                    if (config.os == "windows" || config.os == "mac") {
+                        stage("sign") {
+                            filter = "**/OpenJDK*_${config.os}_*.tar.gz"
+                            buildArgs = ""
+                            if (config.os == "windows") {
+                                buildArgs = "--sign C:\\Users\\jenkins\\windows.p12"
+                            } else if (config.os == "mac") {
+                                buildArgs = "--sign \"Developer ID Application: London Jamocha Community CIC\""
+                            }
+
+                            signJob = build job: sign_build,
+                                    parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
+                                                 string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob),
+                                                 string(name: 'OPERATING_SYSTEM', value: "${config.os}"),
+                                                 string(name: 'FILTER', value: "${filter}"),
+                                                 string(name: 'BUILD_ARGS', value: "${buildArgs}"),
+                                                 [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}"],
+                                    ]
+                            downstreamJobName="sign_build";
+                            jobNumber=signJob.getNumber();
+                        }
+                    }
+
 
                     stage("publish") {
                         if (job.getResult() == 'SUCCESS') {
@@ -167,7 +186,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                             sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
 
                             copyArtifacts(
-                                    projectName: downstreamJob,
+                                    projectName: downstreamJobName,
                                     selector: specific("${jobNumber}"),
                                     filter: 'workspace/target/*',
                                     fingerprintArtifacts: true,
