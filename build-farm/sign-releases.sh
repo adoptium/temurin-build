@@ -11,9 +11,7 @@ else
   exit 0
 fi
 
-ls -alh
-
-for file in $(ls "./OpenJDK*.${EXTENSION}");
+for file in $(ls ./OpenJDK*.${EXTENSION});
 do
   sha256sum "$file" > $file.sha256.txt;
 
