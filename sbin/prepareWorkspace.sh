@@ -335,7 +335,6 @@ relocateToTmpIfNeeded()
 ##################################################################
 
 function configureWorkspace() {
-    checkSignConfiguration
     createWorkspace
     relocateToTmpIfNeeded
     checkoutAndCloneOpenJDKGitRepo
