@@ -26,7 +26,7 @@ VARIANT_ARG="${JAVA_TO_BUILD}-"
 if [ -z "${JDK_BOOT_VERSION}" ]
 then
   echo "Detecting boot jdk for: ${JAVA_TO_BUILD}"
-  currentBuildNumber=$(echo "${JAVA_TO_BUILD}" | egrep -o "[0-9]+")
+  currentBuildNumber=$(echo "${JAVA_TO_BUILD}" | tr -d "[:alpha:]")
   echo "Found build version: ${currentBuildNumber}"
   JDK_BOOT_VERSION=$((currentBuildNumber-1))
   echo "Boot jdk version: ${JDK_BOOT_VERSION}"
