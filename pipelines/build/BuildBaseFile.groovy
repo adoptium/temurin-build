@@ -123,7 +123,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
     echo "Enable tests: ${enableTests}"
     echo "Publish: ${publish}"
 
-    def downstreamJob = "openjdk_build_refactor_pipeline"
+    def downstreamJob = "openjdk_build"
 
     jobConfigurations.each { configuration ->
         jobs[configuration.key] = {
