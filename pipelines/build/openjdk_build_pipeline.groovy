@@ -22,6 +22,10 @@ def keepLastSuccessfulBuildOfType(buildName, build, found) {
 }
 
 def setKeepFlagsForThisBuild(build, success) {
+    // Currently disabled as this script runs in sandbox and cannot access build.getRawBuild()
+    // Enable this if we want to allow this script to run outside a sandbox
+    return
+
     build.getRawBuild().keepLog(true)
     lastBuild = build.getPreviousBuild()
     if (success) {
@@ -36,7 +40,6 @@ def setKeepFlagsForThisBuild(build, success) {
 currentBuild.displayName = "${JAVA_TO_BUILD}-${TARGET_OS}-${ARCHITECTURE}-${VARIANT}"
 node(NODE_LABEL) {
     checkout scm
-    currentBuild.getRawBuild().keepLog(true)
 
     success = false;
     try {
