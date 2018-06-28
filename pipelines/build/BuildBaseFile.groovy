@@ -98,14 +98,14 @@ def determineTestJobName(config, testType) {
     return "openjdk${number}_${variant}_${testType}_${arch}_${os}"
 }
 
-def determineReleaseRepoVersion(config) {
+def determineReleaseRepoVersion(javaToBuild) {
     def number;
 
-    if (config.javaVersion == "jdk8u") {
+    if (javaToBuild == "jdk8u") {
         number = 8
-    } else if (config.javaVersion == "jdk9u") {
+    } else if (javaToBuild == "jdk9u") {
         number = 9
-    } else if (config.javaVersion == "jdk10u") {
+    } else if (javaToBuild == "jdk10u") {
         number = 10
     }
 
@@ -185,7 +185,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
 
 
                     if (publish && config.publish) {
-                        stage("publish nightly ${configuration.key}") {
+                        stage("archive ${configuration.key}") {
                             if (job.getResult() == 'SUCCESS') {
                                 currentBuild.result = 'SUCCESS'
                                 sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
@@ -202,13 +202,6 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                                 sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
                                 archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
 
-
-                                build job: 'refactor_openjdk_release_tool',
-                                        parameters: [string(name: 'REPO', value: 'nightly'),
-                                                     string(name: 'TAG', value: config.javaVersion),
-                                                     string(name: 'UPSTREAM_JOB_NAME', value: downstreamJobName),
-                                                     string(name: 'UPSTREAM_JOB_NUMBER', value: "${jobNumber}"),
-                                                     string(name: 'VERSION', value: determineReleaseRepoVersion(config))]
                             }
                         }
                     }
@@ -218,6 +211,17 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
     }
 
     parallel jobs
+
+    node("master") {
+        stage("publish") {
+            build job: 'refactor_openjdk_release_tool',
+                    parameters: [string(name: 'REPO', value: 'nightly'),
+                                 string(name: 'TAG', value: javaToBuild),
+                                 string(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
+                                 string(name: 'UPSTREAM_JOB_NUMBER', value: "${currentBuild.getNumber()}"),
+                                 string(name: 'VERSION', value: determineReleaseRepoVersion(javaToBuild))]
+        }
+    }
 }
 
 return this
