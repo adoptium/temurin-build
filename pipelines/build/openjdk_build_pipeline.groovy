@@ -22,10 +22,6 @@ def keepLastSuccessfulBuildOfType(buildName, build, found) {
 }
 
 def setKeepFlagsForThisBuild(build, success) {
-    // Currently disabled as this script runs in sandbox and cannot access build.getRawBuild()
-    // Enable this if we want to allow this script to run outside a sandbox
-    return
-
     build.getRawBuild().keepLog(true)
     lastBuild = build.getPreviousBuild()
     if (success) {
