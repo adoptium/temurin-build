@@ -36,6 +36,7 @@ def setKeepFlagsForThisBuild(build, success) {
 currentBuild.displayName = "${JAVA_TO_BUILD}-${TARGET_OS}-${ARCHITECTURE}-${VARIANT}"
 node(NODE_LABEL) {
     checkout scm
+    build.getRawBuild().keepLog(true)
 
     success = false;
     try {
