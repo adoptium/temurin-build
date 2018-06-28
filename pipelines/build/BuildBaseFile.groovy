@@ -205,7 +205,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
 
                                 build job: 'refactor_openjdk_release_tool',
                                         parameters: [string(name: 'REPO', value: 'nightly'),
-                                                     string(name: 'TAG', value: 'jdk8u172-b00'),
+                                                     string(name: 'TAG', value: config.javaVersion),
                                                      string(name: 'UPSTREAM_JOB_NAME', value: downstreamJobName),
                                                      string(name: 'UPSTREAM_JOB_NUMBER', value: "${jobNumber}"),
                                                      string(name: 'VERSION', value: determineReleaseRepoVersion(config))]
