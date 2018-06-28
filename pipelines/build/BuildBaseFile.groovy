@@ -153,8 +153,8 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
 
 
                 node('master') {
-                    def jobNumber = job.getNumber()
                     def downstreamJobName = downstreamJob;
+                    def jobWithReleaseArtifact = job
 
                     if (config.os == "windows" || config.os == "mac") {
                         stage("sign") {
@@ -171,6 +171,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                             }
 
                             signJob = build job: "sign_build",
+                                    propagate: false,
                                     parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
                                                  string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob),
                                                  string(name: 'OPERATING_SYSTEM', value: "${config.os}"),
@@ -179,20 +180,20 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                                                  [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}"],
                                     ]
                             downstreamJobName = "sign_build";
-                            jobNumber = signJob.getNumber();
+                            jobWithReleaseArtifact = signJob;
                         }
                     }
 
 
                     if (publish && config.publish) {
                         stage("archive ${configuration.key}") {
-                            if (job.getResult() == 'SUCCESS') {
+                            if (jobWithReleaseArtifact.getResult() == 'SUCCESS') {
                                 currentBuild.result = 'SUCCESS'
                                 sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
 
                                 copyArtifacts(
                                         projectName: downstreamJobName,
-                                        selector: specific("${jobNumber}"),
+                                        selector: specific("${jobWithReleaseArtifact.getNumber()}"),
                                         filter: 'workspace/target/*',
                                         fingerprintArtifacts: true,
                                         target: "target/${config.os}/${config.arch}/${config.variant}/",
@@ -201,7 +202,6 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
 
                                 sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
                                 archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
-
                             }
                         }
                     }
