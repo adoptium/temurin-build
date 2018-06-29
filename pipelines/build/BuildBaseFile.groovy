@@ -139,17 +139,23 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                 }
 
                 if (enableTests == true && config.test) {
-                    stage("test ${configuration.key}") {
-                        if (job.getResult() == 'SUCCESS') {
+                    if (job.getResult() == 'SUCCESS') {
+                        stage("test ${configuration.key}") {
+                            def testStages = [:]
                             config.test.each { testType ->
-                                def jobName = determineTestJobName(config, testType)
-                                catchError {
-                                    build job: jobName,
-                                            propagate: false,
-                                            parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
-                                                         string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob)]
+                                testStages["${configuration.key}-${testType}"] = {
+                                    stage("test ${configuration.key} ${testType}") {
+                                        def jobName = determineTestJobName(config, testType)
+                                        catchError {
+                                            build job: jobName,
+                                                    propagate: false,
+                                                    parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
+                                                                 string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob)]
+                                        }
+                                    }
                                 }
                             }
+                            parallel testStages
                         }
                     }
                 }

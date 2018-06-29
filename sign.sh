@@ -101,6 +101,8 @@ configDefaults
 parseArguments "$@"
 extractArchive
 signRelease
+
+# shellcheck disable=SC2012
 jdkDir=$(ls "${TMP_DIR}" | head -n1)
 cd "${WORKSPACE}"
 signedArchive=$(createOpenJDKArchive "${TMP_DIR_NAME}/${jdkDir}")

@@ -13,10 +13,10 @@ else
   exit 0
 fi
 
-for file in $(find workspace/target/ | egrep "OpenJDK*.${EXTENSION}^");
+for file in $(find workspace/target/ | grep -E "OpenJDK*.${EXTENSION}^");
 do
-  sha256sum "$file" > $file.sha256.txt;
+  sha256sum "$file" > "$file.sha256.txt"
 
-  echo "${SCRIPT_DIR}/../sign.sh ${BUILD_ARGS} ${file}"
+  # shellcheck disable=SC2086
   bash "${SCRIPT_DIR}/../sign.sh" ${BUILD_ARGS} "${file}"
 done

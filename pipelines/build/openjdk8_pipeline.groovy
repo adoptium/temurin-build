@@ -2,6 +2,7 @@ def buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
+                additionalNodeLabels: 'build-macstadium-macos1010-1',
                 test                : ['openjdktest', 'systemtest']
         ],
 
@@ -50,20 +51,8 @@ def buildConfigurations = [
         ],
 ]
 
-
 def javaToBuild = "jdk8u"
 
-///////////////////////////////////////////////////
-//Do build is the same for all pipelines
-
-/*
-def osTarget = '''{
-    "windows": ["hotspot", "openj9"],
-    "linux": ["hotspot", "openj9"],
-    "aix": ["hotspot", "openj9"],
-    "mac": ["hotspot"]
-}'''
-*/
 node ("master") {
     checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/BuildBaseFile.groovy"

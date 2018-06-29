@@ -8,7 +8,8 @@ PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 TIMESTAMP="$(date +'%Y-%m-%d-%H-%M')"
 
-export OPERATING_SYSTEM=$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')
+export OPERATING_SYSTEM
+OPERATING_SYSTEM=$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')
 
 echo "BUILD TYPE: "
 echo "VERSION: ${JAVA_TO_BUILD}"
