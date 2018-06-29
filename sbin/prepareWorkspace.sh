@@ -290,14 +290,10 @@ downloadingRequiredDependencies()
 
 function moveTmpToWorkspaceLocation {
   if [ ! -z "${TMP_WORKSPACE}" ]; then
-    rm "${TMP_WORKSPACE}/workspace"
-    rm -r "${TMP_WORKSPACE}"
-  fi
-}
 
-function moveTmpToWorkspaceLocation {
-  if [ ! -z "${TMP_WORKSPACE}" ]; then
-    rm -rf "${ORIGINAL_WORKSPACE}"
+    echo "Relocating workspace from ${TMP_WORKSPACE} to ${ORIGINAL_WORKSPACE}"
+
+    rm -rf "${ORIGINAL_WORKSPACE}" || true
 
     mkdir "${ORIGINAL_WORKSPACE}"
 
@@ -309,6 +305,9 @@ function moveTmpToWorkspaceLocation {
     cp -r ${TMP_WORKSPACE}/workspace/* "${ORIGINAL_WORKSPACE}"
     rm -rf "${TMP_WORKSPACE}/workspace/"
     rm -r "${TMP_WORKSPACE}"
+
+    echo "Data at: ${ORIGINAL_WORKSPACE}"
+    ls -alh "${ORIGINAL_WORKSPACE}"
   fi
 }
 
