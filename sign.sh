@@ -14,16 +14,16 @@ source "$SCRIPT_DIR/sbin/common/constants.sh"
 source "$SCRIPT_DIR/sbin/common/common.sh"
 
 ARCHIVE=""
-CERTIFICATE=""
+SIGNING_CERTIFICATE=""
 WORKSPACE=$(pwd)
 TMP_DIR_NAME="tmp"
 TMP_DIR="${WORKSPACE}/${TMP_DIR_NAME}/"
 
 checkSignConfiguration() {
     if [[ "${OPERATING_SYSTEM}" == "windows" ]] ; then
-      if [ ! -f "${CERTIFICATE}" ]
+      if [ ! -f "${SIGNING_CERTIFICATE}" ]
       then
-        echo "Could not find certificate at: ${CERTIFICATE}"
+        echo "Could not find certificate at: ${SIGNING_CERTIFICATE}"
         exit 1
       fi
 
@@ -44,10 +44,10 @@ signRelease()
       signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
       # Sign .exe files
       FILES=$(find "${TMP_DIR}" -type f -name '*.exe')
-      echo "$FILES" | while read -r f; do "$signToolPath" sign /f "${CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
+      echo "$FILES" | while read -r f; do "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
       # Sign .dll files
       FILES=$(find "${TMP_DIR}" -type f -name '*.dll')
-      echo "$FILES" | while read -r f; do "$signToolPath" sign /f "${CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
+      echo "$FILES" | while read -r f; do "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
     ;;
     "mac"*)
       echo "Signing OSX release"
@@ -57,7 +57,7 @@ signRelease()
       security unlock-keychain -p `cat ~/.password`
       # Sign all files with the executable permission bit set.
       FILES=$(find "${TMP_DIR}" -perm +111 -type f || find "${TMP_DIR}" -perm /111 -type f)
-      echo "$FILES" | while read -r f; do codesign -s "${CERTIFICATE}" "$f"; done
+      echo "$FILES" | while read -r f; do codesign -s "${SIGNING_CERTIFICATE}" "$f"; done
     ;;
     *)
       echo "Skipping code signing as it's not supported on $OPERATING_SYSTEM"
@@ -72,7 +72,7 @@ function parseArguments() {
       shift;
     done
 
-    CERTIFICATE="$1";
+    SIGNING_CERTIFICATE="$1";
     ARCHIVE="$2";
 }
 
