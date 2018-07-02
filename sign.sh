@@ -38,20 +38,29 @@ checkSignConfiguration() {
 # Sign the built binary
 signRelease()
 {
+  jdkDir="$1"
+
+  cd "${jdkDir}" || exit 1
+
   case "$OPERATING_SYSTEM" in
     "windows")
       echo "Signing Windows release"
       signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
+
       # Sign .exe files
-      FILES=$(find "${TMP_DIR}" -type f -name '*.exe')
+      FILES=$(find . -type f -name '*.exe')
       echo "$FILES" | while read -r f;
       do
         echo "Signing ${f}"
-        "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "\"$f\"";
+        "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f";
       done
+
       # Sign .dll files
-      FILES=$(find "${TMP_DIR}" -type f -name '*.dll')
-      echo "$FILES" | while read -r f; do "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "\"$f\""; done
+      FILES=$(find . -type f -name '*.dll')
+      echo "$FILES" | while read -r f;
+      do
+        "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f";
+      done
     ;;
     "mac"*)
       echo "Signing OSX release"
@@ -101,10 +110,11 @@ fi
 configDefaults
 parseArguments "$@"
 extractArchive
-signRelease
 
 # shellcheck disable=SC2012
 jdkDir=$(ls "${TMP_DIR}" | head -n1)
+signRelease "${jdkDir}"
+
 cd "${WORKSPACE}"
 signedArchive=$(createOpenJDKArchive "${TMP_DIR_NAME}/${jdkDir}")
 mv "${signedArchive}" "${ARCHIVE}"
