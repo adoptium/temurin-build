@@ -25,5 +25,5 @@ do
   sha256sum "$file" > "$file.sha256.txt"
 
   # shellcheck disable=SC2086
-  bash "${SCRIPT_DIR}/../sign.sh" ${BUILD_ARGS} "${file}"
+  bash "${SCRIPT_DIR}/../sign.sh" ${CERTIFICATE} "${file}"
 done

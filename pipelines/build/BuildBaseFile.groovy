@@ -167,15 +167,15 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                     if (config.os == "windows" || config.os == "mac") {
                         stage("sign ${configuration.key}") {
                             filter = ""
-                            buildArgs = ""
+                            certificate = ""
 
                             if (config.os == "windows") {
                                 filter = "**/OpenJDK*_windows_*.zip"
-                                buildArgs = "--sign C:\\Users\\jenkins\\windows.p12"
+                                certificate = "C:\\Users\\jenkins\\windows.p12"
 
                             } else if (config.os == "mac") {
                                 filter = "**/OpenJDK*_mac_*.tar.gz"
-                                buildArgs = "--sign \"Developer ID Application: London Jamocha Community CIC\""
+                                certificate = "\"Developer ID Application: London Jamocha Community CIC\""
                             }
 
                             signJob = build job: "sign_build",
@@ -184,7 +184,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                                                  string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob),
                                                  string(name: 'OPERATING_SYSTEM', value: "${config.os}"),
                                                  string(name: 'FILTER', value: "${filter}"),
-                                                 string(name: 'BUILD_ARGS', value: "${buildArgs}"),
+                                                 string(name: 'CERTIFICATE', value: "${certificate}"),
                                                  [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}"],
                                     ]
                             downstreamJobName = "sign_build";
