@@ -117,5 +117,6 @@ signRelease "${TMP_DIR}/${jdkDir}"
 
 cd "${WORKSPACE}"
 signedArchive=$(createOpenJDKArchive "${jdkDir}")
+echo "mv ${signedArchive} ${ARCHIVE}"
 mv "${signedArchive}" "${ARCHIVE}"
 rm -rf "${TMP_DIR}"
