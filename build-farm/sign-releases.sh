@@ -10,6 +10,7 @@ if [ "${OPERATING_SYSTEM}" == "mac" ] ; then
 elif [ "${OPERATING_SYSTEM}" == "windows" ] ; then
   EXTENSION="zip"
 else
+  echo "OS does not need signing ${OPERATING_SYSTEM}"
   exit 0
 fi
 
