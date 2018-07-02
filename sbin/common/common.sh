@@ -27,7 +27,7 @@ createOpenJDKArchive()
   local repoDir="$1"
 
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = *"cygwin"* ]]; then
-      zip -r -q OpenJDK.zip ./"${repoDir}" > 2>&1
+      zip -r -q OpenJDK.zip ./"${repoDir}"
       EXT=".zip"
   elif [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]]; then
       GZIP=-9 tar -cf - ./"${repoDir}"/ | gzip -c > OpenJDK.tar.gz > /dev/null 2>&1
