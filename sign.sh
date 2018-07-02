@@ -47,7 +47,7 @@ signRelease()
       echo "$FILES" | while read -r f;
       do
         echo "Signing ${f}"
-        "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f";
+        "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "\"$f\"";
       done
       # Sign .dll files
       FILES=$(find "${TMP_DIR}" -type f -name '*.dll')
