@@ -37,5 +37,5 @@ createOpenJDKArchive()
       EXT=".tar.gz"
   fi
 
-  echo "OpenJDK${EXT}"
+  echo "${PWD}/OpenJDK${EXT}"
 }
