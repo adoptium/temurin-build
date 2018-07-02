@@ -14,8 +14,14 @@ else
   exit 0
 fi
 
+echo "files:"
+ls -alh workspace/target/
+
+echo "OpenJDK*.${EXTENSION}^"
+
 for file in $(find workspace/target/ | grep -E "OpenJDK*.${EXTENSION}^");
 do
+  echo "signing ${file}"
   sha256sum "$file" > "$file.sha256.txt"
 
   # shellcheck disable=SC2086
