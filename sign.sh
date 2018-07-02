@@ -113,9 +113,10 @@ extractArchive
 
 # shellcheck disable=SC2012
 jdkDir=$(ls "${TMP_DIR}" | head -n1)
+jdkDir="${TMP_DIR}/${jdkDir}"
 signRelease "${jdkDir}"
 
 cd "${WORKSPACE}"
-signedArchive=$(createOpenJDKArchive "${TMP_DIR_NAME}/${jdkDir}")
+signedArchive=$(createOpenJDKArchive "${jdkDir}")
 mv "${signedArchive}" "${ARCHIVE}"
 rm -rf "${TMP_DIR}"
