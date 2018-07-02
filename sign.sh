@@ -115,10 +115,8 @@ extractArchive
 jdkDir=$(ls "${TMP_DIR}" | head -n1)
 signRelease "${TMP_DIR}/${jdkDir}"
 
-cd "${WORKSPACE}"
+cd "${TMP_DIR}"
 signedArchive=$(createOpenJDKArchive "${jdkDir}")
-echo "${WORKSPACE}"
-ls -alhR "${WORKSPACE}"
-echo "mv ${signedArchive} ${ARCHIVE}"
+cd "${WORKSPACE}"
 mv "${signedArchive}" "${ARCHIVE}"
 rm -rf "${TMP_DIR}"
