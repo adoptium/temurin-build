@@ -185,7 +185,7 @@ def doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish) {
                                                  string(name: 'OPERATING_SYSTEM', value: "${config.os}"),
                                                  string(name: 'FILTER', value: "${filter}"),
                                                  string(name: 'CERTIFICATE', value: "${certificate}"),
-                                                 [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}"],
+                                                 [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&build"],
                                     ]
                             downstreamJobName = "sign_build";
                             jobWithReleaseArtifact = signJob;
