@@ -116,7 +116,8 @@ jdkDir=$(ls "${TMP_DIR}" | head -n1)
 signRelease "${TMP_DIR}/${jdkDir}"
 
 cd "${TMP_DIR}"
-signedArchive=$(createOpenJDKArchive "${jdkDir}")
+createOpenJDKArchive "${jdkDir}"
+signedArchive="/cygdrive/c/Users/jenkins/workspace/sign_build/tmp/OpenJDK.zip"
 cd "${WORKSPACE}"
 mv "${signedArchive}" "${ARCHIVE}"
 rm -rf "${TMP_DIR}"
