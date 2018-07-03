@@ -16,17 +16,23 @@ issues and place build jobs into Groovy Pipeline scripts.
 this script.
 1. _native-build.sh_ added.  This script is invoked for building (Adopt) OpenJDK 
 binaries natively.
+1. _docker-build.sh_ added.  This script is invoked for building (Adopt) OpenJDK 
+binaries in a Docker container.
 1. _sbin/prepareWorkspace.sh_ added
 1. _sbin/colour-codes.sh_ removed to simplify code
 1. _makejdk.sh_ removed - please use _makejdk-any-platform.sh_ or (rarely) 
 _sbin/build.sh_ instead. 
 1. _sbin/common-functions.sh_ removed and its logic split 
+1. _sbin/common/common.sh_ added
 1. _sbin/common/config_init.sh_ added
-1. _sbin/common/build.template_ added for saving off the configure configuration. 
+1. _sbin/common/constants.sh_ added
+1. _sbin/build.template_ added for saving off the configure configuration. 
 1. _sbin/signalhandler.sh_ moved to _signalhandler.sh_
 1. _sbin/build.sh_ enhanced, now requires a 'saved' build configuration to run. 
 This 'saved' build configuration is created by _makejdk-any-platform.sh_ but 
 can be generated manually as well.
+1. _sign.sh_ added for code signing functionality.
+
 
 #### _makejdk-any-platform.sh_, _build.sh_, _makejdk.sh_ usage changes
 
@@ -81,13 +87,23 @@ opposed to falsely picking up the underlying native env).
 Build Farm jenkins pipeline to build Adopt OpenJDK binaries.  Sets the default 
 environment variables that are currently set in individual jobs.  This allows 
 us to now track and version these variables.
-1. New _build-farm/set-platform-specific-configurations.sh_ added for the new AdoptOpenJDK 
-Build Farm jenkins pipeline to build Adopt OpenJDK binaries.  Sets the default 
-environment variables that are currently set in individual jobs.  This allows 
-us to now track and version these variables.
-1. _pipelines/build/openjdk\<version\>\_pipeline.groovy_ files added.  These will 
-eventually replace the existing individual jobs with a Pipeline for each version 
-and variant.
+1. New _build-farm/set-platform-specific-configurations.sh_ added for the new 
+AdoptOpenJDK Build Farm jenkins pipeline to build Adopt OpenJDK binaries.  Sets 
+the default environment variables that are currently set in individual jobs.  
+This allows us to now track and version these variables.
+1. New _build-farm/set-platform-specific-configurations/<platform>.sh added for 
+the new AdoptOpenJDK Build Farm jenkins pipeline to build Adopt OpenJDK binaries.  
+Sets the default environment variables for specific platforms that are currently 
+set in individual jobs.  This allows us to now track and version these variables.
+1. New _build-farm/sign-releases.sh added for the new AdoptOpenJDK Build Farm 
+jenkins pipeline to code sign Adopt OpenJDK binaries (Mac and Windows for now).
+1. _pipelines/build/BuildBaseFile.groovy_ added. This forms the base pipeline 
+code for each variant.
+1. _pipelines/build/openjdk\_build\_pipeline.groovy_ added. This forms the base 
+pipeline code for each variant.
+1. _pipelines/build/openjdk\<version\>\_\<variant\>\_\<nightly\|release\>\_pipeline.groovy_ 
+files added.  These will eventually replace the existing individual jobs with a 
+Pipeline for each version and variant.
 
 ### Documentation and Misc
 
