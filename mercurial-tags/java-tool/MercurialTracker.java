@@ -84,7 +84,7 @@ public class MercurialTracker {
             System.out.println(" * " + switch_buffer);
             System.out.println("     This one expects value. eg " + switch_buffer + "=30");
             System.out.println("     it is setting the max depth of investigated path.");
-            System.out.println("     Note that teh compelxity is exponential in this case, sostay at 10-30. With eg 100, you can keep ti unlimited anyway.");
+            System.out.println("     Note that the complexity is exponential in this case, so stay at 10-30. With e.g. 100, you can keep it unlimited anyway.");
             System.out.println("     Without it,some high-development forests like jdk10 or jdk10-shenandoah");
             System.out.println("     will run for many hours, and have unpredictable results");
             System.out.println("     If yuou need to use this switch, you probably do not need this program at all.");

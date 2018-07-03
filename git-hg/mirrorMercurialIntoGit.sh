@@ -64,7 +64,7 @@ function addMercurialUpstream() {
   cd "$GITHUB_REPO" || exit 1
 
   git fetch origin
-  if ! git checkout "$BRANCH" ; then
+  if ! git checkout -f "$BRANCH" ; then
     git checkout -b "$BRANCH" || exit 1
   else
     git reset --hard origin/"$BRANCH" || echo "Not resetting as no upstream exists"
@@ -80,7 +80,6 @@ function addMercurialUpstream() {
 function performMergeFromMercurialIntoGit() {
   git fetch hg
   git merge hg/"$BRANCH" -m "Merge $BRANCH" || (echo "The automatic update failed, time for manual intervention!" && exit 1)
-  git gc --auto
   git push origin "$BRANCH" --tags || exit 1
 }
 
