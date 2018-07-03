@@ -97,10 +97,10 @@ Sets the default environment variables for specific platforms that are currently
 set in individual jobs.  This allows us to now track and version these variables.
 1. New _build-farm/sign-releases.sh added for the new AdoptOpenJDK Build Farm 
 jenkins pipeline to code sign Adopt OpenJDK binaries (Mac and Windows for now).
-1. _pipelines/build/BuildBaseFile.groovy_ added. This forms the base pipeline 
-code for each variant.
+1. _pipelines/build/BuildBaseFile.groovy_ added. This co-ordinates the various 
+ pipeline builds.
 1. _pipelines/build/openjdk\_build\_pipeline.groovy_ added. This forms the base 
-pipeline code for each variant.
+pipeline code for each build.
 1. _pipelines/build/openjdk\<version\>\_\<variant\>\_\<nightly\|release\>\_pipeline.groovy_ 
 files added.  These will eventually replace the existing individual jobs with a 
 Pipeline for each version and variant.
