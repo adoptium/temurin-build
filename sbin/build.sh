@@ -180,6 +180,7 @@ configuringVersionStringParameter()
     addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${OPENJDK_BUILD_NUMBER}"
   else
     if [ -z "$OPENJDK_REPO_TAG" ]; then
+      cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || echo Cannot change to "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
       OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
       echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
     fi
@@ -317,6 +318,7 @@ printJavaVersionString()
   PRODUCT_HOME=$(ls -d $OPENJDK_DIR/build/*/images/${JDK_PATH})
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "${good}'$PRODUCT_HOME' found${normal}"
+     # shellcheck disable=SC2154
      echo "${info}"
      if ! "$PRODUCT_HOME"/bin/java -version; then
        echo "${error} Error executing 'java' does not exist in '$PRODUCT_HOME'.${normal}"
@@ -352,7 +354,7 @@ removingUnnecessaryFiles()
   rm -rf "${OPENJDK_REPO_TAG}" || true
   mv "$JDK_PATH" "${OPENJDK_REPO_TAG}"
 
-  JRE_TARGET_PATH="${OPENJDK_REPO_TAG//jdk/jre}"
+  JRE_TARGET_PATH="${OPENJDK_REPO_TAG/jdk/jre}"
   [ "${JRE_TARGET_PATH}" == "${OPENJDK_REPO_TAG}" ] && JRE_TARGET_PATH="${OPENJDK_REPO_TAG}.jre"
   echo "moving ${JRE_PATH} to ${JRE_TARGET_PATH}"
   rm -rf "${JRE_TARGET_PATH}" || true
@@ -428,6 +430,8 @@ signRelease()
       "darwin"*)
         echo "Signing OSX release"
         # Login to KeyChain
+        # shellcheck disable=SC2046
+        # shellcheck disable=SC2006
         security unlock-keychain -p `cat ~/.password`
         # Sign all files with the executable permission bit set.
         FILES=$(find "${OPENJDK_REPO_TAG}" "${JRE_TARGET_PATH}" ! -perm +111 -type f || find "${OPENJDK_REPO_TAG}" -perm /111 -type f)
@@ -448,7 +452,7 @@ createOpenJDKTarArchive()
     OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   fi
   if [ -z "$JRE_TARGET_PATH" ]; then
-    JRE_TARGET_PATH="${OPENJDK_REPO_TAG//jdk/jre}"
+    JRE_TARGET_PATH="${OPENJDK_REPO_TAG/jdk/jre}"
     [ "${JRE_TARGET_PATH}" == "${OPENJDK_REPO_TAG}" ] && JRE_TARGET_PATH="${OPENJDK_REPO_TAG}.jre"
   fi
   
@@ -484,7 +488,7 @@ createOpenJDKTarArchive()
     # TARGET_DIR should be a dir name as the name suggests, not a full filename
     # This is currnently assuming TARGET_DIT has JDK in the filename, otherwise
     # it wiill get overridden
-    mv "OpenJRE${EXT}" "${TARGET_DIR//JDK/JRE}"
+    mv "OpenJRE${EXT}" "${TARGET_DIR/JDK/JRE}"
     mv "OpenJDK${EXT}" "${TARGET_DIR}"
   fi
 

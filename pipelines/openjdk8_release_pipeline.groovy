@@ -1,14 +1,16 @@
 println "building ${JDK_VERSION}"
 
-def buildPlatforms = ['Mac', 'Windows', 'Linux', 'zLinux', 'ppc64le', 'AIX']
+def buildPlatforms = ['Mac', 'Windows', 'Linux', 'zLinux', 'ppc64le', 'AIX', 'aarch64']
 def buildMaps = [:]
-buildMaps['Mac'] = [test:true, ArchOSs:'x86-64_macos']
-buildMaps['Windows'] = [test:false, ArchOSs:'x86-64_windows']
-buildMaps['Linux'] = [test:true, ArchOSs:'x86-64_linux']
-buildMaps['zLinux'] = [test:true, ArchOSs:'s390x_linux']
-buildMaps['ppc64le'] = [test:true, ArchOSs:'ppc64le_linux']
+def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyMMddHHmm")
+
+buildMaps['Mac'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_macos']
+buildMaps['Windows'] = [test:['openjdktest'], ArchOSs:'x86-64_windows']
+buildMaps['Linux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_linux']
+buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
+buildMaps['ppc64le'] = [test:['openjdktest', 'systemtest'], ArchOSs:'ppc64le_linux']
 buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
-def typeTests = ['openjdktest', 'systemtest']
+buildMaps['aarch64'] = [test:['openjdktest'], ArchOSs:'aarch64_linux']
 
 def jobs = [:]
 for ( int i = 0; i < buildPlatforms.size(); i++ ) {
@@ -18,10 +20,12 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 	jobs[platform] = {
 		def buildJob
 		stage('build') {
-			buildJob = build job: "openjdk8_build_${archOS}"
+			buildJob = build job: "openjdk8_build_${archOS}",
+			parameters: [string(name: 'TAG', value: "${JDK_TAG}"),
+				     string(name: 'PIPELINE_TIMESTAMP', value: "${PIPELINE_TIMESTAMP}")]
 		}
 		if (buildMaps[platform].test) {
-			stage('test') {
+			buildMaps[platform].test.each {
 				typeTests.each {
 					build job:"openjdk8_hs_${it}_${archOS}",
 							propagate: false,
@@ -36,7 +40,6 @@ parallel jobs
 
 def checksumJob
 stage('checksums') {
-	build job: 'openjdk8_build_checksum'
 	checksumJob = build job: 'openjdk8_build_checksum',
 							parameters: [string(name: 'PRODUCT', value: 'releases')]
 }
@@ -44,8 +47,8 @@ stage('installers') {
 	build job: 'openjdk8_build_installer', parameters: [string(name: 'VERSION', value: "${JDK_VERSION}")]
 }
 stage('publish release') {
-	build job: 'openjdk_release_tool', 
-				parameters: [string(name: 'REPO', value: 'release'),
+	build job: 'openjdk_release_tool',
+				parameters: [string(name: 'REPO', value: 'releases'),
 							string(name: 'TAG', value: "${JDK_TAG}"),
 							string(name: 'VERSION', value: 'jdk8'),
 							string(name: 'CHECKSUM_JOB_NAME', value: "openjdk8_build_checksum"),

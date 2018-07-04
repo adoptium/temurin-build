@@ -2,12 +2,13 @@ println "building ${JDK_VERSION}"
 
 def buildPlatforms = ['Linux', 'zLinux', 'ppc64le', 'AIX', 'Windows']
 def buildMaps = [:]
-buildMaps['Linux'] = [test:true, ArchOSs:'x86-64_linux']
-buildMaps['zLinux'] = [test:true, ArchOSs:'s390x_linux']
-buildMaps['ppc64le'] = [test:true, ArchOSs:'ppc64le_linux']
+def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyMMddHHmm")
+
+buildMaps['Linux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_linux']
+buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
+buildMaps['ppc64le'] = [test:['openjdktest', 'systemtest'], ArchOSs:'ppc64le_linux']
 buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
-buildMaps['Windows'] = [test:false, ArchOSs:'x86-64_windows']
-def typeTests = ['openjdktest', 'systemtest']
+buildMaps['Windows'] = [test:['openjdktest'], ArchOSs:'x86-64_windows']
 
 def jobs = [:]
 for ( int i = 0; i < buildPlatforms.size(); i++ ) {
@@ -17,11 +18,13 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 	jobs[platform] = {
 		def buildJob
 		stage('build') {
-			buildJob = build job: "openjdk8_openj9_build_${archOS}"
+			buildJob = build job: "openjdk8_openj9_build_${archOS}",
+					parameters: [string(name: 'BRANCH', value: "$ALT_BRANCH"),
+					string(name: 'PIPELINE_TIMESTAMP', value: "${PIPELINE_TIMESTAMP}")]
 		}
 		if (buildMaps[platform].test) {
 			stage('test') {
-				typeTests.each {
+				buildMaps[platform].test.each {
 					build job:"openjdk8_j9_${it}_${archOS}",
 							propagate: false,
 							parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJob.getNumber()}"),

@@ -1,14 +1,16 @@
 println "building ${JDK_VERSION}"
 
-def buildPlatforms = ['Mac', 'Linux', 'zLinux', 'ppc64le', 'Windows', 'AIX', 'arm64']
+def buildPlatforms = ['Mac', 'Linux', 'zLinux', 'ppc64le', 'Windows', 'AIX', 'aarch64']
 def buildMaps = [:]
+def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyMMddHHmm")
+
 buildMaps['Mac'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_macos']
 buildMaps['Windows'] = [test:['openjdktest'], ArchOSs:'x86-64_windows']
 buildMaps['Linux'] = [test:['openjdktest', 'systemtest', 'externaltest'], ArchOSs:'x86-64_linux']
 buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
 buildMaps['ppc64le'] = [test:['openjdktest', 'systemtest'], ArchOSs:'ppc64le_linux']
 buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
-buildMaps['arm64'] = [test:['openjdktest'], ArchOSs:'arm64_linux']
+buildMaps['aarch64'] = [test:['openjdktest'], ArchOSs:'aarch64_linux']
 
 def jobs = [:]
 for ( int i = 0; i < buildPlatforms.size(); i++ ) {
@@ -20,7 +22,9 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 		def buildJobNum
 		def checksumJob
 		stage('build') {
-			buildJob = build job: "openjdk9_build_${archOS}"
+			buildJob = build job: "openjdk9_build_${archOS}",
+					parameters: [string(name: 'PIPELINE_TIMESTAMP', value: "${PIPELINE_TIMESTAMP}")]
+
 			buildJobNum = buildJob.getNumber()
 		}
 		if (buildMaps[platform].test) {
