@@ -26,8 +26,8 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 				     string(name: 'PIPELINE_TIMESTAMP', value: "${PIPELINE_TIMESTAMP}")]
 		}
 		if (buildMaps[platform].test) {
-			buildMaps[platform].test.each {
-				typeTests.each {
+			stage('test') {
+				buildMaps[platform].test.each {
 					build job:"openjdk10_hs_${it}_${archOS}",
 							propagate: false,
 							parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJob.getNumber()}"),
