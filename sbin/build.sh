@@ -352,7 +352,7 @@ removingUnnecessaryFiles()
   rm -rf "${OPENJDK_REPO_TAG}" || true
   mv "$JDK_PATH" "${OPENJDK_REPO_TAG}"
 
-  JRE_TARGET_PATH="${OPENJDK_REPO_TAG//jdk/jre}"
+  JRE_TARGET_PATH="${OPENJDK_REPO_TAG/jdk/jre}"
   [ "${JRE_TARGET_PATH}" == "${OPENJDK_REPO_TAG}" ] && JRE_TARGET_PATH="${OPENJDK_REPO_TAG}.jre"
   echo "moving ${JRE_PATH} to ${JRE_TARGET_PATH}"
   rm -rf "${JRE_TARGET_PATH}" || true
@@ -448,7 +448,7 @@ createOpenJDKTarArchive()
     OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   fi
   if [ -z "$JRE_TARGET_PATH" ]; then
-    JRE_TARGET_PATH="${OPENJDK_REPO_TAG//jdk/jre}"
+    JRE_TARGET_PATH="${OPENJDK_REPO_TAG/jdk/jre}"
     [ "${JRE_TARGET_PATH}" == "${OPENJDK_REPO_TAG}" ] && JRE_TARGET_PATH="${OPENJDK_REPO_TAG}.jre"
   fi
   
@@ -484,7 +484,7 @@ createOpenJDKTarArchive()
     # TARGET_DIR should be a dir name as the name suggests, not a full filename
     # This is currnently assuming TARGET_DIT has JDK in the filename, otherwise
     # it wiill get overridden
-    mv "OpenJRE${EXT}" "${TARGET_DIR//JDK/JRE}"
+    mv "OpenJRE${EXT}" "${TARGET_DIR/JDK/JRE}"
     mv "OpenJDK${EXT}" "${TARGET_DIR}"
   fi
 
