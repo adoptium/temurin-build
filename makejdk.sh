@@ -25,7 +25,7 @@
 # You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# shellcheck disable=SC1091
+# shellcheck disable=SC1090
 source "$SCRIPT_DIR/sbin/common-functions.sh"
 
 OPENJDK_REPO_NAME=${OPENJDK_REPO_NAME:-openjdk}
@@ -387,10 +387,8 @@ buildAndTestOpenJDKViaDocker()
      fi
   else
      echo "Building as you've not specified -k or --keep"
-     echo "$good"
      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER" | awk '{print $1 }' | xargs -I {} docker rm -f {}
      buildDockerContainer
-     echo "$normal"
   fi
 
   mkdir -p "${WORKING_DIR}/target"
