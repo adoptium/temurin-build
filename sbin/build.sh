@@ -446,7 +446,9 @@ signRelease()
 
 createOpenJDKTarArchive()
 {
-  echo "Archiving the build OpenJDK image..."
+  COMPRESS=gzip
+  if which pigz >/dev/null 2>&1; then COMPRESS=pigz; fi
+  echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
 
   if [ -z "$OPENJDK_REPO_TAG" ]; then
     OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
@@ -459,8 +461,8 @@ createOpenJDKTarArchive()
   echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}. JRE path will be ${JRE_TARGET_PATH}"
 
   if [ "$USE_DOCKER" == "true" ] ; then
-    GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
-    GZIP=-9 tar -czf OpenJRE.tar.gz ./"${JRE_TARGET_PATH}"
+    GZIP=-9 tar --use-compress-program=$COMPRESS -cf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+    GZIP=-9 tar --use-compress-program=$COMPRESS -cf OpenJRE.tar.gz ./"${JRE_TARGET_PATH}"
     EXT=".tar.gz"
 
     echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
@@ -473,12 +475,12 @@ createOpenJDKTarArchive()
         zip -r -q OpenJRE.zip ./"${JRE_TARGET_PATH}"
       EXT=".zip" ;;
       aix)
-        GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
-        GZIP=-9 tar -cf - ./"${JRE_TARGET_PATH}"/ | gzip -c > OpenJRE.tar.gz
+        GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | $COMPRESS -c > OpenJDK.tar.gz
+        GZIP=-9 tar -cf - ./"${JRE_TARGET_PATH}"/ | $COMPRESS -c > OpenJRE.tar.gz
       EXT=".tar.gz" ;;
       *)
-        GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
-        GZIP=-9 tar -czf OpenJRE.tar.gz ./"${JRE_TARGET_PATH}"
+        GZIP=-9 tar --use-compress-program=$COMPRESS -cf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+        GZIP=-9 tar --use-compress-program=$COMPRESS -cf OpenJRE.tar.gz ./"${JRE_TARGET_PATH}"
       EXT=".tar.gz" ;;
     esac
     echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
