@@ -65,7 +65,7 @@ done
 
 export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG="false"
 export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG="false"
-if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ] || [ "$OPENJDK_CORE_VERSION" == "amber" ]; then
+if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ] || [ "$OPENJDK_CORE_VERSION" == "jdk11" ] || [ "$OPENJDK_CORE_VERSION" == "amber" ]; then
   export JDK_PATH="jdk"
   export JRE_PATH="jre"
   if [ "$OPENJDK_CORE_VERSION" == "jdk9" ]; then

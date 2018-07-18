@@ -217,7 +217,7 @@ setTargetDirectoryIfProvided()
 
 checkOpenJDKGitRepo()
 {
-  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && { [ "$OPENJDK_CORE_VERSION" == "jdk8" ] || [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ] ; }  ; then
+  if [ -d "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" ] && { [ "$OPENJDK_CORE_VERSION" == "jdk8" ] || [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ] || [ "$OPENJDK_CORE_VERSION" == "jdk11" ] ; }  ; then
     GIT_VERSION=$(git --git-dir "${WORKING_DIR}/${OPENJDK_REPO_NAME}/.git" remote -v | grep "${OPENJDK_CORE_VERSION}")
      echo "${GIT_VERSION}"
      if [ "$GIT_VERSION" ]; then
