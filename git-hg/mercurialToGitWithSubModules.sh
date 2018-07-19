@@ -71,7 +71,9 @@ function setMercurialRepoAndTagsToRetrieve() {
 }
 
 function createDirectories() {
+  echo "Making dirs"
   mkdir -p "$WORKSPACE/$GITHUB_REPO" "$WORKSPACE/openjdk/mirror"
+  echo "Made dirs"
 }
 
 # Clone current Git repo
@@ -120,20 +122,27 @@ function cloneMercurialOpenJDKRepo() {
 
   # Processing each TAG in turn (including HEAD)
   for NEWTAG in $TAGS ; do
+
+    # Go back to where we have the AdoptOpenJDK source code to see what we need
+    # to merge in from the mercurial mirror
     cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
 
+    # If we already have the tag then don't update anything
     if git tag | grep "^$NEWTAG$" ; then
       echo "Skipping $NEWTAG as it already exists"
     else
+      # Go to the mirror and reset to the tag that we want to merge in
       cd "$WORKSPACE/openjdk/mirror" || exit 1
       git reset --hard "$NEWTAG"
 
+      # Merge in the base set of source code (sub modules to follow) for the tag
       echo "$(date +%T)": "Updating master branch for $NEWTAG"
       cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
       git checkout master
       git fetch "$WORKSPACE/openjdk/mirror"
       git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
 
+      # For each module
       for module in "${MODULES[@]}" ; do
         if [ ! -d "$WORKSPACE/openjdk/$module" ]; then
           mkdir -p "$WORKSPACE/openjdk/$module"
