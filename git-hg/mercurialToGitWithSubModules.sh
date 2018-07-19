@@ -30,7 +30,7 @@
 #
 ################################################################################
 
-set -euo pipefail
+set -euo
 
 echo "Import common functionality"
 # shellcheck disable=SC1091
@@ -71,9 +71,7 @@ function setMercurialRepoAndTagsToRetrieve() {
 }
 
 function createDirectories() {
-  echo "Making dirs"
   mkdir -p "$WORKSPACE/$GITHUB_REPO" "$WORKSPACE/openjdk/mirror"
-  echo "Made dirs"
 }
 
 # Clone current Git repo
