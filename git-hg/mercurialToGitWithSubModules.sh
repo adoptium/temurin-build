@@ -147,30 +147,38 @@ function cloneMercurialOpenJDKRepo() {
 
       # For each module
       for module in "${MODULES[@]}" ; do
-        if [ ! -d "$WORKSPACE/openjdk/$module" ]; then
-          mkdir -p "$WORKSPACE/openjdk/$module"
-          cd "$WORKSPACE/openjdk/$module" || exit 1
+
+        # If we don't have the submodule already mirrored, then mirror it
+        if [ ! -d "$WORKSPACE/openjdk/mirror/$module" ]; then
+          mkdir -p "$WORKSPACE/openjdk/mirror/$module"
+          cd "$WORKSPACE/openjdk/mirror/$module" || exit 1
           git init
           git checkout master || git checkout -b master
           echo "$(date +%T)": "Clone $module"
-          git clone "hg::${HG_REPO}/$module" || exit 1
+          git clone "hg::${HG_REPO}/$module" . || exit 1
           echo "$(date +%T)": "GIT filter on $module"
-          cd "$module" || exit
           git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
-          cd .. || exit
         fi
+
+        # Then go to the TAG for the submodule
         echo "$(date +%T)": "GIT pull/reset on $module at $NEWTAG"
-        cd "$WORKSPACE/openjdk/$module/$module" || exit 1
+        cd "$WORKSPACE/openjdk/mirror/$module" || exit 1
         git fetch origin
         git reset --hard origin/master
         git fetch --tags
         git reset --hard "$NEWTAG"
+
+        # Then go to the Adopt clone
         cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+
+        # If the module doesn't exist at the adopt clone, create it
         if [ ! -d "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" ] ; then
           mkdir -p "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module"
         fi
+
+        # Go into the Adopt clone module and fetch in the mirrored version
         cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" || exit 1
-        git fetch "$WORKSPACE/openjdk/$module"
+        git fetch "$WORKSPACE/openjdk/mirror/$module"
         echo "$(date +%T)": GIT filter on "$module"
         if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
           if ! tty; then
@@ -184,8 +192,11 @@ function cloneMercurialOpenJDKRepo() {
           read -r _
         fi
       done
+
+      # Then push the changes back to master
       cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
       git push origin master
+
 
       echo "Pulling in changes to $GITHUB_REPO branch"
       git checkout master
@@ -200,6 +211,8 @@ function cloneMercurialOpenJDKRepo() {
           read -r _
         fi
       fi
+
+
       [ "$NEWTAG" != "HEAD" ] && git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
       echo "Deleting the old version of the tag from the server if it is present or push will fail"
       # shellcheck disable=SC2015
