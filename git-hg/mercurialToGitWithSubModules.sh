@@ -152,15 +152,18 @@ function cloneMercurialOpenJDKRepo() {
         if [ ! -d "$WORKSPACE/openjdk/mirror/$module" ]; then
           mkdir -p "$WORKSPACE/openjdk/mirror/$module"
           cd "$WORKSPACE/openjdk/mirror/$module" || exit 1
+          git init
           echo "$(date +%T)": "Clone $module"
-          git clone "hg::${HG_REPO}/$module" . || exit 1
+          git clone "hg::${HG_REPO}/$module $module" || exit 1
           echo "$(date +%T)": "GIT filter on $module"
+          # This looks a bit odd but trust us
+          cd "$WORKSPACE/openjdk/mirror/$module/$module" || exit 1
           git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
         fi
 
         # Then go to the TAG for the submodule
         echo "$(date +%T)": "GIT pull/reset on $module at $NEWTAG"
-        cd "$WORKSPACE/openjdk/mirror/$module" || exit 1
+        cd "$WORKSPACE/openjdk/mirror/$module/$module" || exit 1
         git fetch origin
         git reset --hard origin/master
         git fetch --tags
@@ -175,6 +178,8 @@ function cloneMercurialOpenJDKRepo() {
         fi
 
         # Go into the Adopt clone module and fetch in the mirrored version
+        # cd /home/jenkins/.jenkins/workspace/git-hg-8u/openjdk-jdk8u/openjdk-jdk8u/corba
+        # git fetch $WORKSPACE/openjdk/mirror/corba
         cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" || exit 1
         git fetch "$WORKSPACE/openjdk/mirror/$module"
         echo "$(date +%T)": GIT filter on "$module"
