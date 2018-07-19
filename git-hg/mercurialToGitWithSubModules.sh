@@ -149,42 +149,37 @@ function cloneMercurialOpenJDKRepo() {
       for module in "${MODULES[@]}" ; do
 
         # If we don't have the submodule already mirrored, then mirror it
-        if [ ! -d "$WORKSPACE/openjdk/mirror/$module" ]; then
-          mkdir -p "$WORKSPACE/openjdk/mirror/$module"
-          cd "$WORKSPACE/openjdk/mirror/$module" || exit 1
-          git init
+        if [ ! -d "$WORKSPACE/openjdk/$module-workingdir" ]; then
+
+          # Make a directory to work in
+          mkdir -p "$WORKSPACE/openjdk/$module-workingdir"
+          cd "$WORKSPACE/openjdk/$module-workingdir" || exit 1
+
+          # Clone the sub module
           echo "$(date +%T)": "Clone $module"
-          git clone "hg::${HG_REPO}/$module" "$module" || exit 1
-          git add "$module"
-          git commit -a -m "add the sub module to the repo"
+          git clone "hg::${HG_REPO}/$module" . || exit 1
+
+          # Get to to the tag that we want
+          git fetch --tags
+          git reset --hard "$NEWTAG"
+
+          # Create a directory structure so our git fetch later on can work
+          mkdir -p "$module"
+          git mv -k ./* "$module"
+          git commit -a -m "relocate to $module sub directory"
+
+          # This looks a bit odd but trust us, re-write history
           echo "$(date +%T)": "GIT filter on $module"
-          # This looks a bit odd but trust us
-          cd "$WORKSPACE/openjdk/mirror/$module/$module" || exit 1
+          cd "$WORKSPACE/openjdk/mirror/$module-workingdir/$module" || exit 1
           git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
         fi
-
-        # Then go to the TAG for the submodule
-        echo "$(date +%T)": "GIT pull/reset on $module at $NEWTAG"
-        cd "$WORKSPACE/openjdk/mirror/$module/$module" || exit 1
-        git fetch origin
-        git reset --hard origin/master
-        git fetch --tags
-        git reset --hard "$NEWTAG"
 
         # Then go to the Adopt clone
         cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
 
-        # If the module doesn't exist at the adopt clone, create it
-        if [ ! -d "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" ] ; then
-          mkdir -p "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module"
-        fi
-
-        # Go into the Adopt clone module and fetch in the mirrored version
-        # cd /home/jenkins/.jenkins/workspace/git-hg-8u/openjdk-jdk8u/openjdk-jdk8u/corba
-        # git fetch $WORKSPACE/openjdk/mirror/corba
-        cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" || exit 1
-        git fetch "$WORKSPACE/openjdk/mirror/$module"
-        echo "$(date +%T)": GIT filter on "$module"
+        # Now fetch
+        git fetch "$WORKSPACE/openjdk/mirror/$module-workingdir"
+        echo "$(date +%T)": GIT merge of "$module"
         if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
           if ! tty; then
             echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
@@ -198,10 +193,11 @@ function cloneMercurialOpenJDKRepo() {
         fi
       done
 
+      exit
+
       # Then push the changes back to master
       cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
       git push origin master
-
 
       echo "Pulling in changes to $GITHUB_REPO branch"
       git checkout master
