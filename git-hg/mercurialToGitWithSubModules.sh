@@ -71,7 +71,7 @@ function setMercurialRepoAndTagsToRetrieve() {
 }
 
 function createDirectories() {
-  mkdir -p  "$WORKSPACE/$GITHUB_REPO" "$WORKSPACE/openjdk/mirror"
+  mkdir -p "$WORKSPACE/$GITHUB_REPO" "$WORKSPACE/openjdk/mirror"
 }
 
 # Clone current Git repo
@@ -95,26 +95,33 @@ function cloneGitOpenJDKRepo() {
 # Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
   echo "Get base openjdk repository"
+
+  # Go to where we have the git mirror of the Mercurial source code
   cd "$WORKSPACE/openjdk/mirror" || exit 1
 
+  # If we haven't already got a git mirror then then do an initial git clone of mercurial
   if [ ! -d "$OPENJDK_VERSION" ] ; then
     git init
     git clone "hg::${HG_REPO}"
   fi
 
+  # Then swap to the master branch (which would match mercurial's HEAD)
   cd "$OPENJDK_VERSION" || exit 1
   git fetch origin
   git reset --hard origin/master
 
+  # TODO don't know what this actually does
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 
-  cd "$WORKSPACE/openjdk/mirror" || exit
-
+  # Fetch all of the tags in the git mirror (i.e. the cloned mercurial tags)
+  cd "$WORKSPACE/openjdk/mirror" || exit 1
   git pull "$OPENJDK_VERSION"
   git fetch --tags "$OPENJDK_VERSION"
 
   # Processing each TAG in turn (including HEAD)
   for NEWTAG in $TAGS ; do
+    cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+
     if git tag | grep "^$NEWTAG$" ; then
       echo "Skipping $NEWTAG as it already exists"
     else
