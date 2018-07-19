@@ -152,8 +152,6 @@ function cloneMercurialOpenJDKRepo() {
         if [ ! -d "$WORKSPACE/openjdk/mirror/$module" ]; then
           mkdir -p "$WORKSPACE/openjdk/mirror/$module"
           cd "$WORKSPACE/openjdk/mirror/$module" || exit 1
-          git init
-          git checkout master || git checkout -b master
           echo "$(date +%T)": "Clone $module"
           git clone "hg::${HG_REPO}/$module" . || exit 1
           echo "$(date +%T)": "GIT filter on $module"
