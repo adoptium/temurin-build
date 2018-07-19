@@ -154,7 +154,7 @@ function cloneMercurialOpenJDKRepo() {
           cd "$WORKSPACE/openjdk/mirror/$module" || exit 1
           git init
           echo "$(date +%T)": "Clone $module"
-          git clone "hg::${HG_REPO}/$module $module" || exit 1
+          git clone "hg::${HG_REPO}/$module" "$module" || exit 1
           echo "$(date +%T)": "GIT filter on $module"
           # This looks a bit odd but trust us
           cd "$WORKSPACE/openjdk/mirror/$module/$module" || exit 1
