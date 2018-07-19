@@ -181,7 +181,7 @@ function cloneMercurialOpenJDKRepo() {
         # cd /home/jenkins/.jenkins/workspace/git-hg-8u/openjdk-jdk8u/openjdk-jdk8u/corba
         # git fetch $WORKSPACE/openjdk/mirror/corba
         cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" || exit 1
-        git fetch "$WORKSPACE/openjdk/mirror/$module"
+        git fetch "$WORKSPACE/openjdk/mirror/$module/$module"
         echo "$(date +%T)": GIT filter on "$module"
         if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
           if ! tty; then
