@@ -206,7 +206,7 @@ function cloneMercurialOpenJDKRepo() {
       [ "$NEWTAG" != "HEAD" ] && git push origin :refs/tags/"$NEWTAG" || true
       [ "$NEWTAG" == "HEAD" ] && git push origin master
       [ "$NEWTAG" != "HEAD" ] && git push origin master --tags
-    fi
+    #fi
   done
 }
 
