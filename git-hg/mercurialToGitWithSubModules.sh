@@ -155,6 +155,8 @@ function cloneMercurialOpenJDKRepo() {
           git init
           echo "$(date +%T)": "Clone $module"
           git clone "hg::${HG_REPO}/$module" "$module" || exit 1
+          git add "$module"
+          git commit -a -m "add the sub module to the repo"
           echo "$(date +%T)": "GIT filter on $module"
           # This looks a bit odd but trust us
           cd "$WORKSPACE/openjdk/mirror/$module/$module" || exit 1
@@ -181,7 +183,7 @@ function cloneMercurialOpenJDKRepo() {
         # cd /home/jenkins/.jenkins/workspace/git-hg-8u/openjdk-jdk8u/openjdk-jdk8u/corba
         # git fetch $WORKSPACE/openjdk/mirror/corba
         cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO/$module" || exit 1
-        git fetch "$WORKSPACE/openjdk/mirror/$module/$module"
+        git fetch "$WORKSPACE/openjdk/mirror/$module"
         echo "$(date +%T)": GIT filter on "$module"
         if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
           if ! tty; then
