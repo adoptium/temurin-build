@@ -64,10 +64,13 @@ function setMercurialRepoAndTagsToRetrieve() {
             # Would be nice to pull out the tags in an automated fashion, but
             # OpenJDK does not provide this yet.
             if [ -z "$TAGS" ] ; then
-                TAGS="jdk8u144-b34 jdk8u151-b12 jdk8u152-b16 jdk8u161-b12 jdk8u162-b12 jdk8u172-b03 jdk8u172-b11 jdk8u181-b13 HEAD"
+                TAGS="jdk8u144-b34 jdk8u151-b12 jdk8u152-b16 jdk8u161-b12 jdk8u162-b12 jdk8u171-b03 jdk8u172-b11 jdk8u181-b13 HEAD"
             fi;;
      jdk9*) HG_REPO=http://hg.openjdk.java.net/jdk-updates/jdk9u
-            [ -z "$TAGS" ] && TAGS="jdk-9+181 jdk-9.0.1+11 jdk-9.0.3+9 jdk-9.0.4+11 HEAD";;
+
+            if [ -z "$TAGS" ] ; then
+                TAGS="jdk-9+181 jdk-9.0.1+11 jdk-9.0.3+9 jdk-9.0.4+11 HEAD"
+            fi;;
          *) Unknown JDK version - only jdk8u and jdk9 are supported; exit 1;;
   esac
 }
@@ -128,9 +131,9 @@ function cloneMercurialOpenJDKRepo() {
     cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
 
     # If we already have the tag then don't update anything
-    if git tag | grep "^$NEWTAG$" ; then
-      echo "Skipping $NEWTAG as it already exists"
-    else
+    #if git tag | grep "^$NEWTAG$" ; then
+    #  echo "Skipping $NEWTAG as it already exists"
+    #else
       # Go to the mirror and reset to the tag that we want to merge in
       cd "$WORKSPACE/openjdk/mirror" || exit 1
       git reset --hard "$NEWTAG"
