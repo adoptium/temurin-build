@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 
-set -euo pipefail
+set -euo
 
 git_repo_version=$1
 hg_root_forest=${2:-${1}}                  # for backwards compatibility
