@@ -233,12 +233,12 @@ function cloneMercurialOpenJDKRepo() {
         fi
       fi
 
-      [ "$NEWTAG" != "HEAD" ] && git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
+      [ "$NEWTAG" != "HEAD" ] && git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master" || true
       echo "Deleting the old version of the tag from the server if it is present or push will fail"
       # shellcheck disable=SC2015
       [ "$NEWTAG" != "HEAD" ] && git push origin :refs/tags/"$NEWTAG" || true
       [ "$NEWTAG" == "HEAD" ] && git push origin master
-      [ "$NEWTAG" != "HEAD" ] && git push origin master --tags
+      [ "$NEWTAG" != "HEAD" ] && git push origin master --tags || true
     #fi
   done
 }

@@ -19,12 +19,13 @@ git_repo_version=$1
 hg_root_forest=${2:-${1}}                  # for backwards compatibility
 hg_repo_version=${3:-${hg_root_forest}}    # for backwards compatibility
 
-#cleanup
+#cleanup TODO put back
 #rm -rf openjdk-git openjdk-hg
 
 echo "git repo version: ${git_repo_version}"
 echo "hg repo version: ${hg_root_forest}/${hg_repo_version}"
 
+# TODO put back
 #git clone -b master "https://github.com/AdoptOpenJDK/openjdk-${git_repo_version}.git" openjdk-git || exit 1
 #hg clone "http://hg.openjdk.java.net/${hg_root_forest}/${hg_repo_version}" openjdk-hg || exit 1
 
@@ -36,14 +37,11 @@ chmod u+x get_source.sh
 cd - || exit 1
 
 pwd
-echo "finding diffNum"
 diffNum=$(diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | wc -l)
-echo "found diffNum"
 
-echo "Seeing if diffNum is > 0"
 if [ "$diffNum" -gt 0 ]; then
   echo "ERROR - THE DIFF HAS DETECTED UNKNOWN FILES"
-  diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | grep 'only in' || exit 1
+  diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | grep 'Only in' || exit 1
   exit 1
 fi
 
