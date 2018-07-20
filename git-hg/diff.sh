@@ -30,14 +30,14 @@ echo "hg repo version: ${hg_root_forest}/${hg_repo_version}"
 
 cd openjdk-hg || exit 1
 
-echo "Going to execute get_source.sh"
 chmod u+x get_source.sh
 ./get_source.sh
-echo "Executed get_source.sh"
 
 cd - || exit 1
 
+echo "finding diffNum"
 diffNum=$(diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | wc -l)
+echo "$diffNum"
 
 if [ "$diffNum" -gt 0 ]; then
   echo "ERROR - THE DIFF HAS DETECTED UNKNOWN FILES"
@@ -47,6 +47,7 @@ fi
 
 # get latest git tag
 
+echo "entering openjdk-git"
 cd openjdk-git || exit 1
 gitTag=$(git describe --abbrev=0 --tags) || exit 1
 cd - || exit 1
