@@ -31,6 +31,7 @@ echo "hg repo version: ${hg_root_forest}/${hg_repo_version}"
 cd openjdk-hg || exit 1
 
 echo "Going to execute get_source.sh"
+chmod u+x get_source.sh
 ./get_source.sh
 echo "Executed get_source.sh"
 
