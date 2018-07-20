@@ -37,8 +37,9 @@ cd - || exit 1
 
 echo "finding diffNum"
 diffNum=$(diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | wc -l)
-echo "$diffNum"
+echo "found diffNum"
 
+echo "Seeing if diffNum is > 0"
 if [ "$diffNum" -gt 0 ]; then
   echo "ERROR - THE DIFF HAS DETECTED UNKNOWN FILES"
   diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | grep 'only in' || exit 1
