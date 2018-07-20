@@ -35,6 +35,7 @@ chmod u+x get_source.sh
 
 cd - || exit 1
 
+pwd
 echo "finding diffNum"
 diffNum=$(diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | wc -l)
 echo "found diffNum"
