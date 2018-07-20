@@ -186,11 +186,6 @@ function cloneMercurialOpenJDKRepo() {
           git fetch --tags
           git reset --hard "$NEWTAG"
 
-          # Create a directory stru cture so our git fetch later on can work
-          #mkdir -p "$module"
-          #git mv -k ./* "$module"
-          #git commit -a -m "relocate to $module sub directory"
-
           # This looks a bit odd but trust us, take all files and prepend corba to them
           echo "$(date +%T)": "GIT filter on $module"
           cd "$WORKSPACE/openjdk/$module-workingdir" || exit 1

@@ -26,7 +26,7 @@ echo "git repo version: ${git_repo_version}"
 echo "hg repo version: ${hg_root_forest}/${hg_repo_version}"
 
 git clone -b master "https://github.com/AdoptOpenJDK/openjdk-${git_repo_version}.git" openjdk-git || exit 1
-hg clone "http://hg.openjdk.java.net/${hg_root_forest}/${hg_repo_version}" openjdk-hg || exit 1
+hg clone "http://hg.openjdk.java.net/${hg_root_forest}/${hg_repo_version}" openjdk-hg || (echo "hg clone failed" && exit 1)
 
 cd openjdk-hg || exit 1
 bash get_source.sh
