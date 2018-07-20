@@ -24,6 +24,30 @@
 #
 # Local setup of the Git clone of a OpenJDK mercurial repository for Java 8/9
 #
+# There are Git two repos involved in the overall operation, which have *no*
+# common history.  One is the Git clone of the AdoptOpenJDK GitHub repo for
+# $OPENJDK_VERSION (the target). The other is a Git mirror of the Mercurial
+# forests at OpenJDK (the source).
+#
+# The overall technique used is to:
+#
+# 1. Get a local Git clone of the AdoptOpenJDK GitHub repo
+# 2. Get a local Git clone of the OpenJDK Mercurial Forests
+# 3. Get to the right tag
+# 4. Merge in any changes from the local Git clone of the base OpenJDK Mercurial
+#    forest into the Git clone of the AdoptOpenJDK GitHub repo followed by the
+#    merging the forests which represent the sub modules (corba, langtools etc).
+# 5. Push that merged result back to the AdoptOpenJDK GitHub repo
+#
+# Repeat 3-5 as needed
+#
+# As there is no common history between the two repos we have to go to great
+# lengths to merge in the changes cleanly including lots of resetting and
+# re-writing histories etc.
+#
+# WARN:  Please do not make changes to this script without discussing on the
+# build channel on the AdoptOpenJDK Slack.
+#
 # Initial repo will be pushed to git@github.com:AdoptOpenJDK/openjdk-$GITHUB_REPO.git
 #
 # TODO Make the location of the git push a parameter
@@ -99,35 +123,34 @@ function cloneGitOpenJDKRepo() {
 
 # Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
-  echo "Get base openjdk repository"
 
-  # Go to where we have the git mirror of the Mercurial source code
+  # Go to the location of the Git mirror of the Mercurial OpenJDK source code
   cd "$WORKSPACE/openjdk/mirror" || exit 1
 
-  # If we haven't already got a git mirror then then do an initial git clone of mercurial
+  # If we haven't already mirrored the $OPENJDK_VERSION then git clone
   if [ ! -d "$OPENJDK_VERSION" ] ; then
     git init
     git clone "hg::${HG_REPO}"
   fi
 
-  # Then swap to the master branch (which would match mercurial's HEAD)
+  # Move into the $OPENJDK_VERSION and make sure we're on the latest master
   cd "$OPENJDK_VERSION" || exit 1
   git fetch origin
   git reset --hard origin/master
 
-  # TODO don't know what this actually does
+  # Remove certain Mercurial specific files from history
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 
-  # Fetch all of the tags in the git mirror (i.e. the cloned mercurial tags)
+  # Fetch all of the tags in the Git mirror (i.e. the Mercurial OpenjDK tags)
   cd "$WORKSPACE/openjdk/mirror" || exit 1
   git pull "$OPENJDK_VERSION"
   git fetch --tags "$OPENJDK_VERSION"
 
-  # Processing each TAG in turn (including HEAD)
+  # Process each TAG in turn (including HEAD)
   for NEWTAG in $TAGS ; do
 
-    # Go back to where we have the AdoptOpenJDK source code to see what we need
-    # to merge in from the mercurial mirror
+    # Go back to where we have the AdoptOpenJDK Git clone to see what we need
+    # to merge in from the Git mirror of Mercurial
     cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
 
     # If we already have the tag then don't update anything
@@ -138,7 +161,7 @@ function cloneMercurialOpenJDKRepo() {
       cd "$WORKSPACE/openjdk/mirror" || exit 1
       git reset --hard "$NEWTAG"
 
-      # Merge in the base set of source code (sub modules to follow) for the tag
+      # Merge in the base Mercurial source code (sub modules to follow) for the tag
       echo "$(date +%T)": "Updating master branch for $NEWTAG"
       cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
       git checkout master
@@ -163,7 +186,7 @@ function cloneMercurialOpenJDKRepo() {
           git fetch --tags
           git reset --hard "$NEWTAG"
 
-          # Create a directory structure so our git fetch later on can work
+          # Create a directory stru cture so our git fetch later on can work
           #mkdir -p "$module"
           #git mv -k ./* "$module"
           #git commit -a -m "relocate to $module sub directory"
@@ -195,14 +218,14 @@ function cloneMercurialOpenJDKRepo() {
         fi
       done
 
-      exit
-
       # Then push the changes back to master
       cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+      git reset --hard master
       git push origin master
 
       echo "Pulling in changes to $GITHUB_REPO branch"
-      git checkout master
+
+      # Grab anything that someone else may have pushed to the remote
       git fetch origin master
       if ! git merge --allow-unrelated-histories -m "Merge $NEWTAG into $GITHUB_REPO" FETCH_HEAD; then
         echo Conflict resolution needed in "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO"
@@ -215,7 +238,6 @@ function cloneMercurialOpenJDKRepo() {
         fi
       fi
 
-
       [ "$NEWTAG" != "HEAD" ] && git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
       echo "Deleting the old version of the tag from the server if it is present or push will fail"
       # shellcheck disable=SC2015
@@ -226,7 +248,6 @@ function cloneMercurialOpenJDKRepo() {
   done
 }
 
-# TODO Need to cover always merging mercurial master into our GitHub dev branch
 checkArgs $#
 setMercurialRepoAndTagsToRetrieve
 createDirectories
