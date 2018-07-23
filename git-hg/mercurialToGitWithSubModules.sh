@@ -141,7 +141,7 @@ function cloneMercurialOpenJDKRepo() {
   # Remove certain Mercurial specific files from history
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 
-  # Fetch all of the tags in the Git mirror (i.e. the Mercurial OpenjDK tags)
+  # Fetch all of the tags in the Git mirror (i.e. the Mercurial OpenJDK tags)
   cd "$WORKSPACE/openjdk/mirror" || exit 1
   git pull "$OPENJDK_VERSION"
   git fetch --tags "$OPENJDK_VERSION"
@@ -153,7 +153,7 @@ function cloneMercurialOpenJDKRepo() {
     # to merge in from the Git mirror of Mercurial
     cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
 
-    # If we already have the tag then don't update anything
+    # If we already have the tag then don't update anything TODO think about HEAD
     #if git tag | grep "^$NEWTAG$" ; then
     #  echo "Skipping $NEWTAG as it already exists"
     #else
@@ -233,12 +233,24 @@ function cloneMercurialOpenJDKRepo() {
         fi
       fi
 
-      [ "$NEWTAG" != "HEAD" ] && git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master" || true
-      echo "Deleting the old version of the tag from the server if it is present or push will fail"
+      if [ "$NEWTAG" != "HEAD" ] ; then
+        echo "Override existing tag on the tag from the server if it is present or push will fail"
+        git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
+      fi
+
       # shellcheck disable=SC2015
-      [ "$NEWTAG" != "HEAD" ] && git push origin :refs/tags/"$NEWTAG" || true
-      [ "$NEWTAG" == "HEAD" ] && git push origin master
-      [ "$NEWTAG" != "HEAD" ] && git push origin master --tags || true
+
+      if [ "$NEWTAG" != "HEAD" ] ; then
+        git push origin :refs/tags/"$NEWTAG"
+      fi
+
+      if [ "$NEWTAG" == "HEAD" ] ; then
+        git push origin master
+      fi
+
+      if [ "$NEWTAG" != "HEAD" ] ; then
+        git push origin master --tags
+      fi
     #fi
   done
 }
