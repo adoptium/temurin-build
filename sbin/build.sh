@@ -28,6 +28,7 @@ JVM_VARIANT="${JVM_VARIANT:-server}"
 OPENJDK_UPDATE_VERSION=""
 OPENJDK_BUILD_NUMBER=""
 OPENJDK_REPO_TAG=""
+JRE_TARGET_PATH=""
 TRIMMED_TAG=""
 USER_SUPPLIED_CONFIGURE_ARGS=""
 
@@ -353,13 +354,22 @@ removingUnnecessaryFiles()
   rm -rf "${OPENJDK_REPO_TAG}" || true
   mv "$JDK_PATH" "${OPENJDK_REPO_TAG}"
 
+  JRE_TARGET_PATH="${OPENJDK_REPO_TAG/jdk/jre}"
+  [ "${JRE_TARGET_PATH}" == "${OPENJDK_REPO_TAG}" ] && JRE_TARGET_PATH="${OPENJDK_REPO_TAG}.jre"
+  echo "moving ${JRE_PATH} to ${JRE_TARGET_PATH}"
+  rm -rf "${JRE_TARGET_PATH}" || true
+  mv "$JRE_PATH" "${JRE_TARGET_PATH}"
+
   # Remove files we don't need
   rm -rf "${OPENJDK_REPO_TAG}"/demo/applets || true
   rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest || true
   rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet || true
+  rm -rf "${JRE_TARGET_PATH}"/demo/applets || true
+  rm -rf "${JRE_TARGET_PATH}"/demo/jfc/Font2DTest || true
+  rm -rf "${JRE_TARGET_PATH}"/demo/jfc/SwingApplet || true
   find . -name "*.diz" -type f -delete || true
 
-  echo "Finished removing unnecessary files from ${OPENJDK_REPO_TAG}"
+  echo "Finished removing unnecessary files from ${OPENJDK_REPO_TAG} and ${JRE_TARGET_PATH}"
 }
 
 makeACopyOfLibFreeFontForMacOSX() {
@@ -411,10 +421,10 @@ signRelease()
         echo "Signing Windows release"
         signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
         # Sign .exe files
-        FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.exe')
+        FILES=$(find "${OPENJDK_REPO_TAG}" "${JRE_TARGET_PATH}" -type f -name '*.exe')
         echo "$FILES" | while read -r f; do "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
         # Sign .dll files
-        FILES=$(find "${OPENJDK_REPO_TAG}" -type f -name '*.dll')
+        FILES=$(find "${OPENJDK_REPO_TAG}" "${JRE_TARGET_PATH}" -type f -name '*.dll')
         echo "$FILES" | while read -r f; do "$signToolPath" sign /f "$CERTIFICATE" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; done
       ;;
       "darwin"*)
@@ -424,7 +434,7 @@ signRelease()
         # shellcheck disable=SC2006
         security unlock-keychain -p `cat ~/.password`
         # Sign all files with the executable permission bit set.
-        FILES=$(find "${OPENJDK_REPO_TAG}" -perm +111 -type f || find "${OPENJDK_REPO_TAG}" -perm /111 -type f)
+        FILES=$(find "${OPENJDK_REPO_TAG}" "${JRE_TARGET_PATH}" ! -perm +111 -type f || find "${OPENJDK_REPO_TAG}" -perm /111 -type f)
         echo "$FILES" | while read -r f; do codesign -s "$CERTIFICATE" "$f"; done
       ;;
       *)
@@ -436,34 +446,51 @@ signRelease()
 
 createOpenJDKTarArchive()
 {
-  echo "Archiving the build OpenJDK image..."
+  COMPRESS=gzip
+  if which pigz >/dev/null 2>&1; then COMPRESS=pigz; fi
+  echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
 
   if [ -z "$OPENJDK_REPO_TAG" ]; then
     OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
   fi
-  echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
+  if [ -z "$JRE_TARGET_PATH" ]; then
+    JRE_TARGET_PATH="${OPENJDK_REPO_TAG/jdk/jre}"
+    [ "${JRE_TARGET_PATH}" == "${OPENJDK_REPO_TAG}" ] && JRE_TARGET_PATH="${OPENJDK_REPO_TAG}.jre"
+  fi
+  
+  echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}. JRE path will be ${JRE_TARGET_PATH}"
 
   if [ "$USE_DOCKER" == "true" ] ; then
-    GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+    GZIP=-9 tar --use-compress-program=$COMPRESS -cf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+    GZIP=-9 tar --use-compress-program=$COMPRESS -cf OpenJRE.tar.gz ./"${JRE_TARGET_PATH}"
     EXT=".tar.gz"
 
     echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
     mv "OpenJDK${EXT}" "${TARGET_DIR}"
+    mv "OpenJRE${EXT}" "${TARGET_DIR}"
   else
     case "${OS_KERNEL_NAME}" in
       *cygwin*)
         zip -r -q OpenJDK.zip ./"${OPENJDK_REPO_TAG}"
+        zip -r -q OpenJRE.zip ./"${JRE_TARGET_PATH}"
       EXT=".zip" ;;
       aix)
-        GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | gzip -c > OpenJDK.tar.gz
+        GZIP=-9 tar -cf - ./"${OPENJDK_REPO_TAG}"/ | $COMPRESS -c > OpenJDK.tar.gz
+        GZIP=-9 tar -cf - ./"${JRE_TARGET_PATH}"/ | $COMPRESS -c > OpenJRE.tar.gz
       EXT=".tar.gz" ;;
       *)
-        GZIP=-9 tar -czf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+        GZIP=-9 tar --use-compress-program=$COMPRESS -cf OpenJDK.tar.gz ./"${OPENJDK_REPO_TAG}"
+        GZIP=-9 tar --use-compress-program=$COMPRESS -cf OpenJRE.tar.gz ./"${JRE_TARGET_PATH}"
       EXT=".tar.gz" ;;
     esac
     echo "${good}Your final ${EXT} was created at ${PWD}${normal}"
-
-    echo "${good}Moving the artifact to ${TARGET_DIR}${normal}"
+    ls -l 
+    echo "${good}Moving the artifacts to ${TARGET_DIR}${normal}"
+    # This really ought to be a separate parameter to makejdk_any_platform or
+    # TARGET_DIR should be a dir name as the name suggests, not a full filename
+    # This is currnently assuming TARGET_DIT has JDK in the filename, otherwise
+    # it wiill get overridden
+    mv "OpenJRE${EXT}" "${TARGET_DIR/JDK/JRE}"
     mv "OpenJDK${EXT}" "${TARGET_DIR}"
   fi
 

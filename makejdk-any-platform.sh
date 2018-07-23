@@ -40,10 +40,10 @@ export REPOSITORY=""
 
 counter=0
 for i in "$@"; do
-  let counter++
+  (( counter++ ))
   case "$i" in
     "--version" | "-v")
-      let counter++
+      (( counter++ ))
       string="\$$counter"
       OPENJDK_FOREST_NAME=$(echo "$@" | awk "{print $string}")
       export OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME}
@@ -51,21 +51,21 @@ for i in "$@"; do
         export OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME%?}
       fi
       # Switch it back to stop it being out of sync with i
-      let counter--
+      (( counter-- ))
       ;;
     "--variant" | "-bv")
-      let counter++
+      (( counter++ ))
       string="\$$counter"
       BUILD_VARIANT=$(echo "$@" | awk "{print $string}")
       # Switch it back to stop it being out of sync with i
-      let counter--
+      (( counter-- ))
       ;;
   esac
 done
 
 export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG="false"
 export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG="false"
-if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ] || [ "$OPENJDK_CORE_VERSION" == "amber" ]; then
+if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ] || [ "$OPENJDK_CORE_VERSION" == "jdk11" ] || [ "$OPENJDK_CORE_VERSION" == "amber" ]; then
   export JDK_PATH="jdk"
   export JRE_PATH="jre"
   if [ "$OPENJDK_CORE_VERSION" == "jdk9" ]; then
@@ -79,7 +79,7 @@ elif [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
   export JDK_PATH="j2sdk-image"
   export JRE_PATH="j2re-image"
 else
-  echo "Please specify a version with --version or -v , either jdk9, jdk10 or jdk8, with or without a \'u\' suffix."
+  echo "Please specify a version with --version or -v , either jdk9, jdk10 or jdk8, with or without a \\'u\\' suffix."
   man ./makejdk-any-platform.1
   exit 1
 fi

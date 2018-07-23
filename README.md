@@ -37,9 +37,10 @@ Once you have Docker started you can then use the script below to build OpenJDK.
 Usage: ./makejdk-any-platform.sh --version [version] [options]
 
 Versions:
-  jdk8u - https://github.com/AdoptOpenJDK/openjdk-jdk8u
-  jdk9 - https://github.com/AdoptOpenJDK/openjdk-jdk9
-  jdk10 - https://github.com/AdoptOpenJDK/openjdk-jdk10
+  jdk8u  - https://github.com/AdoptOpenJDK/openjdk-jdk8u
+  jdk9u  - https://github.com/AdoptOpenJDK/openjdk-jdk9u
+  jdk10u - https://github.com/AdoptOpenJDK/openjdk-jdk10u
+  jdk11  - https://github.com/AdoptOpenJDK/openjdk-jdk11
 
 Options:
   -s,   --source <path>              specify the location for the source and dependencies to be cloned, defaults to ./openjdk. If it is specified, docker is not used

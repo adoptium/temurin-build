@@ -20,8 +20,9 @@ source "$SCRIPT_DIR/common-functions.sh"
 WORKING_DIR=$1
 OPENJDK_REPO_NAME=$2
 BUILD_FULL_NAME=$3
+VERSION=$4
 # shellcheck disable=SC2001
-JTREG_TEST_SUBSETS=$(echo "$4" | sed 's/:/ /')
+JTREG_TEST_SUBSETS=$(echo "$5" | sed 's/:/ /')
 JTREG_VERSION=${JTREG_VERSION:-4.2.0-tip}
 JTREG_TARGET_FOLDER=${JTREG_TARGET_FOLDER:-jtreg}
 JOB_NAME=${JOB_NAME:-OpenJDK}
@@ -77,12 +78,16 @@ downloadJtregAndSetupEnvironment()
 
 applyingJCovSettingsToMakefileForTests()
 {
-  echo "Apply JCov settings to Makefile..." 
-  cd "$OPENJDK_DIR/jdk/test" || exit
+  echo "Apply JCov settings to Makefile..."
+  if [[ $VERSION == *8* ]]; then
+  	cd "$OPENJDK_DIR/jdk/test" || exit
+  	sed -i "s/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:\$\(ABS_PLATFORM_BUILD_ROOT\)\/images\/j2sdk-image\/jre\/lib\/rt.jar  -jcov\/source:\$\(ABS_PLATFORM_BUILD_ROOT\)\/images\/j2sdk-image\/src.zip  -jcov\/include:*/" Makefile
+  else
+  	cd "$OPENJDK_DIR/test" || exit
+  	# TODO pass in correct jcov parameter for jdk9 and up
+  	# sed -i "s/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:\$\(ABS_PLATFORM_BUILD_ROOT\)\/jdk\/classes\/  -jcov\/source:\$\(ABS_PLATFORM_BUILD_ROOT\)\/..\/..\/jdk\/src\/share\/classes  -jcov\/include:*/" TestCommon.gmk
+  fi
   pwd
-  
-  sed -i "s/-vmoption:-Xmx512m.*/-vmoption:-Xmx512m -xml:verify -jcov\/classes:\$\(ABS_PLATFORM_BUILD_ROOT\)\/images\/j2sdk-image\/jre\/lib\/rt.jar  -jcov\/source:\$\(ABS_PLATFORM_BUILD_ROOT\)\/images\/j2sdk-image\/src.zip  -jcov\/include:*/" Makefile
-  
   cd "$OPENJDK_DIR" || exit
 }
 
