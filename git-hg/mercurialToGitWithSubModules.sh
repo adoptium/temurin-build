@@ -26,7 +26,7 @@
 #
 # There are Git two repos involved in the overall operation, which have *no*
 # common history.  One is the Git clone of the AdoptOpenJDK GitHub repo for
-# $OPENJDK_VERSION (the target). The other is a Git mirror of the Mercurial
+# $OPENJDK_VERSION (the target). The other is a Git openjdk-workingdir of the Mercurial
 # forests at OpenJDK (the source).
 #
 # The overall technique used is to:
@@ -54,16 +54,24 @@
 #
 ################################################################################
 
-set -euo
+set -euxo
+
+# TODO Remove these temp vars later
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+mkdir -p $SCRIPT_DIR/workspace
+WORKSPACE=$SCRIPT_DIR/workspace
+rm -rf $SCRIPT_DIR/workspace/*
 
 echo "Import common functionality"
 # shellcheck disable=SC1091
 source import-common.sh
 
+#TARGET_PROJECT=${TARGET_PROJECT:-git@github.com:AdoptOpenJDK}
 function checkArgs() {
-  if [ $# -lt 1 ]; then
-     echo Usage: "$0" '[jdk8u|jdk9u] (TAGS)'
-     echo "Version supplied should match a repository in AdoptOpenJDK/openjdk-VERSION"
+  if [ $# -lt 2 ]; then
+     echo Usage: "$0" '[jdk8u|jdk9u] [TARGET_REPO] (TAGS)'
+     echo "If using this script at AdoptOpenJDK, the version supplied should match";
+     echo "a repository in a git@github.com:AdoptOpenJDK/openjdk-VERSION repo"
      exit 1
   fi
   if [ -z "$WORKSPACE" ] || [ ! -d "$WORKSPACE" ] ; then
@@ -75,11 +83,18 @@ function checkArgs() {
 # These the the modules in the mercurial forest that we'll have to iterate over
 MODULES=(corba langtools jaxp jaxws nashorn jdk hotspot)
 
+# Get the mandatory version that we are wanting to openjdk-workingdir
 OPENJDK_VERSION="$1"
 shift
-# shellcheck disable=SC2124
+
+# Get the target project
+TARGET_PROJECT="$1"
+shift
+
+# Get a list of optional tags
 TAGS="$@"
-GITHUB_PROJECT=git@github.com:AdoptOpenJDK
+
+# TODO Assumes a naming scheme for target repos that is openjdk-$OPENJDK_VERSION
 GITHUB_REPO="openjdk-$OPENJDK_VERSION"
 
 function setMercurialRepoAndTagsToRetrieve() {
@@ -100,7 +115,7 @@ function setMercurialRepoAndTagsToRetrieve() {
 }
 
 function createDirectories() {
-  mkdir -p "$WORKSPACE/$GITHUB_REPO" "$WORKSPACE/openjdk/mirror"
+  mkdir -p "$WORKSPACE/$GITHUB_REPO" "$WORKSPACE/openjdk/openjdk-workingdir"
 }
 
 # Clone current Git repo
@@ -108,7 +123,7 @@ function cloneGitOpenJDKRepo() {
   cd "$WORKSPACE/$GITHUB_REPO" || exit 1;
   echo "Clone current $GITHUB_REPO"
   if [ ! -d "$GITHUB_REPO" ] ; then
-    git clone "$GITHUB_PROJECT/$GITHUB_REPO.git"
+    git clone "$TARGET_PROJECT/$GITHUB_REPO.git"
     cd "$GITHUB_REPO" || exit 1;
   else
     cd "$GITHUB_REPO" || exit 1;
@@ -125,7 +140,7 @@ function cloneGitOpenJDKRepo() {
 function cloneMercurialOpenJDKRepo() {
 
   # Go to the location of the Git mirror of the Mercurial OpenJDK source code
-  cd "$WORKSPACE/openjdk/mirror" || exit 1
+  cd "$WORKSPACE/openjdk/openjdk-workingdir" || exit 1
 
   # If we haven't already mirrored the $OPENJDK_VERSION then git clone
   if [ ! -d "$OPENJDK_VERSION" ] ; then
@@ -135,14 +150,15 @@ function cloneMercurialOpenJDKRepo() {
 
   # Move into the $OPENJDK_VERSION and make sure we're on the latest master
   cd "$OPENJDK_VERSION" || exit 1
+
   git fetch origin
   git reset --hard origin/master
 
   # Remove certain Mercurial specific files from history
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 
-  # Fetch all of the tags in the Git mirror (i.e. the Mercurial OpenJDK tags)
-  cd "$WORKSPACE/openjdk/mirror" || exit 1
+  # Fetch all of the tags in the Git openjdk-workingdir (i.e. the Mercurial OpenJDK tags)
+  cd "$WORKSPACE/openjdk/openjdk-workingdir" || exit 1
   git pull "$OPENJDK_VERSION"
   git fetch --tags "$OPENJDK_VERSION"
 
@@ -150,28 +166,29 @@ function cloneMercurialOpenJDKRepo() {
   for NEWTAG in $TAGS ; do
 
     # Go back to where we have the AdoptOpenJDK Git clone to see what we need
-    # to merge in from the Git mirror of Mercurial
+    # to merge in from the Git openjdk-workingdir of Mercurial
     cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
 
     # If we already have the tag then don't update anything TODO think about HEAD
-    #if git tag | grep "^$NEWTAG$" ; then
-    #  echo "Skipping $NEWTAG as it already exists"
-    #else
-      # Go to the mirror and reset to the tag that we want to merge in
-      cd "$WORKSPACE/openjdk/mirror" || exit 1
+    if git tag | grep "^$NEWTAG$" ; then
+      echo "Skipping $NEWTAG as it already exists"
+    else
+      # Go to the openjdk-workingdir and reset to the tag that we want to merge in
+      cd "$WORKSPACE/openjdk/openjdk-workingdir" || exit 1
       git reset --hard "$NEWTAG"
 
       # Merge in the base Mercurial source code (sub modules to follow) for the tag
       echo "$(date +%T)": "Updating master branch for $NEWTAG"
       cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+      git branch --unset-upstream
       git checkout master
-      git fetch "$WORKSPACE/openjdk/mirror"
+      git fetch "$WORKSPACE/openjdk/openjdk-workingdir"
       git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
 
       # For each module
       for module in "${MODULES[@]}" ; do
 
-        # If we don't have the submodule already mirrored, then mirror it
+        # If we don't have the submodule already openjdk-workingdired, then openjdk-workingdir it
         if [ ! -d "$WORKSPACE/openjdk/$module-workingdir" ]; then
 
           # Make a directory to work in
@@ -180,13 +197,14 @@ function cloneMercurialOpenJDKRepo() {
 
           # Clone the sub module
           echo "$(date +%T)": "Clone $module"
+
           git clone "hg::${HG_REPO}/$module" . || exit 1
 
           # Get to to the tag that we want
           git fetch --tags
           git reset --hard "$NEWTAG"
 
-          # This looks a bit odd but trust us, take all files and prepend corba to them
+          # This looks a bit odd but trust us, take all files and prepend $module to them
           echo "$(date +%T)": "GIT filter on $module"
           cd "$WORKSPACE/openjdk/$module-workingdir" || exit 1
           git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
@@ -198,7 +216,7 @@ function cloneMercurialOpenJDKRepo() {
         cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
 
         # Now fetch
-        git fetch "$WORKSPACE/openjdk/$module-workingdir"
+        git fetch "$WORKSPACE/openjdk/$module-workingdir/$module"
         echo "$(date +%T)": GIT merge of "$module"
         if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
           if ! tty; then
@@ -251,11 +269,11 @@ function cloneMercurialOpenJDKRepo() {
       if [ "$NEWTAG" != "HEAD" ] ; then
         git push origin master --tags
       fi
-    #fi
+    fi
   done
 }
 
-checkArgs $#
+checkArgs $@
 setMercurialRepoAndTagsToRetrieve
 createDirectories
 checkGitVersion
