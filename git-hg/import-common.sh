@@ -41,7 +41,7 @@ function installGitRemoteHg() {
     echo "Getting it from https://raw.githubusercontent.com/felipec/git-remote-hg/master/git-remote-hg"
     mkdir -p "$WORKSPACE/bin"
     PATH="$PATH:$WORKSPACE/bin"
-    wget -O "$WORKSPACE/bin/git-remote-hg https://raw.githubusercontent.com/felipec/git-remote-hg/master/git-remote-hg"
+    wget -O "$WORKSPACE/bin/git-remote-hg" "https://raw.githubusercontent.com/felipec/git-remote-hg/master/git-remote-hg"
     chmod ugo+x "$WORKSPACE/bin/git-remote-hg"
     if ! which git-remote-hg 2>/dev/null; then
       echo "Still cannot find it, exiting.."
