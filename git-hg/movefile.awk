@@ -1,5 +1,4 @@
 #!/bin/awk -f
-BEGIN {}
 {
     regex="\t" module "/"
     where = match($0, regex);
@@ -10,4 +9,3 @@ BEGIN {}
       print $1 "\t" module "/" $2
     }
 }
-END{}

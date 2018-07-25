@@ -136,8 +136,41 @@ function cloneGitOpenJDKRepo() {
   echo "Current openjdk level is $oldtag"
 }
 
+
+function updateRepo() {
+  repoName=$1
+  repoLocation=$2
+
+  mkdir -p "$WORKSPACE/openjdk/openjdk-mirror/$repoName" || exit 1
+  if [ ! -d ".git" ];
+  then
+    git init
+    git clone "hg::${repoLocation}"
+  fi
+
+  git fetch origin
+  git reset --hard origin/master
+  git fetch --tags "$OPENJDK_VERSION"
+
+}
+
+function updateMirrors() {
+  mkdir -p "$WORKSPACE/openjdk/openjdk-mirror"
+  # Go to the location of the Git mirror of the Mercurial OpenJDK source code
+  cd "$WORKSPACE/openjdk/openjdk-mirror" || exit 1
+
+  updateRepo "root" ""
+
+  for module in "${MODULES[@]}" ; do
+      updateRepo "$module" "${HG_REPO}/$module"
+  done
+
+}
+
 # Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
+
+  updateMirrors
 
   # Go to the location of the Git mirror of the Mercurial OpenJDK source code
   cd "$WORKSPACE/openjdk/openjdk-workingdir" || exit 1
@@ -145,7 +178,7 @@ function cloneMercurialOpenJDKRepo() {
   # If we haven't already mirrored the $OPENJDK_VERSION then git clone
   if [ ! -d "$OPENJDK_VERSION" ] ; then
     git init
-    git clone "hg::${HG_REPO}"
+    git clone "$WORKSPACE/openjdk/openjdk-mirror/root"
   fi
 
   # Move into the $OPENJDK_VERSION and make sure we're on the latest master
@@ -197,7 +230,7 @@ function cloneMercurialOpenJDKRepo() {
           # Clone the sub module
           echo "$(date +%T)": "Clone $module"
 
-          git clone "hg::${HG_REPO}/$module" . || exit 1
+          git clone "$WORKSPACE/openjdk/openjdk-mirror/$module" . || exit 1
 
           # Get to to the tag that we want
           git fetch --tags
