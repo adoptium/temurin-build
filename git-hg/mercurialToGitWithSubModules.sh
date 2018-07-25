@@ -215,7 +215,6 @@ function cloneMercurialOpenJDKRepo() {
 
       # Get to to the tag that we want
       git fetch --tags
-      git reset --hard "$NEWTAG"
 
       # This looks a bit odd but trust us, take all files and prepend $module to them
       echo "$(date +%T)": "GIT filter on $module"
