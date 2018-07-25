@@ -153,7 +153,7 @@ function updateRepo() {
   git fetch origin
   git pull origin
   git reset --hard origin/master
-  git fetch --tags "$OPENJDK_VERSION"
+  git fetch --all
 
 }
 
