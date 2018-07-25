@@ -209,7 +209,7 @@ function cloneMercurialOpenJDKRepo() {
       echo "Skipping $NEWTAG as it already exists"
     else
       # Go to the openjdk-workingdir and reset to the tag that we want to merge in
-      cd "$WORKSPACE/openjdk/openjdk-workingdir" || exit 1
+      cd "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION" || exit 1
       git reset --hard "$NEWTAG"
 
       # Merge in the base Mercurial source code (sub modules to follow) for the tag
@@ -242,12 +242,12 @@ function cloneMercurialOpenJDKRepo() {
           echo "$(date +%T)": "GIT filter on $module"
           cd "$WORKSPACE/openjdk/$module-workingdir" || exit 1
 
-          git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | awk -F '\t' -v OFS= -v module="$module" -f $SCRIPT_DIR/movefile.awk | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all | grep -v "was rewritten"
+          git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all | grep -v "was rewritten"
           git reset --hard "$NEWTAG"
         else
           cd "$WORKSPACE/openjdk/$module-workingdir" || exit 1
           git fetch --tags
-          git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | awk -F '\t' -v OFS= -v module="$module" -f $SCRIPT_DIR/movefile.awk | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all | grep -v "was rewritten"
+          git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" |  GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all | grep -v "was rewritten"
           git reset --hard "$NEWTAG"
         fi
 
