@@ -141,14 +141,18 @@ function updateRepo() {
   repoName=$1
   repoLocation=$2
 
-  mkdir -p "$WORKSPACE/openjdk/openjdk-mirror/$repoName" || exit 1
-  if [ ! -d ".git" ];
-  then
+
+  if [ ! -d "$WORKSPACE/openjdk/openjdk-mirror/$repoName/.git" ]; then
+    rm -rf "$WORKSPACE/openjdk/openjdk-mirror/$repoName" || exit 1
+    mkdir -p "$WORKSPACE/openjdk/openjdk-mirror/$repoName" || exit 1
+
     git init
-    git clone "hg::${repoLocation}"
+    git clone "hg::${repoLocation}" .
   fi
 
+  cd "$WORKSPACE/openjdk/openjdk-mirror/$repoName"
   git fetch origin
+  git pull origin
   git reset --hard origin/master
   git fetch --tags "$OPENJDK_VERSION"
 
@@ -159,7 +163,7 @@ function updateMirrors() {
   # Go to the location of the Git mirror of the Mercurial OpenJDK source code
   cd "$WORKSPACE/openjdk/openjdk-mirror" || exit 1
 
-  updateRepo "root" ""
+  updateRepo "root" "${HG_REPO}"
 
   for module in "${MODULES[@]}" ; do
       updateRepo "$module" "${HG_REPO}/$module"
