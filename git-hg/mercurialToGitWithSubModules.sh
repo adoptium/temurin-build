@@ -146,7 +146,6 @@ function updateRepo() {
     rm -rf "$WORKSPACE/openjdk/openjdk-mirror/$repoName" || exit 1
     mkdir -p "$WORKSPACE/openjdk/openjdk-mirror/$repoName" || exit 1
     cd "$WORKSPACE/openjdk/openjdk-mirror/$repoName"
-    git init
     git clone "hg::${repoLocation}" .
   fi
 
