@@ -124,7 +124,7 @@ function cloneGitOpenJDKRepo() {
   cd "$WORKSPACE/$GITHUB_REPO" || exit 1;
   echo "Clone current $GITHUB_REPO"
   if [ ! -d "$GITHUB_REPO" ] ; then
-    git clone "$TARGET_PROJECT/$GITHUB_REPO.git" .
+    git clone "$TARGET_PROJECT/$GITHUB_REPO.git"
     cd "$GITHUB_REPO" || exit 1;
   else
     cd "$GITHUB_REPO" || exit 1;
