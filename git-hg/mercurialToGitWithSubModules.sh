@@ -60,8 +60,13 @@ set -euxo
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 mkdir -p $SCRIPT_DIR/workspace
 WORKSPACE=$SCRIPT_DIR/workspace
-rm -rf $SCRIPT_DIR/workspace/*
-MIRROR=$SCRIPT_DIR/mirror
+
+MIRROR=$WORKSPACE/openjdk-clean-mirror
+REWRITE_WORKSPACE=$WORKSPACE/openjdk-rewritten-mirror/
+REPO_LOCATION=$WORKSPACE/adoptopenjdk-clone/
+
+rm -rf "$REWRITE_WORKSPACE"
+mkdir -p "$REWRITE_WORKSPACE"
 
 echo "Import common functionality"
 # shellcheck disable=SC1091
@@ -121,13 +126,14 @@ function createDirectories() {
 
 # Clone current Git repo
 function cloneGitOpenJDKRepo() {
-  cd "$WORKSPACE/$GITHUB_REPO" || exit 1;
   echo "Clone current $GITHUB_REPO"
-  if [ ! -d "$GITHUB_REPO" ] ; then
+  if [ ! -d "$REPO_LOCATION" ] ; then
+    mkdir -p "$REPO_LOCATION"
+    cd "$REPO_LOCATION"
     git clone "$TARGET_PROJECT/$GITHUB_REPO.git" .
     cd "$GITHUB_REPO" || exit 1;
   else
-    cd "$GITHUB_REPO" || exit 1;
+    cd "$REPO_LOCATION"
     git fetch origin
     git reset --hard origin/master
   fi
@@ -177,90 +183,78 @@ function cloneMercurialOpenJDKRepo() {
   updateMirrors
 
   # Go to the location of the Git mirror of the Mercurial OpenJDK source code
-  cd "$WORKSPACE/openjdk/openjdk-workingdir" || exit 1
+  cd "$REWRITE_WORKSPACE" || exit 1
 
   # If we haven't already mirrored the $OPENJDK_VERSION then git clone
-  if [ ! -d "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION/.git" ] ; then
-    rm -rf "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION" || true
-    mkdir "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION"
-    cd "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION"
+  if [ ! -d "$REWRITE_WORKSPACE/root/.git" ] ; then
+    rm -rf "$REWRITE_WORKSPACE/root" || true
+    mkdir "$REWRITE_WORKSPACE/root"
+    cd "$REWRITE_WORKSPACE/root"
     git clone "$MIRROR/root" .
     git remote set-url origin "file://$MIRROR/root"
   fi
 
   # Move into the $OPENJDK_VERSION and make sure we're on the latest master
-  cd "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION" || exit 1
-
-  git fetch origin
+  cd "$REWRITE_WORKSPACE/root" || exit 1
+  git pull
+  git fetch --all
   git reset --hard origin/master
 
   # Remove certain Mercurial specific files from history
-  git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all | grep -v "was rewritten"
+  git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 
-  # Fetch all of the tags in the Git openjdk-workingdir (i.e. the Mercurial OpenJDK tags)
-  cd "$WORKSPACE/openjdk/openjdk-workingdir" || exit 1
-  git pull "$OPENJDK_VERSION"
-  git fetch --tags "$OPENJDK_VERSION"
+  for module in "${MODULES[@]}" ; do
+      # Make a directory to work in
+      mkdir -p "$REWRITE_WORKSPACE/$module"
+      cd "$REWRITE_WORKSPACE/$module" || exit 1
+
+      # Clone the sub module
+      echo "$(date +%T)": "Clone $module"
+
+      git clone "$MIRROR/$module" . || exit 1
+
+      # Get to to the tag that we want
+      git fetch --tags
+      git reset --hard "$NEWTAG"
+
+      # This looks a bit odd but trust us, take all files and prepend $module to them
+      echo "$(date +%T)": "GIT filter on $module"
+
+      git reset --hard master
+      git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
+  done
 
   # Process each TAG in turn (including HEAD)
   for NEWTAG in $TAGS ; do
 
     # Go back to where we have the AdoptOpenJDK Git clone to see what we need
     # to merge in from the Git openjdk-workingdir of Mercurial
-    cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+    cd "$REPO_LOCATION" || exit 1
 
     # If we already have the tag then don't update anything TODO think about HEAD
     if git tag | grep "^$NEWTAG$" ; then
       echo "Skipping $NEWTAG as it already exists"
     else
       # Go to the openjdk-workingdir and reset to the tag that we want to merge in
-      cd "$WORKSPACE/openjdk/openjdk-workingdir" || exit 1
+      cd "$REWRITE_WORKSPACE/root" || exit 1
       git reset --hard "$NEWTAG"
 
       # Merge in the base Mercurial source code (sub modules to follow) for the tag
       echo "$(date +%T)": "Updating master branch for $NEWTAG"
-      cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+      cd "$REPO_LOCATION" || exit 1
       git branch --unset-upstream
       git checkout master
-      git fetch "$WORKSPACE/openjdk/openjdk-workingdir"
+      git fetch "$REWRITE_WORKSPACE/root"
       git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
 
       # For each module
       for module in "${MODULES[@]}" ; do
-        # If we don't have the submodule already mirrored, then mirror it
-        if [ ! -d "$WORKSPACE/openjdk/$module-workingdir" ]; then
-
-          # Make a directory to work in
-          mkdir -p "$WORKSPACE/openjdk/$module-workingdir"
-          cd "$WORKSPACE/openjdk/$module-workingdir" || exit 1
-
-          # Clone the sub module
-          echo "$(date +%T)": "Clone $module"
-
-          git clone "$MIRROR/$module" . || exit 1
-
-          # Get to to the tag that we want
-          git fetch --tags
-          git reset --hard "$NEWTAG"
-
-          # This looks a bit odd but trust us, take all files and prepend $module to them
-          echo "$(date +%T)": "GIT filter on $module"
-          cd "$WORKSPACE/openjdk/$module-workingdir" || exit 1
-
-          git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | awk -F '\t' -v OFS= -v module="$module" -f $SCRIPT_DIR/movefile.awk | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all | grep -v "was rewritten"
-          git reset --hard "$NEWTAG"
-        else
-          cd "$WORKSPACE/openjdk/$module-workingdir" || exit 1
-          git fetch --tags
-          git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | awk -F '\t' -v OFS= -v module="$module" -f $SCRIPT_DIR/movefile.awk | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all | grep -v "was rewritten"
-          git reset --hard "$NEWTAG"
-        fi
-
         # Then go to the Adopt clone
-        cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+        cd "$REPO_LOCATION" || exit 1
 
         # Now fetch
-        git fetch "$WORKSPACE/openjdk/$module-workingdir/"
+        git fetch "$REWRITE_WORKSPACE/$module" "refs/tags/$NEWTAG"
+
         echo "$(date +%T)": GIT merge of "$module"
         if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
           if ! tty; then
@@ -270,13 +264,13 @@ function cloneMercurialOpenJDKRepo() {
             echo "Please resolve them in another window then press return to continue"
             read -r _
           fi
-          echo Please resolve the conflicts above in "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO", and press return to continue
+          echo Please resolve the conflicts above in "$REPO_LOCATION", and press return to continue
           read -r _
         fi
       done
 
       # Then push the changes back to master
-      cd "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO" || exit 1
+      cd "$REPO_LOCATION" || exit 1
       git reset --hard master
       git push origin master
 
@@ -285,7 +279,7 @@ function cloneMercurialOpenJDKRepo() {
       # Grab anything that someone else may have pushed to the remote
       git fetch origin master
       if ! git merge --allow-unrelated-histories -m "Merge $NEWTAG into $GITHUB_REPO" FETCH_HEAD; then
-        echo Conflict resolution needed in "$WORKSPACE/$GITHUB_REPO/$GITHUB_REPO"
+        echo Conflict resolution needed in "$REPO_LOCATION"
         if ! tty; then
           echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
           exit 10
