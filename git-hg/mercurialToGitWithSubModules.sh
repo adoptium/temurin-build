@@ -124,7 +124,7 @@ function cloneGitOpenJDKRepo() {
   cd "$WORKSPACE/$GITHUB_REPO" || exit 1;
   echo "Clone current $GITHUB_REPO"
   if [ ! -d "$GITHUB_REPO" ] ; then
-    git clone "$TARGET_PROJECT/$GITHUB_REPO.git"
+    git clone "$TARGET_PROJECT/$GITHUB_REPO.git" .
     cd "$GITHUB_REPO" || exit 1;
   else
     cd "$GITHUB_REPO" || exit 1;
@@ -184,8 +184,8 @@ function cloneMercurialOpenJDKRepo() {
     rm -rf "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION" || true
     mkdir "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION"
     cd "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION"
-    git init
     git clone "$MIRROR/root" .
+    git remote set-url origin "file://$MIRROR/root"
   fi
 
   # Move into the $OPENJDK_VERSION and make sure we're on the latest master
