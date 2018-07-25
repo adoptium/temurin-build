@@ -131,7 +131,7 @@ function cloneGitOpenJDKRepo() {
     mkdir -p "$REPO_LOCATION"
     cd "$REPO_LOCATION"
     git clone "$TARGET_PROJECT/$GITHUB_REPO.git" .
-    cd "$GITHUB_REPO" || exit 1;
+    cd "$REPO_LOCATION" || exit 1;
   else
     cd "$REPO_LOCATION"
     git fetch origin
