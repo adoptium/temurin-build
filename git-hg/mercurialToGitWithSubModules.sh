@@ -61,6 +61,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 mkdir -p $SCRIPT_DIR/workspace
 WORKSPACE=$SCRIPT_DIR/workspace
 rm -rf $SCRIPT_DIR/workspace/*
+MIRROR=$SCRIPT_DIR/mirror
 
 echo "Import common functionality"
 # shellcheck disable=SC1091
@@ -142,14 +143,14 @@ function updateRepo() {
   repoLocation=$2
 
 
-  if [ ! -d "$WORKSPACE/openjdk/openjdk-mirror/$repoName/.git" ]; then
-    rm -rf "$WORKSPACE/openjdk/openjdk-mirror/$repoName" || exit 1
-    mkdir -p "$WORKSPACE/openjdk/openjdk-mirror/$repoName" || exit 1
-    cd "$WORKSPACE/openjdk/openjdk-mirror/$repoName"
+  if [ ! -d "$MIRROR/$repoName/.git" ]; then
+    rm -rf "$MIRROR/$repoName" || exit 1
+    mkdir -p "$MIRROR/$repoName" || exit 1
+    cd "$MIRROR/$repoName"
     git clone "hg::${repoLocation}" .
   fi
 
-  cd "$WORKSPACE/openjdk/openjdk-mirror/$repoName"
+  cd "$MIRROR/$repoName"
   git fetch origin
   git pull origin
   git reset --hard origin/master
@@ -158,9 +159,9 @@ function updateRepo() {
 }
 
 function updateMirrors() {
-  mkdir -p "$WORKSPACE/openjdk/openjdk-mirror"
+  mkdir -p "$MIRROR"
   # Go to the location of the Git mirror of the Mercurial OpenJDK source code
-  cd "$WORKSPACE/openjdk/openjdk-mirror" || exit 1
+  cd "$MIRROR" || exit 1
 
   updateRepo "root" "${HG_REPO}"
 
@@ -184,7 +185,7 @@ function cloneMercurialOpenJDKRepo() {
     mkdir "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION"
     cd "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION"
     git init
-    git clone "$WORKSPACE/openjdk/openjdk-mirror/root" "$OPENJDK_VERSION"
+    git clone "$MIRROR/root" "$OPENJDK_VERSION"
   fi
 
   # Move into the $OPENJDK_VERSION and make sure we're on the latest master
@@ -236,7 +237,7 @@ function cloneMercurialOpenJDKRepo() {
           # Clone the sub module
           echo "$(date +%T)": "Clone $module"
 
-          git clone "$WORKSPACE/openjdk/openjdk-mirror/$module" . || exit 1
+          git clone "$MIRROR/$module" . || exit 1
 
           # Get to to the tag that we want
           git fetch --tags
