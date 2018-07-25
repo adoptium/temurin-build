@@ -190,17 +190,12 @@ function cloneMercurialOpenJDKRepo() {
 
   # Move into the $OPENJDK_VERSION and make sure we're on the latest master
   cd "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION" || exit 1
-
-  git fetch origin
+  git pull
+  git fetch --all
   git reset --hard origin/master
 
   # Remove certain Mercurial specific files from history
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all | grep -v "was rewritten"
-
-  # Fetch all of the tags in the Git openjdk-workingdir (i.e. the Mercurial OpenJDK tags)
-  cd "$WORKSPACE/openjdk/openjdk-workingdir" || exit 1
-  git pull "$OPENJDK_VERSION"
-  git fetch --tags "$OPENJDK_VERSION"
 
   # Process each TAG in turn (including HEAD)
   for NEWTAG in $TAGS ; do
