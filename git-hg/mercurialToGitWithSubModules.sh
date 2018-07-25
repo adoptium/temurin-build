@@ -183,10 +183,10 @@ function cloneMercurialOpenJDKRepo() {
   if [ ! -d "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION/.git" ] ; then
     rm -rf "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION"
     mkdir "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION"
-    cd "$WORKSPACE/openjdk/openjdk-workingdir/$OPENJDK_VERSION"
+    cd "$WORKSPACE/openjdk/openjdk-workingdir/"
     git init
     git clone "$MIRROR/root" "$OPENJDK_VERSION"
-    git remote set-url "file://$MIRROR/root"
+    git remote set-url origin "file://$MIRROR/root"
   fi
 
   # Move into the $OPENJDK_VERSION and make sure we're on the latest master
