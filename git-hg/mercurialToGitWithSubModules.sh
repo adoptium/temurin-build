@@ -227,7 +227,7 @@ function cloneMercurialOpenJDKRepo() {
 
       # For each module
       for module in "${MODULES[@]}" ; do
-        # If we don't have the submodule already openjdk-workingdired, then openjdk-workingdir it
+        # If we don't have the submodule already mirrored, then mirror it
         if [ ! -d "$WORKSPACE/openjdk/$module-workingdir" ]; then
 
           # Make a directory to work in
