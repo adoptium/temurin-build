@@ -203,15 +203,7 @@ function updateMirrors() {
 
 }
 
-# Clone current openjdk from Mercurial
-function cloneMercurialOpenJDKRepo() {
-  if [ -z ${DEBUG_SCRIPT+x} ]; then
-    updateMirrors
-  fi
-
-  # Go to the location of the Git mirror of the Mercurial OpenJDK source code
-  cd "$REWRITE_WORKSPACE" || exit 1
-
+function checkoutRoot() {
   # If we haven't already mirrored the $OPENJDK_VERSION then git clone
   if [ ! -d "$REWRITE_WORKSPACE/root/.git" ] ; then
     rm -rf "$REWRITE_WORKSPACE/root" || true
@@ -229,6 +221,107 @@ function cloneMercurialOpenJDKRepo() {
 
   # Remove certain Mercurial specific files from history
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
+}
+
+function fetchRootTagIntoRepo() {
+  NEWTAG=$1
+
+  # Go to the openjdk-workingdir and reset to the tag that we want to merge in
+  cd "$REWRITE_WORKSPACE/root" || exit 1
+  git reset --hard "$NEWTAG"
+
+  # Merge in the base Mercurial source code (sub modules to follow) for the tag
+  echo "$(date +%T)": "Updating master branch for $NEWTAG"
+  cd "$REPO_LOCATION" || exit 1
+  git branch --unset-upstream || true
+  git checkout master
+  git fetch "$REWRITE_WORKSPACE/root"
+  git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
+}
+
+
+function fetchModuleTagIntoRepo() {
+  NEWTAG=$1
+  module=$2
+
+  # Then go to the Adopt clone
+  cd "$REPO_LOCATION" || exit 1
+
+  # Now fetch
+  if [ "$NEWTAG" == "HEAD" ]
+  then
+    git fetch "$REWRITE_WORKSPACE/$module" master
+  else
+    git fetch "$REWRITE_WORKSPACE/$module" "refs/tags/$NEWTAG"
+  fi
+
+  echo "$(date +%T)": GIT merge of "$module"
+  if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
+    if ! tty; then
+      echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
+      exit 10
+    else
+      echo "Please resolve them in another window then press return to continue"
+      read -r _
+    fi
+    echo Please resolve the conflicts above in "$REPO_LOCATION", and press return to continue
+    read -r _
+  fi
+}
+
+function pushTagToMaster() {
+
+  NEWTAG=$1
+
+  # Then push the changes back to master
+  cd "$REPO_LOCATION" || exit 1
+  git reset --hard master
+  git push origin master
+
+  echo "Pulling in changes to $GITHUB_REPO branch"
+
+  # Grab anything that someone else may have pushed to the remote
+  git fetch origin master
+  if ! git merge --allow-unrelated-histories -m "Merge $NEWTAG into $GITHUB_REPO" FETCH_HEAD; then
+    echo Conflict resolution needed in "$REPO_LOCATION"
+    if ! tty; then
+      echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
+      exit 10
+    else
+      echo "Please resolve them in another window then press return to continue"
+      read -r _
+    fi
+  fi
+
+  if [ "$NEWTAG" != "HEAD" ] ; then
+    echo "Override existing tag on the tag from the server if it is present or push will fail"
+    git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
+  fi
+
+  # shellcheck disable=SC2015
+
+  if [ "$NEWTAG" != "HEAD" ] ; then
+    git push origin :refs/tags/"$NEWTAG"
+  fi
+
+  if [ "$NEWTAG" == "HEAD" ] ; then
+    git push origin master
+  fi
+
+  if [ "$NEWTAG" != "HEAD" ] ; then
+    git push origin master --tags
+  fi
+}
+
+# Clone current openjdk from Mercurial
+function cloneMercurialOpenJDKRepo() {
+  if [ -z ${DEBUG_SCRIPT+x} ]; then
+    updateMirrors
+  fi
+
+  # Go to the location of the Git mirror of the Mercurial OpenJDK source code
+  cd "$REWRITE_WORKSPACE" || exit 1
+  checkoutRoot
 
   # Process each TAG in turn (including HEAD)
   for NEWTAG in $TAGS ; do
@@ -241,83 +334,13 @@ function cloneMercurialOpenJDKRepo() {
     if git tag | grep "^$NEWTAG$" ; then
       echo "Skipping $NEWTAG as it already exists"
     else
-      # Go to the openjdk-workingdir and reset to the tag that we want to merge in
-      cd "$REWRITE_WORKSPACE/root" || exit 1
-      git reset --hard "$NEWTAG"
-
-      # Merge in the base Mercurial source code (sub modules to follow) for the tag
-      echo "$(date +%T)": "Updating master branch for $NEWTAG"
-      cd "$REPO_LOCATION" || exit 1
-      git branch --unset-upstream || true
-      git checkout master
-      git fetch "$REWRITE_WORKSPACE/root"
-      git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
+      fetchRootTagIntoRepo "$NEWTAG"
 
       # For each module
       for module in "${MODULES[@]}" ; do
-        # Then go to the Adopt clone
-        cd "$REPO_LOCATION" || exit 1
-
-        # Now fetch
-        if [ "$NEWTAG" == "HEAD" ]
-        then
-          git fetch "$REWRITE_WORKSPACE/$module" master
-        else
-          git fetch "$REWRITE_WORKSPACE/$module" "refs/tags/$NEWTAG"
-        fi
-
-        echo "$(date +%T)": GIT merge of "$module"
-        if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
-          if ! tty; then
-            echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
-            exit 10
-          else
-            echo "Please resolve them in another window then press return to continue"
-            read -r _
-          fi
-          echo Please resolve the conflicts above in "$REPO_LOCATION", and press return to continue
-          read -r _
-        fi
+        fetchModuleTagIntoRepo "$NEWTAG" "$module"
       done
-
-      # Then push the changes back to master
-      cd "$REPO_LOCATION" || exit 1
-      git reset --hard master
-      git push origin master
-
-      echo "Pulling in changes to $GITHUB_REPO branch"
-
-      # Grab anything that someone else may have pushed to the remote
-      git fetch origin master
-      if ! git merge --allow-unrelated-histories -m "Merge $NEWTAG into $GITHUB_REPO" FETCH_HEAD; then
-        echo Conflict resolution needed in "$REPO_LOCATION"
-        if ! tty; then
-          echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
-          exit 10
-        else
-          echo "Please resolve them in another window then press return to continue"
-          read -r _
-        fi
-      fi
-
-      if [ "$NEWTAG" != "HEAD" ] ; then
-        echo "Override existing tag on the tag from the server if it is present or push will fail"
-        git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
-      fi
-
-      # shellcheck disable=SC2015
-
-      if [ "$NEWTAG" != "HEAD" ] ; then
-        git push origin :refs/tags/"$NEWTAG"
-      fi
-
-      if [ "$NEWTAG" == "HEAD" ] ; then
-        git push origin master
-      fi
-
-      if [ "$NEWTAG" != "HEAD" ] ; then
-        git push origin master --tags
-      fi
+      pushTagToMaster "$NEWTAG"
     fi
   done
 }
