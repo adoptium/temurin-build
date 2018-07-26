@@ -65,9 +65,9 @@ MIRROR=$WORKSPACE/openjdk-clean-mirror
 REWRITE_WORKSPACE=$WORKSPACE/openjdk-rewritten-mirror/
 REPO_LOCATION=$WORKSPACE/adoptopenjdk-clone/
 
-DEBUG="true"
+DEBUG_SCRIPT="true"
 
-if [ ! -z ${DEBUG+x} ]; then
+if [ ! -z ${DEBUG_SCRIPT+x} ]; then
   rm -rf "$REWRITE_WORKSPACE"
   mkdir -p "$REWRITE_WORKSPACE"
 else
@@ -205,7 +205,7 @@ function updateMirrors() {
 
 # Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
-  if [ ! -z ${DEBUG+x} ]; then
+  if [ ! -z ${DEBUG_SCRIPT+x} ]; then
     updateMirrors
   fi
 
