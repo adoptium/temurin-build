@@ -248,7 +248,7 @@ function cloneMercurialOpenJDKRepo() {
       # Merge in the base Mercurial source code (sub modules to follow) for the tag
       echo "$(date +%T)": "Updating master branch for $NEWTAG"
       cd "$REPO_LOCATION" || exit 1
-      git branch --unset-upstream
+      git branch --unset-upstream || true
       git checkout master
       git fetch "$REWRITE_WORKSPACE/root"
       git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
