@@ -66,7 +66,6 @@ WORKSPACE=$SCRIPT_DIR/workspace
 # REWRITE_WORKSPACE - workspace/openjdk-rewritten-mirror - Workspace where mercurial is manipulated before being written into the upstream
 #                   - workspace/bin                      - Helper third party programs
 
-
 MIRROR=$WORKSPACE/openjdk-clean-mirror
 REWRITE_WORKSPACE=$WORKSPACE/openjdk-rewritten-mirror/
 REPO_LOCATION=$WORKSPACE/adoptopenjdk-clone/
@@ -202,7 +201,7 @@ function updateMirrors() {
     echo "$(date +%T)": "GIT filter on $module"
 
     git reset --hard master
-    git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all > $module-filter-branch.log
+    git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all >> $module-filter-branch.log 2>&1
   done
 
 }
@@ -224,7 +223,7 @@ function checkoutRoot() {
   git reset --hard origin/master
 
   # Remove certain Mercurial specific files from history
-  git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all > root-filter-branch.log
+  (git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all)  >> root-filter-branch.log 2>&1
 }
 
 function fetchRootTagIntoRepo() {
