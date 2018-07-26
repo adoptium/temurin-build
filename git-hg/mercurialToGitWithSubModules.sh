@@ -61,6 +61,12 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 mkdir -p $SCRIPT_DIR/workspace
 WORKSPACE=$SCRIPT_DIR/workspace
 
+# REPO_LOCATION     - workspace/adoptopenjdk-clone/      - copy of upstream github repo where new commits will end up
+# MIRROR            - workspace/openjdk-clean-mirror     - Unmodified clones of openjdk mercurial (basically a local cache)
+# REWRITE_WORKSPACE - workspace/openjdk-rewritten-mirror - Workspace where mercurial is manipulated before being written into the upstream
+#                   - workspace/bin                      - Helper third party programs
+
+
 MIRROR=$WORKSPACE/openjdk-clean-mirror
 REWRITE_WORKSPACE=$WORKSPACE/openjdk-rewritten-mirror/
 REPO_LOCATION=$WORKSPACE/adoptopenjdk-clone/
@@ -313,6 +319,8 @@ function pushTagToMaster() {
 
 # Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
+
+
   if [ -z ${DEBUG_SCRIPT+x} ]; then
     updateMirrors
   fi
