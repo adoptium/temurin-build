@@ -175,11 +175,29 @@ function updateMirrors() {
       updateRepo "$module" "${HG_REPO}/$module"
   done
 
+  for module in "${MODULES[@]}" ; do
+    # Make a directory to work in
+    mkdir -p "$REWRITE_WORKSPACE/$module"
+    cd "$REWRITE_WORKSPACE/$module" || exit 1
+
+    # Clone the sub module
+    echo "$(date +%T)": "Clone $module"
+
+    git clone "$MIRROR/$module" . || exit 1
+
+    # Get to to the tag that we want
+    git fetch --tags
+    # This looks a bit odd but trust us, take all files and prepend $module to them
+    echo "$(date +%T)": "GIT filter on $module"
+
+    git reset --hard master
+    git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
+  done
+
 }
 
 # Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
-
   updateMirrors
 
   # Go to the location of the Git mirror of the Mercurial OpenJDK source code
@@ -202,26 +220,6 @@ function cloneMercurialOpenJDKRepo() {
 
   # Remove certain Mercurial specific files from history
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
-
-  for module in "${MODULES[@]}" ; do
-      # Make a directory to work in
-      mkdir -p "$REWRITE_WORKSPACE/$module"
-      cd "$REWRITE_WORKSPACE/$module" || exit 1
-
-      # Clone the sub module
-      echo "$(date +%T)": "Clone $module"
-
-      git clone "$MIRROR/$module" . || exit 1
-
-      # Get to to the tag that we want
-      git fetch --tags
-
-      # This looks a bit odd but trust us, take all files and prepend $module to them
-      echo "$(date +%T)": "GIT filter on $module"
-
-      git reset --hard master
-      git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
-  done
 
   # Process each TAG in turn (including HEAD)
   for NEWTAG in $TAGS ; do
@@ -292,6 +290,7 @@ function cloneMercurialOpenJDKRepo() {
         echo "Override existing tag on the tag from the server if it is present or push will fail"
         git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
       fi
+      exit 0
 
       # shellcheck disable=SC2015
 
