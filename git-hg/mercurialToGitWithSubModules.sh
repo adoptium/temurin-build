@@ -120,12 +120,12 @@ function setMercurialRepoAndTagsToRetrieve() {
             # Would be nice to pull out the tags in an automated fashion, but
             # OpenJDK does not provide this yet.
             if [ -z "$TAGS" ] ; then
-                TAGS="jdk8u144-b34 jdk8u151-b12 jdk8u152-b16 jdk8u161-b12 jdk8u162-b12 jdk8u171-b03 jdk8u172-b11 jdk8u181-b13 HEAD"
+                TAGS="jdk8u144-b34 jdk8u151-b12 jdk8u152-b16 jdk8u161-b12 jdk8u162-b12 jdk8u171-b03 jdk8u172-b11 jdk8u181-b13"
             fi;;
      jdk9*) HG_REPO=http://hg.openjdk.java.net/jdk-updates/jdk9u
 
             if [ -z "$TAGS" ] ; then
-                TAGS="jdk-9+181 jdk-9.0.1+11 jdk-9.0.3+9 jdk-9.0.4+11 HEAD"
+                TAGS="jdk-9+181 jdk-9.0.1+11 jdk-9.0.3+9 jdk-9.0.4+11"
             fi;;
          *) Unknown JDK version - only jdk8u and jdk9 are supported; exit 1;;
   esac
@@ -202,7 +202,7 @@ function updateMirrors() {
     echo "$(date +%T)": "GIT filter on $module"
 
     git reset --hard master
-    git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
+    git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all > $module-filter-branch.log
   done
 
 }
@@ -224,7 +224,7 @@ function checkoutRoot() {
   git reset --hard origin/master
 
   # Remove certain Mercurial specific files from history
-  git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
+  git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all > root-filter-branch.log
 }
 
 function fetchRootTagIntoRepo() {
