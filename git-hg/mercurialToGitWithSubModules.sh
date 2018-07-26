@@ -205,7 +205,7 @@ function updateMirrors() {
 
 # Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
-  if [ ! -z ${DEBUG_SCRIPT+x} ]; then
+  if [ -z ${DEBUG_SCRIPT+x} ]; then
     updateMirrors
   fi
 
