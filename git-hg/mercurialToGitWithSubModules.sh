@@ -65,8 +65,15 @@ MIRROR=$WORKSPACE/openjdk-clean-mirror
 REWRITE_WORKSPACE=$WORKSPACE/openjdk-rewritten-mirror/
 REPO_LOCATION=$WORKSPACE/adoptopenjdk-clone/
 
-rm -rf "$REWRITE_WORKSPACE"
-mkdir -p "$REWRITE_WORKSPACE"
+export DEBUG_SCRIPT="true"
+
+if [ -z ${DEBUG_SCRIPT+x} ]; then
+  rm -rf "$REWRITE_WORKSPACE"
+  mkdir -p "$REWRITE_WORKSPACE"
+else
+  rm -rf "$REWRITE_WORKSPACE/root"
+  rm -rf "$REPO_LOCATION"
+fi
 
 echo "Import common functionality"
 # shellcheck disable=SC1091
@@ -131,7 +138,7 @@ function cloneGitOpenJDKRepo() {
     mkdir -p "$REPO_LOCATION"
     cd "$REPO_LOCATION"
     git clone "$TARGET_PROJECT/$GITHUB_REPO.git" .
-    cd "$GITHUB_REPO" || exit 1;
+    cd "$REPO_LOCATION" || exit 1;
   else
     cd "$REPO_LOCATION"
     git fetch origin
@@ -175,12 +182,32 @@ function updateMirrors() {
       updateRepo "$module" "${HG_REPO}/$module"
   done
 
+  for module in "${MODULES[@]}" ; do
+    # Make a directory to work in
+    mkdir -p "$REWRITE_WORKSPACE/$module"
+    cd "$REWRITE_WORKSPACE/$module" || exit 1
+
+    # Clone the sub module
+    echo "$(date +%T)": "Clone $module"
+
+    git clone "$MIRROR/$module" . || exit 1
+
+    # Get to to the tag that we want
+    git fetch --tags
+    # This looks a bit odd but trust us, take all files and prepend $module to them
+    echo "$(date +%T)": "GIT filter on $module"
+
+    git reset --hard master
+    git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
+  done
+
 }
 
 # Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
-
-  updateMirrors
+  if [ -z ${DEBUG_SCRIPT+x} ]; then
+    updateMirrors
+  fi
 
   # Go to the location of the Git mirror of the Mercurial OpenJDK source code
   cd "$REWRITE_WORKSPACE" || exit 1
@@ -203,27 +230,6 @@ function cloneMercurialOpenJDKRepo() {
   # Remove certain Mercurial specific files from history
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 
-  for module in "${MODULES[@]}" ; do
-      # Make a directory to work in
-      mkdir -p "$REWRITE_WORKSPACE/$module"
-      cd "$REWRITE_WORKSPACE/$module" || exit 1
-
-      # Clone the sub module
-      echo "$(date +%T)": "Clone $module"
-
-      git clone "$MIRROR/$module" . || exit 1
-
-      # Get to to the tag that we want
-      git fetch --tags
-      git reset --hard "$NEWTAG"
-
-      # This looks a bit odd but trust us, take all files and prepend $module to them
-      echo "$(date +%T)": "GIT filter on $module"
-
-      git reset --hard master
-      git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
-  done
-
   # Process each TAG in turn (including HEAD)
   for NEWTAG in $TAGS ; do
 
@@ -242,7 +248,7 @@ function cloneMercurialOpenJDKRepo() {
       # Merge in the base Mercurial source code (sub modules to follow) for the tag
       echo "$(date +%T)": "Updating master branch for $NEWTAG"
       cd "$REPO_LOCATION" || exit 1
-      git branch --unset-upstream
+      git branch --unset-upstream || true
       git checkout master
       git fetch "$REWRITE_WORKSPACE/root"
       git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
@@ -253,7 +259,12 @@ function cloneMercurialOpenJDKRepo() {
         cd "$REPO_LOCATION" || exit 1
 
         # Now fetch
-        git fetch "$REWRITE_WORKSPACE/$module" "refs/tags/$NEWTAG"
+        if [ "$NEWTAG" == "HEAD" ]
+        then
+          git fetch "$REWRITE_WORKSPACE/$module" master
+        else
+          git fetch "$REWRITE_WORKSPACE/$module" "refs/tags/$NEWTAG"
+        fi
 
         echo "$(date +%T)": GIT merge of "$module"
         if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
