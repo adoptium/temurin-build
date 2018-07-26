@@ -259,7 +259,7 @@ function cloneMercurialOpenJDKRepo() {
         cd "$REPO_LOCATION" || exit 1
 
         # Now fetch
-        if [ "$module" == "HEAD" ]
+        if [ "$NEWTAG" == "HEAD" ]
         then
           git fetch "$REWRITE_WORKSPACE/$module" master
         else
