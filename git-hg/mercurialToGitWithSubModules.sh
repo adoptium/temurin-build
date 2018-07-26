@@ -67,7 +67,7 @@ REPO_LOCATION=$WORKSPACE/adoptopenjdk-clone/
 
 DEBUG_SCRIPT="true"
 
-if [ ! -z ${DEBUG_SCRIPT+x} ]; then
+if [ -z ${DEBUG_SCRIPT+x} ]; then
   rm -rf "$REWRITE_WORKSPACE"
   mkdir -p "$REWRITE_WORKSPACE"
 else
