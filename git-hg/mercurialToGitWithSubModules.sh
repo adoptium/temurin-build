@@ -259,7 +259,12 @@ function cloneMercurialOpenJDKRepo() {
         cd "$REPO_LOCATION" || exit 1
 
         # Now fetch
-        git fetch "$REWRITE_WORKSPACE/$module" "refs/tags/$NEWTAG"
+        if [ "$module" == "HEAD" ]
+        then
+          git fetch "$REWRITE_WORKSPACE/$module" master
+        else
+          git fetch "$REWRITE_WORKSPACE/$module" "refs/tags/$NEWTAG"
+        fi
 
         echo "$(date +%T)": GIT merge of "$module"
         if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
