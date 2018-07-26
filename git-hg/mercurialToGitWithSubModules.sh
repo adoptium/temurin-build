@@ -65,8 +65,13 @@ MIRROR=$WORKSPACE/openjdk-clean-mirror
 REWRITE_WORKSPACE=$WORKSPACE/openjdk-rewritten-mirror/
 REPO_LOCATION=$WORKSPACE/adoptopenjdk-clone/
 
-rm -rf "$REWRITE_WORKSPACE"
-mkdir -p "$REWRITE_WORKSPACE"
+if [ ! -z ${DEBUG+x} ]; then
+  rm -rf "$REWRITE_WORKSPACE"
+  mkdir -p "$REWRITE_WORKSPACE"
+else
+  rm -rf "$REWRITE_WORKSPACE/root"
+  rm -rf "$REPO_LOCATION"
+fi
 
 echo "Import common functionality"
 # shellcheck disable=SC1091
@@ -198,7 +203,9 @@ function updateMirrors() {
 
 # Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
-  updateMirrors
+  if [ ! -z ${DEBUG+x} ]; then
+    updateMirrors
+  fi
 
   # Go to the location of the Git mirror of the Mercurial OpenJDK source code
   cd "$REWRITE_WORKSPACE" || exit 1
@@ -290,7 +297,6 @@ function cloneMercurialOpenJDKRepo() {
         echo "Override existing tag on the tag from the server if it is present or push will fail"
         git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
       fi
-      exit 0
 
       # shellcheck disable=SC2015
 
