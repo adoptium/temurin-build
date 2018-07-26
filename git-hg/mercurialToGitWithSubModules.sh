@@ -65,8 +65,6 @@ MIRROR=$WORKSPACE/openjdk-clean-mirror
 REWRITE_WORKSPACE=$WORKSPACE/openjdk-rewritten-mirror/
 REPO_LOCATION=$WORKSPACE/adoptopenjdk-clone/
 
-export DEBUG_SCRIPT="true"
-
 if [ -z ${DEBUG_SCRIPT+x} ]; then
   rm -rf "$REWRITE_WORKSPACE"
   mkdir -p "$REWRITE_WORKSPACE"
