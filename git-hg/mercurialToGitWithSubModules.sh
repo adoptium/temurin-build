@@ -147,6 +147,7 @@ function cloneGitOpenJDKRepo() {
   git fetch --tags
   local oldtag=$(git describe --abbrev=0 --tags)
   echo "Current openjdk level is $oldtag"
+  exit
 }
 
 
