@@ -229,7 +229,7 @@ function updateMirrors() {
 
     mkdir "$TMP_WORKSPACE/$module"
 
-    git reset --hard master
+    #git reset --hard master
     java -jar "$WORKSPACE/bin/bfg.jar" --delete-files ".hg{ignore,tags}" "."
     git filter-branch -d "$TMP_WORKSPACE/$module" -f --index-filter "git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
     rm -rf "$TMP_WORKSPACE/$module" || exit 1
