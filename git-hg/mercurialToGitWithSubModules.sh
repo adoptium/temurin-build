@@ -130,10 +130,6 @@ function setMercurialRepoAndTagsToRetrieve() {
   esac
 }
 
-function createDirectories() {
-  mkdir -p "$WORKSPACE/$GITHUB_REPO" "$WORKSPACE/openjdk/openjdk-workingdir"
-}
-
 # Clone current Git repo
 function cloneGitOpenJDKRepo() {
   echo "Clone current $GITHUB_REPO"
@@ -352,7 +348,6 @@ function cloneMercurialOpenJDKRepo() {
 
 checkArgs $@
 setMercurialRepoAndTagsToRetrieve
-createDirectories
 checkGitVersion
 installGitRemoteHg
 cloneGitOpenJDKRepo
