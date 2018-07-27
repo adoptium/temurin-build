@@ -171,10 +171,37 @@ function updateRepo() {
 
 }
 
+TMP_WORKSPACE="/tmp/adopt-tmp/"
+
+cleanup () {
+  if [ -d "$TMP_WORKSPACE" ]; then
+    rm -rf "$TMP_WORKSPACE" || true
+  fi
+  
+  if [ -d "/dev/shm/adopt/" ]; then
+    rm -rf "/dev/shm/adopt/" || true
+  fi
+  exit $exit_code
+}
+
 function updateMirrors() {
   mkdir -p "$MIRROR"
   # Go to the location of the Git mirror of the Mercurial OpenJDK source code
   cd "$MIRROR" || exit 1
+
+  availableMemory=$(free -mw | grep Mem | egrep -o "[0-9]+$"free -mw | grep Mem | egrep -o "[0-9]+$")
+
+  trap cleanup EXIT ERR INT TERM
+
+  if [[ $availableMemory -gt 500 ]]; then
+    echo "Detected more than 500mb of ram available, attempting to use ram dist to speed up"
+    TMP_WORKSPACE="/dev/shm/adopt/"
+  else
+    TMP_WORKSPACE="/tmp/adopt-tmp/"
+    rm -rf "$TMP_WORKSPACE" || true
+  fi
+
+  mkdir -p "$TMP_WORKSPACE" || exit 1
 
   updateRepo "root" "${HG_REPO}"
 
@@ -197,10 +224,13 @@ function updateMirrors() {
     # This looks a bit odd but trust us, take all files and prepend $module to them
     echo "$(date +%T)": "GIT filter on $module"
 
+    mkdir "$TMP_WORKSPACE/$module"
+
     git reset --hard master
-    git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all >> $module-filter-branch.log 2>&1
+    git filter-branch -d "$TMP_WORKSPACE/$module" -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
   done
 
+  rm -rf "$TMP_WORKSPACE" || exit 1
 }
 
 function checkoutRoot() {
@@ -220,7 +250,7 @@ function checkoutRoot() {
   git reset --hard origin/master
 
   # Remove certain Mercurial specific files from history
-  (git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all)  >> root-filter-branch.log 2>&1
+  (git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all)
 }
 
 function fetchRootTagIntoRepo() {
