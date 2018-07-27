@@ -48,7 +48,7 @@
 # WARN:  Please do not make changes to this script without discussing on the
 # build channel on the AdoptOpenJDK Slack.
 #
-# Initial repo will be pushed to git@github.com:AdoptOpenJDK/openjdk-$GITHUB_REPO.git
+# Initial repo will be pushed to git@github.com:AdoptOpenJDK/openjdk-$TARGET_REPO.git
 #
 # TODO Make the location of the git push a parameter
 #
@@ -82,7 +82,6 @@ echo "Import common functionality"
 # shellcheck disable=SC1091
 source import-common.sh
 
-#TARGET_PROJECT=${TARGET_PROJECT:-git@github.com:AdoptOpenJDK}
 function checkArgs() {
   if [ $# -lt 2 ]; then
      echo Usage: "$0" '[jdk8u|jdk9u] [TARGET_REPO] (TAGS)'
@@ -99,19 +98,20 @@ function checkArgs() {
 # These the the modules in the mercurial forest that we'll have to iterate over
 MODULES=(corba langtools jaxp jaxws nashorn jdk hotspot)
 
-# Get the mandatory version that we are wanting to openjdk-workingdir
+# OpenJDK version that we're wanting to mirror, e.g. jdk8u or jdk9u
 OPENJDK_VERSION="$1"
 shift
 
-# Get the target project
+# Get the target project, e.g. git@github.com:AdoptOpenJDK
 TARGET_PROJECT="$1"
+shift
+
+# Get the target repo, e.g. "openjdk-jdk8u"
+TARGET_REPO="$1"
 shift
 
 # Get a list of optional tags
 TAGS="$@"
-
-# TODO Assumes a naming scheme for target repos that is openjdk-$OPENJDK_VERSION
-GITHUB_REPO="openjdk-$OPENJDK_VERSION"
 
 function setMercurialRepoAndTagsToRetrieve() {
   case "$OPENJDK_VERSION" in
@@ -126,17 +126,17 @@ function setMercurialRepoAndTagsToRetrieve() {
             if [ -z "$TAGS" ] ; then
                 TAGS="jdk-9+181 jdk-9.0.1+11 jdk-9.0.3+9 jdk-9.0.4+11"
             fi;;
-         *) Unknown JDK version - only jdk8u and jdk9 are supported; exit 1;;
+         *) Unknown JDK version - only jdk8u and jdk9u are supported; exit 1;;
   esac
 }
 
 # Clone current Git repo
 function cloneGitOpenJDKRepo() {
-  echo "Clone current $GITHUB_REPO"
+  echo "Clone current $TARGET_REPO"
   if [ ! -d "$REPO_LOCATION" ] ; then
     mkdir -p "$REPO_LOCATION"
     cd "$REPO_LOCATION"
-    git clone "$TARGET_PROJECT/$GITHUB_REPO.git" .
+    git clone "$TARGET_PROJECT/$TARGET_REPO.git" .
     cd "$REPO_LOCATION" || exit 1;
   else
     cd "$REPO_LOCATION"
@@ -153,7 +153,6 @@ function cloneGitOpenJDKRepo() {
 function updateRepo() {
   repoName=$1
   repoLocation=$2
-
 
   if [ ! -d "$MIRROR/$repoName/.git" ]; then
     rm -rf "$MIRROR/$repoName" || exit 1
@@ -277,11 +276,11 @@ function pushTagToMaster() {
   git reset --hard master
   git push origin master
 
-  echo "Pulling in changes to $GITHUB_REPO branch"
+  echo "Pulling in changes to $TARGET_REPO branch"
 
   # Grab anything that someone else may have pushed to the remote
   git fetch origin master
-  if ! git merge --allow-unrelated-histories -m "Merge $NEWTAG into $GITHUB_REPO" FETCH_HEAD; then
+  if ! git merge --allow-unrelated-histories -m "Merge $NEWTAG into $TARGET_REPO" FETCH_HEAD; then
     echo Conflict resolution needed in "$REPO_LOCATION"
     if ! tty; then
       echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
@@ -324,14 +323,11 @@ function cloneMercurialOpenJDKRepo() {
   cd "$REWRITE_WORKSPACE" || exit 1
   checkoutRoot
 
-  # Process each TAG in turn (including HEAD)
   for NEWTAG in $TAGS ; do
 
-    # Go back to where we have the AdoptOpenJDK Git clone to see what we need
-    # to merge in from the Git openjdk-workingdir of Mercurial
     cd "$REPO_LOCATION" || exit 1
 
-    # If we already have the tag then don't update anything TODO think about HEAD
+    # If we already have the tag then don't update anything
     if git tag | grep "^$NEWTAG$" ; then
       echo "Skipping $NEWTAG as it already exists"
     else
