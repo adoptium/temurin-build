@@ -158,13 +158,9 @@ function updateRepo() {
 
   if [ ! -d "$MIRROR/$repoName/.git" ]; then
     rm -rf "$MIRROR/$repoName" || exit 1
-    rm -rf "/tmp/adopt/$repoName" || true
-    mkdir -p "/tmp/adopt/$repoName" || exit 1
-
-    git clone "hg::${repoLocation}" "/tmp/adopt/$repoName"
-
-    git clone --mirror "/tmp/adopt/$repoName" "$MIRROR/$repoName";
-    rm -rf "/tmp/adopt/$repoName" || true
+    mkdir -p "$MIRROR/$repoName" || exit 1
+    cd "$MIRROR/$repoName"
+    git clone "hg::${repoLocation}" .
   fi
 
   cd "$MIRROR/$repoName"
@@ -172,7 +168,6 @@ function updateRepo() {
   git pull origin
   git reset --hard origin/master
   git fetch --all
-
 }
 
 TMP_WORKSPACE="/tmp/adopt-tmp/"
@@ -224,7 +219,7 @@ function updateMirrors() {
     # Clone the sub module
     echo "$(date +%T)": "Clone $module"
 
-    git clone "$MIRROR/$module" . || exit 1
+    git clone --mirror "$MIRROR/$module" . || exit 1
 
     # Get to to the tag that we want
     git fetch --tags
@@ -235,7 +230,7 @@ function updateMirrors() {
     mkdir "$TMP_WORKSPACE/$module"
 
     git reset --hard master
-    java -jar "$WORKSPACE/bin/bfg.jar" --delete-files ".hg{ignore,tags}" "$TMP_WORKSPACE/$module"
+    java -jar "$WORKSPACE/bin/bfg.jar" --delete-files ".hg{ignore,tags}" "."
     git filter-branch -d "$TMP_WORKSPACE/$module" -f --index-filter "git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
     rm -rf "$TMP_WORKSPACE/$module" || exit 1
   done
