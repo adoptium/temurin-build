@@ -83,7 +83,7 @@ echo "Import common functionality"
 source import-common.sh
 
 function checkArgs() {
-  if [ $# -lt 2 ]; then
+  if [ $# -lt 3 ]; then
      echo Usage: "$0" '[jdk8u|jdk9u] [TARGET_REPO] (TAGS)'
      echo "If using this script at AdoptOpenJDK, the version supplied should match";
      echo "a repository in a git@github.com:AdoptOpenJDK/openjdk-VERSION repo"
@@ -94,6 +94,8 @@ function checkArgs() {
     exit 2
   fi
 }
+
+checkArgs $@
 
 # These the the modules in the mercurial forest that we'll have to iterate over
 MODULES=(corba langtools jaxp jaxws nashorn jdk hotspot)
@@ -343,7 +345,6 @@ function cloneMercurialOpenJDKRepo() {
   done
 }
 
-checkArgs $@
 setMercurialRepoAndTagsToRetrieve
 checkGitVersion
 installGitRemoteHg
