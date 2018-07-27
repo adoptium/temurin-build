@@ -189,7 +189,7 @@ function updateMirrors() {
   # Go to the location of the Git mirror of the Mercurial OpenJDK source code
   cd "$MIRROR" || exit 1
 
-  availableMemory=$(free -mw | grep Mem | egrep -o "[0-9]+$"free -mw | grep Mem | egrep -o "[0-9]+$")
+  availableMemory=$(free -mw | grep Mem | egrep -o "[0-9]+$")
 
   trap cleanup EXIT ERR INT TERM
 
