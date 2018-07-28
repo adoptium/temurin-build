@@ -168,6 +168,7 @@ function updateRepo() {
   git pull origin
   git reset --hard origin/master
   git fetch --all
+
 }
 
 TMP_WORKSPACE="/tmp/adopt-tmp/"
@@ -176,7 +177,7 @@ cleanup () {
   if [ -d "$TMP_WORKSPACE" ]; then
     rm -rf "$TMP_WORKSPACE" || true
   fi
-  
+
   if [ -d "/dev/shm/adopt/" ]; then
     rm -rf "/dev/shm/adopt/" || true
   fi
@@ -192,8 +193,8 @@ function updateMirrors() {
 
   trap cleanup EXIT ERR INT TERM
 
-  if [[ $availableMemory -gt 500 ]] && [ -d "/dev/shm" ]; then
-    echo "Detected more than 500mb of ram available, attempting to use ram disk to speed up"
+  if [[ $availableMemory -gt 500 ]]; then
+    echo "Detected more than 500mb of ram available, attempting to use ram dist to speed up"
     TMP_WORKSPACE="/dev/shm/adopt/"
   else
     TMP_WORKSPACE="/tmp/adopt-tmp/"
@@ -208,9 +209,6 @@ function updateMirrors() {
       updateRepo "$module" "${HG_REPO}/$module"
   done
 
-  mkdir -p "$WORKSPACE/bin"
-  wget -O "$WORKSPACE/bin/bfg.jar" "https://search.maven.org/remote_content?g=com.madgag&a=bfg&v=LATEST"
-
   for module in "${MODULES[@]}" ; do
     # Make a directory to work in
     mkdir -p "$REWRITE_WORKSPACE/$module"
@@ -219,20 +217,17 @@ function updateMirrors() {
     # Clone the sub module
     echo "$(date +%T)": "Clone $module"
 
-    git clone --mirror "$MIRROR/$module" . || exit 1
+    git clone "$MIRROR/$module" . || exit 1
 
     # Get to to the tag that we want
     git fetch --tags
     # This looks a bit odd but trust us, take all files and prepend $module to them
     echo "$(date +%T)": "GIT filter on $module"
 
-
     mkdir "$TMP_WORKSPACE/$module"
 
-    #git reset --hard master
-    java -jar "$WORKSPACE/bin/bfg.jar" --delete-files ".hg{ignore,tags}" "."
-    git reflog expire --expire=now --all && git gc --prune=now --aggressive
-    git filter-branch -d "$TMP_WORKSPACE/$module" -f --index-filter "git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
+    git reset --hard master
+    git filter-branch -d "$TMP_WORKSPACE/$module" -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
     rm -rf "$TMP_WORKSPACE/$module" || exit 1
   done
 
@@ -256,7 +251,7 @@ function checkoutRoot() {
   git reset --hard origin/master
 
   # Remove certain Mercurial specific files from history
-  git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
+  (git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all)
 }
 
 function fetchRootTagIntoRepo() {
