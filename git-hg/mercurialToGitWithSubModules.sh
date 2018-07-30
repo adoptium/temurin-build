@@ -189,6 +189,16 @@ function updateMirrors() {
   # Go to the location of the Git mirror of the Mercurial OpenJDK source code
   cd "$MIRROR" || exit 1
 
+  updateRepo "root" "${HG_REPO}"
+
+  for module in "${MODULES[@]}" ; do
+      updateRepo "$module" "${HG_REPO}/$module"
+  done
+
+  rewriteMirror
+}
+
+function rewriteMirror() {
   availableMemory=$(free -mw | grep Mem | egrep -o "[0-9]+$")
 
   trap cleanup EXIT ERR INT TERM
@@ -203,32 +213,31 @@ function updateMirrors() {
 
   mkdir -p "$TMP_WORKSPACE" || exit 1
 
-  updateRepo "root" "${HG_REPO}"
-
   for module in "${MODULES[@]}" ; do
-      updateRepo "$module" "${HG_REPO}/$module"
-  done
+    needsUpdate=$(doesModuleNeedUpdate "$module")
 
-  for module in "${MODULES[@]}" ; do
-    # Make a directory to work in
-    mkdir -p "$REWRITE_WORKSPACE/$module"
-    cd "$REWRITE_WORKSPACE/$module" || exit 1
+    # dont rewrite mirror if HEAD in mirror is already merged in
+    if [ "$needsUpdate" == "true" ]; then
+      # Make a directory to work in
+      mkdir -p "$REWRITE_WORKSPACE/$module"
+      cd "$REWRITE_WORKSPACE/$module" || exit 1
 
-    # Clone the sub module
-    echo "$(date +%T)": "Clone $module"
+      # Clone the sub module
+      echo "$(date +%T)": "Clone $module"
 
-    git clone "$MIRROR/$module" . || exit 1
+      git clone "$MIRROR/$module" . || exit 1
 
-    # Get to to the tag that we want
-    git fetch --tags
-    # This looks a bit odd but trust us, take all files and prepend $module to them
-    echo "$(date +%T)": "GIT filter on $module"
+      # Get to to the tag that we want
+      git fetch --tags
+      # This looks a bit odd but trust us, take all files and prepend $module to them
+      echo "$(date +%T)": "GIT filter on $module"
 
-    mkdir "$TMP_WORKSPACE/$module"
+      mkdir "$TMP_WORKSPACE/$module"
 
-    git reset --hard master
-    git filter-branch -d "$TMP_WORKSPACE/$module" -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
-    rm -rf "$TMP_WORKSPACE/$module" || exit 1
+      git reset --hard master
+      git filter-branch -d "$TMP_WORKSPACE/$module" -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
+      rm -rf "$TMP_WORKSPACE/$module" || exit 1
+    fi
   done
 
   rm -rf "$TMP_WORKSPACE" || exit 1
@@ -275,28 +284,38 @@ function fetchModuleTagIntoRepo() {
   NEWTAG=$1
   module=$2
 
-  # Then go to the Adopt clone
-  cd "$REPO_LOCATION" || exit 1
+  needsUpdate=$(doesModuleNeedUpdate "$module")
 
-  # Now fetch
-  if [ "$NEWTAG" == "HEAD" ]
-  then
-    git fetch "$REWRITE_WORKSPACE/$module" master
-  else
-    git fetch "$REWRITE_WORKSPACE/$module" "refs/tags/$NEWTAG"
-  fi
+  if [ "$needsUpdate" == "true" ]; then
+    cd "$REWRITE_WORKSPACE/$module"
+    newCommitId=$(git rev-list -n 1 "$NEWTAG")
 
-  echo "$(date +%T)": GIT merge of "$module"
-  if ! git merge --allow-unrelated-histories -m "Merge $module at $NEWTAG" FETCH_HEAD; then
-    if ! tty; then
-      echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
-      exit 10
+    cd "$MIRROR/$module"
+    originalCommitId=$(git rev-list -n 1 "$NEWTAG")
+
+    # Then go to the Adopt clone
+    cd "$REPO_LOCATION" || exit 1
+
+    # Now fetch
+    if [ "$NEWTAG" == "HEAD" ]
+    then
+      git fetch "$REWRITE_WORKSPACE/$module" master
     else
-      echo "Please resolve them in another window then press return to continue"
+      git fetch "$REWRITE_WORKSPACE/$module" "refs/tags/$NEWTAG"
+    fi
+
+    echo "$(date +%T)": GIT merge of "$module"
+    if ! git merge --allow-unrelated-histories -m "Merge module $module at $NEWTAG. OriginalCommitId: $originalCommitId NewCommitId: $newCommitId" FETCH_HEAD; then
+      if ! tty; then
+        echo "Aborting - not running on a real tty therefore cannot allow manual intervention"
+        exit 10
+      else
+        echo "Please resolve them in another window then press return to continue"
+        read -r _
+      fi
+      echo Please resolve the conflicts above in "$REPO_LOCATION", and press return to continue
       read -r _
     fi
-    echo Please resolve the conflicts above in "$REPO_LOCATION", and press return to continue
-    read -r _
   fi
 }
 
@@ -344,9 +363,26 @@ function pushTagToMaster() {
   fi
 }
 
+function doesModuleNeedUpdate() {
+  module=$1
+
+  cd "$MIRROR/$module"
+  latestCommitInMirror=$(git rev-list -n 1 HEAD)
+
+  cd "$REPO_LOCATION"
+
+  # Merge module $module at $NEWTAG. OriginalCommitId: $originalCommitId NewCommitId: $newCommitId
+  mergeCount=$(git log --all --pretty=format:"%H" --grep="Merge module $module at.*OriginalCommitId: $latestCommitInMirror"  | wc -l)
+
+  if [ "$mergeCount" == "0" ]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
 # Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
-
 
   if [ -z ${DEBUG_SCRIPT+x} ]; then
     updateMirrors
