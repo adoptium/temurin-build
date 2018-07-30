@@ -227,7 +227,7 @@ function updateMirrors() {
     mkdir "$TMP_WORKSPACE/$module"
 
     git reset --hard master
-    git filter-branch -d "$TMP_WORKSPACE/$module" -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
+    git filter-branch -d "$TMP_WORKSPACE/$module" -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"s|\t\\\"*|&$module/|\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all | grep -v 'Ignoring path'
     rm -rf "$TMP_WORKSPACE/$module" || exit 1
   done
 
@@ -251,7 +251,8 @@ function checkoutRoot() {
   git reset --hard origin/master
 
   # Remove certain Mercurial specific files from history
-  (git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all)
+  (git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all) | grep -v 'Ignoring path'
+  
 }
 
 function fetchRootTagIntoRepo() {
