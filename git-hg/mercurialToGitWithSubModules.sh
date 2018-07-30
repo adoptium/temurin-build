@@ -146,6 +146,15 @@ function cloneGitOpenJDKRepo() {
     git reset --hard origin/master
   fi
 
+  commitCount=$(git rev-list --all --count)
+  if [ "$commitCount" == "0" ]; then
+    git checkout -b master
+    touch README.md
+    git add README.md
+    git commit -a -m "Initial commit"
+    git push --set-upstream origin master
+  fi
+
   git checkout master
   git pull --allow-unrelated-histories origin master
   git fetch --tags
