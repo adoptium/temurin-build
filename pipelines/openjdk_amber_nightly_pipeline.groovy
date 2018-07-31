@@ -2,7 +2,7 @@ println "building ${JDK_VERSION}"
 
 def buildPlatforms = ['Mac', 'Linux', 'Windows']
 def buildMaps = [:]
-def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyddMMHHmm")
+def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyMMddHHmm")
 
 buildMaps['Mac'] = [test:['openjdktest'], ArchOSs:'x86-64_macos']
 buildMaps['Windows'] = [test:false, ArchOSs:'x86-64_windows']
