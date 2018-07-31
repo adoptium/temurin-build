@@ -185,6 +185,7 @@ function updateRepo() {
 TMP_WORKSPACE="/tmp/adopt-tmp/"
 
 cleanup () {
+  exit_code=$?
   if [ -d "$TMP_WORKSPACE" ]; then
     rm -rf "$TMP_WORKSPACE" || true
   fi
