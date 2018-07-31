@@ -383,7 +383,7 @@ function doesModuleNeedUpdate() {
   cd "$REPO_LOCATION"
 
   # Merge module $module at $NEWTAG. OriginalCommitId: $originalCommitId NewCommitId: $newCommitId
-  mergeCount=$(git log --all --pretty=format:"%H" --grep="Merge module $module at.*OriginalCommitId: $latestCommitInMirror"  | wc -l)
+  mergeCount=$(git log --all --pretty=format:"%H" --grep="Merge module $module at.*OriginalCommitId: $latestCommitInMirror"  | wc -w)
 
   if [ "$mergeCount" == "0" ]; then
     echo "true"
