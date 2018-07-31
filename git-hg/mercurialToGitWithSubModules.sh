@@ -22,41 +22,35 @@
 ################################################################################
 # mercurialToGitWithSubModules
 #
-# Local setup of the Git clone of a OpenJDK mercurial repository for Java 8/9
+# Create a Git clone of a OpenJDK mercurial repository for Java 8/9 complete
+# with tags and commit history.
 #
-# There are Git two repos involved in the overall operation, which have *no*
-# common history.  One is the Git clone of the AdoptOpenJDK GitHub repo for
-# $OPENJDK_VERSION (the target). The other is a Git openjdk-workingdir of the Mercurial
-# forests at OpenJDK (the source).
+# There are three repos involved in the overall operation
+#
+# REPO_LOCATION     - workspace/adoptopenjdk-clone/      - copy of upstream github repo where new commits will end up
+# MIRROR            - workspace/openjdk-clean-mirror     - Unmodified clones of openjdk mercurial (basically a local cache)
+# REWRITE_WORKSPACE - workspace/openjdk-rewritten-mirror - Workspace where mercurial is manipulated before being written into the upstream
+#                   - workspace/bin                      - Helper third party programs
 #
 # The overall technique used is to:
 #
-# 1. Get a local Git clone of the AdoptOpenJDK GitHub repo
-# 2. Get a local Git clone of the OpenJDK Mercurial Forests
-# 3. Get to the right tag
-# 4. Merge in any changes from the local Git clone of the base OpenJDK Mercurial
-#    forest into the Git clone of the AdoptOpenJDK GitHub repo followed by the
-#    merging the forests which represent the sub modules (corba, langtools etc).
-# 5. Push that merged result back to the AdoptOpenJDK GitHub repo
-#
-# Repeat 3-5 as needed
-#
-# As there is no common history between the two repos we have to go to great
-# lengths to merge in the changes cleanly including lots of resetting and
-# re-writing histories etc.
+# 1. Setup what tags and modules we want to clone
+# 2. Check / Download some tooling we need
+# 3. Git clone the remote upstream where we eventually want to push REPO_LOCATION
+# 4. Clone / Update $MIRROR
+# 5. Rewrite git commits from the $MIRROR into $REWRITE_WORKSPACE which takes
+#    care of things like prefixing the module name for sub forests.
+# 6  Merge the changes in $REWRITE_WORKSPACE into $REPO_LOCATION
+# 7. Push that merged result back to the remote upstream of REPO_LOCATION
 #
 # WARN:  Please do not make changes to this script without discussing on the
 # build channel on the AdoptOpenJDK Slack.
-#
-# Initial repo will be pushed to git@github.com:AdoptOpenJDK/openjdk-$TARGET_REPO.git
-#
-# TODO Make the location of the git push a parameter
 #
 ################################################################################
 
 set -euxo
 
-# TODO Remove these temp vars later
+# Set up the workspace to work from
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 mkdir -p $SCRIPT_DIR/workspace
 WORKSPACE=$SCRIPT_DIR/workspace
@@ -65,18 +59,22 @@ WORKSPACE=$SCRIPT_DIR/workspace
 # MIRROR            - workspace/openjdk-clean-mirror     - Unmodified clones of openjdk mercurial (basically a local cache)
 # REWRITE_WORKSPACE - workspace/openjdk-rewritten-mirror - Workspace where mercurial is manipulated before being written into the upstream
 #                   - workspace/bin                      - Helper third party programs
-
 MIRROR=$WORKSPACE/openjdk-clean-mirror
 REWRITE_WORKSPACE=$WORKSPACE/openjdk-rewritten-mirror/
 REPO_LOCATION=$WORKSPACE/adoptopenjdk-clone/
 
-if [ -z ${DEBUG_SCRIPT+x} ]; then
-  rm -rf "$REWRITE_WORKSPACE"
-  mkdir -p "$REWRITE_WORKSPACE"
-else
-  rm -rf "$REWRITE_WORKSPACE/root"
-  rm -rf "$REPO_LOCATION"
-fi
+# Setup workspace to work in.
+function setupWorkingDir() {
+  if [ -z ${DEBUG_SCRIPT+x} ]; then
+    rm -rf "$REWRITE_WORKSPACE"
+    mkdir -p "$REWRITE_WORKSPACE"
+  else
+    rm -rf "$REWRITE_WORKSPACE/root"
+    rm -rf "$REPO_LOCATION"
+  fi
+}
+
+setupWorkingDir
 
 echo "Import common functionality"
 # shellcheck disable=SC1091
@@ -84,9 +82,10 @@ source import-common.sh
 
 function checkArgs() {
   if [ $# -lt 3 ]; then
-     echo Usage: "$0" '[jdk8u|jdk9u] [TARGET_REPO] (TAGS)'
-     echo "If using this script at AdoptOpenJDK, the version supplied should match";
-     echo "a repository in a git@github.com:AdoptOpenJDK/openjdk-VERSION repo"
+     echo Usage: "$0" '[jdk8u|jdk9u] [TARGET_PROJECT] [TARGET_REPO] (TAGS)'
+     echo ""
+     echo "e.g. ./mercurialToGitWithSubModules.sh jdk8u git@github.com:AdoptOpenJDK openjdk-jdk8u jdk8u172-b11 jdk8u181-b13"
+     echo ""
      exit 1
   fi
   if [ -z "$WORKSPACE" ] || [ ! -d "$WORKSPACE" ] ; then
@@ -98,8 +97,7 @@ function checkArgs() {
 checkArgs $@
 
 # These the the modules in the mercurial forest that we'll have to iterate over
-#MODULES=(corba langtools jaxp jaxws nashorn jdk hotspot)
-MODULES=(corba)
+MODULES=(corba langtools jaxp jaxws nashorn jdk hotspot)
 
 # OpenJDK version that we're wanting to mirror, e.g. jdk8u or jdk9u
 OPENJDK_VERSION="$1"
@@ -163,7 +161,6 @@ function cloneGitOpenJDKRepo() {
   echo "Current openjdk level is $oldtag"
 }
 
-
 function updateRepo() {
   repoName=$1
   repoLocation=$2
@@ -199,7 +196,6 @@ cleanup () {
 
 function updateMirrors() {
   mkdir -p "$MIRROR"
-  # Go to the location of the Git mirror of the Mercurial OpenJDK source code
   cd "$MIRROR" || exit 1
 
   updateRepo "root" "${HG_REPO}"
@@ -232,25 +228,25 @@ function rewriteMirror() {
 
     # dont rewrite mirror if HEAD in mirror is already merged in
     if [ "$needsUpdate" == "true" ]; then
-      # Make a directory to work in
+
       mkdir -p "$REWRITE_WORKSPACE/$module"
       cd "$REWRITE_WORKSPACE/$module" || exit 1
 
       # Clone the sub module
       echo "$(date +%T)": "Clone $module"
-
       git clone "$MIRROR/$module" . || exit 1
 
       # Get to to the tag that we want
       git fetch --tags
-      # This looks a bit odd but trust us, take all files and prepend $module to them
+
       echo "$(date +%T)": "GIT filter on $module"
-
       mkdir "$TMP_WORKSPACE/$module"
-
       git reset --hard master
+
+      # This looks a bit odd but trust us, take all files and prepend $module to them
       prefix_module_sed="s|$(printf '\t')\\\"*|&$module/|"
       git filter-branch -d "$TMP_WORKSPACE/$module" -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"$prefix_module_sed\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
+
       rm -rf "$TMP_WORKSPACE/$module" || exit 1
     fi
   done
@@ -282,11 +278,9 @@ function checkoutRoot() {
 function fetchRootTagIntoRepo() {
   NEWTAG=$1
 
-  # Go to the openjdk-workingdir and reset to the tag that we want to merge in
   cd "$REWRITE_WORKSPACE/root" || exit 1
   git reset --hard "$NEWTAG"
 
-  # Merge in the base Mercurial source code (sub modules to follow) for the tag
   echo "$(date +%T)": "Updating master branch for $NEWTAG"
   cd "$REPO_LOCATION" || exit 1
   git branch --unset-upstream || true
@@ -309,10 +303,8 @@ function fetchModuleTagIntoRepo() {
     cd "$MIRROR/$module"
     originalCommitId=$(git rev-list -n 1 "$NEWTAG")
 
-    # Then go to the Adopt clone
     cd "$REPO_LOCATION" || exit 1
 
-    # Now fetch
     if [ "$NEWTAG" == "HEAD" ]
     then
       git fetch "$REWRITE_WORKSPACE/$module" master
@@ -339,7 +331,6 @@ function pushTagToMaster() {
 
   NEWTAG=$1
 
-  # Then push the changes back to master
   cd "$REPO_LOCATION" || exit 1
   git reset --hard master
   git push origin master
@@ -364,8 +355,6 @@ function pushTagToMaster() {
     git tag -f -a "$NEWTAG" -m "Merge $NEWTAG into master"
   fi
 
-  # shellcheck disable=SC2015
-
   if [ "$NEWTAG" != "HEAD" ] ; then
     git push origin :refs/tags/"$NEWTAG"
   fi
@@ -387,8 +376,7 @@ function doesModuleNeedUpdate() {
 
   cd "$REPO_LOCATION"
 
-  # Merge module $module at $NEWTAG. OriginalCommitId: $originalCommitId NewCommitId: $newCommitId
-  # tr -d is for Mac OS X
+  # Merge module $module at $NEWTAG. OriginalCommitId: $originalCommitId NewCommitId: $newCommitId, tr -d is for Mac OS X
   mergeCount=$(git log --all --pretty=format:"%H" --grep="Merge module $module at.*OriginalCommitId: $latestCommitInMirror" | wc -w | tr -d " ")
 
   if [ "$mergeCount" == "0" ]; then
@@ -398,14 +386,12 @@ function doesModuleNeedUpdate() {
   fi
 }
 
-# Clone current openjdk from Mercurial
 function cloneMercurialOpenJDKRepo() {
 
   if [ -z ${DEBUG_SCRIPT+x} ]; then
     updateMirrors
   fi
 
-  # Go to the location of the Git mirror of the Mercurial OpenJDK source code
   cd "$REWRITE_WORKSPACE" || exit 1
   checkoutRoot
 
@@ -413,7 +399,6 @@ function cloneMercurialOpenJDKRepo() {
 
     cd "$REPO_LOCATION" || exit 1
 
-    # If we already have the tag then don't update anything
     if git tag | grep "^$NEWTAG$" ; then
       echo "Skipping $NEWTAG as it already exists"
     else
