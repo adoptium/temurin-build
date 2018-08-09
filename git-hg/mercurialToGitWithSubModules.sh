@@ -146,7 +146,7 @@ function cloneGitOpenJDKRepo() {
   fi
 
   commitCount=$(git rev-list --all --count)
-  if [ "$commitCount" == "0" ]; then
+  if [ "$commitCount" == 0 ]; then
     git checkout -b master
     touch README.md
     git add README.md
@@ -377,9 +377,9 @@ function doesModuleNeedUpdate() {
   cd "$REPO_LOCATION"
 
   # Merge module $module at $NEWTAG. OriginalCommitId: $originalCommitId NewCommitId: $newCommitId, tr -d is for Mac OS X
-  mergeCount=$(git log --all --pretty=format:"%H" --grep="Merge module $module at.*OriginalCommitId: $latestCommitInMirror" | wc -w | tr -d " ")
+  mergeCount=$(git log --all --pretty=format:"%H\n" --grep="Merge module $module at.*OriginalCommitId: $latestCommitInMirror" | wc -w | tr -d " ")
 
-  if [ "$mergeCount" == "0" ]; then
+  if [ "$mergeCount" == 0 ]; then
     echo "true"
   else
     echo "false"
