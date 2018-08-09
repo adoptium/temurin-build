@@ -65,7 +65,7 @@ function updateMercurialClone() {
 }
 
 function runDiff() {
-  diffNum=$(diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | wc -l)
+  diffNum=$(diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' | wc -l)
 
   if [ "$diffNum" -gt 0 ]; then
     echo "ERROR - THE DIFF HAS DETECTED UNKNOWN FILES"
