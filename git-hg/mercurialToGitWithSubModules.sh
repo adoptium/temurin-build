@@ -208,8 +208,8 @@ function updateMirrors() {
 }
 
 function rewriteMirror() {
-  #availableMemory=$(free -mw | grep Mem | egrep -o "[0-9]+$")
-  availableMemory=400
+  # If running locally on Mac OS X then use availableMemory=400
+  availableMemory=$(free -mw | grep Mem | egrep -o "[0-9]+$")
 
   trap cleanup EXIT ERR INT TERM
 
