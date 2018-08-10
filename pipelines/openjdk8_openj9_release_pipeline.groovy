@@ -1,14 +1,16 @@
 println "building ${JDK_VERSION}"
 
-def buildPlatforms = ['Linux', 'zLinux', 'ppc64le', 'AIX', 'Windows']
+def buildPlatforms = ['Linux', 'zLinux', 'ppc64le', 'AIX', 'Windows', 'Windows32', 'LinuxXL']
 def buildMaps = [:]
 def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyMMddHHmm")
 
 buildMaps['Linux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_linux']
+buildMaps['LinuxXL'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_linux_largeHeap']
 buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
 buildMaps['ppc64le'] = [test:['openjdktest', 'systemtest'], ArchOSs:'ppc64le_linux']
 buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
 buildMaps['Windows'] = [test:['openjdktest'], ArchOSs:'x86-64_windows']
+buildMaps['Windows32'] = [test:['openjdktest'], ArchOSs:'x86-32_windows']
 
 def jobs = [:]
 for ( int i = 0; i < buildPlatforms.size(); i++ ) {
@@ -45,7 +47,7 @@ stage('publish release') {
 	build job: 'openjdk_release_tool', 
 		parameters: [string(name: 'REPO', value: 'releases'), 
 					string(name: 'TAG', value: "${JDK_TAG}"), 
-					string(name: 'VERSION', value: 'jdk8-openj9')，
+					string(name: 'VERSION', value: 'jdk8-openj9'),
 					string(name: 'CHECKSUM_JOB_NAME', value: "openjdk8_openj9_build_checksum"),
 					string(name: 'CHECKSUM_JOB_NUMBER', value: "${checksumJob.getNumber()}")]
 }
