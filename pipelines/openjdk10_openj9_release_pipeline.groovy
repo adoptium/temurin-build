@@ -36,20 +36,21 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 				}
 			}
 		}
-		stage('checksums') {
-			checksumJob = build job: 'openjdk10_openj9_build_checksum',
-							parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJobNum}"),
-									string(name: 'UPSTREAM_JOB_NAME', value: "openjdk10_openj9_build_${archOS}"),
-									string(name: 'PRODUCT', value: 'releases')]
-		}
-		stage('publish releases') {
-			build job: 'openjdk_release_tool',
-						parameters: [string(name: 'REPO', value: 'releases'),
-									string(name: 'TAG', value: "${JDK_TAG}"),
-									string(name: 'VERSION', value: 'jdk10-openj9'),
-									string(name: 'CHECKSUM_JOB_NAME', value: "openjdk10_openj9_build_checksum"),
-									string(name: 'CHECKSUM_JOB_NUMBER', value: "${checksumJob.getNumber()}")]
-		}
 	}
 }
 parallel jobs
+
+stage('checksums') {
+	checksumJob = build job: 'openjdk10_openj9_build_checksum',
+		parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJobNum}"),
+			     string(name: 'UPSTREAM_JOB_NAME', value: "openjdk10_openj9_build_${archOS}"),
+			     string(name: 'PRODUCT', value: 'releases')]
+}
+stage('publish releases') {
+	build job: 'openjdk_release_tool',
+		parameters: [string(name: 'REPO', value: 'releases'),
+			     string(name: 'TAG', value: "${JDK_TAG}"),
+			     string(name: 'VERSION', value: 'jdk10-openj9'),
+			     string(name: 'CHECKSUM_JOB_NAME', value: "openjdk10_openj9_build_checksum"),
+			     string(name: 'CHECKSUM_JOB_NUMBER', value: "${checksumJob.getNumber()}")]
+}
