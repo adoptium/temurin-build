@@ -45,7 +45,7 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 		stage('publish nightly') {
 			build job: 'openjdk_release_tool',
 						parameters: [string(name: 'REPO', value: 'nightly'),
-									string(name: 'TAG', value: 'jdk8u172-b11'),
+									string(name: 'TAG', value: 'jdk8u181-b13'),
 									string(name: 'VERSION', value: 'jdk8-openj9'),
 									string(name: 'CHECKSUM_JOB_NAME', value: "openjdk8_openj9_build_checksum"),
 									string(name: 'CHECKSUM_JOB_NUMBER', value: "${checksumJob.getNumber()}")]
