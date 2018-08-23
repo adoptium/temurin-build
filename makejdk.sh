@@ -257,7 +257,9 @@ cloneOpenJDKGitRepo()
   fi
 
   showShallowCloningMessage "cloning"
-  GIT_CLONE_ARGUMENTS=("$SHALLOW_CLONE_OPTION" '-b' "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
+  # I want to ensure SHALLOW_CLONE_OPTION isn't explcitly wrapped in quotes PR#455
+  # shellcheck disable=SC2206
+  GIT_CLONE_ARGUMENTS=($SHALLOW_CLONE_OPTION "-b" "$BRANCH" "$GIT_REMOTE_REPO_ADDRESS" "${WORKING_DIR}/${OPENJDK_REPO_NAME}")
 
   echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
   git clone "${GIT_CLONE_ARGUMENTS[@]}"
@@ -282,7 +284,7 @@ getOpenJDKUpdateAndBuildVersion()
     # It does exist and it's a repo other than the AdoptOpenJDK one
     cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || return
     echo "Pulling latest tags and getting the latest update version using git fetch -q --tags ${SHALLOW_CLONE_OPTION}"
-    git fetch -q --tags "${SHALLOW_CLONE_OPTION}"
+    git fetch -q --tags ${SHALLOW_CLONE_OPTION}
     OPENJDK_REPO_TAG=${TAG:-$(getFirstTagFromOpenJDKGitRepo)}
     if [[ "${OPENJDK_REPO_TAG}" == "" ]] ; then
      echo "Unable to detect git tag"
