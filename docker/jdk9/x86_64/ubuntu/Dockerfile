@@ -17,7 +17,9 @@ MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools
 RUN apt-get update \
+  && apt-get -y upgrade \
   && apt-get install -qq -y --no-install-recommends \
+    git \
     cpio \
     make \
     gcc \
@@ -31,6 +33,7 @@ RUN apt-get update \
     libelf-dev \
     libcups2-dev \
     libfreetype6-dev \
+    libfontconfig1-dev \
     libasound2-dev \
     openjdk-8-jdk \
     ccache \
@@ -44,17 +47,19 @@ RUN apt-get update \
 # Pick up build instructions
 RUN mkdir -p /openjdk/target
 
-ADD sbin /openjdk/sbin
+COPY sbin /openjdk/sbin
+COPY workspace/config /openjdk/config
 
+RUN mkdir -p /openjdk/build
+RUN useradd -ms /bin/bash build
+RUN chown -R build: /openjdk/
+USER build
 WORKDIR /openjdk/build/
-
-ENV JDK_BOOT_DIR=/usr/lib/jvm/java-1.8.0-openjdk-amd64
 
 # Default actions
 ENTRYPOINT ["/openjdk/sbin/build.sh"]
 
 CMD ["images"]
-
 
 ARG OPENJDK_CORE_VERSION
 ENV OPENJDK_CORE_VERSION=$OPENJDK_CORE_VERSION
