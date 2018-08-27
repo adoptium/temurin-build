@@ -19,6 +19,7 @@ ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.0.27.2}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME=libfreetype.so.6.5.0
 FREETYPE_FONT_VERSION=${FREETYPE_FONT_VERSION:-2.4.0}
 FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.8}
+OPENSSL_VERSION=${OPENSSL_VERSION:-1.1.0i}
 
 determineBuildProperties() {
     JVM_VARIANT=${JVM_VARIANT:-server}
@@ -149,12 +150,42 @@ checkingAndDownloadCaCerts()
   fi
 }
 
+checkingAndDownloadingOpenSSL()
+{
+  echo "Checking for OpenSSL in $WORKING_DIR"
+  FOUND_OPENSSL=$(find $WORKING_DIR -name "openssl-${OPENSSL_VERSION}")
+  if [[ ! -z "$FOUND_OPENSSL" ]] ; then
+    echo "OpenSSL is found in $WORKING_DIR.. Skipping it"
+  else
+    # Download openSSL and build
+    OPENSSL_TAG=$(echo "OpenSSL.${OPENSSL_VERSION}" | sed -e 's/\./_/g' )
+    OPENSSL_FOLDER=openssl-${OPENSSL_VERSION}
+    git clone -b ${OPENSSL_TAG} https://github.com/openssl/openssl.git ${OPENSSL_FOLDER}
+    if [[ ${OS_KERNEL_NAME} == "aix" ]] ; then
+      MAKE=gmake
+    else
+      MAKE=make
+    fi
+    cd ${OPENSSL_FOLDER} || exit
+    # We get the files we need at $WORKING_DIR/${OPENSSL_FOLDER}
+    # shellcheck disable=SC2046
+    if ! (bash ./config && $MAKE); then
+      # shellcheck disable=SC2154
+      echo "${error}Failed to configure and build OpenSSL, exiting"
+      exit;
+    else
+      # shellcheck disable=SC2154
+      echo "${good}Successfully configured OpenJDK with the OpenSSL!"
+    fi
+  fi
+}
+
 downloadingRequiredDependencies()
 {
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-     echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa, Freetype, and CaCerts."
+     echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa, Freetype, CaCerts and OpenSSL."
   else
-     echo "Downloading required dependencies...: Alsa, Freetype, Freemarker, and CaCerts."
+     echo "Downloading required dependencies...: Alsa, Freetype, Freemarker, CaCerts and OpenSSL."
      time (
         echo "Checking and download Alsa dependency"
         checkingAndDownloadingAlsa
@@ -178,6 +209,10 @@ downloadingRequiredDependencies()
         time (
            echo "Checking and download Freemarker dependency"
            checkingAndDownloadingFreemarker
+        )
+        time (
+           echo "Checking and download OpenSSL dependency"
+           checkingAndDownloadingOpenSSL
         )
      fi
      time (

@@ -144,7 +144,7 @@ doAnyBuildVariantOverrides()
 {
   if [[ "${BUILD_VARIANT}" == "openj9" ]]; then
     # current location of Extensions for OpenJDK9 for OpenJ9 project
-    REPOSITORY="ibmruntimes/openj9-openjdk-${OPENJDK_CORE_VERSION}"
+    REPOSITORY="bhamaram/openj9-openjdk-${OPENJDK_CORE_VERSION}"
     [ -z "$BRANCH" ] && BRANCH="openj9"
   fi
   if [[ "${BUILD_VARIANT}" == "SapMachine" ]]; then
@@ -251,9 +251,9 @@ checkOpenJDKGitRepo()
 cloneOpenJDKGitRepo()
 {
   if [[ "$USE_SSH" == "true" ]] ; then
-     GIT_REMOTE_REPO_ADDRESS="git@github.com:${REPOSITORY}.git"
+     GIT_REMOTE_REPO_ADDRESS="git@github.ibm.com:${REPOSITORY}.git"
   else
-     GIT_REMOTE_REPO_ADDRESS="https://github.com/${REPOSITORY}.git"
+     GIT_REMOTE_REPO_ADDRESS="https://github.ibm.com/${REPOSITORY}.git"
   fi
 
   showShallowCloningMessage "cloning"
