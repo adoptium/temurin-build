@@ -210,7 +210,10 @@ buildingTheRestOfTheConfigParameters()
   fi
 
   if [[ -z "${FREETYPE}" ]] ; then
-    FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"}
+    case $OPENJDK_CORE_VERSION in
+       jdk8*|jdk9*|jdk10*) FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-"${WORKING_DIR}/${OPENJDK_REPO_NAME}/installedfreetype"} ;;
+       *) FREETYPE_DIRECTORY=${FREETYPE_DIRECTORY:-bundled} ;;
+    esac
     addConfigureArg "--with-freetype=" "$FREETYPE_DIRECTORY"
   fi
 
