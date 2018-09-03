@@ -18,17 +18,22 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
+[ -r /opt/rh/devtoolset-2/root/usr/bin/gcc ] && export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
+[ -r /opt/rh/devtoolset-2/root/usr/bin/g++ ] && export CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
+
 if [ "${ARCHITECTURE}" == "x64" ]
 then
   export PATH=/opt/rh/devtoolset-2/root/usr/bin:$PATH
-  if [ -r /opt/rh/devtoolset-2/root/usr/bin/g++-NO ]; then
-    export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
-    export CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
-    ls -l $CC $CXX
-    $CC --version
-    $CXX --version
+
+  if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
+  then
+    [ -r /usr/local/gcc/bin/gcc-7.3 ] && export CC=/usr/local/gcc/bin/gcc-7.3
+    [ -r /usr/local/gcc/bin/g++-7.3 ] && export CXX=/usr/local/gcc/bin/g++-7.3
+    export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
   fi
-elif [ "${ARCHITECTURE}" == "s390x" ]
+fi
+
+if [ "${ARCHITECTURE}" == "s390x" ]
 then
   export LANG=C
 
@@ -44,13 +49,19 @@ then
       fi
     fi
   fi
-elif [ "${ARCHITECTURE}" == "ppc64le" ]
+fi
+
+if [ "${ARCHITECTURE}" == "ppc64le" ]
 then
   export LANG=C
-elif [ "${ARCHITECTURE}" == "arm" ]
+fi
+
+if [ "${ARCHITECTURE}" == "arm" ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000"
-elif [ "${ARCHITECTURE}" == "aarch64" ]
+fi
+
+if [ "${ARCHITECTURE}" == "aarch64" ]
 then
   export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 fi
@@ -60,7 +71,7 @@ then
     if [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
     then
       if [ -z "$JDK9_BOOT_DIR" ]; then
-        export JDK9_BOOT_DIR=$PWD/jdk-9+181
+        export JDK9_BOOT_DIR="$PWD/jdk-9+181"
         if [ ! -r "$JDK9_BOOT_DIR" ]; then
           wget -O -  https://github.com/AdoptOpenJDK/openjdk9-releases/releases/download/jdk-9%2B181/OpenJDK9_s390x_Linux_jdk-9.181.tar.gz | tar xpfz -
         fi
@@ -70,4 +81,19 @@ then
       export CC=gcc-4.8
       export CXX=g++-4.8
     fi
+fi
+
+
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
+then
+    export JDK10_BOOT_DIR="$PWD/jdk-10"
+    if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
+      downloadArch="${ARCHITECTURE}"
+      [ "$downloadArch" == "arm" ] && downloadArch="arm32"
+
+      mkdir -p "$JDK10_BOOT_DIR"
+      wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=linux&release=latest&arch=${downloadArch}" | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR"
+    fi
+    export JDK_BOOT_DIR=$JDK10_BOOT_DIR
+
 fi

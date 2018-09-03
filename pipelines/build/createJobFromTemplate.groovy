@@ -18,7 +18,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                     remote {
                         url('https://github.com/johnoliver/openjdk-build.git')
                     }
-                    branch('*/overhaul-build-scripts-6')
+                    branch('*/overhaul-build-scripts-32')
                     extensions {
                         cleanBeforeCheckout()
                     }

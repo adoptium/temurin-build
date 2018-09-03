@@ -32,9 +32,9 @@ def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
     String buildTag = "build"
 
     if (configuration.os == "windows" && variant == "openj9") {
-        buildTag = "buildj9"
+        buildTag = "${buildTag}&&buildj9"
     } else if (configuration.arch == "s390x" && variant == "openj9") {
-        buildTag = "openj9"
+        buildTag = "${buildTag}&&openj9"
     }
 
     def additionalNodeLabels
