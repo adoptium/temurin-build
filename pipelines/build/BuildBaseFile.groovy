@@ -203,7 +203,7 @@ def doBuild(String javaToBuild, buildConfigurations, String osTarget, String ena
                                             build job: jobName,
                                                     propagate: false,
                                                     parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${job.getNumber()}"),
-                                                                 string(name: 'UPSTREAM_JOB_NAME', value: jobName)]
+                                                                 string(name: 'UPSTREAM_JOB_NAME', value: downstreamJob)]
                                         }
                                     }
                                 }
