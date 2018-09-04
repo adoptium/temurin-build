@@ -31,7 +31,7 @@ function checkArgs() {
   if [ $# -lt 2 ]; then
      echo Usage: "$0" '[AdoptOpenJDK Git Repo Version] [OpenJDK Mercurial Root Forest Version]'
      echo ""
-     echo "e.g. ./diff.sh jdk8u jdk8u"
+     echo "e.g. ./diff.sh jdk8u jdk8u jdk8u or ./diff.sh jdk9u jdk-updates jdk9u"
      echo ""
      exit 1
   fi

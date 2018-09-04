@@ -84,7 +84,7 @@ function checkArgs() {
   if [ $# -lt 3 ]; then
      echo Usage: "$0" '[jdk8u|jdk9u] [TARGET_PROJECT] [TARGET_REPO] (TAGS)'
      echo ""
-     echo "e.g. ./mercurialToGitWithSubModules.sh jdk8u git@github.com:AdoptOpenJDK openjdk-jdk8u jdk8u172-b11 jdk8u181-b13"
+     echo "e.g. ./mercurialToGitWithSubModules.sh jdk8u git@github.com:AdoptOpenJDK openjdk-jdk8u jdk8u172-b11 jdk8u181-b13 HEAD"
      echo ""
      exit 1
   fi
@@ -118,14 +118,15 @@ function setMercurialRepoAndTagsToRetrieve() {
   case "$OPENJDK_VERSION" in
      jdk8*) HG_REPO=http://hg.openjdk.java.net/jdk8u/jdk8u
             # Would be nice to pull out the tags in an automated fashion, but
-            # OpenJDK does not provide this yet.
+            # OpenJDK does not provide this yet. HEAD is interpreted by the
+            # script below to mean tip/latest commit.
             if [ -z "$TAGS" ] ; then
-                TAGS="jdk8u144-b34 jdk8u151-b12 jdk8u152-b16 jdk8u161-b12 jdk8u162-b12 jdk8u171-b03 jdk8u172-b11 jdk8u181-b13"
+                TAGS="jdk8u144-b34 jdk8u151-b12 jdk8u152-b16 jdk8u161-b12 jdk8u162-b12 jdk8u171-b03 jdk8u172-b11 jdk8u181-b13 HEAD"
             fi;;
      jdk9*) HG_REPO=http://hg.openjdk.java.net/jdk-updates/jdk9u
 
             if [ -z "$TAGS" ] ; then
-                TAGS="jdk-9+181 jdk-9.0.1+11 jdk-9.0.3+9 jdk-9.0.4+11"
+                TAGS="jdk-9+181 jdk-9.0.1+11 jdk-9.0.3+9 jdk-9.0.4+11 HEAD"
             fi;;
          *) Unknown JDK version - only jdk8u and jdk9u are supported; exit 1;;
   esac
@@ -411,6 +412,9 @@ function cloneMercurialOpenJDKRepo() {
       pushTagToMaster "$NEWTAG"
     fi
   done
+
+
+
 }
 
 setMercurialRepoAndTagsToRetrieve
