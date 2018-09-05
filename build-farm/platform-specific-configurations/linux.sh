@@ -20,6 +20,8 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
 [ -r /opt/rh/devtoolset-2/root/usr/bin/gcc ] && export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
 [ -r /opt/rh/devtoolset-2/root/usr/bin/g++ ] && export CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
+[ -r /usr/local/gcc/bin/gcc-7.3 ] && export CC=/usr/local/gcc/bin/gcc-7.3
+[ -r /usr/local/gcc/bin/g++-7.3 ] && export CXX=/usr/local/gcc/bin/g++-7.3
 
 if [ "${ARCHITECTURE}" == "x64" ]
 then
