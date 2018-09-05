@@ -49,6 +49,7 @@ fi
 if [ "${ARCHITECTURE}" == "x64" ] && [ "${VARIANT}" == "openj9" ]
 then
   export PATH="/usr/bin:$PATH"
+  export HAS_AUTOCONF=1
 
   if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
   then

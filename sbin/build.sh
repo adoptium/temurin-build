@@ -218,16 +218,16 @@ buildingTheRestOfTheConfigParameters()
 
   addConfigureArg "--with-x=" "/usr/include/X11"
 
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
-      # We don't want any extra debug symbols - ensure it's set to release,
-      # other options include fastdebug and slowdebug
-      addConfigureArg "--with-debug-level=" "release"
-      addConfigureArg "--disable-zip-debug-info" ""
-      addConfigureArg "--disable-debug-symbols" ""
-    else
-      addConfigureArg "--with-debug-level=" "release"
-      addConfigureArg "--with-native-debug-symbols=" "none"
-    fi
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
+    # We don't want any extra debug symbols - ensure it's set to release,
+    # other options include fastdebug and slowdebug
+    addConfigureArg "--with-debug-level=" "release"
+    addConfigureArg "--disable-zip-debug-info" ""
+    addConfigureArg "--disable-debug-symbols" ""
+  else
+    addConfigureArg "--with-debug-level=" "release"
+    addConfigureArg "--with-native-debug-symbols=" "none"
+  fi
 }
 
 # Configure the command parameters
