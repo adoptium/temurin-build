@@ -18,12 +18,10 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
-[ -r /opt/rh/devtoolset-2/root/usr/bin/gcc ] && export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
-[ -r /opt/rh/devtoolset-2/root/usr/bin/g++ ] && export CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
-[ -r /usr/local/gcc/bin/gcc-7.3 ] && export CC=/usr/local/gcc/bin/gcc-7.3
-[ -r /usr/local/gcc/bin/g++-7.3 ] && export CXX=/usr/local/gcc/bin/g++-7.3
-
-export BUILD_CC=$CC
+if [ -r /opt/rh/devtoolset-2/root/usr/bin/g++-NO ]; then
+  export CC=/opt/rh/devtoolset-2/root/usr/bin/gcc
+  export CXX=/opt/rh/devtoolset-2/root/usr/bin/g++
+fi
 
 if [ "${ARCHITECTURE}" == "x64" ]
 then
