@@ -23,6 +23,8 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 [ -r /usr/local/gcc/bin/gcc-7.3 ] && export CC=/usr/local/gcc/bin/gcc-7.3
 [ -r /usr/local/gcc/bin/g++-7.3 ] && export CXX=/usr/local/gcc/bin/g++-7.3
 
+export BUILD_CC=$CC
+
 if [ "${ARCHITECTURE}" == "x64" ]
 then
   export PATH=/opt/rh/devtoolset-2/root/usr/bin:$PATH
