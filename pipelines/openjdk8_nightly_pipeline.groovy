@@ -33,7 +33,9 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 					build job:"openjdk8_hs_${it}_${archOS}",
 							propagate: false,
 							parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJobNum}"),
-									string(name: 'UPSTREAM_JOB_NAME', value: "openjdk8_build_${archOS}")]
+									string(name: 'UPSTREAM_JOB_NAME', value: "openjdk8_build_${archOS}"),
+									string(name: 'JVM_VERSION', value: 'openjdk8'),
+									string(name: 'TARGET', value: 'openjdk')]
 				}
 			}
 		}

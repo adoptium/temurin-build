@@ -28,7 +28,9 @@ for ( int i = 0; i < buildPlatforms.size(); i++ ) {
 					build job:"amber-rsl_hs_${it}_${archOS}",
 							propagate: false,
 							parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${buildJobNum}"),
-									string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_amber_build_${archOS}")]
+									string(name: 'UPSTREAM_JOB_NAME', value: "openjdk_amber_build_${archOS}"),
+									string(name: 'JVM_VERSION', value: 'openjdk10'),
+									string(name: 'TARGET', value: 'sanity.openjdk')]
 				}
 			}
 		}
