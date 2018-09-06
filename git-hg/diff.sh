@@ -74,7 +74,9 @@ function runDiff() {
   fi
 }
 
-function checkTags() {
+# This function only checks the latest tag, a future enhancement could be to
+# check all tags
+function checkLatestTag() {
 
   cd openjdk-git || exit 1
   gitTag=$(git describe --abbrev=0 --tags) || exit 1
@@ -85,9 +87,9 @@ function checkTags() {
   cd - || exit 1
 
   if [ "$gitTag" == "$hgTag" ]; then
-    echo "Tags are in sync"
+    echo "Latest Tags are in sync"
   else
-    echo "ERROR - THE TAGS ARE NOT IN SYNC"
+    echo "ERROR - Git tag ${gitTag} is not equal to Hg tag ${hgTag}"
     exit 1
   fi
 }
@@ -96,4 +98,8 @@ cleanUp
 cloneRepos
 updateMercurialClone
 runDiff
-checkTags
+# No longer run the tag checking as we're only pulling in selective tags for
+# AdoptOpenJDK.  For others using this script (who are pulling in ALL of the
+# tags) you may wish to reenable this function and even enhance it to compare
+# all tags.
+#checkLatestTag
