@@ -7,6 +7,7 @@ makejdk.sh
 .SH DESCRIPTION
 The simplest way to build OpenJDK using our scripts is to run makejdk-any-platform.sh -c --version <jdk8u/jdk9> and have your user be in the Docker group on the machine (or prefix all of your Docker commands with sudo. This script can be used to create a Docker container that will be configured with all of the required dependencies and a base operating system in order to build OpenJDK.
 
+.B WARNING: Currently the Docker based build is not working (see https://github.com/AdoptOpenJDK/openjdk-build/issues/194)
 .SH VERSIONS
 .TP
 .BR \jdk8u
