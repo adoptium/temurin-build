@@ -68,7 +68,7 @@ dependencies and a base operating system in order to build OpenJDK. For example:
 
 `./makejdk-any-platform.sh -c --ssh --version jdk8u`
 
-* **NOTE:** If you don't use SSH keys (if you do then pass `-ssh`) to connect to GitHub then the script will challenge you for your GitHub username and password.
+* **NOTE:** If you don't use SSH keys (if you do then pass `-ssh`) to connect to GitHub then the script will challenge you for your GitHub username and password. (You can find more information about SSH keys for GitHub [here](https://help.github.com/articles/connecting-to-github-with-ssh/))
 * **NOTE:** The script will clone source code into the `--source` directory (defaults to `openjdk`).
 * **NOTE:** By default the docker container is removed each time and your build will be copied from the container to the host. 
 To override this behaviour, specify the `-k` or `--keep` option.
