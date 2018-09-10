@@ -26,9 +26,9 @@ pipelineJob("$buildFolder/$JOB_NAME") {
             scm {
                 git {
                     remote {
-                        url('https://github.com/johnoliver/openjdk-build.git')
+                        url('https://github.com/AdoptOpenJDK/openjdk-build.git')
                     }
-                    branch('*/update-release')
+                    branch('*/new_build_scripts')
                     extensions {
                         cleanBeforeCheckout()
                     }
