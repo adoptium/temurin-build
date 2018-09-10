@@ -43,8 +43,12 @@
 # 6  Merge the changes in $REWRITE_WORKSPACE into $REPO_LOCATION
 # 7. Push that merged result back to the remote upstream of REPO_LOCATION
 #
-# WARN:  Please do not make changes to this script without discussing on the
+# WARN: Please do not make changes to this script without discussing on the
 # build channel on the AdoptOpenJDK Slack.
+#
+# TODO: Due to the interleaving of commits in mercurial for CPU and PSU updates
+# e.g. jdk8u151+b12 and jdk152+b16 this script does not gracefully handle
+# merging in both.  We recommend following a CPU or PSU strategy only.
 #
 ################################################################################
 
@@ -121,7 +125,7 @@ function setMercurialRepoAndTagsToRetrieve() {
             # OpenJDK does not provide this yet. HEAD is interpreted by the
             # script below to mean tip/latest commit.
             if [ -z "$TAGS" ] ; then
-                TAGS="jdk8u144-b34 jdk8u151-b12 jdk8u152-b16 jdk8u161-b12 jdk8u162-b12 jdk8u171-b03 jdk8u172-b11 jdk8u181-b13 HEAD"
+                TAGS="jdk8u144-b34 jdk8u152-b16 jdk8u162-b12 jdk8u172-b11 jdk8u181-b13 HEAD"
             fi;;
      jdk9*) HG_REPO=http://hg.openjdk.java.net/jdk-updates/jdk9u
 
