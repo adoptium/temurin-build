@@ -1,4 +1,6 @@
 #!/bin/bash
+
+################################################################################
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,22 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Purpose: This script was contains colour codes that will be commonly used across multiple scripts
+################################################################################
 
-# Escape code
-esc=$(echo -en "\033")
+exit_script() {
+    if [[ -z ${KEEP_CONTAINER} ]] ; then
+      docker ps -a | awk '{ print $1,$2 }' | grep "$CONTAINER_NAME" | awk '{print $1 }' | xargs -I {} docker rm -f {}
+    fi
+    echo "Process exited"
+    trap - SIGINT SIGTERM # clear the trap
+    kill -- -$$ # Sends SIGTERM to child/sub processes
+}
 
-# Set colors
-# shellcheck disable=SC2034
-error="${esc}[0;31m"
-# shellcheck disable=SC2034
-warning="${esc}[0;33m"  #yellow
-# shellcheck disable=SC2034
-good="${esc}[0;32m"
-# shellcheck disable=SC2034
-info="${esc}[0;33m"
-# shellcheck disable=SC2034
-git="${esc}[0;34m"
-# shellcheck disable=SC2034
-normal=$(echo -en "${esc}[m\017")
-
+trap exit_script SIGINT SIGTERM 
