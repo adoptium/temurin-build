@@ -44,7 +44,9 @@ def buildConfigurations = [
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
-                additionalNodeLabels: 'ubuntu',
+                additionalNodeLabels: [
+                        hotspot: 'rhel7'
+                ],
                 test                : ['openjdktest', 'systemtest']
         ],
 
