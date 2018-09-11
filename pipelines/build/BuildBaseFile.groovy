@@ -90,12 +90,12 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
     ]
 }
 
-def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfiguration, String releaseTag) {
+def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag) {
     def jobConfigurations = [:]
 
     //Parse config passed to jenkins job
     new JsonSlurper()
-            .parseText(targetConfiguration)
+            .parseText(targetConfigurations)
             .each { target ->
 
         //For each requested build type, generate a configuration
