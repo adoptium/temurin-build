@@ -28,7 +28,7 @@ In order to build an OpenJDK variant on the build farm you need to follow the
 
 ### Building locally via Docker
 
-**WARN: As of 23rd March 2018 these instructions do not work, there are several issues that need resolving**
+**WARN: As of 23rd March 2018 these instructions do not work, there are several issues that need resolving ([see this issue as starting point](https://github.com/AdoptOpenJDK/openjdk-build/issues/194))**
 
 Make sure you have started your Docker Daemon first!  For help with getting docker follow the instructions [here](https://docs.docker.com/engine/installation/). 
 Once you have Docker started you can then use the script below to build OpenJDK.
@@ -68,7 +68,7 @@ dependencies and a base operating system in order to build OpenJDK. For example:
 
 `./makejdk-any-platform.sh -c --ssh --version jdk8u`
 
-* **NOTE:** If you don't use SSH keys (if you do then pass `-ssh`) to connect to GitHub then the script will challenge you for your GitHub username and password.
+* **NOTE:** If you don't use SSH keys (if you do then pass `-ssh`) to connect to GitHub then the script will challenge you for your GitHub username and password. (You can find more information about SSH keys for GitHub [here](https://help.github.com/articles/connecting-to-github-with-ssh/))
 * **NOTE:** The script will clone source code into the `--source` directory (defaults to `openjdk`).
 * **NOTE:** By default the docker container is removed each time and your build will be copied from the container to the host. 
 To override this behaviour, specify the `-k` or `--keep` option.

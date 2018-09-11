@@ -1,6 +1,6 @@
 println "building ${JDK_VERSION}"
 
-def buildPlatforms = ['Mac', 'Windows', 'Linux', 'zLinux', 'ppc64le', 'AIX', 'aarch64']
+def buildPlatforms = ['Mac', 'Windows', 'Windows32', 'Linux', 'zLinux', 'ppc64le', 'AIX', 'aarch64']
 def buildMaps = [:]
 def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyMMddHHmm")
 
