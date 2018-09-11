@@ -142,7 +142,7 @@ try {
         }
     }
 
-    if (enableTests) {
+    if (enableTests && config.test != false) {
         try {
             testStages = runTests(config)
             parallel testStages
