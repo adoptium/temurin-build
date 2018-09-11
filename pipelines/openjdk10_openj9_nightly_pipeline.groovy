@@ -1,14 +1,15 @@
 println "building ${JDK_VERSION}"
 
-def buildPlatforms = ['Linux', 'zLinux', 'ppc64le', 'AIX', "Windows"]
+//def buildPlatforms = ['Linux', 'zLinux', 'ppc64le', 'AIX', "Windows"]
+def buildPlatforms = ['ppc64le']
 def buildMaps = [:]
 def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyMMddHHmm")
 
-buildMaps['Linux'] = [test:['openjdktest', 'systemtest', 'externaltest'], ArchOSs:'x86-64_linux']
-buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
+//buildMaps['Linux'] = [test:['openjdktest', 'systemtest', 'externaltest'], ArchOSs:'x86-64_linux']
+//buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
 buildMaps['ppc64le'] = [test:['openjdktest', 'systemtest'], ArchOSs:'ppc64le_linux']
-buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
-buildMaps['Windows'] = [test:['openjdktest'], ArchOSs:'x86-64_windows']
+//buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
+//buildMaps['Windows'] = [test:['openjdktest'], ArchOSs:'x86-64_windows']
 def typeTests = ['openjdktest', 'systemtest']
 
 def jobs = [:]
