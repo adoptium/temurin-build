@@ -206,21 +206,27 @@ def doBuild(String javaToBuild, buildConfigurations, String osTarget, String ena
                     // generate job
                     createJob(jobTopName, jobFolder, config, enableTests)
 
+                    // execute build
                     def downstreamJob = build job: downstreamJobName, propagate: false, parameters: toBuildParams(enableTests, config.parameters)
 
-                    node("master") {
-                        sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
+                    if (downstreamJob.getResult() == 'SUCCESS') {
+                        // copy artifacts from build
+                        node("master") {
+                            catchError {
+                                sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
 
-                        copyArtifacts(
-                                projectName: downstreamJobName,
-                                selector: specific("${downstreamJob.getNumber()}"),
-                                filter: 'workspace/target/*',
-                                fingerprintArtifacts: true,
-                                target: "target/${config.os}/${config.arch}/${config.variant}/",
-                                flatten: true)
+                                copyArtifacts(
+                                        projectName: downstreamJobName,
+                                        selector: specific("${downstreamJob.getNumber()}"),
+                                        filter: 'workspace/target/*',
+                                        fingerprintArtifacts: true,
+                                        target: "target/${config.os}/${config.arch}/${config.variant}/",
+                                        flatten: true)
 
-                        sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
-                        archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
+                                sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+                                archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
+                            }
+                        }
                     }
                 }
             }
