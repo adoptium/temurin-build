@@ -90,23 +90,23 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
     ]
 }
 
-def getJobConfigurations(javaToBuild, buildConfigurations, String osTarget, String releaseTag) {
+def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag) {
     def jobConfigurations = [:]
 
     //Parse config passed to jenkins job
     new JsonSlurper()
-            .parseText(osTarget)
+            .parseText(targetConfigurations)
             .each { target ->
 
         //For each requested build type, generate a configuration
-        if (buildConfigurations.containsKey(target.key)) {
-            def configuration = buildConfigurations.get(target.key)
+        if (availableConfigurations.containsKey(target.key)) {
+            def configuration = availableConfigurations.get(target.key)
             target.value.each { variant ->
                 GString name = "${configuration.os}-${configuration.arch}-${variant}"
                 if (configuration.containsKey('additionalFileNameTag')) {
                     name += "-${configuration.additionalFileNameTag}"
                 }
-                jobConfigurations[name] = buildConfiguration(javaToBuild, variant, configuration, releaseTag)
+                jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag)
             }
         }
     }
@@ -169,21 +169,21 @@ def publishRelease(javaToBuild, releaseTag) {
     }
 }
 
-def doBuild(String javaToBuild, buildConfigurations, String osTarget, String enableTestsArg, String publishArg, String releaseTag) {
+def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag) {
 
     if (releaseTag == null || releaseTag == "false") {
         releaseTag = ""
     }
 
-    def jobConfigurations = getJobConfigurations(javaToBuild, buildConfigurations, osTarget, releaseTag)
+    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag)
     def jobs = [:]
 
     def enableTests = enableTestsArg == "true"
     def publish = publishArg == "true"
 
 
-    echo "Java: ${javaToBuild}"
-    echo "OS: ${osTarget}"
+    echo "Java: ${javaVersionToBuild}"
+    echo "OS: ${targetConfigurations}"
     echo "Enable tests: ${enableTests}"
     echo "Publish: ${publish}"
     echo "ReleaseTag: ${releaseTag}"
@@ -237,7 +237,7 @@ def doBuild(String javaToBuild, buildConfigurations, String osTarget, String ena
 
     // publish to github if needed
     if (publish) {
-        publishRelease(javaToBuild, releaseTag)
+        publishRelease(javaVersionToBuild, releaseTag)
     }
 }
 
