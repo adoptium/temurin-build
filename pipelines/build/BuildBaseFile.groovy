@@ -60,7 +60,7 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
 
     }
 
-    if (additionalNodeLabels !== null) {
+    if (additionalNodeLabels != null) {
         additionalNodeLabels = "${additionalNodeLabels}&&${buildTag}"
     } else {
         additionalNodeLabels = "${buildTag}"
