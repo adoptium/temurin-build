@@ -4,7 +4,7 @@ def buildPlatforms = ['Linux', 'zLinux', 'ppc64le', 'AIX', 'Windows', 'Windows32
 def buildMaps = [:]
 def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyMMddHHmm")
 
-buildMaps['Linux'] = [test:['openjdktest', 'systemtest', 'perftest', 'externaltest'], ArchOSs:'x86-64_linux']
+buildMaps['Linux'] = [test:['openjdktest', 'systemtest', 'perftest', 'externaltest','externaltest_extended'], ArchOSs:'x86-64_linux']
 buildMaps['LinuxXL'] = [test:['openjdktest'], ArchOSs:'x86-64_linux_largeHeap']
 buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
 buildMaps['ppc64le'] = [test:['openjdktest', 'systemtest'], ArchOSs:'ppc64le_linux']
