@@ -1,3 +1,30 @@
+# This Branch is a legacy branch!!
+
+Jobs are currently being migrated to the 
+[new_build_scripts](https://github.com/AdoptOpenJDK/openjdk-build/tree/new_build_scripts) branch.
+
+If you're looking to make fixes or additions to the build scripts please do so 
+on the [new_build_scripts](https://github.com/AdoptOpenJDK/openjdk-build/tree/new_build_scripts) branch 
+first and only backport to this legacy branch if required.
+
+**11th of Sept 2018** 
+
+At time of writing the new_build_scripts branch are building most jdk10 jobs
+
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+---
+ 
+
 # Repository for code and instructions for building OpenJDK
 
 [![Build Status](https://travis-ci.org/AdoptOpenJDK/openjdk-build.svg?branch=master)](https://travis-ci.org/AdoptOpenJDK/openjdk-build) [![Slack](https://slackin-jmnmplfpdu.now.sh/badge.svg)](https://slackin-jmnmplfpdu.now.sh/)

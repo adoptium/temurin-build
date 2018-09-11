@@ -1,17 +1,18 @@
 println "building ${JDK_VERSION}"
 
-def buildPlatforms = ['Mac', 'Windows', 'Linux', 'zLinux', 'ppc64le', 'AIX', 'arm32', 'aarch64']
+//def buildPlatforms = ['Mac', 'Windows', 'Linux', 'zLinux', 'ppc64le', 'AIX', 'arm32', 'aarch64']
+def buildPlatforms = ['ppc64le', 'AIX', 'arm32']
 def buildMaps = [:]
 def PIPELINE_TIMESTAMP = new Date(currentBuild.startTimeInMillis).format("yyyyMMddHHmm")
 
-buildMaps['Mac'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_macos']
-buildMaps['Windows'] = [test:['openjdktest'], ArchOSs:'x86-64_windows']
-buildMaps['Linux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_linux']
-buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
+//buildMaps['Mac'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_macos']
+//buildMaps['Windows'] = [test:['openjdktest'], ArchOSs:'x86-64_windows']
+//buildMaps['Linux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'x86-64_linux']
+//buildMaps['zLinux'] = [test:['openjdktest', 'systemtest'], ArchOSs:'s390x_linux']
 buildMaps['ppc64le'] = [test:['openjdktest', 'systemtest'], ArchOSs:'ppc64le_linux']
-buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
+//buildMaps['AIX'] = [test:false, ArchOSs:'ppc64_aix']
 buildMaps['arm32'] = [test:false, ArchOSs:'arm32_linux']
-buildMaps['aarch64'] = [test:['openjdktest'], ArchOSs:'aarch64_linux']
+//buildMaps['aarch64'] = [test:['openjdktest'], ArchOSs:'aarch64_linux']
 
 def jobs = [:]
 for ( int i = 0; i < buildPlatforms.size(); i++ ) {
