@@ -81,7 +81,6 @@ def runTests(config) {
     return testStages
 }
 
-
 def sign(config) {
     // Sign and archive jobs if needed
     if (config.os == "windows" || config.os == "mac") {

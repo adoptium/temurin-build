@@ -80,7 +80,6 @@ source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
 # Set the file name
 JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr '[:lower:]' '[:upper:]')
 
-
 if [ ! -z "${ADDITIONAL_FILE_NAME_TAG}" ]; then
   FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${OPERATING_SYSTEM}_${VARIANT}_${ADDITIONAL_FILE_NAME_TAG}_${TIMESTAMP}.${EXTENSION}"
 else
@@ -91,4 +90,3 @@ echo "Filename will be: $FILENAME"
 
 # shellcheck disable=SC2086
 bash "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
-
