@@ -38,7 +38,7 @@ then
   then
     export PATH="/usr/bin:$PATH"
 
-    if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
+    if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
     then
       if which g++-4.8; then
         export CC=gcc-4.8
@@ -58,7 +58,8 @@ then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000"
 fi
 
-if [ "${ARCHITECTURE}" == "aarch64" ]
+# Skip Building Freetype for certain platforms
+if [ "${ARCHITECTURE}" == "aarch64" ] || [ "${ARCHITECTURE}" == "ppc64le" ]
 then
   export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 fi
@@ -75,8 +76,6 @@ then
       fi
 
       export JDK_BOOT_DIR=$JDK9_BOOT_DIR
-      export CC=gcc-4.8
-      export CXX=g++-4.8
     fi
 fi
 
