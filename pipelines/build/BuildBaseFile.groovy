@@ -223,7 +223,10 @@ def doBuild(String javaVersionToBuild, availableConfigurations, String targetCon
                                         target: "target/${config.os}/${config.arch}/${config.variant}/",
                                         flatten: true)
 
+                                // Checksum
                                 sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+
+                                // Archive in Jenkins
                                 archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
                             }
                         }
@@ -240,6 +243,5 @@ def doBuild(String javaVersionToBuild, availableConfigurations, String targetCon
         publishRelease(javaVersionToBuild, releaseTag)
     }
 }
-
 
 return this
