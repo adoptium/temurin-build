@@ -49,7 +49,7 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
         buildTag = "(buildj9||build)&&openj9"
     }
 
-    def additionalNodeLabels
+    def additionalNodeLabels = null
     if (configuration.containsKey("additionalNodeLabels")) {
         // hack as jenkins sandbox wont allow instanceof
         if ("java.util.LinkedHashMap" == configuration.additionalNodeLabels.getClass().getName()) {
@@ -58,9 +58,12 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
             additionalNodeLabels = configuration.additionalNodeLabels
         }
 
+    }
+
+    if (additionalNodeLabels !== null) {
         additionalNodeLabels = "${additionalNodeLabels}&&${buildTag}"
     } else {
-        additionalNodeLabels = buildTag
+        additionalNodeLabels = "${buildTag}"
     }
 
     def buildParams = [
