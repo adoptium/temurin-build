@@ -124,8 +124,9 @@ function setMercurialRepoAndTagsToRetrieve() {
             # Would be nice to pull out the tags in an automated fashion, but
             # OpenJDK does not provide this yet. HEAD is interpreted by the
             # script below to mean tip/latest commit.
+            # Skipping jdk8u152-b16 as it seems to be problematic
             if [ -z "$TAGS" ] ; then
-                TAGS="jdk8u144-b34 jdk8u152-b16 jdk8u162-b12 jdk8u172-b11 jdk8u181-b13 HEAD"
+                TAGS="jdk8u144-b34 jdk8u162-b12 jdk8u172-b11 jdk8u181-b13 HEAD"
             fi;;
      jdk9*) HG_REPO=http://hg.openjdk.java.net/jdk-updates/jdk9u
 
