@@ -196,7 +196,7 @@ Example usage:
 
 ### Script Relationships
 
-![Build Variant Workflow](images/AdoptOpenJDK_Build_Script_Relationships.png)
+![Build Variant Workflow](docs/images/AdoptOpenJDK_Build_Script_Relationships.png)
 
 The main script to build OpenJDK is `makejdk-any-platform.sh`, which itself uses 
 and/or calls `configureBuild.sh`, `docker-build.sh` and/or `native-build.sh`. 
@@ -277,3 +277,8 @@ to your local platform and then build (Adopt) OpenJDK and place the result in
 
 These scripts default to using AdoptOpenJDK as the OpenJDK source repo to build 
 from, but you can override this with the `-r` flag.
+
+
+# Build farm
+
+The documentation for files that define the build farm builds can be found [here](/docs/build.md). 
