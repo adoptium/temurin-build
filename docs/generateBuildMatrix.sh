@@ -20,7 +20,7 @@ do
     do
         code=$(curl -s -o /dev/null -w "%{http_code}" "https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk${i}/jdk${i}-${buildName}")
         if [ $code = 200 ]; then
-            echo -n "[![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk${i}/jdk${i}-${buildName})](https://ci.adoptopenjdk.net/job/build-scripts/jobs/jdk${i}/jdk${i}-${buildName})"
+            echo -n "[![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk${i}/jdk${i}-${buildName})](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk${i}/job/jdk${i}-${buildName})"
         else
             echo -n "N/A"
         fi
