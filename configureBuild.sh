@@ -182,8 +182,12 @@ processArgumentsforSpecificArchitectures() {
   "ppc64le")
     jvm_variant=server
     build_full_name=linux-ppc64-normal-${jvm_variant}-release
-    # shellcheck disable=SC1083
-    BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]:="--build=$(rpm --eval %{_host})"}
+
+    if which rpm; then
+      # shellcheck disable=SC1083
+      BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]:="--build=$(rpm --eval %{_host})"}
+    fi
+
   ;;
 
   "armv7l")
