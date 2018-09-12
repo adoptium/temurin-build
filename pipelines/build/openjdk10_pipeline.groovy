@@ -83,12 +83,12 @@ def buildConfigurations = [
         ],
         */
         "linuxXL"    : [
-                os                 : 'linux',
-                additionalNodeLabels: 'centos6',
-                arch               : 'x64',
-                test               : false,
+                os                   : 'linux',
+                additionalNodeLabels : 'centos6',
+                arch                 : 'x64',
+                test                 : false,
                 additionalFileNameTag: "linuxXL",
-                configureArgs      : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs'
         ],
 ]
 
