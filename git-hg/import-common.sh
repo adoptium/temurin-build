@@ -29,10 +29,7 @@ function checkGitVersion() {
   GIT_MAJOR_VERSION=$(echo "$GIT_VERSION" | cut -d. -f1)
   GIT_MINOR_VERSION=$(echo "$GIT_VERSION" | cut -d. -f2)
   [ "$GIT_MAJOR_VERSION" -eq 1 ] && echo I need git version 2.16 or later and you have "$GIT_VERSION" && exit 1
-  if [ "$GIT_MAJOR_VERSION" -eq 2 ] && [ "$GIT_MINOR_VERSION" -lt 16 ] ; then
-    echo I need git version 2.16 or later and you have "$GIT_VERSION"
-    exit 1
-  fi
+  [ "$GIT_MAJOR_VERSION" -eq 2 ] && [ "$GIT_MINOR_VERSION" -lt 16 ] && echo I need git version 2.16 or later and you have "$GIT_VERSION" && exit 1
 }
 
 function installGitRemoteHg() {
@@ -41,7 +38,7 @@ function installGitRemoteHg() {
     echo "Getting it from https://raw.githubusercontent.com/felipec/git-remote-hg/master/git-remote-hg"
     mkdir -p "$WORKSPACE/bin"
     PATH="$PATH:$WORKSPACE/bin"
-    wget -O "$WORKSPACE/bin/git-remote-hg" "https://raw.githubusercontent.com/felipec/git-remote-hg/master/git-remote-hg"
+    wget -O "$WORKSPACE/bin/git-remote-hg https://raw.githubusercontent.com/felipec/git-remote-hg/master/git-remote-hg"
     chmod ugo+x "$WORKSPACE/bin/git-remote-hg"
     if ! which git-remote-hg 2>/dev/null; then
       echo "Still cannot find it, exiting.."
@@ -49,12 +46,3 @@ function installGitRemoteHg() {
     fi
   fi
 }
-
-# Merge master into dev as we build off dev at the AdoptOpenJDK Build farm
-# dev contains patches that AdoptOpenJDK has beyond upstream OpenJDK
-function performMergeIntoDevFromMaster() {
-  git checkout dev || git checkout -b dev
-  git rebase master || exit 1
-  git push origin dev || exit 1
-}
-
