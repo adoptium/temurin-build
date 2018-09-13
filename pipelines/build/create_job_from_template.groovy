@@ -37,6 +37,9 @@ pipelineJob("$buildFolder/$JOB_NAME") {
             scriptPath('pipelines/build/openjdk_build_pipeline.groovy')
             lightweight(true)
         }
+        if ($CLEANUP) {
+            cleanWs notFailBuild: true
+        }
     }
     properties {
         copyArtifactPermissionProperty {

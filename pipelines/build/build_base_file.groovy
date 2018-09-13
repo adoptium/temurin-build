@@ -146,6 +146,10 @@ def createJob(jobName, jobFolder, config, enableTests) {
     params.put("JOB_FOLDER", jobFolder)
     params.put("TEST_CONFIG", JsonOutput.prettyPrint(JsonOutput.toJson(config)))
 
+    // Clean workspace on aix as they are in a ramdisk
+    params.put("CLEANUP", config.os.equals("aix"))
+
+
     create = jobDsl targets: "pipelines/build/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
 
     return create
