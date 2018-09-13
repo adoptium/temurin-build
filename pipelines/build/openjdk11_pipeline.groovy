@@ -55,7 +55,7 @@ def buildConfigurations = [
 
         arm32Linux    : [
                 os                  : 'linux',
-                arch                : 'arm&&sxa',
+                arch                : 'arm',
                 test                : ['openjdktest']
         ],
 
