@@ -11,10 +11,9 @@ do
     curl -s "https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk${i}/" | egrep -o "job/jdk${i}u?-[^\/]+" >> "/tmp/build.txt"
 done
 
-
-
-cat "/tmp/build.txt" | cut -d'/' -f2 | sed -r 's/jdk[0-9]+u?\-//g' | sort | uniq  | while read buildName;
+cat "/tmp/build.txt" | cut -d'/' -f2 | sed -r 's/jdk[0-9]+u?\-//g' | sort | uniq | while read buildName;
 do
+    # buildName should be of the form: aix-ppc64-hotspot
     echo -n "| ${buildName} | "
     for i in "8u" "9u" "10u" "11";
     do

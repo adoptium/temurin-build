@@ -18,7 +18,7 @@ import groovy.json.JsonSlurper
  * This file is a template for running a build for a given configuration
  * A configuration is for example jdk10u-mac-x64-hotspot.
  *
- * This file is referenced by the pipeline template createJobFromTemplate.groovy
+ * This file is referenced by the pipeline template create_job_from_template.groovy
  *
  * A pipeline looks like:
  *  1. Check out and build JDK by calling build-farm/make-adopt-build-farm.sh
