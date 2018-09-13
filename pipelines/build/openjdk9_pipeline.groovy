@@ -14,15 +14,15 @@ limitations under the License.
 
 def buildConfigurations = [
         x64Mac    : [
-                os                 : 'mac',
-                arch               : 'x64',
+                os                  : 'mac',
+                arch                : 'x64',
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         x64Linux  : [
-                os                 : 'linux',
-                arch               : 'x64',
+                os                  : 'linux',
+                arch                : 'x64',
                 additionalNodeLabels: 'centos6',
                 test                : ['openjdktest', 'systemtest', 'externaltest']
         ],
@@ -36,45 +36,45 @@ def buildConfigurations = [
         ],
 
         ppc64Aix    : [
-                os                 : 'aix',
-                arch               : 'ppc64',
+                os                  : 'aix',
+                arch                : 'ppc64',
                 test                : false
         ],
 
         s390xLinux    : [
-                os                 : 'linux',
-                arch               : 's390x',
+                os                  : 'linux',
+                arch                : 's390x',
                 additionalNodeLabels: 'rhel7',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         ppc64leLinux    : [
-                os                 : 'linux',
-                arch               : 'ppc64le',
+                os                  : 'linux',
+                arch                : 'ppc64le',
                 additionalNodeLabels: 'centos7',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         arm32Linux    : [
-                os                 : 'linux',
-                arch               : 'arm',
+                os                  : 'linux',
+                arch                : 'arm',
                 test                : ['openjdktest']
         ],
 
         aarch64Linux    : [
-                os                 : 'linux',
-                arch               : 'aarch64',
+                os                  : 'linux',
+                arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
                 test                : ['openjdktest']
         ],
 
         "linuxXL"    : [
-                os                 : 'linux',
-                additionalNodeLabels: 'centos6',
-                arch               : 'x64',
-                test               : false,
+                os                   : 'linux',
+                additionalNodeLabels : 'centos6',
+                arch                 : 'x64',
+                test                 : false,
                 additionalFileNameTag: "linuxXL",
-                configureArgs      : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs'
         ],
 ]
 
@@ -82,6 +82,6 @@ def javaToBuild = "jdk9u"
 
 node ("master") {
     checkout scm
-    def buildFile = load "${WORKSPACE}/pipelines/build/BuildBaseFile.groovy"
+    def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
     buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag)
 }

@@ -54,7 +54,8 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 additionalNodeLabels: [
-                        hotspot: 'centos7',
+                        // Pinned as at time of writing build-osuosl-centos74-ppc64le-2 does not have a valid boot jdk
+                        hotspot: 'centos7&&build-osuosl-centos74-ppc64le-1',
                         openj9:  'ubuntu'
                 ],
                 test                : ['openjdktest', 'systemtest']
@@ -82,12 +83,12 @@ def buildConfigurations = [
         ],
         */
         "linuxXL"    : [
-                os                 : 'linux',
-                additionalNodeLabels: 'centos6',
-                arch               : 'x64',
-                test               : false,
+                os                   : 'linux',
+                additionalNodeLabels : 'centos6',
+                arch                 : 'x64',
+                test                 : false,
                 additionalFileNameTag: "linuxXL",
-                configureArgs      : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs'
         ],
 ]
 
@@ -95,6 +96,6 @@ def javaToBuild = "jdk10u"
 
 node ("master") {
     checkout scm
-    def buildFile = load "${WORKSPACE}/pipelines/build/BuildBaseFile.groovy"
+    def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
     buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag)
 }

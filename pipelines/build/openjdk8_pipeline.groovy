@@ -21,8 +21,8 @@ def buildConfigurations = [
         ],
 
         x64Linux  : [
-                os                 : 'linux',
-                arch               : 'x64',
+                os                  : 'linux',
+                arch                : 'x64',
                 additionalNodeLabels: [
                         hotspot: 'centos6',
                         openj9:  'build-joyent-centos69-x64-1'
@@ -32,8 +32,8 @@ def buildConfigurations = [
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows: [
-                os                 : 'windows',
-                arch               : 'x64',
+                os                  : 'windows',
+                arch                : 'x64',
                 additionalNodeLabels: [
                         hotspot: 'win2008',
                         openj9:  'win2012'
@@ -48,30 +48,30 @@ def buildConfigurations = [
         ],
 
         s390xLinux    : [
-                os                 : 'linux',
-                arch               : 's390x',
+                os                  : 'linux',
+                arch                : 's390x',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         ppc64leLinux    : [
-                os                 : 'linux',
-                arch               : 'ppc64le',
+                os                  : 'linux',
+                arch                : 'ppc64le',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         arm32Linux    : [
-                os                 : 'linux',
-                arch               : 'arm',
+                os                  : 'linux',
+                arch                : 'arm',
                 test                : ['openjdktest']
         ],
 
         "linuxXL"    : [
-                os                  : 'linux',
-                additionalNodeLabels: 'centos6',
-                arch                : 'x64',
-                test                : false,
+                os                   : 'linux',
+                additionalNodeLabels : 'centos6',
+                arch                 : 'x64',
+                test                 : false,
                 additionalFileNameTag: "linuxXL",
-                configureArgs       : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs'
         ],
 ]
 
@@ -79,7 +79,7 @@ def javaToBuild = "jdk8u"
 
 node ("master") {
     checkout scm
-    def buildFile = load "${WORKSPACE}/pipelines/build/BuildBaseFile.groovy"
-    buildFile.doBuild(javaToBuild, buildConfigurations, osTarget, enableTests, publish, releaseTag)
+    def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
+    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag)
 }
 
