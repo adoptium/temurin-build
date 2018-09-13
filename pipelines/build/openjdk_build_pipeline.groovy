@@ -63,19 +63,23 @@ def runTests(config) {
 
     config.test.each { testType ->
         // For each requested test, i.e 'openjdktest', 'systemtest', 'perftest', 'externaltest', call test job
-        println "Running test: ${testType}}"
-        testStages["${testType}"] = {
-            stage("${testType}") {
+        try {
+            println "Running test: ${testType}}"
+            testStages["${testType}"] = {
+                stage("${testType}") {
 
-                // example jobName: openjdk10_hs_externaltest_x86-64_linux
-                def jobName = determineTestJobName(config, testType)
-                catchError {
-                    build job: jobName,
-                            propagate: false,
-                            parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
-                                         string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}")]
+                    // example jobName: openjdk10_hs_externaltest_x86-64_linux
+                    def jobName = determineTestJobName(config, testType)
+                    catchError {
+                        build job: jobName,
+                                propagate: false,
+                                parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                                             string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}")]
+                    }
                 }
             }
+        } catch (Exception e) {
+            println "Failed execute test: ${e.getLocalizedMessage()}"
         }
     }
     return testStages
