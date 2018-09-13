@@ -21,13 +21,6 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 if [ "${ARCHITECTURE}" == "x64" ]
 then
   export PATH=/opt/rh/devtoolset-2/root/usr/bin:$PATH
-
-  if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
-  then
-    [ -r /usr/local/gcc/bin/gcc-7.3 ] && export CC=/usr/local/gcc/bin/gcc-7.3
-    [ -r /usr/local/gcc/bin/g++-7.3 ] && export CXX=/usr/local/gcc/bin/g++-7.3
-    export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
-  fi
 fi
 
 if [ "${ARCHITECTURE}" == "s390x" ]
@@ -91,5 +84,10 @@ then
       wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=linux&release=latest&arch=${downloadArch}" | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR"
     fi
     export JDK_BOOT_DIR=$JDK10_BOOT_DIR
+
+    [ -r /usr/local/gcc/bin ] && export PATH=/usr/local/gcc/bin:$PATH
+    [ -r /usr/local/gcc/bin/gcc-7.3 ] && export CC=/usr/local/gcc/bin/gcc-7.3
+    [ -r /usr/local/gcc/bin/g++-7.3 ] && export CXX=/usr/local/gcc/bin/g++-7.3
+    export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
 
 fi
