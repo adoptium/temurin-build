@@ -14,7 +14,6 @@ if (!binding.hasVariable('ADDITIONAL_FILE_NAME_TAG')) ADDITIONAL_FILE_NAME_TAG =
 if (!binding.hasVariable('TEST_CONFIG')) TEST_CONFIG = ""
 if (!binding.hasVariable('ENABLE_TESTS')) ENABLE_TESTS = "false"
 
-
 folder(buildFolder) {
     description 'Automatically generated build jobs.'
 }
@@ -36,9 +35,6 @@ pipelineJob("$buildFolder/$JOB_NAME") {
             }
             scriptPath('pipelines/build/openjdk_build_pipeline.groovy')
             lightweight(true)
-        }
-        if (CLEANUP) {
-            cleanWs notFailBuild: true
         }
     }
     properties {

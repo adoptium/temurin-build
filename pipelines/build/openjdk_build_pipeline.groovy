@@ -140,9 +140,14 @@ try {
     stage("build") {
         node(NODE_LABEL) {
             checkout scm
-
-            sh "./build-farm/make-adopt-build-farm.sh"
-            archiveArtifacts artifacts: "workspace/target/*"
+            try {
+                sh "./build-farm/make-adopt-build-farm.sh"
+                archiveArtifacts artifacts: "workspace/target/*"
+            } finally {
+                if (config.os == "aix") {
+                    cleanWs notFailBuild: true
+                }
+            }
         }
     }
 
