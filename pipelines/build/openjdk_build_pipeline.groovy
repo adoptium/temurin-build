@@ -18,7 +18,7 @@ import groovy.json.JsonSlurper
  * This file is a template for running a build for a given configuration
  * A configuration is for example jdk10u-mac-x64-hotspot.
  *
- * This file is referenced by the pipeline template createJobFromTemplate.groovy
+ * This file is referenced by the pipeline template create_job_from_template.groovy
  *
  * A pipeline looks like:
  *  1. Check out and build JDK by calling build-farm/make-adopt-build-farm.sh
@@ -63,19 +63,23 @@ def runTests(config) {
 
     config.test.each { testType ->
         // For each requested test, i.e 'openjdktest', 'systemtest', 'perftest', 'externaltest', call test job
-        println "Running test: ${testType}}"
-        testStages["${testType}"] = {
-            stage("${testType}") {
+        try {
+            println "Running test: ${testType}}"
+            testStages["${testType}"] = {
+                stage("${testType}") {
 
-                // example jobName: openjdk10_hs_externaltest_x86-64_linux
-                def jobName = determineTestJobName(config, testType)
-                catchError {
-                    build job: jobName,
-                            propagate: false,
-                            parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
-                                         string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}")]
+                    // example jobName: openjdk10_hs_externaltest_x86-64_linux
+                    def jobName = determineTestJobName(config, testType)
+                    catchError {
+                        build job: jobName,
+                                propagate: false,
+                                parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                                             string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}")]
+                    }
                 }
             }
+        } catch (Exception e) {
+            println "Failed execute test: ${e.getLocalizedMessage()}"
         }
     }
     return testStages
@@ -136,13 +140,18 @@ try {
     stage("build") {
         node(NODE_LABEL) {
             checkout scm
-
-            sh "./build-farm/make-adopt-build-farm.sh"
-            archiveArtifacts artifacts: "workspace/target/*"
+            try {
+                sh "./build-farm/make-adopt-build-farm.sh"
+                archiveArtifacts artifacts: "workspace/target/*"
+            } finally {
+                if (config.os == "aix") {
+                    cleanWs notFailBuild: true
+                }
+            }
         }
     }
 
-    if (enableTests) {
+    if (enableTests && config.test != false) {
         try {
             testStages = runTests(config)
             parallel testStages

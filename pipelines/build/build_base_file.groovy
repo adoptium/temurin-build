@@ -20,7 +20,7 @@ limitations under the License.
  *
  * This:
  *
- * 1. Generate job for each configuration based on  createJobFromTemplate.groovy
+ * 1. Generate job for each configuration based on  create_job_from_template.groovy
  * 2. Execute job
  * 3. Push generated artifacts to github
  */
@@ -138,7 +138,7 @@ static def getJobFolder(config) {
     return "build-scripts/jobs/${config.javaVersion}"
 }
 
-// Generate a job from template at `createJobFromTemplate.groovy`
+// Generate a job from template at `create_job_from_template.groovy`
 def createJob(jobName, jobFolder, config, enableTests) {
 
     def params = config.parameters.clone()
@@ -146,7 +146,7 @@ def createJob(jobName, jobFolder, config, enableTests) {
     params.put("JOB_FOLDER", jobFolder)
     params.put("TEST_CONFIG", JsonOutput.prettyPrint(JsonOutput.toJson(config)))
 
-    create = jobDsl targets: "pipelines/build/createJobFromTemplate.groovy", ignoreExisting: false, additionalParameters: params
+    create = jobDsl targets: "pipelines/build/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
 
     return create
 }

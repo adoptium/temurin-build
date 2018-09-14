@@ -14,13 +14,12 @@ if (!binding.hasVariable('ADDITIONAL_FILE_NAME_TAG')) ADDITIONAL_FILE_NAME_TAG =
 if (!binding.hasVariable('TEST_CONFIG')) TEST_CONFIG = ""
 if (!binding.hasVariable('ENABLE_TESTS')) ENABLE_TESTS = "false"
 
-
 folder(buildFolder) {
     description 'Automatically generated build jobs.'
 }
 
 pipelineJob("$buildFolder/$JOB_NAME") {
-    description('<h1>THIS IS AN AUTOMATICALLY GENERATED JOB DO NOT MODIFY, IT WILL BE OVERWRITTEN.</h1><p>This job is defined in createJobFromTemplate.groovy in the openjdk-build repo, if you wish to change it modify that</p>')
+    description('<h1>THIS IS AN AUTOMATICALLY GENERATED JOB DO NOT MODIFY, IT WILL BE OVERWRITTEN.</h1><p>This job is defined in create_job_from_template.groovy in the openjdk-build repo, if you wish to change it modify that</p>')
     definition {
         cpsScm {
             scm {

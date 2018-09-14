@@ -55,7 +55,7 @@ def buildConfigurations = [
 
         arm32Linux    : [
                 os                  : 'linux',
-                arch                : 'arm32',
+                arch                : 'arm',
                 test                : ['openjdktest']
         ],
 
@@ -75,12 +75,12 @@ def buildConfigurations = [
         ],
         */
         "linuxXL"    : [
-                os                 : 'linux',
-                additionalNodeLabels: 'centos6',
-                arch               : 'x64',
-                test               : false,
+                os                   : 'linux',
+                additionalNodeLabels : 'centos6',
+                arch                 : 'x64',
+                test                 : false,
                 additionalFileNameTag: "linuxXL",
-                configureArgs      : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs'
         ],
 ]
 
@@ -88,6 +88,6 @@ def javaToBuild = "jdk11"
 
 node ("master") {
     checkout scm
-    def buildFile = load "${WORKSPACE}/pipelines/build/BuildBaseFile.groovy"
+    def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
     buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag)
 }

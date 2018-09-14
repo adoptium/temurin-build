@@ -183,7 +183,7 @@ processArgumentsforSpecificArchitectures() {
     jvm_variant=server
     build_full_name=linux-ppc64-normal-${jvm_variant}-release
 
-    if which rpm; then
+    if [ "$(command -v rpm)" ]; then
       # shellcheck disable=SC1083
       BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]:="--build=$(rpm --eval %{_host})"}
     fi
