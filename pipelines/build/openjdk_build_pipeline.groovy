@@ -71,8 +71,6 @@ def runTests(config) {
                     // example jobName: openjdk10_hs_externaltest_x86-64_linux
                     def jobName = determineTestJobName(config, testType)
 
-
-
                     def jobExists = Jenkins.instance.getAllItems()
                             .findAll { job ->
                         job.fullName == jobName && !job.isDisabled()
@@ -86,7 +84,7 @@ def runTests(config) {
                                                  string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}")]
                         }
                     } else {
-                        println "Requested test job that does not exist or is disabled: ${jobName}}"
+                        println "Requested test job that does not exist or is disabled: ${jobName}"
                     }
                 }
             }
