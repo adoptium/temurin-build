@@ -70,11 +70,21 @@ def runTests(config) {
 
                     // example jobName: openjdk10_hs_externaltest_x86-64_linux
                     def jobName = determineTestJobName(config, testType)
-                    catchError {
-                        build job: jobName,
-                                propagate: false,
-                                parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
-                                             string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}")]
+
+                    def jobExists = Jenkins.instance.getAllItems()
+                            .findAll { job ->
+                        job.fullName == jobName && !job.isDisabled()
+                    }.size() > 0;
+
+                    if (jobExists) {
+                        catchError {
+                            build job: jobName,
+                                    propagate: false,
+                                    parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                                                 string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}")]
+                        }
+                    } else {
+                        println "Requested test job that does not exist or is disabled: ${jobName}"
                     }
                 }
             }
