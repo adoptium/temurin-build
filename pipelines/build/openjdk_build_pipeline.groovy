@@ -158,7 +158,7 @@ try {
                 }
             }
         } else {
-            error("No node if this type exists")
+            error("No node of this type exists: ${NODE_LABEL}")
             return
         }
     }
