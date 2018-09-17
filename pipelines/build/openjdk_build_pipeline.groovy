@@ -11,10 +11,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-@Library(['NodeHelper', 'JobHelper']) _
 
 import groovy.json.JsonSlurper
 
+def JobHelper = library('openjdk-jenkins-helper').JobHelper
+def NodeHelper = library('openjdk-jenkins-helper').NodeHelper
 
 /**
  * This file is a template for running a build for a given configuration
