@@ -242,7 +242,6 @@ checkingAndDownloadCaCerts()
       echo "Requested use of JEP319 certs"
       local jreLink="https://api.adoptopenjdk.net/v2/binary/nightly/openjdk10?arch=x64&os=linux&release=latest&type=jre&openjdk_impl=hotspot";
       mkdir -p "security"
-
       wget -O jre.tar.gz "${jreLink}"
       tar --list -zf jre.tar.gz  | grep cacerts | xargs tar --wildcards --strip-components=4 -xpzf jre.tar.gz -C "./security/"
       rm jre.tar.gz
