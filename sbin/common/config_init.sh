@@ -74,6 +74,7 @@ TARGET_FILE_NAME
 TMP_CONTAINER_NAME
 TMP_SPACE_BUILD
 USE_DOCKER
+USE_JEP319_CERTS
 USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
 WORKING_DIR
@@ -233,6 +234,9 @@ function parseConfigurationArguments() {
         "--update-version"  | "-u" )
         BUILD_CONFIG[OPENJDK_UPDATE_VERSION]="$1"; shift;;
 
+        "--use-jep319-certs" )
+        BUILD_CONFIG[USE_JEP319_CERTS]=true;;
+
         "--version"  | "-v" )
         setOpenJdkVersion "$1"; shift;;
 
@@ -345,6 +349,9 @@ function configDefaults() {
 
   # If the wrong git repo is there allow it to be removed
   BUILD_CONFIG[CLEAN_GIT_REPO]=false
+
+  # By default dont backport JEP318 certs to < Java 10
+  BUILD_CONFIG[USE_JEP319_CERTS]=false
 }
 
 # Declare the map of build configuration that we're going to use
