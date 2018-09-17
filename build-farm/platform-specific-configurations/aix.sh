@@ -36,13 +36,13 @@ then
   elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk10_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
+  elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk10_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar DF=/usr/sysv/bin/df"
   fi
 fi
 
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ];
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ];
 then
   export JDK10_BOOT_DIR="$PWD/jdk-10"
   if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
