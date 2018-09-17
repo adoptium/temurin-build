@@ -283,9 +283,11 @@ downloadingRequiredDependencies()
            echo "Checking and download Freemarker dependency"
            checkingAndDownloadingFreemarker
      fi
-      echo "Checking and download CaCerts dependency"
-      checkingAndDownloadCaCerts
   fi
+
+  echo "Checking and download CaCerts dependency"
+  checkingAndDownloadCaCerts
+
 }
 
 function moveTmpToWorkspaceLocation {
