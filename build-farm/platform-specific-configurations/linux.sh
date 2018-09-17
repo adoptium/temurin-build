@@ -72,8 +72,7 @@ then
     fi
 fi
 
-
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
 then
     export JDK10_BOOT_DIR="$PWD/jdk-10"
     if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then

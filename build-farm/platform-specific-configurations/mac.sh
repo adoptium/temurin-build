@@ -30,13 +30,13 @@ fi
 sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
 
-if [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
+if [ "${JAVA_TO_BUILD}" != "${JDK8_VERSION}" ]
 then
     export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
 fi
 
 
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
 then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.8"
 
