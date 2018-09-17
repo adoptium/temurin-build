@@ -11,6 +11,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+@Library(['NodeHelper', 'JobHelper']) _
+
 import groovy.json.JsonSlurper
 
 
@@ -71,12 +73,7 @@ def runTests(config) {
                     // example jobName: openjdk10_hs_externaltest_x86-64_linux
                     def jobName = determineTestJobName(config, testType)
 
-                    def jobExists = Jenkins.getInstance().getAllItems()
-                            .findAll { job ->
-                        job.fullName == jobName && !job.isDisabled()
-                    }.size() > 0;
-
-                    if (jobExists) {
+                    if (JobHelper.jobIsRunnable(jobName)) {
                         catchError {
                             build job: jobName,
                                     propagate: false,
@@ -148,16 +145,21 @@ try {
     def enableTests = ENABLE_TESTS == "true"
 
     stage("build") {
-        node(NODE_LABEL) {
-            checkout scm
-            try {
-                sh "./build-farm/make-adopt-build-farm.sh"
-                archiveArtifacts artifacts: "workspace/target/*"
-            } finally {
-                if (config.os == "aix") {
-                    cleanWs notFailBuild: true
+        if(NodeHelper.nodeIsOnline(NODE_LABEL)) {
+            node(NODE_LABEL) {
+                checkout scm
+                try {
+                    sh "./build-farm/make-adopt-build-farm.sh"
+                    archiveArtifacts artifacts: "workspace/target/*"
+                } finally {
+                    if (config.os == "aix") {
+                        cleanWs notFailBuild: true
+                    }
                 }
             }
+        } else {
+            error("No node if this type exists")
+            return
         }
     }
 
