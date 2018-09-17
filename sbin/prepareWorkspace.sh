@@ -229,28 +229,29 @@ checkingAndDownloadCaCerts()
 {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 
-  echo "Retrieving cacerts file"
-
+    echo "Retrieving cacerts file"
   # Ensure it's the latest we pull in
   rm -rf "cacerts_area"
   mkdir "cacerts_area" || exit
   cd "cacerts_area" || exit
 
-  git init
-  git remote add origin -f https://github.com/AdoptOpenJDK/openjdk-build.git
-  git config core.sparsecheckout true
-  echo "security/*" >> .git/info/sparse-checkout
-  git pull origin master
-
-  echo "cacerts should be here..."
-
-  # shellcheck disable=SC2046
-  if ! [ -r "security/cacerts" ]; then
-    echo "Failed to retrieve the cacerts file, exiting..."
-    exit;
+  if [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" == "true" ];
+  then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]
+    then
+      echo "Requested use of JEP319 certs"
+      local jreLink="https://api.adoptopenjdk.net/v2/binary/nightly/openjdk10?arch=x64&os=linux&release=latest&type=jre&openjdk_impl=hotspot";
+      mkdir -p "security"
+      wget -O - "${jreLink}" | tar --wildcards --strip-components=4 -xpzf - "*/lib/security/cacerts" -C "./security/"
+    fi
   else
-    echo "Successfully retrieved the cacerts file!"
+    git init
+    git remote add origin -f https://github.com/AdoptOpenJDK/openjdk-build.git
+    git config core.sparsecheckout true
+    echo "security/*" >> .git/info/sparse-checkout
+    git pull origin master
   fi
+
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 }
 
