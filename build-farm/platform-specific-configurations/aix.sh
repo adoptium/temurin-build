@@ -27,7 +27,7 @@ if [ "${ARCHITECTURE}" == "x64" ] && [ "${VARIANT}" == "openj9" ];
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} DF=/usr/sysv/bin/df"
 
-  if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
+  if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk8_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar"
   elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
