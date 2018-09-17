@@ -71,7 +71,7 @@ def runTests(config) {
                     // example jobName: openjdk10_hs_externaltest_x86-64_linux
                     def jobName = determineTestJobName(config, testType)
 
-                    def jobExists = Jenkins.instance.getAllItems()
+                    def jobExists = Jenkins.getInstance().getAllItems()
                             .findAll { job ->
                         job.fullName == jobName && !job.isDisabled()
                     }.size() > 0;
