@@ -240,11 +240,9 @@ checkingAndDownloadCaCerts()
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]
     then
       echo "Requested use of JEP319 certs"
-      local jreLink="https://api.adoptopenjdk.net/v2/binary/nightly/openjdk10?arch=x64&os=linux&release=latest&type=jre&openjdk_impl=hotspot";
+      local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk10u/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
       mkdir -p "security"
-      wget -O jre.tar.gz "${jreLink}"
-      tar --list -zf jre.tar.gz  | grep "lib/security/cacerts" | xargs tar --strip-components=4 -xpzf jre.tar.gz -C "./security/"
-      rm jre.tar.gz
+      wget -O "./security/cacerts" "${caLink}"
     fi
   else
     git init
