@@ -19,32 +19,25 @@ def buildConfigurations = [
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
                 test                : ['openjdktest', 'systemtest']
         ],
-
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot: 'centos6',
-                        openj9:  'build-joyent-centos69-x64-1'
-                ],
-                test                : ['openjdktest', 'systemtest', 'perftest', 'externaltest', 'externaltest_extended']
+                additionalNodeLabels: 'centos6',
+                test                : ['openjdktest', 'systemtest', 'externaltest']
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot: 'win2008',
-                        openj9:  'win2012'
-                ],
+                additionalNodeLabels: 'win2012',
                 test                : ['openjdktest']
         ],
 
         ppc64Aix    : [
-                os                 : 'aix',
-                arch               : 'ppc64',
-                test               : false
+                os                  : 'aix',
+                arch                : 'ppc64',
+                test                : false
         ],
 
         s390xLinux    : [
@@ -56,6 +49,7 @@ def buildConfigurations = [
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
+                additionalNodeLabels: 'centos7',
                 test                : ['openjdktest', 'systemtest']
         ],
 
@@ -65,6 +59,21 @@ def buildConfigurations = [
                 test                : ['openjdktest']
         ],
 
+        aarch64Linux    : [
+                os                  : 'linux',
+                arch                : 'aarch64',
+                additionalNodeLabels: 'centos7',
+                test                : ['openjdktest']
+        ],
+
+        /*
+        "x86-32Windows"    : [
+                os                 : 'windows',
+                arch               : 'x86-32',
+                additionalNodeLabels: 'win2012&&x86-32',
+                test                : false
+        ],
+        */
         "linuxXL"    : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
@@ -75,11 +84,10 @@ def buildConfigurations = [
         ],
 ]
 
-def javaToBuild = "jdk8u"
+def javaToBuild = "jdk"
 
 node ("master") {
     checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
     buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag)
 }
-
