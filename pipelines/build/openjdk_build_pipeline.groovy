@@ -14,9 +14,10 @@ limitations under the License.
 
 import groovy.json.JsonSlurper
 
-def helperLib = library('openjdk-jenkins-helper')
-def JobHelper = helperLib.JobHelper
-def NodeHelper = helperLib.NodeHelper
+@Library('openjdk-jenkins-helper@master')
+import JobHelper
+import NodeHelper
+
 
 /**
  * This file is a template for running a build for a given configuration
