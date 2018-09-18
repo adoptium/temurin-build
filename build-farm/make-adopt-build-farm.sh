@@ -60,7 +60,7 @@ case "${JDK_BOOT_VERSION}" in
 esac
 
 
-if [ -d "${JDK_BOOT_DIR}" ]
+if [ ! -d "${JDK_BOOT_DIR}" ]
 then
   export JDK_BOOT_DIR="${JAVA_HOME}"
 fi
