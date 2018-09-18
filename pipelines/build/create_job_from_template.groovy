@@ -30,7 +30,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
             scm {
                 git {
                     remote {
-                        url($GIT_URI)
+                        url(GIT_URI)
                     }
                     branch("*/${GIT_BRANCH}")
                     extensions {
