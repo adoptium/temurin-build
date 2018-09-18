@@ -14,6 +14,11 @@ if (!binding.hasVariable('ADDITIONAL_FILE_NAME_TAG')) ADDITIONAL_FILE_NAME_TAG =
 if (!binding.hasVariable('TEST_CONFIG')) TEST_CONFIG = ""
 if (!binding.hasVariable('ENABLE_TESTS')) ENABLE_TESTS = "false"
 
+
+if (!binding.hasVariable('GIT_URI')) GIT_URI = "https://github.com/AdoptOpenJDK/openjdk-build.git"
+if (!binding.hasVariable('GIT_BRANCH')) GIT_BRANCH = "new_build_scripts"
+
+
 folder(buildFolder) {
     description 'Automatically generated build jobs.'
 }
@@ -25,9 +30,9 @@ pipelineJob("$buildFolder/$JOB_NAME") {
             scm {
                 git {
                     remote {
-                        url('https://github.com/AdoptOpenJDK/openjdk-build.git')
+                        url($GIT_URI)
                     }
-                    branch('*/new_build_scripts')
+                    branch("*/${GIT_BRANCH}")
                     extensions {
                         cleanBeforeCheckout()
                     }
