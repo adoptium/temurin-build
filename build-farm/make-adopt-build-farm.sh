@@ -59,6 +59,12 @@ case "${JDK_BOOT_VERSION}" in
       *)    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK11_BOOT_DIR}";;
 esac
 
+
+if [ -d "${JDK_BOOT_DIR}" ]
+then
+  export JDK_BOOT_DIR="${JAVA_HOME}"
+fi
+
 echo "Boot jdk: ${JDK_BOOT_DIR}"
 
 
