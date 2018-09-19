@@ -75,7 +75,7 @@ def buildConfigurations = [
                 test                : false
         ],
         */
-        "linuxXL"    : [
+        linuxXL    : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
