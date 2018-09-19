@@ -233,7 +233,7 @@ checkOpenJDKGitRepo()
        if [ ! -z "$TAG" ]; then
          git checkout "$TAG"
        fi
-       git clean -fdx
+       git clean -ffdx
      else
        # The repo is not for the correct JDK Version
        echo "Incorrect Source Code for ${OPENJDK_FOREST_NAME}. Will re-clone"
