@@ -81,6 +81,8 @@ checkoutAndCloneOpenJDKGitRepo()
     cloneOpenJDKGitRepo
   fi
 
+  updateOpenj9Sources
+
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
 
@@ -97,6 +99,14 @@ setGitCloneArguments() {
   GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} '-b' "${BUILD_CONFIG[BRANCH]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
 }
 
+updateOpenj9Sources() {
+  # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
+    bash get_source.sh
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+  fi
+}
 # Clone the git repo
 cloneOpenJDKGitRepo()
 {
@@ -108,14 +118,6 @@ cloneOpenJDKGitRepo()
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || exit 1
     git checkout "${BUILD_CONFIG[TAG]}"
   fi
-
-  # TODO extract this to its own function
-  # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
-    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    bash get_source.sh
-  fi
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
 
 # Create the workspace
