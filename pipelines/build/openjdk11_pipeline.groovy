@@ -49,7 +49,7 @@ def buildConfigurations = [
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                additionalNodeLabels: 'centos7',
+                additionalNodeLabels: 'ubuntu',
                 test                : ['openjdktest', 'systemtest']
         ],
 
