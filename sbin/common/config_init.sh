@@ -246,6 +246,19 @@ function parseConfigurationArguments() {
         *) echo >&2 "Invalid build.sh option: ${opt}"; exit 1;;
       esac
     done
+
+    setBranch
+}
+
+function setBranch() {
+
+    # Which repo branch to build, e.g. dev by default for hotspot, "openj9" for openj9
+  local branch="dev"
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
+    branch="openj9";
+  fi
+
+  BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}
 }
 
 # Set the config defaults
@@ -328,8 +341,6 @@ function configDefaults() {
   # Director where OpenJDK binary gets built to
   BUILD_CONFIG[TARGET_DIR]=${BUILD_CONFIG[TARGET_DIR]:-"target/"}
 
-  # Which repo branch to build, e.g. dev
-  BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-"dev"}
 
   # Which repo tag to build, e.g. jdk8u172-b03
   BUILD_CONFIG[TAG]=${BUILD_CONFIG[TAG]:-""}

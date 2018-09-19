@@ -62,6 +62,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
         stringParam('TARGET_OS', "$TARGET_OS")
         stringParam('ADDITIONAL_FILE_NAME_TAG', "$ADDITIONAL_FILE_NAME_TAG")
         stringParam('ENABLE_TESTS', "$ENABLE_TESTS")
+        stringParam('BRANCH', "$BRANCH")
         textParam('TEST_CONFIG', "$TEST_CONFIG")
     }
 }

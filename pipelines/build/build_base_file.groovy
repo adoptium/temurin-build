@@ -39,7 +39,7 @@ def toBuildParams(enableTests, params) {
     return buildParams
 }
 
-static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
+static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs) {
 
     String buildTag = "build"
 
@@ -57,7 +57,6 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
         } else {
             additionalNodeLabels = configuration.additionalNodeLabels
         }
-
     }
 
     if (additionalNodeLabels != null) {
@@ -75,9 +74,25 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
     ]
 
     if (configuration.containsKey('bootJDK')) buildParams.put("JDK_BOOT_VERSION", configuration.bootJDK)
-    if (configuration.containsKey('configureArgs')) buildParams.put("CONFIGURE_ARGS", configuration.configureArgs)
+    if (configuration.containsKey('bootJDK')) buildParams.put("JDK_BOOT_VERSION", configuration.bootJDK)
     if (configuration.containsKey('buildArgs')) buildParams.put("BUILD_ARGS", configuration.buildArgs)
     if (configuration.containsKey('additionalFileNameTag')) buildParams.put("ADDITIONAL_FILE_NAME_TAG", configuration.additionalFileNameTag)
+
+
+    def configureArgs = "";
+
+    if (configuration.containsKey('configureArgs')) configureArgs += configuration.configureArgs;
+    if (additionalConfigureArgs != null && additionalConfigureArgs.length() > 0) {
+        configureArgs += " " + additionalConfigureArgs
+    }
+
+    if (configureArgs.length() > 0) {
+        buildParams.put("CONFIGURE_ARGS", configureArgs)
+    }
+
+    if (branch != null && branch.length() > 0) {
+        buildParams.put("BRANCH", branch)
+    }
 
     if (releaseTag != null && releaseTag.length() > 0) {
         buildParams.put("TAG", releaseTag)
@@ -93,7 +108,7 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
     ]
 }
 
-def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag) {
+def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs) {
     def jobConfigurations = [:]
 
     //Parse config passed to jenkins job
@@ -109,7 +124,7 @@ def getJobConfigurations(javaVersionToBuild, availableConfigurations, String tar
                 if (configuration.containsKey('additionalFileNameTag')) {
                     name += "-${configuration.additionalFileNameTag}"
                 }
-                jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag)
+                jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs)
             }
         }
     }
@@ -172,13 +187,13 @@ def publishRelease(javaToBuild, releaseTag) {
     }
 }
 
-def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag) {
+def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag, String branch, String additionalConfigureArgs) {
 
     if (releaseTag == null || releaseTag == "false") {
         releaseTag = ""
     }
 
-    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag)
+    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs)
     def jobs = [:]
 
     def enableTests = enableTestsArg == "true"
