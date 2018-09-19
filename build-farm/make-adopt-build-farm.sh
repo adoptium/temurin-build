@@ -56,9 +56,14 @@ case "${JDK_BOOT_VERSION}" in
       "9")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK9_BOOT_DIR}";;
       "10")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK10_BOOT_DIR}";;
       "11")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK11_BOOT_DIR}";;
-      "home") export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JAVA_HOME}";;
-      *)    export JDK_BOOT_DIR="${JDK_BOOT_VERSION}";;
+      *)    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK11_BOOT_DIR}";;
 esac
+
+
+if [ ! -d "${JDK_BOOT_DIR}" ]
+then
+  export JDK_BOOT_DIR="${JAVA_HOME}"
+fi
 
 echo "Boot jdk: ${JDK_BOOT_DIR}"
 
@@ -90,6 +95,8 @@ else
 fi
 
 echo "Filename will be: $FILENAME"
+
+export BUILD_ARGS="${BUILD_ARGS} --use-jep319-certs"
 
 # shellcheck disable=SC2086
 bash "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo -b "${branch}" --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"

@@ -121,7 +121,11 @@ setVariablesForConfigure() {
 
   # TODO Regex this in the if or use cut to grab out the number and see if >= 9
   # TODO 9 should become 9u as will 10 shortly....
-  if [ "$openjdk_core_version" == "${JDK9_CORE_VERSION}" ] || [ "$openjdk_core_version" == "${JDK10_CORE_VERSION}" ] || [ "$openjdk_core_version" == "${JDK11_CORE_VERSION}" ] || [ "$openjdk_core_version" == "${AMBER_CORE_VERSION}" ]; then
+  if [ "$openjdk_core_version" == "${JDK9_CORE_VERSION}" ] || \
+    [ "$openjdk_core_version" == "${JDK10_CORE_VERSION}" ] || \
+    [ "$openjdk_core_version" == "${JDK11_CORE_VERSION}" ] || \
+    [ "$openjdk_core_version" == "${AMBER_CORE_VERSION}" ] || \
+    [ "$openjdk_core_version" == "${JDKHEAD_CORE_VERSION}" ]; then
     local jdk_path="jdk"
     local jre_path="jre"
     #BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-"--disable-warnings-as-errors"}

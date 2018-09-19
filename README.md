@@ -180,6 +180,10 @@ For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 (162) or the 3rd position in the semVer version string (4).
 This is typically used in conjunction with -b.
 
+--use-jep319-certs
+Use certs defined in JEP319 in Java 8/9. This will increase the volume of traffic downloaded, however will 
+provide an upto date ca cert list.
+
 -v, --build-variant <variant_name>
 specify a OpenJDK build variant, e.g. openj9.
 For reference, the default variant is hotspot and does not need to be specified.
