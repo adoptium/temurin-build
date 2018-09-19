@@ -252,7 +252,7 @@ function parseConfigurationArguments() {
 
 function setBranch() {
 
-    # Which repo branch to build, e.g. dev by default for hotspot, "openj9" for openj9
+  # Which repo branch to build, e.g. dev by default for hotspot, "openj9" for openj9
   local branch="dev"
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
     branch="openj9";

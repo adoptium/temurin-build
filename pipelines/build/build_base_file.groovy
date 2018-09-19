@@ -77,17 +77,7 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, b
     if (configuration.containsKey('buildArgs')) buildParams.put("BUILD_ARGS", configuration.buildArgs)
     if (configuration.containsKey('additionalFileNameTag')) buildParams.put("ADDITIONAL_FILE_NAME_TAG", configuration.additionalFileNameTag)
 
-
-    def configureArgs = "";
-
-    if (configuration.containsKey('configureArgs')) configureArgs += configuration.configureArgs;
-    if (additionalConfigureArgs != null && additionalConfigureArgs.length() > 0) {
-        configureArgs += " " + additionalConfigureArgs
-    }
-
-    if (configureArgs.length() > 0) {
-        buildParams.put("CONFIGURE_ARGS", configureArgs)
-    }
+    buildParams.putAll(getConfigureArgs(configuration, additionalConfigureArgs))
 
     if (branch != null && branch.length() > 0) {
         buildParams.put("BRANCH", branch)
@@ -105,6 +95,21 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, b
             parameters : buildParams,
             test       : configuration.test,
     ]
+}
+
+static def getConfigureArgs(configuration, additionalConfigureArgs) {
+    def buildParams = [:]
+    def configureArgs = "";
+
+    if (configuration.containsKey('configureArgs')) configureArgs += configuration.configureArgs;
+    if (additionalConfigureArgs != null && additionalConfigureArgs.length() > 0) {
+        configureArgs += " " + additionalConfigureArgs
+    }
+
+    if (configureArgs.length() > 0) {
+        buildParams.put("CONFIGURE_ARGS", configureArgs)
+    }
+    return buildParams
 }
 
 def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs) {
