@@ -68,7 +68,7 @@ def buildConfigurations = [
                 test                : ['openjdktest']
         ],
 
-        "linuxXL"    : [
+        linuxXL    : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
