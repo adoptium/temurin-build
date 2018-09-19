@@ -83,10 +83,17 @@ then
       wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=linux&release=latest&arch=${downloadArch}" | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR"
     fi
     export JDK_BOOT_DIR=$JDK10_BOOT_DIR
-
-    [ -r /usr/local/gcc/bin ] && export PATH=/usr/local/gcc/bin:$PATH
-    [ -r /usr/local/gcc/bin/gcc-7.3 ] && export CC=/usr/local/gcc/bin/gcc-7.3
-    [ -r /usr/local/gcc/bin/g++-7.3 ] && export CXX=/usr/local/gcc/bin/g++-7.3
-    export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
-
+fi
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ] || [ "${VARIANT}" == "openj9" ]
+    # If we have the RedHat devtoolset 7 installed, use gcc 7 from there, else /usr/local/gcc/bin
+    if [ -r /opt/rh/devtoolset-7/root/usr/bin ]; then
+      export PATH=/opt/rh/devtoolset-7/root/usr/bin:$PATH
+      [ -r /opt/rh/devtoolset-7/root/usr/bin/gcc ] && export CC=/opt/rh/devtoolset-7/root/usr/bin/gcc
+      [ -r /opt/rh/devtoolset-7/root/usr/bin/g++ ] && export CC=/opt/rh/devtoolset-7/root/usr/bin/g++
+    elif [ -r /usr/local/gcc/bin ]; then
+      export PATH=/usr/local/gcc/bin:$PATH
+      [ -r /usr/local/gcc/bin/gcc-7.3 ] && export CC=/usr/local/gcc/bin/gcc-7.3
+      [ -r /usr/local/gcc/bin/g++-7.3 ] && export CXX=/usr/local/gcc/bin/g++-7.3
+      export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
+    fi
 fi
