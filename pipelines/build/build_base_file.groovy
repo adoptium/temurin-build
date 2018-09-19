@@ -74,7 +74,6 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, b
     ]
 
     if (configuration.containsKey('bootJDK')) buildParams.put("JDK_BOOT_VERSION", configuration.bootJDK)
-    if (configuration.containsKey('bootJDK')) buildParams.put("JDK_BOOT_VERSION", configuration.bootJDK)
     if (configuration.containsKey('buildArgs')) buildParams.put("BUILD_ARGS", configuration.buildArgs)
     if (configuration.containsKey('additionalFileNameTag')) buildParams.put("ADDITIONAL_FILE_NAME_TAG", configuration.additionalFileNameTag)
 
