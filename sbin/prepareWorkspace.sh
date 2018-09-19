@@ -65,7 +65,7 @@ checkoutAndCloneOpenJDKGitRepo()
       if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
         git checkout "${BUILD_CONFIG[TAG]}"
       fi
-      git clean -fdx
+      git clean -ffdx
     elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
       echo "Removing current git repo as it is the wrong type"
       rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
