@@ -253,8 +253,14 @@ function configDefaults() {
   # The OS kernel name, e.g. 'darwin' for Mac OS X
   BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
 
+  local arch=$(uname -m)
+
+  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]; then
+    arch=$(uname -p | sed 's/powerpc/ppc/')
+  fi
+
   # The O/S architecture, e.g. x86_64 for a modern intel / Mac OS X
-  BUILD_CONFIG[OS_ARCHITECTURE]=$(uname -m)
+  BUILD_CONFIG[OS_ARCHITECTURE]=${arch}
 
   # The full forest name, e.g. jdk8, jdk8u, jdk9, jdk9u, etc.
   BUILD_CONFIG[OPENJDK_FOREST_NAME]=""

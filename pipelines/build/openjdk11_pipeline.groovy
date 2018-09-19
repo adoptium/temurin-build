@@ -43,13 +43,14 @@ def buildConfigurations = [
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
+                additionalNodeLabels: 'build-marist-rhel74-s390x-2',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                additionalNodeLabels: 'centos7',
+                additionalNodeLabels: 'ubuntu',
                 test                : ['openjdktest', 'systemtest']
         ],
 
