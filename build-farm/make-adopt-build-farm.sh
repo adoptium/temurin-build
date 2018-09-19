@@ -81,7 +81,7 @@ elif [ "${OPERATING_SYSTEM}" == "windows" ] ; then
   EXTENSION=zip
 fi
 
-if [ -z "${BRANCH}" ]
+if [ ! -z "${BRANCH}" ]
 then
   OPTIONS="${OPTIONS} -b ${BRANCH}"
 fi
