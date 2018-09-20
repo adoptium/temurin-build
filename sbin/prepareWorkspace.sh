@@ -44,7 +44,6 @@ checkoutAndCloneOpenJDKGitRepo()
 
   # Check that we have a git repo of a valid openjdk version on our local file system
   if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && ( [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK10_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ]) ; then
-
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
@@ -52,20 +51,12 @@ checkoutAndCloneOpenJDKGitRepo()
     local isCorrectGitRepo=$?
     set -e
 
-
     # If the local copy of the git source repo is valid then we reset appropriately
     if [ "${isCorrectGitRepo}" == "0" ]; then
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
       sleep 10
       echo "Pulling latest changes from git openjdk source repository"
-
-      git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
-      git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
-      if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
-        git checkout "${BUILD_CONFIG[TAG]}"
-      fi
-      git clean -ffdx
     elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
       echo "Removing current git repo as it is the wrong type"
       rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
@@ -80,6 +71,15 @@ checkoutAndCloneOpenJDKGitRepo()
     echo "Didn't find any existing openjdk repository at $(pwd)/${BUILD_CONFIG[WORKING_DIR]} so cloning the source to openjdk"
     cloneOpenJDKGitRepo
   fi
+
+  cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}"
+  git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
+  git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
+  if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
+    git checkout "${BUILD_CONFIG[TAG]}"
+  fi
+  git clean -ffdx
 
   updateOpenj9Sources
 
@@ -114,10 +114,6 @@ cloneOpenJDKGitRepo()
 
   echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
   git clone "${GIT_CLONE_ARGUMENTS[@]}"
-  if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
-    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || exit 1
-    git checkout "${BUILD_CONFIG[TAG]}"
-  fi
 }
 
 # Create the workspace
