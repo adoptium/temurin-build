@@ -158,12 +158,15 @@ static def getJobFolder(config) {
 }
 
 // Generate a job from template at `create_job_from_template.groovy`
-def createJob(jobName, jobFolder, config, enableTests) {
+def createJob(jobName, jobFolder, config, enableTests, scmVars) {
 
     def params = config.parameters.clone()
     params.put("JOB_NAME", jobName)
     params.put("JOB_FOLDER", jobFolder)
     params.put("TEST_CONFIG", JsonOutput.prettyPrint(JsonOutput.toJson(config)))
+
+    params.put("GIT_URI", scmVars["GIT_URL"])
+    params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
 
     create = jobDsl targets: "pipelines/build/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
 
@@ -191,7 +194,7 @@ def publishRelease(javaToBuild, releaseTag) {
     }
 }
 
-def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag, String branch, String additionalConfigureArgs) {
+def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag, String branch, String additionalConfigureArgs, scmVars) {
 
     if (releaseTag == null || releaseTag == "false") {
         releaseTag = ""
@@ -226,7 +229,7 @@ def doBuild(String javaVersionToBuild, availableConfigurations, String targetCon
                 // Execute build job for configuration i.e jdk10u/job/jdk10u-linux-x64-hotspot
                 stage(configuration.key) {
                     // generate job
-                    createJob(jobTopName, jobFolder, config, enableTests)
+                    createJob(jobTopName, jobFolder, config, enableTests, scmVars)
 
                     // execute build
                     def downstreamJob = build job: downstreamJobName, propagate: false, parameters: toBuildParams(enableTests, config.parameters)
