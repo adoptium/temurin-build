@@ -32,7 +32,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                     remote {
                         url(GIT_URI)
                     }
-                    branch("*/${GIT_BRANCH}")
+                    branch("${GIT_BRANCH}")
                     extensions {
                         cleanBeforeCheckout()
                     }
