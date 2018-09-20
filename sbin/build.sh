@@ -166,26 +166,65 @@ getOpenJDKUpdateAndBuildVersion()
 # OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
 configuringVersionStringParameter()
 {
+
+  if [ -z "${BUILD_CONFIG[TAG]}" ]; then
+    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || echo Cannot change to "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
+    OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
+    echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
+  fi
+
+  addConfigureArg "--with-milestone=" "fcs"
+  local dateSuffix=$(date +%Y%m%d)
+
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-    # Replace the default 'internal' with our own milestone string
-    addConfigureArg "--with-milestone=" "adoptopenjdk"
+
+    if [ -z "${BUILD_CONFIG[TAG]}" ]; then
+      addConfigureArg "--with-user-release-suffix=" "${dateSuffix}"
+    fi
+
+    addConfigureArg "--with-company-name=" "AdoptOpenJDK"
 
     # Set the update version (e.g. 131), this gets passed in from the calling script
-    addConfigureArgIfValueIsNotEmpty "--with-update-version=" "${BUILD_CONFIG[OPENJDK_UPDATE_VERSION]}"
+    local updateNumber=${BUILD_CONFIG[OPENJDK_UPDATE_VERSION]}
+    if [ -z "${updateNumber}" ]; then
+      updateNumber=$(echo "${OPENJDK_REPO_TAG}" | cut -f1 -d"-" | cut -f2 -d"u")
+    fi
+    addConfigureArgIfValueIsNotEmpty "--with-update-version=" "${updateNumber}"
 
     # Set the build number (e.g. b04), this gets passed in from the calling script
-    addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
-  else
-    if [ -z "$OPENJDK_REPO_TAG" ]; then
-      cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || echo Cannot change to "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
-      OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
-      echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
+    local buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
+    if [ -z "${buildNumber}" ]; then
+      buildNumber=$(echo "$OPENJDK_REPO_TAG" | cut -f2 -d"-")
     fi
-    # > JDK 8
-    addConfigureArg "--with-version-pre=" "adoptopenjdk"
+    addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${buildNumber}"
+  elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]; then
 
-    TRIMMED_TAG=$(echo "$OPENJDK_REPO_TAG" | cut -f2 -d"-" )
+    TRIMMED_TAG=$(echo "${OPENJDK_REPO_TAG}" | cut -f2 -d"-" )
+
+    if [ -z "${BUILD_CONFIG[TAG]}" ]; then
+      TRIMMED_TAG="${TRIMMED_TAG}-${dateSuffix}"
+    fi
+
+    addConfigureArg "--without-version-pre" ""
+    addConfigureArg "--without-version-opt" ""
     addConfigureArg "--with-version-string=" "${TRIMMED_TAG}"
+  else
+    # > JDK 9
+
+    # Set the build number (e.g. b04), this gets passed in from the calling script
+    local buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
+    if [ -z "${buildNumber}" ]; then
+      buildNumber=$(echo "${OPENJDK_REPO_TAG}" | cut -f2 -d"+")
+    fi
+
+    if [ -z "${BUILD_CONFIG[TAG]}" ]; then
+      buildNumber="${buildNumber}-${dateSuffix}"
+    fi
+
+    addConfigureArg "--without-version-pre" ""
+    addConfigureArg "--without-version-opt" ""
+    addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
+    addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
 
   fi
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
