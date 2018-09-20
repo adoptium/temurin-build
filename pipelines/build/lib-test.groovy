@@ -16,6 +16,9 @@ node ("master") {
     checkout scm
 
     println scm
+    println scm.GIT_BRANCH
+    println scm.GIT_BRANCH
+    println scm.getRepositories()
     println scm.branches[0].name
     println scm.branches
 }
