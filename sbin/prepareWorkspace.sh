@@ -72,7 +72,7 @@ checkoutAndCloneOpenJDKGitRepo()
     cloneOpenJDKGitRepo
   fi
 
-  cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
   git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}"
   git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
   git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
