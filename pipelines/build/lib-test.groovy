@@ -13,9 +13,10 @@ limitations under the License.
 */
 
 node ("master") {
-    checkout scm
+    def scmVars = checkout scm
 
     println scm
+    println scmVars
     println scm.GIT_BRANCH
     println scm.GIT_BRANCH
     println scm.getRepositories()
