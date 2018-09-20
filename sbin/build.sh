@@ -166,9 +166,9 @@ getOpenJDKUpdateAndBuildVersion()
 # OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
 configuringVersionStringParameter()
 {
+  stepIntoTheWorkingDirectory
 
   if [ -z "${BUILD_CONFIG[TAG]}" ]; then
-    cd "${WORKING_DIR}/${OPENJDK_REPO_NAME}" || echo Cannot change to "${WORKING_DIR}/${OPENJDK_REPO_NAME}"
     OPENJDK_REPO_TAG=$(getFirstTagFromOpenJDKGitRepo)
     echo "OpenJDK repo tag is ${OPENJDK_REPO_TAG}"
   fi
