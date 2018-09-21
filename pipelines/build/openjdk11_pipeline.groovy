@@ -30,7 +30,7 @@ def buildConfigurations = [
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
-                additionalNodeLabels: 'win2012&&openj9',
+                additionalNodeLabels: 'win2012',
                 test                : ['openjdktest']
         ],
 
