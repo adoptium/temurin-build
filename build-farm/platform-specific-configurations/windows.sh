@@ -58,7 +58,7 @@ fi
 if [ "${ARCHITECTURE}" == "x64" ] && [ "${VARIANT}" == "openj9" ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=2017"
-  export PATH="/usr/bin:$PATH"
+  export PATH="/cygdrive/c/mingw-w64\x86_64-8.1.0-win32-seh-rt_v6-rev0/mingw64/bin:/usr/bin:$PATH"
   export HAS_AUTOCONF=1
 
   if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
