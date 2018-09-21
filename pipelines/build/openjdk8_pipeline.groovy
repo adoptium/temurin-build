@@ -36,7 +36,6 @@ def buildConfigurations = [
                 arch                : 'x64',
                 additionalNodeLabels: [
                         hotspot: 'win2008',
-
                         //Pin to build-softlayer-win2012r2-x64-1 as build-softlayer-win2012r2-x64-2 may have freetype issues
                         openj9:  'win2012&&build-softlayer-win2012r2-x64-1'
                 ],
