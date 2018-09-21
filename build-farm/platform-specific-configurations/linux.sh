@@ -89,7 +89,7 @@ if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JD
     if [ -r /opt/rh/devtoolset-7/root/usr/bin ]; then
       export PATH=/opt/rh/devtoolset-7/root/usr/bin:$PATH
       [ -r /opt/rh/devtoolset-7/root/usr/bin/gcc ] && export CC=/opt/rh/devtoolset-7/root/usr/bin/gcc
-      [ -r /opt/rh/devtoolset-7/root/usr/bin/g++ ] && export CC=/opt/rh/devtoolset-7/root/usr/bin/g++
+      [ -r /opt/rh/devtoolset-7/root/usr/bin/g++ ] && export CXX=/opt/rh/devtoolset-7/root/usr/bin/g++
     elif [ -r /usr/local/gcc/bin ]; then
       export PATH=/usr/local/gcc/bin:$PATH
       [ -r /usr/local/gcc/bin/gcc-7.3 ] && export CC=/usr/local/gcc/bin/gcc-7.3
