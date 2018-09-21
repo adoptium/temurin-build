@@ -152,7 +152,6 @@ getOpenJDKUpdateAndBuildVersion()
     openjdk_update_version=$(echo "${OPENJDK_REPO_TAG}" | cut -d'u' -f 2 | cut -d'-' -f 1)
 
     # TODO dont modify config in build script
-    BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=$(echo "${OPENJDK_REPO_TAG}" | cut -d'b' -f 2 | cut -d'-' -f 1)
     echo "Version: ${openjdk_update_version} ${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
   fi
 
@@ -174,7 +173,7 @@ configuringVersionStringParameter()
   fi
 
   addConfigureArg "--with-milestone=" "fcs"
-  local dateSuffix=$(date +%Y%m%d)
+  local dateSuffix=$(date -u +%Y%m%d%H%M)
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
 
@@ -182,7 +181,9 @@ configuringVersionStringParameter()
       addConfigureArg "--with-user-release-suffix=" "${dateSuffix}"
     fi
 
-    addConfigureArg "--with-company-name=" "AdoptOpenJDK"
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "hotspot" ]; then
+      addConfigureArg "--with-company-name=" "AdoptOpenJDK"
+    fi
 
     # Set the update version (e.g. 131), this gets passed in from the calling script
     local updateNumber=${BUILD_CONFIG[OPENJDK_UPDATE_VERSION]}
@@ -218,7 +219,7 @@ configuringVersionStringParameter()
     fi
 
     if [ -z "${BUILD_CONFIG[TAG]}" ]; then
-      buildNumber="${buildNumber}-${dateSuffix}"
+      buildNumber="${dateSuffix}"
     fi
 
     addConfigureArg "--without-version-pre" ""
