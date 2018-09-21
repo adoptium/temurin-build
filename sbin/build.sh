@@ -199,16 +199,21 @@ configuringVersionStringParameter()
     fi
     addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${buildNumber}"
   elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]; then
+    local buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
+    if [ -z "${buildNumber}" ]; then
+      buildNumber=$(echo "${OPENJDK_REPO_TAG}" | cut -f2 -d"+")
+    fi
 
     TRIMMED_TAG=$(echo "${OPENJDK_REPO_TAG}" | cut -f2 -d"-" )
 
     if [ -z "${BUILD_CONFIG[TAG]}" ]; then
-      TRIMMED_TAG="${TRIMMED_TAG}-${dateSuffix}"
+      addConfigureArg "--with-version-opt" "${dateSuffix}"
+    else
+      addConfigureArg "--without-version-opt" ""
     fi
 
     addConfigureArg "--without-version-pre" ""
-    addConfigureArg "--without-version-opt" ""
-    addConfigureArg "--with-version-string=" "${TRIMMED_TAG}"
+    addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
   else
     # > JDK 9
 
@@ -219,11 +224,12 @@ configuringVersionStringParameter()
     fi
 
     if [ -z "${BUILD_CONFIG[TAG]}" ]; then
-      buildNumber="${dateSuffix}"
+      addConfigureArg "--with-version-opt" "${dateSuffix}"
+    else
+      addConfigureArg "--without-version-opt" ""
     fi
 
     addConfigureArg "--without-version-pre" ""
-    addConfigureArg "--without-version-opt" ""
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
     addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
 
