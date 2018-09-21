@@ -43,6 +43,16 @@ def buildConfigurations = [
                 test                : ['openjdktest']
         ],
 
+        x32Windows: [
+                os                  : 'windows',
+                arch                : 'x86-32',
+                additionalNodeLabels: [
+                        hotspot: 'win2008',
+                        openj9:  'win2012&&build-softlayer-win2012r2-x64-1'
+                ],
+                test                : ['openjdktest']
+        ],
+
         ppc64Aix    : [
                 os                 : 'aix',
                 arch               : 'ppc64',
