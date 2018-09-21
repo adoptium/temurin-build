@@ -207,7 +207,7 @@ configuringVersionStringParameter()
     TRIMMED_TAG=$(echo "${OPENJDK_REPO_TAG}" | cut -f2 -d"-" )
 
     if [ -z "${BUILD_CONFIG[TAG]}" ]; then
-      addConfigureArg "--with-version-opt" "${dateSuffix}"
+      addConfigureArg "--with-version-opt=" "${dateSuffix}"
     else
       addConfigureArg "--without-version-opt" ""
     fi
@@ -224,7 +224,7 @@ configuringVersionStringParameter()
     fi
 
     if [ -z "${BUILD_CONFIG[TAG]}" ]; then
-      addConfigureArg "--with-version-opt" "${dateSuffix}"
+      addConfigureArg "--with-version-opt=" "${dateSuffix}"
     else
       addConfigureArg "--without-version-opt" ""
     fi
