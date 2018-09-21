@@ -240,7 +240,7 @@ checkingAndDownloadCaCerts()
       echo "Requested use of JEP319 certs"
       local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk10u/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
       mkdir -p "security"
-      wget -O "./security/cacerts" "${caLink}"
+      curl -L -o "./security/cacerts" "${caLink}"
     fi
   else
     git init
