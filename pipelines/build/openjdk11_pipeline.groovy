@@ -34,6 +34,13 @@ def buildConfigurations = [
                 test                : ['openjdktest']
         ],
 
+        x32Windows: [
+                os                  : 'windows',
+                arch                : 'x86-32',
+                additionalNodeLabels: 'win2012',
+                test                : ['openjdktest']
+        ],
+
         ppc64Aix    : [
                 os                  : 'aix',
                 arch                : 'ppc64',
