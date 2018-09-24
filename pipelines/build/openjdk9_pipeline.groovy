@@ -68,7 +68,7 @@ def buildConfigurations = [
                 test                : ['openjdktest']
         ],
 
-        "linuxXL"    : [
+        linuxXL    : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
@@ -81,7 +81,7 @@ def buildConfigurations = [
 def javaToBuild = "jdk9u"
 
 node ("master") {
-    checkout scm
+    def scmVars = checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
-    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag)
+    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag, branch, additionalConfigureArgs, scmVars)
 }

@@ -43,13 +43,14 @@ def buildConfigurations = [
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
+                additionalNodeLabels: 'build-marist-rhel74-s390x-2',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                additionalNodeLabels: 'centos7',
+                additionalNodeLabels: 'ubuntu',
                 test                : ['openjdktest', 'systemtest']
         ],
 
@@ -74,7 +75,7 @@ def buildConfigurations = [
                 test                : false
         ],
         */
-        "linuxXL"    : [
+        linuxXL    : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
@@ -87,7 +88,7 @@ def buildConfigurations = [
 def javaToBuild = "jdk11"
 
 node ("master") {
-    checkout scm
+    def scmVars = checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
-    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag)
+    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag, branch, additionalConfigureArgs, scmVars)
 }

@@ -25,14 +25,13 @@ TIMESTAMP="$(date +'%Y-%m-%d-%H-%M')"
 export OPERATING_SYSTEM
 OPERATING_SYSTEM=$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')
 
-branch="dev"
 
 echo "BUILD TYPE: "
 echo "VERSION: ${JAVA_TO_BUILD}"
 echo "ARCHITECTURE ${ARCHITECTURE}"
 echo "VARIANT: ${VARIANT}"
 echo "OS: ${OPERATING_SYSTEM}"
-echo "BRANCH: ${branch}"
+echo "BRANCH: ${BRANCH}"
 
 OPTIONS=""
 EXTENSION=""
@@ -82,6 +81,11 @@ elif [ "${OPERATING_SYSTEM}" == "windows" ] ; then
   EXTENSION=zip
 fi
 
+if [ ! -z "${BRANCH}" ]
+then
+  OPTIONS="${OPTIONS} -b ${BRANCH}"
+fi
+
 # shellcheck source=build-farm/set-platform-specific-configurations.sh
 source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
 
@@ -99,4 +103,4 @@ echo "Filename will be: $FILENAME"
 export BUILD_ARGS="${BUILD_ARGS} --use-jep319-certs"
 
 # shellcheck disable=SC2086
-bash "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo -b "${branch}" --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
+bash "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"

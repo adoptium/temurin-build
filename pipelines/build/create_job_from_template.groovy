@@ -13,6 +13,7 @@ if (!binding.hasVariable('BUILD_ARGS')) BUILD_ARGS = ""
 if (!binding.hasVariable('ADDITIONAL_FILE_NAME_TAG')) ADDITIONAL_FILE_NAME_TAG = ""
 if (!binding.hasVariable('TEST_CONFIG')) TEST_CONFIG = ""
 if (!binding.hasVariable('ENABLE_TESTS')) ENABLE_TESTS = "false"
+if (!binding.hasVariable('BRANCH')) BRANCH = ""
 
 
 if (!binding.hasVariable('GIT_URI')) GIT_URI = "https://github.com/AdoptOpenJDK/openjdk-build.git"
@@ -32,7 +33,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                     remote {
                         url(GIT_URI)
                     }
-                    branch("*/${GIT_BRANCH}")
+                    branch("${GIT_BRANCH}")
                     extensions {
                         cleanBeforeCheckout()
                     }
@@ -62,6 +63,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
         stringParam('TARGET_OS', "$TARGET_OS")
         stringParam('ADDITIONAL_FILE_NAME_TAG', "$ADDITIONAL_FILE_NAME_TAG")
         stringParam('ENABLE_TESTS', "$ENABLE_TESTS")
+        stringParam('BRANCH', "$BRANCH")
         textParam('TEST_CONFIG', "$TEST_CONFIG")
     }
 }

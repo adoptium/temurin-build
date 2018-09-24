@@ -39,7 +39,7 @@ def toBuildParams(enableTests, params) {
     return buildParams
 }
 
-static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
+static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs) {
 
     String buildTag = "build"
 
@@ -57,7 +57,6 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
         } else {
             additionalNodeLabels = configuration.additionalNodeLabels
         }
-
     }
 
     if (additionalNodeLabels != null) {
@@ -75,9 +74,14 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
     ]
 
     if (configuration.containsKey('bootJDK')) buildParams.put("JDK_BOOT_VERSION", configuration.bootJDK)
-    if (configuration.containsKey('configureArgs')) buildParams.put("CONFIGURE_ARGS", configuration.configureArgs)
     if (configuration.containsKey('buildArgs')) buildParams.put("BUILD_ARGS", configuration.buildArgs)
     if (configuration.containsKey('additionalFileNameTag')) buildParams.put("ADDITIONAL_FILE_NAME_TAG", configuration.additionalFileNameTag)
+
+    buildParams.putAll(getConfigureArgs(configuration, additionalConfigureArgs))
+
+    if (branch != null && branch.length() > 0) {
+        buildParams.put("BRANCH", branch)
+    }
 
     if (releaseTag != null && releaseTag.length() > 0) {
         buildParams.put("TAG", releaseTag)
@@ -93,7 +97,22 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag) {
     ]
 }
 
-def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag) {
+static def getConfigureArgs(configuration, additionalConfigureArgs) {
+    def buildParams = [:]
+    def configureArgs = "";
+
+    if (configuration.containsKey('configureArgs')) configureArgs += configuration.configureArgs;
+    if (additionalConfigureArgs != null && additionalConfigureArgs.length() > 0) {
+        configureArgs += " " + additionalConfigureArgs
+    }
+
+    if (configureArgs.length() > 0) {
+        buildParams.put("CONFIGURE_ARGS", configureArgs)
+    }
+    return buildParams
+}
+
+def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs) {
     def jobConfigurations = [:]
 
     //Parse config passed to jenkins job
@@ -109,7 +128,7 @@ def getJobConfigurations(javaVersionToBuild, availableConfigurations, String tar
                 if (configuration.containsKey('additionalFileNameTag')) {
                     name += "-${configuration.additionalFileNameTag}"
                 }
-                jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag)
+                jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs)
             }
         }
     }
@@ -139,12 +158,15 @@ static def getJobFolder(config) {
 }
 
 // Generate a job from template at `create_job_from_template.groovy`
-def createJob(jobName, jobFolder, config, enableTests) {
+def createJob(jobName, jobFolder, config, enableTests, scmVars) {
 
     def params = config.parameters.clone()
     params.put("JOB_NAME", jobName)
     params.put("JOB_FOLDER", jobFolder)
     params.put("TEST_CONFIG", JsonOutput.prettyPrint(JsonOutput.toJson(config)))
+
+    params.put("GIT_URI", scmVars["GIT_URL"])
+    params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
 
     create = jobDsl targets: "pipelines/build/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
 
@@ -172,13 +194,13 @@ def publishRelease(javaToBuild, releaseTag) {
     }
 }
 
-def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag) {
+def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag, String branch, String additionalConfigureArgs, scmVars) {
 
     if (releaseTag == null || releaseTag == "false") {
         releaseTag = ""
     }
 
-    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag)
+    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs)
     def jobs = [:]
 
     def enableTests = enableTestsArg == "true"
@@ -207,7 +229,7 @@ def doBuild(String javaVersionToBuild, availableConfigurations, String targetCon
                 // Execute build job for configuration i.e jdk10u/job/jdk10u-linux-x64-hotspot
                 stage(configuration.key) {
                     // generate job
-                    createJob(jobTopName, jobFolder, config, enableTests)
+                    createJob(jobTopName, jobFolder, config, enableTests, scmVars)
 
                     // execute build
                     def downstreamJob = build job: downstreamJobName, propagate: false, parameters: toBuildParams(enableTests, config.parameters)

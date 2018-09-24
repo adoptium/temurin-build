@@ -36,6 +36,17 @@ def buildConfigurations = [
                 arch                : 'x64',
                 additionalNodeLabels: [
                         hotspot: 'win2008',
+                        //Pin to build-softlayer-win2012r2-x64-1 as build-softlayer-win2012r2-x64-2 may have freetype issues
+                        openj9:  'win2012&&build-softlayer-win2012r2-x64-1'
+                ],
+                test                : ['openjdktest']
+        ],
+
+        x32Windows: [
+                os                  : 'windows',
+                arch                : 'x86-32',
+                additionalNodeLabels: [
+                        hotspot: 'win2008',
                         openj9:  'win2012'
                 ],
                 test                : ['openjdktest']
@@ -65,7 +76,14 @@ def buildConfigurations = [
                 test                : ['openjdktest']
         ],
 
-        "linuxXL"    : [
+        aarch64Linux    : [
+                os                  : 'linux',
+                arch                : 'aarch64',
+                additionalNodeLabels: 'centos7',
+                test                : ['openjdktest']
+        ],
+
+        linuxXL    : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
@@ -78,8 +96,8 @@ def buildConfigurations = [
 def javaToBuild = "jdk8u"
 
 node ("master") {
-    checkout scm
+    def scmVars = checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
-    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag)
+    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag, branch, additionalConfigureArgs, scmVars)
 }
 

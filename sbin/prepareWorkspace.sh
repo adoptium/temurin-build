@@ -44,7 +44,6 @@ checkoutAndCloneOpenJDKGitRepo()
 
   # Check that we have a git repo of a valid openjdk version on our local file system
   if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && ( [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK10_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ]) ; then
-
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
@@ -52,14 +51,12 @@ checkoutAndCloneOpenJDKGitRepo()
     local isCorrectGitRepo=$?
     set -e
 
-
     # If the local copy of the git source repo is valid then we reset appropriately
     if [ "${isCorrectGitRepo}" == "0" ]; then
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
       sleep 10
       echo "Pulling latest changes from git openjdk source repository"
-
       git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
       git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
       if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
@@ -81,6 +78,17 @@ checkoutAndCloneOpenJDKGitRepo()
     cloneOpenJDKGitRepo
   fi
 
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}"
+  git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
+  git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
+  if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
+    git checkout "${BUILD_CONFIG[TAG]}"
+  fi
+  git clean -ffdx
+
+  updateOpenj9Sources
+
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
 
@@ -97,6 +105,14 @@ setGitCloneArguments() {
   GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} '-b' "${BUILD_CONFIG[BRANCH]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
 }
 
+updateOpenj9Sources() {
+  # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
+    bash get_source.sh
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+  fi
+}
 # Clone the git repo
 cloneOpenJDKGitRepo()
 {
@@ -104,18 +120,6 @@ cloneOpenJDKGitRepo()
 
   echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
   git clone "${GIT_CLONE_ARGUMENTS[@]}"
-  if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
-    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || exit 1
-    git checkout "${BUILD_CONFIG[TAG]}"
-  fi
-
-  # TODO extract this to its own function
-  # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
-    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    bash get_source.sh
-  fi
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
 
 # Create the workspace
@@ -242,7 +246,7 @@ checkingAndDownloadCaCerts()
       echo "Requested use of JEP319 certs"
       local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk10u/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
       mkdir -p "security"
-      wget -O "./security/cacerts" "${caLink}"
+      curl -L -o "./security/cacerts" "${caLink}"
     fi
   else
     git init

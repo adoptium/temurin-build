@@ -73,7 +73,6 @@ doAnyBuildVariantOverrides()
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
     # current location of Extensions for OpenJDK9 for OpenJ9 project
     local repository="ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
-    local branch="openj9"
   fi
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]; then
     # current location of SAP variant
