@@ -24,72 +24,88 @@ export LANG=C
 export JAVA_HOME=$JDK_BOOT_DIR
 export BUILD_ARGS="--tmp-space-build ${BUILD_ARGS}"
 
-
-if [ "${ARCHITECTURE}" == "x86-32" ] && [ "${VARIANT}" == "hotspot" ]
+if [ "${ARCHITECTURE}" == "x86-32" ]
 then
-  if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --with-target-bits=32 --target=x86"
+
+  if [ "${VARIANT}" == "hotspot" ]
   then
-    export PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:/cygdrive/C/Projects/OpenJDK/make-3.82/:$PATH"
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-include=/cygdrive/c/openjdk/freetype/include --with-freetype-lib=/cygdrive/c/openjdk/freetype/lib32 --disable-ccache --with-target-bits=32 --target=x86"
+    if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+    then
+      export PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:/cygdrive/C/Projects/OpenJDK/make-3.82/:$PATH"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=2010 --with-freetype-include=/cygdrive/c/openjdk/freetype/include --with-freetype-lib=/cygdrive/c/openjdk/freetype/lib32"
+    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
+    then
+      export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM}"
+    fi
+  fi
+
+  if [ "${VARIANT}" == "openj9" ]
+  then
+    if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+    then
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM}  --with-freetype-include=/cygdrive/c/openjdk/freetype-2.5.3/include --with-freetype-lib=/cygdrive/c/openjdk/freetype-2.5.3/lib --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
+
+      # https://github.com/AdoptOpenJDK/openjdk-build/issues/243
+      export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
+      export PATH="/c/cygwin64/bin:/usr/bin:$PATH"
+    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
+    then
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
+
+      # Next line a potentially tactical fix for https://github.com/AdoptOpenJDK/openjdk-build/issues/267
+      export PATH="/usr/bin:$PATH"
+    fi
   fi
 fi
 
-if [ "${ARCHITECTURE}" == "x86-32" ] && [ "${VARIANT}" == "openj9" ]
+
+if [ "${ARCHITECTURE}" == "x64" ]
 then
-  if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+  if [ "${VARIANT}" == "hotspot" ]
   then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM}  --with-freetype-include=/cygdrive/c/openjdk/freetype-2.5.3/include --with-freetype-lib=/cygdrive/c/openjdk/freetype-2.5.3/lib --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache --with-target-bits=32 --target=x86"
-
-    # https://github.com/AdoptOpenJDK/openjdk-build/issues/243
-    export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
-    export PATH="/c/cygwin64/bin:/usr/bin:$PATH"
-
+    if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+    then
+      export PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:/cygdrive/c/openjdk/make-3.82/:$PATH"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-include=/cygdrive/c/openjdk/freetype/include --with-freetype-lib=/cygdrive/c/openjdk/freetype/lib64 --disable-ccache"
+    elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
+    then
+      export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype=/cygdrive/C/openjdk/freetype --disable-ccache"
+    elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
+    then
+      export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache"
+    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+    then
+      export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
+    fi
   fi
-fi
 
+  if [ "${VARIANT}" == "openj9" ]
+  then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=2017"
+    export PATH="/cygdrive/c/mingw-w64\x86_64-8.1.0-win32-seh-rt_v6-rev0/mingw64/bin:/usr/bin:$PATH"
+    export HAS_AUTOCONF=1
 
-if [ "${ARCHITECTURE}" == "x64" ] && [ "${VARIANT}" == "hotspot" ]
-then
-  if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
-  then
-    export PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:/cygdrive/c/openjdk/make-3.82/:$PATH"
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-include=/cygdrive/c/openjdk/freetype/include --with-freetype-lib=/cygdrive/c/openjdk/freetype/lib64 --disable-ccache"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
-  then
-    export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype=/cygdrive/C/openjdk/freetype --disable-ccache"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
-  then
-    export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --disable-ccache"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
-  then
-    export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
+    if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+    then
+      export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;%INCLUDE%"
+      export PATH="$PATH:/c/cygwin64/bin"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-include=/cygdrive/c/openjdk/freetype-2.5.3/include --with-freetype-lib=/cygdrive/c/openjdk/freetype-2.5.3/lib64 --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
+    elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
+    then
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
+    elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
+    then
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
+    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+    then
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
+    fi
+  else
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=2013"
   fi
-fi
-
-if [ "${ARCHITECTURE}" == "x64" ] && [ "${VARIANT}" == "openj9" ]
-then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=2017"
-  export PATH="/cygdrive/c/mingw-w64\x86_64-8.1.0-win32-seh-rt_v6-rev0/mingw64/bin:/usr/bin:$PATH"
-  export HAS_AUTOCONF=1
-
-  if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
-  then
-    export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;%INCLUDE%"
-    export PATH="$PATH:/c/cygwin64/bin"
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-include=/cygdrive/c/openjdk/freetype-2.5.3/include --with-freetype-lib=/cygdrive/c/openjdk/freetype-2.5.3/lib64 --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
-  then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --with-toolchain-version=2013 --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
-  then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
-  then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
-  fi
-else
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=2013"
 fi
