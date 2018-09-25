@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#      https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,7 +38,7 @@ echo "You are in $WORKSPACE"
 function checkArgs() {
   if [ "$1" -lt 1 ]; then
      echo Usage: "$0" '[jdk-updates/jdk10u|jdk/jdk] (branch)'
-     echo "Hg Repo supplied should match a repository in http://hg.openjdk.java.net/"
+     echo "Hg Repo supplied should match a repository in https://hg.openjdk.java.net/"
      echo "For example, to get the latest jdk development repo:"
      echo "$0 jdk/jdk"
      echo "For example, to get the raw-string-literals branch from the amber repo:"
@@ -72,8 +72,8 @@ function addMercurialUpstream() {
 
   # shellcheck disable=SC2143
   if [ -z "$(git remote -v | grep 'hg')" ] ; then
-    echo "Initial setup of hg::http://hg.openjdk.java.net/$HG_REPO"
-    git remote add hg hg::http://hg.openjdk.java.net/"$HG_REPO"
+    echo "Initial setup of hg::https://hg.openjdk.java.net/$HG_REPO"
+    git remote add hg hg::https://hg.openjdk.java.net/"$HG_REPO"
   fi
 }
 
