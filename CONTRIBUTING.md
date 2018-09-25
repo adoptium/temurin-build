@@ -28,7 +28,7 @@ We ask that you include a line similar to the following as part of your pull req
 ```
 DCO 1.1 Signed-off-by: Random J Developer
 ```
-“DCO” stands for “Developer Certificate of Origin,” and refers to [the same text used in the Linux Kernel community](http://elinux.org/Developer_Certificate_Of_Origin).  Of course, you should replace "Random J Developer" by your own real name.
+“DCO” stands for “Developer Certificate of Origin,” and refers to [the same text used in the Linux Kernel community](https://elinux.org/Developer_Certificate_Of_Origin).  Of course, you should replace "Random J Developer" by your own real name.
 
 By adding this simple comment, you are telling the community that you wrote the code you are contributing, or you have the right to pass on the code that you are contributing.
 
@@ -39,7 +39,7 @@ All the project's source files must start with a comment, as near to the top of 
 
 We don't place explicit copyright statements in the project source files.  The project comprises many distinct pieces of code, spread across numerous source files, and authored by a variety of individuals.  Managing copyright statements is unproductive and [can lead to confusion and contention around the edge cases](https://opensource.com/law/14/n2/copyright-statements-source-files).  Rather we utilize [the NOTICE file](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/NOTICE) mechanism as a way to acknowledge copyright broadly where there is a valid reason to do so.
 
-Finally, for similar reasons to avoiding individual copyright statements, we don't maintain `@author` tags in source files.  There are good arguments to suggest that [author tags discourage open contribution](http://producingoss.com/en/managing-volunteers.html#territoriality), and we depend upon Git to maintain that information for the project.
+Finally, for similar reasons to avoiding individual copyright statements, we don't maintain `@author` tags in source files.  There are good arguments to suggest that [author tags discourage open contribution](https://producingoss.com/en/managing-volunteers.html#territoriality), and we depend upon Git to maintain that information for the project.
 
 ### Ensuring high quality
 After we receive your pull request the [Travis pull request builder](https://travis-ci.org/AdoptOpenJDK/openjdk-build) will test your changes and ensure they meet the coding style guidelines.  Watch for the results posted as a comment to the PR, and investigate and fix any failures.

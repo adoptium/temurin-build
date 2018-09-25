@@ -15,7 +15,7 @@
 # accompanied this code).
 #
 # You should have received a copy of the GNU General Public License version
-# 2 along with this work; if not, see <http://www.gnu.org/licenses/>.
+# 2 along with this work; if not, see <https://www.gnu.org/licenses/>.
 #
 # ===========================================================================
 
@@ -36,9 +36,9 @@ GITHUB_PROJECT=git@github.com:AdoptOpenJDK
 GITHUB_REPO="openjdk-$OPENJDK_VERSION"
 
 case "$OPENJDK_VERSION" in
-   jdk8*) HG_REPO=http://hg.openjdk.java.net/jdk8u/jdk8u
+   jdk8*) HG_REPO=https://hg.openjdk.java.net/jdk8u/jdk8u
           [ -z "$TAGS" ] && TAGS="jdk8u144-b34 jdk8u151-b12 jdk8u152-b16 jdk8u161-b12 jdk8u162-b12 jdk8u172-b03 jdk8u172-b11";;
-   jdk9*) HG_REPO=http://hg.openjdk.java.net/jdk-updates/jdk9u
+   jdk9*) HG_REPO=https://hg.openjdk.java.net/jdk-updates/jdk9u
           [ -z "$TAGS" ] && TAGS="jdk-9+181 jdk-9.0.1+11 jdk-9.0.3+9 jdk-9.0.4+11";;
        *) Unknown JDK version - only jdk8u and jdk9 are supported; exit 1;;
 esac
@@ -56,7 +56,7 @@ GIT_MINOR_VERSION=$(echo "$GIT_VERSION" | cut -d. -f2)
 
 if ! which git-remote-hg 2>/dev/null; then
   echo "I need git-remote-hg and could not find it"
-  echo "Get it from http://raw.githubusercontent.com/felipec/git-remote-hg/master/git-remote-hg"
+  echo "Get it from https://raw.githubusercontent.com/felipec/git-remote-hg/master/git-remote-hg"
   exit 1
 fi
 

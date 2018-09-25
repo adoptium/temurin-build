@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#      https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,7 +39,7 @@ echo "Create $bpath"
 mkdir -p "$bpath" || exit 1
 
 echo "git hg clone $bpath (root)"
-git hg clone "http://hg.openjdk.java.net/$bpath" "$bpath/root" || exit 1
+git hg clone "https://hg.openjdk.java.net/$bpath" "$bpath/root" || exit 1
 
 echo "checkout the $branch"
 if [ "$branch" != "" ]; then
