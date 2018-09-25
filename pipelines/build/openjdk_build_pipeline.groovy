@@ -155,10 +155,9 @@ try {
                     sh "./build-farm/make-adopt-build-farm.sh"
                     archiveArtifacts artifacts: "workspace/target/*"
                 } finally {
-                    /*
                     if (config.os == "aix") {
                         cleanWs notFailBuild: true
-                    }*/
+                    }
                 }
             }
         } else {
