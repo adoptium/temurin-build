@@ -257,15 +257,6 @@ buildingTheRestOfTheConfigParameters()
     addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/freemarker.jar"
   fi
 
-  if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
-    local freetypeDir=BUILD_CONFIG[FREETYPE_DIRECTORY]
-    case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
-       jdk8*|jdk9*|jdk10*) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-"${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype"} ;;
-       *) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled} ;;
-    esac
-    addConfigureArg "--with-freetype=" "${freetypeDir}"
-  fi
-
   addConfigureArg "--with-x=" "/usr/include/X11"
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
@@ -280,14 +271,33 @@ buildingTheRestOfTheConfigParameters()
   fi
 }
 
+configureFreetypeLocation() {
+  if [[ ! "${CONFIGURE_ARGS}" =~ "--with-freetype" ]]; then
+    if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
+      if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+        addConfigureArg "--with-freetype-src=" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype"
+      else
+        local freetypeDir=BUILD_CONFIG[FREETYPE_DIRECTORY]
+        case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
+           jdk8*|jdk9*|jdk10*) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-"${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype"} ;;
+           *) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled} ;;
+        esac
+
+        echo "setting freetype dir to ${freetypeDir}"
+        addConfigureArg "--with-freetype=" "${freetypeDir}"
+      fi
+    fi
+  fi
+}
+
 # Configure the command parameters
 configureCommandParameters()
 {
   configuringVersionStringParameter
   configuringBootJDKConfigureParameter
+
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
-
   else
     echo "Building up the configure command..."
     buildingTheRestOfTheConfigParameters
@@ -295,6 +305,8 @@ configureCommandParameters()
 
   # Now we add any configure arguments the user has specified on the command line.
   CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}"
+
+  configureFreetypeLocation
 
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }

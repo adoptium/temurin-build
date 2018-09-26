@@ -41,29 +41,7 @@ def toBuildParams(enableTests, params) {
 
 static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs) {
 
-    String buildTag = "build"
-
-    if (configuration.os == "windows" && variant == "openj9") {
-        buildTag = "buildj9"
-    } else if (configuration.arch == "s390x" && variant == "openj9") {
-        buildTag = "(buildj9||build)&&openj9"
-    }
-
-    def additionalNodeLabels = null
-    if (configuration.containsKey("additionalNodeLabels")) {
-        // hack as jenkins sandbox wont allow instanceof
-        if ("java.util.LinkedHashMap" == configuration.additionalNodeLabels.getClass().getName()) {
-            additionalNodeLabels = configuration.additionalNodeLabels.get(variant)
-        } else {
-            additionalNodeLabels = configuration.additionalNodeLabels
-        }
-    }
-
-    if (additionalNodeLabels != null) {
-        additionalNodeLabels = "${additionalNodeLabels}&&${buildTag}"
-    } else {
-        additionalNodeLabels = "${buildTag}"
-    }
+    def additionalNodeLabels = formAdditionalNodeLabels(configuration, variant)
 
     def buildParams = [
             JAVA_TO_BUILD: javaToBuild,
@@ -83,9 +61,13 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, b
         buildParams.put("BRANCH", branch)
     }
 
+    def isRelease = false
     if (releaseTag != null && releaseTag.length() > 0) {
+        isRelease = true
         buildParams.put("TAG", releaseTag)
     }
+
+    def testList = getTestList(configuration, isRelease)
 
     return [
             javaVersion: javaToBuild,
@@ -93,8 +75,48 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, b
             os         : configuration.os,
             variant    : variant,
             parameters : buildParams,
-            test       : configuration.test,
+            test       : testList,
     ]
+}
+
+static def getTestList(configuration, isRelease) {
+    if (configuration.containsKey("test")) {
+        def testJobType = isRelease ? "release" : "nightly"
+
+        // hack as jenkins sandbox wont allow instanceof
+        if ("java.util.LinkedHashMap" == configuration.test.getClass().getName()) {
+            return configuration.test.get(testJobType)
+        } else {
+            return configuration.test
+        }
+    }
+    return []
+}
+
+static def formAdditionalNodeLabels(configuration, variant) {
+    def buildTag = "build"
+
+    if (configuration.os == "windows" && variant == "openj9") {
+        buildTag = "buildj9"
+    } else if (configuration.arch == "s390x" && variant == "openj9") {
+        buildTag = "(buildj9||build)&&openj9"
+    }
+
+    def labels = "${buildTag}"
+
+    if (configuration.containsKey("additionalNodeLabels")) {
+        def additionalNodeLabels = null
+
+        // hack as jenkins sandbox wont allow instanceof
+        if ("java.util.LinkedHashMap" == configuration.additionalNodeLabels.getClass().getName()) {
+            additionalNodeLabels = configuration.additionalNodeLabels.get(variant)
+        } else {
+            additionalNodeLabels = configuration.additionalNodeLabels
+        }
+        labels = "${additionalNodeLabels}&&${labels}"
+    }
+
+    return labels
 }
 
 static def getConfigureArgs(configuration, additionalConfigureArgs) {
