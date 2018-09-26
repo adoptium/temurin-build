@@ -73,6 +73,9 @@ a new docker based build.
 .BR \-C ", " \-\-configure-args " " \fI<args>\fR
 specify any custom user configuration arguments.
 .TP
+.BR \-\-clean-git-repo
+clean out any 'bad' local git repo you already have.
+.TP
 .BR \-d ", " \-\-destination " " \fI<path>\fR
 specify the location for the built binary, e.g. /path/.
 This is typically used in conjunction with \fB<-T>\fR to create a custom path
@@ -84,7 +87,17 @@ build OpenJDK in a docker container.
 .BR \-\-disable-shallow-git-clone
 disable the default \fB--depth=1\fR shallow cloning of git repo(s).
 .TP
-.BR \-f ", " \-\-freetype-dir
+.BR \-f ", " \-\-freetype-dir " " \fI<path>\fR
+specify the location of an existing FreeType library.
+This is typically used in conjunction with \fB<-F>\fR.
+.TP
+.BR \-\-freetype-build-param " " \fI<parameter>\fR
+specify any special freetype build parameters (required for some OS's).
+.TP
+.BR \-\-freetype-version " " \fI<version>\fR
+specify the version of freetype you are building.
+.TP
+.BR \-f ", " \-\-freetype-dir " " \fI<path>\fR
 specify the location of an existing FreeType library.
 This is typically used in conjunction with \fB<-F>\fR.
 .TP
@@ -106,9 +119,6 @@ the one you are trying to build.
 .TP
 .BR \-k ", " \-\-keep
 if using docker, keep the container after the build.
-.TP
-.BR \-n ", " \-\-no-colour
-disable colour output.
 .TP
 .BR \-p ", " \-\-processors " " \fI<args>\fR
 specify the number of processors to use for the docker build.
@@ -147,6 +157,13 @@ For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 9.0.4+11 (for Java 9+) with the update number being the number after the '_'
 (162) or the 3rd position in the semVer version string (4).
 This is typically used in conjunction with \fB<-b>\fR.
+.TP
+.BR \-\-use-jep319-certs
+Use certs defined in JEP319 in Java 8/9. This will increase the volume of traffic
+downloaded, however will provide an uptodate ca cert list.
+.TP
+.BR \-v ", " \-\-version " " \fI<version>\fR
+specify the OpenJDK version to build e.g. jdk8u.  Left for backwards compatibility.
 .TP
 .BR \-V ", " \-\-jvm-variant " " \fI<jvm_variant>\fR
 specify the JVM variant (server or client), defaults to server.
