@@ -180,7 +180,6 @@ checkingAndDownloadingFreemarker()
 # Get Freetype
 checkingAndDownloadingFreeType()
 {
-
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   echo "Checking for freetype at ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
 
@@ -189,17 +188,23 @@ checkingAndDownloadingFreeType()
   if [[ ! -z "$FOUND_FREETYPE" ]] ; then
     echo "Skipping FreeType download"
   else
-    # Then FreeType for fonts: make it and use
-    wget -nc --no-check-certificate https://ftp.acc.umu.se/mirror/gnu.org/savannah/freetype/freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
+    curl -L -o "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
 
-    gunzip -dc freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz | tar xf - -C .
-    rm freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}".tar.gz
+    rm -rf "./freetype" || true
+    mkdir -p "freetype" || true
+    tar xpzf freetype.tar.gz --strip-components=1 -C "freetype"
+    rm freetype.tar.gz
 
-    cd freetype-"${BUILD_CONFIG[FREETYPE_FONT_VERSION]}" || exit
+    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+       return;
+    fi
+
+    cd freetype || exit
+
 
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+    if ! (bash ./configure "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
       echo "Failed to configure and build libfreetype, exiting"
       exit;
@@ -266,28 +271,29 @@ downloadingRequiredDependencies()
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
 
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-     echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa, Freetype, and CaCerts."
+     echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa."
   else
      echo "Downloading required dependencies...: Alsa, Freetype, Freemarker, and CaCerts."
         echo "Checking and download Alsa dependency"
         checkingAndDownloadingAlsa
 
-     if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
-       if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
-            echo "Checking and download FreeType Font dependency"
-            checkingAndDownloadingFreeType
-       else
-           echo ""
-           echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
-           echo ""
-       fi
-     else
-        echo "Skipping Freetype"
-     fi
      if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
            echo "Checking and download Freemarker dependency"
            checkingAndDownloadingFreemarker
      fi
+  fi
+
+  if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
+   if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
+     echo "Checking and download FreeType Font dependency"
+     checkingAndDownloadingFreeType
+   else
+     echo ""
+     echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
+     echo ""
+   fi
+  else
+    echo "Skipping Freetype"
   fi
 
   echo "Checking and download CaCerts dependency"
@@ -328,13 +334,14 @@ relocateToTmpIfNeeded()
      export TMP_WORKSPACE="${tmpdir}"
      export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
 
+     trap moveTmpToWorkspaceLocation EXIT SIGINT SIGTERM
+
      if [ -d "${ORIGINAL_WORKSPACE}" ]
      then
         cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
      fi
      BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
 
-     trap moveTmpToWorkspaceLocation EXIT SIGINT SIGTERM
    fi
 }
 
@@ -342,8 +349,8 @@ relocateToTmpIfNeeded()
 
 function configureWorkspace() {
     createWorkspace
+    downloadingRequiredDependencies
     relocateToTmpIfNeeded
     checkoutAndCloneOpenJDKGitRepo
-    downloadingRequiredDependencies
 }
 

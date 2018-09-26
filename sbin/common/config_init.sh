@@ -189,6 +189,9 @@ function parseConfigurationArguments() {
         "--freetype-build-param" )
         BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]="$1"; shift;;
 
+        "--freetype-version" )
+        BUILD_CONFIG[FREETYPE_FONT_VERSION]="$1"; shift;;
+
         "--skip-freetype" | "-F" )
         BUILD_CONFIG[FREETYPE]=false;;
 
