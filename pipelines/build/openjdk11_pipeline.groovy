@@ -19,11 +19,15 @@ def buildConfigurations = [
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
                 test                : ['openjdktest', 'systemtest']
         ],
+
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
-                test                : ['openjdktest', 'systemtest', 'externaltest']
+                test                : [
+                        nightly: ['openjdktest', 'systemtest', 'perftest', 'externaltest', 'externaltest_extended'],
+                        release: ['openjdktest', 'systemtest', 'perftest', 'externaltest']
+                ]
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
