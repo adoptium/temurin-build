@@ -1,5 +1,6 @@
 #!/bin/bash
-#
+
+################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,16 +12,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
+################################################################################
 
-# Delete any existing file
-rm -f certdata.txt*
+export JDK8_VERSION="jdk8u";
+export JDK9_VERSION="jdk9u";
+export JDK10_VERSION="jdk10u";
+export JDK11_VERSION="jdk11";
+export JDKHEAD_VERSION="jdk";
 
-# Grab our certificate information to use from the Mozilla site
-wget https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt .
-
-# Call the script to generate our crt file
-perl mk-ca-bundle.pl -n > ca-bundle.crt
-
-# Finally use the keyutil application
-java -jar keyutil-0.4.0.jar --import --new-keystore trustStore.jks --password changeit --force-new-overwrite --import-pem-file ca-bundle.crt
+export JDK8_CORE_VERSION="jdk8";
+export JDK9_CORE_VERSION="jdk9";
+export JDK10_CORE_VERSION="jdk10";
+export JDK11_CORE_VERSION="jdk11";
+export JDKHEAD_CORE_VERSION="${JDKHEAD_VERSION}";
+export AMBER_CORE_VERSION="amber";

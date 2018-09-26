@@ -5,7 +5,7 @@ Dockerfiles and build scripts for generating various Docker Images building Open
 
 # License
 The Dockerfiles and associated scripts found in this project are licensed under
-the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
+the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 # Steps to build
 
