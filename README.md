@@ -1,3 +1,30 @@
+# This Branch is a legacy branch!!
+
+Jobs are currently being migrated to the 
+[new_build_scripts](https://github.com/AdoptOpenJDK/openjdk-build/tree/new_build_scripts) branch.
+
+If you're looking to make fixes or additions to the build scripts please do so 
+on the [new_build_scripts](https://github.com/AdoptOpenJDK/openjdk-build/tree/new_build_scripts) branch 
+first and only backport to this legacy branch if required.
+
+**11th of Sept 2018** 
+
+At time of writing the new_build_scripts branch are building most jdk10 jobs
+
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+---
+ 
+
 # Repository for code and instructions for building OpenJDK
 
 [![Build Status](https://travis-ci.org/AdoptOpenJDK/openjdk-build.svg?branch=master)](https://travis-ci.org/AdoptOpenJDK/openjdk-build) [![Slack](https://slackin-jmnmplfpdu.now.sh/badge.svg)](https://slackin-jmnmplfpdu.now.sh/)
@@ -235,7 +262,7 @@ passed into `makejdk-any-platform.sh` script.
 Note that the build nodes (list of hosts on the LH side) also have configuration 
 where things like the BOOT_JDK environment variable is set.
 
-### Building via Docker in your local environment
+**WARN: As of 23rd March 2018 these instructions do not work, there are several issues that need resolving ([see this issue as starting point](https://github.com/AdoptOpenJDK/openjdk-build/issues/194))**
 
 The simplest way to build OpenJDK using these scripts is to run `makejdk-any-platform.sh` 
 and have your user be in the Docker group on the machine (or use the `--sudo` 
@@ -249,7 +276,13 @@ Once you have Docker started you can then use the script below to build OpenJDK.
 
 Example Usage (TODO Add example of openj9):
 
-`./makejdk-any-platform.sh --docker --sudo jdk8u`
+* **NOTE:** If you don't use SSH keys (if you do then pass `-ssh`) to connect to GitHub then the script will challenge you for your GitHub username and password. (You can find more information about SSH keys for GitHub [here](https://help.github.com/articles/connecting-to-github-with-ssh/))
+* **NOTE:** The script will clone source code into the `--source` directory (defaults to `openjdk`).
+* **NOTE:** By default the docker container is removed each time and your build will be copied from the container to the host. 
+To override this behaviour, specify the `-k` or `--keep` option.
+* **NOTE:** The entire process will take some time, especially if you have not saved the Docker image from a previous run. 
+* **NOTE:** If you set the `-d` option it will pass that through to `makejdk.sh`, the resulting zipped tarball will be copied to the value for -d, for example:
+`makejdk.sh /target/directory` will result in the JDK being built inside of your Docker container and then copied to `/target/directory` on the host
 
 #### Configuring Docker for non sudo use
 
