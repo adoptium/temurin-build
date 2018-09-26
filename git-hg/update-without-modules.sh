@@ -4,7 +4,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#      https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,8 +32,8 @@ do
 
     pushd "$hg_root_forest/$hg_repo/root"
     echo "Update $hg_root_forest/$hg_repo -> (root)"
-    git hg fetch "http://hg.openjdk.java.net/$hg_root_forest/$hg_repo"
-    git hg pull "http://hg.openjdk.java.net/$hg_root_forest/$hg_repo"
+    git hg fetch "https://hg.openjdk.java.net/$hg_root_forest/$hg_repo"
+    git hg pull "https://hg.openjdk.java.net/$hg_root_forest/$hg_repo"
     popd
 
     echo "Exit hg"

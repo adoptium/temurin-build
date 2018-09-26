@@ -1,10 +1,12 @@
 #!/bin/bash
+
+################################################################################
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#      https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,119 +14,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+################################################################################
 
-# Script to clone the OpenJDK source then build it
+################################################################################
+#
+# Entry point to build (Adopt) OpenJDK binaries for any platform.
+#
+# 1. Source scripts to support configuration, docker builds and native builds.
+# 2. Parse the Command Line Args
+# 3. Set a host of configuration options based on args, platform etc
+# 4. Display and then persist those configuration options
+# 5. Build the binary in Docker or natively
+#
+################################################################################
 
-# Optionally uses Docker, otherwise you can provide two arguments:
-# the area to build the JDK e.g. $HOME/mybuilddir as -s or --source
-# and the target destination for the tar.gz e.g. -d or --destination $HOME/mytargetdir
-# Both must be absolute paths! You can use $PWD/mytargetdir
+# TODO Comment out the 'x' once script is stable.
+set -eu
 
-# A simple way to install dependencies persistently is to use our Ansible playbooks
+# i.e. Where we are
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# You can set the JDK boot directory with the JDK_BOOT_DIR environment variable
+# Pull in configuration and build support
+# shellcheck source=sbin/common/config_init.sh
+source "${SCRIPT_DIR}/sbin/common/config_init.sh"
 
-export OS_KERNEL_NAME=""
-OS_KERNEL_NAME=$(uname | awk '{print tolower($0)}')
-export OS_MACHINE_NAME=""
-OS_MACHINE_NAME=$(uname -m)
+# shellcheck source=docker-build.sh
+source "${SCRIPT_DIR}/docker-build.sh"
 
-# The full forest name, e.g. jdk8, jdk8u, jdk9, jdk9u, etc.
-export OPENJDK_FOREST_NAME=""
+# shellcheck source=native-build.sh
+source "${SCRIPT_DIR}/native-build.sh"
 
-# The abridged, core version name, e.g. jdk8, jdk9, etc. No "u"s.
-export OPENJDK_CORE_VERSION=""
+# shellcheck source=configureBuild.sh
+source "${SCRIPT_DIR}/configureBuild.sh"
 
-export BUILD_VARIANT=""
-export REPOSITORY=""
+echo "Starting $0 to configure, build (Adopt)OpenJDK binary"
 
-counter=0
-for i in "$@"; do
-  (( counter++ ))
-  case "$i" in
-    "--version" | "-v")
-      (( counter++ ))
-      string="\$$counter"
-      OPENJDK_FOREST_NAME=$(echo "$@" | awk "{print $string}")
-      export OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME}
-      if [[ $OPENJDK_FOREST_NAME == *u ]]; then
-        export OPENJDK_CORE_VERSION=${OPENJDK_FOREST_NAME%?}
-      fi
-      # Switch it back to stop it being out of sync with i
-      (( counter-- ))
-      ;;
-    "--variant" | "-bv")
-      (( counter++ ))
-      string="\$$counter"
-      BUILD_VARIANT=$(echo "$@" | awk "{print $string}")
-      # Switch it back to stop it being out of sync with i
-      (( counter-- ))
-      ;;
-  esac
-done
+# Configure the build, display the parameters and write the config to disk
+# see ${SCRIPT_DIR}/sbin/common/config_init.sh for details
+configure_build "$@"
+writeConfigToFile
 
-export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG="false"
-export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG="false"
-if [ "$OPENJDK_CORE_VERSION" == "jdk9" ] || [ "$OPENJDK_CORE_VERSION" == "jdk10" ] || [ "$OPENJDK_CORE_VERSION" == "jdk11" ] || [ "$OPENJDK_CORE_VERSION" == "amber" ]; then
-  export JDK_PATH="jdk"
-  export JRE_PATH="jre"
-  if [ "$OPENJDK_CORE_VERSION" == "jdk9" ]; then
-      export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG="true"
-      export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG="true"
-  fi
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--disable-warnings-as-errors"}
-elif [ "$OPENJDK_CORE_VERSION" == "jdk8" ]; then
-  export COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG="false"
-  export COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG="true"
-  export JDK_PATH="j2sdk-image"
-  export JRE_PATH="j2re-image"
+# Let's build and test the (Adopt) OpenJDK binary in Docker or natively
+if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
+  buildOpenJDKViaDocker
 else
-  echo "Please specify a version with --version or -v , either jdk9, jdk10 or jdk8, with or without a \\'u\\' suffix."
-  man ./makejdk-any-platform.1
-  exit 1
+  buildOpenJDKInNativeEnvironment
 fi
-
-REPOSITORY="${REPOSITORY:-adoptopenjdk/openjdk-$OPENJDK_FOREST_NAME}";
-REPOSITORY="$(echo "${REPOSITORY}" | awk '{print tolower($0)}')";
-
-case "$OS_MACHINE_NAME" in
-"s390x")
-  if [ "$OPENJDK_CORE_VERSION" == "jdk8" ] && [ "$BUILD_VARIANT" != "openj9" ]; then
-    export JVM_VARIANT=${JVM_VARIANT:-zero}
-  else
-    export JVM_VARIANT=${JVM_VARIANT:-server}
-  fi
-
-  export BUILD_FULL_NAME=${BUILD_FULL_NAME:-linux-s390x-normal-${JVM_VARIANT}-release}
-  S390X_MAKE_ARGS="CONF=${BUILD_FULL_NAME} DEBUG_BINARIES=true images"
-  export MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-$S390X_MAKE_ARGS}
-;;
-
-"ppc64le")
-  export JVM_VARIANT=${JVM_VARIANT:-server}
-  export BUILD_FULL_NAME=${BUILD_FULL_NAME:-linux-ppc64-normal-${JVM_VARIANT}-release}
-  # shellcheck disable=SC1083
-  export FREETYPE_FONT_BUILD_TYPE_PARAM=${FREETYPE_FONT_BUILD_TYPE_PARAM:="--build=$(rpm --eval %{_host})"}
-;;
-
-"armv7l")
-  export JVM_VARIANT=${JVM_VARIANT:-zero}
-  export MAKE_ARGS_FOR_ANY_PLATFORM=${MAKE_ARGS_FOR_ANY_PLATFORM:-"DEBUG_BINARIES=true images"}
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS_FOR_ANY_PLATFORM:-"--with-jobs=${NUM_PROCESSORS}"}
-;;
-
-"aarch64")
-  export FREETYPE_FONT_VERSION="2.5.2"
-;;
-esac
-
-case "$OS_KERNEL_NAME" in
-"aix")
-  export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
-;;
-"SunOS")
-  export MAKE_COMMAND_NAME=${MAKE_COMMAND_NAME:-"gmake"}
-;;
-
-esac
-./makejdk.sh "$@"
