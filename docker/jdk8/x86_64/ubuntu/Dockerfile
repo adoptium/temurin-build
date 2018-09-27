@@ -34,7 +34,6 @@ RUN apt-get update \
     g++ \
     gcc \
     git \
-    git \
     libasound2-dev \
     libcups2-dev \
     libfreetype6-dev \

@@ -26,7 +26,6 @@ RUN apt-get update \
     g++ \
     gcc \
     git \
-    git \
     libasound2-dev \
     libcups2-dev \
     libelf-dev \
@@ -43,6 +42,7 @@ RUN apt-get update \
     unzip \
     wget \
     zip \
+
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions
