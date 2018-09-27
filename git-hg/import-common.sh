@@ -53,6 +53,7 @@ function installGitRemoteHg() {
 # dev contains patches that AdoptOpenJDK has beyond upstream OpenJDK
 function performMergeIntoDevFromMaster() {
   git checkout dev || git checkout -b dev origin/dev
+  git pull origin dev || exit 1
   git rebase master || exit 1
   git push origin dev || exit 1
 }
