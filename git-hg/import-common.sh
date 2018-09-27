@@ -20,7 +20,6 @@
 #
 ################################################################################
 
-cd "$WORKSPACE" || exit 1
 export modules=(corba langtools jaxp jaxws hotspot nashorn jdk)
 
 function checkGitVersion() {
@@ -53,8 +52,9 @@ function installGitRemoteHg() {
 # Merge master into dev as we build off dev at the AdoptOpenJDK Build farm
 # dev contains patches that AdoptOpenJDK has beyond upstream OpenJDK
 function performMergeIntoDevFromMaster() {
-  git checkout dev || git checkout -b dev
+  git checkout dev || git checkout -b dev origin/dev
   git rebase master || exit 1
   git push origin dev || exit 1
 }
+
 
