@@ -112,6 +112,9 @@ a new docker based build.
 -C, --configure-args <args>
 specify any custom user configuration arguments.
 
+--clean-git-repo
+clean out any 'bad' local git repo you already have.
+
 -d, --destination <path>
 specify the location for the built binary, e.g. /path/.
 This is typically used in conjunction with -T to create a custom path
@@ -127,14 +130,23 @@ disable the default fB--depth=1 shallow cloning of git repo(s).
 specify the location of an existing FreeType library.
 This is typically used in conjunction with -F.
 
+--freetype-build-param <parameter>
+specify any special freetype build parameters (required for some OS's).
+ 
+--freetype-version <version>
+specify the version of freetype you are building.
+
 -F, --skip-freetype
 skip building Freetype automatically.
 This is typically used in conjunction with -f.
 
+-h, --help
+print the man page.
+
 -i, --ignore-container
 ignore the existing docker container if you have one already.
 
- -J, --jdk-boot-dir <jdk_boot_dir>
+-J, --jdk-boot-dir <jdk_boot_dir>
 specify the JDK boot dir.
 For reference, OpenJDK needs the previous version of a JDK in order to build
 itself. You should select the path to a JDK install that is N-1 versions below
@@ -173,6 +185,9 @@ specify the final name of the OpenJDK binary.
 This is typically used in conjunction with -D to create a custom file
 name for the resulting binary.
 
+--tmp-space-build
+use the temp directory for performing the build
+
 -u, --update-version <update_version>
 specify the update version to build OpenJDK from, e.g. 162.
 For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
@@ -187,6 +202,9 @@ provide an upto date ca cert list.
 -v, --build-variant <variant_name>
 specify a OpenJDK build variant, e.g. openj9.
 For reference, the default variant is hotspot and does not need to be specified.
+
+-v, --version
+specify the OpenJDK version to build e.g. jdk8u.  Left for backwards compatibility.
 
 -V, --jvm-variant <jvm_variant>
 specify the JVM variant (server or client), defaults to server.
