@@ -25,30 +25,29 @@ RUN apt-get update \
   && apt-get update \
   && apt-get -y upgrade \
   && apt-get install -qq -y --no-install-recommends \
-    git \
+    ccache \
     cpio \
     curl \
-    make \
-    gcc \
-    g++ \
     file \
+    g++ \
+    gcc \
+    git \
+    libasound2-dev \
+    libcups2-dev \
+    libelf-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
     libx11-dev \
     libxext-dev \
     libxrender-dev \
-    libxtst-dev \
     libxt-dev \
-    libelf-dev \
-    libcups2-dev \
-    libfreetype6-dev \
-    libfontconfig1-dev \
-    libasound2-dev \
-    zulu-9 \
-    ccache \
-    zip \
-    wget \
-    git \
-    unzip \
+    libxtst-dev \
+    make \
     realpath \
+    unzip \
+    wget \
+    zip \
+    zulu-9 \
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions
