@@ -27,26 +27,26 @@ RUN apt-get update \
   && apt-get update \
   && apt-get -y upgrade \
   && apt-get install -qq -y --no-install-recommends \
-    git \
+    ccache \
     cpio \
-    make \
-    gcc \
-    g++ \
+    curl \
     file \
+    g++ \
+    gcc \
+    git \
+    libasound2-dev \
+    libcups2-dev \
+    libfreetype6-dev \
     libx11-dev \
     libxext-dev \
     libxrender-dev \
-    libxtst-dev \
     libxt-dev \
-    libcups2-dev \
-    libfreetype6-dev \
-    libasound2-dev \
-    zulu-7 \
-    ccache \
-    zip \
-    wget \
-    git \
+    libxtst-dev \
+    make \
     unzip \
+    wget \
+    zip \
+    zulu-7 \
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions
