@@ -28,7 +28,6 @@
 #
 ################################################################################
 
-# TODO Comment out the 'x' once script is stable.
 set -eu
 
 # i.e. Where we are
