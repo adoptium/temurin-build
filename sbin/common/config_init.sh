@@ -302,7 +302,7 @@ function configDefaults() {
   BUILD_CONFIG[JDK_BOOT_DIR]=""
 
   BUILD_CONFIG[NUM_PROCESSORS]="1"
-  BUILD_CONFIG[TARGET_FILE_NAME]="OpenJDK"
+  BUILD_CONFIG[TARGET_FILE_NAME]="OpenJDK.tar.gz"
 
   # Dir where we clone the OpenJDK source code for building, defaults to 'src'
   BUILD_CONFIG[OPENJDK_SOURCE_DIR]="src"

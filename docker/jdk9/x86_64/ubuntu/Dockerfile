@@ -19,29 +19,30 @@ MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 RUN apt-get update \
   && apt-get -y upgrade \
   && apt-get install -qq -y --no-install-recommends \
-    git \
+    ccache \
     cpio \
-    make \
-    gcc \
-    g++ \
+    curl \
     file \
+    g++ \
+    gcc \
+    git \
+    git \
+    libasound2-dev \
+    libcups2-dev \
+    libelf-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
     libx11-dev \
     libxext-dev \
     libxrender-dev \
-    libxtst-dev \
     libxt-dev \
-    libelf-dev \
-    libcups2-dev \
-    libfreetype6-dev \
-    libfontconfig1-dev \
-    libasound2-dev \
+    libxtst-dev \
+    make \
     openjdk-8-jdk \
-    ccache \
-    zip \
-    wget \
-    git \
-    unzip \
     realpath \
+    unzip \
+    wget \
+    zip \
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions
