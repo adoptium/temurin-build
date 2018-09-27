@@ -27,6 +27,7 @@ RUN apt-get update \
   && apt-get install -qq -y --no-install-recommends \
     git \
     cpio \
+    curl \
     make \
     gcc \
     g++ \
