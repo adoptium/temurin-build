@@ -284,9 +284,6 @@ function configDefaults() {
   # The abridged openjdk core version name, e.g. jdk8, jdk9, etc.
   BUILD_CONFIG[OPENJDK_CORE_VERSION]=""
 
-  # The build variant, e.g. openj9
-  BUILD_CONFIG[BUILD_VARIANT]=""
-
   # The OpenJDK source code repository to build from, e.g. an AdoptOpenJDK repo
   BUILD_CONFIG[REPOSITORY]=""
 
@@ -354,8 +351,8 @@ function configDefaults() {
   # build number e.g. b03
   BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]:-""}
 
-  # Build variant, e.g. openj9, defaults to "" which means hotspot
-  BUILD_CONFIG[BUILD_VARIANT]=${BUILD_CONFIG[BUILD_VARIANT]:-""}
+  # Build variant, e.g. openj9, defaults to "hotspot"
+  BUILD_CONFIG[BUILD_VARIANT]=${BUILD_CONFIG[BUILD_VARIANT]:-"hotspot"}
 
   # JVM variant, e.g. client or server, defaults to server
   BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-""}
