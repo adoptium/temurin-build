@@ -165,11 +165,11 @@ function parseConfigurationArguments() {
         "--build-number"  | "-B" )
         BUILD_CONFIG[OPENJDK_BUILD_NUMBER]="$1"; shift;;
 
-        "--configure-args"  | "-C" )
-        BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
-
         "--clean-docker-build" | "-c" )
         BUILD_CONFIG[CLEAN_DOCKER_BUILD]=true;;
+
+        "--configure-args"  | "-C" )
+        BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
 
         "--clean-git-repo" )
         BUILD_CONFIG[CLEAN_GIT_REPO]=true;;

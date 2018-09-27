@@ -13,42 +13,77 @@
 # limitations under the License.
 #
 
+################################################################################
+# diff-without-getsource
+#
+# For finding the diff between an AdoptOpenJDK Git repo and the OpenJDK Mercurial
+# Repo for Java versions >= jdk10
+#
+# 1. Clones the AdoptOpenJDK Git repo for a particular version
+# 2. Clones the OpenJDK Mercurial repo for that same version
+# 3. Runs a diff between the two
+#
+################################################################################
+
 set -euo pipefail
 
+function checkArgs() {
+  if [ $# -lt 2 ]; then
+     echo Usage: "$0" '[AdoptOpenJDK Git Repo Version] [OpenJDK Mercurial Root Forest] [OpenJDK Mercurial Version]'
+     echo ""
+     echo "e.g. ./diff-without-getsource.sh jdk10u jdk-updates jdk10u"
+     echo ""
+     exit 1
+  fi
+}
+
+checkArgs $@
+
 git_repo_version=$1
-hg_root_forest=${2:-${1}}                  # for backwards compatibility
-hg_repo_version=${3:-${hg_root_forest}}    # for backwards compatibility
+hg_root_forest=$2
+hg_repo_version=$3
 
-#cleanup
-rm -rf openjdk-git openjdk-hg
+function cleanUp() {
+  rm -rf openjdk-git openjdk-hg
+}
 
-echo "git repo version: ${git_repo_version}"
-echo "hg repo version: ${hg_root_forest}/${hg_repo_version}"
+function cloneRepos() {
+  echo "AdoptOpenJDK Git Repo Version: ${git_repo_version}"
+  echo "OpenJDK Mercurial Repo Version: ${hg_root_forest}/${hg_repo_version}"
 
-git clone -b master "https://github.com/AdoptOpenJDK/openjdk-${git_repo_version}.git" openjdk-git || exit 1
-hg clone "https://hg.openjdk.java.net/${hg_root_forest}/${hg_repo_version}" openjdk-hg || exit 1
+  git clone -b master "https://github.com/AdoptOpenJDK/openjdk-${git_repo_version}.git" openjdk-git || exit 1
+  hg clone "https://hg.openjdk.java.net/${hg_root_forest}/${hg_repo_version}" openjdk-hg || exit 1
+}
 
-diffNum=$(diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | wc -l)
+function runDiff() {
+  diffNum=$(diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | wc -l)
 
-if [ "$diffNum" -gt 0 ]; then
-  echo "ERROR - THE DIFF HAS DETECTED UNKNOWN FILES"
-  diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | grep 'only in' || exit 1
-  exit 1
-fi
+  if [ "$diffNum" -gt 0 ]; then
+    echo "ERROR - THE DIFF HAS DETECTED UNKNOWN FILES"
+    diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' | grep 'only in' || exit 1
+    exit 1
+  fi
+}
 
-# get latest git tag
+function checkTags() {
 
-cd openjdk-git || exit 1
-gitTag=$(git describe --tags "$(git rev-list --tags --max-count=1)") || exit 1
-cd - || exit 1
+  cd openjdk-git || exit 1
+  gitTag=$(git describe --tags "$(git rev-list --tags --max-count=1)") || exit 1
+  cd - || exit 1
 
-cd openjdk-hg || exit 1
-hgTag=$(hg log -r "." --template "{latesttag}\n") || exit 1
-cd - || exit 1
+  cd openjdk-hg || exit 1
+  hgTag=$(hg log -r "." --template "{latesttag}\n") || exit 1
+  cd - || exit 1
 
-if [ "$gitTag" == "$hgTag" ]; then
-  echo "Tags are in sync"
-else
-  echo "ERROR - THE TAGS ARE NOT IN SYNC"
-  exit 1
-fi
+  if [ "$gitTag" == "$hgTag" ]; then
+    echo "Tags are in sync"
+  else
+    echo "ERROR - THE TAGS ARE NOT IN SYNC"
+    exit 1
+  fi
+}
+
+cleanUp
+cloneRepos
+runDiff
+checkTags

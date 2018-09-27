@@ -1,7 +1,4 @@
-
-
 # Build
-
 
 The build is organised as follows:
 
@@ -37,7 +34,6 @@ The actions of this script are:
 1. Execute all build jobs in parallel
 1. Publish binaries to GitHub
 
-
 #### Generated build jobs
 
 These are generated using the template at [create_job_from_template.groovy](/pipelines/build/create_job_from_template.groovy)
@@ -59,5 +55,3 @@ The actions of this are:
 This is kicked off by the Build Pipeline, this involves calling [make-adopt-build-farm.sh](/build-farm/make-adopt-build-farm.sh).
 This script defines some platform specific configuration such as operating system and architecture specific config defined in [platform-specific-configurations](/build-farm/platform-specific-configurations).
 Then it calls [make-adopt-build-farm.sh](/build-farm/make-adopt-build-farm.sh) to finally invoke the build.
-
-
