@@ -226,6 +226,54 @@ setMakeCommandForOS() {
   BUILD_CONFIG[MAKE_COMMAND_NAME]=${BUILD_CONFIG[MAKE_COMMAND_NAME]:-$make_command_name}
 }
 
+function configureMacFreeFont() {
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_VERSION}" ]; then
+        BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="true";
+        BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true";
+    fi
+
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_VERSION}" ]; then
+        BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false";
+        BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true";
+    fi
+
+    echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
+    echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
+}
+
+function setMakeArgs() {
+    echo "JDK Image folder name: ${BUILD_CONFIG[JDK_PATH]}"
+    echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
+
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_VERSION}" ]; then
+      BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images legacy-jre-image"}
+    else
+      BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}
+    fi
+
+    BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-""}
+}
+
+function setBootJdk() {
+  if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
+    echo "Searching for JDK_BOOT_DIR"
+
+    # shellcheck disable=SC2046
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink $(which javac))))
+    else
+      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
+    fi
+
+    echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+    echo "If this is incorrect explicitly configure JDK_BOOT_DIR"
+  else
+    echo "Overriding JDK_BOOT_DIR, set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+  fi
+
+  echo "Boot dir set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+}
+
 ################################################################################
 
 configure_build() {
@@ -245,4 +293,7 @@ configure_build() {
     sourceSignalHandler
     doAnyBuildVariantOverrides
     setWorkingDirectory
+    configureMacFreeFont
+    setMakeArgs
+    setBootJdk
 }
