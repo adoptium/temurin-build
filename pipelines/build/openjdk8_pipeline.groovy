@@ -80,7 +80,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['openjdktest']
+                test                : ['openjdktest', 'systemtest']
         ],
 
         linuxXL    : [
