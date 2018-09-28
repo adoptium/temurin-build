@@ -245,7 +245,7 @@ function setMakeArgs() {
     echo "JDK Image folder name: ${BUILD_CONFIG[JDK_PATH]}"
     echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
 
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_VERSION}" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
       BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images legacy-jre-image"}
     else
       BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}

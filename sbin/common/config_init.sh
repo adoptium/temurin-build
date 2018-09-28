@@ -264,8 +264,6 @@ function setBranch() {
   BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}
 }
 
-
-
 # Set the config defaults
 function configDefaults() {
   # The OS kernel name, e.g. 'darwin' for Mac OS X
