@@ -122,9 +122,9 @@ buildOpenJDKViaDocker()
   local cpuSet
   cpuSet="0-$((BUILD_CONFIG[NUM_PROCESSORS] - 1))"
   
-  local gitSshAccess=""
+  local gitSshAccess=()
   if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-     gitSshAccess="-v ${HOME}/.ssh:/home/build/.ssh --volume $SSH_AUTH_SOCK:/build-ssh-agent -e SSH_AUTH_SOCK=/build-ssh-agent"
+     gitSshAccess=(-v "${HOME}/.ssh:/home/build/.ssh" -v "${SSH_AUTH_SOCK}:/build-ssh-agent" -e "SSH_AUTH_SOCK=/build-ssh-agent")
   fi
   
   # shellcheck disable=SC2140
@@ -134,7 +134,7 @@ buildOpenJDKViaDocker()
       --cpuset-cpus="${cpuSet}" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
        -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" \
-       ${gitSshAccess} \
+       "${gitSshAccess[@]}" \
        -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
        --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
   
