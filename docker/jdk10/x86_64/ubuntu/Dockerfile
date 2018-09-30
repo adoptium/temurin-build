@@ -48,6 +48,7 @@ RUN apt-get update \
     wget \
     zip \
     zulu-9 \
+    ssh \
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions
