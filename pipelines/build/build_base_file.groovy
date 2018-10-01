@@ -56,11 +56,12 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, b
 
     buildParams.putAll(getConfigureArgs(configuration, additionalConfigureArgs))
 
-    def buildArgs = configuration.buildArgs;
+    def buildArgs = "";
+    if (configuration.containsKey('buildArgs')) buildArgs += configuration.buildArgs;
     if (additionalBuildArgs != null && additionalBuildArgs.length() > 0) {
         buildArgs += " " + additionalBuildArgs
     }
-    if (configuration.containsKey('buildArgs')) buildParams.put("BUILD_ARGS", buildArgs)
+    buildParams.put("BUILD_ARGS", buildArgs)
 
 
     if (branch != null && branch.length() > 0) {
