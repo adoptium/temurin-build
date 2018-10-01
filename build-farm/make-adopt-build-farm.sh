@@ -83,7 +83,7 @@ fi
 
 if [ ! -z "${BRANCH}" ]
 then
-  OPTIONS="${OPTIONS} -b ${BRANCH}"
+  OPTIONS="${OPTIONS} --disable-shallow-git-clone -b ${BRANCH}"
 fi
 
 # shellcheck source=build-farm/set-platform-specific-configurations.sh
