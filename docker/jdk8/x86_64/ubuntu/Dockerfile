@@ -47,6 +47,7 @@ RUN apt-get update \
     wget \
     zip \
     zulu-7 \
+    ssh \
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions

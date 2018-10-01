@@ -113,15 +113,20 @@ buildOpenJDKViaDocker()
   # Show the user all of the config before we build
   displayParams
 
-  local hostDir;
-  hostDir="$(pwd)";
+  local hostDir
+  hostDir="$(pwd)"
 
   echo "Target binary directory on host machine: ${hostDir}/target"
   mkdir -p "${hostDir}/workspace/target"
 
-  local cpuSet;
+  local cpuSet
   cpuSet="0-$((BUILD_CONFIG[NUM_PROCESSORS] - 1))"
-
+  
+  local gitSshAccess=()
+  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
+     gitSshAccess=(-v "${HOME}/.ssh:/home/build/.ssh" -v "${SSH_AUTH_SOCK}:/build-ssh-agent" -e "SSH_AUTH_SOCK=/build-ssh-agent")
+  fi
+  
   # shellcheck disable=SC2140
   # Pass in the last important variables into the Docker container and call
   # the /openjdk/sbin/build.sh script inside
@@ -129,9 +134,10 @@ buildOpenJDKViaDocker()
       --cpuset-cpus="${cpuSet}" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
        -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" \
-      -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
-      --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
-
+       "${gitSshAccess[@]}" \
+       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
+       --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
+  
   # If we didn't specify to keep the container then remove it
   if [[ -z ${BUILD_CONFIG[KEEP_CONTAINER]} ]] ; then
     ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm {}

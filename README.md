@@ -169,7 +169,9 @@ e.g. https://github.com/karianna/openjdk-jdk8u.
 specify the location to clone the OpenJDK source (and dependencies) to.
 
 -S, --ssh
-use ssh when cloning git.
+use ssh when cloning git. 
+In case of docker build add github.com to ~/.ssh/known_hosts (e.g.: ssh github.com)
+if your ssh key has a passphrase, add it to ssh-agent (e.g.: ssh-add ~/.ssh/id_rsa)
 
 --sign
 sign the OpenJDK binary that you build.
