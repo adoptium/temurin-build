@@ -278,8 +278,7 @@ function checkoutRoot() {
   git fetch --all
   git reset --hard origin/master
 
-  git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all)
-
+  git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 }
 
 function fetchRootTagIntoRepo() {
