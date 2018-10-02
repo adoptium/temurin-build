@@ -153,6 +153,10 @@ function parseConfigurationArguments() {
     while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
       opt="$1";
       shift;
+
+      echo "Parsing opt: ${opt}"
+      echo "Possible opt arg: $1"
+
       case "$opt" in
         "--" ) break 2;;
 
