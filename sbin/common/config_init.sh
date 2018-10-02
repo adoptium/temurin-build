@@ -185,7 +185,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[USE_DOCKER]="true";;
 
         "--disable-shallow-git-clone" )
-        BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
+        BUILD_CONFIG[SHALLOW_CLONE_OPTION]="";;
 
         "--freetype-dir" | "-f" )
         BUILD_CONFIG[FREETYPE_DIRECTORY]="$1"; shift;;
