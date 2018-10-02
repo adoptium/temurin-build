@@ -237,7 +237,10 @@ configureFreetypeLocation() {
   if [[ ! "${CONFIGURE_ARGS}" =~ "--with-freetype" ]]; then
     if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
       if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-        addConfigureArg "--with-freetype-src=" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype"
+        case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
+           jdk9*|jdk10*) addConfigureArg "--with-freetype-src=" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" ;;
+           *) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled} ;;
+        esac
       else
         local freetypeDir=BUILD_CONFIG[FREETYPE_DIRECTORY]
         case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
