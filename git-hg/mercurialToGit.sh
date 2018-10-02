@@ -31,8 +31,9 @@ echo "Import common functionality"
 source import-common.sh
 
 # Make sure we're in a valid dir as a workspace
-[ -z "$WORKSPACE" ] || WORKSPACE=$PWD
-echo "You are in $WORKSPACE"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+mkdir -p $SCRIPT_DIR/workspace
+WORKSPACE=$SCRIPT_DIR/workspace
 
 # TODO generalise this for the non adopt build farm case
 function checkArgs() {
@@ -54,6 +55,7 @@ GITHUB_REPO=$(echo "$HG_REPO" | cut -d/ -f2)
 BRANCH=${2:-master}
 
 function cloneGitHubRepo() {
+  cd "$WORKSPACE" || exit 1
   # If we don't have a $GITHUB_REPO locally then clone it from AdoptOpenJDK/openjdk-$GITHUB_REPO.git
   if [ ! -d "$GITHUB_REPO" ] ; then
     git clone git@github.com:AdoptOpenJDK/openjdk-"$GITHUB_REPO".git "$GITHUB_REPO" || exit 1
@@ -61,14 +63,16 @@ function cloneGitHubRepo() {
 }
 
 function addMercurialUpstream() {
-  cd "$GITHUB_REPO" || exit 1
+  cd "$WORKSPACE/$GITHUB_REPO" || exit 1
 
-  git fetch origin
+  git fetch --all
   if ! git checkout -f "$BRANCH" ; then
-    git checkout -b "$BRANCH" || exit 1
+     git checkout -b "$BRANCH" origin/"$BRANCH" || exit 1
   else
     git reset --hard origin/"$BRANCH" || echo "Not resetting as no upstream exists"
   fi
+
+  git pull origin "$BRANCH"
 
   # shellcheck disable=SC2143
   if [ -z "$(git remote -v | grep 'hg')" ] ; then
@@ -83,7 +87,6 @@ function performMergeFromMercurialIntoGit() {
   git push origin "$BRANCH" --tags || exit 1
 }
 
-# TODO Need to cover always merging mercurial master into our GitHub dev branch
 checkArgs $#
 #checkGitVersion
 installGitRemoteHg
