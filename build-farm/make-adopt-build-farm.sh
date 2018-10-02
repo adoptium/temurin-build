@@ -101,7 +101,7 @@ fi
 if [ -z "${TAG}" ]; then
   FILENAME="${FILENAME}_${TIMESTAMP}"
 else
-  nameTag=$(echo "${TAG}" | sed 's/jdk-//' | sed 's/+/_/g')
+  nameTag=$(echo "${TAG}" | sed -e 's/jdk//' -e 's/-//' -e 's/+/_/g')
   FILENAME="${FILENAME}_${nameTag}"
 fi
 
