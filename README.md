@@ -105,6 +105,10 @@ specify the OpenJDK build number to build from, e.g. b12.
 For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 9.0.4+11 (for Java 9+) with the build number being the suffix at the end.
 
+--build-variant <variant_name>
+specify a OpenJDK build variant, e.g. openj9.
+For reference, the default variant is hotspot and does not need to be specified.
+
 -c, --clean-docker-build
 removes the existing docker container and persistent volume before starting
 a new docker based build.
@@ -200,10 +204,6 @@ This is typically used in conjunction with -b.
 --use-jep319-certs
 Use certs defined in JEP319 in Java 8/9. This will increase the volume of traffic downloaded, however will 
 provide an upto date ca cert list.
-
--v, --build-variant <variant_name>
-specify a OpenJDK build variant, e.g. openj9.
-For reference, the default variant is hotspot and does not need to be specified.
 
 -v, --version
 specify the OpenJDK version to build e.g. jdk8u.  Left for backwards compatibility.

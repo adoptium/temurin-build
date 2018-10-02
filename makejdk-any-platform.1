@@ -128,6 +128,8 @@ specify the location to clone the OpenJDK source (and dependencies) to.
 .TP
 .BR \-S ", " \-\-ssh
 use ssh when cloning git.
+In case of docker build add github.com to ~/.ssh/known_hosts (e.g.: ssh github.com)
+if your ssh key has a passphrase, add it to ssh-agent (e.g.: ssh-add ~/.ssh/id_rsa)
 .TP
 .BR \-\-sign \fI<path>\fR
 specify the location for the certificate.  For windows this is the p12
