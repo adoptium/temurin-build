@@ -493,6 +493,18 @@ createOpenJDKTarArchive()
   createArchive "${OPENJDK_REPO_TAG}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
+executeBuild()
+{
+  buildTemplatedFile
+  executeTemplatedFile
+}
+
+fixFreeFontOnMac()
+{
+  makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
+  makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}-jre" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
+}
+
 # Echo success
 showCompletionMessage()
 {
@@ -509,13 +521,12 @@ configureWorkspace
 
 getOpenJDKUpdateAndBuildVersion
 configureCommandParameters
-buildTemplatedFile
-executeTemplatedFile
+executeBuild
 
 printJavaVersionString
+
 removingUnnecessaryFiles
-makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
-makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}-jre" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
+fixFreeFontOnMac
 createOpenJDKTarArchive
 showCompletionMessage
 
