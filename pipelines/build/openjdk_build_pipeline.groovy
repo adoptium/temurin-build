@@ -42,7 +42,7 @@ def getJavaVersionNumber(version) {
 def determineTestJobName(config, testType) {
 
     def variant
-    def number = getJavaVersionNumber(config.javaVersion)
+    def number = getJavaVersionNumber(config.forestName)
 
     if (config.variant == "openj9") {
         variant = "j9"

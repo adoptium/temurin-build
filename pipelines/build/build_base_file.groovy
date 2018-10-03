@@ -79,12 +79,12 @@ static def buildConfiguration(forestName, variant, configuration, releaseTag, br
     def testList = getTestList(configuration, isRelease)
 
     return [
-            javaVersion: forestName,
-            arch       : configuration.arch,
-            os         : configuration.operatingSystem,
-            variant    : variant,
-            parameters : buildParams,
-            test       : testList,
+            forestName     : forestName,
+            arch           : configuration.arch,
+            operatingSystem: configuration.operatingSystem,
+            variant        : variant,
+            parameters     : buildParams,
+            test           : testList,
     ]
 }
 
@@ -143,7 +143,7 @@ static def getConfigureArgs(configuration, additionalConfigureArgs) {
     return buildParams
 }
 
-def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs) {
+def getJobConfigurations(forestName, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs) {
     def jobConfigurations = [:]
 
     //Parse config passed to jenkins job
@@ -159,7 +159,7 @@ def getJobConfigurations(javaVersionToBuild, availableConfigurations, String tar
                 if (configuration.containsKey('additionalFileNameTag')) {
                     name += "-${configuration.additionalFileNameTag}"
                 }
-                jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs)
+                jobConfigurations[name] = buildConfiguration(forestName, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs)
             }
         }
     }
@@ -181,11 +181,11 @@ static def determineReleaseRepoVersion(forestName) {
 }
 
 static def getJobName(displayName, config) {
-    return "${config.javaVersion}-${displayName}"
+    return "${config.forestName}-${displayName}"
 }
 
 static def getJobFolder(config) {
-    return "build-scripts/jobs/${config.javaVersion}"
+    return "build-scripts/jobs/${config.forestName}"
 }
 
 // Generate a job from template at `create_job_from_template.groovy`
@@ -225,20 +225,20 @@ def publishRelease(forestName, releaseTag) {
     }
 }
 
-def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag, String branch, String additionalConfigureArgs, scmVars, String additionalBuildArgs) {
+def doBuild(String forestName, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag, String branch, String additionalConfigureArgs, scmVars, String additionalBuildArgs) {
 
     if (releaseTag == null || releaseTag == "false") {
         releaseTag = ""
     }
 
-    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs)
+    def jobConfigurations = getJobConfigurations(forestName, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs)
     def jobs = [:]
 
     def enableTests = enableTestsArg == "true"
     def publish = publishArg == "true"
 
 
-    echo "Java: ${javaVersionToBuild}"
+    echo "Java: ${forestName}"
     echo "OS: ${targetConfigurations}"
     echo "Enable tests: ${enableTests}"
     echo "Publish: ${publish}"
@@ -296,7 +296,7 @@ def doBuild(String javaVersionToBuild, availableConfigurations, String targetCon
 
     // publish to github if needed
     if (publish) {
-        publishRelease(javaVersionToBuild, releaseTag)
+        publishRelease(forestName, releaseTag)
     }
 }
 
