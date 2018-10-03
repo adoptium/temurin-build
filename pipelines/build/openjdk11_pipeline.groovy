@@ -17,7 +17,7 @@ def buildConfigurations = [
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
-                test                : ['openjdktest', 'systemtest']
+                test                : ['openjdktest', 'systemtest', 'perftest']
         ],
 
         x64Linux  : [
@@ -35,7 +35,7 @@ def buildConfigurations = [
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: 'win2012',
-                test                : ['openjdktest']
+                test                : ['openjdktest', 'perftest']
         ],
 
         x32Windows: [
@@ -58,27 +58,27 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 's390x',
                 additionalNodeLabels: 'build-marist-rhel74-s390x-2',
-                test                : ['openjdktest', 'systemtest']
+                test                : ['openjdktest', 'systemtest', 'perftest']
         ],
 
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 additionalNodeLabels: 'ubuntu',
-                test                : ['openjdktest', 'systemtest']
+                test                : ['openjdktest', 'systemtest', 'perftest']
         ],
 
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                : ['openjdktest']
+                test                : ['openjdktest', 'perftest']
         ],
 
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['openjdktest', 'systemtest']
+                test                : ['openjdktest', 'systemtest', 'perftest']
         ],
 
         /*
