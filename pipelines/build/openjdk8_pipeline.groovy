@@ -53,8 +53,8 @@ def buildConfigurations = [
         ],
 
         ppc64Aix    : [
-                os                 : 'aix',
-                arch               : 'ppc64',
+                os                  : 'aix',
+                arch                : 'ppc64',
                 test                : [
                         nightly: false,
                         release: ['openjdktest', 'systemtest']
