@@ -22,7 +22,7 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 export PATH="/opt/freeware/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH"
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-memory-size=18000 --with-cups-include=/opt/freeware/include"
 
-if [ "${JAVA_TO_BUILD}" != "${JDK11_VERSION}" ]
+if [ "${FOREST_NAME}" != "${JDK11_VERSION}" ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread"
 fi
@@ -33,22 +33,22 @@ if [ "${ARCHITECTURE}" == "x64" ] && [ "${VARIANT}" == "openj9" ];
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} DF=/usr/sysv/bin/df"
 
-  if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+  if [ "${FOREST_NAME}" == "${JDK8_VERSION}" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk8_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
+  elif [ "${FOREST_NAME}" == "${JDK9_VERSION}" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk9_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
+  elif [ "${FOREST_NAME}" == "${JDK10_VERSION}" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk10_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+  elif [ "${FOREST_NAME}" == "${JDK11_VERSION}" ] || [ "${FOREST_NAME}" == "${JDKHEAD_VERSION}" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk10_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar DF=/usr/sysv/bin/df"
   fi
 fi
 
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ];
+if [ "${FOREST_NAME}" == "${JDK11_VERSION}" ] || [ "${FOREST_NAME}" == "${JDKHEAD_VERSION}" ];
 then
   export JDK10_BOOT_DIR="$PWD/jdk-10"
   if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then

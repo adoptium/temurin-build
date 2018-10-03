@@ -399,7 +399,7 @@ makeACopyOfLibFreeFontForMacOSX() {
       return
     fi
 
-    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+    if [[ "${BUILD_CONFIG[OPERATING_SYSTEM]}" == "darwin" ]]; then
         echo "PERFORM_COPYING=${PERFORM_COPYING}"
         if [ "${PERFORM_COPYING}" == "false" ]; then
             echo " Skipping copying of the free font library to ${IMAGE_DIRECTORY}, does not apply for this version of the JDK. "

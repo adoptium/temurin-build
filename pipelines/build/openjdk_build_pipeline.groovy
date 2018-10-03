@@ -55,7 +55,7 @@ def determineTestJobName(config, testType) {
         arch = "x86-64"
     }
 
-    def os = config.os
+    def os = config.operatingSystem
     if (os == "mac") {
         os = "macos"
     }
@@ -97,17 +97,17 @@ def runTests(config) {
 
 def sign(config) {
     // Sign and archive jobs if needed
-    if (config.os == "windows" || config.os == "mac") {
+    if (config.operatingSystem == "windows" || config.operatingSystem == "mac") {
         node('master') {
             stage("sign") {
                 def filter = ""
                 def certificate = ""
 
-                if (config.os == "windows") {
+                if (config.operatingSystem == "windows") {
                     filter = "**/OpenJDK*_windows_*.zip"
                     certificate = "C:\\Users\\jenkins\\windows.p12"
 
-                } else if (config.os == "mac") {
+                } else if (config.operatingSystem == "mac") {
                     filter = "**/OpenJDK*_mac_*.tar.gz"
                     certificate = "\"Developer ID Application: London Jamocha Community CIC\""
                 }
@@ -116,10 +116,10 @@ def sign(config) {
                         propagate: true,
                         parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                                      string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
-                                     string(name: 'OPERATING_SYSTEM', value: "${config.os}"),
+                                     string(name: 'OPERATING_SYSTEM', value: "${config.operatingSystem}"),
                                      string(name: 'FILTER', value: "${filter}"),
                                      string(name: 'CERTIFICATE', value: "${certificate}"),
-                                     [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&build"],
+                                     [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.operatingSystem}&&build"],
                         ]
 
                 //Copy signed artifact back and rearchive
@@ -155,7 +155,7 @@ try {
                     sh "./build-farm/make-adopt-build-farm.sh"
                     archiveArtifacts artifacts: "workspace/target/*"
                 } finally {
-                    if (config.os == "aix") {
+                    if (config.operatingSystem == "aix") {
                         cleanWs notFailBuild: true
                     }
                 }

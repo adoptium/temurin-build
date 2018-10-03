@@ -39,16 +39,16 @@ def toBuildParams(enableTests, params) {
     return buildParams
 }
 
-static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs) {
+static def buildConfiguration(forestName, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs) {
 
     def additionalNodeLabels = formAdditionalNodeLabels(configuration, variant)
 
     def buildParams = [
-            JAVA_TO_BUILD: javaToBuild,
-            NODE_LABEL   : "${additionalNodeLabels}&&${configuration.os}&&${configuration.arch}",
+            FOREST_NAME: forestName,
+            NODE_LABEL   : "${additionalNodeLabels}&&${configuration.operatingSystem}&&${configuration.arch}",
             VARIANT      : variant,
             ARCHITECTURE : configuration.arch,
-            TARGET_OS    : configuration.os
+            OPERATING_SYSTEM    : configuration.operatingSystem
     ]
 
     if (configuration.containsKey('bootJDK')) buildParams.put("JDK_BOOT_VERSION", configuration.bootJDK)
@@ -79,9 +79,9 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, b
     def testList = getTestList(configuration, isRelease)
 
     return [
-            javaVersion: javaToBuild,
+            javaVersion: forestName,
             arch       : configuration.arch,
-            os         : configuration.os,
+            os         : configuration.operatingSystem,
             variant    : variant,
             parameters : buildParams,
             test       : testList,
@@ -105,7 +105,7 @@ static def getTestList(configuration, isRelease) {
 static def formAdditionalNodeLabels(configuration, variant) {
     def buildTag = "build"
 
-    if (configuration.os == "windows" && variant == "openj9") {
+    if (configuration.operatingSystem == "windows" && variant == "openj9") {
         buildTag = "buildj9"
     } else if (configuration.arch == "s390x" && variant == "openj9") {
         buildTag = "(buildj9||build)&&openj9"
@@ -155,7 +155,7 @@ def getJobConfigurations(javaVersionToBuild, availableConfigurations, String tar
         if (availableConfigurations.containsKey(target.key)) {
             def configuration = availableConfigurations.get(target.key)
             target.value.each { variant ->
-                GString name = "${configuration.os}-${configuration.arch}-${variant}"
+                GString name = "${configuration.operatingSystem}-${configuration.arch}-${variant}"
                 if (configuration.containsKey('additionalFileNameTag')) {
                     name += "-${configuration.additionalFileNameTag}"
                 }
@@ -174,8 +174,8 @@ static Integer getJavaVersionNumber(version) {
 }
 
 
-static def determineReleaseRepoVersion(javaToBuild) {
-    def number = getJavaVersionNumber(javaToBuild)
+static def determineReleaseRepoVersion(forestName) {
+    def number = getJavaVersionNumber(forestName)
 
     return "jdk${number}"
 }
@@ -205,9 +205,9 @@ def createJob(jobName, jobFolder, config, enableTests, scmVars) {
 }
 
 // Call job to push artifacts to github
-def publishRelease(javaToBuild, releaseTag) {
+def publishRelease(forestName, releaseTag) {
     def release = false
-    def tag = javaToBuild
+    def tag = forestName
     if (releaseTag != null && releaseTag.length() > 0) {
         release = true
         tag = releaseTag
@@ -220,7 +220,7 @@ def publishRelease(javaToBuild, releaseTag) {
                                  string(name: 'TAG', value: tag),
                                  string(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
                                  string(name: 'UPSTREAM_JOB_NUMBER', value: "${currentBuild.getNumber()}"),
-                                 string(name: 'VERSION', value: determineReleaseRepoVersion(javaToBuild))]
+                                 string(name: 'VERSION', value: determineReleaseRepoVersion(forestName))]
         }
     }
 }
@@ -269,21 +269,21 @@ def doBuild(String javaVersionToBuild, availableConfigurations, String targetCon
                         // copy artifacts from build
                         node("master") {
                             catchError {
-                                sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
+                                sh "rm target/${config.operatingSystem}/${config.arch}/${config.variant}/* || true"
 
                                 copyArtifacts(
                                         projectName: downstreamJobName,
                                         selector: specific("${downstreamJob.getNumber()}"),
                                         filter: 'workspace/target/*',
                                         fingerprintArtifacts: true,
-                                        target: "target/${config.os}/${config.arch}/${config.variant}/",
+                                        target: "target/${config.operatingSystem}/${config.arch}/${config.variant}/",
                                         flatten: true)
 
                                 // Checksum
                                 sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
 
                                 // Archive in Jenkins
-                                archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
+                                archiveArtifacts artifacts: "target/${config.operatingSystem}/${config.arch}/${config.variant}/*"
                             }
                         }
                     }

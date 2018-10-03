@@ -62,7 +62,7 @@ OPENJDK_CORE_VERSION
 OPENJDK_FOREST_NAME
 OPENJDK_SOURCE_DIR
 OPENJDK_UPDATE_VERSION
-OS_KERNEL_NAME
+OPERATING_SYSTEM
 OS_ARCHITECTURE
 REPOSITORY
 REUSE_CONTAINER
@@ -274,11 +274,11 @@ function setBranch() {
 # Set the config defaults
 function configDefaults() {
   # The OS kernel name, e.g. 'darwin' for Mac OS X
-  BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
+  BUILD_CONFIG[OPERATING_SYSTEM]=$(uname | awk '{print tolower($0)}')
 
   local arch=$(uname -m)
 
-  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]; then
+  if [ "${BUILD_CONFIG[OPERATING_SYSTEM]}" == "aix" ]; then
     arch=$(uname -p | sed 's/powerpc/ppc/')
   fi
 

@@ -22,12 +22,12 @@ PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 TIMESTAMP="$(date +'%Y-%m-%d-%H-%M')"
 
+OPERATING_SYSTEM=$(echo "${OPERATING_SYSTEM}" | tr '[:upper:]' '[:lower:]')
 export OPERATING_SYSTEM
-OPERATING_SYSTEM=$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')
 
 
 echo "BUILD TYPE: "
-echo "VERSION: ${JAVA_TO_BUILD}"
+echo "VERSION: ${FOREST_NAME}"
 echo "ARCHITECTURE ${ARCHITECTURE}"
 echo "VARIANT: ${VARIANT}"
 echo "OS: ${OPERATING_SYSTEM}"
@@ -38,12 +38,12 @@ EXTENSION=""
 # shellcheck disable=SC2034
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
 BUILD_ARGS=${BUILD_ARGS:-""}
-VARIANT_ARG="${JAVA_TO_BUILD}-"
+VARIANT_ARG="${FOREST_NAME}-"
 
 if [ -z "${JDK_BOOT_VERSION}" ]
 then
-  echo "Detecting boot jdk for: ${JAVA_TO_BUILD}"
-  currentBuildNumber=$(echo "${JAVA_TO_BUILD}" | tr -d "[:alpha:]")
+  echo "Detecting boot jdk for: ${FOREST_NAME}"
+  currentBuildNumber=$(echo "${FOREST_NAME}" | tr -d "[:alpha:]")
   echo "Found build version: ${currentBuildNumber}"
   JDK_BOOT_VERSION=$((currentBuildNumber-1))
   echo "Boot jdk version: ${JDK_BOOT_VERSION}"
@@ -90,9 +90,9 @@ fi
 source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
 
 # Set the file name
-JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr '[:lower:]' '[:upper:]')
+FOREST_NAME_UPPERCASE=$(echo "${FOREST_NAME}" | tr '[:lower:]' '[:upper:]')
 
-FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}-jdk_${ARCHITECTURE}_${OPERATING_SYSTEM}_${VARIANT}"
+FILENAME="Open${FOREST_NAME_UPPERCASE}-jdk_${ARCHITECTURE}_${OPERATING_SYSTEM}_${VARIANT}"
 
 if [ ! -z "${ADDITIONAL_FILE_NAME_TAG}" ]; then
   FILENAME="${FILENAME}_${ADDITIONAL_FILE_NAME_TAG}"
@@ -112,7 +112,7 @@ echo "Filename will be: $FILENAME"
 
 export BUILD_ARGS="${BUILD_ARGS} --use-jep319-certs"
 
-echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
+echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${FOREST_NAME}"
 
 # shellcheck disable=SC2086
-bash "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
+bash "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${FOREST_NAME}"

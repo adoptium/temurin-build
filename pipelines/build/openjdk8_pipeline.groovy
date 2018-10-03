@@ -93,11 +93,11 @@ def buildConfigurations = [
         ],
 ]
 
-def javaToBuild = "jdk8u"
+def forestName = "jdk8u"
 
 node ("master") {
     def scmVars = checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
-    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag, branch, additionalConfigureArgs, scmVars, additionalBuildArgs)
+    buildFile.doBuild(forestName, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag, branch, additionalConfigureArgs, scmVars, additionalBuildArgs)
 }
 

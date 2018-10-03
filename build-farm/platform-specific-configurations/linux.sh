@@ -31,7 +31,7 @@ then
   then
     export PATH="/usr/bin:$PATH"
 
-    if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
+    if [ "${FOREST_NAME}" == "${JDK8_VERSION}" ] || [ "${FOREST_NAME}" == "${JDK9_VERSION}" ] || [ "${FOREST_NAME}" == "${JDK10_VERSION}" ]
     then
       if which g++-4.8; then
         export CC=gcc-4.8
@@ -59,7 +59,7 @@ fi
 
 if [ "${ARCHITECTURE}" == "s390x" ] || [ "${ARCHITECTURE}" == "ppc64le" ]
 then
-    if [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
+    if [ "${FOREST_NAME}" == "${JDK10_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
     then
       if [ -z "$JDK9_BOOT_DIR" ]; then
         export JDK9_BOOT_DIR="$PWD/jdk-9+181"
@@ -72,7 +72,7 @@ then
     fi
 fi
 
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+if [ "${FOREST_NAME}" == "${JDK11_VERSION}" ] || [ "${FOREST_NAME}" == "${JDKHEAD_VERSION}" ]
 then
     export JDK10_BOOT_DIR="$PWD/jdk-10"
     if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
@@ -84,7 +84,7 @@ then
     fi
     export JDK_BOOT_DIR=$JDK10_BOOT_DIR
 fi
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ] || [ "${VARIANT}" == "openj9" ]; then
+if [ "${FOREST_NAME}" == "${JDK11_VERSION}" ] || [ "${FOREST_NAME}" == "${JDKHEAD_VERSION}" ] || [ "${VARIANT}" == "openj9" ]; then
     # If we have the RedHat devtoolset 7 installed, use gcc 7 from there, else /usr/local/gcc/bin
     if [ -r /opt/rh/devtoolset-7/root/usr/bin ]; then
       export PATH=/opt/rh/devtoolset-7/root/usr/bin:$PATH

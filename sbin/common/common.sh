@@ -35,7 +35,7 @@ function setOpenJdkVersion() {
 # Create a Tar ball
 getArchiveExtension()
 {
-  if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = *"cygwin"* ]]; then
+  if [[ "${BUILD_CONFIG[OPERATING_SYSTEM]}" = *"cygwin"* ]]; then
       EXT=".zip"
   else
       EXT=".tar.gz"
@@ -58,9 +58,9 @@ createOpenJDKArchive()
 
   EXT=$(getArchiveExtension)
 
-  if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = *"cygwin"* ]]; then
+  if [[ "${BUILD_CONFIG[OPERATING_SYSTEM]}" = *"cygwin"* ]]; then
       zip -r -q "${fileName}.zip" ./"${repoDir}"
-  elif [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]]; then
+  elif [[ "${BUILD_CONFIG[OPERATING_SYSTEM]}" == "aix" ]]; then
       GZIP=-9 tar -cf - ./"${repoDir}"/ | $COMPRESS -c > $fileName.tar.gz
   else
       GZIP=-9 tar --use-compress-program=$COMPRESS -cf "${fileName}.tar.gz" ./"${repoDir}"

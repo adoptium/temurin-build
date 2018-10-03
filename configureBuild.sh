@@ -107,7 +107,7 @@ setWorkingDirectory()
 # shellcheck disable=SC2153
 determineBuildProperties() {
     local build_type=normal
-    local default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${build_type}-${BUILD_CONFIG[JVM_VARIANT]}-release
+    local default_build_full_name=${BUILD_CONFIG[OPERATING_SYSTEM]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${build_type}-${BUILD_CONFIG[JVM_VARIANT]}-release
 
     BUILD_CONFIG[BUILD_FULL_NAME]=${BUILD_CONFIG[BUILD_FULL_NAME]:-"$default_build_full_name"}
 }
@@ -151,7 +151,7 @@ setRepository() {
 # Specific platforms need to have special build settings
 processArgumentsforSpecificPlatforms() {
 
-  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+  case "${BUILD_CONFIG[OPERATING_SYSTEM]}" in
   "darwin")
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
       BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false"
@@ -214,7 +214,7 @@ processArgumentsforSpecificArchitectures() {
 # shellcheck disable=SC2153
 setMakeCommandForOS() {
   local make_command_name
-  case "$OS_KERNEL_NAME" in
+  case "$OPERATING_SYSTEM" in
   "aix")
     make_command_name="gmake"
   ;;
@@ -259,7 +259,7 @@ function setBootJdk() {
     echo "Searching for JDK_BOOT_DIR"
 
     # shellcheck disable=SC2046,SC2230
-    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+    if [[ "${BUILD_CONFIG[OPERATING_SYSTEM]}" == "darwin" ]]; then
       BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink $(which javac))))
     else
       BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
