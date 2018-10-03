@@ -48,7 +48,10 @@ def buildConfigurations = [
         ppc64Aix    : [
                 operatingSystem     : 'aix',
                 arch                : 'ppc64',
-                test                : false
+                test                : [
+                        nightly: false,
+                        release: ['openjdktest', 'systemtest']
+                ]
         ],
 
         s390xLinux    : [
@@ -90,7 +93,7 @@ def buildConfigurations = [
                 operatingSystem      : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
-                test                 : false,
+                test                 : ['openjdktest', 'systemtest'],
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
