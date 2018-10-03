@@ -14,14 +14,14 @@ limitations under the License.
 
 def buildConfigurations = [
         x64Mac    : [
-                os                  : 'mac',
+                operatingSystem     : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         x64Linux  : [
-                os                  : 'linux',
+                operatingSystem     : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: [
                         hotspot: 'centos6',
@@ -32,7 +32,7 @@ def buildConfigurations = [
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows: [
-                os                  : 'windows',
+                operatingSystem     : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: [
                         hotspot: 'win2008',
@@ -43,7 +43,7 @@ def buildConfigurations = [
         ],
 
         x32Windows: [
-                os                  : 'windows',
+                operatingSystem     : 'windows',
                 arch                : 'x86-32',
                 additionalNodeLabels: [
                         hotspot: 'win2008',
@@ -53,38 +53,38 @@ def buildConfigurations = [
         ],
 
         ppc64Aix    : [
-                os                 : 'aix',
+                operatingSystem    : 'aix',
                 arch               : 'ppc64',
                 test               : false
         ],
 
         s390xLinux    : [
-                os                  : 'linux',
+                operatingSystem     : 'linux',
                 arch                : 's390x',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         ppc64leLinux    : [
-                os                  : 'linux',
+                operatingSystem     : 'linux',
                 arch                : 'ppc64le',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         arm32Linux    : [
-                os                  : 'linux',
+                operatingSystem     : 'linux',
                 arch                : 'arm',
                 test                : ['openjdktest']
         ],
 
         aarch64Linux    : [
-                os                  : 'linux',
+                operatingSystem     : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         linuxXL    : [
-                os                   : 'linux',
+                operatingSystem      : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
                 test                 : false,

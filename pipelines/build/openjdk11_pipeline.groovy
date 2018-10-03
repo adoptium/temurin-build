@@ -14,14 +14,14 @@ limitations under the License.
 
 def buildConfigurations = [
         x64Mac    : [
-                os                  : 'mac',
+                operatingSystem     : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         x64Linux  : [
-                os                  : 'linux',
+                operatingSystem     : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
                 test                : [
@@ -32,47 +32,47 @@ def buildConfigurations = [
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows: [
-                os                  : 'windows',
+                operatingSystem     : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: 'win2012',
                 test                : ['openjdktest']
         ],
 
         x32Windows: [
-                os                  : 'windows',
+                operatingSystem     : 'windows',
                 arch                : 'x86-32',
                 additionalNodeLabels: 'win2012',
                 test                : ['openjdktest']
         ],
 
         ppc64Aix    : [
-                os                  : 'aix',
+                operatingSystem     : 'aix',
                 arch                : 'ppc64',
                 test                : false
         ],
 
         s390xLinux    : [
-                os                  : 'linux',
+                operatingSystem     : 'linux',
                 arch                : 's390x',
                 additionalNodeLabels: 'build-marist-rhel74-s390x-2',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         ppc64leLinux    : [
-                os                  : 'linux',
+                operatingSystem     : 'linux',
                 arch                : 'ppc64le',
                 additionalNodeLabels: 'ubuntu',
                 test                : ['openjdktest', 'systemtest']
         ],
 
         arm32Linux    : [
-                os                  : 'linux',
+                operatingSystem     : 'linux',
                 arch                : 'arm',
                 test                : ['openjdktest']
         ],
 
         aarch64Linux    : [
-                os                  : 'linux',
+                operatingSystem     : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
                 test                : ['openjdktest', 'systemtest']
@@ -80,14 +80,14 @@ def buildConfigurations = [
 
         /*
         "x86-32Windows"    : [
-                os                 : 'windows',
+                operatingSystem    : 'windows',
                 arch               : 'x86-32',
                 additionalNodeLabels: 'win2012&&x86-32',
                 test                : false
         ],
         */
         linuxXL    : [
-                os                   : 'linux',
+                operatingSystem      : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
                 test                 : false,
