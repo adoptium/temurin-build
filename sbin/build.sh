@@ -330,8 +330,16 @@ executeTemplatedFile() {
 # Print the version string so we know what we've produced
 printJavaVersionString()
 {
-  # shellcheck disable=SC2086
-  PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+  "darwin")
+    # shellcheck disable=SC2086
+    PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]}/Contents/Home)
+  ;;
+  *)
+    # shellcheck disable=SC2086
+    PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
+  ;;
+  esac
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "'$PRODUCT_HOME' found"
      if ! "$PRODUCT_HOME"/bin/java -version; then
@@ -361,28 +369,35 @@ removingUnnecessaryFiles()
 
   echo "Currently at '${PWD}'"
 
-  echo "moving ${BUILD_CONFIG[JDK_PATH]} to ${OPENJDK_REPO_TAG}"
+  echo "moving "$(ls -d ${BUILD_CONFIG[JDK_PATH]})" to ${OPENJDK_REPO_TAG}"
   rm -rf "${OPENJDK_REPO_TAG}" || true
-  mv "${BUILD_CONFIG[JDK_PATH]}" "${OPENJDK_REPO_TAG}"
+  mv "$(ls -d ${BUILD_CONFIG[JDK_PATH]})" "${OPENJDK_REPO_TAG}"
 
-  if [ -d "${BUILD_CONFIG[JRE_PATH]}" ]
+  if [ -d "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" ]
   then
     JRE_TARGET_PATH="${OPENJDK_REPO_TAG}-jre"
     [ "${JRE_TARGET_PATH}" == "${OPENJDK_REPO_TAG}" ] && JRE_TARGET_PATH="${OPENJDK_REPO_TAG}.jre"
-    echo "moving ${BUILD_CONFIG[JRE_PATH]} to ${JRE_TARGET_PATH}"
+    echo "moving $(ls -d ${BUILD_CONFIG[JRE_PATH]}) to ${JRE_TARGET_PATH}"
     rm -rf "${JRE_TARGET_PATH}" || true
-    mv "${BUILD_CONFIG[JRE_PATH]}" "${JRE_TARGET_PATH}"
+    mv "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" "${JRE_TARGET_PATH}"
 
-    rm -rf "${JRE_TARGET_PATH}"/demo/applets || true
-    rm -rf "${JRE_TARGET_PATH}"/demo/jfc/Font2DTest || true
-    rm -rf "${JRE_TARGET_PATH}"/demo/jfc/SwingApplet || true
+    case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+      "darwin") JRE_TARGET="${JRE_TARGET_PATH}/Contents/Home" ;;
+      *) JRE_TARGET="${JRE_TARGET_PATH}" ;;
+    esac
+    rm -rf "${JRE_TARGET}"/demo/applets || true
+    rm -rf "${JRE_TARGET}"/demo/jfc/Font2DTest || true
+    rm -rf "${JRE_TARGET}"/demo/jfc/SwingApplet || true
   fi
 
-
   # Remove files we don't need
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets || true
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest || true
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet || true
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    "darwin") JDK_TARGET="${OPENJDK_REPO_TAG}/Contents/Home" ;;
+    *) JDK_TARGET="${OPENJDK_REPO_TAG}" ;;
+  esac
+  rm -rf "${JDK_TARGET}"/demo/applets || true
+  rm -rf "${JDK_TARGET}"/demo/jfc/Font2DTest || true
+  rm -rf "${JDK_TARGET}"/demo/jfc/SwingApplet || true
 
   find . -name "*.diz" -type f -delete || true
 
@@ -391,7 +406,7 @@ removingUnnecessaryFiles()
 
 # If on a Mac, mac a copy of the font lib as required
 makeACopyOfLibFreeFontForMacOSX() {
-    IMAGE_DIRECTORY=$1
+    IMAGE_DIRECTORY="${1}/Contents/Home"
     PERFORM_COPYING=$2
 
     if [ ! -d "${IMAGE_DIRECTORY}" ]; then

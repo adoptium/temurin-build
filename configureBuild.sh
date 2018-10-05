@@ -127,10 +127,22 @@ setVariablesForConfigure() {
     [ "$openjdk_core_version" == "${JDKHEAD_CORE_VERSION}" ]; then
     local jdk_path="jdk"
     local jre_path="jre"
+    case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    "darwin")
+      local jdk_path="jdk-bundle/jdk-*.jdk"
+      local jre_path="jre-bundle/jre-*.jre"
+    ;;
+    esac
     #BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-"--disable-warnings-as-errors"}
   elif [ "$openjdk_core_version" == "${JDK8_CORE_VERSION}" ]; then
     local jdk_path="j2sdk-image"
     local jre_path="j2re-image"
+    case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    "darwin")
+      local jdk_path="j2sdk-bundle/jdk*.jdk"
+      local jre_path="j2re-bundle/jre*.jre"
+    ;;
+    esac
   else
     echo "Please specify a version, either jdk8u, jdk9, jdk10, amber etc, with or without a 'u' suffix. e.g. $0 [options] jdk8u"
     exit 1
@@ -246,7 +258,10 @@ function setMakeArgs() {
     echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
 
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
-      BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images legacy-jre-image"}
+      case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+      "darwin") BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images mac-legacy-jre-bundle"} ;;
+      *) BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images legacy-jre-image"} ;;
+      esac
     else
       BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}
     fi
