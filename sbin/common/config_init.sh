@@ -155,7 +155,10 @@ function parseConfigurationArguments() {
       shift;
 
       echo "Parsing opt: ${opt}"
-      echo "Possible opt arg: $1"
+      if [ -n "${1-}" ]
+      then
+        echo "Possible opt arg: $1"
+      fi
 
       case "$opt" in
         "--" ) break 2;;
