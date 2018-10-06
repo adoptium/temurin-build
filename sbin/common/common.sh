@@ -32,6 +32,14 @@ function setOpenJdkVersion() {
     BUILD_CONFIG[OPENJDK_CORE_VERSION]=${BUILD_CONFIG[OPENJDK_FOREST_NAME]%?}
   fi
 }
+
+function setDockerVolumeSuffix() {
+  local suffix=$1
+  if [[ "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" != *"-${suffix}" ]]; then
+    BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]="${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}-${suffix}"
+  fi
+}
+
 # Create a Tar ball
 getArchiveExtension()
 {

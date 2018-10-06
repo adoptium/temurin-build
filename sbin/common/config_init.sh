@@ -248,7 +248,8 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[USE_JEP319_CERTS]=true;;
 
         "--version"  | "-v" )
-        setOpenJdkVersion "$1"; shift;;
+        setOpenJdkVersion "$1"
+        setDockerVolumeSuffix "$1"; shift;;
 
         "--jvm-variant"  | "-V" )
         BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
@@ -273,6 +274,7 @@ function setBranch() {
 
 # Set the config defaults
 function configDefaults() {
+ 
   # The OS kernel name, e.g. 'darwin' for Mac OS X
   BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
 
