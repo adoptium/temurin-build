@@ -58,7 +58,6 @@ case "${JDK_BOOT_VERSION}" in
       *)    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK11_BOOT_DIR}";;
 esac
 
-
 if [ ! -d "${JDK_BOOT_DIR}" ]
 then
   export JDK_BOOT_DIR="${JAVA_HOME}"
@@ -66,19 +65,18 @@ fi
 
 echo "Boot jdk: ${JDK_BOOT_DIR}"
 
-
 if [ "${OPERATING_SYSTEM}" == "linux" ] ; then
   EXTENSION="tar.gz"
-
-  if [ ! -z "${TAG}" ]; then
-    OPTIONS="${OPTIONS} --tag $TAG"
-  fi
 elif [ "${OPERATING_SYSTEM}" == "aix" ] ; then
   EXTENSION="tar.gz"
 elif [ "${OPERATING_SYSTEM}" == "mac" ] ; then
   EXTENSION="tar.gz"
 elif [ "${OPERATING_SYSTEM}" == "windows" ] ; then
   EXTENSION=zip
+fi
+
+if [ ! -z "${TAG}" ]; then
+  OPTIONS="${OPTIONS} --tag $TAG"
 fi
 
 if [ ! -z "${BRANCH}" ]
