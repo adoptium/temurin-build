@@ -63,6 +63,7 @@ parseCommandLineArgs()
 
     # Now that we've processed the flags, grab the mandatory argument(s)
     setOpenJdkVersion "$1"
+    setDockerVolumeSuffix "$1"
   fi
 }
 

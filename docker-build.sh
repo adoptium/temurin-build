@@ -40,7 +40,8 @@ createPersistentDockerDataVolume()
 
     # shellcheck disable=SC2154
     echo "Removing old volumes and containers"
-    ${BUILD_CONFIG[DOCKER]} rm -f "$(${BUILD_CONFIG[DOCKER]} ps -a --no-trunc | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | cut -d' ' -f1)" || true
+    # shellcheck disable=SC2046
+    ${BUILD_CONFIG[DOCKER]} rm -f $(${BUILD_CONFIG[DOCKER]} ps -a --no-trunc -q -f volume="${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}") || true
     ${BUILD_CONFIG[DOCKER]} volume rm -f "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
 
     # shellcheck disable=SC2154
