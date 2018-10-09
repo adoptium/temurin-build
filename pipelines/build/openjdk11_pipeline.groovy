@@ -41,7 +41,10 @@ def buildConfigurations = [
         x32Windows: [
                 os                  : 'windows',
                 arch                : 'x86-32',
-                additionalNodeLabels: 'win2012',
+                additionalNodeLabels: [
+                        hotspot: 'win2012',
+                        openj9:  'win2012&&mingw-standalone'
+                ],
                 test                : ['openjdktest']
         ],
 
