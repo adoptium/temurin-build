@@ -246,6 +246,9 @@ function rewriteMirror() {
       # Get to to the tag that we want
       git fetch --tags
 
+      # Clean any old modules JIC a previous build aborted
+      rm -rf "$TMP_WORKSPACE/$module" || exit 1
+
       echo "$(date +%T)": "GIT filter on $module"
       mkdir "$TMP_WORKSPACE/$module"
       git reset --hard master
