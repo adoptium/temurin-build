@@ -253,7 +253,12 @@ checkingAndDownloadCaCerts()
       echo "Requested use of JEP319 certs"
       local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk10u/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
       mkdir -p "security"
-      curl -L -o "./security/cacerts" "${caLink}"
+      # Temporary fudge as curl on my windows boxes is exiting with RC=127
+      if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+         wget -O "./security/cacerts" "${caLink}"
+      else
+         curl -L -o "./security/cacerts" "${caLink}"
+      fi
     fi
   else
     git init
