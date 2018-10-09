@@ -207,7 +207,11 @@ processArgumentsforSpecificArchitectures() {
   ;;
 
   "armv7l")
-    jvm_variant=zero
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "hotspot" ]; then
+      jvm_variant=zero
+    else
+      jvm_variant=server
+    fi
     make_args_for_any_platform="DEBUG_BINARIES=true images"
     configure_args_for_any_platform="--with-jobs=${NUM_PROCESSORS}"
   ;;
