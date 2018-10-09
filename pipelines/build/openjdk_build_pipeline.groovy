@@ -12,12 +12,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-@Library('openjdk-jenkins-helper@master')
-import JobHelper
+import groovy.json.JsonSlurper
+
 @Library('openjdk-jenkins-helper@master')
 import JobHelper
 import NodeHelper
-import groovy.json.JsonSlurper
 
 /**
  * This file is a template for running a build for a given configuration
