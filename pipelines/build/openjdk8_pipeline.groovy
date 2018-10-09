@@ -39,6 +39,9 @@ def buildConfigurations = [
                         //Pin to build-softlayer-win2012r2-x64-2 as build-softlayer-win2012r2-x64-1 may have issues
                         openj9:  'win2012&&build-softlayer-win2012r2-x64-2'
                 ],
+                buildArgs: [
+                        openj9:  '--skip-freetype'
+                ],
                 test                : ['openjdktest']
         ],
 
@@ -48,6 +51,9 @@ def buildConfigurations = [
                 additionalNodeLabels: [
                         hotspot: 'win2008',
                         openj9:  'win2012'
+                ],
+                buildArgs: [
+                        openj9:  '--skip-freetype'
                 ],
                 test                : ['openjdktest']
         ],
