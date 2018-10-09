@@ -38,9 +38,6 @@ def buildConfigurations = [
                         hotspot: 'win2008',
                         openj9:  'win2012&&mingw-cygwin'
                 ],
-                buildArgs: [
-                        openj9:  '--skip-freetype'
-                ],
                 test                : ['openjdktest']
         ],
 
@@ -50,9 +47,6 @@ def buildConfigurations = [
                 additionalNodeLabels: [
                         hotspot: 'win2008',
                         openj9:  'win2012&&mingw-cygwin'
-                ],
-                buildArgs: [
-                        openj9:  '--skip-freetype'
                 ],
                 test                : ['openjdktest']
         ],
