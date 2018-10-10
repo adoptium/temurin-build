@@ -39,7 +39,8 @@ def toBuildParams(enableTests, params) {
     return buildParams
 }
 
-static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs) {
+static
+def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs) {
 
     def additionalNodeLabels = formAdditionalNodeLabels(configuration, variant)
 
@@ -56,10 +57,8 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, b
 
     buildParams.putAll(getConfigureArgs(configuration, additionalConfigureArgs))
 
-    def buildArgs = "";
-    if (configuration.containsKey('buildArgs')) {
-        buildArgs += configuration.buildArgs;
-    }
+    def buildArgs = getBuildArgs(configuration, variant);
+
     if (additionalBuildArgs != null && additionalBuildArgs.length() > 0) {
         buildArgs += " " + additionalBuildArgs
     }
@@ -88,12 +87,28 @@ static def buildConfiguration(javaToBuild, variant, configuration, releaseTag, b
     ]
 }
 
+static def isMap(possibleMap) {
+    // hack as jenkins sandbox wont allow instanceof
+    return "java.util.LinkedHashMap" == possibleMap.getClass().getName()
+}
+
+
+static def getBuildArgs(configuration, variant) {
+    if (configuration.containsKey('buildArgs')) {
+        if (isMap(configuration.buildArgs)) {
+            return configuration.buildArgs.get(variant)
+        } else {
+            return configuration.buildArgs
+        }
+    }
+
+    return ""
+}
+
 static def getTestList(configuration, isRelease) {
     if (configuration.containsKey("test")) {
         def testJobType = isRelease ? "release" : "nightly"
-
-        // hack as jenkins sandbox wont allow instanceof
-        if ("java.util.LinkedHashMap" == configuration.test.getClass().getName()) {
+        if (isMap(configuration.test)) {
             return configuration.test.get(testJobType)
         } else {
             return configuration.test
@@ -116,8 +131,7 @@ static def formAdditionalNodeLabels(configuration, variant) {
     if (configuration.containsKey("additionalNodeLabels")) {
         def additionalNodeLabels = null
 
-        // hack as jenkins sandbox wont allow instanceof
-        if ("java.util.LinkedHashMap" == configuration.additionalNodeLabels.getClass().getName()) {
+        if (isMap(configuration.additionalNodeLabels)) {
             additionalNodeLabels = configuration.additionalNodeLabels.get(variant)
         } else {
             additionalNodeLabels = configuration.additionalNodeLabels
