@@ -95,8 +95,10 @@ static def isMap(possibleMap) {
 
 static def getBuildArgs(configuration, variant) {
     if (configuration.containsKey('buildArgs')) {
-        if (isMap(configuration.buildArgs)) {
-            return configuration.buildArgs.get(variant)
+        if (isMap(configuration.buildArgs) && configuration.buildArgs) {
+            if (configuration.buildArgs.containsKey(variant)) {
+                return configuration.buildArgs.get(variant)
+            }
         } else {
             return configuration.buildArgs
         }
