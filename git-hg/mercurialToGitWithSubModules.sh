@@ -193,20 +193,6 @@ function updateRepo() {
 
 }
 
-TMP_WORKSPACE="/tmp/adopt-tmp/"
-
-cleanup () {
-  exit_code=$?
-  if [ -d "$TMP_WORKSPACE" ]; then
-    rm -rf "$TMP_WORKSPACE" || true
-  fi
-
-  if [ -d "/dev/shm/adopt/" ]; then
-    rm -rf "/dev/shm/adopt/" || true
-  fi
-  exit $exit_code
-}
-
 function updateMirrors() {
   mkdir -p "$MIRROR"
   cd "$MIRROR" || exit 1
@@ -222,20 +208,11 @@ function updateMirrors() {
 
 function rewriteMirror() {
 
+  # clean out old tmp dirs if left around
+  rm -rf "/dev/shm/adopt/" "/tmp/adopt-tmp/"
+
   # If running locally on Mac OS X then use availableMemory=400
   availableMemory=$(free -mw | grep Mem | egrep -o "[0-9]+$")
-
-  trap cleanup EXIT ERR INT TERM
-
-  if [[ $availableMemory -gt 500 ]]; then
-    echo "Detected more than 500mb of ram available, attempting to use ram dist to speed up"
-    TMP_WORKSPACE="/dev/shm/adopt/"
-  else
-    TMP_WORKSPACE="/tmp/adopt-tmp/"
-    rm -rf "$TMP_WORKSPACE" || true
-  fi
-
-  mkdir -p "$TMP_WORKSPACE" || exit 1
 
   for module in "${MODULES[@]}" ; do
     needsUpdate=$(doesModuleNeedUpdate "$module")
@@ -253,22 +230,14 @@ function rewriteMirror() {
       # Get to to the tag that we want
       git fetch --tags
 
-      # Clean any old modules JIC a previous build aborted
-      rm -rf "$TMP_WORKSPACE/$module" || exit 1
-
       echo "$(date +%T)": "GIT filter on $module"
-      mkdir "$TMP_WORKSPACE/$module"
       git reset --hard master
 
       # This looks a bit odd but trust us, take all files and prepend $module to them
       prefix_module_sed="s|$(printf '\t')\\\"*|&$module/|"
-      git filter-branch -d "$TMP_WORKSPACE/$module" -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"$prefix_module_sed\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
-
-      rm -rf "$TMP_WORKSPACE/$module" || exit 1
+      git filter-branch -f --index-filter "git rm -f -q --cached --ignore-unmatch .hgignore .hgtags && git ls-files -s | sed \"$prefix_module_sed\" | GIT_INDEX_FILE=\$GIT_INDEX_FILE.new git update-index --index-info && mv \"\$GIT_INDEX_FILE.new\" \"\$GIT_INDEX_FILE\"" --prune-empty --tag-name-filter cat -- --all
     fi
   done
-
-  rm -rf "$TMP_WORKSPACE" || exit 1
 }
 
 function checkoutRoot() {
