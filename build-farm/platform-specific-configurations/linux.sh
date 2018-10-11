@@ -38,14 +38,15 @@ then
         export CXX=g++-4.8
       fi
     fi
+  fi
 fi
 
-if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] && [ "${VARIANT}" == "openj9" ] 
+if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
 then
   if "${ARCHITECTURE}" == "s390x" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/usr/local/openssl-1.1.1"
-  else 
+  else
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched"
   fi
 fi
