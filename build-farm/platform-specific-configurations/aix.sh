@@ -48,6 +48,11 @@ then
   fi
 fi
 
+if [ "${VARIANT}" == "openj9" ]; then
+  export LDR_CNTRL=MAXDATA=0x80000000 
+fi
+echo LDR_CNTRL=$LDR_CNTRL
+
 if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ];
 then
   export JDK10_BOOT_DIR="$PWD/jdk-10"
