@@ -43,7 +43,6 @@ source "$SCRIPT_DIR/common/constants.sh"
 source "$SCRIPT_DIR/common/common.sh"
 
 export OPENJDK_REPO_TAG
-export OPENJDK_DIR
 export JRE_TARGET_PATH
 export CONFIGURE_ARGS=""
 export MAKE_TEST_IMAGE=""
@@ -52,8 +51,6 @@ export GIT_CLONE_ARGUMENTS=()
 # Parse the CL arguments, defers to the shared function in common-functions.sh
 function parseArguments() {
     parseConfigurationArguments "$@"
-
-    OPENJDK_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 }
 
 # Add an argument to the configure call
@@ -261,8 +258,14 @@ configureCommandParameters()
   configuringVersionStringParameter
   configuringBootJDKConfigureParameter
 
-  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
+
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+      local addsDir="/cygdrive/c/cygwin64/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/adds"
+      echo "adding source route -with-add-source-root=${addsDir}"
+      addConfigureArg "--with-add-source-root=" "${addsDir}"
+    fi
   else
     echo "Building up the configure command..."
     buildingTheRestOfTheConfigParameters
