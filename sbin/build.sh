@@ -214,7 +214,6 @@ buildingTheRestOfTheConfigParameters()
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]] ; then
     addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/freemarker.jar"
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-      addConfigureArg "--with-openssl=" "fetched"
       addConfigureArg "--enable-openssl-bundling" ""
     fi
   fi
