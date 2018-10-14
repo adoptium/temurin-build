@@ -123,6 +123,9 @@ This is typically used in conjunction with -T to create a custom path
 -D, --docker
 build OpenJDK in a docker container.
 
+--debug-docker
+debug OpenJDK build script in a docker container. Only valid if -D is selected.
+
 --disable-shallow-git-clone
 disable the default fB--depth=1 shallow cloning of git repo(s).
 

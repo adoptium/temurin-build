@@ -79,6 +79,7 @@ USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
 WORKING_DIR
 WORKSPACE_DIR
+DEBUG_DOCKER
 )
 
 # Directory structure of build environment:
@@ -186,6 +187,9 @@ function parseConfigurationArguments() {
 
         "--docker" | "-D" )
         BUILD_CONFIG[USE_DOCKER]="true";;
+
+        "--debug-docker" )
+        BUILD_CONFIG[DEBUG_DOCKER]="true";;
 
         "--disable-shallow-git-clone" )
         BUILD_CONFIG[SHALLOW_CLONE_OPTION]="";;
@@ -326,6 +330,9 @@ function configDefaults() {
 
   # Use Docker to build (defaults to false)
   BUILD_CONFIG[USE_DOCKER]=${BUILD_CONFIG[USE_DOCKER]:-false}
+  
+  # Alow to debug docker build.sh scritp (dafult to false)
+  BUILD_CONFIG[DEBUG_DOCKER]=${BUILD_CONFIG[DEBUG_DOCKER]:-false}
 
   # Location of DockerFile and where scripts get copied to inside the container
   BUILD_CONFIG[DOCKER_FILE_PATH]=${BUILD_CONFIG[DOCKER_FILE_PATH]:-""}

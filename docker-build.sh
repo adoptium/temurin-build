@@ -127,15 +127,22 @@ buildOpenJDKViaDocker()
   if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
      gitSshAccess=(-v "${HOME}/.ssh:/home/build/.ssh" -v "${SSH_AUTH_SOCK}:/build-ssh-agent" -e "SSH_AUTH_SOCK=/build-ssh-agent")
   fi
-  
+ 
+  local dockerMode=(-l "st")
+  if [[ "${BUILD_CONFIG[DEBUG_DOCKER]}" == "true" ]] ; then
+	  dockerMode=(-t -i -l "st")
+  fi
+
   # shellcheck disable=SC2140
   # Pass in the last important variables into the Docker container and call
   # the /openjdk/sbin/build.sh script inside
-  ${BUILD_CONFIG[DOCKER]} run -lst \
-      --cpuset-cpus="${cpuSet}" \
+  ${BUILD_CONFIG[DOCKER]} run \
+       "${dockerMode[@]}" \
+       --cpuset-cpus="${cpuSet}" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
        -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" \
        "${gitSshAccess[@]}" \
+       -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
        -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
        --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
   
