@@ -42,6 +42,7 @@ CONTAINER_NAME
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
+DEBUG_DOCKER
 DOCKER
 DOCKER_FILE_PATH
 DOCKER_SOURCE_VOLUME_NAME
@@ -79,7 +80,6 @@ USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
 WORKING_DIR
 WORKSPACE_DIR
-DEBUG_DOCKER
 )
 
 # Directory structure of build environment:
@@ -331,7 +331,7 @@ function configDefaults() {
   # Use Docker to build (defaults to false)
   BUILD_CONFIG[USE_DOCKER]=${BUILD_CONFIG[USE_DOCKER]:-false}
   
-  # Alow to debug docker build.sh scritp (dafult to false)
+  # Alow to debug docker build.sh script (dafult to false)
   BUILD_CONFIG[DEBUG_DOCKER]=${BUILD_CONFIG[DEBUG_DOCKER]:-false}
 
   # Location of DockerFile and where scripts get copied to inside the container
