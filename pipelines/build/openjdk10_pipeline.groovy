@@ -56,11 +56,6 @@ def buildConfigurations = [
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                additionalNodeLabels: [
-                        // Pinned as at time of writing build-osuosl-centos74-ppc64le-2 does not have a valid boot jdk
-                        hotspot: 'centos7&&build-osuosl-centos74-ppc64le-1',
-                        openj9:  'ubuntu'
-                ],
                 test                : ['openjdktest', 'systemtest']
         ],
 
