@@ -131,7 +131,7 @@ buildOpenJDKViaDocker()
   # shellcheck disable=SC2140
   # Pass in the last important variables into the Docker container and call
   # the /openjdk/sbin/build.sh script inside
-  ${BUILD_CONFIG[DOCKER]} run -lst \
+  ${BUILD_CONFIG[DOCKER]} run \
       --cpuset-cpus="${cpuSet}" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
        -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" \
