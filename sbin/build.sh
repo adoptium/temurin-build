@@ -407,6 +407,8 @@ removingUnnecessaryFiles()
   rm -rf "${JDK_TARGET}"/demo/jfc/SwingApplet || true
 
   find . -name "*.diz" -type f -delete || true
+  find . -name "*.pdb" -type f -delete || true
+  find . -name "*.map" -type f -delete || true
 
   echo "Finished removing unnecessary files from ${OPENJDK_REPO_TAG}"
 }

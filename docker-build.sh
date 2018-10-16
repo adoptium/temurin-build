@@ -128,9 +128,9 @@ buildOpenJDKViaDocker()
      gitSshAccess=(-v "${HOME}/.ssh:/home/build/.ssh" -v "${SSH_AUTH_SOCK}:/build-ssh-agent" -e "SSH_AUTH_SOCK=/build-ssh-agent")
   fi
  
-  local dockerMode=(-l "st")
+  local dockerMode=()
   if [[ "${BUILD_CONFIG[DEBUG_DOCKER]}" == "true" ]] ; then
-	  dockerMode=(-t -i -l "st")
+     dockerMode=(-t -i)
   fi
 
   # shellcheck disable=SC2140
