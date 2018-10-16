@@ -129,8 +129,10 @@ buildOpenJDKViaDocker()
   fi
  
   local dockerMode=()
+  local dockerEntrypoint=(--entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}")
   if [[ "${BUILD_CONFIG[DEBUG_DOCKER]}" == "true" ]] ; then
      dockerMode=(-t -i)
+     dockerEntrypoint=(--entrypoint "/bin/sh" "${BUILD_CONFIG[CONTAINER_NAME]}" -c "echo 'DEBUG DOCKER BUILD\nTo build jdk run\n/openjdk/sbin/build.sh'; /bin/bash")
   fi
 
   # shellcheck disable=SC2140
@@ -144,7 +146,7 @@ buildOpenJDKViaDocker()
        "${gitSshAccess[@]}" \
        -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
        -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
-       --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
+       "${dockerEntrypoint[@]}"
   
   # If we didn't specify to keep the container then remove it
   if [[ -z ${BUILD_CONFIG[KEEP_CONTAINER]} ]] ; then

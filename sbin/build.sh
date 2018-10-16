@@ -523,43 +523,25 @@ showCompletionMessage()
   echo "All done!"
 }
 
-execute()
-{
-  "$@"
-  if [[ "${DEBUG_DOCKER_FLAG}" == "true" ]] ; then
-    echo "   ========================="
-    echo "   | DEBUG MODE IS ENABLED |"
-    echo "   ========================="
-    echo "      Script - $0" 
-    echo "      Executed function - " "$@"
-    echo "   ========================================================"
-    echo "   | Type 'exit' and press enter to move to next function |"
-    echo "   ========================================================"
-    
-    #allow user to access bash
-    /bin/bash
-  fi
-}
 ################################################################################
 
-execute loadConfigFromFile
+loadConfigFromFile
+cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
-execute cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+parseArguments "$@"
+configureWorkspace
 
-execute parseArguments "$@"
-execute configureWorkspace
+getOpenJDKUpdateAndBuildVersion
+configureCommandParameters
+buildTemplatedFile
+executeTemplatedFile
 
-execute getOpenJDKUpdateAndBuildVersion
-execute configureCommandParameters
-execute buildTemplatedFile
-execute executeTemplatedFile
-
-execute printJavaVersionString
-execute removingUnnecessaryFiles
-execute makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
-execute makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}-jre" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
-execute createOpenJDKTarArchive
-execute showCompletionMessage
+printJavaVersionString
+removingUnnecessaryFiles
+makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
+makeACopyOfLibFreeFontForMacOSX "${OPENJDK_REPO_TAG}-jre" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
+createOpenJDKTarArchive
+showCompletionMessage
 
 # ccache is not detected properly TODO
 # change grep to something like $GREP -e '^1.*' -e '^2.*' -e '^3\.0.*' -e '^3\.1\.[0123]$'`]
