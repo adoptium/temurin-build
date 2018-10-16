@@ -62,6 +62,7 @@ checkoutAndCloneOpenJDKGitRepo()
       if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
         git fetch origin "refs/tags/${BUILD_CONFIG[TAG]}:refs/tags/${BUILD_CONFIG[TAG]}"
         git checkout "${BUILD_CONFIG[TAG]}"
+        git reset --hard
       fi
       git clean -ffdx
     elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
