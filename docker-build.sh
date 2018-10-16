@@ -132,7 +132,7 @@ buildOpenJDKViaDocker()
   local dockerEntrypoint=(--entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}")
   if [[ "${BUILD_CONFIG[DEBUG_DOCKER]}" == "true" ]] ; then
      dockerMode=(-t -i)
-     dockerEntrypoint=(--entrypoint "/bin/sh" "${BUILD_CONFIG[CONTAINER_NAME]}" -c "echo 'DEBUG DOCKER BUILD\nTo build jdk run\n/openjdk/sbin/build.sh'; /bin/bash")
+     dockerEntrypoint=(--entrypoint "/bin/sh" "${BUILD_CONFIG[CONTAINER_NAME]}" -c "echo 'DEBUG DOCKER BUILD\\nTo build jdk run\\n/openjdk/sbin/build.sh'; /bin/bash")
   fi
 
   # shellcheck disable=SC2140
