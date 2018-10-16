@@ -122,7 +122,7 @@ then
 fi
 
 
-if [ -n "${TOOLCHAIN_VERSION}" ]; then
+if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
   # At time of writing java 8, hotspot tags cannot handle --with-toolchain-version
   if [ "${JAVA_TO_BUILD}" != "${JDK8_VERSION}" ] || [ "${VARIANT}" != "hotspot" ] || [ -z "${TAG}" ]
   then
