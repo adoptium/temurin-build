@@ -135,7 +135,7 @@ function setMercurialRepoAndTagsToRetrieve() {
             # HEAD is interpreted by the script below to mean tip/latest commit.
             # Skipping jdk8u152-b16 as it seems to be problematic
             if [ -z "$TAGS" ] ; then
-                TAGS="jdk8u144-b34 jdk8u162-b12 jdk8u172-b11 ${TAG_181} jdk8u192-b12 HEAD"
+                TAGS="jdk8u192-b12 HEAD"
             fi;;
      jdk9*) if [ -z "$TAGS" ] ; then
                 TAGS="jdk-9+181 jdk-9.0.1+11 jdk-9.0.3+9 jdk-9.0.4+11 HEAD"
@@ -260,6 +260,31 @@ function checkoutRoot() {
   git filter-branch -f --index-filter 'git rm -r -f -q --cached --ignore-unmatch .hg .hgignore .hgtags get_source.sh' --prune-empty --tag-name-filter cat -- --all
 }
 
+
+function fixGeneratedConfigure() {
+  # Since generated-configure.sh contains a timestamp it is a frequent source of merge conflicts
+  # if we have a conflict, regenerate that file
+  local result=$1
+
+  if [ $result != 0 ]
+  then
+    local num_conflicts=$(git status | grep "both modified:" | wc -l)
+    local is_generated=$(git status | grep "both modified:.*generated-configure.sh" | wc -l)
+
+    if [ $num_conflicts == 1 ] && [ $is_generated == 1 ]
+    then
+      # we have a conflict, regenerate the file
+      ./common/autoconf/autogen.sh
+      git commit -a --no-edit
+    else
+      echo "Merge conflicts"
+      git status
+      exit 1
+    fi
+
+  fi
+}
+
 function fetchRootTagIntoRepo() {
   NEWTAG=$1
 
@@ -271,7 +296,12 @@ function fetchRootTagIntoRepo() {
   git branch --unset-upstream || true
   git checkout master
   git fetch "$REWRITE_WORKSPACE/root"
+
+  set +x
   git merge --allow-unrelated-histories -m "Merge base $NEWTAG" FETCH_HEAD
+  local result=$?
+  set -x
+  fixGeneratedConfigure $result
 }
 
 function fetchModuleTagIntoRepo() {
