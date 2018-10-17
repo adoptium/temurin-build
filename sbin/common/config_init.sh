@@ -42,6 +42,7 @@ CONTAINER_NAME
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
+DEBUG_DOCKER
 DOCKER
 DOCKER_FILE_PATH
 DOCKER_SOURCE_VOLUME_NAME
@@ -187,6 +188,9 @@ function parseConfigurationArguments() {
         "--docker" | "-D" )
         BUILD_CONFIG[USE_DOCKER]="true";;
 
+        "--debug-docker" )
+        BUILD_CONFIG[DEBUG_DOCKER]="true";;
+
         "--disable-shallow-git-clone" )
         BUILD_CONFIG[SHALLOW_CLONE_OPTION]="";;
 
@@ -326,6 +330,9 @@ function configDefaults() {
 
   # Use Docker to build (defaults to false)
   BUILD_CONFIG[USE_DOCKER]=${BUILD_CONFIG[USE_DOCKER]:-false}
+  
+  # Alow to debug docker build.sh script (dafult to false)
+  BUILD_CONFIG[DEBUG_DOCKER]=${BUILD_CONFIG[DEBUG_DOCKER]:-false}
 
   # Location of DockerFile and where scripts get copied to inside the container
   BUILD_CONFIG[DOCKER_FILE_PATH]=${BUILD_CONFIG[DOCKER_FILE_PATH]:-""}
