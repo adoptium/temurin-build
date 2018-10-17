@@ -49,6 +49,7 @@ then
 fi
 
 if [ "${VARIANT}" == "openj9" ]; then
+  # Needed for the laster nasm
   export PATH=/usr/local/bin:$PATH
   # ccache causes too many errors (either the default version on 3.2.4) so disabling
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
