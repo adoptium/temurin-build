@@ -19,6 +19,7 @@ def buildConfigurations = [
                 additionalNodeLabels: [
                         hotspot: 'build-macstadium-macos1010-1',
                         openj9:  'build-macstadium-macos1010-2'
+                ],
                 test                : ['openjdktest', 'systemtest', 'perftest']
         ],
 
