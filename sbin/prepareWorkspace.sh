@@ -79,7 +79,9 @@ checkoutAndCloneOpenJDKGitRepo()
 
   # Openj9 does not release from git tags
   if [ ! -z "${BUILD_CONFIG[TAG]}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "openj9" ]; then
+    git fetch origin "refs/tags/${BUILD_CONFIG[TAG]}:refs/tags/${BUILD_CONFIG[TAG]}"
     git checkout "${BUILD_CONFIG[TAG]}"
+    git reset --hard
   fi
   git clean -ffdx
 
