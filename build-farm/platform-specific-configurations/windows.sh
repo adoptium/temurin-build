@@ -52,9 +52,9 @@ then
       
       if [ "${ARCHITECTURE}" == "x86-32" ]
       then
-        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/progra~2/OpenSSL"
+        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/progra~2/OpenSSL --enable-openssl-bundling"
       else
-        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/progra~1/OpenSSL"
+        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/progra~1/OpenSSL --enable-openssl-bundling"
       fi
       # https://github.com/AdoptOpenJDK/openjdk-build/issues/243
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
