@@ -57,15 +57,6 @@ checkoutAndCloneOpenJDKGitRepo()
       echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
       sleep 10
       echo "Pulling latest changes from git openjdk source repository"
-      git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}"
-      git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
-      git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
-      if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
-        git fetch origin "refs/tags/${BUILD_CONFIG[TAG]}:refs/tags/${BUILD_CONFIG[TAG]}"
-        git checkout "${BUILD_CONFIG[TAG]}"
-        git reset --hard
-      fi
-      git clean -ffdx
     elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
       echo "Removing current git repo as it is the wrong type"
       rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
