@@ -41,10 +41,9 @@ check()
 }
 
 if [[ $# -eq 0 ]] ; then
-   if [[ ! -d "${shellcheckDir}" ]]
-   then
+   if [[ ! -d "${shellcheckDir}" ]] ; then
      install
-   fi;	
+   fi
    check
    exit 0
 fi

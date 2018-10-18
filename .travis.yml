@@ -5,11 +5,8 @@ sudo: false
 
 install:
 
-  # Install a custom version of shellcheck instead of Travis CI's default
-  - ./shellchek.sh install
-
 script:
-  - ./shellcheck.sh check
+  - ./shellcheck.sh
 
 matrix:
   fast_finish: true
