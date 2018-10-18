@@ -40,11 +40,7 @@ check()
   "${shellcheckCmd}" -x ./*.sh
 }
 
-if [[ $# -eq 0 ]] ; then
-   if [[ ! -d "${shellcheckDir}" ]] ; then
-     install
-   fi
-   check
-   exit 0
+if [[ ! -d "${shellcheckDir}" ]] ; then
+  install
 fi
-"$@"
+check
