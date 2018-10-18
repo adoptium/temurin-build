@@ -17,7 +17,7 @@
 ################################################################################
 #
 # This script downloads and executes shellcheck. It will be run automatically
-# by Travis on every push. You can also run it mannually. 
+# by Travis on every push. You can run it manually to vailidate your changes. 
 #
 ################################################################################
 
@@ -37,16 +37,15 @@ install()
 
 check() 
 {
-  if [[ ! -d "${shellcheckDir}" ]]
-  then
-     install
-  fi;
-
   "${shellcheckCmd}" -x ./*.sh
 }
 
 if [[ $# -eq 0 ]] ; then
-    check
-    exit 0
+   if [[ ! -d "${shellcheckDir}" ]]
+   then
+     install
+   fi;	
+   check
+   exit 0
 fi
 "$@"
