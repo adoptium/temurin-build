@@ -16,7 +16,10 @@ def buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
-                additionalNodeLabels: 'build-macstadium-macos1010-1',
+                additionalNodeLabels: [
+                        hotspot: 'build-macstadium-macos1010-1',
+                        openj9:  'build-macstadium-macos1010-2'
+                ],
                 test                : ['openjdktest', 'systemtest']
         ],
 
