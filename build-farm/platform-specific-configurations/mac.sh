@@ -53,4 +53,17 @@ if [ "${VARIANT}" == "openj9" ]; then
   export PATH=/usr/local/bin:$PATH
   # ccache causes too many errors (either the default version on 3.2.4) so disabling
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
+  if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+  then
+    export SED=gsed
+    export TAR=gtar
+    export UMA_SUPPRESS_WARNINGS_AS_ERRORS=1
+    export OMR_WARNINGS_AS_ERRORS=0
+    export MACOSX_DEPLOYMENT_TARGET=10.8
+    export SDKPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk
+    export OPENJ9_USE_CUSTOM_COMPILER=1
+    export OPENJ9_DEVELOPER_DIR="/Applications/Xcode7/Xcode.app/Contents/Developer"
+    export OPENJ9_CC="/usr/local/bin/gcc-4.9"
+    export OPENJ9_CXX="/usr/local/bin/g++-4.9"
+  fi
 fi
