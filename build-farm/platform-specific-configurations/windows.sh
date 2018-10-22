@@ -40,6 +40,7 @@ then
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
       export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
+      TOOLCHAIN_VERSION="2013"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
     fi
   fi
