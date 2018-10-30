@@ -23,6 +23,15 @@ def buildConfigurations = [
                 test                : ['openjdktest', 'systemtest', 'perftest']
         ],
 
+        x64MacXL    : [
+                os                   : 'mac',
+                arch                 : 'x64',
+                additionalNodeLabels : 'build-macstadium-macos1010-2',
+                test                 : ['openjdktest', 'systemtest', 'perftest'],
+                additionalFileNameTag: "macosXL",
+                configureArgs        : '--with-noncompressedrefs'
+        ],
+
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
