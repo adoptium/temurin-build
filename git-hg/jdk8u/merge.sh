@@ -23,7 +23,6 @@ function initRepo() {
       cd "$MIRROR/$module/";
       git checkout master
       git reset --hard
-      firstCommitId=$(git rev-list --max-parents=0 HEAD)
   done
 
   cd "$REPO"
@@ -49,7 +48,6 @@ function inititialCheckin() {
   else
     git fetch root --no-tags HEAD
   fi
-  git branch
   git merge "$tag-root"
 
   if [ "$doTagging" == "true" ]; then
@@ -57,8 +55,6 @@ function inititialCheckin() {
   fi
 
   for module in "${MODULES[@]}" ; do
-      cd "$MIRROR/$module/";
-      commitId=$(git rev-list -n 1  $tag)
       cd "$REPO"
       /usr/lib/git-core/git-subtree add --prefix=$module "$MIRROR/$module/" $tag
   done
@@ -71,18 +67,7 @@ function inititialCheckin() {
 }
 
 function resetRepo() {
-    rm -rf "$MODULE_MIRROR/root"
-    mkdir -p "$MODULE_MIRROR/root"
-    mkdir -p "$MODULE_MIRROR/root"
-    cd "$MODULE_MIRROR/root"
-
-    git init
-
-    git remote add -f "upstream" "$MIRROR/root/"
-    git merge $tag
-    git tag -f "$tag"
-
-    for module in "${MODULES[@]}" ; do
+    for module in "${MODULES_WITH_ROOT[@]}" ; do
       rm -rf "$MODULE_MIRROR/$module"
       mkdir -p "$MODULE_MIRROR/$module"
       mkdir -p "$MODULE_MIRROR/$module"
@@ -97,7 +82,6 @@ function resetRepo() {
       do
         git tag -d $tag || true
       done
-
       git tag -f "$tag"
     done
 }
