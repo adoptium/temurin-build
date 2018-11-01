@@ -89,7 +89,9 @@ createTag "jdk8u181-b13"
 cd $SCRIPT_DIR
 ./merge.sh -t -T "jdk8u192-b12" -b "release"
 
-git cherry-pick 3da28e240242cc33c69109458e6ee4c610a4bfee
+cd $REPO
+git checkout release
+git am $PATCHES/0001-8073139-PPC64-User-visible-arch-directory-and-os.arc.patch
 chmod +x ./common/autoconf/autogen.sh
 ./common/autoconf/autogen.sh
 git add ./common/autoconf/autogen.sh

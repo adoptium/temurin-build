@@ -1,0 +1,106 @@
+From 3da28e240242cc33c69109458e6ee4c610a4bfee Mon Sep 17 00:00:00 2001
+From: sgehwolf <unknown>
+Date: Tue, 25 Sep 2018 15:58:42 +0200
+Subject: [PATCH] 8073139: PPC64: User-visible arch directory and os.arch value
+ on ppc64le cause issues with Java tooling Reviewed-by: erikj, goetz, dholmes
+
+---
+ common/autoconf/flags.m4               |  3 +++
+ common/autoconf/generated-configure.sh | 11 +++++++----
+ common/autoconf/jdk-options.m4         |  2 +-
+ common/autoconf/platform.m4            |  2 +-
+ 4 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/common/autoconf/flags.m4 b/common/autoconf/flags.m4
+index 57a66f6..cd7fb89 100644
+--- a/common/autoconf/flags.m4
++++ b/common/autoconf/flags.m4
+@@ -539,6 +539,9 @@ AC_DEFUN_ONCE([FLAGS_SETUP_COMPILER_FLAGS_FOR_JDK],
+       CCXXFLAGS_JDK="$CCXXFLAGS_JDK -D_BIG_ENDIAN"
+     fi
+   fi
++  if test "x$OPENJDK_TARGET_CPU" = xppc64le; then
++    CCXXFLAGS_JDK="$CCXXFLAGS_JDK -DABI_ELFv2"
++  fi
+   
+   # Setup target OS define. Use OS target name but in upper case.
+   OPENJDK_TARGET_OS_UPPERCASE=`$ECHO $OPENJDK_TARGET_OS | $TR 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+diff --git a/common/autoconf/generated-configure.sh b/common/autoconf/generated-configure.sh
+index daa2842..1539c7f 100644
+--- a/common/autoconf/generated-configure.sh
++++ b/common/autoconf/generated-configure.sh
+@@ -4337,7 +4337,7 @@ VS_SDK_PLATFORM_NAME_2017=
+ #CUSTOM_AUTOCONF_INCLUDE
+ 
+ # Do not change or remove the following line, it is needed for consistency checks:
+-DATE_WHEN_GENERATED=1537356874
++DATE_WHEN_GENERATED=1538732652
+ 
+ ###############################################################################
+ #
+@@ -13612,7 +13612,7 @@ test -n "$target_alias" &&
+       VAR_CPU_ENDIAN=big
+       ;;
+     powerpc64le)
+-      VAR_CPU=ppc64
++      VAR_CPU=ppc64le
+       VAR_CPU_ARCH=ppc
+       VAR_CPU_BITS=64
+       VAR_CPU_ENDIAN=little
+@@ -13750,7 +13750,7 @@ $as_echo "$OPENJDK_BUILD_OS-$OPENJDK_BUILD_CPU" >&6; }
+       VAR_CPU_ENDIAN=big
+       ;;
+     powerpc64le)
+-      VAR_CPU=ppc64
++      VAR_CPU=ppc64le
+       VAR_CPU_ARCH=ppc
+       VAR_CPU_BITS=64
+       VAR_CPU_ENDIAN=little
+@@ -14570,7 +14570,7 @@ $as_echo "$with_jvm_variants" >&6; }
+   if test "x$JVM_VARIANT_ZEROSHARK" = xtrue ; then
+     INCLUDE_SA=false
+   fi
+-  if test "x$VAR_CPU" = xppc64 ; then
++  if test "x$VAR_CPU" = xppc64 -o "x$VAR_CPU" = xppc64le ; then
+     INCLUDE_SA=false
+   fi
+   if test "x$OPENJDK_TARGET_CPU" = xaarch64; then
+@@ -41737,6 +41737,9 @@ $as_echo "$supports" >&6; }
+       CCXXFLAGS_JDK="$CCXXFLAGS_JDK -D_BIG_ENDIAN"
+     fi
+   fi
++  if test "x$OPENJDK_TARGET_CPU" = xppc64le; then
++    CCXXFLAGS_JDK="$CCXXFLAGS_JDK -DABI_ELFv2"
++  fi
+ 
+   # Setup target OS define. Use OS target name but in upper case.
+   OPENJDK_TARGET_OS_UPPERCASE=`$ECHO $OPENJDK_TARGET_OS | $TR 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+diff --git a/common/autoconf/jdk-options.m4 b/common/autoconf/jdk-options.m4
+index 6829d7a..167e285 100644
+--- a/common/autoconf/jdk-options.m4
++++ b/common/autoconf/jdk-options.m4
+@@ -158,7 +158,7 @@ AC_DEFUN_ONCE([JDKOPT_SETUP_JVM_VARIANTS],
+   if test "x$JVM_VARIANT_ZEROSHARK" = xtrue ; then
+     INCLUDE_SA=false
+   fi
+-  if test "x$VAR_CPU" = xppc64 ; then
++  if test "x$VAR_CPU" = xppc64 -o "x$VAR_CPU" = xppc64le ; then
+     INCLUDE_SA=false
+   fi
+   if test "x$OPENJDK_TARGET_CPU" = xaarch64; then
+diff --git a/common/autoconf/platform.m4 b/common/autoconf/platform.m4
+index bf109d5..945579d 100644
+--- a/common/autoconf/platform.m4
++++ b/common/autoconf/platform.m4
+@@ -67,7 +67,7 @@ AC_DEFUN([PLATFORM_EXTRACT_VARS_FROM_CPU],
+       VAR_CPU_ENDIAN=big
+       ;;
+     powerpc64le)
+-      VAR_CPU=ppc64
++      VAR_CPU=ppc64le
+       VAR_CPU_ARCH=ppc
+       VAR_CPU_BITS=64
+       VAR_CPU_ENDIAN=little
+-- 
+2.7.4
+
