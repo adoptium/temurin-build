@@ -4,6 +4,14 @@ set -eux
 
 source constants.sh
 
+function createTag() {
+  tag=$1
+  git tag -d "$tag" || true
+  git tag -f "$tag"
+  git branch -D "$tag"
+  git branch "$tag"
+}
+
 cd "$REPO"
 
 if [ -d ".git" ];then
@@ -64,6 +72,7 @@ cd $SCRIPT_DIR
 ## release moves from tag to tag with our patches
 cd "$SCRIPT_DIR"
 
+# sync and tag the release branch as some key milestones
 ./merge.sh -t -i -T "jdk8u144-b34" -b "release"
 ./merge.sh -t -T "jdk8u162-b12" -b "release"
 ./merge.sh -t -T "jdk8u172-b11" -b "release"
@@ -75,13 +84,20 @@ git am $PATCHES/company_name.patch
 git am $PATCHES/ppc64le_1.patch
 git am $PATCHES/ppc64le_2.patch
 
-git tag -d "jdk8u181-b13" || true
-git tag -f "jdk8u181-b13"
-git branch -D "jdk8u181-b13"
-git branch "jdk8u181-b13"
+createTag "jdk8u181-b13"
 
 cd $SCRIPT_DIR
 ./merge.sh -t -T "jdk8u192-b12" -b "release"
+
+git cherry-pick 3da28e240242cc33c69109458e6ee4c610a4bfee
+chmod +x ./common/autoconf/autogen.sh
+./common/autoconf/autogen.sh
+git add ./common/autoconf/autogen.sh
+git commit -a --no-edit
+
+createTag "jdk8u192-b12"
+
+
 ################################################
 
 
