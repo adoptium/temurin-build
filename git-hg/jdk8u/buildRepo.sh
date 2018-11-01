@@ -97,7 +97,6 @@ set -e
 chmod +x ./common/autoconf/autogen.sh
 ./common/autoconf/autogen.sh
 git add ./common/autoconf/autogen.sh
-git commit -a --no-edit
 git am --continue
 
 createTag "jdk8u192-b12"
