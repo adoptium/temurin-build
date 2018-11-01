@@ -61,33 +61,33 @@ git checkout master
 
 cd $SCRIPT_DIR
 
-# Update dev to HEAD
-./merge.sh -T "HEAD" -b "master"
-################################################
-
-
-
-################################################
-## Build release
-## release moves from tag to tag with our patches
-cd "$SCRIPT_DIR"
-
-# sync and tag the release branch as some key milestones
-./merge.sh -t -i -T "jdk8u144-b34" -b "release"
-./merge.sh -t -T "jdk8u162-b12" -b "release"
-./merge.sh -t -T "jdk8u172-b11" -b "release"
-./merge.sh -t -T "jdk8u181-b13" -b "release"
-
-cd $REPO
-git checkout release
-git am $PATCHES/company_name.patch
-git am $PATCHES/ppc64le_1.patch
-git am $PATCHES/ppc64le_2.patch
-
-createTag "jdk8u181-b13"
-
-cd $SCRIPT_DIR
-./merge.sh -t -T "jdk8u192-b12" -b "release"
+## Update dev to HEAD
+#./merge.sh -T "HEAD" -b "master"
+#################################################
+#
+#
+#
+#################################################
+### Build release
+### release moves from tag to tag with our patches
+#cd "$SCRIPT_DIR"
+#
+## sync and tag the release branch as some key milestones
+#./merge.sh -t -i -T "jdk8u144-b34" -b "release"
+#./merge.sh -t -T "jdk8u162-b12" -b "release"
+#./merge.sh -t -T "jdk8u172-b11" -b "release"
+#./merge.sh -t -T "jdk8u181-b13" -b "release"
+#
+#cd $REPO
+#git checkout release
+#git am $PATCHES/company_name.patch
+#git am $PATCHES/ppc64le_1.patch
+#git am $PATCHES/ppc64le_2.patch
+#
+#createTag "jdk8u181-b13"
+#
+#cd $SCRIPT_DIR
+#./merge.sh -t -T "jdk8u192-b12" -b "release"
 
 cd $REPO
 git checkout release
