@@ -91,14 +91,11 @@ cd "$SCRIPT_DIR"
 #
 cd $REPO
 git checkout release
-set +e
-git am $PATCHES/0001-8073139-PPC64-User-visible-arch-directory-and-os.arc.patch
-set -e
-git am --show-current-patch
+git reset --hard cdd004167302fa197ebf02dad0b6108986207e71
+git am $PATCHES/0001-Backport-8073139.patch
 chmod +x ./common/autoconf/autogen.sh
 ./common/autoconf/autogen.sh
-git add ./common/autoconf/*
-git am --continue
+git commit -a -m "autogen"
 
 createTag "jdk8u192-b12"
 
