@@ -97,7 +97,7 @@ set -e
 git am --show-current-patch
 chmod +x ./common/autoconf/autogen.sh
 ./common/autoconf/autogen.sh
-git add ./common/autoconf/autogen.sh
+git add ./common/autoconf/*
 git am --continue
 
 createTag "jdk8u192-b12"
