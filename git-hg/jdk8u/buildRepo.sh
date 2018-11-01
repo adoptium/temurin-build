@@ -94,6 +94,7 @@ git checkout release
 set +e
 git am $PATCHES/0001-8073139-PPC64-User-visible-arch-directory-and-os.arc.patch
 set -e
+git am --show-current-patch
 chmod +x ./common/autoconf/autogen.sh
 ./common/autoconf/autogen.sh
 git add ./common/autoconf/autogen.sh
