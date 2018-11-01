@@ -89,15 +89,15 @@ cd "$SCRIPT_DIR"
 #cd $SCRIPT_DIR
 #./merge.sh -t -T "jdk8u192-b12" -b "release"
 #
-#cd $REPO
-#git checkout release
-#set +e
-#git am $PATCHES/0001-8073139-PPC64-User-visible-arch-directory-and-os.arc.patch
-#set -e
-#chmod +x ./common/autoconf/autogen.sh
-#./common/autoconf/autogen.sh
-#git add ./common/autoconf/autogen.sh
-#git commit -a --no-edit
+cd $REPO
+git checkout release
+set +e
+git am $PATCHES/0001-8073139-PPC64-User-visible-arch-directory-and-os.arc.patch
+set -e
+chmod +x ./common/autoconf/autogen.sh
+./common/autoconf/autogen.sh
+git add ./common/autoconf/autogen.sh
+git commit -a --no-edit
 git am --continue
 
 createTag "jdk8u192-b12"
