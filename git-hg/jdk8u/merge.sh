@@ -11,6 +11,8 @@ doInit="false"
 doTagging="false"
 
 function initRepo() {
+  tag=$1
+
   rm -rf "$REPO"
   mkdir -p "$REPO"
   cd "$REPO"
@@ -65,27 +67,6 @@ function inititialCheckin() {
     git tag -d $tag || true
   done
 }
-
-function resetRepo() {
-    for module in "${MODULES_WITH_ROOT[@]}" ; do
-      rm -rf "$MODULE_MIRROR/$module"
-      mkdir -p "$MODULE_MIRROR/$module"
-      mkdir -p "$MODULE_MIRROR/$module"
-      cd "$MODULE_MIRROR/$module"
-
-      git init
-
-      git remote add -f "upstream" "$MIRROR/$module/"
-      git merge $tag
-
-      git tag | while read tag
-      do
-        git tag -d $tag || true
-      done
-      git tag -f "$tag"
-    done
-}
-
 
 function updateRepo() {
   repoName=$1
@@ -158,7 +139,7 @@ shift $((OPTIND-1))
 
 
 if [ "$doReset" == "true" ]; then
-  initRepo
+  initRepo $tag
 fi
 
 if [ "$doInit" == "true" ]; then
