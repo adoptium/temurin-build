@@ -40,6 +40,9 @@ then
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
       export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
+      # Unset the host VS120COMNTOOLS and VS110COMNTOOLS variables as Java picks them up by default and we don't want that.
+      unset VS120COMNTOOLS
+      unset VS110COMNTOOLS
       TOOLCHAIN_VERSION="2013"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
     fi
@@ -76,12 +79,13 @@ then
   if [ "${VARIANT}" == "hotspot" ]
   then
     TOOLCHAIN_VERSION="2013"
-
+    # Unset the host VS120COMNTOOLS and VS110COMNTOOLS variables as Java picks them up by default and we don't want that.
+    unset VS120COMNTOOLS
+    unset VS110COMNTOOLS
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
       export PATH="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:/cygdrive/c/openjdk/make-3.82/:$PATH"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-include=/cygdrive/c/openjdk/freetype/include --with-freetype-lib=/cygdrive/c/openjdk/freetype/lib64 --disable-ccache"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-msvcr-dll=/cygdrive/c/Windows/system32/msvcr120.dll --with-msvcp-dll=/cygdrive/c/Windows/system32/msvcp120.dll "
     elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
     then
       export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
