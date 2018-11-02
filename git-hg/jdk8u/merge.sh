@@ -155,6 +155,7 @@ commitId=$(git rev-list -n 1  $tag)
 cd "$REPO"
 git checkout $workingBranch
 
+# Get rid of existing tag that we are about to create
 if [ "$doTagging" == "true" ]; then
   git tag -d $tag || true
 fi
@@ -175,8 +176,8 @@ if [[ "$returnCode" -ne "0" ]]; then
   then
     fixAutoConfigure
   else
-      echo "Conflicts"
-      exit 1
+    echo "Conflicts"
+    exit 1
   fi
 fi
 
@@ -189,14 +190,15 @@ echo "Success $tag" >> $WORKSPACE/mergedTags
 
 if [ "$doTagging" == "true" ]; then
   cd "$REPO"
-  git tag  -d "$tag" || true
+  git tag -d "$tag" || true
   git branch -D "$tag" || true
   git branch "$tag"
-  git tag  -f "$tag"
+  git tag -f "$tag"
 fi
 
 cd "$REPO"
 
+# Remove temporary tags
 git tag | grep ".*\-root" | while read tag
 do
   git tag -d $tag || true

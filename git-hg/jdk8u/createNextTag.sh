@@ -27,7 +27,7 @@ git reset --hard
 
 
 cd $SCRIPT_DIR
-# move from jdk8u181-b13 to jdk8u192-b12
+# move release branch on i.e move from jdk8u181-b13 to jdk8u192-b12
 ./merge.sh -t -T "$TAG" -b "release"
 
 
