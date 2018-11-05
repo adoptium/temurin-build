@@ -191,6 +191,10 @@ configuringVersionStringParameter()
     addConfigureArg "--without-version-pre" ""
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
     addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
+    addConfigureArg "--with-vendor-url=" "https://adoptopenjdk.net/"
+    addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
+    addConfigureArg "--with-vendor-vm-bug-url=" "/dev/null"
+
 
   fi
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
