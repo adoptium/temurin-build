@@ -10,7 +10,7 @@ function createTag() {
   tag=$1
   git tag -d "$tag" || true
   git tag -f "$tag"
-  git branch -D "$tag"
+  git branch -D "$tag" || true
   git branch "$tag"
 }
 
