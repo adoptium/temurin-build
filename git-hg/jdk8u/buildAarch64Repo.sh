@@ -2,7 +2,7 @@
 
 set -eux
 
-HG_REPO="https://hg.openjdk.java.net/aarch64-port/jdk8u"
+HG_REPO="https://hg.openjdk.java.net/aarch64-port/jdk8u-shenandoah"
 
 source constants.sh
 
@@ -30,8 +30,8 @@ cd "$SCRIPT_DIR"
 
 ################################################
 ## Build master
-## Init master to be synced at aarch64-jdk8u181-b13
-./merge.sh -r -T "aarch64-jdk8u181-b13" -s "${HG_REPO}"
+## Init master to be synced at aarch64-shenandoah-jdk8u191-b12
+./merge.sh -r -T "aarch64-shenandoah-jdk8u191-b12" -s "${HG_REPO}"
 ################################################
 
 ################################################
@@ -39,7 +39,7 @@ cd "$SCRIPT_DIR"
 ## dev branch is HEAD track with our patches
 cd "$REPO"
 
-# as repo has just been inited to jdk8u181-b13 dev will be at jdk8u181-b13
+# as repo has just been inited to aarch64-shenandoah-jdk8u191-b12 dev will be at aarch64-shenandoah-jdk8u191-b12
 git checkout -b dev
 
 # Apply our patches
@@ -71,11 +71,19 @@ cd "$SCRIPT_DIR"
 ./merge.sh -t -i -T "jdk8u172-b11" -b "release" -s "${HG_REPO}"
 ./merge.sh -t -T "aarch64-jdk8u181-b13" -b "release" -s "${HG_REPO}"
 
+# Apply the company patches
 cd $REPO
 git checkout release
 git am $PATCHES/company_name.patch
 git am $PATCHES/0001-Set-vendor-information.patch
 
+# Create a saner looking tag
 createTag "jdk8u181-b13"
+
+cd "$SCRIPT_DIR"
+./merge.sh -t -T "aarch64-shenandoah-jdk8u191-b12" -b "release" -s "${HG_REPO}"
+
+# Create a saner looking tag
+createTag "jdk8u191-b12"
 
 ################################################
