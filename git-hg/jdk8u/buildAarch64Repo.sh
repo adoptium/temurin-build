@@ -2,13 +2,17 @@
 
 set -eux
 
+HG_REPO="https://hg.openjdk.java.net/aarch64-port/jdk8u-shenandoah"
+
 source constants.sh
 
 function createTag() {
   tag=$1
+
+  cd $REPO
   git tag -d "$tag" || true
   git tag -f "$tag"
-  git branch -D "$tag"
+  git branch -D "$tag" || true
   git branch "$tag"
 }
 
@@ -24,12 +28,12 @@ fi
 cd "$SCRIPT_DIR"
 
 # update mirrors
-./merge.sh -u
+./merge.sh -u -s "${HG_REPO}"
 
 ################################################
 ## Build master
-## Init master to be synced at jdk8u181-b13
-./merge.sh -r -T "jdk8u181-b13"
+## Init master to be synced at aarch64-shenandoah-jdk8u191-b12
+./merge.sh -r -T "aarch64-shenandoah-jdk8u191-b12" -s "${HG_REPO}"
 ################################################
 
 ################################################
@@ -37,23 +41,16 @@ cd "$SCRIPT_DIR"
 ## dev branch is HEAD track with our patches
 cd "$REPO"
 
-# as repo has just been inited to jdk8u181-b13 dev will be at jdk8u181-b13
+# as repo has just been inited to aarch64-shenandoah-jdk8u191-b12 dev will be at aarch64-shenandoah-jdk8u191-b12
 git checkout -b dev
 
 # Apply our patches
 git am $PATCHES/company_name.patch
-
-# Update dev to jdk8u192-b12
-cd "$SCRIPT_DIR"
-./merge.sh -T "jdk8u192-b12" -b "dev"
-
-# Apply vendor patch
-cd "$REPO"
 git am $PATCHES/0001-Set-vendor-information.patch
 
 # Update dev to head
 cd $SCRIPT_DIR
-./merge.sh -T "HEAD" -b "dev"
+./merge.sh -T "HEAD" -b "dev" -s "${HG_REPO}"
 ################################################
 
 ################################################
@@ -64,7 +61,7 @@ git checkout master
 cd $SCRIPT_DIR
 
 # Update dev to HEAD
-./merge.sh -T "HEAD" -b "master"
+./merge.sh -T "HEAD" -b "master" -s "${HG_REPO}"
 ################################################
 
 ################################################
@@ -73,38 +70,26 @@ cd $SCRIPT_DIR
 cd "$SCRIPT_DIR"
 
 # sync and tag the release branch as some key milestones
-./merge.sh -t -i -T "jdk8u144-b34" -b "release"
-./merge.sh -t -T "jdk8u162-b12" -b "release"
-./merge.sh -t -T "jdk8u172-b11" -b "release"
-./merge.sh -t -T "jdk8u181-b13" -b "release"
+./merge.sh -t -i -T "jdk8u172-b11" -b "release" -s "${HG_REPO}"
+./merge.sh -t -T "aarch64-jdk8u181-b13" -b "release" -s "${HG_REPO}"
 
+# Apply the company patches
 cd $REPO
 git checkout release
-git am $PATCHES/company_name.patch
-git am $PATCHES/ppc64le_1.patch
-git am $PATCHES/ppc64le_2.patch
+git am --exclude common/autoconf/generated-configure.sh $PATCHES/company_name.patch
+git am $PATCHES/0001-Set-vendor-information.patch
 
-createTag "jdk8u181-b13"
-
-cd $SCRIPT_DIR
-./merge.sh -t -T "jdk8u192-b12" -b "release"
-
-###############################################
-# Fix jdk8u192-b12 for ppc64le
-cd $REPO
-git checkout release
-git am $PATCHES/0001-Backport-8073139.patch
 chmod +x ./common/autoconf/autogen.sh
 ./common/autoconf/autogen.sh
 git commit -a -m "autogen"
 
-createTag "jdk8u192-b12"
-###############################################
+# Create a saner looking tag
+createTag "jdk8u181-b13"
 
-cd $REPO
-git checkout release
-git am $PATCHES/0001-Set-vendor-information.patch
+cd "$SCRIPT_DIR"
+./merge.sh -t -T "aarch64-shenandoah-jdk8u191-b12" -b "release" -s "${HG_REPO}"
+
+# Create a saner looking tag
+createTag "jdk8u191-b12"
 
 ################################################
-
-
