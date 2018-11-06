@@ -46,9 +46,16 @@ git checkout -b dev
 # Apply our patches
 git am $PATCHES/company_name.patch
 
-cd $SCRIPT_DIR
+# Update dev to jdk8u192-b12
+cd "$SCRIPT_DIR"
+./merge.sh -T "jdk8u192-b12" -b "dev"
 
-# Update dev to HEAD
+# Apply vendor patch
+cd "$REPO"
+git am $PATCHES/0001-Set-vendor-information.patch
+
+# Update dev to head
+cd $SCRIPT_DIR
 ./merge.sh -T "HEAD" -b "dev"
 ################################################
 
@@ -101,6 +108,9 @@ git commit -a -m "autogen"
 createTag "jdk8u192-b12"
 ###############################################
 
+cd $REPO
+git checkout release
+git am $PATCHES/0001-Set-vendor-information.patch
 
 ################################################
 
