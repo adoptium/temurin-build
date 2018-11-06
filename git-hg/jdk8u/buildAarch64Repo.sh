@@ -8,6 +8,8 @@ source constants.sh
 
 function createTag() {
   tag=$1
+
+  cd $REPO
   git tag -d "$tag" || true
   git tag -f "$tag"
   git branch -D "$tag" || true
