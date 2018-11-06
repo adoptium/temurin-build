@@ -74,8 +74,12 @@ cd "$SCRIPT_DIR"
 # Apply the company patches
 cd $REPO
 git checkout release
-git am $PATCHES/company_name.patch
+git am --exclude common/autoconf/generated-configure.sh $PATCHES/company_name.patch
 git am $PATCHES/0001-Set-vendor-information.patch
+
+chmod +x ./common/autoconf/autogen.sh
+./common/autoconf/autogen.sh
+git commit -a -m "autogen"
 
 # Create a saner looking tag
 createTag "jdk8u181-b13"
