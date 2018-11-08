@@ -48,15 +48,3 @@ function installGitRemoteHg() {
     fi
   fi
 }
-
-# Merge master into dev as we build off dev at the AdoptOpenJDK Build farm
-# dev contains patches that AdoptOpenJDK has beyond upstream OpenJDK
-function performMergeIntoDevFromMaster() {
-  git fetch origin dev || exit 1
-  git checkout dev || git checkout -b dev origin/dev
-  git reset --hard origin/dev || exit 1
-  git pull origin dev || exit 1
-  git rebase -p master || exit 1
-  git log --oneline origin/dev..dev
-  git push origin dev || exit 1
-}
