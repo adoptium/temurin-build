@@ -108,7 +108,7 @@ if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JD
     fi
 fi
 
-if [ "${ARCHITECTURE}" == "aarch64" ] && "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+if [ "${ARCHITECTURE}" == "aarch64" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u"
 fi
