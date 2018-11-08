@@ -93,12 +93,7 @@ checkoutAndCloneOpenJDKGitRepo()
 # Set the git clone arguments
 setGitCloneArguments() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
-  local git_remote_repo_address;
-  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-     git_remote_repo_address="git@github.com:${BUILD_CONFIG[REPOSITORY]}.git"
-  else
-     git_remote_repo_address="https://github.com/${BUILD_CONFIG[REPOSITORY]}.git"
-  fi
+  local git_remote_repo_address="${BUILD_CONFIG[REPOSITORY]}.git"
 
   GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} '-b' "${BUILD_CONFIG[BRANCH]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
 }

@@ -153,9 +153,16 @@ setVariablesForConfigure() {
   BUILD_CONFIG[JRE_PATH]=$jre_path
 }
 
-# Set the repository to build from
+# Set the repository to build from, defaults to AdoptOpenJDK if not set by the user
 setRepository() {
-  local repository="${BUILD_CONFIG[REPOSITORY]:-adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+
+  local repository;
+  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
+    repository="${BUILD_CONFIG[REPOSITORY]:-git@github.com:adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+  else
+    repository="${BUILD_CONFIG[REPOSITORY]:-https://github.com/adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+  fi
+
   repository="$(echo "${repository}" | awk '{print tolower($0)}')";
 
   BUILD_CONFIG[REPOSITORY]=$repository;
