@@ -76,8 +76,6 @@ function addMercurialUpstream() {
     git reset --hard origin/"$BRANCH" || echo "Not resetting as no upstream exists"
   fi
 
-  git pull origin "$BRANCH"
-
   # shellcheck disable=SC2143
   if [ -z "$(git remote -v | grep 'hg')" ] ; then
     echo "Initial setup of hg::https://hg.openjdk.java.net/$HG_REPO"
