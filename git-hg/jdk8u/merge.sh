@@ -4,11 +4,13 @@ set -exu
 
 source constants.sh
 
+doInit="false"
+doReset="false"
+doTagging="false"
+doUpdate="false"
+hgRepo="https://hg.openjdk.java.net/jdk8u/jdk8u"
 tag="jdk8u172-b08"
 workingBranch="master"
-doReset="false"
-doInit="false"
-doTagging="false"
 
 function initRepo() {
   tag=$1
@@ -87,11 +89,13 @@ function updateRepo() {
 
 }
 
+# We pass in the repo we want to mirror as the first arg
 function updateMirrors() {
+
+  HG_REPO=$1
+
   mkdir -p "$MIRROR"
   cd "$MIRROR" || exit 1
-
-  HG_REPO="https://hg.openjdk.java.net/jdk8u/jdk8u"
 
   updateRepo "root" "${HG_REPO}"
 
@@ -106,28 +110,29 @@ function fixAutoConfigure() {
     git commit -a --no-edit
 }
 
-
-while getopts "iturT:b:" opt; do
+while getopts "b:irts:T:u" opt; do
     case "${opt}" in
+        b)
+            workingBranch=${OPTARG}
+            ;;
         i)
             doInit="true"
-            ;;
-        t)
-            doTagging="true"
-            ;;
-        u)
-            updateMirrors
-            exit
             ;;
         r)
             doReset="true"
             doInit="true"
             ;;
+        s)
+            hgRepo=${OPTARG}
+            ;;
+        t)
+            doTagging="true"
+            ;;
         T)
             tag=${OPTARG}
             ;;
-        b)
-            workingBranch=${OPTARG}
+        u)
+            doUpdate="true"
             ;;
         *)
             usage
@@ -137,6 +142,10 @@ while getopts "iturT:b:" opt; do
 done
 shift $((OPTIND-1))
 
+if [ "$doUpdate" == "true" ]; then
+  updateMirrors $hgRepo
+  exit
+fi
 
 if [ "$doReset" == "true" ]; then
   initRepo $tag
