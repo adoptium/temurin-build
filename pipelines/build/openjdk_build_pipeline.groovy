@@ -18,7 +18,6 @@ import groovy.json.JsonSlurper
 import JobHelper
 import NodeHelper
 
-
 /**
  * This file is a template for running a build for a given configuration
  * A configuration is for example jdk10u-mac-x64-hotspot.
@@ -148,7 +147,7 @@ try {
     def enableTests = ENABLE_TESTS == "true"
 
     stage("build") {
-        if(NodeHelper.nodeIsOnline(NODE_LABEL)) {
+        if (NodeHelper.nodeIsOnline(NODE_LABEL)) {
             node(NODE_LABEL) {
                 checkout scm
                 try {
@@ -180,5 +179,6 @@ try {
 
 } catch (Exception e) {
     currentBuild.result = 'FAILURE'
+    println "Execution error: " + e.getMessage()
 }
 

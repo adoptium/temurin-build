@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Generates markdown table of build job status
-
+# Generates markdown table of build and test job status
 
 echo "{| class=\"wikitable\""
 echo "|-"
@@ -28,8 +27,6 @@ do
     if [ "$arch" == "x64" ]; then
         arch="x86-64"
     fi
-
-
 
     buildOs=$(echo "${buildName}" | cut -d "-" -f 1)
     os=$buildOs

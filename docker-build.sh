@@ -40,7 +40,8 @@ createPersistentDockerDataVolume()
 
     # shellcheck disable=SC2154
     echo "Removing old volumes and containers"
-    ${BUILD_CONFIG[DOCKER]} rm -f "$(${BUILD_CONFIG[DOCKER]} ps -a --no-trunc | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | cut -d' ' -f1)" || true
+    # shellcheck disable=SC2046
+    ${BUILD_CONFIG[DOCKER]} rm -f $(${BUILD_CONFIG[DOCKER]} ps -a --no-trunc -q -f volume="${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}") || true
     ${BUILD_CONFIG[DOCKER]} volume rm -f "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
 
     # shellcheck disable=SC2154
@@ -126,17 +127,26 @@ buildOpenJDKViaDocker()
   if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
      gitSshAccess=(-v "${HOME}/.ssh:/home/build/.ssh" -v "${SSH_AUTH_SOCK}:/build-ssh-agent" -e "SSH_AUTH_SOCK=/build-ssh-agent")
   fi
-  
+ 
+  local dockerMode=()
+  local dockerEntrypoint=(--entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}")
+  if [[ "${BUILD_CONFIG[DEBUG_DOCKER]}" == "true" ]] ; then
+     dockerMode=(-t -i)
+     dockerEntrypoint=(--entrypoint "/bin/sh" "${BUILD_CONFIG[CONTAINER_NAME]}" -c "echo 'DEBUG DOCKER BUILD\\nTo build jdk run\\n/openjdk/sbin/build.sh'; /bin/bash")
+  fi
+
   # shellcheck disable=SC2140
   # Pass in the last important variables into the Docker container and call
   # the /openjdk/sbin/build.sh script inside
-  ${BUILD_CONFIG[DOCKER]} run -lst \
-      --cpuset-cpus="${cpuSet}" \
+  ${BUILD_CONFIG[DOCKER]} run \
+       "${dockerMode[@]}" \
+       --cpuset-cpus="${cpuSet}" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
-       -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" \
+       -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}:Z" \
        "${gitSshAccess[@]}" \
+       -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
        -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
-       --entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}"
+       "${dockerEntrypoint[@]}"
   
   # If we didn't specify to keep the container then remove it
   if [[ -z ${BUILD_CONFIG[KEEP_CONTAINER]} ]] ; then

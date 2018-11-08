@@ -38,7 +38,7 @@ EXTENSION=""
 # shellcheck disable=SC2034
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
 BUILD_ARGS=${BUILD_ARGS:-""}
-VARIANT_ARG="${JAVA_TO_BUILD}-"
+VARIANT_ARG=""
 
 if [ -z "${JDK_BOOT_VERSION}" ]
 then
@@ -58,7 +58,6 @@ case "${JDK_BOOT_VERSION}" in
       *)    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK11_BOOT_DIR}";;
 esac
 
-
 if [ ! -d "${JDK_BOOT_DIR}" ]
 then
   export JDK_BOOT_DIR="${JAVA_HOME}"
@@ -66,19 +65,18 @@ fi
 
 echo "Boot jdk: ${JDK_BOOT_DIR}"
 
-
 if [ "${OPERATING_SYSTEM}" == "linux" ] ; then
   EXTENSION="tar.gz"
-
-  if [ ! -z "${TAG}" ]; then
-    OPTIONS="${OPTIONS} --tag $TAG"
-  fi
 elif [ "${OPERATING_SYSTEM}" == "aix" ] ; then
   EXTENSION="tar.gz"
 elif [ "${OPERATING_SYSTEM}" == "mac" ] ; then
   EXTENSION="tar.gz"
 elif [ "${OPERATING_SYSTEM}" == "windows" ] ; then
   EXTENSION=zip
+fi
+
+if [ ! -z "${TAG}" ]; then
+  OPTIONS="${OPTIONS} --tag $TAG"
 fi
 
 if [ ! -z "${BRANCH}" ]
@@ -92,15 +90,27 @@ source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
 # Set the file name
 JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr '[:lower:]' '[:upper:]')
 
+FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}-jdk_${ARCHITECTURE}_${OPERATING_SYSTEM}_${VARIANT}"
+
 if [ ! -z "${ADDITIONAL_FILE_NAME_TAG}" ]; then
-  FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${OPERATING_SYSTEM}_${VARIANT}_${ADDITIONAL_FILE_NAME_TAG}_${TIMESTAMP}.${EXTENSION}"
-else
-  FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}_${ARCHITECTURE}_${OPERATING_SYSTEM}_${VARIANT}_${TIMESTAMP}.${EXTENSION}"
+  FILENAME="${FILENAME}_${ADDITIONAL_FILE_NAME_TAG}"
 fi
+
+if [ -z "${TAG}" ]; then
+  FILENAME="${FILENAME}_${TIMESTAMP}"
+else
+  nameTag=$(echo "${TAG}" | sed -e 's/jdk//' -e 's/-//' -e 's/+/_/g')
+  FILENAME="${FILENAME}_${nameTag}"
+fi
+
+FILENAME="${FILENAME}.${EXTENSION}"
+
 
 echo "Filename will be: $FILENAME"
 
 export BUILD_ARGS="${BUILD_ARGS} --use-jep319-certs"
+
+echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
 
 # shellcheck disable=SC2086
 bash "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"

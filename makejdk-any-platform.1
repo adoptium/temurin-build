@@ -84,6 +84,9 @@ This is typically used in conjunction with \fB<-T>\fR to create a custom path
 .BR \-D ", " \-\-docker
 build OpenJDK in a docker container.
 .TP
+.BR \-\-debug-docker
+debug OpenJDK build script in a docker container. Only valid if \fB-D\fR is selected.
+.TP
 .BR \-\-disable-shallow-git-clone
 disable the default \fB--depth=1\fR shallow cloning of git repo(s).
 .TP
@@ -128,6 +131,8 @@ specify the location to clone the OpenJDK source (and dependencies) to.
 .TP
 .BR \-S ", " \-\-ssh
 use ssh when cloning git.
+In case of docker build add github.com to ~/.ssh/known_hosts (e.g.: ssh github.com)
+if your ssh key has a passphrase, add it to ssh-agent (e.g.: ssh-add ~/.ssh/id_rsa)
 .TP
 .BR \-\-sign \fI<path>\fR
 specify the location for the certificate.  For windows this is the p12

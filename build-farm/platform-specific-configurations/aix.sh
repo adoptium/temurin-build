@@ -27,6 +27,11 @@ then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread"
 fi
 
+#if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
+#then
+#  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched"
+#fi
+
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 
 if [ "${ARCHITECTURE}" == "x64" ] && [ "${VARIANT}" == "openj9" ];
@@ -47,6 +52,11 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk10_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar DF=/usr/sysv/bin/df"
   fi
 fi
+
+if [ "${VARIANT}" == "openj9" ]; then
+  export LDR_CNTRL=MAXDATA=0x80000000 
+fi
+echo LDR_CNTRL=$LDR_CNTRL
 
 if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ];
 then

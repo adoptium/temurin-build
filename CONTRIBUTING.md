@@ -42,6 +42,9 @@ We don't place explicit copyright statements in the project source files.  The p
 Finally, for similar reasons to avoiding individual copyright statements, we don't maintain `@author` tags in source files.  There are good arguments to suggest that [author tags discourage open contribution](https://producingoss.com/en/managing-volunteers.html#territoriality), and we depend upon Git to maintain that information for the project.
 
 ### Ensuring high quality
+
+If you're changing a shellscript, please make sure you run `./shellcheck.sh` before submitting your PR.
+
 After we receive your pull request the [Travis pull request builder](https://travis-ci.org/AdoptOpenJDK/openjdk-build) will test your changes and ensure they meet the coding style guidelines.  Watch for the results posted as a comment to the PR, and investigate and fix any failures.
 
 Fixes can simply be pushed to the same branch from which you opened your pull request.  Travis will automatically re-test when new commits are pushed and update the results.

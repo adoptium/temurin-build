@@ -43,7 +43,6 @@ source "$SCRIPT_DIR/common/constants.sh"
 source "$SCRIPT_DIR/common/common.sh"
 
 export OPENJDK_REPO_TAG
-export OPENJDK_DIR
 export JRE_TARGET_PATH
 export CONFIGURE_ARGS=""
 export MAKE_TEST_IMAGE=""
@@ -52,8 +51,6 @@ export GIT_CLONE_ARGUMENTS=()
 # Parse the CL arguments, defers to the shared function in common-functions.sh
 function parseArguments() {
     parseConfigurationArguments "$@"
-
-    OPENJDK_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 }
 
 # Add an argument to the configure call
@@ -194,6 +191,10 @@ configuringVersionStringParameter()
     addConfigureArg "--without-version-pre" ""
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
     addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
+    addConfigureArg "--with-vendor-url=" "https://adoptopenjdk.net/"
+    addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
+    addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-build/issues"
+
 
   fi
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
@@ -207,10 +208,6 @@ buildingTheRestOfTheConfigParameters()
   fi
 
   addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
-
-  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]; then
-    addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/cacerts_area/security/cacerts"
-  fi
 
   addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
 
@@ -237,7 +234,10 @@ configureFreetypeLocation() {
   if [[ ! "${CONFIGURE_ARGS}" =~ "--with-freetype" ]]; then
     if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
       if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-        addConfigureArg "--with-freetype-src=" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype"
+        case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
+           jdk9*|jdk10*) addConfigureArg "--with-freetype-src=" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" ;;
+           *) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled} ;;
+        esac
       else
         local freetypeDir=BUILD_CONFIG[FREETYPE_DIRECTORY]
         case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
@@ -258,11 +258,22 @@ configureCommandParameters()
   configuringVersionStringParameter
   configuringBootJDKConfigureParameter
 
-  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
+
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+      # This is unfortunatly required as if the path does not start with "/cygdrive" the make scripts are unable to find the "/closed/adds" dir
+      local addsDir="/cygdrive/c/cygwin64/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/adds"
+      echo "adding source route -with-add-source-root=${addsDir}"
+      addConfigureArg "--with-add-source-root=" "${addsDir}"
+    fi
   else
     echo "Building up the configure command..."
     buildingTheRestOfTheConfigParameters
+  fi
+
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]; then
+    addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/cacerts_area/security/cacerts"
   fi
 
   # Now we add any configure arguments the user has specified on the command line.
@@ -327,8 +338,16 @@ executeTemplatedFile() {
 # Print the version string so we know what we've produced
 printJavaVersionString()
 {
-  # shellcheck disable=SC2086
-  PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+  "darwin")
+    # shellcheck disable=SC2086
+    PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]}/Contents/Home)
+  ;;
+  *)
+    # shellcheck disable=SC2086
+    PRODUCT_HOME=$(ls -d ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
+  ;;
+  esac
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "'$PRODUCT_HOME' found"
      if ! "$PRODUCT_HOME"/bin/java -version; then
@@ -358,37 +377,46 @@ removingUnnecessaryFiles()
 
   echo "Currently at '${PWD}'"
 
-  echo "moving ${BUILD_CONFIG[JDK_PATH]} to ${OPENJDK_REPO_TAG}"
+  echo "moving "$(ls -d ${BUILD_CONFIG[JDK_PATH]})" to ${OPENJDK_REPO_TAG}"
   rm -rf "${OPENJDK_REPO_TAG}" || true
-  mv "${BUILD_CONFIG[JDK_PATH]}" "${OPENJDK_REPO_TAG}"
+  mv "$(ls -d ${BUILD_CONFIG[JDK_PATH]})" "${OPENJDK_REPO_TAG}"
 
-  if [ -d "${BUILD_CONFIG[JRE_PATH]}" ]
+  if [ -d "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" ]
   then
     JRE_TARGET_PATH="${OPENJDK_REPO_TAG}-jre"
     [ "${JRE_TARGET_PATH}" == "${OPENJDK_REPO_TAG}" ] && JRE_TARGET_PATH="${OPENJDK_REPO_TAG}.jre"
-    echo "moving ${BUILD_CONFIG[JRE_PATH]} to ${JRE_TARGET_PATH}"
+    echo "moving $(ls -d ${BUILD_CONFIG[JRE_PATH]}) to ${JRE_TARGET_PATH}"
     rm -rf "${JRE_TARGET_PATH}" || true
-    mv "${BUILD_CONFIG[JRE_PATH]}" "${JRE_TARGET_PATH}"
+    mv "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" "${JRE_TARGET_PATH}"
 
-    rm -rf "${JRE_TARGET_PATH}"/demo/applets || true
-    rm -rf "${JRE_TARGET_PATH}"/demo/jfc/Font2DTest || true
-    rm -rf "${JRE_TARGET_PATH}"/demo/jfc/SwingApplet || true
+    case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+      "darwin") JRE_TARGET="${JRE_TARGET_PATH}/Contents/Home" ;;
+      *) JRE_TARGET="${JRE_TARGET_PATH}" ;;
+    esac
+    rm -rf "${JRE_TARGET}"/demo/applets || true
+    rm -rf "${JRE_TARGET}"/demo/jfc/Font2DTest || true
+    rm -rf "${JRE_TARGET}"/demo/jfc/SwingApplet || true
   fi
 
-
   # Remove files we don't need
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/applets || true
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/Font2DTest || true
-  rm -rf "${OPENJDK_REPO_TAG}"/demo/jfc/SwingApplet || true
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    "darwin") JDK_TARGET="${OPENJDK_REPO_TAG}/Contents/Home" ;;
+    *) JDK_TARGET="${OPENJDK_REPO_TAG}" ;;
+  esac
+  rm -rf "${JDK_TARGET}"/demo/applets || true
+  rm -rf "${JDK_TARGET}"/demo/jfc/Font2DTest || true
+  rm -rf "${JDK_TARGET}"/demo/jfc/SwingApplet || true
 
   find . -name "*.diz" -type f -delete || true
+  find . -name "*.pdb" -type f -delete || true
+  find . -name "*.map" -type f -delete || true
 
   echo "Finished removing unnecessary files from ${OPENJDK_REPO_TAG}"
 }
 
 # If on a Mac, mac a copy of the font lib as required
 makeACopyOfLibFreeFontForMacOSX() {
-    IMAGE_DIRECTORY=$1
+    IMAGE_DIRECTORY="${1}/Contents/Home"
     PERFORM_COPYING=$2
 
     if [ ! -d "${IMAGE_DIRECTORY}" ]; then
@@ -484,7 +512,8 @@ createOpenJDKTarArchive()
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 
   if [ -d "${JRE_TARGET_PATH}" ]; then
-    createArchive "${JRE_TARGET_PATH}" "${BUILD_CONFIG[TARGET_FILE_NAME]/_/-jre_}"
+    local jreName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-jre/')
+    createArchive "${JRE_TARGET_PATH}" "${jreName}"
   fi
   createArchive "${OPENJDK_REPO_TAG}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }

@@ -42,6 +42,7 @@ CONTAINER_NAME
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
+DEBUG_DOCKER
 DOCKER
 DOCKER_FILE_PATH
 DOCKER_SOURCE_VOLUME_NAME
@@ -153,6 +154,13 @@ function parseConfigurationArguments() {
     while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
       opt="$1";
       shift;
+
+      echo "Parsing opt: ${opt}"
+      if [ -n "${1-}" ]
+      then
+        echo "Possible opt arg: $1"
+      fi
+
       case "$opt" in
         "--" ) break 2;;
 
@@ -180,8 +188,11 @@ function parseConfigurationArguments() {
         "--docker" | "-D" )
         BUILD_CONFIG[USE_DOCKER]="true";;
 
+        "--debug-docker" )
+        BUILD_CONFIG[DEBUG_DOCKER]="true";;
+
         "--disable-shallow-git-clone" )
-        BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
+        BUILD_CONFIG[SHALLOW_CLONE_OPTION]="";;
 
         "--freetype-dir" | "-f" )
         BUILD_CONFIG[FREETYPE_DIRECTORY]="$1"; shift;;
@@ -219,6 +230,8 @@ function parseConfigurationArguments() {
         "--ssh" | "-S" )
         BUILD_CONFIG[USE_SSH]=true;;
 
+        # Signing is a separate step on the AdoptOpenJDK build farm itself
+        # JIC you're wondering why you don't see this get set there.
         "--sign" )
         BUILD_CONFIG[SIGN]=true; BUILD_CONFIG[CERTIFICATE]="$1"; shift;;
 
@@ -241,7 +254,8 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[USE_JEP319_CERTS]=true;;
 
         "--version"  | "-v" )
-        setOpenJdkVersion "$1"; shift;;
+        setOpenJdkVersion "$1"
+        setDockerVolumeSuffix "$1"; shift;;
 
         "--jvm-variant"  | "-V" )
         BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
@@ -266,6 +280,7 @@ function setBranch() {
 
 # Set the config defaults
 function configDefaults() {
+ 
   # The OS kernel name, e.g. 'darwin' for Mac OS X
   BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
 
@@ -317,6 +332,9 @@ function configDefaults() {
 
   # Use Docker to build (defaults to false)
   BUILD_CONFIG[USE_DOCKER]=${BUILD_CONFIG[USE_DOCKER]:-false}
+  
+  # Alow to debug docker build.sh script (dafult to false)
+  BUILD_CONFIG[DEBUG_DOCKER]=${BUILD_CONFIG[DEBUG_DOCKER]:-false}
 
   # Location of DockerFile and where scripts get copied to inside the container
   BUILD_CONFIG[DOCKER_FILE_PATH]=${BUILD_CONFIG[DOCKER_FILE_PATH]:-""}

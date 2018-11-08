@@ -41,6 +41,16 @@ then
   fi
 fi
 
+if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
+then
+  if [ "${ARCHITECTURE}" == "s390x" ]
+  then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/usr/local/openssl-1.1.1 --enable-openssl-bundling"
+  else
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
+  fi
+fi
+
 if [ "${ARCHITECTURE}" == "ppc64le" ]
 then
   export LANG=C
@@ -96,4 +106,9 @@ if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JD
       [ -r /usr/local/gcc/bin/g++-7.3 ] && export CXX=/usr/local/gcc/bin/g++-7.3
       export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
     fi
+fi
+
+if [ "${ARCHITECTURE}" == "aarch64" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+then
+  export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u"
 fi

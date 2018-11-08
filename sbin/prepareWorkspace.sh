@@ -57,12 +57,6 @@ checkoutAndCloneOpenJDKGitRepo()
       echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
       sleep 10
       echo "Pulling latest changes from git openjdk source repository"
-      git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
-      git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
-      if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
-        git checkout "${BUILD_CONFIG[TAG]}"
-      fi
-      git clean -ffdx
     elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
       echo "Removing current git repo as it is the wrong type"
       rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
@@ -82,8 +76,12 @@ checkoutAndCloneOpenJDKGitRepo()
   git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}"
   git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
   git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
-  if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
+
+  # Openj9 does not release from git tags
+  if [ ! -z "${BUILD_CONFIG[TAG]}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "openj9" ]; then
+    git fetch origin "refs/tags/${BUILD_CONFIG[TAG]}:refs/tags/${BUILD_CONFIG[TAG]}"
     git checkout "${BUILD_CONFIG[TAG]}"
+    git reset --hard
   fi
   git clean -ffdx
 
@@ -95,12 +93,7 @@ checkoutAndCloneOpenJDKGitRepo()
 # Set the git clone arguments
 setGitCloneArguments() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
-  local git_remote_repo_address;
-  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-     git_remote_repo_address="git@github.com:${BUILD_CONFIG[REPOSITORY]}.git"
-  else
-     git_remote_repo_address="https://github.com/${BUILD_CONFIG[REPOSITORY]}.git"
-  fi
+  local git_remote_repo_address="${BUILD_CONFIG[REPOSITORY]}.git"
 
   GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} '-b' "${BUILD_CONFIG[BRANCH]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
 }
@@ -109,7 +102,11 @@ updateOpenj9Sources() {
   # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    bash get_source.sh
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+      bash get_source.sh --openssl-version=1.1.1
+    else
+      bash get_source.sh
+    fi
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
@@ -188,7 +185,12 @@ checkingAndDownloadingFreeType()
   if [[ ! -z "$FOUND_FREETYPE" ]] ; then
     echo "Skipping FreeType download"
   else
-    curl -L -o "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
+    # Temporary fudge as curl on my windows boxes is exiting with RC=127
+    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+      wget -O "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
+    else
+      curl -L -o "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
+    fi
 
     rm -rf "./freetype" || true
     mkdir -p "freetype" || true
@@ -249,9 +251,14 @@ checkingAndDownloadCaCerts()
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]
     then
       echo "Requested use of JEP319 certs"
-      local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk10u/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
+      local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk11/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
       mkdir -p "security"
-      curl -L -o "./security/cacerts" "${caLink}"
+      # Temporary fudge as curl on my windows boxes is exiting with RC=127
+      if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+         wget -O "./security/cacerts" "${caLink}"
+      else
+         curl -L -o "./security/cacerts" "${caLink}"
+      fi
     fi
   else
     git init

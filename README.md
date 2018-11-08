@@ -88,7 +88,7 @@ VERSIONS
 jdk8u - Build Java 8, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk8u
 jdk9u - Build Java 9, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk9u
 jdk10u - Build Java 10, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk10u
-jdk11 - Build Java 10, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk11
+jdk11 - Build Java 11, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk11
 jfx - Build OpenJFX, defaults to https://github.com/AdoptOpenJDK/openjdk-jfx
 amber - Build Project Amber, defaults to https://github.com/AdoptOpenJDK/openjdk-amber
 
@@ -104,6 +104,10 @@ branch which may contain a very small diff set to the master branch
 specify the OpenJDK build number to build from, e.g. b12.
 For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 9.0.4+11 (for Java 9+) with the build number being the suffix at the end.
+
+--build-variant <variant_name>
+specify a OpenJDK build variant, e.g. openj9.
+For reference, the default variant is hotspot and does not need to be specified.
 
 -c, --clean-docker-build
 removes the existing docker container and persistent volume before starting
@@ -122,6 +126,9 @@ This is typically used in conjunction with -T to create a custom path
 
 -D, --docker
 build OpenJDK in a docker container.
+
+--debug-docker
+debug OpenJDK build script in a docker container. Only valid if -D is selected.
 
 --disable-shallow-git-clone
 disable the default fB--depth=1 shallow cloning of git repo(s).
@@ -200,10 +207,6 @@ This is typically used in conjunction with -b.
 --use-jep319-certs
 Use certs defined in JEP319 in Java 8/9. This will increase the volume of traffic downloaded, however will 
 provide an upto date ca cert list.
-
--v, --build-variant <variant_name>
-specify a OpenJDK build variant, e.g. openj9.
-For reference, the default variant is hotspot and does not need to be specified.
 
 -v, --version
 specify the OpenJDK version to build e.g. jdk8u.  Left for backwards compatibility.

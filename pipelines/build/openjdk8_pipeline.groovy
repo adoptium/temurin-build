@@ -16,8 +16,20 @@ def buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
-                additionalNodeLabels: 'build-macstadium-macos1010-1',
+                additionalNodeLabels: [
+                        hotspot: 'build-macstadium-macos1010-1',
+                        openj9:  'build-macstadium-macos1010-2'
+                ],
                 test                : ['openjdktest', 'systemtest']
+        ],
+
+        x64MacXL    : [
+                os                   : 'mac',
+                arch                 : 'x64',
+                additionalNodeLabels : 'build-macstadium-macos1010-2',
+                test                 : ['openjdktest', 'systemtest', 'perftest'],
+                additionalFileNameTag: "macosXL",
+                configureArgs        : '--with-noncompressedrefs'
         ],
 
         x64Linux  : [
@@ -36,8 +48,10 @@ def buildConfigurations = [
                 arch                : 'x64',
                 additionalNodeLabels: [
                         hotspot: 'win2008',
-                        //Pin to build-softlayer-win2012r2-x64-2 as build-softlayer-win2012r2-x64-1 may have issues
-                        openj9:  'win2012&&build-softlayer-win2012r2-x64-2'
+                        openj9:  'win2012&&mingw-cygwin'
+                ],
+                buildArgs: [
+                        openj9:  '--skip-freetype'
                 ],
                 test                : ['openjdktest']
         ],
@@ -47,15 +61,21 @@ def buildConfigurations = [
                 arch                : 'x86-32',
                 additionalNodeLabels: [
                         hotspot: 'win2008',
-                        openj9:  'win2012'
+                        openj9:  'win2012&&mingw-cygwin'
+                ],
+                buildArgs: [
+                        openj9:  '--skip-freetype'
                 ],
                 test                : ['openjdktest']
         ],
 
         ppc64Aix    : [
-                os                 : 'aix',
-                arch               : 'ppc64',
-                test               : false
+                os                  : 'aix',
+                arch                : 'ppc64',
+                test                : [
+                        nightly: false,
+                        release: ['openjdktest', 'systemtest']
+                ]
         ],
 
         s390xLinux    : [
@@ -87,8 +107,8 @@ def buildConfigurations = [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
-                test                 : false,
                 additionalFileNameTag: "linuxXL",
+                test                 : ['openjdktest', 'systemtest'],
                 configureArgs        : '--with-noncompressedrefs'
         ],
 ]

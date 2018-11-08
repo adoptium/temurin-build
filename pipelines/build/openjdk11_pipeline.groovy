@@ -16,8 +16,20 @@ def buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
-                additionalNodeLabels: 'build-macstadium-macos1010-1',
-                test                : ['openjdktest', 'systemtest']
+                additionalNodeLabels: [
+                        hotspot: 'build-macstadium-macos1010-1',
+                        openj9:  'build-macstadium-macos1010-2'
+                ],
+                test                : ['openjdktest', 'systemtest', 'perftest']
+        ],
+
+        x64MacXL    : [
+                os                   : 'mac',
+                arch                 : 'x64',
+                additionalNodeLabels : 'build-macstadium-macos1010-2',
+                test                 : ['openjdktest', 'systemtest', 'perftest'],
+                additionalFileNameTag: "macosXL",
+                configureArgs        : '--with-noncompressedrefs'
         ],
 
         x64Linux  : [
@@ -34,48 +46,56 @@ def buildConfigurations = [
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
-                additionalNodeLabels: 'win2012',
-                test                : ['openjdktest']
+                additionalNodeLabels: [
+                        hotspot: 'win2012',
+                        openj9:  'win2012&&vs2017'
+                ],
+                test                : ['openjdktest', 'perftest']
         ],
 
         x32Windows: [
                 os                  : 'windows',
                 arch                : 'x86-32',
-                additionalNodeLabels: 'win2012',
+                additionalNodeLabels: [
+                        hotspot: 'win2012',
+                        openj9:  'win2012&&mingw-standalone'
+                ],
                 test                : ['openjdktest']
         ],
 
         ppc64Aix    : [
                 os                  : 'aix',
                 arch                : 'ppc64',
-                test                : false
+                test                : [
+                        nightly: false,
+                        release: ['openjdktest', 'systemtest']
+                ]
         ],
 
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
                 additionalNodeLabels: 'build-marist-rhel74-s390x-2',
-                test                : ['openjdktest', 'systemtest']
+                test                : ['openjdktest', 'systemtest', 'perftest']
         ],
 
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                additionalNodeLabels: 'ubuntu',
-                test                : ['openjdktest', 'systemtest']
+                test                : ['openjdktest', 'systemtest', 'perftest']
         ],
 
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                : ['openjdktest']
+                test                : ['openjdktest', 'perftest']
         ],
 
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['openjdktest', 'systemtest']
+                test                : ['openjdktest', 'systemtest', 'perftest']
         ],
 
         /*
@@ -90,7 +110,7 @@ def buildConfigurations = [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
-                test                 : false,
+                test                 : ['openjdktest', 'systemtest'],
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
