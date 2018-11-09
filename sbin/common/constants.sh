@@ -17,7 +17,7 @@
 export JDK8_VERSION="jdk8u";
 export JDK9_VERSION="jdk9u";
 export JDK10_VERSION="jdk10u";
-export JDK11_VERSION="jdk11";
+export JDK11_VERSION="jdk11u";
 export JDKHEAD_VERSION="jdk";
 
 export JDK8_CORE_VERSION="jdk8";
