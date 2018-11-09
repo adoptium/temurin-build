@@ -99,6 +99,7 @@ doAnyBuildVariantOverrides()
     fi
   fi
 
+  BUILD_CONFIG[REPOSITORY]=${repository:-${BUILD_CONFIG[REPOSITORY]}};
   BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
 }
 
