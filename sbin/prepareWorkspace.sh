@@ -240,7 +240,7 @@ checkingAndDownloadCaCerts()
 {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 
-    echo "Retrieving cacerts file"
+  echo "Retrieving cacerts file"
   # Ensure it's the latest we pull in
   rm -rf "cacerts_area"
   mkdir "cacerts_area" || exit
@@ -251,7 +251,7 @@ checkingAndDownloadCaCerts()
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]
     then
       echo "Requested use of JEP319 certs"
-      local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk11/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
+      local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk11u/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
       mkdir -p "security"
       # Temporary fudge as curl on my windows boxes is exiting with RC=127
       if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then

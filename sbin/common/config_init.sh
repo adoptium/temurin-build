@@ -230,6 +230,8 @@ function parseConfigurationArguments() {
         "--ssh" | "-S" )
         BUILD_CONFIG[USE_SSH]=true;;
 
+        # Signing is a separate step on the AdoptOpenJDK build farm itself
+        # JIC you're wondering why you don't see this get set there.
         "--sign" )
         BUILD_CONFIG[SIGN]=true; BUILD_CONFIG[CERTIFICATE]="$1"; shift;;
 

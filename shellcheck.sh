@@ -17,7 +17,7 @@
 ################################################################################
 #
 # This script downloads and executes shellcheck. It will be run automatically
-# by Travis on every push. You can run it manually to vailidate your changes. 
+# by Travis on every push. You can run it manually to validate your changes.
 #
 ################################################################################
 
