@@ -92,12 +92,21 @@ function performMergeFromMercurialIntoGit() {
 # Merge master into dev as we build off dev at the AdoptOpenJDK Build farm
 # dev contains patches that AdoptOpenJDK has beyond upstream OpenJDK
 function performMergeIntoDevFromMaster() {
-  git fetch origin dev || exit 1
-  git checkout dev || git checkout -b dev origin/dev
-  git reset --hard origin/dev || exit 1
-  git pull origin dev || exit 1
+
+  if ! git checkout -f dev ; then
+    if ! git rev-parse -q --verify "origin/dev" ; then
+      git checkout -b dev || exit 1
+    else
+      git checkout -b dev origin/dev || exit 1
+    fi
+  else
+    git reset --hard origin/dev || echo "Not resetting as no upstream exists"
+  fi
+
   git rebase -p master || exit 1
-  git log --oneline origin/dev..dev
+  if "git rev-parse -q --verify origin/dev" ; then
+    git log --oneline origin/dev..dev
+  fi
   git push origin dev || exit 1
 }
 
