@@ -28,7 +28,7 @@
 set -euo pipefail
 
 function checkArgs() {
-  if [ $# -lt 2 ]; then
+  if [ $# -lt 3 ]; then
      echo Usage: "$0" '[AdoptOpenJDK Git Repo Version] [OpenJDK Mercurial Root Forest] [OpenJDK Mercurial Version]'
      echo ""
      echo "e.g. ./diff-without-getsource.sh jdk10u jdk-updates jdk10u"
@@ -44,7 +44,7 @@ hg_root_forest=$2
 hg_repo_version=$3
 
 function cleanUp() {
-  rm -rf openjdk-git openjdk-hg
+  rm -rf openjdk-git openjdk-hg || true
 }
 
 function cloneRepos() {

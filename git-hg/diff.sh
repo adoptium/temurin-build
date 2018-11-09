@@ -44,7 +44,7 @@ hg_root_forest=${2:-${1}}                  # for backwards compatibility
 hg_repo_version=${3:-${hg_root_forest}}    # for backwards compatibility
 
 function cleanUp() {
-  rm -rf openjdk-git openjdk-hg
+  rm -rf openjdk-git openjdk-hg || true
 }
 
 function cloneRepos() {
