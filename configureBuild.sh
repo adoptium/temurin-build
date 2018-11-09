@@ -73,11 +73,11 @@ doAnyBuildVariantOverrides()
 {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
     # current location of Extensions for OpenJDK9 for OpenJ9 project
-    local repository="ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
+    local repository="https://github.com/ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
   fi
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]; then
     # current location of SAP variant
-    local repository="SAP/SapMachine"
+    local repository="https://github.com/SAP/SapMachine"
      # sapmachine10 is the current branch for OpenJDK10 mainline
      # (equivalent to jdk/jdk10 on hotspot)
     local branch="sapmachine10"
