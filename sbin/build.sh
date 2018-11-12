@@ -351,6 +351,15 @@ printJavaVersionString()
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "'$PRODUCT_HOME' found"
      if ! "$PRODUCT_HOME"/bin/java -version; then
+
+       echo "===$PRODUCT_HOME===="
+       ls -alh "$PRODUCT_HOME"
+
+       echo "===$PRODUCT_HOME/bin/===="
+       ls -alh "$PRODUCT_HOME/bin/"
+       
+       "$PRODUCT_HOME"/bin/java -version
+
        echo " Error executing 'java' does not exist in '$PRODUCT_HOME'."
        exit -1
      fi
