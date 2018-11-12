@@ -357,7 +357,7 @@ printJavaVersionString()
 
        echo "===$PRODUCT_HOME/bin/===="
        ls -alh "$PRODUCT_HOME/bin/"
-       
+
        "$PRODUCT_HOME"/bin/java -version
 
        echo " Error executing 'java' does not exist in '$PRODUCT_HOME'."
