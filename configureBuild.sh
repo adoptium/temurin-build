@@ -144,7 +144,9 @@ setVariablesForConfigure() {
   BUILD_CONFIG[JRE_PATH]=$jre_path
 }
 
+
 # Set the repository to build from, defaults to AdoptOpenJDK if not set by the user
+# shellcheck disable=SC2153
 setRepository() {
 
   local repository;
