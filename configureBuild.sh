@@ -71,36 +71,11 @@ parseCommandLineArgs()
 # shellcheck disable=SC2153
 doAnyBuildVariantOverrides()
 {
-  local repository;
-
-  # Location of Extensions for OpenJ9 project
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]
-  then
-    if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-      repository="${BUILD_CONFIG[REPOSITORY]:-git@github.com:ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}}";
-    else
-      repository="${BUILD_CONFIG[REPOSITORY]:-https://github.com/ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}}";
-    fi
-  fi
-
-  # Location of SAP variant
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]
   then
     local branch="sapmachine10"
-
-    # TODO need to map versions to SAP branches going forwards
-    # sapmachine10 is the current branch for OpenJDK10 mainline
-    # (equivalent to jdk/jdk10 on hotspot)
-    if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]]
-    then
-      repository="${BUILD_CONFIG[REPOSITORY]:-git@github.com:SAP/SapMachine}";
-    else
-      repository="${BUILD_CONFIG[REPOSITORY]:-https://github.com/SAP/SapMachine}";
-    fi
+    BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
   fi
-
-  BUILD_CONFIG[REPOSITORY]=${repository:-${BUILD_CONFIG[REPOSITORY]}};
-  BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
 }
 
 # Set the working directory for this build
@@ -173,10 +148,32 @@ setVariablesForConfigure() {
 setRepository() {
 
   local repository;
-  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-    repository="${BUILD_CONFIG[REPOSITORY]:-git@github.com:adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+
+  # Location of Extensions for OpenJ9 project
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]
+  then
+    if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
+      repository="${BUILD_CONFIG[REPOSITORY]:-git@github.com:ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}}";
+    else
+      repository="${BUILD_CONFIG[REPOSITORY]:-https://github.com/ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}}";
+    fi
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]
+  then
+    # TODO need to map versions to SAP branches going forwards
+    # sapmachine10 is the current branch for OpenJDK10 mainline
+    # (equivalent to jdk/jdk10 on hotspot)
+    if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]]
+    then
+      repository="${BUILD_CONFIG[REPOSITORY]:-git@github.com:SAP/SapMachine}";
+    else
+      repository="${BUILD_CONFIG[REPOSITORY]:-https://github.com/SAP/SapMachine}";
+    fi
   else
-    repository="${BUILD_CONFIG[REPOSITORY]:-https://github.com/adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+    if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
+      repository="${BUILD_CONFIG[REPOSITORY]:-git@github.com:adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+    else
+      repository="${BUILD_CONFIG[REPOSITORY]:-https://github.com/adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+    fi
   fi
 
   repository="$(echo "${repository}" | awk '{print tolower($0)}')";
