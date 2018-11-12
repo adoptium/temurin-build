@@ -178,7 +178,7 @@ setRepository() {
 
   repository="$(echo "${repository}" | awk '{print tolower($0)}')";
 
-  BUILD_CONFIG[REPOSITORY]="${BUILD_CONFIG[REPOSITORY]:-$repository}";
+  BUILD_CONFIG[REPOSITORY]="${BUILD_CONFIG[REPOSITORY]:-${repository}}";
 }
 
 # Specific platforms need to have special build settings
