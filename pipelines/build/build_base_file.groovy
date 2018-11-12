@@ -173,6 +173,10 @@ def getJobConfigurations(javaVersionToBuild, availableConfigurations, String tar
             target.value.each { variant ->
                 GString name = "${configuration.os}-${configuration.arch}-${variant}"
 
+                if (configuration.containsKey('additionalFileNameTag')) {
+                    name += "-${configuration.additionalFileNameTag}"
+                }
+
                 if (additionalFileNameTag != null && additionalFileNameTag.length() > 0) {
                     if (configuration.containsKey('additionalFileNameTag')) {
                         configuration.additionalFileNameTag = "${configuration.additionalFileNameTag}-${additionalFileNameTag}"
@@ -181,9 +185,6 @@ def getJobConfigurations(javaVersionToBuild, availableConfigurations, String tar
                     }
                 }
 
-                if (configuration.containsKey('additionalFileNameTag')) {
-                    name += "-${configuration.additionalFileNameTag}"
-                }
                 jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs)
             }
         }
