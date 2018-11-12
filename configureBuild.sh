@@ -153,9 +153,9 @@ setRepository() {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]
   then
     if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-      repository="${BUILD_CONFIG[REPOSITORY]:-git@github.com:ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}}";
+      repository="git@github.com:ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}";
     else
-      repository="${BUILD_CONFIG[REPOSITORY]:-https://github.com/ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}}";
+      repository="https://github.com/ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}";
     fi
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]
   then
@@ -164,21 +164,21 @@ setRepository() {
     # (equivalent to jdk/jdk10 on hotspot)
     if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]]
     then
-      repository="${BUILD_CONFIG[REPOSITORY]:-git@github.com:SAP/SapMachine}";
+      repository="git@github.com:SAP/SapMachine";
     else
-      repository="${BUILD_CONFIG[REPOSITORY]:-https://github.com/SAP/SapMachine}";
+      repository="https://github.com/SAP/SapMachine";
     fi
   else
     if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-      repository="${BUILD_CONFIG[REPOSITORY]:-git@github.com:adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+      repository="git@github.com:adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}";
     else
-      repository="${BUILD_CONFIG[REPOSITORY]:-https://github.com/adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+      repository="https://github.com/adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}";
     fi
   fi
 
   repository="$(echo "${repository}" | awk '{print tolower($0)}')";
 
-  BUILD_CONFIG[REPOSITORY]=$repository;
+  BUILD_CONFIG[REPOSITORY]="${BUILD_CONFIG[REPOSITORY]:-$repository}";
 }
 
 # Specific platforms need to have special build settings
