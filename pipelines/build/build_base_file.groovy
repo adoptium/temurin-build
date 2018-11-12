@@ -159,7 +159,7 @@ static def getConfigureArgs(configuration, additionalConfigureArgs) {
     return buildParams
 }
 
-def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs) {
+def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs, String additionalFileNameTag) {
     def jobConfigurations = [:]
 
     //Parse config passed to jenkins job
@@ -172,6 +172,15 @@ def getJobConfigurations(javaVersionToBuild, availableConfigurations, String tar
             def configuration = availableConfigurations.get(target.key)
             target.value.each { variant ->
                 GString name = "${configuration.os}-${configuration.arch}-${variant}"
+
+                if (additionalFileNameTag != null && additionalFileNameTag.length() > 0) {
+                    if (configuration.containsKey('additionalFileNameTag')) {
+                        configuration.additionalFileNameTag = "${configuration.additionalFileNameTag}-${additionalFileNameTag}"
+                    } else {
+                        configuration.additionalFileNameTag = "${additionalFileNameTag}"
+                    }
+                }
+
                 if (configuration.containsKey('additionalFileNameTag')) {
                     name += "-${configuration.additionalFileNameTag}"
                 }
@@ -241,13 +250,13 @@ def publishRelease(javaToBuild, releaseTag) {
     }
 }
 
-def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag, String branch, String additionalConfigureArgs, scmVars, String additionalBuildArgs) {
+def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag, String branch, String additionalConfigureArgs, scmVars, String additionalBuildArgs, String additionalFileNameTag) {
 
     if (releaseTag == null || releaseTag == "false") {
         releaseTag = ""
     }
 
-    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs)
+    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, additionalFileNameTag)
     def jobs = [:]
 
     def enableTests = enableTestsArg == "true"
