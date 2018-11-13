@@ -279,7 +279,6 @@ checkingAndDownloadCaCerts()
 }
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, CACerts et al)
-downloadingRequiredDependencies()
 {
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
@@ -352,7 +351,9 @@ relocateToTmpIfNeeded()
 
      if [ -d "${ORIGINAL_WORKSPACE}" ]
      then
-        cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
+        rm -rf "${TMP_WORKSPACE}"
+        ln -s "${TMP_WORKSPACE}" "${BUILD_CONFIG[WORKSPACE_DIR]}"
+        #cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
      fi
      BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
 
