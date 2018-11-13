@@ -87,5 +87,18 @@ def javaToBuild = "jdk9u"
 node ("master") {
     def scmVars = checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
-    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag, branch, additionalConfigureArgs, scmVars, additionalBuildArgs, additionalFileNameTag)
+
+    buildFile.doBuild(
+            javaToBuild,
+            buildConfigurations,
+            targetConfigurations,
+            enableTests,
+            publish,
+            releaseTag,
+            branch,
+            additionalConfigureArgs,
+            scmVars,
+            additionalBuildArgs,
+            additionalFileNameTag,
+            cleanWorkspaceBeforeBuild)
 }
