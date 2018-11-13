@@ -351,8 +351,7 @@ relocateToTmpIfNeeded()
 
      if [ -d "${ORIGINAL_WORKSPACE}" ]
      then
-        rm -rf "${TMP_WORKSPACE}"
-        ln -s "${TMP_WORKSPACE}" "${BUILD_CONFIG[WORKSPACE_DIR]}"
+        ln -s "${TMP_WORKSPACE}/workspace" "${BUILD_CONFIG[WORKSPACE_DIR]}"
         #cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
      fi
      BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
