@@ -12,11 +12,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import groovy.json.JsonSlurper
-
+@Library('openjdk-jenkins-helper@master')
+import JobHelper
 @Library('openjdk-jenkins-helper@master')
 import JobHelper
 import NodeHelper
+import groovy.json.JsonSlurper
 
 /**
  * This file is a template for running a build for a given configuration
@@ -149,6 +150,10 @@ try {
     stage("build") {
         if (NodeHelper.nodeIsOnline(NODE_LABEL)) {
             node(NODE_LABEL) {
+                if (config.cleanWorkspaceBeforeBuild) {
+                    cleanWs notFailBuild: true
+                }
+
                 checkout scm
                 try {
                     sh "./build-farm/make-adopt-build-farm.sh"
