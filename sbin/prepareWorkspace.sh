@@ -334,7 +334,7 @@ relocateToTmpIfNeeded()
 {
    if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
    then
-     jobName=$(echo "${JOB_NAME}" | egrep -o "[^/]+$")
+     jobName=$(echo "${JOB_NAME:-build-dir}" | egrep -o "[^/]+$")
      local tmpdir="/tmp/openjdk-${jobName}"
      mkdir -p "$tmpdir"
 
