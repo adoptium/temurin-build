@@ -63,6 +63,9 @@ if [ "${VARIANT}" == "openj9" ]; then
     export OMR_WARNINGS_AS_ERRORS=0
     export MACOSX_DEPLOYMENT_TARGET=10.8
     export SDKPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-xcode-path=/Applications/Xcode.app --with-openj9-cc=/usr/local/bin/gcc-4.9 --with-openj9-cxx=/usr/local/bin/g++-4.9 --with-openj9-developer-dir=/Applications/Xcode7/Xcode.app/Contents/Developer"
+    export OPENJ9_USE_CUSTOM_COMPILER=1
+    export OPENJ9_DEVELOPER_DIR="/Applications/Xcode7/Xcode.app/Contents/Developer"
+    export OPENJ9_CC="/usr/local/bin/gcc-4.9"
+    export OPENJ9_CXX="/usr/local/bin/g++-4.9"
   fi
 fi
