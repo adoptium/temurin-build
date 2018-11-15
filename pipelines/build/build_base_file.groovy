@@ -232,7 +232,7 @@ def createJob(jobName, jobFolder, config, enableTests, scmVars) {
 }
 
 // Call job to push artifacts to github
-def publishRelease(javaToBuild, releaseTag) {
+def publishRelease(downstreamJobName, downstreamJobNumber, javaToBuild, releaseTag, timestamp) {
     def release = false
     def tag = javaToBuild
     if (releaseTag != null && releaseTag.length() > 0) {
@@ -245,8 +245,9 @@ def publishRelease(javaToBuild, releaseTag) {
             build job: 'build-scripts/release/refactor_openjdk_release_tool',
                     parameters: [string(name: 'RELEASE', value: "${release}"),
                                  string(name: 'TAG', value: tag),
-                                 string(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
-                                 string(name: 'UPSTREAM_JOB_NUMBER', value: "${currentBuild.getNumber()}"),
+                                 string(name: 'UPSTREAM_JOB_NAME', value: downstreamJobName),
+                                 string(name: 'UPSTREAM_JOB_NUMBER', value: "${downstreamJobNumber}"),
+                                 string(name: 'TIMESTAMP', value: "${timestamp}"),
                                  string(name: 'VERSION', value: determineReleaseRepoVersion(javaToBuild))]
         }
     }
@@ -284,6 +285,8 @@ def doBuild(
     echo "Publish: ${publish}"
     echo "ReleaseTag: ${releaseTag}"
 
+    def timestamp = new Date().format('yyyy-MM-dd-HH-mm', TimeZone.getTimeZone('UTC'))
+
 
     jobConfigurations.each { configuration ->
         jobs[configuration.key] = {
@@ -296,36 +299,39 @@ def doBuild(
             // i.e jdk10u/job/jdk10u-linux-x64-hotspot
             def downstreamJobName = "${jobFolder}/${jobTopName}"
 
-            catchError {
-                // Execute build job for configuration i.e jdk10u/job/jdk10u-linux-x64-hotspot
-                stage(configuration.key) {
-                    // generate job
-                    createJob(jobTopName, jobFolder, config, enableTests, scmVars)
+            // Execute build job for configuration i.e jdk10u/job/jdk10u-linux-x64-hotspot
+            stage(configuration.key) {
+                // generate job
+                createJob(jobTopName, jobFolder, config, enableTests, scmVars)
 
-                    // execute build
-                    def downstreamJob = build job: downstreamJobName, propagate: false, parameters: toBuildParams(enableTests, cleanWorkspace, config.parameters)
+                // execute build
+                def downstreamJob = build job: downstreamJobName, parameters: toBuildParams(enableTests, cleanWorkspace, config.parameters)
 
-                    if (downstreamJob.getResult() == 'SUCCESS') {
-                        // copy artifacts from build
-                        node("master") {
-                            catchError {
-                                sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
+                if (downstreamJob.getResult() == 'SUCCESS') {
+                    // copy artifacts from build
+                    node("master") {
+                        catchError {
+                            sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
 
-                                copyArtifacts(
-                                        projectName: downstreamJobName,
-                                        selector: specific("${downstreamJob.getNumber()}"),
-                                        filter: 'workspace/target/*',
-                                        fingerprintArtifacts: true,
-                                        target: "target/${config.os}/${config.arch}/${config.variant}/",
-                                        flatten: true)
+                            copyArtifacts(
+                                    projectName: downstreamJobName,
+                                    selector: specific("${downstreamJob.getNumber()}"),
+                                    filter: 'workspace/target/*',
+                                    fingerprintArtifacts: true,
+                                    target: "target/${config.os}/${config.arch}/${config.variant}/",
+                                    flatten: true)
 
-                                // Checksum
-                                sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+                            // Checksum
+                            sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
 
-                                // Archive in Jenkins
-                                archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
-                            }
+                            // Archive in Jenkins
+                            archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
                         }
+                    }
+
+                    // publish to github if needed
+                    if (publish) {
+                        publishRelease(downstreamJobName, downstreamJob.getNumber(), javaVersionToBuild, releaseTag, timestamp)
                     }
                 }
             }
@@ -333,11 +339,6 @@ def doBuild(
     }
 
     parallel jobs
-
-    // publish to github if needed
-    if (publish) {
-        publishRelease(javaVersionToBuild, releaseTag)
-    }
 }
 
 return this
