@@ -300,8 +300,10 @@ function setBootJdk() {
   if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
     echo "Searching for JDK_BOOT_DIR"
 
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(greadlink -f $(which javac))))
     # shellcheck disable=SC2046,SC2230
-    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+    elif [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
       BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink $(which javac))))
     else
       BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
