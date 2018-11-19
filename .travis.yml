@@ -4,12 +4,14 @@ os: windows
 env:
  - MSBUILD_PATH="c:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin"
  
+ install:
+ - bash -i -l -c "pacman -Sy autoconf"
+ 
 before_script:
  # - refreshenv
  - unset -v _JAVA_OPTIONS
 
 script: 
- - refreshenv
  - url=$(curl -silent https://api.adoptopenjdk.net/openjdk10/nightly/x64_Win/ | grep 'binary_link' | grep -Eo '(http|https)://[^"]+' | head -1)
  - wget --quiet ${url}
  - zip_file=$(basename ${url})
