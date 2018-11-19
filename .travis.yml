@@ -6,7 +6,7 @@ env:
  
 install:
  - choco upgrade msys2
- - ps a
+ - ps axu
  - export PATH=/c/tools/msys64/usr/bin/:/c/tools/msys64/bin:$PATH
  - pacman -S autoconf
  - bash -i -l -c "pacman -Sy autoconf"
