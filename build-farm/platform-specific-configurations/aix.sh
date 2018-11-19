@@ -60,13 +60,14 @@ echo LDR_CNTRL=$LDR_CNTRL
 
 if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ];
 then
-  export JDK10_BOOT_DIR="$PWD/jdk-10"
-  if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
-    mkdir -p "$JDK10_BOOT_DIR"
-    wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=aix&release=latest&arch=${ARCHITECTURE}" | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR"
+  if [ ! -d "$JDK10_BOOT_DIR" ]; then
+    export JDK10_BOOT_DIR="$PWD/jdk-10"
+    if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
+      mkdir -p "$JDK10_BOOT_DIR"
+      wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=aix&release=latest&arch=${ARCHITECTURE}" | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR"
+    fi
   fi
   export JDK_BOOT_DIR=$JDK10_BOOT_DIR
-
 
   if [ "${VARIANT}" == "hotspot" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} DF=/usr/sysv/bin/df"

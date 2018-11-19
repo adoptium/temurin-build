@@ -25,12 +25,13 @@ limitations under the License.
  * 3. Push generated artifacts to github
  */
 
-def toBuildParams(enableTests, params) {
+def toBuildParams(enableTests, cleanWorkspace, params) {
 
     List buildParams = []
 
     buildParams += [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: params.get("NODE_LABEL")]
     buildParams += string(name: "ENABLE_TESTS", value: "${enableTests}")
+    buildParams += string(name: "CLEAN_WORKSPACE", value: "${cleanWorkspace}")
 
     params
             .findAll { it.key != 'NODE_LABEL' }
@@ -83,7 +84,7 @@ def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, 
             os         : configuration.os,
             variant    : variant,
             parameters : buildParams,
-            test       : testList,
+            test       : testList
     ]
 }
 
@@ -251,7 +252,19 @@ def publishRelease(javaToBuild, releaseTag) {
     }
 }
 
-def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag, String branch, String additionalConfigureArgs, scmVars, String additionalBuildArgs, String additionalFileNameTag) {
+def doBuild(
+        String javaVersionToBuild,
+        availableConfigurations,
+        String targetConfigurations,
+        String enableTestsArg,
+        String publishArg,
+        String releaseTag,
+        String branch,
+        String additionalConfigureArgs,
+        scmVars,
+        String additionalBuildArgs,
+        String additionalFileNameTag,
+        String cleanWorkspaceBeforeBuild) {
 
     if (releaseTag == null || releaseTag == "false") {
         releaseTag = ""
@@ -262,6 +275,7 @@ def doBuild(String javaVersionToBuild, availableConfigurations, String targetCon
 
     def enableTests = enableTestsArg == "true"
     def publish = publishArg == "true"
+    def cleanWorkspace = cleanWorkspaceBeforeBuild == "true"
 
 
     echo "Java: ${javaVersionToBuild}"
@@ -289,7 +303,7 @@ def doBuild(String javaVersionToBuild, availableConfigurations, String targetCon
                     createJob(jobTopName, jobFolder, config, enableTests, scmVars)
 
                     // execute build
-                    def downstreamJob = build job: downstreamJobName, propagate: false, parameters: toBuildParams(enableTests, config.parameters)
+                    def downstreamJob = build job: downstreamJobName, propagate: false, parameters: toBuildParams(enableTests, cleanWorkspace, config.parameters)
 
                     if (downstreamJob.getResult() == 'SUCCESS') {
                         // copy artifacts from build

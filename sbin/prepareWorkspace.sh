@@ -47,7 +47,7 @@ checkoutAndCloneOpenJDKGitRepo()
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
-    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep --quiet "${BUILD_CONFIG[REPOSITORY]}"
+    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep --quiet "${BUILD_CONFIG[REPOSITORY]}"
     local isCorrectGitRepo=$?
     set -e
 
@@ -320,21 +320,12 @@ function moveTmpToWorkspaceLocation {
 
     echo "Relocating workspace from ${TMP_WORKSPACE} to ${ORIGINAL_WORKSPACE}"
 
-    rm -rf "${ORIGINAL_WORKSPACE}" || true
+    rsync -a --delete  "${TMP_WORKSPACE}/workspace/" "${ORIGINAL_WORKSPACE}/"
+    echo "===${ORIGINAL_WORKSPACE}/======"
+    ls -alh "${ORIGINAL_WORKSPACE}/" || true
 
-    mkdir "${ORIGINAL_WORKSPACE}"
-
-    # shellcheck disable=SC2086
-    chmod 755 ${TMP_WORKSPACE}/workspace/* || true
-    chmod 755 "${ORIGINAL_WORKSPACE}" || true
-
-    # shellcheck disable=SC2086
-    cp -r ${TMP_WORKSPACE}/workspace/* "${ORIGINAL_WORKSPACE}"
-    rm -rf "${TMP_WORKSPACE}/workspace/"
-    rm -r "${TMP_WORKSPACE}"
-
-    echo "Data at: ${ORIGINAL_WORKSPACE}"
-    ls -alh "${ORIGINAL_WORKSPACE}"
+    echo "===${ORIGINAL_WORKSPACE}/build======"
+    ls -alh "${ORIGINAL_WORKSPACE}/build" || true
   fi
 }
 
@@ -343,8 +334,10 @@ relocateToTmpIfNeeded()
 {
    if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
    then
-     local tmpdir
-     tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir')
+     jobName=$(echo "${JOB_NAME:-build-dir}" | egrep -o "[^/]+$")
+     local tmpdir="/tmp/openjdk-${jobName}"
+     mkdir -p "$tmpdir"
+
      export TMP_WORKSPACE="${tmpdir}"
      export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
 
@@ -352,7 +345,17 @@ relocateToTmpIfNeeded()
 
      if [ -d "${ORIGINAL_WORKSPACE}" ]
      then
-        cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
+        echo "${BUILD_CONFIG[WORKSPACE_DIR]}"
+        rsync -a --delete "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/"
+
+        echo "===${TMP_WORKSPACE}/======"
+        ls -alh "${TMP_WORKSPACE}/" || true
+
+        echo "===${TMP_WORKSPACE}/workspace======"
+        ls -alh "${TMP_WORKSPACE}/workspace" || true
+
+        echo "===${TMP_WORKSPACE}/workspace/build======"
+        ls -alh "${TMP_WORKSPACE}/workspace/build" || true
      fi
      BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
 
