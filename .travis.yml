@@ -6,7 +6,7 @@ env:
  
 install:
  - choco upgrade msys2
- - find /c/ -name "msys*"
+ - find /c/ -name "pacman*"
  - bash -i -l -c "pacman -Sy autoconf"
  
 before_script:
