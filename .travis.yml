@@ -5,6 +5,7 @@ env:
  - MSBUILD_PATH="c:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin"
  
 install:
+ - choco upgrade msys2
  - find /c/ -name "msys*"
  - bash -i -l -c "pacman -Sy autoconf"
  
