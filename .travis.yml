@@ -1,18 +1,20 @@
 language: cpp
+os: windows
 
-matrix:
-  include:
-    - os: osx
-    - os: linux
-      dist: xenial
-      sudo: required
-      before_install:
-       - sudo apt-get install -y libx11-dev libxext-dev libxrender-dev libxtst-dev libxt-dev libcups2-dev libasound2
-       - sudo ln -s /usr/lib/x86_64-linux-gnu/libasound.so.2 /usr/lib/x86_64-linux-gnu/libasound.so
-
+env:
+ - MSBUILD_PATH="c:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin"
+ 
 before_script:
+ # - refreshenv
  - unset -v _JAVA_OPTIONS
- - wget https://github.com/sormuras/bach/raw/master/install-jdk.sh
+
 script: 
- - source install-jdk.sh -f 10
- - bash -c './makejdk-any-platform.sh jdk11u'
+ - refreshenv
+ - url=$(curl -silent https://api.adoptopenjdk.net/openjdk10/nightly/x64_Win/ | grep 'binary_link' | grep -Eo '(http|https)://[^"]+' | head -1)
+ - wget --quiet ${url}
+ - zip_file=$(basename ${url})
+ - target=$(unzip -Z1 ${zip_file} | grep 'bin/javac'  | tr '/' '\n' | tail -3 | head -1)
+ - unzip -q ${zip_file}
+ - export JAVA_HOME=$(cd "${target}"; pwd)
+ - export PATH=${JAVA_HOME}/bin:$PATH 
+ - bash -c 'export LOG=info && ./makejdk-any-platform.sh jdk11u'
