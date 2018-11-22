@@ -50,6 +50,7 @@ then
 
   if [ "${VARIANT}" == "openj9" ]
   then
+    export PATH="/cygdrive/c/Program Files (x86)/LLVM/bin:$PATH"
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM}  --with-freetype-include=/cygdrive/c/openjdk/freetype-2.5.3/include --with-freetype-lib=/cygdrive/c/openjdk/freetype-2.5.3/lib --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/progra~2/OpenSSL --enable-openssl-bundling"
@@ -96,7 +97,7 @@ then
 
   if [ "${VARIANT}" == "openj9" ]
   then
-    export PATH="/cygdrive/c/mingw-w64\x86_64-8.1.0-win32-seh-rt_v6-rev0/mingw64/bin:/usr/bin:$PATH"
+    export PATH="/cygdrive/c/Program Files/LLVM/bin:/usr/bin:$PATH"
     export HAS_AUTOCONF=1
     export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
 
