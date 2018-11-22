@@ -61,12 +61,6 @@ then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000 --disable-warnings-as-errors"
 fi
 
-# Skip Building Freetype for certain platforms
-if [ "${ARCHITECTURE}" == "aarch64" ] || [ "${ARCHITECTURE}" == "ppc64le" ]
-then
-  export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
-fi
-
 if [ "${ARCHITECTURE}" == "s390x" ] || [ "${ARCHITECTURE}" == "ppc64le" ]
 then
     if [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
