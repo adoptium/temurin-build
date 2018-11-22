@@ -238,9 +238,6 @@ processArgumentsforSpecificArchitectures() {
     configure_args_for_any_platform="--with-jobs=${NUM_PROCESSORS}"
   ;;
 
-  "aarch64")
-    BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.5.2"
-  ;;
   esac
 
   BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-$jvm_variant}
