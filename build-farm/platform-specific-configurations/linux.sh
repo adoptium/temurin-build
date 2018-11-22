@@ -29,8 +29,6 @@ then
 
   if [ "${VARIANT}" == "openj9" ]
   then
-    export PATH="/usr/bin:$PATH"
-
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
     then
       if which g++-4.8; then
