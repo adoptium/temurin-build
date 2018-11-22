@@ -140,6 +140,37 @@ def sign(config) {
     }
 }
 
+def buildInstaller(config) {
+    if (config.os == "mac") {
+        node('master') {
+            stage("installer") {
+                def filter = "**/OpenJDK*_mac_*.tar.gz"
+                def certificate = "\"Developer ID Application: London Jamocha Community CIC\""
+
+                def installerJob = build job: "build-scripts/release/create_installer_mac",
+                        propagate: true,
+                        parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                                     string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                                     string(name: 'FILTER', value: "${filter}"),
+                                     string(name: 'CERTIFICATE', value: "${certificate}"),
+                                     [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&build"],
+                        ]
+
+                copyArtifacts(
+                        projectName: "build-scripts/release/create_installer_mac",
+                        selector: specific("${installerJob.getNumber()}"),
+                        filter: 'workspace/target/*',
+                        fingerprintArtifacts: true,
+                        target: "workspace/target/",
+                        flatten: true)
+
+                sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg); do sha256sum "$file" > $file.sha256.txt ; done'
+                archiveArtifacts artifacts: "workspace/target/*"
+            }
+        }
+    }
+}
+
 try {
     def config = new JsonSlurper().parseText("${TEST_CONFIG}")
     println "Executing tests: ${config}"
@@ -181,6 +212,9 @@ try {
 
     // Sign and archive jobs if needed
     sign(config)
+
+    //buildInstaller if needed
+    buildInstaller(config)
 
 } catch (Exception e) {
     currentBuild.result = 'FAILURE'
