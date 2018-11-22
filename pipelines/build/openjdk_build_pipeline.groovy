@@ -145,7 +145,7 @@ def buildInstaller(config) {
         node('master') {
             stage("installer") {
                 def filter = "**/OpenJDK*_mac_*.tar.gz"
-                def certificate = "\"Developer ID Application: London Jamocha Community CIC\""
+                def certificate = "\"Developer ID Installer: London Jamocha Community CIC\""
 
                 def installerJob = build job: "build-scripts/release/create_installer_mac",
                         propagate: true,
