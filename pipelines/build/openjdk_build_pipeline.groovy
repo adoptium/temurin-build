@@ -81,7 +81,8 @@ def runTests(config) {
                             build job: jobName,
                                     propagate: false,
                                     parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
-                                                 string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}")]
+                                                 string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                                                 string(name: 'RELEASE_TAG', value: "${TAG}")]
                         }
                     } else {
                         println "Requested test job that does not exist or is disabled: ${jobName}"

@@ -67,7 +67,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
         numToKeep(5)
     }
     parameters {
-        stringParam('TAG', null, "git tag/branch/commit to bulid if not HEAD")
+        stringParam('TAG', null, "git tag/branch/commit to build if not HEAD")
         stringParam('NODE_LABEL', "$NODE_LABEL")
         stringParam('JAVA_TO_BUILD', "$JAVA_TO_BUILD")
         stringParam('JDK_BOOT_VERSION', "${JDK_BOOT_VERSION}")
