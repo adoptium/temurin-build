@@ -147,11 +147,12 @@ try {
     println "Build num: ${env.BUILD_NUMBER}"
 
     def enableTests = ENABLE_TESTS == "true"
+    def cleanWorkspace = CLEAN_WORKSPACE == "true"
 
     stage("build") {
         if (NodeHelper.nodeIsOnline(NODE_LABEL)) {
             node(NODE_LABEL) {
-                if (config.cleanWorkspaceBeforeBuild) {
+                if (cleanWorkspace) {
                     cleanWs notFailBuild: true
                 }
 
