@@ -58,7 +58,7 @@ def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, 
 
     buildParams.putAll(getConfigureArgs(configuration, additionalConfigureArgs))
 
-    def buildArgs = getBuildArgs(configuration, variant);
+    def buildArgs = getBuildArgs(configuration, variant)
 
     if (additionalBuildArgs != null && additionalBuildArgs.length() > 0) {
         buildArgs += " " + additionalBuildArgs
@@ -132,7 +132,7 @@ static def formAdditionalNodeLabels(configuration, variant) {
     def labels = "${buildTag}"
 
     if (configuration.containsKey("additionalNodeLabels")) {
-        def additionalNodeLabels = null
+        def additionalNodeLabels
 
         if (isMap(configuration.additionalNodeLabels)) {
             additionalNodeLabels = configuration.additionalNodeLabels.get(variant)
@@ -147,9 +147,9 @@ static def formAdditionalNodeLabels(configuration, variant) {
 
 static def getConfigureArgs(configuration, additionalConfigureArgs) {
     def buildParams = [:]
-    def configureArgs = "";
+    def configureArgs = ""
 
-    if (configuration.containsKey('configureArgs')) configureArgs += configuration.configureArgs;
+    if (configuration.containsKey('configureArgs')) configureArgs += configuration.configureArgs
     if (additionalConfigureArgs != null && additionalConfigureArgs.length() > 0) {
         configureArgs += " " + additionalConfigureArgs
     }
@@ -160,7 +160,7 @@ static def getConfigureArgs(configuration, additionalConfigureArgs) {
     return buildParams
 }
 
-def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs, String additionalFileNameTag) {
+static def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs, String additionalFileNameTag) {
     def jobConfigurations = [:]
 
     //Parse config passed to jenkins job
@@ -273,17 +273,15 @@ def doBuild(
     def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, additionalFileNameTag)
     def jobs = [:]
 
-    def enableTests = enableTestsArg == "true"
-    def publish = publishArg == "true"
-    def cleanWorkspace = cleanWorkspaceBeforeBuild == "true"
-
+    def enableTests = Boolean.valueOf(enableTestsArg)
+    def publish = Boolean.valueOf(publishArg)
+    def cleanWorkspace = Boolean.valueOf(cleanWorkspaceBeforeBuild)
 
     echo "Java: ${javaVersionToBuild}"
     echo "OS: ${targetConfigurations}"
     echo "Enable tests: ${enableTests}"
     echo "Publish: ${publish}"
     echo "ReleaseTag: ${releaseTag}"
-
 
     jobConfigurations.each { configuration ->
         jobs[configuration.key] = {

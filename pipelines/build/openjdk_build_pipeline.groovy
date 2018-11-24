@@ -146,7 +146,7 @@ try {
     println "Executing tests: ${config}"
     println "Build num: ${env.BUILD_NUMBER}"
 
-    def enableTests = ENABLE_TESTS == "true"
+    def enableTests = Boolean.valueOf(ENABLE_TESTS)
 
     stage("build") {
         if (NodeHelper.nodeIsOnline(NODE_LABEL)) {
