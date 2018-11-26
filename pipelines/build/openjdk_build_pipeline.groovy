@@ -14,8 +14,6 @@ limitations under the License.
 
 @Library('openjdk-jenkins-helper@master')
 import JobHelper
-@Library('openjdk-jenkins-helper@master')
-import JobHelper
 import NodeHelper
 import groovy.json.JsonSlurper
 
@@ -147,11 +145,12 @@ try {
     println "Build num: ${env.BUILD_NUMBER}"
 
     def enableTests = Boolean.valueOf(ENABLE_TESTS)
+    def cleanWorkspace = Boolean.valueOf(CLEAN_WORKSPACE)
 
     stage("build") {
         if (NodeHelper.nodeIsOnline(NODE_LABEL)) {
             node(NODE_LABEL) {
-                if (config.cleanWorkspaceBeforeBuild) {
+                if (cleanWorkspace) {
                     cleanWs notFailBuild: true
                 }
 
