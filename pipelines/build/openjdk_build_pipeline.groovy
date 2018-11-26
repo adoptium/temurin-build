@@ -14,8 +14,6 @@ limitations under the License.
 
 @Library('openjdk-jenkins-helper@master')
 import JobHelper
-@Library('openjdk-jenkins-helper@master')
-import JobHelper
 import NodeHelper
 import groovy.json.JsonSlurper
 
@@ -146,8 +144,8 @@ try {
     println "Executing tests: ${config}"
     println "Build num: ${env.BUILD_NUMBER}"
 
-    def enableTests = ENABLE_TESTS == "true"
-    def cleanWorkspace = CLEAN_WORKSPACE == "true"
+    def enableTests = Boolean.valueOf(ENABLE_TESTS)
+    def cleanWorkspace = Boolean.valueOf(CLEAN_WORKSPACE)
 
     stage("build") {
         if (NodeHelper.nodeIsOnline(NODE_LABEL)) {
