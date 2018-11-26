@@ -14,6 +14,8 @@ limitations under the License.
 
 @Library('openjdk-jenkins-helper@master')
 import JobHelper
+@Library('openjdk-jenkins-helper@master')
+import JobHelper
 import NodeHelper
 import groovy.json.JsonSlurper
 
@@ -151,7 +153,7 @@ try {
         if (NodeHelper.nodeIsOnline(NODE_LABEL)) {
             node(NODE_LABEL) {
                 if (cleanWorkspace) {
-                    cleanWs notFailBuild: true
+                    cleanWs notFailBuild: true, disableDeferredWipeout: true
                 }
 
                 checkout scm
