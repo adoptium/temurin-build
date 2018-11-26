@@ -14,8 +14,6 @@ limitations under the License.
 
 @Library('openjdk-jenkins-helper@master')
 import JobHelper
-@Library('openjdk-jenkins-helper@master')
-import JobHelper
 import NodeHelper
 import groovy.json.JsonSlurper
 
