@@ -159,7 +159,7 @@ static def getConfigureArgs(configuration, additionalConfigureArgs) {
     return buildParams
 }
 
-static def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs, String additionalFileNameTag) {
+def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs, String additionalFileNameTag) {
     def jobConfigurations = [:]
 
     //Parse config passed to jenkins job
