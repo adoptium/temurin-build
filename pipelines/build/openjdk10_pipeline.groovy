@@ -16,7 +16,6 @@ def buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
-                bootJDK             : "/Users/jenkins/tools/hudson.model.JDK/JDK9.0.1",
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
                 test                : ['openjdktest', 'systemtest']
         ],
