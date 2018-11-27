@@ -1,5 +1,5 @@
 ---
-name: Binary Issue
+name: 🐛 Bug Report
 about: Have you found a bug with our binaries?
 
 ---
