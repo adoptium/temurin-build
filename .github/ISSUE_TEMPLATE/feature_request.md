@@ -4,4 +4,4 @@ about: Suggest a new feature for this project
 
 ---
 
-Most major feature requests are made over at the [TSC](https://github.com/AdoptOpenJDK/TSC/).
+Features that impact the whole project (e.g. Adding a new OpenJDK distribution)are made over at the [TSC](https://github.com/AdoptOpenJDK/TSC/).
