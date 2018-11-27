@@ -40,7 +40,6 @@ def toBuildParams(enableTests, cleanWorkspace, params) {
     return buildParams
 }
 
-static
 def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs) {
 
     def additionalNodeLabels = formAdditionalNodeLabels(configuration, variant)
