@@ -1,5 +1,5 @@
 ---
-name: Website/API issues
+name: 🌐 Website/API issues
 about: Have you found an issue on our website or API?
 
 ---
