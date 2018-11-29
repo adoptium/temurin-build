@@ -103,6 +103,7 @@ node ("master") {
             enableTests,
             publish,
             releaseTag,
+            releaseApproved,
             branch,
             additionalConfigureArgs,
             scmVars,

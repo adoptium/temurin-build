@@ -16,7 +16,8 @@ limitations under the License.
 */
 
 /**
- * This file starts a high level job, it is called from openjdk8_pipeline.groovy, openjdk9_pipeline.groovy, openjdk10_pipeline.groovy.
+ * This file starts a high level job, it is called from openjdk8_pipeline.groovy,
+ * openjdk9_pipeline.groovy, openjdk10_pipeline.groovy etc.
  *
  * This:
  *
@@ -65,7 +66,6 @@ def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, 
     }
     buildParams.put("BUILD_ARGS", buildArgs)
 
-
     if (branch != null && branch.length() > 0) {
         buildParams.put("BRANCH", branch)
     }
@@ -92,7 +92,6 @@ static def isMap(possibleMap) {
     // hack as jenkins sandbox wont allow instanceof
     return "java.util.LinkedHashMap" == possibleMap.getClass().getName()
 }
-
 
 static def getBuildArgs(configuration, variant) {
     if (configuration.containsKey('buildArgs')) {
@@ -200,7 +199,6 @@ static Integer getJavaVersionNumber(version) {
     return Integer.parseInt(matcher[0][1])
 }
 
-
 static def determineReleaseRepoVersion(javaToBuild) {
     def number = getJavaVersionNumber(javaToBuild)
 
@@ -259,6 +257,7 @@ def doBuild(
         String enableTestsArg,
         String publishArg,
         String releaseTag,
+        releaseApproved,
         String branch,
         String additionalConfigureArgs,
         scmVars,
@@ -268,6 +267,11 @@ def doBuild(
 
     if (releaseTag == null || releaseTag == "false") {
         releaseTag = ""
+    }
+
+    // If someone has entered a non zero release Tag and has checked the approval box
+    if (releaseTag != null && releaseTag.size() > 0 && !releaseApproved) {
+        error('Release is not approved, please create a PR in the TSC repo and get approval!')
     }
 
     def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, additionalFileNameTag)
