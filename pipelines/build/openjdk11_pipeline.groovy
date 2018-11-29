@@ -50,7 +50,7 @@ def buildConfigurations = [
                         hotspot: 'win2012',
                         openj9:  'win2012&&vs2017'
                 ],
-                test                : ['openjdktest', 'perftest']
+                test                : ['openjdktest', 'perftest', 'systemtest']
         ],
 
         x32Windows: [
