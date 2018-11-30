@@ -478,9 +478,9 @@ makeACopyOfLibFreeFontForMacOSX() {
 getFirstTagFromOpenJDKGitRepo()
 {
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    justOneFromTheRevList=$(git rev-list --tags --max-count=1)
-    tagNameFromRepo=$(git describe --tags "$justOneFromTheRevList")
-    echo "$tagNameFromRepo"
+    RevList=$(git rev-list --tags --max-count=100)
+    firstMatchingNameFromRepo=$(git describe --tags "$RevList" | grep ^jdk | head -1)
+    echo "$firstMatchingNameFromRepo"
 }
 
 createArchive() {
