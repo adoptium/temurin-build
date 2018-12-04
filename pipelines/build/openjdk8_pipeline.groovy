@@ -53,7 +53,7 @@ def buildConfigurations = [
                 buildArgs: [
                         openj9:  '--skip-freetype'
                 ],
-                test                : ['openjdktest']
+                test                : ['openjdktest', 'systemtest']
         ],
 
         x32Windows: [
