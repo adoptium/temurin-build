@@ -39,7 +39,7 @@ then
   fi
 fi
 
-if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
+if [ "${VARIANT}" == "openj9" ]
 then
   if [ "${ARCHITECTURE}" == "s390x" ]
   then
