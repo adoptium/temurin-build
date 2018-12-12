@@ -102,11 +102,7 @@ updateOpenj9Sources() {
   # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-      bash get_source.sh --openssl-version=1.1.1
-    else
-      bash get_source.sh
-    fi
+    bash get_source.sh --openssl-version=1.1.1
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
