@@ -39,7 +39,8 @@ def buildConfigurations = [
                 test                : [
                         nightly: ['openjdktest', 'systemtest', 'perftest', 'externaltest', 'externaltest_extended'],
                         release: ['openjdktest', 'systemtest', 'perftest', 'externaltest']
-                ]
+                ],
+                configureArgs        : '--disable-ccache'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -82,7 +83,9 @@ def buildConfigurations = [
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                test                : ['openjdktest', 'systemtest', 'perftest']
+                test                : ['openjdktest', 'systemtest', 'perftest'],
+                configureArgs       : '--disable-ccache'
+
         ],
 
         arm32Linux    : [
@@ -112,7 +115,7 @@ def buildConfigurations = [
                 arch                 : 'x64',
                 test                 : ['openjdktest', 'systemtest'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
 ]
 
