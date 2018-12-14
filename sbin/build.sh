@@ -475,11 +475,12 @@ makeACopyOfLibFreeFontForMacOSX() {
 
 
 # Get the first tag from the git repo
+# Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
 getFirstTagFromOpenJDKGitRepo()
 {
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    RevList=$(git rev-list --tags --max-count=100)
-    firstMatchingNameFromRepo=$(git describe --tags "$RevList" | grep ^jdk | head -1)
+    revList=$(git rev-list --tags --max-count=$GIT_TAGS_TO_SEARCH)
+    firstMatchingNameFromRepo=$(git describe --tags "$revList" | grep jdk | grep -v openj9 | head -1)
     echo "$firstMatchingNameFromRepo"
 }
 
