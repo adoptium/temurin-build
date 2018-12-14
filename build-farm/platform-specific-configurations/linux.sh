@@ -41,7 +41,7 @@ fi
 
 if [ "${VARIANT}" == "openj9" ]
 then
-  if [ "${ARCHITECTURE}" == "s390x" ]
+  if [ "${ARCHITECTURE}" == "s390x" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/usr/local/openssl-1.1.1 --enable-openssl-bundling"
   else
