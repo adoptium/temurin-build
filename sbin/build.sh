@@ -480,7 +480,7 @@ getFirstTagFromOpenJDKGitRepo()
 {
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     revList=$(git rev-list --tags --max-count=$GIT_TAGS_TO_SEARCH)
-    firstMatchingNameFromRepo=$(git describe --tags "$revList" | grep jdk | grep -v openj9 | head -1)
+    firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | head -1)
     echo "$firstMatchingNameFromRepo"
 }
 
