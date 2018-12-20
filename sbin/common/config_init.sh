@@ -280,7 +280,7 @@ function setBranch() {
 
 # Set the config defaults
 function configDefaults() {
- 
+
   # The OS kernel name, e.g. 'darwin' for Mac OS X
   BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
 
@@ -309,7 +309,12 @@ function configDefaults() {
   BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.9.1"
   BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
 
-  BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
+  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ] || [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "SunOS" ]; then
+    BUILD_CONFIG[MAKE_COMMAND_NAME]="gmake"
+  else
+    BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
+  fi
+
   BUILD_CONFIG[SIGN]="false"
   BUILD_CONFIG[JDK_BOOT_DIR]=""
 
@@ -332,7 +337,7 @@ function configDefaults() {
 
   # Use Docker to build (defaults to false)
   BUILD_CONFIG[USE_DOCKER]=${BUILD_CONFIG[USE_DOCKER]:-false}
-  
+
   # Alow to debug docker build.sh script (dafult to false)
   BUILD_CONFIG[DEBUG_DOCKER]=${BUILD_CONFIG[DEBUG_DOCKER]:-false}
 
