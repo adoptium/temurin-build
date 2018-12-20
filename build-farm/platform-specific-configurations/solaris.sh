@@ -23,10 +23,6 @@ export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-cups=/opt/csw/lib/ --with-cups-include=/usr/local/cups-1.5.4-src --with-freetype=/usr/local/ --with-memory-size=16000"
 
 export PATH=/opt/solarisstudio12.3/bin/:/opt/csw/bin/:$PATH
-export TARGET_OS=solaris
-export JAVA_TO_BUILD=jdk8u
-export JDK7_BOOT_DIR=/opt/csw/java/jdk1.7.0_80/
-export TERM=xterm
 export LC_ALL=C
 export HOTSPOT_DISABLE_DTRACE_PROBES=true
 export ENFORCE_CC_COMPILER_REV=5.12
