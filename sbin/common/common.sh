@@ -68,9 +68,7 @@ createOpenJDKArchive()
 
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = *"cygwin"* ]]; then
       zip -r -q "${fileName}.zip" ./"${repoDir}"
-  elif [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]]; then
-      GZIP=-9 tar -cf - "${repoDir}"/ | $COMPRESS -c > $fileName.tar.gz
   else
-      GZIP=-9 tar --use-compress-program=$COMPRESS -cf "${fileName}.tar.gz" "${repoDir}"
+      tar -cf - "${repoDir}"/ | GZIP=-9 $COMPRESS -c > $fileName.tar.gz
   fi
 }
