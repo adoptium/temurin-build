@@ -84,6 +84,12 @@ def buildConfigurations = [
                 test                : ['openjdktest', 'systemtest']
         ],
 
+        sparcv9Solaris    : [
+                os                  : 'solaris',
+                arch                : 'sparcv9',
+                test                : false
+        ],
+
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
@@ -132,4 +138,3 @@ node ("master") {
             additionalFileNameTag,
             cleanWorkspaceBeforeBuild)
 }
-
