@@ -77,7 +77,7 @@ then
         downloadArch="${ARCHITECTURE}"
         [ "$downloadArch" == "arm" ] && downloadArch="arm32"
         mkdir -p "$JDK10_BOOT_DIR"
-        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=linux&release=latest&arch=${downloadArch}" | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR"
+        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/nightly/openjdk10?os=linux&release=latest&arch=${downloadArch}&type=jdk" | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR"
       fi
     fi
     export JDK_BOOT_DIR=$JDK10_BOOT_DIR
