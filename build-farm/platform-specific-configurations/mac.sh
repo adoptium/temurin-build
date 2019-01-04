@@ -38,8 +38,10 @@ fi
 
 if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
 then
-  if [ "${VARIANT}" != "openj9" ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.8  --with-openssl=fetched --enable-openssl-bundling"
+  if [ "${VARIANT}" == "openj9" ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
+  else
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.8"
   fi
   if [ ! -d "$JDK10_BOOT_DIR" ]; then
     export JDK10_BOOT_DIR="$PWD/jdk-10"
