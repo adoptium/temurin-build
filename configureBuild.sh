@@ -254,7 +254,7 @@ setMakeCommandForOS() {
   "aix")
     make_command_name="gmake"
   ;;
-  "SunOS")
+  "sunos")
     make_command_name="gmake"
   ;;
   esac
