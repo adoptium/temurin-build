@@ -71,20 +71,11 @@ parseCommandLineArgs()
 # shellcheck disable=SC2153
 doAnyBuildVariantOverrides()
 {
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
-    # current location of Extensions for OpenJDK9 for OpenJ9 project
-    local repository="ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
-  fi
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]; then
-    # current location of SAP variant
-    local repository="SAP/SapMachine"
-     # sapmachine10 is the current branch for OpenJDK10 mainline
-     # (equivalent to jdk/jdk10 on hotspot)
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]
+  then
     local branch="sapmachine10"
+    BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
   fi
-
-  BUILD_CONFIG[REPOSITORY]=${repository:-${BUILD_CONFIG[REPOSITORY]}};
-  BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
 }
 
 # Set the working directory for this build
@@ -153,19 +144,43 @@ setVariablesForConfigure() {
   BUILD_CONFIG[JRE_PATH]=$jre_path
 }
 
+
 # Set the repository to build from, defaults to AdoptOpenJDK if not set by the user
+# shellcheck disable=SC2153
 setRepository() {
 
   local repository;
-  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-    repository="${BUILD_CONFIG[REPOSITORY]:-git@github.com:adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+
+  # Location of Extensions for OpenJ9 project
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]
+  then
+    if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
+      repository="git@github.com:ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}";
+    else
+      repository="https://github.com/ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}";
+    fi
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]
+  then
+    # TODO need to map versions to SAP branches going forwards
+    # sapmachine10 is the current branch for OpenJDK10 mainline
+    # (equivalent to jdk/jdk10 on hotspot)
+    if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]]
+    then
+      repository="git@github.com:SAP/SapMachine";
+    else
+      repository="https://github.com/SAP/SapMachine";
+    fi
   else
-    repository="${BUILD_CONFIG[REPOSITORY]:-https://github.com/adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}}";
+    if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
+      repository="git@github.com:adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}";
+    else
+      repository="https://github.com/adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}";
+    fi
   fi
 
   repository="$(echo "${repository}" | awk '{print tolower($0)}')";
 
-  BUILD_CONFIG[REPOSITORY]=$repository;
+  BUILD_CONFIG[REPOSITORY]="${BUILD_CONFIG[REPOSITORY]:-${repository}}";
 }
 
 # Specific platforms need to have special build settings
@@ -223,9 +238,6 @@ processArgumentsforSpecificArchitectures() {
     configure_args_for_any_platform="--with-jobs=${NUM_PROCESSORS}"
   ;;
 
-  "aarch64")
-    BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.5.2"
-  ;;
   esac
 
   BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-$jvm_variant}
@@ -242,7 +254,7 @@ setMakeCommandForOS() {
   "aix")
     make_command_name="gmake"
   ;;
-  "SunOS")
+  "sunos")
     make_command_name="gmake"
   ;;
   esac

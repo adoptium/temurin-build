@@ -14,17 +14,15 @@
 # limitations under the License.
 ################################################################################
 
-export JDK8_VERSION="jdk8u";
-export JDK9_VERSION="jdk9u";
-export JDK10_VERSION="jdk10u";
-export JDK11_VERSION="jdk11u";
-export JDKHEAD_VERSION="jdk";
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# shellcheck source=sbin/common/constants.sh
+source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
-export JDK8_CORE_VERSION="jdk8";
-export JDK9_CORE_VERSION="jdk9";
-export JDK10_CORE_VERSION="jdk10";
-export JDK11_CORE_VERSION="jdk11";
-export JDKHEAD_CORE_VERSION="${JDKHEAD_VERSION}";
-export AMBER_CORE_VERSION="amber";
+export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 
-export GIT_TAGS_TO_SEARCH=100
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-cups=/opt/csw/lib/ --with-cups-include=/usr/local/cups-1.5.4-src --with-freetype=/usr/local/ --with-memory-size=16000"
+
+export PATH=/opt/solarisstudio12.3/bin/:/opt/csw/bin/:$PATH
+export LC_ALL=C
+export HOTSPOT_DISABLE_DTRACE_PROBES=true
+export ENFORCE_CC_COMPILER_REV=5.12

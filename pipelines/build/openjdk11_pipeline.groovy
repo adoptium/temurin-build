@@ -39,7 +39,8 @@ def buildConfigurations = [
                 test                : [
                         nightly: ['openjdktest', 'systemtest', 'perftest', 'externaltest', 'externaltest_extended'],
                         release: ['openjdktest', 'systemtest', 'perftest', 'externaltest']
-                ]
+                ],
+                configureArgs        : '--disable-ccache'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -50,7 +51,7 @@ def buildConfigurations = [
                         hotspot: 'win2012',
                         openj9:  'win2012&&vs2017'
                 ],
-                test                : ['openjdktest', 'perftest']
+                test                : ['openjdktest', 'perftest', 'systemtest']
         ],
 
         x32Windows: [
@@ -76,13 +77,16 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 's390x',
                 additionalNodeLabels: 'build-marist-rhel74-s390x-2',
-                test                : ['openjdktest', 'systemtest', 'perftest']
+                test                : ['openjdktest', 'systemtest', 'perftest'],
+                configureArgs        : '--disable-ccache'
         ],
 
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                test                : ['openjdktest', 'systemtest', 'perftest']
+                test                : ['openjdktest', 'systemtest', 'perftest'],
+                configureArgs       : '--disable-ccache'
+
         ],
 
         arm32Linux    : [
@@ -112,14 +116,27 @@ def buildConfigurations = [
                 arch                 : 'x64',
                 test                 : ['openjdktest', 'systemtest'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
 ]
 
-def javaToBuild = "jdk11"
+def javaToBuild = "jdk11u"
 
 node ("master") {
     def scmVars = checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
-    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag, branch, additionalConfigureArgs, scmVars, additionalBuildArgs)
+
+    buildFile.doBuild(
+            javaToBuild,
+            buildConfigurations,
+            targetConfigurations,
+            enableTests,
+            publish,
+            releaseTag,
+            branch,
+            additionalConfigureArgs,
+            scmVars,
+            additionalBuildArgs,
+            additionalFileNameTag,
+            cleanWorkspaceBeforeBuild)
 }

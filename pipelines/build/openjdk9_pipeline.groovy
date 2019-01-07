@@ -31,7 +31,6 @@ def buildConfigurations = [
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
-                additionalNodeLabels: 'win2012',
                 additionalNodeLabels: [
                         hotspot: 'win2012',
                         openj9:  'win2012&&mingw-cygwin'
@@ -87,5 +86,18 @@ def javaToBuild = "jdk9u"
 node ("master") {
     def scmVars = checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
-    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag, branch, additionalConfigureArgs, scmVars, additionalBuildArgs)
+
+    buildFile.doBuild(
+            javaToBuild,
+            buildConfigurations,
+            targetConfigurations,
+            enableTests,
+            publish,
+            releaseTag,
+            branch,
+            additionalConfigureArgs,
+            scmVars,
+            additionalBuildArgs,
+            additionalFileNameTag,
+            cleanWorkspaceBeforeBuild)
 }

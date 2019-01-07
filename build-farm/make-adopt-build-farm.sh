@@ -65,14 +65,10 @@ fi
 
 echo "Boot jdk: ${JDK_BOOT_DIR}"
 
-if [ "${OPERATING_SYSTEM}" == "linux" ] ; then
-  EXTENSION="tar.gz"
-elif [ "${OPERATING_SYSTEM}" == "aix" ] ; then
-  EXTENSION="tar.gz"
-elif [ "${OPERATING_SYSTEM}" == "mac" ] ; then
-  EXTENSION="tar.gz"
-elif [ "${OPERATING_SYSTEM}" == "windows" ] ; then
+if [ "${OPERATING_SYSTEM}" == "windows" ] ; then
   EXTENSION=zip
+else
+  EXTENSION="tar.gz"
 fi
 
 if [ ! -z "${TAG}" ]; then

@@ -29,8 +29,6 @@ then
 
   if [ "${VARIANT}" == "openj9" ]
   then
-    export PATH="/usr/bin:$PATH"
-
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
     then
       if which g++-4.8; then
@@ -41,14 +39,9 @@ then
   fi
 fi
 
-if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
+if [ "${VARIANT}" == "openj9" ]
 then
-  if [ "${ARCHITECTURE}" == "s390x" ]
-  then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/usr/local/openssl-1.1.1 --enable-openssl-bundling"
-  else
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
-  fi
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
 fi
 
 if [ "${ARCHITECTURE}" == "ppc64le" ]
@@ -58,13 +51,7 @@ fi
 
 if [ "${ARCHITECTURE}" == "arm" ]
 then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000"
-fi
-
-# Skip Building Freetype for certain platforms
-if [ "${ARCHITECTURE}" == "aarch64" ] || [ "${ARCHITECTURE}" == "ppc64le" ]
-then
-  export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000 --disable-warnings-as-errors"
 fi
 
 if [ "${ARCHITECTURE}" == "s390x" ] || [ "${ARCHITECTURE}" == "ppc64le" ]
@@ -84,13 +71,14 @@ fi
 
 if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
 then
-    export JDK10_BOOT_DIR="$PWD/jdk-10"
-    if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
-      downloadArch="${ARCHITECTURE}"
-      [ "$downloadArch" == "arm" ] && downloadArch="arm32"
-
-      mkdir -p "$JDK10_BOOT_DIR"
-      wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=linux&release=latest&arch=${downloadArch}" | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR"
+    if [ ! -d "$JDK10_BOOT_DIR" ]; then
+      export JDK10_BOOT_DIR="$PWD/jdk-10"
+      if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
+        downloadArch="${ARCHITECTURE}"
+        [ "$downloadArch" == "arm" ] && downloadArch="arm32"
+        mkdir -p "$JDK10_BOOT_DIR"
+        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/nightly/openjdk10?os=linux&release=latest&arch=${downloadArch}&type=jdk" | tar xpzf - --strip-components=1 -C "$JDK10_BOOT_DIR"
+      fi
     fi
     export JDK_BOOT_DIR=$JDK10_BOOT_DIR
 fi

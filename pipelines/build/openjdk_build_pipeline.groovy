@@ -12,11 +12,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import groovy.json.JsonSlurper
-
 @Library('openjdk-jenkins-helper@master')
 import JobHelper
 import NodeHelper
+import groovy.json.JsonSlurper
 
 /**
  * This file is a template for running a build for a given configuration
@@ -80,7 +79,8 @@ def runTests(config) {
                             build job: jobName,
                                     propagate: false,
                                     parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
-                                                 string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}")]
+                                                 string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                                                 string(name: 'RELEASE_TAG', value: "${TAG}")]
                         }
                     } else {
                         println "Requested test job that does not exist or is disabled: ${jobName}"
@@ -144,11 +144,16 @@ try {
     println "Executing tests: ${config}"
     println "Build num: ${env.BUILD_NUMBER}"
 
-    def enableTests = ENABLE_TESTS == "true"
+    def enableTests = Boolean.valueOf(ENABLE_TESTS)
+    def cleanWorkspace = Boolean.valueOf(CLEAN_WORKSPACE)
 
     stage("build") {
         if (NodeHelper.nodeIsOnline(NODE_LABEL)) {
             node(NODE_LABEL) {
+                if (cleanWorkspace) {
+                    cleanWs notFailBuild: true
+                }
+
                 checkout scm
                 try {
                     sh "./build-farm/make-adopt-build-farm.sh"

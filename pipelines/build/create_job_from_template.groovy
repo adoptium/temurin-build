@@ -28,6 +28,7 @@ if (!binding.hasVariable('ADDITIONAL_FILE_NAME_TAG')) ADDITIONAL_FILE_NAME_TAG =
 if (!binding.hasVariable('TEST_CONFIG')) TEST_CONFIG = ""
 if (!binding.hasVariable('ENABLE_TESTS')) ENABLE_TESTS = "false"
 if (!binding.hasVariable('BRANCH')) BRANCH = ""
+if (!binding.hasVariable('CLEAN_WORKSPACE')) CLEAN_WORKSPACE = "false"
 
 
 if (!binding.hasVariable('GIT_URI')) GIT_URI = "https://github.com/AdoptOpenJDK/openjdk-build.git"
@@ -66,7 +67,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
         numToKeep(5)
     }
     parameters {
-        stringParam('TAG', null, "git tag/branch/commit to bulid if not HEAD")
+        stringParam('TAG', null, "git tag/branch/commit to build if not HEAD")
         stringParam('NODE_LABEL', "$NODE_LABEL")
         stringParam('JAVA_TO_BUILD', "$JAVA_TO_BUILD")
         stringParam('JDK_BOOT_VERSION', "${JDK_BOOT_VERSION}")
@@ -77,6 +78,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
         stringParam('TARGET_OS', "$TARGET_OS")
         stringParam('ADDITIONAL_FILE_NAME_TAG', "$ADDITIONAL_FILE_NAME_TAG")
         stringParam('ENABLE_TESTS', "$ENABLE_TESTS")
+        stringParam('CLEAN_WORKSPACE', "$CLEAN_WORKSPACE")
         stringParam('BRANCH', "$BRANCH")
         textParam('TEST_CONFIG', "$TEST_CONFIG")
     }

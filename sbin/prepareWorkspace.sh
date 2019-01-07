@@ -47,7 +47,7 @@ checkoutAndCloneOpenJDKGitRepo()
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
-    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep --quiet "${BUILD_CONFIG[REPOSITORY]}"
+    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep "${BUILD_CONFIG[REPOSITORY]}"
     local isCorrectGitRepo=$?
     set -e
 
@@ -102,11 +102,7 @@ updateOpenj9Sources() {
   # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-      bash get_source.sh --openssl-version=1.1.1
-    else
-      bash get_source.sh
-    fi
+    bash get_source.sh --openssl-version=1.1.1a
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
@@ -122,6 +118,8 @@ cloneOpenJDKGitRepo()
 # Create the workspace
 createWorkspace()
 {
+   # Setting this to ensure none of the files we ship are group writable
+   umask 022
    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 }
@@ -144,7 +142,7 @@ checkingAndDownloadingAlsa()
     # TODO Holy security problem Batman!
     #wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     wget -nc https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
-    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
       bzip2 -d alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
       tar -xf alsa-lib-"${ALSA_LIB_VERSION}".tar --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
       rm alsa-lib-"${ALSA_LIB_VERSION}".tar
@@ -214,6 +212,13 @@ checkingAndDownloadingFreeType()
       # shellcheck disable=SC2154
       echo "Successfully configured OpenJDK with the FreeType library (libfreetype)!"
 
+     if [ -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/include/freetype2/freetype" ]; then
+        echo "Relocating freetype headers"
+        # Later freetype nests its header files
+        cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/include/freetype2/ft2build.h" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/include/"
+        cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/include/freetype2/freetype/"* "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/include/"
+     fi
+
      if [[ ${BUILD_CONFIG[OS_KERNEL_NAME]} == "darwin" ]] ; then
         TARGET_DYNAMIC_LIB_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype/lib/
         TARGET_DYNAMIC_LIB="${TARGET_DYNAMIC_LIB_DIR}"/libfreetype.6.dylib
@@ -240,7 +245,7 @@ checkingAndDownloadCaCerts()
 {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 
-    echo "Retrieving cacerts file"
+  echo "Retrieving cacerts file"
   # Ensure it's the latest we pull in
   rm -rf "cacerts_area"
   mkdir "cacerts_area" || exit
@@ -251,7 +256,7 @@ checkingAndDownloadCaCerts()
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]
     then
       echo "Requested use of JEP319 certs"
-      local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk11/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
+      local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk11u/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
       mkdir -p "security"
       # Temporary fudge as curl on my windows boxes is exiting with RC=127
       if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
@@ -313,21 +318,12 @@ function moveTmpToWorkspaceLocation {
 
     echo "Relocating workspace from ${TMP_WORKSPACE} to ${ORIGINAL_WORKSPACE}"
 
-    rm -rf "${ORIGINAL_WORKSPACE}" || true
+    rsync -a --delete  "${TMP_WORKSPACE}/workspace/" "${ORIGINAL_WORKSPACE}/"
+    echo "===${ORIGINAL_WORKSPACE}/======"
+    ls -alh "${ORIGINAL_WORKSPACE}/" || true
 
-    mkdir "${ORIGINAL_WORKSPACE}"
-
-    # shellcheck disable=SC2086
-    chmod 755 ${TMP_WORKSPACE}/workspace/* || true
-    chmod 755 "${ORIGINAL_WORKSPACE}" || true
-
-    # shellcheck disable=SC2086
-    cp -r ${TMP_WORKSPACE}/workspace/* "${ORIGINAL_WORKSPACE}"
-    rm -rf "${TMP_WORKSPACE}/workspace/"
-    rm -r "${TMP_WORKSPACE}"
-
-    echo "Data at: ${ORIGINAL_WORKSPACE}"
-    ls -alh "${ORIGINAL_WORKSPACE}"
+    echo "===${ORIGINAL_WORKSPACE}/build======"
+    ls -alh "${ORIGINAL_WORKSPACE}/build" || true
   fi
 }
 
@@ -336,8 +332,10 @@ relocateToTmpIfNeeded()
 {
    if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
    then
-     local tmpdir
-     tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'tmpdir')
+     jobName=$(echo "${JOB_NAME:-build-dir}" | egrep -o "[^/]+$")
+     local tmpdir="/tmp/openjdk-${jobName}"
+     mkdir -p "$tmpdir"
+
      export TMP_WORKSPACE="${tmpdir}"
      export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
 
@@ -345,7 +343,17 @@ relocateToTmpIfNeeded()
 
      if [ -d "${ORIGINAL_WORKSPACE}" ]
      then
-        cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/workspace"
+        echo "${BUILD_CONFIG[WORKSPACE_DIR]}"
+        rsync -a --delete "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/"
+
+        echo "===${TMP_WORKSPACE}/======"
+        ls -alh "${TMP_WORKSPACE}/" || true
+
+        echo "===${TMP_WORKSPACE}/workspace======"
+        ls -alh "${TMP_WORKSPACE}/workspace" || true
+
+        echo "===${TMP_WORKSPACE}/workspace/build======"
+        ls -alh "${TMP_WORKSPACE}/workspace/build" || true
      fi
      BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
 
@@ -360,4 +368,3 @@ function configureWorkspace() {
     relocateToTmpIfNeeded
     checkoutAndCloneOpenJDKGitRepo
 }
-

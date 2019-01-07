@@ -25,12 +25,13 @@ limitations under the License.
  * 3. Push generated artifacts to github
  */
 
-def toBuildParams(enableTests, params) {
+def toBuildParams(enableTests, cleanWorkspace, params) {
 
     List buildParams = []
 
     buildParams += [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: params.get("NODE_LABEL")]
     buildParams += string(name: "ENABLE_TESTS", value: "${enableTests}")
+    buildParams += string(name: "CLEAN_WORKSPACE", value: "${cleanWorkspace}")
 
     params
             .findAll { it.key != 'NODE_LABEL' }
@@ -39,7 +40,6 @@ def toBuildParams(enableTests, params) {
     return buildParams
 }
 
-static
 def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs) {
 
     def additionalNodeLabels = formAdditionalNodeLabels(configuration, variant)
@@ -57,7 +57,7 @@ def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, 
 
     buildParams.putAll(getConfigureArgs(configuration, additionalConfigureArgs))
 
-    def buildArgs = getBuildArgs(configuration, variant);
+    def buildArgs = getBuildArgs(configuration, variant)
 
     if (additionalBuildArgs != null && additionalBuildArgs.length() > 0) {
         buildArgs += " " + additionalBuildArgs
@@ -83,7 +83,7 @@ def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, 
             os         : configuration.os,
             variant    : variant,
             parameters : buildParams,
-            test       : testList,
+            test       : testList
     ]
 }
 
@@ -131,7 +131,7 @@ static def formAdditionalNodeLabels(configuration, variant) {
     def labels = "${buildTag}"
 
     if (configuration.containsKey("additionalNodeLabels")) {
-        def additionalNodeLabels = null
+        def additionalNodeLabels
 
         if (isMap(configuration.additionalNodeLabels)) {
             additionalNodeLabels = configuration.additionalNodeLabels.get(variant)
@@ -146,9 +146,9 @@ static def formAdditionalNodeLabels(configuration, variant) {
 
 static def getConfigureArgs(configuration, additionalConfigureArgs) {
     def buildParams = [:]
-    def configureArgs = "";
+    def configureArgs = ""
 
-    if (configuration.containsKey('configureArgs')) configureArgs += configuration.configureArgs;
+    if (configuration.containsKey('configureArgs')) configureArgs += configuration.configureArgs
     if (additionalConfigureArgs != null && additionalConfigureArgs.length() > 0) {
         configureArgs += " " + additionalConfigureArgs
     }
@@ -159,7 +159,7 @@ static def getConfigureArgs(configuration, additionalConfigureArgs) {
     return buildParams
 }
 
-def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs) {
+def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs, String additionalFileNameTag) {
     def jobConfigurations = [:]
 
     //Parse config passed to jenkins job
@@ -172,9 +172,19 @@ def getJobConfigurations(javaVersionToBuild, availableConfigurations, String tar
             def configuration = availableConfigurations.get(target.key)
             target.value.each { variant ->
                 GString name = "${configuration.os}-${configuration.arch}-${variant}"
+
                 if (configuration.containsKey('additionalFileNameTag')) {
                     name += "-${configuration.additionalFileNameTag}"
                 }
+
+                if (additionalFileNameTag != null && additionalFileNameTag.length() > 0) {
+                    if (configuration.containsKey('additionalFileNameTag')) {
+                        configuration.additionalFileNameTag = "${configuration.additionalFileNameTag}-${additionalFileNameTag}"
+                    } else {
+                        configuration.additionalFileNameTag = "${additionalFileNameTag}"
+                    }
+                }
+
                 jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs)
             }
         }
@@ -241,25 +251,36 @@ def publishRelease(javaToBuild, releaseTag) {
     }
 }
 
-def doBuild(String javaVersionToBuild, availableConfigurations, String targetConfigurations, String enableTestsArg, String publishArg, String releaseTag, String branch, String additionalConfigureArgs, scmVars, String additionalBuildArgs) {
+def doBuild(
+        String javaVersionToBuild,
+        availableConfigurations,
+        String targetConfigurations,
+        String enableTestsArg,
+        String publishArg,
+        String releaseTag,
+        String branch,
+        String additionalConfigureArgs,
+        scmVars,
+        String additionalBuildArgs,
+        String additionalFileNameTag,
+        String cleanWorkspaceBeforeBuild) {
 
     if (releaseTag == null || releaseTag == "false") {
         releaseTag = ""
     }
 
-    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs)
+    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, additionalFileNameTag)
     def jobs = [:]
 
-    def enableTests = enableTestsArg == "true"
-    def publish = publishArg == "true"
-
+    def enableTests = Boolean.valueOf(enableTestsArg)
+    def publish = Boolean.valueOf(publishArg)
+    def cleanWorkspace = Boolean.valueOf(cleanWorkspaceBeforeBuild)
 
     echo "Java: ${javaVersionToBuild}"
     echo "OS: ${targetConfigurations}"
     echo "Enable tests: ${enableTests}"
     echo "Publish: ${publish}"
     echo "ReleaseTag: ${releaseTag}"
-
 
     jobConfigurations.each { configuration ->
         jobs[configuration.key] = {
@@ -279,7 +300,7 @@ def doBuild(String javaVersionToBuild, availableConfigurations, String targetCon
                     createJob(jobTopName, jobFolder, config, enableTests, scmVars)
 
                     // execute build
-                    def downstreamJob = build job: downstreamJobName, propagate: false, parameters: toBuildParams(enableTests, config.parameters)
+                    def downstreamJob = build job: downstreamJobName, propagate: false, parameters: toBuildParams(enableTests, cleanWorkspace, config.parameters)
 
                     if (downstreamJob.getResult() == 'SUCCESS') {
                         // copy artifacts from build

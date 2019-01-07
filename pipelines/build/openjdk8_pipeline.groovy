@@ -53,7 +53,7 @@ def buildConfigurations = [
                 buildArgs: [
                         openj9:  '--skip-freetype'
                 ],
-                test                : ['openjdktest']
+                test                : ['openjdktest', 'systemtest']
         ],
 
         x32Windows: [
@@ -82,6 +82,12 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 's390x',
                 test                : ['openjdktest', 'systemtest']
+        ],
+
+        sparcv9Solaris    : [
+                os                  : 'solaris',
+                arch                : 'sparcv9',
+                test                : false
         ],
 
         ppc64leLinux    : [
@@ -118,6 +124,17 @@ def javaToBuild = "jdk8u"
 node ("master") {
     def scmVars = checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
-    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag, branch, additionalConfigureArgs, scmVars, additionalBuildArgs)
+    buildFile.doBuild(
+            javaToBuild,
+            buildConfigurations,
+            targetConfigurations,
+            enableTests,
+            publish,
+            releaseTag,
+            branch,
+            additionalConfigureArgs,
+            scmVars,
+            additionalBuildArgs,
+            additionalFileNameTag,
+            cleanWorkspaceBeforeBuild)
 }
-

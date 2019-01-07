@@ -16,7 +16,6 @@ def buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
-                bootJDK             : "/Users/jenkins/tools/hudson.model.JDK/JDK9.0.1",
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
                 test                : ['openjdktest', 'systemtest']
         ],
@@ -95,5 +94,18 @@ def javaToBuild = "jdk10u"
 node ("master") {
     def scmVars = checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
-    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, enableTests, publish, releaseTag, branch, additionalConfigureArgs, scmVars, additionalBuildArgs)
+
+    buildFile.doBuild(
+            javaToBuild,
+            buildConfigurations,
+            targetConfigurations,
+            enableTests,
+            publish,
+            releaseTag,
+            branch,
+            additionalConfigureArgs,
+            scmVars,
+            additionalBuildArgs,
+            additionalFileNameTag,
+            cleanWorkspaceBeforeBuild)
 }

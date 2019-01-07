@@ -297,7 +297,7 @@ buildTemplatedFile() {
 
   echo "Currently at '${PWD}'"
 
-  FULL_CONFIGURE="bash ./configure ${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
+  FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
   echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
 
   # If it's Java 9+ then we also make test-image to build the native test libraries
@@ -351,6 +351,13 @@ printJavaVersionString()
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "'$PRODUCT_HOME' found"
      if ! "$PRODUCT_HOME"/bin/java -version; then
+
+       echo "===$PRODUCT_HOME===="
+       ls -alh "$PRODUCT_HOME"
+
+       echo "===$PRODUCT_HOME/bin/===="
+       ls -alh "$PRODUCT_HOME/bin/"
+
        echo " Error executing 'java' does not exist in '$PRODUCT_HOME'."
        exit -1
      fi
@@ -468,12 +475,13 @@ makeACopyOfLibFreeFontForMacOSX() {
 
 
 # Get the first tag from the git repo
+# Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
 getFirstTagFromOpenJDKGitRepo()
 {
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    justOneFromTheRevList=$(git rev-list --tags --max-count=1)
-    tagNameFromRepo=$(git describe --tags "$justOneFromTheRevList")
-    echo "$tagNameFromRepo"
+    revList=$(git rev-list --tags --max-count=$GIT_TAGS_TO_SEARCH)
+    firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | head -1)
+    echo "$firstMatchingNameFromRepo"
 }
 
 createArchive() {
