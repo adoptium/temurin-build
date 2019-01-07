@@ -50,7 +50,6 @@ then
 
   if [ "${VARIANT}" == "openj9" ]
   then
-    export PATH="/cygdrive/c/Program Files (x86)/LLVM/bin:$PATH"
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/progra~2/OpenSSL --enable-openssl-bundling"
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
@@ -65,6 +64,8 @@ then
       # Next line a potentially tactical fix for https://github.com/AdoptOpenJDK/openjdk-build/issues/267
       export PATH="/usr/bin:$PATH"
     fi
+    # This needs to be before cygwin as at least one machine has 64-bit clang in cygwin #813
+    export PATH="/cygdrive/c/Program Files (x86)/LLVM/bin:$PATH"
   fi
 fi
 
@@ -98,7 +99,6 @@ then
 
   if [ "${VARIANT}" == "openj9" ]
   then
-    export PATH="/cygdrive/c/Program Files/LLVM/bin:/usr/bin:$PATH"
     export HAS_AUTOCONF=1
     export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
 
@@ -119,6 +119,8 @@ then
       TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/progra~1/OpenSSL --enable-openssl-bundling"
     fi
+    # LLVM needs to be before cygwin as at least one machine has clang in cygwin #813
+    export PATH="/cygdrive/c/Program Files/LLVM/bin:/usr/bin:$PATH"
   fi
 fi
 
