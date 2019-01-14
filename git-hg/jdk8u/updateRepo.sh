@@ -15,11 +15,11 @@ if [ -d ".git" ];then
   git am --abort || true
 else
   git clone git@github.com:AdoptOpenJDK/openjdk-jdk8u.git .
-  git fetch --all
 fi
 
 # Update dev branch
 cd "$REPO"
+git fetch --all
 git checkout dev
 cd $SCRIPT_DIR
 ./merge.sh -T "HEAD" -b "dev"
