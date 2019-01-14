@@ -13,6 +13,9 @@ if [ -d ".git" ];then
   git checkout master
   git merge --abort || true
   git am --abort || true
+else
+  git clone git@github.com:AdoptOpenJDK/openjdk-jdk8u.git .
+  git fetch --all
 fi
 
 # Update dev branch
