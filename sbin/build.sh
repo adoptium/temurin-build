@@ -422,7 +422,7 @@ removingUnnecessaryFiles()
 }
 
 moveFreetypeLib() {
-  LIB_DIRECTORY="${1}"
+  local LIB_DIRECTORY="${1}"
 
   if [ ! -d "${LIB_DIRECTORY}" ]; then
     echo "Could not find dir: ${LIB_DIRECTORY}"
@@ -431,7 +431,7 @@ moveFreetypeLib() {
 
   echo " Performing copying of the free font library to ${LIB_DIRECTORY}, applicable for this version of the JDK. "
 
-  SOURCE_LIB_NAME="${LIB_DIRECTORY}/libfreetype.dylib.6"
+  local SOURCE_LIB_NAME="${LIB_DIRECTORY}/libfreetype.dylib.6"
 
   if [ ! -f "${SOURCE_LIB_NAME}" ]; then
     SOURCE_LIB_NAME="${LIB_DIRECTORY}/libfreetype.dylib"
@@ -442,9 +442,9 @@ moveFreetypeLib() {
       return
   fi
 
-  TARGET_LIB_NAME="${LIB_DIRECTORY}/libfreetype.6.dylib"
+  local TARGET_LIB_NAME="${LIB_DIRECTORY}/libfreetype.6.dylib"
 
-  INVOKED_BY_FONT_MANAGER="${LIB_DIRECTORY}/libfontmanager.dylib"
+  local INVOKED_BY_FONT_MANAGER="${LIB_DIRECTORY}/libfontmanager.dylib"
 
   echo "Currently at '${PWD}'"
   echo "Copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
@@ -466,13 +466,18 @@ moveFreetypeLib() {
 
 # If on a Mac, mac a copy of the font lib as required
 makeACopyOfLibFreeFontForMacOSX() {
-    LIB_DIRECTORY="${1}"
-    PERFORM_COPYING=$2
+    local DIRECTORY="${1}"
+    local PERFORM_COPYING=$2
 
+    echo "PERFORM_COPYING=${PERFORM_COPYING}"
+    if [ "${PERFORM_COPYING}" == "false" ]; then
+        echo " Skipping copying of the free font library to ${IMAGE_DIRECTORY}, does not apply for this version of the JDK. "
+        return
+    fi
 
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
-      moveFreetypeLib "${LIB_DIRECTORY}/Contents/Home/lib"
-      moveFreetypeLib "${LIB_DIRECTORY}/Contents/Home/jre/lib"
+      moveFreetypeLib "${DIRECTORY}/Contents/Home/lib"
+      moveFreetypeLib "${DIRECTORY}/Contents/Home/jre/lib"
     fi
 }
 
