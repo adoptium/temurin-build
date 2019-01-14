@@ -439,7 +439,7 @@ moveFreetypeLib() {
 
   if [ ! -f "${SOURCE_LIB_NAME}" ]; then
       echo "[Error] ${SOURCE_LIB_NAME} does not exist in the ${LIB_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process..."
-      exit -1
+      return
   fi
 
   TARGET_LIB_NAME="${LIB_DIRECTORY}/libfreetype.6.dylib"
