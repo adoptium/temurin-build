@@ -421,55 +421,58 @@ removingUnnecessaryFiles()
   echo "Finished removing unnecessary files from ${OPENJDK_REPO_TAG}"
 }
 
+moveFreetypeLib() {
+  LIB_DIRECTORY="${1}"
+
+  if [ ! -d "${LIB_DIRECTORY}" ]; then
+    echo "Could not find dir: ${LIB_DIRECTORY}"
+    return
+  fi
+
+  echo " Performing copying of the free font library to ${LIB_DIRECTORY}, applicable for this version of the JDK. "
+
+  SOURCE_LIB_NAME="${LIB_DIRECTORY}/libfreetype.dylib.6"
+
+  if [ ! -f "${SOURCE_LIB_NAME}" ]; then
+    SOURCE_LIB_NAME="${LIB_DIRECTORY}/libfreetype.dylib"
+  fi
+
+  if [ ! -f "${SOURCE_LIB_NAME}" ]; then
+      echo "[Error] ${SOURCE_LIB_NAME} does not exist in the ${LIB_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process..."
+      exit -1
+  fi
+
+  TARGET_LIB_NAME="${LIB_DIRECTORY}/libfreetype.6.dylib"
+
+  INVOKED_BY_FONT_MANAGER="${LIB_DIRECTORY}/libfontmanager.dylib"
+
+  echo "Currently at '${PWD}'"
+  echo "Copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
+  echo " *** Workaround to fix the MacOSX issue where invocation to ${INVOKED_BY_FONT_MANAGER} fails to find ${TARGET_LIB_NAME} ***"
+
+  cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
+  if [ -f "${INVOKED_BY_FONT_MANAGER}" ]; then
+      otool -L "${INVOKED_BY_FONT_MANAGER}"
+  else
+      # shellcheck disable=SC2154
+      echo "[Warning] ${INVOKED_BY_FONT_MANAGER} does not exist in the ${LIB_DIRECTORY} folder, please check if this is the right folder to refer to, this may cause runtime issues, please beware..."
+  fi
+
+  otool -L "${TARGET_LIB_NAME}"
+
+  echo "Finished copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
+}
+
+
 # If on a Mac, mac a copy of the font lib as required
 makeACopyOfLibFreeFontForMacOSX() {
-    IMAGE_DIRECTORY="${1}/Contents/Home"
+    LIB_DIRECTORY="${1}"
     PERFORM_COPYING=$2
 
-    if [ ! -d "${IMAGE_DIRECTORY}" ]; then
-      echo "Could not find dir: ${IMAGE_DIRECTORY}"
-      return
-    fi
 
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
-        echo "PERFORM_COPYING=${PERFORM_COPYING}"
-        if [ "${PERFORM_COPYING}" == "false" ]; then
-            echo " Skipping copying of the free font library to ${IMAGE_DIRECTORY}, does not apply for this version of the JDK. "
-            return
-        fi
-
-       echo " Performing copying of the free font library to ${IMAGE_DIRECTORY}, applicable for this version of the JDK. "
-
-        SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib.6"
-
-        if [ ! -f "${SOURCE_LIB_NAME}" ]; then
-          SOURCE_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.dylib"
-        fi
-
-        if [ ! -f "${SOURCE_LIB_NAME}" ]; then
-            echo "[Error] ${SOURCE_LIB_NAME} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, aborting copy process..."
-            exit -1
-        fi
-
-        TARGET_LIB_NAME="${IMAGE_DIRECTORY}/lib/libfreetype.6.dylib"
-
-        INVOKED_BY_FONT_MANAGER="${IMAGE_DIRECTORY}/lib/libfontmanager.dylib"
-
-        echo "Currently at '${PWD}'"
-        echo "Copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
-        echo " *** Workaround to fix the MacOSX issue where invocation to ${INVOKED_BY_FONT_MANAGER} fails to find ${TARGET_LIB_NAME} ***"
-
-        cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
-        if [ -f "${INVOKED_BY_FONT_MANAGER}" ]; then
-            otool -L "${INVOKED_BY_FONT_MANAGER}"
-        else
-            # shellcheck disable=SC2154
-            echo "[Warning] ${INVOKED_BY_FONT_MANAGER} does not exist in the ${IMAGE_DIRECTORY} folder, please check if this is the right folder to refer to, this may cause runtime issues, please beware..."
-        fi
-
-        otool -L "${TARGET_LIB_NAME}"
-
-        echo "Finished copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
+      moveFreetypeLib "${LIB_DIRECTORY}/Contents/Home/lib"
+      moveFreetypeLib "${LIB_DIRECTORY}/Contents/Home/jre/lib"
     fi
 }
 
