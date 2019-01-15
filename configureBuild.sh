@@ -183,20 +183,6 @@ setRepository() {
   BUILD_CONFIG[REPOSITORY]="${BUILD_CONFIG[REPOSITORY]:-${repository}}";
 }
 
-# Specific platforms need to have special build settings
-processArgumentsforSpecificPlatforms() {
-
-  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
-  "darwin")
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
-      BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false"
-      BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true"
-    fi
-  ;;
-  esac
-
-}
-
 # Specific architectures need to have special build settings
 # shellcheck disable=SC2153
 processArgumentsforSpecificArchitectures() {
@@ -263,7 +249,7 @@ setMakeCommandForOS() {
 }
 
 function configureMacFreeFont() {
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_VERSION}" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
         BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="true";
         BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true";
     fi
@@ -319,7 +305,6 @@ configure_build() {
     # Update the configuration with the arguments passed in, the platform etc
     setVariablesForConfigure
     setRepository
-    processArgumentsforSpecificPlatforms
     processArgumentsforSpecificArchitectures
     setMakeCommandForOS
 
