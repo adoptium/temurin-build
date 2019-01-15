@@ -21,6 +21,7 @@ function initRepo() {
   git clone $MIRROR/root/ .
   git checkout master
   git reset --hard "$tag"
+  git remote add "upstream" git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
   git remote add "root" "$MIRROR/root/"
 
   for module in "${MODULES[@]}" ; do
@@ -28,12 +29,15 @@ function initRepo() {
       git checkout master
       git reset --hard
   done
+  git fetch --all
 
   cd "$REPO"
   git tag | while read tag
   do
     git tag -d $tag || true
   done
+
+  git fetch upstream --tags
 }
 
 function inititialCheckin() {
@@ -68,6 +72,7 @@ function inititialCheckin() {
   do
     git tag -d $tag || true
   done
+  git fetch upstream --tags
 }
 
 function updateRepo() {
