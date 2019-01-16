@@ -91,6 +91,7 @@ function updateRepo() {
   git pull origin
   git reset --hard origin/master
   git fetch --all
+  git fetch --tags
 
 }
 
