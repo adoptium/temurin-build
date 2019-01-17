@@ -156,7 +156,10 @@ configuringVersionStringParameter()
     if [ -z "${buildNumber}" ]; then
       buildNumber=$(echo "$OPENJDK_REPO_TAG" | cut -f2 -d"-")
     fi
-    addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${buildNumber}"
+
+    if [ "${buildNumber}" ] && [ "${buildNumber}" != "ga" ]; then
+      addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${buildNumber}"
+    fi
   elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]; then
     local buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
     if [ -z "${buildNumber}" ]; then
