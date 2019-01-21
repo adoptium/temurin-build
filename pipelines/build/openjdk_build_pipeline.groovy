@@ -60,10 +60,9 @@ def determineTestJobName(config, testType) {
 
     def jobName = "openjdk${number}_${variant}_${testType}_${arch}_${os}"
 
-    if (config.containsKey('additionalFileNameTag')) {
-        jobName += "_${config.additionalFileNameTag}"
+    if (config.parameters.containsKey('ADDITIONAL_FILE_NAME_TAG')) {
+        jobName += "_${config.parameters.ADDITIONAL_FILE_NAME_TAG}"
     }
-
     return "${jobName}"
 }
 
