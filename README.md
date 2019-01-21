@@ -11,7 +11,7 @@ https://www.adoptopenjdk.net and https://api.adoptopenjdk.net.
 ##### Build jdk natively on your system
 
 ```
-./makejdk-any-platform.sh <jdk8u|jdk9u|jdk10u>
+./makejdk-any-platform.sh <jdk8u|jdk9u|jdk10u|jdk11u>
 i.e:
 ./makejdk-any-platform.sh jdk8u
 ```
