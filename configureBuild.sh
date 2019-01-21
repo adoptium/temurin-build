@@ -71,7 +71,7 @@ parseCommandLineArgs()
 # shellcheck disable=SC2153
 doAnyBuildVariantOverrides()
 {
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ]]
   then
     local branch="sapmachine10"
     BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
@@ -149,33 +149,36 @@ setVariablesForConfigure() {
 # shellcheck disable=SC2153
 setRepository() {
 
-  local repository;
+  local suffix;
 
   # Location of Extensions for OpenJ9 project
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]
   then
-    if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-      repository="git@github.com:ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}";
-    else
-      repository="https://github.com/ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}";
-    fi
-  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "SapMachine" ]]
+    suffix="ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}";
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ]]
   then
     # TODO need to map versions to SAP branches going forwards
     # sapmachine10 is the current branch for OpenJDK10 mainline
     # (equivalent to jdk/jdk10 on hotspot)
-    if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]]
-    then
-      repository="git@github.com:SAP/SapMachine";
+    suffix="SAP/SapMachine";
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]]
+  then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+      suffix="corretto/corretto-8";
     else
-      repository="https://github.com/SAP/SapMachine";
+      echo "Adopt only currently supports corretto for JDK8"
+      exit 1
     fi
   else
-    if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-      repository="git@github.com:adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}";
-    else
-      repository="https://github.com/adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}";
-    fi
+    suffix="adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}";
+  fi
+
+  local repository;
+
+  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
+    repository="git@github.com:${suffix}";
+  else
+    repository="https://github.com/${suffix}";
   fi
 
   repository="$(echo "${repository}" | awk '{print tolower($0)}')";
@@ -193,7 +196,7 @@ processArgumentsforSpecificArchitectures() {
 
   case "${BUILD_CONFIG[OS_ARCHITECTURE]}" in
   "s390x")
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "openj9" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
       jvm_variant=zero
     else
       jvm_variant=server
@@ -215,7 +218,7 @@ processArgumentsforSpecificArchitectures() {
   ;;
 
   "armv7l")
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "hotspot" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
       jvm_variant=zero
     else
       jvm_variant=server

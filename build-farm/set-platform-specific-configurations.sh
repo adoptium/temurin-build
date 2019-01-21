@@ -24,7 +24,7 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
 fi
 
-if [ "${VARIANT}" != "hotspot" ]
+if [ "${VARIANT}" != "${BUILD_VARIANT_HOTSPOT}" ]
 then
   export VARIANT_ARG="--build-variant ${VARIANT}"
 fi

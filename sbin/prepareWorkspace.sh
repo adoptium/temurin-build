@@ -78,10 +78,12 @@ checkoutAndCloneOpenJDKGitRepo()
   git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
 
   # Openj9 does not release from git tags
-  if [ ! -z "${BUILD_CONFIG[TAG]}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "openj9" ]; then
-    git fetch origin "refs/tags/${BUILD_CONFIG[TAG]}:refs/tags/${BUILD_CONFIG[TAG]}"
-    git checkout "${BUILD_CONFIG[TAG]}"
-    git reset --hard
+  if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] || [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ]; then
+      git fetch origin "refs/tags/${BUILD_CONFIG[TAG]}:refs/tags/${BUILD_CONFIG[TAG]}"
+      git checkout "${BUILD_CONFIG[TAG]}"
+      git reset --hard
+    fi
   fi
   git clean -ffdx
 
@@ -100,7 +102,7 @@ setGitCloneArguments() {
 
 updateOpenj9Sources() {
   # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     bash get_source.sh --openssl-version=1.1.1a
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
@@ -240,6 +242,17 @@ checkingAndDownloadingFreeType()
   fi
 }
 
+downloadCerts() {
+  local caLink="$1"
+
+  mkdir -p "security"
+  # Temporary fudge as curl on my windows boxes is exiting with RC=127
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+     wget -O "./security/cacerts" "${caLink}"
+  else
+     curl -L -o "./security/cacerts" "${caLink}"
+  fi
+}
 # Certificate Authority Certs (CA Certs)
 checkingAndDownloadCaCerts()
 {
@@ -251,19 +264,17 @@ checkingAndDownloadCaCerts()
   mkdir "cacerts_area" || exit
   cd "cacerts_area" || exit
 
-  if [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" == "true" ];
+
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
+      local caLink="https://github.com/corretto/corretto-8/blob/preview-release/cacerts?raw=true";
+      downloadCerts "$caLink"
+  elif [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" == "true" ];
   then
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]
     then
       echo "Requested use of JEP319 certs"
       local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk11u/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
-      mkdir -p "security"
-      # Temporary fudge as curl on my windows boxes is exiting with RC=127
-      if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-         wget -O "./security/cacerts" "${caLink}"
-      else
-         curl -L -o "./security/cacerts" "${caLink}"
-      fi
+      downloadCerts "$caLink"
     fi
   else
     git init
@@ -289,7 +300,7 @@ downloadingRequiredDependencies()
         echo "Checking and download Alsa dependency"
         checkingAndDownloadingAlsa
 
-     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
+     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
            echo "Checking and download Freemarker dependency"
            checkingAndDownloadingFreemarker
      fi

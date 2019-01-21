@@ -27,7 +27,7 @@ if [ "${ARCHITECTURE}" == "s390x" ]
 then
   export LANG=C
 
-  if [ "${VARIANT}" == "openj9" ]
+  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
   then
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
     then
@@ -39,7 +39,7 @@ then
   fi
 fi
 
-if [ "${VARIANT}" == "openj9" ]
+if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
 fi
@@ -56,7 +56,7 @@ fi
 
 if [ "${ARCHITECTURE}" == "s390x" ] || [ "${ARCHITECTURE}" == "ppc64le" ]
 then
-    if [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
+    if [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ] && [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
     then
       if [ -z "$JDK9_BOOT_DIR" ]; then
         export JDK9_BOOT_DIR="$PWD/jdk-9+181"
@@ -82,7 +82,7 @@ then
     fi
     export JDK_BOOT_DIR=$JDK10_BOOT_DIR
 fi
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ] || [ "${VARIANT}" == "openj9" ]; then
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     # If we have the RedHat devtoolset 7 installed, use gcc 7 from there, else /usr/local/gcc/bin
     if [ -r /opt/rh/devtoolset-7/root/usr/bin ]; then
       export PATH=/opt/rh/devtoolset-7/root/usr/bin:$PATH

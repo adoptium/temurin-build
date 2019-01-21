@@ -30,7 +30,7 @@ if [ "${ARCHITECTURE}" == "x86-32" ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --with-target-bits=32 --target=x86"
 
-  if [ "${VARIANT}" == "hotspot" ]
+  if [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ]
   then
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
@@ -48,7 +48,7 @@ then
     fi
   fi
 
-  if [ "${VARIANT}" == "openj9" ]
+  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/progra~2/OpenSSL --enable-openssl-bundling"
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
@@ -72,7 +72,7 @@ fi
 
 if [ "${ARCHITECTURE}" == "x64" ]
 then
-  if [ "${VARIANT}" == "hotspot" ]
+  if [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ]
   then
     TOOLCHAIN_VERSION="2013"
     # Unset the host VS120COMNTOOLS and VS110COMNTOOLS variables as Java picks them up by default and we don't want that.
@@ -97,7 +97,7 @@ then
     fi
   fi
 
-  if [ "${VARIANT}" == "openj9" ]
+  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
   then
     export HAS_AUTOCONF=1
     export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
@@ -127,7 +127,7 @@ fi
 
 if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
   # At time of writing java 8, hotspot tags cannot handle --with-toolchain-version
-  if [ "${JAVA_TO_BUILD}" != "${JDK8_VERSION}" ] || [ "${VARIANT}" != "hotspot" ] || [ -z "${TAG}" ]
+  if [ "${JAVA_TO_BUILD}" != "${JDK8_VERSION}" ] || [ "${VARIANT}" != "${BUILD_VARIANT_HOTSPOT}" ] || [ -z "${TAG}" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=${TOOLCHAIN_VERSION}"
   fi
