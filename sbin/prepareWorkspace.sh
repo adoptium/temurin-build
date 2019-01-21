@@ -78,10 +78,12 @@ checkoutAndCloneOpenJDKGitRepo()
   git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
 
   # Openj9 does not release from git tags
-  if [ ! -z "${BUILD_CONFIG[TAG]}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
-    git fetch origin "refs/tags/${BUILD_CONFIG[TAG]}:refs/tags/${BUILD_CONFIG[TAG]}"
-    git checkout "${BUILD_CONFIG[TAG]}"
-    git reset --hard
+  if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] || [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ]; then
+      git fetch origin "refs/tags/${BUILD_CONFIG[TAG]}:refs/tags/${BUILD_CONFIG[TAG]}"
+      git checkout "${BUILD_CONFIG[TAG]}"
+      git reset --hard
+    fi
   fi
   git clean -ffdx
 
@@ -240,7 +242,7 @@ checkingAndDownloadingFreeType()
   fi
 }
 
-downloadCert() {
+downloadCerts() {
   local caLink="$1"
 
   mkdir -p "security"
@@ -265,14 +267,14 @@ checkingAndDownloadCaCerts()
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
       local caLink="https://github.com/corretto/corretto-8/blob/preview-release/cacerts?raw=true";
-      downloadCert "$caLink"
+      downloadCerts "$caLink"
   elif [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" == "true" ];
   then
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]
     then
       echo "Requested use of JEP319 certs"
       local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk11u/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
-      downloadCert "$caLink"
+      downloadCerts "$caLink"
     fi
   else
     git init
