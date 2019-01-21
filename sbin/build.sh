@@ -123,7 +123,7 @@ getOpenJdkVersion() {
     local updateRegex="UPDATE_VERSION=([0-9]+)";
     local buildRegex="BUILD_NUMBER=b([0-9]+)";
 
-    local versionData="$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.spec | tr '\n' ' ')"
+    local versionData="$(tr '\n' ' ' < ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.spec)"
 
     local updateNum
     local buildNum
@@ -187,8 +187,6 @@ configuringVersionStringParameter()
     if [ -z "${buildNumber}" ]; then
       buildNumber=$(echo "${openJdkVersion}" | cut -f2 -d"+")
     fi
-
-    TRIMMED_TAG=$(echo "${openJdkVersion}" | cut -f2 -d"-" )
 
     if [ -z "${BUILD_CONFIG[TAG]}" ]; then
       addConfigureArg "--with-version-opt=" "${dateSuffix}"
@@ -412,9 +410,10 @@ removingUnnecessaryFiles()
 
   echo "Currently at '${PWD}'"
 
-  echo "moving "$(ls -d ${BUILD_CONFIG[JDK_PATH]})" to ${openJdkVersion}"
+  local jdkPath=$(ls -d ${BUILD_CONFIG[JDK_PATH]})
+  echo "moving ${jdkPath} to ${openJdkVersion}"
   rm -rf "${openJdkVersion}" || true
-  mv "$(ls -d ${BUILD_CONFIG[JDK_PATH]})" "${openJdkVersion}"
+  mv "${jdkPath}" "${openJdkVersion}"
 
   if [ -d "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" ]
   then
