@@ -66,6 +66,7 @@ then
       export PATH="/usr/bin:$PATH"
     fi
     # LLVM needs to be before cygwin as at least one machine has 64-bit clang in cygwin #813
+    # NASM required for OpenSSL support as per #604
     export PATH="/cygdrive/c/Program Files (x86)/LLVM/bin:/cygdrive/c/openjdk/nasm-$OPENJ9_NASM_VERSION:$PATH"
   fi
 fi
@@ -120,7 +121,8 @@ then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/progra~1/OpenSSL --enable-openssl-bundling"
     fi
     # LLVM needs to be before cygwin as at least one machine has clang in cygwin #813
-    export PATH="/cygdrive/c/Program Files/LLVM/bin:/usr/bin:$PATH"
+    # NASM required for OpenSSL support as per #604
+    export PATH="/cygdrive/c/Program Files/LLVM/bin:/usr/bin:/cygdrive/c/openjdk/nasm-$OPENJ9_NASM_VERSION:$PATH"
   fi
 fi
 
