@@ -23,6 +23,7 @@ export ALLOW_DOWNLOADS=true
 export LANG=C
 export JAVA_HOME=$JDK_BOOT_DIR
 export BUILD_ARGS="--tmp-space-build ${BUILD_ARGS}"
+export OPENJ9_NASM_VERSION=2.13.03
 
 TOOLCHAIN_VERSION=""
 
@@ -65,7 +66,7 @@ then
       export PATH="/usr/bin:$PATH"
     fi
     # LLVM needs to be before cygwin as at least one machine has 64-bit clang in cygwin #813
-    export PATH="/cygdrive/c/Program Files (x86)/LLVM/bin:/cygdrive/c/openjdk/nasm-2.13.03:$PATH"
+    export PATH="/cygdrive/c/Program Files (x86)/LLVM/bin:/cygdrive/c/openjdk/nasm-$OPENJ9_NASM_VERSION:$PATH"
   fi
 fi
 
@@ -122,7 +123,6 @@ then
     export PATH="/cygdrive/c/Program Files/LLVM/bin:/usr/bin:$PATH"
   fi
 fi
-
 
 if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
   # At time of writing java 8, hotspot tags cannot handle --with-toolchain-version
