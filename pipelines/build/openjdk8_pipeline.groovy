@@ -13,17 +13,18 @@ limitations under the License.
 */
 
 def buildConfigurations = [
-        x64Mac    : [
+        x64Mac        : [
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: [
-                        hotspot: 'build-macstadium-macos1010-1',
-                        openj9:  'build-macstadium-macos1010-2'
+                        hotspot : 'build-macstadium-macos1010-1',
+                        corretto: 'build-macstadium-macos1010-1',
+                        openj9  : 'build-macstadium-macos1010-2'
                 ],
                 test                : ['openjdktest', 'systemtest']
         ],
 
-        x64MacXL    : [
+        x64MacXL      : [
                 os                   : 'mac',
                 arch                 : 'x64',
                 additionalNodeLabels : 'build-macstadium-macos1010-2',
@@ -32,84 +33,87 @@ def buildConfigurations = [
                 configureArgs        : '--with-noncompressedrefs'
         ],
 
-        x64Linux  : [
+        x64Linux      : [
                 os                  : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: [
-                        hotspot: 'centos6',
-                        openj9:  'build-joyent-centos69-x64-1'
+                        hotspot : 'centos6',
+                        corretto: 'centos6',
+                        openj9  : 'build-joyent-centos69-x64-1'
                 ],
                 test                : ['openjdktest', 'systemtest', 'perftest', 'externaltest', 'externaltest_extended']
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
-        x64Windows: [
+        x64Windows    : [
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: [
-                        hotspot: 'win2008',
-                        openj9:  'win2012&&mingw-cygwin'
+                        hotspot : 'win2008',
+                        corretto: 'win2008',
+                        openj9  : 'win2012&&mingw-cygwin'
                 ],
-                buildArgs: [
-                        openj9:  '--skip-freetype'
+                buildArgs           : [
+                        openj9: '--skip-freetype'
                 ],
                 test                : ['openjdktest', 'systemtest']
         ],
 
-        x32Windows: [
+        x32Windows    : [
                 os                  : 'windows',
                 arch                : 'x86-32',
                 additionalNodeLabels: [
-                        hotspot: 'win2008',
-                        openj9:  'win2012&&mingw-cygwin'
+                        hotspot : 'win2008',
+                        corretto: 'win2008',
+                        openj9  : 'win2012&&mingw-cygwin'
                 ],
-                buildArgs: [
-                        openj9:  '--skip-freetype'
+                buildArgs           : [
+                        openj9: '--skip-freetype'
                 ],
                 test                : ['openjdktest']
         ],
 
-        ppc64Aix    : [
-                os                  : 'aix',
-                arch                : 'ppc64',
-                test                : [
+        ppc64Aix      : [
+                os  : 'aix',
+                arch: 'ppc64',
+                test: [
                         nightly: false,
                         release: ['openjdktest', 'systemtest']
                 ]
         ],
 
         s390xLinux    : [
-                os                  : 'linux',
-                arch                : 's390x',
-                test                : ['openjdktest', 'systemtest']
+                os  : 'linux',
+                arch: 's390x',
+                test: ['openjdktest', 'systemtest']
         ],
 
-        sparcv9Solaris    : [
-                os                  : 'solaris',
-                arch                : 'sparcv9',
-                test                : false
+        sparcv9Solaris: [
+                os  : 'solaris',
+                arch: 'sparcv9',
+                test: false
         ],
 
-        ppc64leLinux    : [
-                os                  : 'linux',
-                arch                : 'ppc64le',
-                test                : ['openjdktest', 'systemtest']
+        ppc64leLinux  : [
+                os  : 'linux',
+                arch: 'ppc64le',
+                test: ['openjdktest', 'systemtest']
         ],
 
         arm32Linux    : [
-                os                  : 'linux',
-                arch                : 'arm',
-                test                : ['openjdktest']
+                os  : 'linux',
+                arch: 'arm',
+                test: ['openjdktest']
         ],
 
-        aarch64Linux    : [
+        aarch64Linux  : [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
                 test                : ['openjdktest', 'systemtest']
         ],
 
-        linuxXL    : [
+        linuxXL       : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
@@ -121,7 +125,7 @@ def buildConfigurations = [
 
 def javaToBuild = "jdk8u"
 
-node ("master") {
+node("master") {
     def scmVars = checkout scm
     def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
     buildFile.doBuild(
