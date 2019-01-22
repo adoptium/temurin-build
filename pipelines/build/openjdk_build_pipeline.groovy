@@ -15,6 +15,7 @@ limitations under the License.
 @Library('openjdk-jenkins-helper@master')
 import JobHelper
 import NodeHelper
+import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 /**
@@ -144,10 +145,36 @@ def sign(config) {
     }
 }
 
+def listArchives() {
+    return sh(
+            script: """find workspace/target/ | egrep '.tar.gz|.zip'""",
+            returnStdout: true,
+            returnStatus: false
+    )
+            .trim()
+            .split('\n')
+}
+
+def writeMetadata(config, filesCreated) {
+    def buildMetadata = [
+            os     : config.os,
+            arc    : config.arch,
+            variant: config.variant,
+            version: config.javaVersion,
+            tag    : config.parameters.TAG
+    ]
+
+    filesCreated.each({ file ->
+        writeFile file: "${file}.json", text: JsonOutput.prettyPrint(JsonOutput.toJson(buildMetadata))
+    })
+}
+
 try {
     def config = new JsonSlurper().parseText("${TEST_CONFIG}")
     println "Executing tests: ${config}"
     println "Build num: ${env.BUILD_NUMBER}"
+
+    def filesCreated = [];
 
     def enableTests = Boolean.valueOf(ENABLE_TESTS)
     def cleanWorkspace = Boolean.valueOf(CLEAN_WORKSPACE)
@@ -161,8 +188,10 @@ try {
 
                 checkout scm
                 try {
+
                     sh "./build-farm/make-adopt-build-farm.sh"
                     archiveArtifacts artifacts: "workspace/target/*"
+                    filesCreated = listArchives()
                 } finally {
                     if (config.os == "aix") {
                         cleanWs notFailBuild: true
@@ -182,6 +211,11 @@ try {
         } catch (Exception e) {
             println "Failed test: ${e}"
         }
+    }
+
+    node("master") {
+        writeMetadata(config, filesCreated)
+        archiveArtifacts artifacts: "workspace/target/*"
     }
 
     // Sign and archive jobs if needed
