@@ -50,7 +50,7 @@ then
 
   if [ "${VARIANT}" == "openj9" ]
   then
-    export PATH="/cygdrive/c/Program Files (x86)/LLVM/bin:$PATH"
+    export PATH="/cygdrive/c/Program Files (x86)/LLVM/bin:/cygdrive/c/openjdk/nasm-2.13.03:$PATH"
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/progra~2/OpenSSL --enable-openssl-bundling"
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
