@@ -94,12 +94,12 @@ fi
 
 if [ -z "${TAG}" ]; then
   FILENAME="${FILENAME}_${TIMESTAMP}"
-
-  # clean out and rebuild libs on release
-  OPTIONS="${OPTIONS} --clean-libs"
 else
   nameTag=$(echo "${TAG}" | sed -e 's/jdk//' -e 's/-//' -e 's/+/_/g')
   FILENAME="${FILENAME}_${nameTag}"
+
+  # clean out and rebuild libs on release
+  OPTIONS="${OPTIONS} --clean-libs"
 fi
 
 FILENAME="${FILENAME}.${EXTENSION}"
