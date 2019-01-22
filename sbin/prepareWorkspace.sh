@@ -174,6 +174,18 @@ checkingAndDownloadingFreemarker()
   fi
 }
 
+downloadFile() {
+  targetFileName="$1"
+  url="$2"
+
+  # Temporary fudge as curl on my windows boxes is exiting with RC=127
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+    wget -O "${targetFileName}" "${url}"
+  else
+    curl -L -o "${targetFileName}" "${url}"
+  fi
+}
+
 # Get Freetype
 checkingAndDownloadingFreeType()
 {
@@ -185,12 +197,7 @@ checkingAndDownloadingFreeType()
   if [[ ! -z "$FOUND_FREETYPE" ]] ; then
     echo "Skipping FreeType download"
   else
-    # Temporary fudge as curl on my windows boxes is exiting with RC=127
-    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-      wget -O "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
-    else
-      curl -L -o "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
-    fi
+    downloadFile "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
 
     rm -rf "./freetype" || true
     mkdir -p "freetype" || true
@@ -203,10 +210,14 @@ checkingAndDownloadingFreeType()
 
     cd freetype || exit
 
+    local pngArg="";
+    if ./configure --help | grep "with-png"; then
+      pngArg="--with-png=no";
+    fi
 
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${pngArg}" "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
       echo "Failed to configure and build libfreetype, exiting"
       exit;
@@ -290,6 +301,10 @@ checkingAndDownloadCaCerts()
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, CACerts et al)
 downloadingRequiredDependencies()
 {
+  if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || true
+  fi
+
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
 

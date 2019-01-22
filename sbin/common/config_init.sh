@@ -37,6 +37,7 @@ BUILD_VARIANT
 CERTIFICATE
 CLEAN_DOCKER_BUILD
 CLEAN_GIT_REPO
+CLEAN_LIBS
 CONFIGURE_ARGS_FOR_ANY_PLATFORM
 CONTAINER_NAME
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
@@ -181,6 +182,9 @@ function parseConfigurationArguments() {
 
         "--clean-git-repo" )
         BUILD_CONFIG[CLEAN_GIT_REPO]=true;;
+
+        "--clean-libs" )
+        BUILD_CONFIG[CLEAN_LIBS]=true;;
 
         "--destination" | "-d" )
         BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
@@ -391,6 +395,8 @@ function configDefaults() {
 
   # If the wrong git repo is there allow it to be removed
   BUILD_CONFIG[CLEAN_GIT_REPO]=false
+
+  BUILD_CONFIG[CLEAN_LIBS]=false
 
   # By default dont backport JEP318 certs to < Java 10
   BUILD_CONFIG[USE_JEP319_CERTS]=false
