@@ -141,8 +141,6 @@ checkingAndDownloadingAlsa()
   then
     echo "Skipping ALSA download"
   else
-    # TODO Holy security problem Batman!
-    #wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     wget -nc https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
       bzip2 -d alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
@@ -302,7 +300,10 @@ checkingAndDownloadCaCerts()
 downloadingRequiredDependencies()
 {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
-    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || true
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
+
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype"
   fi
 
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
