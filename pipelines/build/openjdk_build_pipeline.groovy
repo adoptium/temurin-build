@@ -58,7 +58,12 @@ def determineTestJobName(config, testType) {
         os = "macos"
     }
 
-    return "openjdk${number}_${variant}_${testType}_${arch}_${os}"
+    def jobName = "openjdk${number}_${variant}_${testType}_${arch}_${os}"
+
+    if (config.parameters.containsKey('ADDITIONAL_FILE_NAME_TAG')) {
+        jobName += "_${config.parameters.ADDITIONAL_FILE_NAME_TAG}"
+    }
+    return "${jobName}"
 }
 
 def runTests(config) {

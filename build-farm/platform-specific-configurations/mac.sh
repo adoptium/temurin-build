@@ -38,7 +38,7 @@ fi
 
 if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
 then
-  if [ "${VARIANT}" == "openj9" ]; then
+  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
   else
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.8"
@@ -53,7 +53,7 @@ then
   export JDK_BOOT_DIR=$JDK10_BOOT_DIR
 fi
 
-if [ "${VARIANT}" == "openj9" ]; then
+if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   # Needed for the later nasm
   export PATH=/usr/local/bin:$PATH
   # ccache causes too many errors (either the default version on 3.2.4) so disabling

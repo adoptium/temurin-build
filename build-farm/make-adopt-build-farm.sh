@@ -97,6 +97,9 @@ if [ -z "${TAG}" ]; then
 else
   nameTag=$(echo "${TAG}" | sed -e 's/jdk//' -e 's/-//' -e 's/+/_/g')
   FILENAME="${FILENAME}_${nameTag}"
+
+  # clean out and rebuild libs on release
+  OPTIONS="${OPTIONS} --clean-libs"
 fi
 
 FILENAME="${FILENAME}.${EXTENSION}"

@@ -34,7 +34,7 @@ fi
 
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 
-if [ "${ARCHITECTURE}" == "x64" ] && [ "${VARIANT}" == "openj9" ];
+if [ "${ARCHITECTURE}" == "x64" ] && [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ];
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} DF=/usr/sysv/bin/df"
 
@@ -53,7 +53,7 @@ then
   fi
 fi
 
-if [ "${VARIANT}" == "openj9" ]; then
+if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   export LDR_CNTRL=MAXDATA=0x80000000 
 fi
 echo LDR_CNTRL=$LDR_CNTRL
@@ -69,11 +69,11 @@ then
   fi
   export JDK_BOOT_DIR=$JDK10_BOOT_DIR
 
-  if [ "${VARIANT}" == "hotspot" ]; then
+  if [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} DF=/usr/sysv/bin/df"
   fi
 
-  if [ "${VARIANT}" == "openj9" ]; then
+  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
     if [ -r /usr/local/gcc/bin/gcc-7.3 ]; then
       # Following line ensures the latest ccache is picked up too

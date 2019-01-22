@@ -138,7 +138,10 @@ static def formAdditionalNodeLabels(configuration, variant) {
         } else {
             additionalNodeLabels = configuration.additionalNodeLabels
         }
-        labels = "${additionalNodeLabels}&&${labels}"
+
+        if (additionalNodeLabels != null) {
+            labels = "${additionalNodeLabels}&&${labels}"
+        }
     }
 
     return labels
