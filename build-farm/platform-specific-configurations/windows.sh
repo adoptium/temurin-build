@@ -23,9 +23,9 @@ export ALLOW_DOWNLOADS=true
 export LANG=C
 export JAVA_HOME=$JDK_BOOT_DIR
 export BUILD_ARGS="--tmp-space-build ${BUILD_ARGS}"
+export OPENJ9_NASM_VERSION=2.13.03
 
 TOOLCHAIN_VERSION=""
-
 
 if [ "${ARCHITECTURE}" == "x86-32" ]
 then
@@ -47,8 +47,9 @@ then
       # Next line a potentially tactical fix for https://github.com/AdoptOpenJDK/openjdk-build/issues/267
       export PATH="/usr/bin:$PATH"
     fi
-    # This needs to be before cygwin as at least one machine has 64-bit clang in cygwin #813
-    export PATH="/cygdrive/c/Program Files (x86)/LLVM/bin:$PATH"
+    # LLVM needs to be before cygwin as at least one machine has 64-bit clang in cygwin #813
+    # NASM required for OpenSSL support as per #604
+    export PATH="/cygdrive/c/Program Files (x86)/LLVM/bin:/cygdrive/c/openjdk/nasm-$OPENJ9_NASM_VERSION:$PATH"
   else
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
@@ -66,7 +67,6 @@ then
     fi
   fi
 fi
-
 
 if [ "${ARCHITECTURE}" == "x64" ]
 then
@@ -93,7 +93,8 @@ then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/progra~1/OpenSSL --enable-openssl-bundling"
     fi
     # LLVM needs to be before cygwin as at least one machine has clang in cygwin #813
-    export PATH="/cygdrive/c/Program Files/LLVM/bin:/usr/bin:$PATH"
+    # NASM required for OpenSSL support as per #604
+    export PATH="/cygdrive/c/Program Files/LLVM/bin:/usr/bin:/cygdrive/c/openjdk/nasm-$OPENJ9_NASM_VERSION:$PATH"
   else
     TOOLCHAIN_VERSION="2013"
     # Unset the host VS120COMNTOOLS and VS110COMNTOOLS variables as Java picks them up by default and we don't want that.
@@ -119,9 +120,7 @@ then
   fi
 fi
 
-
 if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
-
   HOTSPOT_BUILD="false";
   if [ "${VARIANT}" != "${BUILD_VARIANT_HOTSPOT}" ] && [ "${VARIANT}" != "${BUILD_VARIANT_CORRETTO}" ]; then
     HOTSPOT_BUILD="true";
