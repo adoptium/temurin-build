@@ -40,7 +40,7 @@ def toBuildParams(enableTests, cleanWorkspace, params) {
     return buildParams
 }
 
-def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs) {
+def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, adoptBuildNumber) {
 
     def additionalNodeLabels = formAdditionalNodeLabels(configuration, variant)
 
@@ -78,12 +78,13 @@ def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, 
     def testList = getTestList(configuration, isRelease)
 
     return [
-            javaVersion: javaToBuild,
-            arch       : configuration.arch,
-            os         : configuration.os,
-            variant    : variant,
-            parameters : buildParams,
-            test       : testList
+            javaVersion     : javaToBuild,
+            arch            : configuration.arch,
+            os              : configuration.os,
+            variant         : variant,
+            parameters      : buildParams,
+            test            : testList,
+            adoptBuildNumber: adoptBuildNumber
     ]
 }
 
@@ -162,7 +163,7 @@ static def getConfigureArgs(configuration, additionalConfigureArgs) {
     return buildParams
 }
 
-def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs, String additionalFileNameTag) {
+def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs, String additionalFileNameTag, String adoptBuildNumber) {
     def jobConfigurations = [:]
 
     //Parse config passed to jenkins job
@@ -188,7 +189,7 @@ def getJobConfigurations(javaVersionToBuild, availableConfigurations, String tar
                     }
                 }
 
-                jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs)
+                jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, adoptBuildNumber)
             }
         }
     }
@@ -266,13 +267,14 @@ def doBuild(
         scmVars,
         String additionalBuildArgs,
         String additionalFileNameTag,
-        String cleanWorkspaceBeforeBuild) {
+        String cleanWorkspaceBeforeBuild,
+        String adoptBuildNumber) {
 
     if (releaseTag == null || releaseTag == "false") {
         releaseTag = ""
     }
 
-    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, additionalFileNameTag)
+    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, additionalFileNameTag, adoptBuildNumber)
     def jobs = [:]
 
     def enableTests = Boolean.valueOf(enableTestsArg)

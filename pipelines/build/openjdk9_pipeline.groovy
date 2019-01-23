@@ -105,5 +105,6 @@ node ("master") {
             scmVars,
             additionalBuildArgs,
             additionalFileNameTag,
-            cleanWorkspaceBeforeBuild)
+            cleanWorkspaceBeforeBuild,
+            adoptBuildNumber)
 }

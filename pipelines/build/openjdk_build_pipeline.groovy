@@ -14,6 +14,8 @@ limitations under the License.
 
 @Library('openjdk-jenkins-helper@master')
 import JobHelper
+@Library('openjdk-jenkins-helper@master')
+import JobHelper
 import NodeHelper
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
@@ -157,11 +159,12 @@ def listArchives() {
 
 def writeMetadata(config, filesCreated) {
     def buildMetadata = [
-            os     : config.os,
-            arc    : config.arch,
-            variant: config.variant,
-            version: config.javaVersion,
-            tag    : config.parameters.TAG
+            os              : config.os,
+            arc             : config.arch,
+            variant         : config.variant,
+            version         : config.javaVersion,
+            tag             : config.parameters.TAG,
+            adoptBuildNumber: config.adoptBuildNumber
     ]
 
     filesCreated.each({ file ->
