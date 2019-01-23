@@ -168,7 +168,15 @@ def writeMetadata(config, filesCreated) {
     ]
 
     filesCreated.each({ file ->
-        writeFile file: "${file}.json", text: JsonOutput.prettyPrint(JsonOutput.toJson(buildMetadata))
+        def type = "jdk";
+        if (file.contains("-jre")) {
+            type = "jre";
+        }
+
+        data = buildMetadata.clone()
+        data.put("binary_type", type)
+
+        writeFile file: "${file}.json", text: JsonOutput.prettyPrint(JsonOutput.toJson(data))
     })
 }
 
