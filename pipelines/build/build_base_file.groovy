@@ -311,7 +311,6 @@ def doBuild(
                             catchError {
                                 sh "rm target/${config.os}/${config.arch}/${config.variant}/* || true"
 
-
                                 copyArtifacts(
                                         projectName: downstreamJobName,
                                         selector: specific("${downstreamJob.getNumber()}"),
@@ -320,14 +319,11 @@ def doBuild(
                                         target: "target/${config.os}/${config.arch}/${config.variant}/",
                                         flatten: true)
 
-
                                 // Checksum
                                 sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
 
-
                                 // Archive in Jenkins
                                 archiveArtifacts artifacts: "target/${config.os}/${config.arch}/${config.variant}/*"
-
                             }
                         }
                     }

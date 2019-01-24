@@ -164,6 +164,25 @@ def writeMetadata(config, filesCreated) {
             tag    : config.parameters.TAG
     ]
 
+    /*
+    example data:
+    {
+        "os": "linux",
+        "arc": "x64",
+        "variant": "hotspot",
+        "version": "jdk8u",
+        "tag": "jdk8u202-b08",
+        "adopt_build_number": 2,
+        "version_data": {
+            "major": 8,
+            "minor": 0,
+            "security": 202,
+            "build": 8,
+            "version": "8u202-b08"
+        },
+        "binary_type": "jdk"
+    }
+    */
     filesCreated.each({ file ->
         writeFile file: "${file}.json", text: JsonOutput.prettyPrint(JsonOutput.toJson(buildMetadata))
     })
