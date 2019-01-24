@@ -59,18 +59,18 @@ def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, 
 
     def buildArgs = getBuildArgs(configuration, variant)
 
-    if (additionalBuildArgs != null && additionalBuildArgs.length() > 0) {
+    if (additionalBuildArgs) {
         buildArgs += " " + additionalBuildArgs
     }
     buildParams.put("BUILD_ARGS", buildArgs)
 
 
-    if (branch != null && branch.length() > 0) {
+    if (branch) {
         buildParams.put("BRANCH", branch)
     }
 
     def isRelease = false
-    if (releaseTag != null && releaseTag.length() > 0) {
+    if (releaseTag) {
         isRelease = true
         buildParams.put("TAG", releaseTag)
     }
@@ -152,7 +152,7 @@ static def getConfigureArgs(configuration, additionalConfigureArgs) {
     def configureArgs = ""
 
     if (configuration.containsKey('configureArgs')) configureArgs += configuration.configureArgs
-    if (additionalConfigureArgs != null && additionalConfigureArgs.length() > 0) {
+    if (additionalConfigureArgs) {
         configureArgs += " " + additionalConfigureArgs
     }
 
@@ -180,7 +180,7 @@ def getJobConfigurations(javaVersionToBuild, availableConfigurations, String tar
                     name += "-${configuration.additionalFileNameTag}"
                 }
 
-                if (additionalFileNameTag != null && additionalFileNameTag.length() > 0) {
+                if (additionalFileNameTag) {
                     if (configuration.containsKey('additionalFileNameTag')) {
                         configuration.additionalFileNameTag = "${configuration.additionalFileNameTag}-${additionalFileNameTag}"
                     } else {
@@ -235,7 +235,7 @@ def createJob(jobName, jobFolder, config, enableTests, scmVars) {
 
 def checkSaneConfig(releaseTag, jobConfigurations) {
 
-    if (releaseTag != null && releaseTag.length() > 0) {
+    if (releaseTag) {
         // Doing a release
         def variants = jobConfigurations
                 .values()
@@ -255,7 +255,7 @@ def checkSaneConfig(releaseTag, jobConfigurations) {
 def publishRelease(javaToBuild, releaseTag) {
     def release = false
     def tag = javaToBuild
-    if (releaseTag != null && releaseTag.length() > 0) {
+    if (releaseTag) {
         release = true
         tag = releaseTag
     }
