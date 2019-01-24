@@ -233,6 +233,24 @@ def createJob(jobName, jobFolder, config, enableTests, scmVars) {
     return create
 }
 
+def checkSaneConfig(releaseTag, jobConfigurations) {
+
+    if (releaseTag != null && releaseTag.length() > 0) {
+        // Doing a release
+        def variants = jobConfigurations
+                .values()
+                .collect({ it.variant })
+                .unique()
+
+        if (variants.size() > 1) {
+            error('Trying to release multiple variants at the same time, this is unusual')
+            return false
+        }
+    }
+
+    return true
+}
+
 // Call job to push artifacts to github
 def publishRelease(javaToBuild, releaseTag) {
     def release = false
@@ -273,6 +291,11 @@ def doBuild(
     }
 
     def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, additionalFileNameTag)
+
+    if (!checkSaneConfig(releaseTag, jobConfigurations)) {
+        return
+    }
+
     def jobs = [:]
 
     def enableTests = Boolean.valueOf(enableTestsArg)
