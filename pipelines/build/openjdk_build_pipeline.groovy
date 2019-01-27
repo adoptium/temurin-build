@@ -152,20 +152,22 @@ try {
     def enableTests = Boolean.valueOf(ENABLE_TESTS)
     def cleanWorkspace = Boolean.valueOf(CLEAN_WORKSPACE)
 
-    stage("build") {
+    stage("queue") {
         if (NodeHelper.nodeIsOnline(NODE_LABEL)) {
             node(NODE_LABEL) {
-                if (cleanWorkspace) {
-                    cleanWs notFailBuild: true
-                }
-
-                checkout scm
-                try {
-                    sh "./build-farm/make-adopt-build-farm.sh"
-                    archiveArtifacts artifacts: "workspace/target/*"
-                } finally {
-                    if (config.os == "aix") {
+                stage("build") {
+                    if (cleanWorkspace) {
                         cleanWs notFailBuild: true
+                    }
+
+                    checkout scm
+                    try {
+                        sh "./build-farm/make-adopt-build-farm.sh"
+                        archiveArtifacts artifacts: "workspace/target/*"
+                    } finally {
+                        if (config.os == "aix") {
+                            cleanWs notFailBuild: true
+                        }
                     }
                 }
             }
