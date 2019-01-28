@@ -185,9 +185,13 @@ def writeMetadata(config, filesCreated) {
         "binary_type": "jdk"
     }
     */
-    filesCreated.each({ file ->
-        writeFile file: "${file}.json", text: JsonOutput.prettyPrint(JsonOutput.toJson(buildMetadata))
-    })
+
+    node("master") {
+        filesCreated.each({ file ->
+            writeFile file: "${file}", text: JsonOutput.prettyPrint(JsonOutput.toJson(buildMetadata))
+        })
+        archiveArtifacts artifacts: "workspace/target/**/*.json"
+    }
 }
 
 try {
@@ -235,10 +239,7 @@ try {
         }
     }
 
-    node("master") {
-        writeMetadata(config, filesCreated)
-        archiveArtifacts artifacts: "workspace/target/*"
-    }
+    writeMetadata(config, filesCreated)
 
     // Sign and archive jobs if needed
     sign(config)
