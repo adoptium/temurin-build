@@ -88,10 +88,15 @@ if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JD
       export PATH=/opt/rh/devtoolset-7/root/usr/bin:$PATH
       [ -r /opt/rh/devtoolset-7/root/usr/bin/gcc ] && export CC=/opt/rh/devtoolset-7/root/usr/bin/gcc
       [ -r /opt/rh/devtoolset-7/root/usr/bin/g++ ] && export CXX=/opt/rh/devtoolset-7/root/usr/bin/g++
-    elif [ -r /usr/local/gcc/bin ]; then
+    elif [ -r /usr/local/gcc/bin/gcc-7.3 ]; then
       export PATH=/usr/local/gcc/bin:$PATH
       [ -r /usr/local/gcc/bin/gcc-7.3 ] && export CC=/usr/local/gcc/bin/gcc-7.3
       [ -r /usr/local/gcc/bin/g++-7.3 ] && export CXX=/usr/local/gcc/bin/g++-7.3
+      export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
+    elif [ -r /usr/local/gcc/bin/gcc-7.4 ]; then
+      export PATH=/usr/local/gcc/bin:$PATH
+      [ -r /usr/local/gcc/bin/gcc-7.4 ] && export CC=/usr/local/gcc/bin/gcc-7.4
+      [ -r /usr/local/gcc/bin/g++-7.4 ] && export CXX=/usr/local/gcc/bin/g++-7.4
       export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
     fi
 fi
