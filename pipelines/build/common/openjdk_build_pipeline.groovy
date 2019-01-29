@@ -109,10 +109,9 @@ private void formSemver(data, config) {
         semver += "-" + data.pre
     }
 
-    def joiner = new java.util.StringJoiner('.')
-    joiner.add(data.build ?: "0")
-    joiner.add(config.adoptBuildNumber ?: "0")
-    semver += "+" + joiner.toString()
+    semver += "+"
+    semver += (data.build ?: "0")
+    semver += "." + (config.adoptBuildNumber ?: "0")
     return semver
 }
 
