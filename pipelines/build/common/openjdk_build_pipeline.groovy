@@ -364,7 +364,7 @@ try {
                     try {
                         sh "./build-farm/make-adopt-build-farm.sh"
                         archiveArtifacts artifacts: "workspace/target/*"
-                        filesCreated = listArchives()
+                        //filesCreated = listArchives()
                     } finally {
                         if (config.os == "aix") {
                             cleanWs notFailBuild: true
@@ -387,13 +387,13 @@ try {
         }
     }
 
-    writeMetadata(config, filesCreated)
+    //writeMetadata(config, filesCreated)
 
     // Sign and archive jobs if needed
     sign(config)
 
     //buildInstaller if needed
-    buildInstaller(config)
+    //buildInstaller(config)
 } catch (Exception e) {
     currentBuild.result = 'FAILURE'
     println "Execution error: " + e.getMessage()
