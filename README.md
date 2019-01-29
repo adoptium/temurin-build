@@ -307,7 +307,7 @@ from, but you can override this with the `-r` flag.
 
 #Metadata
 **This is still in alpha do not rely on this yet**
-Along side the built assets a metadata file will be created with info about the build. This will look of the form:
+Alongside the built assets a metadata file will be created with info about the build. This will be a JSON document of the form:
 
 ```
     {
