@@ -33,6 +33,11 @@ import groovy.json.JsonSlurper
  *
  */
 
+
+/*
+    Extracts the named regex element `groupName` from the `matched` regex matcher and adds it to `map.name`
+    If it is not present add `0`
+ */
 def addOr0(map, name, matched, groupName) {
     def number = matched.group(groupName)
     if (number) {
