@@ -38,6 +38,7 @@ import groovy.json.JsonSlurper
     Extracts the named regex element `groupName` from the `matched` regex matcher and adds it to `map.name`
     If it is not present add `0`
  */
+
 def addOr0(map, name, matched, groupName) {
     def number = matched.group(groupName)
     if (number) {
@@ -245,6 +246,44 @@ def sign(config) {
     }
 }
 
+
+def buildInstaller(config) {
+    if (config.os == "mac") {
+        node('master') {
+            stage("installer") {
+
+                def versionData = formVersionData(config)
+
+
+                def filter = "**/OpenJDK*_mac_*.tar.gz"
+                def certificate = "\"Developer ID Installer: London Jamocha Community CIC\""
+
+                def installerJob = build job: "build-scripts/release/create_installer_mac",
+                        propagate: true,
+                        parameters: [string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                                     string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                                     string(name: 'FILTER', value: "${filter}"),
+                                     string(name: 'FULL_VERSION', value: "${versionData.semver}"),
+                                     string(name: 'MAJOR_VERSION', value: "${versionData.major}"),
+                                     string(name: 'CERTIFICATE', value: "${certificate}"),
+                                     [$class: 'LabelParameterValue', name: 'NODE_LABEL', label: "${config.os}&&build"],
+                        ]
+
+                copyArtifacts(
+                        projectName: "build-scripts/release/create_installer_mac",
+                        selector: specific("${installerJob.getNumber()}"),
+                        filter: 'workspace/target/*',
+                        fingerprintArtifacts: true,
+                        target: "workspace/target/",
+                        flatten: true)
+
+                sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg); do sha256sum "$file" > $file.sha256.txt ; done'
+                archiveArtifacts artifacts: "workspace/target/*"
+            }
+        }
+    }
+}
+
 def listArchives() {
     return sh(
             script: """find workspace/target/ | egrep '.tar.gz|.zip'""",
@@ -354,6 +393,9 @@ try {
 
     // Sign and archive jobs if needed
     sign(config)
+
+    //buildInstaller if needed
+    buildInstaller(config)
 } catch (Exception e) {
     currentBuild.result = 'FAILURE'
     println "Execution error: " + e.getMessage()
