@@ -305,11 +305,6 @@ def writeMetadata(config, filesCreated) {
             version_data: formVersionData(config)
     ]
 
-    def type = "jdk";
-    if (file.contains("-jre")) {
-        type = "jre";
-    }
-
     /*
     example data:
     {
@@ -333,6 +328,10 @@ def writeMetadata(config, filesCreated) {
     */
     node("master") {
         filesCreated.each({ file ->
+            def type = "jdk";
+            if (file.contains("-jre")) {
+                type = "jre";
+            }
 
             data = buildMetadata.clone()
             data.put("binary_type", type)
