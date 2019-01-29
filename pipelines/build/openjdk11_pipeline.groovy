@@ -130,7 +130,7 @@ def javaToBuild = "jdk11u"
 
 node ("master") {
     def scmVars = checkout scm
-    def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
+    def buildFile = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
 
     buildFile.doBuild(
             javaToBuild,
@@ -144,5 +144,6 @@ node ("master") {
             scmVars,
             additionalBuildArgs,
             additionalFileNameTag,
-            cleanWorkspaceBeforeBuild)
+            cleanWorkspaceBeforeBuild,
+            adoptBuildNumber)
 }

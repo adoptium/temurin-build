@@ -25,6 +25,8 @@ limitations under the License.
  * 3. Push generated artifacts to github
  */
 
+
+
 def toBuildParams(enableTests, cleanWorkspace, params) {
 
     List buildParams = []
@@ -40,7 +42,7 @@ def toBuildParams(enableTests, cleanWorkspace, params) {
     return buildParams
 }
 
-def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs) {
+def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, adoptBuildNumber) {
 
     def additionalNodeLabels = formAdditionalNodeLabels(configuration, variant)
 
@@ -78,12 +80,13 @@ def buildConfiguration(javaToBuild, variant, configuration, releaseTag, branch, 
     def testList = getTestList(configuration, isRelease)
 
     return [
-            javaVersion: javaToBuild,
-            arch       : configuration.arch,
-            os         : configuration.os,
-            variant    : variant,
-            parameters : buildParams,
-            test       : testList
+            javaVersion     : javaToBuild,
+            arch            : configuration.arch,
+            os              : configuration.os,
+            variant         : variant,
+            parameters      : buildParams,
+            test            : testList,
+            adoptBuildNumber: adoptBuildNumber
     ]
 }
 
@@ -162,7 +165,7 @@ static def getConfigureArgs(configuration, additionalConfigureArgs) {
     return buildParams
 }
 
-def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs, String additionalFileNameTag) {
+def getJobConfigurations(javaVersionToBuild, availableConfigurations, String targetConfigurations, String releaseTag, String branch, String additionalConfigureArgs, String additionalBuildArgs, String additionalFileNameTag, String adoptBuildNumber) {
     def jobConfigurations = [:]
 
     //Parse config passed to jenkins job
@@ -188,7 +191,7 @@ def getJobConfigurations(javaVersionToBuild, availableConfigurations, String tar
                     }
                 }
 
-                jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs)
+                jobConfigurations[name] = buildConfiguration(javaVersionToBuild, variant, configuration, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, adoptBuildNumber)
             }
         }
     }
@@ -228,7 +231,7 @@ def createJob(jobName, jobFolder, config, enableTests, scmVars) {
     params.put("GIT_URI", scmVars["GIT_URL"])
     params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
 
-    create = jobDsl targets: "pipelines/build/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
+    create = jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
 
     return create
 }
@@ -284,18 +287,18 @@ def doBuild(
         scmVars,
         String additionalBuildArgs,
         String additionalFileNameTag,
-        String cleanWorkspaceBeforeBuild) {
+        String cleanWorkspaceBeforeBuild,
+        String adoptBuildNumber) {
 
     if (releaseTag == null || releaseTag == "false") {
         releaseTag = ""
     }
 
-    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, additionalFileNameTag)
+    def jobConfigurations = getJobConfigurations(javaVersionToBuild, availableConfigurations, targetConfigurations, releaseTag, branch, additionalConfigureArgs, additionalBuildArgs, additionalFileNameTag, adoptBuildNumber)
 
     if (!checkSaneConfig(releaseTag, jobConfigurations)) {
         return
     }
-
     def jobs = [:]
 
     def enableTests = Boolean.valueOf(enableTestsArg)

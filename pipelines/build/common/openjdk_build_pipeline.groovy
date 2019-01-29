@@ -14,7 +14,9 @@ limitations under the License.
 
 @Library('openjdk-jenkins-helper@master')
 import JobHelper
-import NodeHelper
+@Library('openjdk-jenkins-helper@master')
+import JobHelper
+import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 /**
@@ -31,16 +33,110 @@ import groovy.json.JsonSlurper
  *
  */
 
-def getJavaVersionNumber(version) {
-    // version should be something like "jdk8u"
-    def matcher = (version =~ /(\d+)/)
-    return Integer.parseInt(matcher[0][1])
+def addOr0(map, name, matched, groupName) {
+    def number = matched.group(groupName)
+    if (number != null) {
+        map.put(name, number as Integer)
+    } else {
+        map.put(name, 0)
+    }
+    return map
 }
+
+def matchPre223(version) {
+    final pre223regex = "jdk(?<version>(?<major>[0-8]+)(u(?<update>[0-9]+))?(-b(?<build>[0-9]+))(_(?<opt>[-a-zA-Z0-9\\.]+))?)"
+    final matched = version =~ /${pre223regex}/
+
+    if (matched.matches()) {
+        result = [:]
+        result = addOr0(result, 'major', matched, 'major')
+        result.put('minor', 0)
+        result = addOr0(result, 'security', matched, 'update')
+        result = addOr0(result, 'build', matched, 'build')
+        if (matched.group('opt') != null) result.put('opt', matched.group('opt'))
+        result.put('version', matched.group('version'))
+
+        return result
+    } else {
+        return null
+    }
+}
+
+def match223(version) {
+    //Regexes based on those in http://openjdk.java.net/jeps/223
+    // Technically the standard supports an arbitrary number of numbers, we will support 3 for now
+    final vnumRegex = "(?<major>[0-9]+)(\\.(?<minor>[0-9]+))?(\\.(?<security>[0-9]+))?"
+    final pre = "(?<pre>[a-zA-Z0-9]+)"
+    final build = "(?<build>[0-9]+)"
+    final opt = "(?<opt>[-a-zA-Z0-9\\.]+)"
+
+    final version223Regexs = [
+            "(?:jdk\\-)(?<version>${vnumRegex}(\\-${pre})?\\+${build}(\\-${opt})?)",
+            "(?:jdk\\-)(?<version>${vnumRegex}\\-${pre}(\\-${opt})?)",
+            "(?:jdk\\-)(?<version>${vnumRegex}(\\+\\-${opt})?)"
+    ]
+
+    return version223Regexs
+            .findResult({ regex ->
+        final matched223 = version =~ /${regex}/
+        if (matched223.matches()) {
+            result = [:]
+            result = addOr0(result, 'major', matched223, 'major')
+            result = addOr0(result, 'minor', matched223, 'minor')
+            result = addOr0(result, 'security', matched223, 'security')
+            if (matched223.group('pre') != null) result.put('pre', matched223.group('pre'))
+            result = addOr0(result, 'build', matched223, 'build')
+            if (matched223.group('opt') != null) result.put('opt', matched223.group('opt'))
+            result.put('version', matched223.group('version'))
+
+            return result
+        } else {
+            return null
+        }
+    })
+}
+
+private void formSemver(data, config) {
+    def semver = data.major + "." + data.minor + "." + data.security
+
+    if (data.pre) {
+        semver += "-" + data.pre
+    }
+
+    def joiner = new java.util.StringJoiner('.')
+    joiner.add(data.build ?: "0")
+    joiner.add(config.adoptBuildNumber ?: "0")
+    semver += "+" + joiner.toString()
+    return semver
+}
+
+def formVersionData(config) {
+
+    def data = [:]
+
+    if (config.adoptBuildNumber) {
+        data.put('adopt_build_number', config.adoptBuildNumber)
+    }
+
+    if (config.parameters.TAG != null) {
+        def pre223 = matchPre223(config.parameters.TAG)
+        if (pre223 != null) {
+            data = pre223
+        } else {
+            data = match223(config.parameters.TAG)
+        }
+    }
+
+    data.put('semver', formSemver(data, config))
+
+
+    return data
+}
+
 
 def determineTestJobName(config, testType) {
 
     def variant
-    def number = getJavaVersionNumber(config.javaVersion)
 
     if (config.variant == "openj9") {
         variant = "j9"
@@ -144,10 +240,69 @@ def sign(config) {
     }
 }
 
+def listArchives() {
+    return sh(
+            script: """find workspace/target/ | egrep '.tar.gz|.zip'""",
+            returnStdout: true,
+            returnStatus: false
+    )
+            .trim()
+            .split('\n')
+}
+
+def writeMetadata(config, filesCreated) {
+
+    def buildMetadata = [
+            os          : config.os,
+            arch        : config.arch,
+            variant     : config.variant,
+            version     : config.javaVersion,
+            tag         : config.parameters.TAG,
+            version_data: formVersionData(config)
+    ]
+
+    def type = "jdk";
+    if (file.contains("-jre")) {
+        type = "jre";
+    }
+
+    /*
+    example data:
+    {
+        "os": "linux",
+        "arch": "x64",
+        "variant": "hotspot",
+        "version": "jdk8u",
+        "tag": "jdk8u202-b08",
+        "version_data": {
+            "adopt_build_number": 2,
+            "major": 8,
+            "minor": 0,
+            "security": 202,
+            "build": 8,
+            "version": "8u202-b08"
+        },
+        "binary_type": "jdk"
+    }
+    */
+    node("master") {
+        filesCreated.each({ file ->
+
+            data = buildMetadata.clone()
+            data.put("binary_type", type)
+
+            writeFile file: "${file}.json", text: JsonOutput.prettyPrint(JsonOutput.toJson(data))
+        })
+        archiveArtifacts artifacts: "workspace/target/**/*.json"
+    }
+}
+
 try {
     def config = new JsonSlurper().parseText("${TEST_CONFIG}")
     println "Executing tests: ${config}"
     println "Build num: ${env.BUILD_NUMBER}"
+
+    def filesCreated = [];
 
     def enableTests = Boolean.valueOf(ENABLE_TESTS)
     def cleanWorkspace = Boolean.valueOf(CLEAN_WORKSPACE)
@@ -164,6 +319,7 @@ try {
                     try {
                         sh "./build-farm/make-adopt-build-farm.sh"
                         archiveArtifacts artifacts: "workspace/target/*"
+                        filesCreated = listArchives()
                     } finally {
                         if (config.os == "aix") {
                             cleanWs notFailBuild: true
@@ -186,9 +342,10 @@ try {
         }
     }
 
+    writeMetadata(config, filesCreated)
+
     // Sign and archive jobs if needed
     sign(config)
-
 } catch (Exception e) {
     currentBuild.result = 'FAILURE'
     println "Execution error: " + e.getMessage()
