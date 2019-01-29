@@ -142,6 +142,7 @@ def formVersionData(config) {
 def determineTestJobName(config, testType) {
 
     def variant
+    def number = getJavaVersionNumber(config.javaVersion)
 
     if (config.variant == "openj9") {
         variant = "j9"
