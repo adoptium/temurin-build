@@ -305,6 +305,32 @@ to your local platform and then build (Adopt) OpenJDK and place the result in
 These scripts default to using AdoptOpenJDK as the OpenJDK source repo to build 
 from, but you can override this with the `-r` flag.
 
+#Metadata
+**This is still in alpha do not rely on this yet**
+Alongside the built assets a metadata file will be created with info about the build. This will be a JSON document of the form:
+
+```
+    {
+        "WARNING": "THIS METADATA FILE IS STILL IN ALPHA DO NOT USE ME",
+        "os": "linux",
+        "arch": "x64",
+        "variant": "hotspot",
+        "version": "jdk8u",
+        "tag": "jdk8u202-b08",
+        {
+            "adopt_build_number": 2,
+            "major": 8,
+            "minor": 0,
+            "security": 202,
+            "build": 8,
+            "version": "8u202-b08",
+            "semver": "8.0.202+8.2",
+        },
+        "binary_type": "jdk"
+    }
+```
+
+It is worth noting the additional tags on the semver is the adopt build number. 
 
 # Build farm
 
