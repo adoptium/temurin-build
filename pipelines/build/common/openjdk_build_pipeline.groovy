@@ -35,7 +35,7 @@ import groovy.json.JsonSlurper
 
 def addOr0(map, name, matched, groupName) {
     def number = matched.group(groupName)
-    if (number != null) {
+    if (number) {
         map.put(name, number as Integer)
     } else {
         map.put(name, 0)
@@ -48,7 +48,7 @@ def matchPre223(version) {
     final matched = version =~ /${pre223regex}/
 
     if (matched.matches()) {
-        result = [:]
+        def result = [:]
         result = addOr0(result, 'major', matched, 'major')
         result.put('minor', 0)
         result = addOr0(result, 'security', matched, 'update')
@@ -80,7 +80,7 @@ def match223(version) {
             .findResult({ regex ->
         final matched223 = version =~ /${regex}/
         if (matched223.matches()) {
-            result = [:]
+            def result = [:]
             result = addOr0(result, 'major', matched223, 'major')
             result = addOr0(result, 'minor', matched223, 'minor')
             result = addOr0(result, 'security', matched223, 'security')
@@ -253,6 +253,7 @@ def listArchives() {
 def writeMetadata(config, filesCreated) {
 
     def buildMetadata = [
+            WARNING     : "THIS METADATA FILE IS STILL IN ALPHA DO NOT USE ME",
             os          : config.os,
             arch        : config.arch,
             variant     : config.variant,
@@ -269,6 +270,7 @@ def writeMetadata(config, filesCreated) {
     /*
     example data:
     {
+        "WARNING": "THIS METADATA FILE IS STILL IN ALPHA DO NOT USE ME",
         "os": "linux",
         "arch": "x64",
         "variant": "hotspot",
@@ -280,7 +282,8 @@ def writeMetadata(config, filesCreated) {
             "minor": 0,
             "security": 202,
             "build": 8,
-            "version": "8u202-b08"
+            "version": "8u202-b08",
+            "semver": "8.0.202+8.2"
         },
         "binary_type": "jdk"
     }
