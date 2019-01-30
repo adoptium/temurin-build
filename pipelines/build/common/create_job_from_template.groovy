@@ -25,10 +25,14 @@ if (!binding.hasVariable('JDK_BOOT_VERSION')) JDK_BOOT_VERSION = ""
 if (!binding.hasVariable('CONFIGURE_ARGS')) CONFIGURE_ARGS = ""
 if (!binding.hasVariable('BUILD_ARGS')) BUILD_ARGS = ""
 if (!binding.hasVariable('ADDITIONAL_FILE_NAME_TAG')) ADDITIONAL_FILE_NAME_TAG = ""
-if (!binding.hasVariable('TEST_CONFIG')) TEST_CONFIG = ""
-if (!binding.hasVariable('ENABLE_TESTS')) ENABLE_TESTS = "false"
-if (!binding.hasVariable('BRANCH')) BRANCH = ""
-if (!binding.hasVariable('CLEAN_WORKSPACE')) CLEAN_WORKSPACE = "false"
+if (!binding.hasVariable('TEST_LIST')) TEST_LIST = ""
+if (!binding.hasVariable('ENABLE_TESTS')) ENABLE_TESTS = false
+if (!binding.hasVariable('SCM_REF')) SCM_REF = ""
+if (!binding.hasVariable('CLEAN_WORKSPACE')) CLEAN_WORKSPACE = false
+if (!binding.hasVariable('RELEASE')) RELEASE = false
+if (!binding.hasVariable('OVERRIDE_FILE_NAME_VERSION')) OVERRIDE_FILE_NAME_VERSION = ""
+if (!binding.hasVariable('PUBLISH_NAME')) PUBLISH_NAME = ""
+if (!binding.hasVariable('ADOPT_BUILD_NUMBER')) ADOPT_BUILD_NUMBER = ""
 
 
 if (!binding.hasVariable('GIT_URI')) GIT_URI = "https://github.com/AdoptOpenJDK/openjdk-build.git"
@@ -47,6 +51,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 git {
                     remote {
                         url(GIT_URI)
+                        refspec("+refs/pull/*/head:refs/remotes/pull/* +refs/heads/master:refs/remotes/origin/master")
                     }
                     branch("${GIT_BRANCH}")
                     extensions {
@@ -54,7 +59,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                     }
                 }
             }
-            scriptPath('pipelines/build/openjdk_build_pipeline.groovy')
+            scriptPath('pipelines/build/common/openjdk_build_pipeline.groovy')
             lightweight(true)
         }
     }
@@ -66,8 +71,9 @@ pipelineJob("$buildFolder/$JOB_NAME") {
     logRotator {
         numToKeep(5)
     }
+
     parameters {
-        stringParam('TAG', null, "git tag/branch/commit to build if not HEAD")
+        stringParam('SCM_REF', null, "git tag/branch/commit to build if not HEAD")
         stringParam('NODE_LABEL', "$NODE_LABEL")
         stringParam('JAVA_TO_BUILD', "$JAVA_TO_BUILD")
         stringParam('JDK_BOOT_VERSION', "${JDK_BOOT_VERSION}")
@@ -77,9 +83,12 @@ pipelineJob("$buildFolder/$JOB_NAME") {
         stringParam('VARIANT', "$VARIANT")
         stringParam('TARGET_OS', "$TARGET_OS")
         stringParam('ADDITIONAL_FILE_NAME_TAG', "$ADDITIONAL_FILE_NAME_TAG")
-        stringParam('ENABLE_TESTS', "$ENABLE_TESTS")
-        stringParam('CLEAN_WORKSPACE', "$CLEAN_WORKSPACE")
-        stringParam('BRANCH', "$BRANCH")
-        textParam('TEST_CONFIG', "$TEST_CONFIG")
+        stringParam('OVERRIDE_FILE_NAME_VERSION', "$OVERRIDE_FILE_NAME_VERSION")
+        booleanParam('ENABLE_TESTS', ENABLE_TESTS)
+        booleanParam('CLEAN_WORKSPACE', CLEAN_WORKSPACE)
+        booleanParam('RELEASE', RELEASE)
+        stringParam('PUBLISH_NAME', "$PUBLISH_NAME")
+        stringParam('ADOPT_BUILD_NUMBER', "$ADOPT_BUILD_NUMBER")
+        stringParam('TEST_LIST', "$TEST_LIST")
     }
 }

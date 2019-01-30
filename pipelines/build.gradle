@@ -1,0 +1,31 @@
+group 'adoptopenjdk'
+version '1.0.0-SNAPSHOT'
+
+apply plugin: 'groovy'
+
+//Get compile errors if using 11
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+sourceSets {
+    main {
+        groovy {
+            srcDirs = ['build', 'src/main/groovy']
+            buildDir = 'target'
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.codehaus.groovy:groovy-all:2.3.11'
+    testCompile('org.junit.jupiter:junit-jupiter-api:5.4.0')
+    testRuntime('org.junit.jupiter:junit-jupiter-engine:5.4.0')
+}
+
+test {
+    useJUnitPlatform()
+}
