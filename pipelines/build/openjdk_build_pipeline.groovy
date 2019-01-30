@@ -14,6 +14,8 @@ limitations under the License.
 
 @Library('openjdk-jenkins-helper@master')
 import JobHelper
+@Library('openjdk-jenkins-helper@master')
+import JobHelper
 import NodeHelper
 import groovy.json.JsonSlurper
 
@@ -61,7 +63,9 @@ def determineTestJobName(config, testType) {
     def jobName = "openjdk${number}_${variant}_${testType}_${arch}_${os}"
 
     if (config.parameters.containsKey('ADDITIONAL_FILE_NAME_TAG')) {
-        jobName += "_${config.parameters.ADDITIONAL_FILE_NAME_TAG}"
+        if (config.parameters.ADDITIONAL_FILE_NAME_TAG == "linuxXL" || config.parameters.ADDITIONAL_FILE_NAME_TAG == "macosXL") {
+            jobName += "_${config.parameters.ADDITIONAL_FILE_NAME_TAG}"
+        }
     }
     return "${jobName}"
 }
