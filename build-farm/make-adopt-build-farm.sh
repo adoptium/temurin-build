@@ -88,10 +88,6 @@ JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr '[:lower:]' '[:upper:]')
 
 FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}-jdk_${ARCHITECTURE}_${OPERATING_SYSTEM}_${VARIANT}"
 
-if [ ! -z "${ADDITIONAL_FILE_NAME_TAG}" ]; then
-  FILENAME="${FILENAME}_${ADDITIONAL_FILE_NAME_TAG}"
-fi
-
 if [ -z "${TAG}" ]; then
   FILENAME="${FILENAME}_${TIMESTAMP}"
 else
@@ -100,6 +96,10 @@ else
 
   # clean out and rebuild libs on release
   OPTIONS="${OPTIONS} --clean-libs"
+fi
+
+if [ ! -z "${ADDITIONAL_FILE_NAME_TAG}" ]; then
+  FILENAME="${FILENAME}_${ADDITIONAL_FILE_NAME_TAG}"
 fi
 
 FILENAME="${FILENAME}.${EXTENSION}"
