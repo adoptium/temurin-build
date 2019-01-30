@@ -359,7 +359,11 @@ def doBuild(
 
     // publish to github if needed
     if (publish) {
-        publishRelease(javaVersionToBuild, releaseTag)
+        def releaseName = releaseTag;
+        if (releaseName && additionalFileNameTag) {
+            releaseName += "_" + additionalFileNameTag
+        }
+        publishRelease(javaVersionToBuild, releaseName)
     }
 }
 
