@@ -58,7 +58,15 @@ def determineTestJobName(config, testType) {
         os = "macos"
     }
 
-    return "openjdk${number}_${variant}_${testType}_${arch}_${os}"
+    def jobName = "openjdk${number}_${variant}_${testType}_${arch}_${os}"
+
+    if (config.parameters.containsKey('ADDITIONAL_FILE_NAME_TAG')) {
+        switch (config.parameters.ADDITIONAL_FILE_NAME_TAG) {
+            case ~/.*linuxXL.*/: jobName += "_linuxXL"; break;
+            case ~/.*macosXL.*/: jobName += "_macosXL"; break;
+        }
+    }
+    return "${jobName}"
 }
 
 def runTests(config) {
@@ -147,20 +155,22 @@ try {
     def enableTests = Boolean.valueOf(ENABLE_TESTS)
     def cleanWorkspace = Boolean.valueOf(CLEAN_WORKSPACE)
 
-    stage("build") {
+    stage("queue") {
         if (NodeHelper.nodeIsOnline(NODE_LABEL)) {
             node(NODE_LABEL) {
-                if (cleanWorkspace) {
-                    cleanWs notFailBuild: true
-                }
-
-                checkout scm
-                try {
-                    sh "./build-farm/make-adopt-build-farm.sh"
-                    archiveArtifacts artifacts: "workspace/target/*"
-                } finally {
-                    if (config.os == "aix") {
+                stage("build") {
+                    if (cleanWorkspace) {
                         cleanWs notFailBuild: true
+                    }
+
+                    checkout scm
+                    try {
+                        sh "./build-farm/make-adopt-build-farm.sh"
+                        archiveArtifacts artifacts: "workspace/target/*"
+                    } finally {
+                        if (config.os == "aix") {
+                            cleanWs notFailBuild: true
+                        }
                     }
                 }
             }

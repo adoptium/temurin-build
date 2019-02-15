@@ -99,6 +99,10 @@ function performMergeFromMercurialIntoGit() {
 # dev contains patches that AdoptOpenJDK has beyond upstream OpenJDK
 function performMergeIntoDevFromMaster() {
 
+  # Abort existing rebase
+  git rebase --abort || true
+  git reset --hard || true
+
   git fetch --all
   if ! git checkout -f dev ; then
     if ! git rev-parse -q --verify "origin/dev" ; then
@@ -112,19 +116,17 @@ function performMergeIntoDevFromMaster() {
 
   # Rebase master onto dev
 
-  # Abort existing rebase
-  git rebase --abort || true
 
   # Create tmp branch from master
   git branch -D dev-tmp || true
   git checkout -b dev-tmp master
 
   # place master commits on the end of dev
-  git rebase -p dev || exit 1
+  git rebase dev || exit 1
 
   # copy commits into dev
   git checkout dev
-  git rebase -p dev-tmp || exit 1
+  git rebase dev-tmp || exit 1
 
   git branch -D dev-tmp || true
 

@@ -4,6 +4,7 @@ set -exu
 
 source constants.sh
 
+acceptUpstream="false"
 doInit="false"
 doReset="false"
 doTagging="false"
@@ -21,6 +22,7 @@ function initRepo() {
   git clone $MIRROR/root/ .
   git checkout master
   git reset --hard "$tag"
+  git remote add "upstream" git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
   git remote add "root" "$MIRROR/root/"
 
   for module in "${MODULES[@]}" ; do
@@ -28,12 +30,15 @@ function initRepo() {
       git checkout master
       git reset --hard
   done
+  git fetch --all
 
   cd "$REPO"
   git tag | while read tag
   do
     git tag -d $tag || true
   done
+
+  git fetch upstream --tags
 }
 
 function inititialCheckin() {
@@ -68,6 +73,7 @@ function inititialCheckin() {
   do
     git tag -d $tag || true
   done
+  git fetch upstream --tags
 }
 
 function updateRepo() {
@@ -86,6 +92,7 @@ function updateRepo() {
   git pull origin
   git reset --hard origin/master
   git fetch --all
+  git fetch --tags
 
 }
 
@@ -110,8 +117,11 @@ function fixAutoConfigure() {
     git commit -a --no-edit
 }
 
-while getopts "b:irts:T:u" opt; do
+while getopts "ab:irts:T:u" opt; do
     case "${opt}" in
+        a)
+            acceptUpstream="true"
+            ;;
         b)
             workingBranch=${OPTARG}
             ;;
@@ -162,6 +172,8 @@ cd "$MIRROR/root/";
 commitId=$(git rev-list -n 1  $tag)
 
 cd "$REPO"
+git merge --abort || true
+git rebase --abort || true
 git checkout $workingBranch
 
 # Get rid of existing tag that we are about to create
@@ -192,7 +204,20 @@ fi
 
 cd "$REPO"
 for module in "${MODULES[@]}" ; do
+    set +e
     /usr/lib/git-core/git-subtree pull -q -m "Merge $module at $tag" --prefix=$module "$MIRROR/$module/" $tag
+
+    if [ $? != 0 ]; then
+      if [ "$acceptUpstream" == "true" ]; then
+        git diff --name-only --diff-filter=U | xargs git checkout --theirs
+        git commit -a -m "Resolve conflicts on module $module when merging tag $tag"
+      else
+        echo "Failed to merge in module $module"
+        exit 1
+      fi
+    fi
+
+    set -e
 done
 
 echo "Success $tag" >> $WORKSPACE/mergedTags

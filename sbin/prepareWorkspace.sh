@@ -78,10 +78,12 @@ checkoutAndCloneOpenJDKGitRepo()
   git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
 
   # Openj9 does not release from git tags
-  if [ ! -z "${BUILD_CONFIG[TAG]}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "openj9" ]; then
-    git fetch origin "refs/tags/${BUILD_CONFIG[TAG]}:refs/tags/${BUILD_CONFIG[TAG]}"
-    git checkout "${BUILD_CONFIG[TAG]}"
-    git reset --hard
+  if [ ! -z "${BUILD_CONFIG[TAG]}" ]; then
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] || [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ]; then
+      git fetch origin "refs/tags/${BUILD_CONFIG[TAG]}:refs/tags/${BUILD_CONFIG[TAG]}"
+      git checkout "${BUILD_CONFIG[TAG]}"
+      git reset --hard
+    fi
   fi
   git clean -ffdx
 
@@ -100,7 +102,7 @@ setGitCloneArguments() {
 
 updateOpenj9Sources() {
   # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     bash get_source.sh --openssl-version=1.1.1a
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
@@ -139,8 +141,6 @@ checkingAndDownloadingAlsa()
   then
     echo "Skipping ALSA download"
   else
-    # TODO Holy security problem Batman!
-    #wget -nc ftp://ftp.alsa-project.org/pub/lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     wget -nc https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
       bzip2 -d alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
@@ -172,6 +172,18 @@ checkingAndDownloadingFreemarker()
   fi
 }
 
+downloadFile() {
+  targetFileName="$1"
+  url="$2"
+
+  # Temporary fudge as curl on my windows boxes is exiting with RC=127
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+    wget -O "${targetFileName}" "${url}"
+  else
+    curl -L -o "${targetFileName}" "${url}"
+  fi
+}
+
 # Get Freetype
 checkingAndDownloadingFreeType()
 {
@@ -183,12 +195,7 @@ checkingAndDownloadingFreeType()
   if [[ ! -z "$FOUND_FREETYPE" ]] ; then
     echo "Skipping FreeType download"
   else
-    # Temporary fudge as curl on my windows boxes is exiting with RC=127
-    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-      wget -O "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
-    else
-      curl -L -o "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
-    fi
+    downloadFile "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
 
     rm -rf "./freetype" || true
     mkdir -p "freetype" || true
@@ -201,10 +208,14 @@ checkingAndDownloadingFreeType()
 
     cd freetype || exit
 
+    local pngArg="";
+    if ./configure --help | grep "with-png"; then
+      pngArg="--with-png=no";
+    fi
 
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${pngArg}" "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
       echo "Failed to configure and build libfreetype, exiting"
       exit;
@@ -240,6 +251,17 @@ checkingAndDownloadingFreeType()
   fi
 }
 
+downloadCerts() {
+  local caLink="$1"
+
+  mkdir -p "security"
+  # Temporary fudge as curl on my windows boxes is exiting with RC=127
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+     wget -O "./security/cacerts" "${caLink}"
+  else
+     curl -L -o "./security/cacerts" "${caLink}"
+  fi
+}
 # Certificate Authority Certs (CA Certs)
 checkingAndDownloadCaCerts()
 {
@@ -251,19 +273,17 @@ checkingAndDownloadCaCerts()
   mkdir "cacerts_area" || exit
   cd "cacerts_area" || exit
 
-  if [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" == "true" ];
+
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
+      local caLink="https://github.com/corretto/corretto-8/blob/preview-release/cacerts?raw=true";
+      downloadCerts "$caLink"
+  elif [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" == "true" ];
   then
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]
     then
       echo "Requested use of JEP319 certs"
       local caLink="https://github.com/AdoptOpenJDK/openjdk-jdk11u/blob/dev/src/java.base/share/lib/security/cacerts?raw=true";
-      mkdir -p "security"
-      # Temporary fudge as curl on my windows boxes is exiting with RC=127
-      if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-         wget -O "./security/cacerts" "${caLink}"
-      else
-         curl -L -o "./security/cacerts" "${caLink}"
-      fi
+      downloadCerts "$caLink"
     fi
   else
     git init
@@ -279,6 +299,13 @@ checkingAndDownloadCaCerts()
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, CACerts et al)
 downloadingRequiredDependencies()
 {
+  if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
+
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" || true
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype" || true
+  fi
+
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
 
@@ -289,7 +316,7 @@ downloadingRequiredDependencies()
         echo "Checking and download Alsa dependency"
         checkingAndDownloadingAlsa
 
-     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]]; then
+     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
            echo "Checking and download Freemarker dependency"
            checkingAndDownloadingFreemarker
      fi
