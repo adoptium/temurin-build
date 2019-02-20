@@ -73,18 +73,29 @@ checkoutAndCloneOpenJDKGitRepo()
   fi
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-  git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}"
-  git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
-  git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
 
-  # Openj9 does not release from git tags
-  if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]; then
-    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] || [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ]; then
-      git fetch origin "refs/tags/${BUILD_CONFIG[TAG]}:refs/tags/${BUILD_CONFIG[TAG]}"
-      git checkout "${BUILD_CONFIG[TAG]}"
-      git reset --hard
+  local tag="${BUILD_CONFIG[TAG]}"
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
+    git fetch --tags
+    if git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
+      echo "looks like the scm ref given is a valid tag, so treat it as a tag"
+      tag="${BUILD_CONFIG[BRANCH]}"
+      BUILD_CONFIG[TAG]="${tag}"
     fi
   fi
+
+  if [ "${tag}" ]; then
+    echo "Checking out tag ${tag}"
+    git fetch origin "refs/tags/${tag}:refs/tags/${tag}"
+    git checkout "${tag}"
+    git reset --hard
+    echo "Checked out tag ${tag}"
+  else
+    git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}"
+    git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
+    git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
+  fi
+
   git clean -ffdx
 
   updateOpenj9Sources
@@ -97,7 +108,7 @@ setGitCloneArguments() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   local git_remote_repo_address="${BUILD_CONFIG[REPOSITORY]}.git"
 
-  GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} '-b' "${BUILD_CONFIG[BRANCH]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
+  GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
 }
 
 updateOpenj9Sources() {

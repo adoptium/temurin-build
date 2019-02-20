@@ -304,7 +304,7 @@ class Build {
 
 
                     def filter = "**/OpenJDK*_mac_*.tar.gz"
-                    def certificate = "\"Developer ID Installer: London Jamocha Community CIC\""
+                    def certificate = "Developer ID Installer: London Jamocha Community CIC"
 
                     def installerJob = context.build job: "build-scripts/release/create_installer_mac",
                             propagate: true,
