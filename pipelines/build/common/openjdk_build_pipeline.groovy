@@ -38,10 +38,10 @@ limitations under the License.
  */
 
 class VersionInfo {
-    Integer major
-    Integer minor
-    Integer security
-    Integer build
+    Integer major // 8
+    Integer minor // 0
+    Integer security // 181
+    Integer build // 8
     String opt
     String version
     String pre
@@ -321,6 +321,44 @@ class Build {
                             flatten: true)
 
                     context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg); do sha256sum "$file" > $file.sha256.txt ; done'
+                    context.archiveArtifacts artifacts: "workspace/target/*"
+                }
+            }
+        } else if (TARGET_OS == "windows") {
+            context.node('master') {
+                context.stage("installer") {
+
+                    VersionInfo versionData = new VersionInfo().parse(PUBLISH_NAME, ADOPT_BUILD_NUMBER)
+
+
+                    def filter = "**/OpenJDK*_windows_*.zip"
+                    def certificate = "C:\Users\jenkins\windows.p12"
+
+                    def installerJob = context.build job: "build-scripts/release/create_installer_windows",
+                            propagate: true,
+                            parameters: [
+                                    context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                                    context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                                    context.string(name: 'FILTER', value: "${filter}"),
+                                    context.string(name: 'PRODUCT_MAJOR_VERSION', value: "${versionData.major}"),
+                                    context.string(name: 'PRODUCT_MINOR_VERSION', value: "${versionData.minor}"),
+                                    context.string(name: 'PRODUCT_MAINTENANCE_VERSION', value: "${versionData.security}"),
+                                    context.string(name: 'PRODUCT_PATCH_VERSION', value: "${versionData.build}"),
+                                    context.string(name: 'JVM', value: "${VARIANT}"),
+                                    context.string(name: 'SIGNING_CERTIFICATE', value: "${certificate}"),
+                                    context.string(name: 'ARCH', value: "${ARCHITECTURE}"),
+                                    ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${TARGET_OS}&&wix"],
+                            ]
+
+                    context.copyArtifacts(
+                            projectName: "build-scripts/release/create_installer_windows",
+                            selector: context.specific("${installerJob.getNumber()}"),
+                            filter: 'wix/ReleaseDir/*',
+                            fingerprintArtifacts: true,
+                            target: "workspace/target/",
+                            flatten: true)
+
+                    context.sh 'for file in $(ls workspace/target/*.zip workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
                     context.archiveArtifacts artifacts: "workspace/target/*"
                 }
             }
