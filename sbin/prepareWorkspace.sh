@@ -82,8 +82,8 @@ checkoutAndCloneOpenJDKGitRepo()
       tag="${BUILD_CONFIG[BRANCH]}"
     fi
   fi
-
-  if [ -z "${tag}" ]; then
+  
+  if [ "${tag}" ]; then
     echo "Checking out tag ${tag}"
     git fetch origin "refs/tags/${tag}:refs/tags/${tag}"
     git checkout "${tag}"
