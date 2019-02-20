@@ -45,7 +45,7 @@ class VersionInfo {
     String opt
     String version
     String pre
-    Integer adopt_build_number
+    Integer adopt_build_number = 1
     String semver
 
     VersionInfo() {
@@ -134,7 +134,7 @@ class VersionInfo {
 
             semver += "+"
             semver += (build ?: "0")
-            semver += "." + (adopt_build_number ?: "0")
+            semver += "." + adopt_build_number
             return semver
         } else {
             return null
