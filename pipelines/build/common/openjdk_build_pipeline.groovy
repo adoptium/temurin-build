@@ -97,14 +97,14 @@ class VersionInfo {
         //Regexes based on those in http://openjdk.java.net/jeps/223
         // Technically the standard supports an arbitrary number of numbers, we will support 3 for now
         final vnumRegex = "(?<major>[0-9]+)(\\.(?<minor>[0-9]+))?(\\.(?<security>[0-9]+))?"
-        final pre = "(?<pre>[a-zA-Z0-9]+)"
+        final preRegex = "(?<pre>[a-zA-Z0-9]+)"
         final buildRegex = "(?<build>[0-9]+)"
-        final opt = "(?<opt>[-a-zA-Z0-9\\.]+)"
+        final optRegex = "(?<opt>[-a-zA-Z0-9\\.]+)"
 
         List<String> version223Regexs = [
-                "(?:jdk\\-)(?<version>${vnumRegex}(\\-${pre})?\\+${buildRegex}(\\-${opt})?)".toString(),
-                "(?:jdk\\-)(?<version>${vnumRegex}\\-${pre}(\\-${opt})?)".toString(),
-                "(?:jdk\\-)(?<version>${vnumRegex}(\\+\\-${opt})?)".toString()
+                "(?:jdk\\-)(?<version>${vnumRegex}(\\-${preRegex})?\\+${buildRegex}(\\-${optRegex})?)".toString(),
+                "(?:jdk\\-)(?<version>${vnumRegex}\\-${preRegex}(\\-${optRegex})?)".toString(),
+                "(?:jdk\\-)(?<version>${vnumRegex}(\\+\\-${optRegex})?)".toString()
         ]
 
         for (String regex : version223Regexs) {
@@ -169,7 +169,7 @@ class Build {
     Integer getJavaVersionNumber() {
         // version should be something like "jdk8u"
         def matcher = (JAVA_TO_BUILD =~ /(\d+)/)
-        List<String> list = matcher[0] as List;
+        List<String> list = matcher[0] as List
         return Integer.parseInt(list[1] as String)
     }
 
@@ -437,7 +437,7 @@ class Build {
         try {
 
             def filename = determineFileName()
-            def metadata = formMetadata();
+            def metadata = formMetadata()
 
             context.println "Executing tests: ${TEST_LIST}"
             context.println "Build num: ${env.BUILD_NUMBER}"
@@ -477,7 +477,7 @@ class Build {
                 }
             }
 
-            if (enableTests && TEST_LIST != false) {
+            if (enableTests && TEST_LIST.trim().length() > 0) {
                 try {
                     def testStages = runTests()
                     context.parallel testStages
@@ -505,14 +505,14 @@ if (!binding.hasVariable("context")) {
 }
 
 if (String.class.isInstance(ENABLE_TESTS)) {
-    ENABLE_TESTS = Boolean.parseBoolean(ENABLE_TESTS)
+    ENABLE_TESTS = Boolean.parseBoolean(ENABLE_TESTS as String)
 }
 
 if (String.class.isInstance(CLEAN_WORKSPACE)) {
-    CLEAN_WORKSPACE = Boolean.parseBoolean(CLEAN_WORKSPACE)
+    CLEAN_WORKSPACE = Boolean.parseBoolean(CLEAN_WORKSPACE as String)
 }
 if (String.class.isInstance(RELEASE)) {
-    RELEASE = Boolean.parseBoolean(RELEASE)
+    RELEASE = Boolean.parseBoolean(RELEASE as String)
 }
 
 

@@ -68,7 +68,7 @@ class IndividualBuildConfig implements Serializable {
     }
 
     List<?> toBuildParams(def context) {
-        def params = toMap();
+        def params = toMap()
         List<?> buildParams = []
 
         buildParams.add(['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: params.get("NODE_LABEL")])
@@ -162,7 +162,7 @@ class Builder implements Serializable {
     String getBuildArgs(Map<String, ?> configuration, variant) {
         if (configuration.containsKey('buildArgs')) {
             if (isMap(configuration.buildArgs)) {
-                Map<String, ?> buildArgs = configuration.buildArgs as Map<String, ?>;
+                Map<String, ?> buildArgs = configuration.buildArgs as Map<String, ?>
                 if (buildArgs.containsKey(variant)) {
                     return buildArgs.get(variant)
                 }
@@ -220,7 +220,7 @@ class Builder implements Serializable {
         return labels
     }
 
-    static String getConfigureArgs(Map<String, ?> configuration, additionalConfigureArgs) {
+    static String getConfigureArgs(Map<String, ?> configuration, String additionalConfigureArgs) {
         def configureArgs = ""
 
         if (configuration.containsKey('configureArgs')) configureArgs += configuration.configureArgs
@@ -426,7 +426,6 @@ class Builder implements Serializable {
     }
 }
 
-
 return {
     String javaToBuild,
     Map<String, Map<String, ?>> buildConfigurations,
@@ -440,12 +439,11 @@ return {
     def scmVars,
     String additionalBuildArgs,
     String overrideFileNameVersion,
-    boolean cleanWorkspaceBeforeBuild,
+    String cleanWorkspaceBeforeBuild,
     String adoptBuildNumber,
     def currentBuild,
     def context,
     def env ->
-
         return new Builder(
                 javaToBuild: javaToBuild,
                 buildConfigurations: buildConfigurations,
