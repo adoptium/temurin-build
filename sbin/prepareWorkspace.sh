@@ -80,9 +80,10 @@ checkoutAndCloneOpenJDKGitRepo()
     if git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
       echo "looks like the scm ref given is a valid tag, so treat it as a tag"
       tag="${BUILD_CONFIG[BRANCH]}"
+      BUILD_CONFIG[TAG]="${tag}"
     fi
   fi
-  
+
   if [ "${tag}" ]; then
     echo "Checking out tag ${tag}"
     git fetch origin "refs/tags/${tag}:refs/tags/${tag}"
