@@ -94,7 +94,25 @@ def javaToBuild = "jdk"
 
 node ("master") {
     def scmVars = checkout scm
-    def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
-    //Tests off for head builds
-    buildFile.doBuild(javaToBuild, buildConfigurations, targetConfigurations, false, publish, releaseTag, branch, additionalConfigureArgs, scmVars)
+    Closure configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
+
+    configureBuild(
+            javaToBuild,
+            buildConfigurations,
+            targetConfigurations,
+            enableTests,
+            publish,
+            release,
+            scmReference,
+            publishName,
+            additionalConfigureArgs,
+            scmVars,
+            additionalBuildArgs,
+            overrideFileNameVersion,
+            cleanWorkspaceBeforeBuild,
+            adoptBuildNumber,
+            currentBuild,
+            this,
+            env
+    ).doBuild()
 }
