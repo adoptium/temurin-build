@@ -78,15 +78,17 @@ checkoutAndCloneOpenJDKGitRepo()
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
     git fetch --tags
     if git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
-      #looks like the scm ref given is a valid tag, so treat it as a tag
+      echo "looks like the scm ref given is a valid tag, so treat it as a tag"
       tag="${BUILD_CONFIG[BRANCH]}"
     fi
   fi
 
   if [ -z "${tag}" ]; then
+    echo "Checking out tag ${tag}"
     git fetch origin "refs/tags/${tag}:refs/tags/${tag}"
     git checkout "${tag}"
     git reset --hard
+    echo "Checked out tag ${tag}"
   else
     git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}"
     git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
@@ -105,7 +107,7 @@ setGitCloneArguments() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   local git_remote_repo_address="${BUILD_CONFIG[REPOSITORY]}.git"
 
-  GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} '-b' "${BUILD_CONFIG[BRANCH]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
+  GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
 }
 
 updateOpenj9Sources() {
