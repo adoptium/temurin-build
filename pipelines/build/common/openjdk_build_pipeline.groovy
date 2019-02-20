@@ -334,9 +334,6 @@ class Build {
             context.node('master') {
                 context.stage("installer") {
 
-                    VersionInfo versionData = new VersionInfo().parse(PUBLISH_NAME, ADOPT_BUILD_NUMBER)
-
-
                     def filter = "**/OpenJDK*_windows_*.zip"
                     def certificate = "C:\\Users\\jenkins\\windows.p12"
 
