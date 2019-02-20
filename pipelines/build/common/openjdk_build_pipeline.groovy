@@ -291,14 +291,16 @@ class Build {
 
 
     def buildInstaller() {
-        if (!RELEASE) {
+        VersionInfo versionData = new VersionInfo().parse(PUBLISH_NAME, ADOPT_BUILD_NUMBER)
+
+        if (versionData.major == null) {
+            context.println "Failed to parse version number, possibly a nightly? Skipping installer steps"
             return
         }
+
         if (TARGET_OS == "mac") {
             context.node('master') {
                 context.stage("installer") {
-
-                    VersionInfo versionData = new VersionInfo().parse(PUBLISH_NAME, ADOPT_BUILD_NUMBER)
 
 
                     def filter = "**/OpenJDK*_mac_*.tar.gz"
@@ -497,7 +499,11 @@ class Build {
                     context.node(NODE_LABEL) {
                         context.stage("build") {
                             if (cleanWorkspace) {
-                                context.cleanWs notFailBuild: true
+                                try {
+                                    context.cleanWs notFailBuild: true
+                                } catch (e) {
+                                    context.println "Failed to clean ${e}"
+                                }
                             }
                             context.checkout context.scm
                             try {
