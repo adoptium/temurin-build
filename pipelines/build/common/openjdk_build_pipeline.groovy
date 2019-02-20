@@ -157,6 +157,7 @@ class Build {
     String OVERRIDE_FILE_NAME_VERSION
     boolean ENABLE_TESTS
     boolean CLEAN_WORKSPACE
+    boolean RELEASE
     String PUBLISH_NAME
     String TEST_LIST
     String ADOPT_BUILD_NUMBER
@@ -290,6 +291,9 @@ class Build {
 
 
     def buildInstaller() {
+        if (!RELEASE) {
+            return
+        }
         if (TARGET_OS == "mac") {
             context.node('master') {
                 context.stage("installer") {
@@ -332,7 +336,7 @@ class Build {
 
 
                     def filter = "**/OpenJDK*_windows_*.zip"
-                    def certificate = "C:\Users\jenkins\windows.p12"
+                    def certificate = "C:\\Users\\jenkins\\windows.p12"
 
                     def installerJob = context.build job: "build-scripts/release/create_installer_windows",
                             propagate: true,
@@ -570,6 +574,7 @@ new Build(SCM_REF: SCM_REF,
         PUBLISH_NAME: PUBLISH_NAME,
         ADOPT_BUILD_NUMBER: ADOPT_BUILD_NUMBER,
         TEST_LIST: TEST_LIST,
+        RELEASE: RELEASE,
 
         context: context,
         env: env,
