@@ -1,3 +1,5 @@
+package groovy.common
+
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -127,18 +129,25 @@ def javaToBuild = "jdk8u"
 
 node("master") {
     def scmVars = checkout scm
-    def buildFile = load "${WORKSPACE}/pipelines/build/build_base_file.groovy"
-    buildFile.doBuild(
+    Closure configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
+
+    configureBuild(
             javaToBuild,
             buildConfigurations,
             targetConfigurations,
             enableTests,
             publish,
-            releaseTag,
-            branch,
+            release,
+            scmReference,
+            publishName,
             additionalConfigureArgs,
             scmVars,
             additionalBuildArgs,
-            additionalFileNameTag,
-            cleanWorkspaceBeforeBuild)
+            overrideFileNameVersion,
+            cleanWorkspaceBeforeBuild,
+            adoptBuildNumber,
+            currentBuild,
+            this,
+            env
+    ).doBuild()
 }

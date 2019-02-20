@@ -20,20 +20,17 @@ PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ## Very very build farm specific configuration
 
-TIMESTAMP="$(date +'%Y-%m-%d-%H-%M')"
-
 export OPERATING_SYSTEM
 OPERATING_SYSTEM=$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')
-
 
 echo "BUILD TYPE: "
 echo "VERSION: ${JAVA_TO_BUILD}"
 echo "ARCHITECTURE ${ARCHITECTURE}"
 echo "VARIANT: ${VARIANT}"
 echo "OS: ${OPERATING_SYSTEM}"
-echo "BRANCH: ${BRANCH}"
-
+echo "SCM_REF: ${SCM_REF}"
 OPTIONS=""
+
 EXTENSION=""
 # shellcheck disable=SC2034
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
@@ -65,11 +62,16 @@ fi
 
 echo "Boot jdk: ${JDK_BOOT_DIR}"
 
-if [ "${OPERATING_SYSTEM}" == "windows" ] ; then
-  EXTENSION=zip
-else
-  EXTENSION="tar.gz"
+if [ "${RELEASE}" == "true" ]; then
+  OPTIONS="${OPTIONS} --release --clean-libs"
 fi
+
+if [ "${RELEASE}" == "true" ] && [ "${VARIANT}" != "openj9" ]; then
+    export TAG="${SCM_REF}"
+else
+    export BRANCH="${SCM_REF}"
+fi
+
 
 if [ ! -z "${TAG}" ]; then
   OPTIONS="${OPTIONS} --tag $TAG"
@@ -80,30 +82,11 @@ then
   OPTIONS="${OPTIONS} --disable-shallow-git-clone -b ${BRANCH}"
 fi
 
+echo "BRANCH: ${BRANCH} (For release either BRANCH or TAG should be set)"
+echo "TAG: ${TAG}"
+
 # shellcheck source=build-farm/set-platform-specific-configurations.sh
 source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
-
-# Set the file name
-JAVA_TO_BUILD_UPPERCASE=$(echo "${JAVA_TO_BUILD}" | tr '[:lower:]' '[:upper:]')
-
-FILENAME="Open${JAVA_TO_BUILD_UPPERCASE}-jdk_${ARCHITECTURE}_${OPERATING_SYSTEM}_${VARIANT}"
-
-if [ -z "${TAG}" ]; then
-  FILENAME="${FILENAME}_${TIMESTAMP}"
-else
-  nameTag=$(echo "${TAG}" | sed -e 's/jdk//' -e 's/-//' -e 's/+/_/g')
-  FILENAME="${FILENAME}_${nameTag}"
-
-  # clean out and rebuild libs on release
-  OPTIONS="${OPTIONS} --clean-libs"
-fi
-
-if [ ! -z "${ADDITIONAL_FILE_NAME_TAG}" ]; then
-  FILENAME="${FILENAME}_${ADDITIONAL_FILE_NAME_TAG}"
-fi
-
-FILENAME="${FILENAME}.${EXTENSION}"
-
 
 echo "Filename will be: $FILENAME"
 

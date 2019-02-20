@@ -66,6 +66,7 @@ OPENJDK_SOURCE_DIR
 OPENJDK_UPDATE_VERSION
 OS_KERNEL_NAME
 OS_ARCHITECTURE
+RELEASE
 REPOSITORY
 REUSE_CONTAINER
 SHALLOW_CLONE_OPTION
@@ -227,6 +228,9 @@ function parseConfigurationArguments() {
 
         "--repository" | "-r" )
         BUILD_CONFIG[REPOSITORY]="$1"; shift;;
+
+        "--release" )
+        BUILD_CONFIG[RELEASE]=true; shift;;
 
         "--source" | "-s" )
         BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
@@ -400,6 +404,8 @@ function configDefaults() {
 
   # By default dont backport JEP318 certs to < Java 10
   BUILD_CONFIG[USE_JEP319_CERTS]=false
+
+  BUILD_CONFIG[RELEASE]=false
 }
 
 # Declare the map of build configuration that we're going to use
