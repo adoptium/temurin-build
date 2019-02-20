@@ -158,7 +158,7 @@ configuringVersionStringParameter()
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
 
-    if [ -z "${BUILD_CONFIG[RELEASE]}" ]; then
+    if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
       addConfigureArg "--with-user-release-suffix=" "${dateSuffix}"
     fi
 
@@ -188,7 +188,7 @@ configuringVersionStringParameter()
       buildNumber=$(echo "${openJdkVersion}" | cut -f2 -d"+")
     fi
 
-    if [ -z "${BUILD_CONFIG[RELEASE]}" ]; then
+    if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
       addConfigureArg "--with-version-opt=" "${dateSuffix}"
     else
       addConfigureArg "--without-version-opt" ""
@@ -205,7 +205,7 @@ configuringVersionStringParameter()
       buildNumber=$(echo "${openJdkVersion}" | cut -f2 -d"+")
     fi
 
-    if [ -z "${BUILD_CONFIG[RELEASE]}" ]; then
+    if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
       addConfigureArg "--with-version-opt=" "${dateSuffix}"
     else
       addConfigureArg "--without-version-opt" ""
