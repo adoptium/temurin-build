@@ -358,6 +358,7 @@ class Build {
                     switch (TARGET_OS) {
                         case "mac": buildMacInstaller(versionData); break
                         case "windows": buildWindowsInstaller(versionData); break
+                        default: return; break
                     }
                     context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
                     context.archiveArtifacts artifacts: "workspace/target/*"
