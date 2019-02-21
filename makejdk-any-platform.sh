@@ -37,9 +37,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/config_init.sh
 source "${SCRIPT_DIR}/sbin/common/config_init.sh"
 
-# shellcheck source=docker-build.sh
-source "${SCRIPT_DIR}/docker-build.sh"
-
 # shellcheck source=native-build.sh
 source "${SCRIPT_DIR}/native-build.sh"
 
@@ -53,9 +50,4 @@ echo "Starting $0 to configure, build (Adopt)OpenJDK binary"
 configure_build "$@"
 writeConfigToFile
 
-# Let's build and test the (Adopt) OpenJDK binary in Docker or natively
-if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
-  buildOpenJDKViaDocker
-else
-  buildOpenJDKInNativeEnvironment
-fi
+buildOpenJDKInNativeEnvironment
