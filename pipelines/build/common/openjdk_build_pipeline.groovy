@@ -290,7 +290,7 @@ class Build {
     }
 
 
-    private void buildMacInstaller() {
+    private void buildMacInstaller(VersionInfo versionData) {
         def filter = "**/OpenJDK*_mac_*.tar.gz"
         def certificate = "Developer ID Installer: London Jamocha Community CIC"
 
@@ -315,7 +315,7 @@ class Build {
                 flatten: true)
     }
 
-    private void buildWindowsInstaller() {
+    private void buildWindowsInstaller(VersionInfo versionData) {
         def filter = "**/OpenJDK*_windows_*.zip"
         def certificate = "C:\\Users\\jenkins\\windows.p12"
 
@@ -356,8 +356,8 @@ class Build {
             context.stage("installer") {
                 try {
                     switch (TARGET_OS) {
-                        case "mac": buildMacInstaller(); break
-                        case "windows": buildWindowsInstaller(); break
+                        case "mac": buildMacInstaller(versionData); break
+                        case "windows": buildWindowsInstaller(versionData); break
                     }
                     context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
                     context.archiveArtifacts artifacts: "workspace/target/*"
