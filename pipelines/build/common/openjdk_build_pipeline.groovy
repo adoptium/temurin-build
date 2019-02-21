@@ -417,7 +417,7 @@ class Build {
     */
         context.node("master") {
             //Clean workspace on parent
-            context.sh 'find . -regex ".*/OpenJDK.*\\.json" -exec rm {} \\; || true'
+            context.sh 'find . -regex ".*/OpenJDK.*\\.json" -exec rm ./{} \\; || true'
             filesCreated.each({ file ->
                 def type = "jdk"
                 if (file.contains("-jre")) {
