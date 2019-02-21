@@ -111,9 +111,6 @@ buildOpenJDKViaDocker()
      buildDockerContainer
   fi
 
-  # Show the user all of the config before we build
-  displayParams
-
   local hostDir
   hostDir="$(pwd)"
 
@@ -122,18 +119,22 @@ buildOpenJDKViaDocker()
 
   local cpuSet
   cpuSet="0-$((BUILD_CONFIG[NUM_PROCESSORS] - 1))"
-  
+
   local gitSshAccess=()
   if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
      gitSshAccess=(-v "${HOME}/.ssh:/home/build/.ssh" -v "${SSH_AUTH_SOCK}:/build-ssh-agent" -e "SSH_AUTH_SOCK=/build-ssh-agent")
   fi
- 
+
   local dockerMode=()
-  local dockerEntrypoint=(--entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}")
+  local dockerEntrypoint=(--entrypoint /openjdk/makejdk-any-platform.sh)
   if [[ "${BUILD_CONFIG[DEBUG_DOCKER]}" == "true" ]] ; then
      dockerMode=(-t -i)
-     dockerEntrypoint=(--entrypoint "/bin/sh" "${BUILD_CONFIG[CONTAINER_NAME]}" -c "echo 'DEBUG DOCKER BUILD\\nTo build jdk run\\n/openjdk/sbin/build.sh'; /bin/bash")
+     dockerEntrypoint=(--entrypoint "/bin/sh" "${BUILD_CONFIG[CONTAINER_NAME]}" -c "echo 'DEBUG DOCKER BUILD\\nTo build jdk run\\n/openjdk/makejdk-any-platform.sh'; /bin/bash")
   fi
+
+  echo "# ================================================================== "
+  echo "# Building AdoptOpenJDK in docker                                    "
+  echo "# ==================================================================="
 
   # shellcheck disable=SC2140
   # Pass in the last important variables into the Docker container and call
@@ -146,10 +147,38 @@ buildOpenJDKViaDocker()
        "${gitSshAccess[@]}" \
        -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
        -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
-       "${dockerEntrypoint[@]}"
-  
+       "${dockerEntrypoint[@]}" \
+        "${BUILD_CONFIG[CONTAINER_NAME]}" "$@"
+
+
+  echo "# ================================================================== "
+  echo "# Docker build finished                                              "
+  echo "# ==================================================================="
+
   # If we didn't specify to keep the container then remove it
   if [[ -z ${BUILD_CONFIG[KEEP_CONTAINER]} ]] ; then
     ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm {}
   fi
 }
+
+# i.e. Where we are
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Pull in configuration and build support
+# shellcheck source=sbin/common/config_init.sh
+source "${SCRIPT_DIR}/sbin/common/config_init.sh"
+
+# shellcheck source=native-build.sh
+source "${SCRIPT_DIR}/native-build.sh"
+
+# shellcheck source=configureBuild.sh
+source "${SCRIPT_DIR}/configureBuild.sh"
+
+echo "Starting $0 to configure, build (Adopt)OpenJDK binary"
+
+# Configure the build, display the parameters and write the config to disk
+# see ${SCRIPT_DIR}/sbin/common/config_init.sh for details
+configure_build "$@"
+writeConfigToFile
+
+buildOpenJDKViaDocker "$@"

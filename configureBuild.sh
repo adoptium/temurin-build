@@ -84,7 +84,7 @@ setWorkingDirectory()
   if [ -z "${BUILD_CONFIG[WORKSPACE_DIR]}" ] ; then
     if [[ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ]];
     then
-       BUILD_CONFIG[WORKSPACE_DIR]="/openjdk/";
+       BUILD_CONFIG[WORKSPACE_DIR]="/openjdk";
      else
        BUILD_CONFIG[WORKSPACE_DIR]="$PWD/workspace";
        mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit

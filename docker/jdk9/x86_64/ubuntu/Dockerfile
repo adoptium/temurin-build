@@ -50,7 +50,7 @@ RUN apt-get update \
 RUN mkdir -p /openjdk/target
 
 COPY sbin /openjdk/sbin
-COPY workspace/config /openjdk/config
+COPY *.sh /openjdk/
 
 RUN mkdir -p /openjdk/build
 RUN useradd -ms /bin/bash build
@@ -59,7 +59,7 @@ USER build
 WORKDIR /openjdk/build/
 
 # Default actions
-ENTRYPOINT ["/openjdk/sbin/build.sh"]
+ENTRYPOINT ["/openjdk/makejdk-any-platform.sh"]
 
 CMD ["images"]
 
