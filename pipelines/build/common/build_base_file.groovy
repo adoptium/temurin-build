@@ -260,7 +260,7 @@ class Builder implements Serializable {
 
     Integer getJavaVersionNumber() {
         // version should be something like "jdk8u"
-        Matcher matcher = javaToBuild =~ /.*(?<version>\d+).*/
+        Matcher matcher = javaToBuild =~ /([^\d]*(?<version>\d+)[^\d]*)/
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
         } else {
