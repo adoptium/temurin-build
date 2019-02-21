@@ -303,7 +303,7 @@ class Build {
                         context.string(name: 'FULL_VERSION', value: "${versionData.semver}"),
                         context.string(name: 'MAJOR_VERSION', value: "${versionData.major}"),
                         context.string(name: 'CERTIFICATE', value: "${certificate}"),
-                        ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${TARGET_OS}&&build"],
+                        ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${TARGET_OS}&&build"]
                 ]
 
         context.copyArtifacts(
@@ -332,7 +332,7 @@ class Build {
                         context.string(name: 'JVM', value: "${VARIANT}"),
                         context.string(name: 'SIGNING_CERTIFICATE', value: "${certificate}"),
                         context.string(name: 'ARCH', value: "${ARCHITECTURE}"),
-                        ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${TARGET_OS}&&wix"],
+                        ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${TARGET_OS}&&wix"]
                 ]
 
         context.copyArtifacts(
@@ -417,7 +417,7 @@ class Build {
     */
         context.node("master") {
             //Clean workspace on parent
-            context.sh "rm workspace/target/**/*.json || true"
+            context.sh 'find . -regex ".*/OpenJDK.*\\.json" -exec rm {} \\; || true'
             filesCreated.each({ file ->
                 def type = "jdk"
                 if (file.contains("-jre")) {
