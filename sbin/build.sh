@@ -153,7 +153,11 @@ configuringVersionStringParameter()
   local openJdkVersion=$(getOpenJdkVersion)
   echo "OpenJDK repo tag is ${openJdkVersion}"
 
-  addConfigureArg "--with-milestone=" "fcs"
+  # --with-milestone=fcs reprecated at jdk11, removed at jdk12
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK12_CORE_VERSION}" ]; then
+    addConfigureArg "--with-milestone=" "fcs"
+  fi
+
   local dateSuffix=$(date -u +%Y%m%d%H%M)
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
