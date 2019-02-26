@@ -34,6 +34,7 @@ then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
   then
     if [ "${JAVA_TO_BUILD}" != "${JDK12_VERSION}" ]
+    then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/progra~2/OpenSSL --enable-openssl-bundling"
     fi
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
