@@ -57,7 +57,7 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   # Needed for the later nasm
   export PATH=/usr/local/bin:$PATH
   # ccache causes too many errors (either the default version on 3.2.4) so disabling
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --with-openssl=fetched --enable-openssl-bundling"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--disable-ccache ${CONFIGURE_ARGS_FOR_ANY_PLATFORM}"
   export MACOSX_DEPLOYMENT_TARGET=10.9.0
   if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
   then
