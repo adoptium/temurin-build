@@ -58,7 +58,7 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
 fi
 echo LDR_CNTRL=$LDR_CNTRL
 
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ];
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
 then
   if [ ! -d "$JDK10_BOOT_DIR" ]; then
     export JDK10_BOOT_DIR="$PWD/jdk-10"
@@ -68,7 +68,22 @@ then
     fi
   fi
   export JDK_BOOT_DIR=$JDK10_BOOT_DIR
+fi
 
+if [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ];
+then
+  if [ ! -d "$JDK11_BOOT_DIR" ]; then
+    export JDK11_BOOT_DIR="$PWD/jdk-11"
+    if [ ! -d "$JDK11_BOOT_DIR/bin" ]; then
+      mkdir -p "$JDK11_BOOT_DIR"
+      wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?os=aix&release=latest&arch=${ARCHITECTURE}&heap_size=normal&openjdk_impl=openj9" | tar xpzf - --strip-components=2 -C "$JDK11_BOOT_DIR"
+    fi
+  fi
+  export JDK_BOOT_DIR=$JDK11_BOOT_DIR
+fi
+
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ];
+then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
     if [ -r /usr/local/gcc/bin/gcc-7.3 ]; then
