@@ -65,7 +65,7 @@ then
     export JDK11_BOOT_DIR="$PWD/jdk-11"
     if [ ! -d "$JDK11_BOOT_DIR/bin" ]; then
       mkdir -p "$JDK11_BOOT_DIR"
-      wget -q -O - 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?os=mac&release=latest&heap_size=normal&openjdk_impl=openj9' | tar xpzf - --strip-components=2 -C "$JDK11_BOOT_DIR"
+      wget -q -O - 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?os=mac&release=latest&type=jdk&heap_size=normal&openjdk_impl=openj9' | tar xpzf - --strip-components=2 -C "$JDK11_BOOT_DIR"
     fi
   fi
   export JDK_BOOT_DIR=$JDK11_BOOT_DIR
