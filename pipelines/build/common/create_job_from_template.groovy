@@ -43,6 +43,7 @@ folder(buildFolder) {
     description 'Automatically generated build jobs.'
 }
 
+
 pipelineJob("$buildFolder/$JOB_NAME") {
     description('<h1>THIS IS AN AUTOMATICALLY GENERATED JOB DO NOT MODIFY, IT WILL BE OVERWRITTEN.</h1><p>This job is defined in create_job_from_template.groovy in the openjdk-build repo, if you wish to change it modify that</p>')
     definition {
@@ -51,7 +52,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 git {
                     remote {
                         url(GIT_URI)
-                        refspec("+refs/pull/*/head:refs/remotes/pull/* +refs/heads/master:refs/remotes/origin/master")
+                        refspec("+refs/pull/*/head:refs/remotes/pull/* +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*")
                     }
                     branch("${GIT_BRANCH}")
                     extensions {
