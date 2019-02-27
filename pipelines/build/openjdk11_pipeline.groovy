@@ -98,7 +98,8 @@ def buildConfigurations = [
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                : ['openjdktest', 'perftest']
+                // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
+                //test                : ['openjdktest', 'perftest']
         ],
 
         aarch64Linux    : [

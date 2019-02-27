@@ -45,10 +45,8 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
 
     parameters {
         textParam('targetConfigurations', JsonOutput.prettyPrint(JsonOutput.toJson(targetConfigurations)))
-        booleanParam('publish', !TEST, 'If set to true the final assets will be published to GitHub')
+        choiceParam('releaseType', ['Nightly', 'Nightly Without Publish', 'Release' ], 'Nightly - release a standard nightly build.<br/>Nightly Without Publish - run a nightly but do not publish.<br/>Release - this is a release, this will need to be manually promoted.')
         stringParam('publishName', "", 'Name that determines the file name (and is used by the meta-data file). Nightly builds: Leave blank (defaults to a date_time stamp. Release builds: For example, Java 8 based releases: <code>jdk8u192-b12</code> or <code>jdk8u192-b12_openj9-0.12.1</code> and for Java 11 based releases <code>jdk-11.0.2+9</code> or <code>jdk-11.0.2+9_openj9-0.12.1</code>.')
-        booleanParam('release', false, 'If set to true this will be considered a release')
-        booleanParam('releaseApproved', false, 'Must have approval from the project to release! Make sure there is a release issue in the TSC repo.')
         stringParam('scmReference', "", 'Tag name or Branch name from which to build. Nightly builds: Defaults to master. Release builds: For hotspot this would be the OpenJDK tag and for OpenJ9 this will be the branch.')
         booleanParam('enableTests', !TEST, 'If set to true the test pipeline will be executed')
         stringParam('additionalConfigureArgs', "", "Additional arguments that will be ultimately passed to OpenJDK's <code>./configure</code>")
