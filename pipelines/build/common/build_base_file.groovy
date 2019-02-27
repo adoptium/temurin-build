@@ -434,7 +434,7 @@ return {
     String enableTests,
     String releaseType,
     String scmReference,
-    String publishName,
+    String overridePublishName,
     String additionalConfigureArgs,
     def scmVars,
     String additionalBuildArgs,
@@ -453,6 +453,13 @@ return {
         boolean publish = false
         if (releaseType == 'Nightly') {
             publish = true;
+        }
+
+        // If no overridePublishName is set and it's a release just use the tag or branch name
+        if (release && !overridePublishName) {
+            publishName = scmReference
+        } else {
+            publishName = overridePublishName
         }
 
         return new Builder(

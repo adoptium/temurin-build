@@ -166,7 +166,6 @@ class Build {
     def env
     def currentBuild
 
-
     Integer getJavaVersionNumber() {
         // version should be something like "jdk8u"
         def matcher = (JAVA_TO_BUILD =~ /(\d+)/)
@@ -558,10 +557,10 @@ if (String.class.isInstance(ENABLE_TESTS)) {
 if (String.class.isInstance(CLEAN_WORKSPACE)) {
     CLEAN_WORKSPACE = Boolean.parseBoolean(CLEAN_WORKSPACE as String)
 }
+
 if (String.class.isInstance(RELEASE)) {
     RELEASE = Boolean.parseBoolean(RELEASE as String)
 }
-
 
 new Build(SCM_REF: SCM_REF,
         NODE_LABEL: NODE_LABEL,
