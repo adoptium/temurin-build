@@ -111,7 +111,6 @@ class Builder implements Serializable {
     String publishName
 
     boolean release
-    boolean releaseApproved
     boolean publish
     boolean enableTests
     boolean cleanWorkspaceBeforeBuild
@@ -305,11 +304,6 @@ class Builder implements Serializable {
 
         if (release) {
 
-            if(!releaseApproved) {
-                context.error('Make sure you have approval to execute this released!  See the releaseApproved checkbox.')
-                return false
-            }
-
             // Doing a release
             def variants = jobConfigurations
                     .values()
@@ -438,9 +432,7 @@ return {
     Map<String, Map<String, ?>> buildConfigurations,
     String targetConfigurations,
     String enableTests,
-    String publish,
-    String release,
-    String releaseApproved,
+    String releaseType,
     String scmReference,
     String publishName,
     String additionalConfigureArgs,
@@ -452,14 +444,24 @@ return {
     def currentBuild,
     def context,
     def env ->
+
+        Boolean release = false
+        if (releaseType == 'Release') {
+            release = true;
+        }
+
+        Boolean publish = false
+        if (releaseType == 'Nightly') {
+            publish = true;
+        }
+
         return new Builder(
                 javaToBuild: javaToBuild,
                 buildConfigurations: buildConfigurations,
                 targetConfigurations: new JsonSlurper().parseText(targetConfigurations) as Map,
                 enableTests: Boolean.parseBoolean(enableTests),
-                publish: Boolean.parseBoolean(publish),
-                release: Boolean.parseBoolean(release),
-                releaseApproved: Boolean.parseBoolean(releaseApproved),
+                publish: publish,
+                release: release,
                 scmReference: scmReference,
                 publishName: publishName,
                 additionalConfigureArgs: additionalConfigureArgs,

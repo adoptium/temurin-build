@@ -98,7 +98,9 @@ def buildConfigurations = [
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                : ['openjdktest', 'perftest']
+                // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
+                //test                : ['openjdktest', 'perftest']
+                test                : false
         ],
 
         aarch64Linux    : [
@@ -139,7 +141,6 @@ node ("master") {
             enableTests,
             publish,
             release,
-            releaseApproved,
             scmReference,
             publishName,
             additionalConfigureArgs,
