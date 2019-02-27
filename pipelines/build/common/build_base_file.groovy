@@ -434,7 +434,7 @@ return {
     String enableTests,
     String releaseType,
     String scmReference,
-    String publishName,
+    String overridePublishName,
     String additionalConfigureArgs,
     def scmVars,
     String additionalBuildArgs,
@@ -453,6 +453,13 @@ return {
         boolean publish = false
         if (releaseType == 'Nightly') {
             publish = true;
+        }
+
+        publishName = '' // This is set to a timestamp later on if undefined
+        if (overridePublishName) {
+            publishName = overridePublishName
+        } else if (release) {
+            publishName = scmReference
         }
 
         return new Builder(

@@ -100,7 +100,7 @@ node ("master") {
             enableTests,
             releaseType,
             scmReference,
-            publishName,
+            overridePublishName,
             additionalConfigureArgs,
             scmVars,
             additionalBuildArgs,
