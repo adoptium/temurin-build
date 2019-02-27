@@ -41,7 +41,11 @@ fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
 then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched"
+  if [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ]
+  then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-openssl-bundling"
+  fi
 fi
 
 if [ "${ARCHITECTURE}" == "ppc64le" ]
@@ -69,7 +73,7 @@ then
     fi
 fi
 
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
 then
     if [ ! -d "$JDK10_BOOT_DIR" ]; then
       export JDK10_BOOT_DIR="$PWD/jdk-10"
@@ -82,7 +86,21 @@ then
     fi
     export JDK_BOOT_DIR=$JDK10_BOOT_DIR
 fi
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+
+if [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+then
+    if [ ! -d "$JDK11_BOOT_DIR" ]; then
+      export JDK11_BOOT_DIR="$PWD/jdk-11"
+      if [ ! -d "$JDK11_BOOT_DIR/bin" ]; then
+        downloadArch="${ARCHITECTURE}"
+        [ "$downloadArch" == "arm" ] && downloadArch="arm32"
+        mkdir -p "$JDK11_BOOT_DIR"
+        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/nightly/openjdk11?os=linux&release=latest&arch=${downloadArch}&type=jdk&openjdk_impl=hotspot&heap_size=normal" | tar xpzf - --strip-components=1 -C "$JDK11_BOOT_DIR"
+      fi
+    fi
+    export JDK_BOOT_DIR=$JDK11_BOOT_DIR
+fi
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     # If we have the RedHat devtoolset 7 installed, use gcc 7 from there, else /usr/local/gcc/bin
     if [ -r /opt/rh/devtoolset-7/root/usr/bin ]; then
       export PATH=/opt/rh/devtoolset-7/root/usr/bin:$PATH
