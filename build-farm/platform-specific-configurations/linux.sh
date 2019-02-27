@@ -42,7 +42,7 @@ fi
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched"
-  if [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ]
+  if [ "${JAVA_TO_BUILD}" != "${JDK12_VERSION}" ]
   then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-openssl-bundling"
   fi
@@ -68,7 +68,6 @@ then
           wget -O -  https://github.com/AdoptOpenJDK/openjdk9-releases/releases/download/jdk-9%2B181/OpenJDK9_s390x_Linux_jdk-9.181.tar.gz | tar xpfz -
         fi
       fi
-
       export JDK_BOOT_DIR=$JDK9_BOOT_DIR
     fi
 fi
