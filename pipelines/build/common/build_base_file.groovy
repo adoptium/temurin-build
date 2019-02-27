@@ -445,12 +445,12 @@ return {
     def context,
     def env ->
 
-        Boolean release = false
+        boolean release = false
         if (releaseType == 'Release') {
             release = true;
         }
 
-        Boolean publish = false
+        boolean publish = false
         if (releaseType == 'Nightly') {
             publish = true;
         }
