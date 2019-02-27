@@ -99,7 +99,7 @@ then
     fi
     export JDK_BOOT_DIR=$JDK11_BOOT_DIR
 fi
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     # If we have the RedHat devtoolset 7 installed, use gcc 7 from there, else /usr/local/gcc/bin
     if [ -r /opt/rh/devtoolset-7/root/usr/bin ]; then
       export PATH=/opt/rh/devtoolset-7/root/usr/bin:$PATH
