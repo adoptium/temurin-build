@@ -455,7 +455,7 @@ return {
             publish = true;
         }
 
-        publishName = ''
+        publishName = '' // This is set to a timestamp later on if undefined
         if (overridePublishName) {
             publishName = overridePublishName
         } else if (release) {
