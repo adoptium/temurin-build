@@ -111,6 +111,7 @@ class Builder implements Serializable {
     String publishName
 
     boolean release
+    boolean releaseApproved
     boolean publish
     boolean enableTests
     boolean cleanWorkspaceBeforeBuild
@@ -259,7 +260,7 @@ class Builder implements Serializable {
 
     Integer getJavaVersionNumber() {
         // version should be something like "jdk8u"
-        Matcher matcher = javaToBuild =~ /.*(?<version>\d+).*/
+        Matcher matcher = javaToBuild =~ /.*?(?<version>\d+).*?/
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
         } else {
@@ -303,6 +304,12 @@ class Builder implements Serializable {
     def checkConfigIsSane(Map<String, IndividualBuildConfig> jobConfigurations) {
 
         if (release) {
+
+            if(!releaseApproved) {
+                context.error('Make sure you have approval to execute this released!  See the releaseApproved checkbox.')
+                return false
+            }
+
             // Doing a release
             def variants = jobConfigurations
                     .values()
@@ -433,6 +440,7 @@ return {
     String enableTests,
     String publish,
     String release,
+    String releaseApproved,
     String scmReference,
     String publishName,
     String additionalConfigureArgs,
@@ -451,6 +459,7 @@ return {
                 enableTests: Boolean.parseBoolean(enableTests),
                 publish: Boolean.parseBoolean(publish),
                 release: Boolean.parseBoolean(release),
+                releaseApproved: Boolean.parseBoolean(releaseApproved),
                 scmReference: scmReference,
                 publishName: publishName,
                 additionalConfigureArgs: additionalConfigureArgs,

@@ -38,14 +38,14 @@ limitations under the License.
  */
 
 class VersionInfo {
-    Integer major
-    Integer minor
-    Integer security
-    Integer build
+    Integer major // 8
+    Integer minor // 0
+    Integer security // 181
+    Integer build // 8
     String opt
     String version
     String pre
-    Integer adopt_build_number
+    Integer adopt_build_number = 1
     String semver
 
     VersionInfo() {
@@ -134,7 +134,7 @@ class VersionInfo {
 
             semver += "+"
             semver += (build ?: "0")
-            semver += "." + (adopt_build_number ?: "0")
+            semver += "." + adopt_build_number
             return semver
         } else {
             return null
@@ -157,6 +157,7 @@ class Build {
     String OVERRIDE_FILE_NAME_VERSION
     boolean ENABLE_TESTS
     boolean CLEAN_WORKSPACE
+    boolean RELEASE
     String PUBLISH_NAME
     String TEST_LIST
     String ADOPT_BUILD_NUMBER
@@ -289,43 +290,85 @@ class Build {
     }
 
 
+    private void buildMacInstaller(VersionInfo versionData) {
+        def filter = "**/OpenJDK*_mac_*.tar.gz"
+        def certificate = "Developer ID Installer: London Jamocha Community CIC"
+
+        def installerJob = context.build job: "build-scripts/release/create_installer_mac",
+                propagate: true,
+                parameters: [
+                        context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                        context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                        context.string(name: 'FILTER', value: "${filter}"),
+                        context.string(name: 'FULL_VERSION', value: "${versionData.semver}"),
+                        context.string(name: 'MAJOR_VERSION', value: "${versionData.major}"),
+                        context.string(name: 'CERTIFICATE', value: "${certificate}"),
+                        ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${TARGET_OS}&&build"]
+                ]
+
+        context.copyArtifacts(
+                projectName: "build-scripts/release/create_installer_mac",
+                selector: context.specific("${installerJob.getNumber()}"),
+                filter: 'workspace/target/*',
+                fingerprintArtifacts: true,
+                target: "workspace/target/",
+                flatten: true)
+    }
+
+    private void buildWindowsInstaller(VersionInfo versionData) {
+        def filter = "**/OpenJDK*_windows_*.zip"
+        def certificate = "C:\\Users\\jenkins\\windows.p12"
+
+        def installerJob = context.build job: "build-scripts/release/create_installer_windows",
+                propagate: true,
+                parameters: [
+                        context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                        context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                        context.string(name: 'FILTER', value: "${filter}"),
+                        context.string(name: 'PRODUCT_MAJOR_VERSION', value: "${versionData.major}"),
+                        context.string(name: 'PRODUCT_MINOR_VERSION', value: "${versionData.minor}"),
+                        context.string(name: 'PRODUCT_MAINTENANCE_VERSION', value: "${versionData.security}"),
+                        context.string(name: 'PRODUCT_PATCH_VERSION', value: "${versionData.build}"),
+                        context.string(name: 'JVM', value: "${VARIANT}"),
+                        context.string(name: 'SIGNING_CERTIFICATE', value: "${certificate}"),
+                        context.string(name: 'ARCH', value: "${ARCHITECTURE}"),
+                        ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${TARGET_OS}&&wix"]
+                ]
+
+        context.copyArtifacts(
+                projectName: "build-scripts/release/create_installer_windows",
+                selector: context.specific("${installerJob.getNumber()}"),
+                filter: 'wix/ReleaseDir/*',
+                fingerprintArtifacts: true,
+                target: "workspace/target/",
+                flatten: true)
+    }
+
     def buildInstaller() {
-        if (TARGET_OS == "mac") {
-            context.node('master') {
-                context.stage("installer") {
+        VersionInfo versionData = new VersionInfo().parse(PUBLISH_NAME, ADOPT_BUILD_NUMBER)
 
-                    VersionInfo versionData = new VersionInfo().parse(PUBLISH_NAME, ADOPT_BUILD_NUMBER)
+        if (versionData.major == null) {
+            context.println "Failed to parse version number, possibly a nightly? Skipping installer steps"
+            return
+        }
 
-
-                    def filter = "**/OpenJDK*_mac_*.tar.gz"
-                    def certificate = "\"Developer ID Installer: London Jamocha Community CIC\""
-
-                    def installerJob = context.build job: "build-scripts/release/create_installer_mac",
-                            propagate: true,
-                            parameters: [
-                                    context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
-                                    context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
-                                    context.string(name: 'FILTER', value: "${filter}"),
-                                    context.string(name: 'FULL_VERSION', value: "${versionData.semver}"),
-                                    context.string(name: 'MAJOR_VERSION', value: "${versionData.major}"),
-                                    context.string(name: 'CERTIFICATE', value: "${certificate}"),
-                                    ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${TARGET_OS}&&build"],
-                            ]
-
-                    context.copyArtifacts(
-                            projectName: "build-scripts/release/create_installer_mac",
-                            selector: context.specific("${installerJob.getNumber()}"),
-                            filter: 'workspace/target/*',
-                            fingerprintArtifacts: true,
-                            target: "workspace/target/",
-                            flatten: true)
-
-                    context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg); do sha256sum "$file" > $file.sha256.txt ; done'
+        context.node('master') {
+            context.stage("installer") {
+                try {
+                    switch (TARGET_OS) {
+                        case "mac": buildMacInstaller(versionData); break
+                        case "windows": buildWindowsInstaller(versionData); break
+                        default: return; break
+                    }
+                    context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
                     context.archiveArtifacts artifacts: "workspace/target/*"
+                } catch (e) {
+                    context.println("Failed to build installer ${TARGET_OS} ${e}")
                 }
             }
         }
     }
+
 
     List<String> listArchives() {
         return context.sh(
@@ -374,7 +417,7 @@ class Build {
     */
         context.node("master") {
             //Clean workspace on parent
-            context.sh "rm workspace/target/**/*.json || true"
+            context.sh 'find . -regex ".*/OpenJDK.*\\.json" -exec rm ./{} \\; || true'
             filesCreated.each({ file ->
                 def type = "jdk"
                 if (file.contains("-jre")) {
@@ -455,7 +498,11 @@ class Build {
                     context.node(NODE_LABEL) {
                         context.stage("build") {
                             if (cleanWorkspace) {
-                                context.cleanWs notFailBuild: true
+                                try {
+                                    context.cleanWs notFailBuild: true
+                                } catch (e) {
+                                    context.println "Failed to clean ${e}"
+                                }
                             }
                             context.checkout context.scm
                             try {
@@ -532,6 +579,7 @@ new Build(SCM_REF: SCM_REF,
         PUBLISH_NAME: PUBLISH_NAME,
         ADOPT_BUILD_NUMBER: ADOPT_BUILD_NUMBER,
         TEST_LIST: TEST_LIST,
+        RELEASE: RELEASE,
 
         context: context,
         env: env,
