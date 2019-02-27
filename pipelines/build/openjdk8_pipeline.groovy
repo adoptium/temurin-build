@@ -140,7 +140,6 @@ node("master") {
             enableTests,
             publish,
             release,
-            releaseApproved,
             scmReference,
             publishName,
             additionalConfigureArgs,
