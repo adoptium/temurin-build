@@ -455,11 +455,11 @@ return {
             publish = true;
         }
 
-        // If no overridePublishName is set and it's a release just use the tag or branch name
-        if (release && !overridePublishName) {
-            publishName = scmReference
-        } else {
+        publishName = ''
+        if (overridePublishName) {
             publishName = overridePublishName
+        } else if (release) {
+            publishName = scmReference
         }
 
         return new Builder(
