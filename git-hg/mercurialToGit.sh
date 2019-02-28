@@ -92,13 +92,16 @@ function performMergeFromMercurialIntoGit() {
     echo "====Commit diff for branch $BRANCH===="
     git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative $BRANCH..origin/$BRANCH
     echo "======================================"
-
-    git push origin "$BRANCH" || exit 1
-    git push origin "$BRANCH" --tags || exit 1
   else
     # In the case this is a new repo, chunk uploads
-    git log --pretty=format:"%H"  upstream/master...fix-hg
+    git log --reverse --pretty=format:"%H"  | split -l 5000 --filter="tail -n1" | while read sha; do
+      echo "Pushing $sha";
+      git push origin $sha:master
+    done
   fi
+
+  git push origin "$BRANCH" || exit 1
+  git push origin "$BRANCH" --tags || exit 1
 
 }
 
