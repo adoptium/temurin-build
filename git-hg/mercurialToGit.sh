@@ -88,11 +88,21 @@ function performMergeFromMercurialIntoGit() {
   git merge hg/"$BRANCH" -m "Merge $BRANCH" || (echo "The automatic update failed, time for manual intervention!" && exit 1)
 
 
-  echo "====Commit diff for branch $BRANCH===="
-  git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative $BRANCH..origin/$BRANCH
-  echo "======================================"
+  if git rev-parse -q --verify "origin/$BRANCH"; then
+    echo "====Commit diff for branch $BRANCH===="
+    git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative $BRANCH..origin/$BRANCH
+    echo "======================================"
+  else
+    # In the case this is a new repo, chunk uploads into 5000 commit chunks
+    git log --reverse --pretty=format:"%H"  | split -l 5000 --filter="tail -n1" | while read sha; do
+      echo "Pushing $sha";
+      git push origin $sha:refs/heads/master
+    done
+  fi
 
+  git push -u origin "$BRANCH" || exit 1
   git push origin "$BRANCH" --tags || exit 1
+
 }
 
 # Merge master into dev as we build off dev at the AdoptOpenJDK Build farm
