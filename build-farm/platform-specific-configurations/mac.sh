@@ -36,7 +36,7 @@ then
 fi
 
 
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
 then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
@@ -53,11 +53,28 @@ then
   export JDK_BOOT_DIR=$JDK10_BOOT_DIR
 fi
 
+if [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+then
+  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
+  else
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.8"
+  fi
+  if [ ! -d "$JDK11_BOOT_DIR" ]; then
+    export JDK11_BOOT_DIR="$PWD/jdk-11"
+    if [ ! -d "$JDK11_BOOT_DIR/bin" ]; then
+      mkdir -p "$JDK11_BOOT_DIR"
+      wget -q -O - 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?os=mac&release=latest&type=jdk&heap_size=normal&openjdk_impl=hotspot' | tar xpzf - --strip-components=2 -C "$JDK11_BOOT_DIR"
+    fi
+  fi
+  export JDK_BOOT_DIR=$JDK11_BOOT_DIR
+fi
+
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   # Needed for the later nasm
   export PATH=/usr/local/bin:$PATH
   # ccache causes too many errors (either the default version on 3.2.4) so disabling
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --with-openssl=fetched --enable-openssl-bundling"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--disable-ccache ${CONFIGURE_ARGS_FOR_ANY_PLATFORM}"
   export MACOSX_DEPLOYMENT_TARGET=10.9.0
   if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
   then
