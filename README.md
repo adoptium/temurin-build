@@ -2,8 +2,8 @@
 
 [![Build Status](https://travis-ci.org/AdoptOpenJDK/openjdk-build.svg?branch=master)](https://travis-ci.org/AdoptOpenJDK/openjdk-build) [![Slack](https://slackin-jmnmplfpdu.now.sh/badge.svg)](https://slackin-jmnmplfpdu.now.sh/)
 
-AdoptOpenJDK makes use of these scripts to build binaries on the build farm at 
-https://ci.adoptopenjdk.net, which produces OpenJDK binaries for consumption via 
+AdoptOpenJDK makes use of these scripts to build binaries on the build farm at
+https://ci.adoptopenjdk.net, which produces OpenJDK binaries for consumption via
 https://www.adoptopenjdk.net and https://api.adoptopenjdk.net.
 
 ## TLDR I want to build a JDK NOW!
@@ -28,52 +28,52 @@ If you need sudo to run docker on your system.
 ## Build
 The build has 2 modes, native and docker.
 
-### Native 
-Native builds run on whatever platform the script is invoked on, i.e 
+### Native
+Native builds run on whatever platform the script is invoked on, i.e
 if you invoke a native build on MacOS it will build a JDK for MacOS.
 
 ### Docker
-This runs a build inside a docker container. Currently this will always 
+This runs a build inside a docker container. Currently this will always
 build a linux JDK.
 
 ## Repository contents
 
-This repository contains several useful scripts in order to build OpenJDK 
+This repository contains several useful scripts in order to build OpenJDK
 personally or at build farm scale.
 
-1. The `build-farm` folder contains shell scripts for multi configuration Jenkins 
+1. The `build-farm` folder contains shell scripts for multi configuration Jenkins
 build jobs used for building Adopt OpenJDK binaries.  TODO This may get removed.
-2. The `docker` folder contains DockerFiles which can be used as part of building 
+2. The `docker` folder contains DockerFiles which can be used as part of building
 OpenJDK inside a Docker container.
-3. The `git-hg` folder contains scripts to clone an OpenJDK mercurial forest into 
+3. The `git-hg` folder contains scripts to clone an OpenJDK mercurial forest into
 a GitHub repo ()and regularly update it).
 4. The `images` folder contains diagrams to aid understanding.
 5. The `mercurial-tags/java-tool` folder contains scripts for TODO.
-6. The `pipelines` folder contains the Groovy pipeline scripts for Jenkins 
+6. The `pipelines` folder contains the Groovy pipeline scripts for Jenkins
 (e.g. build | test | checksum | release).
-7. The `sbin` folder contains the scripts that actually build (AdoptOpenJDK). 
-`build.sh` is the entry point which can be used stand alone but is typically 
+7. The `sbin` folder contains the scripts that actually build (AdoptOpenJDK).
+`build.sh` is the entry point which can be used stand alone but is typically
 called by the `native-build.sh` or `docker-build.sh` scripts (which themselves
 are typically called by `makejdk-any-platform.sh`).
-8. The `security` folder contains a script and `cacerts` file that is bundled 
-with the JDK and used when building OpenJDK: the `cacerts` file is an important 
+8. The `security` folder contains a script and `cacerts` file that is bundled
+with the JDK and used when building OpenJDK: the `cacerts` file is an important
 file that's used to enable SSL connections.
 
 ## The makejdk-any-platform.sh script
 
-`makejdk-any-platform.sh` is the entry point for building (Adopt) OpenJDK binaries. 
-Building natively or in a docker container are both supported. This script (and 
+`makejdk-any-platform.sh` is the entry point for building (Adopt) OpenJDK binaries.
+Building natively or in a docker container are both supported. This script (and
 its supporting scripts) have defaults, but you can override these as needed.
-The scripts will auto detect the platform and architecture it is running on and 
-configure the OpenJDK build accordingly.  The supporting scripts will also 
-download and locally install any required dependencies for the OpenJDK build, 
+The scripts will auto detect the platform and architecture it is running on and
+configure the OpenJDK build accordingly.  The supporting scripts will also
+download and locally install any required dependencies for the OpenJDK build,
 e.g. The ALSA sound and Freetype font libraries.
 
 Many of the configuration options are passed through to the `configure` and
-`make` commands that OpenJDK uses to build binaries.  Please see the appropriate 
-_README-builds.html_ file for the OpenJDK source repository that you are building. 
+`make` commands that OpenJDK uses to build binaries.  Please see the appropriate
+_README-builds.html_ file for the OpenJDK source repository that you are building.
 
-**NOTE:** Usage can be found via `makejdk-any-platform.sh --help`. Here is the 
+**NOTE:** Usage can be found via `makejdk-any-platform.sh --help`. Here is the
 man page re-formatted for convenience.
 
 ```
@@ -139,7 +139,7 @@ This is typically used in conjunction with -F.
 
 --freetype-build-param <parameter>
 specify any special freetype build parameters (required for some OS's).
- 
+
 --freetype-version <version>
 specify the version of freetype you are building.
 
@@ -176,7 +176,7 @@ e.g. https://github.com/karianna/openjdk-jdk8u.
 specify the location to clone the OpenJDK source (and dependencies) to.
 
 -S, --ssh
-use ssh when cloning git. 
+use ssh when cloning git.
 In case of docker build add github.com to ~/.ssh/known_hosts (e.g.: ssh github.com)
 if your ssh key has a passphrase, add it to ssh-agent (e.g.: ssh-add ~/.ssh/id_rsa)
 
@@ -205,7 +205,7 @@ For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 This is typically used in conjunction with -b.
 
 --use-jep319-certs
-Use certs defined in JEP319 in Java 8/9. This will increase the volume of traffic downloaded, however will 
+Use certs defined in JEP319 in Java 8/9. This will increase the volume of traffic downloaded, however will
 provide an upto date ca cert list.
 
 -v, --version
@@ -225,11 +225,11 @@ Example usage:
 
 ![Build Variant Workflow](docs/images/AdoptOpenJDK_Build_Script_Relationships.png)
 
-The main script to build OpenJDK is `makejdk-any-platform.sh`, which itself uses 
-and/or calls `configureBuild.sh`, `docker-build.sh` and/or `native-build.sh`. 
+The main script to build OpenJDK is `makejdk-any-platform.sh`, which itself uses
+and/or calls `configureBuild.sh`, `docker-build.sh` and/or `native-build.sh`.
 
 The structure of a build is:
- 
+
  1. Configuration phase determines what the configuration of the build is based on your current
 platform and and optional arguments provided
  1. Configuration is written out to `built_config.cfg`
@@ -238,36 +238,36 @@ platform and and optional arguments provided
  1. Downloads source, dependencies and prepares build workspace
  1. Configure and invoke OpenJDK build via `make`
  1. Package up built artifacts
- 
+
 - Configuration phase is primarily performed by `configureBuild.sh` and `makejdk-any-platform.sh`.
 - If a docker container is required it is built by `docker-build.sh`.
 - In the build phase `sbin/build.sh` is invoked either natively or inside the docker container.
-`sbin/build.sh` invokes `sbin/prepareWorkspace.sh` to download dependencies, source and perform 
+`sbin/build.sh` invokes `sbin/prepareWorkspace.sh` to download dependencies, source and perform
 general preparation.
-- Rest of the build and packaging is then handled from `sbin/build.sh` 
- 
+- Rest of the build and packaging is then handled from `sbin/build.sh`
+
 ## Building OpenJDK
 
 ### Building on the Build Farm
 
-In order to build an OpenJDK variant on the build farm you need to follow the 
-[Adding-a-new-build-variant](https://github.com/AdoptOpenJDK/TSC/wiki/Adding-a-new-build-variant) 
-instructions.  The configuration options are often set in the Jenkins job and 
+In order to build an OpenJDK variant on the build farm you need to follow the
+[Adding-a-new-build-variant](https://github.com/AdoptOpenJDK/TSC/wiki/Adding-a-new-build-variant)
+instructions.  The configuration options are often set in the Jenkins job and
 passed into `makejdk-any-platform.sh` script.
 
-Note that the build nodes (list of hosts on the LH side) also have configuration 
+Note that the build nodes (list of hosts on the LH side) also have configuration
 where things like the BOOT_JDK environment variable is set.
 
 ### Building via Docker in your local environment
 
-The simplest way to build OpenJDK using these scripts is to run `makejdk-any-platform.sh` 
-and have your user be in the Docker group on the machine (or use the `--sudo` 
-option to prefix all of your Docker commands with `sudo`). This script will create 
-a Docker container that will be configured with all of the required dependencies 
+The simplest way to build OpenJDK using these scripts is to run `makejdk-any-platform.sh`
+and have your user be in the Docker group on the machine (or use the `--sudo`
+option to prefix all of your Docker commands with `sudo`). This script will create
+a Docker container that will be configured with all of the required dependencies
 and a base operating system in order to build OpenJDK.
 
-Make sure you have started your Docker Daemon first!  For help with getting 
-docker follow the instructions [here](https://docs.docker.com/engine/installation/). 
+Make sure you have started your Docker Daemon first!  For help with getting
+docker follow the instructions [here](https://docs.docker.com/engine/installation/).
 Once you have Docker started you can then use the script below to build OpenJDK.
 
 Example Usage (TODO Add example of openj9):
@@ -276,8 +276,8 @@ Example Usage (TODO Add example of openj9):
 
 #### Configuring Docker for non sudo use
 
-To use the Docker commands without using the `--sudo` option, you will need to be 
-in the Docker group which can be achieved with the following three commands 
+To use the Docker commands without using the `--sudo` option, you will need to be
+in the Docker group which can be achieved with the following three commands
 (performed as `root`)
 
 1. `sudo groupadd docker`: creates the Docker group if it doesn't already exist
@@ -287,22 +287,22 @@ in the Docker group which can be achieved with the following three commands
 ### Building natively in your local environment
 
 Please note that your build host will need to have certain pre-requisites met.  
-We provide Ansible scripts in the 
-[openjdk-infrastructure](https://www.github.com/AdoptOpenJDK/openjdk-infrastructure) 
+We provide Ansible scripts in the
+[openjdk-infrastructure](https://www.github.com/AdoptOpenJDK/openjdk-infrastructure)
 project for setting these pre-requisites.
 
 Example Usage (TODO Add example of openj9):
 
 `./makejdk-any-platform.sh -s /home/openjdk10/src -d /home/openjdk/target -T MyOpenJDK10.tar.gz jdk10`
 
-This would clone OpenJDK source from _https://github.com/AdoptOpenJDK/openjdk-jdk10_ 
-to `/home/openjdk10/src`, configure the build with sensible defaults according 
-to your local platform and then build (Adopt) OpenJDK and place the result in 
+This would clone OpenJDK source from _https://github.com/AdoptOpenJDK/openjdk-jdk10_
+to `/home/openjdk10/src`, configure the build with sensible defaults according
+to your local platform and then build (Adopt) OpenJDK and place the result in
 `/home/openjdk/target/MyOpenJDK10.tar.gz`.
 
 ### Building OpenJDK from a non Adopt source
 
-These scripts default to using AdoptOpenJDK as the OpenJDK source repo to build 
+These scripts default to using AdoptOpenJDK as the OpenJDK source repo to build
 from, but you can override this with the `-r` flag.
 
 #Metadata
@@ -330,37 +330,37 @@ Alongside the built assets a metadata file will be created with info about the b
     }
 ```
 
-It is worth noting the additional tags on the semver is the adopt build number. 
+It is worth noting the additional tags on the semver is the adopt build number.
 
 # Build farm
 
-The documentation for files that define the build farm builds can be found at [Build Farm Definition](/docs/build.md). 
+The documentation for files that define the build farm builds can be found at [Build Farm Definition](/docs/build.md).
 
 # Build status
 
 Table generated with `generateBuildMatrix.sh`
 
-| Platform                  | Java 8 | Java 9 | Java 10 | Java 11 |
-| ------------------------- | ------ | ------ | ------- | ------- |
-| aix-ppc64-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-aix-ppc64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-aix-ppc64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-aix-ppc64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-aix-ppc64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-aix-ppc64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-aix-ppc64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-aix-ppc64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-aix-ppc64-hotspot) | 
-| aix-ppc64-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-aix-ppc64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-aix-ppc64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-aix-ppc64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-aix-ppc64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-aix-ppc64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-aix-ppc64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-aix-ppc64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-aix-ppc64-openj9) | 
-| linux-aarch64-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-aarch64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-aarch64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-aarch64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-aarch64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-aarch64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-aarch64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-linux-aarch64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-linux-aarch64-hotspot) | 
-| linux-arm-hotspot | N/A | N/A | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-arm-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-arm-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-linux-arm-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-linux-arm-hotspot) | 
-| linux-ppc64le-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-ppc64le-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-ppc64le-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-ppc64le-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-ppc64le-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-ppc64le-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-ppc64le-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-linux-ppc64le-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-linux-ppc64le-hotspot) | 
-| linux-ppc64le-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-ppc64le-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-ppc64le-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-ppc64le-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-ppc64le-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-ppc64le-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-ppc64le-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-linux-ppc64le-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-linux-ppc64le-openj9) | 
-| linux-s390x-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-s390x-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-s390x-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-s390x-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-s390x-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-s390x-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-s390x-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-linux-s390x-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-linux-s390x-hotspot) | 
-| linux-s390x-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-s390x-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-s390x-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-s390x-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-s390x-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-s390x-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-s390x-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-linux-s390x-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-linux-s390x-openj9) | 
-| linux-x64-corretto | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-x64-corretto)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-x64-corretto) | N/A | N/A | N/A | 
-| linux-x64-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-linux-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-linux-x64-hotspot) | 
-| linux-x64-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-linux-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-linux-x64-openj9) | 
-| linux-x64-openj9-linuxXL | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-x64-openj9-linuxXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-x64-openj9-linuxXL) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-x64-openj9-linuxXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-x64-openj9-linuxXL) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-x64-openj9-linuxXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-x64-openj9-linuxXL) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-linux-x64-openj9-linuxXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-linux-x64-openj9-linuxXL) | 
-| mac-x64-corretto | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-mac-x64-corretto)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-mac-x64-corretto) | N/A | N/A | N/A | 
-| mac-x64-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-mac-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-mac-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-mac-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-mac-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-mac-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-mac-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-mac-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-mac-x64-hotspot) | 
-| mac-x64-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-mac-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-mac-x64-openj9) | N/A | N/A | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-mac-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-mac-x64-openj9) | 
-| mac-x64-openj9-macosXL | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-mac-x64-openj9-macosXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-mac-x64-openj9-macosXL) | N/A | N/A | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-mac-x64-openj9-macosXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-mac-x64-openj9-macosXL) | 
-| solaris-sparcv9-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-solaris-sparcv9-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-sparcv9-hotspot) | N/A | N/A | N/A | 
-| windows-x64-corretto | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-windows-x64-corretto)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-windows-x64-corretto) | N/A | N/A | N/A | 
-| windows-x64-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-windows-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-windows-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-windows-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-windows-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-windows-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-windows-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-windows-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-windows-x64-hotspot) | 
-| windows-x64-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-windows-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-windows-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-windows-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-windows-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-windows-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-windows-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-windows-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-windows-x64-openj9) | 
-| windows-x86-32-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-windows-x86-32-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-windows-x86-32-hotspot) | N/A | N/A | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-windows-x86-32-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-windows-x86-32-hotspot) | 
-| windows-x86-32-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-windows-x86-32-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-windows-x86-32-openj9) | N/A | N/A | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11/jdk11-windows-x86-32-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11/job/jdk11-windows-x86-32-openj9) | 
+| Platform                  | Java 8 | Java 9 | Java 10 | Java 11 | Java 12 |
+| ------------------------- | ------ | ------ | ------- | ------- | ------- |
+| aix-ppc64-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-aix-ppc64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-aix-ppc64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-aix-ppc64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-aix-ppc64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-aix-ppc64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-aix-ppc64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-aix-ppc64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-aix-ppc64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-aix-ppc64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-aix-ppc64-hotspot) |
+| aix-ppc64-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-aix-ppc64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-aix-ppc64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-aix-ppc64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-aix-ppc64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-aix-ppc64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-aix-ppc64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-aix-ppc64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-aix-ppc64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-aix-ppc64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-aix-ppc64-openj9) |
+| linux-aarch64-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-aarch64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-aarch64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-aarch64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-aarch64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-aarch64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-aarch64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-linux-aarch64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-linux-aarch64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-linux-aarch64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-linux-aarch64-hotspot) |
+| linux-arm-hotspot | N/A | N/A | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-arm-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-arm-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-linux-arm-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-linux-arm-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-linux-arm-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-linux-arm-hotspot) |
+| linux-ppc64le-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-ppc64le-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-ppc64le-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-ppc64le-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-ppc64le-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-ppc64le-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-ppc64le-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-linux-ppc64le-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-linux-ppc64le-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-linux-ppc64le-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-linux-ppc64le-hotspot) |
+| linux-ppc64le-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-ppc64le-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-ppc64le-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-ppc64le-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-ppc64le-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-ppc64le-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-ppc64le-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-linux-ppc64le-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-linux-ppc64le-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-linux-ppc64le-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-linux-ppc64le-openj9) |
+| linux-s390x-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-s390x-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-s390x-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-s390x-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-s390x-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-s390x-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-s390x-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-linux-s390x-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-linux-s390x-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-linux-s390x-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-linux-s390x-hotspot) |
+| linux-s390x-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-s390x-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-s390x-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-s390x-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-s390x-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-s390x-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-s390x-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-linux-s390x-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-linux-s390x-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-linux-s390x-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-linux-s390x-openj9) |
+| linux-x64-corretto | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-x64-corretto)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-x64-corretto) | N/A | N/A | N/A | N/A |
+| linux-x64-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-linux-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-linux-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-linux-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-linux-x64-hotspot) |
+| linux-x64-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-linux-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-linux-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-linux-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-linux-x64-openj9) |
+| linux-x64-openj9-linuxXL | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-linux-x64-openj9-linuxXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-linux-x64-openj9-linuxXL) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-linux-x64-openj9-linuxXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-linux-x64-openj9-linuxXL) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-linux-x64-openj9-linuxXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-linux-x64-openj9-linuxXL) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-linux-x64-openj9-linuxXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-linux-x64-openj9-linuxXL) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-linux-x64-openj9-linuxXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-linux-x64-openj9-linuxXL) |
+| mac-x64-corretto | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-mac-x64-corretto)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-mac-x64-corretto) | N/A | N/A | N/A | N/A |
+| mac-x64-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-mac-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-mac-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-mac-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-mac-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-mac-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-mac-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-mac-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-mac-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-mac-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-mac-x64-hotspot) |
+| mac-x64-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-mac-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-mac-x64-openj9) | N/A | N/A | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-mac-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-mac-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-mac-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-mac-x64-openj9) |
+| mac-x64-openj9-macosXL | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-mac-x64-openj9-macosXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-mac-x64-openj9-macosXL) | N/A | N/A | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-mac-x64-openj9-macosXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-mac-x64-openj9-macosXL) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-mac-x64-openj9-macosXL)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-mac-x64-openj9-macosXL) |
+| solaris-sparcv9-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-solaris-sparcv9-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-sparcv9-hotspot) | N/A | N/A | N/A | N/A |
+| windows-x64-corretto | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-windows-x64-corretto)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-windows-x64-corretto) | N/A | N/A | N/A | N/A |
+| windows-x64-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-windows-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-windows-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-windows-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-windows-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-windows-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-windows-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-windows-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-windows-x64-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-windows-x64-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-windows-x64-hotspot) |
+| windows-x64-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-windows-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-windows-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk9u/jdk9u-windows-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk9u/job/jdk9u-windows-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk10u/jdk10u-windows-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk10u/job/jdk10u-windows-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-windows-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-windows-x64-openj9) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-windows-x64-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-windows-x64-openj9) |
+| windows-x86-32-hotspot | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-windows-x86-32-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-windows-x86-32-hotspot) | N/A | N/A | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk11u/jdk11u-windows-x86-32-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk11u/job/jdk11u-windows-x86-32-hotspot) | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk12u/jdk12u-windows-x86-32-hotspot)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk12u/job/jdk12u-windows-x86-32-hotspot) |
+| windows-x86-32-openj9 | [![Build Status](https://ci.adoptopenjdk.net/buildStatus/icon?job=build-scripts/jobs/jdk8u/jdk8u-windows-x86-32-openj9)](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-windows-x86-32-openj9) | N/A | N/A | N/A | N/A | 
