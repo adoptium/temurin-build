@@ -96,7 +96,7 @@ function performMergeFromMercurialIntoGit() {
     # In the case this is a new repo, chunk uploads
     git log --reverse --pretty=format:"%H"  | split -l 5000 --filter="tail -n1" | while read sha; do
       echo "Pushing $sha";
-      git push origin $sha:master
+      git push -u origin $sha:master
     done
   fi
 
