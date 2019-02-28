@@ -154,3 +154,5 @@ cloneGitHubRepo
 addMercurialUpstream
 performMergeFromMercurialIntoGit
 performMergeIntoDevFromMaster
+
+git push --tags origin
