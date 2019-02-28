@@ -88,9 +88,11 @@ function performMergeFromMercurialIntoGit() {
   git merge hg/"$BRANCH" -m "Merge $BRANCH" || (echo "The automatic update failed, time for manual intervention!" && exit 1)
 
 
-  echo "====Commit diff for branch $BRANCH===="
-  git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative $BRANCH..origin/$BRANCH
-  echo "======================================"
+  if git rev-parse -q --verify "origin/$BRANCH"; then
+    echo "====Commit diff for branch $BRANCH===="
+    git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative $BRANCH..origin/$BRANCH
+    echo "======================================"
+  fi
 
   git push origin "$BRANCH" --tags || exit 1
 }
