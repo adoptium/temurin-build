@@ -35,6 +35,9 @@ targetConfigurations = [
         ],
         "linuxXL"       : [
                 "openj9"
+        ],
+        "x64MacXL"      : [
+                "openj9"
         ]
 ]
 
