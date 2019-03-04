@@ -58,12 +58,21 @@ then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-include=/cygdrive/c/openjdk/freetype/include --with-freetype-lib=/cygdrive/c/openjdk/freetype/lib32"
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
-      export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
-      # Unset the host VS120COMNTOOLS and VS110COMNTOOLS variables as Java picks them up by default and we don't want that.
-      unset VS120COMNTOOLS
-      unset VS110COMNTOOLS
       TOOLCHAIN_VERSION="2013"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
+      unset VS100COMNTOOLS
+      unset VS110COMNTOOLS
+      unset VS140COMNTOOLS
+      export PATH="/usr/bin:$PATH"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
+    elif [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+    then
+      TOOLCHAIN_VERSION="2017"
+      unset VS100COMNTOOLS
+      unset VS110COMNTOOLS
+      unset VS120COMNTOOLS
+      unset VS140COMNTOOLS
+      export PATH="/usr/bin:$PATH"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     fi
   fi
 fi
@@ -116,9 +125,22 @@ then
     then
       export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freetype-src=/cygdrive/c/openjdk/freetype-2.5.3 --disable-ccache"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
-      export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
+      TOOLCHAIN_VERSION="2013"
+      unset VS100COMNTOOLS
+      unset VS110COMNTOOLS
+      unset VS140COMNTOOLS
+      export PATH="/usr/bin:$PATH"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
+    elif [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+    then
+      TOOLCHAIN_VERSION="2017"
+      unset VS100COMNTOOLS
+      unset VS110COMNTOOLS
+      unset VS120COMNTOOLS
+      unset VS140COMNTOOLS
+      export PATH="/usr/bin:$PATH"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     fi
   fi
