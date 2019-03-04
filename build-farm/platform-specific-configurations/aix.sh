@@ -64,7 +64,7 @@ then
     export JDK10_BOOT_DIR="$PWD/jdk-10"
     if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
       mkdir -p "$JDK10_BOOT_DIR"
-      wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=aix&release=latest&arch=${ARCHITECTURE}&type=jdk&heap_size=normal&openjdk_impl=openj9" | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR"
+      wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=aix&release=latest&arch=${ARCHITECTURE}&type=jdk&heap_size=normal&openjdk_impl=openj9" | tar xpzf - --strip-components=1 -C "$JDK10_BOOT_DIR"
     fi
   fi
   export JDK_BOOT_DIR=$JDK10_BOOT_DIR
@@ -76,7 +76,7 @@ then
     export JDK11_BOOT_DIR="$PWD/jdk-11"
     if [ ! -d "$JDK11_BOOT_DIR/bin" ]; then
       mkdir -p "$JDK11_BOOT_DIR"
-      wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?os=aix&release=latest&arch=${ARCHITECTURE}&type=jdk&heap_size=normal&openjdk_impl=openj9" | tar xpzf - --strip-components=2 -C "$JDK11_BOOT_DIR"
+      wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?os=aix&release=latest&arch=${ARCHITECTURE}&type=jdk&heap_size=normal&openjdk_impl=openj9" | tar xpzf - --strip-components=1 -C "$JDK11_BOOT_DIR"
     fi
   fi
   export JDK_BOOT_DIR=$JDK11_BOOT_DIR
