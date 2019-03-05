@@ -101,8 +101,8 @@ determineBuildProperties() {
   local build_type=
   local default_build_full_name=
   # From jdk12 there is no build type in the build output directory name
-  if [ "$openjdk_core_version" == "${JDK12_CORE_VERSION}" ] || \
-    [ "$openjdk_core_version" == "${JDKHEAD_CORE_VERSION}" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || \
+    [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
     build_type=normal
     default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${BUILD_CONFIG[JVM_VARIANT]}-release
   else
@@ -210,8 +210,8 @@ processArgumentsforSpecificArchitectures() {
       jvm_variant=server
     fi
 
-    if [ "$openjdk_core_version" == "${JDK12_CORE_VERSION}" ] || \
-      [ "$openjdk_core_version" == "${JDKHEAD_CORE_VERSION}" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || \
+      [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
       build_full_name=linux-s390x-${jvm_variant}-release
     else
       build_full_name=linux-s390x-normal-${jvm_variant}-release
@@ -228,8 +228,8 @@ processArgumentsforSpecificArchitectures() {
   "ppc64le")
     jvm_variant=server
 
-    if [ "$openjdk_core_version" == "${JDK12_CORE_VERSION}" ] || \
-      [ "$openjdk_core_version" == "${JDKHEAD_CORE_VERSION}" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || \
+      [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
       build_full_name=linux-ppc64-${jvm_variant}-release
     else
       build_full_name=linux-ppc64-normal-${jvm_variant}-release
