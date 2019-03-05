@@ -98,10 +98,17 @@ setWorkingDirectory()
 
 # shellcheck disable=SC2153
 determineBuildProperties() {
-    local build_type=normal
-    local default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${build_type}-${BUILD_CONFIG[JVM_VARIANT]}-release
-
-    BUILD_CONFIG[BUILD_FULL_NAME]=${BUILD_CONFIG[BUILD_FULL_NAME]:-"$default_build_full_name"}
+  local build_type=
+  local default_build_full_name=
+  # From jdk12 there is no build type in the build output directory name
+  if [ "$openjdk_core_version" == "${JDK12_CORE_VERSION}" ] || \
+    [ "$openjdk_core_version" == "${JDKHEAD_CORE_VERSION}" ]; then
+    build_type=normal
+    default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${BUILD_CONFIG[JVM_VARIANT]}-release
+  else
+    default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${build_type}-${BUILD_CONFIG[JVM_VARIANT]}-release
+  fi
+  BUILD_CONFIG[BUILD_FULL_NAME]=${BUILD_CONFIG[BUILD_FULL_NAME]:-"$default_build_full_name"}
 }
 
 # Set variables that the `configure` command (which builds OpenJDK) will need
@@ -203,7 +210,12 @@ processArgumentsforSpecificArchitectures() {
       jvm_variant=server
     fi
 
-    build_full_name=linux-s390x-normal-${jvm_variant}-release
+    if [ "$openjdk_core_version" == "${JDK12_CORE_VERSION}" ] || \
+      [ "$openjdk_core_version" == "${JDKHEAD_CORE_VERSION}" ]; then
+      build_full_name=linux-s390x-${jvm_variant}-release
+    else
+      build_full_name=linux-s390x-normal-${jvm_variant}-release
+    fi
 
     # This is to ensure consistency with the defaults defined in setMakeArgs()
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
@@ -215,7 +227,13 @@ processArgumentsforSpecificArchitectures() {
 
   "ppc64le")
     jvm_variant=server
-    build_full_name=linux-ppc64-normal-${jvm_variant}-release
+
+    if [ "$openjdk_core_version" == "${JDK12_CORE_VERSION}" ] || \
+      [ "$openjdk_core_version" == "${JDKHEAD_CORE_VERSION}" ]; then
+      build_full_name=linux-ppc64-${jvm_variant}-release
+    else
+      build_full_name=linux-ppc64-normal-${jvm_variant}-release
+    fi
 
     if [ "$(command -v rpm)" ]; then
       # shellcheck disable=SC1083
