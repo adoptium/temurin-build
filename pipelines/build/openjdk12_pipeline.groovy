@@ -48,7 +48,7 @@ def buildConfigurations = [
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: [
-                        hotspot: 'win2012',
+                        hotspot: 'win2012&&vs2017',
                         openj9:  'win2012&&vs2017'
                 ],
                 test                : ['openjdktest', 'perftest', 'systemtest']
@@ -58,7 +58,7 @@ def buildConfigurations = [
                 os                  : 'windows',
                 arch                : 'x86-32',
                 additionalNodeLabels: [
-                        hotspot: 'win2012',
+                        hotspot: 'win2012&&vs2017',
                         openj9:  'win2012&&mingw-standalone'
                 ],
                 test                : ['openjdktest']
