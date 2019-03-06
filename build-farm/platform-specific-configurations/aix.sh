@@ -34,25 +34,6 @@ fi
 
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 
-if [ "${ARCHITECTURE}" == "x64" ] && [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ];
-then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} DF=/usr/sysv/bin/df"
-
-  if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
-  then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk8_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
-  then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk9_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
-  then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk10_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar"
-  elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
-  then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/ramdisk0/build/workspace/openjdk10_openj9_build_ppc64_aix/freemarker-2.3.8/lib/freemarker.jar DF=/usr/sysv/bin/df"
-  fi
-fi
-
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   export LDR_CNTRL=MAXDATA=0x80000000 
 fi
