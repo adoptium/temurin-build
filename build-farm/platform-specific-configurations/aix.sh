@@ -27,11 +27,6 @@ then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread"
 fi
 
-#if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] && [ "${VARIANT}" == "openj9" ]
-#then
-#  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched"
-#fi
-
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
@@ -66,7 +61,7 @@ fi
 if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ];
 then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors --with-openssl=fetched"
     if [ -r /usr/local/gcc/bin/gcc-7.3 ]; then
       # Following line ensures the latest ccache is picked up too
       export PATH=/usr/local/gcc/bin:$PATH
