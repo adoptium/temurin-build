@@ -248,6 +248,8 @@ class Build {
                     def filter = ""
                     def certificate = ""
 
+                    def nodeFilter = "${TARGET_OS}&&build"
+
                     if (TARGET_OS == "windows") {
                         filter = "**/OpenJDK*_windows_*.zip"
                         certificate = "C:\\Users\\jenkins\\windows.p12"
@@ -255,6 +257,9 @@ class Build {
                     } else if (TARGET_OS == "mac") {
                         filter = "**/OpenJDK*_mac_*.tar.gz"
                         certificate = "\"Developer ID Application: London Jamocha Community CIC\""
+
+                        // currently only macos10.10 can sign
+                        nodeFilter = "${nodeFilter}&&macos10.10"
                     }
 
                     def params = [
@@ -263,7 +268,7 @@ class Build {
                             context.string(name: 'OPERATING_SYSTEM', value: "${TARGET_OS}"),
                             context.string(name: 'FILTER', value: "${filter}"),
                             context.string(name: 'CERTIFICATE', value: "${certificate}"),
-                            ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${TARGET_OS}&&build"],
+                            ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"],
                     ]
 
                     def signJob = context.build job: "build-scripts/release/sign_build",
@@ -293,6 +298,9 @@ class Build {
         def filter = "**/OpenJDK*_mac_*.tar.gz"
         def certificate = "Developer ID Installer: London Jamocha Community CIC"
 
+        // currently only macos10.10 can build an installer
+        def nodeFilter = "${TARGET_OS}&&macos10.10&&build"
+
         def installerJob = context.build job: "build-scripts/release/create_installer_mac",
                 propagate: true,
                 parameters: [
@@ -302,7 +310,7 @@ class Build {
                         context.string(name: 'FULL_VERSION', value: "${versionData.semver}"),
                         context.string(name: 'MAJOR_VERSION', value: "${versionData.major}"),
                         context.string(name: 'CERTIFICATE', value: "${certificate}"),
-                        ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${TARGET_OS}&&build"]
+                        ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
                 ]
 
         context.copyArtifacts(
