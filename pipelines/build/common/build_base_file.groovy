@@ -321,10 +321,21 @@ class Builder implements Serializable {
 
     // Call job to push artifacts to github
     def publishBinary() {
-        def tag = javaToBuild
+        if (release) {
+            // make sure to skip on release
+            context.println("Not publishing release")
+            return
+        }
+
+        def tag
+
         if (publishName) {
             tag = publishName
+        } else {
+            def timestamp = new Date().format("YYYY-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
+            tag = "${javaToBuild}-${timestamp}"
         }
+
         context.node("master") {
             context.stage("publish") {
                 context.build job: 'build-scripts/release/refactor_openjdk_release_tool',
