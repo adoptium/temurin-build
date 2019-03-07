@@ -327,13 +327,11 @@ class Builder implements Serializable {
             return
         }
 
-        def tag
+        def timestamp = new Date().format("YYYY-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
+        def tag = "${javaToBuild}-${timestamp}"
 
         if (publishName) {
             tag = publishName
-        } else {
-            def timestamp = new Date().format("YYYY-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
-            tag = "${javaToBuild}-${timestamp}"
         }
 
         context.node("master") {
@@ -342,6 +340,7 @@ class Builder implements Serializable {
                         parameters: [
                                 ['$class': 'BooleanParameterValue', name: 'RELEASE', value: release],
                                 context.string(name: 'TAG', value: tag),
+                                context.string(name: 'TIMESTAMP', value: timestamp),
                                 context.string(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
                                 context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${currentBuild.getNumber()}"),
                                 context.string(name: 'VERSION', value: determineReleaseToolRepoVersion())]
