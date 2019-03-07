@@ -16,17 +16,14 @@ def buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot: 'build-macstadium-macos1010-1',
-                        openj9:  'build-macstadium-macos1010-2'
-                ],
+                additionalNodeLabels : 'macos10.12',
                 test                : ['openjdktest', 'systemtest', 'perftest']
         ],
 
         x64MacXL    : [
                 os                   : 'mac',
                 arch                 : 'x64',
-                additionalNodeLabels : 'build-macstadium-macos1010-2',
+                additionalNodeLabels : 'macos10.12',
                 test                 : ['openjdktest', 'systemtest', 'perftest'],
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs'
