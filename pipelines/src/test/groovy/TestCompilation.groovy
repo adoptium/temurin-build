@@ -13,10 +13,10 @@ class TestCompilation {
     }
 
     private String getBuildFile(String filename) {
-        def file = new File("../../../build/common/${filename}");
+        def file = new File("../../../build/${filename}");
 
         if (!file.exists()) {
-            file = new File("build/common/${filename}");
+            file = new File("build/${filename}");
         }
 
         String code = file.getText('UTF-8');
@@ -65,12 +65,17 @@ class TestCompilation {
 
     @Test
     void compile_build_base_fileTest() {
-        doCompile('build_base_file.groovy', null)
+        doCompile('common/build_base_file.groovy', null)
     }
 
     @Test
     void openjdk_build_pipelineTest() {
-        doCompile('openjdk_build_pipeline.groovy', IndividualBuildConfig.class)
+        doCompile('common/openjdk_build_pipeline.groovy', IndividualBuildConfig.class)
+    }
+    @Test
+
+    void compile_pr_test_pipelineTest() {
+        doCompile('prTester/pr_test_pipeline.groovy', null)
     }
 
 }
