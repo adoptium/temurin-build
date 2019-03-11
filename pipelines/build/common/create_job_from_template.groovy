@@ -57,6 +57,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                     branch("${GIT_BRANCH}")
                     extensions {
                         cleanBeforeCheckout()
+                        pruneStaleBranch()
                     }
                 }
             }
