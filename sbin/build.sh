@@ -220,7 +220,9 @@ configuringVersionStringParameter()
     addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
     addConfigureArg "--with-vendor-url=" "https://adoptopenjdk.net/"
     addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
-    addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-build/issues"
+    addConfigureArg "--with-vendor-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-build/issues"
+    addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/eclipse/openj9/issues"
+"
 
 
   fi
