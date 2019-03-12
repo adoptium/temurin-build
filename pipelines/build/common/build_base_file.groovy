@@ -114,6 +114,7 @@ class Builder implements Serializable {
     boolean publish
     boolean enableTests
     boolean cleanWorkspaceBeforeBuild
+    boolean propagateFailures
 
     def env
     def scmVars
@@ -292,7 +293,11 @@ class Builder implements Serializable {
         params.put("JOB_FOLDER", jobFolder)
 
         params.put("GIT_URI", scmVars["GIT_URL"])
-        params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
+        if (scmVars["GIT_BRANCH"] != "detached") {
+            params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
+        } else {
+            params.put("GIT_BRANCH", scmVars["GIT_COMMIT"])
+        }
 
         def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
 
@@ -419,6 +424,9 @@ class Builder implements Serializable {
                                     context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
                                 }
                             }
+                        } else if (propagateFailures) {
+                            context.error("Build failed due to downstream failure of ${downstreamJobName}")
+                            currentBuild.result = "FAILURE"
                         }
                     }
                 }
@@ -451,6 +459,7 @@ return {
     String overrideFileNameVersion,
     String cleanWorkspaceBeforeBuild,
     String adoptBuildNumber,
+    String propagateFailures,
     def currentBuild,
     def context,
     def env ->
@@ -487,6 +496,7 @@ return {
                 overrideFileNameVersion: overrideFileNameVersion,
                 cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
                 adoptBuildNumber: adoptBuildNumber,
+                propagateFailures: Boolean.parseBoolean(propagateFailures),
                 currentBuild: currentBuild,
                 context: context,
                 env: env

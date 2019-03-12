@@ -112,6 +112,7 @@ node ("master") {
             overrideFileNameVersion,
             cleanWorkspaceBeforeBuild,
             adoptBuildNumber,
+            propagateFailures,
             currentBuild,
             this,
             env
