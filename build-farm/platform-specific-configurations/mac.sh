@@ -44,11 +44,11 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.8"
   fi
   if [ ! -d "$JDK10_BOOT_DIR" ]; then
-    JDK10_BOOT_DIR_ROOT="$PWD/jdk-10"
-    export JDK10_BOOT_DIR="$PWD/jdk-10/Home"
+    export JDK10_BOOT_DIR="$PWD/jdk-10"
     if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
-      mkdir -p "$JDK10_BOOT_DIR_ROOT"
-      wget -q -O - 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=mac&release=latest' | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR_ROOT"
+      mkdir -p "$JDK10_BOOT_DIR"
+      # --strip-components=3 removes top jdk-version/Contents/Home directories
+      wget -q -O - 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=mac&release=latest' | tar xpzf - --strip-components=3 -C "$JDK10_BOOT_DIR"
     fi
   fi
   export JDK_BOOT_DIR=$JDK10_BOOT_DIR
@@ -62,11 +62,11 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.8"
   fi
   if [ ! -d "$JDK11_BOOT_DIR" ]; then
-    JDK11_BOOT_DIR_ROOT="$PWD/jdk-11"
-    export JDK11_BOOT_DIR="$PWD/jdk-11/Home"
+    export JDK11_BOOT_DIR="$PWD/jdk-11"
     if [ ! -d "$JDK11_BOOT_DIR/bin" ]; then
-      mkdir -p "$JDK11_BOOT_DIR_ROOT"
-      wget -q -O - 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?os=mac&release=latest&type=jdk&heap_size=normal&openjdk_impl=hotspot' | tar xpzf - --strip-components=2 -C "$JDK11_BOOT_DIR_ROOT"
+      mkdir -p "$JDK11_BOOT_DIR"
+      # --strip-components=3 removes top jdk-version/Contents/Home directories
+      wget -q -O - 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?os=mac&release=latest&type=jdk&heap_size=normal&openjdk_impl=hotspot' | tar xpzf - --strip-components=3 -C "$JDK11_BOOT_DIR"
     fi
   fi
   export JDK_BOOT_DIR=$JDK11_BOOT_DIR
