@@ -2,9 +2,15 @@ package testDoubles
 // Stub to fix compilation
 
 class ContextStub {
+
+    class Configuration {
+        Map<String, ?> targetConfigurations;
+    }
+
     String scm
 
     ContextStub string(Map s) {}
+
     ContextStub bool(Map s) {}
 
     ContextStub echo(String s) {}
@@ -43,5 +49,9 @@ class ContextStub {
 
     String checkout(String s) {}
 
+    String checkout(Map<String, ?> s) {}
+
     String writeFile(Map s) {}
+
+    Configuration load(String s) {}
 }

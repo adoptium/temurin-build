@@ -52,16 +52,16 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 git {
                     remote {
                         url(GIT_URI)
-                        refspec("+refs/pull/*/head:refs/remotes/pull/* +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*")
+                        refspec(" +refs/pull/*:refs/remotes/origin/pr/* +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*")
                     }
                     branch("${GIT_BRANCH}")
                     extensions {
                         cleanBeforeCheckout()
+                        pruneStaleBranch()
                     }
                 }
             }
             scriptPath('pipelines/build/common/openjdk_build_pipeline.groovy')
-            lightweight(true)
         }
     }
     properties {
