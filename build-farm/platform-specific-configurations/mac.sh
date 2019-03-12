@@ -47,7 +47,7 @@ then
     export JDK10_BOOT_DIR="$PWD/jdk-10"
     if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
       mkdir -p "$JDK10_BOOT_DIR"
-      # --strip-components=2 removes top /Contents/Home directories
+      # --strip-components=3 removes top jdk-version/Contents/Home directories
       wget -q -O - 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=mac&release=latest' | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR"
     fi
   fi
@@ -65,7 +65,7 @@ then
     export JDK11_BOOT_DIR="$PWD/jdk-11"
     if [ ! -d "$JDK11_BOOT_DIR/bin" ]; then
       mkdir -p "$JDK11_BOOT_DIR"
-      # --strip-components=2 removes top /Contents/Home directories
+      # --strip-components=3 removes top jdk-version/Contents/Home directories
       wget -q -O - 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?os=mac&release=latest&type=jdk&heap_size=normal&openjdk_impl=hotspot' | tar xpzf - --strip-components=2 -C "$JDK11_BOOT_DIR"
     fi
   fi
