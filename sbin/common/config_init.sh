@@ -58,6 +58,7 @@ JRE_PATH
 JVM_VARIANT
 MAKE_ARGS_FOR_ANY_PLATFORM
 MAKE_COMMAND_NAME
+ADOPT_PATCHES
 NUM_PROCESSORS
 OPENJDK_BUILD_NUMBER
 OPENJDK_CORE_VERSION
@@ -222,6 +223,9 @@ function parseConfigurationArguments() {
 
         "--keep" | "-k" )
         BUILD_CONFIG[KEEP_CONTAINER]=true;;
+
+        "--no-adopt-patches" )
+        BUILD_CONFIG[ADOPT_PATCHES]=false;;
 
         "--processors" | "-p" )
         BUILD_CONFIG[NUM_PROCESSORS]="$1"; shift;;
@@ -406,6 +410,9 @@ function configDefaults() {
   BUILD_CONFIG[USE_JEP319_CERTS]=false
 
   BUILD_CONFIG[RELEASE]=false
+
+  # By default assume we have adopt patches applied to the repo
+  BUILD_CONFIG[ADOPT_PATCHES]=true
 }
 
 # Declare the map of build configuration that we're going to use

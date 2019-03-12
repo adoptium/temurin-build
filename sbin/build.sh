@@ -166,7 +166,7 @@ configuringVersionStringParameter()
       addConfigureArg "--with-user-release-suffix=" "${dateSuffix}"
     fi
 
-    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ ${BUILD_CONFIG[ADOPT_PATCHES]} == true ]; then
       addConfigureArg "--with-company-name=" "AdoptOpenJDK"
     fi
 
