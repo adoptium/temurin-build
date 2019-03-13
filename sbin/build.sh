@@ -386,7 +386,6 @@ printJavaVersionString()
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "'$PRODUCT_HOME' found"
      if ! "$PRODUCT_HOME"/bin/java -version; then
-
        echo "===$PRODUCT_HOME===="
        ls -alh "$PRODUCT_HOME"
 
@@ -395,6 +394,12 @@ printJavaVersionString()
 
        echo " Error executing 'java' does not exist in '$PRODUCT_HOME'."
        exit -1
+     else
+       # repeat version string around easy to find output
+       # do not modify these strings as jenkins looks for them
+       echo "=JAVA VERSION OUTPUT="
+       "$PRODUCT_HOME"/bin/java -version
+       echo "=/JAVA VERSION OUTPUT="
      fi
   else
     echo "'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location."

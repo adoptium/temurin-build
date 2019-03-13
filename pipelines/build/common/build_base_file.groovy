@@ -466,12 +466,12 @@ return {
 
         boolean release = false
         if (releaseType == 'Release') {
-            release = true;
+            release = true
         }
 
         boolean publish = false
         if (releaseType == 'Nightly') {
-            publish = true;
+            publish = true
         }
 
         publishName = '' // This is set to a timestamp later on if undefined

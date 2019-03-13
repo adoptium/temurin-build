@@ -11,4 +11,6 @@ class CurrentBuildStub {
 
     def setKeepLog(boolean s) {}
 
+    List<String> getLog(int s) {}
+
 }

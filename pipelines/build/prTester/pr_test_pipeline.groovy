@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 import static groovy.json.JsonOutput.prettyPrint
 import static groovy.json.JsonOutput.toJson
 
@@ -22,14 +24,8 @@ class PullRequestTestPipeline implements Serializable {
     def currentBuild
 
     String branch
-
-    Map<String, ?> testConfigurations = [
-            "x64Linux": [
-                    "hotspot"
-            ]
-    ]
-
-    def javaVersions = [8, 11, 12]
+    Map<String, ?> testConfigurations
+    def javaVersions
 
     def runTests() {
 
@@ -67,13 +63,30 @@ class PullRequestTestPipeline implements Serializable {
     }
 }
 
+Map<String, ?> defaultTestConfigurations = [
+        "x64Linux": [
+                "hotspot"
+        ]
+]
+
+def defaultJavaVersions = [8, 11, 12]
+
 return {
     String branch,
     def currentBuild,
     def context,
-    def env ->
+    def env,
+    def testConfigurations = defaultTestConfigurations,
+    def javaVersions = defaultJavaVersions
+        ->
+
+        if (String.class.isInstance(testConfigurations)) testConfigurations = new JsonSlurper().parseText(testConfigurations) as Map
+        if (String.class.isInstance(javaVersions)) javaVersions = new JsonSlurper().parseText(javaVersions) as ArrayList
+
         return new PullRequestTestPipeline(
                 branch: branch,
+                testConfigurations: testConfigurations,
+                javaVersions: javaVersions,
 
                 context: context,
                 env: env,
