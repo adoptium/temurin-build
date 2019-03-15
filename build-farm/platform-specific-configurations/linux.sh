@@ -92,7 +92,6 @@ then
       export JDK11_BOOT_DIR="$PWD/jdk-11"
       if [ ! -d "$JDK11_BOOT_DIR/bin" ]; then
         downloadArch="${ARCHITECTURE}"
-        [ "$downloadArch" == "arm" ] && downloadArch="arm32"
         mkdir -p "$JDK11_BOOT_DIR"
         wget -q -O - "https://api.adoptopenjdk.net/v2/binary/nightly/openjdk11?os=linux&release=latest&arch=${downloadArch}&type=jdk&openjdk_impl=hotspot&heap_size=normal" | tar xpzf - --strip-components=1 -C "$JDK11_BOOT_DIR"
       fi
