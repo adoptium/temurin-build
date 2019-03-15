@@ -84,11 +84,11 @@ return {
         List<Integer> javaVersions = defaultJavaVersions
 
 
-        if (testConfigurations != null && String.class.isInstance(testConfigurations)) {
+        if (testConfigurations != null) {
             testConfig = new JsonSlurper().parseText(testConfigurations) as Map
         }
 
-        if (versions != null && String.class.isInstance(versions)) {
+        if (versions != null) {
             javaVersions = new JsonSlurper().parseText(versions) as List<Integer>
         }
 
