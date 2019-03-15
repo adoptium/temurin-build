@@ -25,7 +25,7 @@ class PullRequestTestPipeline implements Serializable {
 
     String branch
     Map<String, ?> testConfigurations
-    def javaVersions
+    List<Integer> javaVersions
 
     def runTests() {
 
@@ -69,23 +69,32 @@ Map<String, ?> defaultTestConfigurations = [
         ]
 ]
 
-def defaultJavaVersions = [8, 11, 12]
+List<Integer> defaultJavaVersions = [8, 11, 12]
 
 return {
     String branch,
     def currentBuild,
     def context,
     def env,
-    def testConfigurations = defaultTestConfigurations,
-    def javaVersions = defaultJavaVersions
+    String testConfigurations = null,
+    String versions = null
         ->
 
-        if (String.class.isInstance(testConfigurations)) testConfigurations = new JsonSlurper().parseText(testConfigurations) as Map
-        if (String.class.isInstance(javaVersions)) javaVersions = new JsonSlurper().parseText(javaVersions) as ArrayList
+        Map<String, ?> testConfig = defaultTestConfigurations
+        List<Integer> javaVersions = defaultJavaVersions
+
+
+        if (testConfigurations != null && String.class.isInstance(testConfigurations)) {
+            testConfig = new JsonSlurper().parseText(testConfigurations) as Map
+        }
+
+        if (versions != null && String.class.isInstance(versions)) {
+            javaVersions = new JsonSlurper().parseText(versions) as List<Integer>
+        }
 
         return new PullRequestTestPipeline(
                 branch: branch,
-                testConfigurations: testConfigurations,
+                testConfigurations: testConfig,
                 javaVersions: javaVersions,
 
                 context: context,
