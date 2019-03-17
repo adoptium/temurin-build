@@ -27,17 +27,32 @@ version = version_string.split('build ')[1].split(')')[0]
 
 split_version = version.split('.')
 
+try:
+    isinstance(int(split_version[0]), (int, long))
+except ValueError:
+    split_version = version.split('+')
+
 if int(split_version[0]) > 1:
     # detected openjdk 9 or above
     major = int(split_version[0]) # 11
-    minor = int(split_version[1]) # 0
-    security = int(split_version[2].split('+')[0]) # 2
-    build = int(split_version[2].split('+')[1].split('-')[0]) # 9
-    # test if a timestamp is defined
     try:
-        opt = split_version[2].split('+')[1].split('-')[1]
-    except IndexError:
-        opt = None
+        minor = int(split_version[1]) # 0
+        security = int(split_version[2].split('+')[0]) # 2
+        build = int(split_version[2].split('+')[1].split('-')[0]) # 9
+        # test if a timestamp is defined
+        try:
+            opt = split_version[2].split('+')[1].split('-')[1]
+        except IndexError:
+            opt = None
+    except ValueError:
+        minor = 0
+        security = 0
+        build = int(split_version[1].split('-')[0]) # 9
+        # test if a timestamp is defined
+        try:
+            opt = split_version[1].split('-')[1]
+        except IndexError:
+            opt = None
 else:
     # detected openjdk 8
     major = int(split_version[1]) # 8

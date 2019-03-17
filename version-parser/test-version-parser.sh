@@ -66,4 +66,20 @@ if [ "${result[3]}" != 9 ]; then exit 1; fi
 if [ "${result[4]}" != 201903122221 ]; then exit 1; fi
 if [ "${result[5]}" != "11.0.3+9.7" ]; then exit 1; fi
 
+read -r -d '' java12Nightly << EOM
+openjdk version "12" 2019-03-19
+OpenJDK Runtime Environment AdoptOpenJDK (build 12+33-201903171631)
+OpenJDK 64-Bit Server VM AdoptOpenJDK (build 12+33-201903171631, mixed mode, sharing)
+EOM
+
+export TEST=$java12Nightly
+RESULT=$(python version-parser.py fake/path/java 11)
+IFS=', ' read -r -a result <<< "$RESULT"
+if [ "${result[0]}" != 12 ]; then exit 1; fi
+if [ "${result[1]}" != 0 ]; then exit 1; fi
+if [ "${result[2]}" != 0 ]; then exit 1; fi
+if [ "${result[3]}" != 33 ]; then exit 1; fi
+if [ "${result[4]}" != 201903171631 ]; then exit 1; fi
+if [ "${result[5]}" != "12.0.0+33.11" ]; then exit 1; fi
+
 unset TEST

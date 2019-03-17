@@ -424,14 +424,15 @@ removingUnnecessaryFiles()
   IFS=', ' read -r -a result <<< "$RESULT"
   openJdkVersion="${result[5]}" # 8.0.202+08.1
 
+  JDK_TARGET_PATH="jdk-${openJdkVersion}"
   local jdkPath=$(ls -d ${BUILD_CONFIG[JDK_PATH]})
-  echo "moving ${jdkPath} to ${openJdkVersion}"
-  rm -rf "${openJdkVersion}" || true
-  mv "${jdkPath}" "${openJdkVersion}"
+  echo "moving ${jdkPath} to ${JDK_TARGET_PATH}"
+  rm -rf "${JDK_TARGET_PATH}" || true
+  mv "${jdkPath}" "${JDK_TARGET_PATH}"
 
   if [ -d "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" ]
   then
-    JRE_TARGET_PATH="${openJdkVersion}-jre"
+    JRE_TARGET_PATH="jre-${openJdkVersion}"
     [ "${JRE_TARGET_PATH}" == "${openJdkVersion}" ] && JRE_TARGET_PATH="${openJdkVersion}.jre"
     echo "moving $(ls -d ${BUILD_CONFIG[JRE_PATH]}) to ${JRE_TARGET_PATH}"
     rm -rf "${JRE_TARGET_PATH}" || true
@@ -558,14 +559,14 @@ createOpenJDKTarArchive()
   if which pigz >/dev/null 2>&1; then COMPRESS=pigz; fi
   echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
 
-  if [ -z "${openJdkVersion+x}" ] || [ -z "${openJdkVersion}" ]; then
+  if [ -z "${JDK_TARGET_PATH+x}" ] || [ -z "${JDK_TARGET_PATH}" ]; then
     openJdkVersion=$(getFirstTagFromOpenJDKGitRepo)
   fi
   if [ -z "${JRE_TARGET_PATH+x}" ] || [ -z "${JRE_TARGET_PATH}" ]; then
     JRE_TARGET_PATH="${openJdkVersion}-jre"
   fi
 
-  echo "OpenJDK repo tag is ${openJdkVersion}. JRE path will be ${JRE_TARGET_PATH}"
+  echo "OpenJDK JDK path will be ${JDK_TARGET_PATH}. JRE path will be ${JRE_TARGET_PATH}"
 
   ## clean out old builds
   rm -r "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[TARGET_DIR]}" || true
