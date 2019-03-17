@@ -7,7 +7,7 @@ install:
 
 script:
   - ./shellcheck.sh
-  - ./version-parser/test-version-parser.sh
+  - cd version-parser && ./test-version-parser.sh
 
 matrix:
   fast_finish: true
