@@ -419,6 +419,11 @@ removingUnnecessaryFiles()
 
   echo "Currently at '${PWD}'"
 
+  ADOPT_BUILD_NUMBER="${ADOPT_BUILD_NUMBER:-1}"
+  RESULT=$(python $WORKSPACE/version-parser/version-parser.py "$PRODUCT_HOME"/bin/java $ADOPT_BUILD_NUMBER)
+  IFS=', ' read -r -a result <<< "$RESULT"
+  openJdkVersion="${result[5]}" # 8.0.202+08.1
+
   local jdkPath=$(ls -d ${BUILD_CONFIG[JDK_PATH]})
   echo "moving ${jdkPath} to ${openJdkVersion}"
   rm -rf "${openJdkVersion}" || true
