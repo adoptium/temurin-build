@@ -20,6 +20,7 @@ security="${result[2]}" # 202
 build="${result[3]}" # 08
 opt="${result[4]}" # None or 201903130451
 semver="${result[5]}" # 8.0.202+08.1
+version="${result[6]}" # 1.8.0_202-b08
 ```
 
 ## testing:

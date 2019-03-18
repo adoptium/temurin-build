@@ -24,6 +24,7 @@ security = None
 build = None
 opt = None
 semver = None
+version = None
 
 if "TEST" in os.environ:
     output = os.environ['TEST']
@@ -82,4 +83,4 @@ else:
 
 semver = str(major) + '.' + str(minor) + '.' + str(security) + '+' + str(build) + '.' + build_num # 8.0.202+08.1
 
-print str(major) + ", " + str(minor) + ", " + str(security) + ", " + str(build) + ", " + str(opt) + ", " + str(semver)
+print str(major) + ", " + str(minor) + ", " + str(security) + ", " + str(build) + ", " + str(opt) + ", " + str(semver) + ", " + str(version)
