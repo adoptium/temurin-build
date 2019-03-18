@@ -554,16 +554,14 @@ createOpenJDKTarArchive()
 {
   COMPRESS=gzip
 
-  local openJdkVersion=$(getOpenJdkVersion)
-
   if which pigz >/dev/null 2>&1; then COMPRESS=pigz; fi
   echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
 
   if [ -z "${JDK_TARGET_PATH+x}" ] || [ -z "${JDK_TARGET_PATH}" ]; then
-    openJdkVersion=$(getFirstTagFromOpenJDKGitRepo)
+    JDK_TARGET_PATH=$(getFirstTagFromOpenJDKGitRepo)
   fi
   if [ -z "${JRE_TARGET_PATH+x}" ] || [ -z "${JRE_TARGET_PATH}" ]; then
-    JRE_TARGET_PATH="${openJdkVersion}-jre"
+    JRE_TARGET_PATH="${JDK_TARGET_PATH}-jre"
   fi
 
   echo "OpenJDK JDK path will be ${JDK_TARGET_PATH}. JRE path will be ${JRE_TARGET_PATH}"
@@ -576,7 +574,7 @@ createOpenJDKTarArchive()
     local jreName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-jre/')
     createArchive "${JRE_TARGET_PATH}" "${jreName}"
   fi
-  createArchive "${openJdkVersion}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
+  createArchive "${JDK_TARGET_PATH}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
 # Echo success
@@ -586,9 +584,8 @@ showCompletionMessage()
 }
 
 copyFreeFontForMacOS() {
-  local openJdkVersion=$(getOpenJdkVersion)
-  makeACopyOfLibFreeFontForMacOSX "${openJdkVersion}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
-  makeACopyOfLibFreeFontForMacOSX "${openJdkVersion}-jre" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
+  makeACopyOfLibFreeFontForMacOSX "${JDK_TARGET_PATH}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
+  makeACopyOfLibFreeFontForMacOSX "${JRE_TARGET_PATH}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
 }
 
 ################################################################################
