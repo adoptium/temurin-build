@@ -347,7 +347,7 @@ class Build {
                         context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                         context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
                         context.string(name: 'FILTER', value: "${filter}"),
-                        context.string(name: 'FULL_VERSION', value: "${versionData.semver}"),
+                        context.string(name: 'FULL_VERSION', value: "${versionData.version}"),
                         context.string(name: 'MAJOR_VERSION', value: "${versionData.major}"),
                         context.string(name: 'CERTIFICATE', value: "${certificate}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
