@@ -518,13 +518,17 @@ makeACopyOfLibFreeFontForMacOSX() {
 }
 
 
-# Get the first tag from the git repo
+# Get the tags from the git repo and choose the latest tag when there is more than one for the same SHA.
 # Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
 getFirstTagFromOpenJDKGitRepo()
 {
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     revList=$(git rev-list --tags --topo-order --max-count=$GIT_TAGS_TO_SEARCH)
     firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | head -1)
+    # this may not find the correct tag if there are multiples on the commit so find commit
+    # that contains this tag and then use `git tag` to find the real tag
+    revList=$(git rev-list -n 1 $firstMatchingNameFromRepo) 
+    firstMatchingNameFromRepo=$(git tag --points-at $revList | tail -1)
     echo "$firstMatchingNameFromRepo"
 }
 
