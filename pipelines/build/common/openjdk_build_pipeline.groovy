@@ -369,7 +369,7 @@ class Build {
         def buildNumber = versionData.build;
 
         if (versionData.major == 8) {
-            buildNumber = "${String.format("%02d", versionData.build)}"
+            buildNumber = String.format("%02d", versionData.build)
         }
 
         def installerJob = context.build job: "build-scripts/release/create_installer_windows",
