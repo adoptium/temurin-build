@@ -366,6 +366,12 @@ class Build {
         def filter = "**/OpenJDK*_windows_*.zip"
         def certificate = "C:\\Users\\jenkins\\windows.p12"
 
+        def buildNumber = versionData.build;
+
+        if (versionData.major == 8) {
+            buildNumber = String.format("%02d", versionData.build)
+        }
+
         def installerJob = context.build job: "build-scripts/release/create_installer_windows",
                 propagate: true,
                 parameters: [
@@ -375,7 +381,7 @@ class Build {
                         context.string(name: 'PRODUCT_MAJOR_VERSION', value: "${versionData.major}"),
                         context.string(name: 'PRODUCT_MINOR_VERSION', value: "${versionData.minor}"),
                         context.string(name: 'PRODUCT_MAINTENANCE_VERSION', value: "${versionData.security}"),
-                        context.string(name: 'PRODUCT_PATCH_VERSION', value: "${String.format("%02d", versionData.build)}"),
+                        context.string(name: 'PRODUCT_PATCH_VERSION', value: "${buildNumber}"),
                         context.string(name: 'JVM', value: "${VARIANT}"),
                         context.string(name: 'SIGNING_CERTIFICATE', value: "${certificate}"),
                         context.string(name: 'ARCH', value: "${ARCHITECTURE}"),
