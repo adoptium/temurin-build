@@ -107,7 +107,7 @@ def buildConfigurations = [
                 arch: 'arm',
                 // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
                 //test                : ['openjdktest']
-                test                : false
+                test: false
         ],
 
         aarch64Linux  : [
@@ -131,6 +131,7 @@ def javaToBuild = "jdk8u"
 
 node("master") {
     def scmVars = checkout scm
+    load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
     Closure configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
 
     configureBuild(

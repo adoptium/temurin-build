@@ -24,6 +24,7 @@ class PullRequestTestPipeline implements Serializable {
     def currentBuild
 
     String branch
+    String gitRepo
     Map<String, ?> testConfigurations
     List<Integer> javaVersions
 
@@ -36,7 +37,7 @@ class PullRequestTestPipeline implements Serializable {
 
             def config = [
                     PR_BUILDER          : true,
-                    GIT_URL             : "https://github.com/AdoptOpenJDK/openjdk-build",
+                    GIT_URL             : gitRepo,
                     BRANCH              : "${branch}",
                     BUILD_FOLDER        : "build-scripts-pr-tester/build-test",
                     JOB_NAME            : "openjdk${javaVersion}",
@@ -71,18 +72,24 @@ Map<String, ?> defaultTestConfigurations = [
 
 List<Integer> defaultJavaVersions = [8, 11, 12]
 
+defaultGitRepo = "https://github.com/AdoptOpenJDK/openjdk-build"
+
 return {
     String branch,
     def currentBuild,
     def context,
     def env,
     String testConfigurations = null,
-    String versions = null
+    String versions = null,
+    String gitRepo = defaultGitRepo
         ->
 
         Map<String, ?> testConfig = defaultTestConfigurations
         List<Integer> javaVersions = defaultJavaVersions
 
+        if (gitRepo == null) {
+            gitRepo = defaultGitRepo
+        }
 
         if (testConfigurations != null) {
             testConfig = new JsonSlurper().parseText(testConfigurations) as Map
@@ -93,6 +100,7 @@ return {
         }
 
         return new PullRequestTestPipeline(
+                gitRepo: gitRepo,
                 branch: branch,
                 testConfigurations: testConfig,
                 javaVersions: javaVersions,

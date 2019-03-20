@@ -1,7 +1,10 @@
 package testDoubles
 // Stub to fix compilation
 
+import NodeHelper
+
 class ContextStub {
+    NodeHelper NodeHelper;
 
     class Configuration {
         Map<String, ?> targetConfigurations;
@@ -34,6 +37,8 @@ class ContextStub {
     ContextStub parallel(Map) {}
 
     ContextStub specific(String) {}
+
+    ContextStub library(Map) {}
 
     String getResult() {}
 

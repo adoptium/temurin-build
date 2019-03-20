@@ -11,7 +11,7 @@ targetCompatibility = 1.8
 sourceSets {
     main {
         groovy {
-            srcDirs = ['build', 'src/main/groovy']
+            srcDirs = ['build', 'src/main/groovy', 'library/src']
             buildDir = 'target'
         }
     }
@@ -21,10 +21,17 @@ repositories {
     mavenCentral()
 }
 
+task uberjar(type: Jar) {
+    baseName = 'adopt-shared-lib'
+    version = ""
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.3.11'
-    testCompile('org.junit.jupiter:junit-jupiter-api:5.4.0')
-    testRuntime('org.junit.jupiter:junit-jupiter-engine:5.4.0')
+    compile 'org.codehaus.groovy:groovy-all:2.5.6'
+    testCompile('org.junit.jupiter:junit-jupiter-api:5.4.1')
+    testRuntime('org.junit.jupiter:junit-jupiter-engine:5.4.1')
 }
 
 test {
