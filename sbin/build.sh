@@ -527,9 +527,13 @@ getFirstTagFromOpenJDKGitRepo()
     firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | head -1)
     # this may not find the correct tag if there are multiples on the commit so find commit
     # that contains this tag and then use `git tag` to find the real tag
-    revList=$(git rev-list -n 1 $firstMatchingNameFromRepo) 
+    revList=$(git rev-list -n 1 $firstMatchingNameFromRepo --)
     firstMatchingNameFromRepo=$(git tag --points-at $revList | tail -1)
-    echo "$firstMatchingNameFromRepo"
+    if [ -z "$firstMatchingNameFromRepo" ]; then
+      echo "WARNING: Failed to identify latest tag in the repository" 1>&2
+    else
+      echo "$firstMatchingNameFromRepo"
+    fi
 }
 
 createArchive() {
