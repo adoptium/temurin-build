@@ -64,6 +64,11 @@ createOpenJDKArchive()
      exit 1
   fi
 
+  if [[ "$repoDir" = "/"* ]]; then
+     echo "Absolute directory passed to archive"
+     exit 1
+  fi
+
   COMPRESS=gzip
   if which pigz; then
     COMPRESS=pigz;
@@ -74,16 +79,14 @@ createOpenJDKArchive()
 
 
   local fullPath
-  if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
-    fullPath=$(dirname $(readlink $repoDir))
-  else
+  if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "darwin" ]]; then
     fullPath=$(dirname $(readlink -f $repoDir))
+    if [[ "$fullPath" != "${BUILD_CONFIG[WORKSPACE_DIR]}"* ]]; then
+      echo "Requested to archive a dir outside of workspace"
+      exit 1
+    fi
   fi
 
-  if [[ "$fullPath" != "${BUILD_CONFIG[WORKSPACE_DIR]}"* ]]; then
-    echo "Requested to archive a dir outside of workspace"
-    exit 1
-  fi
 
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = *"cygwin"* ]]; then
       zip -r -q "${fileName}.zip" ./"${repoDir}"
