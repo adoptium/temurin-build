@@ -2,9 +2,11 @@ package testDoubles
 // Stub to fix compilation
 
 import NodeHelper
+import JobHelper
 
 class ContextStub {
     NodeHelper NodeHelper;
+    JobHelper JobHelper
 
     class Configuration {
         Map<String, ?> targetConfigurations;
