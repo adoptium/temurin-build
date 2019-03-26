@@ -1,7 +1,7 @@
-import common.IndividualBuildConfig
-import common.MetaData
 @Library('local-lib@master')
 import common.VersionInfo
+import common.IndividualBuildConfig
+import common.MetaData
 import groovy.json.JsonOutput
 
 import java.util.regex.Matcher
@@ -40,14 +40,14 @@ limitations under the License.
  */
 
 class Build {
-    final IndividualBuildConfig buildConfig;
+    final IndividualBuildConfig buildConfig
 
     final def context
     final def env
     final def currentBuild
 
-    public Build(IndividualBuildConfig buildConfig, def context, def env, def currentBuild) {
-        this.buildConfig = buildConfig;
+    Build(IndividualBuildConfig buildConfig, def context, def env, def currentBuild) {
+        this.buildConfig = buildConfig
         this.context = context
         this.currentBuild = currentBuild
         this.env = env
@@ -228,7 +228,7 @@ class Build {
         def filter = "**/OpenJDK*_windows_*.zip"
         def certificate = "C:\\Users\\jenkins\\windows.p12"
 
-        def buildNumber = versionData.build;
+        def buildNumber = versionData.build
 
         if (versionData.major == 8) {
             buildNumber = String.format("%02d", versionData.build)
@@ -460,9 +460,9 @@ return {
     currentBuild ->
         def buildConfig
         if (String.class.isInstance(buildConfigArg)) {
-            buildConfig = new IndividualBuildConfig().fromJson(buildConfigArg as String);
+            buildConfig = new IndividualBuildConfig().fromJson(buildConfigArg as String)
         } else {
-            buildConfig = buildConfigArg as IndividualBuildConfig;
+            buildConfig = buildConfigArg as IndividualBuildConfig
         }
 
         return new Build(
@@ -471,5 +471,4 @@ return {
                 env,
                 currentBuild)
 }
-
 
