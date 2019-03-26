@@ -142,7 +142,7 @@ class Build {
         return null
     }
 
-    def sign() {
+    def sign(VersionInfo versionInfo) {
         // Sign and archive jobs if needed
         if (buildConfig.TARGET_OS == "windows" || buildConfig.TARGET_OS == "mac") {
             context.node('master') {
@@ -188,7 +188,10 @@ class Build {
                             target: "workspace/target/",
                             flatten: true)
 
+
                     context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+
+                    writeMetadata(versionInfo)
                     context.archiveArtifacts artifacts: "workspace/target/*"
                 }
             }
@@ -274,6 +277,7 @@ class Build {
                         default: return; break
                     }
                     context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
+                    writeMetadata(versionData)
                     context.archiveArtifacts artifacts: "workspace/target/*"
                 } catch (e) {
                     context.println("Failed to build installer ${buildConfig.TARGET_OS} ${e}")
@@ -322,26 +326,21 @@ class Build {
     }
     */
 
-        context.node('master') {
-            MetaData data = formMetadata(version)
+        MetaData data = formMetadata(version)
 
-            listArchives().each({ file ->
-                def type = "jdk"
-                if (file.contains("-jre")) {
-                    type = "jre"
-                }
+        listArchives().each({ file ->
+            def type = "jdk"
+            if (file.contains("-jre")) {
+                type = "jre"
+            }
 
-                String hash = context.sh(script: "sha256sum $file | cut -f1 -d' '", returnStdout: true, returnStatus: false)
+            String hash = context.sh(script: "sha256sum $file | cut -f1 -d' '", returnStdout: true, returnStatus: false)
 
-                data.binary_type = type
-                data.sha256 = hash
+            data.binary_type = type
+            data.sha256 = hash
 
-                context.writeFile file: "${file}.json", text: JsonOutput.prettyPrint(JsonOutput.toJson(data.asMap()))
-            })
-
-            context.archiveArtifacts artifacts: "workspace/target/**/*.json"
-
-        }
+            context.writeFile file: "${file}.json", text: JsonOutput.prettyPrint(JsonOutput.toJson(data.asMap()))
+        })
     }
 
     def determineFileName() {
@@ -427,6 +426,7 @@ class Build {
                                     String consoleOut = context.sh(script: "chmod +x ./sbin/getBuiltVersion.sh;./sbin/getBuiltVersion.sh", returnStdout: true, returnStatus: false)
                                     versionInfo = parseVersionOutput(consoleOut)
                                 }
+                                writeMetadata(versionInfo)
                                 context.archiveArtifacts artifacts: "workspace/target/*"
                             } finally {
                                 if (buildConfig.TARGET_OS == "aix") {
@@ -451,12 +451,11 @@ class Build {
             }
 
             // Sign and archive jobs if needed
-            sign()
+            sign(versionInfo)
 
             //buildInstaller if needed
             buildInstaller(versionInfo)
 
-            writeMetadata(versionInfo)
         } catch (Exception e) {
             currentBuild.result = 'FAILURE'
             context.println "Execution error: " + e.getMessage()
