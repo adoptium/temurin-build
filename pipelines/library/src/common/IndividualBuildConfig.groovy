@@ -1,27 +1,29 @@
 package common
 
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
-public class IndividualBuildConfig implements Serializable {
-    String ARCHITECTURE
-    String TARGET_OS
-    String VARIANT
-    String JAVA_TO_BUILD
-    String TEST_LIST
-    String SCM_REF
-    String BUILD_ARGS
-    String NODE_LABEL
-    String CONFIGURE_ARGS
-    String OVERRIDE_FILE_NAME_VERSION
-    String ADDITIONAL_FILE_NAME_TAG
-    String JDK_BOOT_VERSION
-    boolean RELEASE = false
-    String PUBLISH_NAME
-    String ADOPT_BUILD_NUMBER = "1"
-    boolean ENABLE_TESTS = false
-    boolean CLEAN_WORKSPACE = false
+class IndividualBuildConfig implements Serializable {
+    final String ARCHITECTURE
+    final String TARGET_OS
+    final String VARIANT
+    final String JAVA_TO_BUILD
+    final String TEST_LIST
+    final String SCM_REF
+    final String BUILD_ARGS
+    final String NODE_LABEL
+    final String CONFIGURE_ARGS
+    final String OVERRIDE_FILE_NAME_VERSION
+    final String ADDITIONAL_FILE_NAME_TAG
+    final String JDK_BOOT_VERSION
+    final boolean RELEASE
+    final String PUBLISH_NAME
+    final String ADOPT_BUILD_NUMBER
+    final boolean ENABLE_TESTS
+    final boolean CLEAN_WORKSPACE
 
-    IndividualBuildConfig() {
+    IndividualBuildConfig(String json) {
+        this(new JsonSlurper().parseText(json) as Map)
     }
 
     IndividualBuildConfig(Map<String, ?> map) {

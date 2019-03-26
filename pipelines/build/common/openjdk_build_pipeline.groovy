@@ -1,7 +1,7 @@
-@Library('local-lib@master')
-import common.VersionInfo
 import common.IndividualBuildConfig
 import common.MetaData
+@Library('local-lib@master')
+import common.VersionInfo
 import groovy.json.JsonOutput
 
 import java.util.regex.Matcher
@@ -107,8 +107,8 @@ class Build {
                         // example jobName: openjdk10_hs_externaltest_x86-64_linux
                         def jobName = determineTestJobName(testType)
 
-                        def isRunnable = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper.jobIsRunnable(jobName)
-                        if (isRunnable) {
+                        def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+                        if (JobHelper.jobIsRunnable(jobName as String)) {
                             context.catchError {
                                 context.build job: jobName,
                                         propagate: false,
@@ -460,7 +460,7 @@ return {
     currentBuild ->
         def buildConfig
         if (String.class.isInstance(buildConfigArg)) {
-            buildConfig = new IndividualBuildConfig().fromJson(buildConfigArg as String)
+            buildConfig = new IndividualBuildConfig(buildConfigArg as String)
         } else {
             buildConfig = buildConfigArg as IndividualBuildConfig
         }

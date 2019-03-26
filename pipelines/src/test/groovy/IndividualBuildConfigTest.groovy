@@ -1,4 +1,5 @@
 import common.IndividualBuildConfig
+import groovy.json.JsonOutput
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -6,35 +7,35 @@ class IndividualBuildConfigTest {
 
     @Test
     void serializationTransfersDataCorrectly() {
-        def config = new IndividualBuildConfig()
-
-        config.ARCHITECTURE = "a"
-        config.TARGET_OS = "b"
-        config.VARIANT = "c"
-        config.JAVA_TO_BUILD = "d"
-        config.TEST_LIST = "e"
-        config.SCM_REF = "f"
-        config.BUILD_ARGS = "g"
-        config.NODE_LABEL = "h"
-        config.CONFIGURE_ARGS = "i"
-        config.OVERRIDE_FILE_NAME_VERSION = "j"
-        config.ADDITIONAL_FILE_NAME_TAG = "k"
-        config.JDK_BOOT_VERSION = "l"
-        config.RELEASE = false
-        config.PUBLISH_NAME = "m"
-        config.ADOPT_BUILD_NUMBER = "n"
-        config.ENABLE_TESTS = true
-        config.CLEAN_WORKSPACE = false
+        def config = new IndividualBuildConfig(
+                [ARCHITECTURE              : "a",
+                 TARGET_OS                 : "b",
+                 VARIANT                   : "c",
+                 JAVA_TO_BUILD             : "d",
+                 TEST_LIST                 : "e",
+                 SCM_REF                   : "f",
+                 BUILD_ARGS                : "g",
+                 NODE_LABEL                : "h",
+                 CONFIGURE_ARGS            : "i",
+                 OVERRIDE_FILE_NAME_VERSION: "j",
+                 ADDITIONAL_FILE_NAME_TAG  : "k",
+                 JDK_BOOT_VERSION          : "l",
+                 RELEASE                   : false,
+                 PUBLISH_NAME              : "m",
+                 ADOPT_BUILD_NUMBER        : "n",
+                 ENABLE_TESTS              : true,
+                 CLEAN_WORKSPACE           : false]
+        )
 
         def json = config.toJson()
-        def parsedConfig = new IndividualBuildConfig().fromJson(json);
+        def parsedConfig = new IndividualBuildConfig(json)
 
         parsedConfig.toRawMap()
                 .each { val ->
             Assertions.assertNotNull(val.value, "${val.key} is null")
         }
 
-        Assertions.assertEquals(config.toJson(), parsedConfig.toJson())
+        Assertions.assertEquals(JsonOutput.toJson(config), JsonOutput.toJson(parsedConfig))
     }
 
 }
