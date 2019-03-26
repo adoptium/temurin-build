@@ -285,7 +285,7 @@ class Build {
 
     List<String> listArchives() {
         return context.sh(
-                script: """find workspace/target/ | egrep '.tar.gz|.zip'""",
+                script: """find workspace/target/ | egrep '.tar.gz|.zip|.msi|.pkg'""",
                 returnStdout: true,
                 returnStatus: false
         )
@@ -317,21 +317,31 @@ class Build {
             "version": "8u202-b08",
             "semver": "8.0.202+8.2"
         },
-        "binary_type": "jdk"
+        "binary_type": "jdk",
+        "sha256": "c1b8fb7298d66a5bca9b830e8d612a85bbc52c81b9a88cef4dd71f2f37b289f1"
     }
     */
-        MetaData data = formMetadata(version)
 
-        listArchives().each({ file ->
-            def type = "jdk"
-            if (file.contains("-jre")) {
-                type = "jre"
-            }
+        context.node('master') {
+            MetaData data = formMetadata(version)
 
-            data.binary_type = type
+            listArchives().each({ file ->
+                def type = "jdk"
+                if (file.contains("-jre")) {
+                    type = "jre"
+                }
 
-            context.writeFile file: "${file}.json", text: JsonOutput.prettyPrint(JsonOutput.toJson(data.asMap()))
-        })
+                String hash = context.sh(script: "sha256sum $file | cut -f1 -d' '", returnStdout: true, returnStatus: false)
+
+                data.binary_type = type
+                data.sha256 = hash
+
+                context.writeFile file: "${file}.json", text: JsonOutput.prettyPrint(JsonOutput.toJson(data.asMap()))
+            })
+
+            context.archiveArtifacts artifacts: "workspace/target/**/*.json"
+
+        }
     }
 
     def determineFileName() {
@@ -416,7 +426,6 @@ class Build {
                                     context.sh(script: "./build-farm/make-adopt-build-farm.sh")
                                     String consoleOut = context.sh(script: "chmod +x ./sbin/getBuiltVersion.sh;./sbin/getBuiltVersion.sh", returnStdout: true, returnStatus: false)
                                     versionInfo = parseVersionOutput(consoleOut)
-                                    writeMetadata(versionInfo)
                                 }
                                 context.archiveArtifacts artifacts: "workspace/target/*"
                             } finally {
@@ -446,6 +455,8 @@ class Build {
 
             //buildInstaller if needed
             buildInstaller(versionInfo)
+
+            writeMetadata(versionInfo)
         } catch (Exception e) {
             currentBuild.result = 'FAILURE'
             context.println "Execution error: " + e.getMessage()
