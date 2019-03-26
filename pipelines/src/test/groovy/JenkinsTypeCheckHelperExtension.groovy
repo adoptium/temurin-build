@@ -21,5 +21,13 @@ class JenkinsTypeCheckHelperExtension extends GroovyTypeCheckingExtensionSupport
                     handled = true
                 }
         }
+
+        methodNotFound { receiver, name, argList, argTypes, call ->
+            if (receiver == classNodeFor(Date)
+                    && name == 'format') {
+                handled = true
+                return newMethod('format', classNodeFor(Date))
+            }
+        }
     }
 }

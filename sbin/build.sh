@@ -42,7 +42,10 @@ source "$SCRIPT_DIR/common/constants.sh"
 # shellcheck source=sbin/common/common.sh
 source "$SCRIPT_DIR/common/common.sh"
 
-export JRE_TARGET_PATH
+
+export LIB_DIR="${SCRIPT_DIR}/../pipelines/"
+
+export jreTargetPath
 export CONFIGURE_ARGS=""
 export MAKE_TEST_IMAGE=""
 export GIT_CLONE_ARGUMENTS=()
@@ -368,6 +371,17 @@ executeTemplatedFile() {
 
 }
 
+buildSharedLibs() {
+    cd "${LIB_DIR}"
+    ./gradlew clean uberjar
+}
+
+parseJavaVersionString() {
+  ADOPT_BUILD_NUMBER="${ADOPT_BUILD_NUMBER:-1}"
+  local version=$("$PRODUCT_HOME"/bin/java -version 2>&1 | java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
+  echo $version
+}
+
 # Print the version string so we know what we've produced
 printJavaVersionString()
 {
@@ -398,7 +412,7 @@ printJavaVersionString()
        # repeat version string around easy to find output
        # do not modify these strings as jenkins looks for them
        echo "=JAVA VERSION OUTPUT="
-       "$PRODUCT_HOME"/bin/java -version
+       "$PRODUCT_HOME"/bin/java -version 2>&1
        echo "=/JAVA VERSION OUTPUT="
      fi
   else
@@ -408,47 +422,48 @@ printJavaVersionString()
 }
 
 # Clean up
-removingUnnecessaryFiles()
-{
+removingUnnecessaryFiles() {
+  local openJdkVersion="$1"
+  local jdkTargetPath="jdk-$1"
+  local jreTargetPath="jre-$1"
+
   echo "Removing unnecessary files now..."
 
-  local openJdkVersion=$(getOpenJdkVersion)
   stepIntoTheWorkingDirectory
 
   cd build/*/images || return
 
   echo "Currently at '${PWD}'"
 
+
   local jdkPath=$(ls -d ${BUILD_CONFIG[JDK_PATH]})
-  echo "moving ${jdkPath} to ${openJdkVersion}"
-  rm -rf "${openJdkVersion}" || true
-  mv "${jdkPath}" "${openJdkVersion}"
+  echo "moving ${jdkPath} to ${jdkTargetPath}"
+  rm -rf "${jdkTargetPath}" || true
+  mv "${jdkPath}" "${jdkTargetPath}"
 
   if [ -d "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" ]
   then
-    JRE_TARGET_PATH="${openJdkVersion}-jre"
-    [ "${JRE_TARGET_PATH}" == "${openJdkVersion}" ] && JRE_TARGET_PATH="${openJdkVersion}.jre"
-    echo "moving $(ls -d ${BUILD_CONFIG[JRE_PATH]}) to ${JRE_TARGET_PATH}"
-    rm -rf "${JRE_TARGET_PATH}" || true
-    mv "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" "${JRE_TARGET_PATH}"
+    echo "moving $(ls -d ${BUILD_CONFIG[JRE_PATH]}) to ${jreTargetPath}"
+    rm -rf "${jreTargetPath}" || true
+    mv "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" "${jreTargetPath}"
 
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
-      "darwin") JRE_TARGET="${JRE_TARGET_PATH}/Contents/Home" ;;
-      *) JRE_TARGET="${JRE_TARGET_PATH}" ;;
+      "darwin") jreTargetPath="${jreTargetPath}/Contents/Home" ;;
+      *) jreTargetPath="${jreTargetPath}" ;;
     esac
-    rm -rf "${JRE_TARGET}"/demo/applets || true
-    rm -rf "${JRE_TARGET}"/demo/jfc/Font2DTest || true
-    rm -rf "${JRE_TARGET}"/demo/jfc/SwingApplet || true
+    rm -rf "${jreTargetPath}"/demo/applets || true
+    rm -rf "${jreTargetPath}"/demo/jfc/Font2DTest || true
+    rm -rf "${jreTargetPath}"/demo/jfc/SwingApplet || true
   fi
 
   # Remove files we don't need
   case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
-    "darwin") JDK_TARGET="${openJdkVersion}/Contents/Home" ;;
-    *) JDK_TARGET="${openJdkVersion}" ;;
+    "darwin") jdkTargetPath="${openJdkVersion}/Contents/Home" ;;
+    *) jdkTargetPath="${openJdkVersion}" ;;
   esac
-  rm -rf "${JDK_TARGET}"/demo/applets || true
-  rm -rf "${JDK_TARGET}"/demo/jfc/Font2DTest || true
-  rm -rf "${JDK_TARGET}"/demo/jfc/SwingApplet || true
+  rm -rf "${jdkTargetPath}"/demo/applets || true
+  rm -rf "${jdkTargetPath}"/demo/jfc/Font2DTest || true
+  rm -rf "${jdkTargetPath}"/demo/jfc/SwingApplet || true
 
   find . -name "*.diz" -type f -delete || true
   find . -name "*.pdb" -type f -delete || true
@@ -554,31 +569,26 @@ createArchive() {
 # Create a Tar ball
 createOpenJDKTarArchive()
 {
-  COMPRESS=gzip
+  local openJdkVersion="$1"
+  local jdkTargetPath="jdk-$1"
+  local jreTargetPath="jre-$1"
 
-  local openJdkVersion=$(getOpenJdkVersion)
+  COMPRESS=gzip
 
   if which pigz >/dev/null 2>&1; then COMPRESS=pigz; fi
   echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
 
-  if [ -z "${openJdkVersion+x}" ] || [ -z "${openJdkVersion}" ]; then
-    openJdkVersion=$(getFirstTagFromOpenJDKGitRepo)
-  fi
-  if [ -z "${JRE_TARGET_PATH+x}" ] || [ -z "${JRE_TARGET_PATH}" ]; then
-    JRE_TARGET_PATH="${openJdkVersion}-jre"
-  fi
-
-  echo "OpenJDK repo tag is ${openJdkVersion}. JRE path will be ${JRE_TARGET_PATH}"
+  echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
   ## clean out old builds
   rm -r "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[TARGET_DIR]}" || true
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 
-  if [ -d "${JRE_TARGET_PATH}" ]; then
+  if [ -d "${jreTargetPath}" ]; then
     local jreName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-jre/')
-    createArchive "${JRE_TARGET_PATH}" "${jreName}"
+    createArchive "${jreTargetPath}" "${jreName}"
   fi
-  createArchive "${openJdkVersion}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
+   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
 # Echo success
@@ -588,9 +598,12 @@ showCompletionMessage()
 }
 
 copyFreeFontForMacOS() {
-  local openJdkVersion=$(getOpenJdkVersion)
-  makeACopyOfLibFreeFontForMacOSX "${openJdkVersion}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
-  makeACopyOfLibFreeFontForMacOSX "${openJdkVersion}-jre" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
+  local openJdkVersion="$1"
+  local jdkTargetPath="jdk-$1"
+  local jreTargetPath="jre-$1"
+
+  makeACopyOfLibFreeFontForMacOSX "${jdkTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
+  makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
 }
 
 ################################################################################
@@ -601,15 +614,20 @@ cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 parseArguments "$@"
 configureWorkspace
 
+buildSharedLibs
+
 getOpenJDKUpdateAndBuildVersion
 configureCommandParameters
 buildTemplatedFile
 executeTemplatedFile
 
 printJavaVersionString
-removingUnnecessaryFiles
-copyFreeFontForMacOS
-createOpenJDKTarArchive
+
+openJdkVersion=$(parseJavaVersionString)
+
+removingUnnecessaryFiles "${openJdkVersion}"
+copyFreeFontForMacOS "${openJdkVersion}"
+createOpenJDKTarArchive "${openJdkVersion}"
 showCompletionMessage
 
 # ccache is not detected properly TODO

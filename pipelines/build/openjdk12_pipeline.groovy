@@ -129,6 +129,7 @@ def javaToBuild = "jdk12u"
 
 node ("master") {
     def scmVars = checkout scm
+    load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
     Closure configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
 
     configureBuild(

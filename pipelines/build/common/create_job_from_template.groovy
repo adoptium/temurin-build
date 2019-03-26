@@ -61,7 +61,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                     }
                 }
             }
-            scriptPath('pipelines/build/common/openjdk_build_pipeline.groovy')
+            scriptPath('pipelines/build/common/kick_off_build.groovy')
         }
     }
     properties {
