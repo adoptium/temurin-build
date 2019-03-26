@@ -336,6 +336,8 @@ class Build {
 
             String hash = context.sh(script: "sha256sum $file | cut -f1 -d' '", returnStdout: true, returnStatus: false)
 
+            hash = hash.replaceAll("\n", "")
+
             data.binary_type = type
             data.sha256 = hash
 
