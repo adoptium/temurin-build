@@ -54,25 +54,16 @@ then
   else
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
-      TOOLCHAIN_VERSION="2010"
+      TOOLCHAIN_VERSION="2013"
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
-      export PATH="/cygdrive/C/Projects/OpenJDK/make-3.82/:$PATH"
+      export PATH="/cygdrive/c/openjdk/make-3.82/:$PATH"
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
-      TOOLCHAIN_VERSION="2013"
-      unset VS100COMNTOOLS
-      unset VS110COMNTOOLS
-      unset VS140COMNTOOLS
-      export PATH="/usr/bin:$PATH"
+      TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     elif [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
     then
       TOOLCHAIN_VERSION="2017"
-      unset VS100COMNTOOLS
-      unset VS110COMNTOOLS
-      unset VS120COMNTOOLS
-      unset VS140COMNTOOLS
-      export PATH="/usr/bin:$PATH"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     fi
   fi
@@ -114,9 +105,6 @@ then
     export PATH="/cygdrive/c/Program Files/LLVM/bin:/usr/bin:/cygdrive/c/openjdk/nasm-$OPENJ9_NASM_VERSION:$PATH"
   else
     TOOLCHAIN_VERSION="2013"
-    # Unset the host VS120COMNTOOLS and VS110COMNTOOLS variables as Java picks them up by default and we don't want that.
-    unset VS120COMNTOOLS
-    unset VS110COMNTOOLS
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
@@ -125,43 +113,23 @@ then
     elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
-      export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
-      export PATH="/usr/bin:/cygdrive/c/Program Files (x86)/Microsoft Visual Studio 10.0/VC/bin/amd64/:$PATH"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
-      TOOLCHAIN_VERSION="2013"
-      unset VS100COMNTOOLS
-      unset VS110COMNTOOLS
-      unset VS140COMNTOOLS
-      export PATH="/usr/bin:$PATH"
+      TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     elif [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
     then
       TOOLCHAIN_VERSION="2017"
-      unset VS100COMNTOOLS
-      unset VS110COMNTOOLS
-      unset VS120COMNTOOLS
-      unset VS140COMNTOOLS
-      export PATH="/usr/bin:$PATH"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     fi
   fi
 fi
 
 if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
-  HOTSPOT_BUILD="false";
-  if [ "${VARIANT}" != "${BUILD_VARIANT_HOTSPOT}" ] && [ "${VARIANT}" != "${BUILD_VARIANT_CORRETTO}" ]; then
-    HOTSPOT_BUILD="true";
-  fi
-
-  # At time of writing java 8, hotspot tags cannot handle --with-toolchain-version
-  if [ "${JAVA_TO_BUILD}" != "${JDK8_VERSION}" ] || [ "${HOTSPOT_BUILD}" != "true" ] || [ -z "${TAG}" ]
-  then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=${TOOLCHAIN_VERSION}"
-  fi
 fi
