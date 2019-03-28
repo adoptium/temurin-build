@@ -373,7 +373,7 @@ executeTemplatedFile() {
 
 buildSharedLibs() {
     cd "${LIB_DIR}"
-    ./gradlew clean uberjar
+    GRADLE_USER_HOME=./gradle-cache ./gradlew clean uberjar
 }
 
 parseJavaVersionString() {

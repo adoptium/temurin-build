@@ -332,7 +332,7 @@ class Builder implements Serializable {
 
                         context.echo "Created job " + downstreamJobName
                         // execute build
-                        def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams(context)
+                        def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
 
                         if (downstreamJob.getResult() == 'SUCCESS') {
                             // copy artifacts from build

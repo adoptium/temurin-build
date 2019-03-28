@@ -7,4 +7,7 @@ node("master") {
     builder = load "pipelines/build/common/openjdk_build_pipeline.groovy"
 }
 
-builder.build()
+builder(BUILD_CONFIGURATION,
+        this,
+        env,
+        currentBuild).build()

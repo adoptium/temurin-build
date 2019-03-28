@@ -9,6 +9,7 @@ class MetaData {
     final String scmRef
     final String version_data
     String binary_type
+    String sha256
 
     MetaData(String os, String scmRef, VersionInfo version, String version_data, String variant, String arch) {
         this.os = os
@@ -28,7 +29,8 @@ class MetaData {
                 version     : version,
                 scmRef      : scmRef,
                 version_data: version_data,
-                binary_type : binary_type
+                binary_type : binary_type,
+                sha256      : sha256
         ]
     }
 }

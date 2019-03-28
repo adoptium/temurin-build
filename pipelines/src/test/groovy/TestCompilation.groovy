@@ -59,6 +59,7 @@ class TestCompilation {
         } catch (Exception e) {
             println("This test checks compilation against Stub implementations that Mimic the jenkins Environment")
             println("Check that any methods you wish to use from the environment are represented in the testDoubles package")
+            e.printStackTrace()
             throw e
         }
     }
