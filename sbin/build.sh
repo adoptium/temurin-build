@@ -373,12 +373,23 @@ executeTemplatedFile() {
 
 buildSharedLibs() {
     cd "${LIB_DIR}"
-    GRADLE_USER_HOME=./gradle-cache ./gradlew clean uberjar
+
+    GRADLE_JAVA_HOME=${JAVA_HOME}
+    if [ -z ${JDK8_BOOT_DIR+x} ]; then
+      GRADLE_JAVA_HOME=${JDK8_BOOT_DIR}
+    fi
+    JAVA_HOME="$GRADLE_JAVA_HOME" GRADLE_USER_HOME=./gradle-cache ./gradlew clean uberjar
 }
 
 parseJavaVersionString() {
   ADOPT_BUILD_NUMBER="${ADOPT_BUILD_NUMBER:-1}"
-  local version=$("$PRODUCT_HOME"/bin/java -version 2>&1 | java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
+
+  GRADLE_JAVA_HOME=${JAVA_HOME}
+  if [ -z ${JDK8_BOOT_DIR+x} ]; then
+    GRADLE_JAVA_HOME=${JDK8_BOOT_DIR}
+  fi
+
+  local version=$("$PRODUCT_HOME"/bin/java -version 2>&1 | "$GRADLE_JAVA_HOME"/bin/java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
   echo $version
 }
 
