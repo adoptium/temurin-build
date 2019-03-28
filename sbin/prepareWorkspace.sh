@@ -32,6 +32,7 @@ source "$SCRIPT_DIR/common/constants.sh"
 
 # Set default versions for 3 libraries that OpenJDK relies on to build
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
+ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f08783329157e8dd68b3de0c096de6d724}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.28}
 
@@ -152,7 +153,8 @@ checkingAndDownloadingAlsa()
   then
     echo "Skipping ALSA download"
   else
-    wget -nc https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
+    downloadFile "alsa-lib.tar" "https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2" ${ALSA_LIB_CHECKSUM}
+
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
       bzip2 -d alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
       tar -xf alsa-lib-"${ALSA_LIB_VERSION}".tar --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
@@ -161,6 +163,27 @@ checkingAndDownloadingAlsa()
       tar -xf alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2 --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
       rm alsa-lib-"${ALSA_LIB_VERSION}".tar.bz2
     fi
+  fi
+}
+
+checkFingerPrint() {
+  local sigFile="$1"
+  local fileName="$2"
+  local publicKey="$3"
+  local expectedFingerPrint="$4"
+
+  rm /tmp/public_key.gpg || true
+  gpg --output /tmp/public_key.gpg --dearmor "${SCRIPT_DIR}/sig_check/${publicKey}.asc"
+
+  gpg -v --no-default-keyring --keyring "/tmp/public_key.gpg" --verify $sigFile $fileName
+
+  local verify=$(gpg -v --no-default-keyring --keyring "/tmp/public_key.gpg" --verify $sigFile $fileName 2>&1)
+  local fingerprint=$(echo $verify | grep "Primary key fingerprint" | egrep -o "([0-9A-F]{4} ? ?){10}" | sed -e 's/[[:space:]]*$//')
+
+  if [ "$fingerprint" != "$expectedFingerPrint" ]; then
+    echo "Failed to verify signature of $fileName"
+    echo "expected \"$expectedFingerPrint\" got \"$fingerprint\""
+    exit 1
   fi
 }
 
@@ -177,6 +200,10 @@ checkingAndDownloadingFreemarker()
   else
 
     wget -nc --no-check-certificate "https://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
+    wget "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc"
+
+    checkFingerPrint "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" "freemarker" "13AC 2213 964A BE1D 1C14 7C0E 1939 A252 0BAB 1D90"
+
     mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/" || exit
     tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/"
     rm "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
@@ -184,14 +211,28 @@ checkingAndDownloadingFreemarker()
 }
 
 downloadFile() {
-  targetFileName="$1"
-  url="$2"
+  local targetFileName="$1"
+  local url="$2"
 
   # Temporary fudge as curl on my windows boxes is exiting with RC=127
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
     wget -O "${targetFileName}" "${url}"
   else
     curl -L -o "${targetFileName}" "${url}"
+  fi
+
+  if [ $# -ge 3 ]; then
+
+    local checksum="$3"
+    local actualChecksum=$(sha256sum ${targetFileName} | cut -f1 -d' ')
+
+    if [ "${actualChecksum}" != "${checksum}" ];
+    then
+      echo "Failed to verify checksum on ${targetFileName} ${url}"
+
+      echo "Expected ${checksum} got ${actualChecksum}"
+      exit 1
+    fi
   fi
 }
 
@@ -207,6 +248,8 @@ checkingAndDownloadingFreeType()
     echo "Skipping FreeType download"
   else
     downloadFile "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
+    downloadFile "freetype.tar.gz.sig" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz.sig"
+    checkFingerPrint "freetype.tar.gz.sig" "freetype.tar.gz" "freetype" "58E0 C111 E39F 5408 C5D3 EC76 C1A6 0EAC E707 FDA5"
 
     rm -rf "./freetype" || true
     mkdir -p "freetype" || true
