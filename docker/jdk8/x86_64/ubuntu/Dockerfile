@@ -54,7 +54,7 @@ RUN apt-get update \
 RUN mkdir -p /openjdk/target
 
 COPY sbin /openjdk/sbin
-COPY *.sh /openjdk/
+COPY configureBuild.sh makejdk-any-platform.1 makejdk-any-platform.sh native-build.sh signalhandler.sh /openjdk/
 
 RUN mkdir -p /openjdk/build
 RUN useradd -ms /bin/bash build

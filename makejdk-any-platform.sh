@@ -51,4 +51,3 @@ configure_build "$@"
 writeConfigToFile
 
 buildOpenJDKInNativeEnvironment
-

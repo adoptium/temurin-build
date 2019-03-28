@@ -148,7 +148,7 @@ buildOpenJDKViaDocker()
        -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
        -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
        "${dockerEntrypoint[@]}" \
-        "${BUILD_CONFIG[CONTAINER_NAME]}" "$@"
+       "${BUILD_CONFIG[CONTAINER_NAME]}" "$@"
 
 
   echo "# ================================================================== "
@@ -167,12 +167,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Pull in configuration and build support
 # shellcheck source=sbin/common/config_init.sh
 source "${SCRIPT_DIR}/sbin/common/config_init.sh"
-
-# shellcheck source=native-build.sh
-source "${SCRIPT_DIR}/native-build.sh"
-
-# shellcheck source=configureBuild.sh
-source "${SCRIPT_DIR}/configureBuild.sh"
 
 echo "Starting $0 to configure, build (Adopt)OpenJDK binary"
 
