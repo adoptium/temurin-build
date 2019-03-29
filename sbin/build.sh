@@ -371,29 +371,36 @@ executeTemplatedFile() {
 
 }
 
+getGradleHome() {
+  local gradleJavaHome=""
+
+  if [ ${JAVA_HOME+x} ]; then
+    gradleJavaHome=${JAVA_HOME}
+  fi
+  if [ ${JDK11_BOOT_DIR+x} ]; then
+    gradleJavaHome=${JDK11_BOOT_DIR}
+  fi
+
+  echo $gradleJavaHome
+}
+
 buildSharedLibs() {
     cd "${LIB_DIR}"
-    GRADLE_JAVA_HOME=${JAVA_HOME}
-    if [ ${JDK11_BOOT_DIR+x} ]; then
-      GRADLE_JAVA_HOME=${JDK11_BOOT_DIR}
-    fi
-    echo "Running gradle with $GRADLE_JAVA_HOME"
+    local gradleJavaHome=$(getGradleHome)
+    echo "Running gradle with $gradleJavaHome"
 
-    JAVA_HOME="$GRADLE_JAVA_HOME" GRADLE_USER_HOME=./gradle-cache ./gradlew clean uberjar
+    JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache ./gradlew clean uberjar
 
     # Test parser
-    "$JAVA_HOME"/bin/java -version 2>&1 | "$JAVA_HOME"/bin/java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
+    "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
 }
 
 parseJavaVersionString() {
   ADOPT_BUILD_NUMBER="${ADOPT_BUILD_NUMBER:-1}"
 
-  GRADLE_JAVA_HOME=${JAVA_HOME}
-  if [ ${JDK11_BOOT_DIR+x} ]; then
-    GRADLE_JAVA_HOME=${JDK11_BOOT_DIR}
-  fi
+  local gradleJavaHome=$(getGradleHome)
 
-  local version=$("$PRODUCT_HOME"/bin/java -version 2>&1 | "$GRADLE_JAVA_HOME"/bin/java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
+  local version=$("$PRODUCT_HOME"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
   echo $version
 }
 
