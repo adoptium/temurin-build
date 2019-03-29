@@ -384,7 +384,7 @@ getGradleHome() {
     gradleJavaHome=${JDK11_BOOT_DIR}
   fi
 
-  if [ ! -d  $gradleJavaHome ]; then
+  if [ ! -d "$gradleJavaHome" ]; then
     echo "Unable to find java to run gradle with, set JAVA_HOME, JDK8_BOOT_DIR or JDK11_BOOT_DIR"
     exit 1
   fi
