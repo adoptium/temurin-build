@@ -45,7 +45,7 @@ esac
 
 if [[ -d "$PRODUCT_HOME" ]]; then
   cd "$PRODUCT_HOME"
-  export JAVA_HOME="$JAVA_HOME"
+  export JAVA_HOME="$PRODUCT_HOME"
   echo "=JAVA VERSION OUTPUT="
   JAVA_HOME="$PRODUCT_HOME" "$PRODUCT_HOME"/bin/java -version 2>&1
   echo "=/JAVA VERSION OUTPUT="
