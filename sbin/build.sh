@@ -404,13 +404,12 @@ buildSharedLibs() {
 }
 
 parseJavaVersionString() {
-  cd "${LIB_DIR}"
   ADOPT_BUILD_NUMBER="${ADOPT_BUILD_NUMBER:-1}"
-
-  local gradleJavaHome=$(getGradleHome)
 
   local javaVersion=$(JAVA_HOME="$PRODUCT_HOME" "$PRODUCT_HOME"/bin/java -version 2>&1)
 
+  cd "${LIB_DIR}"
+  local gradleJavaHome=$(getGradleHome)
   local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
   echo $version
 }
