@@ -411,7 +411,7 @@ parseJavaVersionString() {
 
   local javaVersion=$(JAVA_HOME="$PRODUCT_HOME" "$PRODUCT_HOME"/bin/java -version 2>&1)
 
-  local version=$(echo ""$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
+  local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
   echo $version
 }
 
