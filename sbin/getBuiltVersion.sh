@@ -44,8 +44,10 @@ case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
 esac
 
 if [[ -d "$PRODUCT_HOME" ]]; then
+  cd "$PRODUCT_HOME"
+  export JAVA_HOME="$JAVA_HOME"
   echo "=JAVA VERSION OUTPUT="
-  "$PRODUCT_HOME"/bin/java -version 2>&1
+  JAVA_HOME="$PRODUCT_HOME" "$PRODUCT_HOME"/bin/java -version 2>&1
   echo "=/JAVA VERSION OUTPUT="
 else
   echo "'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location."
