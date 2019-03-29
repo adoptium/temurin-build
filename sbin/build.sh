@@ -43,7 +43,7 @@ source "$SCRIPT_DIR/common/constants.sh"
 source "$SCRIPT_DIR/common/common.sh"
 
 
-export LIB_DIR="${SCRIPT_DIR}/../pipelines/"
+export LIB_DIR=$(crossPlatformRealPath "${SCRIPT_DIR}/../pipelines/")
 
 export jreTargetPath
 export CONFIGURE_ARGS=""
@@ -371,14 +371,44 @@ executeTemplatedFile() {
 
 }
 
+getGradleHome() {
+  local gradleJavaHome=""
+
+  if [ ${JAVA_HOME+x} ]; then
+    gradleJavaHome=${JAVA_HOME}
+  fi
+  if [ ${JDK8_BOOT_DIR+x} ]; then
+    gradleJavaHome=${JDK8_BOOT_DIR}
+  fi
+  if [ ${JDK11_BOOT_DIR+x} ]; then
+    gradleJavaHome=${JDK11_BOOT_DIR}
+  fi
+
+  if [ ! -d "$gradleJavaHome" ]; then
+    echo "Unable to find java to run gradle with, set JAVA_HOME, JDK8_BOOT_DIR or JDK11_BOOT_DIR"
+    exit 1
+  fi
+
+  echo $gradleJavaHome
+}
+
 buildSharedLibs() {
     cd "${LIB_DIR}"
-    GRADLE_USER_HOME=./gradle-cache ./gradlew clean uberjar
+    local gradleJavaHome=$(getGradleHome)
+    echo "Running gradle with $gradleJavaHome"
+
+    JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache ./gradlew --no-daemon clean uberjar
+
+    # Test that the parser can execute as fail fast rather than waiting till after the build to find out
+    "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
 }
 
 parseJavaVersionString() {
   ADOPT_BUILD_NUMBER="${ADOPT_BUILD_NUMBER:-1}"
-  local version=$("$PRODUCT_HOME"/bin/java -version 2>&1 | java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
+
+  local gradleJavaHome=$(getGradleHome)
+
+  local version=$("$PRODUCT_HOME"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
   echo $version
 }
 

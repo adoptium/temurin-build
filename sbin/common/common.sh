@@ -33,6 +33,24 @@ function setOpenJdkVersion() {
   fi
 }
 
+function crossPlatformRealPath() {
+  local target=$1
+
+  local currentDir="$PWD"
+
+  if [[ -d $target ]]; then
+    cd "$target"
+    local name=""
+  elif [[ -f $target ]]; then
+    cd "$(dirname $target)"
+    local name=$(basename "$target")
+  fi
+
+  local fullPath="$PWD/$name"
+  cd "$currentDir"
+  echo "$fullPath"
+}
+
 function setDockerVolumeSuffix() {
   local suffix=$1
   if [[ "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" != *"-${suffix}" ]]; then
