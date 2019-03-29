@@ -43,7 +43,7 @@ source "$SCRIPT_DIR/common/constants.sh"
 source "$SCRIPT_DIR/common/common.sh"
 
 
-export LIB_DIR="${SCRIPT_DIR}/../pipelines/"
+export LIB_DIR=$(crossPlatformRealPath "${SCRIPT_DIR}/../pipelines/")
 
 export jreTargetPath
 export CONFIGURE_ARGS=""
@@ -382,7 +382,7 @@ buildSharedLibs() {
     JAVA_HOME="$GRADLE_JAVA_HOME" GRADLE_USER_HOME=./gradle-cache ./gradlew clean uberjar
 
     # Test parser
-    "$JAVA_HOME"/bin/java -version 2>&1 | "$JAVA_HOME"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
+    "$JAVA_HOME"/bin/java -version 2>&1 | "$JAVA_HOME"/bin/java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
 }
 
 parseJavaVersionString() {
