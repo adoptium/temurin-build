@@ -42,7 +42,7 @@ function crossPlatformRealPath() {
     cd "$target"
     local name=""
   elif [[ -f $target ]]; then
-    cd "$(dirname "$target")"
+    cd "$(dirname $target)"
     local name=$(basename "$target")
   fi
 

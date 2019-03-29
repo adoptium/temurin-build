@@ -389,9 +389,9 @@ buildSharedLibs() {
     local gradleJavaHome=$(getGradleHome)
     echo "Running gradle with $gradleJavaHome"
 
-    JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache ./gradlew clean uberjar
+    JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache ./gradlew --no-daemon clean uberjar
 
-    # Test parser
+    # Test that the parser can execute as fail fast rather than waiting till after the build to find out
     "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
 }
 
