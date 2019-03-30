@@ -54,12 +54,12 @@ class VersionInfo {
                 String additional = matched.group('additional')
                 additional.split("-")
                         .each { val ->
-                    def matcher = val =~ /b(?<build>[0-9]+)/
-                    if (matcher.matches()) build = Integer.parseInt(matcher.group("build"));
+                            def matcher = val =~ /b(?<build>[0-9]+)/
+                            if (matcher.matches()) build = Integer.parseInt(matcher.group("build"));
 
-                    matcher = val =~ /^(?<opt>[0-9]{12})$/
-                    if (matcher.matches()) opt = matcher.group("opt");
-                }
+                            matcher = val =~ /^(?<opt>[0-9]{12})$/
+                            if (matcher.matches()) opt = matcher.group("opt");
+                        }
             }
             version = matched.group('version')
             return true
@@ -127,6 +127,10 @@ class VersionInfo {
             semver += "+"
             semver += (build ?: "0")
             semver += "." + adopt_build_number
+
+            if (opt) {
+                semver += "." + opt
+            }
             return semver
         } else {
             return null

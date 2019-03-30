@@ -400,15 +400,17 @@ buildSharedLibs() {
     JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache ./gradlew --no-daemon clean uberjar
 
     # Test that the parser can execute as fail fast rather than waiting till after the build to find out
-    "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
+    "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
 }
 
 parseJavaVersionString() {
   ADOPT_BUILD_NUMBER="${ADOPT_BUILD_NUMBER:-1}"
 
-  local gradleJavaHome=$(getGradleHome)
+  local javaVersion=$(JAVA_HOME="$PRODUCT_HOME" "$PRODUCT_HOME"/bin/java -version 2>&1)
 
-  local version=$("$PRODUCT_HOME"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "${LIB_DIR}/target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
+  cd "${LIB_DIR}"
+  local gradleJavaHome=$(getGradleHome)
+  local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
   echo $version
 }
 
@@ -642,9 +644,11 @@ loadConfigFromFile
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
 parseArguments "$@"
-configureWorkspace
 
 buildSharedLibs
+
+configureWorkspace
+
 
 getOpenJDKUpdateAndBuildVersion
 configureCommandParameters
