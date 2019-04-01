@@ -636,9 +636,12 @@ copyFreeFontForMacOS() {
   makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
 }
 
-createTargetDirs() {
-  ## clean out old builds
+wipeOutOldTargetDir() {
   rm -r "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[TARGET_DIR]}" || true
+}
+
+createTargetDir() {
+  ## clean out old builds
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 }
 
@@ -650,7 +653,9 @@ cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 parseArguments "$@"
 
 buildSharedLibs
-createTargetDirs
+
+wipeOutOldTargetDir
+createTargetDir
 
 configureWorkspace
 
