@@ -131,7 +131,7 @@ class Build {
 
     VersionInfo parseVersionOutput(String consoleOut) {
         context.println(consoleOut)
-        Matcher matcher = (consoleOut =~ /(?ms)^.*=JAVA VERSION OUTPUT=.*OpenJDK Runtime Environment[^\n]*\(build (?<version>[^)]*)\).*=\/JAVA VERSION OUTPUT=.*$/)
+        Matcher matcher = (consoleOut =~ /(?ms)^.*OpenJDK Runtime Environment[^\n]*\(build (?<version>[^)]*)\).*$/)
         if (matcher.matches()) {
             context.println("matched")
             String versionOutput = matcher.group('version')
@@ -425,8 +425,9 @@ class Build {
 
                                 context.withEnv(envVars) {
                                     context.sh(script: "./build-farm/make-adopt-build-farm.sh")
-                                    String consoleOut = context.sh(script: "chmod +x ./sbin/getBuiltVersion.sh;./sbin/getBuiltVersion.sh", returnStdout: true, returnStatus: false)
-                                    versionInfo = parseVersionOutput(consoleOut)
+                                    String versionOut = context.readFile("workspace/target/version.txt")
+
+                                    versionInfo = parseVersionOutput(versionOut)
                                 }
                                 writeMetadata(versionInfo)
                                 context.archiveArtifacts artifacts: "workspace/target/*"

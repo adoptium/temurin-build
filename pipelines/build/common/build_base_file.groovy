@@ -232,6 +232,8 @@ class Builder implements Serializable {
             params.put("GIT_BRANCH", scmVars["GIT_COMMIT"])
         }
 
+        params.put("BUILD_CONFIG", config.toJson())
+
         def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
 
         return create
