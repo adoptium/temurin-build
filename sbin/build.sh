@@ -397,7 +397,7 @@ buildSharedLibs() {
     local gradleJavaHome=$(getGradleHome)
     echo "Running gradle with $gradleJavaHome"
 
-    JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache ./gradlew --no-daemon clean uberjar
+    JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache bash ./gradlew --no-daemon clean uberjar
 
     # Test that the parser can execute as fail fast rather than waiting till after the build to find out
     "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
@@ -446,6 +446,8 @@ printJavaVersionString()
        echo "=JAVA VERSION OUTPUT="
        "$PRODUCT_HOME"/bin/java -version 2>&1
        echo "=/JAVA VERSION OUTPUT="
+
+       "$PRODUCT_HOME"/bin/java -version > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/version.txt" 2>&1
      fi
   else
     echo "'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location."
@@ -612,10 +614,6 @@ createOpenJDKTarArchive()
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
-  ## clean out old builds
-  rm -r "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[TARGET_DIR]}" || true
-  mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
-
   if [ -d "${jreTargetPath}" ]; then
     local jreName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-jre/')
     createArchive "${jreTargetPath}" "${jreName}"
@@ -638,6 +636,12 @@ copyFreeFontForMacOS() {
   makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
 }
 
+createTargetDirs() {
+  ## clean out old builds
+  rm -r "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[TARGET_DIR]}" || true
+  mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
+}
+
 ################################################################################
 
 loadConfigFromFile
@@ -646,9 +650,9 @@ cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 parseArguments "$@"
 
 buildSharedLibs
+createTargetDirs
 
 configureWorkspace
-
 
 getOpenJDKUpdateAndBuildVersion
 configureCommandParameters
