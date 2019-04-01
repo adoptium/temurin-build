@@ -58,7 +58,25 @@ pipelineJob("$buildFolder/$JOB_NAME") {
     }
 
     parameters {
-        textParam('BUILD_CONFIGURATION', null, "")
         stringParam('NODE_LABEL', "$NODE_LABEL")
+        textParam('BUILD_CONFIGURATION', "$BUILD_CONFIG", """
+            <dl>
+                <dt><b>ARCHITECTURE</b></dt><dd>x64, ppc64, s390x...</dd>
+                <dt><b>TARGET_OS</b></dt><dd>windows, linux, aix...</dd>
+                <dt><b>VARIANT</b></dt><dd>hotspot, openj9...</dd>
+                <dt><b>JAVA_TO_BUILD</b></dt><dd>i.e jdk11u, jdk12u...</dd>
+                <dt><b>TEST_LIST</b></dt><dd>Comma seperated list of tests, i.e: openjdktest,perftest,systemtest</dd>
+                <dt><b>SCM_REF</b></dt><dd>Source code ref to build, i.e branch, tag, commit id</dd>
+                <dt><b>BUILD_ARGS</b></dt><dd>args to pass to makejdk-any-platform.sh</dd>
+                <dt><b>NODE_LABEL</b></dt><dd>Labels of node to build on</dd>
+                <dt><b>CONFIGURE_ARGS</b></dt><dd>Arguments for ./configure</dd>
+                <dt><b>OVERRIDE_FILE_NAME_VERSION</b></dt><dd>Set the version string on the file name</dd>
+                <dt><b>RELEASE</b></dt><dd>Is this build a release</dd>
+                <dt><b>PUBLISH_NAME</b></dt><dd>Set name of publish</dd>
+                <dt><b>ADOPT_BUILD_NUMBER</b></dt><dd>Adopt build number</dd>
+                <dt><b>ENABLE_TESTS</b></dt><dd>Run tests</dd>
+                <dt><b>CLEAN_WORKSPACE</b></dt><dd>Wipe out workspace before build</dd>
+            </dl>
+        """)
     }
 }

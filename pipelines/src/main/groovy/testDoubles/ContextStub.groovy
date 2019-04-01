@@ -1,8 +1,9 @@
 package testDoubles
-// Stub to fix compilation
 
-import NodeHelper
 import JobHelper
+import NodeHelper
+
+// Stub to fix compilation
 
 class ContextStub {
     NodeHelper NodeHelper;
@@ -61,4 +62,6 @@ class ContextStub {
     String writeFile(Map s) {}
 
     Configuration load(String s) {}
+
+    String readFile(String s) {}
 }
