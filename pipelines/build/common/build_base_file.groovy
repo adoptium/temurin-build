@@ -72,7 +72,7 @@ class Builder implements Serializable {
                 ARCHITECTURE: platformConfig.arch as String,
                 TARGET_OS: platformConfig.os as String,
                 VARIANT: variant,
-                TEST_LIST: testList.join(","),
+                TEST_LIST: testList,
                 SCM_REF: scmReference,
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",

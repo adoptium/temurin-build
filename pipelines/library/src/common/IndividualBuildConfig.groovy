@@ -8,7 +8,7 @@ class IndividualBuildConfig implements Serializable {
     final String TARGET_OS
     final String VARIANT
     final String JAVA_TO_BUILD
-    final String TEST_LIST
+    final List<String> TEST_LIST
     final String SCM_REF
     final String BUILD_ARGS
     final String NODE_LABEL
@@ -31,7 +31,15 @@ class IndividualBuildConfig implements Serializable {
         TARGET_OS = map.get("TARGET_OS")
         VARIANT = map.get("VARIANT")
         JAVA_TO_BUILD = map.get("JAVA_TO_BUILD")
-        TEST_LIST = map.get("TEST_LIST")
+
+        if (String.class.isInstance(map.get("TEST_LIST"))) {
+            TEST_LIST = map.get("TEST_LIST").split(",")
+        } else if (List.class.isInstance(map.get("TEST_LIST"))) {
+            TEST_LIST = map.get("TEST_LIST")
+        } else {
+            TEST_LIST = []
+        }
+
         SCM_REF = map.get("SCM_REF")
         BUILD_ARGS = map.get("BUILD_ARGS")
         NODE_LABEL = map.get("NODE_LABEL")
