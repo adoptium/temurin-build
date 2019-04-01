@@ -374,22 +374,26 @@ executeTemplatedFile() {
 getGradleHome() {
   local gradleJavaHome=""
 
-  if [ ${JAVA_HOME+x} ]; then
+  if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
     gradleJavaHome=${JAVA_HOME}
   fi
 
-  if [ ${JDK8_BOOT_DIR+x} ]; then
+  if [ -d "${BUILD_CONFIG[JDK_BOOT_DIR]}" ]; then
+    gradleJavaHome=${BUILD_CONFIG[JDK_BOOT_DIR]}
+  fi
+
+  if [ ${JDK8_BOOT_DIR+x} ] && [ -d "${JDK8_BOOT_DIR}" ]; then
     gradleJavaHome=${JDK8_BOOT_DIR}
   fi
 
   # Special case arm because for some unknown reason the JDK11_BOOT_DIR that arm downloads is unable to form connection
   # to services.gradle.org
-  if [ ${JDK11_BOOT_DIR+x} ] && [ "${ARCHITECTURE}" != "arm" ]; then
+  if [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ] && [ "${ARCHITECTURE}" != "arm" ]; then
     gradleJavaHome=${JDK11_BOOT_DIR}
   fi
 
   if [ ! -d "$gradleJavaHome" ]; then
-    echo "Unable to find java to run gradle with, set JAVA_HOME, JDK8_BOOT_DIR or JDK11_BOOT_DIR"
+    echo "Unable to find java to run gradle with, set JAVA_HOME, JDK8_BOOT_DIR or JDK11_BOOT_DIR: $gradleJavaHome"
     exit 1
   fi
 
