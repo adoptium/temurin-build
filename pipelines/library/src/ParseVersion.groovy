@@ -25,7 +25,11 @@ class ParseVersion {
         if (parsedArgs.f) {
             def toPrint = ((String) parsedArgs.getProperty("f")).split(",")
             toPrint.each { arg ->
-                println(version.getProperty(arg))
+                if (arg == "openjdk-semver") {
+                    println(version.formOpenjdkSemver())
+                } else {
+                    println(version.getProperty(arg))
+                }
             }
         } else {
             println(JsonOutput.prettyPrint(JsonOutput.toJson(version)))

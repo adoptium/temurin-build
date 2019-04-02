@@ -136,4 +136,24 @@ class VersionInfo {
             return null
         }
     }
+
+    /**
+     * Form semver without adopt build number or timestamp
+     * @return
+     */
+    String formOpenjdkSemver() {
+        if (major != null) {
+            def semver = major + "." + minor + "." + security
+
+            if (pre) {
+                semver += "-" + pre
+            }
+
+            semver += "+"
+            semver += (build ?: "0")
+            return semver
+        } else {
+            return null
+        }
+    }
 }
