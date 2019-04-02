@@ -393,7 +393,7 @@ getGradleHome() {
   fi
 
   if [ ! -d "$gradleJavaHome" ]; then
-    echo "Unable to find java to run gradle with, set JAVA_HOME, JDK8_BOOT_DIR or JDK11_BOOT_DIR: $gradleJavaHome"
+    echo "Unable to find java to run gradle with, set JAVA_HOME, JDK8_BOOT_DIR or JDK11_BOOT_DIR: $gradleJavaHome">&2
     exit 1
   fi
 
@@ -418,7 +418,7 @@ parseJavaVersionString() {
 
   cd "${LIB_DIR}"
   local gradleJavaHome=$(getGradleHome)
-  local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver $ADOPT_BUILD_NUMBER)
+  local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f openjdk-semver $ADOPT_BUILD_NUMBER | tr -d '\n')
   echo $version
 }
 
@@ -467,7 +467,7 @@ printJavaVersionString()
 removingUnnecessaryFiles() {
   local openJdkVersion="$1"
   local jdkTargetPath="jdk-$1"
-  local jreTargetPath="jre-$1"
+  local jreTargetPath="jdk-$1-jre"
 
   echo "Removing unnecessary files now..."
 
@@ -613,7 +613,7 @@ createOpenJDKTarArchive()
 {
   local openJdkVersion="$1"
   local jdkTargetPath="jdk-$1"
-  local jreTargetPath="jre-$1"
+  local jreTargetPath="jdk-$1-jre"
 
   COMPRESS=gzip
 
@@ -638,7 +638,7 @@ showCompletionMessage()
 copyFreeFontForMacOS() {
   local openJdkVersion="$1"
   local jdkTargetPath="jdk-$1"
-  local jreTargetPath="jre-$1"
+  local jreTargetPath="jdk-$1-jre"
 
   makeACopyOfLibFreeFontForMacOSX "${jdkTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
   makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
