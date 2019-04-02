@@ -96,7 +96,7 @@ class Build {
     def runTests() {
         def testStages = [:]
 
-        List testList = buildConfig.TEST_LIST.split(",") as List
+        List testList = buildConfig.TEST_LIST
         testList.each { testType ->
             // For each requested test, i.e 'openjdktest', 'systemtest', 'perftest', 'externaltest', call test job
             try {
@@ -444,7 +444,7 @@ class Build {
                 }
             }
 
-            if (enableTests && buildConfig.TEST_LIST.trim().length() > 0) {
+            if (enableTests && buildConfig.TEST_LIST.size() > 0) {
                 try {
                     def testStages = runTests()
                     context.parallel testStages
