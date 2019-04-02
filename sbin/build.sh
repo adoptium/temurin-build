@@ -466,8 +466,8 @@ printJavaVersionString()
 # Clean up
 removingUnnecessaryFiles() {
   local openJdkVersion="$1"
-  local jdkTargetPath="jdk-$1"
-  local jreTargetPath="jre-$1"
+  local jdkTargetPath="$1"
+  local jreTargetPath="$1-jre"
 
   echo "Removing unnecessary files now..."
 
@@ -612,8 +612,8 @@ createArchive() {
 createOpenJDKTarArchive()
 {
   local openJdkVersion="$1"
-  local jdkTargetPath="jdk-$1"
-  local jreTargetPath="jre-$1"
+  local jdkTargetPath="$1"
+  local jreTargetPath="$1-jre"
 
   COMPRESS=gzip
 
@@ -637,8 +637,8 @@ showCompletionMessage()
 
 copyFreeFontForMacOS() {
   local openJdkVersion="$1"
-  local jdkTargetPath="jdk-$1"
-  local jreTargetPath="jre-$1"
+  local jdkTargetPath="$1"
+  local jreTargetPath="$1-jre"
 
   makeACopyOfLibFreeFontForMacOSX "${jdkTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
   makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
