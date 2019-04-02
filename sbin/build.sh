@@ -418,7 +418,7 @@ parseJavaVersionString() {
 
   cd "${LIB_DIR}"
   local gradleJavaHome=$(getGradleHome)
-  local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f openjdk-semver $ADOPT_BUILD_NUMBER)
+  local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f openjdk-semver $ADOPT_BUILD_NUMBER | tr -d '\n')
   echo $version
 }
 
