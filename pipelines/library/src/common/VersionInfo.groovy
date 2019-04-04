@@ -138,7 +138,8 @@ class VersionInfo {
     }
 
     /**
-     * Form semver without adopt build number or timestamp
+     * Form semver without build, adopt build number or timestamp.
+     * This is the format dirs inside an adopt archive will look like, i.e 8.0.212
      * @return
      */
     String formOpenjdkSemver() {
@@ -148,9 +149,6 @@ class VersionInfo {
             if (pre) {
                 semver += "-" + pre
             }
-
-            semver += "+"
-            semver += (build ?: "0")
             return semver
         } else {
             return null
