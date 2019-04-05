@@ -24,7 +24,7 @@
 #
 ################################################################################
 
-set -euo pipefail
+set -euxo pipefail
 
 echo "Import common functionality"
 # shellcheck disable=SC1091
@@ -85,9 +85,8 @@ function addMercurialUpstream() {
 
 function performMergeFromMercurialIntoGit() {
   git fetch hg
-  git fetch hg --tags
-  git merge hg/"$BRANCH" -m "Merge $BRANCH" || (echo "The automatic update failed, time for manual intervention!" && exit 1)
 
+  git merge hg/"$BRANCH" -m "Merge $BRANCH" || (echo "The automatic update failed, time for manual intervention!" && exit 1)
 
   if git rev-parse -q --verify "origin/$BRANCH"; then
     echo "====Commit diff for branch $BRANCH===="
@@ -103,7 +102,6 @@ function performMergeFromMercurialIntoGit() {
 
   git push -u origin "$BRANCH" || exit 1
   git push origin "$BRANCH" --tags || exit 1
-
 }
 
 # Merge master into dev as we build off dev at the AdoptOpenJDK Build farm
