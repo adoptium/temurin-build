@@ -54,10 +54,11 @@ function inititialCheckin() {
 
   if [ "$tag" != "HEAD" ]; then
     git fetch root --no-tags +refs/tags/$tag:refs/tags/$tag-root
+    git merge "$tag-root"
   else
     git fetch root --no-tags HEAD
+    git merge HEAD
   fi
-  git merge "$tag-root"
 
   if [ "$doTagging" == "true" ]; then
     git tag -d $tag || true
