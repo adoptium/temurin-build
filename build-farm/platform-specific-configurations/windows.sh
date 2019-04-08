@@ -59,7 +59,7 @@ then
       export PATH="/cygdrive/c/openjdk/make-3.82/:$PATH"
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
-      TOOLCHAIN_VERSION="2017"
+      TOOLCHAIN_VERSION="2013"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     elif [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
     then
