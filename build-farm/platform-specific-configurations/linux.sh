@@ -41,10 +41,15 @@ fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
 then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched"
-  if [ "${JAVA_TO_BUILD}" != "${JDK12_VERSION}" ]
-  then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-openssl-bundling"
+  # CentOS 6 has openssl 1.0.1 so we use a self-installed 1.0.2 from the playbooks
+  if grep 'release 6' /etc/redhat-release >/dev/null; then
+    if [ -r /usr/local/openssl-1.0.2/include/openssl/opensslconf.h ]; then
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/usr/local/openssl-1.0.2"
+    else
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched"
+    fi
+  else
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=system"
   fi
 fi
 
