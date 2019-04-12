@@ -249,7 +249,7 @@ processArgumentsforSpecificArchitectures() {
       jvm_variant=server
     fi
     make_args_for_any_platform="DEBUG_BINARIES=true images"
-    configure_args_for_any_platform="--with-jobs=${NUM_PROCESSORS}"
+    configure_args_for_any_platform="--with-jobs=${BUILD_CONFIG[NUM_PROCESSORS]}"
   ;;
 
   esac
