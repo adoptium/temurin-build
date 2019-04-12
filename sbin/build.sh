@@ -463,11 +463,24 @@ printJavaVersionString()
   fi
 }
 
+getJdkArchivePath() {
+  # Todo: Set this to the outcome of https://github.com/AdoptOpenJDK/openjdk-build/issues/1016
+  # local version="$(parseJavaVersionString)
+  # echo "jdk-${version}"
+
+  local version=$(getOpenJdkVersion)
+  echo "$version"
+}
+
+getJreArchivePath() {
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-jre"
+}
+
 # Clean up
 removingUnnecessaryFiles() {
-  local openJdkVersion="$1"
-  local jdkTargetPath="jdk-$1"
-  local jreTargetPath="jdk-$1-jre"
+  local jdkTargetPath=$(getJdkArchivePath)
+  local jreTargetPath=$(getJreArchivePath)
 
   echo "Removing unnecessary files now..."
 
@@ -476,7 +489,6 @@ removingUnnecessaryFiles() {
   cd build/*/images || return
 
   echo "Currently at '${PWD}'"
-
 
   local jdkPath=$(ls -d ${BUILD_CONFIG[JDK_PATH]})
   echo "moving ${jdkPath} to ${jdkTargetPath}"
@@ -490,28 +502,28 @@ removingUnnecessaryFiles() {
     mv "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" "${jreTargetPath}"
 
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
-      "darwin") jreTargetPath="${jreTargetPath}/Contents/Home" ;;
-      *) jreTargetPath="${jreTargetPath}" ;;
+      "darwin") dirToRemove="${jreTargetPath}/Contents/Home" ;;
+      *) dirToRemove="${jreTargetPath}" ;;
     esac
-    rm -rf "${jreTargetPath}"/demo/applets || true
-    rm -rf "${jreTargetPath}"/demo/jfc/Font2DTest || true
-    rm -rf "${jreTargetPath}"/demo/jfc/SwingApplet || true
+    rm -rf "${dirToRemove}"/demo/applets || true
+    rm -rf "${dirToRemove}"/demo/jfc/Font2DTest || true
+    rm -rf "${dirToRemove}"/demo/jfc/SwingApplet || true
   fi
 
   # Remove files we don't need
   case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
-    "darwin") jdkTargetPath="${openJdkVersion}/Contents/Home" ;;
-    *) jdkTargetPath="${openJdkVersion}" ;;
+    "darwin") dirToRemove="${jdkTargetPath}/Contents/Home" ;;
+    *) dirToRemove="${jdkTargetPath}" ;;
   esac
-  rm -rf "${jdkTargetPath}"/demo/applets || true
-  rm -rf "${jdkTargetPath}"/demo/jfc/Font2DTest || true
-  rm -rf "${jdkTargetPath}"/demo/jfc/SwingApplet || true
+  rm -rf "${dirToRemove}"/demo/applets || true
+  rm -rf "${dirToRemove}"/demo/jfc/Font2DTest || true
+  rm -rf "${dirToRemove}"/demo/jfc/SwingApplet || true
 
   find . -name "*.diz" -type f -delete || true
   find . -name "*.pdb" -type f -delete || true
   find . -name "*.map" -type f -delete || true
 
-  echo "Finished removing unnecessary files from ${openJdkVersion}"
+  echo "Finished removing unnecessary files from ${jdkTargetPath}"
 }
 
 moveFreetypeLib() {
@@ -611,9 +623,8 @@ createArchive() {
 # Create a Tar ball
 createOpenJDKTarArchive()
 {
-  local openJdkVersion="$1"
-  local jdkTargetPath="jdk-$1"
-  local jreTargetPath="jdk-$1-jre"
+  local jdkTargetPath=$(getJdkArchivePath)
+  local jreTargetPath=$(getJreArchivePath)
 
   COMPRESS=gzip
 
@@ -636,9 +647,8 @@ showCompletionMessage()
 }
 
 copyFreeFontForMacOS() {
-  local openJdkVersion="$1"
-  local jdkTargetPath="jdk-$1"
-  local jreTargetPath="jdk-$1-jre"
+  local jdkTargetPath=$(getJdkArchivePath)
+  local jreTargetPath=$(getJreArchivePath)
 
   makeACopyOfLibFreeFontForMacOSX "${jdkTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
   makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
@@ -674,11 +684,9 @@ executeTemplatedFile
 
 printJavaVersionString
 
-openJdkVersion=$(parseJavaVersionString)
-
-removingUnnecessaryFiles "${openJdkVersion}"
-copyFreeFontForMacOS "${openJdkVersion}"
-createOpenJDKTarArchive "${openJdkVersion}"
+removingUnnecessaryFiles
+copyFreeFontForMacOS
+createOpenJDKTarArchive
 showCompletionMessage
 
 # ccache is not detected properly TODO
