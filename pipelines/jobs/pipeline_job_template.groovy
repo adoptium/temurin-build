@@ -1,20 +1,20 @@
 import groovy.json.JsonOutput
 
-triggerSchedule = "@daily"
+// Release freeze build inhibitor, set cron to build on 31st Feb
+triggerSchedule = "0 0 31 2 0"
+//triggerSchedule = "@daily"
 gitRefSpec = ""
 propagateFailures = false
 runTests = true
 
 // if true means this is running in the pr builder pipeline
 if (binding.hasVariable('PR_BUILDER')) {
-    triggerSchedule = "@yearly"
+    //build on 31st Feb
+    triggerSchedule = "0 0 31 2 0"
     gitRefSpec = "+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*"
     propagateFailures = true
     runTests = false
 }
-
-// Release freeze build inhibitor, set cron to build on 31st Feb
-triggerSchedule = "0 0 31 2 0"
 
 folder("${BUILD_FOLDER}")
 folder("${BUILD_FOLDER}/jobs")
