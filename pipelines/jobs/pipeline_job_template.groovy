@@ -13,6 +13,9 @@ if (binding.hasVariable('PR_BUILDER')) {
     runTests = false
 }
 
+// Release freeze build inhibitor, set cron to build on 31st Feb
+triggerSchedule = "0 0 31 2 0"
+
 folder("${BUILD_FOLDER}")
 folder("${BUILD_FOLDER}/jobs")
 
