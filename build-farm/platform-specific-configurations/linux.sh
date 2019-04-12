@@ -56,6 +56,10 @@ fi
 if [ "${ARCHITECTURE}" == "arm" ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000 --disable-warnings-as-errors"
+  if [ ! -z "${NUM_PROCESSORS}" ]
+  then
+    export BUILD_ARGS="${BUILD_ARGS} --processors $NUM_PROCESSORS"
+  fi
 fi
 
 if [ "${ARCHITECTURE}" == "s390x" ] || [ "${ARCHITECTURE}" == "ppc64le" ]
