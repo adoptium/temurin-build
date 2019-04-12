@@ -224,8 +224,12 @@ configuringVersionStringParameter()
     addConfigureArg "--with-vendor-url=" "https://adoptopenjdk.net/"
     addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
     addConfigureArg "--with-vendor-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-build/issues"
-    addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/eclipse/openj9/issues"
 
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
+      addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/eclipse/openj9/issues"
+    else
+      addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-build/issues"
+    fi
   fi
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
