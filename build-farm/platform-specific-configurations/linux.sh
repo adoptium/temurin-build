@@ -51,6 +51,10 @@ then
   else
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=system"
   fi
+  # Fix for https://github.com/eclipse/openj9/issues/4486
+  if [ "${ARCHITECTURE}" == "aarch64" ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors-openj9"
+  fi
 fi
 
 if [ "${ARCHITECTURE}" == "ppc64le" ]
