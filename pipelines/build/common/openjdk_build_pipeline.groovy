@@ -227,6 +227,34 @@ class Build {
                 flatten: true)
     }
 
+    private void buildLinuxInstaller(VersionInfo versionData) {
+        def filter = "**/OpenJDK*_linux_*.tar.gz"
+        def nodeFilter = "${buildConfig.TARGET_OS}&&fpm"
+
+        def buildNumber = versionData.build
+
+        def installerJob = context.build job: "build-scripts/release/create_installer_linux",
+                propagate: true,
+                parameters: [
+                        context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                        context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                        context.string(name: 'FILTER', value: "${filter}"),
+                        context.string(name: 'VERSION', value: "${versionData.version}"),
+                        context.string(name: 'MAJOR_VERSION', value: "${versionData.major}"),
+                        context.string(name: 'JVM', value: "${buildConfig.VARIANT}"),
+                        context.string(name: 'ARCHITECTURE', value: "${buildConfig.ARCHITECTURE}"),
+                        ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
+                ]
+
+        context.copyArtifacts(
+                projectName: "build-scripts/release/create_installer_linux",
+                selector: context.specific("${installerJob.getNumber()}"),
+                filter: 'linux/deb/build/*.deb, linux/rpm/build/*/*.rpm',
+                fingerprintArtifacts: true,
+                target: "workspace/target/",
+                flatten: true)
+    }
+
     private void buildWindowsInstaller(VersionInfo versionData) {
         def filter = "**/OpenJDK*_windows_*.zip"
         def certificate = "C:\\Users\\jenkins\\windows.p12"
@@ -273,6 +301,7 @@ class Build {
                 try {
                     switch (buildConfig.TARGET_OS) {
                         case "mac": buildMacInstaller(versionData); break
+                        case "linux": buildLinuxInstaller(versionData); break
                         case "windows": buildWindowsInstaller(versionData); break
                         default: return; break
                     }
@@ -484,4 +513,3 @@ return {
                 env,
                 currentBuild)
 }
-
