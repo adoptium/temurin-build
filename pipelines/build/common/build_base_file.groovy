@@ -2,7 +2,6 @@
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
 
-import java.text.SimpleDateFormat
 import java.util.regex.Matcher
 
 /*
@@ -172,21 +171,21 @@ class Builder implements Serializable {
         targetConfigurations
                 .each { target ->
 
-            //For each requested build type, generate a configuration
-            if (buildConfigurations.containsKey(target.key)) {
-                def platformConfig = buildConfigurations.get(target.key) as Map<String, ?>
+                    //For each requested build type, generate a configuration
+                    if (buildConfigurations.containsKey(target.key)) {
+                        def platformConfig = buildConfigurations.get(target.key) as Map<String, ?>
 
-                target.value.each { variant ->
-                    String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
+                        target.value.each { variant ->
+                            String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
 
-                    if (platformConfig.containsKey('additionalFileNameTag')) {
-                        name += "-${platformConfig.additionalFileNameTag}"
+                            if (platformConfig.containsKey('additionalFileNameTag')) {
+                                name += "-${platformConfig.additionalFileNameTag}"
+                            }
+
+                            jobConfigurations[name] = buildConfiguration(platformConfig, variant)
+                        }
                     }
-
-                    jobConfigurations[name] = buildConfiguration(platformConfig, variant)
                 }
-            }
-        }
 
         return jobConfigurations
     }
@@ -252,6 +251,19 @@ class Builder implements Serializable {
 
             if (variants.size() > 1) {
                 context.error('Trying to release multiple variants at the same time, this is unusual')
+                return false
+            }
+
+            boolean isOpenj9WithoutVersionOverride = jobConfigurations
+                    .values()
+                    .stream()
+                    .anyMatch({ config ->
+                        def emptyOverride = config.OVERRIDE_FILE_NAME_VERSION == null || config.OVERRIDE_FILE_NAME_VERSION.isEmpty()
+                        return config.VARIANT == "openj9" && emptyOverride;
+                    })
+
+            if (isOpenj9WithoutVersionOverride) {
+                context.error('When releasing openj9 you must override the file version')
                 return false
             }
         }
