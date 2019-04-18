@@ -2,7 +2,6 @@
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
 
-import java.text.SimpleDateFormat
 import java.util.regex.Matcher
 
 /*
@@ -172,21 +171,21 @@ class Builder implements Serializable {
         targetConfigurations
                 .each { target ->
 
-            //For each requested build type, generate a configuration
-            if (buildConfigurations.containsKey(target.key)) {
-                def platformConfig = buildConfigurations.get(target.key) as Map<String, ?>
+                    //For each requested build type, generate a configuration
+                    if (buildConfigurations.containsKey(target.key)) {
+                        def platformConfig = buildConfigurations.get(target.key) as Map<String, ?>
 
-                target.value.each { variant ->
-                    String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
+                        target.value.each { variant ->
+                            String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
 
-                    if (platformConfig.containsKey('additionalFileNameTag')) {
-                        name += "-${platformConfig.additionalFileNameTag}"
+                            if (platformConfig.containsKey('additionalFileNameTag')) {
+                                name += "-${platformConfig.additionalFileNameTag}"
+                            }
+
+                            jobConfigurations[name] = buildConfiguration(platformConfig, variant)
+                        }
                     }
-
-                    jobConfigurations[name] = buildConfiguration(platformConfig, variant)
                 }
-            }
-        }
 
         return jobConfigurations
     }
