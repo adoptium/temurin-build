@@ -253,19 +253,6 @@ class Builder implements Serializable {
                 context.error('Trying to release multiple variants at the same time, this is unusual')
                 return false
             }
-
-            boolean isOpenj9WithoutVersionOverride = jobConfigurations
-                    .values()
-                    .stream()
-                    .anyMatch({ config ->
-                        def emptyOverride = config.OVERRIDE_FILE_NAME_VERSION == null || config.OVERRIDE_FILE_NAME_VERSION.isEmpty()
-                        return config.VARIANT == "openj9" && emptyOverride;
-                    })
-
-            if (isOpenj9WithoutVersionOverride) {
-                context.error('When releasing openj9 you must override the file version')
-                return false
-            }
         }
 
         return true

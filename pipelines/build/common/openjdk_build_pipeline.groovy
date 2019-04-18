@@ -370,9 +370,16 @@ class Build {
         if (overrideFileNameVersion) {
             fileName = "${fileName}_${overrideFileNameVersion}"
         } else if (buildConfig.PUBLISH_NAME) {
+
+            // for java 11 remove jdk- and +. i.e jdk-11.0.3+7 -> 11.0.3_7_openj9-0.14.0
             def nameTag = buildConfig.PUBLISH_NAME
                     .replace("jdk-", "")
                     .replaceAll("\\+", "_")
+
+            // for java 8 remove jdk and - before the build. i.e jdk8u212-b03_openj9-0.14.0 -> 8u212b03_openj9-0.14.0
+            nameTag = nameTag
+                    .replace("jdk", "")
+                    .replace("-b", "b")
 
             fileName = "${fileName}_${nameTag}"
         } else {
