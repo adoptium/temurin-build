@@ -245,14 +245,6 @@ class Build {
                         context.string(name: 'ARCHITECTURE', value: "${buildConfig.ARCHITECTURE}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
                 ]
-
-        context.copyArtifacts(
-                projectName: "build-scripts/release/create_installer_linux",
-                selector: context.specific("${installerJob.getNumber()}"),
-                filter: 'linux/deb/build/*.deb, linux/rpm/build/*/*.rpm',
-                fingerprintArtifacts: true,
-                target: "workspace/target/",
-                flatten: true)
     }
 
     private void buildWindowsInstaller(VersionInfo versionData) {
