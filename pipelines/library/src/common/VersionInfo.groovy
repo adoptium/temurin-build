@@ -154,4 +154,44 @@ class VersionInfo {
             return null
         }
     }
+
+    /**
+     * Form adopt build number.
+     * This should be what adopt openjdk would refer to the version as
+     * @return
+     */
+    String formOpenjdkVersion() {
+        if (major != null) {
+            if (major > 8) {
+                def version = major;
+
+                if (minor && minor != 0 || security && security != 0) {
+                    version += "." + minor + "." + security
+                }
+
+                if (pre) {
+                    version += "-" + pre
+                }
+
+                if (build) {
+                    version += "+" + build
+                }
+
+                if (opt && opt != 0) {
+                    version += "-" + opt
+                }
+                return version
+            } else {
+                def version = major + "u" + security
+
+                if (build) {
+                    version += "-b" + build
+                }
+
+                return version
+            }
+        } else {
+            return null
+        }
+    }
 }

@@ -27,6 +27,8 @@ class ParseVersion {
             toPrint.each { arg ->
                 if (arg == "openjdk-semver") {
                     println(version.formOpenjdkSemver())
+                } else if (arg == "openjdk-version") {
+                    println(version.formOpenjdkVersion())
                 } else {
                     println(version.getProperty(arg))
                 }

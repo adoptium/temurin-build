@@ -23,6 +23,11 @@ OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.2+7, mixed mode)"""
 OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.3+9-201903122221)
 OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.3+9-201903122221, mixed mode)"""
 
+
+    def java12 = """"openjdk version "12" 2019-03-19
+OpenJDK Runtime Environment AdoptOpenJDK (build 12+12-201905010854)
+Eclipse OpenJ9 VM AdoptOpenJDK (build master-7634f2e3b, JRE 12 Windows Server 2012 R2 amd64-64-Bit Compressed References 20190501_63 (JIT enabled, AOT enabled)"""
+
     def parse(String version) {
         IndividualBuildConfig config = new IndividualBuildConfig([ADOPT_BUILD_NUMBER: 23]);
         def build = new Build(config, new ContextStub(), new EnvStub(), new CurrentBuildStub())
@@ -36,6 +41,7 @@ OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.3+9-201903122221, mixed mode)"
         Assertions.assertEquals(202, parsed.security)
         Assertions.assertEquals(8, parsed.build)
         Assertions.assertEquals("8.0.202+8.23", parsed.semver)
+        Assertions.assertEquals("8u202-b8", parsed.formOpenjdkVersion())
     }
 
     @Test
@@ -46,6 +52,7 @@ OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.3+9-201903122221, mixed mode)"
         Assertions.assertEquals(8, parsed.build)
         Assertions.assertEquals("201903130451", parsed.opt)
         Assertions.assertEquals("8.0.202+8.23.201903130451", parsed.semver)
+        Assertions.assertEquals("8u202-b8", parsed.formOpenjdkVersion())
     }
 
     @Test
@@ -65,6 +72,16 @@ OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.3+9-201903122221, mixed mode)"
         Assertions.assertEquals(9, parsed.build)
         Assertions.assertEquals("201903122221", parsed.opt)
         Assertions.assertEquals("11.0.3+9.23.201903122221", parsed.semver)
+        Assertions.assertEquals("11.0.3+9-201903122221", parsed.formOpenjdkVersion())
+    }
+
+    @Test
+    void parsesJava12String() {
+        def parsed = parse(java12);
+        Assertions.assertEquals(12, parsed.major)
+        Assertions.assertEquals(0, parsed.security)
+        Assertions.assertEquals(12, parsed.build)
+        Assertions.assertEquals("12+12-201905010854", parsed.formOpenjdkVersion())
     }
 
 }

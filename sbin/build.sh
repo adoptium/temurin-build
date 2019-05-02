@@ -138,7 +138,7 @@ getOpenJdkVersion() {
     fi
     version="8u${updateNum}-b${buildNum}"
   else
-    version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+    version=${BUILD_CONFIG[TAG]:-"$(parseJavaVersionString)"}
   fi
 
   echo ${version}
@@ -422,7 +422,12 @@ parseJavaVersionString() {
 
   cd "${LIB_DIR}"
   local gradleJavaHome=$(getGradleHome)
-  local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f openjdk-semver $ADOPT_BUILD_NUMBER | tr -d '\n')
+  local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f openjdk-version $ADOPT_BUILD_NUMBER | tr -d '\n')
+  if [ $version == 8* ]; then
+    version="jdk${version}"
+  else
+    version="jdk-${version}"
+  fi
   echo $version
 }
 
@@ -587,25 +592,6 @@ makeACopyOfLibFreeFontForMacOSX() {
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
       moveFreetypeLib "${DIRECTORY}/Contents/Home/lib"
       moveFreetypeLib "${DIRECTORY}/Contents/Home/jre/lib"
-    fi
-}
-
-
-# Get the tags from the git repo and choose the latest tag when there is more than one for the same SHA.
-# Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
-getFirstTagFromOpenJDKGitRepo()
-{
-    git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    revList=$(git rev-list --tags --topo-order --max-count=$GIT_TAGS_TO_SEARCH)
-    firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | grep -v "\-ga" | head -1)
-    # this may not find the correct tag if there are multiples on the commit so find commit
-    # that contains this tag and then use `git tag` to find the real tag
-    revList=$(git rev-list -n 1 $firstMatchingNameFromRepo --)
-    firstMatchingNameFromRepo=$(git tag --points-at $revList | grep -v "\-ga" | tail -1)
-    if [ -z "$firstMatchingNameFromRepo" ]; then
-      echo "WARNING: Failed to identify latest tag in the repository" 1>&2
-    else
-      echo "$firstMatchingNameFromRepo"
     fi
 }
 
