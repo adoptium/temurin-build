@@ -52,6 +52,12 @@ def buildConfigurations = [
                 test                : false
         ],
 
+        x64Solaris    : [
+                os                  : 'solaris',
+                arch                : 'x64',
+                test                : false
+        ],
+
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',

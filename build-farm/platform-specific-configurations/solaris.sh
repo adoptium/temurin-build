@@ -20,9 +20,17 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 
-export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-cups=/opt/csw/lib/ --with-cups-include=/usr/local/cups-1.5.4-src --with-freetype=/usr/local/ --with-memory-size=16000"
+if [ "${ARCHITECTURE}" == "x64" ]; then
+  export CUPS="--with-cups=/opt/sfw/cups"
+  export MEMORY=4000
+elif [ "${ARCHITECTURE}" == "sparcv9" ]; then
+  export CUPS="--with-cups=/opt/csw/lib/ --with-cups-include=/usr/local/cups-1.5.4-src"
+  export MEMORY=16000
+fi
 
-export PATH=/opt/solarisstudio12.3/bin/:/opt/csw/bin/:$PATH
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} ${CUPS} --with-freetype=/usr/local/ --with-memory-size=${MEMORY}"
+export PATH=/opt/solarisstudio12.3/bin/:/opt/csw/bin/:/usr/ccs/bin:$PATH
+
 export LC_ALL=C
 export HOTSPOT_DISABLE_DTRACE_PROBES=true
 export ENFORCE_CC_COMPILER_REV=5.12
