@@ -246,7 +246,7 @@ processArgumentsforSpecificArchitectures() {
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
       jvm_variant=zero
     else
-      jvm_variant=server
+      jvm_variant=server,client
     fi
     make_args_for_any_platform="DEBUG_BINARIES=true images"
     configure_args_for_any_platform="--with-jobs=${BUILD_CONFIG[NUM_PROCESSORS]}"
