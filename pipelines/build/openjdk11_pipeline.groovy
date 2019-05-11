@@ -37,7 +37,7 @@ def buildConfigurations = [
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
                 test                : [
-                        nightly: ['openjdktest', 'systemtest', 'perftest', 'externaltest', 'externaltest_extended'],
+                        nightly: ['openjdktest', 'systemtest', 'perftest', 'externaltest'],
                         release: ['openjdktest', 'systemtest', 'perftest', 'externaltest']
                 ],
                 configureArgs        : '--disable-ccache'

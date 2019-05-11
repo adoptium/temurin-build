@@ -43,7 +43,7 @@ def buildConfigurations = [
                         corretto: 'centos6',
                         openj9  : 'build-joyent-centos69-x64-1'
                 ],
-                test                : ['openjdktest', 'systemtest', 'perftest', 'externaltest', 'externaltest_extended']
+                test                : ['openjdktest', 'systemtest', 'perftest', 'externaltest']
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
