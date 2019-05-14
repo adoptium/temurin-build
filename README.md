@@ -283,6 +283,8 @@ To use the Docker commands without using the `--sudo` option, you will need to b
 in the Docker group which can be achieved with the following three commands
 (performed as `root`)
 
+**Security Warning!** Please read the [Linux Post Install](https://docs.docker.com/install/linux/linux-postinstall/) guidance before you do this. 
+
 1. `sudo groupadd docker`: creates the Docker group if it does not already exist
 2. `sudo gpasswd -a yourusernamehere docker`: adds a user to the Docker group
 3. `sudo service docker restart`: restarts the Docker service so the above changes can take effect
