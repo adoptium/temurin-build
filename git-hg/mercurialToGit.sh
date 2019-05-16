@@ -34,10 +34,32 @@ source import-common.sh
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 mkdir -p $SCRIPT_DIR/workspace
 WORKSPACE=$SCRIPT_DIR/workspace
+GIT_REPO=""
 
 # TODO generalise this for the non adopt build farm case
 function checkArgs() {
-  if [ "$1" -lt 1 ]; then
+
+  while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
+    opt="$1";
+    shift;
+
+    echo "Parsing opt: ${opt}"
+    if [ -n "${1-}" ]
+    then
+      echo "Possible opt arg: $1"
+    fi
+
+    case "$opt" in
+      "--" ) break 2;;
+
+      "--repo" | "-r" )
+      GIT_REPO="$1"; shift;;
+
+      *) echo >&2 "Invalid build.sh option: ${opt}"; exit 1;;
+    esac
+  done
+
+  if [ "$#" -lt 1 ]; then
      echo Usage: "$0" '[jdk-updates/jdk10u|jdk/jdk] (branch)'
      echo "Hg Repo supplied should match a repository in https://hg.openjdk.java.net/"
      echo "For example, to get the latest jdk development repo:"
@@ -58,7 +80,12 @@ function cloneGitHubRepo() {
   cd "$WORKSPACE" || exit 1
   # If we don't have a $GITHUB_REPO locally then clone it from AdoptOpenJDK/openjdk-$GITHUB_REPO.git
   if [ ! -d "$GITHUB_REPO" ] ; then
-    git clone git@github.com:AdoptOpenJDK/openjdk-"$GITHUB_REPO".git "$GITHUB_REPO" || exit 1
+    local repo="git@github.com:AdoptOpenJDK/openjdk-"$GITHUB_REPO".git"
+    if [ ! -z "$GIT_REPO" ]; then
+      repo="$GIT_REPO"
+    fi
+
+    git clone $repo "$GITHUB_REPO" || exit 1
   fi
 }
 
@@ -146,7 +173,7 @@ function performMergeIntoDevFromMaster() {
   git push origin dev || exit 1
 }
 
-checkArgs $#
+checkArgs $@
 #checkGitVersion
 installGitRemoteHg
 cloneGitHubRepo
