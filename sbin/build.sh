@@ -596,13 +596,21 @@ makeACopyOfLibFreeFontForMacOSX() {
 # Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
 getFirstTagFromOpenJDKGitRepo()
 {
-    git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    revList=$(git rev-list --tags --topo-order --max-count=$GIT_TAGS_TO_SEARCH)
-    firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | grep -v "\-ga" | head -1)
-    # this may not find the correct tag if there are multiples on the commit so find commit
-    # that contains this tag and then use `git tag` to find the real tag
-    revList=$(git rev-list -n 1 $firstMatchingNameFromRepo --)
-    firstMatchingNameFromRepo=$(git tag --points-at $revList | grep -v "\-ga" | tail -1)
+    # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon...
+    # Read OPENJDK_TAG value from that file..
+    local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] && [[ -f "${openj9_openjdk_tag_file}" ]]; then
+      firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
+    else
+      git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+      revList=$(git rev-list --tags --topo-order --max-count=$GIT_TAGS_TO_SEARCH)
+      firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | grep -v "\-ga" | head -1)
+      # this may not find the correct tag if there are multiples on the commit so find commit
+      # that contains this tag and then use `git tag` to find the real tag
+      revList=$(git rev-list -n 1 $firstMatchingNameFromRepo --)
+      firstMatchingNameFromRepo=$(git tag --points-at $revList | grep -v "\-ga" | tail -1)
+    fi
+
     if [ -z "$firstMatchingNameFromRepo" ]; then
       echo "WARNING: Failed to identify latest tag in the repository" 1>&2
     else
