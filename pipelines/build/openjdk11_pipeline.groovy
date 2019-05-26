@@ -61,6 +61,9 @@ def buildConfigurations = [
                         hotspot: 'win2012',
                         openj9:  'win2012&&mingw-standalone'
                 ],
+                buildArgs : [
+                        hotspot : '--jvm-variant client,server'
+                ],
                 test                : ['openjdktest']
         ],
 
