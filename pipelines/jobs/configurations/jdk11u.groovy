@@ -14,6 +14,9 @@ targetConfigurations = [
                 "hotspot",
                 "openj9"
         ],
+        "x64WindowsXL"  : [
+                "openj9"
+        ],
         "x32Windows"  : [
                 "hotspot"
         ],

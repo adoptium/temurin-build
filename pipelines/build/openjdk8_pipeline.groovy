@@ -58,6 +58,14 @@ def buildConfigurations = [
                 test                : ['openjdktest', 'systemtest']
         ],
 
+        x64WindowsXL    : [
+                os                   : 'windows',
+                arch                 : 'x64',
+                additionalNodeLabels : 'win2012&&mingw-cygwin',
+                test                 : ['openjdktest', 'systemtest'],
+                configureArgs        : '--with-noncompressedrefs'
+        ],
+
         x32Windows    : [
                 os                  : 'windows',
                 arch                : 'x86-32',
