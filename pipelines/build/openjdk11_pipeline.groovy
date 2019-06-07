@@ -51,6 +51,9 @@ def buildConfigurations = [
                         hotspot: 'win2012',
                         openj9:  'win2012&&vs2017'
                 ],
+                buildArgs : [
+                        hotspot : '--jvm-variant client,server'
+                ],
                 test                : ['openjdktest', 'perftest', 'systemtest']
         ],
 

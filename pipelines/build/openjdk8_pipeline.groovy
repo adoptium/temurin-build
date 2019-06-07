@@ -55,6 +55,9 @@ def buildConfigurations = [
                         corretto: 'win2008',
                         openj9  : 'win2012&&mingw-cygwin'
                 ],
+                buildArgs : [
+                        hotspot : '--jvm-variant client,server'
+                ],
                 test                : ['openjdktest', 'systemtest']
         ],
 
