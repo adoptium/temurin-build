@@ -63,6 +63,7 @@ def buildConfigurations = [
                 arch                 : 'x64',
                 additionalNodeLabels : 'win2012&&mingw-cygwin',
                 test                 : ['openjdktest', 'systemtest'],
+                additionalFileNameTag: "windowsXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
 

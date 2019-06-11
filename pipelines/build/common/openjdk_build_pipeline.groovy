@@ -88,6 +88,7 @@ class Build {
             switch (buildConfig.ADDITIONAL_FILE_NAME_TAG) {
                 case ~/.*linuxXL.*/: jobName += "_linuxXL"; break
                 case ~/.*macosXL.*/: jobName += "_macosXL"; break
+                case ~/.*windowsXL.*/: jobName += "_windowsXL"; break
             }
         }
         return "${jobName}"

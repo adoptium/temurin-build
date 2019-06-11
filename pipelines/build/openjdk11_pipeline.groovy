@@ -62,6 +62,7 @@ def buildConfigurations = [
                 arch                 : 'x64',
                 additionalNodeLabels : 'win2012&&vs2017',
                 test                 : ['openjdktest', 'perftest', 'systemtest'],
+                additionalFileNameTag: "windowsXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
 
