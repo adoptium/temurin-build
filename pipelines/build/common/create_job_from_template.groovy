@@ -65,7 +65,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>TARGET_OS</strong></dt><dd>windows, linux, aix...</dd>
                 <dt><strong>VARIANT</strong></dt><dd>hotspot, openj9...</dd>
                 <dt><strong>JAVA_TO_BUILD</strong></dt><dd>i.e jdk11u, jdk12u...</dd>
-                <dt><strong>TEST_LIST</strong></dt><dd>Comma seperated list of tests, i.e: openjdktest,perftest,systemtest</dd>
+                <dt><strong>TEST_LIST</strong></dt><dd>Comma seperated list of tests, i.e: sanity.openjdk,sanity.perf,sanity.system</dd>
                 <dt><strong>SCM_REF</strong></dt><dd>Source code ref to build, i.e branch, tag, commit id</dd>
                 <dt><strong>BUILD_ARGS</strong></dt><dd>args to pass to makejdk-any-platform.sh</dd>
                 <dt><strong>NODE_LABEL</strong></dt><dd>Labels of node to build on</dd>

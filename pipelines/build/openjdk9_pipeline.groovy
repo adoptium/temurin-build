@@ -17,14 +17,14 @@ def buildConfigurations = [
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
-                test                : ['openjdktest', 'systemtest']
+                test                : ['sanity.openjdk', 'sanity.system']
         ],
 
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
-                test                : ['openjdktest', 'systemtest', 'externaltest']
+                test                : ['sanity.openjdk', 'sanity.system', 'sanity.external']
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -35,7 +35,7 @@ def buildConfigurations = [
                         hotspot: 'win2012',
                         openj9:  'win2012&&mingw-cygwin'
                 ],
-                test                : ['openjdktest']
+                test                : ['sanity.openjdk']
         ],
 
         ppc64Aix    : [
@@ -48,7 +48,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 's390x',
                 additionalNodeLabels: 'rhel7',
-                test                : ['openjdktest', 'systemtest']
+                test                : ['sanity.openjdk', 'sanity.system']
         ],
 
         sparcv9Solaris    : [
@@ -61,20 +61,20 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 additionalNodeLabels: 'centos7',
-                test                : ['openjdktest', 'systemtest']
+                test                : ['sanity.openjdk', 'sanity.system']
         ],
 
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                : ['openjdktest']
+                test                : ['sanity.openjdk']
         ],
 
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['openjdktest']
+                test                : ['sanity.openjdk']
         ],
 
         linuxXL    : [

@@ -78,17 +78,12 @@ class Build {
         }
 
         def os = buildConfig.TARGET_OS
-        if (os == "mac") {
-            os = "macos"
-        }
 
-        def jobName = "openjdk${number}_${variant}_${testType}_${arch}_${os}"
+        def jobName = "Test_openjdk${number}_${variant}_${testType}_${arch}_${os}"
 
         if (buildConfig.ADDITIONAL_FILE_NAME_TAG) {
             switch (buildConfig.ADDITIONAL_FILE_NAME_TAG) {
-                case ~/.*linuxXL.*/: jobName += "_linuxXL"; break
-                case ~/.*macosXL.*/: jobName += "_macosXL"; break
-                case ~/.*windowsXL.*/: jobName += "_windowsXL"; break
+                case ~/.*XL.*/: jobName += "_xl"; break
             }
         }
         return "${jobName}"
@@ -99,13 +94,13 @@ class Build {
 
         List testList = buildConfig.TEST_LIST
         testList.each { testType ->
-            // For each requested test, i.e 'openjdktest', 'systemtest', 'perftest', 'externaltest', call test job
+            // For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
             try {
                 context.println "Running test: ${testType}"
                 testStages["${testType}"] = {
                     context.stage("${testType}") {
 
-                        // example jobName: openjdk10_hs_externaltest_x86-64_linux
+                        // example jobName: Test_openjdk11_hs_sanity.system_ppc64_aix
                         def jobName = determineTestJobName(testType)
 
                         def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
