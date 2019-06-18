@@ -33,7 +33,7 @@ then
 
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
   then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/progra~2/OpenSSL --enable-openssl-bundling"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1-x86_32 --enable-openssl-bundling"
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
@@ -81,7 +81,7 @@ then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="$PATH:/c/cygwin64/bin"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache  --with-openssl=/cygdrive/c/progra~1/OpenSSL --enable-openssl-bundling"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache  --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1-x86_64 --enable-openssl-bundling"
     elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
     then
       TOOLCHAIN_VERSION="2013"
@@ -94,11 +94,11 @@ then
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
     then
       TOOLCHAIN_VERSION="2017"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/progra~1/OpenSSL --enable-openssl-bundling"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1-x86_64 --enable-openssl-bundling"
     elif [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ]
     then
       TOOLCHAIN_VERSION="2017"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/progra~1/OpenSSL --enable-openssl-bundling"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1-x86_64 --enable-openssl-bundling"
     fi
     # LLVM needs to be before cygwin as at least one machine has clang in cygwin #813
     # NASM required for OpenSSL support as per #604
