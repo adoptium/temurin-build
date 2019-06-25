@@ -33,6 +33,9 @@ source "$SCRIPT_DIR/common/constants.sh"
 # Set default versions for 3 libraries that OpenJDK relies on to build
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
 ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f08783329157e8dd68b3de0c096de6d724}
+FREEMARKER_LIB_CHECKSUM=${FREEMARKER_LIB_CHECKSUM:-da0668189daef7da300e1734defece130c8635ad1a20d580422326eab85f84e6}
+FREETYPE_LIB_CHECKSUM=${FREETYPE_LIB_CHECKSUM:-ec391504e55498adceb30baceebd147a6e963f636eb617424bcfc47a169898ce}
+
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.28}
 
@@ -166,11 +169,27 @@ checkingAndDownloadingAlsa()
   fi
 }
 
-checkFingerPrint() {
+checkFingerprint() {
   local sigFile="$1"
   local fileName="$2"
   local publicKey="$3"
   local expectedFingerPrint="$4"
+  local expectedChecksum="$4"
+
+  if ! [ -x "$(command -v gpg)" ]; then
+    echo "WARNING: GPG not present, resorting to checksum"
+    local actualChecksum=$(sha256sum ${fileName} | cut -f1 -d' ')
+
+    if [ "${actualChecksum}" != "${expectedChecksum}" ];
+    then
+      echo "Failed to verify checksum on ${fileName} ${url}"
+
+      echo "Expected ${expectedChecksum} got ${actualChecksum}"
+      exit 1
+    fi
+
+    return
+  fi
 
   rm /tmp/public_key.gpg || true
   gpg --output /tmp/public_key.gpg --dearmor "${SCRIPT_DIR}/sig_check/${publicKey}.asc"
@@ -178,6 +197,8 @@ checkFingerPrint() {
   gpg -v --no-default-keyring --keyring "/tmp/public_key.gpg" --verify $sigFile $fileName
 
   local verify=$(gpg -v --no-default-keyring --keyring "/tmp/public_key.gpg" --verify $sigFile $fileName 2>&1)
+
+  # grep out and trim fingerprint from line of the form "Primary key fingerprint: 58E0 C111 E39F 5408 C5D3  EC76 C1A6 0EAC E707 FDA5"
   local fingerprint=$(echo $verify | grep "Primary key fingerprint" | egrep -o "([0-9A-F]{4} ? ?){10}" | sed -e 's/[[:space:]]*$//')
 
   if [ "$fingerprint" != "$expectedFingerPrint" ]; then
@@ -202,7 +223,7 @@ checkingAndDownloadingFreemarker()
     wget -nc --no-check-certificate "https://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
     wget "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc"
 
-    checkFingerPrint "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" "freemarker" "13AC 2213 964A BE1D 1C14 7C0E 1939 A252 0BAB 1D90"
+    checkFingerprint "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" "freemarker" "13AC 2213 964A BE1D 1C14 7C0E 1939 A252 0BAB 1D90" "${FREEMARKER_LIB_CHECKSUM}"
 
     mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/" || exit
     tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/"
@@ -223,14 +244,14 @@ downloadFile() {
 
   if [ $# -ge 3 ]; then
 
-    local checksum="$3"
+    local expectedChecksum="$3"
     local actualChecksum=$(sha256sum ${targetFileName} | cut -f1 -d' ')
 
-    if [ "${actualChecksum}" != "${checksum}" ];
+    if [ "${actualChecksum}" != "${expectedChecksum}" ];
     then
       echo "Failed to verify checksum on ${targetFileName} ${url}"
 
-      echo "Expected ${checksum} got ${actualChecksum}"
+      echo "Expected ${expectedChecksum} got ${actualChecksum}"
       exit 1
     fi
   fi
@@ -249,7 +270,7 @@ checkingAndDownloadingFreeType()
   else
     downloadFile "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
     downloadFile "freetype.tar.gz.sig" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz.sig"
-    checkFingerPrint "freetype.tar.gz.sig" "freetype.tar.gz" "freetype" "58E0 C111 E39F 5408 C5D3 EC76 C1A6 0EAC E707 FDA5"
+    checkFingerprint "freetype.tar.gz.sig" "freetype.tar.gz" "freetype" "58E0 C111 E39F 5408 C5D3 EC76 C1A6 0EAC E707 FDA5" "${FREETYPE_LIB_CHECKSUM}"
 
     rm -rf "./freetype" || true
     mkdir -p "freetype" || true
