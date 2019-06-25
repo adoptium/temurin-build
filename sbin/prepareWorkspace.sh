@@ -174,7 +174,7 @@ checkFingerprint() {
   local fileName="$2"
   local publicKey="$3"
   local expectedFingerprint="$4"
-  local expectedChecksum="$4"
+  local expectedChecksum="$5"
 
   if ! [ -x "$(command -v gpg)" ]; then
     echo "WARNING: GPG not present, resorting to checksum"
