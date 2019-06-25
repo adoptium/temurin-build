@@ -173,7 +173,7 @@ checkFingerprint() {
   local sigFile="$1"
   local fileName="$2"
   local publicKey="$3"
-  local expectedFingerPrint="$4"
+  local expectedFingerprint="$4"
   local expectedChecksum="$4"
 
   if ! [ -x "$(command -v gpg)" ]; then
@@ -201,9 +201,9 @@ checkFingerprint() {
   # grep out and trim fingerprint from line of the form "Primary key fingerprint: 58E0 C111 E39F 5408 C5D3  EC76 C1A6 0EAC E707 FDA5"
   local fingerprint=$(echo $verify | grep "Primary key fingerprint" | egrep -o "([0-9A-F]{4} ? ?){10}" | sed -e 's/[[:space:]]*$//')
 
-  if [ "$fingerprint" != "$expectedFingerPrint" ]; then
+  if [ "$fingerprint" != "$expectedFingerprint" ]; then
     echo "Failed to verify signature of $fileName"
-    echo "expected \"$expectedFingerPrint\" got \"$fingerprint\""
+    echo "expected \"$expectedFingerprint\" got \"$fingerprint\""
     exit 1
   fi
 }
