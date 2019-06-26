@@ -171,7 +171,7 @@ checkingAndDownloadingAlsa()
 
 sha256File() {
   if [ -x "$(command -v shasum)" ]; then
-    cat $1 | shasum -a 256 | cut -f1 -d' '
+    (shasum -a 256 | cut -f1 -d' ') < $1
   else
     sha256sum $1 | cut -f1 -d' '
   fi
@@ -253,7 +253,7 @@ downloadFile() {
   if [ $# -ge 3 ]; then
 
     local expectedChecksum="$3"
-    local actualChecksum=$(sha256File ${targetFileName} | cut -f1 -d' ')
+    local actualChecksum=$(sha256File ${targetFileName})
 
     if [ "${actualChecksum}" != "${expectedChecksum}" ];
     then
