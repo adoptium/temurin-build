@@ -169,6 +169,14 @@ checkingAndDownloadingAlsa()
   fi
 }
 
+sha256File() {
+  if [ -x "$(command -v shasum)" ]; then
+    cat $1 | shasum -a 256 | cut -f1 -d' '
+  else
+    sha256sum $1 | cut -f1 -d' '
+  fi
+}
+
 checkFingerprint() {
   local sigFile="$1"
   local fileName="$2"
@@ -178,7 +186,7 @@ checkFingerprint() {
 
   if ! [ -x "$(command -v gpg)" ]; then
     echo "WARNING: GPG not present, resorting to checksum"
-    local actualChecksum=$(sha256sum ${fileName} | cut -f1 -d' ')
+    local actualChecksum=$(sha256File ${fileName})
 
     if [ "${actualChecksum}" != "${expectedChecksum}" ];
     then
@@ -245,7 +253,7 @@ downloadFile() {
   if [ $# -ge 3 ]; then
 
     local expectedChecksum="$3"
-    local actualChecksum=$(sha256sum ${targetFileName} | cut -f1 -d' ')
+    local actualChecksum=$(sha256File ${targetFileName} | cut -f1 -d' ')
 
     if [ "${actualChecksum}" != "${expectedChecksum}" ];
     then
