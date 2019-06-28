@@ -200,11 +200,12 @@ checkFingerprint() {
   fi
 
   rm /tmp/public_key.gpg || true
-  gpg --output /tmp/public_key.gpg --dearmor "${SCRIPT_DIR}/sig_check/${publicKey}.asc"
 
-  gpg -v --no-default-keyring --keyring "/tmp/public_key.gpg" --verify $sigFile $fileName
+  gpg --no-options --output /tmp/public_key.gpg --dearmor "${SCRIPT_DIR}/sig_check/${publicKey}.asc"
 
-  local verify=$(gpg -v --no-default-keyring --keyring "/tmp/public_key.gpg" --verify $sigFile $fileName 2>&1)
+  local verify=$(gpg --no-options -v --no-default-keyring --keyring "/tmp/public_key.gpg" --verify $sigFile $fileName 2>&1)
+
+  echo $verify
 
   # grep out and trim fingerprint from line of the form "Primary key fingerprint: 58E0 C111 E39F 5408 C5D3  EC76 C1A6 0EAC E707 FDA5"
   local fingerprint=$(echo $verify | grep "Primary key fingerprint" | egrep -o "([0-9A-F]{4} ? ?){10}" | sed -e 's/[[:space:]]*$//')
