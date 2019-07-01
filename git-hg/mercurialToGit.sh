@@ -200,7 +200,8 @@ function performMergeIntoReleaseFromMaster() {
 
   if ! git checkout -f release ; then
     if ! git rev-parse -q --verify "origin/release" ; then
-      git checkout -b release || exit 1
+      currentBuildTag=$(echo "$buildTags" | eval "$jdk11plus_sort_tags_cmd" | tail -1 || exit 1)
+      git checkout -b release $currentBuildTag || exit 1
     else
       git checkout -b release origin/release || exit 1
     fi
