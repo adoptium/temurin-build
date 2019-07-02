@@ -199,8 +199,7 @@ processArgumentsforSpecificArchitectures() {
       jvm_variant=server
     fi
 
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || \
-      [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 12 ]; then
       build_full_name=linux-s390x-${jvm_variant}-release
     else
       build_full_name=linux-s390x-normal-${jvm_variant}-release
