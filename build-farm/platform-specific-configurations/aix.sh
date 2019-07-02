@@ -42,7 +42,9 @@ if [ "$JAVA_FEATURE_VERSION" -gt 8 ]; then
     if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       export $BOOT_JDK_VARIABLE="$PWD/jdk-$BOOT_JDK_VERSION"
       if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE/bin")" ]; then
-        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=aix&release=latest&arch=${ARCHITECTURE}&heap_size=normal&type=jdk&openjdk_impl=openj9" | tar xpzf - --strip-components=1 -C "$(eval echo "\$$BOOT_JDK_VARIABLE")"
+        bootDir="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+        mkdir -p "${bootDir}"
+        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=aix&release=latest&arch=${ARCHITECTURE}&heap_size=normal&type=jdk&openjdk_impl=openj9" | tar xpzf - --strip-components=1 -C "${bootDir}"
       fi
     fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
