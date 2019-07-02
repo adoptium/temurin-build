@@ -389,8 +389,6 @@ function configDefaults() {
   # build number e.g. b03
   BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]:-""}
 
-  local FEATURE_NUMBER=$(echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | tr -d "[:alpha:]")
-
   # feature number e.g. 11
   BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]:-""}
 
