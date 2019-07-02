@@ -392,7 +392,7 @@ function configDefaults() {
   local FEATURE_NUMBER=$(echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | tr -d "[:alpha:]")
 
   # feature number e.g. 11
-  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${FEATURE_NUMBER:-14}
+  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]:-""}
 
   # Build variant, e.g. openj9, defaults to "hotspot"
   BUILD_CONFIG[BUILD_VARIANT]=${BUILD_CONFIG[BUILD_VARIANT]:-"${BUILD_VARIANT_HOTSPOT}"}

@@ -31,6 +31,12 @@ function setOpenJdkVersion() {
   if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} == *u ]]; then
     BUILD_CONFIG[OPENJDK_CORE_VERSION]=${BUILD_CONFIG[OPENJDK_FOREST_NAME]%?}
   fi
+
+  local featureNumber=$(echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | tr -d "[:alpha:]")
+
+  # feature number e.g. 11
+  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber:-14}
+
 }
 
 function crossPlatformRealPath() {
