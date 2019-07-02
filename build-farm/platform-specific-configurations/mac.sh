@@ -43,14 +43,14 @@ if [ "$JAVA_FEATURE_VERSION" -gt 8 ]; then
     BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
     if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       export $BOOT_JDK_VARIABLE="$PWD/jdk-$BOOT_JDK_VERSION"
-      if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE/bin")" ]; then
-        downloadArch="${ARCHITECTURE}"
-        [ "$downloadArch" == "arm" ] && downloadArch="arm32"
+      if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE/Contents/Home/bin")" ]; then
         mkdir -p "$(eval echo "\$$BOOT_JDK_VARIABLE")"
-        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=mac&release=latest&arch=${downloadArch}&heap_size=normal&type=jdk&openjdk_impl=hotspot" | tar xpzf - --strip-components=1 -C "$(eval echo "\$$BOOT_JDK_VARIABLE")"
+        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=mac&release=latest&arch=${ARCHITECTURE}&heap_size=normal&type=jdk&openjdk_impl=hotspot" | tar xpzf - --strip-components=1 -C "$(eval echo "\$$BOOT_JDK_VARIABLE")"
       fi
+      export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE/Contents/Home")"
+    else
+      export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
     fi
-    export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
