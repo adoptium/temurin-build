@@ -157,7 +157,7 @@ configuringVersionStringParameter()
   echo "OpenJDK repo tag is ${openJdkVersion}"
 
   # --with-milestone=fcs deprecated at jdk11, removed at jdk12
-  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK12_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDKHEAD_CORE_VERSION}" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 12 ]; then
     addConfigureArg "--with-milestone=" "fcs"
   fi
 
