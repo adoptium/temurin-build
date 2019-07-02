@@ -23,6 +23,15 @@ PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export OPERATING_SYSTEM
 OPERATING_SYSTEM=$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')
 
+export JAVA_FEATURE_VERSION
+JAVA_FEATURE_VERSION=$(echo "${JAVA_TO_BUILD}" | tr -d "[:alpha:]")
+
+if [ -z "${JAVA_FEATURE_VERSION}" ]
+then
+    # THIS NEEDS TO BE UPDATED WHEN HEAD UPDATES (the latest tag that jdk/jdk contains)
+    JAVA_FEATURE_VERSION=14
+fi
+
 echo "BUILD TYPE: "
 echo "VERSION: ${JAVA_TO_BUILD}"
 echo "ARCHITECTURE ${ARCHITECTURE}"
@@ -53,7 +62,8 @@ case "${JDK_BOOT_VERSION}" in
       "10")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK10_BOOT_DIR}";;
       "11")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK11_BOOT_DIR}";;
       "12")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK12_BOOT_DIR}";;
-      *)    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK12_BOOT_DIR}";;
+      "13")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK13_BOOT_DIR}";;
+      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK14_BOOT_DIR}";;
 esac
 
 if [ ! -d "${JDK_BOOT_DIR}" ]

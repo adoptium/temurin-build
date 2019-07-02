@@ -61,7 +61,7 @@ then
     then
       TOOLCHAIN_VERSION="2013"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+    elif [ "$JAVA_FEATURE_VERSION" -gt 11 ]
     then
       TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
@@ -91,11 +91,7 @@ then
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
-    then
-      TOOLCHAIN_VERSION="2017"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1-x86_64 --enable-openssl-bundling"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ]
+    elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
     then
       TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1-x86_64 --enable-openssl-bundling"
@@ -118,11 +114,7 @@ then
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
-    then
-      TOOLCHAIN_VERSION="2017"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
+    elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
     then
       TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
