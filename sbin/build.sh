@@ -209,7 +209,8 @@ configuringVersionStringParameter()
     # Set the build number (e.g. b04), this gets passed in from the calling script
     local buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
     if [ -z "${buildNumber}" ]; then
-      buildNumber=$(echo "${openJdkVersion}" | cut -f2 -d"+")
+      # Get build number (eg.10) from tag of potential format "jdk-11.0.4+10_adopt"
+      buildNumber=$(echo "${openJdkVersion}" | cut -d_ -f1 | cut -f2 -d"+")
     fi
 
     if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
