@@ -37,3 +37,5 @@ export BUILD_VARIANT_CORRETTO="corretto"
 export BUILD_VARIANT_SAP="SapMachine"
 
 export GIT_TAGS_TO_SEARCH=100
+
+export ADOPTOPENJDK_MD_MARKER_FILE="AdoptOpenJDK.md"

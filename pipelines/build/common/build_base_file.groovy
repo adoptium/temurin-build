@@ -412,7 +412,10 @@ return {
         if (overridePublishName) {
             publishName = overridePublishName
         } else if (release) {
-            publishName = scmReference
+            // Default to scmReference, remove any trailing "_adopt" from the tag if present
+            if (scmReference) {
+                publishName = scmReference.minus("_adopt\$")
+            }
         }
 
         return new Builder(
