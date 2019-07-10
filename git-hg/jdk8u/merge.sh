@@ -22,8 +22,7 @@ function initRepo() {
   git clone $MIRROR/root/ .
   git checkout master
   git reset --hard "$tag"
-  git remote add "upstream" git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
-  git remote add "root" "$MIRROR/root/"
+  addRemotes
 
   for module in "${MODULES[@]}" ; do
       cd "$MIRROR/$module/";
@@ -39,6 +38,16 @@ function initRepo() {
   done
 
   git fetch upstream --tags
+}
+
+function addRemotes() {
+  if ! git config remote.upstream.url > /dev/null; then
+    git remote add "upstream" git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
+  fi
+
+  if ! git config remote.root.url > /dev/null; then
+    git remote add "root" "$MIRROR/root/"
+  fi
 }
 
 function inititialCheckin() {
@@ -161,6 +170,8 @@ fi
 if [ "$doReset" == "true" ]; then
   initRepo $tag
 fi
+
+addRemotes
 
 if [ "$doInit" == "true" ]; then
   inititialCheckin $tag
