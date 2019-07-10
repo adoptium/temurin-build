@@ -41,6 +41,8 @@ function initRepo() {
 }
 
 function addRemotes() {
+
+  cd "$REPO"
   if ! git config remote.upstream.url > /dev/null; then
     git remote add "upstream" git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
   fi
