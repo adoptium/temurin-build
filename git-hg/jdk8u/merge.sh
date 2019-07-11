@@ -50,6 +50,9 @@ function addRemotes() {
   if ! git config remote.root.url > /dev/null; then
     git remote add "root" "$MIRROR/root/"
   fi
+
+  git fetch --all
+  git fetch upstream --tags
 }
 
 function inititialCheckin() {
