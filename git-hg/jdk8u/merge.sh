@@ -183,7 +183,7 @@ while getopts "ab:irts:T:u" opt; do
             doReset="true"
             doInit="true"
             ;;
-        R)
+        l)
             doRebuildLocalRepo="true"
             ;;
         s)
