@@ -171,7 +171,7 @@ function fixAutoConfigure() {
     git commit -a --no-edit
 }
 
-while getopts "ab:irts:T:u" opt; do
+while getopts "ab:irtls:T:u" opt; do
     case "${opt}" in
         a)
             acceptUpstream="true"
@@ -302,3 +302,4 @@ done
 
 git prune
 git gc
+
