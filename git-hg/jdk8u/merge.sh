@@ -136,7 +136,7 @@ function rebuildLocalRepo() {
     git clone $UPSTREAM_GIT_REPO .
     git checkout master
 
-    # Step 3 Retup remotes
+    # Step 3 Setup remotes
     addRemotes
 
     # Repoint origin from the upstream repo to root module
