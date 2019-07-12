@@ -45,7 +45,7 @@ function addRemotes() {
 
   cd "$REPO"
   if ! git config remote.upstream.url > /dev/null; then
-    git remote add "upstream" git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
+    git remote add "upstream" $UPSTREAM_GIT_REPO
   fi
 
   if ! git config remote.root.url > /dev/null; then
@@ -111,6 +111,7 @@ function updateRepo() {
 
 # Builds a local repo on a new machine by pulling down the existing remote repo
 function rebuildLocalRepo() {
+    hgRepo=$1
 
     # Steps required to build a new host
     #
@@ -120,7 +121,7 @@ function rebuildLocalRepo() {
     #
     # 3. Set up remotes on $REPO
     #     Remotes should look as follows:
-    #       upstream: git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
+    #       upstream: git@github.com:AdoptOpenJDK/openjdk-jdk8u.git (or aarch)
     #       root:    "$MIRROR/root/"
     #       origin:  "$MIRROR/root/"
     #
@@ -132,7 +133,7 @@ function rebuildLocalRepo() {
     rm -rf "$REPO" || true
     mkdir -p "$REPO"
     cd "$REPO"
-    git clone git@github.com:AdoptOpenJDK/openjdk-jdk8u.git .
+    git clone $UPSTREAM_GIT_REPO .
     git checkout master
 
     # Step 3 Retup remotes
@@ -206,7 +207,7 @@ done
 shift $((OPTIND-1))
 
 if [ "$doRebuildLocalRepo" == "true" ]; then
-    rebuildLocalRepo
+    rebuildLocalRepo $hgRepo
     exit
 fi
 
