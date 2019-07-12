@@ -302,3 +302,4 @@ done
 
 git prune
 git gc
+
