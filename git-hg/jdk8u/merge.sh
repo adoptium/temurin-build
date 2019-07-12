@@ -5,6 +5,7 @@ set -exu
 source constants.sh
 
 acceptUpstream="false"
+doRebuildLocalRepo="false"
 doInit="false"
 doReset="false"
 doTagging="false"
@@ -108,6 +109,43 @@ function updateRepo() {
 
 }
 
+# Builds a local repo on a new machine by pulling down the existing remote repo
+function rebuildLocalRepo() {
+
+    # Steps required to build a new host
+    #
+    # 1. Clone upstream mirrors (done by updateMirrors function)
+    #
+    # 2. Pull adopt repo down into $REPO
+    #
+    # 3. Set up remotes on $REPO
+    #     Remotes should look as follows:
+    #       upstream: git@github.com:AdoptOpenJDK/openjdk-jdk8u.git
+    #       root:    "$MIRROR/root/"
+    #       origin:  "$MIRROR/root/"
+    #
+
+    # Step 1 Clone mirrors
+    updateMirrors $hgRepo
+
+    # Step 2, Reclone upstream repo
+    rm -rf "$REPO" || true
+    mkdir -p "$REPO"
+    cd "$REPO"
+    git clone git@github.com:AdoptOpenJDK/openjdk-jdk8u.git .
+    git checkout master
+
+    # Step 3 Retup remotes
+    addRemotes
+
+    # Repoint origin from the upstream repo to root module
+    cd "$REPO"
+    git remote set-url origin "$MIRROR/root/"
+
+    git fetch --all
+    git fetch --tags
+}
+
 # We pass in the repo we want to mirror as the first arg
 function updateMirrors() {
 
@@ -144,6 +182,9 @@ while getopts "ab:irts:T:u" opt; do
             doReset="true"
             doInit="true"
             ;;
+        R)
+            doRebuildLocalRepo="true"
+            ;;
         s)
             hgRepo=${OPTARG}
             ;;
@@ -164,6 +205,11 @@ while getopts "ab:irts:T:u" opt; do
 done
 shift $((OPTIND-1))
 
+if [ "$doRebuildLocalRepo" == "true" ]; then
+    rebuildLocalRepo
+    exit
+fi
+
 if [ "$doUpdate" == "true" ]; then
   updateMirrors $hgRepo
   exit
@@ -172,8 +218,6 @@ fi
 if [ "$doReset" == "true" ]; then
   initRepo $tag
 fi
-
-addRemotes
 
 if [ "$doInit" == "true" ]; then
   inititialCheckin $tag
