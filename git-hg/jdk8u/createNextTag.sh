@@ -32,8 +32,8 @@ cd "$REPO"
 git reset --hard
 git merge --abort || true
 git am --abort || true
-git fetch --all
-if git show-ref --quiet release; then
+
+if git show-ref refs/heads/release; then
     git checkout release
 else
     git checkout -b release upstream/release
