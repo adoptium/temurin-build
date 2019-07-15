@@ -81,7 +81,7 @@ function inititialCheckin() {
 
   for module in "${MODULES[@]}" ; do
       cd "$REPO"
-      /usr/lib/git-core/git-subtree add --prefix=$module "$MIRROR/$module/" $tag
+      git subtree add --prefix=$module "$MIRROR/$module/" $tag
   done
 
   cd "$REPO"
@@ -267,7 +267,7 @@ fi
 cd "$REPO"
 for module in "${MODULES[@]}" ; do
     set +e
-    /usr/lib/git-core/git-subtree pull -q -m "Merge $module at $tag" --prefix=$module "$MIRROR/$module/" $tag
+    git subtree pull -q -m "Merge $module at $tag" --prefix=$module "$MIRROR/$module/" $tag
 
     if [ $? != 0 ]; then
       if [ "$acceptUpstream" == "true" ]; then
