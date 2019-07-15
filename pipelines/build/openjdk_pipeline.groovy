@@ -23,7 +23,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.external']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.external', 'special.functional']
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
