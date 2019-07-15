@@ -23,14 +23,14 @@ def buildConfigurations = [
                         corretto: 'build-macstadium-macos1010-1',
                         openj9  : 'build-macstadium-macos1010-2'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
 
         x64MacXL      : [
                 os                   : 'mac',
                 arch                 : 'x64',
                 additionalNodeLabels : 'build-macstadium-macos1010-2',
-                test                 : ['sanity.openjdk', 'sanity.system', 'sanity.perf'],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -43,7 +43,7 @@ def buildConfigurations = [
                         corretto: 'centos6',
                         openj9  : 'build-joyent-centos69-x64-1'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -55,14 +55,14 @@ def buildConfigurations = [
                         corretto: 'win2008',
                         openj9  : 'win2012&&mingw-cygwin'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
 
         x64WindowsXL    : [
                 os                   : 'windows',
                 arch                 : 'x64',
                 additionalNodeLabels : 'win2012&&mingw-cygwin',
-                test                 : ['sanity.openjdk', 'sanity.system'],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "windowsXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -86,14 +86,14 @@ def buildConfigurations = [
                 arch: 'ppc64',
                 test: [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system']
+                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ]
         ],
 
         s390xLinux    : [
                 os  : 'linux',
                 arch: 's390x',
-                test: ['sanity.openjdk', 'sanity.system']
+                test: ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
 
         sparcv9Solaris: [
@@ -111,7 +111,7 @@ def buildConfigurations = [
         ppc64leLinux  : [
                 os  : 'linux',
                 arch: 'ppc64le',
-                test: ['sanity.openjdk', 'sanity.system']
+                test: ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
 
         arm32Linux    : [
@@ -126,7 +126,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk', 'sanity.system']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
 
         linuxXL       : [
@@ -134,7 +134,7 @@ def buildConfigurations = [
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
                 additionalFileNameTag: "linuxXL",
-                test                 : ['sanity.openjdk', 'sanity.system'],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 configureArgs        : '--with-noncompressedrefs'
         ],
 ]
