@@ -32,7 +32,7 @@ cd "$REPO"
 git reset --hard
 git merge --abort || true
 git am --abort || true
-git fetch --all
+
 if git show-ref --quiet release; then
     git checkout release
 else
