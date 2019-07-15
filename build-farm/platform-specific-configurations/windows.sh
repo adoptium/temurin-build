@@ -96,6 +96,16 @@ then
       TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1-x86_64 --enable-openssl-bundling"
     fi
+
+    CUDA_VERSION=9.0
+    CUDA_HOME="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v$CUDA_VERSION"
+    # use cygpath to map to 'short' names (without spaces)
+    CUDA_HOME=$(cygpath -ms "$CUDA_HOME")
+    if [ -f "$(cygpath -u $CUDA_HOME/include/cuda.h)" ]
+    then
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-cuda --with-cuda=$CUDA_HOME"
+    fi
+
     # LLVM needs to be before cygwin as at least one machine has clang in cygwin #813
     # NASM required for OpenSSL support as per #604
     export PATH="/cygdrive/c/Program Files/LLVM/bin:/usr/bin:/cygdrive/c/openjdk/nasm-$OPENJ9_NASM_VERSION:$PATH"
