@@ -126,7 +126,7 @@ function rebuildLocalRepo() {
     #     Remotes should look as follows:
     #       upstream: git@github.com:AdoptOpenJDK/openjdk-jdk8u.git (or aarch)
     #       root:     "$MIRROR/root/"
-    #       origin:   git@github.com:AdoptOpenJDK/openjdk-jdk8u.git (or aarch)
+    #       origin:   "$MIRROR/root/"
     #
 
     # Step 1 Clone mirrors
@@ -142,15 +142,17 @@ function rebuildLocalRepo() {
     # Step 3 Setup remotes
     addRemotes
 
+    # Remove any incorrect local tags we have
+    git tag -l | xargs git tag -d
+    git fetch --tags
+
     # Ensure origin is correct
     cd "$REPO"
     git remote set-url origin "$UPSTREAM_GIT_REPO"
 
-    # Remove any incorrect local tags we have
-    git tag -l | xargs git tag -d
-
-    git fetch --all
-    git fetch --tags
+    # Repoint origin from the upstream repo to root module
+    cd "$REPO"
+    git remote set-url origin "$MIRROR/root/"
 }
 
 # We pass in the repo we want to mirror as the first arg
