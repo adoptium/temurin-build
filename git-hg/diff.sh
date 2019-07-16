@@ -43,7 +43,7 @@ git_repo_version=$1
 hg_root_forest=${2:-${1}}                  # for backwards compatibility
 hg_repo_version=${3:-${hg_root_forest}}    # for backwards compatibility
 tag=${4:-} # tag to check
-expectedDiffLimit=${5:-0} # expected diff limit
+expectedDiffLimit=${5:-0} # Number of lines that the full-diff file can be before an error is reported
 
 function cleanUp() {
   rm -rf openjdk-git openjdk-hg || true
