@@ -25,11 +25,11 @@
 #
 ################################################################################
 
-set -euxo
+set -euxo pipefail
 
 function checkArgs() {
   if [ $# -lt 2 ]; then
-     echo Usage: "$0" '[AdoptOpenJDK Git Repo Version] [OpenJDK Mercurial Root Forest Version]'
+     echo Usage: "$0" '[AdoptOpenJDK Git Repo Version] [OpenJDK Mercurial Root Forest Name] [OpenJDK Mercurial Root Forest Version] [Tag Name] [Allowed Change Size]'
      echo ""
      echo "e.g. ./diff.sh jdk8u jdk8u jdk8u or ./diff.sh jdk9u jdk-updates jdk9u"
      echo ""
@@ -43,6 +43,7 @@ git_repo_version=$1
 hg_root_forest=${2:-${1}}                  # for backwards compatibility
 hg_repo_version=${3:-${hg_root_forest}}    # for backwards compatibility
 tag=${4:-} # tag to check
+expectedDiffLimit=${5:-0} # expected diff limit
 
 function cleanUp() {
   rm -rf openjdk-git openjdk-hg || true
@@ -63,48 +64,42 @@ function cloneRepos() {
     git checkout $tag
     cd ..
   fi
-
-
 }
 
 function updateMercurialClone() {
-  cd openjdk-hg || exit 1
+  local rootDir=$(pwd)
 
-  chmod u+x get_source.sh
-  ./get_source.sh
+  cd "${rootDir}/openjdk-hg" || exit 1
+  if [ -f get_source.sh ]; then
+    chmod u+x get_source.sh
+    ./get_source.sh
 
-  cd - || exit 1
+    if [ -n "${tag}" ]; then
+      MODULES=(corba langtools jaxp jaxws nashorn jdk hotspot)
+
+	  hg update $tag
+      for module in "${MODULES[@]}" ; do
+        cd "${rootDir}/openjdk-hg/${module}"
+        hg update $tag
+      done
+    fi
+  fi
+
+  cd $rootDir || exit 1
 }
 
 function runDiff() {
 
+  set +e
+  diff -r openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' > full-changes.diff
   diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' > changes.diff
+  set -e
 
-  diffNum=$(wc -l < changes.diff)
+  diffNum=$(wc -l < full-changes.diff)
 
-  if [ "$diffNum" -gt 0 ]; then
+  if [ "$diffNum" -gt ${expectedDiffLimit} ]; then
     echo "ERROR - THE DIFF HAS DETECTED UNKNOWN FILES"
     diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' | grep 'Only in' || exit 1
-    exit 1
-  fi
-}
-
-# This function only checks the latest tag, a future enhancement could be to
-# check all tags
-function checkLatestTag() {
-  # get latest git tag
-  cd openjdk-git || exit 1
-  gitTag=$(git describe --abbrev=0 --tags) || exit 1
-  cd - || exit 1
-
-  cd openjdk-hg || exit 1
-  hgTag=$(hg log -r "." --template "{latesttag}\n") || exit 1
-  cd - || exit 1
-
-  if [ "$gitTag" == "$hgTag" ]; then
-    echo "Latest Tags are in sync"
-  else
-     echo "ERROR - Git tag ${gitTag} is not equal to Hg tag ${hgTag}"
     exit 1
   fi
 }
@@ -113,8 +108,3 @@ cleanUp
 cloneRepos
 updateMercurialClone
 runDiff
-# No longer run the tag checking as we're only pulling in selective tags for
-# AdoptOpenJDK.  For others using this script (who are pulling in ALL of the
-# tags) you may wish to reenable this function and even enhance it to compare
-# all tags.
-#checkLatestTag
