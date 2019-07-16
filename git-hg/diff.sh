@@ -67,39 +67,39 @@ function cloneRepos() {
 }
 
 function updateMercurialClone() {
-  local rootDir=$(pwd)
+    local rootDir=$(pwd)
 
-  cd "${rootDir}/openjdk-hg" || exit 1
-  if [ -f get_source.sh ]; then
-    chmod u+x get_source.sh
-    ./get_source.sh
+    cd "${rootDir}/openjdk-hg" || exit 1
+    if [ -f get_source.sh ]; then
+        chmod u+x get_source.sh
+        ./get_source.sh
 
-    if [ -n "${tag}" ]; then
-      MODULES=(corba langtools jaxp jaxws nashorn jdk hotspot)
+        if [ -n "${tag}" ]; then
+            MODULES=(corba langtools jaxp jaxws nashorn jdk hotspot)
 
-	  hg update $tag
-      for module in "${MODULES[@]}" ; do
-        cd "${rootDir}/openjdk-hg/${module}"
-        hg update $tag
-      done
+            hg update $tag
+            for module in "${MODULES[@]}" ; do
+                cd "${rootDir}/openjdk-hg/${module}"
+                hg update $tag
+            done
+        fi
     fi
-  fi
 
-  cd $rootDir || exit 1
+    cd $rootDir || exit 1
 }
 
 function runDiff() {
 
+  local diffArgs="openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md'"
   set +e
-  diff -r openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' > full-changes.diff
-  diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' > changes.diff
+  diff -r  $diffArgs > full-changes.diff
+  diff -rq $diffArgs > changes.diff
   set -e
 
   diffNum=$(wc -l < full-changes.diff)
 
   if [ "$diffNum" -gt ${expectedDiffLimit} ]; then
-    echo "ERROR - THE DIFF HAS DETECTED UNKNOWN FILES"
-    diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' | grep 'Only in' || exit 1
+    echo "ERROR - THE DIFF IS TOO LARGE, EXAMINE full-changes.diff"
     exit 1
   fi
 }
