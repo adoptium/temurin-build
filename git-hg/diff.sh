@@ -25,7 +25,7 @@
 #
 ################################################################################
 
-set -euo
+set -euxo
 
 function checkArgs() {
   if [ $# -lt 2 ]; then
@@ -42,6 +42,7 @@ checkArgs $@
 git_repo_version=$1
 hg_root_forest=${2:-${1}}                  # for backwards compatibility
 hg_repo_version=${3:-${hg_root_forest}}    # for backwards compatibility
+tag=${4:-} # tag to check
 
 function cleanUp() {
   rm -rf openjdk-git openjdk-hg || true
@@ -53,6 +54,17 @@ function cloneRepos() {
 
   git clone -b master "https://github.com/AdoptOpenJDK/openjdk-${git_repo_version}.git" openjdk-git || exit 1
   hg clone "https://hg.openjdk.java.net/${hg_root_forest}/${hg_repo_version}" openjdk-hg || exit 1
+
+  if [ -n "${tag}" ]; then
+    cd openjdk-hg
+    hg update $tag
+    cd ../openjdk-git
+    git fetch --all
+    git chechout $tag
+    cd ..
+  fi
+
+
 }
 
 function updateMercurialClone() {
@@ -65,7 +77,10 @@ function updateMercurialClone() {
 }
 
 function runDiff() {
-  diffNum=$(diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' | wc -l)
+
+  diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' > changes.diff
+
+  diffNum=$(cat changes.diff | wc -l)
 
   if [ "$diffNum" -gt 0 ]; then
     echo "ERROR - THE DIFF HAS DETECTED UNKNOWN FILES"
