@@ -60,7 +60,7 @@ function cloneRepos() {
     hg update $tag
     cd ../openjdk-git
     git fetch --all
-    git chechout $tag
+    git checkout $tag
     cd ..
   fi
 
