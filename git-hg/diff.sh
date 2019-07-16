@@ -63,6 +63,12 @@ function cloneRepos() {
     git fetch --all
     git checkout $tag
     cd ..
+  else
+    # By default compare the dev branch
+    cd ./openjdk-git
+    git fetch --all
+    git checkout dev
+    cd ..
   fi
 }
 
