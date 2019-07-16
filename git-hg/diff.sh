@@ -80,7 +80,7 @@ function runDiff() {
 
   diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' > changes.diff
 
-  diffNum=$(cat changes.diff | wc -l)
+  diffNum=$(wc -l < changes.diff)
 
   if [ "$diffNum" -gt 0 ]; then
     echo "ERROR - THE DIFF HAS DETECTED UNKNOWN FILES"
