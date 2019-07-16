@@ -139,14 +139,14 @@ buildOpenJDKViaDocker()
   # Pass in the last important variables into the Docker container and call
   # the /openjdk/sbin/build.sh script inside
   ${BUILD_CONFIG[DOCKER]} run \
-       "${dockerMode[@]}" \
+       "${dockerMode[@]:+${dockerMode[@]}}" \
        --cpuset-cpus="${cpuSet}" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
        -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}:Z" \
-       "${gitSshAccess[@]}" \
+       "${gitSshAccess[@]:+${gitSshAccess[@]}}" \
        -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
        -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
-       "${dockerEntrypoint[@]}"
+       "${dockerEntrypoint[@]:+${dockerEntrypoint[@]}}"
   
   # If we didn't specify to keep the container then remove it
   if [[ -z ${BUILD_CONFIG[KEEP_CONTAINER]} ]] ; then

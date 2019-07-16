@@ -209,9 +209,9 @@ checkFingerprint() {
 
   rm /tmp/public_key.gpg || true
 
-  gpg --no-options --output /tmp/public_key.gpg --dearmor "${SCRIPT_DIR}/sig_check/${publicKey}.asc"
+  gpg --output /tmp/public_key.gpg --dearmor "${SCRIPT_DIR}/sig_check/${publicKey}.asc"
 
-  local verify=$(gpg --no-options -v --no-default-keyring --keyring "/tmp/public_key.gpg" --verify $sigFile $fileName 2>&1)
+  local verify=$(gpg -v --no-default-keyring --keyring "/tmp/public_key.gpg" --verify $sigFile $fileName 2>&1)
 
   echo $verify
 

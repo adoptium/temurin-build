@@ -52,7 +52,7 @@ function crossPlatformRealPath() {
     local name=$(basename "$target")
   fi
 
-  local fullPath="$PWD/$name"
+  local fullPath="$PWD/${name:+${name}}"
   cd "$currentDir"
   echo "$fullPath"
 }
