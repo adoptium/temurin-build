@@ -142,6 +142,7 @@ getOpenJdkVersion() {
 
     # TODO remove pending #1016
     version=${version%_adopt}
+    version=${version#aarch64-shenandoah-}
   fi
 
   echo ${version}
