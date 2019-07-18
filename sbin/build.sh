@@ -141,7 +141,7 @@ getOpenJdkVersion() {
     version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
 
     # TODO remove pending #1016
-    version=${version//_adopt/}
+    version=${version%_adopt}
   fi
 
   echo ${version}
