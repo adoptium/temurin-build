@@ -211,6 +211,8 @@ checkFingerprint() {
 
   gpg --no-options --output /tmp/public_key.gpg --dearmor "${SCRIPT_DIR}/sig_check/${publicKey}.asc"
 
+  # If this dir does not exist, gpg 1.4.20 supplied on Ubuntu16.04 aborts
+  mkdir -p $HOME/.gnupg
   local verify=$(gpg --no-options -v --no-default-keyring --keyring "/tmp/public_key.gpg" --verify $sigFile $fileName 2>&1)
 
   echo $verify
