@@ -192,7 +192,7 @@ checkFingerprint() {
   local expectedFingerprint="$4"
   local expectedChecksum="$5"
 
-  if ! [ -x "$(command -v gpg)" ]; then
+  if ! [ -x "$(command -v gpg)" ] || [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
     echo "WARNING: GPG not present, resorting to checksum"
     local actualChecksum=$(sha256File ${fileName})
 
