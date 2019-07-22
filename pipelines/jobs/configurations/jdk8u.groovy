@@ -33,6 +33,9 @@ targetConfigurations = [
         "aarch64Linux"  : [
                 "hotspot"
         ],
+        "arm32Linux"  : [
+                "hotspot"
+        ],
         "sparcv9Solaris": [
                 "hotspot"
         ],
