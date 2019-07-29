@@ -36,7 +36,7 @@ if [ "$JAVA_FEATURE_VERSION" -gt 8 ]; then
       if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE/bin")" ]; then
         wget -q "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=windows&release=latest&arch=x64&heap_size=normal&type=jdk&openjdk_impl=hotspot" -O openjdk.zip
         unzip -q openjdk.zip
-        mv $(eval ls -d jdk-$BOOT_JDK_VERSION*) jdk-$BOOT_JDK_VERSION
+        mv $(ls -d jdk-$BOOT_JDK_VERSION*) jdk-$BOOT_JDK_VERSION
       fi
     fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
