@@ -80,7 +80,7 @@ signRelease()
       security unlock-keychain -p `cat ~/.password`
       # Sign all files with the executable permission bit set.
       FILES=$(find "${TMP_DIR}" -perm +111 -type f || find "${TMP_DIR}" -perm /111 -type f)
-      echo "$FILES" | while read -r f; do codesign -s "Developer ID Application: London Jamocha Community CIC" "$f"; done
+      echo "$FILES" | while read -r f; do codesign -s "Developer ID Application: London Jamocha Community CIC" -o runtime "$f"; done
     ;;
     *)
       echo "Skipping code signing as it's not supported on $OPERATING_SYSTEM"
