@@ -20,6 +20,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
 export PATH="/opt/freeware/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH"
+# Without this, java adds /usr/lib to the LIBPATH of anything it forks which breaks linkage
+export LIBPATH="/opt/freeware/lib:$LIBPATH"
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-memory-size=18000 --with-cups-include=/opt/freeware/include"
 
 # Any version below 11
