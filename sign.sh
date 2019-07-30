@@ -74,13 +74,34 @@ signRelease()
     ;;
     "mac"*)
       echo "Signing OSX release"
+
+      case $VERSION in
+        8) ENTITLEMENTS="$WORKSPACE/entitlements_jdk8.plist" ;;
+        *) ENTITLEMENTS="$WORKSPACE/entitlements.plist" ;;
+      esac
+
       # Login to KeyChain
       # shellcheck disable=SC2046
       # shellcheck disable=SC2006
       security unlock-keychain -p `cat ~/.password`
       # Sign all files with the executable permission bit set.
-      FILES=$(find "${TMP_DIR}" -perm +111 -type f || find "${TMP_DIR}" -perm /111 -type f)
-      echo "$FILES" | while read -r f; do codesign -s "Developer ID Application: London Jamocha Community CIC" -o runtime "$f"; done
+      FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
+      echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
+
+      # Loop through jmods, extract, sign and repack
+      if [[ -d "$TMP_DIR/Contents/Home/jmods" ]]; then
+        cd "$TMP_DIR/Contents/Home/jmods"
+        for jmod in ./*; do
+        	rm -rf tmp
+        	unzip -q $jmod -d tmp
+        	cd tmp
+          FILES=$(find bin lib -type f)
+          echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
+          zip -r ../$jmod .
+        	cd ../
+        	rm -rf tmp
+        done
+      fi
     ;;
     *)
       echo "Skipping code signing as it's not supported on $OPERATING_SYSTEM"
