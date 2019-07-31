@@ -138,7 +138,7 @@ class Build {
         return null
     }
 
-    def sign(VersionInfo versionInfo versionData) {
+    def sign(VersionInfo versionInfo) {
         // Sign and archive jobs if needed
         if (buildConfig.TARGET_OS == "windows" || buildConfig.TARGET_OS == "mac") {
             context.node('master') {
@@ -165,7 +165,7 @@ class Build {
                             context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                             context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
                             context.string(name: 'OPERATING_SYSTEM', value: "${buildConfig.TARGET_OS}"),
-                            context.string(name: 'VERSION', value: "${versionData.major}"),
+                            context.string(name: 'VERSION', value: "${versionInfo.major}"),
                             context.string(name: 'FILTER', value: "${filter}"),
                             context.string(name: 'CERTIFICATE', value: "${certificate}"),
                             ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"],
