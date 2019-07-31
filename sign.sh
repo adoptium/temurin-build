@@ -86,7 +86,7 @@ signRelease()
       security unlock-keychain -p `cat ~/.password`
       # Sign all files with the executable permission bit set.
       FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
-      echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
+      echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --force --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
 
       # Loop through jmods, extract, sign and repack
       if [[ -d "$TMP_DIR/Contents/Home/jmods" ]]; then
@@ -96,7 +96,7 @@ signRelease()
         	unzip -q $jmod -d tmp
         	cd tmp
           FILES=$(find bin lib -type f)
-          echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
+          echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --force --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
           zip -r ../$jmod .
         	cd ../
         	rm -rf tmp
