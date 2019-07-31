@@ -89,16 +89,19 @@ signRelease()
       echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --force --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
 
       # Loop through jmods, extract, sign and repack
-      JMODS_DIR=$(ls -d $TMP_DIR/jdk*/Contents/Home/jmods || echo "null")
-      if [[ "$JMODS_DIR" != "null" ]]; then
+      JMODS_DIR=$(ls -d $TMP_DIR/jdk*/Contents/Home/jmods || echo "")
+      if [[ -n $JMODS_DIR ]]; then
         cd "$JMODS_DIR"
         for jmod in ./*; do
         	rm -rf tmp
-          7za x $jmod -otmp
+          # Use brew install p7zip to get 7z
+          7z x $jmod -otmp
         	cd tmp
-          FILES=$(find bin lib -type f)
-          echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --force --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
-          zip -r ../$jmod .
+          FILES=$(find bin lib -type f 2>/dev/null || echo "")
+          if [[ -n $FILES ]]; then
+            echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --force --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
+          fi
+          7z a -r ../$jmod .
         	cd ../
         	rm -rf tmp
         done
