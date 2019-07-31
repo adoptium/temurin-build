@@ -146,24 +146,26 @@ class Build {
                     def filter = ""
                     def certificate = ""
 
-                    def nodeFilter = "${buildConfig.TARGET_OS}&&build"
+                    def nodeFilter = "${buildConfig.TARGET_OS}"
 
                     if (buildConfig.TARGET_OS == "windows") {
                         filter = "**/OpenJDK*_windows_*.zip"
                         certificate = "C:\\Users\\jenkins\\windows.p12"
+                        nodeFilter = "${nodeFilter}&&build"
 
                     } else if (buildConfig.TARGET_OS == "mac") {
                         filter = "**/OpenJDK*_mac_*.tar.gz"
                         certificate = "\"Developer ID Application: London Jamocha Community CIC\""
 
                         // currently only macos10.10 can sign
-                        nodeFilter = "${nodeFilter}&&macos10.10"
+                        nodeFilter = "${nodeFilter}&&macos10.14"
                     }
 
                     def params = [
                             context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                             context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
                             context.string(name: 'OPERATING_SYSTEM', value: "${buildConfig.TARGET_OS}"),
+                            context.string(name: 'VERSION', value: "${versionInfo.major}"),
                             context.string(name: 'FILTER', value: "${filter}"),
                             context.string(name: 'CERTIFICATE', value: "${certificate}"),
                             ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"],
