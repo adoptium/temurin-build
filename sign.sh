@@ -89,7 +89,7 @@ signRelease()
       echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
 
       # Loop through jmods, extract, sign and repack
-      JMODS_DIR=$(ls -d "$TMP_DIR/jdk*/Contents/Home/jmods" || echo "")
+      JMODS_DIR=$(find "$TMP_DIR" -type d -name jmods 2>/dev/null || echo "")
       if [[ -n $JMODS_DIR ]]; then
         cd "$JMODS_DIR"
         for jmod in ./*; do
