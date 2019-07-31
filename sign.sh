@@ -94,7 +94,7 @@ signRelease()
         cd "$JMODS_DIR"
         for jmod in ./*; do
         	rm -rf tmp
-        	unzip -q $jmod -d tmp
+          7za x $jmod -otmp
         	cd tmp
           FILES=$(find bin lib -type f)
           echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --force --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
