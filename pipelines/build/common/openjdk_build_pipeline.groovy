@@ -202,7 +202,7 @@ class Build {
         def certificate = "Developer ID Installer: London Jamocha Community CIC"
 
         // currently only macos10.10 can build an installer
-        def nodeFilter = "${buildConfig.TARGET_OS}&&macos10.10&&build"
+        def nodeFilter = "${buildConfig.TARGET_OS}&&macos10.14&&xcode10"
 
         def installerJob = context.build job: "build-scripts/release/create_installer_mac",
                 propagate: true,
