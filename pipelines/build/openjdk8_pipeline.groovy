@@ -38,11 +38,7 @@ def buildConfigurations = [
         x64Linux      : [
                 os                  : 'linux',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot : 'centos6',
-                        corretto: 'centos6',
-                        openj9  : 'build-joyent-centos69-x64-1'
-                ],
+                additionalNodeLabels: 'centos6',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
         ],
 
