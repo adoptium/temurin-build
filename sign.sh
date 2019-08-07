@@ -74,11 +74,7 @@ signRelease()
       ;;
     "mac"*)
       echo "Signing OSX release"
-
-      case $VERSION in
-        8) ENTITLEMENTS="$WORKSPACE/entitlements_jdk8.plist" ;;
-        *) ENTITLEMENTS="$WORKSPACE/entitlements.plist" ;;
-      esac
+      ENTITLEMENTS="$WORKSPACE/entitlements.plist"
 
       # Login to KeyChain
       # shellcheck disable=SC2046
