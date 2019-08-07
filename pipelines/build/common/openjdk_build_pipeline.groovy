@@ -470,6 +470,9 @@ class Build {
                 }
             }
 
+            // Sign and archive jobs if needed
+            sign(versionInfo)
+
             if (enableTests && buildConfig.TEST_LIST.size() > 0) {
                 try {
                     def testStages = runTests()
@@ -478,9 +481,6 @@ class Build {
                     context.println "Failed test: ${e}"
                 }
             }
-
-            // Sign and archive jobs if needed
-            sign(versionInfo)
 
             //buildInstaller if needed
             buildInstaller(versionInfo)
