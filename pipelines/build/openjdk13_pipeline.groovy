@@ -79,6 +79,7 @@ def buildConfigurations = [
         ppc64Aix    : [
                 os                  : 'aix',
                 arch                : 'ppc64',
+                additionalNodeLabels: 'xlc16',
                 test                : [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
