@@ -98,9 +98,6 @@ if [ "$JAVA_FEATURE_VERSION" -gt 8 ]; then
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 fi
 
-# Any version above 10
-if [ "$JAVA_FEATURE_VERSION" -gt 10 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
-    # If we have the RedHat devtoolset 7 installed, use gcc 7 from there, else /usr/local/gcc/bin
     if [ -r /opt/rh/devtoolset-7/root/usr/bin ]; then
       export PATH=/opt/rh/devtoolset-7/root/usr/bin:$PATH
       [ -r /opt/rh/devtoolset-7/root/usr/bin/gcc ] && export CC=/opt/rh/devtoolset-7/root/usr/bin/gcc
@@ -116,7 +113,6 @@ if [ "$JAVA_FEATURE_VERSION" -gt 10 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPEN
       [ -r /usr/local/gcc/bin/g++-7.4 ] && export CXX=/usr/local/gcc/bin/g++-7.4
       export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
     fi
-fi
 
 if [ "${ARCHITECTURE}" == "aarch64" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
