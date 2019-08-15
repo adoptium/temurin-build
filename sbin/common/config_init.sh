@@ -324,11 +324,14 @@ function configDefaults() {
   BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.9.1"
   BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
 
-  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ] || [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]; then
-    BUILD_CONFIG[MAKE_COMMAND_NAME]="gmake"
-  else
-    BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
-  fi
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    aix | sunos | *bsd )
+      BUILD_CONFIG[MAKE_COMMAND_NAME]="gmake"
+      ;;
+    * )
+      BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
+      ;;
+  esac
 
   BUILD_CONFIG[SIGN]="false"
   BUILD_CONFIG[JDK_BOOT_DIR]=""
