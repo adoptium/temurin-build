@@ -231,15 +231,20 @@ class Build {
 
         def buildNumber = versionData.build
 
+        String releaseType = "Nightly"
+        if (buildConfig.RELEASE) {
+            releaseType = "Release"
+        }
+
         def installerJob = context.build job: "build-scripts/release/create_installer_linux",
                 propagate: true,
                 parameters: [
                         context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                         context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
                         context.string(name: 'FILTER', value: "${filter}"),
+                        context.string(name: 'RELEASE_TYPE', value: "${releaseType}"),
                         context.string(name: 'VERSION', value: "${versionData.version}"),
                         context.string(name: 'MAJOR_VERSION', value: "${versionData.major}"),
-                        context.string(name: 'JVM', value: "${buildConfig.VARIANT}"),
                         context.string(name: 'ARCHITECTURE', value: "${buildConfig.ARCHITECTURE}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
                 ]
