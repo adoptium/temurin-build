@@ -33,7 +33,7 @@ source "$SCRIPT_DIR/common/constants.sh"
 # Set default versions for 3 libraries that OpenJDK relies on to build
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
 ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f08783329157e8dd68b3de0c096de6d724}
-FREEMARKER_LIB_CHECKSUM=${FREEMARKER_LIB_CHECKSUM:-da0668189daef7da300e1734defece130c8635ad1a20d580422326eab85f84e6}
+FREEMARKER_LIB_CHECKSUM=${FREEMARKER_LIB_CHECKSUM:-eb790d229d45fbaad1662a5b3e7a6a9d9c628b92f04567066dcdc8d2a3fe3660}
 FREETYPE_LIB_CHECKSUM=${FREETYPE_LIB_CHECKSUM:-ec391504e55498adceb30baceebd147a6e963f636eb617424bcfc47a169898ce}
 
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
@@ -198,7 +198,7 @@ checkFingerprint() {
 
     if [ "${actualChecksum}" != "${expectedChecksum}" ];
     then
-      echo "Failed to verify checksum on ${fileName} ${url}"
+      echo "Failed to verify checksum on ${fileName}"
 
       echo "Expected ${expectedChecksum} got ${actualChecksum}"
       exit 1
