@@ -91,6 +91,7 @@ jdk9u - Build Java 9, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk9u
 jdk10u - Build Java 10, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk10u
 jdk11u - Build Java 11, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk11u
 jdk12u - Build Java 12, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk12u
+jdk13u - Build Java 13, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk13u
 jdk - Build Latest Java (Alpha/Beta), defaults to https://github.com/AdoptOpenJDK/openjdk-jdk
 jfx - Build OpenJFX, defaults to https://github.com/AdoptOpenJDK/openjdk-jfx
 amber - Build Project Amber, defaults to https://github.com/AdoptOpenJDK/openjdk-amber
