@@ -74,7 +74,6 @@ signRelease()
       ;;
     "mac"*)
       echo "Signing OSX release"
-      ENTITLEMENTS="$WORKSPACE/entitlements.plist"
 
       # Login to KeyChain
       # shellcheck disable=SC2046
@@ -87,6 +86,8 @@ signRelease()
       echo "$FILES" | while read -r f; do codesign -s "Developer ID Application: London Jamocha Community CIC" "$f"; done
       ########################################
       ## TODO: Bring me back pending resolution to https://github.com/AdoptOpenJDK/TSC/issues/107
+
+#      ENTITLEMENTS="$WORKSPACE/entitlements.plist"
 #      # Sign all files with the executable permission bit set.
 #      FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
 #      echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
