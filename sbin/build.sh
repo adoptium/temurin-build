@@ -689,7 +689,7 @@ fixJavaHomeUnderDocker() {
   then
       # clear BUILD_CONFIG[JDK_BOOT_DIR] and re set it
       BUILD_CONFIG[JDK_BOOT_DIR]=""
-      setBootJdk()
+      setBootJdk
   fi
 }
 
