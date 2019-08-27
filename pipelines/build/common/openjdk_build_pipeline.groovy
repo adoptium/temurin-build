@@ -356,6 +356,8 @@ class Build {
             def type = "jdk"
             if (file.contains("-jre")) {
                 type = "jre"
+            } else if (file.contains("-testimage")) {
+                type = "testimage"
             }
 
             String hash = context.sh(script: "sha256sum $file | cut -f1 -d' '", returnStdout: true, returnStatus: false)
