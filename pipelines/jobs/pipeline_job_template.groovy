@@ -33,6 +33,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
             scriptPath(SCRIPT)
         }
     }
+    concurrentBuild(false)
     triggers {
         cron(triggerSchedule)
     }
