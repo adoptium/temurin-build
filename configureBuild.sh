@@ -292,25 +292,6 @@ function setMakeArgs() {
     BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-""}
 }
 
-function setBootJdk() {
-  if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
-    echo "Searching for JDK_BOOT_DIR"
-
-    # shellcheck disable=SC2046,SC2230
-    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
-      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink $(which javac))))
-    else
-      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
-    fi
-
-    echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
-    echo "If this is incorrect explicitly configure JDK_BOOT_DIR"
-  else
-    echo "Overriding JDK_BOOT_DIR, set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
-  fi
-
-  echo "Boot dir set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
-}
 
 ################################################################################
 
