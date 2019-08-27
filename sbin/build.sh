@@ -683,9 +683,20 @@ createTargetDir() {
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 }
 
+fixJavaHomeUnderDocker() {
+  # If we are inside docker we cannot trust the JDK_BOOT_DIR that was detected on the host system
+  if [[ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ]];
+  then
+      # clear BUILD_CONFIG[JDK_BOOT_DIR] and re set it
+      BUILD_CONFIG[JDK_BOOT_DIR]=""
+      setBootJdk()
+  fi
+}
+
 ################################################################################
 
 loadConfigFromFile
+fixJavaHomeUnderDocker
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
 parseArguments "$@"

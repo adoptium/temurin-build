@@ -117,3 +117,23 @@ createOpenJDKArchive()
       tar -cf - "${repoDir}"/ | GZIP=-9 $COMPRESS -c > $fileName.tar.gz
   fi
 }
+
+function setBootJdk() {
+  if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
+    echo "Searching for JDK_BOOT_DIR"
+
+    # shellcheck disable=SC2046,SC2230
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink $(which javac))))
+    else
+      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
+    fi
+
+    echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+    echo "If this is incorrect explicitly configure JDK_BOOT_DIR"
+  else
+    echo "Overriding JDK_BOOT_DIR, set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+  fi
+
+  echo "Boot dir set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+}
