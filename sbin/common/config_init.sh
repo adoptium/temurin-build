@@ -31,6 +31,7 @@
 # (because of GPL3), we therefore have to name the indexes of the CONFIG_PARAMS
 # map. This is why we can't have nice things.
 CONFIG_PARAMS=(
+ADOPT_PATCHES
 BRANCH
 BUILD_FULL_NAME
 BUILD_VARIANT
@@ -44,6 +45,7 @@ COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
 DEBUG_DOCKER
+DISABLE_ADOPT_BRANCH_SAFETY
 DOCKER
 DOCKER_FILE_PATH
 DOCKER_SOURCE_VOLUME_NAME
@@ -58,7 +60,6 @@ JRE_PATH
 JVM_VARIANT
 MAKE_ARGS_FOR_ANY_PLATFORM
 MAKE_COMMAND_NAME
-ADOPT_PATCHES
 NUM_PROCESSORS
 OPENJDK_BUILD_NUMBER
 OPENJDK_CORE_VERSION
@@ -188,6 +189,9 @@ function parseConfigurationArguments() {
 
         "--clean-libs" )
         BUILD_CONFIG[CLEAN_LIBS]=true;;
+
+        "--disable-adopt-branch-safety" )
+        BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=true;;
 
         "--destination" | "-d" )
         BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
@@ -420,6 +424,8 @@ function configDefaults() {
 
   # By default assume we have adopt patches applied to the repo
   BUILD_CONFIG[ADOPT_PATCHES]=true
+
+  BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false
 }
 
 # Declare the map of build configuration that we're going to use
