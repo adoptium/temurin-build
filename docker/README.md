@@ -18,3 +18,17 @@ the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 Optionally you can run with Debug (to shell): 
 
 `docker run -it -v <path to source>:/openjdk/build --entrypoint /bin/bash dockeropenjdk`
+
+# Building a JDK, using Docker containers with buildDocker.sh
+
+This script will automatically build a JDK inside a docker container.
+There are several options that the script can take :
+
+| Option | Description            | Example                                          |
+|--------|------------------------|--------------------------------------------------|
+| -v     | JDK version choice     | `./buildDocker.sh -v jdk8`                       |
+| -a     | Test all JDK versions  | `./buildDocker.sh -a`                            |
+| -j9    | Build JDK with OpenJ9  | `./buildDocker.sh -v jdk8u -j9`                  |
+| -J     | Set JDK Boot directory | `./buildDocker.sh -v jdk8u -J /path/to/boot/jdk` |
+
+When not specified, the JDK will be built with Hotspot and attempt to detect the boot jdk directory.
