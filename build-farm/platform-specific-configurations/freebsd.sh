@@ -21,4 +21,4 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 # export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/battleblow/openjdk-${JAVA_TO_BUILD}"
 export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/gdams/openjdk-${JAVA_TO_BUILD}-2"
 
-export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang --with-fontconfig=/usr/local"
