@@ -75,6 +75,10 @@ doAnyBuildVariantOverrides()
   then
     local branch="sapmachine10"
     BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
+  elif [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "freebsd" ]]
+  then
+    local branch="bsd-port"
+    BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
   fi
 }
 
