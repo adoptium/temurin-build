@@ -20,4 +20,4 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
 export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/battleblow/openjdk-${JAVA_TO_BUILD} --disable-adopt-branch-safety"
 
-export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang --with-fontconfig=/usr/local --with-alsa=/usr/local"
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang --with-fontconfig=/usr/local --with-alsa=/usr/local --x-includes=/usr/local/include --x-libraries=/usr/local/lib"
