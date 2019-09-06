@@ -129,6 +129,8 @@ function rebuildLocalRepo() {
     #       origin:   "$MIRROR/root/"
     #
 
+    addRemotes
+
     # Step 1 Clone mirrors
     updateMirrors $hgRepo
 
