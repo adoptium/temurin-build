@@ -233,7 +233,7 @@ processArgumentsforSpecificArchitectures() {
   ;;
 
   "armv7l")
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && isHotspot; then
       jvm_variant=zero
     else
       jvm_variant=server,client

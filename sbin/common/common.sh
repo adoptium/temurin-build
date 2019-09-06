@@ -137,3 +137,12 @@ function setBootJdk() {
 
   echo "Boot dir set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
 }
+
+# A function that returns true if the variant is based on Hotspot and should
+# be treated as such by the build scripts
+function isHotSpot() {
+  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] ||
+  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] ||
+  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ] ||
+  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]
+}
