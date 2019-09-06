@@ -96,6 +96,8 @@ function updateRepo() {
   repoName=$1
   repoLocation=$2
 
+  addRemotes
+
   if [ ! -d "$MIRROR/$repoName/.git" ]; then
     rm -rf "$MIRROR/$repoName" || exit 1
     mkdir -p "$MIRROR/$repoName" || exit 1
@@ -128,8 +130,6 @@ function rebuildLocalRepo() {
     #       root:     "$MIRROR/root/"
     #       origin:   "$MIRROR/root/"
     #
-
-    addRemotes
 
     # Step 1 Clone mirrors
     updateMirrors $hgRepo
@@ -234,8 +234,6 @@ if [ "$doInit" == "true" ]; then
   inititialCheckin $tag
   exit
 fi
-
-addRemotes
 
 echo "$tag" >> $WORKSPACE/mergedTags
 
