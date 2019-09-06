@@ -129,6 +129,8 @@ function rebuildLocalRepo() {
     #       origin:   "$MIRROR/root/"
     #
 
+    addRemotes
+
     # Step 1 Clone mirrors
     updateMirrors $hgRepo
 
@@ -232,8 +234,6 @@ if [ "$doInit" == "true" ]; then
   inititialCheckin $tag
   exit
 fi
-
-addRemotes
 
 echo "$tag" >> $WORKSPACE/mergedTags
 
