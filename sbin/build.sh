@@ -489,10 +489,16 @@ getJreArchivePath() {
   echo "${jdkArchivePath}-jre"
 }
 
+getTestImageArchivePath() {
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-test-image"
+}
+
 # Clean up
 removingUnnecessaryFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
+  local testImageTargetPath=$(getTestImageArchivePath)
 
   echo "Removing unnecessary files now..."
 
@@ -520,6 +526,14 @@ removingUnnecessaryFiles() {
     rm -rf "${dirToRemove}"/demo/applets || true
     rm -rf "${dirToRemove}"/demo/jfc/Font2DTest || true
     rm -rf "${dirToRemove}"/demo/jfc/SwingApplet || true
+  fi
+  # Test image is JDK 11+ only so add an additional
+  # check if the config is set
+  if [ ! -z "${BUILD_CONFIG[TEST_IMAGE_PATH]}" ] && [ -d "$(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]})" ]
+  then
+    echo "moving $(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]}) to ${testImageTargetPath}"
+    rm -rf "${testImageTargetPath}" || true
+    mv "$(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]})" "${testImageTargetPath}"
   fi
 
   # Remove files we don't need
@@ -645,6 +659,7 @@ createOpenJDKTarArchive()
 {
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
+  local testImageTargetPath=$(getTestImageArchivePath)
 
   COMPRESS=gzip
 
@@ -657,7 +672,12 @@ createOpenJDKTarArchive()
     local jreName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-jre/')
     createArchive "${jreTargetPath}" "${jreName}"
   fi
-   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
+  if [ -d "${testImageTargetPath}" ]; then
+    echo "OpenJDK test image path will be ${testImageTargetPath}."
+    local testImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-testimage}")
+    createArchive "${testImageTargetPath}" "${testImageName}"
+  fi
+  createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
 # Echo success
