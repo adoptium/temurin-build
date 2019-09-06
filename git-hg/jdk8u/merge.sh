@@ -233,6 +233,8 @@ if [ "$doInit" == "true" ]; then
   exit
 fi
 
+addRemotes
+
 echo "$tag" >> $WORKSPACE/mergedTags
 
 cd "$MIRROR/root/";
