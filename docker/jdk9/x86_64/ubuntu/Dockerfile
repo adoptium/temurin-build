@@ -39,6 +39,7 @@ RUN apt-get update \
     make \
     openjdk-8-jdk \
     realpath \
+    systemtap-sdt-dev \
     unzip \
     wget \
     zip \

@@ -44,6 +44,7 @@ RUN apt-get update \
     libxtst-dev \
     make \
     realpath \
+    systemtap-sdt-dev \
     unzip \
     wget \
     zip \

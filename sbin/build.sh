@@ -255,6 +255,8 @@ buildingTheRestOfTheConfigParameters()
 
   addConfigureArg "--with-x=" "/usr/include/X11"
 
+  addConfigureArg "--enable-dtrace=" "auto"
+
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
     # We don't want any extra debug symbols - ensure it's set to release,
     # other options include fastdebug and slowdebug
