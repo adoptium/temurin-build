@@ -13,7 +13,7 @@
 
 FROM ubuntu:18.04
 
-MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
+LABEL maintainer="AdoptOpenJDK <adoption-discuss@openjdk.java.net>"
 
 # Install required OS tools
 RUN apt-get update \
