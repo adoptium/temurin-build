@@ -45,7 +45,6 @@ RUN apt-get update \
     libxt-dev \
     libxtst-dev \
     make \
-    manpages-pl \
     systemtap-sdt-dev \
     unzip \
     wget \
