@@ -16,6 +16,7 @@ FROM ubuntu:18.04
 LABEL maintainer="AdoptOpenJDK <adoption-discuss@openjdk.java.net>"
 
 # Install required OS tools
+# dirmngr, gpg-agent & coreutils are all required for the apt-add repository command
 RUN apt-get update \
   && apt-get install -qq -y --no-install-recommends \
     software-properties-common \
