@@ -16,10 +16,13 @@ FROM ubuntu:18.04
 LABEL maintainer="AdoptOpenJDK <adoption-discuss@openjdk.java.net>"
 
 # Install required OS tools
+# dirmngr, gpg-agent & coreutils are all required for the apt-add repository command
 RUN apt-get update \
   && apt-get install -qq -y --no-install-recommends \
     software-properties-common \
-    python-software-properties \
+    dirmngr \
+    gpg-agent \
+    coreutils \
   && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \
   && add-apt-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \
   && apt-get update \
@@ -43,7 +46,6 @@ RUN apt-get update \
     libxt-dev \
     libxtst-dev \
     make \
-    realpath \
     systemtap-sdt-dev \
     unzip \
     wget \
