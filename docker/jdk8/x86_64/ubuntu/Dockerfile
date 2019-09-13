@@ -48,6 +48,7 @@ RUN apt-get update \
     wget \
     zip \
     zulu-7 \
+    zulu-8 \
     ssh \
 && rm -rf /var/lib/apt/lists/*
 
@@ -72,3 +73,4 @@ ARG OPENJDK_CORE_VERSION
 ENV OPENJDK_CORE_VERSION=$OPENJDK_CORE_VERSION
 ENV JDK_PATH=j2sdk-image
 ENV JRE_PATH=j2re-image
+ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64

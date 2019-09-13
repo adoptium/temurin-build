@@ -48,6 +48,7 @@ RUN apt-get update \
     unzip \
     wget \
     zip \
+    zulu-8 \
     ssh \
 && rm -rf /var/lib/apt/lists/*
 
@@ -72,3 +73,4 @@ CMD ["images"]
 ARG OPENJDK_VERSION
 ENV OPENJDK_VERSION=$OPENJDK_VERSION
 ENV JDK_PATH=jdk
+ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64

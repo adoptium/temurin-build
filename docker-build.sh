@@ -135,19 +135,54 @@ buildOpenJDKViaDocker()
      dockerEntrypoint=(--entrypoint "/bin/sh" "${BUILD_CONFIG[CONTAINER_NAME]}" -c "echo 'DEBUG DOCKER BUILD\\nTo build jdk run\\n/openjdk/sbin/build.sh'; /bin/bash")
   fi
 
-  # shellcheck disable=SC2140
-  # Pass in the last important variables into the Docker container and call
-  # the /openjdk/sbin/build.sh script inside
-  ${BUILD_CONFIG[DOCKER]} run \
+  #if both dockerMode and gitSshAccess are unbounded
+  if [ ! -n "${dockerMode[@]:-}" ]  && [ ! -n "${gitSshAccess[@]:-}" ]; then
+    ${BUILD_CONFIG[DOCKER]} run \
+         --cpuset-cpus="${cpuSet}" \
+         -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
+         -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}:Z" \
+         -v "${hostDir}/pipelines":/openjdk/pipelines \
+         -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
+         -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}"
+         "${dockerEntrypoint[@]}"
+  #if just dockerMode is unbounded
+  elif [ ! -n "${dockerMode[@]:-}" ]; then
+    ${BUILD_CONFIG[DOCKER]} run \
+       --cpuset-cpus="${cpuSet}" \
+       -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
+       -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}:Z" \
+       -v "${hostDir}/pipelines":/openjdk/pipelines \
+        "${gitSshAccess[@]}" \
+       -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
+       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
+       "${dockerEntrypoint[@]}"
+  #if just gitSshAccess is unbounded
+  elif [ ! -n "${gitSshAccess[@]:-}" ]; then
+    ${BUILD_CONFIG[DOCKER]} run \
        "${dockerMode[@]}" \
        --cpuset-cpus="${cpuSet}" \
        -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
        -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}:Z" \
+       -v "${hostDir}/pipelines":/openjdk/pipelines \
+       -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
+       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
+       "${dockerEntrypoint[@]}"
+  else
+    # shellcheck disable=SC2140
+    # Pass in the last important variables into the Docker container and call
+    # the /openjdk/sbin/build.sh script inside
+    ${BUILD_CONFIG[DOCKER]} run \
+       "${dockerMode[@]}" \
+       --cpuset-cpus="${cpuSet}" \
+       -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
+       -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}:Z" \
+       -v "${hostDir}/pipelines":/openjdk/pipelines \
        "${gitSshAccess[@]}" \
        -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
        -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
        "${dockerEntrypoint[@]}"
-  
+  fi 
+ 
   # If we didn't specify to keep the container then remove it
   if [[ -z ${BUILD_CONFIG[KEEP_CONTAINER]} ]] ; then
     ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm {}

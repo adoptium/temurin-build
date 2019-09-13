@@ -47,6 +47,7 @@ RUN apt-get update \
     systemtap-sdt-dev \
     unzip \
     wget \
+    zulu-8 \
     zip \
     ssh \
 && rm -rf /var/lib/apt/lists/*
@@ -72,3 +73,4 @@ CMD ["images"]
 ARG OPENJDK_VERSION
 ENV OPENJDK_VERSION=$OPENJDK_VERSION
 ENV JDK_PATH=jdk
+ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64

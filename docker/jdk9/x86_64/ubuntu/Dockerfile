@@ -17,6 +17,10 @@ MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools
 RUN apt-get update \
+  && apt-get install -y software-properties-common \
+  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \
+  && apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \
+  && apt-get update \
   && apt-get -y upgrade \
   && apt-get install -qq -y --no-install-recommends \
     ccache \
@@ -43,6 +47,7 @@ RUN apt-get update \
     unzip \
     wget \
     zip \
+    zulu-8 \
     ssh \
 
 && rm -rf /var/lib/apt/lists/*
@@ -67,3 +72,4 @@ CMD ["images"]
 ARG OPENJDK_CORE_VERSION
 ENV OPENJDK_CORE_VERSION=$OPENJDK_CORE_VERSION
 ENV JDK_PATH=jdk
+ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64
