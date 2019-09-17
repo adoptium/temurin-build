@@ -410,7 +410,7 @@ function configDefaults() {
   # JVM variant, e.g. client or server, defaults to server
   BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-""}
 
-    # Any extra config/make args provided by the user
+    # Any extra config / make args provided by the user
   BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""}
   BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]:-""}
 
