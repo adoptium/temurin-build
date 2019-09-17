@@ -56,7 +56,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
     }
     logRotator {
         numToKeep(10)
-        artifactNumToKeep(1)
+        artifactNumToKeep(10)
     }
 
     parameters {
