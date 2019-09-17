@@ -40,7 +40,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
     logRotator {
         numToKeep(10)
-        artifactNumToKeep(2)
+        artifactNumToKeep(10)
     }
 
     properties {
