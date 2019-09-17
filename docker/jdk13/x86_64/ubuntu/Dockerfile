@@ -48,14 +48,23 @@ RUN apt-get update \
     unzip \
     wget \
     zip \
-    zulu-8 \
     ssh \
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions
 RUN mkdir -p /openjdk/target
-# wget and extract JDK12
-RUN wget 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk12?openjdk_impl=hotspot&os=linux&arch=x64&release=latest&type=jdk' -O - | tar -xz
+
+# Extract AdoptOpenJDK8 to run Gradle.
+RUN wget 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk8?openjdk_impl=hotspot&os=linux&arch=x64&release=latest&type=jdk' -O jdk8.tar.gz
+RUN mkdir -p /usr/lib/jvm/jdk8 && tar -xvf /jdk8.tar.gz -C /usr/lib/jvm/jdk8 --strip-components=1
+
+# Extract AdoptOpenJDK12 for JDK_BOOT_DIR.
+RUN wget 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk12?openjdk_impl=hotspot&os=linux&arch=x64&release=latest&type=jdk' -O jdk12.tar.gz
+RUN mkdir -p /usr/lib/jvm/jdk12 && tar -xvf /jdk12.tar.gz -C /usr/lib/jvm/jdk12 --strip-components=1
+RUN ln -sf /usr/lib/jvm/jdk12/bin/java /usr/bin/java
+RUN ln -sf /usr/lib/jvm/jdk12/bin/javac /usr/bin/javac
+
+
 COPY sbin /openjdk/sbin
 COPY workspace/config /openjdk/config
 
@@ -73,4 +82,4 @@ CMD ["images"]
 ARG OPENJDK_VERSION
 ENV OPENJDK_VERSION=$OPENJDK_VERSION
 ENV JDK_PATH=jdk
-ENV JAVA_HOME=/usr/lib/jvm/zulu-8-amd64
+ENV JAVA_HOME=/usr/lib/jvm/jdk8
