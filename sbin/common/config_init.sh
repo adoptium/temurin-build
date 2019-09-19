@@ -84,6 +84,7 @@ USE_DOCKER
 USE_JEP319_CERTS
 USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
+USER_SUPPLIED_MAKE_ARGS
 WORKING_DIR
 WORKSPACE_DIR
 )
@@ -181,6 +182,9 @@ function parseConfigurationArguments() {
 
         "--configure-args"  | "-C" )
         BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
+
+        "--make-args" )
+        BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]="$1"; shift;;
 
         "--clean-docker-build" | "-c" )
         BUILD_CONFIG[CLEAN_DOCKER_BUILD]=true;;
@@ -406,8 +410,9 @@ function configDefaults() {
   # JVM variant, e.g. client or server, defaults to server
   BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-""}
 
-  # Any extra args provided by the user
+  # Any extra config / make args provided by the user
   BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""}
+  BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]:-""}
 
   BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-"docker"}
 
