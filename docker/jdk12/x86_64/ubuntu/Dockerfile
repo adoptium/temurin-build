@@ -55,8 +55,17 @@ RUN apt-get update \
 
 # Pick up build instructions
 RUN mkdir -p /openjdk/target
-# wget and extract JDK11
-RUN wget 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?openjdk_impl=hotspot&os=linux&arch=x64&release=latest&type=jdk' -O - | tar -xz
+
+# Extract AdoptOpenJDK8 to run Gradle.
+RUN wget 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk8?openjdk_impl=hotspot&os=linux&arch=x64&release=latest&type=jdk' -O jdk8.tar.gz
+RUN mkdir -p /usr/lib/jvm/jdk8 && tar -xvf /jdk8.tar.gz -C /usr/lib/jvm/jdk8 --strip-components=1
+
+# Extract AdoptOpenJDK11 to set as JDK_BOOT_DIR.
+RUN wget 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?openjdk_impl=hotspot&os=linux&arch=x64&release=latest&type=jdk' -O jdk11.tar.gz
+RUN mkdir -p /usr/lib/jvm/jdk11 && tar -xvf /jdk11.tar.gz -C /usr/lib/jvm/jdk11 --strip-components=1
+RUN ln -sf /usr/lib/jvm/jdk11/bin/javac /usr/bin/javac
+RUN ln -sf /usr/lib/jvm/jdk11/bin/javac /usr/bin/javac
+
 COPY sbin /openjdk/sbin
 COPY workspace/config /openjdk/config
 
@@ -74,3 +83,4 @@ CMD ["images"]
 ARG OPENJDK_VERSION
 ENV OPENJDK_VERSION=$OPENJDK_VERSION
 ENV JDK_PATH=jdk
+ENV JAVA_HOME=/usr/lib/jvm/jdk8

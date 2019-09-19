@@ -48,12 +48,21 @@ RUN apt-get update \
     unzip \
     wget \
     zip \
-    zulu-9 \
     ssh \
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions
 RUN mkdir -p /openjdk/target
+
+# Extract AdoptOpenJDK8 to run Gradle.
+RUN wget 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk8?openjdk_impl=hotspot&os=linux&arch=x64&release=latest&type=jdk' -O jdk8.tar.gz
+RUN mkdir -p /usr/lib/jvm/jdk8 && tar -xvf /jdk8.tar.gz -C /usr/lib/jvm/jdk8 --strip-components=1
+
+# Extract AdoptOpenJDK9 to set as JDK_BOOT_DIR.
+RUN wget 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk9?openjdk_impl=hotspot&os=linux&arch=x64&release=latest&type=jdk' -O jdk9.tar.gz
+RUN mkdir -p /usr/lib/jvm/jdk9 && tar -xvf /jdk9.tar.gz -C /usr/lib/jvm/jdk9 --strip-components=1
+RUN ln -sf /usr/lib/jvm/jdk9/bin/java /usr/bin/java
+RUN ln -sf /usr/lib/jvm/jdk9/bin/javac /usr/bin/javac
 
 COPY sbin /openjdk/sbin
 COPY workspace/config /openjdk/config
@@ -72,3 +81,4 @@ CMD ["images"]
 ARG OPENJDK_VERSION
 ENV OPENJDK_VERSION=$OPENJDK_VERSION
 ENV JDK_PATH=jdk
+ENV JAVA_HOME=/usr/lib/jvm/jdk8

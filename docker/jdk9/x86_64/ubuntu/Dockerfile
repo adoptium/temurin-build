@@ -17,6 +17,10 @@ MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
 # Install required OS tools
 RUN apt-get update \
+  && apt-get install -y software-properties-common \
+  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \
+  && apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \
+  && apt-get update \
   && apt-get -y upgrade \
   && apt-get install -qq -y --no-install-recommends \
     ccache \
@@ -37,7 +41,6 @@ RUN apt-get update \
     libxt-dev \
     libxtst-dev \
     make \
-    openjdk-8-jdk \
     realpath \
     systemtap-sdt-dev \
     unzip \
@@ -49,6 +52,12 @@ RUN apt-get update \
 
 # Pick up build instructions
 RUN mkdir -p /openjdk/target
+
+# Extract AdoptOpenJDK8 and set as default Java/Javac
+RUN wget 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk8?openjdk_impl=hotspot&os=linux&arch=x64&release=latest&type=jdk' -O jdk8.tar.gz
+RUN mkdir -p /usr/lib/jvm/jdk8 && tar -xvf /jdk8.tar.gz -C /usr/lib/jvm/jdk8 --strip-components=1
+RUN ln -sf /usr/lib/jvm/jdk8/bin/java /usr/bin/java
+RUN ln -sf /usr/lib/jvm/jdk8/bin/javac /usr/bin/javac
 
 COPY sbin /openjdk/sbin
 COPY workspace/config /openjdk/config
@@ -67,3 +76,4 @@ CMD ["images"]
 ARG OPENJDK_CORE_VERSION
 ENV OPENJDK_CORE_VERSION=$OPENJDK_CORE_VERSION
 ENV JDK_PATH=jdk
+ENV JAVA_HOME=/usr/lib/jvm/jdk8

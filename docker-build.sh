@@ -132,22 +132,33 @@ buildOpenJDKViaDocker()
   local dockerEntrypoint=(--entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}")
   if [[ "${BUILD_CONFIG[DEBUG_DOCKER]}" == "true" ]] ; then
      dockerMode=(-t -i)
-     dockerEntrypoint=(--entrypoint "/bin/sh" "${BUILD_CONFIG[CONTAINER_NAME]}" -c "echo 'DEBUG DOCKER BUILD\\nTo build jdk run\\n/openjdk/sbin/build.sh'; /bin/bash")
+     dockerEntrypoint=(--entrypoint "/bin/sh" "${BUILD_CONFIG[CONTAINER_NAME]}" -c "/bin/bash")
   fi
 
-  # shellcheck disable=SC2140
-  # Pass in the last important variables into the Docker container and call
-  # the /openjdk/sbin/build.sh script inside
-  ${BUILD_CONFIG[DOCKER]} run \
-       "${dockerMode[@]}" \
-       --cpuset-cpus="${cpuSet}" \
-       -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
-       -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}:Z" \
-       "${gitSshAccess[@]}" \
-       -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
-       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
-       "${dockerEntrypoint[@]}"
-  
+  # Command without gitSshAccess or dockerMode arrays
+  local commandString=(
+         "--cpuset-cpus=${cpuSet}" 
+         -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build"
+         -v "${hostDir}"/workspace/target:/"${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}":Z 
+         -v "${hostDir}"/pipelines:/openjdk/pipelines 
+         -e "DEBUG_DOCKER_FLAG=${BUILD_CONFIG[DEBUG_DOCKER]}" 
+         -e "BUILD_VARIANT=${BUILD_CONFIG[BUILD_VARIANT]}"
+          "${dockerEntrypoint[@]}")
+
+  # If build specifies --ssh, add array to the command string
+  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
+        commandString=("${gitSshAccess[@]}" "${commandString[@]}")
+  fi
+
+  # If build specifies --debug-docker, add array to the command string
+  if [[ "${BUILD_CONFIG[DEBUG_DOCKER]}" == "true" ]] ; then
+        commandString=("${dockerMode[@]}" "${commandString[@]}")
+        echo "DEBUG DOCKER MODE. To build jdk run /openjdk/sbin/build.sh"
+  fi
+
+  # Run the command string in Docker
+  ${BUILD_CONFIG[DOCKER]} run "${commandString[@]}"
+ 
   # If we didn't specify to keep the container then remove it
   if [[ -z ${BUILD_CONFIG[KEEP_CONTAINER]} ]] ; then
     ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm {}

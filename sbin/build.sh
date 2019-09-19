@@ -390,10 +390,6 @@ getGradleHome() {
     gradleJavaHome=${JAVA_HOME}
   fi
 
-  if [ -d "${BUILD_CONFIG[JDK_BOOT_DIR]}" ]; then
-    gradleJavaHome=${BUILD_CONFIG[JDK_BOOT_DIR]}
-  fi
-
   if [ ${JDK8_BOOT_DIR+x} ] && [ -d "${JDK8_BOOT_DIR}" ]; then
     gradleJavaHome=${JDK8_BOOT_DIR}
   fi
