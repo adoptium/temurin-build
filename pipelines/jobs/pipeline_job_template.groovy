@@ -1,7 +1,6 @@
 import groovy.json.JsonOutput
 
-//build on 31st Feb
-triggerSchedule = "0 0 31 2 0"
+triggerSchedule = "@daily"
 gitRefSpec = ""
 propagateFailures = false
 runTests = true
@@ -40,7 +39,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
     logRotator {
         numToKeep(10)
-        artifactNumToKeep(10)
+        artifactNumToKeep(2)
     }
 
     properties {
