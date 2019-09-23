@@ -4,6 +4,7 @@ set -u
 jdkVersion=''
 bootDir=''
 openJ9=false
+useEclipseDockerFiles=false
 
 #takes in all arguments to determine script options
 parseCommandLineArgs()
@@ -25,6 +26,8 @@ parseCommandLineArgs()
 					bootDir="$1"; shift;;
 				"--openj9" | "-j9")
 					openJ9=true;;
+				"--use-eclipse-docker-files" | "-e" )
+					useEclipseDockerFiles=true;;
 				"--help" | "-h" )
 					usage; exit 0;;
 				*) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised."; usage; exit 1;;
@@ -36,10 +39,11 @@ parseCommandLineArgs()
 usage()
 {
 	echo
-	echo "Usage: ./buildDocker.sh	--all|-a 		Build all support JDK versions"
-	echo "			--version|-v 		Build the specified JDK version"
-	echo "			--jdk-boot-dir|-J	Specify the boot JDK directory"
-	echo "			--openj9|-j9		Builds using OpenJ9 instead of Hotspot"
+	echo "Usage: ./buildDocker.sh	--all|-a 			Build all support JDK versions"
+	echo "			--version|-v 			Build the specified JDK version"
+	echo "			--jdk-boot-dir|-J		Specify the boot JDK directory"
+	echo "			--openj9|-j9			Builds using OpenJ9 instead of Hotspot"
+	echo "			--use-eclipse-docker-files|-e	Builds the specified jdk using the Eclipse Openj9 dockerfiles"
 	echo
 }
 
@@ -58,7 +62,8 @@ checkJDKVersion()
 			jdkVersion="jdk12u";;
 		"jdk13u" | "jdk13" | "13" | "13u" )
 			jdkVersion="jdk13u";;
-		"all" ) ;;
+		"all" )
+			jdkVersion="jdk8u jdk9u jdk10u jdk11u jdk12u jdk13u";;
 		*)
 			echo "Not a valid JDK Version" ; jdkVersionList; exit 1;;
 	esac
@@ -82,6 +87,21 @@ removeBuild()
 	cd $WORKSPACE/DockerBuildFolder/openjdk-build/workspace && rm -r build
 }
 
+useEclipseDockerFiles()
+{
+	cd $WORKSPACE/DockerBuildFolder/openjdk-build/docker && mkdir -p EclipseDockerfiles
+	cd EclipseDockerfiles
+	for jdk in $jdkVersion
+	do
+		# ${jdk%?} will remove the 'u' from 'jdk__u' when needed.
+		curl -o Dockerfile.$jdk https://raw.githubusercontent.com/eclipse/openj9/master/buildenv/docker/${jdk%?}/x86_64/ubuntu16/Dockerfile;
+		docker build -t $jdk -f Dockerfile.$jdk .
+		docker run -it -u root -d --name=$jdk $jdk
+		docker exec -u root -it $jdk sh -c "git clone https://github.com/ibmruntimes/openj9-openjdk-${jdk%?}"
+		docker exec -u root -it $jdk sh -c "cd openj9-openjdk-${jdk%?} && bash ./get_source.sh && bash ./configure --with-freemarker-jar=/root/freemarker.jar && make all"
+	done
+}
+
 buildDocker()
 {
 	local commandString="./makejdk-any-platform.sh --docker --clean-docker-build"
@@ -91,17 +111,11 @@ buildDocker()
 	if [[ "$openJ9" = true ]]; then
 		commandString="$commandString --build-variant openj9"
 	fi
-	if [ "$jdkVersion" == "all" ]; then
-		echo "Testing all Docker Builds"
-		for jdk in jdk8u jdk9u jdk10u jdk11u jdk12u jdk13u
-		do
-			echo "$commandString $jdk being executed"
-			cd $WORKSPACE/DockerBuildFolder/openjdk-build && $commandString $jdk
-		done
-	else
-		echo "$commandString $jdkVersion being executed"
-		cd $WORKSPACE/DockerBuildFolder/openjdk-build && $commandString $jdkVersion
-	fi
+	for jdk in $jdkVersion
+	do
+		echo "$commandString $jdk being executed"
+		cd $WORKSPACE/DockerBuildFolder/openjdk-build && $commandString $jdk
+	done
 	removeBuild
 }
 
@@ -116,8 +130,11 @@ setupGit()
 		git pull https://github.com/adoptopenjdk/openjdk-build
 	fi
 }
-
 parseCommandLineArgs $@
 checkJDKVersion
-setupGit
-buildDocker
+if [[ "$useEclipseDockerFiles" == "true" ]]; then
+	useEclipseDockerFiles
+else
+	setupGit
+	buildDocker
+fi
