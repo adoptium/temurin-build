@@ -28,6 +28,7 @@ RUN apt-get update \
   && apt-get update \
   && apt-get -y upgrade \
   && apt-get install -qq -y --no-install-recommends \
+    autoconf \
     ccache \
     cpio \
     curl \
@@ -42,6 +43,7 @@ RUN apt-get update \
     libfreetype6-dev \
     libx11-dev \
     libxext-dev \
+    libxrandr-dev \
     libxrender-dev \
     libxt-dev \
     libxtst-dev \
