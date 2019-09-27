@@ -171,7 +171,7 @@ class Build {
                             ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"],
                     ]
 
-                    def signJob = context.build job: "build-scripts/release/sign_build",
+                    def signJob = context.build job: "build-scripts/release/sign_build_notarize",
                             propagate: true,
                             parameters: params
 
