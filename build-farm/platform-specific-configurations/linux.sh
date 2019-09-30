@@ -126,4 +126,5 @@ fi
 if [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-jdk8u-jfr-incubator"
+  BOOT_JDK_VERSION="8"
 fi
