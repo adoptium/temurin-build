@@ -35,9 +35,9 @@ RUN apt-get update \
     gcc \
     git \
     libasound2-dev \
-    libconfig1-dev \ 
     libcups2-dev \
     libfreetype6-dev \
+    libfontconfig1-dev \
     libx11-dev \
     libxext-dev \
     libxrender-dev \
