@@ -94,12 +94,6 @@ checkArgs()
         fi
 }
 
-removeBuild()
-{
-	echo "Removing ../openjdk_build/workspace/build"
-	cd $WORKSPACE/DockerBuildFolder/openjdk-build/workspace && rm -r build
-}
-
 useEclipseDockerFiles()
 {
 	cd $WORKSPACE/DockerBuildFolder/openjdk-build/docker && mkdir -p EclipseDockerfiles
@@ -152,7 +146,6 @@ buildDocker()
 		echo "$commandString $jdk being executed"
 		cd $WORKSPACE/DockerBuildFolder/openjdk-build && $commandString $jdk
 	done
-	removeBuild
 }
 
 setupGit()
