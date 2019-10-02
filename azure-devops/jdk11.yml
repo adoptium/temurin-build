@@ -11,7 +11,6 @@ stages:
 
     jobs:
       - job: macOS
-        condition: contains(variables.buildPlatforms, 'macOS')
         pool:
           vmImage: "macOS-10.14"
         steps:
