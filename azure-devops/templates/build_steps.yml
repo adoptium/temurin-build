@@ -1,0 +1,66 @@
+# To use this step template from a job, use the following code:
+#
+# Your job using this template *must* supply these values:
+# - DEBUG_LEVEL: '[fastdebug | slowdebug | release ]' - default to fastdebug,
+#   Reference: https://hg.openjdk.java.net/jdk8/jdk8/raw-file/tip/README-builds.html.
+
+parameters:
+  javaVersion: ''
+
+steps:
+  - checkout: self
+
+  - script: |
+      printenv
+    displayName: "Show all env vars"
+    condition: eq(variables['system.debug'], 'true')
+
+  - bash: |
+      ERR_MESSAGE_MISSING_ENV=''
+
+      if [ -z "$JAVA_VERSION"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set javaVersion to jdk8, jdk11. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$DEBUG_LEVEL"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set DEBUG_LEVEL to fastdebug, slowdebug, release. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ ! -z "$ERR_MESSAGE_MISSING_ENV" ]; then
+        echo "##vso[task.logissue type=error;]$ERR_MESSAGE_MISSING_ENV"
+        echo "##vso[task.complete result=Failed;]"
+      fi;
+    env:
+      JAVA_VERSION: ${{ parameters.javaVersion }}
+    displayName: Check for required parameters
+
+  - script: |
+      brew update
+    displayName: "macOS: Update brew"
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+
+  - script: |
+      brew install autoconf
+    displayName: "macOS: Install dependencies"
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+
+  # Use the AdoptOpenJDK build scripts to build the OpenJDK8 binaries.
+  - script: |
+      ./makejdk-any-platform.sh \
+        -J "${JDK_BOOT_DIR}" \
+        --make-args "$MAKE_ARGS_FOR_ANY_PLATFORM" \
+        --configure-args "$CONFIGURE_ARGS_FOR_ANY_PLATFORM --with-debug-level=$(DEBUG_LEVEL)" \
+        -d artifacts \
+        --no-adopt-patches \
+        $EXTRA_OPTION \
+        $JAVA_TO_BUILD
+    env:
+      JAVA_TO_BUILD: ${{ parameters.javaVersion }}
+    displayName: "Start makejdk-any-platform ${{ parameters.javaVersion }} process"
+
+  # Upload the produced JDK/JRE binary to the build artifact service.
+  - task: PublishPipelineArtifact@1
+    inputs:
+      artifactName: $(Agent.OS)_$(Agent.OSArchitecture)
+      targetPath: "workspace/artifacts"
+    displayName: "Upload JDK/JRE artifact"

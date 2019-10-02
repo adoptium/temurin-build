@@ -1,0 +1,20 @@
+name: "$(Year:yyyy).$(Month).0.$(BuildID)-pr"
+
+trigger: none
+pr: none
+schedules: []
+
+stages:
+  - stage: Build
+    variables:
+      JDK_SOURCE_REPO: "https://github.com/AdoptOpenJDK/openjdk-jdk11u"
+
+    jobs:
+      - job: macOS
+        condition: contains(variables.buildPlatforms, 'macOS')
+        pool:
+          vmImage: "macOS-10.14"
+        steps:
+          - template: ./templates/build_steps.yml
+            parameters:
+              javaVersion: "jdk11u"
