@@ -1,3 +1,6 @@
+variables:
+- group: codesign-certs
+
 steps:
   - checkout: self
   
