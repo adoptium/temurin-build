@@ -1,0 +1,35 @@
+steps:
+  - checkout: self
+  
+- script: |
+    printenv
+  displayName: "Show all env vars"
+  condition: eq(variables['system.debug'], 'true')
+  
+# Install Apple certificate for codesigning
+- task: InstallAppleCertificate@2
+  inputs:
+    certSecureFile: "osx.p12"
+    certPwd: $(MACOS_P12_PASSWORD)
+  
+# download the jdk/jre artifact
+- task: DownloadPipelineArtifact@2
+  inputs:
+    buildType: "current"
+    artifactName: $(Agent.OS)_$(Agent.OSArchitecture)
+    itemPattern: "**"
+    targetPath: "$(Pipeline.Workspace)/workspace/target"
+  displayName: "Download jdk artifact"
+
+- script: |
+    case "$(uname)" in
+          "Darwin")    export OPERATING_SYSTEM="mac";;
+    esac
+    ./build-farm/sign-releases.sh
+    
+# Upload the produced JDK/JRE binary to the build artifact service.
+- task: PublishPipelineArtifact@1
+  inputs:
+    artifactName: $(Agent.OS)_$(Agent.OSArchitecture)
+    targetPath: "workspace/artifacts"
+  displayName: "Upload JDK/JRE artifact"
