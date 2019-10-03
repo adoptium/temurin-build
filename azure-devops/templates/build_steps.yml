@@ -52,7 +52,7 @@ steps:
         --configure-args "$CONFIGURE_ARGS_FOR_ANY_PLATFORM --with-debug-level=$(DEBUG_LEVEL)" \
         -d artifacts \
         --no-adopt-patches \
-        --target-file-name "$(Build.BuildName).tar.gz" \
+        --target-file-name "$(Build.BuildNumber).tar.gz" \
         $EXTRA_OPTION \
         $JAVA_TO_BUILD
     env:

@@ -8,9 +8,12 @@ variables:
   - group: codesign-certs
 
 stages:
-  - stage: Build
+  - stage: Build_and_Sign_macOS
+    displayName: 'Build & Sign'
     jobs:
-      - job: macOS
+
+      - job: Build_macOS
+        displayName: Build
         pool:
           vmImage: "macOS-10.14"
         steps:
@@ -18,10 +21,23 @@ stages:
             parameters:
               javaVersion: "jdk11u"
 
-  - stage: Sign
-    jobs:
-      - job: macOS
+      - job: Sign_macOS
+        displayName: Sign
+        dependsOn: Build_macOS
         pool:
           vmImage: "macOS-10.14"
         steps:
           - template: ./templates/sign_steps.yml
+
+  - stage: Test_macOS
+    displayName: 'Test macOS'
+    dependsOn: Build_and_Sign_macOS
+    jobs:
+      - job: Test_macOS
+        displayName: 'Test'
+        pool:
+          vmImage: 'macOS-10.14'
+        steps:
+          - script: |
+              echo "Do the Tests here."
+            displayName: 'Hello World'
