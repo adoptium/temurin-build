@@ -6,9 +6,6 @@ schedules: []
 
 stages:
   - stage: Build
-    variables:
-      JDK_SOURCE_REPO: "https://github.com/AdoptOpenJDK/openjdk-jdk11u"
-
     jobs:
       - job: macOS
         pool:
@@ -17,3 +14,11 @@ stages:
           - template: ./templates/build_steps.yml
             parameters:
               javaVersion: "jdk11u"
+  
+  - stage: Sign
+    jobs:
+      - job: macOS
+        pool:
+          vmImage: "macOS-10.14"
+        steps:
+          - template: ./templates/sign_steps.yml           
