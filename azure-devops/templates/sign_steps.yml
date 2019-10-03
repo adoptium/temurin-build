@@ -31,5 +31,5 @@ steps:
   - task: PublishPipelineArtifact@1
     inputs:
       artifactName: $(Agent.OS)_$(Agent.OSArchitecture)
-      targetPath: "workspace/artifacts"
+      targetPath: "workspace/target"
     displayName: "Upload JDK/JRE artifact"
