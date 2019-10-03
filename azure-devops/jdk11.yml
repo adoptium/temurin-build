@@ -1,4 +1,4 @@
-name: "$(Year:yyyy).$(Month).0.$(BuildID)-pr"
+name: "OpenJDK11U-jdk_x64_mac_hotspot_$(Year:yyyy)-$(Date:MM)-$(Date:dd)-$(Date:HH)-$(Date:mm)"
 
 trigger: none
 pr: none
@@ -17,11 +17,11 @@ stages:
           - template: ./templates/build_steps.yml
             parameters:
               javaVersion: "jdk11u"
-  
+
   - stage: Sign
     jobs:
       - job: macOS
         pool:
           vmImage: "macOS-10.14"
         steps:
-          - template: ./templates/sign_steps.yml           
+          - template: ./templates/sign_steps.yml

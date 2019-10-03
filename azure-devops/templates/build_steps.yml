@@ -52,6 +52,7 @@ steps:
         --configure-args "$CONFIGURE_ARGS_FOR_ANY_PLATFORM --with-debug-level=$(DEBUG_LEVEL)" \
         -d artifacts \
         --no-adopt-patches \
+        --target-file-name "$(Build.BuildName).tar.gz" \
         $EXTRA_OPTION \
         $JAVA_TO_BUILD
     env:
@@ -61,6 +62,6 @@ steps:
   # Upload the produced JDK/JRE binary to the build artifact service.
   - task: PublishPipelineArtifact@1
     inputs:
-      artifactName: $(Agent.OS)_$(Agent.OSArchitecture)
+      artifactName: $(Agent.OS)_$(Agent.OSArchitecture)_unsigned
       targetPath: "workspace/artifacts"
     displayName: "Upload JDK/JRE artifact"
