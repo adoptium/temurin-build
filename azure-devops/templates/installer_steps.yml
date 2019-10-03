@@ -25,7 +25,7 @@ steps:
   - task: DownloadPipelineArtifact@2
     inputs:
       buildType: "current"
-      artifactName: $(Agent.OS)_$(Agent.OSArchitecture)
+      artifactName: $(Agent.OS)_$(Agent.OSArchitecture)_signed
       itemPattern: "**"
       targetPath: "workspace/target"
     displayName: "Download jdk artifact"
