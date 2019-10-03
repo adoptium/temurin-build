@@ -26,10 +26,11 @@ steps:
             "Darwin")    export OPERATING_SYSTEM="mac";;
       esac
       ./build-farm/sign-releases.sh
+    workingDirectory: $(Pipeline.Workspace)
 
   # Upload the produced JDK/JRE binary to the build artifact service.
   - task: PublishPipelineArtifact@1
     inputs:
       artifactName: $(Agent.OS)_$(Agent.OSArchitecture)
-      targetPath: "workspace/target"
+      targetPath: "$(Pipeline.Workspace)/workspace/target"
     displayName: "Upload JDK/JRE artifact"
