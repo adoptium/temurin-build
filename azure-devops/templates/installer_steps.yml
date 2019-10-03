@@ -3,6 +3,8 @@ parameters:
   fullVersion: ''
 
 steps:
+  - checkout: none
+
   # Checkout openjdk-installer repo
   - script: |
       git clone https://github.com/AdoptOpenJDK/openjdk-installer.git $(Build.SourcesDirectory)
