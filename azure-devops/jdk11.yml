@@ -4,6 +4,9 @@ trigger: none
 pr: none
 schedules: []
 
+variables:
+  - group: codesign-certs
+
 stages:
   - stage: Build
     jobs:
