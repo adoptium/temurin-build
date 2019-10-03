@@ -32,6 +32,6 @@ steps:
   # Upload the produced JDK/JRE binary to the build artifact service.
   - task: PublishPipelineArtifact@1
     inputs:
-      artifactName: $(Agent.OS)_$(Agent.OSArchitecture)
+      artifactName: $(Agent.OS)_$(Agent.OSArchitecture)_signed
       targetPath: "workspace/target"
     displayName: "Upload JDK/JRE artifact"
