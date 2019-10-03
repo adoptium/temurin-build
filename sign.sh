@@ -76,9 +76,11 @@ signRelease()
       echo "Signing OSX release"
 
       # Login to KeyChain
-      # shellcheck disable=SC2046
-      # shellcheck disable=SC2006
-      security unlock-keychain -p `cat ~/.password`
+      if [ -f ~/.password ]; then
+        # shellcheck disable=SC2046
+        # shellcheck disable=SC2006
+        security unlock-keychain -p `cat ~/.password`
+      fi
 
       ########################################
       ## TODO: Remove me pending resolution to https://github.com/AdoptOpenJDK/TSC/issues/107
