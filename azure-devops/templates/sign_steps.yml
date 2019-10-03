@@ -26,6 +26,8 @@ steps:
             "Darwin")    export OPERATING_SYSTEM="mac";;
       esac
       ./build-farm/sign-releases.sh
+    env:
+      CERTIFICATE: "Developer ID Application: London Jamocha Community CIC"
 
   # Upload the produced JDK/JRE binary to the build artifact service.
   - task: PublishPipelineArtifact@1

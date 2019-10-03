@@ -1,0 +1,44 @@
+parameters:
+  majorVersion: ''
+  fullVersion: ''
+
+steps:
+  # Checkout openjdk-installer repo
+  - script: |
+      git clone https://github.com/AdoptOpenJDK/openjdk-installer.git $(Build.SourcesDirectory)
+    displayName: "Checkout openjdk-installer"
+
+  - script: |
+      printenv
+    displayName: "Show all env vars"
+    condition: eq(variables['system.debug'], 'true')
+
+  # Install Apple certificate for codesigning
+  - task: InstallAppleCertificate@2
+    inputs:
+      certSecureFile: "osx_installer.p12"
+      certPwd: $(MACOS_P12_INSTALLER_PASSWORD)
+
+  # download the jdk/jre artifact
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      buildType: "current"
+      artifactName: $(Agent.OS)_$(Agent.OSArchitecture)
+      itemPattern: "**"
+      targetPath: "workspace/target"
+    displayName: "Download jdk artifact"
+
+  - script: |
+      ./pkgbuild/create-installer-mac.sh
+    env:
+      CERTIFICATE: "Developer ID Installer: London Jamocha Community CIC"
+      WORKSPACE: $(Build.SourcesDirectory)
+      MAJOR_VERSION: ${{ parameters.majorVersion }}
+      FULL_VERSION: ${{ parameters.fullVersion }}
+
+  # Upload the produced JDK/JRE binary to the build artifact service.
+  - task: PublishPipelineArtifact@1
+    inputs:
+      artifactName: $(Agent.OS)_$(Agent.OSArchitecture)_installers
+      targetPath: "workspace/target"
+    displayName: "Upload JDK/JRE artifact"
