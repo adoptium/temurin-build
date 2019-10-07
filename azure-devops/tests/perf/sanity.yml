@@ -1,0 +1,24 @@
+parameters:
+  buildList: "perf/idle_micro"
+  testTarget: "_sanity.perf"
+  testName: "perf_sanity"
+  failTaskOnFailedTests: true
+  tapResult: "true"
+  testResultSearchPath: "**/*.tap.xml"
+  pool: {}
+  useContainer: {}
+
+jobs:
+  - job: perf_sanity
+    displayName: "Performance Sanity Check"
+    pool: ${{ parameters.pool }}
+    ${{ insert }}: ${{ parameters.useContainer }}
+    variables:
+      BUILD_LIST: ${{ parameters.buildList }}
+      TEST_TARGET: ${{ parameters.testTarget }}
+      TEST_NAME: ${{ parameters.testName }}
+      FAIL_TASK_ON_FAILED_TESTS: ${{ parameters.failTaskOnFailedTests }}
+      TAP_RESULT: ${{ parameters.tapResult }}
+      TEST_RESULT_SEARCH_PATH: ${{ parameters.testResultSearchPath }}
+    steps:
+      - template: ../templates/test_steps.yml

@@ -47,12 +47,22 @@ stages:
   - stage: Test_macOS
     displayName: 'Test'
     dependsOn: Build_and_Sign_macOS
+    variables:
+      ADOPT_TEST_REPO_URI: 'https://github.com/AdoptOpenJDK/openjdk-tests'
+      ADOPT_TEST_REPO_BRANCH: 'master'
+      ADOPT_TEST_SOURCE_URI: 'https://github.com/AdoptOpenJDK/openjdk-jdk11u'
+      ADOPT_TEST_SOURCE_BRANCH: 'master'
     jobs:
-      - job: Test_macOS
-        displayName: 'Test'
+    - template: ./tests/openjdk/sanity.yml
+      parameters:
         pool:
-          vmImage: 'macOS-10.14'
-        steps:
-          - script: |
-              echo "Do the Tests here."
-            displayName: 'Hello World'
+          vmImage: macOS-10.14
+    - template: ./tests/perf/sanity.yml
+      parameters:
+        pool:
+          vmImage: macOS-10.14
+    - template: ./tests/system/sanity.yml
+      parameters:
+        pool:
+          vmImage: macOS-10.14
+

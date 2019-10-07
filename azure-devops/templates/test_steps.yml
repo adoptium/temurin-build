@@ -1,0 +1,215 @@
+# To use this step template from a job, use the following code:
+#
+# Your job using this template *must* supply these values:
+# - DEBUG_LEVEL: '[fastdebug | slowdebug | release ]' - default to fastdebug, Reference: https://hg.openjdk.java.net/jdk8/jdk8/raw-file/tip/README-builds.html .
+# - BUILD_LIST: 'b1,b2,b3' - a list of tests that we want to run.
+# - TEST_TARGET: '_level.type' - target of the tests that we want to run.
+# - ADOPT_TEST_REPO_URI: 'https link' - link to adopt openjdk test repo
+# - ADOPT_TEST_REPO_BRANCH: 'master' - default branch of the openjdk repo
+# - TEST_NAME: 'name' - the name of the test.
+# - FAIL_TASK_ON_FAILED_TESTS: 'true | false' - whether to fail the job if test fail
+# - TEST_RESULT_SEARCH_PATH: '**/*.xml' - path to search test result
+#
+# Your job using this template *may* supply these values:
+# - CUSTOMIZED_TESTS: 'string' - set this value to break down large test
+# - TAP_RESULT: 'true' - convert TAP result
+
+steps:
+  # we are using prebuild artifacts, so we do not need to checkout
+  - checkout: none
+
+  - bash: |
+      ERR_MESSAGE_MISSING_ENV=''
+
+      if [ -z "$DEBUG_LEVEL"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set DEBUG_LEVEL to fastdebug, slowdebug, release. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$BUILD_LIST"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set BUILD_LIST to the URI to the JDK repo to build. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$TEST_TARGET"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set TEST_TARGET to URI of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$ADOPT_TEST_REPO_URI"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set ADOPT_TEST_REPO_URI to the branch-name of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$ADOPT_TEST_REPO_BRANCH"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set ADOPT_TEST_REPO_BRANCH to the branch-name of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$TEST_NAME"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set TEST_NAME to the branch-name of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$FAIL_TASK_ON_FAILED_TESTS"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set FAIL_TASK_ON_FAILED_TESTS to the branch-name of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$TEST_RESULT_SEARCH_PATH"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set TEST_RESULT_SEARCH_PATH to the branch-name of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ ! -z "$ERR_MESSAGE_MISSING_ENV" ]; then
+        echo "##vso[task.logissue type=error;]$ERR_MESSAGE_MISSING_ENV"
+        echo "##vso[task.complete result=Failed;]"
+      fi;
+
+    displayName: Check for required parameters
+
+  - script: |
+      brew update
+    displayName: 'Update brew'
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+
+  # Install macOS required dependencies
+  - script: |
+      set -e
+      brew install xmlstarlet ant ant-contrib
+    displayName: "macOS: install dependencies"
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+
+  - script: |
+      export PERL_MM_USE_DEFAULT=1
+      cpan install JSON Text::CSV XML::Parser
+    displayName: 'Setup Perl dependencies'
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+
+  # download the jdk/jre artifact
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      buildType: "current"
+      artifactName: $(Agent.OS)_$(Agent.OSArchitecture)_signed
+      itemPattern: "**"
+      targetPath: "$(Pipeline.Workspace)"
+    displayName: "Download jdk artifact"
+
+  # Decomporess the artifacts
+  - script: |
+      set -e
+      cd /$PIPELINE_WORKSPACE
+      mkdir -p /$PIPELINE_WORKSPACE/j2sdk-image
+      mkdir -p /$PIPELINE_WORKSPACE/j2re-image
+
+      STRIP_COMPONENTS=""
+      if [ $AGENT_OS == "Linux" ]; then
+        STRIP_COMPONENTS=1
+      fi;
+      if [ $AGENT_OS == "Darwin" ]; then
+        STRIP_COMPONENTS=3
+      fi;
+
+      tar -xzf OpenJDK*-jdk_*.tar.gz -C /$PIPELINE_WORKSPACE/j2sdk-image --strip-components=$STRIP_COMPONENTS
+      tar -xzf OpenJDK*-jre_*.tar.gz -C /$PIPELINE_WORKSPACE/j2re-image --strip-components=$STRIP_COMPONENTS
+    displayName: "Decompress build pipeline artifact"
+
+  # Set environment variables
+  # export DISPLAY=:1
+  # export OPENJDK_SOURCES=$BUILD_REPOSITORY_LOCALPATH
+  # export TEST_JDK_HOME=$PIPELINE_WORKSPACE/j2sdk-image
+  # export OPENJDK_BUILD=$PIPELINE_WORKSPACE/j2sdk-image
+  # export TEST_DIR=$COMMON_TESTRESULTSDIRECTORY/adopt-test
+  # export JRE_IMAGE=$PIPELINE_WORKSPACE/j2re-image
+  # export BUILD_ROOT=$COMMON_TESTRESULTSDIRECTORY/adopt-test/test-result
+
+  - script: |
+      echo "##vso[task.setvariable variable=DISPLAY]:1";
+      echo "##vso[task.setvariable variable=OPENJDK_SOURCES]$BUILD_REPOSITORY_LOCALPATH";
+      echo "##vso[task.setvariable variable=TEST_JDK_HOME]$PIPELINE_WORKSPACE/j2sdk-image";
+      echo "##vso[task.setvariable variable=OPENJDK_BUILD]$PIPELINE_WORKSPACE/j2sdk-image";
+      echo "##vso[task.setvariable variable=TEST_DIR]$COMMON_TESTRESULTSDIRECTORY/adopt-test"
+      echo "##vso[task.setvariable variable=JRE_IMAGE]$PIPELINE_WORKSPACE/j2re-image";
+      echo "##vso[task.setvariable variable=BUILD_ROOT]$COMMON_TESTRESULTSDIRECTORY/adopt-test/test-result";
+    displayName: "Set environment varaibles"
+
+  # clone openjdk-test repo
+  - script: |
+      cd /$COMMON_TESTRESULTSDIRECTORY
+      git clone -b $ADOPT_TEST_REPO_BRANCH --depth 1 $ADOPT_TEST_REPO_URI
+    displayName: "Clone openjdk test repo"
+
+  # create symbolic link, map openjdk source to the test framework folder
+  - script: |
+      cd /$TEST_DIR
+      ln -s $OPENJDK_SOURCES ./openjdk/openjdk-jdk
+    displayName: "Create symbolic link"
+
+  # Get openj9 test framework
+  - script: |
+      cd /$TEST_DIR
+      ./get.sh -t $TEST_DIR
+    displayName: "Get openj9 test framework"
+
+  # Todo: Remove this and take all cookies away from George and Derek.
+  - script: |
+      sed -i 's/"sanity", "extended", "special"/"sanity", "extended", "special", "individual"/g' $TEST_DIR/openj9/test/TestConfig/scripts/testKitGen/testKitGen.pl
+      sed -i 's/"sanity", "extended", "special"/"sanity", "extended", "special", "individual"/g' $TEST_DIR/openj9/test/TestConfig/TKGJ/src/org/testKitGen/Constants.java
+    displayName: "HACK HACK HACK: add individual category to playlist parser"
+
+  # update test suites playlist.xml files
+  # the test suites in $CUSTOMIZED_TESTS is split by "|"
+  # the path to playlist.xml file and test name is split by ":"
+  # reference: https://stackoverflow.com/a/918931
+  - script: |
+      cd /$TEST_DIR
+      while IFS='|' read -ra TESTS; do
+          for i in "${TESTS[@]}"; do
+              IFS=':' read -ra TEST <<< "$i"
+              xmlstarlet ed -L --subnode "//playlist/test[testCaseName = '"${TEST[1]}"']/levels" -t elem -n level -v "individual" "./${TEST[0]}/playlist.xml"
+          done
+      done <<< "$CUSTOMIZED_TESTS"
+    condition: and(succeeded(), ne(variables['CUSTOMIZED_TESTS'], ''))
+    displayName: "Update playlist.xml files"
+
+  # Start the X virtual frame buffer (X-windows in memory only) on Linux.
+  - bash: |
+      set -e
+      Xvfb $DISPLAY -screen 0 1280x1024x24 &
+      disown -ar
+    displayName: "Start xvfb"
+    condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
+
+  # Build test suites
+  - script: |
+      cd /$TEST_DIR
+      ./maketest.sh $TEST_DIR
+    displayName: "Build test suites"
+
+  - script: |
+      cd /$TEST_DIR
+      OPENJDK_DIR=$OPENJDK_SOURCES ./maketest.sh $TEST_DIR $TEST_TARGET
+    displayName: "Execute test suites"
+
+  # Find the TAP file
+  - script: |
+      cd /$COMMON_TESTRESULTSDIRECTORY
+      TAP_FILE_PATH=$(find . -type f -name "*.tap" -print | head -n 1)
+      echo "TAP_FILE_PATH: $TAP_FILE_PATH"
+      echo "##vso[task.setvariable variable=TAP_FILE_PATH]$TAP_FILE_PATH";
+    displayName: "Search for TAP file"
+    condition: and(succeeded(), eq(variables['TAP_RESULT'], 'true'))
+
+  # Convert TAP file to XML file
+  # We use .tap.xml file to distinguish from other xml configuration files
+  - script: |
+      cd /$COMMON_TESTRESULTSDIRECTORY
+      # tap-xunit will cause exit code 1 if there is any failed test, `||` true can mitigate this error
+      cat "$TAP_FILE_PATH" | tap-xunit > results.tap.xml || true
+    displayName: "Convert TAP to XML file"
+    condition: and(succeeded(), eq(variables['TAP_RESULT'], 'true'))
+
+  # Publish the .tap.xml file to AzDO
+  # even though the we use tap-xunit, we still need to use JUnit plugin
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: "JUnit"
+      testResultsFiles: $(TEST_RESULT_SEARCH_PATH)
+      searchFolder: "$(Common.TestResultsDirectory)"
+      mergeTestResults: true
+      failTaskOnFailedTests: $(FAIL_TASK_ON_FAILED_TESTS)
+      testRunTitle: $(TEST_NAME)-$(Agent.OSArchitecture)-$(Agent.OS)
+    displayName: "Publish test result"
+

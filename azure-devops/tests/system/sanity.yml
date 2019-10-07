@@ -1,0 +1,39 @@
+parameters:
+  failTaskOnFailedTests: true
+  tapResult: "true"
+  testResultSearchPath: "**/*.tap.xml"
+  pool: {}
+  useContainer: {}
+
+jobs:
+  - job: system_sanity
+    displayName: "System Sanity Check"
+    variables:
+      FAIL_TASK_ON_FAILED_TESTS: ${{ parameters.failTaskOnFailedTests }}
+      TAP_RESULT: ${{ parameters.tapResult }}
+      TEST_RESULT_SEARCH_PATH: ${{ parameters.testResultSearchPath }}
+    pool: ${{ parameters.pool }}
+    ${{ insert }}: ${{ parameters.useContainer }}
+    strategy:
+      matrix:
+        "otherLoadTest & mauveLoadTest":
+          BUILD_LIST: "system/otherLoadTest,system/mauveLoadTest"
+          TEST_TARGET: "_sanity.system"
+          TEST_NAME: "system_sanity otherLoadTest & mauveLoadTest"
+        "mathLoadTest & lambdaLoadTest":
+          BUILD_LIST: "system/mathLoadTest,system/lambdaLoadTest"
+          TEST_TARGET: "_sanity.system"
+          TEST_NAME: "system_sanity mathLoadTest & mauveLlambdaLoadTestoadTest"
+        jlm1:
+          BUILD_LIST: "system/jlm"
+          CUSTOMIZED_TESTS: "system/jlm:MachineInfo|system/jlm:TestJlmRemoteClassAuth|system/jlm:TestJlmRemoteClassNoAuth_SE80_Linux"
+          TEST_TARGET: "_individual.system"
+          TEST_NAME: "system_sanity jlm1"
+        jlm2:
+          BUILD_LIST: "system/jlm"
+          CUSTOMIZED_TESTS: "system/jlm:TestJlmRemoteMemoryAuth_SE80_Linux|system/jlm:TestJlmRemoteMemoryNoAuth_SE80_Linux|system/jlm:TestJlmRemoteNotifierProxyAuth"
+          TEST_TARGET: "_individual.system"
+          TEST_NAME: "system_sanity jlm2"
+
+    steps:
+      - template: ../templates/test_steps.yml

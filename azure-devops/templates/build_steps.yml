@@ -4,6 +4,8 @@
 # - DEBUG_LEVEL: '[fastdebug | slowdebug | release ]' - default to fastdebug,
 #   Reference: https://hg.openjdk.java.net/jdk8/jdk8/raw-file/tip/README-builds.html.
 
+# TODO: Handle the branch/tag to build - it is assuming 'master' right now
+
 parameters:
   javaVersion: ''
 

@@ -1,0 +1,38 @@
+parameters:
+  buildList: "openjdk"
+  testTarget: "_individual.openjdk"
+  failTaskOnTestFailures: true
+  testResultSearchPath: "**/*.jtr.xml"
+  pool: {}
+  useContainer: {}
+
+jobs:
+  - job: openjdk_sanity
+    displayName: "OpenJDK Sanity Check"
+    variables:
+      BUILD_LIST: ${{ parameters.buildList }}
+      TEST_TARGET: ${{ parameters.testTarget }}
+      FAIL_TASK_ON_FAILED_TESTS: ${{ parameters.failTaskOnTestFailures }}
+      TEST_RESULT_SEARCH_PATH: ${{ parameters.testResultSearchPath }}
+    pool: ${{ parameters.pool }}
+    ${{ insert }}: ${{ parameters.useContainer }}
+    strategy:
+      matrix:
+        jdk_io_math_jre:
+          CUSTOMIZED_TESTS: "openjdk:jdk_io|openjdk:jdk_math|openjdk:jdk_math_jre"
+          TEST_NAME: "openjdk_sanity io math jre"
+        openjdk_jdk_net_security1:
+          CUSTOMIZED_TESTS: "openjdk:jdk_net|openjdk:jdk_security1"
+          TEST_NAME: "openjdk_sanity net security1"
+        jdk_lang:
+          CUSTOMIZED_TESTS: "openjdk:jdk_lang"
+          TEST_NAME: "openjdk_sanity lang"
+        jdk_nio_rmi:
+          CUSTOMIZED_TESTS: "openjdk:jdk_nio|openjdk:jdk_rmi"
+          TEST_NAME: "openjdk_sanity nio rmi"
+        jdk_util:
+          CUSTOMIZED_TESTS: "openjdk:jdk_util"
+          TEST_NAME: "openjdk_sanity util"
+
+    steps:
+      - template: ../templates/test_steps.yml
