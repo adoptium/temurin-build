@@ -21,4 +21,4 @@ jobs:
       TAP_RESULT: ${{ parameters.tapResult }}
       TEST_RESULT_SEARCH_PATH: ${{ parameters.testResultSearchPath }}
     steps:
-      - template: ../templates/test_steps.yml
+      - template: ../../templates/test_steps.yml

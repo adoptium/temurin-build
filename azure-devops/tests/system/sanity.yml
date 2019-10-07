@@ -36,4 +36,4 @@ jobs:
           TEST_NAME: "system_sanity jlm2"
 
     steps:
-      - template: ../templates/test_steps.yml
+      - template: ../../templates/test_steps.yml

@@ -35,4 +35,4 @@ jobs:
           TEST_NAME: "openjdk_sanity util"
 
     steps:
-      - template: ../templates/test_steps.yml
+      - template: ../../templates/test_steps.yml
