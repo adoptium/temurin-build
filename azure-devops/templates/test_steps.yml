@@ -102,7 +102,7 @@ steps:
   # Decomporess the artifacts
   - script: |
       set -e
-      cd /$PIPELINE_WORKSPACE
+      cd $PIPELINE_WORKSPACE
       mkdir -p /$PIPELINE_WORKSPACE/j2sdk-image
       mkdir -p /$PIPELINE_WORKSPACE/j2re-image
 
@@ -123,35 +123,35 @@ steps:
   # export OPENJDK_SOURCES=$BUILD_REPOSITORY_LOCALPATH
   # export TEST_JDK_HOME=$PIPELINE_WORKSPACE/j2sdk-image
   # export OPENJDK_BUILD=$PIPELINE_WORKSPACE/j2sdk-image
-  # export TEST_DIR=$COMMON_TESTRESULTSDIRECTORY/adopt-test
+  # export TEST_DIR=$COMMON_TESTRESULTSDIRECTORY/openjdk-tests
   # export JRE_IMAGE=$PIPELINE_WORKSPACE/j2re-image
-  # export BUILD_ROOT=$COMMON_TESTRESULTSDIRECTORY/adopt-test/test-result
+  # export BUILD_ROOT=$COMMON_TESTRESULTSDIRECTORY/openjdk-tests/test-result
 
   - script: |
       echo "##vso[task.setvariable variable=DISPLAY]:1";
       echo "##vso[task.setvariable variable=OPENJDK_SOURCES]$BUILD_REPOSITORY_LOCALPATH";
       echo "##vso[task.setvariable variable=TEST_JDK_HOME]$PIPELINE_WORKSPACE/j2sdk-image";
       echo "##vso[task.setvariable variable=OPENJDK_BUILD]$PIPELINE_WORKSPACE/j2sdk-image";
-      echo "##vso[task.setvariable variable=TEST_DIR]$COMMON_TESTRESULTSDIRECTORY/adopt-test"
+      echo "##vso[task.setvariable variable=TEST_DIR]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests"
       echo "##vso[task.setvariable variable=JRE_IMAGE]$PIPELINE_WORKSPACE/j2re-image";
-      echo "##vso[task.setvariable variable=BUILD_ROOT]$COMMON_TESTRESULTSDIRECTORY/adopt-test/test-result";
+      echo "##vso[task.setvariable variable=BUILD_ROOT]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests/test-result";
     displayName: "Set environment varaibles"
 
   # clone openjdk-test repo
   - script: |
-      cd /$COMMON_TESTRESULTSDIRECTORY
-      git clone -b $ADOPT_TEST_REPO_BRANCH --depth 1 $ADOPT_TEST_REPO_URI
+      cd $COMMON_TESTRESULTSDIRECTORY
+      git clone -b $ADOPT_TEST_REPO_BRANCH --depth 1 $ADOPT_TEST_REPO_URI $TEST_DIR
     displayName: "Clone openjdk test repo"
 
   # create symbolic link, map openjdk source to the test framework folder
   - script: |
-      cd /$TEST_DIR
+      cd $TEST_DIR
       ln -s $OPENJDK_SOURCES ./openjdk/openjdk-jdk
     displayName: "Create symbolic link"
 
   # Get openj9 test framework
   - script: |
-      cd /$TEST_DIR
+      cd $TEST_DIR
       ./get.sh -t $TEST_DIR
     displayName: "Get openj9 test framework"
 
@@ -166,7 +166,7 @@ steps:
   # the path to playlist.xml file and test name is split by ":"
   # reference: https://stackoverflow.com/a/918931
   - script: |
-      cd /$TEST_DIR
+      cd $TEST_DIR
       while IFS='|' read -ra TESTS; do
           for i in "${TESTS[@]}"; do
               IFS=':' read -ra TEST <<< "$i"
@@ -186,18 +186,18 @@ steps:
 
   # Build test suites
   - script: |
-      cd /$TEST_DIR
+      cd $TEST_DIR
       ./maketest.sh $TEST_DIR
     displayName: "Build test suites"
 
   - script: |
-      cd /$TEST_DIR
+      cd $TEST_DIR
       OPENJDK_DIR=$OPENJDK_SOURCES ./maketest.sh $TEST_DIR $TEST_TARGET
     displayName: "Execute test suites"
 
   # Find the TAP file
   - script: |
-      cd /$COMMON_TESTRESULTSDIRECTORY
+      cd $COMMON_TESTRESULTSDIRECTORY
       TAP_FILE_PATH=$(find . -type f -name "*.tap" -print | head -n 1)
       echo "TAP_FILE_PATH: $TAP_FILE_PATH"
       echo "##vso[task.setvariable variable=TAP_FILE_PATH]$TAP_FILE_PATH";
@@ -207,7 +207,7 @@ steps:
   # Convert TAP file to XML file
   # We use .tap.xml file to distinguish from other xml configuration files
   - script: |
-      cd /$COMMON_TESTRESULTSDIRECTORY
+      cd $COMMON_TESTRESULTSDIRECTORY
       # tap-xunit will cause exit code 1 if there is any failed test, `||` true can mitigate this error
       cat "$TAP_FILE_PATH" | tap-xunit > results.tap.xml || true
     displayName: "Convert TAP to XML file"
