@@ -18,6 +18,10 @@ steps:
   # we are using prebuild artifacts, so we do not need to checkout
   - checkout: none
 
+  - script: |
+      git clone --branch $ADOPT_JDK_SOURCE_BRANCH --depth 1 $ADOPT_JDK_SOURCE_URI $(Build.SourcesDirectory)
+    displayName: 'Clone jdk11u sources'
+
   - bash: |
       ERR_MESSAGE_MISSING_ENV=''
 
@@ -26,31 +30,39 @@ steps:
       fi;
 
       if [ -z "$BUILD_LIST"  ]; then
-        ERR_MESSAGE_MISSING_ENV="Pipeline must set BUILD_LIST to the URI to the JDK repo to build. $ERR_MESSAGE_MISSING_ENV"
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set BUILD_LIST to [openjdk|system|external|etc...]. $ERR_MESSAGE_MISSING_ENV"
       fi;
 
       if [ -z "$TEST_TARGET"  ]; then
-        ERR_MESSAGE_MISSING_ENV="Pipeline must set TEST_TARGET to URI of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set TEST_TARGET to _[sanity|extended|special|etc.].suite_name $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$ADOPT_JDK_SOURCE_URI"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set ADOPT_JDK_SOURCE_URI to the uri of the jdk repo to use. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$ADOPT_JDK_SOURCE_BRANCH"  ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set ADOPT_JDK_SOURCE_BRANCH to the branch-name of the jdk repo to use. $ERR_MESSAGE_MISSING_ENV"
       fi;
 
       if [ -z "$ADOPT_TEST_REPO_URI"  ]; then
-        ERR_MESSAGE_MISSING_ENV="Pipeline must set ADOPT_TEST_REPO_URI to the branch-name of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set ADOPT_TEST_REPO_URI to the uri of the openjdk-tests repo to use. $ERR_MESSAGE_MISSING_ENV"
       fi;
 
       if [ -z "$ADOPT_TEST_REPO_BRANCH"  ]; then
-        ERR_MESSAGE_MISSING_ENV="Pipeline must set ADOPT_TEST_REPO_BRANCH to the branch-name of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set ADOPT_TEST_REPO_BRANCH to the branch-name of the openjdk-tests repo to use. $ERR_MESSAGE_MISSING_ENV"
       fi;
 
       if [ -z "$TEST_NAME"  ]; then
-        ERR_MESSAGE_MISSING_ENV="Pipeline must set TEST_NAME to the branch-name of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set TEST_NAME to the tests to run. $ERR_MESSAGE_MISSING_ENV"
       fi;
 
       if [ -z "$FAIL_TASK_ON_FAILED_TESTS"  ]; then
-        ERR_MESSAGE_MISSING_ENV="Pipeline must set FAIL_TASK_ON_FAILED_TESTS to the branch-name of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set FAIL_TASK_ON_FAILED_TESTS to true or false. $ERR_MESSAGE_MISSING_ENV"
       fi;
 
       if [ -z "$TEST_RESULT_SEARCH_PATH"  ]; then
-        ERR_MESSAGE_MISSING_ENV="Pipeline must set TEST_RESULT_SEARCH_PATH to the branch-name of the adopt-build repo to use. $ERR_MESSAGE_MISSING_ENV"
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set TEST_RESULT_SEARCH_PATH to the local search path for test report files. $ERR_MESSAGE_MISSING_ENV"
       fi;
 
       if [ ! -z "$ERR_MESSAGE_MISSING_ENV" ]; then

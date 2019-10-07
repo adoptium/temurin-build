@@ -50,8 +50,8 @@ stages:
     variables:
       ADOPT_TEST_REPO_URI: 'https://github.com/AdoptOpenJDK/openjdk-tests'
       ADOPT_TEST_REPO_BRANCH: 'master'
-      ADOPT_TEST_SOURCE_URI: 'https://github.com/AdoptOpenJDK/openjdk-jdk11u'
-      ADOPT_TEST_SOURCE_BRANCH: 'master'
+      ADOPT_JDK_SOURCE_URI: 'https://github.com/AdoptOpenJDK/openjdk-jdk11u'
+      ADOPT_JDK_SOURCE_BRANCH: 'master'
     jobs:
     - template: ./tests/openjdk/sanity.yml
       parameters:
