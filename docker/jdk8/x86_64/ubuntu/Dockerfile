@@ -44,11 +44,12 @@ RUN apt-get update \
     libxt-dev \
     libxtst-dev \
     make \
+    ssh \
     systemtap-sdt-dev \
     unzip \
     wget \
     zip \
-    ssh \
+    zulu-7 \
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions

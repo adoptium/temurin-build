@@ -143,16 +143,16 @@ buildOpenJDKViaDocker()
          -v "${hostDir}"/pipelines:/openjdk/pipelines 
          -e "DEBUG_DOCKER_FLAG=${BUILD_CONFIG[DEBUG_DOCKER]}" 
          -e "BUILD_VARIANT=${BUILD_CONFIG[BUILD_VARIANT]}"
-          "${dockerEntrypoint[@]}")
+          "${dockerEntrypoint[@]:+${dockerEntrypoint[@]}}")
 
   # If build specifies --ssh, add array to the command string
   if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-        commandString=("${gitSshAccess[@]}" "${commandString[@]}")
+        commandString=("${gitSshAccess[@]:+${gitSshAccess[@]}}" "${commandString[@]}")
   fi
 
   # If build specifies --debug-docker, add array to the command string
   if [[ "${BUILD_CONFIG[DEBUG_DOCKER]}" == "true" ]] ; then
-        commandString=("${dockerMode[@]}" "${commandString[@]}")
+        commandString=("${dockerMode[@]:+${dockerMode[@]}}" "${commandString[@]}")
         echo "DEBUG DOCKER MODE. To build jdk run /openjdk/sbin/build.sh"
   fi
 
