@@ -7,7 +7,8 @@ runTests = true
 
 // if true means this is running in the pr builder pipeline
 if (binding.hasVariable('PR_BUILDER')) {
-    triggerSchedule = "@yearly"
+    //build on 31st Feb
+    triggerSchedule = "0 0 31 2 0"
     gitRefSpec = "+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*"
     propagateFailures = true
     runTests = false
@@ -32,6 +33,8 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
             scriptPath(SCRIPT)
         }
     }
+    disabled(disableJob)
+    concurrentBuild(false)
     triggers {
         cron(triggerSchedule)
     }

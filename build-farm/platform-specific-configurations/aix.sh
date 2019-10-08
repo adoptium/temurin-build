@@ -18,9 +18,10 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
-
 export PATH="/opt/freeware/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH"
-export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-memory-size=18000 --with-cups-include=/opt/freeware/include"
+# Without this, java adds /usr/lib to the LIBPATH of anything it forks which breaks linkage
+export LIBPATH="/opt/freeware/lib:$LIBPATH"
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-memory-size=10000 --with-cups-include=/opt/freeware/include"
 
 # Any version below 11
 if  [ "$JAVA_FEATURE_VERSION" -lt 11 ]
@@ -54,18 +55,14 @@ if [ "$JAVA_FEATURE_VERSION" -ge 11 ];
 then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors --with-openssl=fetched"
-    if [ -r /usr/local/gcc/bin/gcc-7.3 ]; then
-      # Following line ensures the latest ccache is picked up too
-      export PATH=/usr/local/gcc/bin:$PATH
-      export CC=gcc-7.3
-      export CXX=g++-7.3
-      export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
-    fi
   else
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} DF=/usr/sysv/bin/df"
   fi
 
   export LANG=C
-  export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH
-
+  if [ "$JAVA_FEATURE_VERSION" -ge 13 ]; then
+    export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/xlC/16.1.0/bin:/opt/IBM/xlc/16.1.0/bin:$PATH
+  else
+    export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH
+  fi
 fi

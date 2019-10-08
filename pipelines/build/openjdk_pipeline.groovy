@@ -17,13 +17,13 @@ def buildConfigurations = [
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
-                test                : ['sanity.openjdk', 'sanity.system']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
-                test                : ['sanity.openjdk', 'sanity.system', 'sanity.external']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.external', 'special.functional']
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -71,7 +71,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk', 'sanity.system']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
 
         arm32Linux    : [
@@ -86,7 +86,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk']
+                test                : ['sanity.openjdk', 'sanity.system']
         ],
 
         /*

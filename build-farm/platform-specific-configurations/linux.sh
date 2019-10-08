@@ -54,6 +54,19 @@ then
   fi
 fi
 
+if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
+then
+  if [ "${ARCHITECTURE}" == "ppc64le" ] || [ "${ARCHITECTURE}" == "x64" ]
+  then
+    CUDA_VERSION=9.0
+    CUDA_HOME=/usr/local/cuda-$CUDA_VERSION
+    if [ -f $CUDA_HOME/include/cuda.h ]
+    then
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-cuda --with-cuda=$CUDA_HOME"
+    fi
+  fi
+fi
+
 if [ "${ARCHITECTURE}" == "ppc64le" ]
 then
   export LANG=C
@@ -61,7 +74,10 @@ fi
 
 if [ "${ARCHITECTURE}" == "arm" ]
 then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000 --disable-warnings-as-errors"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000"
+  if [ "$JAVA_FEATURE_VERSION" -ge 11 ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="$CONFIGURE_ARGS_FOR_ANY_PLATFORM --disable-warnings-as-errors"
+  fi
   if [ ! -z "${NUM_PROCESSORS}" ]
   then
     export BUILD_ARGS="${BUILD_ARGS} --processors $NUM_PROCESSORS"
@@ -105,4 +121,12 @@ fi
 if [ "${ARCHITECTURE}" == "aarch64" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u"
+fi
+
+if [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+then
+  export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-jdk8u-jfr-incubator"
+  export BOOT_JDK_VERSION="8"
+  export BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+  export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 fi

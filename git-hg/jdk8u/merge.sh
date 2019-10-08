@@ -81,7 +81,7 @@ function inititialCheckin() {
 
   for module in "${MODULES[@]}" ; do
       cd "$REPO"
-      /usr/lib/git-core/git-subtree add --prefix=$module "$MIRROR/$module/" $tag
+      git subtree add --prefix=$module "$MIRROR/$module/" $tag
   done
 
   cd "$REPO"
@@ -95,6 +95,8 @@ function inititialCheckin() {
 function updateRepo() {
   repoName=$1
   repoLocation=$2
+
+  addRemotes
 
   if [ ! -d "$MIRROR/$repoName/.git" ]; then
     rm -rf "$MIRROR/$repoName" || exit 1
@@ -125,8 +127,8 @@ function rebuildLocalRepo() {
     # 3. Set up remotes on $REPO
     #     Remotes should look as follows:
     #       upstream: git@github.com:AdoptOpenJDK/openjdk-jdk8u.git (or aarch)
-    #       root:    "$MIRROR/root/"
-    #       origin:  "$MIRROR/root/"
+    #       root:     "$MIRROR/root/"
+    #       origin:   "$MIRROR/root/"
     #
 
     # Step 1 Clone mirrors
@@ -142,12 +144,17 @@ function rebuildLocalRepo() {
     # Step 3 Setup remotes
     addRemotes
 
+    # Remove any incorrect local tags we have
+    git tag -l | xargs git tag -d
+    git fetch --tags
+
+    # Ensure origin is correct
+    cd "$REPO"
+    git remote set-url origin "$UPSTREAM_GIT_REPO"
+
     # Repoint origin from the upstream repo to root module
     cd "$REPO"
     git remote set-url origin "$MIRROR/root/"
-
-    git fetch --all
-    git fetch --tags
 }
 
 # We pass in the repo we want to mirror as the first arg
@@ -267,7 +274,7 @@ fi
 cd "$REPO"
 for module in "${MODULES[@]}" ; do
     set +e
-    /usr/lib/git-core/git-subtree pull -q -m "Merge $module at $tag" --prefix=$module "$MIRROR/$module/" $tag
+    git subtree pull -q -m "Merge $module at $tag" --prefix=$module "$MIRROR/$module/" $tag
 
     if [ $? != 0 ]; then
       if [ "$acceptUpstream" == "true" ]; then

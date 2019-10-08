@@ -102,7 +102,8 @@ determineBuildProperties() {
   local default_build_full_name=
   # From jdk12 there is no build type in the build output directory name
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || \
-    [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] || \
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
     build_type=normal
     default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${BUILD_CONFIG[JVM_VARIANT]}-release
   else
@@ -116,6 +117,9 @@ determineBuildProperties() {
 setVariablesForConfigure() {
 
   local openjdk_core_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
+  # test-image target is JDK 11+ only. Set to the empty string
+  # as build scripts check whether the variable is non-empty.
+  local openjdk_test_image_path=""
 
   if [ "$openjdk_core_version" == "${JDK8_CORE_VERSION}" ]; then
     local jdk_path="j2sdk-image"
@@ -135,10 +139,13 @@ setVariablesForConfigure() {
       local jre_path="jre-bundle/jre-*.jre"
     ;;
     esac
+    # Set the test image path for JDK 11+
+    openjdk_test_image_path="test"
   fi
 
   BUILD_CONFIG[JDK_PATH]=$jdk_path
   BUILD_CONFIG[JRE_PATH]=$jre_path
+  BUILD_CONFIG[TEST_IMAGE_PATH]=$openjdk_test_image_path
 }
 
 
@@ -206,7 +213,7 @@ processArgumentsforSpecificArchitectures() {
     fi
 
     # This is to ensure consistency with the defaults defined in setMakeArgs()
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
       make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true product-images legacy-jre-image"
     else
       make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true images"
@@ -217,6 +224,7 @@ processArgumentsforSpecificArchitectures() {
     jvm_variant=server
 
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || \
+       [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] || \
       [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
       build_full_name=linux-ppc64-${jvm_variant}-release
     else
@@ -231,7 +239,7 @@ processArgumentsforSpecificArchitectures() {
   ;;
 
   "armv7l")
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && isHotspot; then
       jvm_variant=zero
     else
       jvm_variant=server,client
@@ -278,7 +286,7 @@ function setMakeArgs() {
     echo "JDK Image folder name: ${BUILD_CONFIG[JDK_PATH]}"
     echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
 
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
       case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
       "darwin") BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images mac-legacy-jre-bundle"} ;;
       *) BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images legacy-jre-image"} ;;
@@ -290,25 +298,6 @@ function setMakeArgs() {
     BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-""}
 }
 
-function setBootJdk() {
-  if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
-    echo "Searching for JDK_BOOT_DIR"
-
-    # shellcheck disable=SC2046,SC2230
-    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
-      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink $(which javac))))
-    else
-      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
-    fi
-
-    echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
-    echo "If this is incorrect explicitly configure JDK_BOOT_DIR"
-  else
-    echo "Overriding JDK_BOOT_DIR, set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
-  fi
-
-  echo "Boot dir set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
-}
 
 ################################################################################
 
