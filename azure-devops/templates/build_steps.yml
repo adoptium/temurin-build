@@ -5,7 +5,6 @@
 #   Reference: https://hg.openjdk.java.net/jdk8/jdk8/raw-file/tip/README-builds.html.
 
 # TODO: Handle the branch/tag to build - it is assuming 'master' right now
-
 parameters:
   javaVersion: ''
 
@@ -42,9 +41,15 @@ steps:
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
 
   - script: |
-      brew install autoconf
+      brew install autoconf ccache
     displayName: "macOS: Install dependencies"
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+
+  - task: CacheBeta@0
+    inputs:
+      key: ccache | $(Agent.OS)
+      path: $(Pipeline.Workspace)/ccache
+    displayName: Restore ccache dir
 
   # Use the AdoptOpenJDK build scripts to build the OpenJDK8 binaries.
   - script: |
@@ -59,6 +64,7 @@ steps:
         $JAVA_TO_BUILD
     env:
       JAVA_TO_BUILD: ${{ parameters.javaVersion }}
+      CCACHE_DIR: $(Pipeline.Workspace)/ccache
     displayName: "Start makejdk-any-platform ${{ parameters.javaVersion }} process"
 
   # Upload the produced JDK/JRE binary to the build artifact service.
