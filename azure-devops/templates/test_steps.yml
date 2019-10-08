@@ -80,7 +80,7 @@ steps:
   # Install macOS required dependencies
   - script: |
       set -e
-      brew install xmlstarlet ant ant-contrib
+      brew install xmlstarlet ant ant-contrib tree gnu-sed
     displayName: "macOS: install dependencies"
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
 
@@ -155,12 +155,34 @@ steps:
       ./get.sh -t $TEST_DIR
     displayName: "Get openj9 test framework"
 
+  - script: |
+      cd $TEST_DIR
+      grep -R '"special"' .
+    displayName: 'Show where files containing "special" are.'
+
+  - script: |
+      cd $TEST_DIR
+      tree -v --charset utf-8
+    displayName: 'Show tree of files'
+
   # Todo: Remove this and take all cookies away from George and Derek.
   - script: |
-      sed -i 's/"sanity", "extended", "special"/"sanity", "extended", "special", "individual"/g' $TEST_DIR/openj9/test/TestConfig/scripts/testKitGen/testKitGen.pl
-      sed -i 's/"sanity", "extended", "special"/"sanity", "extended", "special", "individual"/g' $TEST_DIR/openj9/test/TestConfig/TKGJ/src/org/testKitGen/Constants.java
-    displayName: "HACK HACK HACK: add individual category to playlist parser"
+      cd $TEST_DIR
 
+      TESTKITGEN_JAVA=`find . -path "*/testKitGen/Constants.java"`
+      TESTKITGEN_PERL=`find . -name "testKitGen.pl"`
+
+      if [ -n "$TESTKITGEN_PERL" ]; then
+        echo "Using gsed to insert test category 'individual' into '$TESTKITGEN_PERL'"
+        gsed -i 's/"special" );/"special", "individual" );/g' $TESTKITGEN_PERL
+      fi
+
+      if [ -n "$TESTKITGEN_JAVA" ]; then
+        echo "Using gsed to insert test category 'individual' into '$TESTKITGEN_JAVA'"
+        gsed -i 's/"special");/"special", "individual");/g' $TESTKITGEN_JAVA
+      fi
+
+    displayName: "HACK HACK HACK: add individual category to playlist parser"
   # update test suites playlist.xml files
   # the test suites in $CUSTOMIZED_TESTS is split by "|"
   # the path to playlist.xml file and test name is split by ":"
