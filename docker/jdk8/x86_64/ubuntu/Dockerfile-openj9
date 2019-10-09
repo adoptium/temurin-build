@@ -13,7 +13,7 @@
 
 FROM ubuntu:16.04
 
-MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
+LABEL maintainer="AdoptOpenJDK <adoption-discuss@openjdk.java.net>"
 
 # Install required OS tools
 RUN apt-get update \
@@ -73,3 +73,4 @@ WORKDIR /openjdk/build/
 ARG OPENJDK_CORE_VERSION
 ENV OPENJDK_CORE_VERSION=$OPENJDK_CORE_VERSION
 ENV JDK_PATH=jdk
+ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
