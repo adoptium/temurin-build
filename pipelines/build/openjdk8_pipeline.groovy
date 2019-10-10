@@ -42,7 +42,7 @@ def buildConfigurations = [
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
                 configureArgs       : [
                         "hotspot-jfr" : '--enable-jfr'
-                ],
+                ]
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
