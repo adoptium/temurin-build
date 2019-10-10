@@ -50,14 +50,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Make sure build uses 4.8
-RUN rm -f /usr/bin/gcc \
-    && rm -f /usr/bin/g++ \
-    && rm -f /usr/bin/c++ \
-    && ln -s /usr/bin/gcc-4.8 /usr/bin/gcc \
-    && ln -s /usr/bin/g++-4.8 /usr/bin/g++ \
-    && ln -s /usr/bin/g++-4.8 /usr/bin/c++
+RUN ln -sf /usr/bin/gcc-4.8 /usr/bin/gcc \
+    && ln -sf /usr/bin/g++-4.8 /usr/bin/g++ \
+    && ln -sf /usr/bin/g++-4.8 /usr/bin/c++
 
-# Pick up build instructions
 RUN mkdir -p /openjdk/target
 
 COPY sbin /openjdk/sbin
@@ -66,7 +62,7 @@ COPY pipelines /openjdk/pipelines
 
 RUN mkdir -p /openjdk/build
 RUN useradd -ms /bin/bash build
-RUN chown -R build: /openjdk/
+RUN chown -R build /openjdk/
 USER build
 WORKDIR /openjdk/build/
 
