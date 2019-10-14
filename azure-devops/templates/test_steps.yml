@@ -20,7 +20,7 @@ steps:
 
   - script: |
       git clone --branch $ADOPT_JDK_SOURCE_BRANCH --depth 1 $ADOPT_JDK_SOURCE_URI $(Build.SourcesDirectory)
-    displayName: 'Clone jdk11u sources'
+    displayName: 'Clone jdk sources'
 
   - bash: |
       ERR_MESSAGE_MISSING_ENV=''

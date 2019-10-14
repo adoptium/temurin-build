@@ -1,4 +1,4 @@
-name: "OpenJDK11U-jdk_x64_mac_hotspot_$(Year:yyyy)-$(Date:MM)-$(Date:dd)-$(Date:HH)-$(Date:mm)"
+name: "OpenJDK$(JAVA_VERSION)U-jdk_x64_mac_hotspot_$(Year:yyyy)-$(Date:MM)-$(Date:dd)-$(Date:HH)-$(Date:mm)"
 
 trigger: none
 pr: none
@@ -19,7 +19,7 @@ stages:
         steps:
           - template: ./templates/build_steps.yml
             parameters:
-              javaVersion: "jdk11u"
+              javaVersion: "jdk$(JAVA_VERSION)u"
 
       - job: Sign_macOS
         displayName: Sign
@@ -40,8 +40,8 @@ stages:
         steps:
           - template: ./templates/installer_steps.yml
             parameters:
-              majorVersion: "11"
-              fullVersion: "11+0.0.2" # TODO this needs to be worked out.
+              majorVersion: "$(JAVA_VERSION)"
+              fullVersion: "$(JAVA_VERSION)+0.0.2" # TODO this needs to be worked out.
 
 
   - stage: Test_macOS
@@ -50,7 +50,7 @@ stages:
     variables:
       ADOPT_TEST_REPO_URI: 'https://github.com/AdoptOpenJDK/openjdk-tests'
       ADOPT_TEST_REPO_BRANCH: 'master'
-      ADOPT_JDK_SOURCE_URI: 'https://github.com/AdoptOpenJDK/openjdk-jdk11u'
+      ADOPT_JDK_SOURCE_URI: 'https://github.com/AdoptOpenJDK/openjdk-jdk$(JAVA_VERSION)u'
       ADOPT_JDK_SOURCE_BRANCH: 'master'
     jobs:
     - template: ./tests/openjdk/sanity.yml
