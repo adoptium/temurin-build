@@ -53,6 +53,7 @@ mergeRepo() {
 
 # Push
 pushMerge() {
+	git push || exit 1
 	git push --tags || exit 1
 }
 
