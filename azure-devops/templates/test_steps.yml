@@ -84,12 +84,6 @@ steps:
     displayName: "macOS: install dependencies"
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
 
-  - script: |
-      export PERL_MM_USE_DEFAULT=1
-      cpan install JSON Text::CSV XML::Parser
-    displayName: 'Setup Perl dependencies'
-    condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
-
   # download the jdk/jre artifact
   - task: DownloadPipelineArtifact@2
     inputs:
