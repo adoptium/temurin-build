@@ -495,7 +495,7 @@ applyPatches()
     echo "applying patches from ${BUILD_CONFIG[PATCHES]}"
     git clone "${BUILD_CONFIG[PATCHES]}" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/patches"
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    for patch in "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/patches/*.patch"
+    for patch in "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/patches/"*.patch
     do
       echo "applying $patch"
       patch -p1 < "$patch"
