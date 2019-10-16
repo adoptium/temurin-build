@@ -70,6 +70,7 @@ OPENJDK_SOURCE_DIR
 OPENJDK_UPDATE_VERSION
 OS_KERNEL_NAME
 OS_ARCHITECTURE
+PATCHES
 RELEASE
 REPOSITORY
 REUSE_CONTAINER
@@ -237,6 +238,9 @@ function parseConfigurationArguments() {
         "--no-adopt-patches" )
         BUILD_CONFIG[ADOPT_PATCHES]=false;;
 
+        "--patches" )
+        BUILD_CONFIG[PATCHES]="$1"; shift;;
+
         "--processors" | "-p" )
         BUILD_CONFIG[NUM_PROCESSORS]="$1"; shift;;
 
@@ -403,6 +407,9 @@ function configDefaults() {
 
   # feature number e.g. 11
   BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]:-""}
+
+  # URL to a git repo containing source code patches to be applied
+  BUILD_CONFIG[PATCHES]=${BUILD_CONFIG[PATCHES]:-""}
 
   # Build variant, e.g. openj9, defaults to "hotspot"
   BUILD_CONFIG[BUILD_VARIANT]=${BUILD_CONFIG[BUILD_VARIANT]:-"${BUILD_VARIANT_HOTSPOT}"}
