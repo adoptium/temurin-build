@@ -50,6 +50,15 @@ steps:
       key: ccache | $(Agent.OS)
       path: $(Pipeline.Workspace)/ccache
     displayName: Restore ccache dir
+    condition: and(succeeded(), ne(variables['JAVA_VERSION'], '8'))
+
+  # TODO: remove this when the patch gets upstreamed
+  - bash: |
+      echo "##vso[task.setvariable variable=EXTRA_OPTION]--patches https://github.com/gdams/adopt_patches"
+      echo "##vso[task.setvariable variable=CONFIGURE_ARGS_FOR_ANY_PLATFORM]--with-toolchain-type=clang"
+      echo "##vso[task.setvariable variable=COMPILER_WARNINGS_FATAL]false"
+    displayName: "Set jdk8 specific env"
+    condition: and(eq(variables['Agent.OS'], 'Darwin'), eq(variables['JAVA_VERSION'], '8'))
 
   # Use the AdoptOpenJDK build scripts to build the OpenJDK8 binaries.
   - script: |
