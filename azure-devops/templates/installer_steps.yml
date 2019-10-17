@@ -30,6 +30,11 @@ steps:
       targetPath: "workspace/target"
     displayName: "Download jdk artifact"
 
+  - task: UseNode@1
+    inputs:
+      version: '10.x'
+    displayName: "Use Node.js version 10"
+
   - script: |
       ./pkgbuild/create-installer-mac.sh
     env:
