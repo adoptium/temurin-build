@@ -157,10 +157,15 @@ class Builder implements Serializable {
         def configureArgs = ""
 
         if (configuration.containsKey('configureArgs')) {
+            def configConfigureArgs
             if (isMap(configuration.configureArgs)) {
-                configureArgs += (configuration.configureArgs as Map<String, ?>).get(variant)
+                configConfigureArgs = (configuration.configureArgs as Map<String, ?>).get(variant)
             } else {
-                configureArgs += configuration.configureArgs
+                configConfigureArgs = configuration.configureArgs
+            }
+
+            if (configConfigureArgs != null) {
+                configureArgs += configConfigureArgs
             }
         }
 
