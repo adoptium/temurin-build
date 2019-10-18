@@ -221,9 +221,22 @@ function performMergeIntoReleaseFromMaster() {
         foundCurrentReleaseTag=true
       fi
     else
-      echo "Merging build tag $tag into release branch"
-      git merge -m"Merging $tag into release" $tag || exit 1
-      git tag -a "${tag}_adopt" -m "Merged $tag into release" || exit 1
+      mergeTag=true
+      # Check if tag is in the releaseTagExcludeList, if so do not bring it into the release branch
+      # and do not create an _adopt tag
+      if [ ! -z "$releaseTagExcludeList" ] ; then
+        for skipTag in $releaseTagExcludeList; do
+          if [ "x$tag" == "x$skipTag" ]; then
+           mergeTag=false
+           echo "Skipping merge of excluded tag $tag"
+          fi
+        done
+      fi
+      if [[ "$mergeTag" == true ]]; then
+        echo "Merging build tag $tag into release branch"
+        git merge -m"Merging $tag into release" $tag || exit 1
+        git tag -a "${tag}_adopt" -m "Merged $tag into release" || exit 1
+      fi
     fi
   done
 
