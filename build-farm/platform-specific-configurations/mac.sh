@@ -26,6 +26,10 @@ XCODE_SWITCH_PATH="/";
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   XCODE_SWITCH_PATH="/Applications/Xcode.app"
+  # See https://github.com/AdoptOpenJDK/openjdk-build/issues/1202
+  if isHotSpot; then
+    export COMPILER_WARNINGS_FATAL=false
+  fi
 else
   export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
@@ -39,6 +43,7 @@ sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
 # Any version above 8
 if [ "$JAVA_FEATURE_VERSION" -gt 8 ]; then
+
     BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
     BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
     if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
