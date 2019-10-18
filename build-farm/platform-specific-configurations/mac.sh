@@ -32,6 +32,7 @@ then
   # See https://github.com/AdoptOpenJDK/openjdk-build/issues/1202
   if isHotSpot; then
     export COMPILER_WARNINGS_FATAL=false
+    echo "Compiler Warnings set to: $COMPILER_WARNINGS_FATAL"
   fi
 else
   export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
