@@ -18,6 +18,9 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
+# shellcheck source=sbin/common/common.sh
+source "$SCRIPT_DIR/../../sbin/common/common.sh"
+
 export MACOSX_DEPLOYMENT_TARGET=10.8
 export BUILD_ARGS="${BUILD_ARGS}"
 
