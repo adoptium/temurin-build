@@ -18,8 +18,15 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
-# shellcheck source=sbin/common/common.sh
-source "$SCRIPT_DIR/../../sbin/common/common.sh"
+# A function that returns true if the variant is based on Hotspot and should
+# be treated as such by this build script. There is a similar function in
+# sbin/common.sh but we didn't want to refactor all of this on release day.
+function isHotSpot() {
+  [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ] ||
+  [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] ||
+  [ "${VARIANT}" == "${BUILD_VARIANT_SAP}" ] ||
+  [ "${VARIANT}" == "${BUILD_VARIANT_CORRETTO}" ]
+}
 
 export MACOSX_DEPLOYMENT_TARGET=10.8
 export BUILD_ARGS="${BUILD_ARGS}"
@@ -76,3 +83,4 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-xcode-path=/Applications/Xcode.app --with-openj9-cc=/Applications/Xcode7/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang --with-openj9-cxx=/Applications/Xcode7/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++ --with-openj9-developer-dir=/Applications/Xcode7/Xcode.app/Contents/Developer"
   fi
 fi
+
