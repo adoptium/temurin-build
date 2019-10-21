@@ -21,6 +21,7 @@ usage() {
 initRepo() {
 	if [ -d ${REPO} ]; then
 		cd ${REPO}
+		git pull || exit 1
 		git reset --hard origin/${SYNC_BRANCH} || exit 1
 	else
 		git clone ${CHILD_REPO_PATH}/${REPO}.git || exit 1
