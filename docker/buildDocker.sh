@@ -159,6 +159,11 @@ setupGit()
 		git pull https://github.com/adoptopenjdk/openjdk-build
 	fi
 }
+# Sets WORKSPACE to home if WORKSPACE is empty or unbounded
+if [ ! -n "${WORKSPACE:-}" ]; then
+	echo "WORKSPACE not found, setting it as environment variable 'HOME'"
+	WORKSPACE=$HOME
+fi
 parseCommandLineArgs $@
 checkJDKVersion
 if [[ "$useEclipseDockerFiles" == "true" ]]; then
