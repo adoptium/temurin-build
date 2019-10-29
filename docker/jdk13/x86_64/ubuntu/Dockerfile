@@ -72,8 +72,11 @@ RUN ln -sf /usr/lib/jvm/jdk12/bin/javac /usr/bin/javac
 COPY sbin /openjdk/sbin
 COPY workspace/config /openjdk/config
 
+# Create User "build"
+ARG HostUID
+ENV HostUID=$HostUID
 RUN mkdir -p /openjdk/build
-RUN useradd -ms /bin/bash build
+RUN useradd -u $HostUID -ms /bin/bash build
 RUN chown -R build: /openjdk/
 USER build
 WORKDIR /openjdk/build/
