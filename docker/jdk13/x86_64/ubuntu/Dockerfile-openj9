@@ -68,7 +68,10 @@ COPY sbin /openjdk/sbin
 COPY workspace/config /openjdk/config
 COPY pipelines /openjdk/pipelines
 
-RUN mkdir -p /openjdk/build
+# Create User "build"
+ARG HostUID
+ENV HostUID=$HostUID
+RUN mkdir -u HostUID -p /openjdk/build
 RUN useradd -ms /bin/bash build
 RUN chown -R build /openjdk/
 USER build
