@@ -410,17 +410,20 @@ downloadingRequiredDependencies()
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
 
-  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-     echo "Windows or Windows-like environment detected, skipping downloading of dependencies...: Alsa."
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+    echo "macOS, Windows or Windows-like environment detected, skipping download of dependency Alsa."
   else
-     echo "Downloading required dependencies...: Alsa, Freetype, Freemarker, and CaCerts."
-        echo "Checking and download Alsa dependency"
-        checkingAndDownloadingAlsa
+    echo "Checking and downloading Alsa dependency"
+    checkingAndDownloadingAlsa
+  fi
 
-     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
-           echo "Checking and download Freemarker dependency"
-           checkingAndDownloadingFreemarker
-     fi
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
+    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+      echo "Windows or Windows-like environment detected, skipping download of dependency Freemarker."
+    else
+      echo "Checking and downloading Freemarker dependency"
+      checkingAndDownloadingFreemarker
+    fi
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
