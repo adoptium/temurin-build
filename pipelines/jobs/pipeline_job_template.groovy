@@ -1,8 +1,6 @@
 import groovy.json.JsonOutput
 
-
-triggerSchedule = "0 0 31 2 0"
-//triggerSchedule = "@daily"
+triggerSchedule = "@daily"
 gitRefSpec = ""
 propagateFailures = false
 runTests = true
