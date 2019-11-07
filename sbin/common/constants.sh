@@ -19,6 +19,7 @@ export JDK9_VERSION="jdk9u";
 export JDK10_VERSION="jdk10u";
 export JDK11_VERSION="jdk11u";
 export JDK12_VERSION="jdk12u";
+export JDK13_VERSION="jdk13u";
 export JDKHEAD_VERSION="jdk";
 
 export JDK8_CORE_VERSION="jdk8";
@@ -26,12 +27,16 @@ export JDK9_CORE_VERSION="jdk9";
 export JDK10_CORE_VERSION="jdk10";
 export JDK11_CORE_VERSION="jdk11";
 export JDK12_CORE_VERSION="jdk12";
+export JDK13_CORE_VERSION="jdk13";
 export JDKHEAD_CORE_VERSION="${JDKHEAD_VERSION}";
 export AMBER_CORE_VERSION="amber";
 
 export BUILD_VARIANT_HOTSPOT="hotspot"
+export BUILD_VARIANT_HOTSPOT_JFR="hotspot-jfr"
 export BUILD_VARIANT_OPENJ9="openj9"
 export BUILD_VARIANT_CORRETTO="corretto"
 export BUILD_VARIANT_SAP="SapMachine"
 
 export GIT_TAGS_TO_SEARCH=100
+
+export ADOPTOPENJDK_MD_MARKER_FILE="AdoptOpenJDK.md"

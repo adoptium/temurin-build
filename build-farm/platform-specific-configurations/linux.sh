@@ -29,7 +29,8 @@ then
 
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
   then
-    if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
+    # Any version below 11
+    if [ "$JAVA_FEATURE_VERSION" -lt 11 ]
     then
       if which g++-4.8; then
         export CC=gcc-4.8
@@ -53,6 +54,19 @@ then
   fi
 fi
 
+if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
+then
+  if [ "${ARCHITECTURE}" == "ppc64le" ] || [ "${ARCHITECTURE}" == "x64" ]
+  then
+    CUDA_VERSION=9.0
+    CUDA_HOME=/usr/local/cuda-$CUDA_VERSION
+    if [ -f $CUDA_HOME/include/cuda.h ]
+    then
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-cuda --with-cuda=$CUDA_HOME"
+    fi
+  fi
+fi
+
 if [ "${ARCHITECTURE}" == "ppc64le" ]
 then
   export LANG=C
@@ -60,54 +74,32 @@ fi
 
 if [ "${ARCHITECTURE}" == "arm" ]
 then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000 --disable-warnings-as-errors"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000"
+  if [ "$JAVA_FEATURE_VERSION" -ge 11 ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="$CONFIGURE_ARGS_FOR_ANY_PLATFORM --disable-warnings-as-errors"
+  fi
   if [ ! -z "${NUM_PROCESSORS}" ]
   then
     export BUILD_ARGS="${BUILD_ARGS} --processors $NUM_PROCESSORS"
   fi
 fi
 
-if [ "${ARCHITECTURE}" == "s390x" ] || [ "${ARCHITECTURE}" == "ppc64le" ]
-then
-    if [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ] && [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
-    then
-      if [ -z "$JDK9_BOOT_DIR" ]; then
-        export JDK9_BOOT_DIR="$PWD/jdk-9+181"
-        if [ ! -r "$JDK9_BOOT_DIR" ]; then
-          wget -O -  https://github.com/AdoptOpenJDK/openjdk9-releases/releases/download/jdk-9%2B181/OpenJDK9_s390x_Linux_jdk-9.181.tar.gz | tar xpfz -
-        fi
+# Any version above 8
+if [ "$JAVA_FEATURE_VERSION" -gt 8 ]; then
+    BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+    BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+    if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
+      export $BOOT_JDK_VARIABLE="$PWD/jdk-$BOOT_JDK_VERSION"
+      if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE/bin")" ]; then
+        mkdir -p "$(eval echo "\$$BOOT_JDK_VARIABLE")"
+        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=linux&release=latest&arch=${ARCHITECTURE}&heap_size=normal&type=jdk&openjdk_impl=hotspot" | tar xpzf - --strip-components=1 -C "$(eval echo "\$$BOOT_JDK_VARIABLE")"
       fi
-      export JDK_BOOT_DIR=$JDK9_BOOT_DIR
     fi
+    export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 fi
 
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
-then
-    if [ ! -d "$JDK10_BOOT_DIR" ]; then
-      export JDK10_BOOT_DIR="$PWD/jdk-10"
-      if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
-        downloadArch="${ARCHITECTURE}"
-        [ "$downloadArch" == "arm" ] && downloadArch="arm32"
-        mkdir -p "$JDK10_BOOT_DIR"
-        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/nightly/openjdk10?os=linux&release=latest&arch=${downloadArch}&type=jdk" | tar xpzf - --strip-components=1 -C "$JDK10_BOOT_DIR"
-      fi
-    fi
-    export JDK_BOOT_DIR=$JDK10_BOOT_DIR
-fi
-
-if [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
-then
-    if [ ! -d "$JDK11_BOOT_DIR" ]; then
-      export JDK11_BOOT_DIR="$PWD/jdk-11"
-      if [ ! -d "$JDK11_BOOT_DIR/bin" ]; then
-        downloadArch="${ARCHITECTURE}"
-        mkdir -p "$JDK11_BOOT_DIR"
-        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/nightly/openjdk11?os=linux&release=latest&arch=${downloadArch}&type=jdk&openjdk_impl=hotspot&heap_size=normal" | tar xpzf - --strip-components=1 -C "$JDK11_BOOT_DIR"
-      fi
-    fi
-    export JDK_BOOT_DIR=$JDK11_BOOT_DIR
-fi
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+# Any version above 10
+if [ "$JAVA_FEATURE_VERSION" -gt 10 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     # If we have the RedHat devtoolset 7 installed, use gcc 7 from there, else /usr/local/gcc/bin
     if [ -r /opt/rh/devtoolset-7/root/usr/bin ]; then
       export PATH=/opt/rh/devtoolset-7/root/usr/bin:$PATH
@@ -129,4 +121,12 @@ fi
 if [ "${ARCHITECTURE}" == "aarch64" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u"
+fi
+
+if [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+then
+  export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-jdk8u-jfr-incubator"
+  export BOOT_JDK_VERSION="8"
+  export BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+  export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 fi

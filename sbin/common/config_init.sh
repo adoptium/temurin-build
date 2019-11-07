@@ -31,6 +31,7 @@
 # (because of GPL3), we therefore have to name the indexes of the CONFIG_PARAMS
 # map. This is why we can't have nice things.
 CONFIG_PARAMS=(
+ADOPT_PATCHES
 BRANCH
 BUILD_FULL_NAME
 BUILD_VARIANT
@@ -44,6 +45,7 @@ COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
 DEBUG_DOCKER
+DISABLE_ADOPT_BRANCH_SAFETY
 DOCKER
 DOCKER_FILE_PATH
 DOCKER_SOURCE_VOLUME_NAME
@@ -55,18 +57,20 @@ KEEP_CONTAINER
 JDK_BOOT_DIR
 JDK_PATH
 JRE_PATH
+TEST_IMAGE_PATH
 JVM_VARIANT
 MAKE_ARGS_FOR_ANY_PLATFORM
 MAKE_COMMAND_NAME
-ADOPT_PATCHES
 NUM_PROCESSORS
 OPENJDK_BUILD_NUMBER
 OPENJDK_CORE_VERSION
+OPENJDK_FEATURE_NUMBER
 OPENJDK_FOREST_NAME
 OPENJDK_SOURCE_DIR
 OPENJDK_UPDATE_VERSION
 OS_KERNEL_NAME
 OS_ARCHITECTURE
+PATCHES
 RELEASE
 REPOSITORY
 REUSE_CONTAINER
@@ -81,6 +85,7 @@ USE_DOCKER
 USE_JEP319_CERTS
 USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
+USER_SUPPLIED_MAKE_ARGS
 WORKING_DIR
 WORKSPACE_DIR
 )
@@ -179,6 +184,9 @@ function parseConfigurationArguments() {
         "--configure-args"  | "-C" )
         BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
 
+        "--make-args" )
+        BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]="$1"; shift;;
+
         "--clean-docker-build" | "-c" )
         BUILD_CONFIG[CLEAN_DOCKER_BUILD]=true;;
 
@@ -187,6 +195,9 @@ function parseConfigurationArguments() {
 
         "--clean-libs" )
         BUILD_CONFIG[CLEAN_LIBS]=true;;
+
+        "--disable-adopt-branch-safety" )
+        BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=true;;
 
         "--destination" | "-d" )
         BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
@@ -226,6 +237,9 @@ function parseConfigurationArguments() {
 
         "--no-adopt-patches" )
         BUILD_CONFIG[ADOPT_PATCHES]=false;;
+
+        "--patches" )
+        BUILD_CONFIG[PATCHES]="$1"; shift;;
 
         "--processors" | "-p" )
         BUILD_CONFIG[NUM_PROCESSORS]="$1"; shift;;
@@ -323,11 +337,14 @@ function configDefaults() {
   BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.9.1"
   BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
 
-  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ] || [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]; then
-    BUILD_CONFIG[MAKE_COMMAND_NAME]="gmake"
-  else
-    BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
-  fi
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    aix | sunos | *bsd )
+      BUILD_CONFIG[MAKE_COMMAND_NAME]="gmake"
+      ;;
+    * )
+      BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
+      ;;
+  esac
 
   BUILD_CONFIG[SIGN]="false"
   BUILD_CONFIG[JDK_BOOT_DIR]=""
@@ -388,14 +405,21 @@ function configDefaults() {
   # build number e.g. b03
   BUILD_CONFIG[OPENJDK_BUILD_NUMBER]=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]:-""}
 
+  # feature number e.g. 11
+  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]:-""}
+
+  # URL to a git repo containing source code patches to be applied
+  BUILD_CONFIG[PATCHES]=${BUILD_CONFIG[PATCHES]:-""}
+
   # Build variant, e.g. openj9, defaults to "hotspot"
   BUILD_CONFIG[BUILD_VARIANT]=${BUILD_CONFIG[BUILD_VARIANT]:-"${BUILD_VARIANT_HOTSPOT}"}
 
   # JVM variant, e.g. client or server, defaults to server
   BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-""}
 
-  # Any extra args provided by the user
+  # Any extra config / make args provided by the user
   BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""}
+  BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]:-""}
 
   BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-"docker"}
 
@@ -413,6 +437,8 @@ function configDefaults() {
 
   # By default assume we have adopt patches applied to the repo
   BUILD_CONFIG[ADOPT_PATCHES]=true
+
+  BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false
 }
 
 # Declare the map of build configuration that we're going to use

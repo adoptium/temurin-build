@@ -18,6 +18,16 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
+# A function that returns true if the variant is based on Hotspot and should
+# be treated as such by this build script. There is a similar function in
+# sbin/common.sh but we didn't want to refactor all of this on release day.
+function isHotSpot() {
+  [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ] ||
+  [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] ||
+  [ "${VARIANT}" == "${BUILD_VARIANT_SAP}" ] ||
+  [ "${VARIANT}" == "${BUILD_VARIANT_CORRETTO}" ]
+}
+
 export MACOSX_DEPLOYMENT_TARGET=10.8
 export BUILD_ARGS="${BUILD_ARGS}"
 
@@ -26,50 +36,37 @@ XCODE_SWITCH_PATH="/";
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   XCODE_SWITCH_PATH="/Applications/Xcode.app"
+  # See https://github.com/AdoptOpenJDK/openjdk-build/issues/1202
+  if isHotSpot; then
+    export COMPILER_WARNINGS_FATAL=false
+    echo "Compiler Warnings set to: $COMPILER_WARNINGS_FATAL"
+  fi
+else
+  export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
+  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
+  else
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.8"
+  fi
 fi
+
 sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
+# Any version above 8
+if [ "$JAVA_FEATURE_VERSION" -gt 8 ]; then
 
-if [ "${JAVA_TO_BUILD}" != "${JDK8_VERSION}" ]
-then
-    export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
-fi
-
-
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
-then
-  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
-  else
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.8"
-  fi
-  if [ ! -d "$JDK10_BOOT_DIR" ]; then
-    export JDK10_BOOT_DIR="$PWD/jdk-10"
-    if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
-      mkdir -p "$JDK10_BOOT_DIR"
-      # --strip-components=2 removes top ./jdk-version directories
-      wget -q -O - 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=mac&release=latest' | tar xpzf - --strip-components=2 -C "$JDK10_BOOT_DIR"
+    BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+    BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+    if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
+      export $BOOT_JDK_VARIABLE="$PWD/jdk-$BOOT_JDK_VERSION"
+      if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE/Contents/Home/bin")" ]; then
+        mkdir -p "$(eval echo "\$$BOOT_JDK_VARIABLE")"
+        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=mac&release=latest&arch=${ARCHITECTURE}&heap_size=normal&type=jdk&openjdk_impl=hotspot" | tar xpzf - --strip-components=1 -C "$(eval echo "\$$BOOT_JDK_VARIABLE")"
+      fi
+      export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE/Contents/Home")"
+    else
+      export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
     fi
-  fi
-  export JDK_BOOT_DIR=$JDK10_BOOT_DIR
-fi
-
-if [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]
-then
-  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
-  else
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.8"
-  fi
-  if [ ! -d "$JDK11_BOOT_DIR" ]; then
-    export JDK11_BOOT_DIR="$PWD/jdk-11"
-    if [ ! -d "$JDK11_BOOT_DIR/bin" ]; then
-      mkdir -p "$JDK11_BOOT_DIR"
-      # --strip-components=3 removes top jdk-version/Contents/Home directories
-      wget -q -O - 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?os=mac&release=latest&type=jdk&heap_size=normal&openjdk_impl=hotspot' | tar xpzf - --strip-components=3 -C "$JDK11_BOOT_DIR"
-    fi
-  fi
-  export JDK_BOOT_DIR=$JDK11_BOOT_DIR
 fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
@@ -86,3 +83,4 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-xcode-path=/Applications/Xcode.app --with-openj9-cc=/Applications/Xcode7/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang --with-openj9-cxx=/Applications/Xcode7/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++ --with-openj9-developer-dir=/Applications/Xcode7/Xcode.app/Contents/Developer"
   fi
 fi
+

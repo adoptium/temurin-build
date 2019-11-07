@@ -14,7 +14,6 @@
 # limitations under the License.
 ################################################################################
 
-
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../sbin/common/constants.sh"
@@ -24,10 +23,7 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
 fi
 
-if [ "${VARIANT}" != "${BUILD_VARIANT_HOTSPOT}" ]
-then
-  export VARIANT_ARG="--build-variant ${VARIANT}"
-fi
+export VARIANT_ARG="--build-variant ${VARIANT}"
 
 # shellcheck disable=SC1091,SC1090
 source "$SCRIPT_DIR/platform-specific-configurations/${OPERATING_SYSTEM}.sh"

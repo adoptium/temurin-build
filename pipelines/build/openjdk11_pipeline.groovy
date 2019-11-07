@@ -20,14 +20,14 @@ def buildConfigurations = [
                         hotspot: 'build-macstadium-macos1010-1',
                         openj9:  'build-macstadium-macos1010-2'
                 ],
-                test                : ['openjdktest', 'systemtest', 'perftest']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
         ],
 
         x64MacXL    : [
                 os                   : 'mac',
                 arch                 : 'x64',
                 additionalNodeLabels : 'build-macstadium-macos1010-2',
-                test                 : ['openjdktest', 'systemtest', 'perftest'],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -37,8 +37,8 @@ def buildConfigurations = [
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
                 test                : [
-                        nightly: ['openjdktest', 'systemtest', 'perftest', 'externaltest', 'externaltest_extended'],
-                        release: ['openjdktest', 'systemtest', 'perftest', 'externaltest']
+                        nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
+                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
                 configureArgs        : '--disable-ccache'
         ],
@@ -51,7 +51,19 @@ def buildConfigurations = [
                         hotspot: 'win2012',
                         openj9:  'win2012&&vs2017'
                 ],
-                test                : ['openjdktest', 'perftest', 'systemtest']
+                buildArgs : [
+                        hotspot : '--jvm-variant client,server'
+                ],
+                test                : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
+        ],
+
+        x64WindowsXL    : [
+                os                   : 'windows',
+                arch                 : 'x64',
+                additionalNodeLabels : 'win2012&&vs2017',
+                test                 : ['sanity.openjdk', 'sanity.system'],
+                additionalFileNameTag: "windowsXL",
+                configureArgs        : '--with-noncompressedrefs'
         ],
 
         x32Windows: [
@@ -61,7 +73,10 @@ def buildConfigurations = [
                         hotspot: 'win2012',
                         openj9:  'win2012&&mingw-standalone'
                 ],
-                test                : ['openjdktest']
+                buildArgs : [
+                        hotspot : '--jvm-variant client,server'
+                ],
+                test                : ['sanity.openjdk']
         ],
 
         ppc64Aix    : [
@@ -69,14 +84,14 @@ def buildConfigurations = [
                 arch                : 'ppc64',
                 test                : [
                         nightly: false,
-                        release: ['openjdktest', 'systemtest']
+                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ]
         ],
 
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
-                test                : ['openjdktest', 'systemtest', 'perftest'],
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 configureArgs        : '--disable-ccache'
         ],
 
@@ -89,7 +104,7 @@ def buildConfigurations = [
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                test                : ['openjdktest', 'systemtest', 'perftest'],
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 configureArgs       : '--disable-ccache'
 
         ],
@@ -98,7 +113,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'arm',
                 // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
-                //test                : ['openjdktest', 'perftest']
+                //test                : ['sanity.openjdk', 'sanity.perf']
                 test                : false
         ],
 
@@ -106,7 +121,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['openjdktest', 'systemtest', 'perftest']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
         ],
 
         /*
@@ -121,7 +136,7 @@ def buildConfigurations = [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
-                test                 : ['openjdktest', 'systemtest'],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],

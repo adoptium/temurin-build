@@ -139,6 +139,10 @@ getOpenJdkVersion() {
     version="8u${updateNum}-b${buildNum}"
   else
     version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+
+    # TODO remove pending #1016
+    version=${version%_adopt}
+    version=${version#aarch64-shenandoah-}
   fi
 
   echo ${version}
@@ -157,7 +161,7 @@ configuringVersionStringParameter()
   echo "OpenJDK repo tag is ${openJdkVersion}"
 
   # --with-milestone=fcs deprecated at jdk11, removed at jdk12
-  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK12_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDKHEAD_CORE_VERSION}" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 12 ]; then
     addConfigureArg "--with-milestone=" "fcs"
   fi
 
@@ -209,7 +213,8 @@ configuringVersionStringParameter()
     # Set the build number (e.g. b04), this gets passed in from the calling script
     local buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
     if [ -z "${buildNumber}" ]; then
-      buildNumber=$(echo "${openJdkVersion}" | cut -f2 -d"+")
+      # Get build number (eg.10) from tag of potential format "jdk-11.0.4+10_adopt"
+      buildNumber=$(echo "${openJdkVersion}" | cut -d_ -f1 | cut -f2 -d"+")
     fi
 
     if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
@@ -241,8 +246,6 @@ buildingTheRestOfTheConfigParameters()
     addConfigureArg "--enable-ccache" ""
   fi
 
-  addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
-
   addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
 
   # Point-in-time dependency for openj9 only
@@ -251,6 +254,7 @@ buildingTheRestOfTheConfigParameters()
   fi
 
   addConfigureArg "--with-x=" "/usr/include/X11"
+
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
     # We don't want any extra debug symbols - ensure it's set to release,
@@ -261,6 +265,7 @@ buildingTheRestOfTheConfigParameters()
   else
     addConfigureArg "--with-debug-level=" "release"
     addConfigureArg "--with-native-debug-symbols=" "none"
+    addConfigureArg "--enable-dtrace=" "auto"
   fi
 }
 
@@ -306,6 +311,9 @@ configureCommandParameters()
     buildingTheRestOfTheConfigParameters
   fi
 
+  echo "Configuring jvm variants if provided"
+  addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
+
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]; then
     addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/cacerts_area/security/cacerts"
   fi
@@ -347,7 +355,7 @@ buildTemplatedFile() {
     MAKE_TEST_IMAGE=" test-image" # the added white space is deliberate as it's the last arg
   fi
 
-  FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${MAKE_TEST_IMAGE}"
+  FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]} ${MAKE_TEST_IMAGE}"
 
   # shellcheck disable=SC2002
   cat "$SCRIPT_DIR/build.template" | \
@@ -382,10 +390,6 @@ getGradleHome() {
     gradleJavaHome=${JAVA_HOME}
   fi
 
-  if [ -d "${BUILD_CONFIG[JDK_BOOT_DIR]}" ]; then
-    gradleJavaHome=${BUILD_CONFIG[JDK_BOOT_DIR]}
-  fi
-
   if [ ${JDK8_BOOT_DIR+x} ] && [ -d "${JDK8_BOOT_DIR}" ]; then
     gradleJavaHome=${JDK8_BOOT_DIR}
   fi
@@ -406,6 +410,7 @@ getGradleHome() {
 
 buildSharedLibs() {
     cd "${LIB_DIR}"
+
     local gradleJavaHome=$(getGradleHome)
     echo "Running gradle with $gradleJavaHome"
 
@@ -423,6 +428,7 @@ parseJavaVersionString() {
   cd "${LIB_DIR}"
   local gradleJavaHome=$(getGradleHome)
   local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f openjdk-semver $ADOPT_BUILD_NUMBER | tr -d '\n')
+
   echo $version
 }
 
@@ -481,10 +487,16 @@ getJreArchivePath() {
   echo "${jdkArchivePath}-jre"
 }
 
+getTestImageArchivePath() {
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-test-image"
+}
+
 # Clean up
 removingUnnecessaryFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
+  local testImageTargetPath=$(getTestImageArchivePath)
 
   echo "Removing unnecessary files now..."
 
@@ -512,6 +524,14 @@ removingUnnecessaryFiles() {
     rm -rf "${dirToRemove}"/demo/applets || true
     rm -rf "${dirToRemove}"/demo/jfc/Font2DTest || true
     rm -rf "${dirToRemove}"/demo/jfc/SwingApplet || true
+  fi
+  # Test image is JDK 11+ only so add an additional
+  # check if the config is set
+  if [ ! -z "${BUILD_CONFIG[TEST_IMAGE_PATH]}" ] && [ -d "$(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]})" ]
+  then
+    echo "moving $(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]}) to ${testImageTargetPath}"
+    rm -rf "${testImageTargetPath}" || true
+    mv "$(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]})" "${testImageTargetPath}"
   fi
 
   # Remove files we don't need
@@ -595,13 +615,21 @@ makeACopyOfLibFreeFontForMacOSX() {
 # Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
 getFirstTagFromOpenJDKGitRepo()
 {
-    git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    revList=$(git rev-list --tags --topo-order --max-count=$GIT_TAGS_TO_SEARCH)
-    firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | grep -v "\-ga" | head -1)
-    # this may not find the correct tag if there are multiples on the commit so find commit
-    # that contains this tag and then use `git tag` to find the real tag
-    revList=$(git rev-list -n 1 $firstMatchingNameFromRepo --)
-    firstMatchingNameFromRepo=$(git tag --points-at $revList | grep -v "\-ga" | tail -1)
+    # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon...
+    # Read OPENJDK_TAG value from that file..
+    local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] && [[ -f "${openj9_openjdk_tag_file}" ]]; then
+      firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
+    else
+      git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+      revList=$(git rev-list --tags --topo-order --max-count=$GIT_TAGS_TO_SEARCH)
+      firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | grep -v _adopt | grep -v "\-ga" | head -1)
+      # this may not find the correct tag if there are multiples on the commit so find commit
+      # that contains this tag and then use `git tag` to find the real tag
+      revList=$(git rev-list -n 1 $firstMatchingNameFromRepo --)
+      firstMatchingNameFromRepo=$(git tag --points-at $revList | grep -v "\-ga" | tail -1)
+    fi
+
     if [ -z "$firstMatchingNameFromRepo" ]; then
       echo "WARNING: Failed to identify latest tag in the repository" 1>&2
     else
@@ -629,6 +657,7 @@ createOpenJDKTarArchive()
 {
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
+  local testImageTargetPath=$(getTestImageArchivePath)
 
   COMPRESS=gzip
 
@@ -641,7 +670,12 @@ createOpenJDKTarArchive()
     local jreName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-jre/')
     createArchive "${jreTargetPath}" "${jreName}"
   fi
-   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
+  if [ -d "${testImageTargetPath}" ]; then
+    echo "OpenJDK test image path will be ${testImageTargetPath}."
+    local testImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-testimage}")
+    createArchive "${testImageTargetPath}" "${testImageName}"
+  fi
+  createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
 # Echo success
@@ -667,9 +701,20 @@ createTargetDir() {
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 }
 
+fixJavaHomeUnderDocker() {
+  # If we are inside docker we cannot trust the JDK_BOOT_DIR that was detected on the host system
+  if [[ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ]];
+  then
+      # clear BUILD_CONFIG[JDK_BOOT_DIR] and re set it
+      BUILD_CONFIG[JDK_BOOT_DIR]=""
+      setBootJdk
+  fi
+}
+
 ################################################################################
 
 loadConfigFromFile
+fixJavaHomeUnderDocker
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
 parseArguments "$@"

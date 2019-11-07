@@ -18,11 +18,13 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
-
 export PATH="/opt/freeware/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH"
-export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-memory-size=18000 --with-cups-include=/opt/freeware/include"
+# Without this, java adds /usr/lib to the LIBPATH of anything it forks which breaks linkage
+export LIBPATH="/opt/freeware/lib:$LIBPATH"
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-memory-size=10000 --with-cups-include=/opt/freeware/include"
 
-if [ "${JAVA_TO_BUILD}" != "${JDK11_VERSION}" ] && [ "${JAVA_TO_BUILD}" != "${JDK12_VERSION}" ]
+# Any version below 11
+if  [ "$JAVA_FEATURE_VERSION" -lt 11 ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread"
 fi
@@ -30,50 +32,37 @@ fi
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
-  export LDR_CNTRL=MAXDATA=0x80000000 
+  export LDR_CNTRL=MAXDATA=0x80000000
 fi
 echo LDR_CNTRL=$LDR_CNTRL
 
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
-then
-  if [ ! -d "$JDK10_BOOT_DIR" ]; then
-    export JDK10_BOOT_DIR="$PWD/jdk-10"
-    if [ ! -d "$JDK10_BOOT_DIR/bin" ]; then
-      mkdir -p "$JDK10_BOOT_DIR"
-      wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?os=aix&release=latest&arch=${ARCHITECTURE}&type=jdk&heap_size=normal&openjdk_impl=openj9" | tar xpzf - --strip-components=1 -C "$JDK10_BOOT_DIR"
+# Any version above 8
+if [ "$JAVA_FEATURE_VERSION" -gt 8 ]; then
+    BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+    BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+    if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
+      export $BOOT_JDK_VARIABLE="$PWD/jdk-$BOOT_JDK_VERSION"
+      if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE/bin")" ]; then
+        bootDir="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+        mkdir -p "${bootDir}"
+        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=aix&release=latest&arch=${ARCHITECTURE}&heap_size=normal&type=jdk&openjdk_impl=openj9" | tar xpzf - --strip-components=1 -C "${bootDir}"
+      fi
     fi
-  fi
-  export JDK_BOOT_DIR=$JDK10_BOOT_DIR
+    export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 fi
 
-if [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ];
-then
-  if [ ! -d "$JDK11_BOOT_DIR" ]; then
-    export JDK11_BOOT_DIR="$PWD/jdk-11"
-    if [ ! -d "$JDK11_BOOT_DIR/bin" ]; then
-      mkdir -p "$JDK11_BOOT_DIR"
-      wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?os=aix&release=latest&arch=${ARCHITECTURE}&type=jdk&heap_size=normal&openjdk_impl=openj9" | tar xpzf - --strip-components=1 -C "$JDK11_BOOT_DIR"
-    fi
-  fi
-  export JDK_BOOT_DIR=$JDK11_BOOT_DIR
-fi
-
-if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDK12_VERSION}" ] || [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ];
+if [ "$JAVA_FEATURE_VERSION" -ge 11 ];
 then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors --with-openssl=fetched"
-    if [ -r /usr/local/gcc/bin/gcc-7.3 ]; then
-      # Following line ensures the latest ccache is picked up too
-      export PATH=/usr/local/gcc/bin:$PATH
-      export CC=gcc-7.3
-      export CXX=g++-7.3
-      export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
-    fi
   else
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} DF=/usr/sysv/bin/df"
   fi
 
   export LANG=C
-  export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH
-
+  if [ "$JAVA_FEATURE_VERSION" -ge 13 ]; then
+    export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/xlC/16.1.0/bin:/opt/IBM/xlc/16.1.0/bin:$PATH
+  else
+    export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH
+  fi
 fi

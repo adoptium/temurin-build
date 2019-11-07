@@ -31,6 +31,12 @@ function setOpenJdkVersion() {
   if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} == *u ]]; then
     BUILD_CONFIG[OPENJDK_CORE_VERSION]=${BUILD_CONFIG[OPENJDK_FOREST_NAME]%?}
   fi
+
+  local featureNumber=$(echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | tr -d "[:alpha:]")
+
+  # feature number e.g. 11
+  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber:-14}
+
 }
 
 function crossPlatformRealPath() {
@@ -46,7 +52,7 @@ function crossPlatformRealPath() {
     local name=$(basename "$target")
   fi
 
-  local fullPath="$PWD/$name"
+  local fullPath="$PWD/${name:+${name}}"
   cd "$currentDir"
   echo "$fullPath"
 }
@@ -110,4 +116,33 @@ createOpenJDKArchive()
   else
       tar -cf - "${repoDir}"/ | GZIP=-9 $COMPRESS -c > $fileName.tar.gz
   fi
+}
+
+function setBootJdk() {
+  if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
+    echo "Searching for JDK_BOOT_DIR"
+
+    # shellcheck disable=SC2046,SC2230
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+      BUILD_CONFIG[JDK_BOOT_DIR]="$(/usr/libexec/java_home)"
+    else
+      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
+    fi
+
+    echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+    echo "If this is incorrect explicitly configure JDK_BOOT_DIR"
+  else
+    echo "Overriding JDK_BOOT_DIR, set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+  fi
+
+  echo "Boot dir set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+}
+
+# A function that returns true if the variant is based on HotSpot and should
+# be treated as such by the build scripts
+function isHotSpot() {
+  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] ||
+  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] ||
+  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ] ||
+  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]
 }

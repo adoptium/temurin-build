@@ -5,6 +5,7 @@ targetConfigurations = [
         ],
         "x64Linux"      : [
                 "hotspot",
+                "hotspot-jfr",
                 "openj9"
         ],
         "x32Windows"    : [
@@ -13,6 +14,9 @@ targetConfigurations = [
         ],
         "x64Windows"    : [
                 "hotspot",
+                "openj9"
+        ],
+        "x64WindowsXL"  : [
                 "openj9"
         ],
         "ppc64Aix"      : [
@@ -30,7 +34,13 @@ targetConfigurations = [
         "aarch64Linux"  : [
                 "hotspot"
         ],
+        "arm32Linux"  : [
+                "hotspot"
+        ],
         "sparcv9Solaris": [
+                "hotspot"
+        ],
+        "x64Solaris": [
                 "hotspot"
         ],
         "linuxXL"       : [

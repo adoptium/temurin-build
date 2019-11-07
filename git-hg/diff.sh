@@ -25,11 +25,11 @@
 #
 ################################################################################
 
-set -euo
+set -euxo pipefail
 
 function checkArgs() {
   if [ $# -lt 2 ]; then
-     echo Usage: "$0" '[AdoptOpenJDK Git Repo Version] [OpenJDK Mercurial Root Forest Version]'
+     echo Usage: "$0" '[AdoptOpenJDK Git Repo Version] [OpenJDK Mercurial Root Forest Name] [OpenJDK Mercurial Root Forest Version] [Tag Name] [Allowed Change Size]'
      echo ""
      echo "e.g. ./diff.sh jdk8u jdk8u jdk8u or ./diff.sh jdk9u jdk-updates jdk9u"
      echo ""
@@ -42,6 +42,8 @@ checkArgs $@
 git_repo_version=$1
 hg_root_forest=${2:-${1}}                  # for backwards compatibility
 hg_repo_version=${3:-${hg_root_forest}}    # for backwards compatibility
+tag=${4:-} # tag to check
+expectedDiffLimit=${5:-0} # Number of lines that the full-diff file can be before an error is reported
 
 function cleanUp() {
   rm -rf openjdk-git openjdk-hg || true
@@ -53,43 +55,57 @@ function cloneRepos() {
 
   git clone -b master "https://github.com/AdoptOpenJDK/openjdk-${git_repo_version}.git" openjdk-git || exit 1
   hg clone "https://hg.openjdk.java.net/${hg_root_forest}/${hg_repo_version}" openjdk-hg || exit 1
-}
 
-function updateMercurialClone() {
-  cd openjdk-hg || exit 1
-
-  chmod u+x get_source.sh
-  ./get_source.sh
-
-  cd - || exit 1
-}
-
-function runDiff() {
-  diffNum=$(diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' | wc -l)
-
-  if [ "$diffNum" -gt 0 ]; then
-    echo "ERROR - THE DIFF HAS DETECTED UNKNOWN FILES"
-    diff -rq openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md' | grep 'Only in' || exit 1
-    exit 1
+  if [ -n "${tag}" ]; then
+    cd openjdk-hg
+    hg update $tag
+    cd ../openjdk-git
+    git fetch --all
+    git checkout $tag
+    cd ..
+  else
+    # By default compare the dev branch
+    cd ./openjdk-git
+    git fetch --all
+    git checkout dev
+    cd ..
   fi
 }
 
-# This function only checks the latest tag, a future enhancement could be to
-# check all tags
-function checkLatestTag() {
-  # get latest git tag
-  cd openjdk-git || exit 1
-  gitTag=$(git describe --abbrev=0 --tags) || exit 1
-  cd - || exit 1
+function updateMercurialClone() {
+    local rootDir=$(pwd)
 
-  cd openjdk-hg || exit 1
-  hgTag=$(hg log -r "." --template "{latesttag}\n") || exit 1
-  cd - || exit 1
+    cd "${rootDir}/openjdk-hg" || exit 1
+    if [ -f get_source.sh ]; then
+        chmod u+x get_source.sh
+        ./get_source.sh
 
-  if [ "$gitTag" == "$hgTag" ]; then
-    echo "Latest Tags are in sync"
-  else
-     echo "ERROR - Git tag ${gitTag} is not equal to Hg tag ${hgTag}"
+        if [ -n "${tag}" ]; then
+            MODULES=(corba langtools jaxp jaxws nashorn jdk hotspot)
+
+            hg update $tag
+            for module in "${MODULES[@]}" ; do
+                cd "${rootDir}/openjdk-hg/${module}"
+                hg update $tag
+            done
+        fi
+    fi
+
+    cd $rootDir || exit 1
+}
+
+function runDiff() {
+
+  local diffArgs="openjdk-git openjdk-hg -x '.git' -x '.hg' -x '.hgtags' -x '.hgignore' -x 'get_source.sh' -x 'README.md'"
+  set +e
+  diff -r  $diffArgs > full-changes.diff
+  diff -rq $diffArgs > changes.diff
+  set -e
+
+  diffNum=$(wc -l < full-changes.diff)
+
+  if [ "$diffNum" -gt ${expectedDiffLimit} ]; then
+    echo "ERROR - THE DIFF IS TOO LARGE, EXAMINE full-changes.diff"
     exit 1
   fi
 }
@@ -98,8 +114,3 @@ cleanUp
 cloneRepos
 updateMercurialClone
 runDiff
-# No longer run the tag checking as we're only pulling in selective tags for
-# AdoptOpenJDK.  For others using this script (who are pulling in ALL of the
-# tags) you may wish to reenable this function and even enhance it to compare
-# all tags.
-#checkLatestTag

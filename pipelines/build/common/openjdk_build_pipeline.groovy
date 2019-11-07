@@ -78,16 +78,12 @@ class Build {
         }
 
         def os = buildConfig.TARGET_OS
-        if (os == "mac") {
-            os = "macos"
-        }
 
-        def jobName = "openjdk${number}_${variant}_${testType}_${arch}_${os}"
+        def jobName = "Test_openjdk${number}_${variant}_${testType}_${arch}_${os}"
 
         if (buildConfig.ADDITIONAL_FILE_NAME_TAG) {
             switch (buildConfig.ADDITIONAL_FILE_NAME_TAG) {
-                case ~/.*linuxXL.*/: jobName += "_linuxXL"; break
-                case ~/.*macosXL.*/: jobName += "_macosXL"; break
+                case ~/.*XL.*/: jobName += "_xl"; break
             }
         }
         return "${jobName}"
@@ -98,13 +94,13 @@ class Build {
 
         List testList = buildConfig.TEST_LIST
         testList.each { testType ->
-            // For each requested test, i.e 'openjdktest', 'systemtest', 'perftest', 'externaltest', call test job
+            // For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
             try {
                 context.println "Running test: ${testType}"
                 testStages["${testType}"] = {
                     context.stage("${testType}") {
 
-                        // example jobName: openjdk10_hs_externaltest_x86-64_linux
+                        // example jobName: Test_openjdk11_hs_sanity.system_ppc64_aix
                         def jobName = determineTestJobName(testType)
 
                         def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
@@ -150,24 +146,26 @@ class Build {
                     def filter = ""
                     def certificate = ""
 
-                    def nodeFilter = "${buildConfig.TARGET_OS}&&build"
+                    def nodeFilter = "${buildConfig.TARGET_OS}"
 
                     if (buildConfig.TARGET_OS == "windows") {
                         filter = "**/OpenJDK*_windows_*.zip"
                         certificate = "C:\\Users\\jenkins\\windows.p12"
+                        nodeFilter = "${nodeFilter}&&build"
 
                     } else if (buildConfig.TARGET_OS == "mac") {
                         filter = "**/OpenJDK*_mac_*.tar.gz"
                         certificate = "\"Developer ID Application: London Jamocha Community CIC\""
 
                         // currently only macos10.10 can sign
-                        nodeFilter = "${nodeFilter}&&macos10.10"
+                        nodeFilter = "${nodeFilter}&&macos10.14"
                     }
 
                     def params = [
                             context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                             context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
                             context.string(name: 'OPERATING_SYSTEM', value: "${buildConfig.TARGET_OS}"),
+                            context.string(name: 'VERSION', value: "${versionInfo.major}"),
                             context.string(name: 'FILTER', value: "${filter}"),
                             context.string(name: 'CERTIFICATE', value: "${certificate}"),
                             ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"],
@@ -204,7 +202,7 @@ class Build {
         def certificate = "Developer ID Installer: London Jamocha Community CIC"
 
         // currently only macos10.10 can build an installer
-        def nodeFilter = "${buildConfig.TARGET_OS}&&macos10.10&&build"
+        def nodeFilter = "${buildConfig.TARGET_OS}&&macos10.14&&xcode10"
 
         def installerJob = context.build job: "build-scripts/release/create_installer_mac",
                 propagate: true,
@@ -225,6 +223,31 @@ class Build {
                 fingerprintArtifacts: true,
                 target: "workspace/target/",
                 flatten: true)
+    }
+
+    private void buildLinuxInstaller(VersionInfo versionData) {
+        def filter = "**/OpenJDK*_linux_*.tar.gz"
+        def nodeFilter = "${buildConfig.TARGET_OS}&&fpm"
+
+        def buildNumber = versionData.build
+
+        String releaseType = "Nightly"
+        if (buildConfig.RELEASE) {
+            releaseType = "Release"
+        }
+
+        def installerJob = context.build job: "build-scripts/release/create_installer_linux",
+                propagate: true,
+                parameters: [
+                        context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                        context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                        context.string(name: 'FILTER', value: "${filter}"),
+                        context.string(name: 'RELEASE_TYPE', value: "${releaseType}"),
+                        context.string(name: 'VERSION', value: "${versionData.version}"),
+                        context.string(name: 'MAJOR_VERSION', value: "${versionData.major}"),
+                        context.string(name: 'ARCHITECTURE', value: "${buildConfig.ARCHITECTURE}"),
+                        ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
+                ]
     }
 
     private void buildWindowsInstaller(VersionInfo versionData) {
@@ -273,6 +296,7 @@ class Build {
                 try {
                     switch (buildConfig.TARGET_OS) {
                         case "mac": buildMacInstaller(versionData); break
+                        case "linux": buildLinuxInstaller(versionData); break
                         case "windows": buildWindowsInstaller(versionData); break
                         default: return; break
                     }
@@ -332,6 +356,8 @@ class Build {
             def type = "jdk"
             if (file.contains("-jre")) {
                 type = "jre"
+            } else if (file.contains("-testimage")) {
+                type = "testimage"
             }
 
             String hash = context.sh(script: "sha256sum $file | cut -f1 -d' '", returnStdout: true, returnStatus: false)
@@ -451,6 +477,9 @@ class Build {
                 }
             }
 
+            // Sign and archive jobs if needed
+            sign(versionInfo)
+
             if (enableTests && buildConfig.TEST_LIST.size() > 0) {
                 try {
                     def testStages = runTests()
@@ -459,9 +488,6 @@ class Build {
                     context.println "Failed test: ${e}"
                 }
             }
-
-            // Sign and archive jobs if needed
-            sign(versionInfo)
 
             //buildInstaller if needed
             buildInstaller(versionInfo)
@@ -491,4 +517,3 @@ return {
                 env,
                 currentBuild)
 }
-

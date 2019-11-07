@@ -23,14 +23,14 @@ def buildConfigurations = [
                         corretto: 'build-macstadium-macos1010-1',
                         openj9  : 'build-macstadium-macos1010-2'
                 ],
-                test                : ['openjdktest', 'systemtest']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
 
         x64MacXL      : [
                 os                   : 'mac',
                 arch                 : 'x64',
                 additionalNodeLabels : 'build-macstadium-macos1010-2',
-                test                 : ['openjdktest', 'systemtest', 'perftest'],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -38,12 +38,11 @@ def buildConfigurations = [
         x64Linux      : [
                 os                  : 'linux',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot : 'centos6',
-                        corretto: 'centos6',
-                        openj9  : 'build-joyent-centos69-x64-1'
-                ],
-                test                : ['openjdktest', 'systemtest', 'perftest', 'externaltest', 'externaltest_extended']
+                additionalNodeLabels: 'centos6',
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
+                configureArgs       : [
+                        "hotspot-jfr" : '--enable-jfr'
+                ]
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -55,7 +54,16 @@ def buildConfigurations = [
                         corretto: 'win2008',
                         openj9  : 'win2012&&mingw-cygwin'
                 ],
-                test                : ['openjdktest', 'systemtest']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system']
+        ],
+
+        x64WindowsXL    : [
+                os                   : 'windows',
+                arch                 : 'x64',
+                additionalNodeLabels : 'win2012&&mingw-cygwin',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "windowsXL",
+                configureArgs        : '--with-noncompressedrefs'
         ],
 
         x32Windows    : [
@@ -66,7 +74,10 @@ def buildConfigurations = [
                         corretto: 'win2008',
                         openj9  : 'win2012&&mingw-cygwin'
                 ],
-                test                : ['openjdktest']
+                buildArgs : [
+                        hotspot : '--jvm-variant client,server'
+                ],
+                test                : ['sanity.openjdk']
         ],
 
         ppc64Aix      : [
@@ -74,14 +85,14 @@ def buildConfigurations = [
                 arch: 'ppc64',
                 test: [
                         nightly: false,
-                        release: ['openjdktest', 'systemtest']
+                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ]
         ],
 
         s390xLinux    : [
                 os  : 'linux',
                 arch: 's390x',
-                test: ['openjdktest', 'systemtest']
+                test: ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
 
         sparcv9Solaris: [
@@ -90,17 +101,23 @@ def buildConfigurations = [
                 test: false
         ],
 
+        x64Solaris    : [
+                os                  : 'solaris',
+                arch                : 'x64',
+                test                : false
+        ],
+
         ppc64leLinux  : [
                 os  : 'linux',
                 arch: 'ppc64le',
-                test: ['openjdktest', 'systemtest']
+                test: ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
 
         arm32Linux    : [
                 os  : 'linux',
                 arch: 'arm',
                 // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
-                //test                : ['openjdktest']
+                //test                : ['sanity.openjdk']
                 test: false
         ],
 
@@ -108,7 +125,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['openjdktest', 'systemtest']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
 
         linuxXL       : [
@@ -116,7 +133,7 @@ def buildConfigurations = [
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
                 additionalFileNameTag: "linuxXL",
-                test                 : ['openjdktest', 'systemtest'],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 configureArgs        : '--with-noncompressedrefs'
         ],
 ]
