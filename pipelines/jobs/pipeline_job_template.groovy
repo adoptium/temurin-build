@@ -1,16 +1,13 @@
 import groovy.json.JsonOutput
 
-
-triggerSchedule = "0 0 31 2 0"
-//triggerSchedule = "@daily"
+triggerSchedule = "@daily"
 gitRefSpec = ""
 propagateFailures = false
 runTests = true
 
 // if true means this is running in the pr builder pipeline
 if (binding.hasVariable('PR_BUILDER')) {
-    //build on 31st Feb
-    triggerSchedule = "0 0 31 2 0"
+    triggerSchedule = "@yearly"
     gitRefSpec = "+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*"
     propagateFailures = true
     runTests = false
