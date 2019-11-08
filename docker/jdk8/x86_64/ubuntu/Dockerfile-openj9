@@ -23,8 +23,6 @@ RUN apt-get update \
        cpio \
        curl \
        file \
-       g++-4.8 \
-       gcc-4.8 \
        git \
        gnupg2 \
        libasound2-dev \
@@ -43,16 +41,19 @@ RUN apt-get update \
        nasm \
        openjdk-8-jdk \
        pkg-config \
+       software-properties-common \
        ssh \
        unzip \
        wget \
        zip \
     && rm -rf /var/lib/apt/lists/*
 
-# Make sure build uses 4.8
-RUN ln -sf /usr/bin/gcc-4.8 /usr/bin/gcc \
-    && ln -sf /usr/bin/g++-4.8 /usr/bin/g++ \
-    && ln -sf /usr/bin/g++-4.8 /usr/bin/c++
+# Make sure build uses GCC 7
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test \
+  && apt-get update \
+  && apt-get install -y gcc-7 g++-7 \
+  && ln -sf /usr/bin/gcc-7 /usr/bin/gcc \
+  && ln -sf /usr/bin/g++-7 /usr/bin/g++
 
 RUN mkdir -p /openjdk/target
 
