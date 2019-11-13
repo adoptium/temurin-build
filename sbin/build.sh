@@ -351,7 +351,7 @@ buildTemplatedFile() {
   # If it's Java 9+ then we also make test-image to build the native test libraries
   JDK_PREFIX="jdk"
   JDK_VERSION_NUMBER="${BUILD_CONFIG[OPENJDK_CORE_VERSION]#$JDK_PREFIX}"
-  if [ "$JDK_VERSION_NUMBER" -gt 8 ]; then
+  if [ "$JDK_VERSION_NUMBER" -gt 8 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
     MAKE_TEST_IMAGE=" test-image" # the added white space is deliberate as it's the last arg
   fi
 
