@@ -24,8 +24,6 @@ RUN apt-get update \
        cpio \
        curl \
        file \
-       g++-4.8 \
-       gcc-4.8 \
        git \
        gnupg2 \
        libasound2-dev \
@@ -45,16 +43,24 @@ RUN apt-get update \
        nasm \
        openjdk-8-jdk \
        pkg-config \
+       software-properties-common \
        ssh \
        unzip \
        wget \
        zip \
     && rm -rf /var/lib/apt/lists/*
 
-# Make sure build uses 4.8
-RUN ln -sf /usr/bin/gcc-4.8 /usr/bin/gcc \
-    && ln -sf /usr/bin/g++-4.8 /usr/bin/g++ \
-    && ln -sf /usr/bin/g++-4.8 /usr/bin/c++
+# Make sure build uses GCC 7.3
+RUN cd /usr/local \
+  && wget -O gcc-7.tar.xz "https://ci.adoptopenjdk.net/userContent/gcc/gcc730+ccache.x86_64.tar.xz" \
+  && tar -xJf gcc-7.tar.xz --strip-components=1 \
+  && rm -rf gcc-7.tar.xz
+  
+# Create links for GCC to access the C library and gcc,g++
+RUN ln -s /usr/lib/x86_64-linux-gnu /usr/lib64 \
+  && ln -s /usr/include/x86_64-linux-gnu/* /usr/local/include \
+  && ln -s /usr/local/bin/g++-7.3 /usr/bin/g++ \
+  && ln -s /usr/local/bin/gcc-7.3 /usr/bin/gcc
 
 RUN mkdir -p /openjdk/target
 
