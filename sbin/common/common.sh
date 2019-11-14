@@ -58,7 +58,7 @@ function crossPlatformRealPath() {
 }
 
 function setDockerVolumeSuffix() {
-  local suffix=$1
+  local suffix="$1-${BUILD_CONFIG[BUILD_VARIANT]}"
   if [[ "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" != *"-${suffix}" ]]; then
     BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]="${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}-${suffix}"
   fi
