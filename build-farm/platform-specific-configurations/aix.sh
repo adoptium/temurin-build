@@ -62,6 +62,8 @@ then
   export LANG=C
   if [ "$JAVA_FEATURE_VERSION" -ge 13 ]; then
     export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/xlC/16.1.0/bin:/opt/IBM/xlc/16.1.0/bin:$PATH
+    export CC=xlclang
+    export CXX=xlclang++
   else
     export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH
   fi
