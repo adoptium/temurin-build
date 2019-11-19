@@ -224,7 +224,7 @@ function performMergeIntoReleaseFromMaster() {
       mergeTag=true
       # Check if tag is in the releaseTagExcludeList, if so do not bring it into the release branch
       # and do not create an _adopt tag
-      if [ ! -z "$releaseTagExcludeList" ] ; then
+      if [ -n "${releaseTagExcludeList-}" ] ; then
         for skipTag in $releaseTagExcludeList; do
           if [ "x$tag" == "x$skipTag" ]; then
            mergeTag=false
