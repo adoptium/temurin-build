@@ -3,7 +3,7 @@ set -u
 
 jdkVersion=''
 bootDir=''
-openJ9=false
+buildVariant="hotspot"
 useEclipseDockerFiles=false
 useEclipseDockerSlavesFiles=false
 
@@ -26,11 +26,11 @@ parseCommandLineArgs()
 				"--jdk-boot-dir" | "-J")
 					bootDir="$1"; shift;;
 				"--openj9" | "-j9")
-					openJ9=true;;
+					buildVariant="openj9";;
 				"--use-eclipse-docker-files" | "-e" )
-					useEclipseDockerFiles=true;;
+					useEclipseDockerFiles=true; buildVariant="eclipse";;
 				"--use-eclipse-docker-slave-files" | "-es" )
-					useEclipseDockerSlavesFiles=true;;
+					useEclipseDockerSlavesFiles=true; buildVariant="eclipse_slave";;
 				"--help" | "-h" )
 					usage; exit 0;;
 				*) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised."; usage; exit 1;;
@@ -88,6 +88,11 @@ jdkVersionList()
 
 checkArgs()
 {
+	# Sets WORKSPACE to home if WORKSPACE is empty or unbounded
+	if [ ! -n "${WORKSPACE:-}" ]; then
+        	echo "WORKSPACE not found, setting it as environment variable 'HOME'"
+        	WORKSPACE=$HOME
+	fi
 	if [[ "$useEclipseDockerFiles" == true && "$useEclipseDockerSlavesFiles" == true ]]; then
 		echo "Unable to use both kinds of dockerfiles at once, Select a single option."
 		exit 1
@@ -96,7 +101,7 @@ checkArgs()
 
 useEclipseDockerFiles()
 {
-	cd $WORKSPACE/DockerBuildFolder/openjdk-build/docker && mkdir -p EclipseDockerfiles
+	cd $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant && mkdir -p EclipseDockerfiles
 	cd EclipseDockerfiles
 	for jdk in $jdkVersion
 	do
@@ -109,7 +114,8 @@ useEclipseDockerFiles()
 useEclipseDockerSlavesFiles()
 {
 	cd $WORKSPACE/DockerBuildFolder/
-	git clone https://github.com/eclipse/openj9 && cd openj9/buildenv/jenkins/docker-slaves/x86/centos6.9/
+	git clone https://github.com/eclipse/openj9 $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant 
+	cd $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant/buildenv/jenkins/docker-slaves/x86/centos6.9
 	if [ -f "known_hosts" ]; then 
 		rm known_hosts
 	fi
@@ -138,34 +144,28 @@ buildDocker()
 	if [ -n "$bootDir" ]; then
 		commandString="$commandString -J $bootDir"
 	fi
-	if [[ "$openJ9" = true ]]; then
+	if [[ "$buildVariant" == "openj9" ]]; then
 		commandString="$commandString --build-variant openj9"
 	fi
 	for jdk in $jdkVersion
 	do
 		echo "$commandString $jdk being executed"
-		cd $WORKSPACE/DockerBuildFolder/openjdk-build && $commandString $jdk
+		cd $WORKSPACE/DockerBuildFolder/$jdk-$buildVariant && $commandString $jdk
 	done
 }
 
 setupGit()
 {
-	mkdir -p $WORKSPACE/DockerBuildFolder
-	cd $WORKSPACE/DockerBuildFolder/
-	if [ ! -d "openjdk-build" ]; then
-		git clone https://github.com/adoptopenjdk/openjdk-build $WORKSPACE/DockerBuildFolder/openjdk-build
+	if [ ! -d "$jdkVersion-$buildVariant/docker" ]; then
+		git clone https://github.com/adoptopenjdk/openjdk-build $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant
 	else
-		cd openjdk-build
+		cd $jdkVersion-$buildVariant
 		git pull https://github.com/adoptopenjdk/openjdk-build
 	fi
 }
-# Sets WORKSPACE to home if WORKSPACE is empty or unbounded
-if [ ! -n "${WORKSPACE:-}" ]; then
-	echo "WORKSPACE not found, setting it as environment variable 'HOME'"
-	WORKSPACE=$HOME
-fi
 parseCommandLineArgs $@
 checkJDKVersion
+mkdir -p $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant
 if [[ "$useEclipseDockerFiles" == "true" ]]; then
 	useEclipseDockerFiles
 elif [[ "$useEclipseDockerSlavesFiles" == "true" ]]; then
