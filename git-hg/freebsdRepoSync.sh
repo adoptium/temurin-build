@@ -21,8 +21,10 @@ usage() {
 initRepo() {
 	if [ -d ${REPO} ]; then
 		cd ${REPO}
-		git pull || exit 1
+		# Some local changes may prevent a pull from succeeding
+		# To avoid that, reset the repo here
 		git reset --hard origin/${SYNC_BRANCH} || exit 1
+		git pull || exit 1
 	else
 		git clone ${CHILD_REPO_PATH}/${REPO}.git || exit 1
 		cd ${REPO}
