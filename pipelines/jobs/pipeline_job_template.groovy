@@ -13,6 +13,10 @@ if (binding.hasVariable('PR_BUILDER')) {
     runTests = false
 }
 
+if (!binding.hasVariable('disableJob')) {
+    disableJob = false
+}
+
 folder("${BUILD_FOLDER}")
 folder("${BUILD_FOLDER}/jobs")
 

@@ -58,7 +58,7 @@ function crossPlatformRealPath() {
 }
 
 function setDockerVolumeSuffix() {
-  local suffix=$1
+  local suffix="$1-${BUILD_CONFIG[BUILD_VARIANT]}"
   if [[ "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" != *"-${suffix}" ]]; then
     BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]="${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}-${suffix}"
   fi
@@ -114,7 +114,12 @@ createOpenJDKArchive()
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = *"cygwin"* ]]; then
       zip -r -q "${fileName}.zip" ./"${repoDir}"
   else
-      tar -cf - "${repoDir}"/ | GZIP=-9 $COMPRESS -c > $fileName.tar.gz
+      # Create archive with UID/GID 0 for root if using GNU tar
+      if tar --version 2>&1 | grep GNU > /dev/null; then
+          tar -cf - --owner=root --group=root "${repoDir}"/ | GZIP=-9 $COMPRESS -c > $fileName.tar.gz
+      else
+          tar -cf - "${repoDir}"/ | GZIP=-9 $COMPRESS -c > $fileName.tar.gz
+      fi
   fi
 }
 
