@@ -20,7 +20,6 @@ RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get install -qq -y --no-install-recommends \
        autoconf \
-       ccache \
        cpio \
        curl \
        file \
@@ -60,7 +59,8 @@ RUN cd /usr/local \
 RUN ln -s /usr/lib/x86_64-linux-gnu /usr/lib64 \
   && ln -s /usr/include/x86_64-linux-gnu/* /usr/local/gcc/include \
   && ln -s /usr/local/gcc/bin/g++-7.3 /usr/bin/g++ \
-  && ln -s /usr/local/gcc/bin/gcc-7.3 /usr/bin/gcc
+  && ln -s /usr/local/gcc/bin/gcc-7.3 /usr/bin/gcc \
+  && ln -s /usr/local/gcc/bin/ccache /usr/local/bin/ccache
 
 RUN mkdir -p /openjdk/target
 
