@@ -20,7 +20,6 @@ RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get install -qq -y --no-install-recommends \
        autoconf \
-       ccache \
        cpio \
        curl \
        file \
@@ -54,7 +53,8 @@ RUN apt-get update \
 # Make sure build uses 4.8
 RUN ln -sf /usr/bin/gcc-4.8 /usr/bin/gcc \
     && ln -sf /usr/bin/g++-4.8 /usr/bin/g++ \
-    && ln -sf /usr/bin/g++-4.8 /usr/bin/c++
+    && ln -sf /usr/bin/g++-4.8 /usr/bin/c++ \
+  && ln -s /usr/local/gcc/bin/ccache /usr/local/bin/ccache
 
 RUN mkdir -p /openjdk/target
 
