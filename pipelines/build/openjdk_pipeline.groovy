@@ -97,10 +97,26 @@ def buildConfigurations = [
                 test                : false
         ],
         */
-        "linuxXL"    : [
+        x64LinuxXL    : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
+                test                 : false,
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs'
+        ],
+        s390xLinuxXL    : [
+                os                   : 'linux',
+                additionalNodeLabels : 'centos6',
+                arch                 : 's390x',
+                test                 : false,
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs'
+        ],
+        ppc64LinuxXL    : [
+                os                   : 'linux',
+                additionalNodeLabels : 'centos6',
+                arch                 : 'ppc64le',
                 test                 : false,
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs'

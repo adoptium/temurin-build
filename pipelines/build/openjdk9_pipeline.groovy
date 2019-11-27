@@ -77,7 +77,7 @@ def buildConfigurations = [
                 test                : ['sanity.openjdk']
         ],
 
-        linuxXL    : [
+        x64LinuxXL    : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
