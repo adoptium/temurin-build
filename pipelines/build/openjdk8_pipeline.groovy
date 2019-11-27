@@ -128,10 +128,26 @@ def buildConfigurations = [
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system']
         ],
 
-        linuxXL       : [
+        x64LinuxXL       : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
+                additionalFileNameTag: "linuxXL",
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                configureArgs        : '--with-noncompressedrefs'
+        ],
+        s390xLinuxXL       : [
+                os                   : 'linux',
+                additionalNodeLabels : 'centos6',
+                arch                 : 's390x',
+                additionalFileNameTag: "linuxXL",
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                configureArgs        : '--with-noncompressedrefs'
+        ],
+        ppc64leLinuxXL       : [
+                os                   : 'linux',
+                additionalNodeLabels : 'centos6',
+                arch                 : 'ppc64le',
                 additionalFileNameTag: "linuxXL",
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 configureArgs        : '--with-noncompressedrefs'
