@@ -138,7 +138,6 @@ def buildConfigurations = [
         ],
         s390xLinuxXL       : [
                 os                   : 'linux',
-                additionalNodeLabels : 'centos6',
                 arch                 : 's390x',
                 additionalFileNameTag: "linuxXL",
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
@@ -146,7 +145,6 @@ def buildConfigurations = [
         ],
         ppc64leLinuxXL       : [
                 os                   : 'linux',
-                additionalNodeLabels : 'centos6',
                 arch                 : 'ppc64le',
                 additionalFileNameTag: "linuxXL",
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
