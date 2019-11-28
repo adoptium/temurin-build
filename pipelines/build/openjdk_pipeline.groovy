@@ -107,7 +107,6 @@ def buildConfigurations = [
         ],
         s390xLinuxXL    : [
                 os                   : 'linux',
-                additionalNodeLabels : 'centos6',
                 arch                 : 's390x',
                 test                 : false,
                 additionalFileNameTag: "linuxXL",
@@ -115,7 +114,6 @@ def buildConfigurations = [
         ],
         ppc64LinuxXL    : [
                 os                   : 'linux',
-                additionalNodeLabels : 'centos6',
                 arch                 : 'ppc64le',
                 test                 : false,
                 additionalFileNameTag: "linuxXL",
