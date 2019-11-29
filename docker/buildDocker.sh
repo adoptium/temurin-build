@@ -156,11 +156,11 @@ buildDocker()
 
 setupGit()
 {
-	if [ ! -d "$jdkVersion-$buildVariant/docker" ]; then
+	if [ ! -d "$WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant/docker" ]; then
 		git clone https://github.com/adoptopenjdk/openjdk-build $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant
 	else
-		cd $jdkVersion-$buildVariant
-		git pull https://github.com/adoptopenjdk/openjdk-build
+		cd $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant
+		git pull
 	fi
 }
 parseCommandLineArgs $@
