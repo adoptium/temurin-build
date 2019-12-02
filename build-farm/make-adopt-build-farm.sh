@@ -68,10 +68,12 @@ esac
 
 if [ ! -d "${JDK_BOOT_DIR}" ]
 then
+  echo Setting JDK_BOOT_DIR to \$JAVA_HOME
   export JDK_BOOT_DIR="${JAVA_HOME}"
 fi
 
-echo "Boot jdk: ${JDK_BOOT_DIR}"
+echo "Boot jdk directory: ${JDK_BOOT_DIR}:"
+java -version 2>&1 | sed 's/^/BOOT JDK: /'
 
 if [ "${RELEASE}" == "true" ]; then
   OPTIONS="${OPTIONS} --release --clean-libs"
