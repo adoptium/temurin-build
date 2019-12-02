@@ -131,11 +131,11 @@ function setBootJdk() {
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
       set +e
       BUILD_CONFIG[JDK_BOOT_DIR]="$(/usr/libexec/java_home)"
-      set -e
       local returnCode=$?
+      set -e
 
       if [[ ${returnCode} -ne 0 ]]; then
-        BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
+        BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(greadlink -f $(which javac))))
       fi
     else
       BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
