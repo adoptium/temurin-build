@@ -133,7 +133,7 @@ sharedDockerCommands()
 {
 	local jdk=$1
 	docker build -t $jdk -f Dockerfile.$jdk .
-	docker run -it -u root -d --name=$jdk $jdk
+	docker run -it -u root -d --name=${jdk}-Eclipse $jdk
 	docker exec -u root -it $jdk sh -c "git clone https://github.com/ibmruntimes/openj9-openjdk-${jdk%?}"
 	docker exec -u root -it $jdk sh -c "cd openj9-openjdk-${jdk%?} && bash ./get_source.sh && bash ./configure --with-freemarker-jar=/root/freemarker.jar && make all"
 }
