@@ -107,7 +107,7 @@ useEclipseDockerFiles()
 	do
 		# ${jdk%?} will remove the 'u' from 'jdk__u' when needed.
 		curl -o Dockerfile.$jdk https://raw.githubusercontent.com/eclipse/openj9/master/buildenv/docker/${jdk%?}/x86_64/ubuntu16/Dockerfile;
-		sharedDockerCommands $jdk
+		sharedEclipseDockerCommands $jdk
 	done
 }
 
@@ -125,11 +125,11 @@ useEclipseDockerSlavesFiles()
 	for jdk in $jdkVersion
 	do
 		cp Dockerfile $PWD/Dockerfile.$jdk
-		sharedDockerCommands $jdk
+		sharedEclipseDockerCommands $jdk
 	done
 }
 
-sharedDockerCommands()
+sharedEclipseDockerCommands()
 {
 	local jdk=$1
 	docker build -t $jdk -f Dockerfile.$jdk .
