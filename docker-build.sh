@@ -82,6 +82,41 @@ buildOpenJDKViaDocker()
   # shellcheck disable=SC1090
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
 
+    local openjdk_core_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
+    local openjdk_test_image_path=""
+    local jdk_directory=""
+    local jre_directory=""
+
+    if [ "$openjdk_core_version" == "${JDK8_CORE_VERSION}" ]; then
+      case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+      "darwin")
+        jdk_directory="j2sdk-bundle/jdk*.jdk"
+        jre_directory="j2re-bundle/jre*.jre"
+      ;;
+      *)
+        jdk_directory="j2sdk-image"
+        jre_directory="j2re-image"
+      ;;
+      esac
+    else
+      case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+      "darwin")
+        jdk_directory="jdk-bundle/jdk-*.jdk"
+        jre_directory="jre-bundle/jre-*.jre"
+      ;;
+      *)
+        jdk_directory="jdk"
+        jre_directory="jre"
+      ;;
+      esac
+    # Set the test image path for JDK 11+
+      openjdk_test_image_path="test"
+    fi
+
+    BUILD_CONFIG[JDK_PATH]=$jdk_directory
+    BUILD_CONFIG[JRE_PATH]=$jre_directory
+    BUILD_CONFIG[TEST_IMAGE_PATH]=$openjdk_test_image_path
+
   if [ -z "$(command -v docker)" ]; then
      # shellcheck disable=SC2154
     echo "Error, please install docker and ensure that it is in your path and running!"

@@ -107,7 +107,7 @@ useEclipseDockerFiles()
 	do
 		# ${jdk%?} will remove the 'u' from 'jdk__u' when needed.
 		curl -o Dockerfile.$jdk https://raw.githubusercontent.com/eclipse/openj9/master/buildenv/docker/${jdk%?}/x86_64/ubuntu16/Dockerfile;
-		sharedDockerCommands $jdk
+		sharedEclipseDockerCommands $jdk
 	done
 }
 
@@ -125,17 +125,17 @@ useEclipseDockerSlavesFiles()
 	for jdk in $jdkVersion
 	do
 		cp Dockerfile $PWD/Dockerfile.$jdk
-		sharedDockerCommands $jdk
+		sharedEclipseDockerCommands $jdk
 	done
 }
 
-sharedDockerCommands()
+sharedEclipseDockerCommands()
 {
 	local jdk=$1
 	docker build -t $jdk -f Dockerfile.$jdk .
-	docker run -it -u root -d --name=$jdk $jdk
-	docker exec -u root -it $jdk sh -c "git clone https://github.com/ibmruntimes/openj9-openjdk-${jdk%?}"
-	docker exec -u root -it $jdk sh -c "cd openj9-openjdk-${jdk%?} && bash ./get_source.sh && bash ./configure --with-freemarker-jar=/root/freemarker.jar && make all"
+	docker run -it -u root -d --name=${jdk}-Eclipse $jdk
+	docker exec -u root -i ${jdk}-Eclipse sh -c "git clone https://github.com/ibmruntimes/openj9-openjdk-${jdk%?}"
+	docker exec -u root -i ${jdk}-Eclipse sh -c "cd openj9-openjdk-${jdk%?} && bash ./get_source.sh && bash ./configure --with-freemarker-jar=/root/freemarker.jar && make all"
 }
 
 buildDocker()

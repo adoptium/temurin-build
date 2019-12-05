@@ -318,6 +318,9 @@ function configDefaults() {
     arch=$(uname -p | sed 's/powerpc/ppc/')
   fi
 
+  BUILD_CONFIG[JDK_PATH]=""
+  BUILD_CONFIG[JRE_PATH]=""
+
   # The O/S architecture, e.g. x86_64 for a modern intel / Mac OS X
   BUILD_CONFIG[OS_ARCHITECTURE]=${arch}
 
