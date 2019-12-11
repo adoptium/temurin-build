@@ -218,7 +218,17 @@ checkFingerprint() {
   echo $verify
 
   # grep out and trim fingerprint from line of the form "Primary key fingerprint: 58E0 C111 E39F 5408 C5D3  EC76 C1A6 0EAC E707 FDA5"
-  local fingerprint=$(echo $verify | grep "Primary key fingerprint" | egrep -o "([0-9A-F]{4} ? ?){10}" | sed -e 's/[[:space:]]*$//')
+  local fingerprint=$(echo $verify | grep "Primary key fingerprint" | egrep -o "([0-9A-F]{4} ? ?){10}" | head -n 1)
+
+  # Remove whitespace from finger print as different versions of gpg may or may not add spaces to the fingerprint
+  # specifically gpg on Ubuntu 16.04 produces:
+  # `13AC 2213 964A BE1D 1C14 7C0E 1939 A252 0BAB 1D90`
+  # where as 18.04 produces:
+  # `13AC2213964ABE1D1C147C0E1939A2520BAB1D90`
+  fingerprint="${fingerprint// /}"
+
+  # remove spaces from expected fingerprint to match the format from the output of gpg
+  expectedFingerprint="${expectedFingerprint// /}"
 
   if [ "$fingerprint" != "$expectedFingerprint" ]; then
     echo "Failed to verify signature of $fileName"
