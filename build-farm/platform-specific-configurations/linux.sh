@@ -115,6 +115,9 @@ if [ "$JAVA_FEATURE_VERSION" -gt 10 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPEN
       [ -r /usr/local/gcc/bin/gcc-7.4 ] && export CC=/usr/local/gcc/bin/gcc-7.4
       [ -r /usr/local/gcc/bin/g++-7.4 ] && export CXX=/usr/local/gcc/bin/g++-7.4
       export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
+    elif [ -r /usr/bin/gcc-7 ]; then
+      [ -r /usr/bin/gcc-7 ] && export CC=/usr/bin/gcc-7
+      [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
     fi
 fi
 
