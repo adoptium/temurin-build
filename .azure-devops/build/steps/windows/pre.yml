@@ -1,0 +1,75 @@
+# pre.yml
+# install Windows platform dependencies & set environment variables
+
+parameters:
+  # store all the downloaded files
+  dependenciesDir: '$(Agent.BuildDirectory)\tmp'
+  # store boot jdk
+  jdkBootDir: '$(Agent.BuildDirectory)\jdk\boot'
+  # store jdk used for gradle
+  javaHomeDir: '$(Agent.BuildDirectory)\jdk\home'
+
+steps:
+  # cache task to cache dependencies, e.g, jdk8 and bootjdk
+  - task: Cache@2
+    inputs:
+      key: '"$(Agent.OS)"|$(Build.SourcesDirectory)\.azure-devops\build\steps\windows\pre.yml'
+      path: "${{ parameters.dependenciesDir }}"
+      cacheHitVar: CACHE_RESTORED
+    displayName: "[Windows Pre] caching download dependencies"
+
+  # create all required directories before downloading files & installing jdks
+  - script: |
+      if not exist "${{ parameters.dependenciesDir }}" mkdir ${{ parameters.dependenciesDir }};
+      if not exist "${{ parameters.jdkBootDir }}" mkdir ${{ parameters.jdkBootDir }};
+      if not exist "${{ parameters.javaHomeDir }}" mkdir ${{ parameters.javaHomeDir }};
+    displayName: "[Windows Pre] create required directories"
+
+  # download cygwin installer, jdk8u, bootjdk, and visual studio 2013 installer
+  - powershell: |
+      $ProgressPreference = 'SilentlyContinue';
+      if('$(JAVA_TO_BUILD)' -eq 'jdk8u'){
+        $BOOTJDK_VERSION = 8;
+      } elseif('$(JAVA_TO_BUILD)' -eq 'jdk11u'){
+        $BOOTJDK_VERSION = 10;
+      } elseif('$(JAVA_TO_BUILD)' -eq 'jdk13u'){
+        $BOOTJDK_VERSION = 12;
+      } elseif('$(JAVA_TO_BUILD)' -eq 'jdk'){
+        $BOOTJDK_VERSION = 13;
+      }
+      Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile '${{ parameters.dependenciesDir }}\cygwin.exe';
+      Invoke-WebRequest -UseBasicParsing 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk8?os=windows&release=latest&arch=x64&heap_size=normal&type=jdk&openjdk_impl=hotspot' -OutFile '${{ parameters.dependenciesDir }}\jdk8.zip';
+      Invoke-WebRequest -UseBasicParsing "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOTJDK_VERSION}?os=windows&release=latest&arch=x64&heap_size=normal&type=jdk&openjdk_impl=hotspot" -OutFile '${{ parameters.dependenciesDir }}\jdk.zip';
+      Invoke-WebRequest -UseBasicParsing 'https://go.microsoft.com/fwlink/?LinkId=532495' -OutFile '${{ parameters.dependenciesDir }}\vs2013.exe';
+    displayName: "[Windows Pre] download JDKs from AdoptOpenJDK & other dependencies"
+    condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
+
+  # install cygwin and build dependencies
+  - powershell: |
+      Start-Process -Wait -FilePath '${{ parameters.dependenciesDir }}\cygwin.exe' -ArgumentList '--packages wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir $(Agent.BuildDirectory)\cygwin_packages --root $(Agent.BuildDirectory)\cygwin64';
+    displayName: "[Windows Pre] install cygwin"
+
+  # add cygwin bin to PATH
+  - script: |
+      echo ##vso[task.setvariable variable=Path]$(Agent.BuildDirectory)\cygwin64\bin;%PATH%
+    displayName: "[Windows Pre] add cygwin to PATH"
+
+  # unzip downloaded JDK zip files to directories, bsdtar is installed by cygwin
+  - bash: |
+      bsdtar --strip-components=1 -xvf $(cygpath -u '${{ parameters.dependenciesDir }}\jdk8.zip') -C '${{ parameters.javaHomeDir }}'
+      bsdtar --strip-components=1 -xvf $(cygpath -u '${{ parameters.dependenciesDir }}\jdk.zip') -C '${{ parameters.jdkBootDir }}'
+    displayName: "[Windows Pre] extracting downloaded JDKs to directories"
+
+  # only install visual studio 2013 when build jdk8 and jdk11
+  - powershell: |
+      if('$(JAVA_TO_BUILD)' -eq 'jdk8u' -Or '$(JAVA_TO_BUILD)' -eq 'jdk11u'){
+        Start-Process -Wait -FilePath '${{ parameters.dependenciesDir }}\vs2013.exe' -ArgumentList '/Silent /NoRestart';
+      }
+    displayName: "[Windows Pre] jdk8u & jdk11u install VS2013"
+
+  # set system veraibles that will be used by following steps
+  # cygpath is used to make sure JDK_BOOT_DIR & JAVA_HOME is correct in cygwin bash
+  - bash: |
+      echo "##vso[task.setvariable variable=JDK_BOOT_DIR]$(cygpath -u '${{ parameters.jdkBootDir }}')"
+      echo "##vso[task.setvariable variable=JAVA_HOME]$(cygpath -u '${{ parameters.javaHomeDir }}')"
+    displayName: "[Windows Pre] update Windows environment variables"

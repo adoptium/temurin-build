@@ -1,0 +1,23 @@
+# build_hotspot.yml
+# run the ./makejdk-any-platform.sh and upload generated files to artifacts
+
+steps:
+  # using the AdoptOpenJDK build scripts to build the OpenJDK binaries
+  - bash: |
+      ./makejdk-any-platform.sh \
+        ${EXTRA_MAKEJDK_ANY_PLATFORM_OPTIONS} \
+        --jdk-boot-dir "${JDK_BOOT_DIR}" \
+        --configure-args "--disable-warnings-as-errors --with-extra-cxxflags='-stdlib=libc++ -mmacosx-version-min=10.8'" \
+        --destination artifacts \
+        --target-file-name "${FILENAME}.tar.gz" \
+        --use-jep319-certs \
+        --build-variant "$(VARIANT)" \
+        $(JAVA_TO_BUILD)
+    displayName: "[macOS Build] start makejdk-any-platform process"
+
+  # upload the produced JDK/JRE binary to the build artifact service
+  - task: PublishPipelineArtifact@1
+    inputs:
+      artifactName: $(Agent.OS)_x64
+      targetPath: "$(Build.SourcesDirectory)/workspace/artifacts"
+    displayName: "[macOS Build] upload JKD/JRE artifact"

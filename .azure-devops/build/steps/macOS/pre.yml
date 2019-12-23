@@ -1,0 +1,76 @@
+# pre.yml
+# install macOS platform dependencies & set environment variables
+
+parameters:
+  # store all the downloaded files
+  dependenciesDir: "$(Agent.BuildDirectory)/tmp"
+  # store boot jdk
+  jdkBootDir: "$(Agent.BuildDirectory)/jdk/boot"
+  # store jdk used for gradle
+  javaHomeDir: "$(Agent.BuildDirectory)/jdk/home"
+
+steps:
+  # based on
+  # https://github.com/AdoptOpenJDK/openjdk-infrastructure/blob/master/ansible/playbooks/AdoptOpenJDK_Unix_Playbook/roles/Common/scripts/install-xcode.sh
+  - bash: |
+      touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress;
+      PROD=$(softwareupdate -l |
+        grep "\*.*Command Line" |
+        head -n 1 | awk -F"*" '{print $2}' |
+        sed -e 's/^ *//' |
+        tr -d '\n')
+      softwareupdate -i "$PROD" --verbose;
+      rm /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress;
+    displayName: "[macOS Pre] install Xcode command line tools"
+
+  # based on
+  # https://github.com/AdoptOpenJDK/openjdk-infrastructure/blob/master/ansible/playbooks/AdoptOpenJDK_Unix_Playbook/roles/Common/vars/MacOSX.yml
+  - bash: |
+      brew install autoconf ccache coreutils wget
+    displayName: "[macOS Pre] brew install autoconf, ccache, coreutils, and wget"
+
+  # cache task to cache dependencies, e.g, jdk8 and bootjdk
+  - task: Cache@2
+    inputs:
+      key: '"$(Agent.OS)"|$(Build.SourcesDirectory)/.azure-devops/build/steps/macOS/pre.yml'
+      path: "${{ parameters.dependenciesDir }}"
+      cacheHitVar: CACHE_RESTORED
+    displayName: "[macOS Pre] caching download dependencies"
+
+  # create all required directories before downloading files & installing jdks
+  - bash: |
+      mkdir -p ${{ parameters.jdkBootDir }}
+      mkdir -p ${{ parameters.javaHomeDir }}
+      mkdir -p ${{ parameters.dependenciesDir }}
+    displayName: "[macOS Pre] create required directories"
+
+  # download JDKs from AdoptOpenJDK
+  - bash: |
+      BOOTJDK_VERSION=
+      if [ "$(JAVA_TO_BUILD)" == "jdk11u" ]
+      then
+          BOOTJDK_VERSION=10
+      elif [ "$(JAVA_TO_BUILD)" == "jdk13u" ]
+      then
+          BOOTJDK_VERSION=12
+      elif [ "$(JAVA_TO_BUILD)" == "jdk" ]
+      then
+          BOOTJDK_VERSION=13
+      fi
+      wget -O "${{ parameters.dependenciesDir }}/openjdk8.tar.gz" "https://api.adoptopenjdk.net/v2/binary/releases/openjdk8?os=mac&release=latest&arch=x64&heap_size=normal&type=jdk&openjdk_impl=hotspot"
+      wget -O "${{ parameters.dependenciesDir }}/openjdk.tar.gz" "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOTJDK_VERSION}?os=mac&release=latest&arch=x64&heap_size=normal&type=jdk&openjdk_impl=hotspot"
+    displayName: "[macOS Pre] download JDKs from AdoptOpenJDK"
+    condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
+
+  # untar downloaded JDK files & move it to directories
+  - bash: |
+      tar -xzf "${{ parameters.dependenciesDir }}/openjdk8.tar.gz" --strip-components=3 -C ${{ parameters.javaHomeDir }}
+      tar -xzf "${{ parameters.dependenciesDir }}/openjdk.tar.gz" --strip-components=3 -C ${{ parameters.jdkBootDir }}
+    displayName: "[macOS Pre] extracting downloaded JDKs to directories"
+
+  # set system veraibles that will be used by following steps
+  - bash: |
+      echo "##vso[task.setvariable variable=JDK_BOOT_DIR]${{ parameters.jdkBootDir }}"
+      echo "##vso[task.setvariable variable=JAVA_HOME]${{ parameters.javaHomeDir }}"
+      echo "##vso[task.setvariable variable=PATH]${{ parameters.jdkBootDir }}/bin;$PATH"
+    displayName: "[macOS Pre] set JDK_BOOT_DIR, JAVA_HOME, and PATH environment variables"
