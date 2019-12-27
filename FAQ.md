@@ -1,0 +1,125 @@
+# openjdk-build FAQ
+
+This document will cover who to perform various repeatable tasks in the
+repository that might not otherwise be obvious.
+
+## Access control in this repository
+
+The two github teams relevant to this repository are as follows (Note, you
+won't necessarily have access to see thse links):
+
+- [GetOpenJDK](https://github.com/orgs/AdoptOpenJDK/teams/getopenjdk) - `Triage` level of access which lets you assign issues to people
+- [build](https://github.com/orgs/AdoptOpenJDK/teams/build) - `Write` access which lets you approve and merge PRs and run and configure most jenkins jobs
+- [release](https://github.com/orgs/AdoptOpenJDK/teams/build) - Allows you to run the release jobs in jenkins
+
+## How do I build OpenJDK in a docker image?
+
+If you do not want to set up your machine with all the prerequisites for
+building openjdk, you can use our docker images under the [docker]
+directory as follows (first version builds HotSpot, second builds J9 - the
+final parameter can be adjusted to build whichever version you want as long
+as we have a valid dockerfile for it in this repository):
+
+```
+./makejdk-any-platform.sh --docker --clean-docker-build jdk8u
+./makejdk-any-platform.sh --docker --clean-docker-build --build-variant openj9 jdk13u
+```
+
+We test these dockerfiles on a regular basis in the
+[Dockerfilecheck](https://ci.adoptopenjdk.net/job/DockerfileCheck/) job
+to ensure they continue to work in a stable fashion.
+
+## How do I find my way around AdoptOpenJDK's build automation scripts?
+
+I wrote this diagram partially for my own benefit in [issue 957](https://github.com/AdoptOpenJDK/openjdk-build/issues/957) that lists the Jenkins jobs (`J`), groovy scripts from github (`G`), shell scripts (`S`) and environment scripts (`E`). I think it would be useful to incorporate this into the documentation (potentially annotated with a bit more info) so people can find their way around the myriad of script levels that we now have.
+
+```
+J - build-scripts/job/utils/job/build-pipeline-generator
+G   - Create openjdk*-pipeline jobs from pipelines/jobs/popeline_job_template.groovy
+J   - openjdk11-pipeline
+G     - pipelines/build/openjdk*_pipeline.groovy
+G       - pipelines/build/common/build_base_file.groovy
+G         - create_job_from_template.groovy (Generates e.g. jdk11u-linux-x64-hotspot)
+G       - configureBuild()
+G         - .doBuild() (common/build_base_file.groovy)
+J           - context.build job: downstreamJobName (e.g. jdk11u/job/jdk11u-linux-x64-hotspot)
+J             (Provides JAVA_TO_BUILD, ARCHITECTURE, VARIANT, TARGET_OS + tests)
+G             - openjdk_build_pipeline.groovy
+G               - context.sh make-adopt-build-farm.sh
+S                 - set-platform-specific-configurations.sh
+E                    - sbin/common/constants.sh (DUPLICATED LATER FROM configureBuild.sh)
+E                    - platform-specific-configurations/${OPERATING_SYSTEM}.sh
+S                 - makejdk-any-platform.sh
+E                   - ${SCRIPT_DIR}/sbin/common/config_init.sh (Parse options)
+E                   - ${SCRIPT_DIR}/docker-build.sh (Runs build.sh within container)
+E                   - ${SCRIPT_DIR}/native-build.sh (Runs build.sh natively)
+E                   - ${SCRIPT_DIR}/configureBuild.sh
+E                     - ${SCRIPT_DIR}/sbin/common/constants.sh
+E                     - ${SCRIPT_DIR}/sbin/common/common.sh
+E                     - ${SCRIPT_DIR}/signalhandler.sh (rm container on SIGINT/SIGTERM)
+S                   - {buildOpenJDKViaDocker|buildOpenJDKInNativeEnvironment}
+```
+
+## What are the prerequisites for a system used for builds?
+
+- The upstream OpenJDK build requirements are at https://wiki.openjdk.java.net/display/Build/Supported+Build+Platforms
+- The AdoptOpenJDK levels we build on are at https://github.com/AdoptOpenJDK/openjdk-build/wiki/%5BWIP%5D-Minimum-OS-levels
+  although anything with comparable equivalent or later C libraries should work ok (in particular we have built on most current Linux distros without issues)
+
+In terms of compilers, these are what we currently use for each release:
+
+| Version | OS      | Compiler |
+|---------|---------|----------|
+| JDK8    | Linux   | GCC 4.8 (HotSpot) GCC 7.3 (OpenJ9) GCC 7.4 (OpenJ9/s390x) |
+| JDK11+  | Linux   | GCC 7.3 (except s390x which uses GCC 7.4)			|
+| JDK8    | Windows | VS2013 (12.0) (HotSpot) or VS2010 (10.0) (OpenJ9)		|
+| JDK11+  | Windows | VS2017							|
+| JDK8/11 | AIX     | xlC/C++ 13.1.3						|
+| JDK13+  | AIX     | xlC/C++ 16.1.0						|
+| JDK8    | macos   | GCC 4.2.1 (LLVM 2336.11.00				|
+| JDK11   | macos   | clang-700.1.81						|
+| JDK13+  | macos   | clang-900.0.39.2						|
+
+All machines at AdoptOpenJDK are set up using the ansible playbooks from the
+[infrastructure](https://github.com/adoptopenjdk/openjdk-infrastructure) repository.
+
+## Adding a new major release to be built
+
+1. Create the new release repository under github.com/adoptopenjdk (generally `openjdk-jdkxx`)
+2. Add the release to the list at [pipeline file](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build)
+3. Adjust the PR testing pipline [Example](https://github.com/AdoptOpenJDK/openjdk-build/pull/1394) to use the new release
+
+## Removing a major release once you've added a new one
+
+Unless the last release was an LTS one, you will generally want to remove one of the old versions after creating a new one. This can be done with `disableJob = true` in the release configuration files
+
+[Example](https://github.com/AdoptOpenJDK/openjdk-build/pull/1303/files)
+
+## How to enable/disable a particular build configuration
+
+1. Add/Remove it from the configuration files in [https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations]
+2. if you're removing one and it's not just temporarily, you may want to delete the specific job from jenkins too
+
+[Example PR - removing aarch64 OpenJ9 builds](https://github.com/AdoptOpenJDK/openjdk-build/pull/1452)
+
+## How to add a new variant
+
+Simply modify the [pipeline files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build) as well as any environment-specific change syou need to make in the [platform files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
+
+## How do I change the parameters, such as configure flags, for a build
+
+Either
+- Modify the environment files in [platform-specific-configurations](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
+- Modify the [pipeline files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build), although this is normally only done for configuration differences such as OpenJ9 Large Heap builds
+
+[Example PR - Adding a new configure flag for OpenJ9](https://github.com/AdoptOpenJDK/openjdk-build/pull/1442/files)
+
+4. *How to do a new release build*
+
+   Since it's quite long, this is covered in a separate [RELEASING.md] document
+
+## I've modified the build scripts - how can I test my changes?
+
+Easy - use the
+[test-build-script-pull-request](https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/test-build-script-pull-request/)
+job! Pass it your fork name (e.g. https://github.com/sxa555/openjdk-build) and the name of the branch
