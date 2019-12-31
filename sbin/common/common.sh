@@ -94,8 +94,8 @@ createOpenJDKArchive()
   fi
 
   COMPRESS=gzip
-  if which pigz; then
-    COMPRESS=pigz;
+  if which pigz > /dev/null 2>&1; then
+    COMPRESS=pigz
   fi
   echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
 
