@@ -409,7 +409,7 @@ class Build {
 
             fileName = "${fileName}_${nameTag}"
         } else {
-            def timestamp = new Date().format("YYYY-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
+            def timestamp = new Date().format("yyyy-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
 
             fileName = "${fileName}_${timestamp}"
         }

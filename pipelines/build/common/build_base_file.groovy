@@ -278,7 +278,7 @@ class Builder implements Serializable {
             return
         }
 
-        def timestamp = new Date().format("YYYY-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
+        def timestamp = new Date().format("yyyy-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
         def tag = "${javaToBuild}-${timestamp}"
 
         if (publishName) {
