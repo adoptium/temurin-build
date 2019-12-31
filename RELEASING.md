@@ -33,9 +33,9 @@ Don't be scared off by this document! If you already understand the stuff in th
 ### Eclipse OpenJ9/OMR releases
 
 - The OpenJ9 releases are based on three codebases
-  - https://github.com/eclipse/openj9-omr (a platform abstraction layer which OpenJ9 builds use, based on https://github.com/eclipse/openj9-omr)
+  - https://github.com/eclipse/openj9-omr (a platform abstraction layer which OpenJ9 builds use, based on https://github.com/eclipse/omr)
   - https://github.com/eclipse/openj9 (The JVM code)
-  - The "extensions" repository for each release which contains a modified version of the OpenJDK codebase (OpenJDK updates are merged by the IBM team who owns the extensions repository, not the AdoptOpenJDK project)
+  - The "extensions" repository for each release (see the next section of the glossar for more details) which contains a modified version of the OpenJDK codebase (OpenJDK updates are merged by the IBM team who owns the extensions repository, not the AdoptOpenJDK project)
 - Unlike the HotSpot versions, the Eclipse OpenJ9 and OMR projects do not have separate versions for each major java release, but the extensions repository does (Conditional compilation is used in OpenJ9 for any release differences). Each new OpenJ9 version goes into every JDK release.
 - In the run up to a new JDK release or quarterly update the OpenJ9 and OMR `master` is branched to create a release branch named according to the OpenJ9 version for that release, e.g. `v0.17.0-release` (In general each quarterly update will have a new OpenJ9 version included)
 - Before a new release there will typically be two milestone builds which get their own git tag from a commit in that branch e.g. `openj9-0.17.0-m1`
@@ -67,10 +67,9 @@ Don't be scared off by this document! If you already understand the stuff in th
 
 1. The extensions release branch (e.g. `openj9-0.17.0`) will exist from doing the milestone builds (OpenJ9 milestone process is covered in a later section)
 2. Ask the extensions team to run their release-specific merge jobs to ensure they are up to date - this is not done by jobs at AdoptOpenJDK
-3. Once merged to master, ask the extensions team to merge to openj9-staging branch
 3. Having merged to openj9-staging successfully, then a job hosted by the extensions team (not at AdoptOpenJDK) will have automatically been triggered, which will perform "sanity" testing on all platforms for the new `openj9-staging` branch and if successful testing will automatically promote the code to the "openj9" branch, acceptance jobs: https://ci.eclipse.org/openj9/
-4. OpenJ9 leads (Currently Peter Shipton and Dan Heidinga) will now verify the Eclipse OpenJ9 and OMR release branch against the newly merged openjdk GA level in openj9-staging. If they are happy they will tag their release branches with the release tag, eg. "openj9-0.17.0", you are then ready to build the release.
-5. In the extensions release branch corresponding to the openj9 version, create a PR to do the following (usually the extensions team will do this)
+4. OpenJ9 leads (Currently [Peter Shipton](https://github.com/pshipton) and [Dan Heidinga](https://github.com/danheidinga)) will now verify the Eclipse OpenJ9 and OMR release branch against the newly merged openjdk GA level in openj9-staging. If they are happy they will tag their release branches with the release tag, eg. "openj9-0.17.0", you are then ready to build the release.
+5. Get someone in the extensions team to make the following changes in the extensions release branch corresponding to the openj9 version for the release:
    - Merge into the openj9 extensions "release" branch (e.g. `openj9-0.17.0`) the latest tag merged from openjdk (automated jobs merge the tag into openj9-staging, but not the release branch so this has to be done manually)
    - Update closed/openjdk-tag.gmk (This is used for the java - version) e.g. `OPENJDK_TAG:= jdk8u232-b09`  
    - Update closed/get_j9_sources.sh to pull in Eclipse OpenJ9 and OMR tags e.g. `openj9-0.14.0-release`
@@ -90,7 +89,7 @@ Here are the steps:
 
 1. Build and Test the OpenJDK for "release" at AdoptOpenJDK using a build pipeline job as follows:
    * Job: https://ci.adoptopenjdk.net/job/build-scripts/job/openjdk8-pipeline/build?delay=0sec (Switch `openjdk8` for your version number)
-   * `targetConfigurations`: remove all the entries for the variants you don't want to build (e.g. remove the openj9 ones for hotspot releases) or any platforms you don't want to release
+   * `targetConfigurations`: remove all the entries for the variants you don't want to build (e.g. remove the openj9 ones for hotspot releases) or any platforms you don't want to release (Currently that would include OpenJ9 aarch64)
    * `releaseType: Release`
    * [OpenJ9 ONLY] `overridePublishName`: github binaries publish name (NOTE: If you are doing a point release, do NOT adjust this as we don't want the filenames to include the `.x` part), e.g. `jdk8u232-b09_openj9-0.14.0` or `jdk-11.0.5+10_openj9-0.14.0`
    * `adoptBuildNumber`: Leave blank unless you are doing a point release in which case it should be a number starting at `1` for the first point release.
@@ -130,7 +129,7 @@ The following examples all use `-m1` as an example - this gets replaced with a l
 1. Eclipse OpenJ9 creates a new branch for their release branch: e.g. `v0.17.0-release`
 2. Eclipse OpenJ9 tag the commit in the "release" branch that they want to be the milestone level as e.g. `openj9-0.17.0-m1`
 3. OpenJDK extensions branches the `openj9` branch to create the release branch, called `openj9-0.nn.0`
-4. In the extensions release branch create a PR to do the following (usually the extensions team will do this)
+4. Ask someone in the extensions team to make the following modifications:
    * Update [closed/get_j9_source.sh](https://github.com/ibmruntimes/openj9-openjdk-jdk11/blob/openj9/closed/get_j9_source.sh) (Link is for JDK11, chnage as appropriate!) to pull in Eclipse OpenJ9 & OMR milestone 1 tags e.g. `openj9-0.nn.0-m1`([Sample PR](https://github.com/ibmruntimes/openj9-openjdk-jdk11/commit/4607d33d99c566054261557fdf34bcbfaefc6480))
    * Update custom-spec.gmk.in with correct `J9JDK_EXT_VERSION` for the release, [Sample commit for 11](https://github.com/ibmruntimes/openj9-openjdk-jdk8/commit/8512fe26e568962d4ee08f82f2f59d3bb241bb9d) and [Sample commit for 11](https://github.com/ibmruntimes/openj9-openjdk-jdk11/commit/c7964e29fea19a7803a86bc991de0d0e45547dc8) e.g:
 ```
@@ -154,19 +153,6 @@ JDK_FIX_VERSION=0-m1
 
 Occasionally we may have to do an out-of-band release that does not align with a quarterly release from the upstream openjdk project. This may occur if there has been a problem with our build process that we missed at GA time, to fix a critical issue, or when a project outside openjdk (e.g. OpenJ9) need to do an interim release. In order to do such a release, follow the steps included in the process above which I'll repeat here for clarity:
 
-
 1. When triggering the pipeline, set `AdoptBuildNumber` to a unique number for the point release
 2. If you used a custom entry in `overridePublishName` when kicking off the GA pipeline, keep it the same as for the GA release - we DO NOT want the filenames changed to include the point number
 3. When running the publish job, you need to use a custom `TAG` in order to publish it to the website with a separate name from what you had initially e.g.  `jdk-11.0.5+10.1_openj9-0.17.1` (Note the position of the `.1` for OpenJ9 releases in that example - it's after the openj9 version but before the OpenJ9 version.
-
-
-
-
-
-
-
-
-
-
-
-
