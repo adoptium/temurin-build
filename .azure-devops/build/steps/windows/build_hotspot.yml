@@ -38,6 +38,6 @@ steps:
   # upload the produced JDK/JRE binary to the build artifact service.
   - task: PublishPipelineArtifact@1
     inputs:
-      artifactName: $(Agent.OS)_x64
+      artifactName: $(Agent.OS)_$(ARCHITECTURE)
       targetPath: "$(Build.SourcesDirectory)/workspace/artifacts"
     displayName: "[Windows Build] update JKD/JRE artifact"

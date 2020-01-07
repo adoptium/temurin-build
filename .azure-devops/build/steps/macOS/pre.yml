@@ -4,7 +4,7 @@
 parameters:
   # store all the downloaded files
   dependenciesDir: "$(Agent.BuildDirectory)/tmp"
-  # store boot jdk
+  # directory to download the JDK used to bootstrap the build
   jdkBootDir: "$(Agent.BuildDirectory)/jdk/boot"
   # store jdk used for gradle
   javaHomeDir: "$(Agent.BuildDirectory)/jdk/home"

@@ -58,34 +58,35 @@ If you don't have an Azure DevOps organization, you can start from
 
 ## How To Add Customized Steps
 
-The pipeline works out of the box and you have little things need to be configured.
+The pipeline is intended to work with minimal configuration required by the end user.
 However, it is possible that you want to add or replace certain tasks.
-And The rule of thumb is:
+To add a task:
 
-1. Find out where the task belong.
-   If it is shared by all the pipelines then `shared` folder is the place to go.
+1. Find out where the task belongs.
+   Tasks shared by all the pipelines should be placed into the `shared` folder.
 
-2. To prevent merge conflict when you pull the latest changes from the upstream.
-   It is recommended to create another YAML step templates, and find a proper place to place it.
-   
-   Here is an example. If you need to override the default output file name. You have two options.
+2. To prevent merge conflicts when you pull the latest changes from the upstream sources.
+   It is recommended to create another YAML step template, and save it in an appropriate folder.
 
-   First, you can edit the task inside the `build/shared/pre.ymal` file directly.
-   But you may have to spend some time down the road if the upstream changes.
+### Example: Overriding file name
 
-   Second, you can create another YAML step template, and save it to `build/shared/set_filename.yml`.
-   And just need to add it to the `build.yml` file.
+If you need to override the default output file name, you have two options:
 
-   ```
-   steps:
-      - template: ./steps/shared/pre.yml
-      - template: ./steps/shared/set_filename.yml
-      - template: ./steps/windows/pre.yml
-      - template: ./steps/windows/build_hotspot.yml
-      - template: ./steps/shared/post.yml
-   ```
+First, you can edit the task inside the `build/shared/pre.ymal` file directly.
+This may add a maintenance cost over time as upstream changes may conflicts with this.
 
-   By doing this you will not get any merge conflic when you pull the changes from upstream.
+Second, you can create another YAML step template and save it to `build/shared/set_filename.yml` and add it to the `build.yml` file.
+
+```
+steps:
+    - template: ./steps/shared/pre.yml
+    - template: ./steps/shared/set_filename.yml
+    - template: ./steps/windows/pre.yml
+    - template: ./steps/windows/build_hotspot.yml
+    - template: ./steps/shared/post.yml
+```
+
+By doing this you will not get any merge conflicts when you pull the changes from upstream.
 
 <!--- 
 Links.
