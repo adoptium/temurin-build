@@ -60,6 +60,8 @@ E                     - ${SCRIPT_DIR}/signalhandler.sh (rm container on SIGINT/S
 S                   - {buildOpenJDKViaDocker|buildOpenJDKInNativeEnvironment}
 ```
 
+There is also some documentation in [CHANGELOG.md](CHANGELOG.md)
+
 ## What are the prerequisites for a system used for builds?
 
 - The upstream OpenJDK build requirements are at https://wiki.openjdk.java.net/display/Build/Supported+Build+Platforms
@@ -97,7 +99,7 @@ Unless the last release was an LTS one, you will generally want to remove one of
 
 ## How to enable/disable a particular build configuration
 
-1. Add/Remove it from the configuration files in [https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations]
+1. Add/Remove it from the configuration files in https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations
 2. if you're removing one and it's not just temporarily, you may want to delete the specific job from jenkins too
 
 [Example PR - removing aarch64 OpenJ9 builds](https://github.com/AdoptOpenJDK/openjdk-build/pull/1452)
@@ -114,12 +116,17 @@ Either
 
 [Example PR - Adding a new configure flag for OpenJ9](https://github.com/AdoptOpenJDK/openjdk-build/pull/1442/files)
 
-4. *How to do a new release build*
+## How to do a new release build
 
-   Since it's quite long, this is covered in a separate [RELEASING.md] document
+   Since it's quite long, this is covered in a separate [RELEASING.md](RELEASING.md) document
 
 ## I've modified the build scripts - how can I test my changes?
 
-Easy - use the
+If you're making changes ensure you follow the contribution guidelines in
+[CONTRIBUTING.md](CONTRIBUTING.md) including running `./shellcheck.sh` if you're modifying
+the shell scripts.
+
+In order to test whether your changes work use the
 [test-build-script-pull-request](https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/test-build-script-pull-request/)
 job! Pass it your fork name (e.g. https://github.com/sxa555/openjdk-build) and the name of the branch
+and it will run a build using your updated scripts.
