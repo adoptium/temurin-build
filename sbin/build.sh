@@ -174,7 +174,7 @@ configuringVersionStringParameter()
     fi
 
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ ${BUILD_CONFIG[ADOPT_PATCHES]} == true ]; then
-      addConfigureArg "--with-company-name=" "AdoptOpenJDK"
+      addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
     fi
 
     # Set the update version (e.g. 131), this gets passed in from the calling script
