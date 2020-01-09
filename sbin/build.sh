@@ -79,6 +79,12 @@ configuringBootJDKConfigureParameter()
   addConfigureArgIfValueIsNotEmpty "--with-boot-jdk=" "${BUILD_CONFIG[JDK_BOOT_DIR]}"
 }
 
+# Configure the boot JDK
+configuringMacOSCodesignParameter()
+{
+  addConfigureArgIfValueIsNotEmpty "--with-macosx-codesign-identity=" "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}"
+}
+
 # Get the OpenJDK update version and build version
 getOpenJDKUpdateAndBuildVersion()
 {
@@ -296,6 +302,7 @@ configureCommandParameters()
 {
   configuringVersionStringParameter
   configuringBootJDKConfigureParameter
+  configuringMacOSCodesignParameter
 
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."

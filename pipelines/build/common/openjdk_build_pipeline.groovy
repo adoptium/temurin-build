@@ -153,7 +153,8 @@ class Build {
                         certificate = "C:\\Users\\jenkins\\windows.p12"
                         nodeFilter = "${nodeFilter}&&build"
 
-                    } else if (buildConfig.TARGET_OS == "mac") {
+                    // TODO: This version info check needs to be updated when the notarization fix gets applied to other versions.
+                    } else if (buildConfig.TARGET_OS == "mac" && versionInfo.major != 11) {
                         filter = "**/OpenJDK*_mac_*.tar.gz"
                         certificate = "\"Developer ID Application: London Jamocha Community CIC\""
 
