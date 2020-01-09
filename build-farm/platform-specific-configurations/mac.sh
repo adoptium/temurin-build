@@ -56,7 +56,7 @@ then
   # shellcheck disable=SC2046
   # shellcheck disable=SC2006
   security unlock-keychain -p `cat ~/.password`
-  export BUILD_ARGS="${BUILD_ARGS} --codesign-identity \"Developer ID Application: London Jamocha Community CIC\""
+  export BUILD_ARGS="${BUILD_ARGS} --codesign-identity 'Developer ID Application: London Jamocha Community CIC'"
 fi
 
 sudo xcode-select --switch "${XCODE_SWITCH_PATH}"

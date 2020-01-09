@@ -82,7 +82,7 @@ configuringBootJDKConfigureParameter()
 # Configure the boot JDK
 configuringMacOSCodesignParameter()
 {
-  addConfigureArgIfValueIsNotEmpty "--with-macosx-codesign-identity=" "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}"
+  addConfigureArgIfValueIsNotEmpty "--with-macosx-codesign-identity=" "\"${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}\""
 }
 
 # Get the OpenJDK update version and build version
