@@ -40,7 +40,7 @@ def buildConfigurations = [
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
                 test                : [
-                        nightly: false
+                        nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
                 configureArgs        : '--disable-ccache'
@@ -180,7 +180,7 @@ def buildConfigurations = [
                 arch                 : 'ppc64le',
                 test                : [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system'
+                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ],
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache'

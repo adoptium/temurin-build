@@ -109,7 +109,7 @@ def buildConfigurations = [
                 arch                : 's390x',
                 test                : [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'
+                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ],
                 configureArgs        : '--disable-ccache'
         ],
