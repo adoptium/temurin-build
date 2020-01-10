@@ -65,7 +65,7 @@ def buildConfigurations = [
                 ],
                 test: [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'
+                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
                 ]
         ],
 
@@ -163,7 +163,7 @@ def buildConfigurations = [
                 additionalFileNameTag: "linuxXL",
                 test: [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'
+                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
                 ],
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -173,7 +173,7 @@ def buildConfigurations = [
                 additionalFileNameTag: "linuxXL",
                 test: [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'
+                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
                 ],
                 configureArgs        : '--with-noncompressedrefs'
         ],
