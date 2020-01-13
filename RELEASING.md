@@ -101,7 +101,9 @@ Here are the steps:
      * For OpenJ9 (all versions) use the OpenJ9 branch e.g. `openj9-0.15.1`
    * `enableTests`: tick
    * SUBMIT!!
-2. Once the Build and Test pipeline has completed, triage the results using [TRSS](https://trss.adoptopenjdk.net/tests/Test)
+2. Once the Build and Test pipeline has completed,
+   [triage the results](https://github.com/AdoptOpenJDK/openjdk-tests/blob/master/doc/Triage.md)
+   ([TRSS](https://trss.adoptopenjdk.net/tests/Test) will probably help!)
    * Find the milestone build row, and click the "Grid" link
    * Check all tests are "Green", and if not "hover" over the icon and follow the Jenkins link to triage the errors...
    * Raise issues either at:
@@ -109,11 +111,12 @@ Here are the steps:
      * https://github.com/eclipse/openj9 (for OpenJ9 issues)
 3. Discuss failing tests with [Shelley Lambert](https://github.com/smlambert)
 4. If "good to publish", then get permission to publish the release from the Adopt TSC members, discussion is via the AdoptOpenJDK #release channel (https://adoptopenjdk.slack.com/messages/CLCFNV2JG) and creation of a Promotion TSC item like these: https://github.com/adoptopenjdk/TSC/issues?utf8=✓&q=is%3Aissue+promote
-5. Once permission has been obtained, run the Adopt "Publish" job (restricted access - if you can't see this link, you don't have access): https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/
-   * `TAG`: <github binaries published name>  e.g. `jdk-11.0.5+9` or `jdk-11.0.5+9_openj9-0.nn.0` for OpenJ9 releases. If doing a point release, add that into the name e.g. for a `.3` release use something like these (NOTE that for OpenJ9 the point number goes before the openj9 version): `jdk8u232-b09.3` or `jdk-11.0.4+11.3_openj9-0.15.1`
-   * `VERSION`: <select version>
-   * `UPSTREAM_JOB_NAME`: <build-scripts/openjdkNN-pipeline>
-   * `UPSTREAM_JOB_NUMBER`: <the job number of the build pipeline under build-scripts/openjdkNN-pipeline> eg.86
+5. Once permission has been obtained, run the Adopt "Publish" job (restricted access - if you can't see this link, you don't have access):
+https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/qs
+   * `TAG`: (github binaries published name)  e.g. `jdk-11.0.5+9` or `jdk-11.0.5+9_openj9-0.nn.0` for OpenJ9 releases. If doing a point release, add that into the name e.g. for a `.3` release use something like these (NOTE that for OpenJ9 the point number goes before the openj9 version): `jdk8u232-b09.3` or `jdk-11.0.4+11.3_openj9-0.15.1`
+   * `VERSION`: (select version)
+   * `UPSTREAM_JOB_NAME`: (build-scripts/openjdkNN-pipeline)
+   * `UPSTREAM_JOB_NUMBER`: (the job number of the build pipeline under build-scripts/openjdkNN-pipeline) eg.86
    * `RELEASE`: "ticked"
    * SUBMIT!!
 6. Once the job completes successfully, check the binaries have uploaded to github at somewhere like https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/jdk8u232-b09
