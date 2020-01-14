@@ -121,7 +121,7 @@ https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_r
    * SUBMIT!!
 6. Once the job completes successfully, check the binaries have uploaded to github at somewhere like https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/jdk8u232-b09
 7. Within 15 minutes the binaries should be available on the website too at e.g. https://adoptopenjdk.net/?variant=openjdk11&jvmVariant=openj9
-8. Since you have 15 minutes free, use that time to update https://github.com/AdoptOpenJDK/openjdk-website/blob/master/src/handlebars/support.handlebars to update the versions in the table on https://adoptopenjdk.net/support.html
+8. Since you have 15 minutes free, use that time to update https://github.com/AdoptOpenJDK/openjdk-website/blob/master/src/handlebars/support.handlebars which is the source of  https://adoptopenjdk.net/support.html and (if required) the supported platforms table at https://github.com/AdoptOpenJDK/openjdk-website/blob/master/src/handlebars/supported_platforms.handlebars which is the source of https://adoptopenjdk.net/supported_platforms.html
 9. Publicise the Adopt JDK release via slack on AdoptOpenJDK #release
 10. If desired, find someone with the appropriate authority (George, Martijn, Shelley, Stewart) to post a tweet about the new release from the AdoptOpenJDK twitter account
 
