@@ -29,7 +29,7 @@ JAVA_FEATURE_VERSION=$(echo "${JAVA_TO_BUILD}" | tr -d "[:alpha:]")
 if [ -z "${JAVA_FEATURE_VERSION}" ]
 then
     # THIS NEEDS TO BE UPDATED WHEN HEAD UPDATES (the latest tag that jdk/jdk contains)
-    JAVA_FEATURE_VERSION=14
+    JAVA_FEATURE_VERSION=15
 fi
 
 echo "BUILD TYPE: "
