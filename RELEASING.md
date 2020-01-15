@@ -75,8 +75,8 @@ Don't be scared off by this document! If you already understand the stuff in th
      - git merge -m"Merge jdk-11.0.6+10" jdk-11.0.6+10
      - (Resolve any merge conflicts again if necessary)
      - Create a PullRequest and Merge (using a Merge Commit, do not Squash&Merge, otherwise we lose track of history)
-   - Update closed/openjdk-tag.gmk (This is used for the java - version) e.g. `OPENJDK_TAG:= jdk8u232-b09`  
-   - Update closed/get_j9_sources.sh to pull in Eclipse OpenJ9 and OMR tags e.g. `openj9-0.14.0-release`
+   - Update closed/openjdk-tag.gmk with tag just merged. (This is used for the java - version) e.g. `OPENJDK_TAG:= jdk-11.0.6+10`  
+   - Update closed/get_j9_sources.sh to pull in Eclipse OpenJ9 and OMR tags e.g. `openj9-0.18.0`
    - Update custom-spec.gmk.in in the appropriate branch with the correct `J9JDK_EXT_VERSION` for the release, e.g:
    - For jdk8: `J9JDK_EXT_VERSION       := $(JDK_MINOR_VERSION).$(JDK_MICRO_VERSION).$(JDK_MOD_VERSION).$(JDK_FIX_VERSION)` [Sample commit](https://github.com/ibmruntimes/openj9-openjdk-jdk8/commit/7eb1dfe231f40f94117c893adcb0a3e6da63b2a8#diff-828ea264e53560b6d0d572bc5be1693a)
      and update jdk/make/closed/autoconf/openj9ext-version-numbers with the correct MOD & FIX versions
