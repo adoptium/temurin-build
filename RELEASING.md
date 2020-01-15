@@ -75,16 +75,27 @@ Don't be scared off by this document! If you already understand the stuff in th
      - git merge -m"Merge jdk-11.0.6+10" jdk-11.0.6+10
      - (Resolve any merge conflicts again if necessary)
      - Create a PullRequest and Merge (using a Merge Commit, do not Squash&Merge, otherwise we lose track of history)
-   - Update closed/openjdk-tag.gmk with tag just merged. (This is used for the java - version) e.g. `OPENJDK_TAG:= jdk-11.0.6+10`  
-   - Update closed/get_j9_sources.sh to pull in Eclipse OpenJ9 and OMR tags e.g. `openj9-0.18.0`
+   - Update closed/openjdk-tag.gmk with tag just merged. (This is used for the java - version) e.g.:
+   ```
+   OPENJDK_TAG:= jdk-11.0.6+10
+   ```
+   - Update closed/get_j9_sources.sh to pull in Eclipse OpenJ9 and OMR release tag, e.g. `openj9-0.18.0`
    - Update custom-spec.gmk.in in the appropriate branch with the correct `J9JDK_EXT_VERSION` for the release, e.g:
-   - For jdk8: `J9JDK_EXT_VERSION       := $(JDK_MINOR_VERSION).$(JDK_MICRO_VERSION).$(JDK_MOD_VERSION).$(JDK_FIX_VERSION)` [Sample commit](https://github.com/ibmruntimes/openj9-openjdk-jdk8/commit/7eb1dfe231f40f94117c893adcb0a3e6da63b2a8#diff-828ea264e53560b6d0d572bc5be1693a)
-     and update jdk/make/closed/autoconf/openj9ext-version-numbers with the correct MOD & FIX versions
-     `JDK_MOD_VERSION=232`
-     `JDK_FIX_VERSION=0`
+   - For jdk8:
+   ```
+   J9JDK_EXT_VERSION       := $(JDK_MINOR_VERSION).$(JDK_MICRO_VERSION).$(JDK_MOD_VERSION).$(JDK_FIX_VERSION)
+   [Sample commit](https://github.com/ibmruntimes/openj9-openjdk-jdk8/commit/7eb1dfe231f40f94117c893adcb0a3e6da63b2a8#diff-828ea264e53560b6d0d572bc5be1693a)
+   ```
+   and update jdk/make/closed/autoconf/openj9ext-version-numbers with the correct MOD & FIX versions
+   ```
+   JDK_MOD_VERSION=232
+   JDK_FIX_VERSION=0
+   ```
    - For jdk11+ update custom-spec.gmk.in to set the following [Sample commit](https://github.com/ibmruntimes/openj9-openjdk-jdk11/commit/08085f7ff4d3720530b981a7b59ac19a46363e5a#diff-d6f51dbe595d728e2d1111f036170369)
-     `J9JDK_EXT_VERSION       := 11.0.5.0`
-     `# J9JDK_EXT_VERSION       := HEAD`   <==  !!! Comment out this line
+   ```
+     J9JDK_EXT_VERSION       := 11.0.5.0
+     # J9JDK_EXT_VERSION       := HEAD   <==  !!! Comment out this line
+   ```
 6. Get permission to submit the release pipeline job from the Adopt TSC members, discussion is via the AdoptOpenJDK #release channel (https://adoptopenjdk.slack.com/messages/CLCFNV2JG).
 
 # Steps for every version
