@@ -70,7 +70,11 @@ Don't be scared off by this document! If you already understand the stuff in th
 3. Having merged to openj9-staging successfully, then a job hosted by the extensions team (not at AdoptOpenJDK) will have automatically been triggered, which will perform "sanity" testing on all platforms for the new `openj9-staging` branch and if successful testing will automatically promote the code to the "openj9" branch, acceptance jobs: https://ci.eclipse.org/openj9/
 4. OpenJ9 leads (Currently [Peter Shipton](https://github.com/pshipton) and [Dan Heidinga](https://github.com/danheidinga)) will now verify the Eclipse OpenJ9 and OMR release branch against the newly merged openjdk GA level in openj9-staging. If they are happy they will tag their release branches with the release tag, eg. "openj9-0.17.0", you are then ready to build the release.
 5. Get someone in the extensions team to make the following changes in the extensions release branch corresponding to the openj9 version for the release:
-   - Merge into the openj9 extensions "release" branch (e.g. `openj9-0.17.0`) the latest tag merged from openjdk (automated jobs merge the tag into openj9-staging, but not the release branch so this has to be done manually)
+   - Merge into the openj9 extensions "release" branch (e.g. `openj9-0.17.0`) the latest tag merged from openjdk (automated jobs merge the tag into openj9-staging, but not the release branch so this has to be done manually). eg.:
+     - git checkout openj9-0.18.0
+     - git merge -m"Merge jdk-11.0.6+10" jdk-11.0.6+10
+     - (Resolve any merge conflicts again if necessary)
+     - Create a PullRequest and Merge (using a Merge Commit, do not Squash&Merge, otherwise we lose track of history)
    - Update closed/openjdk-tag.gmk (This is used for the java - version) e.g. `OPENJDK_TAG:= jdk8u232-b09`  
    - Update closed/get_j9_sources.sh to pull in Eclipse OpenJ9 and OMR tags e.g. `openj9-0.14.0-release`
    - Update custom-spec.gmk.in in the appropriate branch with the correct `J9JDK_EXT_VERSION` for the release, e.g:
