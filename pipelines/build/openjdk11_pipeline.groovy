@@ -46,7 +46,13 @@ def buildConfigurations = [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
-                configureArgs        : '--disable-ccache'
+                configureArgs       : [
+                        "openj9"      : '--disable-ccache --enable-jitserver',
+                        "hotspot"     : '--disable-ccache',
+                        "hotspot-jfr" : '--disable-ccache',
+                        "corretto"    : '--disable-ccache',
+                        "SapMachine"  : '--disable-ccache'
+                ]
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -166,7 +172,7 @@ def buildConfigurations = [
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-jitserver'
         ],
         s390xLinuxXL    : [
                 os                   : 'linux',
