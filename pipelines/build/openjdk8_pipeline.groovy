@@ -50,7 +50,8 @@ def buildConfigurations = [
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk']
                 ],
                 configureArgs       : [
-                        "hotspot-jfr" : '--enable-jfr'
+                        "hotspot-jfr" : '--enable-jfr',
+                        "openj9"      : '--enable-jitserver'
                 ]
         ],
 
@@ -165,7 +166,7 @@ def buildConfigurations = [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
                 ],
-                configureArgs        : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs --enable-jitserver'
         ],
         s390xLinuxXL       : [
                 os                   : 'linux',
