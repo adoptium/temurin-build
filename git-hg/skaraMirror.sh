@@ -24,7 +24,7 @@ WORKSPACE=$SCRIPT_DIR/workspace
 function checkArgs() {
   if [ "$1" -lt 1 ]; then
      echo Usage: "$0" '[jdk14|jdk14u]'
-     echo "Hg Repo supplied should match a repository in https://github.com/openjdk/"
+     echo "Skara Repo supplied should match a repository in https://github.com/openjdk/"
      echo "For example, to mirror https://github.com/openjdk/jdk14"
      echo "e.g. $0 jdk14"
      exit 1
