@@ -20,6 +20,7 @@ export JDK10_VERSION="jdk10u";
 export JDK11_VERSION="jdk11u";
 export JDK12_VERSION="jdk12u";
 export JDK13_VERSION="jdk13u";
+export JDK14_VERSION="jdk14";
 export JDKHEAD_VERSION="jdk";
 
 export JDK8_CORE_VERSION="jdk8";
@@ -28,6 +29,7 @@ export JDK10_CORE_VERSION="jdk10";
 export JDK11_CORE_VERSION="jdk11";
 export JDK12_CORE_VERSION="jdk12";
 export JDK13_CORE_VERSION="jdk13";
+export JDK14_CORE_VERSION="${JDK14_VERSION}";
 export JDKHEAD_CORE_VERSION="${JDKHEAD_VERSION}";
 export AMBER_CORE_VERSION="amber";
 

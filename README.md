@@ -11,7 +11,7 @@ https://www.adoptopenjdk.net and https://api.adoptopenjdk.net.
 ##### Build jdk natively on your system
 
 ```
-./makejdk-any-platform.sh <jdk8u|jdk9u|jdk10u|jdk11u|jdk12u|jdk13u|jdk>
+./makejdk-any-platform.sh <jdk8u|jdk9u|jdk10u|jdk11u|jdk12u|jdk13u|jdk14|jdk>
 i.e:
 ./makejdk-any-platform.sh jdk8u
 ```
@@ -45,7 +45,7 @@ personally or at build farm scale.
 build jobs used for building Adopt OpenJDK binaries.
 2. The `docker` folder contains DockerFiles which can be used as part of building
 OpenJDK inside a Docker container.
-3. The `docs` folder contains images and utilit scripts to produce up to date
+3. The `docs` folder contains images and utility scripts to produce up to date
 documentation.
 4. The `git-hg` folder contains scripts to clone an OpenJDK mercurial forest into
 a GitHub repo ()and regularly update it).
