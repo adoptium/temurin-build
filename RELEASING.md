@@ -17,7 +17,7 @@ Don't be scared off by this document! If you already understand the stuff in th
 
 - A private group of trusted people who take reports of vulnerabilities in the openjdk codebase and work to resolve them and get them into releases in a timely manner
 
-### Non-Oracle (usually RedHat) maintained OpenJDK Quarterly PSU Update
+### Non-Oracle (usually Red Hat) maintained OpenJDK Quarterly PSU Update
 
 - Maintainers work on public quarterly update fixes for the next update, in the updates head stream e.g. https://hg.openjdk.java.net/jdk-updates/jdk11u
 - Fixes for the subsequent update, are developed in the `dev` stream e.g. https://hg.openjdk.java.net/jdk-updates/jdk11u-dev/
