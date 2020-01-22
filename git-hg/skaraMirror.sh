@@ -63,7 +63,7 @@ function addSkaralUpstream() {
 function performMergeFromSkaraIntoGit() {
   git fetch skara --tags
 
-  git checkout skara/master
+  git rebase "skara/$BRANCH" "$BRANCH"
 
   git push -u origin "$BRANCH" || exit 1
   git push origin "$BRANCH" --tags || exit 1
