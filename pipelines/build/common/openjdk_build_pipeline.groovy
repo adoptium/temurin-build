@@ -140,7 +140,8 @@ class Build {
 
     def sign(VersionInfo versionInfo) {
         // Sign and archive jobs if needed
-        if (buildConfig.TARGET_OS == "windows" || buildConfig.TARGET_OS == "mac") {
+        // TODO: This version info check needs to be updated when the notarization fix gets applied to other versions.
+        if (buildConfig.TARGET_OS == "windows" || (buildConfig.TARGET_OS == "mac" && versionInfo.major != 11)) {
             context.node('master') {
                 context.stage("sign") {
                     def filter = ""
@@ -154,7 +155,7 @@ class Build {
                         nodeFilter = "${nodeFilter}&&build"
 
                     // TODO: This version info check needs to be updated when the notarization fix gets applied to other versions.
-                    } else if (buildConfig.TARGET_OS == "mac" && versionInfo.major != 11) {
+                    } else if (buildConfig.TARGET_OS == "mac") {
                         filter = "**/OpenJDK*_mac_*.tar.gz"
                         certificate = "\"Developer ID Application: London Jamocha Community CIC\""
 
