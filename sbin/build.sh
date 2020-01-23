@@ -252,15 +252,10 @@ buildingTheRestOfTheConfigParameters()
     addConfigureArg "--enable-ccache" ""
   fi
 
-  addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
-
   # Point-in-time dependency for openj9 only
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] ; then
     addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/freemarker.jar"
   fi
-
-  addConfigureArg "--with-x=" "/usr/include/X11"
-
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
     # We don't want any extra debug symbols - ensure it's set to release,
@@ -268,6 +263,8 @@ buildingTheRestOfTheConfigParameters()
     addConfigureArg "--with-debug-level=" "release"
     addConfigureArg "--disable-zip-debug-info" ""
     addConfigureArg "--disable-debug-symbols" ""
+    addConfigureArg "--with-x=" "/usr/include/X11"
+    addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
   else
     addConfigureArg "--with-debug-level=" "release"
     addConfigureArg "--with-native-debug-symbols=" "none"
