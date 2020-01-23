@@ -52,7 +52,7 @@ fi
 
 if [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
 then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-sysroot=/System/Library/Frameworks"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
   # Login to KeyChain
   # shellcheck disable=SC2046
   # shellcheck disable=SC2006
