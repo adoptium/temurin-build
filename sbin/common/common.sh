@@ -35,7 +35,7 @@ function setOpenJdkVersion() {
   local featureNumber=$(echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | tr -d "[:alpha:]")
 
   # feature number e.g. 11
-  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber:-14}
+  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber:-15}
 
 }
 
