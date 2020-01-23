@@ -89,13 +89,17 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
     BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
     BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
     if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-      export $BOOT_JDK_VARIABLE="$PWD/jdk-$BOOT_JDK_VERSION"
-      if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE/bin")" ]; then
-        mkdir -p "$(eval echo "\$$BOOT_JDK_VARIABLE")"
-        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=linux&release=latest&arch=${ARCHITECTURE}&heap_size=normal&type=jdk&openjdk_impl=hotspot" | tar xpzf - --strip-components=1 -C "$(eval echo "\$$BOOT_JDK_VARIABLE")"
+      bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+      # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
+      # instead of BOOT_JDK_VARIABLE (no '$').
+      export ${BOOT_JDK_VARIABLE}="$bootDir"
+      if [ ! -d "$bootDir/bin" ]; then
+        mkdir -p "$bootDir"
+        wget -q -O - "https://api.adoptopenjdk.net/v3/binary/latest/${BOOT_JDK_VERSION}/ga/linux/${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$bootDir"
       fi
     fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+    $JDK_BOOT_DIR/bin/java -version | sed 's/^/BOOT JDK: /'
 fi
 
 # Any version above 10
