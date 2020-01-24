@@ -44,4 +44,6 @@ targetConfigurations = [
         ]
 ]
 
+disableJob = true
+
 return this
