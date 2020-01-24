@@ -29,6 +29,7 @@ TOOLCHAIN_VERSION=""
 
 # Any version above 8 (11 for now due to openjdk-build#1409
 if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
+    BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
     BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
     if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
@@ -42,7 +43,7 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
       fi
     fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
-    $JDK_BOOT_DIR/bin/java -version | sed 's/^/BOOT JDK: /'
+    "$JDK_BOOT_DIR/bin/java" -version | sed 's/^/BOOT JDK: /'
 fi
 
 if [ "${ARCHITECTURE}" == "x86-32" ]
