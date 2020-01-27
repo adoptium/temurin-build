@@ -99,7 +99,7 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
       fi
     fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
-    $JDK_BOOT_DIR/bin/java -version | sed 's/^/BOOT JDK: /'
+    "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
 # Any version above 10
