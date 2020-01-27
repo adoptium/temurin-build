@@ -55,10 +55,17 @@ class Build {
 
 
     Integer getJavaVersionNumber() {
-        // version should be something like "jdk8u"
+        // version should be something like "jdk8u" or "jdk" for HEAD
         def matcher = (buildConfig.JAVA_TO_BUILD =~ /(\d+)/)
-        List<String> list = matcher[0] as List
-        return Integer.parseInt(list[1] as String)
+        if (matcher.matches()) {
+            List<String> list = matcher[0] as List
+            return Integer.parseInt(list[1] as String)
+        } else if ("jdk".equalsIgnoreCase(buildConfig.JAVA_TO_BUILD.trim())) {
+            // This needs to get updated when JDK HEAD version updates
+            return Integer.valueOf("15")
+        } else {
+            return Integer.valueOf("-1")
+        }
     }
 
     def determineTestJobName(testType) {
