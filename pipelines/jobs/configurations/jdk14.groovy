@@ -26,7 +26,7 @@ targetConfigurations = [
         ],
         "ppc64leLinuxXL": [
                 "openj9"
-        ]
+        ],
         "s390xLinux"  : [
                 "hotspot",
                 "openj9"
