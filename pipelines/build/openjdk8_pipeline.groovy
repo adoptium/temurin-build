@@ -135,7 +135,7 @@ def buildConfigurations = [
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --enable-jitserver'
+                configureArgs        : '--with-noncompressedrefs --enable-jitserver',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
         ],
         s390xLinuxXL       : [
