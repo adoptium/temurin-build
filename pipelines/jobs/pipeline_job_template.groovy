@@ -4,6 +4,8 @@ triggerSchedule = "@daily"
 gitRefSpec = ""
 propagateFailures = false
 runTests = true
+slackChannel = "#pipeline"
+slackOnSuccess = true 
 
 // if true means this is running in the pr builder pipeline
 if (binding.hasVariable('PR_BUILDER')) {
@@ -64,5 +66,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         booleanParam('cleanWorkspaceBeforeBuild', false, "Clean out the workspace before the build")
         booleanParam('propagateFailures', propagateFailures, "If true, a failure of <b>ANY</b> downstream build (but <b>NOT</b> test) will cause the whole build to fail")
         stringParam('adoptBuildNumber', "", "Starts at 1. If you ever need to re-release then bump this number. Currently this is only added to the build metadata file.")
+        stringParam('slackChannel', slackChannel, "Enter an AdoptOpenJDK Slack Channel if you wish it to be notified when the build fails.<br/>e.g. #pipeline")
+        booleanParam('slackOnSuccess', slackOnSuccess, "If set to true, the channel will also be notified on a build success.")
     }
 }

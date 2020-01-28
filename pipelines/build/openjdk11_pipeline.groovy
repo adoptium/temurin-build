@@ -180,6 +180,8 @@ node ("master") {
             buildConfigurations,
             targetConfigurations,
             enableTests,
+            slackChannel,
+            slackOnSuccess,
             releaseType,
             scmReference,
             overridePublishName,

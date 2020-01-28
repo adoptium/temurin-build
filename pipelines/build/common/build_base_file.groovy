@@ -37,6 +37,7 @@ class Builder implements Serializable {
     String overrideFileNameVersion
     String additionalBuildArgs
     String additionalConfigureArgs
+    String slackHandle
     Map<String, List<String>> targetConfigurations
     Map<String, Map<String, ?>> buildConfigurations
     String scmReference
@@ -45,6 +46,7 @@ class Builder implements Serializable {
     boolean release
     boolean publish
     boolean enableTests
+    boolean slackOnSuccess
     boolean cleanWorkspaceBeforeBuild
     boolean propagateFailures
 
@@ -83,6 +85,8 @@ class Builder implements Serializable {
                 PUBLISH_NAME: publishName,
                 ADOPT_BUILD_NUMBER: adoptBuildNumber,
                 ENABLE_TESTS: enableTests,
+                SLACK_HANDLE: slackHandle,
+                SLACK_ON_SUCCESS: slackOnSuccess,
                 CLEAN_WORKSPACE: cleanWorkspaceBeforeBuild
         )
     }
@@ -320,6 +324,8 @@ class Builder implements Serializable {
         context.echo "Java: ${javaToBuild}"
         context.echo "OS: ${targetConfigurations}"
         context.echo "Enable tests: ${enableTests}"
+        context.echo "Slack Channel: ${slackHandle}"
+        context.echo "Slack on success: ${slack_on_success}"
         context.echo "Publish: ${publish}"
         context.echo "Release: ${release}"
         context.echo "Tag/Branch name: ${scmReference}"
@@ -344,6 +350,7 @@ class Builder implements Serializable {
                         createJob(jobTopName, jobFolder, config)
 
                         context.echo "Created job " + downstreamJobName
+                        
                         // execute build
                         def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
 
@@ -368,11 +375,25 @@ class Builder implements Serializable {
 
                                     // Archive in Jenkins
                                     context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
+
+                                    // Send slack success message (if slackOnSuccess is set)
+                                    if (slack_on_success && slackHandle) {
+                                        context.echo "Sending slack notification..."
+                                        slackSend 
+                                            channel: slackHandle, color: 'good', message: "${downstreamJob.getResult()}: ${downstreamJobName} #${downstreamJob.getNumber()} (<${downstreamJob.getAbsoluteUrl()}|Open>)\nStarted by ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+                                    }
                                 }
                             }
                         } else if (propagateFailures) {
                             context.error("Build failed due to downstream failure of ${downstreamJobName}")
                             currentBuild.result = "FAILURE"
+
+                            // Send slack failure message
+                            if (slackHandle){
+                                context.echo "Sending slack notification..."
+                                slackSend 
+                                    channel: slackHandle, color: 'danger', message: "${downstreamJob.getResult()}: ${downstreamJobName} #${downstreamJob.getNumber()} (<${downstreamJob.getAbsoluteUrl()}|Open>)\nStarted by ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+                            }
                         }
                     }
                 }
@@ -396,6 +417,8 @@ return {
     Map<String, Map<String, ?>> buildConfigurations,
     String targetConfigurations,
     String enableTests,
+    String slackHandle,
+    String slack_on_success,
     String releaseType,
     String scmReference,
     String overridePublishName,
@@ -420,6 +443,10 @@ return {
             publish = true
         }
 
+        if (params.SLACK_CHANNEL != null || params.SLACK_CHANNEL != "") {
+            slackHandle = params.SLACK_CHANNEL
+        }
+
         String publishName = '' // This is set to a timestamp later on if undefined
         if (overridePublishName) {
             publishName = overridePublishName
@@ -435,6 +462,8 @@ return {
                 buildConfigurations: buildConfigurations,
                 targetConfigurations: new JsonSlurper().parseText(targetConfigurations) as Map,
                 enableTests: Boolean.parseBoolean(enableTests),
+                slackHandle: slackHandle,
+                slack_on_success: Boolean.parseBoolean(slackOnSuccess),
                 publish: publish,
                 release: release,
                 scmReference: scmReference,
