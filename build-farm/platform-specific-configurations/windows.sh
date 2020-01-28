@@ -47,6 +47,7 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
           # nightlies?
           echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
           echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} ..."
+          # shellcheck disable=SC2034
           releaseType="ea"
           apiURL=$(eval echo ${apiUrlTemplate})
           wget -q "${apiURL}" -O openjdk.zip
