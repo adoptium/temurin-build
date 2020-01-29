@@ -49,11 +49,10 @@ VARIANT_ARG=""
 if [ -z "${JDK_BOOT_VERSION}" ]
 then
   echo "Detecting boot jdk for: ${JAVA_TO_BUILD}"
-  currentBuildNumber=$(echo "${JAVA_TO_BUILD}" | tr -d "[:alpha:]")
-  echo "Found build version: ${currentBuildNumber}"
-  JDK_BOOT_VERSION=$((currentBuildNumber-1))
-  echo "Boot jdk version: ${JDK_BOOT_VERSION}"
+  echo "Found build version: ${JAVA_FEATURE_VERSION}"
+  JDK_BOOT_VERSION=$(($JAVA_FEATURE_VERSION-1))
 fi
+echo "Required boot JDK version: ${JDK_BOOT_VERSION}"
 
 case "${JDK_BOOT_VERSION}" in
       "7")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";;

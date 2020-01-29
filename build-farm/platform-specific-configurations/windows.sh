@@ -37,7 +37,21 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
       # instead of BOOT_JDK_VARIABLE (no '$').
       export ${BOOT_JDK_VARIABLE}="$bootDir"
       if [ ! -d "$bootDir/bin" ]; then
-        wget -q "https://api.adoptopenjdk.net/v3/binary/latest/${BOOT_JDK_VERSION}/ga/windows/${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk" -O openjdk.zip
+        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
+        releaseType="ga"
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
+        apiURL=$(eval echo ${apiUrlTemplate})
+        wget -q "${apiURL}" -O openjdk.zip
+        if [ $? -ne 0 ]; then
+          # We must be a JDK HEAD build for which no boot JDK exists other than
+          # nightlies?
+          echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+          echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} ..."
+          # shellcheck disable=SC2034
+          releaseType="ea"
+          apiURL=$(eval echo ${apiUrlTemplate})
+          wget -q "${apiURL}" -O openjdk.zip
+        fi
         unzip -q openjdk.zip
         mv $(ls -d jdk-${BOOT_JDK_VERSION}*) "$bootDir"
       fi

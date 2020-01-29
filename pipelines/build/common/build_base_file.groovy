@@ -203,15 +203,17 @@ class Builder implements Serializable {
     }
 
     Integer getJavaVersionNumber() {
-        // version should be something like "jdk8u"
+        // version should be something like "jdk8u" or "jdk" for HEAD
         Matcher matcher = javaToBuild =~ /.*?(?<version>\d+).*?/
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
+        } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
+            // This needs to get updated when JDK HEAD version updates
+            return Integer.valueOf("15")
         } else {
-            context.error("Failed to read java version")
+            context.error("Failed to read java version '${javaToBuild}'")
             throw new Exception()
         }
-
     }
 
 
