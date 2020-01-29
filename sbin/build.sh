@@ -83,6 +83,7 @@ configuringBootJDKConfigureParameter()
 configuringMacOSCodesignParameter()
 {
   if [ ! -z "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
+    # This commmand needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
     addConfigureArg "--with-macosx-codesign-identity=" "\"${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}\""
   fi
 }
