@@ -87,7 +87,7 @@ def buildConfigurations = [
                 arch                : 'ppc64',
                 additionalNodeLabels: 'xlc13',
                 test                : [
-                        nightly: false,
+                        nightly: ['sanity.openjdk'],
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ]
         ],
