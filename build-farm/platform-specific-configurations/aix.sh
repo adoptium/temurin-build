@@ -68,14 +68,14 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
     "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
-if [ "$JAVA_FEATURE_VERSION" -ge 11 ];
-then
-  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors --with-openssl=fetched"
-  else
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} DF=/usr/sysv/bin/df"
-  fi
 
+if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors --with-openssl=fetched"
+else
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} DF=/usr/sysv/bin/df"
+fi
+
+if [ "$JAVA_FEATURE_VERSION" -ge 11 ]; then
   export LANG=C
   if [ "$JAVA_FEATURE_VERSION" -ge 13 ]; then
     export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/xlC/16.1.0/bin:/opt/IBM/xlc/16.1.0/bin:$PATH
