@@ -24,6 +24,10 @@ targetConfigurations = [
                 "hotspot",
                 "openj9"
         ],
+        "ppc64Aix"    : [
+                "hotspot",
+                "openj9"
+        ],
         "ppc64leLinuxXL": [
                 "openj9"
         ],
