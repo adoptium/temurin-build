@@ -57,7 +57,7 @@ class Build {
     Integer getJavaVersionNumber() {
         // version should be something like "jdk8u" or "jdk" for HEAD
         def matcher = (buildConfig.JAVA_TO_BUILD =~ /(\d+)/)
-        if (matcher.matches()) {
+        if (matcher.find()) {
             List<String> list = matcher[0] as List
             return Integer.parseInt(list[1] as String)
         } else if ("jdk".equalsIgnoreCase(buildConfig.JAVA_TO_BUILD.trim())) {
