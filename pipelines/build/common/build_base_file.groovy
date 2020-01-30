@@ -46,7 +46,6 @@ class Builder implements Serializable {
     boolean release
     boolean publish
     boolean enableTests
-    boolean slackOnSuccess
     boolean cleanWorkspaceBeforeBuild
     boolean propagateFailures
 
@@ -86,7 +85,6 @@ class Builder implements Serializable {
                 ADOPT_BUILD_NUMBER: adoptBuildNumber,
                 ENABLE_TESTS: enableTests,
                 SLACK_HANDLE: slackHandle,
-                SLACK_ON_SUCCESS: slackOnSuccess,
                 CLEAN_WORKSPACE: cleanWorkspaceBeforeBuild
         )
     }
@@ -325,7 +323,7 @@ class Builder implements Serializable {
         context.echo "OS: ${targetConfigurations}"
         context.echo "Enable tests: ${enableTests}"
         context.echo "Slack Channel: ${slackHandle}"
-        context.echo "Slack on success: ${slack_on_success}"
+        context.echo "Slack on success: ${params.slackOnSuccess}"
         context.echo "Publish: ${publish}"
         context.echo "Release: ${release}"
         context.echo "Tag/Branch name: ${scmReference}"
@@ -376,8 +374,8 @@ class Builder implements Serializable {
                                     // Archive in Jenkins
                                     context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
 
-                                    // Send slack success message (if slackOnSuccess is set)
-                                    if (slack_on_success && slackHandle) {
+                                    // Send slack success message
+                                    if (params.slackOnSuccess && slackHandle) {
                                         context.echo "Sending slack notification..."
                                         slackSend 
                                             channel: slackHandle, color: 'good', message: "${downstreamJob.getResult()}: ${downstreamJobName} #${downstreamJob.getNumber()} (<${downstreamJob.getAbsoluteUrl()}|Open>)\nStarted by ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
@@ -418,7 +416,6 @@ return {
     String targetConfigurations,
     String enableTests,
     String slackHandle,
-    String slack_on_success,
     String releaseType,
     String scmReference,
     String overridePublishName,
@@ -463,7 +460,6 @@ return {
                 targetConfigurations: new JsonSlurper().parseText(targetConfigurations) as Map,
                 enableTests: Boolean.parseBoolean(enableTests),
                 slackHandle: slackHandle,
-                slack_on_success: Boolean.parseBoolean(slackOnSuccess),
                 publish: publish,
                 release: release,
                 scmReference: scmReference,
