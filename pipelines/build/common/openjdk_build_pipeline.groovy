@@ -62,7 +62,7 @@ class Build {
             return Integer.parseInt(list[1] as String)
         } else if ("jdk".equalsIgnoreCase(buildConfig.JAVA_TO_BUILD.trim())) {
             // This needs to get updated when JDK HEAD version updates
-            return buildConfig.JAVA_FEATURE_VERSION
+            return Integer.valueOf(buildConfig.JAVA_FEATURE_VERSION)
         } else {
             return Integer.valueOf("-1")
         }
