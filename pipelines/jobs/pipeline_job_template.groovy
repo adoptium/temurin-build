@@ -37,7 +37,6 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         }
     }
     disabled(disableJob)
-    concurrentBuild(false)
     triggers {
         cron(triggerSchedule)
     }
@@ -47,6 +46,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
 
     properties {
+	disableConcurrentBuilds()
         copyArtifactPermissionProperty {
             projectNames('*')
         }
