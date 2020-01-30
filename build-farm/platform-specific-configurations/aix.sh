@@ -51,8 +51,14 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
         releaseType="ga"
         apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/aix/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
         apiURL=$(eval echo ${apiUrlTemplate})
+        # make-adopt-build-farm.sh has 'set -e'. We need to disable that
+        # for the fallback mechanism, as downloading of the GA binary might
+        # fail.
+        set +e
         wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
-        if [ $? -ne 0 ]; then
+        retVal=$?
+        set -e
+        if [ $retVal -ne 0 ]; then
           # We must be a JDK HEAD build for which no boot JDK exists other than
           # nightlies?
           echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
