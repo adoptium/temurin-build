@@ -48,8 +48,8 @@ pipelineJob("$buildFolder/$JOB_NAME") {
             scriptPath('pipelines/build/common/kick_off_build.groovy')
         }
     }
-    concurrentBuild(false)
     properties {
+	disableConcurrentBuilds()
         copyArtifactPermissionProperty {
             projectNames('*')
         }
