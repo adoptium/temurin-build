@@ -54,17 +54,18 @@ class Build {
     }
 
 
-    Integer getJavaVersionNumber() {
+	Integer getJavaVersionNumber() {
+		def javaToBuild = buildConfig.JAVA_TO_BUILD
         // version should be something like "jdk8u" or "jdk" for HEAD
-        def matcher = (buildConfig.JAVA_TO_BUILD =~ /(\d+)/)
-        if (matcher.find()) {
-            List<String> list = matcher[0] as List
-            return Integer.parseInt(list[1] as String)
-        } else if ("jdk".equalsIgnoreCase(buildConfig.JAVA_TO_BUILD.trim())) {
+        Matcher matcher = javaToBuild =~ /.*?(?<version>\d+).*?/
+        if (matcher.matches()) {
+            return Integer.parseInt(matcher.group('version'))
+        } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
             // This needs to get updated when JDK HEAD version updates
             return Integer.valueOf("15")
         } else {
-            return Integer.valueOf("-1")
+            context.error("Failed to read java version '${javaToBuild}'")
+            throw new Exception()
         }
     }
 
