@@ -16,7 +16,7 @@ def buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
-                additionalNodeLabels: 'macos10.12',
+                additionalNodeLabels : 'macos10.14',
                 test                : [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
@@ -26,7 +26,7 @@ def buildConfigurations = [
         x64MacXL: [
                 os                   : 'mac',
                 arch                 : 'x64',
-                additionalNodeLabels : 'macos10.12',
+                additionalNodeLabels : 'macos10.14',
                 test                 : [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
