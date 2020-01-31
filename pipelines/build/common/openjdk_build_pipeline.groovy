@@ -149,7 +149,7 @@ class Build {
     def sign(VersionInfo versionInfo) {
         // Sign and archive jobs if needed
         // TODO: This version info check needs to be updated when the notarization fix gets applied to other versions.
-        if (buildConfig.TARGET_OS == "windows" || (buildConfig.TARGET_OS == "mac" && versionInfo.major != 11)) {
+        if (buildConfig.TARGET_OS == "windows" || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 8) || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 13)) {
             context.node('master') {
                 context.stage("sign") {
                     def filter = ""
@@ -162,7 +162,6 @@ class Build {
                         certificate = "C:\\Users\\jenkins\\windows.p12"
                         nodeFilter = "${nodeFilter}&&build"
 
-                    // TODO: This version info check needs to be updated when the notarization fix gets applied to other versions.
                     } else if (buildConfig.TARGET_OS == "mac") {
                         filter = "**/OpenJDK*_mac_*.tar.gz"
                         certificate = "\"Developer ID Application: London Jamocha Community CIC\""
