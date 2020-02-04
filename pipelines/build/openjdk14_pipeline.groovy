@@ -87,6 +87,16 @@ def buildConfigurations = [
         ],
 
 
+        ppc64Aix    : [
+                os                  : 'aix',
+                arch                : 'ppc64',
+                additionalNodeLabels: 'xlc16',
+                test                : [
+                        nightly: ['sanity.openjdk'],
+                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
+                ]
+        ],
+
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
