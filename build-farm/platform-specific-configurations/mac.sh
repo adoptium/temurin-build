@@ -51,8 +51,7 @@ else
 fi
 
 # The configure option '--with-macosx-codesign-identity' is supported in Java 11 and higher versions.
-# The OpenJ9 variant also supports that option in Java 8.
-if [ "$JAVA_FEATURE_VERSION" -ge 11 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
+if [ "$JAVA_FEATURE_VERSION" -ge 11 ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
   # Login to KeyChain
