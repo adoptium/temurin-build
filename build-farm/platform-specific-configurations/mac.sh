@@ -83,7 +83,7 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
         # for the fallback mechanism, as downloading of the GA binary might
         # fail.
         set +e
-        wget -q -O - "${apiURL}" | tar xpzf --strip-components=1 -C "$bootDir"
+        wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
         retVal=$?
         set -e
         if [ $retVal -ne 0 ]; then
@@ -94,7 +94,7 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
           # shellcheck disable=SC2034
           releaseType="ea"
           apiURL=$(eval echo ${apiUrlTemplate})
-          wget -q -O - "${apiURL}" | tar xpzf --strip-components=1 -C "$bootDir"
+          wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
         fi
       fi
     fi
