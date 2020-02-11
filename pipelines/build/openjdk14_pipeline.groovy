@@ -17,20 +17,14 @@ def buildConfigurations = [
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels : 'macos10.14',
-                test                : [
-                        nightly: true,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
-                ]
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
         ],
 
         x64MacXL: [
                 os                   : 'mac',
                 arch                 : 'x64',
                 additionalNodeLabels : 'macos10.14',
-                test                 : [
-                        nightly: true,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
-                ],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -39,10 +33,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
-                test                : [
-                        nightly: true,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
-                ],
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
                 configureArgs        : '--disable-ccache'
         ],
 
@@ -50,10 +41,7 @@ def buildConfigurations = [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
-                test                 : [
-                        nightly: true,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
-                ],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
@@ -68,20 +56,14 @@ def buildConfigurations = [
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
-                test                : [
-                        nightly: true,
-                        release: ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
-                ]
+                test                : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
         ],
 
         x64WindowsXL    : [
                 os                   : 'windows',
                 arch                 : 'x64',
                 additionalNodeLabels : 'win2012&&vs2017',
-                test                 : [
-                        nightly: true,
-                        release: ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
-                ],
+                test                 : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "windowsXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -90,20 +72,14 @@ def buildConfigurations = [
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
-                test                : [
-                        nightly: true,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
-                ],
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 configureArgs        : '--disable-ccache'
         ],
 
         s390xLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 's390x',
-                test                 : [
-                        nightly: true,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
-                ],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
@@ -111,10 +87,7 @@ def buildConfigurations = [
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                test                : [
-                        nightly: true,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
-                ],
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 configureArgs       : '--disable-ccache'
 
         ],
@@ -122,10 +95,7 @@ def buildConfigurations = [
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
-                test                 : [
-                        nightly: true,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
-                ],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
@@ -134,10 +104,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : [
-                        nightly: true,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
-                ]
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
         ],
 
 ]
