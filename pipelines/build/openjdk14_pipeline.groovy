@@ -18,7 +18,7 @@ def buildConfigurations = [
                 arch                : 'x64',
                 additionalNodeLabels : 'macos10.14',
                 test                : [
-                        nightly: false,
+                        nightly: true,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ]
         ],
@@ -28,7 +28,7 @@ def buildConfigurations = [
                 arch                 : 'x64',
                 additionalNodeLabels : 'macos10.14',
                 test                 : [
-                        nightly: false,
+                        nightly: true,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ],
                 additionalFileNameTag: "macosXL",
@@ -40,7 +40,7 @@ def buildConfigurations = [
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
                 test                : [
-                        nightly: false,
+                        nightly: true,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
                 configureArgs        : '--disable-ccache'
@@ -51,7 +51,7 @@ def buildConfigurations = [
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
                 test                 : [
-                        nightly: false,
+                        nightly: true,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ],
                 additionalFileNameTag: "linuxXL",
@@ -69,7 +69,7 @@ def buildConfigurations = [
                         hotspot : '--jvm-variant client,server'
                 ],
                 test                : [
-                        nightly: false,
+                        nightly: true,
                         release: ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
                 ]
         ],
@@ -79,7 +79,7 @@ def buildConfigurations = [
                 arch                 : 'x64',
                 additionalNodeLabels : 'win2012&&vs2017',
                 test                 : [
-                        nightly: false,
+                        nightly: true,
                         release: ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
                 ],
                 additionalFileNameTag: "windowsXL",
@@ -91,7 +91,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 's390x',
                 test                : [
-                        nightly: false,
+                        nightly: true,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ],
                 configureArgs        : '--disable-ccache'
@@ -101,7 +101,7 @@ def buildConfigurations = [
                 os                   : 'linux',
                 arch                 : 's390x',
                 test                 : [
-                        nightly: false,
+                        nightly: true,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ],
                 additionalFileNameTag: "linuxXL",
@@ -112,7 +112,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 test                : [
-                        nightly: false,
+                        nightly: true,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ],
                 configureArgs       : '--disable-ccache'
@@ -123,7 +123,7 @@ def buildConfigurations = [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
                 test                 : [
-                        nightly: false,
+                        nightly: true,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ],
                 additionalFileNameTag: "linuxXL",
@@ -135,7 +135,7 @@ def buildConfigurations = [
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
                 test                : [
-                        nightly: false,
+                        nightly: true,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ]
         ],
