@@ -99,8 +99,13 @@ class Build {
 
     def runTests() {
         def testStages = [:]
-
-        List testList = buildConfig.TEST_LIST
+        List testList = []
+        
+        if (buildConfig.VARIANT == "hotspot-jfr") {
+        	testList = buildConfig.TEST_LIST.minus(['sanity.external'])
+        } else {
+        	testList = buildConfig.TEST_LIST
+        }
         testList.each { testType ->
             // For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
             try {
