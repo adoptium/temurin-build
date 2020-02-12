@@ -83,7 +83,7 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
         # for the fallback mechanism, as downloading of the GA binary might
         # fail.
         set +e
-        wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
+        wget -q -O "${BOOT_JDK_VERSION}.tgz" "${apiURL}" && tar xpzf "${BOOT_JDK_VERSION}.tgz" --strip-components=1 -C "$bootDir" && rm "${BOOT_JDK_VERSION}.tgz"
         retVal=$?
         set -e
         if [ $retVal -ne 0 ]; then
