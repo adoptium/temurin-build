@@ -8,6 +8,10 @@ targetConfigurations = [
         "x64Windows"  : [
                 "hotspot"
         ],
+        "ppc64Aix"    : [
+                "hotspot",
+                "openj9"
+        ],
         "ppc64leLinux": [
                 "hotspot"
         ],
