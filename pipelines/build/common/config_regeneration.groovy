@@ -1,6 +1,6 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
-import groovy.json.JsonSlurper
+import groovy.json.*
 
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,34 +32,95 @@ node ("master") {
         // Download jenkins helper
         def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 
-        // Get all pipelines
-        def directory = new File("${WORKSPACE}/pipelines/build")
-        def path = directory.listFiles({d, f-> f ==~ /.*.groovy/} as FilenameFilter).sort()
+        // Get all pipelines (use jenkins api)
+        def parser = new JsonSlurper()
+        def pipelines = []
 
-        path.each { pipeline -> 
-            def match = path =~ /[^\/][a-z]+[0-9]+_[a-z]+/
-            def pipeline = match[0].tr('_', '-') // Match pipeline job name
+        try {
+            def get = new URL("https://ci.adoptopenjdk.net/job/build-scripts/api/json?tree=jobs[name]&pretty=true&depth1").openConnection()
+            def rc = get.getResponseCode()
+            def response = parser.parseText(get.getInputStream().getText())
 
-            // Query jobIsRunning jenkins helper 
-            def inprogress = true
-
-            while (inprogress) {
-                echo "Checking if ${pipeline} is running..."
-                if (JobHelper.jobIsRunning(pipeline as String)) {
-                    echo "${pipeline} is running. Sleeping..."
-                    sleep(900) // sleep for 15mins
-                }
-                else {
-                    inprogress = false                    
+            // Parse api response
+            response.jobs.name.each{ job -> 
+                if (job.contains("pipeline")) {
+                    pipelines.add(job)
                 }
             }
+
+        } catch (Exception e) {
+            // Failed to connect to jenkins api or a parsing error occured
+            println "Failure on jenkins api connection or parsing. API response code: ${rc}\nError: ${e.getLocalizedMessage()}"
+            currentBuild.result = 'FAILURE'
+        } 
+        finally {
+            // Query jobIsRunning jenkins helper for each pipeline
+            pipelines.each { pipeline ->
+                def inprogress = true
+
+                while (inprogress) {
+                    println "Checking if ${pipeline} is running..."
+                    if (JobHelper.jobIsRunning(pipeline as String)) {
+                        println "${pipeline} is running. Sleeping..."
+                        sleep(900) // sleep for 15mins
+                    }
+                    else {
+                        inprogress = false                    
+                    }
+                }
+            }
+            // No pipelines running or queued up
+            println "No piplines running or scheduled. Running regeneration job..."
         }
-        // No pipelines running or queued up
-        echo "No piplines running or scheduled. Running regeneration job..."
     }
 
     context.stage("Regenerate") {
+        // Download openjdk-build
+        def Build = context.library(identifier: 'openjdk-build@master').Build
 
+        // Get all pipelines (use jenkins api)
+        def parser = new JsonSlurper()
+        def pipelines = []
+
+        try {
+            def get = new URL("https://ci.adoptopenjdk.net/job/build-scripts/api/json?tree=jobs[name]&pretty=true&depth1").openConnection()
+            def rc = get.getResponseCode()
+            def response = parser.parseText(get.getInputStream().getText())
+
+            // Parse api response
+            response.jobs.name.each{ job -> 
+                if (job.contains("pipeline")) {
+                    pipelines.add(job)
+                }
+            }
+
+        } catch (Exception e) {
+            // Failed to connect to jenkins api or a parsing error occured
+            println "Failure on jenkins api connection or parsing. API response code: ${rc}\nError: ${e.getLocalizedMessage()}"
+            currentBuild.result = 'FAILURE'
+        } 
+
+        pipelines.each { pipeline -> 
+            // Generate a job from template at `create_job_from_template.groovy`
+            def createJob(jobName, jobFolder, IndividualBuildConfig config) {
+                Map<String, ?> params = config.toMap().clone() as Map
+                params.put("JOB_NAME", jobName)
+                params.put("JOB_FOLDER", jobFolder)
+
+                params.put("GIT_URI", scmVars["GIT_URL"])
+                if (scmVars["GIT_BRANCH"] != "detached") {
+                    params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
+                } else {
+                    params.put("GIT_BRANCH", scmVars["GIT_COMMIT"])
+                }
+
+                params.put("BUILD_CONFIG", config.toJson())
+
+                def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
+
+                return create
+            }
+        }
     }
 
     context.stage("Publish") {
