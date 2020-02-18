@@ -28,6 +28,8 @@ limitations under the License.
 */
 
 node ("master") {
+    final def context
+
     /**
      * Queries the Jenkins API for the pipeline names
      * @return pipelines
@@ -52,8 +54,7 @@ node ("master") {
 
         } catch (Exception e) {
             // Failed to connect to jenkins api or a parsing error occured
-            context.error("Failure on jenkins api connection or parsing. API response code: ${rc}\nError: ${e.getLocalizedMessage()}")
-            throw new Exception()
+            throw new RuntimeException("Failure on jenkins api connection or parsing. API response code: ${rc}\nError: ${e.getLocalizedMessage()}")
         } 
     }
 
@@ -92,41 +93,87 @@ node ("master") {
     } // end Check stage...
 
     context.stage("Regenerate") {
+        // Download openjdk-build
+        def Build = context.library(identifier: 'openjdk-build@master').Build
+
         /**
-        * Returns the basic job name of the downstream configurations
-        * i.e. jdk11u-linux-x64-hotspot
+        * Returns version number from the jobname or pipeline
+        * @param name
+        */
+        def getVersionNumber(name){
+            def regex = name =~ /[0-9]+[0-9]?/
+            return regex[0]
+        }
+
+        /**
+        * Returns a list of the job names of downstream builds
         * @param jobName
         * @return
         */
-        def getJobName(jobName) { 
-			def regex = jobName =~ /[0-9]+[0-9]?/
-            def version = "jdk${regex[0]}u"
+        def getJobNames(jobName) { 
+            // Get all buildConfigurations from file
+            // i.e. openjdk11_pipeline.groovy
+            Closure openjdkPipeline = load "${WORKSPACE}/pipelines/build/${jobName.tr('-', '_')}.groovy"
+            def buildConfigs = openjdkPipeline.buildConfigurations
 
-            return "${version}-linux-x64-hotspot" // TODO: Find a way to extract all of the configurations
+            // Extract OS, Arch and variant? for each config
+            def configs = []
+
+            buildConfigs.each { target ->
+                def platformConfig = buildConfigs.get(target.key) as Map<String, ?>
+
+                target.value.each { variant ->
+                    configs.add("${platformConfig.os}-${platformConfig.arch}-${variant}") // TODO: Figure out how to specify the variant
+                }   
+            return configs 
         }
 
         /**
-        * Returns the full path of the job folder
+        * Returns the full path of the job folder. Utilises the JobHelper.
         * @return
         */
         def getJobFolder(jobName) {
-            def parentDir = currentBuild.fullProjectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/")) 
-            return parentDir + "/jobs/" + javaToBuild // TODO: Find a way to extract the full job folder
-        }
+            def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 
-        // Download openjdk-build
-        def Build = context.library(identifier: 'openjdk-build@master').Build
+            // Parse the full path
+            def path = JobHelper.getJobFolder(jobName as String).substring(0, job.fullProjectName.lastIndexOf("/"))
+            return path + "/jobs/"
+        }
 
         // Get all pipelines (use jenkins api)
         def pipelines = queryJenkinsAPI()
 
+        // Generate a job from template at `create_job_from_template.groovy`
         pipelines.each { pipeline -> 
-            // Generate a job from template at `create_job_from_template.groovy`
-            // Get all job names
-            def jobTopName = getJobName(pipeline as String)
-            def jobFolder = getJobFolder(pipeline as String)
+            // Get pipeline version number
+            // i.e. jdk11u
+            def version = "jdk${getVersionNumber(pipeline)}u"
 
-            //def createJob(pipeline, jobFolder, IndividualBuildConfig config) {
+            // Get pipeline configurations
+            // i.e. linux-x64-hotspot
+            def pipelineConfigs = getJobNames(pipeline as String)
+
+            pipelineConfigs.each { config -> 
+                // Get job name
+                // i.e. jdk11u-linux-x64-hotspot
+                def jobTopName = "${version}-${config}"
+
+                // Get job folder
+                // i.e jdk11u/jobs/
+                def jobFolder = getJobFolder(pipeline as String)
+
+                context.library(identifier: 'openjdk-build@master').Build // TODO: Check if this is needed (swapping back from the jenkins helper)
+
+                // Final job name
+                // i.e jdk11u/jobs/jdk11u-linux-x64-hotspot
+                def downstreamJobName = "${jobFolder}/${version}-${jobTopName}"
+
+                Closure configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
+                configureBuild().createJob(jobTopName, jobFolder, config) // TODO: Need to figure out how to pass in the config
+            }
+
+            /** CURRENT CREATEJOB FUNCTION IN OPENJDK-BUILD
+            def createJob(pipeline, jobFolder, IndividualBuildConfig config) {
             Map<String, ?> params = config.toMap().clone() as Map
             params.put("JOB_NAME", pipeline)
             params.put("JOB_FOLDER", jobFolder)
@@ -143,6 +190,7 @@ node ("master") {
             def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
 
             return create
+            */
         }
 
     } // end Regenerate stage...
