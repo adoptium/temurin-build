@@ -89,9 +89,31 @@ node ("master") {
         }
         // No pipelines running or queued up
         println "No piplines running or scheduled. Running regeneration job..."
-    }
+    } // end Check stage...
 
     context.stage("Regenerate") {
+        /**
+        * Returns the basic job name of the downstream configurations
+        * i.e. jdk11u-linux-x64-hotspot
+        * @param jobName
+        * @return
+        */
+        def getJobName(jobName) { 
+			def regex = jobName =~ /[0-9]+[0-9]?/
+            def version = "jdk${regex[0]}u"
+
+            return "${version}-linux-x64-hotspot" // TODO: Find a way to extract all of the configurations
+        }
+
+        /**
+        * Returns the full path of the job folder
+        * @return
+        */
+        def getJobFolder(jobName) {
+            def parentDir = currentBuild.fullProjectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/")) 
+            return parentDir + "/jobs/" + javaToBuild // TODO: Find a way to extract the full job folder
+        }
+
         // Download openjdk-build
         def Build = context.library(identifier: 'openjdk-build@master').Build
 
@@ -100,28 +122,32 @@ node ("master") {
 
         pipelines.each { pipeline -> 
             // Generate a job from template at `create_job_from_template.groovy`
-            def createJob(pipeline, jobFolder, IndividualBuildConfig config) {
-                Map<String, ?> params = config.toMap().clone() as Map
-                params.put("JOB_NAME", pipeline)
-                params.put("JOB_FOLDER", jobFolder)
+            // Get all job names
+            def jobTopName = getJobName(pipeline as String)
+            def jobFolder = getJobFolder(pipeline as String)
 
-                params.put("GIT_URI", scmVars["GIT_URL"])
-                if (scmVars["GIT_BRANCH"] != "detached") {
-                    params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
-                } else {
-                    params.put("GIT_BRANCH", scmVars["GIT_COMMIT"])
-                }
+            //def createJob(pipeline, jobFolder, IndividualBuildConfig config) {
+            Map<String, ?> params = config.toMap().clone() as Map
+            params.put("JOB_NAME", pipeline)
+            params.put("JOB_FOLDER", jobFolder)
 
-                params.put("BUILD_CONFIG", config.toJson())
-
-                def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
-
-                return create
+            params.put("GIT_URI", scmVars["GIT_URL"])
+            if (scmVars["GIT_BRANCH"] != "detached") {
+                params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
+            } else {
+                params.put("GIT_BRANCH", scmVars["GIT_COMMIT"])
             }
+
+            params.put("BUILD_CONFIG", config.toJson())
+
+            def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
+
+            return create
         }
-    }
+
+    } // end Regenerate stage...
 
     context.stage("Publish") {
 
-    }
+    } // end Publish stage...
 }
