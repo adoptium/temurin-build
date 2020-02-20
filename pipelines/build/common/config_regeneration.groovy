@@ -1,3 +1,4 @@
+@Library('openjdk-build@concurrent_test')
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
 
