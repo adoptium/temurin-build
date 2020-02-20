@@ -1,3 +1,4 @@
+import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
 
 /*
@@ -96,6 +97,7 @@ node ("master") {
     stage("Regenerate") {
         // Download openjdk-build
         //def Build = context.library(identifier: 'openjdk-build@master').Build
+        library(identifier: 'openjdk-build@master') // TODO: Figure out how to add libs
 
         // /**
         // * Returns version number from the jobname or pipeline
