@@ -1,4 +1,4 @@
-@Library('openjdk-build@concurrent_test')
+library('https://github.com/M-Davies/openjdk-build.git@concurrent_test')
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
 
@@ -28,7 +28,8 @@ limitations under the License.
 */
 
 node ("master") {
-    final def context
+  checkout scm
+  final def context
 
 // DISABLE FOR TESTING PURPOSES
     /**
@@ -173,13 +174,13 @@ node ("master") {
       params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
       params.put("GIT_BRANCH", "new_build_scripts") 
 
-      def create = jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
+      jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
 
       println "jobDsl created! create variable (jobDsl) is ${create}\nAttempting to build. Will likely fail since openjdkxx does not exist..."
       println "Cleaning..."
       cleanWs()
 
-      def downstreamJob = build job: "jdkxxu/jobs/jdkxxu-linux-x64-hotspot", propagate: false, parameters: config.toBuildParams()
+      build job: "jdkxxu/jobs/jdkxxu-linux-x64-hotspot", propagate: false, parameters: config.toBuildParams()
 
       println "All done! Cleaning workspace..."
       cleanWs()
