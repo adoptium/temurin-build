@@ -30,10 +30,12 @@ limitations under the License.
 node ("master") {
     final def context
 
+// DISABLE FOR TESTING PURPOSES
     /**
      * Queries the Jenkins API for the pipeline names
      * @return pipelines
      */
+/*
     def queryJenkinsAPI() {
         try {
             def parser = new JsonSlurper()
@@ -58,7 +60,7 @@ node ("master") {
         } 
     }
 
-    context.stage("Check") {
+     context.stage("Check") {
         // Download jenkins helper
         def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 
@@ -90,7 +92,7 @@ node ("master") {
         }
         // No pipelines running or queued up
         println "No piplines running or scheduled. Running regeneration job..."
-    } // end Check stage...
+    } // end Check stage... */
 
     context.stage("Regenerate") {
         // Download openjdk-build
@@ -124,8 +126,9 @@ node ("master") {
 
                 target.value.each { variant ->
                     configs.add("${platformConfig.os}-${platformConfig.arch}-${variant}") // TODO: Figure out how to specify the variant
-                }   
-            return configs 
+                }    
+            }
+            return configs
         }
 
         /**
@@ -140,7 +143,108 @@ node ("master") {
             return path + "/jobs/"
         }
 
-        // Get all pipelines (use jenkins api)
+      // ** TEST JOB **
+
+      /*
+      * Get some basic configure args. Used when creating the IndividualBuildConfig
+      */
+      static String getConfigureArgs(Map<String, ?> configuration, String variant) {
+        def configureArgs = ""
+
+        if (configuration.containsKey('configureArgs')) {
+            def configConfigureArgs
+            if (isMap(configuration.configureArgs)) {
+                configConfigureArgs = (configuration.configureArgs as Map<String, ?>).get(variant)
+            } else {
+                configConfigureArgs = configuration.configureArgs
+            }
+
+            if (configConfigureArgs != null) {
+                configureArgs += configConfigureArgs
+            }
+        }
+        return configureArgs
+      }
+
+      /*
+      * Create IndividualBuildConfig for jobDsl 
+      */ 
+      IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant) {
+
+        //def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
+        def additionalNodeLabels = "centos6&&build"
+
+        //def buildArgs = getBuildArgs(platformConfig, variant)
+        def buildArgs = ""
+
+        // if (additionalBuildArgs) {
+        //     buildArgs += " " + additionalBuildArgs
+        // }
+
+        def testList = []
+
+        return new IndividualBuildConfig( // final build config
+                JAVA_TO_BUILD: "jdkxxu",
+                ARCHITECTURE: platformConfig.arch as String,
+                TARGET_OS: platformConfig.os as String,
+                VARIANT: variant,
+                TEST_LIST: testList,
+                SCM_REF: "",
+                BUILD_ARGS: buildArgs,
+                NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+                CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
+                OVERRIDE_FILE_NAME_VERSION: "",
+                ADDITIONAL_FILE_NAME_TAG: "",
+                JDK_BOOT_VERSION: platformConfig.bootJDK as String,
+                RELEASE: false,
+                PUBLISH_NAME: "",
+                ADOPT_BUILD_NUMBER: "",
+                ENABLE_TESTS: false,
+                CLEAN_WORKSPACE: false
+        )
+    }
+
+      /* 
+      * **JOB STARTS HERE** 
+      */
+      // Test downstream job creation.
+      def platformConfig = [
+        x64Linux  : [
+          os                  : 'linux',
+          arch                : 'x64',
+          additionalNodeLabels: 'centos6',
+          test                : [
+            nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
+            release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
+          ],
+          configureArgs : '--disable-ccache',
+        ],
+      ]
+
+      Map<String, IndividualBuildConfig> jobConfigurations = [:]
+      jobConfigurations["linux-x64-hotspot"] = buildConfiguration(platformConfig, "hotspot")
+
+      Map<String, ?> params = config.toMap().clone() as Map
+
+      def jdkVersion = "openjdkxx-pipeline" // Based off the openjdk11_pipeline.groovy build config
+
+      params.put("JOB_NAME", "jdkxxu-linux-x64-hotspot")
+      params.put("JOB_FOLDER", "jdkxxu/jobs/")
+
+      params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
+      params.put("GIT_BRANCH", "new_build_scripts") 
+
+      def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
+
+      println "jobDsl created! create variable (jobDsl) is ${create}\nAttempting to build. Will likely fail since openjdkxx does not exist..."
+
+      def downstreamJob = context.build job: "jdkxxu/jobs/jdkxxu-linux-x64-hotspot", propagate: false, parameters: config.toBuildParams()
+
+      println "All done! Cleaning workspace..."
+      cleanWs()
+
+// DISABLE FOR TESTING PURPOSES
+/*      // Get all pipelines (use jenkins api)
         def pipelines = queryJenkinsAPI()
 
         // Generate a job from template at `create_job_from_template.groovy`
@@ -174,28 +278,30 @@ node ("master") {
 
             /** CURRENT CREATEJOB FUNCTION IN OPENJDK-BUILD
             def createJob(pipeline, jobFolder, IndividualBuildConfig config) {
-            Map<String, ?> params = config.toMap().clone() as Map
-            params.put("JOB_NAME", pipeline)
-            params.put("JOB_FOLDER", jobFolder)
+              Map<String, ?> params = config.toMap().clone() as Map
+              params.put("JOB_NAME", pipeline)
+              params.put("JOB_FOLDER", jobFolder)
 
-            params.put("GIT_URI", scmVars["GIT_URL"])
-            if (scmVars["GIT_BRANCH"] != "detached") {
-                params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
-            } else {
-                params.put("GIT_BRANCH", scmVars["GIT_COMMIT"])
+              params.put("GIT_URI", scmVars["GIT_URL"])
+              if (scmVars["GIT_BRANCH"] != "detached") {
+                  params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
+              } else {
+                  params.put("GIT_BRANCH", scmVars["GIT_COMMIT"])
+              }
+
+              params.put("BUILD_CONFIG", config.toJson())
+
+              def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
+
+              return create
             }
-
-            params.put("BUILD_CONFIG", config.toJson())
-
-            def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
-
-            return create
             */
-        }
-
     } // end Regenerate stage...
 
-    context.stage("Publish") {
+// DISABLE FOR TESTING PURPOSES
+/*
+     context.stage("Publish") {
 
-    } // end Publish stage...
+    } // end Publish stage... 
+*/
 }
