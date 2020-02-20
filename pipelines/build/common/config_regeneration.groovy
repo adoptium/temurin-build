@@ -1,4 +1,4 @@
-@Library('openjdk-build@concurrent_test')
+@Library('openjdk-build@master')
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
 
