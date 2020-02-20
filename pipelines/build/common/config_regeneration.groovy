@@ -1,4 +1,4 @@
-library('https://github.com/M-Davies/openjdk-build.git@concurrent_test')
+@Library('https://github.com/M-Davies/openjdk-build.git@concurrent_test')
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
 
