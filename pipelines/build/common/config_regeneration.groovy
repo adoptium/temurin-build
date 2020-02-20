@@ -143,67 +143,6 @@ node ("master") {
         //     return path + "/jobs/"
         // }
 
-      // ** TEST JOB **
-
-      /*
-      * Get some basic configure args. Used when creating the IndividualBuildConfig
-      */
-      static String getConfigureArgs(Map<String, ?> configuration, String variant) {
-        def configureArgs = ""
-
-        if (configuration.containsKey('configureArgs')) {
-            def configConfigureArgs
-            if (isMap(configuration.configureArgs)) {
-                configConfigureArgs = (configuration.configureArgs as Map<String, ?>).get(variant)
-            } else {
-                configConfigureArgs = configuration.configureArgs
-            }
-
-            if (configConfigureArgs != null) {
-                configureArgs += configConfigureArgs
-            }
-        }
-        return configureArgs
-      }
-
-      /*
-      * Create IndividualBuildConfig for jobDsl 
-      */ 
-      IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant) {
-
-        //def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
-        def additionalNodeLabels = "centos6&&build"
-
-        //def buildArgs = getBuildArgs(platformConfig, variant)
-        def buildArgs = ""
-
-        // if (additionalBuildArgs) {
-        //     buildArgs += " " + additionalBuildArgs
-        // }
-
-        def testList = []
-
-        return new IndividualBuildConfig( // final build config
-                JAVA_TO_BUILD: "jdkxxu",
-                ARCHITECTURE: platformConfig.arch as String,
-                TARGET_OS: platformConfig.os as String,
-                VARIANT: variant,
-                TEST_LIST: testList,
-                SCM_REF: "",
-                BUILD_ARGS: buildArgs,
-                NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
-                CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
-                OVERRIDE_FILE_NAME_VERSION: "",
-                ADDITIONAL_FILE_NAME_TAG: "",
-                JDK_BOOT_VERSION: platformConfig.bootJDK as String,
-                RELEASE: false,
-                PUBLISH_NAME: "",
-                ADOPT_BUILD_NUMBER: "",
-                ENABLE_TESTS: false,
-                CLEAN_WORKSPACE: false
-        )
-    }
-
       /* 
       * **JOB STARTS HERE** 
       */
@@ -306,4 +245,64 @@ node ("master") {
 
     } // end Publish stage... 
 */
+}
+
+// ** TEST JOB **
+
+/*
+* Get some basic configure args. Used when creating the IndividualBuildConfig
+*/
+static String getConfigureArgs(Map<String, ?> configuration, String variant) {
+  def configureArgs = ""
+
+  if (configuration.containsKey('configureArgs')) {
+    def configConfigureArgs
+      if (isMap(configuration.configureArgs)) {
+        configConfigureArgs = (configuration.configureArgs as Map<String, ?>).get(variant)
+      } else {
+        configConfigureArgs = configuration.configureArgs
+      }
+
+      if (configConfigureArgs != null) {
+        configureArgs += configConfigureArgs
+      }
+    }
+    return configureArgs
+}
+
+/*
+* Create IndividualBuildConfig for jobDsl 
+*/ 
+IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant) {
+  //def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
+  def additionalNodeLabels = "centos6&&build"
+
+  //def buildArgs = getBuildArgs(platformConfig, variant)
+  def buildArgs = ""
+
+  // if (additionalBuildArgs) {
+  //     buildArgs += " " + additionalBuildArgs
+  // }
+
+  def testList = []
+
+  return new IndividualBuildConfig( // final build config
+    JAVA_TO_BUILD: "jdkxxu",
+    ARCHITECTURE: platformConfig.arch as String,
+    TARGET_OS: platformConfig.os as String,
+    VARIANT: variant,
+    TEST_LIST: testList,
+    SCM_REF: "",
+    BUILD_ARGS: buildArgs,
+    NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+    CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
+    OVERRIDE_FILE_NAME_VERSION: "",
+    ADDITIONAL_FILE_NAME_TAG: "",
+    JDK_BOOT_VERSION: platformConfig.bootJDK as String,
+    RELEASE: false,
+    PUBLISH_NAME: "",
+    ADOPT_BUILD_NUMBER: "",
+    ENABLE_TESTS: false,
+    CLEAN_WORKSPACE: false
+  )
 }
