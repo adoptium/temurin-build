@@ -94,54 +94,54 @@ node ("master") {
         println "No piplines running or scheduled. Running regeneration job..."
     } // end Check stage... */
 
-    context.stage("Regenerate") {
+    stage("Regenerate") {
         // Download openjdk-build
-        def Build = context.library(identifier: 'openjdk-build@master').Build
+        //def Build = context.library(identifier: 'openjdk-build@master').Build
 
-        /**
-        * Returns version number from the jobname or pipeline
-        * @param name
-        */
-        def getVersionNumber(name){
-            def regex = name =~ /[0-9]+[0-9]?/
-            return regex[0]
-        }
+        // /**
+        // * Returns version number from the jobname or pipeline
+        // * @param name
+        // */
+        // def getVersionNumber(name){
+        //     def regex = name =~ /[0-9]+[0-9]?/
+        //     return regex[0]
+        // }
 
-        /**
-        * Returns a list of the job names of downstream builds
-        * @param jobName
-        * @return
-        */
-        def getJobNames(jobName) { 
-            // Get all buildConfigurations from file
-            // i.e. openjdk11_pipeline.groovy
-            Closure openjdkPipeline = load "${WORKSPACE}/pipelines/build/${jobName.tr('-', '_')}.groovy"
-            def buildConfigs = openjdkPipeline.buildConfigurations
+        // /**
+        // * Returns a list of the job names of downstream builds
+        // * @param jobName
+        // * @return
+        // */
+        // def getJobNames(jobName) { 
+        //     // Get all buildConfigurations from file
+        //     // i.e. openjdk11_pipeline.groovy
+        //     Closure openjdkPipeline = load "${WORKSPACE}/pipelines/build/${jobName.tr('-', '_')}.groovy"
+        //     def buildConfigs = openjdkPipeline.buildConfigurations
 
-            // Extract OS, Arch and variant? for each config
-            def configs = []
+        //     // Extract OS, Arch and variant? for each config
+        //     def configs = []
 
-            buildConfigs.each { target ->
-                def platformConfig = buildConfigs.get(target.key) as Map<String, ?>
+        //     buildConfigs.each { target ->
+        //         def platformConfig = buildConfigs.get(target.key) as Map<String, ?>
 
-                target.value.each { variant ->
-                    configs.add("${platformConfig.os}-${platformConfig.arch}-${variant}") // TODO: Figure out how to specify the variant
-                }    
-            }
-            return configs
-        }
+        //         target.value.each { variant ->
+        //             configs.add("${platformConfig.os}-${platformConfig.arch}-${variant}") // TODO: Figure out how to specify the variant
+        //         }    
+        //     }
+        //     return configs
+        // }
 
-        /**
-        * Returns the full path of the job folder. Utilises the JobHelper.
-        * @return
-        */
-        def getJobFolder(jobName) {
-            def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+        // /**
+        // * Returns the full path of the job folder. Utilises the JobHelper.
+        // * @return
+        // */
+        // def getJobFolder(jobName) {
+        //     def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 
-            // Parse the full path
-            def path = JobHelper.getJobFolder(jobName as String).substring(0, job.fullProjectName.lastIndexOf("/"))
-            return path + "/jobs/"
-        }
+        //     // Parse the full path
+        //     def path = JobHelper.getJobFolder(jobName as String).substring(0, job.fullProjectName.lastIndexOf("/"))
+        //     return path + "/jobs/"
+        // }
 
       // ** TEST JOB **
 
@@ -234,11 +234,13 @@ node ("master") {
       params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
       params.put("GIT_BRANCH", "new_build_scripts") 
 
-      def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
+      def create = jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
 
       println "jobDsl created! create variable (jobDsl) is ${create}\nAttempting to build. Will likely fail since openjdkxx does not exist..."
+      println "Cleaning..."
+      cleanWs()
 
-      def downstreamJob = context.build job: "jdkxxu/jobs/jdkxxu-linux-x64-hotspot", propagate: false, parameters: config.toBuildParams()
+      def downstreamJob = build job: "jdkxxu/jobs/jdkxxu-linux-x64-hotspot", propagate: false, parameters: config.toBuildParams()
 
       println "All done! Cleaning workspace..."
       cleanWs()
