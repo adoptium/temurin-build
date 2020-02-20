@@ -1,4 +1,4 @@
-@Library('openjdk-build@master')
+@Library('local-lib@master')
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
 
