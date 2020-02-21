@@ -16,6 +16,15 @@
 
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Send temporary build files to the ramdisk for performance
+if [ -r /ramdisk0/build/tmp ]; then
+  echo Using /ramdisk0/build/tmp for temporary files \(Clearing it out first...\)
+  export TMPDIR=/ramdisk0/build/tmp
+  echo Found $(find $TMPDIR -type f -print | wc -l) items in it - removing them
+  time rm -rf /ramdisk0/build/tmp/*
+else
+  echo Using default /tmp for temporary files as /ramdisk0/build/tmp does not exist
+fi
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 export PATH="/opt/freeware/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH"
