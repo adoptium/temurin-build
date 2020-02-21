@@ -47,7 +47,7 @@ class Regeneration implements Serializable {
           release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
         ],
         configureArgs : '--disable-ccache',
-        ],
+      ]
     ]
 
     Map<String, IndividualBuildConfig> jobConfigurations = [:]
