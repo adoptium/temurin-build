@@ -1,4 +1,4 @@
-library(identifier: 'openjdk-build@master') // TODO: Figure out how to add libs
+@Library('openjdk-build-mdavies@concurrent_test') // TODO: Need to add the lib to jenkins 
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
 
@@ -29,7 +29,7 @@ limitations under the License.
 
 node ("master") {
   checkout scm
-  final def context
+  //final def context
 
 // DISABLE FOR TESTING PURPOSES
     /**
