@@ -37,7 +37,7 @@ class Regeneration implements Serializable {
   @SuppressWarnings("unused")
   def regenerate() {
     // Test downstream job creation.
-    def platformConfig = [
+    IndividualBuildConfig platformConfig = [
       x64Linux  : [
         os                  : 'linux',
         arch                : 'x64',
@@ -47,7 +47,7 @@ class Regeneration implements Serializable {
           release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
         ],
         configureArgs : '--disable-ccache',
-      ]
+      ],
     ]
 
     Map<String, IndividualBuildConfig> jobConfigurations = [:]
