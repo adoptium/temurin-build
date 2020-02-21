@@ -53,7 +53,7 @@ class Regeneration implements Serializable {
     Map<String, IndividualBuildConfig> jobConfigurations = [:]
     jobConfigurations["linux-x64-hotspot"] = buildConfiguration(platformConfig, "hotspot")
 
-    Map<String, ?> params = config.toMap().clone() as Map
+    Map<String, ?> params = platformConfig.toMap().clone() as Map
 
     def jdkVersion = "openjdkxx-pipeline" // Based off the openjdk11_pipeline.groovy build config
 
@@ -139,7 +139,7 @@ return {
   def currentBuild,
   def context,
   def env -> 
-  
+
       return new Regeneration(
               scmVars: scmVars,
               currentBuild: currentBuild,
