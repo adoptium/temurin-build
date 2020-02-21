@@ -135,16 +135,16 @@ class Regeneration implements Serializable {
 }
 
 return {
-  def scmVars // Source control vars
-  def currentBuild  //  Upstream build object
-  def context // Upstream object i.e. regeneration_pipeline.groovy
-  def env -> // Enviroment vars
-
-    return new Regeneration(
-      scmVars: scmVars,
-      currentBuild: currentBuild,
-      context: context,
-      env: env
-    )
+  def scmVars,
+  def currentBuild,
+  def context,
+  def env -> 
+  
+      return new Regeneration(
+              scmVars: scmVars,
+              currentBuild: currentBuild,
+              context: context,
+              env: env
+      )
 
 }
