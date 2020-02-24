@@ -173,7 +173,7 @@ class Regeneration implements Serializable {
         context.echo "build name " + downstreamJobName
 
         context.catchError {
-          context.stage{
+          context.stage {
             // Job dsl
             createJob(jobTopName, jobFolder, config)
 
@@ -188,8 +188,8 @@ class Regeneration implements Serializable {
     }
     context.parallel jobs
 
-    context.println "All done! Cleaning workspace..."
-    context.cleanWs()
+    context.println "All done!"
+    //context.cleanWs()
 
     //Map<String, ?> params = platformConfig.toMap().clone() as Map
 
