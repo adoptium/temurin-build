@@ -95,7 +95,7 @@ class Regeneration implements Serializable {
   @SuppressWarnings("unused")
   def regenerate() {
     // Test downstream job creation.
-    IndividualBuildConfig platformConfig = [
+    Map<String, ?> platformConfig = [
       x64Linux  : [
         os                  : 'linux',
         arch                : 'x64',
@@ -109,6 +109,7 @@ class Regeneration implements Serializable {
     ]
 
     Map<String, IndividualBuildConfig> jobConfigurations = [:]
+    
     jobConfigurations["linux-x64-hotspot"] = buildConfiguration(platformConfig, "hotspot")
 
     Map<String, ?> params = platformConfig.toMap().clone() as Map
