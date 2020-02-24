@@ -165,7 +165,7 @@ class Regeneration implements Serializable {
 
         // jdkxx-linux-x64-hotspot
         def jobTopName = "${javaToBuild}-${configuration.key}"
-        def jobFolder = "jdkxx/jobs/${javaToBuild}"
+        def jobFolder = "jdkxx/jobs/"
 
         // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
         def downstreamJobName = "${jobFolder}/${jobTopName}"
