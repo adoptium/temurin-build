@@ -30,6 +30,7 @@ class Regeneration implements Serializable {
   def currentBuild
   def context
   def env
+  Map<String, Map<String, ?>> buildConfigurations
 
   /*
   * Get some basic configure args. Used when creating the IndividualBuildConfig
@@ -61,7 +62,7 @@ class Regeneration implements Serializable {
     def additionalNodeLabels = "centos6&&build"
 
     // DEBUG
-    context.echo "[DEBUG] platformConfig.os = ${platformConfig.x64Linux.os}. platformConfig.arch = ${platformConfig.x64Linux.arch}"
+    context.println "[DEBUG] platformConfig.os = ${platformConfig.os} platformConfig.arch = ${platformConfig.arch}"
 
     //def buildArgs = getBuildArgs(platformConfig, variant)
     def buildArgs = ""
@@ -74,13 +75,13 @@ class Regeneration implements Serializable {
 
     return new IndividualBuildConfig( // final build config
       JAVA_TO_BUILD: "jdkxx",
-      ARCHITECTURE: platformConfig.x64Linux.arch as String,
-      TARGET_OS: platformConfig.x64Linux.os as String,
+      ARCHITECTURE: platformConfig.arch as String,
+      TARGET_OS: platformConfig.os as String,
       VARIANT: variant,
       TEST_LIST: testList,
       SCM_REF: "",
       BUILD_ARGS: buildArgs,
-      NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.x64Linux.os}&&${platformConfig.x64Linux.arch}",
+      NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}", //centos6&&build&&linux&&x64
       CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
       OVERRIDE_FILE_NAME_VERSION: "",
       ADDITIONAL_FILE_NAME_TAG: "",
@@ -93,61 +94,127 @@ class Regeneration implements Serializable {
     )
   }
 
-  /**
-  * Main function. Ran from regeneration_pipeline.groovy, this will be what the jenkins regeneration job will run. 
-  */ 
-  @SuppressWarnings("unused")
-  def regenerate() {
-    // Test downstream job creation.
-    Map<String, ?> platformConfig = [
-      x64Linux  : [
-        os                  : 'linux',
-        arch                : 'x64',
-        additionalNodeLabels: 'centos6',
-        test                : [
-          nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
-          release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
-        ],
-        configureArgs : '--disable-ccache',
-      ],
-    ]
-
-    Map<String, IndividualBuildConfig> jobConfigurations = [:]
-
-    jobConfigurations["linux-x64-hotspot"] = buildConfiguration(platformConfig, "hotspot")
-
-    //Map<String, ?> params = platformConfig.toMap().clone() as Map
-    Map<String, ?> params = platformConfig as Map
-
-    def jdkVersion = "openjdkxx-pipeline" // Based off the openjdk11_pipeline.groovy build config
-
+  // Generate a job from template at `create_job_from_template.groovy`
+  def createJob(IndividualBuildConfig config) {
+    Map<String, ?> params = config.toMap().clone() as Map
     params.put("JOB_NAME", "jdkxx-linux-x64-hotspot")
     params.put("JOB_FOLDER", "jdkxx/jobs/")
 
     params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
     params.put("GIT_BRANCH", "new_build_scripts") 
 
-    context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
+    params.put("BUILD_CONFIG", config.toJson())
 
-    context.println "jobDsl created! create variable (jobDsl) is ${create}\nAttempting to build. Will likely fail since openjdkxx does not exist..."
-    context.println "Cleaning..."
-    context.cleanWs()
+    // DEBUG
+    context.println "params is a ${params.getClass()}"
 
-    context.build job: "jdkxx/jobs/jdkxx-linux-x64-hotspot", propagate: false, parameters: config.toBuildParams()
+    def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
+
+    return create
+  }
+
+  /**
+  * Main function. Ran from regeneration_pipeline.groovy, this will be what the jenkins regeneration job will run. 
+  */ 
+  @SuppressWarnings("unused")
+  def regenerate() {
+    // Test downstream job creation.
+    // Map<String, ?> platformConfig = [
+    //   x64Linux  : [
+    //     os                  : 'linux',
+    //     arch                : 'x64',
+    //     additionalNodeLabels: 'centos6',
+    //     test                : [
+    //       nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
+    //       release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
+    //     ],
+    //     configureArgs : '--disable-ccache',
+    //   ],
+    // ]
+
+    // Make job configuration
+    Map<String, IndividualBuildConfig> jobConfigurations = [:]
+    def javaToBuild = "jdkxx" // Based off the openjdk11_pipeline.groovy build config
+
+    if (buildConfigurations.containsKey("x64Linux")) {
+      def platformConfig = buildConfigurations.get(x64Linux) as Map<String, ?>
+      def variant = "hotspot"
+
+      String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
+
+      if (platformConfig.containsKey('additionalFileNameTag')) {
+        name += "-${platformConfig.additionalFileNameTag}"
+      }
+
+      jobConfigurations[name] = buildConfiguration(platformConfig, variant)
+    }
+
+    // Run through configurations
+    def jobs = [:]
+
+    jobConfigurations.each { configuration ->
+      jobs[configuration.key] = {
+        IndividualBuildConfig config = configuration.value
+
+        // jdkxx-linux-x64-hotspot
+        def jobTopName = "${javaToBuild}-${configuration.key}"
+        def jobFolder = "jdkxx/jobs/${javaToBuild}"
+
+        // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
+        def downstreamJobName = "${jobFolder}/${jobTopName}"
+
+        context.echo "build name " + downstreamJobName
+
+        context.catchError {
+          context.stage{
+            // Job dsl
+            createJob(jobTopName, jobFolder, config)
+
+            context.echo "Created job " + downstreamJobName
+
+            // Start build
+            def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()   
+          }
+        }
+
+      }
+    }
+    context.parallel jobs
 
     context.println "All done! Cleaning workspace..."
     context.cleanWs()
+
+    //Map<String, ?> params = platformConfig.toMap().clone() as Map
+
+    // params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
+    // params.put("GIT_BRANCH", "new_build_scripts") 
+
+    // // Job DSL
+    // IndividualBuildConfig indivBuildconfig = jobConfigurations.linux-x64-hotspot
+    // createJob(indivBuildconfig)
+
+    // context.println "jobDsl created! create variable (jobDsl) is ${create}\nAttempting to build. Will likely fail since openjdkxx does not exist..."
+    // context.println "Cleaning..."
+    // context.cleanWs()
+
+    // // Build
+    // context.build job: "jdkxx/jobs/jdkxx-linux-x64-hotspot", propagate: false, parameters: config.toBuildParams()
+
+    // context.println "All done! Cleaning workspace..."
+    // context.cleanWs()
   }
 
 }
 
 return {
+  Map<String, Map<String, ?>> buildConfigurations,
   def scmVars,
   def currentBuild,
   def context,
   def env -> 
 
       return new Regeneration(
+              buildConfigurations: buildConfigurations,
               scmVars: scmVars,
               currentBuild: currentBuild,
               context: context,
