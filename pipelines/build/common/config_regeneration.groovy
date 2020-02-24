@@ -57,8 +57,12 @@ class Regeneration implements Serializable {
   */ 
   IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant) {
     //def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
+    //def additionalNodeLabels = "centos6&&build"
     def additionalNodeLabels = "centos6&&build"
 
+    // DEBUG
+    echo "[DEBUG] platformConfig.os = ${platformConfig.os}. platformConfig.arch = ${platformConfig.arch}"
+    
     //def buildArgs = getBuildArgs(platformConfig, variant)
     def buildArgs = ""
 
