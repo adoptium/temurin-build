@@ -137,7 +137,7 @@ class Regeneration implements Serializable {
     def javaToBuild = "jdkxx" // Based off the openjdk11_pipeline.groovy build config
 
     if (buildConfigurations.containsKey("x64Linux")) {
-      def platformConfig = buildConfigurations.get(x64Linux) as Map<String, ?>
+      def platformConfig = buildConfigurations.get("x64Linux") as Map<String, ?>
       def variant = "hotspot"
 
       String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
