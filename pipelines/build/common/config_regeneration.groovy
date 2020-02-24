@@ -94,6 +94,13 @@ class Regeneration implements Serializable {
     )
   }
 
+  /**
+  * Checks if the property is a map
+  */
+  static def isMap(possibleMap) {
+    return Map.class.isInstance(possibleMap)
+  }
+
   // Generate a job from template at `create_job_from_template.groovy`
   def createJob(IndividualBuildConfig config) {
     Map<String, ?> params = config.toMap().clone() as Map
