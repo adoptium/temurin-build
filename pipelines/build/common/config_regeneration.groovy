@@ -102,10 +102,10 @@ class Regeneration implements Serializable {
   }
 
   // Generate a job from template at `create_job_from_template.groovy`
-  def createJob(IndividualBuildConfig config) {
+  def createJob(jobName, jobFolder, IndividualBuildConfig config) {
     Map<String, ?> params = config.toMap().clone() as Map
-    params.put("JOB_NAME", "jdkxx-linux-x64-hotspot")
-    params.put("JOB_FOLDER", "jdkxx/jobs/")
+    params.put("JOB_NAME", jobName)
+    params.put("JOB_FOLDER", jobFolder)
 
     params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
     params.put("GIT_BRANCH", "new_build_scripts") 
@@ -181,7 +181,7 @@ class Regeneration implements Serializable {
         def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
       }
     }
-    
+
     context.parallel jobs
 
     context.println "All done!"
