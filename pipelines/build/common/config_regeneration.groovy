@@ -61,7 +61,7 @@ class Regeneration implements Serializable {
     def additionalNodeLabels = "centos6&&build"
 
     // DEBUG
-    context.echo "[DEBUG] platformConfig.os = ${platformConfig.os}. platformConfig.arch = ${platformConfig.arch}"
+    context.echo "[DEBUG] platformConfig.os = ${platformConfig.x64Linux.os}. platformConfig.arch = ${platformConfig.x64Linux.arch}"
 
     //def buildArgs = getBuildArgs(platformConfig, variant)
     def buildArgs = ""
@@ -74,13 +74,13 @@ class Regeneration implements Serializable {
 
     return new IndividualBuildConfig( // final build config
       JAVA_TO_BUILD: "jdkxxu",
-      ARCHITECTURE: platformConfig.arch as String,
-      TARGET_OS: platformConfig.os as String,
+      ARCHITECTURE: platformConfig.x64Linux.arch as String,
+      TARGET_OS: platformConfig.x64Linux.os as String,
       VARIANT: variant,
       TEST_LIST: testList,
       SCM_REF: "",
       BUILD_ARGS: buildArgs,
-      NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+      NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.x64Linux.os}&&${platformConfig.x64Linux.arch}",
       CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
       OVERRIDE_FILE_NAME_VERSION: "",
       ADDITIONAL_FILE_NAME_TAG: "",
@@ -117,7 +117,7 @@ class Regeneration implements Serializable {
     jobConfigurations["linux-x64-hotspot"] = buildConfiguration(platformConfig, "hotspot")
 
     //Map<String, ?> params = platformConfig.toMap().clone() as Map
-    Map<String, ?> params = platformConfig
+    Map<String, ?> params = platformConfig.toMap().clone() as Map
 
     def jdkVersion = "openjdkxx-pipeline" // Based off the openjdk11_pipeline.groovy build config
 
