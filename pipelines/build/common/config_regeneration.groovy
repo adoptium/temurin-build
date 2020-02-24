@@ -61,8 +61,8 @@ class Regeneration implements Serializable {
     def additionalNodeLabels = "centos6&&build"
 
     // DEBUG
-    echo "[DEBUG] platformConfig.os = ${platformConfig.os}. platformConfig.arch = ${platformConfig.arch}"
-    
+    context.echo "[DEBUG] platformConfig.os = ${platformConfig.os}. platformConfig.arch = ${platformConfig.arch}"
+
     //def buildArgs = getBuildArgs(platformConfig, variant)
     def buildArgs = ""
 
