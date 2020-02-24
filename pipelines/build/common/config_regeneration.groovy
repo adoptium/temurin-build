@@ -172,20 +172,16 @@ class Regeneration implements Serializable {
 
         context.echo "build name " + downstreamJobName
 
-        context.catchError {
-          context.stage {
-            // Job dsl
-            createJob(jobTopName, jobFolder, config)
+        // Job dsl
+        createJob(jobTopName, jobFolder, config)
 
-            context.echo "Created job " + downstreamJobName
+        context.echo "Created job " + downstreamJobName
 
-            // Start build
-            def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()   
-          }
-        }
-
+        // Start build
+        def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
       }
     }
+    
     context.parallel jobs
 
     context.println "All done!"
