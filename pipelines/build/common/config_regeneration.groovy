@@ -73,7 +73,7 @@ class Regeneration implements Serializable {
     def testList = []
 
     return new IndividualBuildConfig( // final build config
-      JAVA_TO_BUILD: "jdkxxu",
+      JAVA_TO_BUILD: "jdkxx",
       ARCHITECTURE: platformConfig.x64Linux.arch as String,
       TARGET_OS: platformConfig.x64Linux.os as String,
       VARIANT: variant,
@@ -117,12 +117,12 @@ class Regeneration implements Serializable {
     jobConfigurations["linux-x64-hotspot"] = buildConfiguration(platformConfig, "hotspot")
 
     //Map<String, ?> params = platformConfig.toMap().clone() as Map
-    Map<String, ?> params = platformConfig.toMap().clone() as Map
+    Map<String, ?> params = platformConfig as Map
 
     def jdkVersion = "openjdkxx-pipeline" // Based off the openjdk11_pipeline.groovy build config
 
-    params.put("JOB_NAME", "jdkxxu-linux-x64-hotspot")
-    params.put("JOB_FOLDER", "jdkxxu/jobs/")
+    params.put("JOB_NAME", "jdkxx-linux-x64-hotspot")
+    params.put("JOB_FOLDER", "jdkxx/jobs/")
 
     params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
     params.put("GIT_BRANCH", "new_build_scripts") 
@@ -133,7 +133,7 @@ class Regeneration implements Serializable {
     context.println "Cleaning..."
     context.cleanWs()
 
-    context.build job: "jdkxxu/jobs/jdkxxu-linux-x64-hotspot", propagate: false, parameters: config.toBuildParams()
+    context.build job: "jdkxx/jobs/jdkxx-linux-x64-hotspot", propagate: false, parameters: config.toBuildParams()
 
     context.println "All done! Cleaning workspace..."
     context.cleanWs()
