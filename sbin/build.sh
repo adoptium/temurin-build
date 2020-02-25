@@ -271,7 +271,7 @@ buildingTheRestOfTheConfigParameters()
   else
     addConfigureArg "--with-debug-level=" "release"
     addConfigureArg "--with-native-debug-symbols=" "none"
-    addConfigureArg "--enable-dtrace=" "auto"
+    addConfigureArg "--enable-dtrace" ""
   fi
 }
 
