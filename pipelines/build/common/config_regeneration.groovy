@@ -122,6 +122,8 @@ class Regeneration implements Serializable {
 
   def getJobFolder() {
     def parentDir = currentBuild.fullProjectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/"))
+    // DEBUG
+    context.echo "[DEBUG] parentDir is ${parentDir}"
     return parentDir + "/jobs/" + javaToBuild
   }
 
