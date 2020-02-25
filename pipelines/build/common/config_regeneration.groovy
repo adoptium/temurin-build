@@ -128,11 +128,7 @@ class Regeneration implements Serializable {
 
     // DEBUG build-scripts/job/openjdkxx-pipeline/ OR build-scripts/openjdkxx-pipeline/
 
-    def parentDir = projectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/")) 
-    // DEBUG this will be openjdkxx-pipeline/jobs/<job-to-build>
-
-    // DEBUG
-    context.echo "[DEBUG] parentDir is ${parentDir}"
+    //def parentDir = projectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/")) 
 
     return "build-scripts/jobs/${javaToBuild}" //i.e. build-scripts/jobs/jdkxx
   }
