@@ -167,12 +167,15 @@ def buildConfigurations = [
         ],
 ]
 
+def javaToBuild = "jdkxx"
+
 node ("master") {
     def scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
     Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
 
     regenerationScript(
+            javaToBuild,
             buildConfigurations,
             scmVars,
             currentBuild,

@@ -26,6 +26,7 @@ limitations under the License.
 */
 
 class Regeneration implements Serializable {
+  String javaToBuild
   def scmVars
   def currentBuild
   def context
@@ -140,7 +141,6 @@ class Regeneration implements Serializable {
   def regenerate() {
     // Make job configuration
     Map<String, IndividualBuildConfig> jobConfigurations = [:]
-    def javaToBuild = "jdkxx" // Based off the openjdk11_pipeline.groovy build config
 
     if (buildConfigurations.containsKey("x64Linux")) {
       def platformConfig = buildConfigurations.get("x64Linux") as Map<String, ?>
@@ -209,6 +209,7 @@ class Regeneration implements Serializable {
 }
 
 return {
+  String javaToBuild,
   Map<String, Map<String, ?>> buildConfigurations,
   def scmVars,
   def currentBuild,
@@ -216,6 +217,7 @@ return {
   def env -> 
 
       return new Regeneration(
+              javaToBuild: javaToBuild,
               buildConfigurations: buildConfigurations,
               scmVars: scmVars,
               currentBuild: currentBuild,
