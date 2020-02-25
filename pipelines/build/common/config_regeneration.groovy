@@ -121,15 +121,20 @@ class Regeneration implements Serializable {
   }
 
   def getJobFolder() {
-    def projectName = currentBuild.fullProjectName
-    // DEBUG
-    context.echo "[DEBUG] projectName is ${projectName}"
+    def projectName = currentBuild.fullProjectName  //This defaults to my test script name
 
-    def parentDir = projectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/"))
+    // DEBUG
+    context.echo "[DEBUG] projectName is ${projectName}" 
+
+    // DEBUG build-scripts/job/openjdkxx-pipeline/ OR build-scripts/openjdkxx-pipeline/
+
+    def parentDir = projectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/")) 
+    // DEBUG this will be openjdkxx-pipeline/jobs/<job-to-build>
+
     // DEBUG
     context.echo "[DEBUG] parentDir is ${parentDir}"
 
-    return parentDir + "/jobs/" + javaToBuild
+    return "build-scripts/jobs/${javaToBuild}" //i.e. build-scripts/jobs/jdkxx
   }
 
   /**
@@ -137,20 +142,6 @@ class Regeneration implements Serializable {
   */ 
   @SuppressWarnings("unused")
   def regenerate() {
-    // Test downstream job creation.
-    // Map<String, ?> platformConfig = [
-    //   x64Linux  : [
-    //     os                  : 'linux',
-    //     arch                : 'x64',
-    //     additionalNodeLabels: 'centos6',
-    //     test                : [
-    //       nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
-    //       release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
-    //     ],
-    //     configureArgs : '--disable-ccache',
-    //   ],
-    // ]
-
     // Make job configuration
     Map<String, IndividualBuildConfig> jobConfigurations = [:]
     def javaToBuild = "jdkxx" // Based off the openjdk11_pipeline.groovy build config
