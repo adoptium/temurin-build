@@ -120,6 +120,11 @@ class Regeneration implements Serializable {
     return create
   }
 
+  def getJobFolder() {
+    def parentDir = currentBuild.fullProjectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/"))
+    return parentDir + "/jobs/" + javaToBuild
+  }
+
   /**
   * Main function. Ran from regeneration_pipeline.groovy, this will be what the jenkins regeneration job will run. 
   */ 
@@ -165,7 +170,7 @@ class Regeneration implements Serializable {
 
         // jdkxx-linux-x64-hotspot
         def jobTopName = "${javaToBuild}-${configuration.key}"
-        def jobFolder = currentBuild.fullProjectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/")) + "/jobs/" + javaToBuild
+        def jobFolder = getJobFolder()
 
         // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
         def downstreamJobName = "${jobFolder}/${jobTopName}"
