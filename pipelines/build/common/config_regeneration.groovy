@@ -62,9 +62,6 @@ class Regeneration implements Serializable {
     //def additionalNodeLabels = "centos6&&build"
     def additionalNodeLabels = "centos6&&build"
 
-    // DEBUG
-    context.println "[DEBUG] platformConfig.os = ${platformConfig.os} platformConfig.arch = ${platformConfig.arch}"
-
     //def buildArgs = getBuildArgs(platformConfig, variant)
     def buildArgs = ""
 
@@ -113,25 +110,18 @@ class Regeneration implements Serializable {
 
     params.put("BUILD_CONFIG", config.toJson())
 
-    // DEBUG
-    context.println "params is a ${params.getClass()}"
-
     def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
 
     return create
   }
 
   def getJobFolder() {
-    def projectName = currentBuild.fullProjectName  //This defaults to my test script name
+    // THIS DEFAULTS TO MY TEST JOB NAME
+    //def parentDir = currentBuild.fullProjectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/"))
+    //return parentDir + "/jobs/" + javaToBuild
 
-    // DEBUG
-    context.echo "[DEBUG] projectName is ${projectName}" 
-
-    // DEBUG build-scripts/job/openjdkxx-pipeline/ OR build-scripts/openjdkxx-pipeline/
-
-    //def parentDir = projectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/")) 
-
-    return "build-scripts/jobs/${javaToBuild}" //i.e. build-scripts/jobs/jdkxx
+    //return "build-scripts/jobs/${javaToBuild}" //i.e. build-scripts/jobs/jdkxx
+    return "build-scripts/jobs/jdkxx" //i.e. build-scripts/jobs/jdkxx
   }
 
   /**
@@ -184,26 +174,7 @@ class Regeneration implements Serializable {
     context.parallel jobs
 
     context.println "All done!"
-    //context.cleanWs()
-
-    //Map<String, ?> params = platformConfig.toMap().clone() as Map
-
-    // params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
-    // params.put("GIT_BRANCH", "new_build_scripts") 
-
-    // // Job DSL
-    // IndividualBuildConfig indivBuildconfig = jobConfigurations.linux-x64-hotspot
-    // createJob(indivBuildconfig)
-
-    // context.println "jobDsl created! create variable (jobDsl) is ${create}\nAttempting to build. Will likely fail since openjdkxx does not exist..."
-    // context.println "Cleaning..."
-    // context.cleanWs()
-
-    // // Build
-    // context.build job: "jdkxx/jobs/jdkxx-linux-x64-hotspot", propagate: false, parameters: config.toBuildParams()
-
-    // context.println "All done! Cleaning workspace..."
-    // context.cleanWs()
+    context.cleanWs()
   }
 
 }

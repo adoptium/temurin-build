@@ -167,7 +167,7 @@ def buildConfigurations = [
         ],
 ]
 
-def javaToBuild = "jdkxx"
+def javaToBuild = "jdk11u"
 
 node ("master") {
     def scmVars = checkout scm
