@@ -54,7 +54,7 @@ targetConfigurations = [
         ]
 ]
 
-// 03:30
-triggerSchedule="TZ=UTC\n30 03 * * *"
+// 17:05
+triggerSchedule="TZ=UTC\n05 17 * * *"
 
 return this
