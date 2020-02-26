@@ -6,7 +6,8 @@ targetConfigurations = [
         "x64Linux"      : [
                 "hotspot",
                 "hotspot-jfr",
-                "openj9"
+                "openj9",
+                "corretto"
         ],
         "x32Windows"    : [
                 "hotspot",

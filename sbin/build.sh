@@ -132,20 +132,22 @@ getOpenJdkVersion() {
   local version;
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
-    local updateRegex="UPDATE_VERSION=([0-9]+)";
-    local buildRegex="BUILD_NUMBER=b([0-9]+)";
+    local corrVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
+ 
+    local corrVersion="$(cut -d'.' -f 1 < ${corrVerFile})"
 
-    local versionData="$(tr '\n' ' ' < ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.spec)"
-
-    local updateNum
-    local buildNum
-    if [[ "${versionData}" =~ $updateRegex ]]; then
-      updateNum="${BASH_REMATCH[1]}"
+    if [ "${corrVersion}" == "8" ]; then
+      local updateNum="$(cut -d'.' -f 2 < ${corrVerFile})"
+      local buildNum="$(cut -d'.' -f 3 < ${corrVerFile})"
+      local fixNum="$(cut -d'.' -f 4 < ${corrVerFile})"
+      version="jdk8u${updateNum}-b${buildNum}.${fixNum}"
+    else
+      local minorNum="$(cut -d'.' -f 2 < ${corrVerFile})"
+      local updateNum="$(cut -d'.' -f 3 < ${corrVerFile})"
+      local buildNum="$(cut -d'.' -f 4 < ${corrVerFile})"
+      local fixNum="$(cut -d'.' -f 5 < ${corrVerFile})"
+      version="jdk-${corrVersion}.${minorNum}.${updateNum}+${buildNum}.${fixNum}"
     fi
-    if [[ "${versionData}" =~ $buildRegex ]]; then
-      buildNum="${BASH_REMATCH[1]}"
-    fi
-    version="8u${updateNum}-b${buildNum}"
   else
     version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
 
