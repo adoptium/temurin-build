@@ -8,7 +8,8 @@ targetConfigurations = [
         ],
         "x64Linux"    : [
                 "hotspot",
-                "openj9"
+                "openj9",
+                "corretto"
         ],
         "x64Windows"  : [
                 "hotspot",
