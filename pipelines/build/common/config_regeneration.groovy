@@ -88,7 +88,7 @@ class Regeneration implements Serializable {
       PUBLISH_NAME: "",
       ADOPT_BUILD_NUMBER: "",
       ENABLE_TESTS: false,
-      CLEAN_WORKSPACE: false
+      CLEAN_WORKSPACE: true
     )
   }
 
