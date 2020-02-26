@@ -72,7 +72,7 @@ class Regeneration implements Serializable {
     def testList = []
 
     return new IndividualBuildConfig( // final build config
-      JAVA_TO_BUILD: "jdkxx",
+      JAVA_TO_BUILD: javaToBuild,
       ARCHITECTURE: platformConfig.arch as String,
       TARGET_OS: platformConfig.os as String,
       VARIANT: variant,
