@@ -455,7 +455,7 @@ class Build {
             context.stage("queue") {
                 def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
 
-                if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
+                if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL) || (buildConfig.CODEBUILD)) {
                     context.node(buildConfig.NODE_LABEL) {
                         context.stage("build") {
                             if (cleanWorkspace) {

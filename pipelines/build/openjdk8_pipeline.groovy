@@ -43,7 +43,8 @@ def buildConfigurations = [
                 configureArgs       : [
                         "hotspot-jfr" : '--enable-jfr',
                         "openj9"      : '--enable-jitserver'
-                ]
+                ],
+                codebuild             : true
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -137,6 +138,7 @@ def buildConfigurations = [
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-jitserver',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                codebuild            : true
         ],
         s390xLinuxXL       : [
                 os                   : 'linux',

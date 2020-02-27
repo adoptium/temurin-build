@@ -31,7 +31,8 @@ def buildConfigurations = [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
-                configureArgs        : '--disable-ccache'
+                configureArgs        : '--disable-ccache',
+                codebuild            : true
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed

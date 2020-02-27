@@ -34,7 +34,8 @@ def buildConfigurations = [
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
-                configureArgs        : '--disable-ccache'
+                configureArgs        : '--disable-ccache',
+                codebuild             : true
         ],
 
         x64LinuxXL    : [
@@ -43,7 +44,8 @@ def buildConfigurations = [
                 arch                 : 'x64',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache',
+                codebuild            : true
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed

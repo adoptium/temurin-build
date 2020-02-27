@@ -75,6 +75,7 @@ class Builder implements Serializable {
                 SCM_REF: scmReference,
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+                CODEBUILD: platformConfig.codebuild as Boolean,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
                 OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
