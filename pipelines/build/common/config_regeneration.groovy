@@ -126,56 +126,126 @@ class Regeneration implements Serializable {
   }
 
   /**
-  * Main function. Ran from regeneration_pipeline.groovy, this will be what the jenkins regeneration job will run. 
+  * Queries the Jenkins API for the pipeline names
+  * @return pipelines
+  */
+  def queryJenkinsAPI(String query) {
+    try {
+      def parser = new JsonSlurper()
+
+      def get = new URL(query).openConnection()
+      def rc = get.getResponseCode()
+      def response = parser.parseText(get.getInputStream().getText())
+
+      def pipelines = []
+
+      // Parse api response to only extract the pipeline jobnames
+      response.jobs.name.each{ job -> 
+        if (job.contains("pipeline")) {
+          pipelines.add(job) //e.g. openjdk8-pipeline
+        }
+      }
+      return pipelines;
+
+    } catch (Exception e) {
+      // Failed to connect to jenkins api or a parsing error occured
+      throw new RuntimeException("Failure on jenkins api connection or parsing. API response code: ${rc}\nError: ${e.getLocalizedMessage()}")
+    } 
+  }
+
+  /**
+  * Main function. Ran from regeneration_pipeline.groovy, this will be what jenkins will run. 
   */ 
   @SuppressWarnings("unused")
   def regenerate() {
-    // Make job configuration
-    Map<String, IndividualBuildConfig> jobConfigurations = [:]
+    def pipelines = []
+    def jobs = []
 
-    if (buildConfigurations.containsKey("x64Linux")) {
-      def platformConfig = buildConfigurations.get("x64Linux") as Map<String, ?>
-      def variant = "hotspot"
+    /*
+    * Stage: Check for pipelines that are inprogress or queued up. Once they are clear, run the regeneration job
+    */
+    context.stage("Check for running pipelines") {
+      // Download jenkins helper
+      def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 
-      String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
+      // Get all pipelines (use jenkins api)
+      pipelines = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/api/json?tree=jobs[name]&pretty=true&depth1")
 
-      if (platformConfig.containsKey('additionalFileNameTag')) {
-        name += "-${platformConfig.additionalFileNameTag}"
+      // Query jobIsRunning jenkins helper for each pipeline
+      Integer sleepTime = 900
+
+      context.println "[INFO] Job regeneration cannot run if there are pipelines in progress or queued\nPipelines:"
+
+      pipelines.each { pipeline ->
+        def inProgress = true
+
+        while (inProgress) {
+          context.println "Checking if ${pipeline} is running or queued..."
+            if (JobHelper.jobIsRunning(pipeline as String)) {
+              context.println "${pipeline} is running. Sleeping for ${sleepTime} while waiting for ${pipeline} to complete..."
+              context.sleep sleepTime
+            }
+            else {
+              context.println "${pipeline} has no jobs queued and is currently idle"
+              inProgress = false                    
+            }
+        }
+
       }
-
-      jobConfigurations[name] = buildConfiguration(platformConfig, variant)
+      // No pipelines running or queued up
+      context.println "No piplines running or scheduled. Running regeneration job..."
     }
 
-    // Run through configurations
-    def jobs = [:]
+    /*
+    * Stage: Regenerate all of the job configurations by pipeline and job type (i.e. jdkxx-linux-x64-hotspot
+    * jdkxx-linux-x64-openj9, etc.)
+    */
+    context.stage("Regenerate pipeline jobs") {
+      // Make job configuration
+      Map<String, IndividualBuildConfig> jobConfigurations = [:]
 
-    jobConfigurations.each { configuration ->
-      jobs[configuration.key] = {
-        IndividualBuildConfig config = configuration.value
+      if (buildConfigurations.containsKey("x64Linux")) {
+        def platformConfig = buildConfigurations.get("x64Linux") as Map<String, ?>
+        def variant = "hotspot"
 
-        // jdkxx-linux-x64-hotspot
-        def jobTopName = "${javaToBuild}-${configuration.key}"
-        def jobFolder = getJobFolder()
+        String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
 
-        // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
-        def downstreamJobName = "${jobFolder}/${jobTopName}"
+        if (platformConfig.containsKey('additionalFileNameTag')) {
+          name += "-${platformConfig.additionalFileNameTag}"
+        }
 
-        context.echo "build name " + downstreamJobName
-
-        // Job dsl
-        createJob(jobTopName, jobFolder, config)
-
-        context.echo "Created job " + downstreamJobName
-
-        // Start build
-        def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
+        jobConfigurations[name] = buildConfiguration(platformConfig, variant)
       }
+
+      // Run through configurations
+      def jobs = [:]
+
+      jobConfigurations.each { configuration ->
+        jobs[configuration.key] = {
+          IndividualBuildConfig config = configuration.value
+
+          // jdkxx-linux-x64-hotspot
+          def jobTopName = "${javaToBuild}-${configuration.key}"
+          def jobFolder = getJobFolder()
+
+          // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
+          def downstreamJobName = "${jobFolder}/${jobTopName}"
+
+          context.echo "build name " + downstreamJobName
+
+          // Job dsl
+          createJob(jobTopName, jobFolder, config)
+
+          // Job regenerated correctly
+          context.echo "Regenerated configuration for job " + downstreamJobName
+        }
+      }
+
+      // Clean up
+      context.println "All done!"
+      context.cleanWs()
     }
 
-    context.parallel jobs
-
-    context.println "All done!"
-    context.cleanWs()
   }
 
 }
