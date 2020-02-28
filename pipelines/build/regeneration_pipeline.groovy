@@ -167,17 +167,15 @@ def buildConfigurations = [
         ],
 ]
 
-def javaToBuild = "jdk11u"
-
 node ("master") {
   def scmVars = checkout scm
   load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
   Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
+  
+  // DEBUG TEST
   println env.targetConfigurations
 
-
   regenerationScript(
-    javaToBuild,
     buildConfigurations,
     scmVars,
     currentBuild,
