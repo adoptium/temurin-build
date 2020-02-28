@@ -26,7 +26,6 @@ limitations under the License.
 */
 
 class Regeneration implements Serializable {
-  String javaToBuild
   def scmVars
   def currentBuild
   def context
@@ -54,31 +53,54 @@ class Regeneration implements Serializable {
       return configureArgs
   }
 
+  /**
+  * Builds up a node param string that defines what nodes are eligible to run the given job
+  * @param configuration
+  * @param variant
+  * @return
+  */
+  def formAdditionalBuildNodeLabels(Map<String, ?> configuration, String variant) {
+    def buildTag = "build"
+
+    if (configuration.os == "windows" && variant == "openj9") {
+        buildTag = "buildj9"
+    } else if (configuration.arch == "s390x" && variant == "openj9") {
+        buildTag = "(buildj9||build)&&openj9"
+    }
+
+    def labels = "${buildTag}"
+
+    if (configuration.containsKey("additionalNodeLabels")) {
+        def additionalNodeLabels
+
+        if (isMap(configuration.additionalNodeLabels)) {
+            additionalNodeLabels = (configuration.additionalNodeLabels as Map<String, ?>).get(variant)
+        } else {
+            additionalNodeLabels = configuration.additionalNodeLabels
+        }
+
+        if (additionalNodeLabels != null) {
+            labels = "${additionalNodeLabels}&&${labels}"
+        }
+    }
+
+    return labels
+  }
+
   /*
   * Create IndividualBuildConfig for jobDsl 
   */ 
-  IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant) {
-    //def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
-    //def additionalNodeLabels = "centos6&&build"
-    def additionalNodeLabels = "centos6&&build"
-
-    //def buildArgs = getBuildArgs(platformConfig, variant)
-    def buildArgs = ""
-
-    // if (additionalBuildArgs) {
-    //     buildArgs += " " + additionalBuildArgs
-    // }
-
-    def testList = []
+  IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant, String javaToBuild) {
+    def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
     return new IndividualBuildConfig( // final build config
       JAVA_TO_BUILD: javaToBuild,
       ARCHITECTURE: platformConfig.arch as String,
       TARGET_OS: platformConfig.os as String,
       VARIANT: variant,
-      TEST_LIST: testList,
+      TEST_LIST: [],
       SCM_REF: "",
-      BUILD_ARGS: buildArgs,
+      BUILD_ARGS: "",
       NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}", //centos6&&build&&linux&&x64
       CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
       OVERRIDE_FILE_NAME_VERSION: "",
@@ -116,15 +138,6 @@ class Regeneration implements Serializable {
     return create
   }
 
-  def getJobFolder() {
-    // THIS DEFAULTS TO MY TEST JOB NAME
-    //def parentDir = currentBuild.fullProjectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/"))
-    //return parentDir + "/jobs/" + javaToBuild
-
-    //return "build-scripts/jobs/${javaToBuild}" //i.e. build-scripts/jobs/jdkxx
-    return "build-scripts/jobs/jdkxx" //i.e. build-scripts/jobs/jdkxx
-  }
-
   /**
   * Queries the Jenkins API for the pipeline names
   * @return pipelines
@@ -132,21 +145,11 @@ class Regeneration implements Serializable {
   def queryJenkinsAPI(String query) {
     try {
       def parser = new JsonSlurper()
-
       def get = new URL(query).openConnection()
       def rc = get.getResponseCode()
       def response = parser.parseText(get.getInputStream().getText())
 
-      def pipelines = []
-
-      // Parse api response to only extract the pipeline jobnames
-      response.jobs.name.each{ job -> 
-        if (job.contains("pipeline")) {
-          pipelines.add(job) //e.g. openjdk8-pipeline
-        }
-      }
-      return pipelines;
-
+      return response;
     } catch (Exception e) {
       // Failed to connect to jenkins api or a parsing error occured
       throw new RuntimeException("Failure on jenkins api connection or parsing. API response code: ${rc}\nError: ${e.getLocalizedMessage()}")
@@ -159,17 +162,24 @@ class Regeneration implements Serializable {
   @SuppressWarnings("unused")
   def regenerate() {
     def pipelines = []
-    def jobs = []
 
     /*
     * Stage: Check for pipelines that are inprogress or queued up. Once they are clear, run the regeneration job
+    * TODO: Need to find a better way to block this job if the pipelines are running
     */
     context.stage("Check for running pipelines") {
       // Download jenkins helper
       def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 
       // Get all pipelines (use jenkins api)
-      pipelines = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/api/json?tree=jobs[name]&pretty=true&depth1")
+      def getPipelines = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/api/json?tree=jobs[name]&pretty=true&depth1")
+
+      // Parse api response to only extract the pipeline jobnames
+      getPipelines.jobs.name.each{ job -> 
+        if (job.contains("pipeline")) {
+          pipelines.add(job) //e.g. openjdk8-pipeline
+        }
+      }
 
       // Query jobIsRunning jenkins helper for each pipeline
       Integer sleepTime = 900
@@ -201,48 +211,122 @@ class Regeneration implements Serializable {
     * jdkxx-linux-x64-openj9, etc.)
     */
     context.stage("Regenerate pipeline jobs") {
-      // Make job configuration
-      Map<String, IndividualBuildConfig> jobConfigurations = [:]
+      // Get downstream job folders and platforms
+      Map<String,List> downstreamJobs = new HashMap<>();
 
-      if (buildConfigurations.containsKey("x64Linux")) {
-        def platformConfig = buildConfigurations.get("x64Linux") as Map<String, ?>
-        def variant = "hotspot"
+      // i.e. jdk11u, jdk8u, etc.
+      context.println "[INFO] Pulling downstream folders and jobs from API..."
+      def folders = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/api/json?tree=jobs[name]&pretty=true&depth=1")
 
-        String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
+      folders.jobs.name.each{ folder -> 
+        def jobs = [] // clean out folder each time to avoid duplication
 
-        if (platformConfig.containsKey('additionalFileNameTag')) {
-          name += "-${platformConfig.additionalFileNameTag}"
+        // i.e. jdk8u-linux-x64-hotspot, jdk8u-mac-x64-openj9, etc.
+        def platforms = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/${folder}/api/json?tree=jobs[name]&pretty=true&depth=1")
+
+        platforms.jobs.name.each{ job -> 
+          jobs.add(job)
         }
 
-        jobConfigurations[name] = buildConfiguration(platformConfig, variant)
+        downstreamJobs.put(folder, jobs)
       }
 
-      // Run through configurations
-      def jobs = [:]
+      // Regenerate each job, running through the map a folder at a time
+      context.println "[INFO] Jobs are regenerating...\n"
 
-      jobConfigurations.each { configuration ->
-        jobs[configuration.key] = {
-          IndividualBuildConfig config = configuration.value
+      downstreamJobs.each { folder ->
+        context.println "Folder: $folder.key" 
 
-          // jdkxx-linux-x64-hotspot
-          def jobTopName = "${javaToBuild}-${configuration.key}"
-          def jobFolder = getJobFolder()
+        // Run through the list of jobs inside the folder
+        for (def job in downstreamJobs.get(folder.key)) {
+          context.println "Currently regenerating: ${job}"
 
-          // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
-          def downstreamJobName = "${jobFolder}/${jobTopName}"
+          // Split each job down to its version, platform, arch and variant to construct the build configuration key
+          // i.e. jdk8u(javaToBuild)-linux(os)-x64(arch)-openj9(variant)
+          def buildConfigurationKey
+          List configs = job.split("-")
 
-          context.echo "build name " + downstreamJobName
+          def javaToBuild = folder.key
+          def os = configs[1]
 
-          // Job dsl
-          createJob(jobTopName, jobFolder, config)
+          switch(configs[2]) {
+            case "x86":
+              // Account for x86-32 builds
+              // i.e. jdkxx-windows-x86-32-hotspot
+              def arch = "${configs[2]}-${configs[3]}"
+              def variant = configs[4]
+              context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
 
-          // Job regenerated correctly
-          context.echo "Regenerated configuration for job " + downstreamJobName
+              buildConfigurationKey = "${configs[3]}${os.capitalize()}" // x32Windows is the target key
+
+              break
+            default:
+              def arch = configs[2]
+              def variant = configs[3]
+
+              // Account for large heap builds
+              // i.e. jdkxx-linux-ppc64le-openj9-linuxXL
+              if (configs[4] != null) {
+                def lrgHeap = configs[4]
+                context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}\nAdditional Tag: ${lrgHeap}"
+
+                buildConfigurationKey = "${arch}${os.capitalize()}XL"
+              } else {
+                context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
+
+                buildConfigurationKey = "${arch}${os.capitalize()}"
+              }
+
+              break
+          }
+
+          // Make job configuration from buildConfigurationKey
+          Map<String, IndividualBuildConfig> jobConfigurations = [:]
+
+          if (buildConfigurations.containsKey(buildConfigurationKey)) {
+            def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
+
+            String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
+
+            if (platformConfig.containsKey('additionalFileNameTag')) {
+              name += "-${platformConfig.additionalFileNameTag}"
+            }
+
+            jobConfigurations[name] = buildConfiguration(platformConfig, variant)
+          } else { 
+            context.println "[ERROR] Build Configuration Key not recognised: ${buildConfigurationKey}"
+            currentBuild.result = "FAILURE"
+          }
+
+          // Run through configurations
+          def jobs = [:]
+
+          jobConfigurations.each { configuration ->
+            jobs[configuration.key] = {
+              IndividualBuildConfig config = configuration.value
+
+              // jdkxx-linux-x64-hotspot
+              def jobTopName = "${javaToBuild}-${configuration.key}"
+              def jobFolder = "build-scripts/jobs/jdkxx"
+
+              // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
+              def downstreamJobName = "${jobFolder}/${jobTopName}"
+              context.println "build name: ${downstreamJobName}"
+
+              // Job dsl
+              createJob(jobTopName, jobFolder, config)
+
+              // Job regenerated correctly
+              context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
+            }
+          }
+
         }
+        context.println "[SUCCESS] ${folder} regenerated"
       }
-
+      
       // Clean up
-      context.println "All done!"
+      context.println "[SUCCESS] All done!"
       context.cleanWs()
     }
 
@@ -251,7 +335,6 @@ class Regeneration implements Serializable {
 }
 
 return {
-  String javaToBuild,
   Map<String, Map<String, ?>> buildConfigurations,
   def scmVars,
   def currentBuild,
@@ -259,7 +342,6 @@ return {
   def env -> 
 
       return new Regeneration(
-              javaToBuild: javaToBuild,
               buildConfigurations: buildConfigurations,
               scmVars: scmVars,
               currentBuild: currentBuild,
