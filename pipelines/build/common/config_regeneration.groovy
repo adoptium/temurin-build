@@ -292,45 +292,40 @@ class Regeneration implements Serializable {
               name += "-${platformConfig.additionalFileNameTag}"
             }
 
-            jobConfigurations[name] = buildConfiguration(platformConfig, variant)
+            jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
           } else { 
             context.println "[ERROR] Build Configuration Key not recognised: ${buildConfigurationKey}"
             currentBuild.result = "FAILURE"
           }
 
-          // Run through configurations
-          def jobs = [:]
-
           jobConfigurations.each { configuration ->
-            jobs[configuration.key] = {
-              IndividualBuildConfig config = configuration.value
+            IndividualBuildConfig config = configuration.value
 
-              // jdkxx-linux-x64-hotspot
-              def jobTopName = "${javaToBuild}-${configuration.key}"
-              def jobFolder = "build-scripts/jobs/jdkxx"
+            // jdkxx-linux-x64-hotspot
+            def jobTopName = "${javaToBuild}-${configuration.key}"
+            def jobFolder = "build-scripts/jobs/jdkxx"
 
-              // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
-              def downstreamJobName = "${jobFolder}/${jobTopName}"
-              context.println "build name: ${downstreamJobName}"
+            // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
+            def downstreamJobName = "${jobFolder}/${jobTopName}"
+            context.println "build name: ${downstreamJobName}"
 
-              // Job dsl
-              createJob(jobTopName, jobFolder, config)
+            // Job dsl
+            createJob(jobTopName, jobFolder, config)
 
-              // Job regenerated correctly
-              context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
-            }
+            // Job regenerated correctly
+            context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
           }
-
-        }
+        } // end job for loop
         context.println "[SUCCESS] ${folder} regenerated"
-      }
-      
+      } // end folder foreach loop
+
       // Clean up
       context.println "[SUCCESS] All done!"
       context.cleanWs()
-    }
+      
+    } // end Regenerate pipeline jobs stage
 
-  }
+  } // end regenerate()
 
 }
 
