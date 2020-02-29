@@ -128,7 +128,6 @@ class Regeneration implements Serializable {
     params.put("JOB_FOLDER", jobFolder)
 
     params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
-    //params.put("GIT_BRANCH", "new_build_scripts") 
     params.put("GIT_BRANCH", "master") 
 
     params.put("BUILD_CONFIG", config.toJson())
@@ -280,7 +279,7 @@ class Regeneration implements Serializable {
               break
           }
 
-          // Make job configuration from buildConfigurationKey
+          // Build job configuration from buildConfigurationKey
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
 
           if (buildConfigurations.containsKey(buildConfigurationKey)) {
@@ -298,12 +297,13 @@ class Regeneration implements Serializable {
             currentBuild.result = "FAILURE"
           }
 
+          // Make job
           jobConfigurations.each { configuration ->
             IndividualBuildConfig config = configuration.value
 
             // jdkxx-linux-x64-hotspot
             def jobTopName = "${javaToBuild}-${configuration.key}"
-            def jobFolder = "build-scripts/jobs/jdkxx"
+            def jobFolder = "build-scripts/jobs/${javaToBuild}"
 
             // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
             def downstreamJobName = "${jobFolder}/${jobTopName}"
@@ -322,7 +322,7 @@ class Regeneration implements Serializable {
       // Clean up
       context.println "[SUCCESS] All done!"
       context.cleanWs()
-      
+
     } // end Regenerate pipeline jobs stage
 
   } // end regenerate()
