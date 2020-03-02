@@ -222,7 +222,7 @@ class Regeneration implements Serializable {
     */
     context.stage("Regenerate pipeline jobs") {
       // Get downstream job folders and platforms
-      Map<String,List> downstreamJobs = new HashMap<>();
+      Map<String,List> downstreamJobs = [:];
 
       context.println "[INFO] Pulling downstream folders and jobs from API..."
 
