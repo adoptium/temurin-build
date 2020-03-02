@@ -312,7 +312,9 @@ class Regeneration implements Serializable {
           context.println "BUILD CONFIGURATION KEYS: ${buildConfigurations.keySet()}"
 
           // TODO: buildConfigurations does not currently have all jdk pipeline configs
+          // TODO: BUG. Not accepting valid keys
           if (buildConfigurations.containsKey(buildConfigurationKey)) {
+            context.println "DOES THIS EXECUTE?"
             def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
 
             name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
