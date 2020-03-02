@@ -243,7 +243,8 @@ class Regeneration implements Serializable {
       }
 
       // Output for user verification
-      downstreamJobs.each { folder, jobs -> context.println "[INFO] Jobs to be regenerated:\n${folder}: ${jobs}\n" }
+      context.println "[INFO] Jobs to be regenerated:"
+      downstreamJobs.each { folder, jobs -> context.println "${folder}: ${jobs}\n" }
 
       // Regenerate each job, running through the map a folder at a time
       context.println "[INFO] Regenerating..."
