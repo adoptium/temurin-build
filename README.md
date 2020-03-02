@@ -299,12 +299,12 @@ project for setting these pre-requisites.
 
 Example Usage (TODO Add example of openj9):
 
-`./makejdk-any-platform.sh -s /home/openjdk10/src -d /home/openjdk/target -T MyOpenJDK10.tar.gz jdk10`
+`./makejdk-any-platform.sh -s src -d target -T MyOpenJDK10.tar.gz jdk10`
 
-This would clone OpenJDK source from _https://github.com/AdoptOpenJDK/openjdk-jdk10_
-to `/home/openjdk10/src`, configure the build with sensible defaults according
-to your local platform and then build (Adopt) OpenJDK and place the result in
-`/home/openjdk/target/MyOpenJDK10.tar.gz`.
+This would clone OpenJDK source from _https://github.com/AdoptOpenJDK/openjdk-jdk10
+to `src` under your current directory, configure the build with sensible defaults 
+according to your local platform and then build (Adopt) OpenJDK and place the result in
+`target/MyOpenJDK10.tar.gz`.
 
 ### Building OpenJDK from a non Adopt source
 
