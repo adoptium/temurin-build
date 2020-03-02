@@ -173,6 +173,24 @@ class Regeneration implements Serializable {
   }
 
   /**
+  * Extracts the java version number from the job folder
+  * @param javaToBuild
+  */
+  String getJavaVersionNumber(String javaToBuild) {
+    // javaToBuild should be something like "jdk8u" or "jdk" for HEAD
+    Matcher matcher = javaToBuild =~ /.*?(?<version>\d+).*?/
+    if (matcher.matches()) {
+        return matcher.group('version')
+    } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
+        // This needs to get updated when JDK HEAD version updates
+        return "15"
+    } else {
+        context.error("Failed to read java version '${javaToBuild}'")
+        currentBuild.result = "FAILURE"
+    }
+  }
+
+  /**
   * Main function. Ran from regeneration_pipeline.groovy, this will be what jenkins will run first. 
   */ 
   @SuppressWarnings("unused")
@@ -256,6 +274,9 @@ class Regeneration implements Serializable {
       context.println "[INFO] Regenerating..."
 
       downstreamJobs.each { folder ->
+        // Get java version number to use later when loading the build configuration
+        String versionNumber = getJavaVersionNumber("$folder.key")
+
         context.println "Regenerating Folder: $folder.key" 
 
         // Run through the list of jobs inside the folder
@@ -308,13 +329,16 @@ class Regeneration implements Serializable {
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
           String name = null
 
-          context.println "BUILD CONFIGURATIONS: ${buildConfigurations}"
-          context.println "BUILD CONFIGURATION KEYS: ${buildConfigurations.keySet()}"
+          // Get build config for jdk version
+          Closure pipelineFile = load "${WORKSPACE}/pipelines/build/openjdk${versionNumber}_pipeline.groovy"
+          def pipelineConfiguration = pipelineFile.buildConfigurations
 
-          // TODO: buildConfigurations does not currently have all jdk pipeline configs
-          // TODO: BUG. Not accepting valid keys, always goes down the else route
-          if (buildConfigurations.containsKey(buildConfigurationKey)) {
-            def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
+          context.println "BUILD CONFIGURATIONS: ${pipelineConfiguration}"
+          context.println "BUILD CONFIGURATION KEYS: ${pipelineConfiguration.keySet()}"
+
+          // Construct configuration for downstream job
+          if (pipelineConfiguration.containsKey(buildConfigurationKey)) {
+            def platformConfig = pipelineConfiguration.get(buildConfigurationKey) as Map<String, ?>
 
             name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
 
