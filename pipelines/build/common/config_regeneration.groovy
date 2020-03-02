@@ -300,18 +300,21 @@ class Regeneration implements Serializable {
           context.println "[INFO] ${buildConfigurationKey} is regenerating...\n"
 
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
+          String name = null
 
           // TODO: buildConfigurations does not currently have all jdk pipeline configs
           if (buildConfigurations.containsKey(buildConfigurationKey)) {
             def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
 
-            String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
+            name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
 
             if (platformConfig.containsKey('additionalFileNameTag')) {
               name += "-${platformConfig.additionalFileNameTag}"
             }
 
-            jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
+            if (name != null) {
+              jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
+            }
           } else { 
             context.println "[ERROR] Build Configuration Key not recognised: ${buildConfigurationKey}"
             currentBuild.result = "FAILURE"
