@@ -309,6 +309,7 @@ class Regeneration implements Serializable {
           String name = null
 
           context.println "BUILD CONFIGURATIONS: ${buildConfigurations}"
+          context.println "BUILD CONFIGURATION KEYS: ${buildConfigurations.keyset()}"
 
           // TODO: buildConfigurations does not currently have all jdk pipeline configs
           if (buildConfigurations.containsKey(buildConfigurationKey)) {
