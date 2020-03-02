@@ -166,6 +166,12 @@ def buildConfigurations = [
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
+        riscv64Linux      :  [
+                os                   : 'linux',
+                additionalNodeLabels : 'riscvcross',
+                arch                 : 'riscv',
+                configureArgs        : '--disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root'
+        ],
 ]
 
 def javaToBuild = "jdk11u"
