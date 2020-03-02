@@ -308,6 +308,8 @@ class Regeneration implements Serializable {
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
           String name = null
 
+          context.println "BUILD CONFIGURATIONS: ${buildConfigurations}"
+
           // TODO: buildConfigurations does not currently have all jdk pipeline configs
           if (buildConfigurations.containsKey(buildConfigurationKey)) {
             def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
@@ -346,7 +348,7 @@ class Regeneration implements Serializable {
             context.println "[WARNING] Skipping regeneration of ${buildConfigurationKey} due to unexpected error."
           }
         } // end job for loop
-        context.println "[SUCCESS] ${folder} regenerated"
+        context.println "[SUCCESS] ${folder.key} regenerated"
       } // end folder foreach loop
 
       // Clean up
