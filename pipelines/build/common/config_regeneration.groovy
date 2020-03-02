@@ -194,7 +194,7 @@ class Regeneration implements Serializable {
       // Query jobIsRunning jenkins helper for each pipeline
       Integer sleepTime = 900
 
-      context.println "[INFO] Job regeneration cannot run if there are pipelines in progress or queued\nPipelines:"
+      context.println "[INFO] Job regeneration cannot run if there are pipelines in progress or queued"
 
       pipelines.each { pipeline ->
         def inProgress = true
@@ -213,7 +213,7 @@ class Regeneration implements Serializable {
 
       }
       // No pipelines running or queued up
-      context.println "No piplines running or scheduled. Running regeneration job..."
+      context.println "[SUCCESS] No piplines running or scheduled. Running regeneration job..."
     }
 
     /*
@@ -242,8 +242,11 @@ class Regeneration implements Serializable {
         downstreamJobs.put(folder, jobs)
       }
 
+      // Output for user verification
+      downstreamJobs.each { folder, jobs -> println "[INFO] Jobs to be regenerated:\n${folder}: ${jobs}\n" }
+
       // Regenerate each job, running through the map a folder at a time
-      context.println "[INFO] Regenerating...\n"
+      context.println "[INFO] Regenerating..."
 
       downstreamJobs.each { folder ->
         context.println "Regenerating Folder: $folder.key" 
