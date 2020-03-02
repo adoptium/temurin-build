@@ -156,13 +156,12 @@ class Regeneration implements Serializable {
     try {
       def parser = new JsonSlurper()
       def get = new URL(query).openConnection()
-      def rc = get.getResponseCode()
       def response = parser.parseText(get.getInputStream().getText())
       return response
 
     } catch (Exception e) {
       // Failed to connect to jenkins api or a parsing error occured
-      throw new RuntimeException("Failure on jenkins api connection or parsing. API response code: ${rc}\nError: ${e.getLocalizedMessage()}")
+      throw new RuntimeException("Failure on jenkins api connection or parsing.\nError: ${e.getLocalizedMessage()}")
     } 
   }
 
