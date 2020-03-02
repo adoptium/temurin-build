@@ -330,7 +330,7 @@ class Regeneration implements Serializable {
           String name = null
 
           // Get build config for jdk version
-          Closure pipelineFile = load "${WORKSPACE}/pipelines/build/openjdk${versionNumber}_pipeline.groovy"
+          Closure pipelineFile = load "${env.WORKSPACE}/pipelines/build/openjdk${versionNumber}_pipeline.groovy"
           def pipelineConfiguration = pipelineFile.buildConfigurations
 
           context.println "BUILD CONFIGURATIONS: ${pipelineConfiguration}"
