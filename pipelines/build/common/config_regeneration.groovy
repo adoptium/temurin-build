@@ -22,7 +22,7 @@ limitations under the License.
 *
 * This:
 * 1) Is called from regeneration_pipeline.groovy
-* 2) Attempts to create a new downstream job using a default configuration and will try to build it (which should fail as jdkxx does not exist)
+* 2) Attempts to create downstream job dsl's using for each job configuration
 */
 
 class Regeneration implements Serializable {
@@ -34,6 +34,8 @@ class Regeneration implements Serializable {
 
   /*
   * Get some basic configure args. Used when creating the IndividualBuildConfig
+  * @param configuration
+  * @param variant
   */
   static String getConfigureArgs(Map<String, ?> configuration, String variant) {
     def configureArgs = ""
@@ -54,7 +56,7 @@ class Regeneration implements Serializable {
   }
 
   /**
-  * Builds up a node param string that defines what nodes are eligible to run the given job
+  * Builds up a node param string that defines what nodes are eligible to run the given job. Only used here as a placeholder for the BuildConfig
   * @param configuration
   * @param variant
   * @return
@@ -88,7 +90,10 @@ class Regeneration implements Serializable {
   }
 
   /*
-  * Create IndividualBuildConfig for jobDsl 
+  * Create IndividualBuildConfig for jobDsl. Most of the config is not filled out since we're not actually building the downstream jobs
+  * @param platformConfig
+  * @param variant
+  * @param javaToBuild
   */ 
   IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant, String javaToBuild) {
     def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
@@ -115,13 +120,19 @@ class Regeneration implements Serializable {
   }
 
   /**
-  * Checks if the property is a map
+  * Checks if the property is a 
+  * @param possibleMap
   */
   static def isMap(possibleMap) {
     return Map.class.isInstance(possibleMap)
   }
 
-  // Generate a job from template at `create_job_from_template.groovy`
+  /**
+  * Generates a job from template at `create_job_from_template.groovy`. This is what creates the job dsl and "regenerates" the job.
+  * @param jobName
+  * @param jobFolder
+  * @param config
+  */
   def createJob(jobName, jobFolder, IndividualBuildConfig config) {
     Map<String, ?> params = config.toMap().clone() as Map
     params.put("JOB_NAME", jobName)
@@ -138,8 +149,8 @@ class Regeneration implements Serializable {
   }
 
   /**
-  * Queries the Jenkins API for the pipeline names
-  * @return pipelines
+  * Queries the Jenkins API. Used to get the pipeline and downstream job details.
+  * @param query
   */
   def queryJenkinsAPI(String query) {
     try {
@@ -147,8 +158,8 @@ class Regeneration implements Serializable {
       def get = new URL(query).openConnection()
       def rc = get.getResponseCode()
       def response = parser.parseText(get.getInputStream().getText())
+      return response
 
-      return response;
     } catch (Exception e) {
       // Failed to connect to jenkins api or a parsing error occured
       throw new RuntimeException("Failure on jenkins api connection or parsing. API response code: ${rc}\nError: ${e.getLocalizedMessage()}")
@@ -156,7 +167,7 @@ class Regeneration implements Serializable {
   }
 
   /**
-  * Main function. Ran from regeneration_pipeline.groovy, this will be what jenkins will run. 
+  * Main function. Ran from regeneration_pipeline.groovy, this will be what jenkins will run first. 
   */ 
   @SuppressWarnings("unused")
   def regenerate() {
@@ -164,13 +175,13 @@ class Regeneration implements Serializable {
 
     /*
     * Stage: Check for pipelines that are inprogress or queued up. Once they are clear, run the regeneration job
-    * TODO: Need to find a better way to block this job if the pipelines are running
+    * TODO: Need to find a better way to block this job if the pipelines are running. Maybe (https://plugins.jenkins.io/build-blocker-plugin/)?
     */
     context.stage("Check for running pipelines") {
-      // Download jenkins helper
+      // Get jenkins helper
       def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 
-      // Get all pipelines (use jenkins api)
+      // Get all pipelines
       def getPipelines = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/api/json?tree=jobs[name]&pretty=true&depth1")
 
       // Parse api response to only extract the pipeline jobnames
@@ -191,7 +202,7 @@ class Regeneration implements Serializable {
         while (inProgress) {
           context.println "Checking if ${pipeline} is running or queued..."
             if (JobHelper.jobIsRunning(pipeline as String)) {
-              context.println "${pipeline} is running. Sleeping for ${sleepTime} while waiting for ${pipeline} to complete..."
+              context.println "${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
               context.sleep sleepTime
             }
             else {
@@ -213,12 +224,13 @@ class Regeneration implements Serializable {
       // Get downstream job folders and platforms
       Map<String,List> downstreamJobs = new HashMap<>();
 
-      // i.e. jdk11u, jdk8u, etc.
       context.println "[INFO] Pulling downstream folders and jobs from API..."
+
+      // i.e. jdk11u, jdk8u, etc.
       def folders = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/api/json?tree=jobs[name]&pretty=true&depth=1")
 
       folders.jobs.name.each{ folder -> 
-        def jobs = [] // clean out folder each time to avoid duplication
+        def jobs = [] // clean out array each time to avoid duplication
 
         // i.e. jdk8u-linux-x64-hotspot, jdk8u-mac-x64-openj9, etc.
         def platforms = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/${folder}/api/json?tree=jobs[name]&pretty=true&depth=1")
@@ -231,18 +243,19 @@ class Regeneration implements Serializable {
       }
 
       // Regenerate each job, running through the map a folder at a time
-      context.println "[INFO] Jobs are regenerating...\n"
+      context.println "[INFO] Regenerating...\n"
 
       downstreamJobs.each { folder ->
-        context.println "Folder: $folder.key" 
+        context.println "Regenerating Folder: $folder.key" 
 
         // Run through the list of jobs inside the folder
         for (def job in downstreamJobs.get(folder.key)) {
-          context.println "Currently regenerating: ${job}"
+          // Parse the downstream jobs to create keys that match up with the buildConfigurations in the pipeline files (e.g. openjdk11_pipeline.groovy)
+          context.println "Parsing ${job}..."
+          def buildConfigurationKey
 
           // Split each job down to its version, platform, arch and variant to construct the build configuration key
           // i.e. jdk8u(javaToBuild)-linux(os)-x64(arch)-openj9(variant)
-          def buildConfigurationKey
           List configs = job.split("-")
 
           def javaToBuild = folder.key
@@ -269,7 +282,7 @@ class Regeneration implements Serializable {
                 def lrgHeap = configs[4]
                 context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}\nAdditional Tag: ${lrgHeap}"
 
-                buildConfigurationKey = "${arch}${os.capitalize()}XL"
+                buildConfigurationKey = "${arch}${os.capitalize()}XL" // ppc64leLinuxXL is a target key
               } else {
                 context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
 
@@ -280,8 +293,11 @@ class Regeneration implements Serializable {
           }
 
           // Build job configuration from buildConfigurationKey
+          context.println "[INFO] ${buildConfigurationKey} is regenerating...\n"
+
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
 
+          // TODO: buildConfigurations does not currently have all jdk pipeline configs
           if (buildConfigurations.containsKey(buildConfigurationKey)) {
             def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
 
@@ -298,23 +314,22 @@ class Regeneration implements Serializable {
           }
 
           // Make job
-          jobConfigurations.each { configuration ->
-            IndividualBuildConfig config = configuration.value
+          IndividualBuildConfig config = jobConfigurations.get(name)
 
-            // jdkxx-linux-x64-hotspot
-            def jobTopName = "${javaToBuild}-${configuration.key}"
-            def jobFolder = "build-scripts/jobs/${javaToBuild}"
+          // jdkxx-linux-x64-hotspot
+          def jobTopName = "${javaToBuild}-${name}"
+          def jobFolder = "build-scripts/jobs/${javaToBuild}"
 
-            // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
-            def downstreamJobName = "${jobFolder}/${jobTopName}"
-            context.println "build name: ${downstreamJobName}"
+          // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
+          def downstreamJobName = "${jobFolder}/${jobTopName}"
+          context.println "build name: ${downstreamJobName}"
 
-            // Job dsl
-            createJob(jobTopName, jobFolder, config)
+          // Job dsl
+          createJob(jobTopName, jobFolder, config)
 
-            // Job regenerated correctly
-            context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
-          }
+          // Job regenerated correctly
+          context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
+
         } // end job for loop
         context.println "[SUCCESS] ${folder} regenerated"
       } // end folder foreach loop
