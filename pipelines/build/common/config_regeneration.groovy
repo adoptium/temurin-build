@@ -96,27 +96,33 @@ class Regeneration implements Serializable {
   * @param javaToBuild
   */ 
   IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant, String javaToBuild) {
-    def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
+    try {
+      def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
-    return new IndividualBuildConfig( // final build config
-      JAVA_TO_BUILD: javaToBuild,
-      ARCHITECTURE: platformConfig.arch as String,
-      TARGET_OS: platformConfig.os as String,
-      VARIANT: variant,
-      TEST_LIST: [],
-      SCM_REF: "",
-      BUILD_ARGS: "",
-      NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}", //centos6&&build&&linux&&x64
-      CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
-      OVERRIDE_FILE_NAME_VERSION: "",
-      ADDITIONAL_FILE_NAME_TAG: "",
-      JDK_BOOT_VERSION: platformConfig.bootJDK as String,
-      RELEASE: false,
-      PUBLISH_NAME: "",
-      ADOPT_BUILD_NUMBER: "",
-      ENABLE_TESTS: false,
-      CLEAN_WORKSPACE: true
-    )
+      return new IndividualBuildConfig( // final build config
+        JAVA_TO_BUILD: javaToBuild,
+        ARCHITECTURE: platformConfig.arch as String,
+        TARGET_OS: platformConfig.os as String,
+        VARIANT: variant,
+        TEST_LIST: [],
+        SCM_REF: "",
+        BUILD_ARGS: "",
+        NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+        CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
+        OVERRIDE_FILE_NAME_VERSION: "",
+        ADDITIONAL_FILE_NAME_TAG: "",
+        JDK_BOOT_VERSION: platformConfig.bootJDK as String,
+        RELEASE: false,
+        PUBLISH_NAME: "",
+        ADOPT_BUILD_NUMBER: "",
+        ENABLE_TESTS: false,
+        CLEAN_WORKSPACE: true
+      )
+    } catch (Exception e) {
+      // Catch invalid configurations
+      context.println "[ERROR] Failed to create IndividualBuildConfig for platformConfig: ${platformConfig}.\nError: ${e}"
+      currentBuild.result = "FAILURE"
+    }
   }
 
   /**
@@ -312,31 +318,33 @@ class Regeneration implements Serializable {
               name += "-${platformConfig.additionalFileNameTag}"
             }
 
-            if (name != null) {
-              jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
-            }
+            jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
           } else { 
-            context.println "[ERROR] Build Configuration Key not recognised: ${buildConfigurationKey}"
+            context.println "[ERROR] Build Configuration Key not recognised: ${buildConfigurationKey}, for folder ${folder.key}."
             currentBuild.result = "FAILURE"
           }
 
           // Make job
-          IndividualBuildConfig config = jobConfigurations.get(name)
+          if (jobConfigurations.get(name) != null) {
+            IndividualBuildConfig config = jobConfigurations.get(name)
 
-          // jdkxx-linux-x64-hotspot
-          def jobTopName = "${javaToBuild}-${name}"
-          def jobFolder = "build-scripts/jobs/${javaToBuild}"
+            // jdkxx-linux-x64-hotspot
+            def jobTopName = "${javaToBuild}-${name}"
+            def jobFolder = "build-scripts/jobs/${javaToBuild}"
 
-          // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
-          def downstreamJobName = "${jobFolder}/${jobTopName}"
-          context.println "build name: ${downstreamJobName}"
+            // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
+            def downstreamJobName = "${jobFolder}/${jobTopName}"
+            context.println "build name: ${downstreamJobName}"
 
-          // Job dsl
-          createJob(jobTopName, jobFolder, config)
+            // Job dsl
+            createJob(jobTopName, jobFolder, config)
 
-          // Job regenerated correctly
-          context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
-
+            // Job regenerated correctly
+            context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
+          }
+          else {
+            context.println "[WARNING] Skipping regeneration of ${buildConfigurationKey} due to unexpected error."
+          }
         } // end job for loop
         context.println "[SUCCESS] ${folder} regenerated"
       } // end folder foreach loop
