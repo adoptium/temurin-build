@@ -308,26 +308,25 @@ class Regeneration implements Serializable {
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
           String name = null
 
-          context.println "BUILD CONFIGURATIONS: ${buildConfigurations}"
-          context.println "BUILD CONFIGURATION KEYS: ${buildConfigurations.keySet()}"
+          //context.println "BUILD CONFIGURATIONS: ${buildConfigurations}"
+          //context.println "BUILD CONFIGURATION KEYS: ${buildConfigurations.keySet()}"
 
           // TODO: buildConfigurations does not currently have all jdk pipeline configs
-          // TODO: BUG. Not accepting valid keys
-          if (buildConfigurations.containsKey(buildConfigurationKey)) {
-            context.println "DOES THIS EXECUTE?"
-            def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
+          // TODO: BUG. Not accepting valid keys, always goes down the else route
+          // if (buildConfigurations.containsKey(buildConfigurationKey)) {
+          def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
 
-            name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
+          name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
 
-            if (platformConfig.containsKey('additionalFileNameTag')) {
-              name += "-${platformConfig.additionalFileNameTag}"
-            }
-
-            jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
-          } else { 
-            context.println "[ERROR] Build Configuration Key not recognised: ${buildConfigurationKey}, for folder ${folder.key}."
-            currentBuild.result = "FAILURE"
+          if (platformConfig.containsKey('additionalFileNameTag')) {
+            name += "-${platformConfig.additionalFileNameTag}"
           }
+
+          jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
+          // } else { 
+          //   context.println "[ERROR] Build Configuration Key not recognised: ${buildConfigurationKey}, for folder ${folder.key}."
+          //   currentBuild.result = "FAILURE"
+          // }
 
           // Make job
           if (jobConfigurations.get(name) != null) {
