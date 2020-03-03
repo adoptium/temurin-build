@@ -272,15 +272,17 @@ class Regeneration implements Serializable {
 
       // Regenerate each job, running through the map a folder at a time
       context.println "[INFO] Regenerating..."
+      context.println "[DEBUG] Only regen jdk11u for now to test regeneration for one pipeline"
 
-      downstreamJobs.each { folder ->
+      def folderToBuild = "jdk11u"
+      // downstreamJobs.each { folder ->
         // Get java version number to use later when loading the build configuration
-        String versionNumber = getJavaVersionNumber("$folder.key")
+        String versionNumber = getJavaVersionNumber("$folderToBuild")
 
-        context.println "Regenerating Folder: $folder.key" 
+        context.println "Regenerating Folder: $folderToBuild" 
 
         // Run through the list of jobs inside the folder
-        for (def job in downstreamJobs.get(folder.key)) {
+        for (def job in downstreamJobs.get(folderToBuild)) {
           // Parse the downstream jobs to create keys that match up with the buildConfigurations in the pipeline files (e.g. openjdk11_pipeline.groovy)
           context.println "Parsing ${job}..."
           def buildConfigurationKey
@@ -289,7 +291,7 @@ class Regeneration implements Serializable {
           // i.e. jdk8u(javaToBuild)-linux(os)-x64(arch)-openj9(variant)
           List configs = job.split("-")
 
-          def javaToBuild = folder.key
+          def javaToBuild = folderToBuild
           def os = configs[1]
 
           switch(configs[2]) {
@@ -345,7 +347,7 @@ class Regeneration implements Serializable {
 
             jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
           } else { 
-            context.println "[ERROR] Build Configuration Key not recognised: ${buildConfigurationKey}, for folder ${folder.key}."
+            context.println "[ERROR] Build Configuration Key not recognised: ${buildConfigurationKey}, for folder ${folderToBuild}."
             currentBuild.result = "FAILURE"
           }
 
@@ -371,8 +373,8 @@ class Regeneration implements Serializable {
             context.println "[WARNING] Skipping regeneration of ${buildConfigurationKey} due to malformed IndividualBuildConfig."
           }
         } // end job for loop
-        context.println "[SUCCESS] ${folder.key} regenerated"
-      } // end folder foreach loop
+        context.println "[SUCCESS] ${folderToBuild} regenerated"
+      //} // end folder foreach loop
 
       // Clean up
       context.println "[SUCCESS] All done!"
