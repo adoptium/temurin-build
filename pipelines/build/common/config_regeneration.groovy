@@ -329,15 +329,12 @@ class Regeneration implements Serializable {
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
           String name = null
 
-          // Get build config for jdk version
-          Closure pipelineFile = load "${env.WORKSPACE}/pipelines/build/openjdk${versionNumber}_pipeline.groovy"
-          def pipelineConfiguration = pipelineFile.buildConfigurations
-
-          context.println "BUILD CONFIGURATIONS: ${pipelineConfiguration}"
-          context.println "BUILD CONFIGURATION KEYS: ${pipelineConfiguration.keySet()}"
+          context.println "BUILD CONFIGURATIONS: ${buildConfigurations}"
+          context.println "BUILD CONFIGURATION KEYS: ${buildConfigurations.keySet()}"
 
           // Construct configuration for downstream job
-          if (pipelineConfiguration.containsKey(buildConfigurationKey)) {
+          // TODO: Work out how to specify exactly which buildConfigurations to use for the folder 
+          if (buildConfigurations.containsKey(buildConfigurationKey)) {
             def platformConfig = pipelineConfiguration.get(buildConfigurationKey) as Map<String, ?>
 
             name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
