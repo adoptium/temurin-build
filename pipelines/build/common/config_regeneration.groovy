@@ -302,21 +302,28 @@ class Regeneration implements Serializable {
               def variant = configs[4]
               context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
 
-              buildConfigurationKey = "${configs[3]}${os.capitalize()}" // x32Windows is the target key
+              buildConfigurationKey = "x${configs[3]}${os.capitalize()}" // x32Windows is the target key
 
               break
             default:
               def arch = configs[2]
               def variant = configs[3]
 
-              // Account for large heap builds
-              // i.e. jdkxx-linux-ppc64le-openj9-linuxXL
               if (configs[4] != null) {
+                // Account for large heap builds
+                // i.e. jdkxx-linux-ppc64le-openj9-linuxXL
                 def lrgHeap = configs[4]
                 context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}\nAdditional Tag: ${lrgHeap}"
 
                 buildConfigurationKey = "${arch}${os.capitalize()}XL" // ppc64leLinuxXL is a target key
+              } else if (configs[2] == "arm") {
+                // Account for arm32 builds
+                // i.e. jdkxx-linux-arm-hotspot
+                context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}32\nVariant: ${variant}\nAdditional Tag: ${lrgHeap}"
+
+                buildConfigurationKey = "${arch}32${os.capitalize()}"
               } else {
+                // All other builds
                 context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
 
                 buildConfigurationKey = "${arch}${os.capitalize()}"
@@ -331,11 +338,12 @@ class Regeneration implements Serializable {
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
           String name = null
 
-          context.println "[DEBUG] BUILD CONFIGURATIONS FOR JDK11: ${buildConfigurations}"
+          //context.println "[DEBUG] BUILD CONFIGURATIONS FOR JDK11: ${buildConfigurations}"
           context.println "[DEBUG] BUILD CONFIGURATION KEYS FOR JDK11: ${buildConfigurations.keySet()}"
 
           // Construct configuration for downstream job
-          // TODO: Work out how to specify exactly which buildConfigurations to use for the folder 
+          // TODO: Work out how to specify exactly which buildConfigurations to use for the folder
+          // TODO: Work out why containsKey is returning false when it does contain the specified key  
           if (buildConfigurations.containsKey(buildConfigurationKey)) {
             def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
 
