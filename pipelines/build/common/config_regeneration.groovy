@@ -329,13 +329,13 @@ class Regeneration implements Serializable {
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
           String name = null
 
-          context.println "BUILD CONFIGURATIONS: ${buildConfigurations}"
-          context.println "BUILD CONFIGURATION KEYS: ${buildConfigurations.keySet()}"
+          context.println "[DEBUG] BUILD CONFIGURATIONS FOR JDK11: ${buildConfigurations}"
+          context.println "[DEBUG] BUILD CONFIGURATION KEYS FOR JDK11: ${buildConfigurations.keySet()}"
 
           // Construct configuration for downstream job
           // TODO: Work out how to specify exactly which buildConfigurations to use for the folder 
           if (buildConfigurations.containsKey(buildConfigurationKey)) {
-            def platformConfig = pipelineConfiguration.get(buildConfigurationKey) as Map<String, ?>
+            def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
 
             name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
 
@@ -368,7 +368,7 @@ class Regeneration implements Serializable {
             context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
           }
           else {
-            context.println "[WARNING] Skipping regeneration of ${buildConfigurationKey} due to unexpected error."
+            context.println "[WARNING] Skipping regeneration of ${buildConfigurationKey} due to malformed IndividualBuildConfig."
           }
         } // end job for loop
         context.println "[SUCCESS] ${folder.key} regenerated"
