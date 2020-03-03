@@ -319,7 +319,7 @@ class Regeneration implements Serializable {
               } else if (configs[2] == "arm") {
                 // Account for arm32 builds
                 // i.e. jdkxx-linux-arm-hotspot
-                context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}32\nVariant: ${variant}\nAdditional Tag: ${lrgHeap}"
+                context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}32\nVariant: ${variant}"
 
                 buildConfigurationKey = "${arch}32${os.capitalize()}"
               } else {
