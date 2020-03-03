@@ -344,7 +344,7 @@ class Regeneration implements Serializable {
           // Construct configuration for downstream job
           // TODO: Work out how to specify exactly which buildConfigurations to use for the folder
           // TODO: Work out why containsKey is returning false when it does contain the specified key  
-          if (buildConfigurations.get(buildConfigurationKey) != null) {
+          if (buildConfigurations.keySet().contains(buildConfigurationKey)) {
             def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
 
             name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
