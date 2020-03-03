@@ -339,12 +339,19 @@ class Regeneration implements Serializable {
           String name = null
 
           //context.println "[DEBUG] BUILD CONFIGURATIONS FOR JDK11: ${buildConfigurations}"
-          context.println "[DEBUG] BUILD CONFIGURATION KEYS FOR JDK11: ${buildConfigurations.keySet()}"
-
+          //context.println "[DEBUG] BUILD CONFIGURATION KEYS FOR JDK11: ${buildConfigurations.keySet()}"
+          buildConfigurations.keySet().each { key -> 
+            if (key == buildConfigurationKey) {
+              context.println "[DEBUG] FOUND MATCH! Keyset Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
+            }
+            else { 
+              context.println "[DEBUG] KEY DIFFERENT Keyset Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
+            }
+          }
           // Construct configuration for downstream job
           // TODO: Work out how to specify exactly which buildConfigurations to use for the folder
           // TODO: Work out why containsKey is returning false when it does contain the specified key  
-          if (buildConfigurations.keySet().contains(buildConfigurationKey)) {
+          if (buildConfigurations.containsKey(buildConfigurationKey)) {
             def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
 
             name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
@@ -378,7 +385,7 @@ class Regeneration implements Serializable {
             context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
           }
           else {
-            context.println "[WARNING] Skipping regeneration of ${buildConfigurationKey} due to malformed IndividualBuildConfig."
+            context.println "[WARNING] Skipping regeneration of ${buildConfigurationKey} due to malformed IndividualBuildConfig"
           }
         } // end job for loop
         context.println "[SUCCESS] ${folderToBuild} regenerated"
