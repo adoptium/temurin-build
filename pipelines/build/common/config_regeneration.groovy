@@ -126,7 +126,7 @@ class Regeneration implements Serializable {
   }
 
   /**
-  * Checks if the property is a 
+  * Checks if the parameter is a map
   * @param possibleMap
   */
   static def isMap(possibleMap) {
@@ -274,15 +274,14 @@ class Regeneration implements Serializable {
       context.println "[INFO] Regenerating..."
       context.println "[DEBUG] Only regen jdk11u for now to test regeneration for one pipeline"
 
-      def folderToBuild = "jdk11u"
-      // downstreamJobs.each { folder ->
+      downstreamJobs.each { folder ->
         // Get java version number to use later when loading the build configuration
-        String versionNumber = getJavaVersionNumber("$folderToBuild")
+        String versionNumber = getJavaVersionNumber("$folder.key")
 
-        context.println "Regenerating Folder: $folderToBuild" 
+        context.println "Regenerating Folder: $folder.key" 
 
         // Run through the list of jobs inside the folder
-        for (def job in downstreamJobs.get(folderToBuild)) {
+        for (def job in downstreamJobs.get(folder.key)) {
           // Parse the downstream jobs to create keys that match up with the buildConfigurations in the pipeline files (e.g. openjdk11_pipeline.groovy)
           context.println "Parsing ${job}..."
           def buildConfigurationKey
@@ -291,7 +290,7 @@ class Regeneration implements Serializable {
           // i.e. jdk8u(javaToBuild)-linux(os)-x64(arch)-openj9(variant)
           List configs = job.split("-")
 
-          def javaToBuild = folderToBuild
+          def javaToBuild = folder.key
           def os = configs[1]
           def variant // has to be declared early for loop perm reasons 
 
@@ -339,16 +338,14 @@ class Regeneration implements Serializable {
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
           String name = null
 
-          //context.println "[DEBUG] BUILD CONFIGURATIONS FOR JDK11: ${buildConfigurations}"
-          //context.println "[DEBUG] BUILD CONFIGURATION KEYS FOR JDK11: ${buildConfigurations.keySet()}"
-
           // Construct configuration for downstream job
           // TODO: Work out how to specify exactly which buildConfigurations to use for the folder
 
-          // containsKey() does not work for this map, use manual version
+          // containsKey() does not work for this map
           Boolean keyFound = false
           buildConfigurations.keySet().each { key ->  
             if (key == buildConfigurationKey) {
+              //For requested build type, generate a configuration
               context.println "[INFO] FOUND MATCH! Keyset Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
               keyFound = true
 
@@ -365,35 +362,40 @@ class Regeneration implements Serializable {
           }
 
           if (keyFound == false) { 
-            context.println "[ERROR] buildConfigurationKey: ${buildConfigurationKey} not recognised. Valid configuration keys for folder: ${folder} are ${buildConfigurations.keySet()}."
-            currentBuild.result = "FAILURE"
+            context.println "[WARNING] buildConfigurationKey: ${buildConfigurationKey} not recognised. Valid configuration keys for folder: ${folder.key} are ${buildConfigurations.keySet()}.\n[WARNING] ${buildConfigurationKey} WILL NOT BE REGENERATED!"
           }
 
           // Make job
           if (jobConfigurations.get(name) != null) {
-            IndividualBuildConfig config = jobConfigurations.get(name)
+            if (keyFound) {
+              IndividualBuildConfig config = jobConfigurations.get(name)
 
-            // jdkxx-linux-x64-hotspot
-            def jobTopName = "${javaToBuild}-${name}"
-            def jobFolder = "build-scripts/jobs/${javaToBuild}"
+              // jdkxx-linux-x64-hotspot
+              def jobTopName = "${javaToBuild}-${name}"
+              def jobFolder = "build-scripts/jobs/${javaToBuild}"
 
-            // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
-            def downstreamJobName = "${jobFolder}/${jobTopName}"
-            context.println "build name: ${downstreamJobName}"
+              // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
+              def downstreamJobName = "${jobFolder}/${jobTopName}"
+              context.println "build name: ${downstreamJobName}"
 
-            // Job dsl
-            createJob(jobTopName, jobFolder, config)
+              // Job dsl
+              createJob(jobTopName, jobFolder, config)
 
-            // Job regenerated correctly
-            context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
+              // Job regenerated correctly
+              context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
+            }
+            else {
+              context.println "[WARNING] Skipping regeneration for key: ${buildConfigurationKey}..."
+            }
           }
           else {
+            // Unexpected error when building the configuration
             context.println "[ERROR] IndividualBuildConfig is malformed for key: ${buildConfigurationKey}."
             currentBuild.result = "FAILURE"
           }
         } // end job for loop
-        context.println "[SUCCESS] ${folderToBuild} regenerated"
-      //} // end folder foreach loop
+        context.println "[SUCCESS] ${folder.key} regenerated"
+      } // end folder foreach loop
 
       // Clean up
       context.println "[SUCCESS] All done!"
