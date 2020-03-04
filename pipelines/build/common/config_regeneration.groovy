@@ -2,6 +2,7 @@
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
 import java.util.regex.Matcher
+import jenkins.model.Jenkins;
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -202,10 +203,10 @@ class Regeneration implements Serializable {
 
       pipelines.each { pipeline ->
         def inProgress = true
-        
-        String tempPipeline = "openjdkx-pipeline"
+
+        def jenkinsCall = Jenkins.getInstance().getAllItems()
         context.println "[DEBUG] Output of JobHelper.jobIsRunning for pipeline $pipeline is: ${JobHelper.jobIsRunning(pipeline)}"
-        context.println "[DEBUG] Output of JobHelper.jobIsRunning for pipeline $tempPipeline is: ${JobHelper.jobIsRunning(tempPipeline)}"
+        context.println "[DEBUG] jenkinsCall: $jenkinsCall"
 
         while (inProgress) {
           context.println "[INFO] Checking if ${pipeline} is running or queued..."
