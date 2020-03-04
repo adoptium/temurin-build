@@ -173,38 +173,18 @@ class Regeneration implements Serializable {
   }
 
   /**
-  * Extracts the java version number from the job folder
-  * @param javaToBuild
-  */
-  String getJavaVersionNumber(String javaToBuild) {
-    // javaToBuild should be something like "jdk8u" or "jdk" for HEAD
-    Matcher matcher = javaToBuild =~ /.*?(?<version>\d+).*?/
-    if (matcher.matches()) {
-        return matcher.group('version')
-    } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
-        // This needs to get updated when JDK HEAD version updates
-        return "15"
-    } else {
-        context.error("Failed to read java version '${javaToBuild}'")
-        currentBuild.result = "FAILURE"
-    }
-  }
-
-  /**
   * Main function. Ran from regeneration_pipeline.groovy, this will be what jenkins will run first. 
   */ 
   @SuppressWarnings("unused")
   def regenerate() {
     def pipelines = []
+    def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 
     /*
     * Stage: Check for pipelines that are inprogress or queued up. Once they are clear, run the regeneration job
     * TODO: Need to find a better way to block this job if the pipelines are running. Maybe (https://plugins.jenkins.io/build-blocker-plugin/)?
     */
     context.stage("Check for running pipelines") {
-      // Get jenkins helper
-      def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
-
       // Get all pipelines
       def getPipelines = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/api/json?tree=jobs[name]&pretty=true&depth1")
 
@@ -236,7 +216,6 @@ class Regeneration implements Serializable {
         }
 
       }
-      // No pipelines running or queued up
       context.println "[SUCCESS] No piplines running or scheduled. Running regeneration job..."
     } // end stage
 
@@ -253,14 +232,18 @@ class Regeneration implements Serializable {
       // i.e. jdk11u, jdk8u, etc.
       def folders = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/api/json?tree=jobs[name]&pretty=true&depth=1")
 
-      folders.jobs.name.each{ folder -> 
+      folders.jobs.name.each { folder -> 
         def jobs = [] // clean out array each time to avoid duplication
 
         // i.e. jdk8u-linux-x64-hotspot, jdk8u-mac-x64-openj9, etc.
         def platforms = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/${folder}/api/json?tree=jobs[name]&pretty=true&depth=1")
 
-        platforms.jobs.name.each{ job -> 
-          jobs.add(job)
+        platforms.jobs.name.each { job -> 
+          if (JobHelper.jobIsRunnable(job as String)) {
+            jobs.add(job)
+          } else {
+            context.println "[WARNING] Requested job does not exist or is disabled: ${job}. Skipping..."
+          }
         }
 
         downstreamJobs.put(folder, jobs)
@@ -272,14 +255,12 @@ class Regeneration implements Serializable {
 
       // Regenerate each job, running through the map a folder at a time
       downstreamJobs.each { folder ->
-        // Get java version number to use later when loading the build configuration
-        String versionNumber = getJavaVersionNumber("$folder.key")
-
         context.println "[INFO] Regenerating Folder: $folder.key" 
 
         // Run through the list of jobs inside the folder
         for (def job in downstreamJobs.get(folder.key)) {
-          // Parse the downstream jobs to create keys that match up with the buildConfigurations in the pipeline files (e.g. openjdk11_pipeline.groovy)
+
+          // Parse the downstream jobs to create keys that match up with the buildConfigurations in the pipeline files
           context.println "[INFO] Parsing ${job}..."
           def buildConfigurationKey
 
@@ -318,7 +299,7 @@ class Regeneration implements Serializable {
                 // i.e. jdkxx-linux-arm-hotspot
                 context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}32\nVariant: ${variant}"
 
-                buildConfigurationKey = "${arch}32${os.capitalize()}"
+                buildConfigurationKey = "${arch}32${os.capitalize()}" // arm32Linux is a target key
               } else {
                 // All other builds
                 context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
@@ -341,7 +322,7 @@ class Regeneration implements Serializable {
           buildConfigurations.keySet().each { key ->  
             if (key == buildConfigurationKey) {
               //For requested build type, generate a configuration
-              context.println "[SUCCESS] FOUND MATCH! Configuration Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
+              context.println "[INFO] FOUND MATCH! Configuration Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
               keyFound = true
 
               def platformConfig = buildConfigurations.get(key) as Map<String, ?>
@@ -372,7 +353,7 @@ class Regeneration implements Serializable {
 
               // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
               def downstreamJobName = "${jobFolder}/${jobTopName}"
-              context.println "build name: ${downstreamJobName}"
+              context.println "[INFO] build name: ${downstreamJobName}"
 
               // Job dsl
               createJob(jobTopName, jobFolder, config)
@@ -381,7 +362,7 @@ class Regeneration implements Serializable {
               context.println "[SUCCESS] Regenerated configuration for job $downstreamJobName\n"
             }
             else {
-              // Unexpected error when building the configuration
+              // Unexpected error when building or getting the configuration
               context.println "[ERROR] IndividualBuildConfig is malformed for key: ${buildConfigurationKey}."
               currentBuild.result = "FAILURE"
             }
@@ -389,11 +370,15 @@ class Regeneration implements Serializable {
           else {
             context.println "[WARNING] Skipping regeneration for key: ${buildConfigurationKey}..."
           }
+
         } // end job for loop
+
         context.println "[SUCCESS] ${folder.key} folder regenerated!"
       } // end folder foreach loop
+
       context.println "[SUCCESS] All done!"
     } // end stage
+    
     context.cleanWs()
   } // end regenerate()
 
