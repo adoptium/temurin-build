@@ -210,7 +210,7 @@ class Regeneration implements Serializable {
 
       // Parse api response to only extract the pipeline jobnames
       getPipelines.jobs.name.each{ job -> 
-        if (job.contains("pipeline") && JobHelper.jobIsRunnable(job as String)) {
+        if (job.contains("pipeline")) {
           pipelines.add(job) //e.g. openjdk8-pipeline
         }
       }
@@ -238,7 +238,7 @@ class Regeneration implements Serializable {
       }
       // No pipelines running or queued up
       context.println "[SUCCESS] No piplines running or scheduled. Running regeneration job..."
-    }
+    } // end stage
 
     /*
     * Stage: Regenerate all of the job configurations by pipeline and job type (i.e. jdkxx-linux-x64-hotspot
@@ -270,7 +270,6 @@ class Regeneration implements Serializable {
       context.println "[INFO] Jobs to be regenerated:"
       downstreamJobs.each { folder, jobs -> context.println "${folder}: ${jobs}\n" }
 
-      downstreamJobs.remove("jdkxx")
       // Regenerate each job, running through the map a folder at a time
       downstreamJobs.each { folder ->
         // Get java version number to use later when loading the build configuration
@@ -338,8 +337,6 @@ class Regeneration implements Serializable {
 
           // Construct configuration for downstream job
           // TODO: Work out how to specify exactly which buildConfigurations to use for the folder
-
-          // containsKey() does not work for this map
           Boolean keyFound = false
           buildConfigurations.keySet().each { key ->  
             if (key == buildConfigurationKey) {
@@ -395,13 +392,8 @@ class Regeneration implements Serializable {
         } // end job for loop
         context.println "[SUCCESS] ${folder.key} folder regenerated!"
       } // end folder foreach loop
-
-      // Clean up
       context.println "[SUCCESS] All done!"
-      context.cleanWs()
-
-    } // end Regenerate pipeline jobs stage
-
+    } // end stage
     context.cleanWs()
   } // end regenerate()
 
