@@ -202,9 +202,11 @@ class Regeneration implements Serializable {
 
       pipelines.each { pipeline ->
         def inProgress = true
-
-        context.println "[DEBUG] Output of JobHelper.jobIsRunning: ${JobHelper.jobIsRunning(pipeline)}"
         
+        String tempPipeline = "openjdkx-pipeline"
+        context.println "[DEBUG] Output of JobHelper.jobIsRunning for pipeline $pipeline is: ${JobHelper.jobIsRunning(pipeline)}"
+        context.println "[DEBUG] Output of JobHelper.jobIsRunning for pipeline $tempPipeline is: ${JobHelper.jobIsRunning(tempPipeline)}"
+
         while (inProgress) {
           context.println "[INFO] Checking if ${pipeline} is running or queued..."
             if (JobHelper.jobIsRunning(pipeline as String)) { // TODO: THIS CURRENTLY DOESN'T WORK
