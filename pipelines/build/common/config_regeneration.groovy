@@ -239,11 +239,7 @@ class Regeneration implements Serializable {
         def platforms = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/${folder}/api/json?tree=jobs[name]&pretty=true&depth=1")
 
         platforms.jobs.name.each { job -> 
-          if (JobHelper.jobIsRunnable(job as String)) {
-            jobs.add(job)
-          } else {
-            context.println "[WARNING] Requested job does not exist or is disabled: ${job}. Skipping..."
-          }
+          jobs.add(job)
         }
 
         downstreamJobs.put(folder, jobs)
@@ -378,7 +374,7 @@ class Regeneration implements Serializable {
 
       context.println "[SUCCESS] All done!"
     } // end stage
-    
+
     context.cleanWs()
   } // end regenerate()
 
