@@ -293,13 +293,14 @@ class Regeneration implements Serializable {
 
           def javaToBuild = folderToBuild
           def os = configs[1]
+          def variant // has to be declared early for loop perm reasons 
 
           switch(configs[2]) {
             case "x86":
               // Account for x86-32 builds
               // i.e. jdkxx-windows-x86-32-hotspot
               def arch = "${configs[2]}-${configs[3]}"
-              def variant = configs[4]
+              variant = configs[4]
               context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
 
               buildConfigurationKey = "x${configs[3]}${os.capitalize()}" // x32Windows is the target key
@@ -307,7 +308,7 @@ class Regeneration implements Serializable {
               break
             default:
               def arch = configs[2]
-              def variant = configs[3]
+              variant = configs[3]
 
               if (configs[4] != null) {
                 // Account for large heap builds
