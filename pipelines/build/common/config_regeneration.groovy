@@ -210,7 +210,7 @@ class Regeneration implements Serializable {
 
       // Parse api response to only extract the pipeline jobnames
       getPipelines.jobs.name.each{ job -> 
-        if (job.contains("pipeline")) {
+        if (job.contains("pipeline") && JobHelper.jobIsRunnable(job as String)) {
           pipelines.add(job) //e.g. openjdk8-pipeline
         }
       }
@@ -270,9 +270,8 @@ class Regeneration implements Serializable {
       context.println "[INFO] Jobs to be regenerated:"
       downstreamJobs.each { folder, jobs -> context.println "${folder}: ${jobs}\n" }
 
+      downstreamJobs.remove("jdkxx")
       // Regenerate each job, running through the map a folder at a time
-      context.println "[INFO] Regenerating..."
-
       downstreamJobs.each { folder ->
         // Get java version number to use later when loading the build configuration
         String versionNumber = getJavaVersionNumber("$folder.key")
@@ -362,6 +361,7 @@ class Regeneration implements Serializable {
 
           if (keyFound == false) { 
             context.println "[WARNING] buildConfigurationKey: ${buildConfigurationKey} not recognised. Valid configuration keys for folder: ${folder.key} are ${buildConfigurations.keySet()}.\n[WARNING] ${buildConfigurationKey} WILL NOT BE REGENERATED!"
+            currentBuild.result = "UNSTABLE"
           }
 
           // Make job
@@ -402,6 +402,7 @@ class Regeneration implements Serializable {
 
     } // end Regenerate pipeline jobs stage
 
+    context.cleanWs()
   } // end regenerate()
 
 }
