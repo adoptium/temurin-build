@@ -201,23 +201,20 @@ class Regeneration implements Serializable {
       context.println "[INFO] Job regeneration cannot run if there are pipelines in progress or queued"
 
       pipelines.each { pipeline ->
-        def inProgress = true
-
-        def tempJobFolder = JobHelper.getJobFolder("openjdk8-pipeline")
-        context.println "[DEBUG] Check if get job folder works: $tempJobFolder"
+        context.println "[INFO] Checking if ${pipeline} is running..."
+        Boolean inProgress = true
 
         while (inProgress) {
-          context.println "[INFO] Checking if ${pipeline} is running or queued..."
-            if (JobHelper.jobIsRunning(pipeline as String)) { // TODO: THIS CURRENTLY DOESN'T WORK
-              context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
-              context.sleep sleepTime
-            }
-            else {
-              context.println "[INFO] ${pipeline} has no jobs queued and is currently idle"
-              inProgress = false                    
-            }
-        }
+          // Check if pipeline is in progress using api
+          def pipelineInProgress = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
+          inProgress = pipelineInProgress.building as Boolean
 
+          if (inProgress) {
+            context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
+            context.sleep sleepTime
+          }
+        }
+        context.println "[INFO] ${pipeline} has no jobs queued and is currently idle"
       }
       context.println "[SUCCESS] No piplines running or scheduled. Running regeneration job..."
     } // end stage
