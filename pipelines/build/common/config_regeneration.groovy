@@ -340,29 +340,31 @@ class Regeneration implements Serializable {
 
           //context.println "[DEBUG] BUILD CONFIGURATIONS FOR JDK11: ${buildConfigurations}"
           //context.println "[DEBUG] BUILD CONFIGURATION KEYS FOR JDK11: ${buildConfigurations.keySet()}"
-          buildConfigurations.keySet().each { key -> 
-            if (key == buildConfigurationKey) {
-              context.println "[DEBUG] FOUND MATCH! Keyset Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
-            }
-            else { 
-              context.println "[DEBUG] KEY DIFFERENT Keyset Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
-            }
-          }
+
           // Construct configuration for downstream job
           // TODO: Work out how to specify exactly which buildConfigurations to use for the folder
-          // TODO: Work out why containsKey is returning false when it does contain the specified key  
-          if (buildConfigurations.containsKey(buildConfigurationKey)) {
-            def platformConfig = buildConfigurations.get(buildConfigurationKey) as Map<String, ?>
 
-            name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
+          // containsKey() does not work for this map, use manual version
+          Boolean keyFound = false
+          buildConfigurations.keySet().each { key ->  
+            if (key == buildConfigurationKey) {
+              context.println "[INFO] FOUND MATCH! Keyset Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
+              keyFound = true
 
-            if (platformConfig.containsKey('additionalFileNameTag')) {
-              name += "-${platformConfig.additionalFileNameTag}"
+              def platformConfig = buildConfigurations.get(key) as Map<String, ?>
+
+              name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
+
+              if (platformConfig.containsKey('additionalFileNameTag')) {
+                name += "-${platformConfig.additionalFileNameTag}"
+              }
+
+              jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
             }
+          }
 
-            jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
-          } else { 
-            context.println "[ERROR] Build Configuration Key not recognised: ${buildConfigurationKey}, for folder ${folderToBuild}."
+          if (keyFound == false) { 
+            context.println "[ERROR] buildConfigurationKey: ${buildConfigurationKey} not recognised. Valid configuration keys for folder: ${folder} are ${buildConfigurations.keySet()}."
             currentBuild.result = "FAILURE"
           }
 
@@ -385,7 +387,8 @@ class Regeneration implements Serializable {
             context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
           }
           else {
-            context.println "[WARNING] Skipping regeneration of ${buildConfigurationKey} due to malformed IndividualBuildConfig"
+            context.println "[ERROR] IndividualBuildConfig is malformed for key: ${buildConfigurationKey}."
+            currentBuild.result = "FAILURE"
           }
         } // end job for loop
         context.println "[SUCCESS] ${folderToBuild} regenerated"
