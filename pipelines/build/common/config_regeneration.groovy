@@ -272,18 +272,17 @@ class Regeneration implements Serializable {
 
       // Regenerate each job, running through the map a folder at a time
       context.println "[INFO] Regenerating..."
-      context.println "[DEBUG] Only regen jdk11u for now to test regeneration for one pipeline"
 
       downstreamJobs.each { folder ->
         // Get java version number to use later when loading the build configuration
         String versionNumber = getJavaVersionNumber("$folder.key")
 
-        context.println "Regenerating Folder: $folder.key" 
+        context.println "[INFO] Regenerating Folder: $folder.key" 
 
         // Run through the list of jobs inside the folder
         for (def job in downstreamJobs.get(folder.key)) {
           // Parse the downstream jobs to create keys that match up with the buildConfigurations in the pipeline files (e.g. openjdk11_pipeline.groovy)
-          context.println "Parsing ${job}..."
+          context.println "[INFO] Parsing ${job}..."
           def buildConfigurationKey
 
           // Split each job down to its version, platform, arch and variant to construct the build configuration key
@@ -333,7 +332,7 @@ class Regeneration implements Serializable {
           }
 
           // Build job configuration from buildConfigurationKey
-          context.println "[INFO] ${buildConfigurationKey} is regenerating...\n"
+          context.println "[INFO] ${buildConfigurationKey} is regenerating..."
 
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
           String name = null
@@ -346,7 +345,7 @@ class Regeneration implements Serializable {
           buildConfigurations.keySet().each { key ->  
             if (key == buildConfigurationKey) {
               //For requested build type, generate a configuration
-              context.println "[INFO] FOUND MATCH! Keyset Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
+              context.println "[SUCCESS] FOUND MATCH! Configuration Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
               keyFound = true
 
               def platformConfig = buildConfigurations.get(key) as Map<String, ?>
@@ -366,8 +365,8 @@ class Regeneration implements Serializable {
           }
 
           // Make job
-          if (jobConfigurations.get(name) != null) {
-            if (keyFound) {
+          if (keyFound) {
+            if (jobConfigurations.get(name) != null) {
               IndividualBuildConfig config = jobConfigurations.get(name)
 
               // jdkxx-linux-x64-hotspot
@@ -382,19 +381,19 @@ class Regeneration implements Serializable {
               createJob(jobTopName, jobFolder, config)
 
               // Job regenerated correctly
-              context.echo "[SUCCESS] Regenerated configuration for job " + downstreamJobName
+              context.println "[SUCCESS] Regenerated configuration for job $downstreamJobName\n"
             }
             else {
-              context.println "[WARNING] Skipping regeneration for key: ${buildConfigurationKey}..."
+              // Unexpected error when building the configuration
+              context.println "[ERROR] IndividualBuildConfig is malformed for key: ${buildConfigurationKey}."
+              currentBuild.result = "FAILURE"
             }
           }
           else {
-            // Unexpected error when building the configuration
-            context.println "[ERROR] IndividualBuildConfig is malformed for key: ${buildConfigurationKey}."
-            currentBuild.result = "FAILURE"
+            context.println "[WARNING] Skipping regeneration for key: ${buildConfigurationKey}..."
           }
         } // end job for loop
-        context.println "[SUCCESS] ${folder.key} regenerated"
+        context.println "[SUCCESS] ${folder.key} folder regenerated!"
       } // end folder foreach loop
 
       // Clean up
