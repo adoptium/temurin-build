@@ -203,14 +203,16 @@ class Regeneration implements Serializable {
       pipelines.each { pipeline ->
         def inProgress = true
 
+        context.println "[DEBUG] Output of JobHelper.jobIsRunning: ${JobHelper.jobIsRunning(pipeline)}"
+        
         while (inProgress) {
-          context.println "Checking if ${pipeline} is running or queued..."
-            if (JobHelper.jobIsRunning(pipeline as String)) {
-              context.println "${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
+          context.println "[INFO] Checking if ${pipeline} is running or queued..."
+            if (JobHelper.jobIsRunning(pipeline as String)) { // TODO: THIS CURRENTLY DOESN'T WORK
+              context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
               context.sleep sleepTime
             }
             else {
-              context.println "${pipeline} has no jobs queued and is currently idle"
+              context.println "[INFO] ${pipeline} has no jobs queued and is currently idle"
               inProgress = false                    
             }
         }
@@ -369,7 +371,7 @@ class Regeneration implements Serializable {
 
         } // end job for loop
 
-        context.println "[SUCCESS] ${folder.key} folder regenerated!"
+        context.println "[SUCCESS] ${folder.key} folder regenerated!\n"
       } // end folder foreach loop
 
       context.println "[SUCCESS] All done!"
