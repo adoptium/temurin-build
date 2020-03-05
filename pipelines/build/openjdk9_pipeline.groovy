@@ -17,14 +17,16 @@ def buildConfigurations = [
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
-                test                : ['sanity.openjdk', 'sanity.system']
+                test                : ['sanity.openjdk', 'sanity.system'],
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
-                test                : ['sanity.openjdk', 'sanity.system', 'sanity.external']
+                test                : ['sanity.openjdk', 'sanity.system', 'sanity.external'],
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -48,33 +50,38 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 's390x',
                 additionalNodeLabels: 'rhel7',
-                test                : ['sanity.openjdk', 'sanity.system']
+                test                : ['sanity.openjdk', 'sanity.system'],
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         sparcv9Solaris    : [
                 os                  : 'solaris',
                 arch                : 'sparcv9',
-                test                : false
+                test                : false,
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk', 'sanity.system']
+                test                : ['sanity.openjdk', 'sanity.system'],
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                : ['sanity.openjdk']
+                test                : ['sanity.openjdk'],
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk']
+                test                : ['sanity.openjdk'],
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         x64LinuxXL    : [
@@ -83,7 +90,7 @@ def buildConfigurations = [
                 arch                 : 'x64',
                 test                 : false,
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
         ],
 ]
 
