@@ -68,9 +68,9 @@ checkJDKVersion()
 		"jdk13u" | "jdk13" | "13" | "13u" )
 			jdkVersion="jdk13u";;
                 "jdk14u" | "jdk14" | "14" | "14u" )
-                        jdkVersion="jdk14u";;
+                        jdkVersion="jdk14";;
                 "jdk15u" | "jdk15" | "15" | "15u" )
-                        jdkVersion="jdk15u";;
+                        jdkVersion="jdk";;
 		"all" )
 			jdkVersion="jdk8u jdk9u jdk10u jdk11u jdk12u jdk13u jdk14u jdk15u";;
 		*)

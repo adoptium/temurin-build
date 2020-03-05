@@ -167,12 +167,7 @@ setRepository() {
     suffix="SAP/SapMachine";
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]]
   then
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-      suffix="corretto/corretto-8";
-    else
-      echo "Adopt only currently supports corretto for JDK8"
-      exit 1
-    fi
+    suffix="corretto/corretto-${BUILD_CONFIG[OPENJDK_CORE_VERSION]:3}"
   elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
     suffix="adoptopenjdk/openjdk-aarch32-jdk8u";
   else

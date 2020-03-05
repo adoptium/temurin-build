@@ -304,7 +304,7 @@ function setBranch() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     branch="openj9";
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
-    branch="preview-release";
+    branch="develop";
   fi
 
   BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}
