@@ -43,6 +43,7 @@ RUN apt-get update \
        pkg-config \
        software-properties-common \
        ssh \
+       systemtap-sdt-dev \
        unzip \
        wget \
        zip \
