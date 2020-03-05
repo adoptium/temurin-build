@@ -206,7 +206,7 @@ class Regeneration implements Serializable {
         while (inProgress) {
           // Check if pipeline is in progress using api
           context.println "[INFO] Checking if ${pipeline} is running..."
-          
+
           def pipelineInProgress = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
           inProgress = pipelineInProgress.building as Boolean
 
@@ -215,7 +215,7 @@ class Regeneration implements Serializable {
             context.sleep sleepTime
           }
         }
-        context.println "[INFO] ${pipeline} has no jobs queued and is currently idle"
+        context.println "[INFO] ${pipeline} is idle"
       }
       context.println "[SUCCESS] No piplines running or scheduled. Running regeneration job..."
     } // end stage
