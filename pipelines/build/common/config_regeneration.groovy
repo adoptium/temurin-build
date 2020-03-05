@@ -201,11 +201,12 @@ class Regeneration implements Serializable {
       context.println "[INFO] Job regeneration cannot run if there are pipelines in progress or queued"
 
       pipelines.each { pipeline ->
-        context.println "[INFO] Checking if ${pipeline} is running..."
         Boolean inProgress = true
 
         while (inProgress) {
           // Check if pipeline is in progress using api
+          context.println "[INFO] Checking if ${pipeline} is running..."
+          
           def pipelineInProgress = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
           inProgress = pipelineInProgress.building as Boolean
 
