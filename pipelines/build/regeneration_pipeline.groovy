@@ -32,12 +32,13 @@ node ("master") {
   pipelines.each { pipeline -> 
     println "[INFO] Loading buildConfiguration for pipeline: $pipeline"
 
-    def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy").getText()
-    
-    println "[DEBUG] Test file load\nOutput: $pipelineConfiguration"
+    //def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy").getText()
+    Class pipelineConfiguration = new GroovyClassLoader(getClass().getClassLoader()).parseClass("${WORKSPACE}/pipelines/build/${pipeline}.groovy");
+    GroovyObject config = (GroovyObject) pipelineConfiguration.newInstance();
+    println "[DEBUG] printing out instance of groovy config:\n$config"
   
     regenerationScript(
-      pipelineConfiguration.buildConfigurations,
+      config.buildConfigurations,
       scmVars,
       currentBuild,
       this,
