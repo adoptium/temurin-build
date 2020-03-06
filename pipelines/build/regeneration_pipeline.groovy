@@ -33,11 +33,9 @@ node ("master") {
     println "[INFO] Loading buildConfiguration for pipeline: $pipeline"
 
     //def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy").getText()
-    GroovyShell shell = new GroovyShell()
-    def pipelineConfiguration = shell.parse(new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy"))
-    println "[DEBUG] pipelineConfiguration.buildConfigurations is:\n$pipelineConfiguration.buildConfigurations"
-    println "[DEBUG] printing out instance of groovy config:\n$pipelineConfiguration"
-  
+    def pipelineConfiguration = evaluate(new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy"))
+    println "[DEBUG] pipelineConfiguration is:\n$pipelineConfiguration"
+    
     regenerationScript(
       pipelineConfiguration.buildConfigurations,
       scmVars,
