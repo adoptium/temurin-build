@@ -186,7 +186,7 @@ class Build {
                     ]
 
                     def signJob = context.build job: "build-scripts/release/sign_build",
-                            propagate: true,
+                            propagate: false,
                             parameters: params
 
                     //Copy signed artifact back and rearchive
@@ -219,7 +219,7 @@ class Build {
         def nodeFilter = "${buildConfig.TARGET_OS}&&macos10.14&&xcode10"
 
         def installerJob = context.build job: "build-scripts/release/create_installer_mac",
-                propagate: true,
+                propagate: false,
                 parameters: [
                         context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                         context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
@@ -275,7 +275,7 @@ class Build {
         }
 
         def installerJob = context.build job: "build-scripts/release/create_installer_windows",
-                propagate: true,
+                propagate: false,
                 parameters: [
                         context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                         context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
