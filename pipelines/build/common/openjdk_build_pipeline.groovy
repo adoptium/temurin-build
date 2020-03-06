@@ -372,6 +372,8 @@ class Build {
                 type = "jre"
             } else if (file.contains("-testimage")) {
                 type = "testimage"
+            } else if (file.contains("-debugimage")) {
+                type = "debugimage"
             }
 
             String hash = context.sh(script: "sha256sum $file | cut -f1 -d' '", returnStdout: true, returnStatus: false)

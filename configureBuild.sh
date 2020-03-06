@@ -118,9 +118,9 @@ determineBuildProperties() {
 setVariablesForConfigure() {
 
   local openjdk_core_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
-  # test-image target is JDK 11+ only. Set to the empty string
-  # as build scripts check whether the variable is non-empty.
-  local openjdk_test_image_path=""
+  # test-image and debug-image targets are optional - build scripts check whether the directories exist
+  local openjdk_test_image_path="test"
+  local openjdk_debug_image_path="debug-image"
 
   if [ "$openjdk_core_version" == "${JDK8_CORE_VERSION}" ]; then
     local jdk_path="j2sdk-image"
@@ -140,13 +140,12 @@ setVariablesForConfigure() {
       local jre_path="jre-bundle/jre-*.jre"
     ;;
     esac
-    # Set the test image path for JDK 11+
-    openjdk_test_image_path="test"
   fi
 
   BUILD_CONFIG[JDK_PATH]=$jdk_path
   BUILD_CONFIG[JRE_PATH]=$jre_path
   BUILD_CONFIG[TEST_IMAGE_PATH]=$openjdk_test_image_path
+  BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
 }
 
 

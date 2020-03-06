@@ -496,11 +496,17 @@ getTestImageArchivePath() {
   echo "${jdkArchivePath}-test-image"
 }
 
+getDebugImageArchivePath() {
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-debug-image"
+}
+
 # Clean up
 removingUnnecessaryFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
+  local debugImageTargetPath=$(getDebugImageArchivePath)
 
   echo "Removing unnecessary files now..."
 
@@ -528,13 +534,22 @@ removingUnnecessaryFiles() {
     rm -rf "${dirToRemove}"/demo || true
     
   fi
-  # Test image is JDK 11+ only so add an additional
-  # check if the config is set
-  if [ ! -z "${BUILD_CONFIG[TEST_IMAGE_PATH]}" ] && [ -d "$(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]})" ]
+  # Test image - check if the config is set and directory exists
+  local testImagePath="${BUILD_CONFIG[TEST_IMAGE_PATH]}"
+  if [ ! -z "${testImagePath}" ] && [ -d "${testImagePath}" ]
   then
-    echo "moving $(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]}) to ${testImageTargetPath}"
+    echo "moving ${testImagePath} to ${testImageTargetPath}"
     rm -rf "${testImageTargetPath}" || true
-    mv "$(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]})" "${testImageTargetPath}"
+    mv "${testImagePath}" "${testImageTargetPath}"
+  fi
+
+  # Debug image - check if the config is set and directory exists
+  local debugImagePath="${BUILD_CONFIG[DEBUG_IMAGE_PATH]}"
+  if [ ! -z "${debugImagePath}" ] && [ -d "${debugImagePath}" ]
+  then
+    echo "moving ${debugImagePath} to ${debugImageTargetPath}"
+    rm -rf "${debugImageTargetPath}" || true
+    mv "${debugImagePath}" "${debugImageTargetPath}"
   fi
 
   # Remove files we don't need
@@ -544,6 +559,7 @@ removingUnnecessaryFiles() {
   esac
   rm -rf "${dirToRemove}"/demo || true
 
+  find . -name "*.debuginfo" -type f -delete || true
   find . -name "*.diz" -type f -delete || true
   find . -name "*.pdb" -type f -delete || true
   find . -name "*.map" -type f -delete || true
@@ -667,6 +683,7 @@ createOpenJDKTarArchive()
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
+  local debugImageTargetPath=$(getDebugImageArchivePath)
 
   COMPRESS=gzip
 
@@ -683,6 +700,11 @@ createOpenJDKTarArchive()
     echo "OpenJDK test image path will be ${testImageTargetPath}."
     local testImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-testimage}")
     createArchive "${testImageTargetPath}" "${testImageName}"
+  fi
+  if [ -d "${debugImageTargetPath}" ]; then
+    echo "OpenJDK debug-image path will be ${debugImageTargetPath}."
+    local debugImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debugimage}")
+    createArchive "${debugImageTargetPath}" "${debugImageName}"
   fi
   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
