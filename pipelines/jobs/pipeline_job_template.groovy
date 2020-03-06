@@ -44,7 +44,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         cron(triggerSchedule)
     }
     logRotator {
-        numToKeep(10)
+        numToKeep(60)
         artifactNumToKeep(2)
     }
 
