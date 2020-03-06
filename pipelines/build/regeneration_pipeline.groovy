@@ -1,3 +1,4 @@
+import java.io.File
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,12 +31,13 @@ node ("master") {
   // Run through pipeline configurations and pass them down to the job
   pipelines.each { pipeline -> 
     println "[INFO] Loading buildConfiguration for pipeline: $pipeline"
+
+    def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy").getText()
     
-    Closure pipelineConfiguration = load "${WORKSPACE}/pipelines/build/${pipeline}.groovy"
-    def buildConfigurations = pipelineConfiguration.buildConfigurations
+    println "[DEBUG] Test file load\nOutput: $pipelineConfiguration"
   
     regenerationScript(
-      buildConfigurations,
+      pipelineConfiguration.buildConfigurations,
       scmVars,
       currentBuild,
       this,
