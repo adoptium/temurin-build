@@ -33,8 +33,8 @@ node ("master") {
     println "[INFO] Loading buildConfiguration for pipeline: $pipeline"
 
     //def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy").getText()
-    def pipelineScript = load "${WORKSPACE}/pipelines/build/${pipeline}.groovy".buildConfigurations
-    def buildConfigurations = pipelineScript
+    Closure pipelineScript = load "${WORKSPACE}/pipelines/build/${pipeline}.groovy"
+    def buildConfigurations = pipelineScript.buildConfigurations
 
     // Get buildConfigurations variable
     println "[DEBUG] config is: $buildConfigurations"
