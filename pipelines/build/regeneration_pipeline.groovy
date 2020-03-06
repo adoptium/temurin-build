@@ -13,7 +13,14 @@ limitations under the License.
 */
 
 // This will need to be updated when jdk HEAD updates
-def pipelines = ["openjdk15_pipeline", "openjdk11_pipeline", "openjdk12_pipeline", "openjdk13_pipeline", "openjdk14_pipeline", "openjdk8_pipeline"]
+def pipelines = [
+  "openjdk15_pipeline", 
+  "openjdk11_pipeline", 
+  "openjdk12_pipeline", 
+  "openjdk13_pipeline", 
+  "openjdk14_pipeline", 
+  "openjdk8_pipeline"
+]
 
 node ("master") {
   def scmVars = checkout scm
@@ -23,10 +30,12 @@ node ("master") {
   // Run through pipeline configurations and pass them down to the job
   pipelines.each { pipeline -> 
     println "[INFO] Loading buildConfiguration for pipeline: $pipeline"
+    
     Closure pipelineConfiguration = load "${WORKSPACE}/pipelines/build/${pipeline}.groovy"
+    def buildConfigurations = pipelineConfiguration.buildConfigurations
   
     regenerationScript(
-      pipelineConfiguration.buildConfigurations,
+      buildConfigurations,
       scmVars,
       currentBuild,
       this,
