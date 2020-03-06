@@ -32,8 +32,8 @@ node ("master") {
   pipelines.each { pipeline -> 
     println "[INFO] Loading buildConfiguration for pipeline: $pipeline"
 
-    //def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy").getText()
-    Closure pipelineScript = load "${WORKSPACE}/pipelines/build/${pipeline}.groovy"
+    def pipelineScript = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy")
+    //Closure pipelineScript = load "${WORKSPACE}/pipelines/build/${pipeline}.groovy"
     def buildConfigurations = pipelineScript.buildConfigurations
 
     // Get buildConfigurations variable
