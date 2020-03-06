@@ -32,17 +32,14 @@ node ("master") {
   pipelines.each { pipeline -> 
     println "[INFO] Loading buildConfiguration for pipeline: $pipeline"
 
-    def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy")
-    pipelineConfiguration.withDataInputStream { input ->
-      def config = input.readUTF() == buildConfigurations
-    }
+    def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy").getText()
 
     // Get buildConfigurations variable
-    println "[DEBUG] config is: $config"
+    println "[DEBUG] config is: $pipelineConfiguration"
 
 
     regenerationScript(
-      config,
+      pipelineConfiguration.buildConfigurations,
       scmVars,
       currentBuild,
       this,
