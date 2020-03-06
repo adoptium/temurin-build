@@ -33,13 +33,13 @@ node ("master") {
     println "[INFO] Loading buildConfiguration for pipeline: $pipeline"
 
     def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy").getText()
-
+    Map<String, Map<String, ?>> buildConfigurations = pipelineConfiguration.buildConfigurations
     // Get buildConfigurations variable
-    println "[DEBUG] config is: $pipelineConfiguration"
+    println "[DEBUG] config is: $buildConfigurations"
 
 
     regenerationScript(
-      pipelineConfiguration.buildConfigurations,
+      buildConfigurations,
       scmVars,
       currentBuild,
       this,
