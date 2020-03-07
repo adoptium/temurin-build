@@ -23,8 +23,7 @@ def buildConfigurations = [
                         corretto: 'build-macstadium-macos1010-1',
                         openj9  : 'build-macstadium-macos1010-2'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                configureArgs       : '--enable-dtrace=auto'
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
         ],
 
         x64MacXL      : [
@@ -33,7 +32,7 @@ def buildConfigurations = [
                 additionalNodeLabels : 'build-macstadium-macos1010-2',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'special.openjdk'],
                 additionalFileNameTag: "macosXL",
-                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
+                configureArgs        : '--with-noncompressedrefs'
         ],
 
         x64Linux      : [
@@ -42,8 +41,8 @@ def buildConfigurations = [
                 additionalNodeLabels: 'centos6',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
                 configureArgs       : [
-                        "hotspot-jfr" : '--enable-jfr --enable-dtrace=auto',
-                        "openj9"      : '--enable-jitserver --enable-dtrace=auto'
+                        "hotspot-jfr" : '--enable-jfr',
+                        "openj9"      : '--enable-jitserver'
                 ]
         ],
 
@@ -95,29 +94,25 @@ def buildConfigurations = [
         s390xLinux    : [
                 os  : 'linux',
                 arch: 's390x',
-                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                configureArgs : '--enable-dtrace=auto'
+                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
         ],
 
         sparcv9Solaris: [
                 os  : 'solaris',
                 arch: 'sparcv9',
-                test: false,
-                configureArgs: '--enable-dtrace=auto'
+                test: false
         ],
 
         x64Solaris    : [
                 os                  : 'solaris',
                 arch                : 'x64',
-                test                : false,
-                configureArgs       : '--enable-dtrace=auto'
+                test                : false
         ],
 
         ppc64leLinux  : [
                 os  : 'linux',
                 arch: 'ppc64le',
-                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                configureArgs : '--enable-dtrace=auto'
+                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
         ],
 
         arm32Linux    : [
@@ -125,16 +120,14 @@ def buildConfigurations = [
                 arch: 'arm',
                 // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
                 //test                : ['sanity.openjdk']
-                test: false,
-                configureArgs : '--enable-dtrace=auto'
+                test: false
         ],
 
         aarch64Linux  : [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                configureArgs       : '--enable-dtrace=auto'
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
         ],
 
         x64LinuxXL       : [
@@ -142,7 +135,7 @@ def buildConfigurations = [
                 additionalNodeLabels : 'centos6',
                 arch                 : 'x64',
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --enable-jitserver --enable-dtrace=auto',
+                configureArgs        : '--with-noncompressedrefs --enable-jitserver',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
         ],
         s390xLinuxXL       : [
@@ -150,14 +143,14 @@ def buildConfigurations = [
                 arch                 : 's390x',
                 additionalFileNameTag: "linuxXL",
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
+                configureArgs        : '--with-noncompressedrefs'
         ],
         ppc64leLinuxXL       : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
                 additionalFileNameTag: "linuxXL",
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
+                configureArgs        : '--with-noncompressedrefs'
         ],
 ]
 
