@@ -54,8 +54,8 @@ class Build {
     }
 
 
-	Integer getJavaVersionNumber() {
-		def javaToBuild = buildConfig.JAVA_TO_BUILD
+    Integer getJavaVersionNumber() {
+        def javaToBuild = buildConfig.JAVA_TO_BUILD
         // version should be something like "jdk8u" or "jdk" for HEAD
         Matcher matcher = javaToBuild =~ /.*?(?<version>\d+).*?/
         if (matcher.matches()) {
@@ -74,10 +74,10 @@ class Build {
         def variant
         def number = getJavaVersionNumber()
 
-        if (buildConfig.VARIANT == "openj9") {
-            variant = "j9"
-        } else {
-            variant = "hs"
+        switch (buildConfig.VARIANT) {
+            case "openj9": variant = "j9"; break
+            case "corretto": variant = "corretto"; break
+            default: variant = "hs"
         }
 
         def arch = buildConfig.ARCHITECTURE
@@ -100,11 +100,11 @@ class Build {
     def runTests() {
         def testStages = [:]
         List testList = []
-        
-        if (buildConfig.VARIANT == "hotspot-jfr") {
-        	testList = buildConfig.TEST_LIST.minus(['sanity.external'])
+
+        if (buildConfig.VARIANT == "hotspot-jfr" || buildConfig.VARIANT == "corretto") {
+            testList = buildConfig.TEST_LIST.minus(['sanity.external'])
         } else {
-        	testList = buildConfig.TEST_LIST
+            testList = buildConfig.TEST_LIST
         }
         testList.each { testType ->
             // For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
@@ -186,7 +186,7 @@ class Build {
                     ]
 
                     def signJob = context.build job: "build-scripts/release/sign_build",
-                            propagate: true,
+                            propagate: false,
                             parameters: params
 
                     //Copy signed artifact back and rearchive
@@ -219,7 +219,7 @@ class Build {
         def nodeFilter = "${buildConfig.TARGET_OS}&&macos10.14&&xcode10"
 
         def installerJob = context.build job: "build-scripts/release/create_installer_mac",
-                propagate: true,
+                propagate: false,
                 parameters: [
                         context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                         context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
@@ -275,7 +275,7 @@ class Build {
         }
 
         def installerJob = context.build job: "build-scripts/release/create_installer_windows",
-                propagate: true,
+                propagate: false,
                 parameters: [
                         context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                         context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
