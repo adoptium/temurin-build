@@ -1,5 +1,5 @@
 class Config implements Serializable {
-  def buildConfigurations = [
+  Map<String, Map<String, ?>> buildConfigurations = [
           x64Mac    : [
                   os                  : 'mac',
                   arch                : 'x64',
@@ -68,13 +68,13 @@ class Config implements Serializable {
                   ]
           ],
 
-  ]
+  ];
 
-  public void getBuildConfigurations() {
-    return this.buildConfigurations
+  public Map getBuildConfigurations() {
+    return this.buildConfigurations;
   }
 
 }
 
-Config config = new Config()
-return config.getBuildConfigurations()
+Config config = new Config();
+return config.getBuildConfigurations();
