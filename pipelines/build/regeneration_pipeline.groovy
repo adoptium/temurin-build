@@ -36,6 +36,9 @@ node ("master") {
 
     println "[DEBUG] configFile is: $configFile"
 
+    println "[DEBUG] Directory contents:"
+    sh "ls -la"
+
     def buildConfigurations = configFile.getBuildConfigurations()
 
     println "[DEBUG] buildConfigurations is: $buildConfigurations"
