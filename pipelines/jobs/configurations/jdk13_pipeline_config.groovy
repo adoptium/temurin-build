@@ -140,4 +140,6 @@ def buildConfigurations = [
         ],
 ]
 
-return buildConfigurations
+public def getBuildConfigurations () {
+  return buildConfigurations
+}
