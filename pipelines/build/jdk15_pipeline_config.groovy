@@ -1,5 +1,5 @@
 class Config {
-  public Map<String, Map<String, ?>> buildConfigurations = [
+  final Map<String, Map<String, ?>> buildConfigurations = [
           "x64Mac"    : [
                   "os"                  : 'mac',
                   "arch"                : 'x64',
@@ -70,6 +70,11 @@ class Config {
 
   ]
 
+  Map<String, Map<String, ?>> get() {
+    this.buildConfigurations                       
+  }
+
 }
 
-return Config.buildConfigurations
+Config config = new Config()
+return config.buildConfigurations
