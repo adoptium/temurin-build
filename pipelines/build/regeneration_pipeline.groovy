@@ -38,23 +38,23 @@ node ("master") {
 
     def buildConfigurations = 
       pipelineConfig(
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        javaToBuild,
+        buildConfigurations,
+        targetConfigurations,
+        enableTests,
+        releaseType,
+        scmReference,
+        overridePublishName,
+        additionalConfigureArgs,
+        scmVars,
+        additionalBuildArgs,
+        overrideFileNameVersion,
+        cleanWorkspaceBeforeBuild,
+        adoptBuildNumber,
+        propagateFailures,
+        currentBuild,
+        this,
+        env
       ).returnConfig()
 
     println "[DEBUG] buildConfigurations is: $buildConfigurations"
