@@ -32,21 +32,9 @@ node ("master") {
   
     // Get buildConfiguration
     println "[INFO] Loading Pipeline Config File: ${config}.groovy"
-    Closure configFile = load "${WORKSPACE}/pipelines/jobs/configurations/${config}.groovy"
-    
-    println "[DEBUG] Current directory:"
-    sh "${pwd()}"
+    Closure configFile = load "${WORKSPACE}/pipelines/build/${config}.groovy"
 
-    println "[DEBUG] Moving to config dir..."
-    dir("${WORKSPACE}/pipelines/jobs/configurations") {
-      sh "${pwd()}"
-    }
-
-    println "[DEBUG] Current directory:"
-    sh "${pwd()}"
-    
-    println "[DEBUG] Contents:"
-    sh "ls -la ${pwd()}"
+    println "[DEBUG] configFile is: $configFile"
 
     def buildConfigurations = configFile.getBuildConfigurations()
 
