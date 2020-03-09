@@ -1,4 +1,5 @@
-def buildConfigurations = [
+class Config {
+  final Map<String, Map<String, ?>> buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
@@ -126,8 +127,9 @@ def buildConfigurations = [
                 ]
         ],
 
-]
-
-public def getBuildConfigurations () {
-  return buildConfigurations
+  ]
+  
 }
+
+Config config = new Config()
+return config.buildConfigurations

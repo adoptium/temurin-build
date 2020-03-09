@@ -1,4 +1,5 @@
-def buildConfigurations = [
+class Config {
+  final Map<String, Map<String, ?>> buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
@@ -65,6 +66,7 @@ def buildConfigurations = [
         ppc64Aix    : [
                 os                  : 'aix',
                 arch                : 'ppc64',
+                additionalNodeLabels: 'xlc16',
                 test                : [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
@@ -123,8 +125,23 @@ def buildConfigurations = [
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
-]
-
-public def getBuildConfigurations () {
-  return buildConfigurations
+        s390xLinuxXL    : [
+                os                   : 'linux',
+                arch                 : 's390x',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+        ],
+        ppc64leLinuxXL    : [
+                os                   : 'linux',
+                arch                 : 'ppc64le',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+        ],
+  ]
+  
 }
+
+Config config = new Config()
+return config.buildConfigurations

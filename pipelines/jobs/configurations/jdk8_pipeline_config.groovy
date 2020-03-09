@@ -1,4 +1,5 @@
-def buildConfigurations = [
+class Config {
+  final Map<String, Map<String, ?>> buildConfigurations = [
         x64Mac        : [
                 os                  : 'mac',
                 arch                : 'x64',
@@ -136,8 +137,9 @@ def buildConfigurations = [
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
                 configureArgs        : '--with-noncompressedrefs'
         ],
-]
+  ]
 
-public def getBuildConfigurations () {
-  return buildConfigurations
 }
+
+Config config = new Config()
+return config.buildConfigurations
