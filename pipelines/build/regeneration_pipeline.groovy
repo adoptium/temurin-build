@@ -36,10 +36,10 @@ node ("master") {
     // Get buildConfigurations variable
     println "[INFO] Loading pipeline config..."
     Closure pipelineConfig = load "${WORKSPACE}/pipelines/build/${pipeline}.groovy"
-    def targetConfigurations = null 
+    def targetConfigurations = "foobar" 
 
     println "[INFO] Pulling build configs..."
-    def buildConfigurations = 
+    Map<String, Map<String, ?>> buildConfigurations = 
       pipelineConfig(
         javaToBuild,
         buildConfigurations,
