@@ -34,6 +34,8 @@ node ("master") {
     println "[INFO] Loading Pipeline Config File: ${config}.groovy"
     def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${config}.groovy"
 
+    println "[INFO] Found buildConfigurations:\n$buildConfigurations"
+
     println "[INFO] Running regeneration script..."
     regenerationScript(
       buildConfigurations,
