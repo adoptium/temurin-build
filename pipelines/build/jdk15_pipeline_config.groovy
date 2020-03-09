@@ -71,7 +71,7 @@ class Config implements Serializable {
   ];
 
   public Map getBuildConfigurations() {
-    return this.buildConfigurations;
+    return buildConfigurations;
   }
 
 }
