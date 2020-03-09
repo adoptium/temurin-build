@@ -31,9 +31,23 @@ node ("master") {
   pipelineConfigs.each { config -> 
   
     // Get buildConfiguration
-    println "[INFO] Loading Pipeline Config File: $config"
+    println "[INFO] Loading Pipeline Config File: ${config}.groovy"
     Closure configFile = load "${WORKSPACE}/pipelines/jobs/configurations/${config}.groovy"
-    println "[DEBUG] configFile is: $configFile"
+    
+    println "[DEBUG] Current directory:"
+    sh "${pwd()}"
+
+    println "[DEBUG] Moving to config dir..."
+    dir("${WORKSPACE}/pipelines/jobs/configurations") {
+      sh "${pwd()}"
+    }
+
+    println "[DEBUG] Current directory:"
+    sh "${pwd()}"
+    
+    println "[DEBUG] Contents:"
+    sh "ls -la ${pwd()}"
+
     def buildConfigurations = configFile.getBuildConfigurations()
 
     println "[DEBUG] buildConfigurations is: $buildConfigurations"
