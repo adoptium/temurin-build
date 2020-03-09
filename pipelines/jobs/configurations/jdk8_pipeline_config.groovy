@@ -1,4 +1,4 @@
-Map<String, Map<String, ?>> buildConfigurations = [
+def buildConfigurations = [
         x64Mac        : [
                 os                  : 'mac',
                 arch                : 'x64',
