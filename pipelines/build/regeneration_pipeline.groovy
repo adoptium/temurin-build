@@ -36,10 +36,6 @@ node ("master") {
 
     println "[DEBUG] configFile is: $configFile"
 
-    println "[DEBUG] Directory contents:"
-    sh "ls -la ${WORKSPACE}/pipelines/build"
-    sh "pwd"
-
     def buildConfigurations = configFile.getBuildConfigurations()
 
     println "[DEBUG] buildConfigurations is: $buildConfigurations"
