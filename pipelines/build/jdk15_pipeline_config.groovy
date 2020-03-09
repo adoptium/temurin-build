@@ -70,7 +70,7 @@ class Config implements Serializable {
 
   ]
 
-  public def getBuildConfigurations () {
+  public void getBuildConfigurations () {
     return this.buildConfigurations
   }
 
