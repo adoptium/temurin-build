@@ -37,7 +37,7 @@ node ("master") {
     println "[DEBUG] configFile is: $configFile"
 
     println "[DEBUG] Directory contents:"
-    sh "ls -la"
+    sh "ls -la ${WORKSPACE}/pipelines/build"
 
     def buildConfigurations = configFile.getBuildConfigurations()
 
