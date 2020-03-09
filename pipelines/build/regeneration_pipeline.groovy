@@ -36,7 +36,7 @@ node ("master") {
 
     println "[DEBUG] configFile is: $configFile"
 
-    def buildConfigurations = configFile.buildConfigurations
+    def buildConfigurations = configFile
 
     println "[DEBUG] buildConfigurations is: $buildConfigurations"
 

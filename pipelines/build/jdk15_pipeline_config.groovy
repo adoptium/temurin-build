@@ -72,4 +72,4 @@ class Config {
 
 }
 
-return Config
+return Config.buildConfigurations
