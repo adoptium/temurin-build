@@ -154,6 +154,11 @@ def buildConfigurations = [
         ],
 ]
 
+public def returnConfig () {
+  def versionConfigs = buildConfigurations
+  return versionConfigs
+}
+
 def javaToBuild = "jdk8u"
 
 node("master") {

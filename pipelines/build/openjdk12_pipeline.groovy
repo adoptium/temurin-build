@@ -139,6 +139,11 @@ def buildConfigurations = [
         ],
 ]
 
+public def returnConfig () {
+  def versionConfigs = buildConfigurations
+  return versionConfigs
+}
+
 def javaToBuild = "jdk12u"
 
 node ("master") {

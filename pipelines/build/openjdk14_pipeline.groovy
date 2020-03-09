@@ -142,6 +142,11 @@ def buildConfigurations = [
 
 ]
 
+public def returnConfig () {
+  def versionConfigs = buildConfigurations
+  return versionConfigs
+}
+
 def javaToBuild = "jdk14"
 
 node ("master") {

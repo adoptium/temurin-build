@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-public def buildConfigurations = [
+def buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
@@ -82,6 +82,11 @@ public def buildConfigurations = [
         ],
 
 ]
+
+public def returnConfig () {
+  def versionConfigs = buildConfigurations
+  return versionConfigs
+}
 
 def javaToBuild = "jdk"
 
