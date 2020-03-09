@@ -32,11 +32,9 @@ node ("master") {
   
     // Get buildConfiguration
     println "[INFO] Loading Pipeline Config File: ${config}.groovy"
-    def configFile = load "${WORKSPACE}/pipelines/build/${config}.groovy"
+    def buildConfigurations = load "${WORKSPACE}/pipelines/build/${config}.groovy"
 
-    println "[DEBUG] configFile is: $configFile"
-
-    def buildConfigurations = configFile
+    println "[DEBUG] configFile is: $buildConfigurations\n[DEBUG] Retrieve class type: ${buildConfigurations.getClass()}"
 
     println "[DEBUG] buildConfigurations is: $buildConfigurations"
 

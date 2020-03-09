@@ -70,10 +70,6 @@ class Config {
 
   ]
 
-  Map<String, Map<String, ?>> get() {
-    this.buildConfigurations                       
-  }
-
 }
 
 Config config = new Config()
