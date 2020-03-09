@@ -1,4 +1,3 @@
-import java.io.File
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,13 +13,13 @@ limitations under the License.
 */
 
 // This will need to be updated when jdk HEAD updates
-def pipelines = [
-  "openjdk15_pipeline", 
-  "openjdk11_pipeline", 
-  "openjdk12_pipeline", 
-  "openjdk13_pipeline", 
-  "openjdk14_pipeline", 
-  "openjdk8_pipeline"
+def pipelineConfigs = [
+  "jdk15_pipeline_config", 
+  "jdk11_pipeline_config", 
+  "jdk12_pipeline_config", 
+  "jdk13_pipeline_config", 
+  "jdk14_pipeline_config", 
+  "jdk8_pipeline_config"
 ]
 
 node ("master") {
@@ -29,40 +28,16 @@ node ("master") {
   Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
 
   // Run through pipeline configurations and pass them down to the job
-  pipelines.each { pipeline -> 
-    println "[INFO] Loading buildConfiguration for pipeline: $pipeline"
+  pipelineConfigs.each { config -> 
+  
+    // Get buildConfiguration
+    println "[INFO] Loading Pipeline Config File: $config"
+    Closure buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${config}.groovy"
 
-    //def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy")
-    // Get buildConfigurations variable
-    println "[INFO] Loading pipeline config..."
-    Closure pipelineConfig = load "${WORKSPACE}/pipelines/build/${pipeline}.groovy"
-    def targetConfigurations = [] 
-
-    println "[INFO] Pulling build configs..."
-    Map<String, Map<String, ?>> buildConfigurations = 
-      pipelineConfig(
-        javaToBuild,
-        buildConfigurations,
-        targetConfigurations,
-        enableTests,
-        releaseType,
-        scmReference,
-        overridePublishName,
-        additionalConfigureArgs,
-        scmVars,
-        additionalBuildArgs,
-        overrideFileNameVersion,
-        cleanWorkspaceBeforeBuild,
-        adoptBuildNumber,
-        propagateFailures,
-        currentBuild,
-        this,
-        env
-    ).returnConfig()
-
+    println "[DEBUG] buildConfigurations class is ${buildConfigurations.getClass()}"
     println "[DEBUG] buildConfigurations is: $buildConfigurations"
 
-    println "[INFO] Running regenerationScipt..."
+    println "[INFO] Running regeneration script..."
     regenerationScript(
       buildConfigurations,
       scmVars,
@@ -70,5 +45,7 @@ node ("master") {
       this,
       env
     ).regenerate()
+
+    println "[SUCCESS] Pipeline $config regenerated."
   }
 }

@@ -313,11 +313,10 @@ class Regeneration implements Serializable {
           String name = null
 
           // Construct configuration for downstream job
-          // TODO: Work out how to specify exactly which buildConfigurations to use for the folder
           Boolean keyFound = false
           buildConfigurations.keySet().each { key ->  
             if (key == buildConfigurationKey) {
-              //For requested build type, generate a configuration
+              //For each build type, generate a configuration
               context.println "[INFO] FOUND MATCH! Configuration Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
               keyFound = true
 
