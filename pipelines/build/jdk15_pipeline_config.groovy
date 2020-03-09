@@ -1,5 +1,5 @@
 class Config {
-  Map<String, Map<String, ?>> buildConfigurations = [
+  public Map<String, Map<String, ?>> buildConfigurations = [
           "x64Mac"    : [
                   "os"                  : 'mac',
                   "arch"                : 'x64',
