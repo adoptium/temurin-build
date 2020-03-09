@@ -1,4 +1,4 @@
-return buildConfigurations = [
+Map<String, Map<String, ?>> buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
@@ -124,3 +124,5 @@ return buildConfigurations = [
                 configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
 ]
+
+return buildConfigurations
