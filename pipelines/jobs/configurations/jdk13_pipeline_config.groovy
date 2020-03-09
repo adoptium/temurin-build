@@ -1,4 +1,4 @@
-buildConfigurations = [
+return buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
@@ -139,5 +139,3 @@ buildConfigurations = [
                 configureArgs        : '--with-noncompressedrefs --disable-ccache'
         ],
 ]
-
-return this

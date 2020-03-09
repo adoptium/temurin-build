@@ -1,4 +1,4 @@
-buildConfigurations = [
+return buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
@@ -68,5 +68,3 @@ buildConfigurations = [
         ],
 
 ]
-
-return this
