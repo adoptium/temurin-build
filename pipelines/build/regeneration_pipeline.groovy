@@ -35,7 +35,28 @@ node ("master") {
     //def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy")
     // Get buildConfigurations variable
     Closure pipelineConfig = load "${WORKSPACE}/pipelines/build/${pipeline}.groovy"
-    def buildConfigurations = pipelineConfig.returnConfig()
+
+    def buildConfigurations = 
+      pipelineConfig(
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ).returnConfig()
+
     println "[DEBUG] buildConfigurations is: $buildConfigurations"
 
     regenerationScript(
