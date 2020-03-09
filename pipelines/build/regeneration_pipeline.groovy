@@ -34,8 +34,11 @@ node ("master") {
 
     //def pipelineConfiguration = new File("${WORKSPACE}/pipelines/build/${pipeline}.groovy")
     // Get buildConfigurations variable
+    println "[INFO] Loading pipeline config..."
     Closure pipelineConfig = load "${WORKSPACE}/pipelines/build/${pipeline}.groovy"
+    def targetConfigurations = null 
 
+    println "[INFO] Pulling build configs..."
     def buildConfigurations = 
       pipelineConfig(
         javaToBuild,
@@ -55,10 +58,11 @@ node ("master") {
         currentBuild,
         this,
         env
-      ).returnConfig()
+    ).returnConfig()
 
     println "[DEBUG] buildConfigurations is: $buildConfigurations"
 
+    println "[INFO] Running regenerationScipt..."
     regenerationScript(
       buildConfigurations,
       scmVars,
