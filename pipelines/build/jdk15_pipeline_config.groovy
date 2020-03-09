@@ -1,4 +1,4 @@
-class Config implements Serializable {
+class Config {
   def buildConfigurations = [
           x64Mac    : [
                   os                  : 'mac',
