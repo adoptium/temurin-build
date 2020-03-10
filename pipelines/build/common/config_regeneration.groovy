@@ -190,9 +190,6 @@ class Regeneration implements Serializable {
       getPipelines.jobs.name.each{ pipeline -> 
         if (pipeline.contains("pipeline") && pipeline.contains(javaVersion)) {
           Integer sleepTime = 900
-
-          context.println "[INFO] Job regeneration cannot run if pipeline is in progress or queued"
-
           Boolean inProgress = true
 
           while (inProgress) {

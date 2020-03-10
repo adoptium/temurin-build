@@ -1,4 +1,4 @@
-class Config {
+class Config10 {
   final Map<String, Map<String, ?>> buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
@@ -84,5 +84,5 @@ class Config {
   
 }
 
-Config config = new Config()
+Config10 config = new Config10()
 return config.buildConfigurations
