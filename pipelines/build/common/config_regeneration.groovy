@@ -25,11 +25,12 @@ limitations under the License.
 */
 
 class Regeneration implements Serializable {
+  String javaVersion
+  Map<String, Map<String, ?>> buildConfigurations
   def scmVars
   def currentBuild
   def context
   def env
-  Map<String, Map<String, ?>> buildConfigurations
 
   /*
   * Get some basic configure args. Used when creating the IndividualBuildConfig
@@ -176,56 +177,53 @@ class Regeneration implements Serializable {
   */ 
   @SuppressWarnings("unused")
   def regenerate() {
-    def pipelines = []
     def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 
     /*
-    * Stage: Check for pipelines that are inprogress or queued up. Once they are clear, run the regeneration job
-    * TODO: Need to find a better way to block this job if the pipelines are running. Maybe (https://plugins.jenkins.io/build-blocker-plugin/)?
+    * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
     */
     context.stage("Check for running pipelines") {
       // Get all pipelines
       def getPipelines = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/api/json?tree=jobs[name]&pretty=true&depth1")
 
       // Parse api response to only extract the pipeline jobnames
-      getPipelines.jobs.name.each{ job -> 
-        if (job.contains("pipeline")) {
-          pipelines.add(job) //e.g. openjdk8-pipeline
-        }
-      }
+      getPipelines.jobs.name.each{ pipeline -> 
+        if (pipeline.contains("pipeline") && pipeline.contains(javaVersion)) {
+          Integer sleepTime = 900
 
-      // Query jobIsRunning jenkins helper for each pipeline
-      Integer sleepTime = 900
+          context.println "[INFO] Job regeneration cannot run if pipeline is in progress or queued"
 
-      context.println "[INFO] Job regeneration cannot run if there are pipelines in progress or queued"
+          Boolean inProgress = true
 
-      pipelines.each { pipeline ->
-        Boolean inProgress = true
+          while (inProgress) {
+            // Check if pipeline is in progress using api
+            context.println "[INFO] Checking if ${pipeline} is running..." //e.g. openjdk8-pipeline
 
-        while (inProgress) {
-          // Check if pipeline is in progress using api
-          context.println "[INFO] Checking if ${pipeline} is running..."
+            def pipelineInProgress = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
+            inProgress = pipelineInProgress.building as Boolean
 
-          def pipelineInProgress = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
-          inProgress = pipelineInProgress.building as Boolean
+            if (inProgress) {
+              context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
+              context.sleep sleepTime
+            }
 
-          if (inProgress) {
-            context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
-            context.sleep sleepTime
           }
+          
+          context.println "[SUCCESS] ${pipeline} is idle. Running regeneration job..."
         }
-        context.println "[INFO] ${pipeline} is idle"
+
       }
-      context.println "[SUCCESS] No piplines running or scheduled. Running regeneration job..."
+
     } // end stage
 
     /*
-    * Stage: Regenerate all of the job configurations by pipeline and job type (i.e. jdkxx-linux-x64-hotspot
-    * jdkxx-linux-x64-openj9, etc.)
+    * Stage: Regenerate all of the job configurations by job type (i.e. jdk8u-linux-x64-hotspot
+    * jdk8u-linux-x64-openj9, etc.)
     */
     context.stage("Regenerate pipeline jobs") {
-      // Get downstream job folders and platforms
-      Map<String,List> downstreamJobs = [:];
+
+      // Get downstream job folder and platforms
+      Map<String,List> downstreamJobs = [:]
 
       context.println "[INFO] Pulling downstream folders and jobs from API..."
 
@@ -233,34 +231,36 @@ class Regeneration implements Serializable {
       def folders = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/api/json?tree=jobs[name]&pretty=true&depth=1")
 
       folders.jobs.name.each { folder -> 
-        def jobs = [] // clean out array each time to avoid duplication
+        if ((folder == "jdk" && javaVersion == "jdk15") || folder.contains(javaVersion)) {
+          def jobs = [] // clean out array each time to avoid duplication
 
-        // i.e. jdk8u-linux-x64-hotspot, jdk8u-mac-x64-openj9, etc.
-        def platforms = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/${folder}/api/json?tree=jobs[name]&pretty=true&depth=1")
+          // i.e. jdk8u-linux-x64-hotspot, jdk8u-mac-x64-openj9, etc.
+          def platforms = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/${folder}/api/json?tree=jobs[name]&pretty=true&depth=1")
 
-        platforms.jobs.name.each { job -> 
-          jobs.add(job)
+          platforms.jobs.name.each { job -> 
+            jobs.add(job)
+          }
+
+          downstreamJobs.put(folder, jobs)
         }
 
-        downstreamJobs.put(folder, jobs)
       }
 
       // Output for user verification
-      context.println "[INFO] Jobs to be regenerated:"
+      context.println "[INFO] Jobs to be regenerated (they should only be $javaVersion jobs!):"
       downstreamJobs.each { folder, jobs -> context.println "${folder}: ${jobs}\n" }
 
-      // Regenerate each job, running through the map a folder at a time
+      // Regenerate each job, running through map a job at a time
       downstreamJobs.each { folder ->
         context.println "[INFO] Regenerating Folder: $folder.key" 
 
-        // Run through the list of jobs inside the folder
         for (def job in downstreamJobs.get(folder.key)) {
 
-          // Parse the downstream jobs to create keys that match up with the buildConfigurations in the pipeline files
+          // Parse the downstream jobs to create keys that match up with the buildConfigurations in the pipeline file
           context.println "[INFO] Parsing ${job}..."
           def buildConfigurationKey
 
-          // Split each job down to its version, platform, arch and variant to construct the build configuration key
+          // Split job down to version, platform, arch and variant to construct buildConfigurationKey
           // i.e. jdk8u(javaToBuild)-linux(os)-x64(arch)-openj9(variant)
           List configs = job.split("-")
 
@@ -316,7 +316,7 @@ class Regeneration implements Serializable {
           Boolean keyFound = false
           buildConfigurations.keySet().each { key ->  
             if (key == buildConfigurationKey) {
-              //For each build type, generate a configuration
+              //For build type, generate a configuration
               context.println "[INFO] FOUND MATCH! Configuration Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
               keyFound = true
 
@@ -335,18 +335,16 @@ class Regeneration implements Serializable {
           if (keyFound == false) { 
             context.println "[WARNING] buildConfigurationKey: ${buildConfigurationKey} not recognised. Valid configuration keys for folder: ${folder.key} are ${buildConfigurations.keySet()}.\n[WARNING] ${buildConfigurationKey} WILL NOT BE REGENERATED!"
             currentBuild.result = "UNSTABLE"
-          }
-
-          // Make job
-          if (keyFound) {
+          } else {
+            // Make job
             if (jobConfigurations.get(name) != null) {
               IndividualBuildConfig config = jobConfigurations.get(name)
 
-              // jdkxx-linux-x64-hotspot
+              // jdk8u-linux-x64-hotspot
               def jobTopName = "${javaToBuild}-${name}"
               def jobFolder = "build-scripts/jobs/${javaToBuild}"
 
-              // i.e jdkxx/jobs/jdkxx-linux-x64-hotspot
+              // i.e jdk8u/jobs/jdk8u-linux-x64-hotspot
               def downstreamJobName = "${jobFolder}/${jobTopName}"
               context.println "[INFO] build name: ${downstreamJobName}"
 
@@ -362,24 +360,20 @@ class Regeneration implements Serializable {
               currentBuild.result = "FAILURE"
             }
           }
-          else {
-            context.println "[WARNING] Skipping regeneration for key: ${buildConfigurationKey}..."
-          }
 
         } // end job for loop
 
         context.println "[SUCCESS] ${folder.key} folder regenerated!\n"
       } // end folder foreach loop
 
-      context.println "[SUCCESS] All done!"
     } // end stage
 
-    context.cleanWs()
   } // end regenerate()
 
 }
 
 return {
+  String javaVersion,
   Map<String, Map<String, ?>> buildConfigurations,
   def scmVars,
   def currentBuild,
@@ -387,6 +381,7 @@ return {
   def env -> 
 
       return new Regeneration(
+              javaVersion: javaVersion,
               buildConfigurations: buildConfigurations,
               scmVars: scmVars,
               currentBuild: currentBuild,
