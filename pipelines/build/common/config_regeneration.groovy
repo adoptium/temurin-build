@@ -31,6 +31,7 @@ class Regeneration implements Serializable {
   def currentBuild
   def context
   def env
+  boolean release = false // Stub for compilation
 
   /*
   * Get some basic configure args. Used when creating the IndividualBuildConfig
