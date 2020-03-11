@@ -23,34 +23,40 @@ def pipelineConfigs = [
 ]
 
 node ("master") {
-  def scmVars = checkout scm
-  load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
-  Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
+  try {
+    def scmVars = checkout scm
+    load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
+    Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
 
-  // Run through pipeline configurations and pass them down to the job
-  pipelineConfigs.each { config -> 
+    // Run through pipeline configurations and pass them down to the job
+    pipelineConfigs.each { config -> 
 
-    // Identify java version
-    String javaVersion = config.split("_")[0]
-  
-    // Get buildConfiguration
-    println "[INFO] Loading Pipeline Config File: ${config}.groovy for java version: $javaVersion"
-    def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${config}.groovy"
+      // Identify java version
+      String javaVersion = config.split("_")[0]
+    
+      // Get buildConfiguration
+      println "[INFO] Loading Pipeline Config File: ${config}.groovy for java version: $javaVersion"
+      def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${config}.groovy"
 
-    println "[INFO] Found buildConfigurations:\n$buildConfigurations"
+      println "[INFO] Found buildConfigurations:\n$buildConfigurations"
 
-    println "[INFO] Running regeneration script..."
-    regenerationScript(
-      javaVersion,
-      buildConfigurations,
-      scmVars,
-      currentBuild,
-      this,
-      env
-    ).regenerate()
+      println "[INFO] Running regeneration script..."
+      regenerationScript(
+        javaVersion,
+        buildConfigurations,
+        scmVars,
+        currentBuild,
+        this,
+        env
+      ).regenerate()
 
-    println "[SUCCESS] Pipeline $config regenerated."
+      println "[SUCCESS] Pipeline $config regenerated."
+    }
+    println "[SUCCESS] All done!"
+
+  } finally {
+    println "[INFO] Cleaning up..."
+    cleanWs()
   }
-  println "[SUCCESS] All done!"
-  cleanWs()
+  
 }

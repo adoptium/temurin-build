@@ -267,7 +267,7 @@ class Regeneration implements Serializable {
           // Account for freebsd builds (not currently in the config files, remove this if this changes)
           // i.e. jdk11u-freebsd-x64-hotspot
           if (os == "freebsd") {
-            println "[WARNING] freebsd does not currently have a configuration in the pipeline files. Skipping regeneration (remove this statement in https://github.com/AdoptOpenJDK/openjdk-build if this changes)..."
+            context.println "[WARNING] freebsd does not currently have a configuration in the pipeline files. Skipping regeneration (remove this statement in https://github.com/AdoptOpenJDK/openjdk-build if this changes)..."
             continue
           }
           
