@@ -263,12 +263,20 @@ class Regeneration implements Serializable {
 
           def javaToBuild = folder.key
           def os = configs[1]
+
+          // Account for freebsd builds (not currently in the config files, remove this if this changes)
+          // i.e. jdk11u-freebsd-x64-hotspot
+          if (os == "freebsd") {
+            println "[WARNING] freebsd does not currently have a configuration in the pipeline files. Skipping regeneration (remove this statement in https://github.com/AdoptOpenJDK/openjdk-build if this changes)..."
+            continue
+          }
+          
           def variant // has to be declared early for loop perm reasons 
 
           switch(configs[2]) {
             case "x86":
               // Account for x86-32 builds
-              // i.e. jdkxx-windows-x86-32-hotspot
+              // i.e. jdk8u-windows-x86-32-hotspot
               def arch = "${configs[2]}-${configs[3]}"
               variant = configs[4]
               context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
@@ -282,14 +290,14 @@ class Regeneration implements Serializable {
 
               if (configs[4] != null) {
                 // Account for large heap builds
-                // i.e. jdkxx-linux-ppc64le-openj9-linuxXL
+                // i.e. jdk8u-linux-ppc64le-openj9-linuxXL
                 def lrgHeap = configs[4]
                 context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}\nAdditional Tag: ${lrgHeap}"
 
                 buildConfigurationKey = "${arch}${os.capitalize()}XL" // ppc64leLinuxXL is a target key
               } else if (configs[2] == "arm") {
                 // Account for arm32 builds
-                // i.e. jdkxx-linux-arm-hotspot
+                // i.e. jdk8u-linux-arm-hotspot
                 context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}32\nVariant: ${variant}"
 
                 buildConfigurationKey = "${arch}32${os.capitalize()}" // arm32Linux is a target key
