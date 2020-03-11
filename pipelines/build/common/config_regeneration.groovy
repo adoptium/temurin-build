@@ -215,7 +215,7 @@ class Regeneration implements Serializable {
     /*
     * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
     */
-    context.stage("Check for running pipelines") {
+    context.stage("Check $javaVersion pipeline status") {
       // Get all pipelines
       def getPipelines = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/api/json?tree=jobs[name]&pretty=true&depth1")
 
