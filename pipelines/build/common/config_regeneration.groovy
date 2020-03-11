@@ -89,6 +89,33 @@ class Regeneration implements Serializable {
     return labels
   }
 
+  String getBuildArgs(Map<String, ?> configuration, variant) {
+    if (configuration.containsKey('buildArgs')) {
+        if (isMap(configuration.buildArgs)) {
+            Map<String, ?> buildArgs = configuration.buildArgs as Map<String, ?>
+            if (buildArgs.containsKey(variant)) {
+                return buildArgs.get(variant)
+            }
+        } else {
+            context.error("Incorrect buildArgs type")
+        }
+    }
+
+    return ""
+  }
+
+  List<String> getTestList(Map<String, ?> configuration) {
+    if (configuration.containsKey("test")) {
+        def testJobType = release ? "release" : "nightly"
+        if (isMap(configuration.test)) {
+            return (configuration.test as Map).get(testJobType) as List<String>
+        } else {
+            return configuration.test as List<String>
+        }
+    }
+    return []
+  }
+
   /*
   * Create IndividualBuildConfig for jobDsl. Most of the config is not filled out since we're not actually building the downstream jobs
   * @param platformConfig
@@ -99,24 +126,29 @@ class Regeneration implements Serializable {
     try {
       def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
+      def buildArgs = getBuildArgs(platformConfig, variant)
+
+      def testList = getTestList(platformConfig)
+
+      // TODO: Work out how to pass in the parameters (marked) from the pipeline jobs into the IndividualBuildConfig
       return new IndividualBuildConfig( // final build config
         JAVA_TO_BUILD: javaToBuild,
         ARCHITECTURE: platformConfig.arch as String,
         TARGET_OS: platformConfig.os as String,
         VARIANT: variant,
-        TEST_LIST: [],
-        SCM_REF: "",
-        BUILD_ARGS: "",
+        TEST_LIST: testList,
+        SCM_REF: "", // scmReference
+        BUILD_ARGS: buildArgs,
         NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
-        CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
-        OVERRIDE_FILE_NAME_VERSION: "",
-        ADDITIONAL_FILE_NAME_TAG: "",
-        JDK_BOOT_VERSION: platformConfig.bootJDK as String,
-        RELEASE: false,
-        PUBLISH_NAME: "",
-        ADOPT_BUILD_NUMBER: "",
-        ENABLE_TESTS: false,
-        CLEAN_WORKSPACE: true
+        CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant), // additionalConfigureArgs
+        OVERRIDE_FILE_NAME_VERSION: "", // overrideFileNameVersion
+        ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
+        JDK_BOOT_VERSION: platformConfig.bootJDK as String, 
+        RELEASE: false, // releaseType
+        PUBLISH_NAME: "", // overridePublishName
+        ADOPT_BUILD_NUMBER: "", // adoptBuildNumber
+        ENABLE_TESTS: false, // enableTests	
+        CLEAN_WORKSPACE: true // cleanWorkspaceBeforeBuild
       )
     } catch (Exception e) {
       // Catch invalid configurations
