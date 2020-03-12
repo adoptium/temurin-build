@@ -49,12 +49,12 @@ node ("master") {
         this,
         env
       ).regenerate()
-
-      println "[SUCCESS] Pipeline $config regenerated."
+      
     }
     println "[SUCCESS] All done!"
 
   } finally {
+    // Always clean up, even on failure (doesn't delete the dsls)
     println "[INFO] Cleaning up..."
     cleanWs()
   }

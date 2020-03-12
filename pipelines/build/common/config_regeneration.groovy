@@ -16,14 +16,13 @@ limitations under the License.
 */
 
 /**
-* This file is a job that regenerates all of the build configurations in pipelines/build/openjdk*_pipeline.groovy to ensure that race
-* conditions are avoided for concurrent builds. THIS IS A WIP TEST, IT WILL ALMOST CERTAINLY DIE IN JENKINS
+* This file is a job that regenerates all of the build configurations in pipelines/build/jobs/configurations/jdk*_pipeline_config.groovy. This
+* ensures that race conditions are not encountered when running concurrent pipeline builds.
 *
 * This:
 * 1) Is called from regeneration_pipeline.groovy
-* 2) Attempts to create downstream job dsl's using for each job configuration
+* 2) Attempts to create downstream job dsl's using for each pipeline job configuration
 */
-
 class Regeneration implements Serializable {
   String javaVersion
   Map<String, Map<String, ?>> buildConfigurations
@@ -34,7 +33,7 @@ class Regeneration implements Serializable {
   boolean release = false // Stub for compilation
 
   /*
-  * Get some basic configure args. Used when creating the IndividualBuildConfig
+  * Get configure args from jdk*_pipeline_config.groovy. Used when creating the IndividualBuildConfig.
   * @param configuration
   * @param variant
   */
@@ -57,7 +56,8 @@ class Regeneration implements Serializable {
   }
 
   /**
-  * Builds up a node param string that defines what nodes are eligible to run the given job. Only used here as a placeholder for the BuildConfig
+  * Builds up a node param string that defines what nodes are eligible to run the given job. Only used here as a placeholder for the 
+  * jdk*_pipeline_config.groovy
   * @param configuration
   * @param variant
   * @return
@@ -90,6 +90,11 @@ class Regeneration implements Serializable {
     return labels
   }
 
+  /*
+  * Get build args from jdk*_pipeline_config.groovy. Used when creating the IndividualBuildConfig.
+  * @param configuration
+  * @param variant
+  */
   String getBuildArgs(Map<String, ?> configuration, variant) {
     if (configuration.containsKey('buildArgs')) {
         if (isMap(configuration.buildArgs)) {
@@ -105,6 +110,12 @@ class Regeneration implements Serializable {
     return ""
   }
 
+  /*
+  * Get the list of tests from jdk*_pipeline_config.groovy. Used when creating the IndividualBuildConfig. Used as a placeholder since we're not 
+  * actually running the tests here.
+  * @param configuration
+  * @param variant
+  */
   List<String> getTestList(Map<String, ?> configuration) {
     if (configuration.containsKey("test")) {
         def testJobType = release ? "release" : "nightly"
@@ -118,7 +129,8 @@ class Regeneration implements Serializable {
   }
 
   /*
-  * Create IndividualBuildConfig for jobDsl. Most of the config is not filled out since we're not actually building the downstream jobs
+  * Create IndividualBuildConfig for jobDsl. Used as a placeholder since we're not 
+  * actually building here.
   * @param platformConfig
   * @param variant
   * @param javaToBuild
@@ -131,25 +143,24 @@ class Regeneration implements Serializable {
 
       def testList = getTestList(platformConfig)
 
-      // TODO: Work out how to pass in the parameters (marked) from the pipeline jobs into the IndividualBuildConfig
       return new IndividualBuildConfig( // final build config
         JAVA_TO_BUILD: javaToBuild,
         ARCHITECTURE: platformConfig.arch as String,
         TARGET_OS: platformConfig.os as String,
         VARIANT: variant,
         TEST_LIST: testList,
-        SCM_REF: "", // scmReference
+        SCM_REF: "",
         BUILD_ARGS: buildArgs,
         NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
-        CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant), // additionalConfigureArgs
-        OVERRIDE_FILE_NAME_VERSION: "", // overrideFileNameVersion
+        CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
+        OVERRIDE_FILE_NAME_VERSION: "",
         ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
         JDK_BOOT_VERSION: platformConfig.bootJDK as String, 
-        RELEASE: false, // releaseType
-        PUBLISH_NAME: "", // overridePublishName
-        ADOPT_BUILD_NUMBER: "", // adoptBuildNumber
-        ENABLE_TESTS: false, // enableTests	
-        CLEAN_WORKSPACE: true // cleanWorkspaceBeforeBuild
+        RELEASE: false,
+        PUBLISH_NAME: "",
+        ADOPT_BUILD_NUMBER: "",
+        ENABLE_TESTS: true,
+        CLEAN_WORKSPACE: true
       )
     } catch (Exception e) {
       // Catch invalid configurations
@@ -210,16 +221,15 @@ class Regeneration implements Serializable {
   */ 
   @SuppressWarnings("unused")
   def regenerate() {
-    def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
-
     /*
     * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
     */
     context.stage("Check $javaVersion pipeline status") {
+
       // Get all pipelines
       def getPipelines = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/api/json?tree=jobs[name]&pretty=true&depth1")
 
-      // Parse api response to only extract the pipeline jobnames
+      // Parse api response to only extract the relevant pipeline
       getPipelines.jobs.name.each{ pipeline -> 
         if (pipeline.contains("pipeline") && pipeline.contains(javaVersion)) {
           Integer sleepTime = 900
@@ -227,12 +237,13 @@ class Regeneration implements Serializable {
 
           while (inProgress) {
             // Check if pipeline is in progress using api
-            context.println "[INFO] Checking if ${pipeline} is running..." //e.g. openjdk8-pipeline
+            context.println "[INFO] Checking if ${pipeline} is running..." //i.e. openjdk8-pipeline
 
             def pipelineInProgress = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
             inProgress = pipelineInProgress.building as Boolean
 
             if (inProgress) {
+              // Sleep for a bit, then check again...
               context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
               context.sleep sleepTime
             }
@@ -250,14 +261,13 @@ class Regeneration implements Serializable {
     * Stage: Regenerate all of the job configurations by job type (i.e. jdk8u-linux-x64-hotspot
     * jdk8u-linux-x64-openj9, etc.)
     */
-    context.stage("Regenerate pipeline jobs") {
+    context.stage("Regenerate $javaVersion pipeline jobs") {
 
       // Get downstream job folder and platforms
       Map<String,List> downstreamJobs = [:]
 
-      context.println "[INFO] Pulling downstream folders and jobs from API..."
-
       // i.e. jdk11u, jdk8u, etc.
+      context.println "[INFO] Pulling downstream folders and jobs from API..."
       def folders = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/api/json?tree=jobs[name]&pretty=true&depth=1")
 
       folders.jobs.name.each { folder -> 
@@ -283,10 +293,9 @@ class Regeneration implements Serializable {
       // Regenerate each job, running through map a job at a time
       downstreamJobs.each { folder ->
         context.println "[INFO] Regenerating Folder: $folder.key" 
-
         for (def job in downstreamJobs.get(folder.key)) {
 
-          // Parse the downstream jobs to create keys that match up with the buildConfigurations in the pipeline file
+          // Parse downstream jobs to create keys that match up with the buildConfigurations in the config file
           context.println "[INFO] Parsing ${job}..."
           def buildConfigurationKey
 
@@ -297,15 +306,14 @@ class Regeneration implements Serializable {
           def javaToBuild = folder.key
           def os = configs[1]
 
-          // Account for freebsd builds (not currently in the config files, remove this if this changes)
+          // Account for freebsd builds (not currently in the config files, remove this if that changes)
           // i.e. jdk11u-freebsd-x64-hotspot
           if (os == "freebsd") {
             context.println "[WARNING] freebsd does not currently have a configuration in the pipeline files. Skipping regeneration (remove this statement in https://github.com/AdoptOpenJDK/openjdk-build if this changes)..."
             continue
           }
           
-          def variant // has to be declared early for loop perm reasons 
-
+          def variant
           switch(configs[2]) {
             case "x86":
               // Account for x86-32 builds
@@ -343,15 +351,13 @@ class Regeneration implements Serializable {
 
               break
           }
-
-          // Build job configuration from buildConfigurationKey
           context.println "[INFO] ${buildConfigurationKey} is regenerating..."
 
+          // Construct configuration for downstream job
           Map<String, IndividualBuildConfig> jobConfigurations = [:]
           String name = null
-
-          // Construct configuration for downstream job
           Boolean keyFound = false
+
           buildConfigurations.keySet().each { key ->  
             if (key == buildConfigurationKey) {
               //For build type, generate a configuration
@@ -371,7 +377,7 @@ class Regeneration implements Serializable {
           }
 
           if (keyFound == false) { 
-            context.println "[WARNING] buildConfigurationKey: ${buildConfigurationKey} not recognised. Valid configuration keys for folder: ${folder.key} are ${buildConfigurations.keySet()}.\n[WARNING] ${buildConfigurationKey} WILL NOT BE REGENERATED!"
+            context.println "[WARNING] buildConfigurationKey: ${buildConfigurationKey} not recognised. Valid configuration keys for folder: ${folder.key} are ${buildConfigurations.keySet()}.\n[WARNING] ${buildConfigurationKey} WILL NOT BE REGENERATED! Setting build result to UNSTABLE..."
             currentBuild.result = "UNSTABLE"
           } else {
             // Make job
