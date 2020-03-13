@@ -33,11 +33,11 @@ source "$SCRIPT_DIR/common/constants.sh"
 # Set default versions for 3 libraries that OpenJDK relies on to build
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
 ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f08783329157e8dd68b3de0c096de6d724}
-FREEMARKER_LIB_CHECKSUM=${FREEMARKER_LIB_CHECKSUM:-eb790d229d45fbaad1662a5b3e7a6a9d9c628b92f04567066dcdc8d2a3fe3660}
+FREEMARKER_LIB_CHECKSUM=${FREEMARKER_LIB_CHECKSUM:-affeb3a9a1b6a85861add091ccfff561329dccc74546843d12f3016daaf51faa}
 FREETYPE_LIB_CHECKSUM=${FREETYPE_LIB_CHECKSUM:-ec391504e55498adceb30baceebd147a6e963f636eb617424bcfc47a169898ce}
 
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
-FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.29}
+FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.30}
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for SRP
@@ -207,13 +207,13 @@ checkFingerprint() {
     return
   fi
 
-  rm /tmp/public_key.gpg || true
+  rm ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/public_key.gpg || true
 
-  gpg --no-options --output /tmp/public_key.gpg --dearmor "${SCRIPT_DIR}/sig_check/${publicKey}.asc"
+  gpg --no-options --output ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/public_key.gpg --dearmor "${SCRIPT_DIR}/sig_check/${publicKey}.asc"
 
   # If this dir does not exist, gpg 1.4.20 supplied on Ubuntu16.04 aborts
   mkdir -p $HOME/.gnupg
-  local verify=$(gpg --no-options -v --no-default-keyring --keyring "/tmp/public_key.gpg" --verify $sigFile $fileName 2>&1)
+  local verify=$(gpg --no-options -v --no-default-keyring --keyring "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/public_key.gpg" --verify $sigFile $fileName 2>&1)
 
   echo $verify
 

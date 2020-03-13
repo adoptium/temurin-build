@@ -17,7 +17,8 @@ def buildConfigurations = [
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels : 'macos10.14',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         x64MacXL: [
@@ -26,7 +27,7 @@ def buildConfigurations = [
                 additionalNodeLabels : 'macos10.14',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 additionalFileNameTag: "macosXL",
-                configureArgs        : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
         ],
 
         x64Linux  : [
@@ -34,7 +35,7 @@ def buildConfigurations = [
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
-                configureArgs        : '--disable-ccache'
+                configureArgs        : '--disable-ccache --enable-dtrace=auto'
         ],
 
         x64LinuxXL    : [
@@ -43,7 +44,7 @@ def buildConfigurations = [
                 arch                 : 'x64',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -83,7 +84,7 @@ def buildConfigurations = [
                 os                  : 'linux',
                 arch                : 's390x',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
-                configureArgs        : '--disable-ccache'
+                configureArgs        : '--disable-ccache --enable-dtrace=auto'
         ],
 
         s390xLinuxXL    : [
@@ -91,14 +92,14 @@ def buildConfigurations = [
                 arch                 : 's390x',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
         ],
 
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
-                configureArgs       : '--disable-ccache'
+                configureArgs       : '--disable-ccache --enable-dtrace=auto'
 
         ],
 
@@ -107,14 +108,15 @@ def buildConfigurations = [
                 arch                 : 'ppc64le',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
         ],
 
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
 ]

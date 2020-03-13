@@ -20,7 +20,8 @@ def buildConfigurations = [
                 test                : [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
-                ]
+                ],
+                configureArgs       : '--enable-dtrace'
         ],
 
         x64Linux  : [
@@ -31,7 +32,7 @@ def buildConfigurations = [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
-                configureArgs        : '--disable-ccache'
+                configureArgs       : '--disable-ccache --enable-dtrace'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -55,7 +56,7 @@ def buildConfigurations = [
                 arch                : 'ppc64',
                 additionalNodeLabels: 'xlc16',
                 test                : [
-                        nightly: ['sanity.openjdk'],
+                        nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ]
         ],
@@ -68,7 +69,7 @@ def buildConfigurations = [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ],
-                configureArgs        : '--disable-ccache'
+                configureArgs       : '--disable-ccache --enable-dtrace'
         ],
 
         ppc64leLinux    : [
@@ -78,7 +79,7 @@ def buildConfigurations = [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ],
-                configureArgs       : '--disable-ccache'
+                configureArgs       : '--disable-ccache --enable-dtrace'
 
         ],
 
@@ -89,7 +90,8 @@ def buildConfigurations = [
                 test                : [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
-                ]
+                ],
+                configureArgs       : '--enable-dtrace'
         ],
 
 ]
