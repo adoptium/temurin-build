@@ -321,12 +321,13 @@ class Builder implements Serializable {
                 context.catchError {
                     // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
                     context.stage(configuration.key) {
+                        def downstreamJob
 
                         // Create a lock on the job creation so concurrent builds don't get muddled up
                         context.lock("downstreamJobLock") {
                           context.echo "$downstreamJobName obtained lock\nCreated job " + downstreamJobName
                           // execute build
-                          def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
+                          downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
                         }
 
                         if (downstreamJob.getResult() == 'SUCCESS') {
