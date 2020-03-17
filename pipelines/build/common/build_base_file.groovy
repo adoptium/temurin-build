@@ -323,7 +323,7 @@ class Builder implements Serializable {
                     context.stage(configuration.key) {
 
                         // Create a lock on the job creation so concurrent builds don't get muddled up
-                        context.lock label: "downstreamJobLock" {
+                        context.lock resource: "downstreamJobLock" {
                           context.echo "$downstreamJobName obtained lock\nCreated job " + downstreamJobName
                           // execute build
                           def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
