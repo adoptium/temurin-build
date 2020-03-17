@@ -46,7 +46,6 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
 
     properties {
-	disableConcurrentBuilds()
         copyArtifactPermissionProperty {
             projectNames('*')
         }

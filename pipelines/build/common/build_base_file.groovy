@@ -232,27 +232,6 @@ class Builder implements Serializable {
         return parentDir + "/jobs/" + javaToBuild
     }
 
-    // Generate a job from template at `create_job_from_template.groovy`
-    def createJob(jobName, jobFolder, IndividualBuildConfig config) {
-        Map<String, ?> params = config.toMap().clone() as Map
-        params.put("JOB_NAME", jobName)
-        params.put("JOB_FOLDER", jobFolder)
-
-        params.put("GIT_URI", scmVars["GIT_URL"])
-        if (scmVars["GIT_BRANCH"] != "detached") {
-            params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
-        } else {
-            params.put("GIT_BRANCH", scmVars["GIT_COMMIT"])
-        }
-
-        params.put("BUILD_CONFIG", config.toJson())
-
-        def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
-
-        return create
-    }
-
-
     def checkConfigIsSane(Map<String, IndividualBuildConfig> jobConfigurations) {
 
         if (release) {
@@ -342,8 +321,6 @@ class Builder implements Serializable {
                 context.catchError {
                     // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
                     context.stage(configuration.key) {
-                        // generate job
-                        //createJob(jobTopName, jobFolder, config)
 
                         context.echo "Created job " + downstreamJobName
                         // execute build
