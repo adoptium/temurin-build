@@ -328,48 +328,48 @@ class Builder implements Serializable {
                           context.echo "$downstreamJobName obtained lock\nCreated job " + downstreamJobName
                           // execute build
                           downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
-                        }
+                        
+                          if (downstreamJob.getResult() == 'SUCCESS') {
+                              // copy artifacts from build
+                              context.node("master") {
+                                  context.catchError {
 
-                        if (downstreamJob.getResult() == 'SUCCESS') {
-                            // copy artifacts from build
-                            context.node("master") {
-                                context.catchError {
+                                      //Remove the previous artifacts
+                                      context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
 
-                                    //Remove the previous artifacts
-                                    context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
+                                      context.copyArtifacts(
+                                              projectName: downstreamJobName,
+                                              selector: context.specific("${downstreamJob.getNumber()}"),
+                                              filter: 'workspace/target/*',
+                                              fingerprintArtifacts: true,
+                                              target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
+                                              flatten: true)
 
-                                    context.copyArtifacts(
-                                            projectName: downstreamJobName,
-                                            selector: context.specific("${downstreamJob.getNumber()}"),
-                                            filter: 'workspace/target/*',
-                                            fingerprintArtifacts: true,
-                                            target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
-                                            flatten: true)
+                                      // Checksum
+                                      context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
 
-                                    // Checksum
-                                    context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+                                      // Archive in Jenkins
+                                      context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
+                                  }
+                              }
+                          } else if (propagateFailures) {
+                              context.error("Build failed due to downstream failure of ${downstreamJobName}")
+                              currentBuild.result = "FAILURE"
+                          }
+                      }
+                  }
+              }
+          }
+          context.parallel jobs
 
-                                    // Archive in Jenkins
-                                    context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
-                                }
-                            }
-                        } else if (propagateFailures) {
-                            context.error("Build failed due to downstream failure of ${downstreamJobName}")
-                            currentBuild.result = "FAILURE"
-                        }
-                    }
-                }
-            }
-        }
-        context.parallel jobs
-
-        // publish to github if needed
-        // Dont publish release automatically
-        if (publish && !release) {
-            //During testing just remove the publish
-            publishBinary()
-        } else if (publish && release) {
-            context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
+          // publish to github if needed
+          // Dont publish release automatically
+          if (publish && !release) {
+              //During testing just remove the publish
+              publishBinary()
+          } else if (publish && release) {
+              context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
+          }
         }
     }
 }
