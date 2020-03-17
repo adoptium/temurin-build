@@ -306,7 +306,7 @@ class Builder implements Serializable {
         context.echo "Tag/Branch name: ${scmReference}"
 
         // Create a lock on the job creation so concurrent builds don't get muddled up
-        context.lock("downstreamJobLock") {
+        //context.lock("downstreamJobLock") {
 
           jobConfigurations.each { configuration ->
               jobs[configuration.key] = {
@@ -371,7 +371,7 @@ class Builder implements Serializable {
               context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
           }
 
-        } // end lock
+        //} // end lock
     }
 
 }
