@@ -6,55 +6,56 @@ Don't be scared off by this document! If you already understand the stuff in th
 
 ### OpenJDK "New" Release:
 
-- The refers to "new" major OpenJDK release Short or Long Term Release (jdk13, jdk14, jdk15, ...)
-- Oracle and contributors work on release in "head" openjdk stream: https://hg.openjdk.java.net/jdk/jdk
-- 3 months prior to the GA date, the `head` stream if branched into the new release stream for development rampdown e.g. https://hg.openjdk.java.net/jdk/jdk14
-- Regular builds are tagged every week or so in a format such as  `jdk-13+21`
-- Eventually after rampdown and final phase testing, all done in the open, the GA build is tagged and released, `jdk-13-ga` tag is tagged along side the actual release build tag.
+- The refers to a "new" major (Short or Long Term) OpenJDK Release (e.g. jdk13, jdk14, jdk15, ...)
+- Oracle and contributors work on releases in the "head" OpenJDK stream: https://hg.openjdk.java.net/jdk/jdk
+- 3 months prior to the GA date, the `head` stream is branched into a new release stream for development rampdown e.g. https://hg.openjdk.java.net/jdk/jdk14
+- Regular builds are tagged every week or so in a format such as `jdk-13+21`
+- Eventually after rampdown and final phase testing the GA build is tagged and released, e.g. the `jdk-13-ga` code level is tagged along side the actual release build tag.
 
 
 ### OpenJDK Vulnerability Group
 
 - A private group of trusted people who take reports of vulnerabilities in the openjdk codebase and work to resolve them and get them into releases in a timely manner
 
-### Non-Oracle (usually Red Hat) maintained OpenJDK Quarterly PSU Update
+### Non-Oracle (usually Red Hat) maintained OpenJDK Quarterly Patch Set Update (PSU)
 
-- Maintainers work on public quarterly update fixes for the next update, in the updates head stream e.g. https://hg.openjdk.java.net/jdk-updates/jdk11u
-- Fixes for the subsequent update, are developed in the `dev` stream e.g. https://hg.openjdk.java.net/jdk-updates/jdk11u-dev/
+- Maintainers work on quarterly update fixes for the next update, in the head stream of the updates repository e.g. https://hg.openjdk.java.net/jdk-updates/jdk11u
+- Fixes for the subsequent update are developed in the `dev` stream e.g. https://hg.openjdk.java.net/jdk-updates/jdk11u-dev/
 - Regular builds are tagged every week or so, e.g. `jdk-11.0.5+6`
-- Eventually after final testing it comes to GA day for the update, at this point any fixes from the Vulnerability Group are merged with the final GA build, and tagged, e.g. `jdk-11.0.5+10`, `jdk-11.0.5-ga`
+- Eventually after final testing it comes to general availability (GA) day for the update, at this point any fixes from the Vulnerability Group are merged with the final GA build, and tagged, e.g. `jdk-11.0.5+10`, `jdk-11.0.5-ga`
 
-### Oracle Managed OpenJDK Quarterly PSU Update
+### Oracle Managed OpenJDK Quarterly PSU
 
-- For the most recent JDK release, updates are managed by Oracle, and there will only be two of them, e.g. `jdk-13.0.1` and `jdk-13.0.2` after the initial GA unless it is an LTS release
-- Oracle work on the quarterly updates internally and their these branches are not public until GA date along with the Vulnerability Group fixes.
-- On GA day, Oracle merges the internal branch and any Vulnerability Group fixes to produce the final GA build, and tagged, e.g. `jdk-13.0.1+9`, `jdk-13.0.1-ga`
+- The most recent JDK release updates are managed by Oracle, and there will only be two of them, e.g. for `jdk-13` Oracle produced `jdk-13.0.1` and `jdk-13.0.2`.  
+- Oracle work on the quarterly updates internally and these update source branches and Vulnerability Group fixes are not public until GA date.
+- On GA day, Oracle merges the internal branch and Vulnerability Group fixes to produce the final GA build, and this is tagged, e.g. `jdk-13.0.1+9`, `jdk-13.0.1-ga`
+- If the release is a short term support release there are no more releases after the two Oracle-led updates, but if it is a long term support (LTS) release the OpenJDK community picks up subsequent release maintainance, and all work continues in public as described above.
 
 ### Eclipse OpenJ9/OMR releases
 
 - The OpenJ9 releases are based on three codebases
   - https://github.com/eclipse/openj9-omr (a platform abstraction layer which OpenJ9 builds use, based on https://github.com/eclipse/omr)
   - https://github.com/eclipse/openj9 (The JVM code)
-  - The "extensions" repository for each release (see the next section of the glossar for more details) which contains a modified version of the OpenJDK codebase (OpenJDK updates are merged by the IBM team who owns the extensions repository, not the AdoptOpenJDK project)
-- Unlike the HotSpot versions, the Eclipse OpenJ9 and OMR projects do not have separate versions for each major java release, but the extensions repository does (Conditional compilation is used in OpenJ9 for any release differences). Each new OpenJ9 version goes into every JDK release.
-- In the run up to a new JDK release or quarterly update the OpenJ9 and OMR `master` is branched to create a release branch named according to the OpenJ9 version for that release, e.g. `v0.17.0-release` (In general each quarterly update will have a new OpenJ9 version included)
-- Before a new release there will typically be two milestone builds which get their own git tag from a commit in that branch e.g. `openj9-0.17.0-m1`
-- This milestone tag is then pulled in by an openjdk "extensions" release branch to build an actual JDK binary.
-- When it comes to a GA release day, the release branch will be built with the GA OpenJDK source from the extensions repository, and then tested. If this looks good a tag to indicate the GA level is created in the openj9 repository e.g. `openj9-0.17.0`. This tag is picked up by the openjdk extensions release branch to build the GA JDK binary. You can see the tags at https://github.com/eclipse/openj9/tags
+  - The "extensions" repository for each release (see the next section of the glossary for more details) which contains a modified version of the OpenJDK codebase (OpenJDK updates are merged by the IBM team who owns the extensions repository, not the AdoptOpenJDK project)
+- Unlike the HotSpot versions, the Eclipse OpenJ9 and OMR projects do not have separate versions for each major OpenJDK release, but the extensions repository does (conditional compilation is used in OpenJ9 for any release differences). Each new OpenJ9 version goes into every JDK release.
+- In the run up to a new JDK release or quarterly update the OpenJ9 and OMR `master` is branched to create a release branch named according to the OpenJ9 version for that release, e.g. `v0.17.0-release`.  In general each quarterly update will have a new OpenJ9 version included.
+- Before a new release there will typically be two milestone builds which get their own Git tag from a commit in that branch e.g. `openj9-0.17.0-m1`
+- This milestone tag is then pulled in by an OpenJDK "extensions" release branch to build an actual JDK binary.
+- When it comes to a GA release day, the release branch will be built with the GA OpenJDK source from the extensions repository, and then tested. If this looks good a tag to indicate the GA level is created in the OpenJ9 repository e.g. `openj9-0.17.0`. This tag is picked up by the OpenJDK extensions release branch to build the GA JDK binary. You can see the tags at https://github.com/eclipse/openj9/tags
 
 
 ### OpenJDK "extensions" repository for OpenJ9 releases
 
 - The openjdk "extensions" repositories e.g. https://github.com/ibmruntimes/openj9-openjdk-jdk11 follows the same branching process as Eclipse OpenJ9 and OMR. When OpenJ9 creates the release branch for the first milestone, a corresponding release branch (based on the `openj9` branch, not `master`) is created, e.g. `openj9-0.17.0`.
 - The "extensions" release branch is updated to pull in the correct OpenJ9 and OMR milestone "tags" to build with for each milestone build.
-- In the run up to the JDK GA date, the extensions team's OpenJDK auto-merge and acceptance jobs merge any new jdk builds into the openj9-staging and openj9 branches, but NOT the openj9-0.nn.0 release branch.
-- When it comes to the GA date, the auto-merged GA jdk "tag" needs to be merged into the openj9-0.nn.0 release branch by the extensions team.
+- In the run up to the JDK GA date, the extensions team's OpenJDK auto-merge and acceptance jobs merge any new jdk builds into the `openj9-staging` and `openj9` branches, but NOT the `openj9-0.nn.0` release branch.
+- When it comes to the GA date, the auto-merged GA jdk "tag" needs to be merged into the `openj9-0.nn.0` release branch by the extensions team.
 - The release branch is also updated to pull in the GA Eclipse OpenJ9 & OMR release tags, and then the GA JDK binary is built.
 
 
 # OpenJDK Quarterly/New Release Process
 
-1. Wait for RedHat/Oracle to push the GA code to mercurial and announce availability:
+1. Wait for Red Hat/Oracle to push the GA code to mercurial and announce availability:
    * jdk8u : https://hg.openjdk.java.net/jdk8u/jdk8u/jdk/
      * Announce: https://mail.openjdk.java.net/pipermail/jdk8u-dev/
    * jdk11+u:  https://hg.openjdk.java.net/jdk-updates/jdk11u/
@@ -65,16 +66,16 @@ Don't be scared off by this document! If you already understand the stuff in th
 
 # Extra OpenJ9 prerequisite steps (skip for a HotSpot release)
 
-1. The extensions release branch (e.g. `openj9-0.17.0`) will exist from doing the milestone builds (OpenJ9 milestone process is covered in a later section)
-2. Ask the extensions team to run their release-specific merge jobs to ensure they are up to date - this is not done by jobs at AdoptOpenJDK
-3. Having merged to openj9-staging successfully, then a job hosted by the extensions team (not at AdoptOpenJDK) will have automatically been triggered, which will perform "sanity" testing on all platforms for the new `openj9-staging` branch and if successful testing will automatically promote the code to the "openj9" branch, acceptance jobs: https://ci.eclipse.org/openj9/
-4. OpenJ9 leads (Currently [Peter Shipton](https://github.com/pshipton) and [Dan Heidinga](https://github.com/danheidinga)) will now verify the Eclipse OpenJ9 and OMR release branch against the newly merged openjdk GA level in openj9-staging. If they are happy they will tag their release branches with the release tag, eg. "openj9-0.17.0", you are then ready to build the release.
-5. Get someone in the extensions team to make the following changes in the extensions release branch corresponding to the openj9 version for the release:
-   - Merge into the openj9 extensions "release" branch (e.g. `openj9-0.17.0`) the latest tag merged from openjdk (automated jobs merge the tag into openj9-staging, but not the release branch so this has to be done manually). eg.:
-     - git checkout openj9-0.18.0
-     - git merge -m"Merge jdk-11.0.6+10" jdk-11.0.6+10
-     - (Resolve any merge conflicts again if necessary)
-     - Create a PullRequest and Merge (using a Merge Commit, do not Squash&Merge, otherwise we lose track of history)
+1. The extensions release branch (e.g. `openj9-0.17.0`) will exist from doing the milestone builds (OpenJ9 milestone process is covered in a later section).
+2. Ask the extensions team to run their release-specific merge jobs to ensure they are up to date - this is not done by jobs at AdoptOpenJDK.
+3. Having merged to `openj9-staging` successfully then a job hosted by the extensions team (not at AdoptOpenJDK) will have automatically been triggered, which will perform "sanity" testing on all platforms for the new `openj9-staging` branch and, if successful, testing will automatically promote the code to the "openj9" branch, acceptance jobs: https://ci.eclipse.org/openj9/
+4. OpenJ9 leads (currently [Peter Shipton](https://github.com/pshipton) and [Dan Heidinga](https://github.com/danheidinga)) will now verify the Eclipse OpenJ9 and OMR release branch against the newly merged OpenJDK GA level in `openj9-staging`. If they are happy they will tag their release branches with the release tag, eg. `openj9-0.17.0`, you are then ready to build the release.
+5. Get someone in the extensions team to make the following changes in the extensions release branch corresponding to the OpenJ9 version for the release:
+   - Merge into the OpenJ9 extensions release branch (e.g. `openj9-0.17.0`) the latest tag merged from OpenJDK (automated jobs merge the tag into `openj9-staging`, but not the release branch so this has to be done manually). eg.:
+     - `git checkout openj9-0.18.0`
+     - `git merge -m"Merge jdk-11.0.6+10" jdk-11.0.6+10`
+     - Resolve any merge conflicts again if necessary.
+     - Create a Pull Request and Merge (using a Merge Commit, do not Squash&Merge, otherwise we lose track of history).
    - Update closed/openjdk-tag.gmk with tag just merged. (This is used for the java - version) e.g.:
    ```
    OPENJDK_TAG:= jdk-11.0.6+10
@@ -96,7 +97,7 @@ Don't be scared off by this document! If you already understand the stuff in th
      J9JDK_EXT_VERSION       := 11.0.5.0
      # J9JDK_EXT_VERSION       := HEAD   <==  !!! Comment out this line
    ```
-6. Get permission to submit the release pipeline job from the Adopt TSC members, discussion is via the AdoptOpenJDK #release channel (https://adoptopenjdk.slack.com/messages/CLCFNV2JG).
+6. Get permission to submit the release pipeline job from the AdoptOpenJDK TSC members, discussion is via the AdoptOpenJDK #release channel (https://adoptopenjdk.slack.com/messages/CLCFNV2JG).
 
 # Steps for every version
 
@@ -169,7 +170,7 @@ JDK_FIX_VERSION=0
 
 ## Summary on point releases
 
-Occasionally we may have to do an out-of-band release that does not align with a quarterly release from the upstream openjdk project. This may occur if there has been a problem with our build process that we missed at GA time, to fix a critical issue, or when a project outside openjdk (e.g. OpenJ9) need to do an interim release. In order to do such a release, follow the steps included in the process above which I'll repeat here for clarity:
+Occasionally we may have to do an out-of-band release that does not align with a quarterly release from the upstream OpenJDK project. This may occur if there has been a problem with our build process that we missed at GA time, to fix a critical issue, or when a project outside OpenJDK (e.g. OpenJ9) needs to do an interim release. In order to do such a release, follow the steps included in the process above which I'll repeat here for clarity:
 
 1. When triggering the pipeline, set `AdoptBuildNumber` to a unique number for the point release
 2. If you used a custom entry in `overridePublishName` when kicking off the GA pipeline, keep it the same as for the GA release - we DO NOT want the filenames changed to include the point number
