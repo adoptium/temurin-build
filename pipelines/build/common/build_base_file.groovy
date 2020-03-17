@@ -305,30 +305,30 @@ class Builder implements Serializable {
         context.echo "Release: ${release}"
         context.echo "Tag/Branch name: ${scmReference}"
 
-        jobConfigurations.each { configuration ->
-            jobs[configuration.key] = {
-                IndividualBuildConfig config = configuration.value
+        // Create a lock on the job creation so concurrent builds don't get muddled up
+        context.lock("downstreamJobLock") {
 
-                // jdk11u-linux-x64-hotspot
-                def jobTopName = getJobName(configuration.key)
-                def jobFolder = getJobFolder()
+          jobConfigurations.each { configuration ->
+              jobs[configuration.key] = {
+                  IndividualBuildConfig config = configuration.value
 
-                // i.e jdk10u/job/jdk11u-linux-x64-hotspot
-                def downstreamJobName = "${jobFolder}/${jobTopName}"
+                  // jdk11u-linux-x64-hotspot
+                  def jobTopName = getJobName(configuration.key)
+                  def jobFolder = getJobFolder()
 
-                context.echo "build name " + downstreamJobName
+                  // i.e jdk10u/job/jdk11u-linux-x64-hotspot
+                  def downstreamJobName = "${jobFolder}/${jobTopName}"
 
-                context.catchError {
-                    // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
-                    context.stage(configuration.key) {
-                        def downstreamJob
+                  context.echo "build name " + downstreamJobName
 
-                        // Create a lock on the job creation so concurrent builds don't get muddled up
-                        context.lock("downstreamJobLock") {
-                          context.echo "$downstreamJobName obtained lock\nCreated job " + downstreamJobName
+                  context.catchError {
+                      // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
+                      context.stage(configuration.key) {
+
+                          context.echo "Created job " + downstreamJobName
                           // execute build
-                          downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
-                        
+                          def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
+
                           if (downstreamJob.getResult() == 'SUCCESS') {
                               // copy artifacts from build
                               context.node("master") {
@@ -370,8 +370,10 @@ class Builder implements Serializable {
           } else if (publish && release) {
               context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
           }
-        }
+
+        } // end lock
     }
+
 }
 
 return {
