@@ -330,7 +330,7 @@ class Builder implements Serializable {
                             
                             // execute build
                             downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
-                          }
+                          
 
                             if (downstreamJob.getResult() == 'SUCCESS') {
                                 // copy artifacts from build
@@ -359,6 +359,7 @@ class Builder implements Serializable {
                                 context.error("Build failed due to downstream failure of ${downstreamJobName}")
                                 currentBuild.result = "FAILURE"
                             }
+                          }
                       }
                   }
               }
