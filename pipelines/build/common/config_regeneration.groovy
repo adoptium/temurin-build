@@ -188,14 +188,8 @@ class Regeneration implements Serializable {
     params.put("JOB_NAME", jobName)
     params.put("JOB_FOLDER", jobFolder)
 
-    // params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
-    // params.put("GIT_BRANCH", "master") 
-    params.put("GIT_URI", scmVars["GIT_URL"])
-    if (scmVars["GIT_BRANCH"] != "detached") {
-        params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
-    } else {
-        params.put("GIT_BRANCH", scmVars["GIT_COMMIT"])
-    }
+    params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
+    params.put("GIT_BRANCH", "master") 
 
     params.put("BUILD_CONFIG", config.toJson())
 
