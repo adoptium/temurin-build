@@ -320,46 +320,47 @@ class Builder implements Serializable {
 
                   context.catchError {
 
-                    // Create a lock on the job creation so concurrent builds don't get muddled up
-                    context.lock("downstreamJobLock") {
-
                       // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
                       context.stage(configuration.key) {
+                          
+                          // Create a lock on the job creation so concurrent builds don't get muddled up
+                          context.lock("downstreamJobLock") {
 
-                          context.echo "Created job " + downstreamJobName
-                          // execute build
-                          def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
+                            context.echo "Created job " + downstreamJobName
+                            // execute build
+                            def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
 
-                          if (downstreamJob.getResult() == 'SUCCESS') {
-                              // copy artifacts from build
-                              context.node("master") {
-                                  context.catchError {
+                            if (downstreamJob.getResult() == 'SUCCESS') {
+                                // copy artifacts from build
+                                context.node("master") {
+                                    context.catchError {
 
-                                      //Remove the previous artifacts
-                                      context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
+                                        //Remove the previous artifacts
+                                        context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
 
-                                      context.copyArtifacts(
-                                              projectName: downstreamJobName,
-                                              selector: context.specific("${downstreamJob.getNumber()}"),
-                                              filter: 'workspace/target/*',
-                                              fingerprintArtifacts: true,
-                                              target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
-                                              flatten: true)
+                                        context.copyArtifacts(
+                                                projectName: downstreamJobName,
+                                                selector: context.specific("${downstreamJob.getNumber()}"),
+                                                filter: 'workspace/target/*',
+                                                fingerprintArtifacts: true,
+                                                target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
+                                                flatten: true)
 
-                                      // Checksum
-                                      context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+                                        // Checksum
+                                        context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
 
-                                      // Archive in Jenkins
-                                      context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
-                                  }
-                              }
-                          } else if (propagateFailures) {
-                              context.error("Build failed due to downstream failure of ${downstreamJobName}")
-                              currentBuild.result = "FAILURE"
+                                        // Archive in Jenkins
+                                        context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
+                                    }
+                                }
+                            } else if (propagateFailures) {
+                                context.error("Build failed due to downstream failure of ${downstreamJobName}")
+                                currentBuild.result = "FAILURE"
+                            }
+
                           }
+                          
                       }
-                      
-                    }
                   }
               }
           }
