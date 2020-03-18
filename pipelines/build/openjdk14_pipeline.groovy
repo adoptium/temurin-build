@@ -69,6 +69,17 @@ def buildConfigurations = [
                 configureArgs        : '--with-noncompressedrefs'
         ],
 
+        x32Windows: [
+                os                  : 'windows',
+                arch                : 'x86-32',
+                additionalNodeLabels: [
+                        hotspot: 'win2012&&vs2017'
+                ],
+                buildArgs : [
+                        hotspot : '--jvm-variant client,server'
+                ],
+                test                : ['sanity.openjdk']
+        ],
 
         ppc64Aix    : [
                 os                  : 'aix',
@@ -101,6 +112,15 @@ def buildConfigurations = [
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 configureArgs       : '--disable-ccache --enable-dtrace=auto'
 
+        ],
+
+        arm32Linux    : [
+                os                  : 'linux',
+                arch                : 'arm',
+                // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
+                //test                : ['sanity.openjdk', 'sanity.perf']
+                test                : false,
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         ppc64leLinuxXL    : [
