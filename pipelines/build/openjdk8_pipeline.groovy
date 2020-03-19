@@ -112,7 +112,10 @@ def buildConfigurations = [
         ppc64leLinux  : [
                 os  : 'linux',
                 arch: 'ppc64le',
-                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
+                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                configureArgs       : [
+                        "openj9"      : '--enable-jitserver'
+                ]
         ],
 
         arm32Linux    : [
@@ -150,7 +153,7 @@ def buildConfigurations = [
                 arch                 : 'ppc64le',
                 additionalFileNameTag: "linuxXL",
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                configureArgs        : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs --enable-jitserver'
         ],
 ]
 
