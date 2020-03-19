@@ -307,60 +307,53 @@ class Builder implements Serializable {
 
           jobConfigurations.each { configuration ->
               jobs[configuration.key] = {
-                  IndividualBuildConfig config = configuration.value
+                IndividualBuildConfig config = configuration.value
 
-                  // jdk11u-linux-x64-hotspot
-                  def jobTopName = getJobName(configuration.key)
-                  def jobFolder = getJobFolder()
+                // jdk11u-linux-x64-hotspot
+                def jobTopName = getJobName(configuration.key)
+                def jobFolder = getJobFolder()
 
-                  // i.e jdk10u/job/jdk11u-linux-x64-hotspot
-                  def downstreamJobName = "${jobFolder}/${jobTopName}"
+                // i.e jdk10u/job/jdk11u-linux-x64-hotspot
+                def downstreamJobName = "${jobFolder}/${jobTopName}"
+                context.echo "build name " + downstreamJobName
 
-                  context.echo "build name " + downstreamJobName
+                context.catchError {
+                    // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
+                    context.stage(configuration.key) {
+                      context.echo "Created job " + downstreamJobName
+                      
+                      // execute build
+                      def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
 
-                  context.catchError {
+                      if (downstreamJob.getResult() == 'SUCCESS') {
+                          // copy artifacts from build
+                          context.node("master") {
+                              context.catchError {
 
-                      // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
-                      context.stage(configuration.key) {
-                          def downstreamJob
-                          
-                          // Create a lock on the job creation so concurrent builds don't get muddled up
-                          context.lock("downstreamJobLock") {
-                            context.echo "Created job " + downstreamJobName
-                            
-                            // execute build
-                            downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
-                          
+                                  //Remove the previous artifacts
+                                  context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
 
-                            if (downstreamJob.getResult() == 'SUCCESS') {
-                                // copy artifacts from build
-                                context.node("master") {
-                                    context.catchError {
+                                  context.copyArtifacts(
+                                          projectName: downstreamJobName,
+                                          selector: context.specific("${downstreamJob.getNumber()}"),
+                                          filter: 'workspace/target/*',
+                                          fingerprintArtifacts: true,
+                                          target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
+                                          flatten: true)
 
-                                        //Remove the previous artifacts
-                                        context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
+                                  // Checksum
+                                  context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
 
-                                        context.copyArtifacts(
-                                                projectName: downstreamJobName,
-                                                selector: context.specific("${downstreamJob.getNumber()}"),
-                                                filter: 'workspace/target/*',
-                                                fingerprintArtifacts: true,
-                                                target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
-                                                flatten: true)
-
-                                        // Checksum
-                                        context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
-
-                                        // Archive in Jenkins
-                                        context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
-                                    }
-                                }
-                            } else if (propagateFailures) {
-                                context.error("Build failed due to downstream failure of ${downstreamJobName}")
-                                currentBuild.result = "FAILURE"
-                            }
+                                  // Archive in Jenkins
+                                  context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
+                              }
                           }
+                      } else if (propagateFailures) {
+                          context.error("Build failed due to downstream failure of ${downstreamJobName}")
+                          currentBuild.result = "FAILURE"
                       }
+
+                    }
                   }
               }
           }
