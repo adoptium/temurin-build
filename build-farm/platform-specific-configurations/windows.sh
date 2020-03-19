@@ -39,7 +39,12 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
       if [ ! -d "$bootDir/bin" ]; then
         echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
         releaseType="ga"
-        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
+        # This is needed to convert x86-32 to x32 which is what the API uses
+        case "$ARCHITECTURE" in
+          "x86-32") downloadArch="x32";;
+          *) downloadArch="$ARCHITECTURE";;
+        esac
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/hotspot/normal/adoptopenjdk"
         apiURL=$(eval echo ${apiUrlTemplate})
         # make-adopt-build-farm.sh has 'set -e'. We need to disable that
         # for the fallback mechanism, as downloading of the GA binary might
