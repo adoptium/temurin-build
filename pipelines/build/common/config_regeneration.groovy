@@ -30,7 +30,6 @@ class Regeneration implements Serializable {
   def currentBuild
   def context
   def env
-  boolean release = false // Stub for compilation
 
   /*
   * Get configure args from jdk*_pipeline_config.groovy. Used when creating the IndividualBuildConfig.
@@ -118,9 +117,8 @@ class Regeneration implements Serializable {
   */
   List<String> getTestList(Map<String, ?> configuration) {
     if (configuration.containsKey("test")) {
-        def testJobType = release ? "release" : "nightly"
         if (isMap(configuration.test)) {
-            return (configuration.test as Map).get(testJobType) as List<String>
+            return (configuration.test as Map).get("nightly") as List<String> // no need to check for release
         } else {
             return configuration.test as List<String>
         }
