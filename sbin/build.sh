@@ -525,9 +525,8 @@ removingUnnecessaryFiles() {
       "darwin") dirToRemove="${jreTargetPath}/Contents/Home" ;;
       *) dirToRemove="${jreTargetPath}" ;;
     esac
-    rm -rf "${dirToRemove}"/demo/applets || true
-    rm -rf "${dirToRemove}"/demo/jfc/Font2DTest || true
-    rm -rf "${dirToRemove}"/demo/jfc/SwingApplet || true
+    rm -rf "${dirToRemove}"/demo || true
+    
   fi
   # Test image is JDK 11+ only so add an additional
   # check if the config is set
@@ -543,9 +542,7 @@ removingUnnecessaryFiles() {
     "darwin") dirToRemove="${jdkTargetPath}/Contents/Home" ;;
     *) dirToRemove="${jdkTargetPath}" ;;
   esac
-  rm -rf "${dirToRemove}"/demo/applets || true
-  rm -rf "${dirToRemove}"/demo/jfc/Font2DTest || true
-  rm -rf "${dirToRemove}"/demo/jfc/SwingApplet || true
+  rm -rf "${dirToRemove}"/demo || true
 
   find . -name "*.diz" -type f -delete || true
   find . -name "*.pdb" -type f -delete || true
