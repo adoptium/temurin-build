@@ -4,7 +4,8 @@ class Config13 {
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels : 'macos10.12',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         x64MacXL    : [
@@ -13,7 +14,7 @@ class Config13 {
                 additionalNodeLabels : 'macos10.12',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 additionalFileNameTag: "macosXL",
-                configureArgs        : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
         ],
 
         x64Linux  : [
@@ -24,7 +25,7 @@ class Config13 {
                         nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
-                configureArgs        : '--disable-ccache'
+                configureArgs        : '--disable-ccache --enable-dtrace=auto'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -77,20 +78,21 @@ class Config13 {
                 os                  : 'linux',
                 arch                : 's390x',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
-                configureArgs        : '--disable-ccache'
+                configureArgs        : '--disable-ccache --enable-dtrace=auto'
         ],
 
         sparcv9Solaris    : [
                 os                  : 'solaris',
                 arch                : 'sparcv9',
-                test                : false
+                test                : false,
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
-                configureArgs       : '--disable-ccache'
+                configureArgs       : '--disable-ccache --enable-dtrace=auto'
 
         ],
 
@@ -99,14 +101,16 @@ class Config13 {
                 arch                : 'arm',
                 // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
                 //test                : ['sanity.openjdk', 'sanity.perf']
-                test                : false
+                test                : false,
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         /*
@@ -123,21 +127,21 @@ class Config13 {
                 arch                 : 'x64',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
         ],
         s390xLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 's390x',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
         ],
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
         ],
   ]
   

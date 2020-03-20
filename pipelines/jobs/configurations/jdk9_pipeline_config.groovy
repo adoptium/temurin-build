@@ -1,4 +1,4 @@
-class Config10 {
+class Config9 {
   final Map<String, Map<String, ?>> buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
@@ -7,6 +7,7 @@ class Config10 {
                 test                : ['sanity.openjdk', 'sanity.system'],
                 configureArgs       : '--enable-dtrace=auto'
         ],
+
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
@@ -35,9 +36,7 @@ class Config10 {
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
-                additionalNodeLabels: [
-                        hotspot: 'rhel7'
-                ],
+                additionalNodeLabels: 'rhel7',
                 test                : ['sanity.openjdk', 'sanity.system'],
                 configureArgs       : '--enable-dtrace=auto'
         ],
@@ -52,6 +51,7 @@ class Config10 {
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
+                additionalNodeLabels: 'centos7',
                 test                : ['sanity.openjdk', 'sanity.system'],
                 configureArgs       : '--enable-dtrace=auto'
         ],
@@ -71,14 +71,6 @@ class Config10 {
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
-        /*
-        "x86-32Windows"    : [
-                os                 : 'windows',
-                arch               : 'x86-32',
-                additionalNodeLabels: 'win2012&&x86-32',
-                test                : false
-        ],
-        */
         x64LinuxXL    : [
                 os                   : 'linux',
                 additionalNodeLabels : 'centos6',
@@ -88,8 +80,8 @@ class Config10 {
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
         ],
   ]
-  
+
 }
 
-Config10 config = new Config10()
+Config9 config = new Config9()
 return config.buildConfigurations
