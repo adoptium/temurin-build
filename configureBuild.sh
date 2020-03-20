@@ -103,6 +103,7 @@ determineBuildProperties() {
   # From jdk12 there is no build type in the build output directory name
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || \
      [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] || \
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK14_CORE_VERSION}" ] || \
      [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
     build_type=normal
     default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${BUILD_CONFIG[JVM_VARIANT]}-release
@@ -168,6 +169,8 @@ setRepository() {
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]]
   then
     suffix="corretto/corretto-${BUILD_CONFIG[OPENJDK_CORE_VERSION]:3}"
+  elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
+    suffix="adoptopenjdk/openjdk-aarch32-jdk8u";
   else
     suffix="adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}";
   fi
@@ -208,7 +211,7 @@ processArgumentsforSpecificArchitectures() {
       fi
 
       # This is to ensure consistency with the defaults defined in setMakeArgs()
-      if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
+      if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
         make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true product-images legacy-jre-image"
       else
         make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true images"
@@ -220,6 +223,7 @@ processArgumentsforSpecificArchitectures() {
 
       if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || \
          [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] || \
+         [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK14_CORE_VERSION}" ] || \
          [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
         build_full_name=linux-ppc64-${jvm_variant}-release
       else
@@ -234,7 +238,7 @@ processArgumentsforSpecificArchitectures() {
 
     "armv7l")
       if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && isHotSpot; then
-        jvm_variant=zero
+        jvm_variant=client
       else
         jvm_variant=server,client
       fi
@@ -280,7 +284,7 @@ function setMakeArgs() {
     echo "JDK Image folder name: ${BUILD_CONFIG[JDK_PATH]}"
     echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
 
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
       case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
       "darwin") BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images mac-legacy-jre-bundle"} ;;
       *) BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images legacy-jre-image"} ;;
