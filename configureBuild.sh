@@ -242,7 +242,7 @@ processArgumentsforSpecificArchitectures() {
       else
         jvm_variant=server,client
       fi
-      make_args_for_any_platform="DEBUG_BINARIES=true images"
+      make_args_for_any_platform="DEBUG_BINARIES=true images legacy-jre-image"
       configure_args_for_any_platform="--with-jobs=${BUILD_CONFIG[NUM_PROCESSORS]}"
     ;;
 
