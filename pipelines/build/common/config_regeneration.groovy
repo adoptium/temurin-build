@@ -31,6 +31,9 @@ class Regeneration implements Serializable {
   def context
   def env
 
+  def javaToBuild
+  def variant
+
   /*
   * Get configure args from jdk*_pipeline_config.groovy. Used when creating the IndividualBuildConfig.
   * @param configuration
@@ -214,10 +217,95 @@ class Regeneration implements Serializable {
   }
 
   /**
+  * Parse downstream jobs to create keys that match up with the buildConfigurations in the config file
+  * @param folderName
+  * @param downstreamJob
+  */
+  def parseJob (String folderName, String downstreamJob) {
+
+    // Split downstreamJob down to version, platform, arch and variant to construct buildConfigurationKey
+    // i.e. jdk8u(javaToBuild)-linux(os)-x64(arch)-openj9(variant)
+    def configKey = null
+    List configs = downstreamJob.split("-")
+
+    // Account for freebsd builds (not currently in the config files, remove this if that changes)
+    // i.e. jdk11u-freebsd-x64-hotspot
+    def os = configs[1]
+    if (os == "freebsd") {
+      context.println "[WARNING] freebsd does not currently have a configuration in the pipeline files. Skipping regeneration (remove this statement in https://github.com/AdoptOpenJDK/openjdk-build if this changes)..."
+      continue
+    }
+
+    switch(configs[2]) {
+      case "x86":
+        // Account for x86-32 builds
+        // i.e. jdk8u-windows-x86-32-hotspot
+        def arch = "${configs[2]}-${configs[3]}"
+        variant = configs[4]
+        context.println "Version: ${folderName}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
+
+        configKey = "x${configs[3]}${os.capitalize()}" // x32Windows is the target key
+
+        break
+      default:
+        def arch = configs[2]
+        variant = configs[3]
+
+        if (configs[4] != null) {
+          // Account for large heap builds
+          // i.e. jdk8u-linux-ppc64le-openj9-linuxXL
+          def lrgHeap = configs[4]
+          context.println "Version: ${folderName}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}\nAdditional Tag: ${lrgHeap}"
+
+          configKey = "${arch}${os.capitalize()}XL" // ppc64leLinuxXL is a target key
+        } else if (configs[2] == "arm") {
+          // Account for arm32 builds
+          // i.e. jdk8u-linux-arm-hotspot
+          context.println "Version: ${folderName}\nPlatform: ${os}\nArchitecture: ${arch}32\nVariant: ${variant}"
+
+          configKey = "${arch}32${os.capitalize()}" // arm32Linux is a target key
+        } else {
+          // All other builds
+          context.println "Version: ${folderName}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
+
+          configKey = "${arch}${os.capitalize()}"
+        }
+
+        break
+    }
+
+    return configKey
+  }
+
+  /**
+  * Make downstream job
+  * @param jobConfig
+  * @param jobName
+  */
+  def makeJob (def jobConfig, def jobName) {
+    IndividualBuildConfig config = jobConfig.get(jobName)
+
+    // jdk8u-linux-x64-hotspot
+    def jobTopName = "${javaToBuild}-${name}"
+    def jobFolder = "build-scripts/jobs/${javaToBuild}"
+
+    // i.e jdk8u/jobs/jdk8u-linux-x64-hotspot
+    def downstreamJobName = "${jobFolder}/${jobTopName}"
+    context.println "[INFO] build name: ${downstreamJobName}"
+
+    // Job dsl
+    createJob(jobTopName, jobFolder, config)
+
+    // Job regenerated correctly
+    context.println "[SUCCESS] Regenerated configuration for job $downstreamJobName\n"
+  }
+
+  /**
   * Main function. Ran from regeneration_pipeline.groovy, this will be what jenkins will run first. 
   */ 
   @SuppressWarnings("unused")
   def regenerate() {
+
     /*
     * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
     */
@@ -294,60 +382,10 @@ class Regeneration implements Serializable {
 
           // Parse downstream jobs to create keys that match up with the buildConfigurations in the config file
           context.println "[INFO] Parsing ${job}..."
-          def buildConfigurationKey
+          javaToBuild = folder.key
 
-          // Split job down to version, platform, arch and variant to construct buildConfigurationKey
-          // i.e. jdk8u(javaToBuild)-linux(os)-x64(arch)-openj9(variant)
-          List configs = job.split("-")
-
-          def javaToBuild = folder.key
-          def os = configs[1]
-
-          // Account for freebsd builds (not currently in the config files, remove this if that changes)
-          // i.e. jdk11u-freebsd-x64-hotspot
-          if (os == "freebsd") {
-            context.println "[WARNING] freebsd does not currently have a configuration in the pipeline files. Skipping regeneration (remove this statement in https://github.com/AdoptOpenJDK/openjdk-build if this changes)..."
-            continue
-          }
+          def buildConfigurationKey = parseJob(javaToBuild, job)
           
-          def variant
-          switch(configs[2]) {
-            case "x86":
-              // Account for x86-32 builds
-              // i.e. jdk8u-windows-x86-32-hotspot
-              def arch = "${configs[2]}-${configs[3]}"
-              variant = configs[4]
-              context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
-
-              buildConfigurationKey = "x${configs[3]}${os.capitalize()}" // x32Windows is the target key
-
-              break
-            default:
-              def arch = configs[2]
-              variant = configs[3]
-
-              if (configs[4] != null) {
-                // Account for large heap builds
-                // i.e. jdk8u-linux-ppc64le-openj9-linuxXL
-                def lrgHeap = configs[4]
-                context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}\nAdditional Tag: ${lrgHeap}"
-
-                buildConfigurationKey = "${arch}${os.capitalize()}XL" // ppc64leLinuxXL is a target key
-              } else if (configs[2] == "arm") {
-                // Account for arm32 builds
-                // i.e. jdk8u-linux-arm-hotspot
-                context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}32\nVariant: ${variant}"
-
-                buildConfigurationKey = "${arch}32${os.capitalize()}" // arm32Linux is a target key
-              } else {
-                // All other builds
-                context.println "Version: ${javaToBuild}\nPlatform: ${os}\nArchitecture: ${arch}\nVariant: ${variant}"
-
-                buildConfigurationKey = "${arch}${os.capitalize()}"
-              }
-
-              break
-          }
           context.println "[INFO] ${buildConfigurationKey} is regenerating..."
 
           // Construct configuration for downstream job
@@ -379,21 +417,7 @@ class Regeneration implements Serializable {
           } else {
             // Make job
             if (jobConfigurations.get(name) != null) {
-              IndividualBuildConfig config = jobConfigurations.get(name)
-
-              // jdk8u-linux-x64-hotspot
-              def jobTopName = "${javaToBuild}-${name}"
-              def jobFolder = "build-scripts/jobs/${javaToBuild}"
-
-              // i.e jdk8u/jobs/jdk8u-linux-x64-hotspot
-              def downstreamJobName = "${jobFolder}/${jobTopName}"
-              context.println "[INFO] build name: ${downstreamJobName}"
-
-              // Job dsl
-              createJob(jobTopName, jobFolder, config)
-
-              // Job regenerated correctly
-              context.println "[SUCCESS] Regenerated configuration for job $downstreamJobName\n"
+              makeJob(jobConfigurations, name)
             }
             else {
               // Unexpected error when building or getting the configuration
