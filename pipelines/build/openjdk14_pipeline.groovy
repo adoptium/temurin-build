@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-def javaToBuild = "jdk14"
+def javaToBuild = "jdk14u"
 
 node ("master") {
     def scmVars = checkout scm
