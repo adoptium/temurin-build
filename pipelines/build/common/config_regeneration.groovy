@@ -286,7 +286,7 @@ class Regeneration implements Serializable {
     IndividualBuildConfig config = jobConfig.get(jobName)
 
     // jdk8u-linux-x64-hotspot
-    def jobTopName = "${javaToBuild}-${name}"
+    def jobTopName = "${javaToBuild}-${jobName}"
     def jobFolder = "build-scripts/jobs/${javaToBuild}"
 
     // i.e jdk8u/jobs/jdk8u-linux-x64-hotspot
