@@ -150,7 +150,7 @@ then
     then
       TOOLCHAIN_VERSION="2017"
       # If statements to ensure build machines don't break if they're yet to have openssl-1.1.1e put on them
-      if [ -d /cygdrive/c/openjdk/OpenSSL-1.1.1e-x86_64-VS2017]; then
+      if [ -d /cygdrive/c/openjdk/OpenSSL-1.1.1e-x86_64-VS2017 ]; then
         export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1e-x86_64-VS2017 --enable-openssl-bundling"
       elif [ -d /cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_64.VS2017 ]; then
         export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_64.VS2017 --enable-openssl-bundling"	
