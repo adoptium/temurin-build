@@ -98,7 +98,10 @@ class Config11 {
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
-                configureArgs       : '--disable-ccache --enable-dtrace=auto'
+                configureArgs       : [
+                        "hotspot"     : '--disable-ccache --enable-dtrace=auto',
+                        "openj9"      : '--disable-ccache --enable-dtrace=auto --enable-jitserver'
+                ]
 
         ],
 
@@ -147,7 +150,7 @@ class Config11 {
                 arch                 : 'ppc64le',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto --enable-jitserver'
         ],
         aarch64LinuxXL    : [
                 os                   : 'linux',

@@ -97,7 +97,10 @@ class Config8 {
         ppc64leLinux  : [
                 os  : 'linux',
                 arch: 'ppc64le',
-                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
+                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                configureArgs       : [
+                        "openj9"      : '--enable-jitserver'
+                ]
         ],
 
         arm32Linux    : [
@@ -135,7 +138,7 @@ class Config8 {
                 arch                 : 'ppc64le',
                 additionalFileNameTag: "linuxXL",
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                configureArgs        : '--with-noncompressedrefs'
+                configureArgs        : '--with-noncompressedrefs --enable-jitserver'
         ],
   ]
 

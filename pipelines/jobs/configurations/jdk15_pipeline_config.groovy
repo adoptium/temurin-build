@@ -80,7 +80,6 @@ class Config15 {
                 ],
                 configureArgs       : '--enable-dtrace'
         ],
-
   ]
 
 }

@@ -98,7 +98,15 @@ class Config14 {
                 arch                : 'ppc64le',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 configureArgs       : '--disable-ccache --enable-dtrace=auto'
+        ],
 
+        arm32Linux    : [
+                os                  : 'linux',
+                arch                : 'arm',
+                // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
+                //test                : ['sanity.openjdk', 'sanity.perf']
+                test                : false,
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         arm32Linux    : [
@@ -125,7 +133,6 @@ class Config14 {
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 configureArgs       : '--enable-dtrace=auto'
         ],
-
   ]
   
 }
