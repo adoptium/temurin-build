@@ -233,7 +233,7 @@ class Regeneration implements Serializable {
     def os = configs[1]
     if (os == "freebsd") {
       context.println "[WARNING] freebsd does not currently have a configuration in the pipeline files. Skipping regeneration (remove this statement in https://github.com/AdoptOpenJDK/openjdk-build if this changes)..."
-      continue
+      return "freebsd"
     }
 
     switch(configs[2]) {
@@ -385,6 +385,8 @@ class Regeneration implements Serializable {
           javaToBuild = folder.key
 
           def buildConfigurationKey = parseJob(javaToBuild, job)
+
+          if (buildConfigurationKey == "freebsd") { continue }
           
           context.println "[INFO] ${buildConfigurationKey} is regenerating..."
 
