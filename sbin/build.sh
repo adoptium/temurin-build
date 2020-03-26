@@ -47,7 +47,7 @@ export LIB_DIR=$(crossPlatformRealPath "${SCRIPT_DIR}/../pipelines/")
 
 export jreTargetPath
 export CONFIGURE_ARGS=""
-export MAKE_TEST_IMAGE=""
+export ADDITIONAL_MAKE_TARGETS=""
 export GIT_CLONE_ARGUMENTS=()
 
 # Parse the CL arguments, defers to the shared function in common-functions.sh
@@ -352,14 +352,17 @@ buildTemplatedFile() {
   FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
   echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
 
-  # If it's Java 9+ then we also make test-image to build the native test libraries
+  # If it's Java 9+ then we also make test-image to build the native test libraries,
+  # For openj9 add debug-image
   JDK_PREFIX="jdk"
   JDK_VERSION_NUMBER="${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
-  if [ "$JDK_VERSION_NUMBER" -gt 8 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
-    MAKE_TEST_IMAGE=" test-image" # the added white space is deliberate as it's the last arg
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
+    ADDITIONAL_MAKE_TARGETS=" test-image debug-image"
+  elif [ "$JDK_VERSION_NUMBER" -gt 8 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
+    ADDITIONAL_MAKE_TARGETS=" test-image"
   fi
 
-  FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]} ${MAKE_TEST_IMAGE}"
+  FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]} ${ADDITIONAL_MAKE_TARGETS}"
 
   # shellcheck disable=SC2002
   cat "$SCRIPT_DIR/build.template" | \
