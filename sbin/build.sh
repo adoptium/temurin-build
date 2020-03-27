@@ -133,7 +133,7 @@ getOpenJdkVersion() {
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
     local corrVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
- 
+
     local corrVersion="$(cut -d'.' -f 1 < ${corrVerFile})"
 
     if [ "${corrVersion}" == "8" ]; then
@@ -535,8 +535,8 @@ removingUnnecessaryFiles() {
       *) dirToRemove="${jreTargetPath}" ;;
     esac
     rm -rf "${dirToRemove}"/demo || true
-    
   fi
+
   # Test image - check if the config is set and directory exists
   local testImagePath="${BUILD_CONFIG[TEST_IMAGE_PATH]}"
   if [ ! -z "${testImagePath}" ] && [ -d "${testImagePath}" ]
@@ -562,10 +562,7 @@ removingUnnecessaryFiles() {
   esac
   rm -rf "${dirToRemove}"/demo || true
 
-  find . -name "*.debuginfo" -type f -delete || true
-  find . -name "*.diz" -type f -delete || true
-  find . -name "*.pdb" -type f -delete || true
-  find . -name "*.map" -type f -delete || true
+  find "${jdkTargetPath}" -type f "(" -name "*.debuginfo" -o -name "*.diz" -o -name "*.pdb" -o -name "*.map" ")" -delete || true
 
   echo "Finished removing unnecessary files from ${jdkTargetPath}"
 }
@@ -705,7 +702,7 @@ createOpenJDKTarArchive()
     createArchive "${testImageTargetPath}" "${testImageName}"
   fi
   if [ -d "${debugImageTargetPath}" ]; then
-    echo "OpenJDK debug-image path will be ${debugImageTargetPath}."
+    echo "OpenJDK debug image path will be ${debugImageTargetPath}."
     local debugImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debugimage}")
     createArchive "${debugImageTargetPath}" "${debugImageName}"
   fi
