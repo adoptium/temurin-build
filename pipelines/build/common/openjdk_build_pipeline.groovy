@@ -495,7 +495,9 @@ class Build {
                         context.echo("checking ${buildConfig.TARGET_OS}")
                         if (buildConfig.TARGET_OS == "windows") {
                             context.echo("changing workspace to /tmp/openjdk-build/${jobName}")
-                            context.ws("/tmp/openjdk-build/${jobName}", buildScripts(context, cleanWorkspace, buildConfig, filename))
+                            context.ws("/tmp/openjdk-build/${jobName}") {
+                                buildScripts(context, cleanWorkspace, buildConfig, filename)
+                            }
                         } else {
                             buildScripts(context, cleanWorkspace, buildConfig, filename)
                         }
