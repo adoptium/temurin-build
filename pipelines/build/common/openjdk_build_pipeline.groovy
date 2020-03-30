@@ -437,7 +437,7 @@ class Build {
         return fileName
     }
 
-    def buildScripts(context, cleanWorkspace, buildConfig, filename) {
+    def buildScripts(cleanWorkspace, buildConfig, filename) {
         return context.stage("build") {
             if (cleanWorkspace) {
                 try {
@@ -496,10 +496,10 @@ class Build {
                         if (buildConfig.TARGET_OS == "windows") {
                             context.echo("changing workspace to C:/cygwin64/tmp/openjdk-build/${jobName}")
                             context.ws("C:/cygwin64/tmp/openjdk-build/${jobName}") {
-                                buildScripts(context, cleanWorkspace, buildConfig, filename)
+                                buildScripts(cleanWorkspace, buildConfig, filename)
                             }
                         } else {
-                            buildScripts(context, cleanWorkspace, buildConfig, filename)
+                            buildScripts(cleanWorkspace, buildConfig, filename)
                         }
                     }
                 } else {
