@@ -437,7 +437,7 @@ class Build {
         return fileName
     }
 
-    def buildScripts(context, cleanWorkspace, buildConfig) {
+    def buildScripts(context, cleanWorkspace, buildConfig, filename) {
         return context.stage("build") {
             if (cleanWorkspace) {
                 try {
@@ -493,9 +493,9 @@ class Build {
                     context.node(buildConfig.NODE_LABEL) {
                         // This is to avoid windows path length issues.
                         if (buildConfig.TARGET_OS == 'windows') {
-                            context.ws("/tmp/openjdk-build/${jobName}", buildScripts(context, cleanWorkspace, buildConfig))
+                            context.ws("/tmp/openjdk-build/${jobName}", buildScripts(context, cleanWorkspace, buildConfig, filename))
                         } else {
-                            buildScripts(context, cleanWorkspace, buildConfig)
+                            buildScripts(context, cleanWorkspace, buildConfig, filename)
                         }
                     }
                 } else {
