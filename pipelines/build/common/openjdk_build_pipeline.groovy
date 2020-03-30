@@ -494,8 +494,8 @@ class Build {
                         // This is to avoid windows path length issues.
                         context.echo("checking ${buildConfig.TARGET_OS}")
                         if (buildConfig.TARGET_OS == "windows") {
-                            context.echo("changing workspace to /tmp/openjdk-build/${jobName}")
-                            context.ws("/tmp/openjdk-build/${jobName}") {
+                            context.echo("changing workspace to C:/cygwin64/tmp/openjdk-build/${jobName}")
+                            context.ws("C:/cygwin64/tmp/openjdk-build/${jobName}") {
                                 buildScripts(context, cleanWorkspace, buildConfig, filename)
                             }
                         } else {
