@@ -450,7 +450,7 @@ class Build {
             try {
                 List<String> envVars = buildConfig.toEnvVars()
                 envVars.add("FILENAME=${filename}" as String)
-
+                def versionInfo
                 context.withEnv(envVars) {
                     context.sh(script: "./build-farm/make-adopt-build-farm.sh")
                     String versionOut = context.readFile("workspace/target/version.txt")
