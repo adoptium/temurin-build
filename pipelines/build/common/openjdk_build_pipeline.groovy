@@ -437,7 +437,7 @@ class Build {
         return fileName
     }
 
-    def buildScripts(cleanWorkspace, buildConfig, filename) {
+    def buildScripts(cleanWorkspace, filename) {
         return context.stage("build") {
             if (cleanWorkspace) {
                 try {
@@ -481,8 +481,8 @@ class Build {
 
             def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
             def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
-            def jobName = env.JOB_NAME.split('/')
-            jobName = jobName[jobName.size() -1]
+            def jobNameSplit = env.JOB_NAME.split('/')
+            def jobName = jobNameSplit[jobNameSplit.size() -1]
 
             VersionInfo versionInfo = null
 
@@ -496,10 +496,10 @@ class Build {
                         if (buildConfig.TARGET_OS == "windows") {
                             context.echo("changing workspace to C:/cygwin64/tmp/openjdk-build/${jobName}")
                             context.ws("C:/cygwin64/tmp/openjdk-build/${jobName}") {
-                                buildScripts(cleanWorkspace, buildConfig, filename)
+                                buildScripts(cleanWorkspace, filename)
                             }
                         } else {
-                            buildScripts(cleanWorkspace, buildConfig, filename)
+                            buildScripts(cleanWorkspace, filename)
                         }
                     }
                 } else {
