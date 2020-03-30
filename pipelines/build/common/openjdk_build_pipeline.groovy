@@ -492,7 +492,9 @@ class Build {
                 if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
                     context.node(buildConfig.NODE_LABEL) {
                         // This is to avoid windows path length issues.
-                        if (buildConfig.TARGET_OS == 'windows') {
+                        context.echo("checking ${buildConfig.TARGET_OS}")
+                        if (buildConfig.TARGET_OS == "windows") {
+                            context.echo("changing workspace to /tmp/openjdk-build/${jobName}")
                             context.ws("/tmp/openjdk-build/${jobName}", buildScripts(context, cleanWorkspace, buildConfig, filename))
                         } else {
                             buildScripts(context, cleanWorkspace, buildConfig, filename)
