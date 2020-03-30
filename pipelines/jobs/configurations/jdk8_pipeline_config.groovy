@@ -36,8 +36,8 @@ class Config8 {
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: [
-                        hotspot : 'win2008',
-                        corretto: 'win2008',
+                        hotspot : 'win2012',
+                        corretto: 'win2012',
                         openj9  : 'win2012&&mingw-cygwin'
                 ],
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
@@ -56,8 +56,8 @@ class Config8 {
                 os                  : 'windows',
                 arch                : 'x86-32',
                 additionalNodeLabels: [
-                        hotspot : 'win2008',
-                        corretto: 'win2008',
+                        hotspot : 'win2012',
+                        corretto: 'win2012',
                         openj9  : 'win2012&&mingw-cygwin'
                 ],
                 buildArgs : [
