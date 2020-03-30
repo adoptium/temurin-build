@@ -437,6 +437,36 @@ class Build {
         return fileName
     }
 
+    def buildScripts(context, cleanWorkspace, buildConfig) {
+        return context.stage("build") {
+            if (cleanWorkspace) {
+                try {
+                    context.cleanWs notFailBuild: true
+                } catch (e) {
+                    context.println "Failed to clean ${e}"
+                }
+            }
+            context.checkout context.scm
+            try {
+                List<String> envVars = buildConfig.toEnvVars()
+                envVars.add("FILENAME=${filename}" as String)
+
+                context.withEnv(envVars) {
+                    context.sh(script: "./build-farm/make-adopt-build-farm.sh")
+                    String versionOut = context.readFile("workspace/target/version.txt")
+
+                    versionInfo = parseVersionOutput(versionOut)
+                }
+                writeMetadata(versionInfo)
+                context.archiveArtifacts artifacts: "workspace/target/*"
+            } finally {
+                if (buildConfig.TARGET_OS == "aix") {
+                    context.cleanWs notFailBuild: true
+                }
+            }
+        }
+    }
+
     def build() {
         try {
 
@@ -451,6 +481,8 @@ class Build {
 
             def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
             def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
+            def jobName = env.JOB_NAME.split('/')
+            jobName = jobName[jobName.size() -1]
 
             VersionInfo versionInfo = null
 
@@ -459,34 +491,11 @@ class Build {
 
                 if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
                     context.node(buildConfig.NODE_LABEL) {
-                        context.ws("/tmp/openjdk-build/${env.JOB_NAME}") {
-                            context.stage("build") {
-                                if (cleanWorkspace) {
-                                    try {
-                                        context.cleanWs notFailBuild: true
-                                    } catch (e) {
-                                        context.println "Failed to clean ${e}"
-                                    }
-                                }
-                                context.checkout context.scm
-                                try {
-                                    List<String> envVars = buildConfig.toEnvVars()
-                                    envVars.add("FILENAME=${filename}" as String)
-
-                                    context.withEnv(envVars) {
-                                        context.sh(script: "./build-farm/make-adopt-build-farm.sh")
-                                        String versionOut = context.readFile("workspace/target/version.txt")
-
-                                        versionInfo = parseVersionOutput(versionOut)
-                                    }
-                                    writeMetadata(versionInfo)
-                                    context.archiveArtifacts artifacts: "workspace/target/*"
-                                } finally {
-                                    if (buildConfig.TARGET_OS == "aix") {
-                                        context.cleanWs notFailBuild: true
-                                    }
-                                }
-                            }
+                        // This is to avoid windows path length issues.
+                        if (buildConfig.TARGET_OS == 'windows') {
+                            context.ws("/tmp/openjdk-build/${jobName}", buildScripts(context, cleanWorkspace, buildConfig))
+                        } else {
+                            buildScripts(context, cleanWorkspace, buildConfig)
                         }
                     }
                 } else {
