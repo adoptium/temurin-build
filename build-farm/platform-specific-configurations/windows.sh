@@ -22,7 +22,6 @@ export ANT_HOME=/cygdrive/C/Projects/OpenJDK/apache-ant-1.10.1
 export ALLOW_DOWNLOADS=true
 export LANG=C
 export JAVA_HOME=$JDK_BOOT_DIR
-export BUILD_ARGS="--tmp-space-build ${BUILD_ARGS}"
 export OPENJ9_NASM_VERSION=2.13.03
 
 TOOLCHAIN_VERSION=""

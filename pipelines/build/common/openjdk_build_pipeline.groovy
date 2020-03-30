@@ -458,31 +458,33 @@ class Build {
                 def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
 
                 if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
-                    context.node(buildConfig.NODE_LABEL) {
-                        context.stage("build") {
-                            if (cleanWorkspace) {
+                    context.node(buildConfig.NODE_LABEL {
+                        context.ws("/tmp/openjdk-build/${env.JOB_NAME}") {
+                            context.stage("build") {
+                                if (cleanWorkspace) {
+                                    try {
+                                        context.cleanWs notFailBuild: true
+                                    } catch (e) {
+                                        context.println "Failed to clean ${e}"
+                                    }
+                                }
+                                context.checkout context.scm
                                 try {
-                                    context.cleanWs notFailBuild: true
-                                } catch (e) {
-                                    context.println "Failed to clean ${e}"
-                                }
-                            }
-                            context.checkout context.scm
-                            try {
-                                List<String> envVars = buildConfig.toEnvVars()
-                                envVars.add("FILENAME=${filename}" as String)
+                                    List<String> envVars = buildConfig.toEnvVars()
+                                    envVars.add("FILENAME=${filename}" as String)
 
-                                context.withEnv(envVars) {
-                                    context.sh(script: "./build-farm/make-adopt-build-farm.sh")
-                                    String versionOut = context.readFile("workspace/target/version.txt")
+                                    context.withEnv(envVars) {
+                                        context.sh(script: "./build-farm/make-adopt-build-farm.sh")
+                                        String versionOut = context.readFile("workspace/target/version.txt")
 
-                                    versionInfo = parseVersionOutput(versionOut)
-                                }
-                                writeMetadata(versionInfo)
-                                context.archiveArtifacts artifacts: "workspace/target/*"
-                            } finally {
-                                if (buildConfig.TARGET_OS == "aix") {
-                                    context.cleanWs notFailBuild: true
+                                        versionInfo = parseVersionOutput(versionOut)
+                                    }
+                                    writeMetadata(versionInfo)
+                                    context.archiveArtifacts artifacts: "workspace/target/*"
+                                } finally {
+                                    if (buildConfig.TARGET_OS == "aix") {
+                                        context.cleanWs notFailBuild: true
+                                    }
                                 }
                             }
                         }
