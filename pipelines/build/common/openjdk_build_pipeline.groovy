@@ -458,7 +458,7 @@ class Build {
                 def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
 
                 if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
-                    context.node(buildConfig.NODE_LABEL {
+                    context.node(buildConfig.NODE_LABEL) {
                         context.ws("/tmp/openjdk-build/${env.JOB_NAME}") {
                             context.stage("build") {
                                 if (cleanWorkspace) {
