@@ -267,12 +267,16 @@ buildingTheRestOfTheConfigParameters()
     # other options include fastdebug and slowdebug
     addConfigureArg "--with-debug-level=" "release"
     addConfigureArg "--disable-zip-debug-info" ""
-    addConfigureArg "--disable-debug-symbols" ""
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]] ; then
+      addConfigureArg "--disable-debug-symbols" ""
+    fi
     addConfigureArg "--with-x=" "/usr/include/X11"
     addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
   else
     addConfigureArg "--with-debug-level=" "release"
-    addConfigureArg "--with-native-debug-symbols=" "none"
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]] ; then
+      addConfigureArg "--with-native-debug-symbols=" "none"
+    fi
   fi
 }
 
