@@ -45,6 +45,7 @@ class Build {
     final def context
     final def env
     final def currentBuild
+    VersionInfo versionInfo = null
 
     Build(IndividualBuildConfig buildConfig, def context, def env, def currentBuild) {
         this.buildConfig = buildConfig
@@ -450,7 +451,6 @@ class Build {
             try {
                 List<String> envVars = buildConfig.toEnvVars()
                 envVars.add("FILENAME=${filename}" as String)
-                def versionInfo
                 context.withEnv(envVars) {
                     context.sh(script: "./build-farm/make-adopt-build-farm.sh")
                     String versionOut = context.readFile("workspace/target/version.txt")
@@ -483,8 +483,6 @@ class Build {
             def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
             def jobNameSplit = env.JOB_NAME.split('/')
             def jobName = jobNameSplit[jobNameSplit.size() -1]
-
-            VersionInfo versionInfo = null
 
             context.stage("queue") {
                 def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
