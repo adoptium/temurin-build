@@ -491,7 +491,7 @@ class Build {
                         context.echo("checking ${buildConfig.TARGET_OS}")
                         if (buildConfig.TARGET_OS == "windows") {
                             def workspace = "C:/cygwin64/tmp/openjdk-build/"
-                            if (env.hasProperty('CYGWIN_WORKSPACE')) {
+                            if (env.hasVariable("CYGWIN_WORKSPACE")) {
                                 workspace = env.CYGWIN_WORKSPACE
                             }
                             context.echo("changing ${workspace}")
