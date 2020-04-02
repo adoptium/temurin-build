@@ -481,8 +481,6 @@ class Build {
 
             def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
             def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
-            def jobNameSplit = env.JOB_NAME.split('/')
-            def jobName = jobNameSplit[jobNameSplit.size() -1]
 
             context.stage("queue") {
                 def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
@@ -492,8 +490,12 @@ class Build {
                         // This is to avoid windows path length issues.
                         context.echo("checking ${buildConfig.TARGET_OS}")
                         if (buildConfig.TARGET_OS == "windows") {
-                            context.echo("changing workspace to C:/cygwin64/tmp/openjdk-build/${jobName}")
-                            context.ws("C:/cygwin64/tmp/openjdk-build/${jobName}") {
+                            def workspace = "C:/cygwin64/tmp/openjdk-build/"
+                            if (env.CYGWIN_WORKSPACE) {
+                                workspace = env.CYGWIN_WORKSPACE
+                            }
+                            context.echo("changing ${workspace}")
+                            context.ws(workspace) {
                                 buildScripts(cleanWorkspace, filename)
                             }
                         } else {
