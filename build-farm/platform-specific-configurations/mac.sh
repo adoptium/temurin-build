@@ -31,11 +31,8 @@ function isHotSpot() {
 export MACOSX_DEPLOYMENT_TARGET=10.9
 export BUILD_ARGS="${BUILD_ARGS}"
 
-XCODE_SWITCH_PATH="/";
-
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
-  XCODE_SWITCH_PATH="/Applications/Xcode.app"
   # See https://github.com/AdoptOpenJDK/openjdk-build/issues/1202
   if isHotSpot; then
     export COMPILER_WARNINGS_FATAL=false
@@ -44,9 +41,9 @@ then
 else
   export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling "
   else
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.9"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.9 --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
   fi
 fi
 
@@ -60,8 +57,6 @@ then
   security unlock-keychain -p `cat ~/.password`
   export BUILD_ARGS="${BUILD_ARGS} --codesign-identity 'Developer ID Application: London Jamocha Community CIC'"
 fi
-
-sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
 # Any version above 8 (11 for now due to openjdk-build#1409
 if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then

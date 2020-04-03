@@ -4,7 +4,7 @@ class Config8 {
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: [
-                        hotspot : 'build-macstadium-macos1010-1',
+                        hotspot : 'macos10.14',
                         corretto: 'build-macstadium-macos1010-1',
                         openj9  : 'build-macstadium-macos1010-2'
                 ],
