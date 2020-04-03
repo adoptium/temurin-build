@@ -37,13 +37,14 @@ then
   if isHotSpot; then
     export COMPILER_WARNINGS_FATAL=false
     echo "Compiler Warnings set to: $COMPILER_WARNINGS_FATAL"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
   fi
 else
   export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling "
   else
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.9 --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.9"
   fi
 fi
 
