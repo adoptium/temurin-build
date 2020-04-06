@@ -45,6 +45,7 @@ class Build {
     final def context
     final def env
     final def currentBuild
+    VersionInfo versionInfo = null
 
     Build(IndividualBuildConfig buildConfig, def context, def env, def currentBuild) {
         this.buildConfig = buildConfig
@@ -372,6 +373,8 @@ class Build {
                 type = "jre"
             } else if (file.contains("-testimage")) {
                 type = "testimage"
+            } else if (file.contains("-debugimage")) {
+                type = "debugimage"
             }
 
             String hash = context.sh(script: "sha256sum $file | cut -f1 -d' '", returnStdout: true, returnStatus: false)
@@ -435,6 +438,35 @@ class Build {
         return fileName
     }
 
+    def buildScripts(cleanWorkspace, filename) {
+        return context.stage("build") {
+            if (cleanWorkspace) {
+                try {
+                    context.cleanWs notFailBuild: true
+                } catch (e) {
+                    context.println "Failed to clean ${e}"
+                }
+            }
+            context.checkout context.scm
+            try {
+                List<String> envVars = buildConfig.toEnvVars()
+                envVars.add("FILENAME=${filename}" as String)
+                context.withEnv(envVars) {
+                    context.sh(script: "./build-farm/make-adopt-build-farm.sh")
+                    String versionOut = context.readFile("workspace/target/version.txt")
+
+                    versionInfo = parseVersionOutput(versionOut)
+                }
+                writeMetadata(versionInfo)
+                context.archiveArtifacts artifacts: "workspace/target/*"
+            } finally {
+                if (buildConfig.TARGET_OS == "aix") {
+                    context.cleanWs notFailBuild: true
+                }
+            }
+        }
+    }
+
     def build() {
         try {
 
@@ -450,39 +482,24 @@ class Build {
             def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
             def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
 
-            VersionInfo versionInfo = null
-
             context.stage("queue") {
                 def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
 
                 if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
                     context.node(buildConfig.NODE_LABEL) {
-                        context.stage("build") {
-                            if (cleanWorkspace) {
-                                try {
-                                    context.cleanWs notFailBuild: true
-                                } catch (e) {
-                                    context.println "Failed to clean ${e}"
-                                }
+                        // This is to avoid windows path length issues.
+                        context.echo("checking ${buildConfig.TARGET_OS}")
+                        if (buildConfig.TARGET_OS == "windows") {
+                            def workspace = "C:/cygwin64/tmp/openjdk-build/"
+                            if (env.CYGWIN_WORKSPACE) {
+                                workspace = env.CYGWIN_WORKSPACE
                             }
-                            context.checkout context.scm
-                            try {
-                                List<String> envVars = buildConfig.toEnvVars()
-                                envVars.add("FILENAME=${filename}" as String)
-
-                                context.withEnv(envVars) {
-                                    context.sh(script: "./build-farm/make-adopt-build-farm.sh")
-                                    String versionOut = context.readFile("workspace/target/version.txt")
-
-                                    versionInfo = parseVersionOutput(versionOut)
-                                }
-                                writeMetadata(versionInfo)
-                                context.archiveArtifacts artifacts: "workspace/target/*"
-                            } finally {
-                                if (buildConfig.TARGET_OS == "aix") {
-                                    context.cleanWs notFailBuild: true
-                                }
+                            context.echo("changing ${workspace}")
+                            context.ws(workspace) {
+                                buildScripts(cleanWorkspace, filename)
                             }
+                        } else {
+                            buildScripts(cleanWorkspace, filename)
                         }
                     }
                 } else {
