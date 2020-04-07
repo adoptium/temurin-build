@@ -168,8 +168,6 @@ setRepository() {
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]]
   then
     suffix="corretto/corretto-${BUILD_CONFIG[OPENJDK_CORE_VERSION]:3}"
-  elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
-    suffix="adoptopenjdk/openjdk-aarch32-jdk8u";
   else
     suffix="adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}";
   fi
@@ -237,8 +235,7 @@ processArgumentsforSpecificArchitectures() {
 
     "armv7l")
       if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && isHotSpot; then
-        jvm_variant=client
-        make_args_for_any_platform="DEBUG_BINARIES=true images"
+        jvm_variant=zero
       else
         jvm_variant=server,client
         make_args_for_any_platform="DEBUG_BINARIES=true images legacy-jre-image"
