@@ -8,14 +8,14 @@ class Config8 {
                         corretto: 'build-macstadium-macos1010-1',
                         openj9  : 'build-macstadium-macos1010-2'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
+                test                : false
         ],
 
         x64MacXL      : [
                 os                   : 'mac',
                 arch                 : 'x64',
                 additionalNodeLabels : 'build-macstadium-macos1010-2',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'special.openjdk'],
+                test                 : false,
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -24,7 +24,7 @@ class Config8 {
                 os                  : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
+                test                : false,
                 configureArgs       : [
                         "hotspot-jfr" : '--enable-jfr',
                         "openj9"      : '--enable-jitserver'
@@ -40,14 +40,14 @@ class Config8 {
                         corretto: 'win2012',
                         openj9  : 'win2012&&mingw-cygwin'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
+                test                : false
         ],
 
         x64WindowsXL    : [
                 os                   : 'windows',
                 arch                 : 'x64',
                 additionalNodeLabels : 'win2012&&mingw-cygwin',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                test                 : false,
                 additionalFileNameTag: "windowsXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -63,23 +63,20 @@ class Config8 {
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
-                test                : ['sanity.openjdk', 'special.openjdk']
+                test                : false
         ],
 
         ppc64Aix      : [
                 os  : 'aix',
                 arch: 'ppc64',
                 additionalNodeLabels: 'xlc13',
-                test: [
-                        nightly: ['sanity.openjdk'],
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
-                ]
+                test: false
         ],
 
         s390xLinux    : [
                 os  : 'linux',
                 arch: 's390x',
-                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
+                test: false
         ],
 
         sparcv9Solaris: [
@@ -97,7 +94,7 @@ class Config8 {
         ppc64leLinux  : [
                 os  : 'linux',
                 arch: 'ppc64le',
-                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                test: false,
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver'
                 ]
@@ -115,7 +112,7 @@ class Config8 {
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
+                test                : false
         ],
 
         x64LinuxXL       : [
@@ -124,20 +121,20 @@ class Config8 {
                 arch                 : 'x64',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-jitserver',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                test                 : false
         ],
         s390xLinuxXL       : [
                 os                   : 'linux',
                 arch                 : 's390x',
                 additionalFileNameTag: "linuxXL",
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                test                 : false,
                 configureArgs        : '--with-noncompressedrefs'
         ],
         ppc64leLinuxXL       : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
                 additionalFileNameTag: "linuxXL",
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                test                 : false,
                 configureArgs        : '--with-noncompressedrefs --enable-jitserver'
         ],
   ]
