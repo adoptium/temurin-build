@@ -6,7 +6,7 @@ class Config15 {
                 additionalNodeLabels: 'macos10.14',
                 test                : [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                        release: false
                 ],
                 configureArgs       : '--enable-dtrace'
         ],
@@ -17,7 +17,7 @@ class Config15 {
                 additionalNodeLabels: 'centos6',
                 test                : [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
+                        release: false
                 ],
                 configureArgs       : '--disable-ccache --enable-dtrace'
         ],
@@ -34,7 +34,7 @@ class Config15 {
                 ],
                 test                : [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
+                        release: false
                 ]
         ],
 
@@ -44,7 +44,7 @@ class Config15 {
                 additionalNodeLabels: 'xlc16',
                 test                : [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
+                        release: false
                 ]
         ],
 
@@ -54,7 +54,7 @@ class Config15 {
                 arch                : 's390x',
                 test                : [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                        release: false
                 ],
                 configureArgs       : '--disable-ccache --enable-dtrace'
         ],
@@ -64,7 +64,7 @@ class Config15 {
                 arch                : 'ppc64le',
                 test                : [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                        release: false
                 ],
                 configureArgs       : '--disable-ccache --enable-dtrace'
 
@@ -76,7 +76,7 @@ class Config15 {
                 additionalNodeLabels: 'centos7',
                 test                : [
                         nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                        release: false
                 ],
                 configureArgs       : '--enable-dtrace'
         ],
