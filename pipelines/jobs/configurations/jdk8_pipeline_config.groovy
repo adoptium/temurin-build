@@ -6,7 +6,7 @@ class Config8 {
                 additionalNodeLabels: [
                         hotspot : 'build-macstadium-macos1010-1',
                         corretto: 'build-macstadium-macos1010-1',
-                        openj9  : 'build-macstadium-macos1010-2'
+                        openj9  : 'macos10.14'
                 ],
                 test                : false
         ],
@@ -14,7 +14,7 @@ class Config8 {
         x64MacXL      : [
                 os                   : 'mac',
                 arch                 : 'x64',
-                additionalNodeLabels : 'build-macstadium-macos1010-2',
+                additionalNodeLabels : 'macos10.14',
                 test                 : false,
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs'
