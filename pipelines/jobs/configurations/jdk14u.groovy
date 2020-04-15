@@ -20,6 +20,9 @@ targetConfigurations = [
         "x64WindowsXL": [
                 "openj9"
         ],
+        "x32Windows"  : [
+                "hotspot"
+        ],
         "ppc64Aix"    : [
                 "hotspot",
                 "openj9"
@@ -43,6 +46,9 @@ targetConfigurations = [
                 "openj9"
         ],
         "aarch64Linux": [
+                "hotspot"
+        ],
+        "arm32Linux"  : [
                 "hotspot"
         ]
 ]

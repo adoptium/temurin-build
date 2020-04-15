@@ -22,7 +22,6 @@ export ANT_HOME=/cygdrive/C/Projects/OpenJDK/apache-ant-1.10.1
 export ALLOW_DOWNLOADS=true
 export LANG=C
 export JAVA_HOME=$JDK_BOOT_DIR
-export BUILD_ARGS="--tmp-space-build ${BUILD_ARGS}"
 export OPENJ9_NASM_VERSION=2.13.03
 
 TOOLCHAIN_VERSION=""
@@ -39,7 +38,12 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
       if [ ! -d "$bootDir/bin" ]; then
         echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
         releaseType="ga"
-        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
+        # This is needed to convert x86-32 to x32 which is what the API uses
+        case "$ARCHITECTURE" in
+          "x86-32") downloadArch="x32";;
+          *) downloadArch="$ARCHITECTURE";;
+        esac
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/hotspot/normal/adoptopenjdk"
         apiURL=$(eval echo ${apiUrlTemplate})
         # make-adopt-build-farm.sh has 'set -e'. We need to disable that
         # for the fallback mechanism, as downloading of the GA binary might
@@ -72,7 +76,12 @@ then
 
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
   then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_32 --enable-openssl-bundling"
+    # If statements to ensure build machines don't break if they're yet to have openssl-1.1.1e put on them
+    if [ -d /cygdrive/c/openjdk/OpenSSL-1.1.1e-x86_32-VS2013 ]; then
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1e-x86_32-VS2013 --enable-openssl-bundling"
+    else
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_32 --enable-openssl-bundling"
+    fi
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
@@ -120,7 +129,13 @@ then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="$PATH:/c/cygwin64/bin"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache  --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_64 --enable-openssl-bundling"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache"
+      # If statements to ensure build machines don't break if they're yet to have openssl-1.1.1e put on them
+      if [ -d /cygdrive/c/openjdk/OpenSSL-1.1.1e-x86_64-VS2013 ]; then
+        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1e-x86_64-VS2013 --enable-openssl-bundling"
+      else
+        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_64 --enable-openssl-bundling"
+      fi
     elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
     then
       TOOLCHAIN_VERSION="2013"
@@ -133,7 +148,14 @@ then
     elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
     then
       TOOLCHAIN_VERSION="2017"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_64 --enable-openssl-bundling"
+      # If statements to ensure build machines don't break if they're yet to have openssl-1.1.1e put on them
+      if [ -d /cygdrive/c/openjdk/OpenSSL-1.1.1e-x86_64-VS2017 ]; then
+        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1e-x86_64-VS2017 --enable-openssl-bundling"
+      elif [ -d /cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_64-VS2017 ]; then
+        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_64-VS2017 --enable-openssl-bundling"	
+      else	
+        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_64 --enable-openssl-bundling"
+      fi
     fi
 
     CUDA_VERSION=9.0

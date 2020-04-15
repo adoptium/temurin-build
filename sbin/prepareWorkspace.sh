@@ -24,8 +24,7 @@
 
 set -eu
 
-
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/common/constants.sh"
@@ -40,23 +39,22 @@ FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.30}
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
-# TODO refactor this for SRP
-checkoutAndCloneOpenJDKGitRepo()
-{
+# TODO refactor this for Single Responsibility Principle (SRP)
+checkoutAndCloneOpenJDKGitRepo() {
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
 
-  # Check that we have a git repo of a valid openjdk version on our local file system
-  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && ( [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK10_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ]) ; then
+  # Check that we have a git repo, we assume that it is a repo that contains openjdk source
+  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep "${BUILD_CONFIG[REPOSITORY]}"
-    local isCorrectGitRepo=$?
+    local isValidGitRepo=$?
     set -e
 
     # If the local copy of the git source repo is valid then we reset appropriately
-    if [ "${isCorrectGitRepo}" == "0" ]; then
+    if [ "${isValidGitRepo}" == "0" ]; then
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
       sleep 10
@@ -70,7 +68,7 @@ checkoutAndCloneOpenJDKGitRepo()
       echo "If this is inside a docker you can purge the existing source by passing --clean-docker-build"
       exit 1
     fi
-  elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] ; then
+  elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
     # If it doesn't exist, clone it
     echo "Didn't find any existing openjdk repository at $(pwd)/${BUILD_CONFIG[WORKING_DIR]} so cloning the source to openjdk"
     cloneOpenJDKGitRepo
@@ -101,11 +99,11 @@ checkoutAndCloneOpenJDKGitRepo()
   fi
 
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 11 ]]; then
-     # Verify Adopt patches tag is being built, otherwise we may be accidently just building "raw" OpenJDK
-     if [ ! -f "${ADOPTOPENJDK_MD_MARKER_FILE}" ] && [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "false" ]; then
-       echo "${ADOPTOPENJDK_MD_MARKER_FILE} marker file not found in fetched source to be built, this may mean the wrong SCMReference build parameter has been specified. Ensure the correct AdoptOpenJDK patch release tag is specified, eg.for build jdk-11.0.4+10, it would be jdk-11.0.4+10_adopt"
-       exit 1
-     fi
+    # Verify Adopt patches tag is being built, otherwise we may be accidently just building "raw" OpenJDK
+    if [ ! -f "${ADOPTOPENJDK_MD_MARKER_FILE}" ] && [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "false" ]; then
+      echo "${ADOPTOPENJDK_MD_MARKER_FILE} marker file not found in fetched source to be built, this may mean the wrong SCMReference build parameter has been specified. Ensure the correct AdoptOpenJDK patch release tag is specified, eg.for build jdk-11.0.4+10, it would be jdk-11.0.4+10_adopt"
+      exit 1
+    fi
   fi
 
   git clean -ffdx
@@ -131,9 +129,9 @@ updateOpenj9Sources() {
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
+
 # Clone the git repo
-cloneOpenJDKGitRepo()
-{
+cloneOpenJDKGitRepo() {
   setGitCloneArguments
 
   echo "git clone ${GIT_CLONE_ARGUMENTS[*]}"
@@ -141,17 +139,15 @@ cloneOpenJDKGitRepo()
 }
 
 # Create the workspace
-createWorkspace()
-{
-   # Setting this to ensure none of the files we ship are group writable
-   umask 022
-   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
-   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
+createWorkspace() {
+  # Setting this to ensure none of the files we ship are group writable
+  umask 022
+  mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
+  mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 }
 
 # ALSA first for sound
-checkingAndDownloadingAlsa()
-{
+checkingAndDownloadingAlsa() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
 
   echo "Checking for ALSA"
@@ -160,8 +156,7 @@ checkingAndDownloadingAlsa()
 
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/" || exit
 
-  if [[ ! -z "$FOUND_ALSA" ]]
-  then
+  if [[ ! -z "$FOUND_ALSA" ]]; then
     echo "Skipping ALSA download"
   else
     downloadFile "alsa-lib.tar.bz2" "https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2" ${ALSA_LIB_CHECKSUM}
@@ -179,7 +174,7 @@ checkingAndDownloadingAlsa()
 
 sha256File() {
   if [ -x "$(command -v shasum)" ]; then
-    (shasum -a 256 | cut -f1 -d' ') < $1
+    (shasum -a 256 | cut -f1 -d' ') <$1
   else
     sha256sum $1 | cut -f1 -d' '
   fi
@@ -196,8 +191,7 @@ checkFingerprint() {
     echo "WARNING: GPG not present, resorting to checksum"
     local actualChecksum=$(sha256File ${fileName})
 
-    if [ "${actualChecksum}" != "${expectedChecksum}" ];
-    then
+    if [ "${actualChecksum}" != "${expectedChecksum}" ]; then
       echo "Failed to verify checksum on ${fileName}"
 
       echo "Expected ${expectedChecksum} got ${actualChecksum}"
@@ -238,21 +232,20 @@ checkFingerprint() {
 }
 
 # Freemarker for OpenJ9
-checkingAndDownloadingFreemarker()
-{
+checkingAndDownloadingFreemarker() {
   echo "Checking for FREEMARKER"
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/" || exit
   FOUND_FREEMARKER=$(find "." -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
 
-  if [[ ! -z "$FOUND_FREEMARKER" ]] ; then
+  if [[ ! -z "$FOUND_FREEMARKER" ]]; then
     echo "Skipping FREEMARKER download"
   else
 
     wget -nc --no-check-certificate "https://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
     # Allow fallback to curl since wget fails cert check on macos - issue #1194
     wget "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" ||
-    	curl -o "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc"
+      curl -o "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc"
 
     checkFingerprint "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" "freemarker" "13AC 2213 964A BE1D 1C14 7C0E 1939 A252 0BAB 1D90" "${FREEMARKER_LIB_CHECKSUM}"
 
@@ -262,12 +255,13 @@ checkingAndDownloadingFreemarker()
   fi
 }
 
+# Utility function
 downloadFile() {
   local targetFileName="$1"
   local url="$2"
 
   # Temporary fudge as curl on my windows boxes is exiting with RC=127
-  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     wget -O "${targetFileName}" "${url}"
   else
     curl -L -o "${targetFileName}" "${url}"
@@ -278,8 +272,7 @@ downloadFile() {
     local expectedChecksum="$3"
     local actualChecksum=$(sha256File ${targetFileName})
 
-    if [ "${actualChecksum}" != "${expectedChecksum}" ];
-    then
+    if [ "${actualChecksum}" != "${expectedChecksum}" ]; then
       echo "Failed to verify checksum on ${targetFileName} ${url}"
 
       echo "Expected ${expectedChecksum} got ${actualChecksum}"
@@ -289,14 +282,13 @@ downloadFile() {
 }
 
 # Get Freetype
-checkingAndDownloadingFreeType()
-{
+checkingAndDownloadingFreeType() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   echo "Checking for freetype at ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
 
   FOUND_FREETYPE=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib/" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}" || true)
 
-  if [[ ! -z "$FOUND_FREETYPE" ]] ; then
+  if [[ ! -z "$FOUND_FREETYPE" ]]; then
     echo "Skipping FreeType download"
   else
     downloadFile "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
@@ -308,20 +300,20 @@ checkingAndDownloadingFreeType()
     tar xpzf freetype.tar.gz --strip-components=1 -C "freetype"
     rm freetype.tar.gz
 
-    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-       return;
+    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+      return
     fi
 
     cd freetype || exit
 
-    local pngArg="";
+    local pngArg=""
     if ./configure --help | grep "with-png"; then
-      pngArg="--with-png=no";
+      pngArg="--with-png=no"
     fi
 
-    local freetypeEnv="";
-    if [[ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "i686" ]] || [[ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "i386" ]] ; then
-      freetypeEnv="export CC=\"gcc -m32\"";
+    local freetypeEnv=""
+    if [[ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "i686" ]] || [[ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "i386" ]]; then
+      freetypeEnv="export CC=\"gcc -m32\""
     fi
 
     # We get the files we need at $WORKING_DIR/installedfreetype
@@ -329,24 +321,24 @@ checkingAndDownloadingFreeType()
     if ! (eval "${freetypeEnv}" && bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${pngArg}" "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
       echo "Failed to configure and build libfreetype, exiting"
-      exit;
+      exit
     else
       # shellcheck disable=SC2154
       echo "Successfully configured OpenJDK with the FreeType library (libfreetype)!"
 
-     if [ -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/include/freetype2/freetype" ]; then
+      if [ -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/include/freetype2/freetype" ]; then
         echo "Relocating freetype headers"
         # Later freetype nests its header files
         cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/include/freetype2/ft2build.h" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/include/"
         cp -r "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/include/freetype2/freetype/"* "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/include/"
-     fi
+      fi
 
-     # For unclear reasons on OpenSUSE it puts the lib into a different dir
-     if [ -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib64" ] && [ ! -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib" ]; then
-       ln -s lib64 "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib"
-     fi
+      # For unclear reasons on OpenSUSE it puts the lib into a different dir
+      if [ -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib64" ] && [ ! -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib" ]; then
+        ln -s lib64 "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib"
+      fi
 
-     if [[ ${BUILD_CONFIG[OS_KERNEL_NAME]} == "darwin" ]] ; then
+      if [[ ${BUILD_CONFIG[OS_KERNEL_NAME]} == "darwin" ]]; then
         TARGET_DYNAMIC_LIB_DIR="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype/lib/
         TARGET_DYNAMIC_LIB="${TARGET_DYNAMIC_LIB_DIR}"/libfreetype.6.dylib
 
@@ -367,20 +359,21 @@ checkingAndDownloadingFreeType()
   fi
 }
 
+# Download our security certificates
 downloadCerts() {
   local caLink="$1"
 
   mkdir -p "security"
   # Temporary fudge as curl on my windows boxes is exiting with RC=127
-  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] ; then
-     wget -O "./security/cacerts" "${caLink}"
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    wget -O "./security/cacerts" "${caLink}"
   else
-     curl -L -o "./security/cacerts" "${caLink}"
+    curl -L -o "./security/cacerts" "${caLink}"
   fi
 }
+
 # Certificate Authority Certs (CA Certs)
-checkingAndDownloadCaCerts()
-{
+checkingAndDownloadCaCerts() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
 
   echo "Retrieving cacerts file if needed"
@@ -389,16 +382,14 @@ checkingAndDownloadCaCerts()
   mkdir "cacerts_area" || exit
   cd "cacerts_area" || exit
 
-
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
-      local caLink="https://github.com/corretto/corretto-8/blob/preview-release/cacerts?raw=true";
-      downloadCerts "$caLink"
-  elif [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" != "true" ];
-  then
+    local caLink="https://github.com/corretto/corretto-8/blob/preview-release/cacerts?raw=true"
+    downloadCerts "$caLink"
+  elif [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" != "true" ]; then
     git init
     git remote add origin -f https://github.com/AdoptOpenJDK/openjdk-build.git
     git config core.sparsecheckout true
-    echo "security/*" >> .git/info/sparse-checkout
+    echo "security/*" >>.git/info/sparse-checkout
     git pull origin master
   fi
 
@@ -406,8 +397,7 @@ checkingAndDownloadCaCerts()
 }
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, CACerts et al)
-downloadingRequiredDependencies()
-{
+downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
 
@@ -434,15 +424,15 @@ downloadingRequiredDependencies()
     fi
   fi
 
-  if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]] ; then
-   if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
-     echo "Checking and download FreeType Font dependency"
-     checkingAndDownloadingFreeType
-   else
-     echo ""
-     echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
-     echo ""
-   fi
+  if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
+    if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
+      echo "Checking and download FreeType Font dependency"
+      checkingAndDownloadingFreeType
+    else
+      echo ""
+      echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
+      echo ""
+    fi
   else
     echo "Skipping Freetype"
   fi
@@ -452,12 +442,12 @@ downloadingRequiredDependencies()
 
 }
 
-function moveTmpToWorkspaceLocation {
+function moveTmpToWorkspaceLocation() {
   if [ ! -z "${TMP_WORKSPACE}" ]; then
 
     echo "Relocating workspace from ${TMP_WORKSPACE} to ${ORIGINAL_WORKSPACE}"
 
-    rsync -a --delete  "${TMP_WORKSPACE}/workspace/" "${ORIGINAL_WORKSPACE}/"
+    rsync -a --delete "${TMP_WORKSPACE}/workspace/" "${ORIGINAL_WORKSPACE}/"
     echo "===${ORIGINAL_WORKSPACE}/======"
     ls -alh "${ORIGINAL_WORKSPACE}/" || true
 
@@ -466,50 +456,43 @@ function moveTmpToWorkspaceLocation {
   fi
 }
 
+relocateToTmpIfNeeded() {
+  if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]; then
+    jobName=$(echo "${JOB_NAME:-build-dir}" | egrep -o "[^/]+$")
+    local tmpdir="/tmp/openjdk-${jobName}"
+    mkdir -p "$tmpdir"
 
-relocateToTmpIfNeeded()
-{
-   if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]
-   then
-     jobName=$(echo "${JOB_NAME:-build-dir}" | egrep -o "[^/]+$")
-     local tmpdir="/tmp/openjdk-${jobName}"
-     mkdir -p "$tmpdir"
+    export TMP_WORKSPACE="${tmpdir}"
+    export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
 
-     export TMP_WORKSPACE="${tmpdir}"
-     export ORIGINAL_WORKSPACE="${BUILD_CONFIG[WORKSPACE_DIR]}"
+    trap moveTmpToWorkspaceLocation EXIT SIGINT SIGTERM
 
-     trap moveTmpToWorkspaceLocation EXIT SIGINT SIGTERM
+    if [ -d "${ORIGINAL_WORKSPACE}" ]; then
+      echo "${BUILD_CONFIG[WORKSPACE_DIR]}"
+      rsync -a --delete "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/"
 
-     if [ -d "${ORIGINAL_WORKSPACE}" ]
-     then
-        echo "${BUILD_CONFIG[WORKSPACE_DIR]}"
-        rsync -a --delete "${BUILD_CONFIG[WORKSPACE_DIR]}" "${TMP_WORKSPACE}/"
+      echo "===${TMP_WORKSPACE}/======"
+      ls -alh "${TMP_WORKSPACE}/" || true
 
-        echo "===${TMP_WORKSPACE}/======"
-        ls -alh "${TMP_WORKSPACE}/" || true
+      echo "===${TMP_WORKSPACE}/workspace======"
+      ls -alh "${TMP_WORKSPACE}/workspace" || true
 
-        echo "===${TMP_WORKSPACE}/workspace======"
-        ls -alh "${TMP_WORKSPACE}/workspace" || true
+      echo "===${TMP_WORKSPACE}/workspace/build======"
+      ls -alh "${TMP_WORKSPACE}/workspace/build" || true
+    fi
+    BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
 
-        echo "===${TMP_WORKSPACE}/workspace/build======"
-        ls -alh "${TMP_WORKSPACE}/workspace/build" || true
-     fi
-     BUILD_CONFIG[WORKSPACE_DIR]="${TMP_WORKSPACE}/workspace"
-
-   fi
+  fi
 }
 
-applyPatches()
-{
-  if [ ! -z "${BUILD_CONFIG[PATCHES]}" ]
-  then
+applyPatches() {
+  if [ ! -z "${BUILD_CONFIG[PATCHES]}" ]; then
     echo "applying patches from ${BUILD_CONFIG[PATCHES]}"
     git clone "${BUILD_CONFIG[PATCHES]}" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/patches"
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    for patch in "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/patches/"*.patch
-    do
+    for patch in "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/patches/"*.patch; do
       echo "applying $patch"
-      patch -p1 < "$patch"
+      patch -p1 <"$patch"
     done
   fi
 }
@@ -517,9 +500,9 @@ applyPatches()
 ##################################################################
 
 function configureWorkspace() {
-    createWorkspace
-    downloadingRequiredDependencies
-    relocateToTmpIfNeeded
-    checkoutAndCloneOpenJDKGitRepo
-    applyPatches
+  createWorkspace
+  downloadingRequiredDependencies
+  relocateToTmpIfNeeded
+  checkoutAndCloneOpenJDKGitRepo
+  applyPatches
 }
