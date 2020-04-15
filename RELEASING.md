@@ -80,7 +80,7 @@ Don't be scared off by this document! If you already understand the stuff in th
    ```
    OPENJDK_TAG:= jdk-11.0.6+10
    ```
-   - Update closed/get_j9_sources.sh to pull in Eclipse OpenJ9 and OMR release tag, e.g. `openj9-0.18.0`
+   - Update closed/get_j9_source.sh to pull in Eclipse OpenJ9 and OMR release tag, e.g. `openj9-0.18.0`
    - Update custom-spec.gmk.in in the appropriate branch with the correct `J9JDK_EXT_VERSION` for the release, e.g:
    - For jdk8:
    ```
