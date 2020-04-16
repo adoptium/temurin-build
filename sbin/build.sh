@@ -566,7 +566,7 @@ removingUnnecessaryFiles() {
   esac
   rm -rf "${dirToRemove}"/demo || true
 
-  find "${jdkTargetPath}" -type f "(" -name "*.debuginfo" -o -name "*.diz" -o -name "*.pdb" -o -name "*.map" ")" -delete || true
+  find "${jdkTargetPath}" "${jreTargetPath}" -type f "(" -name "*.debuginfo" -o -name "*.diz" -o -name "*.pdb" -o -name "*.map" ")" -delete || true
 
   echo "Finished removing unnecessary files from ${jdkTargetPath}"
 }
