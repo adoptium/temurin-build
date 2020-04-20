@@ -16,17 +16,11 @@ FROM ubuntu:16.04
 
 MAINTAINER AdoptOpenJDK <adoption-discuss@openjdk.java.net>
 
-# Install required OS tools.  Yes we have to apt-get update first in order to
-# get to software-properties-common, which includes the apt-add-repository
-# package, so we can add the Azul repo and then apt-get update that so we cam
-# get zulu-7.  This is why we can't have nice things.
+# Install required OS tools.
 RUN apt-get update \
-  && apt-get install -y software-properties-common \
-  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \
-  && apt-add-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \
-  && apt-get update \
   && apt-get -y upgrade \
   && apt-get install -qq -y --no-install-recommends \
+    ca-certificates \
     ccache \
     cpio \
     curl \
@@ -49,7 +43,6 @@ RUN apt-get update \
     unzip \
     wget \
     zip \
-    zulu-7 \
 && rm -rf /var/lib/apt/lists/*
 
 # Pick up build instructions
