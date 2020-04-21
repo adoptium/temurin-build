@@ -607,7 +607,6 @@ moveFreetypeLib() {
   fi
 
   cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
-
   if [ -f "${INVOKED_BY_FONT_MANAGER}" ]; then
       otool -L "${INVOKED_BY_FONT_MANAGER}"
   else
