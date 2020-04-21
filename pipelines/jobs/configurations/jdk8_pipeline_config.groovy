@@ -4,9 +4,9 @@ class Config8 {
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: [
-                        hotspot : 'build-macstadium-macos1010-1',
+                        hotspot : 'macos10.14',
                         corretto: 'build-macstadium-macos1010-1',
-                        openj9  : 'build-macstadium-macos1010-2'
+                        openj9  : 'macos10.14'
                 ],
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
         ],
@@ -14,7 +14,7 @@ class Config8 {
         x64MacXL      : [
                 os                   : 'mac',
                 arch                 : 'x64',
-                additionalNodeLabels : 'build-macstadium-macos1010-2',
+                additionalNodeLabels : 'macos10.14',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'special.openjdk'],
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs'
