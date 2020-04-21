@@ -91,6 +91,7 @@ signRelease()
       security unlock-keychain -p `cat ~/.password`
 
       ENTITLEMENTS="$WORKSPACE/entitlements.plist"
+      xattr -cr .
       # Sign all files with the executable permission bit set.
       FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
       echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
