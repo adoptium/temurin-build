@@ -55,7 +55,7 @@ signRelease()
   case "$OPERATING_SYSTEM" in
     "windows")
       echo "Signing Windows release"
-      signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
+      signToolPath=${signToolPath:-"/cygdrive/c/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x64/signtool.exe"}
 
       # Sign .exe files
       FILES=$(find . -type f -name '*.exe')
