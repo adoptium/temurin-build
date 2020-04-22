@@ -187,7 +187,7 @@ class Build {
                     ]
 
                     def signJob = context.build job: "build-scripts/release/sign_build",
-                            propagate: false,
+                            propagate: true,
                             parameters: params
 
                     //Copy signed artifact back and rearchive
