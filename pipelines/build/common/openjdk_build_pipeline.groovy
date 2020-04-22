@@ -155,7 +155,7 @@ class Build {
     def sign(VersionInfo versionInfo) {
         // Sign and archive jobs if needed
         // TODO: This version info check needs to be updated when the notarization fix gets applied to other versions.
-        if (buildConfig.TARGET_OS == "windows" || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 8) || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 13)) {
+        if (buildConfig.TARGET_OS == "windows" || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 8 && buildConfig.VARIANT != "openj9") || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 13)) {
             context.node('master') {
                 context.stage("sign") {
                     def filter = ""
@@ -187,7 +187,7 @@ class Build {
                     ]
 
                     def signJob = context.build job: "build-scripts/release/sign_build",
-                            propagate: false,
+                            propagate: true,
                             parameters: params
 
                     //Copy signed artifact back and rearchive

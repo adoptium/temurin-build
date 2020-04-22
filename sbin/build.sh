@@ -566,7 +566,7 @@ removingUnnecessaryFiles() {
   esac
   rm -rf "${dirToRemove}"/demo || true
 
-  find "${jdkTargetPath}" -type f "(" -name "*.debuginfo" -o -name "*.diz" -o -name "*.pdb" -o -name "*.map" ")" -delete || true
+  find "${jdkTargetPath}" "${jreTargetPath}" -type f "(" -name "*.debuginfo" -o -name "*.diz" -o -name "*.pdb" -o -name "*.map" ")" -delete || true
 
   echo "Finished removing unnecessary files from ${jdkTargetPath}"
 }
@@ -599,6 +599,12 @@ moveFreetypeLib() {
   echo "Currently at '${PWD}'"
   echo "Copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
   echo " *** Workaround to fix the MacOSX issue where invocation to ${INVOKED_BY_FONT_MANAGER} fails to find ${TARGET_LIB_NAME} ***"
+
+  # codesign freetype before it is bundled
+  if [ ! -z "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
+    ENTITLEMENTS="$WORKSPACE/entitlements.plist"
+    codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" "${SOURCE_LIB_NAME}"
+  fi
 
   cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
   if [ -f "${INVOKED_BY_FONT_MANAGER}" ]; then

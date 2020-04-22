@@ -36,6 +36,7 @@ XCODE_SWITCH_PATH="/";
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   XCODE_SWITCH_PATH="/Applications/Xcode.app"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
   # See https://github.com/AdoptOpenJDK/openjdk-build/issues/1202
   if isHotSpot; then
     export COMPILER_WARNINGS_FATAL=false
@@ -50,8 +51,8 @@ else
   fi
 fi
 
-# The configure option '--with-macosx-codesign-identity' is supported in JDK11 and JDK14+
-if [ "$JAVA_FEATURE_VERSION" -eq 11 ] || [ "$JAVA_FEATURE_VERSION" -ge 14 ]
+# The configure option '--with-macosx-codesign-identity' is supported in JDK8 OpenJ9 and JDK11 and JDK14+
+if [[ ( "$JAVA_FEATURE_VERSION" -eq 11 ) || ( "$JAVA_FEATURE_VERSION" -ge 14 ) || ( "$JAVA_FEATURE_VERSION" -eq 8 && "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ) ]]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
   # Login to KeyChain
@@ -111,7 +112,6 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   then
     export SED=gsed
     export TAR=gtar
-    export SDKPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-xcode-path=/Applications/Xcode.app --with-openj9-cc=/Applications/Xcode7/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang --with-openj9-cxx=/Applications/Xcode7/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++ --with-openj9-developer-dir=/Applications/Xcode7/Xcode.app/Contents/Developer"
+    export SDKPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
   fi
 fi
