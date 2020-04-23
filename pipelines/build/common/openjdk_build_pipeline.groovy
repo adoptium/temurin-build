@@ -377,7 +377,13 @@ class Build {
                 type = "debugimage"
             }
 
-            String hash = context.sh(script: "sha256sum $file | cut -f1 -d' '", returnStdout: true, returnStatus: false)
+            String hash = context.sh(script: """\
+                                              if [ -x "\$(command -v shasum)" ]; then
+                                                (shasum -a 256 | cut -f1 -d' ') <$file
+                                              else
+                                                sha256sum $file | cut -f1 -d' '
+                                              fi
+                                            """.stripIndent(), returnStdout: true, returnStatus: false)
 
             hash = hash.replaceAll("\n", "")
 
