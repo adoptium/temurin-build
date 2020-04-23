@@ -103,7 +103,25 @@ Don't be scared off by this document! If you already understand the stuff in th
 Here are the steps:
 
 1. If desired, add a banner to the website to indicate that the releases are coming in the near future ([Sample PR](https://github.com/AdoptOpenJDK/openjdk-website/pull/702/files))
-2. Build and Test the OpenJDK for "release" at AdoptOpenJDK using a build pipeline job as follows:
+2. Update the job generators to match the JDK HEAD version as follows:
+   * Job Folder - https://ci.adoptopenjdk.net/job/build-scripts/job/utils/: NOTE, As of writing this, the `utils` folder in jenkins is restricted. Ask for access in Slack:#build if you cannot see this folder. The jobs themselves you want are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD).
+    * If you are ADDING a JDK version: 
+      - Create a New Item in the folder linked above that copies the `pipeline_jobs_generator_jdk` job. Call it `pipeline_jobs_generator_jdk<new-version-number>`. 
+      - Change the `Script Path` setting of the new job to `pipelines/build/regeneration/jdk<new-version-number>_regeneration_pipeline.groovy`. 
+      - Update the `Script Path` setting of the JDK-HEAD job (`pipeline_jobs_generator_jdk`) to whatever the new JDK HEAD is. I.e. if the new head is JDK16, change `Script Path` to `pipelines/build/regeneration/jdk16_regeneration_pipeline.groovy`
+    * If you are REMOVING a JDK version: 
+      - Delete the job `pipeline_jobs_generator_jdk<version-you-want-to-delete>`
+      - Update the `Script Path` setting of the JDK-HEAD job (`pipeline_jobs_generator_jdk`) to whatever the new JDK HEAD is. I.e. if the new head is JDK16, change `Script Path` to `pipelines/build/regeneration/jdk16_regeneration_pipeline.groovy`
+   * Build configurations - https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations: Create a new `jdk<new-version-number>_pipeline_config.groovy` file with the desired `buildConfigurations` for the new pipeline. Ensure that the classname and instance of it is changed to `Config<new-version-number>`. Don't remove any old version configs.
+   * Regeneration Pipeline - https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build/regeneration: Create a new `jdk<new-version-number>_regeneration_pipeline.groovy`. Ensure that the `javaVersion` and `buildConfigurations` variables are what they should be for the new version. Don't remove any old version configs.
+   * Config regeneration base file - https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/config_regeneration.groovy: Update the following lines
+     - https://github.com/AdoptOpenJDK/openjdk-build/blob/2041d51db738b741f2a630bc803ca1f038ef62b2/pipelines/build/common/config_regeneration.groovy#L359 (`javaVersion` in `context.stage("Regenerate $javaVersion pipeline jobs")`). Update the jdkxx part of `javaVersion == "jdkxx"` to match the new jdk head version number
+     
+     *If we want to build `freebsd`, do these next two line changes. Otherwise, you can ignore them:*
+     - https://github.com/AdoptOpenJDK/openjdk-build/blob/2041d51db738b741f2a630bc803ca1f038ef62b2/pipelines/build/common/config_regeneration.groovy#L389 (`if (buildConfigurationKey == "freebsd") { continue }`). Remove this line.
+      - https://github.com/AdoptOpenJDK/openjdk-build/blob/2041d51db738b741f2a630bc803ca1f038ef62b2/pipelines/build/common/config_regeneration.groovy#L234 (output warning that `freebsd` wont be regenerated). Remove this `if` statement.
+   * Build the `pipeline_jobs_generator` that you just made. Ensure the equivalant `openjdkxx_pipeline` to the generator exists or this will fail. Once it is complete, the new version pipeline is ready to run.
+3. Build and Test the OpenJDK for "release" at AdoptOpenJDK using a build pipeline job as follows:
    * Job: https://ci.adoptopenjdk.net/job/build-scripts/job/openjdk8-pipeline/build (Switch `openjdk8` for your version number)
    * `targetConfigurations`: remove all the entries for the variants you don't want to build (e.g. remove the openj9 ones for hotspot releases) or any platforms you don't want to release (Currently that would include OpenJ9 aarch64)
    * `releaseType: Release`
@@ -117,7 +135,7 @@ Here are the steps:
      * For OpenJ9 (all versions) use the OpenJ9 branch e.g. `openj9-0.15.1`
    * `enableTests`: tick
    * SUBMIT!!
-3. Once the Build and Test pipeline has completed,
+4. Once the Build and Test pipeline has completed,
    [triage the results](https://github.com/AdoptOpenJDK/openjdk-tests/blob/master/doc/Triage.md)
    ([TRSS](https://trss.adoptopenjdk.net/tests/Test) will probably help!)
    * Find the milestone build row, and click the "Grid" link
@@ -125,21 +143,21 @@ Here are the steps:
    * Raise issues either at:
      * [openjdk-build](https://github.com/adoptopenjdk/openjdk-build) or [openjdk-tests](https://github.com/AdoptOpenJDK/openjdk-tests) (for Adopt build or test issues)
      * [eclipse/openj9](https://github.com/eclipse/openj9) (for OpenJ9 issues)
-4. Discuss failing tests with [Shelley Lambert](https://github.com/smlambert)
-5. If "good to publish", then get permission to publish the release from the Adopt TSC members, discussion is via the AdoptOpenJDK [#release](https://adoptopenjdk.slack.com/messages/CLCFNV2JG) Slack channel and create a Promotion TSC item [here](https://github.com/AdoptOpenJDK/TSC/issues/new?assignees=&labels=&template=promote-release.md&title=Promote+AdoptOpenJDK+Version+%3Cx%3E).
-6. Once permission has been obtained, run the [Adopt "Publish" job](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) (restricted access - if you can't see this link, you don't have access)
+5. Discuss failing tests with [Shelley Lambert](https://github.com/smlambert)
+6. If "good to publish", then get permission to publish the release from the Adopt TSC members, discussion is via the AdoptOpenJDK [#release](https://adoptopenjdk.slack.com/messages/CLCFNV2JG) Slack channel and create a Promotion TSC item [here](https://github.com/AdoptOpenJDK/TSC/issues/new?assignees=&labels=&template=promote-release.md&title=Promote+AdoptOpenJDK+Version+%3Cx%3E).
+7. Once permission has been obtained, run the [Adopt "Publish" job](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) (restricted access - if you can't see this link, you don't have access)
    * `TAG`: (github binaries published name)  e.g. `jdk-11.0.5+9` or `jdk-11.0.5+9_openj9-0.nn.0` for OpenJ9 releases. If doing a point release, add that into the name e.g. for a `.3` release use something like these (NOTE that for OpenJ9 the point number goes before the openj9 version): `jdk8u232-b09.3` or `jdk-11.0.4+11.3_openj9-0.15.1`
    * `VERSION`: (select version)
    * `UPSTREAM_JOB_NAME`: (build-scripts/openjdkNN-pipeline)
    * `UPSTREAM_JOB_NUMBER`: (the job number of the build pipeline under build-scripts/openjdkNN-pipeline) eg.86
    * `RELEASE`: "ticked"
    * SUBMIT!!
-7. Once the job completes successfully, check the binaries have uploaded to github at somewhere like https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/jdk8u232-b09
-8. Within 15 minutes the binaries should be available on the website too at e.g. https://adoptopenjdk.net/?variant=openjdk11&jvmVariant=openj9
-9. Since you have 15 minutes free, use that time to update https://github.com/AdoptOpenJDK/openjdk-website/blob/master/src/handlebars/support.handlebars which is the source of  https://adoptopenjdk.net/support.html and (if required) the supported platforms table at https://github.com/AdoptOpenJDK/openjdk-website/blob/master/src/handlebars/supported_platforms.handlebars which is the source of https://adoptopenjdk.net/supported_platforms.html, and also update https://adoptopenjdk.net/release_notes.html ([Sample change](https://github.com/AdoptOpenJDK/openjdk-website/pull/675/commits/563d8e2f0d9d26500a7e8d9eca61b491f73f1f37)
-10. [Mac only] Once the binaries are available on the website you need to run the [homebrew-cask_updater](https://ci.adoptopenjdk.net/job/homebrew-cask_updater/) which will create a series of pull requests [here](https://github.com/AdoptOpenJDK/homebrew-openjdk/pulls). Normally George approves these but in principle as long as the CI passes, they should be good to approve. You don't need to wait around and merge the PR's because the Mergify bot will automatically do this for you as long as somebody has approved it.
-11. Publicise the Adopt JDK release via slack on AdoptOpenJDK #release
-12. If desired, find someone with the appropriate authority (George, Martijn, Shelley, Stewart) to post a tweet about the new release from the AdoptOpenJDK twitter account
+8. Once the job completes successfully, check the binaries have uploaded to github at somewhere like https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/jdk8u232-b09
+9. Within 15 minutes the binaries should be available on the website too at e.g. https://adoptopenjdk.net/?variant=openjdk11&jvmVariant=openj9
+10. Since you have 15 minutes free, use that time to update https://github.com/AdoptOpenJDK/openjdk-website/blob/master/src/handlebars/support.handlebars which is the source of  https://adoptopenjdk.net/support.html and (if required) the supported platforms table at https://github.com/AdoptOpenJDK/openjdk-website/blob/master/src/handlebars/supported_platforms.handlebars which is the source of https://adoptopenjdk.net/supported_platforms.html, and also update https://adoptopenjdk.net/release_notes.html ([Sample change](https://github.com/AdoptOpenJDK/openjdk-website/pull/675/commits/563d8e2f0d9d26500a7e8d9eca61b491f73f1f37)
+11. [Mac only] Once the binaries are available on the website you need to run the [homebrew-cask_updater](https://ci.adoptopenjdk.net/job/homebrew-cask_updater/) which will create a series of pull requests [here](https://github.com/AdoptOpenJDK/homebrew-openjdk/pulls). Normally George approves these but in principle as long as the CI passes, they should be good to approve. You don't need to wait around and merge the PR's because the Mergify bot will automatically do this for you as long as somebody has approved it.
+12. Publicise the Adopt JDK release via slack on AdoptOpenJDK #release
+13. If desired, find someone with the appropriate authority (George, Martijn, Shelley, Stewart) to post a tweet about the new release from the AdoptOpenJDK twitter account
 
 # [OpenJ9 Only] Milestone Process
 
