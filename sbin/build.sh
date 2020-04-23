@@ -574,7 +574,24 @@ removingUnnecessaryFiles() {
   esac
   rm -rf "${dirToRemove}"/demo || true
 
-  find "${jdkTargetPath}" "${jreTargetPath}" -type f "(" -name "*.debuginfo" -o -name "*.diz" -o -name "*.pdb" -o -name "*.map" ")" -delete || true
+  # .diz files may be present on any platform
+  find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.diz" -delete || true
+
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    *cygwin*)
+      # on Windows, we want to remove .map and .pdb files
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.map" -delete || true
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.pdb" -delete || true
+      ;;
+    darwin)
+      # on MacOSX, we want to remove .dSYM folders
+      find "${jdkTargetPath}" "${jreTargetPath}" -type d -name "*.dSYM" | xargs -I "{}" rm -rf "{}"
+      ;;
+    *)
+      # on other platforms, we want to remove .debuginfo files
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.debuginfo" -delete || true
+      ;;
+  esac
 
   echo "Finished removing unnecessary files from ${jdkTargetPath}"
 }
