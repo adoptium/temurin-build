@@ -69,10 +69,10 @@ checkJDKVersion()
 			jdkVersion="jdk13u";;
                 "jdk14u" | "jdk14" | "14" | "14u" )
                         jdkVersion="jdk14";;
-                "jdk15u" | "jdk15" | "15" | "15u" )
+                "jdk" | "jdknext" )
                         jdkVersion="jdk";;
 		"all" )
-			jdkVersion="jdk8u jdk9u jdk10u jdk11u jdk12u jdk13u jdk14u jdk15u";;
+			jdkVersion="jdk8u jdk9u jdk10u jdk11u jdk12u jdk13u jdk14u jdk";;
 		*)
 			echo "Not a valid JDK Version" ; jdkVersionList; exit 1;;
 	esac
@@ -89,7 +89,7 @@ jdkVersionList()
 		- jdk12u
 		- jdk13u
 		- jdk14u
-		- jdk15u"
+		- jdk"
 }
 
 checkArgs()
