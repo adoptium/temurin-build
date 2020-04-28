@@ -575,7 +575,8 @@ removingUnnecessaryFiles() {
   rm -rf "${dirToRemove}"/demo || true
 
   # .diz files may be present on any platform
-  find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.diz" -delete || true
+  # Note that on AIX, find does not support the '-delete' option.
+  find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.diz" | xargs rm -f || true
 
   case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
     *cygwin*)
@@ -589,7 +590,7 @@ removingUnnecessaryFiles() {
       ;;
     *)
       # on other platforms, we want to remove .debuginfo files
-      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.debuginfo" -delete || true
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.debuginfo" | xargs rm -f || true
       ;;
   esac
 
