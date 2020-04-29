@@ -189,6 +189,11 @@ class Build {
                     def signJob = context.build job: "build-scripts/release/sign_build",
                             propagate: true,
                             parameters: params
+                    
+                    // Output notification of downstream failure (the build will fail automatically)
+		    if (signJob.getResult() == 'FAILURE') {
+                        context.println "ERROR: downstream sign_build FAILED. See ${signJob.getAbsoluteUrl()}"
+                    } 
 
                     //Copy signed artifact back and rearchive
                     context.sh "rm workspace/target/* || true"
@@ -229,6 +234,11 @@ class Build {
                         context.string(name: 'CERTIFICATE', value: "${certificate}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
                 ]
+        
+	// Output notification of downstream failure (the build will fail automatically)
+        if (installerJob.getResult() == 'FAILURE') {
+            context.println "ERROR: downstream mac installer FAILED. See ${installerJob.getAbsoluteUrl()}"
+        }
 
         context.copyArtifacts(
                 projectName: "build-scripts/release/create_installer_mac",
@@ -262,6 +272,11 @@ class Build {
                         context.string(name: 'ARCHITECTURE', value: "${buildConfig.ARCHITECTURE}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
                 ]
+        
+        // Output notification of downstream failure (the build will fail automatically)
+        if (installerJob.getResult() == 'FAILURE') {
+            context.println "ERROR: downstream linux installer FAILED. See ${installerJob.getAbsoluteUrl()}"
+        }
     }
 
     private void buildWindowsInstaller(VersionInfo versionData) {
@@ -289,6 +304,11 @@ class Build {
                         context.string(name: 'ARCH', value: "${buildConfig.ARCHITECTURE}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${buildConfig.TARGET_OS}&&wix"]
                 ]
+        
+	// Output notification of downstream failure (the build will fail automatically)
+        if (installerJob.getResult() == 'FAILURE') {
+            context.println "ERROR: downstream windows installer FAILED. See ${installerJob.getAbsoluteUrl()}"
+        }
 
         context.copyArtifacts(
                 projectName: "build-scripts/release/create_installer_windows",
