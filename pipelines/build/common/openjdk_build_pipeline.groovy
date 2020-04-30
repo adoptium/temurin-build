@@ -519,7 +519,7 @@ class Build {
                         // This is to avoid windows path length issues.
                         context.echo("checking ${buildConfig.TARGET_OS}")
                         if (buildConfig.TARGET_OS == "windows") {
-                            def workspace = "C:/cygwin64/tmp/openjdk-build/"
+                            def workspace = "C:/workspace/openjdk-build/"
                             if (env.CYGWIN_WORKSPACE) {
                                 workspace = env.CYGWIN_WORKSPACE
                             }
