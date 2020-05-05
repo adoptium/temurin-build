@@ -22,7 +22,13 @@ class Config14 {
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
-                configureArgs        : '--disable-ccache --enable-dtrace=auto'
+                configureArgs       : [
+                        "openj9"      : '--disable-ccache --enable-dtrace=auto --enable-jitserver',
+                        "hotspot"     : '--disable-ccache --enable-dtrace=auto',
+                        "hotspot-jfr" : '--disable-ccache --enable-dtrace=auto',
+                        "corretto"    : '--disable-ccache --enable-dtrace=auto',
+                        "SapMachine"  : '--disable-ccache --enable-dtrace=auto'
+                ]
         ],
 
         x64LinuxXL    : [
@@ -31,7 +37,7 @@ class Config14 {
                 arch                 : 'x64',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto --enable-jitserver'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -97,7 +103,10 @@ class Config14 {
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
-                configureArgs       : '--disable-ccache --enable-dtrace=auto'
+                configureArgs       : [
+                        "hotspot"     : '--disable-ccache --enable-dtrace=auto',
+                        "openj9"      : '--disable-ccache --enable-dtrace=auto --enable-jitserver'
+                ]
         ],
 
         arm32Linux    : [
