@@ -73,7 +73,8 @@ then
 fi
 
 echo "Boot jdk directory: ${JDK_BOOT_DIR}:"
-java -version 2>&1 | sed 's/^/BOOT JDK: /'
+${JDK_BOOT_DIR}/bin/java -version 2>&1 | sed 's/^/BOOT JDK: /'
+java -version 2>&1 | sed 's/^/JDK IN PATH: /g'
 
 if [ "${RELEASE}" == "true" ]; then
   OPTIONS="${OPTIONS} --release --clean-libs"
