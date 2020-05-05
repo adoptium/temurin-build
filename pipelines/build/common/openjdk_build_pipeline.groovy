@@ -194,7 +194,7 @@ class Build {
                     // Output notification of downstream failure (the build will fail automatically)
 		    def jobResult = signJob.getResult()
 		    if (jobResult != 'SUCCESS') {
-		     context.println "ERROR: downstream sign_build ${jobResult}.\nSee ${signJob.getAbsoluteUrl()} for details"
+		        context.println "ERROR: downstream sign_build ${jobResult}.\nSee ${signJob.getAbsoluteUrl()} for details"
                     } 
 
 
