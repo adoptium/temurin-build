@@ -192,9 +192,11 @@ class Build {
                             parameters: params
                     
                     // Output notification of downstream failure (the build will fail automatically)
-		    if (signJob.getResult() == 'FAILURE') {
-                        context.println "ERROR: downstream sign_build FAILED. See ${signJob.getAbsoluteUrl()}"
+		    def jobResult = signJob.getResult()
+		    if (jobResult != 'SUCCESS') {
+		     context.println "ERROR: downstream sign_build ${jobResult}.\nSee ${signJob.getAbsoluteUrl()} for details"
                     } 
+
 
                     //Copy signed artifact back and rearchive
                     context.sh "rm workspace/target/* || true"
@@ -237,8 +239,9 @@ class Build {
                 ]
         
 	// Output notification of downstream failure (the build will fail automatically)
-        if (installerJob.getResult() == 'FAILURE') {
-            context.println "ERROR: downstream mac installer FAILED. See ${installerJob.getAbsoluteUrl()}"
+	def jobResult = installerJob.getResult()
+        if (jobResult != 'SUCCESS') {
+		context.println "ERROR: downstream mac installer ${jobResult}. See ${installerJob.getAbsoluteUrl()}"
         }
 
         context.copyArtifacts(
@@ -275,8 +278,9 @@ class Build {
                 ]
         
         // Output notification of downstream failure (the build will fail automatically)
-        if (installerJob.getResult() == 'FAILURE') {
-            context.println "ERROR: downstream linux installer FAILED. See ${installerJob.getAbsoluteUrl()}"
+	def jobResult = installerJob.getResult()
+        if (jobResult != 'SUCCESS') {
+		context.println "ERROR: downstream linux installer ${jobResult}. See ${installerJob.getAbsoluteUrl()}"
         }
     }
 
@@ -307,8 +311,9 @@ class Build {
                 ]
         
 	// Output notification of downstream failure (the build will fail automatically)
-        if (installerJob.getResult() == 'FAILURE') {
-            context.println "ERROR: downstream windows installer FAILED. See ${installerJob.getAbsoluteUrl()}"
+	def jobResult = installerJob.getResult()
+        if (jobResult != 'SUCCESS') {
+		context.println "ERROR: downstream windows installer ${jobResult}. See ${installerJob.getAbsoluteUrl()}"
         }
 
         context.copyArtifacts(
