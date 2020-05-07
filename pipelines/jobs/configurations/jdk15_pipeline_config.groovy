@@ -20,11 +20,11 @@ class Config15 {
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
                 configureArgs       : [
-                        "openj9"      : '--disable-ccache --enable-dtrace=auto --enable-jitserver',
-                        "hotspot"     : '--disable-ccache --enable-dtrace=auto',
-                        "hotspot-jfr" : '--disable-ccache --enable-dtrace=auto',
-                        "corretto"    : '--disable-ccache --enable-dtrace=auto',
-                        "SapMachine"  : '--disable-ccache --enable-dtrace=auto'
+                        "openj9"      : '--disable-ccache --enable-dtrace --enable-jitserver',
+                        "hotspot"     : '--disable-ccache --enable-dtrace',
+                        "hotspot-jfr" : '--disable-ccache --enable-dtrace',
+                        "corretto"    : '--disable-ccache --enable-dtrace',
+                        "SapMachine"  : '--disable-ccache --enable-dtrace'
                 ]
         ],
 
@@ -73,8 +73,8 @@ class Config15 {
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ],
                 configureArgs       : [
-                        "hotspot"     : '--disable-ccache --enable-dtrace=auto',
-                        "openj9"      : '--disable-ccache --enable-dtrace=auto --enable-jitserver'
+                        "hotspot"     : '--disable-ccache --enable-dtrace',
+                        "openj9"      : '--disable-ccache --enable-dtrace --enable-jitserver'
                 ]
 
         ],
