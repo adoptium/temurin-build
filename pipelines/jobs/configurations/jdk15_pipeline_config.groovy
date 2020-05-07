@@ -41,7 +41,10 @@ class Config15 {
         ppc64Aix    : [
                 os                  : 'aix',
                 arch                : 'ppc64',
-                additionalNodeLabels: 'xlc16',
+                additionalNodeLabels: [
+                        hotspot: 'xlc16&&aix710',
+                        openj9:  'xlc16&&aix715'
+                ],
                 test                : [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
