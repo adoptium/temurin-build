@@ -52,7 +52,7 @@ export GIT_CLONE_ARGUMENTS=()
 
 # Parse the CL arguments, defers to the shared function in common-functions.sh
 function parseArguments() {
-    parseConfigurationArguments "$@"
+  parseConfigurationArguments "$@"
 }
 
 # Add an argument to the configure call
@@ -67,7 +67,7 @@ addConfigureArg()
 # Add an argument to the configure call (if it's not empty)
 addConfigureArgIfValueIsNotEmpty()
 {
-  #Only try to add an arg if the second argument is not empty.
+  # Only try to add an arg if the second argument is not empty.
   if [ ! -z "$2" ]; then
     addConfigureArg "$1" "$2"
   fi
@@ -263,18 +263,23 @@ buildingTheRestOfTheConfigParameters()
   fi
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
-    # We don't want any extra debug symbols - ensure it's set to release,
-    # other options include fastdebug and slowdebug
-    addConfigureArg "--with-debug-level=" "release"
-    addConfigureArg "--disable-zip-debug-info" ""
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]] ; then
-      addConfigureArg "--disable-debug-symbols" ""
-    fi
     addConfigureArg "--with-x=" "/usr/include/X11"
     addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
+  fi
+}
+
+configureDebugParameters() {
+  # We don't want any extra debug symbols - ensure it's set to release;
+  # other options include fastdebug and slowdebug.
+  addConfigureArg "--with-debug-level=" "release"
+
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+    addConfigureArg "--disable-zip-debug-info" ""
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
+      addConfigureArg "--disable-debug-symbols" ""
+    fi
   else
-    addConfigureArg "--with-debug-level=" "release"
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]] ; then
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
       addConfigureArg "--with-native-debug-symbols=" "none"
     fi
   fi
@@ -308,15 +313,15 @@ configureCommandParameters()
   configuringVersionStringParameter
   configuringBootJDKConfigureParameter
   configuringMacOSCodesignParameter
+  configureDebugParameters
 
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
 
     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-
       local addsDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/adds"
 
-      # This is unfortunatly required as if the path does not start with "/cygdrive" the make scripts are unable to find the "/closed/adds" dir
+      # This is unfortunately required as if the path does not start with "/cygdrive" the make scripts are unable to find the "/closed/adds" directory.
       if ! echo "$addsDir" | egrep -q "^/cygdrive/"; then
         # BUILD_CONFIG[WORKSPACE_DIR] does not seem to be an absolute path, prepend /cygdrive/c/cygwin64/"
         echo "Prepending /cygdrive/c/cygwin64/ to BUILD_CONFIG[WORKSPACE_DIR]"
@@ -680,7 +685,7 @@ getFirstTagFromOpenJDKGitRepo()
         # For the development tree jdk/jdk, there might be two major versions in development
         # in parallel. One in stabilization mode, and the currently active developement line
         # Thus, add an explicit grep on the specified FEATURE_VERSION so as to appropriately
-	# set the correct build number later on.
+        # set the correct build number later on.
         firstMatchingNameFromRepo=$(git describe --tags $revList | grep "jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" | grep -v openj9 | grep -v _adopt | grep -v "\-ga" | head -1)
       else
         firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | grep -v _adopt | grep -v "\-ga" | head -1)
@@ -764,7 +769,7 @@ wipeOutOldTargetDir() {
 }
 
 createTargetDir() {
-  ## clean out old builds
+  # clean out old builds
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 }
 
