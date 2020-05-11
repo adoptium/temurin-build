@@ -68,7 +68,7 @@ To add a task:
 
 If you need to override the default output file name, you have two options:
 
-First, you can edit the task inside the `build/shared/pre.ymal` file directly.
+First, you can edit the task inside the `build/shared/before.yml` file directly.
 This may add a maintenance cost over time as upstream changes may conflicts with this.
 
 Second, you can create another YAML step template and save it to `build/shared/set_filename.yml` and add it to the `build.yml` file.
