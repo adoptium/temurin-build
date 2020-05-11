@@ -10,7 +10,7 @@ steps:
       if [ "$(JAVA_TO_BUILD)" == "jdk8u" ]
       then
           CONFIGURE_ARGS="--disable-ccache --with-toolchain-version=2013"
-          BUILD_ARGS="--jvm-variant client,server --freetype-version 2.5.3"
+          BUILD_ARGS="--freetype-version 2.5.3"
       elif [ "$(JAVA_TO_BUILD)" == "jdk11u" ]
       then
           CONFIGURE_ARGS="--disable-warnings-as-errors --disable-ccache --with-toolchain-version=2017"
