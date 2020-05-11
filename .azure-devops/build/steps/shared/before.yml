@@ -1,4 +1,4 @@
-# pre.yml
+# before.yml
 # 1. check required environment variables
 # 2. checkout openjdk-build repo
 # 3. set shared environment variables

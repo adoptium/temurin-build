@@ -7,7 +7,7 @@ steps:
       ./makejdk-any-platform.sh \
         ${EXTRA_MAKEJDK_ANY_PLATFORM_OPTIONS} \
         --jdk-boot-dir "${JDK_BOOT_DIR}" \
-        --configure-args "--disable-warnings-as-errors --with-extra-cxxflags='-stdlib=libc++ -mmacosx-version-min=10.8'" \
+        --configure-args "--enable-dtrace=auto --disable-warnings-as-errors --with-extra-cxxflags='-stdlib=libc++ -mmacosx-version-min=10.9'" \
         --destination artifacts \
         --target-file-name "${FILENAME}.tar.gz" \
         --use-jep319-certs \

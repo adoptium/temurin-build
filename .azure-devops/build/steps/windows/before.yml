@@ -1,4 +1,4 @@
-# pre.yml
+# before.yml
 # install Windows platform dependencies & set environment variables
 
 parameters:
@@ -13,7 +13,7 @@ steps:
   # cache task to cache dependencies, e.g, jdk8 and bootjdk
   - task: Cache@2
     inputs:
-      key: '"$(Agent.OS)"|$(Build.SourcesDirectory)\.azure-devops\build\steps\windows\pre.yml'
+      key: '"$(Agent.OS)"|$(Build.SourcesDirectory)\.azure-devops\build\steps\windows\before.yml'
       path: "${{ parameters.dependenciesDir }}"
       cacheHitVar: CACHE_RESTORED
     displayName: "[Windows Pre] caching download dependencies"
@@ -60,10 +60,10 @@ steps:
 
   # only install visual studio 2013 when build jdk8 and jdk11
   - powershell: |
-      if('$(JAVA_TO_BUILD)' -eq 'jdk8u' -Or '$(JAVA_TO_BUILD)' -eq 'jdk11u'){
+      if('$(JAVA_TO_BUILD)' -eq 'jdk8u'){
         Start-Process -Wait -FilePath '${{ parameters.dependenciesDir }}\vs2013.exe' -ArgumentList '/Silent /NoRestart';
       }
-    displayName: "[Windows Pre] jdk8u & jdk11u install VS2013"
+    displayName: "[Windows Pre] jdk8u install VS2013"
 
   # set system veraibles that will be used by following steps
   # cygpath is used to make sure JDK_BOOT_DIR & JAVA_HOME is correct in cygwin bash

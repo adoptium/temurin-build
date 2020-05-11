@@ -75,11 +75,11 @@ Second, you can create another YAML step template and save it to `build/shared/s
 
 ```
 steps:
-    - template: ./steps/shared/pre.yml
+    - template: ./steps/shared/before.yml
     - template: ./steps/shared/set_filename.yml
-    - template: ./steps/windows/pre.yml
+    - template: ./steps/windows/before.yml
     - template: ./steps/windows/build_hotspot.yml
-    - template: ./steps/shared/post.yml
+    - template: ./steps/shared/after.yml
 ```
 
 By doing this you will not get any merge conflicts when you pull the changes from upstream.
