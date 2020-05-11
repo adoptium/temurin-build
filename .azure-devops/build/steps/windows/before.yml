@@ -36,8 +36,8 @@ steps:
         $BOOTJDK_VERSION = 14;
       }
       Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile '${{ parameters.dependenciesDir }}\cygwin.exe';
-      Invoke-WebRequest -UseBasicParsing 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk8?os=windows&release=latest&arch=x64&heap_size=normal&type=jdk&openjdk_impl=hotspot' -OutFile '${{ parameters.dependenciesDir }}\jdk8.zip';
-      Invoke-WebRequest -UseBasicParsing "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOTJDK_VERSION}?os=windows&release=latest&arch=x64&heap_size=normal&type=jdk&openjdk_impl=hotspot" -OutFile '${{ parameters.dependenciesDir }}\jdk.zip';
+      Invoke-WebRequest -UseBasicParsing 'https://api.adoptopenjdk.net/v3/binary/latest/8/ga/windows/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk' -OutFile '${{ parameters.dependenciesDir }}\jdk8.zip';
+      Invoke-WebRequest -UseBasicParsing "https://api.adoptopenjdk.net/v3/binary/latest/${BOOTJDK_VERSION}/ga/windows/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk" -OutFile '${{ parameters.dependenciesDir }}\jdk.zip';
       Invoke-WebRequest -UseBasicParsing 'https://go.microsoft.com/fwlink/?LinkId=532495' -OutFile '${{ parameters.dependenciesDir }}\vs2013.exe';
     displayName: "[Windows Pre] download JDKs from AdoptOpenJDK & other dependencies"
     condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
