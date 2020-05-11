@@ -19,7 +19,7 @@ steps:
           CONFIGURE_ARGS="--disable-warnings-as-errors --disable-ccache --with-toolchain-version=2017"
           BUILD_ARGS="--jvm-variant client,server"
       fi
-      if [ "${ARCHITECTURE}" == "x86-32"]
+      if [ "${ARCHITECTURE}" == "x86-32" ]
       then
           CONFIGURE_ARGS="--with-target-bits=32 --target=x86 ${CONFIGURE_ARGS}"
       fi
