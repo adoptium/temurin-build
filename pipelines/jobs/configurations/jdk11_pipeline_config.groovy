@@ -5,7 +5,10 @@ class Config11 {
                 arch                : 'x64',
                 additionalNodeLabels : 'macos10.14',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
-                configureArgs       : '--enable-dtrace=auto'
+                configureArgs       : [
+                        "openj9"      : '--enable-dtrace=auto --with-cmake',
+                        "hotspot"     : '--enable-dtrace=auto'
+                ]
         ],
 
         x64MacXL    : [
@@ -14,7 +17,7 @@ class Config11 {
                 additionalNodeLabels : 'macos10.14',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "macosXL",
-                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto --with-cmake'
         ],
 
         x64Linux  : [
