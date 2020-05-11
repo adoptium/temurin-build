@@ -24,7 +24,8 @@ class VersionInfo {
             }
         }
 
-        if (ADOPT_BUILD_NUMBER != null) {
+        // ADOPT_BUILD_NUMBER is a string, so we also need to account for an empty string value
+        if (ADOPT_BUILD_NUMBER != null && ADOPT_BUILD_NUMBER != "") {
             adopt_build_number = Integer.parseInt(ADOPT_BUILD_NUMBER)
         } else if (opt != null) {
             // if an opt is present then set adopt_build_number to pad out the semver
