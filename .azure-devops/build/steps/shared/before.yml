@@ -16,7 +16,7 @@ steps:
       ERR_MESSAGE_MISSING_ENV=''
 
       if [ -z $(JAVA_TO_BUILD) ]; then
-        ERR_MESSAGE_MISSING_ENV="Pipeline must set JAVA_TO_BUILD to jdk8, jdk11, jdk, etc. $ERR_MESSAGE_MISSING_ENV"
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set JAVA_TO_BUILD to jdk8u, jdk11u, jdk, etc. $ERR_MESSAGE_MISSING_ENV"
       fi;
 
       if [ -z "$ARCHITECTURE" ]; then
