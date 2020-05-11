@@ -32,10 +32,8 @@ steps:
         $BOOTJDK_VERSION = 8;
       } elseif('$(JAVA_TO_BUILD)' -eq 'jdk11u'){
         $BOOTJDK_VERSION = 10;
-      } elseif('$(JAVA_TO_BUILD)' -eq 'jdk13u'){
-        $BOOTJDK_VERSION = 12;
       } elseif('$(JAVA_TO_BUILD)' -eq 'jdk'){
-        $BOOTJDK_VERSION = 13;
+        $BOOTJDK_VERSION = 14;
       }
       Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile '${{ parameters.dependenciesDir }}\cygwin.exe';
       Invoke-WebRequest -UseBasicParsing 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk8?os=windows&release=latest&arch=x64&heap_size=normal&type=jdk&openjdk_impl=hotspot' -OutFile '${{ parameters.dependenciesDir }}\jdk8.zip';

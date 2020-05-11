@@ -50,12 +50,9 @@ steps:
       if [ "$(JAVA_TO_BUILD)" == "jdk11u" ]
       then
           BOOTJDK_VERSION=10
-      elif [ "$(JAVA_TO_BUILD)" == "jdk13u" ]
-      then
-          BOOTJDK_VERSION=12
       elif [ "$(JAVA_TO_BUILD)" == "jdk" ]
       then
-          BOOTJDK_VERSION=13
+          BOOTJDK_VERSION=14
       fi
       wget -O "${{ parameters.dependenciesDir }}/openjdk8.tar.gz" "https://api.adoptopenjdk.net/v2/binary/releases/openjdk8?os=mac&release=latest&arch=x64&heap_size=normal&type=jdk&openjdk_impl=hotspot"
       wget -O "${{ parameters.dependenciesDir }}/openjdk.tar.gz" "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOTJDK_VERSION}?os=mac&release=latest&arch=x64&heap_size=normal&type=jdk&openjdk_impl=hotspot"

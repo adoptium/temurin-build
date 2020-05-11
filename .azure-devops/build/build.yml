@@ -33,10 +33,10 @@ stages:
         pool:
           vmImage: macOS-10.14
         steps:
-          - template: ./steps/shared/pre.yml
-          - template: ./steps/macOS/pre.yml
+          - template: ./steps/shared/before.yml
+          - template: ./steps/macOS/before.yml
           - template: ./steps/macOS/build_hotspot.yml
-          - template: ./steps/shared/post.yml
+          - template: ./steps/shared/after.yml
 
   - stage: build_windows_x64_hotspot_binaries
     variables:
@@ -52,10 +52,10 @@ stages:
         pool:
           vmImage: vs2017-win2016
         steps:
-          - template: ./steps/shared/pre.yml
-          - template: ./steps/windows/pre.yml
+          - template: ./steps/shared/before.yml
+          - template: ./steps/windows/before.yml
           - template: ./steps/windows/build_hotspot.yml
-          - template: ./steps/shared/post.yml
+          - template: ./steps/shared/after.yml
 
   - stage: build_windows_x86_hotspot_binaries
     variables:
@@ -71,7 +71,7 @@ stages:
         pool:
           vmImage: vs2017-win2016
         steps:
-          - template: ./steps/shared/pre.yml
-          - template: ./steps/windows/pre.yml
+          - template: ./steps/shared/before.yml
+          - template: ./steps/windows/before.yml
           - template: ./steps/windows/build_hotspot.yml
-          - template: ./steps/shared/post.yml
+          - template: ./steps/shared/after.yml
