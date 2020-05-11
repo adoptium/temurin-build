@@ -21,24 +21,52 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 export ANT_HOME=/cygdrive/C/Projects/OpenJDK/apache-ant-1.10.1
 export ALLOW_DOWNLOADS=true
 export LANG=C
-export JAVA_HOME=$JDK_BOOT_DIR
-export BUILD_ARGS="--tmp-space-build ${BUILD_ARGS}"
 export OPENJ9_NASM_VERSION=2.13.03
 
 TOOLCHAIN_VERSION=""
 
 # Any version above 8 (11 for now due to openjdk-build#1409
 if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
+    BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
     BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
     if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-      export $BOOT_JDK_VARIABLE="$PWD/jdk-$BOOT_JDK_VERSION"
-      if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE/bin")" ]; then
-        wget -q "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=windows&release=latest&arch=x64&heap_size=normal&type=jdk&openjdk_impl=hotspot" -O openjdk.zip
+      bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+      # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
+      # instead of BOOT_JDK_VARIABLE (no '$').
+      export ${BOOT_JDK_VARIABLE}="$bootDir"
+      if [ ! -d "$bootDir/bin" ]; then
+        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
+        releaseType="ga"
+        # This is needed to convert x86-32 to x32 which is what the API uses
+        case "$ARCHITECTURE" in
+          "x86-32") downloadArch="x32";;
+          *) downloadArch="$ARCHITECTURE";;
+        esac
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/hotspot/normal/adoptopenjdk"
+        apiURL=$(eval echo ${apiUrlTemplate})
+        # make-adopt-build-farm.sh has 'set -e'. We need to disable that
+        # for the fallback mechanism, as downloading of the GA binary might
+        # fail.
+        set +e
+        wget -q "${apiURL}" -O openjdk.zip
+        retVal=$?
+        set -e
+        if [ $retVal -ne 0 ]; then
+          # We must be a JDK HEAD build for which no boot JDK exists other than
+          # nightlies?
+          echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+          echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} ..."
+          # shellcheck disable=SC2034
+          releaseType="ea"
+          apiURL=$(eval echo ${apiUrlTemplate})
+          wget -q "${apiURL}" -O openjdk.zip
+        fi
         unzip -q openjdk.zip
-        mv $(ls -d jdk-$BOOT_JDK_VERSION*) jdk-$BOOT_JDK_VERSION
+        mv $(ls -d jdk-${BOOT_JDK_VERSION}*) "$bootDir"
       fi
     fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+    "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
 if [ "${ARCHITECTURE}" == "x86-32" ]
@@ -47,7 +75,7 @@ then
 
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
   then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_32 --enable-openssl-bundling"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1g-x86_32-VS2013 --enable-openssl-bundling"
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
@@ -95,7 +123,8 @@ then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="$PATH:/c/cygwin64/bin"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache  --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_64 --enable-openssl-bundling"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1g-x86_64-VS2013 --enable-openssl-bundling"
     elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
     then
       TOOLCHAIN_VERSION="2013"
@@ -108,7 +137,7 @@ then
     elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
     then
       TOOLCHAIN_VERSION="2017"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1d-x86_64 --enable-openssl-bundling"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1g-x86_64-VS2017 --enable-openssl-bundling"
     fi
 
     CUDA_VERSION=9.0

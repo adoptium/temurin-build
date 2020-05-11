@@ -56,8 +56,7 @@ RUN apt-get update \
 RUN mkdir -p /openjdk/target
 
 # Extract AdoptOpenJDK8 to run Gradle with, and set to default Java/Javac.
-RUN wget 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk8?openjdk_impl=hotspot&os=linux&arch=x64&release=latest&type=jdk' -O jdk8.tar.gz
-RUN mkdir -p /usr/lib/jvm/jdk8 && tar -xvf /jdk8.tar.gz -C /usr/lib/jvm/jdk8 --strip-components=1
+RUN sh -c "mkdir -p /usr/lib/jvm/jdk8 && wget 'https://api.adoptopenjdk.net/v3/binary/latest/8/ga/linux/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk' -O - | tar xzf - -C /usr/lib/jvm/jdk8 --strip-components=1"
 RUN ln -sf /usr/lib/jvm/jdk8/bin/java /usr/bin/java
 RUN ln -sf /usr/lib/jvm/jdk8/bin/javac /usr/bin/javac
 

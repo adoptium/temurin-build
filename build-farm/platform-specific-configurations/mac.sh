@@ -28,7 +28,7 @@ function isHotSpot() {
   [ "${VARIANT}" == "${BUILD_VARIANT_CORRETTO}" ]
 }
 
-export MACOSX_DEPLOYMENT_TARGET=10.8
+export MACOSX_DEPLOYMENT_TARGET=10.9
 export BUILD_ARGS="${BUILD_ARGS}"
 
 XCODE_SWITCH_PATH="/";
@@ -36,6 +36,7 @@ XCODE_SWITCH_PATH="/";
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   XCODE_SWITCH_PATH="/Applications/Xcode.app"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
   # See https://github.com/AdoptOpenJDK/openjdk-build/issues/1202
   if isHotSpot; then
     export COMPILER_WARNINGS_FATAL=false
@@ -46,8 +47,19 @@ else
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
   else
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.8"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.9"
   fi
+fi
+
+# The configure option '--with-macosx-codesign-identity' is supported in JDK8 OpenJ9 and JDK11 and JDK14+
+if [[ ( "$JAVA_FEATURE_VERSION" -eq 11 ) || ( "$JAVA_FEATURE_VERSION" -ge 14 ) || ( "$JAVA_FEATURE_VERSION" -eq 8 && "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ) ]]
+then
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
+  # Login to KeyChain
+  # shellcheck disable=SC2046
+  # shellcheck disable=SC2006
+  security unlock-keychain -p `cat ~/.password`
+  export BUILD_ARGS="${BUILD_ARGS} --codesign-identity 'Developer ID Application: London Jamocha Community CIC'"
 fi
 
 sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
@@ -57,15 +69,37 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
     BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
     BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
     if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-      export $BOOT_JDK_VARIABLE="$PWD/jdk-$BOOT_JDK_VERSION"
-      if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE/Contents/Home/bin")" ]; then
-        mkdir -p "$(eval echo "\$$BOOT_JDK_VARIABLE")"
-        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=mac&release=latest&arch=${ARCHITECTURE}&heap_size=normal&type=jdk&openjdk_impl=hotspot" | tar xpzf - --strip-components=1 -C "$(eval echo "\$$BOOT_JDK_VARIABLE")"
+      bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+      # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
+      # instead of BOOT_JDK_VARIABLE (no '$').
+      export ${BOOT_JDK_VARIABLE}="$bootDir/Contents/Home"
+      if [ ! -d "$bootDir/Contents/Home/bin" ]; then
+        mkdir -p "$bootDir"
+        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
+        releaseType="ga"
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/mac/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
+        apiURL=$(eval echo ${apiUrlTemplate})
+        # make-adopt-build-farm.sh has 'set -e'. We need to disable that
+        # for the fallback mechanism, as downloading of the GA binary might
+        # fail.
+        set +e
+        wget -q -O "${BOOT_JDK_VERSION}.tgz" "${apiURL}" && tar xpzf "${BOOT_JDK_VERSION}.tgz" --strip-components=1 -C "$bootDir" && rm "${BOOT_JDK_VERSION}.tgz"
+        retVal=$?
+        set -e
+        if [ $retVal -ne 0 ]; then
+          # We must be a JDK HEAD build for which no boot JDK exists other than
+          # nightlies?
+          echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+          echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} ..."
+          # shellcheck disable=SC2034
+          releaseType="ea"
+          apiURL=$(eval echo ${apiUrlTemplate})
+          wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
+        fi
       fi
-      export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE/Contents/Home")"
-    else
-      export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
     fi
+    export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+    "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
@@ -78,8 +112,6 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   then
     export SED=gsed
     export TAR=gtar
-    export SDKPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-xcode-path=/Applications/Xcode.app --with-openj9-cc=/Applications/Xcode7/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang --with-openj9-cxx=/Applications/Xcode7/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++ --with-openj9-developer-dir=/Applications/Xcode7/Xcode.app/Contents/Developer"
+    export SDKPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
   fi
 fi
-

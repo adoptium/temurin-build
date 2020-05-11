@@ -64,4 +64,8 @@ class ContextStub {
     Configuration load(String s) {}
 
     String readFile(String s) {}
+
+    String ws(String s, Closure) {}
+
+    String getAbsoluteUrl() {}
 }

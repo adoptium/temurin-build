@@ -33,7 +33,17 @@ class PullRequestTestPipeline implements Serializable {
         def jobs = [:]
 
         javaVersions.each({ javaVersion ->
-            def target = context.load "pipelines/jobs/configurations/jdk${javaVersion}u.groovy"
+            def target
+            try {
+                target = context.load "pipelines/jobs/configurations/jdk${javaVersion}u.groovy"
+            } catch (Exception e) {
+                try {
+                    target = context.load "pipelines/jobs/configurations/jdk${javaVersion}.groovy"
+                } catch (Exception e2) {
+                    println "No config found for ${javaVersion}"
+                    return
+                }
+            }
 
             def config = [
                     PR_BUILDER          : true,
@@ -70,7 +80,7 @@ Map<String, ?> defaultTestConfigurations = [
         ]
 ]
 
-List<Integer> defaultJavaVersions = [8, 11, 13]
+List<Integer> defaultJavaVersions = [8, 11, 14, 15]
 
 defaultGitRepo = "https://github.com/AdoptOpenJDK/openjdk-build"
 

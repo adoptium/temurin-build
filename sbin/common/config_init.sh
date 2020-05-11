@@ -45,6 +45,7 @@ COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
 DEBUG_DOCKER
+DEBUG_IMAGE_PATH
 DISABLE_ADOPT_BRANCH_SAFETY
 DOCKER
 DOCKER_FILE_PATH
@@ -59,6 +60,7 @@ JDK_PATH
 JRE_PATH
 TEST_IMAGE_PATH
 JVM_VARIANT
+MACOSX_CODESIGN_IDENTITY
 MAKE_ARGS_FOR_ANY_PLATFORM
 MAKE_COMMAND_NAME
 NUM_PROCESSORS
@@ -187,6 +189,9 @@ function parseConfigurationArguments() {
         "--make-args" )
         BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]="$1"; shift;;
 
+        "--codesign-identity" )
+        BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]="$1"; shift;;
+
         "--clean-docker-build" | "-c" )
         BUILD_CONFIG[CLEAN_DOCKER_BUILD]=true;;
 
@@ -300,7 +305,7 @@ function setBranch() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     branch="openj9";
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
-    branch="preview-release";
+    branch="develop";
   fi
 
   BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}
@@ -351,6 +356,8 @@ function configDefaults() {
 
   BUILD_CONFIG[SIGN]="false"
   BUILD_CONFIG[JDK_BOOT_DIR]=""
+
+  BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]=${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]:-""}
 
   BUILD_CONFIG[NUM_PROCESSORS]="1"
   BUILD_CONFIG[TARGET_FILE_NAME]="OpenJDK.tar.gz"

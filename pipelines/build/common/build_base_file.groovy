@@ -203,15 +203,17 @@ class Builder implements Serializable {
     }
 
     Integer getJavaVersionNumber() {
-        // version should be something like "jdk8u"
+        // version should be something like "jdk8u" or "jdk" for HEAD
         Matcher matcher = javaToBuild =~ /.*?(?<version>\d+).*?/
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
+        } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
+            // This needs to get updated when JDK HEAD version updates
+            return Integer.valueOf("15")
         } else {
-            context.error("Failed to read java version")
+            context.error("Failed to read java version '${javaToBuild}'")
             throw new Exception()
         }
-
     }
 
 
@@ -229,27 +231,6 @@ class Builder implements Serializable {
         def parentDir = currentBuild.fullProjectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/"))
         return parentDir + "/jobs/" + javaToBuild
     }
-
-    // Generate a job from template at `create_job_from_template.groovy`
-    def createJob(jobName, jobFolder, IndividualBuildConfig config) {
-        Map<String, ?> params = config.toMap().clone() as Map
-        params.put("JOB_NAME", jobName)
-        params.put("JOB_FOLDER", jobFolder)
-
-        params.put("GIT_URI", scmVars["GIT_URL"])
-        if (scmVars["GIT_BRANCH"] != "detached") {
-            params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
-        } else {
-            params.put("GIT_BRANCH", scmVars["GIT_COMMIT"])
-        }
-
-        params.put("BUILD_CONFIG", config.toJson())
-
-        def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
-
-        return create
-    }
-
 
     def checkConfigIsSane(Map<String, IndividualBuildConfig> jobConfigurations) {
 
@@ -278,7 +259,7 @@ class Builder implements Serializable {
             return
         }
 
-        def timestamp = new Date().format("YYYY-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
+        def timestamp = new Date().format("yyyy-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
         def tag = "${javaToBuild}-${timestamp}"
 
         if (publishName) {
@@ -324,8 +305,8 @@ class Builder implements Serializable {
         context.echo "Release: ${release}"
         context.echo "Tag/Branch name: ${scmReference}"
 
-        jobConfigurations.each { configuration ->
-            jobs[configuration.key] = {
+          jobConfigurations.each { configuration ->
+              jobs[configuration.key] = {
                 IndividualBuildConfig config = configuration.value
 
                 // jdk11u-linux-x64-hotspot
@@ -334,61 +315,61 @@ class Builder implements Serializable {
 
                 // i.e jdk10u/job/jdk11u-linux-x64-hotspot
                 def downstreamJobName = "${jobFolder}/${jobTopName}"
-
                 context.echo "build name " + downstreamJobName
 
                 context.catchError {
                     // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
                     context.stage(configuration.key) {
-                        // generate job
-                        createJob(jobTopName, jobFolder, config)
+                      context.echo "Created job " + downstreamJobName
+                      
+                      // execute build
+                      def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
 
-                        context.echo "Created job " + downstreamJobName
-                        // execute build
-                        def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
+                      if (downstreamJob.getResult() == 'SUCCESS') {
+                          // copy artifacts from build
+                          context.node("master") {
+                              context.catchError {
 
-                        if (downstreamJob.getResult() == 'SUCCESS') {
-                            // copy artifacts from build
-                            context.node("master") {
-                                context.catchError {
+                                  //Remove the previous artifacts
+                                  context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
 
-                                    //Remove the previous artifacts
-                                    context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
+                                  context.copyArtifacts(
+                                          projectName: downstreamJobName,
+                                          selector: context.specific("${downstreamJob.getNumber()}"),
+                                          filter: 'workspace/target/*',
+                                          fingerprintArtifacts: true,
+                                          target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
+                                          flatten: true)
 
-                                    context.copyArtifacts(
-                                            projectName: downstreamJobName,
-                                            selector: context.specific("${downstreamJob.getNumber()}"),
-                                            filter: 'workspace/target/*',
-                                            fingerprintArtifacts: true,
-                                            target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
-                                            flatten: true)
+                                  // Checksum
+                                  context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
 
-                                    // Checksum
-                                    context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+                                  // Archive in Jenkins
+                                  context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
+                              }
+                          }
+                      } else if (propagateFailures) {
+                          context.error("Build failed due to downstream failure of ${downstreamJobName}")
+                          currentBuild.result = "FAILURE"
+                      }
 
-                                    // Archive in Jenkins
-                                    context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
-                                }
-                            }
-                        } else if (propagateFailures) {
-                            context.error("Build failed due to downstream failure of ${downstreamJobName}")
-                            currentBuild.result = "FAILURE"
-                        }
                     }
                 }
-            }
-        }
-        context.parallel jobs
+              }
+          }
+          context.parallel jobs
 
-        // publish to github if needed
-        // Dont publish release automatically
-        if (publish && !release) {
-            //During testing just remove the publish
-            publishBinary()
-        } else if (publish && release) {
-            context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
-        }
+          // publish to github if needed
+          // Dont publish release automatically
+          if (publish && !release) {
+              //During testing just remove the publish
+              publishBinary()
+          } else if (publish && release) {
+              context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
+          }
+
     }
+
 }
 
 return {

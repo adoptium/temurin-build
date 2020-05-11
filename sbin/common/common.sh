@@ -35,7 +35,7 @@ function setOpenJdkVersion() {
   local featureNumber=$(echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | tr -d "[:alpha:]")
 
   # feature number e.g. 11
-  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber:-14}
+  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber:-15}
 
 }
 
@@ -94,8 +94,8 @@ createOpenJDKArchive()
   fi
 
   COMPRESS=gzip
-  if which pigz; then
-    COMPRESS=pigz;
+  if which pigz > /dev/null 2>&1; then
+    COMPRESS=pigz
   fi
   echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
 
@@ -129,7 +129,14 @@ function setBootJdk() {
 
     # shellcheck disable=SC2046,SC2230
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+      set +e
       BUILD_CONFIG[JDK_BOOT_DIR]="$(/usr/libexec/java_home)"
+      local returnCode=$?
+      set -e
+
+      if [[ ${returnCode} -ne 0 ]]; then
+        BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(greadlink -f $(which javac))))
+      fi
     else
       BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
     fi

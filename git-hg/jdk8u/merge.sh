@@ -96,14 +96,14 @@ function updateRepo() {
   repoName=$1
   repoLocation=$2
 
-  addRemotes
-
   if [ ! -d "$MIRROR/$repoName/.git" ]; then
     rm -rf "$MIRROR/$repoName" || exit 1
     mkdir -p "$MIRROR/$repoName" || exit 1
     cd "$MIRROR/$repoName"
     git clone "hg::${repoLocation}" .
   fi
+
+  addRemotes
 
   cd "$MIRROR/$repoName"
   git fetch origin
