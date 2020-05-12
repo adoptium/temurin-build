@@ -69,7 +69,10 @@ class Config8 {
         ppc64Aix      : [
                 os  : 'aix',
                 arch: 'ppc64',
-                additionalNodeLabels: 'xlc13',
+                additionalNodeLabels: [
+                        hotspot: 'xlc13&&aix710',
+                        openj9:  'xlc13&&aix715'
+                ],
                 test: [
                         nightly: ['sanity.openjdk'],
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
