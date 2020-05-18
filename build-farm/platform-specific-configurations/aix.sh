@@ -28,8 +28,9 @@ fi
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 export PATH="/opt/freeware/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH"
-# Without this, java adds /usr/lib to the LIBPATH of anything it forks which breaks linkage
-export LIBPATH="/opt/freeware/lib:$LIBPATH"
+# Without this, java adds /usr/lib to the LIBPATH and it's own library
+# directories of anything it forks which breaks linkage
+export LIBPATH=/opt/freeware/lib
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-cups-include=/opt/freeware/include"
 
 # Any version below 11
@@ -112,8 +113,3 @@ if [ "$JAVA_FEATURE_VERSION" -ge 14 ] && [ "${VARIANT}" == "${BUILD_VARIANT_OPEN
 else
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-memory-size=10000"
 fi
-
-echo Stripping the following from the LIBPATH in order to prevent it being embedded in the executable:
-echo $LIBPATH | tr : \\n | grep /usr/j | sed 's/^/> /g' 
-
-export LIBPATH=$(echo $LIBPATH | tr : \\n | grep -v /usr/j | tr \\n :)
