@@ -171,9 +171,16 @@ JDK_FIX_VERSION=0
 
   1. Update the Job Folder - https://ci.adoptopenjdk.net/job/build-scripts/job/utils/: The jobs themselves you are looking for are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD).
     * If you are ADDING a JDK version: 
-      - Create a New Item in the folder linked above that copies the `pipeline_jobs_generator_jdk` job. Call it `pipeline_jobs_generator_jdk<new-version-number>`. 
-      - Change the `Script Path` setting of the new job to `pipelines/build/regeneration/jdk<new-version-number>_regeneration_pipeline.groovy`. Don't worry if this currently doesn't exist in this repo, you'll add it in step 3.
-      - Update the `Script Path` setting of the JDK-HEAD job (`pipeline_jobs_generator_jdk`) to whatever the new JDK HEAD is. I.e. if the new head is JDK16, change `Script Path` to `pipelines/build/regeneration/jdk16_regeneration_pipeline.groovy`
+      - Ensure that JDK N-1 is available as build JDK on the builders. For example in order to build JDK 15, JDK 14 needs to be installed on the build machines. As a temporary measure, [code](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/build-farm/platform-specific-configurations/linux.sh#L110) so as to download the JDK to the builder via the API has been added. NOTE: For the transition period shortly after a new JDK has been branched, there might not yet exist a generally available release of JDK N-1.
+      - Ensure that JDK sources are being mirrored. Example [infrastructure request](https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1096)
+      - Ensure that a repository which contains the binary releases exists. Example [openjdk15-binaries](https://github.com/AdoptOpenJDK/openjdk15-binaries)
+      - If you are updating the latest JDK release, there are [a](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/build_base_file.groovy#L212) [couple](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/build-farm/make-adopt-build-farm.sh#L32) [places](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy#L66) in the openjdk-build repository where the latest JDK number is hard-coded. Be sure to update them.
+      - Add build scripts for the new JDK release. Example for [JDK 14](https://github.com/AdoptOpenJDK/openjdk-build/commit/808b08fe2aefc005cf53f6cc1deb28a9b323ff)
+      - Regenerate build jobs:
+        - Create a New Item in the folder linked above that copies the `pipeline_jobs_generator_jdk` job. Call it `pipeline_jobs_generator_jdk<new-version-number>`. 
+        - Change the `Script Path` setting of the new job to `pipelines/build/regeneration/jdk<new-version-number>_regeneration_pipeline.groovy`. Don't worry if this currently doesn't exist in this repo, you'll add it in step 3.
+        - Update the `Script Path` setting of the JDK-HEAD job (`pipeline_jobs_generator_jdk`) to whatever the new JDK HEAD is. I.e. if the new head is JDK16, change `Script Path` to `pipelines/build/regeneration/jdk16_regeneration_pipeline.groovy`
+        - At some point the JDK N version will get to be maintained in an update repository. At that point a switch-over of job names from `jdkXX` to `jdkXXu` has to happen.
     * If you are REMOVING a JDK version: 
       - Delete the job `pipeline_jobs_generator_jdk<version-you-want-to-delete>`
   2. Create the new build configurations for the release - https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations: Create a new `jdk<new-version-number>_pipeline_config.groovy` file with the desired `buildConfigurations` for the new pipeline. 99% of the time, copy and pasting the configs from the previous version ios acceptable. Ensure that the classname and instance of it is changed to `Config<new-version-number>`. Don't remove any old version configs.
