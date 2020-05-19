@@ -134,7 +134,7 @@ function performMergeIntoReleaseFromMaster() {
   currentReleaseTag=$(echo "$releaseTags" | eval "$jdk11plus_sort_tags_cmd" | tail -1 || exit 1)
   echo "New release build tag: $currentReleaseTag"
 
-  git push origin release || exit 1
+  git push --tags origin release || exit 1
 }
 
 # Merge master(HEAD) into dev as we build off dev at the AdoptOpenJDK Build farm for Nightlies

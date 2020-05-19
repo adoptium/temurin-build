@@ -55,7 +55,7 @@ signRelease()
   case "$OPERATING_SYSTEM" in
     "windows")
       echo "Signing Windows release"
-      signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
+      signToolPath=${signToolPath:-"/cygdrive/c/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x64/signtool.exe"}
 
       # Sign .exe files
       FILES=$(find . -type f -name '*.exe')
@@ -82,6 +82,7 @@ signRelease()
       done
       ;;
     "mac"*)
+      # TODO: Remove this completly once https://github.com/AdoptOpenJDK/openjdk-jdk11u/commit/b3250adefed0c1778f38a7e221109ae12e7c421e has been backported to JDK8u
       echo "Signing OSX release"
 
       # Login to KeyChain
@@ -89,36 +90,11 @@ signRelease()
       # shellcheck disable=SC2006
       security unlock-keychain -p `cat ~/.password`
 
-      ########################################
-      ## TODO: Remove me pending resolution to https://github.com/AdoptOpenJDK/TSC/issues/107
-      FILES=$(find "${TMP_DIR}" -perm +111 -type f || find "${TMP_DIR}" -perm /111 -type f)
-      echo "$FILES" | while read -r f; do codesign -s "Developer ID Application: London Jamocha Community CIC" "$f"; done
-      ########################################
-      ## TODO: Bring me back pending resolution to https://github.com/AdoptOpenJDK/TSC/issues/107
-
-#      ENTITLEMENTS="$WORKSPACE/entitlements.plist"
-#      # Sign all files with the executable permission bit set.
-#      FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
-#      echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
-#
-#      # Loop through jmods, extract, sign and repack
-#      JMODS_DIR=$(find "$TMP_DIR" -type d -name jmods 2>/dev/null || echo "")
-#      if [[ -n $JMODS_DIR ]]; then
-#        cd "$JMODS_DIR"
-#        for jmod in ./*; do
-#          rm -rf tmp
-#          # Use brew install p7zip to get 7z
-#          7z x "$jmod" -otmp
-#          cd tmp
-#          FILES=$(find bin lib -type f 2>/dev/null || echo "")
-#          if [[ -n $FILES ]]; then
-#            echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
-#          fi
-#          7z a -r ../"$jmod" .
-#          cd ../
-#          rm -rf tmp
-#        done
-#      fi
+      ENTITLEMENTS="$WORKSPACE/entitlements.plist"
+      xattr -cr .
+      # Sign all files with the executable permission bit set.
+      FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
+      echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
       ;;
     *)
       echo "Skipping code signing as it's not supported on $OPERATING_SYSTEM"

@@ -47,12 +47,12 @@ export LIB_DIR=$(crossPlatformRealPath "${SCRIPT_DIR}/../pipelines/")
 
 export jreTargetPath
 export CONFIGURE_ARGS=""
-export MAKE_TEST_IMAGE=""
+export ADDITIONAL_MAKE_TARGETS=""
 export GIT_CLONE_ARGUMENTS=()
 
 # Parse the CL arguments, defers to the shared function in common-functions.sh
 function parseArguments() {
-    parseConfigurationArguments "$@"
+  parseConfigurationArguments "$@"
 }
 
 # Add an argument to the configure call
@@ -67,7 +67,7 @@ addConfigureArg()
 # Add an argument to the configure call (if it's not empty)
 addConfigureArgIfValueIsNotEmpty()
 {
-  #Only try to add an arg if the second argument is not empty.
+  # Only try to add an arg if the second argument is not empty.
   if [ ! -z "$2" ]; then
     addConfigureArg "$1" "$2"
   fi
@@ -133,7 +133,7 @@ getOpenJdkVersion() {
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
     local corrVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
- 
+
     local corrVersion="$(cut -d'.' -f 1 < ${corrVerFile})"
 
     if [ "${corrVersion}" == "8" ]; then
@@ -263,17 +263,25 @@ buildingTheRestOfTheConfigParameters()
   fi
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] ; then
-    # We don't want any extra debug symbols - ensure it's set to release,
-    # other options include fastdebug and slowdebug
-    addConfigureArg "--with-debug-level=" "release"
-    addConfigureArg "--disable-zip-debug-info" ""
-    addConfigureArg "--disable-debug-symbols" ""
     addConfigureArg "--with-x=" "/usr/include/X11"
     addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
+  fi
+}
+
+configureDebugParameters() {
+  # We don't want any extra debug symbols - ensure it's set to release;
+  # other options include fastdebug and slowdebug.
+  addConfigureArg "--with-debug-level=" "release"
+
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+    addConfigureArg "--disable-zip-debug-info" ""
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
+      addConfigureArg "--disable-debug-symbols" ""
+    fi
   else
-    addConfigureArg "--with-debug-level=" "release"
-    addConfigureArg "--with-native-debug-symbols=" "none"
-    addConfigureArg "--enable-dtrace=" "auto"
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
+      addConfigureArg "--with-native-debug-symbols=" "none"
+    fi
   fi
 }
 
@@ -305,13 +313,21 @@ configureCommandParameters()
   configuringVersionStringParameter
   configuringBootJDKConfigureParameter
   configuringMacOSCodesignParameter
+  configureDebugParameters
 
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
 
     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-      # This is unfortunatly required as if the path does not start with "/cygdrive" the make scripts are unable to find the "/closed/adds" dir
-      local addsDir="/cygdrive/c/cygwin64/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/adds"
+      local addsDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/adds"
+
+      # This is unfortunately required as if the path does not start with "/cygdrive" the make scripts are unable to find the "/closed/adds" directory.
+      if ! echo "$addsDir" | egrep -q "^/cygdrive/"; then
+        # BUILD_CONFIG[WORKSPACE_DIR] does not seem to be an absolute path, prepend /cygdrive/c/cygwin64/"
+        echo "Prepending /cygdrive/c/cygwin64/ to BUILD_CONFIG[WORKSPACE_DIR]"
+        addsDir="/cygdrive/c/cygwin64/$addsDir"
+      fi
+
       echo "adding source route -with-add-source-root=${addsDir}"
       addConfigureArg "--with-add-source-root=" "${addsDir}"
     fi
@@ -353,14 +369,17 @@ buildTemplatedFile() {
   FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
   echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
 
-  # If it's Java 9+ then we also make test-image to build the native test libraries
+  # If it's Java 9+ then we also make test-image to build the native test libraries,
+  # For openj9 add debug-image
   JDK_PREFIX="jdk"
   JDK_VERSION_NUMBER="${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
-  if [ "$JDK_VERSION_NUMBER" -gt 8 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
-    MAKE_TEST_IMAGE=" test-image" # the added white space is deliberate as it's the last arg
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
+    ADDITIONAL_MAKE_TARGETS=" test-image debug-image"
+  elif [ "$JDK_VERSION_NUMBER" -gt 8 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
+    ADDITIONAL_MAKE_TARGETS=" test-image"
   fi
 
-  FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]} ${MAKE_TEST_IMAGE}"
+  FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]} ${ADDITIONAL_MAKE_TARGETS}"
 
   # shellcheck disable=SC2002
   cat "$SCRIPT_DIR/build.template" | \
@@ -497,11 +516,17 @@ getTestImageArchivePath() {
   echo "${jdkArchivePath}-test-image"
 }
 
+getDebugImageArchivePath() {
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-debug-image"
+}
+
 # Clean up
 removingUnnecessaryFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
+  local debugImageTargetPath=$(getDebugImageArchivePath)
 
   echo "Removing unnecessary files now..."
 
@@ -526,17 +551,25 @@ removingUnnecessaryFiles() {
       "darwin") dirToRemove="${jreTargetPath}/Contents/Home" ;;
       *) dirToRemove="${jreTargetPath}" ;;
     esac
-    rm -rf "${dirToRemove}"/demo/applets || true
-    rm -rf "${dirToRemove}"/demo/jfc/Font2DTest || true
-    rm -rf "${dirToRemove}"/demo/jfc/SwingApplet || true
+    rm -rf "${dirToRemove}"/demo || true
   fi
-  # Test image is JDK 11+ only so add an additional
-  # check if the config is set
-  if [ ! -z "${BUILD_CONFIG[TEST_IMAGE_PATH]}" ] && [ -d "$(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]})" ]
+
+  # Test image - check if the config is set and directory exists
+  local testImagePath="${BUILD_CONFIG[TEST_IMAGE_PATH]}"
+  if [ ! -z "${testImagePath}" ] && [ -d "${testImagePath}" ]
   then
-    echo "moving $(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]}) to ${testImageTargetPath}"
+    echo "moving ${testImagePath} to ${testImageTargetPath}"
     rm -rf "${testImageTargetPath}" || true
-    mv "$(ls -d ${BUILD_CONFIG[TEST_IMAGE_PATH]})" "${testImageTargetPath}"
+    mv "${testImagePath}" "${testImageTargetPath}"
+  fi
+
+  # Debug image - check if the config is set and directory exists
+  local debugImagePath="${BUILD_CONFIG[DEBUG_IMAGE_PATH]}"
+  if [ ! -z "${debugImagePath}" ] && [ -d "${debugImagePath}" ]
+  then
+    echo "moving ${debugImagePath} to ${debugImageTargetPath}"
+    rm -rf "${debugImageTargetPath}" || true
+    mv "${debugImagePath}" "${debugImageTargetPath}"
   fi
 
   # Remove files we don't need
@@ -544,13 +577,27 @@ removingUnnecessaryFiles() {
     "darwin") dirToRemove="${jdkTargetPath}/Contents/Home" ;;
     *) dirToRemove="${jdkTargetPath}" ;;
   esac
-  rm -rf "${dirToRemove}"/demo/applets || true
-  rm -rf "${dirToRemove}"/demo/jfc/Font2DTest || true
-  rm -rf "${dirToRemove}"/demo/jfc/SwingApplet || true
+  rm -rf "${dirToRemove}"/demo || true
 
-  find . -name "*.diz" -type f -delete || true
-  find . -name "*.pdb" -type f -delete || true
-  find . -name "*.map" -type f -delete || true
+  # .diz files may be present on any platform
+  # Note that on AIX, find does not support the '-delete' option.
+  find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.diz" | xargs rm -f || true
+
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    *cygwin*)
+      # on Windows, we want to remove .map and .pdb files
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.map" -delete || true
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.pdb" -delete || true
+      ;;
+    darwin)
+      # on MacOSX, we want to remove .dSYM folders
+      find "${jdkTargetPath}" "${jreTargetPath}" -type d -name "*.dSYM" | xargs -I "{}" rm -rf "{}"
+      ;;
+    *)
+      # on other platforms, we want to remove .debuginfo files
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.debuginfo" | xargs rm -f || true
+      ;;
+  esac
 
   echo "Finished removing unnecessary files from ${jdkTargetPath}"
 }
@@ -583,6 +630,12 @@ moveFreetypeLib() {
   echo "Currently at '${PWD}'"
   echo "Copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
   echo " *** Workaround to fix the MacOSX issue where invocation to ${INVOKED_BY_FONT_MANAGER} fails to find ${TARGET_LIB_NAME} ***"
+
+  # codesign freetype before it is bundled
+  if [ ! -z "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
+    ENTITLEMENTS="$WORKSPACE/entitlements.plist"
+    codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" "${SOURCE_LIB_NAME}"
+  fi
 
   cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
   if [ -f "${INVOKED_BY_FONT_MANAGER}" ]; then
@@ -632,7 +685,7 @@ getFirstTagFromOpenJDKGitRepo()
         # For the development tree jdk/jdk, there might be two major versions in development
         # in parallel. One in stabilization mode, and the currently active developement line
         # Thus, add an explicit grep on the specified FEATURE_VERSION so as to appropriately
-	# set the correct build number later on.
+        # set the correct build number later on.
         firstMatchingNameFromRepo=$(git describe --tags $revList | grep "jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" | grep -v openj9 | grep -v _adopt | grep -v "\-ga" | head -1)
       else
         firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | grep -v _adopt | grep -v "\-ga" | head -1)
@@ -671,6 +724,7 @@ createOpenJDKTarArchive()
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
+  local debugImageTargetPath=$(getDebugImageArchivePath)
 
   COMPRESS=gzip
 
@@ -687,6 +741,11 @@ createOpenJDKTarArchive()
     echo "OpenJDK test image path will be ${testImageTargetPath}."
     local testImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-testimage}")
     createArchive "${testImageTargetPath}" "${testImageName}"
+  fi
+  if [ -d "${debugImageTargetPath}" ]; then
+    echo "OpenJDK debug image path will be ${debugImageTargetPath}."
+    local debugImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debugimage}")
+    createArchive "${debugImageTargetPath}" "${debugImageName}"
   fi
   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
@@ -710,7 +769,7 @@ wipeOutOldTargetDir() {
 }
 
 createTargetDir() {
-  ## clean out old builds
+  # clean out old builds
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}" || exit
 }
 

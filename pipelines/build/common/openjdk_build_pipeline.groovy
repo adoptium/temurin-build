@@ -45,6 +45,7 @@ class Build {
     final def context
     final def env
     final def currentBuild
+    VersionInfo versionInfo = null
 
     Build(IndividualBuildConfig buildConfig, def context, def env, def currentBuild) {
         this.buildConfig = buildConfig
@@ -54,8 +55,8 @@ class Build {
     }
 
 
-	Integer getJavaVersionNumber() {
-		def javaToBuild = buildConfig.JAVA_TO_BUILD
+    Integer getJavaVersionNumber() {
+        def javaToBuild = buildConfig.JAVA_TO_BUILD
         // version should be something like "jdk8u" or "jdk" for HEAD
         Matcher matcher = javaToBuild =~ /.*?(?<version>\d+).*?/
         if (matcher.matches()) {
@@ -74,10 +75,10 @@ class Build {
         def variant
         def number = getJavaVersionNumber()
 
-        if (buildConfig.VARIANT == "openj9") {
-            variant = "j9"
-        } else {
-            variant = "hs"
+        switch (buildConfig.VARIANT) {
+            case "openj9": variant = "j9"; break
+            case "corretto": variant = "corretto"; break
+            default: variant = "hs"
         }
 
         def arch = buildConfig.ARCHITECTURE
@@ -100,40 +101,41 @@ class Build {
     def runTests() {
         def testStages = [:]
         List testList = []
-        
-        if (buildConfig.VARIANT == "hotspot-jfr") {
-        	testList = buildConfig.TEST_LIST.minus(['sanity.external'])
+
+        if (buildConfig.VARIANT == "hotspot-jfr" || buildConfig.VARIANT == "corretto") {
+            testList = buildConfig.TEST_LIST.minus(['sanity.external'])
         } else {
-        	testList = buildConfig.TEST_LIST
+            testList = buildConfig.TEST_LIST
         }
         testList.each { testType ->
-            // For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
-            try {
-                context.println "Running test: ${testType}"
-                testStages["${testType}"] = {
-                    context.stage("${testType}") {
+			
+			// For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
+			try {
+				context.println "Running test: ${testType}"
+				testStages["${testType}"] = {
+					context.stage("${testType}") {
 
-                        // example jobName: Test_openjdk11_hs_sanity.system_ppc64_aix
-                        def jobName = determineTestJobName(testType)
+						// example jobName: Test_openjdk11_hs_sanity.system_ppc64_aix
+						def jobName = determineTestJobName(testType)
 
-                        def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
-                        if (JobHelper.jobIsRunnable(jobName as String)) {
-                            context.catchError {
-                                context.build job: jobName,
-                                        propagate: false,
-                                        parameters: [
-                                                context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
-                                                context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
-                                                context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}")]
-                            }
-                        } else {
-                            context.println "Requested test job that does not exist or is disabled: ${jobName}"
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                context.println "Failed execute test: ${e.getLocalizedMessage()}"
-            }
+						def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+						if (JobHelper.jobIsRunnable(jobName as String)) {
+							context.catchError {
+								context.build job: jobName,
+										propagate: false,
+										parameters: [
+												context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+												context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+												context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}")]
+							}
+						} else {
+							context.println "Requested test job that does not exist or is disabled: ${jobName}"
+						}
+					}
+				}
+			} catch (Exception e) {
+				context.println "Failed execute test: ${e.getLocalizedMessage()}"
+			}
         }
         return testStages
     }
@@ -154,7 +156,7 @@ class Build {
     def sign(VersionInfo versionInfo) {
         // Sign and archive jobs if needed
         // TODO: This version info check needs to be updated when the notarization fix gets applied to other versions.
-        if (buildConfig.TARGET_OS == "windows" || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 8) || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 13)) {
+        if (buildConfig.TARGET_OS == "windows" || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 8 && buildConfig.VARIANT != "openj9") || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 13)) {
             context.node('master') {
                 context.stage("sign") {
                     def filter = ""
@@ -188,6 +190,12 @@ class Build {
                     def signJob = context.build job: "build-scripts/release/sign_build",
                             propagate: true,
                             parameters: params
+                    
+                   // Output notification of downstream failure (the build will fail automatically)
+                   def jobResult = signJob.getResult()
+                   if (jobResult != 'SUCCESS') {
+                       context.println "ERROR: downstream sign_build ${jobResult}.\nSee ${signJob.getAbsoluteUrl()} for details"
+                   } 
 
                     //Copy signed artifact back and rearchive
                     context.sh "rm workspace/target/* || true"
@@ -215,7 +223,6 @@ class Build {
         def filter = "**/OpenJDK*_mac_*.tar.gz"
         def certificate = "Developer ID Installer: London Jamocha Community CIC"
 
-        // currently only macos10.10 can build an installer
         def nodeFilter = "${buildConfig.TARGET_OS}&&macos10.14&&xcode10"
 
         def installerJob = context.build job: "build-scripts/release/create_installer_mac",
@@ -229,6 +236,12 @@ class Build {
                         context.string(name: 'CERTIFICATE', value: "${certificate}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
                 ]
+        
+        // Output notification of downstream failure (the build will fail automatically)
+        def jobResult = installerJob.getResult()
+        if (jobResult != 'SUCCESS') {
+            context.println "ERROR: downstream mac installer ${jobResult}. See ${installerJob.getAbsoluteUrl()}"
+        }
 
         context.copyArtifacts(
                 projectName: "build-scripts/release/create_installer_mac",
@@ -262,6 +275,12 @@ class Build {
                         context.string(name: 'ARCHITECTURE', value: "${buildConfig.ARCHITECTURE}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
                 ]
+        
+        // Output notification of downstream failure (the build will fail automatically)
+        def jobResult = installerJob.getResult()
+        if (jobResult != 'SUCCESS') {
+            context.println "ERROR: downstream linux installer ${jobResult}. See ${installerJob.getAbsoluteUrl()}"
+        }
     }
 
     private void buildWindowsInstaller(VersionInfo versionData) {
@@ -289,6 +308,12 @@ class Build {
                         context.string(name: 'ARCH', value: "${buildConfig.ARCHITECTURE}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${buildConfig.TARGET_OS}&&wix"]
                 ]
+        
+        // Output notification of downstream failure (the build will fail automatically)
+        def jobResult = installerJob.getResult()
+        if (jobResult != 'SUCCESS') {
+            context.println "ERROR: downstream windows installer ${jobResult}. See ${installerJob.getAbsoluteUrl()}"
+        }
 
         context.copyArtifacts(
                 projectName: "build-scripts/release/create_installer_windows",
@@ -307,13 +332,13 @@ class Build {
 
         context.node('master') {
             context.stage("installer") {
+                switch (buildConfig.TARGET_OS) {
+                    case "mac": buildMacInstaller(versionData); break
+                    case "linux": buildLinuxInstaller(versionData); break
+                    case "windows": buildWindowsInstaller(versionData); break
+                    default: return; break
+                }
                 try {
-                    switch (buildConfig.TARGET_OS) {
-                        case "mac": buildMacInstaller(versionData); break
-                        case "linux": buildLinuxInstaller(versionData); break
-                        case "windows": buildWindowsInstaller(versionData); break
-                        default: return; break
-                    }
                     context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
                     writeMetadata(versionData)
                     context.archiveArtifacts artifacts: "workspace/target/*"
@@ -372,9 +397,17 @@ class Build {
                 type = "jre"
             } else if (file.contains("-testimage")) {
                 type = "testimage"
+            } else if (file.contains("-debugimage")) {
+                type = "debugimage"
             }
 
-            String hash = context.sh(script: "sha256sum $file | cut -f1 -d' '", returnStdout: true, returnStatus: false)
+            String hash = context.sh(script: """\
+                                              if [ -x "\$(command -v shasum)" ]; then
+                                                (shasum -a 256 | cut -f1 -d' ') <$file
+                                              else
+                                                sha256sum $file | cut -f1 -d' '
+                                              fi
+                                            """.stripIndent(), returnStdout: true, returnStatus: false)
 
             hash = hash.replaceAll("\n", "")
 
@@ -435,6 +468,35 @@ class Build {
         return fileName
     }
 
+    def buildScripts(cleanWorkspace, filename) {
+        return context.stage("build") {
+            if (cleanWorkspace) {
+                try {
+                    context.cleanWs notFailBuild: true
+                } catch (e) {
+                    context.println "Failed to clean ${e}"
+                }
+            }
+            context.checkout context.scm
+            try {
+                List<String> envVars = buildConfig.toEnvVars()
+                envVars.add("FILENAME=${filename}" as String)
+                context.withEnv(envVars) {
+                    context.sh(script: "./build-farm/make-adopt-build-farm.sh")
+                    String versionOut = context.readFile("workspace/target/version.txt")
+
+                    versionInfo = parseVersionOutput(versionOut)
+                }
+                writeMetadata(versionInfo)
+                context.archiveArtifacts artifacts: "workspace/target/*"
+            } finally {
+                if (buildConfig.TARGET_OS == "aix") {
+                    context.cleanWs notFailBuild: true
+                }
+            }
+        }
+    }
+
     def build() {
         try {
 
@@ -450,39 +512,25 @@ class Build {
             def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
             def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
 
-            VersionInfo versionInfo = null
-
             context.stage("queue") {
                 def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
 
                 if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
                     context.node(buildConfig.NODE_LABEL) {
-                        context.stage("build") {
-                            if (cleanWorkspace) {
-                                try {
-                                    context.cleanWs notFailBuild: true
-                                } catch (e) {
-                                    context.println "Failed to clean ${e}"
-                                }
+                        // This is to avoid windows path length issues.
+                        context.echo("checking ${buildConfig.TARGET_OS}")
+                        if (buildConfig.TARGET_OS == "windows") {
+                            // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
+                            def workspace = "C:/workspace/openjdk-build/"
+                            if (env.CYGWIN_WORKSPACE) {
+                                workspace = env.CYGWIN_WORKSPACE
                             }
-                            context.checkout context.scm
-                            try {
-                                List<String> envVars = buildConfig.toEnvVars()
-                                envVars.add("FILENAME=${filename}" as String)
-
-                                context.withEnv(envVars) {
-                                    context.sh(script: "./build-farm/make-adopt-build-farm.sh")
-                                    String versionOut = context.readFile("workspace/target/version.txt")
-
-                                    versionInfo = parseVersionOutput(versionOut)
-                                }
-                                writeMetadata(versionInfo)
-                                context.archiveArtifacts artifacts: "workspace/target/*"
-                            } finally {
-                                if (buildConfig.TARGET_OS == "aix") {
-                                    context.cleanWs notFailBuild: true
-                                }
+                            context.echo("changing ${workspace}")
+                            context.ws(workspace) {
+                                buildScripts(cleanWorkspace, filename)
                             }
+                        } else {
+                            buildScripts(cleanWorkspace, filename)
                         }
                     }
                 } else {
