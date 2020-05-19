@@ -113,8 +113,3 @@ if [ "$JAVA_FEATURE_VERSION" -ge 14 ] && [ "${VARIANT}" == "${BUILD_VARIANT_OPEN
 else
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-memory-size=10000"
 fi
-
-echo Stripping the following from the LIBPATH in order to prevent it being embedded in the executable:
-echo $LIBPATH | tr : \\n | grep /usr/j | sed 's/^/> /g' 
-
-export LIBPATH=$(echo $LIBPATH | tr : \\n | grep -v /usr/j | tr \\n :)
