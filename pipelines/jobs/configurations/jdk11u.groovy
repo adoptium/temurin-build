@@ -51,6 +51,9 @@ targetConfigurations = [
         ],
         "aarch64LinuxXL": [
                 "openj9"
+        ],
+        "riscv64Linux": [
+                "openj9"
         ]
 ]
 

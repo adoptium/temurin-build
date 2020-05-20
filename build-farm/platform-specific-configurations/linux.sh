@@ -148,3 +148,16 @@ then
   export BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
   export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 fi
+
+if [ "${ARCHITECTURE}" == "riscv" ]
+then
+	export RISCV64=/opt/riscv_toolchain_linux
+	export LD_LIBRARY_PATH=$RISCV64/lib64
+	export PATH="$RISCV64/bin:$PATH"
+	# riscv has to use a cross compiler
+	export CC=$RISCV64/bin/riscv64-unknown-linux-gnu-gcc
+	export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
+	CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK_BOOT_DIR --with-build-jdk=$JDK_BOOT_DIR"
+	BUILD_ARGS="${BUILD_ARGS} -F"
+fi
+
