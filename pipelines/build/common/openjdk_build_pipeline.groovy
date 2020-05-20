@@ -237,12 +237,6 @@ class Build {
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
                 ]
         
-        // Output notification of downstream failure (the build will fail automatically)
-        def jobResult = installerJob.getResult()
-        if (jobResult != 'SUCCESS') {
-            context.println "ERROR: downstream mac installer ${jobResult}. See ${installerJob.getAbsoluteUrl()}"
-        }
-
         context.copyArtifacts(
                 projectName: "build-scripts/release/create_installer_mac",
                 selector: context.specific("${installerJob.getNumber()}"),
@@ -276,11 +270,6 @@ class Build {
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
                 ]
         
-        // Output notification of downstream failure (the build will fail automatically)
-        def jobResult = installerJob.getResult()
-        if (jobResult != 'SUCCESS') {
-            context.println "ERROR: downstream linux installer ${jobResult}. See ${installerJob.getAbsoluteUrl()}"
-        }
     }
 
     private void buildWindowsInstaller(VersionInfo versionData) {
@@ -308,13 +297,6 @@ class Build {
                         context.string(name: 'ARCH', value: "${buildConfig.ARCHITECTURE}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${buildConfig.TARGET_OS}&&wix"]
                 ]
-        
-        // Output notification of downstream failure (the build will fail automatically)
-        def jobResult = installerJob.getResult()
-        if (jobResult != 'SUCCESS') {
-            context.println "ERROR: downstream windows installer ${jobResult}. See ${installerJob.getAbsoluteUrl()}"
-        }
-
         context.copyArtifacts(
                 projectName: "build-scripts/release/create_installer_windows",
                 selector: context.specific("${installerJob.getNumber()}"),
@@ -332,13 +314,14 @@ class Build {
 
         context.node('master') {
             context.stage("installer") {
-                switch (buildConfig.TARGET_OS) {
-                    case "mac": buildMacInstaller(versionData); break
-                    case "linux": buildLinuxInstaller(versionData); break
-                    case "windows": buildWindowsInstaller(versionData); break
-                    default: return; break
-                }
                 try {
+                    switch (buildConfig.TARGET_OS) {
+                        case "mac": buildMacInstaller(versionData); break
+                        case "linux": buildLinuxInstaller(versionData); break
+                        case "windows": buildWindowsInstaller(versionData); break
+                        default: return; break
+                    }
+
                     context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
                     writeMetadata(versionData)
                     context.archiveArtifacts artifacts: "workspace/target/*"
