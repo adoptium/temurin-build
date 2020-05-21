@@ -157,7 +157,8 @@ then
 	# riscv has to use a cross compiler
 	export CC=$RISCV64/bin/riscv64-unknown-linux-gnu-gcc
 	export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
-	CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK_BOOT_DIR --with-build-jdk=$JDK_BOOT_DIR"
+	# riscv can currently only be built on JDK11, and requires JDK11 as it's build/boot JDK
+	CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK11_BOOT_DIR --with-build-jdk=$JDK11_BOOT_DIR"
 	BUILD_ARGS="${BUILD_ARGS} -F"
 fi
 
