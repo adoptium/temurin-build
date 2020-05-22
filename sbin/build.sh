@@ -494,7 +494,6 @@ OMR      - 000000000
 JCL      - 000000000 based on jdk-11.0.0+0)
 EOT
      else
-       # riscv is cross compiled, so we cannot run it on the build system
        # print version string around easy to find output
        # do not modify these strings as jenkins looks for them
        echo "=JAVA VERSION OUTPUT="
