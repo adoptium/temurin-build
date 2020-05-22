@@ -473,17 +473,18 @@ printJavaVersionString()
   esac
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "'$PRODUCT_HOME' found"
-     if ! "$PRODUCT_HOME"/bin/java -version; then
+     if [ ! -r "$PRODUCT_HOME/bin/java" ]; then
        echo "===$PRODUCT_HOME===="
        ls -alh "$PRODUCT_HOME"
 
        echo "===$PRODUCT_HOME/bin/===="
        ls -alh "$PRODUCT_HOME/bin/"
 
-       echo " Error executing 'java' does not exist in '$PRODUCT_HOME'."
+       echo "Error 'java' does not exist in '$PRODUCT_HOME'."
        exit -1
-     else
-       # repeat version string around easy to find output
+     elif [ "${ARCHITECTURE}" != "riscv" ]; then
+       # riscv is cross compiled, so we cannot run it on the build system
+       # print version string around easy to find output
        # do not modify these strings as jenkins looks for them
        echo "=JAVA VERSION OUTPUT="
        "$PRODUCT_HOME"/bin/java -version 2>&1
