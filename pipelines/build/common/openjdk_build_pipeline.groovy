@@ -481,65 +481,69 @@ class Build {
     }
 
     def build() {
-        try {
+        timestamps {
+            timeout(time: 18, unit: "HOURS") {
+                try {
 
-            context.println "Build config"
-            context.println buildConfig.toJson()
+                    context.println "Build config"
+                    context.println buildConfig.toJson()
 
-            def filename = determineFileName()
+                    def filename = determineFileName()
 
-            context.println "Executing tests: ${buildConfig.TEST_LIST}"
-            context.println "Build num: ${env.BUILD_NUMBER}"
-            context.println "File name: ${filename}"
+                    context.println "Executing tests: ${buildConfig.TEST_LIST}"
+                    context.println "Build num: ${env.BUILD_NUMBER}"
+                    context.println "File name: ${filename}"
 
-            def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
-            def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
+                    def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
+                    def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
 
-            context.stage("queue") {
-                def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
+                    context.stage("queue") {
+                        def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
 
-                if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
-                    context.node(buildConfig.NODE_LABEL) {
-                        // This is to avoid windows path length issues.
-                        context.echo("checking ${buildConfig.TARGET_OS}")
-                        if (buildConfig.TARGET_OS == "windows") {
-                            // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
-                            def workspace = "C:/workspace/openjdk-build/"
-                            if (env.CYGWIN_WORKSPACE) {
-                                workspace = env.CYGWIN_WORKSPACE
-                            }
-                            context.echo("changing ${workspace}")
-                            context.ws(workspace) {
-                                buildScripts(cleanWorkspace, filename)
+                        if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
+                            context.node(buildConfig.NODE_LABEL) {
+                                // This is to avoid windows path length issues.
+                                context.echo("checking ${buildConfig.TARGET_OS}")
+                                if (buildConfig.TARGET_OS == "windows") {
+                                    // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
+                                    def workspace = "C:/workspace/openjdk-build/"
+                                    if (env.CYGWIN_WORKSPACE) {
+                                        workspace = env.CYGWIN_WORKSPACE
+                                    }
+                                    context.echo("changing ${workspace}")
+                                    context.ws(workspace) {
+                                        buildScripts(cleanWorkspace, filename)
+                                    }
+                                } else {
+                                    buildScripts(cleanWorkspace, filename)
+                                }
                             }
                         } else {
-                            buildScripts(cleanWorkspace, filename)
+                            context.error("No node of this type exists: ${buildConfig.NODE_LABEL}")
+                            return
                         }
                     }
-                } else {
-                    context.error("No node of this type exists: ${buildConfig.NODE_LABEL}")
-                    return
-                }
-            }
 
-            // Sign and archive jobs if needed
-            sign(versionInfo)
+                    // Sign and archive jobs if needed
+                    sign(versionInfo)
 
-            if (enableTests && buildConfig.TEST_LIST.size() > 0) {
-                try {
-                    def testStages = runTests()
-                    context.parallel testStages
+                    if (enableTests && buildConfig.TEST_LIST.size() > 0) {
+                        try {
+                            def testStages = runTests()
+                            context.parallel testStages
+                        } catch (Exception e) {
+                            context.println "Failed test: ${e}"
+                        }
+                    }
+
+                    //buildInstaller if needed
+                    buildInstaller(versionInfo)
+
                 } catch (Exception e) {
-                    context.println "Failed test: ${e}"
+                    currentBuild.result = 'FAILURE'
+                    context.println "Execution error: " + e.getMessage()
                 }
             }
-
-            //buildInstaller if needed
-            buildInstaller(versionInfo)
-
-        } catch (Exception e) {
-            currentBuild.result = 'FAILURE'
-            context.println "Execution error: " + e.getMessage()
         }
     }
 }
