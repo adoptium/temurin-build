@@ -417,6 +417,12 @@ class Build {
 
         javaToBuild = javaToBuild.toUpperCase()
 
+	// Use version number for HEAD binaries
+	if (javaToBuild == "JDK") {
+		// This needs to be updated each time JDK-Head updates
+		javaToBuild = "15U"
+	}
+
         def fileName = "Open${javaToBuild}-jdk_${architecture}_${os}_${variant}"
 
         if (additionalFileNameTag) {
