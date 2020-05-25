@@ -481,8 +481,8 @@ class Build {
     }
 
     def build() {
-        timestamps {
-            timeout(time: 18, unit: "HOURS") {
+        context.timestamps {
+            context.timeout(time: 18, unit: "HOURS") {
                 try {
 
                     context.println "Build config"
