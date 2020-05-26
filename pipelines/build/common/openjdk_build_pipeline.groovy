@@ -220,7 +220,7 @@ class Build {
 
 
     private void buildMacInstaller(VersionInfo versionData) {
-        def filter = "**/OpenJDK-{jdk,jre}*_mac_*.tar.gz"
+        def filter = "**/OpenJDK*_mac_*.tar.gz"
         def certificate = "Developer ID Installer: London Jamocha Community CIC"
 
         def nodeFilter = "${buildConfig.TARGET_OS}&&macos10.14&&xcode10"
@@ -247,7 +247,7 @@ class Build {
     }
 
     private void buildLinuxInstaller(VersionInfo versionData) {
-        def filter = "**/OpenJDK-{jdk,jre}*_linux_*.tar.gz"
+        def filter = "**/OpenJDK*_linux_*.tar.gz"
         def nodeFilter = "${buildConfig.TARGET_OS}&&fpm"
 
         def buildNumber = versionData.build
@@ -273,7 +273,7 @@ class Build {
     }
 
     private void buildWindowsInstaller(VersionInfo versionData) {
-        def filter = "**/OpenJDK-{jdk,jre}*_windows_*.zip"
+        def filter = "**/OpenJDK*_windows_*.zip"
         def certificate = "C:\\Users\\jenkins\\windows.p12"
 
         def buildNumber = versionData.build
