@@ -326,7 +326,8 @@ class Build {
                     writeMetadata(versionData)
                     context.archiveArtifacts artifacts: "workspace/target/*"
                 } catch (e) {
-                    context.println("Failed to build installer ${buildConfig.TARGET_OS} ${e}")
+                    context.println("Failed to build ${buildConfig.TARGET_OS} installer ${e}")
+                    currentBuild.result = 'FAILURE'
                 }
             }
         }
