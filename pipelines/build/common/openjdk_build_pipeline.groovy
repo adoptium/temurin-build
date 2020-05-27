@@ -461,7 +461,11 @@ class Build {
         return context.stage("build") {
             if (cleanWorkspace) {
                 try {
-                    context.cleanWs notFailBuild: true
+                    if (buildConfig.TARGET_OS == "windows" && buildConfig.VARIANT == "openj9") {
+                        context.cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
+                    } else {
+                        context.cleanWs notFailBuild: true
+                    }
                 } catch (e) {
                     context.println "Failed to clean ${e}"
                 }
