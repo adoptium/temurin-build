@@ -260,6 +260,8 @@ downloadFile() {
   local targetFileName="$1"
   local url="$2"
 
+  echo downloadFile: Saving "url" to "$targetFilename"
+  
   # Temporary fudge as curl on my windows boxes is exiting with RC=127
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     wget -O "${targetFileName}" "${url}"
