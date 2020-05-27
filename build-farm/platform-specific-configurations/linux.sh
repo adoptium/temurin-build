@@ -153,7 +153,7 @@ if [ "${ARCHITECTURE}" == "riscv" ]
 then
 	echo RISCV cross-compilation ... Downloading latest nightly OpenJ9/x64 as build JDK
 	export BUILDJDK=$WORKSPACE/buildjdk
-	rm -r "$BUILDJDK"
+	rm -rf "$BUILDJDK"
 	mkdir "$BUILDJDK"
 	wget -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/x64/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
 	"$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g'
