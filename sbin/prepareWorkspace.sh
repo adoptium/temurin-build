@@ -261,7 +261,6 @@ downloadFile() {
   local url="$2"
 
   echo downloadFile: Saving "url" to "$targetFileName"
-
   
   # Temporary fudge as curl on my windows boxes is exiting with RC=127
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
