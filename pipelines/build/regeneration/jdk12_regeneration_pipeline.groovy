@@ -29,10 +29,8 @@ node ("master") {
     regenerationScript(
       javaVersion,
       buildConfigurations,
-      scmVars,
       currentBuild,
-      this,
-      env
+      this
     ).regenerate()
       
     println "[SUCCESS] All done!"
