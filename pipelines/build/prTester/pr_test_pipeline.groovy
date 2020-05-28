@@ -80,7 +80,11 @@ Map<String, ?> defaultTestConfigurations = [
         ]
 ]
 
-List<Integer> defaultJavaVersions = [8, 11, 14, 15]
+// We've emptied this array on purpose until we can get this to work again with
+// the asynchronous nature of our builds
+// TODO https://github.com/AdoptOpenJDK/openjdk-build/issues/1770
+List<Integer> defaultJavaVersions = []
+//List<Integer> defaultJavaVersions = [8, 11, 14, 15]
 
 defaultGitRepo = "https://github.com/AdoptOpenJDK/openjdk-build"
 
