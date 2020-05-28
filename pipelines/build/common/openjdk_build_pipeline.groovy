@@ -325,12 +325,17 @@ class Build {
                         case "windows": buildWindowsInstaller(versionData); break
                 	default: return; break
                 }
-		try {
-                    context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
-                    writeMetadata(versionData)
-                    context.archiveArtifacts artifacts: "workspace/target/*"
-                } catch (e) {
-                    context.println("Failed to build ${buildConfig.TARGET_OS} installer ${e}")
+                // Archive the Mac and Windows pkg/msi
+                // (Linux installer job produces no artifacts, it just uploads rpm/deb to the repositories)
+                if (buildConfig.TARGET_OS == "mac" || buildConfig.TARGET_OS == "windows") {
+                    try {
+                        context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
+                        writeMetadata(versionData)
+                        context.archiveArtifacts artifacts: "workspace/target/*"
+                    } catch (e) {
+                        context.println("Failed to build ${buildConfig.TARGET_OS} installer ${e}")
+                        currentBuild.result = 'FAILURE'
+                    }
                 }
             }
         }
