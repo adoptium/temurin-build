@@ -116,7 +116,6 @@ then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
   then
     export HAS_AUTOCONF=1
-    export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
 
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
