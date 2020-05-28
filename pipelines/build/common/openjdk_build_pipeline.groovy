@@ -326,8 +326,9 @@ class Build {
                 	default: return; break
                 }
                 // Archive the Mac and Windows pkg/msi
+                // (Linux installer job produces no artifacts, it just uploads rpm/deb to the repositories)
                 if (buildConfig.TARGET_OS == "mac" || buildConfig.TARGET_OS == "windows") {
-		    try {
+                    try {
                         context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
                         writeMetadata(versionData)
                         context.archiveArtifacts artifacts: "workspace/target/*"
