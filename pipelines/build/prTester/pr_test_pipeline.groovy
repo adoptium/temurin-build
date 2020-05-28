@@ -1,8 +1,5 @@
 import groovy.json.JsonSlurper
 
-import static groovy.json.JsonOutput.prettyPrint
-import static groovy.json.JsonOutput.toJson
-
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+
 class PullRequestTestPipeline implements Serializable {
 
     def context
-    def env
     def currentBuild
 
     String branch
@@ -28,42 +25,65 @@ class PullRequestTestPipeline implements Serializable {
     Map<String, ?> testConfigurations
     List<Integer> javaVersions
 
+    String BUILD_FOLDER = "build-scripts-pr-tester/build-test"
+
+    Map<String, ?> generateConfig(def javaVersion) {
+        return [
+                PR_BUILDER          : true,
+                TEST                : false,
+                GIT_URL             : gitRepo,
+                BRANCH              : "${branch}",
+                BUILD_FOLDER        : BUILD_FOLDER,
+                JOB_NAME            : "openjdk${javaVersion}-pipeline",
+                SCRIPT              : "pipelines/build/openjdk${javaVersion}_pipeline.groovy",
+                disableJob          : false,
+                triggerSchedule     : "0 0 31 2 0",
+                targetConfigurations: testConfigurations
+        ]
+    }
+
+    def generatePipelineJob(def javaVersion) {
+        Map<String, ?> config = generateConfig(javaVersion)
+        context.checkout([$class: 'GitSCM', userRemoteConfigs: [[url: config.GIT_URL]], branches: [[name: branch]]])
+
+        println "${javaVersion} ${config.disableJob}"
+        context.jobDsl targets: "pipelines/jobs/pipeline_job_template.groovy", ignoreExisting: false, additionalParameters: config
+    }
+
     def runTests() {
 
         def jobs = [:]
 
-        javaVersions.each({ javaVersion ->
-            def target
-            try {
-                target = context.load "pipelines/jobs/configurations/jdk${javaVersion}u.groovy"
-            } catch (Exception e) {
-                try {
-                    target = context.load "pipelines/jobs/configurations/jdk${javaVersion}.groovy"
-                } catch (Exception e2) {
-                    println "No config found for ${javaVersion}"
-                    return
-                }
-            }
+        println "loading ${context.WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
+        Closure regenerationScript = context.load "${context.WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
 
-            def config = [
-                    PR_BUILDER          : true,
-                    GIT_URL             : gitRepo,
-                    BRANCH              : "${branch}",
-                    BUILD_FOLDER        : "build-scripts-pr-tester/build-test",
-                    JOB_NAME            : "openjdk${javaVersion}",
-                    SCRIPT              : "pipelines/build/openjdk${javaVersion}_pipeline.groovy",
-                    targetConfigurations: target.targetConfigurations,
-                    propagateFailures   : true
-            ]
+        javaVersions.each({ javaVersion ->
+            // generate top level job
+            generatePipelineJob(javaVersion)
+            println "[INFO] Running regeneration script..."
+
+            println "loading ${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy"
+            def buildConfigurations = context.load "${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy"
+
+            regenerationScript(
+                    "jdk${javaVersion}u",
+                    buildConfigurations,
+                    currentBuild,
+                    context,
+                    "build-scripts-pr-tester/build-test",
+                    gitRepo,
+                    branch,
+                    "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test"
+            ).regenerate()
+
+            println "[SUCCESS] All done!"
 
             jobs["Test building Java ${javaVersion}"] = {
                 context.catchError {
                     context.stage("Test building Java ${javaVersion}") {
-                        context.jobDsl targets: "pipelines/jobs/pipeline_job_template.groovy", ignoreExisting: false, additionalParameters: config
-                        context.build job: "${config.BUILD_FOLDER}/openjdk${javaVersion}",
+                        context.build job: "${BUILD_FOLDER}/openjdk${javaVersion}-pipeline",
                                 propagate: true,
                                 parameters: [
-                                        [$class: 'StringParameterValue', name: 'targetConfigurations', value: prettyPrint(toJson(testConfigurations))],
                                         context.string(name: 'releaseType', value: "Nightly Without Publish")
                                 ]
                     }
@@ -72,6 +92,7 @@ class PullRequestTestPipeline implements Serializable {
         })
         context.parallel jobs
     }
+
 }
 
 Map<String, ?> defaultTestConfigurations = [
@@ -80,11 +101,7 @@ Map<String, ?> defaultTestConfigurations = [
         ]
 ]
 
-// We've emptied this array on purpose until we can get this to work again with
-// the asynchronous nature of our builds
-// TODO https://github.com/AdoptOpenJDK/openjdk-build/issues/1770
-List<Integer> defaultJavaVersions = []
-//List<Integer> defaultJavaVersions = [8, 11, 14, 15]
+List<Integer> defaultJavaVersions = [8, 11, 14, 15]
 
 defaultGitRepo = "https://github.com/AdoptOpenJDK/openjdk-build"
 
@@ -92,11 +109,12 @@ return {
     String branch,
     def currentBuild,
     def context,
-    def env,
+    String gitRepo = defaultGitRepo,
     String testConfigurations = null,
-    String versions = null,
-    String gitRepo = defaultGitRepo
+    String versions = null
         ->
+
+        context.load "pipelines/build/common/import_lib.groovy"
 
         Map<String, ?> testConfig = defaultTestConfigurations
         List<Integer> javaVersions = defaultJavaVersions
@@ -113,6 +131,7 @@ return {
             javaVersions = new JsonSlurper().parseText(versions) as List<Integer>
         }
 
+
         return new PullRequestTestPipeline(
                 gitRepo: gitRepo,
                 branch: branch,
@@ -120,6 +139,5 @@ return {
                 javaVersions: javaVersions,
 
                 context: context,
-                env: env,
                 currentBuild: currentBuild)
 }

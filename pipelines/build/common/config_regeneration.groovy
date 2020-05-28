@@ -26,13 +26,17 @@ limitations under the License.
 class Regeneration implements Serializable {
   String javaVersion
   Map<String, Map<String, ?>> buildConfigurations
-  def scmVars
   def currentBuild
   def context
-  def env
 
   def javaToBuild
   def variant
+
+  def jobRootDir
+  def gitUri
+  def gitBranch
+
+  def jenkinsBuildRoot
 
   /*
   * Get configure args from jdk*_pipeline_config.groovy. Used when creating the IndividualBuildConfig.
@@ -112,7 +116,7 @@ class Regeneration implements Serializable {
   }
 
   /*
-  * Get the list of tests from jdk*_pipeline_config.groovy. Used when creating the IndividualBuildConfig. Used as a placeholder since we're not 
+  * Get the list of tests from jdk*_pipeline_config.groovy. Used when creating the IndividualBuildConfig. Used as a placeholder since we're not
   * actually running the tests here.
   * @param configuration
   * @param variant
@@ -129,12 +133,12 @@ class Regeneration implements Serializable {
   }
 
   /*
-  * Create IndividualBuildConfig for jobDsl. Used as a placeholder since we're not 
+  * Create IndividualBuildConfig for jobDsl. Used as a placeholder since we're not
   * actually building here.
   * @param platformConfig
   * @param variant
   * @param javaToBuild
-  */ 
+  */
   IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant, String javaToBuild) {
     try {
       def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
@@ -155,7 +159,7 @@ class Regeneration implements Serializable {
         CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
         OVERRIDE_FILE_NAME_VERSION: "",
         ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
-        JDK_BOOT_VERSION: platformConfig.bootJDK as String, 
+        JDK_BOOT_VERSION: platformConfig.bootJDK as String,
         RELEASE: false,
         PUBLISH_NAME: "",
         ADOPT_BUILD_NUMBER: "",
@@ -188,8 +192,8 @@ class Regeneration implements Serializable {
     params.put("JOB_NAME", jobName)
     params.put("JOB_FOLDER", jobFolder)
 
-    params.put("GIT_URI", "https://github.com/AdoptOpenJDK/openjdk-build.git")
-    params.put("GIT_BRANCH", "master") 
+    params.put("GIT_URI", gitUri)
+    params.put("GIT_BRANCH", gitBranch)
 
     params.put("BUILD_CONFIG", config.toJson())
 
@@ -213,7 +217,7 @@ class Regeneration implements Serializable {
       // Failed to connect to jenkins api or a parsing error occured
       context.println "[ERROR] Failure on jenkins api connection or parsing.\nError: ${e}"
       currentBuild.result = "FAILURE"
-    } 
+    }
   }
 
   /**
@@ -287,7 +291,7 @@ class Regeneration implements Serializable {
 
     // jdk8u-linux-x64-hotspot
     def jobTopName = "${javaToBuild}-${jobName}"
-    def jobFolder = "build-scripts/jobs/${javaToBuild}"
+    def jobFolder = "${jobRootDir}/jobs/${javaToBuild}"
 
     // i.e jdk8u/jobs/jdk8u-linux-x64-hotspot
     def downstreamJobName = "${jobFolder}/${jobTopName}"
@@ -301,8 +305,8 @@ class Regeneration implements Serializable {
   }
 
   /**
-  * Main function. Ran from regeneration_pipeline.groovy, this will be what jenkins will run first. 
-  */ 
+  * Main function. Ran from regeneration_pipeline.groovy, this will be what jenkins will run first.
+  */
   @SuppressWarnings("unused")
   def regenerate() {
 
@@ -312,10 +316,10 @@ class Regeneration implements Serializable {
     context.stage("Check $javaVersion pipeline status") {
 
       // Get all pipelines
-      def getPipelines = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/api/json?tree=jobs[name]&pretty=true&depth1")
+      def getPipelines = queryJenkinsAPI("${jenkinsBuildRoot}/api/json?tree=jobs[name]&pretty=true&depth1")
 
       // Parse api response to only extract the relevant pipeline
-      getPipelines.jobs.name.each{ pipeline -> 
+      getPipelines.jobs.name.each{ pipeline ->
         if (pipeline.contains("pipeline") && pipeline.contains(javaVersion)) {
           Integer sleepTime = 900
           Boolean inProgress = true
@@ -324,7 +328,7 @@ class Regeneration implements Serializable {
             // Check if pipeline is in progress using api
             context.println "[INFO] Checking if ${pipeline} is running..." //i.e. openjdk8-pipeline
 
-            def pipelineInProgress = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
+            def pipelineInProgress = queryJenkinsAPI("${jenkinsBuildRoot}/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
             inProgress = pipelineInProgress.building as Boolean
 
             if (inProgress) {
@@ -334,7 +338,7 @@ class Regeneration implements Serializable {
             }
 
           }
-          
+
           context.println "[SUCCESS] ${pipeline} is idle. Running regeneration job..."
         }
 
@@ -353,16 +357,16 @@ class Regeneration implements Serializable {
 
       // i.e. jdk11u, jdk8u, etc.
       context.println "[INFO] Pulling downstream folders and jobs from API..."
-      def folders = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/api/json?tree=jobs[name]&pretty=true&depth=1")
+      def folders = queryJenkinsAPI("${jenkinsBuildRoot}/job/jobs/api/json?tree=jobs[name]&pretty=true&depth=1")
 
-      folders.jobs.name.each { folder -> 
+      folders.jobs.name.each { folder ->
         if ((folder == "jdk" && javaVersion == "jdk15") || folder.contains(javaVersion)) {
           def jobs = [] // clean out array each time to avoid duplication
 
           // i.e. jdk8u-linux-x64-hotspot, jdk8u-mac-x64-openj9, etc.
-          def platforms = queryJenkinsAPI("https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/${folder}/api/json?tree=jobs[name]&pretty=true&depth=1")
+          def platforms = queryJenkinsAPI("${jenkinsBuildRoot}/job/jobs/job/${folder}/api/json?tree=jobs[name]&pretty=true&depth=1")
 
-          platforms.jobs.name.each { job -> 
+          platforms.jobs.name.each { job ->
             jobs.add(job)
           }
 
@@ -377,7 +381,7 @@ class Regeneration implements Serializable {
 
       // Regenerate each job, running through map a job at a time
       downstreamJobs.each { folder ->
-        context.println "[INFO] Regenerating Folder: $folder.key" 
+        context.println "[INFO] Regenerating Folder: $folder.key"
         for (def job in downstreamJobs.get(folder.key)) {
 
           // Parse downstream jobs to create keys that match up with the buildConfigurations in the config file
@@ -387,7 +391,7 @@ class Regeneration implements Serializable {
           def buildConfigurationKey = parseJob(javaToBuild, job)
 
           if (buildConfigurationKey == "freebsd") { continue }
-          
+
           context.println "[INFO] ${buildConfigurationKey} is regenerating..."
 
           // Construct configuration for downstream job
@@ -395,7 +399,7 @@ class Regeneration implements Serializable {
           String name = null
           Boolean keyFound = false
 
-          buildConfigurations.keySet().each { key ->  
+          buildConfigurations.keySet().each { key ->
             if (key == buildConfigurationKey) {
               //For build type, generate a configuration
               context.println "[INFO] FOUND MATCH! Configuration Key: ${key} and buildConfigurationKey: ${buildConfigurationKey}"
@@ -413,7 +417,7 @@ class Regeneration implements Serializable {
             }
           }
 
-          if (keyFound == false) { 
+          if (keyFound == false) {
             context.println "[WARNING] buildConfigurationKey: ${buildConfigurationKey} not recognised. Valid configuration keys for folder: ${folder.key} are ${buildConfigurations.keySet()}.\n[WARNING] ${buildConfigurationKey} WILL NOT BE REGENERATED! Setting build result to UNSTABLE..."
             currentBuild.result = "UNSTABLE"
           } else {
@@ -442,18 +446,22 @@ class Regeneration implements Serializable {
 return {
   String javaVersion,
   Map<String, Map<String, ?>> buildConfigurations,
-  def scmVars,
   def currentBuild,
   def context,
-  def env -> 
-
-      return new Regeneration(
-              javaVersion: javaVersion,
-              buildConfigurations: buildConfigurations,
-              scmVars: scmVars,
-              currentBuild: currentBuild,
-              context: context,
-              env: env
-      )
+  String jobRootDir = "build-scripts",
+  String getUri = "https://github.com/AdoptOpenJDK/openjdk-build.git",
+  String gitBranch = "master",
+  String jenkinsBuildRoot = "https://ci.adoptopenjdk.net/job/build-scripts/"
+    ->
+    return new Regeneration(
+            javaVersion: javaVersion,
+            buildConfigurations: buildConfigurations,
+            currentBuild: currentBuild,
+            context: context,
+            jobRootDir: jobRootDir,
+            gitUri: getUri,
+            gitBranch: gitBranch,
+            jenkinsBuildRoot: jenkinsBuildRoot
+    )
 
 }
