@@ -149,7 +149,7 @@ then
   export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 fi
 
-if [ "${ARCHITECTURE}" == "riscv" ]
+if [ "${ARCHITECTURE}" == "riscv64" ]
 then
 	echo RISCV cross-compilation ... Downloading latest nightly OpenJ9/x64 as build JDK
 	export BUILDJDK=$WORKSPACE/buildjdk
