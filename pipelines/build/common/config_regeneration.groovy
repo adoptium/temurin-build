@@ -452,8 +452,8 @@ return {
   String getUri = "https://github.com/AdoptOpenJDK/openjdk-build.git",
   String gitBranch = "master",
   String jenkinsBuildRoot = "https://ci.adoptopenjdk.net/job/build-scripts/"
-    ->
-    return new Regeneration(
+  
+  return new Regeneration(
             javaVersion: javaVersion,
             buildConfigurations: buildConfigurations,
             currentBuild: currentBuild,
