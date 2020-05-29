@@ -24,19 +24,31 @@ limitations under the License.
 * 2) Attempts to create downstream job dsl's for each pipeline job configuration
 */
 class Regeneration implements Serializable {
-  String javaVersion
-  Map<String, Map<String, ?>> buildConfigurations
-  def currentBuild
-  def context
+  private final String javaVersion
+  private final Map<String, Map<String, ?>> buildConfigurations
+  private final def currentBuild
+  private final def context
 
-  def javaToBuild
-  def variant
+  private final def jobRootDir
+  private final def gitUri
+  private final def gitBranch
 
-  def jobRootDir
-  def gitUri
-  def gitBranch
+  private final def jenkinsBuildRoot
 
-  def jenkinsBuildRoot
+  private def javaToBuild
+  private def variant
+
+  public Regeneration(String javaVersion, Map<String, Map<String, ?>> buildConfigurations, currentBuild, context,
+                      String jobRootDir, String gitUri, String gitBranch, String jenkinsBuildRoot) {
+    this.javaVersion = javaVersion
+    this.buildConfigurations = buildConfigurations
+    this.currentBuild = currentBuild
+    this.context = context
+    this.jobRootDir = jobRootDir
+    this.gitUri = gitUri
+    this.gitBranch = gitBranch
+    this.jenkinsBuildRoot = jenkinsBuildRoot
+  }
 
   /*
   * Get configure args from jdk*_pipeline_config.groovy. Used when creating the IndividualBuildConfig.
@@ -448,20 +460,15 @@ return {
   Map<String, Map<String, ?>> buildConfigurations,
   def currentBuild,
   def context,
-  String jobRootDir = "build-scripts",
-  String getUri = "https://github.com/AdoptOpenJDK/openjdk-build.git",
-  String gitBranch = "master",
-  String jenkinsBuildRoot = "https://ci.adoptopenjdk.net/job/build-scripts/"
+  String jobRootDir,
+  String gitUri,
+  String gitBranch,
+  String jenkinsBuildRoot
     ->
-    return new Regeneration(
-            javaVersion: javaVersion,
-            buildConfigurations: buildConfigurations,
-            currentBuild: currentBuild,
-            context: context,
-            jobRootDir: jobRootDir,
-            gitUri: getUri,
-            gitBranch: gitBranch,
-            jenkinsBuildRoot: jenkinsBuildRoot
-    )
+    if (jobRootDir == null) jobRootDir = "build-scripts";
+    if (gitUri == null) gitUri = "https://github.com/AdoptOpenJDK/openjdk-build.git";
+    if (gitBranch == null) gitBranch = "master";
+    if (jenkinsBuildRoot == null) jenkinsBuildRoot = "https://ci.adoptopenjdk.net/job/build-scripts/";
 
+    return new Regeneration(javaVersion, buildConfigurations, currentBuild, context, jobRootDir, gitUri, gitBranch, jenkinsBuildRoot)
 }
