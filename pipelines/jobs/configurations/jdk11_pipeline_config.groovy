@@ -169,7 +169,7 @@ class Config11 {
         riscv64Linux      :  [
                 os                   : 'linux',
                 additionalNodeLabels : 'riscvcross',
-                arch                 : 'riscv',
+                arch                 : 'riscv64',
                 configureArgs        : '--disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root'
         ],
   ]
