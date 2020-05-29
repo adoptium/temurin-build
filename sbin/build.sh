@@ -737,11 +737,6 @@ createOpenJDKTarArchive()
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
 
-  COMPRESS=gzip
-
-  if which pigz >/dev/null 2>&1; then COMPRESS=pigz; fi
-  echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
-
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
   if [ -d "${jreTargetPath}" ]; then
