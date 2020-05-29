@@ -27,10 +27,10 @@ node ("master") {
 
     println "[INFO] Running regeneration script..."
     regenerationScript(
-      javaVersion,
-      buildConfigurations,
-      currentBuild,
-      this
+            javaVersion: javaVersion,
+            buildConfigurations: buildConfigurations,
+            currentBuild: currentBuild,
+            context: this
     ).regenerate()
       
     println "[SUCCESS] All done!"
