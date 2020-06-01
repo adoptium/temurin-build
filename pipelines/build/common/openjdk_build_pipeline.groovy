@@ -278,7 +278,7 @@ class Build {
     }
 
     private void buildWindowsInstaller(VersionInfo versionData) {
-        def filter = "**/OpenJDK*_windows_*.zip"
+        def filter = "**/OpenJDK*jdk_*_windows_*.zip"
         def certificate = "C:\\Users\\jenkins\\windows.p12"
 
         def buildNumber = versionData.build
@@ -309,6 +309,42 @@ class Build {
                 fingerprintArtifacts: true,
                 target: "workspace/target/",
                 flatten: true)
+
+        // Check if JRE exists, if so, build another installer for it
+        listArchives().each({ file ->
+
+            if (file.contains("-jre")) {
+                
+                context.println("We have a JRE. Running another installer for it...")
+                def jreinstallerJob = context.build job: "build-scripts/release/create_installer_windows",
+                        propagate: true,
+                        parameters: [
+                            context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                            context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                            context.string(name: 'FILTER', value: "**/OpenJDK*jre_*_windows_*.tar.gz"),
+                            context.string(name: 'PRODUCT_MAJOR_VERSION', value: "${versionData.major}"),
+                            context.string(name: 'PRODUCT_MINOR_VERSION', value: "${versionData.minor}"),
+                            context.string(name: 'PRODUCT_MAINTENANCE_VERSION', value: "${versionData.security}"),
+                            context.string(name: 'PRODUCT_PATCH_VERSION', value: "${buildNumber}"),
+                            context.string(name: 'JVM', value: "${buildConfig.VARIANT}"),
+                            context.string(name: 'SIGNING_CERTIFICATE', value: "${certificate}"),
+                            context.string(name: 'ARCH', value: "${buildConfig.ARCHITECTURE}"),
+                            ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${buildConfig.TARGET_OS}&&wix"]
+                        ]
+
+                context.copyArtifacts(
+                    projectName: "build-scripts/release/create_installer_windows",
+                    selector: context.specific("${jreinstallerJob.getNumber()}"),
+                    filter: 'wix/ReleaseDir/*',
+                    fingerprintArtifacts: true,
+                    target: "workspace/target/",
+                    flatten: true
+                )
+
+                break
+            } 
+            
+        })
     }
 
     def buildInstaller(VersionInfo versionData) {
