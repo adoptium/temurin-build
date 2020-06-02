@@ -13,6 +13,10 @@ class ContextStub {
         Map<String, ?> targetConfigurations;
     }
 
+    class CustomScript {
+        void regenerate() {}
+    }
+
     String scm
 
     ContextStub string(Map s) {}
@@ -61,11 +65,17 @@ class ContextStub {
 
     String writeFile(Map s) {}
 
-    Configuration load(String s) {}
+    Closure<CustomScript> load(String s) {}
 
     String readFile(String s) {}
 
     String ws(String s, Closure) {}
 
     String getAbsoluteUrl() {}
+
+    String WORKSPACE
+
+    ContextStub timestamps(Closure ignore) {}
+
+    ContextStub timeout(Map<String, ?> ignore, Closure<? extends Object> ignore2) {}
 }

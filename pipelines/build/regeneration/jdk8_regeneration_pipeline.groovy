@@ -18,7 +18,7 @@ node ("master") {
   try {
     def scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
-  
+
     def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
 
     println "[INFO] Found buildConfigurations:\n$buildConfigurations"
@@ -27,14 +27,16 @@ node ("master") {
 
     println "[INFO] Running regeneration script..."
     regenerationScript(
-      javaVersion,
-      buildConfigurations,
-      scmVars,
-      currentBuild,
-      this,
-      env
+            javaVersion,
+            buildConfigurations,
+            currentBuild,
+            this,
+            null,
+            null,
+            null,
+            null
     ).regenerate()
-      
+
     println "[SUCCESS] All done!"
 
   } finally {
@@ -42,5 +44,5 @@ node ("master") {
     println "[INFO] Cleaning up..."
     cleanWs()
   }
-  
+
 }
