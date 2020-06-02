@@ -322,7 +322,7 @@ class Build {
                         parameters: [
                             context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                             context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
-                            context.string(name: 'FILTER', value: "**/OpenJDK*jre_*_windows_*.tar.gz"),
+                            context.string(name: 'FILTER', value: "**/OpenJDK*jre_*_windows_*.zip"),
                             context.string(name: 'PRODUCT_MAJOR_VERSION', value: "${versionData.major}"),
                             context.string(name: 'PRODUCT_MINOR_VERSION', value: "${versionData.minor}"),
                             context.string(name: 'PRODUCT_MAINTENANCE_VERSION', value: "${versionData.security}"),
