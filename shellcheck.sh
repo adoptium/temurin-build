@@ -29,7 +29,8 @@ shellcheckCmd="${shellcheckDir}/shellcheck"
 
 install() 
 {
-  wget "https://github.com/koalaman/shellcheck/releases/download/${shellcheckVersion}/shellcheck-stable.linux.x86_64.tar.xz"
+  wget "https://github.com/koalaman/shellcheck/releases/download/${shellcheckVersion}/shellcheck-${shellcheckVersion}.linux.x86_64.tar.xz"
+  
   tar --xz -xvf "shellcheck-${shellcheckVersion}.linux.x86_64.tar.xz"
   rm "shellcheck-${shellcheckVersion}.linux.x86_64.tar.xz"
   "${shellcheckCmd}" --version
