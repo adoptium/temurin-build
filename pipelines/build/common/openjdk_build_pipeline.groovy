@@ -297,6 +297,7 @@ class Build {
                         context.string(name: 'PRODUCT_MINOR_VERSION', value: "${versionData.minor}"),
                         context.string(name: 'PRODUCT_MAINTENANCE_VERSION', value: "${versionData.security}"),
                         context.string(name: 'PRODUCT_PATCH_VERSION', value: "${buildNumber}"),
+                        context.string(name: 'PRODUCT_CATEGORY', value: "jdk"),
                         context.string(name: 'JVM', value: "${buildConfig.VARIANT}"),
                         context.string(name: 'SIGNING_CERTIFICATE', value: "${certificate}"),
                         context.string(name: 'ARCH', value: "${buildConfig.ARCHITECTURE}"),
@@ -305,7 +306,7 @@ class Build {
         context.copyArtifacts(
                 projectName: "build-scripts/release/create_installer_windows",
                 selector: context.specific("${installerJob.getNumber()}"),
-                filter: 'wix/ReleaseDir/*',
+                filter: 'wix/ReleaseDir/OpenJDK*jdk_*_windows_*.msi',
                 fingerprintArtifacts: true,
                 target: "workspace/target/",
                 flatten: true)
@@ -326,6 +327,7 @@ class Build {
                             context.string(name: 'PRODUCT_MINOR_VERSION', value: "${versionData.minor}"),
                             context.string(name: 'PRODUCT_MAINTENANCE_VERSION', value: "${versionData.security}"),
                             context.string(name: 'PRODUCT_PATCH_VERSION', value: "${buildNumber}"),
+                            context.string(name: 'PRODUCT_CATEGORY', value: "jre"),
                             context.string(name: 'JVM', value: "${buildConfig.VARIANT}"),
                             context.string(name: 'SIGNING_CERTIFICATE', value: "${certificate}"),
                             context.string(name: 'ARCH', value: "${buildConfig.ARCHITECTURE}"),
@@ -335,7 +337,7 @@ class Build {
                 context.copyArtifacts(
                     projectName: "build-scripts/release/create_installer_windows",
                     selector: context.specific("${jreinstallerJob.getNumber()}"),
-                    filter: 'wix/ReleaseDir/*',
+                    filter: 'wix/ReleaseDir/OpenJDK*jre_*_windows_*.msi',
                     fingerprintArtifacts: true,
                     target: "workspace/target/",
                     flatten: true
