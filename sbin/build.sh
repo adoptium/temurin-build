@@ -565,6 +565,19 @@ removingUnnecessaryFiles() {
     rm -rf "${dirToRemove}"/demo || true
   fi
 
+  # Generate java.se adopt bundle
+  moduleList="java.se"
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    "darwin") jlink="${jdkTargetPath}/Contents/Home/bin/jlink" ;;
+    *) jlink="${jdkTargetPath}/bin/jlink" ;;
+  esac
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
+    moduleList+=",openj9.jvm,openj9.sharedclasses"
+  fi
+  echo "Generating java.se adopt bundle"
+  echo "$jlink --add-modules $moduleList --no-header-files --no-man-pages --output adopt_bundle"
+  $jlink --add-modules $moduleList --no-header-files --no-man-pages --output adopt_bundle
+
   # Test image - check if the config is set and directory exists
   local testImagePath="${BUILD_CONFIG[TEST_IMAGE_PATH]}"
   if [ ! -z "${testImagePath}" ] && [ -d "${testImagePath}" ]
@@ -742,6 +755,10 @@ createOpenJDKTarArchive()
   if [ -d "${jreTargetPath}" ]; then
     local jreName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-jre/')
     createArchive "${jreTargetPath}" "${jreName}"
+  fi
+  if [ -d "adopt_bundle" ]; then
+    local adopt_bundle_name=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-adopt_bundle/')
+    createArchive "adopt_bundle" "${adopt_bundle_name}"
   fi
   if [ -d "${testImageTargetPath}" ]; then
     echo "OpenJDK test image path will be ${testImageTargetPath}."
