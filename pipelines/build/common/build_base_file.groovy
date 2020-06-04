@@ -208,13 +208,8 @@ class Builder implements Serializable {
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
         } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
-            String javaFeatureVersion = System.getenv("JAVA_FEATURE_VERSION")
-            if (javaFeatureVersion) {
-                return Integer.valueOf(javaFeatureVersion)
-            } else {
-                context.error("Environment variable JAVA_FEATURE_VERSION not set")
-                throw new Exception()
-            }
+            // This needs to get updated when JDK HEAD version updates
+            return Integer.valueOf("15")
         } else {
             context.error("Failed to read java version '${javaToBuild}'")
             throw new Exception()
