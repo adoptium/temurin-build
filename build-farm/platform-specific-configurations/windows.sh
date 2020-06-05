@@ -66,6 +66,12 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
       fi
     fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+    "$JDK_BOOT_DIR/bin/java" -version
+    executedJavaVersion=$?
+    if [ $executedJavaVersion -ne 0 ]; then
+        echo "Failed to obtain or find a valid boot jdk"
+        exit 1
+    fi
     "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
