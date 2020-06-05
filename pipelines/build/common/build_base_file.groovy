@@ -210,10 +210,10 @@ class Builder implements Serializable {
         } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
             // Query the Adopt api to get the "most_recent_feature_release" (currently 15)
             def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
-            context.println "Querying Adopt Api for the JDK-Head number (most_recent_feature_version)..."
+            context.println "Querying Adopt Api for the JDK-Head number (most_recent_feature_release)..."
 
             response = JobHelper.getAvailableReleases()
-            Integer headVersion = Integer.valueOf(response.most_recent_feature_version)
+            Integer headVersion = Integer.valueOf(response.most_recent_feature_release)
             if (headVersion.equalsIgnoreCase(null)) {
                 context.println "Failure on api connection or parsing."
                 throw new Exception()
