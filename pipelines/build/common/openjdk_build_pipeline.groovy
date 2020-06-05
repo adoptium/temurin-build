@@ -342,8 +342,6 @@ class Build {
                     target: "workspace/target/",
                     flatten: true
                 )
-
-                break
             } 
             
         })
