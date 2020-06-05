@@ -1,6 +1,6 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
-import groovy.json.JsonSlurper
+import groovy.json.*
 
 import java.util.regex.Matcher
 
@@ -208,13 +208,18 @@ class Builder implements Serializable {
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
         } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
-            String javaFeatureVersion = System.getenv("JAVA_FEATURE_VERSION")
-            if (javaFeatureVersion) {
-                return Integer.valueOf(javaFeatureVersion)
-            } else {
-                context.error("Environment variable JAVA_FEATURE_VERSION not set")
+            // Query the Adopt api to get the "most_recent_feature_release" (currently 15)
+            def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+            context.println "Querying Adopt Api for the JDK-Head number (most_recent_feature_release)..."
+
+            response = JobHelper.getAvailableReleases()
+            Integer headVersion = Integer.valueOf(response.most_recent_feature_release)
+            if (headVersion.equalsIgnoreCase(null)) {
+                context.println "Failure on api connection or parsing."
                 throw new Exception()
             }
+            context.println "Found Java Version Number: ${headVersion}"
+            return headVersion
         } else {
             context.error("Failed to read java version '${javaToBuild}'")
             throw new Exception()
