@@ -283,7 +283,7 @@ class Build {
     }
 
     private void buildWindowsInstaller(VersionInfo versionData) {
-        def filter = "**/OpenJDK*jdk_*_windows_*.zip"
+        def filter = "**/OpenJDK*jdk_*_windows*.zip"
         def certificate = "C:\\Users\\jenkins\\windows.p12"
 
         def buildNumber = versionData.build
@@ -311,7 +311,7 @@ class Build {
         context.copyArtifacts(
                 projectName: "build-scripts/release/create_installer_windows",
                 selector: context.specific("${installerJob.getNumber()}"),
-                filter: 'wix/ReleaseDir/OpenJDK*jdk_*_windows_*.msi',
+                filter: 'wix/ReleaseDir/OpenJDK*jdk_*_windows*.msi',
                 fingerprintArtifacts: true,
                 target: "workspace/target/",
                 flatten: true)
@@ -327,7 +327,7 @@ class Build {
                         parameters: [
                             context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
                             context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
-                            context.string(name: 'FILTER', value: "**/OpenJDK*jre_*_windows_*.zip"),
+                            context.string(name: 'FILTER', value: "**/OpenJDK*jre_*_windows*.zip"),
                             context.string(name: 'PRODUCT_MAJOR_VERSION', value: "${versionData.major}"),
                             context.string(name: 'PRODUCT_MINOR_VERSION', value: "${versionData.minor}"),
                             context.string(name: 'PRODUCT_MAINTENANCE_VERSION', value: "${versionData.security}"),
@@ -342,7 +342,7 @@ class Build {
                 context.copyArtifacts(
                     projectName: "build-scripts/release/create_installer_windows",
                     selector: context.specific("${jreinstallerJob.getNumber()}"),
-                    filter: 'wix/ReleaseDir/OpenJDK*jre_*_windows_*.msi',
+                    filter: 'wix/ReleaseDir/OpenJDK*jre_*_windows*.msi',
                     fingerprintArtifacts: true,
                     target: "workspace/target/",
                     flatten: true
