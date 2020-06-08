@@ -4,6 +4,9 @@ import groovy.json.*
 
 import java.util.regex.Matcher
 
+@Library('openjdk-jenkins-helper@master')
+import JobHelper
+
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -209,10 +212,9 @@ class Builder implements Serializable {
             return Integer.parseInt(matcher.group('version'))
         } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
             // Query the Adopt api to get the "most_recent_feature_version" (currently 15)
-            def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
             context.println "Querying Adopt Api for the JDK-Head number (most_recent_feature_version)..."
 
-            response = JobHelper.getAvailableReleases()
+            def response = JobHelper.getAvailableReleases()
             Integer headVersion = Integer.valueOf(response.most_recent_feature_version)
             if (headVersion.equalsIgnoreCase(null)) {
                 context.println "Failure on api connection or parsing."
