@@ -128,7 +128,7 @@ class Build {
 						// example jobName: Test_openjdk11_hs_sanity.system_ppc64_aix
 						def jobName = determineTestJobName(testType)
 
-                        def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+						def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 						if (JobHelper.jobIsRunnable(jobName as String)) {
 							context.catchError {
 								context.build job: jobName,
