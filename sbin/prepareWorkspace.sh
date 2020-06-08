@@ -261,13 +261,12 @@ downloadFile() {
   local url="$2"
 
   echo downloadFile: Saving "url" to "$targetFileName"
-
   
   # Temporary fudge as curl on my windows boxes is exiting with RC=127
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    wget -O "${targetFileName}" "${url}"
+    wget -O "${targetFileName}" "${url}" || exit 2
   else
-    curl -L -o "${targetFileName}" "${url}"
+    curl --fail -L -o "${targetFileName}" "${url}" || exit 2
   fi
 
   if [ $# -ge 3 ]; then
