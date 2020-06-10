@@ -452,6 +452,11 @@ buildSharedLibs() {
     # Re-enable cmd line failure shell exit
     set -e
 
+    if [ $rc -ne 0 ]; then
+        echo "gradle failed to create uberjar"
+        exit $rc
+    fi 
+
     # Test that the parser can execute as fail fast rather than waiting till after the build to find out
     "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
 }
