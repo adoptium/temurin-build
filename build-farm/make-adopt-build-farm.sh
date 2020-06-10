@@ -28,8 +28,17 @@ JAVA_FEATURE_VERSION=$(echo "${JAVA_TO_BUILD}" | tr -d "[:alpha:]")
 
 if [ -z "${JAVA_FEATURE_VERSION}" ]
 then
-    # THIS NEEDS TO BE UPDATED WHEN HEAD UPDATES (the latest tag that jdk/jdk contains)
-    JAVA_FEATURE_VERSION=15
+  # Use Adopt API to get the JDK Head number
+  echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
+  JAVA_FEATURE_VERSION=$(curl https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
+    
+  # Checks the api request was successfull and the return value is a number
+  if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
+  then
+    echo "Failed to query or parse the adopt api"
+    exit 1
+  fi
+  echo "JAVA_FEATURE_VERSION is ${JAVA_FEATURE_VERSION}"
 fi
 
 echo "BUILD TYPE: "

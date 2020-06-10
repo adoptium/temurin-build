@@ -34,8 +34,23 @@ function setOpenJdkVersion() {
 
   local featureNumber=$(echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | tr -d "[:alpha:]")
 
+  if [ -z "${featureNumber}" ]
+  then
+    # Use Adopt API to get the JDK Head number
+    echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
+    local featureNumber=$(curl https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
+    
+    # Checks the api request was successfull and the return value is a number
+    if [ -z "${featureNumber}" ] || ! [[ "${featureNumber}" -gt 0 ]]
+    then
+        echo "Failed to query or parse the adopt api"
+        exit 1
+    fi
+    echo "featureNumber is $featureNumber"
+  fi
+
   # feature number e.g. 11
-  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber:-15}
+  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber}
 
 }
 
