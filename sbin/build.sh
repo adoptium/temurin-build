@@ -438,7 +438,8 @@ buildSharedLibs() {
     local gradleJavaHome=$(getGradleHome)
     echo "Running gradle with $gradleJavaHome"
 
-
+    # Disable cmd line failure shell exit    
+    set +e
     gradlecount=1
     rc=1
     while [[ $rc -ne 0 && $gradlecount -le 3 ]]
@@ -448,6 +449,8 @@ buildSharedLibs() {
         echo "gradle attempt $gradlecount : rc=$rc "
         gradlecount=$(( gradlecount + 1 ))
     done
+    # Re-enable cmd line failure shell exit
+    set -e
 
     # Test that the parser can execute as fail fast rather than waiting till after the build to find out
     "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
