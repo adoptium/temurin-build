@@ -33,8 +33,7 @@ then
   JAVA_FEATURE_VERSION=$(curl https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
     
   # Checks the api request was successfull and the return value is a number
-  isNum='^[0-9]+$'
-  if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ $JAVA_FEATURE_VERSION =~ $isNum ]]
+  if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
   then
     echo "Failed to query or parse the adopt api"
     exit 1
