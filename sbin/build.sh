@@ -438,19 +438,12 @@ buildSharedLibs() {
     local gradleJavaHome=$(getGradleHome)
     echo "Running gradle with $gradleJavaHome"
 
-    # Disable cmd line failure shell exit    
-    set +e
     gradlecount=1
-    rc=1
-    while [[ $rc -ne 0 && $gradlecount -le 3 ]]
-    do
-        JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache bash ./gradlew --no-daemon clean uberjar
-        rc=$?
-        echo "gradle attempt $gradlecount : rc=$rc "
-        gradlecount=$(( gradlecount + 1 ))
+    while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache bash ./gradlew --no-daemon clean uberjar; do
+      echo "RETRYWARNING: Gradle failed on attempt $gradlecount"
+      gradlecount=$(( gradlecount + 1 ))
+      [ $gradlecount -gt 3 ] && exit 1
     done
-    # Re-enable cmd line failure shell exit
-    set -e
 
     if [ $rc -ne 0 ]; then
         echo "gradle failed to create uberjar"

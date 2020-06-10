@@ -80,13 +80,13 @@ checkoutAndCloneOpenJDKGitRepo() {
 
   checkoutRequiredCodeToBuild
   if [ $checkoutRc -ne 0 ]; then
-    echo "Checkout required source failed, cleaning workspace and retrying..."
+    echo "RETRYWARNING: Checkout required source failed, cleaning workspace and retrying..."
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     cloneOpenJDKGitRepo
     checkoutRequiredCodeToBuild
     if [ $checkoutRc -ne 0 ]; then
-      echo "Checkout failed on clean workspace retry, failing job..."
+      echo "RETRYWARNING: Checkout failed on clean workspace retry, failing job..."
       exit 1
     fi
   fi
