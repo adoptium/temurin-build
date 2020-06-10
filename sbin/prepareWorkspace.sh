@@ -78,28 +78,17 @@ checkoutAndCloneOpenJDKGitRepo() {
     cloneOpenJDKGitRepo
   fi
 
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-
-  local tag="${BUILD_CONFIG[TAG]}"
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
-    git fetch --tags
-    if git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
-      echo "looks like the scm ref given is a valid tag, so treat it as a tag"
-      tag="${BUILD_CONFIG[BRANCH]}"
-      BUILD_CONFIG[TAG]="${tag}"
+  checkoutRequiredCodeToBuild
+  if [ $checkoutRc -ne 0 ]; then
+    echo "Checkout required source failed, cleaning workspace and retrying..."
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    cloneOpenJDKGitRepo
+    checkoutRequiredCodeToBuild
+    if [ $checkoutRc -ne 0 ]; then
+      echo "Checkout failed on clean workspace retry, failing job..."
+      exit 1
     fi
-  fi
-
-  if [ "${tag}" ]; then
-    echo "Checking out tag ${tag}"
-    git fetch origin "refs/tags/${tag}:refs/tags/${tag}"
-    git checkout "${tag}"
-    git reset --hard
-    echo "Checked out tag ${tag}"
-  else
-    git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}"
-    git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
-    git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
   fi
 
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 11 ]]; then
@@ -115,6 +104,88 @@ checkoutAndCloneOpenJDKGitRepo() {
   updateOpenj9Sources
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+}
+
+# Checkout the required code to build from the given cached git repo
+# Set checkoutRc to result so we can retry 
+checkoutRequiredCodeToBuild() {
+  checkoutRc=1
+
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+
+  echo "checkoutRequiredCodeToBuild:"
+  echo "  workspace = ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  echo "  BUILD_VARIANT = ${BUILD_CONFIG[BUILD_VARIANT]}"
+  echo "  TAG = ${BUILD_CONFIG[TAG]}"
+  echo "  BRANCH = ${BUILD_CONFIG[BRANCH]}"
+
+  # Ensure commands don't abort shell
+  set +e
+  local rc=0
+
+  local tag="${BUILD_CONFIG[TAG]}"
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
+    git fetch --tags || rc=$?
+    if [ $rc -eq 0 ]; then
+      if git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
+        echo "looks like the scm ref given is a valid tag, so treat it as a tag"
+        tag="${BUILD_CONFIG[BRANCH]}"
+        BUILD_CONFIG[TAG]="${tag}"
+      fi
+    else
+      echo "Failed cmd: git fetch --tags"
+    fi
+  fi
+
+  if [ $rc -eq 0 ]; then
+    if [ "${tag}" ]; then
+      echo "Checking out tag ${tag}"
+      git fetch origin "refs/tags/${tag}:refs/tags/${tag}" || rc=$?
+      if [ $rc -eq 0 ]; then
+        git checkout "${tag}" || rc=$?
+        if [ $rc -eq 0 ]; then
+          git reset --hard || rc=$?
+          if [ $rc -eq 0 ]; then
+            echo "Checked out tag ${tag}"
+          else
+            echo "Failed cmd: git reset --hard"
+          fi
+        else
+          echo "Failed cmd: git checkout \"${tag}\""
+        fi
+      else
+        echo "Failed cmd: git fetch origin \"refs/tags/${tag}:refs/tags/${tag}\""
+      fi
+    else
+      git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}" || rc=$?
+      if [ $rc -eq 0 ]; then
+        git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} || rc=$?
+        if [ $rc -eq 0 ]; then
+          git reset --hard "origin/${BUILD_CONFIG[BRANCH]}" || rc=$?
+          if [ $rc -eq 0 ]; then
+            echo "Checked out origin/${BUILD_CONFIG[BRANCH]}"
+          else
+            echo "Failed cmd: git reset --hard \"origin/${BUILD_CONFIG[BRANCH]}\""
+          fi
+        else
+          echo "Failed cmd: git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
+        fi
+      else
+        echo "Failed cmd: git remote set-branches --add origin \"${BUILD_CONFIG[BRANCH]}\""
+      fi
+    fi
+  fi
+
+  # Restore command failure shell abort
+  set -e
+
+  if [ $rc -eq 0 ]; then
+    echo "checkoutRequiredCodeToBuild succeeded"
+  else
+    echo "checkoutRequiredCodeToBuild failed rc=$rc"
+  fi
+
+  checkoutRc=$rc
 }
 
 # Set the git clone arguments
