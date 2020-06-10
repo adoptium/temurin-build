@@ -214,7 +214,7 @@ class Builder implements Serializable {
 
             def response = JobHelper.getAvailableReleases()
             Integer headVersion = Integer.valueOf(response.most_recent_feature_version)
-            if (headVersion.equalsIgnoreCase(null)) {
+            if (headVersion == null) {
                 context.println "Failure on api connection or parsing."
                 throw new Exception()
             }
