@@ -68,7 +68,7 @@ class Build {
 
             def response = JobHelper.getAvailableReleases()
             Integer headVersion = Integer.valueOf(response.tip_version)
-            if (headVersion.equalsIgnoreCase(null)) {
+            if (headVersion == null) {
                 context.println "Failure on api connection or parsing."
                 throw new Exception()
             }
