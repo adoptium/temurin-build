@@ -449,6 +449,9 @@ buildSharedLibs() {
         gradlecount=$(( gradlecount + 1 ))
     done
 
+    export GRADLE_USER_HOME="$WORKSPACE/.gradle"
+    echo "GRADLE_USER_HOME is $GRADLE_USER_HOME"
+
     # Test that the parser can execute as fail fast rather than waiting till after the build to find out
     "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
 }
