@@ -441,6 +441,7 @@ buildSharedLibs() {
     gradlecount=1
     while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache bash ./gradlew --no-daemon clean uberjar; do
       echo "RETRYWARNING: Gradle failed on attempt $gradlecount"
+      sleep 120 # Wait before retrying in case of network/server outage ...
       gradlecount=$(( gradlecount + 1 ))
       [ $gradlecount -gt 3 ] && exit 1
     done
