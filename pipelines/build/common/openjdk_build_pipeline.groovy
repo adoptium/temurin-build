@@ -311,7 +311,7 @@ class Build {
         context.copyArtifacts(
                 projectName: "build-scripts/release/create_installer_windows",
                 selector: context.specific("${installerJob.getNumber()}"),
-                filter: 'ReleaseDir/OpenJDK*jdk_*_windows*.msi',
+                filter: 'wix/ReleaseDir/OpenJDK*jdk_*_windows*.msi',
                 fingerprintArtifacts: true,
                 target: "workspace/target/",
                 flatten: true)
@@ -342,7 +342,7 @@ class Build {
                 context.copyArtifacts(
                     projectName: "build-scripts/release/create_installer_windows",
                     selector: context.specific("${jreinstallerJob.getNumber()}"),
-                    filter: 'ReleaseDir/OpenJDK*jre_*_windows*.msi',
+                    filter: 'wix/ReleaseDir/OpenJDK*jre_*_windows*.msi',
                     fingerprintArtifacts: true,
                     target: "workspace/target/",
                     flatten: true
