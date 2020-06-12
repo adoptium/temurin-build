@@ -263,7 +263,7 @@ class Regeneration implements Serializable {
     */
     @SuppressWarnings("unused")
     def regenerate() {
-        public def versionNumbers = javaVersion =~ /\d+/
+        def versionNumbers = javaVersion =~ /\d+/
 
         /*
         * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
