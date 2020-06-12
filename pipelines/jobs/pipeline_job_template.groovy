@@ -49,7 +49,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
 
     properties {
-        copyArtifactPermissionProperty {
+        copyArtifactPermission {
             projectNames('*')
         }
     }
