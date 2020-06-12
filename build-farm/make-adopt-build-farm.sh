@@ -35,7 +35,8 @@ then
   # Checks the api request was successfull and the return value is a number
   if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
   then
-    echo "Failed to query or parse the adopt api"
+    echo "Failed to query or parse the adopt api. Dumping headers via curl -v https://api.adoptopenjdk.net/v3/info/available_releases..."
+    curl -v https://api.adoptopenjdk.net/v3/info/available_releases
     exit 1
   fi
   echo "JAVA_FEATURE_VERSION is ${JAVA_FEATURE_VERSION}"
