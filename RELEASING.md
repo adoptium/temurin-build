@@ -174,7 +174,6 @@ JDK_FIX_VERSION=0
       - Ensure that JDK N-1 is available as build JDK on the builders. For example in order to build JDK 15, JDK 14 needs to be installed on the build machines. As a temporary measure, [code](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/build-farm/platform-specific-configurations/linux.sh#L110) so as to download the JDK to the builder via the API has been added. NOTE: For the transition period shortly after a new JDK has been branched, there might not yet exist a generally available release of JDK N-1.
       - Ensure that JDK sources are being mirrored. Example [infrastructure request](https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1096)
       - Ensure that a repository which contains the binary releases exists. Example [openjdk15-binaries](https://github.com/AdoptOpenJDK/openjdk15-binaries)
-      - If you are updating the latest JDK release, there is [a place](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/build-farm/make-adopt-build-farm.sh#L32) in the openjdk-build repository where the latest JDK number is hard-coded. Be sure to update it.
       - Add build scripts for the new JDK release. Example for [JDK 14](https://github.com/AdoptOpenJDK/openjdk-build/commit/808b08fe2aefc005cf53f6cc1deb28a9b323ff)
       - Regenerate build jobs:
         - Create a New Item in the folder linked above that copies the `pipeline_jobs_generator_jdk` job. Call it `pipeline_jobs_generator_jdk<new-version-number>`. 
