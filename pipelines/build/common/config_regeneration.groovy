@@ -263,123 +263,124 @@ class Regeneration implements Serializable {
     */
     @SuppressWarnings("unused")
     def regenerate() {
-        def versionNumbers = javaVersion =~ /\d+/
+        context.timestamps {
+            def versionNumbers = javaVersion =~ /\d+/
 
-        /*
-        * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
-        */
-        context.stage("Check $javaVersion pipeline status") {
+            /*
+            * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
+            */
+            context.stage("Check $javaVersion pipeline status") {
 
-            // Get all pipelines
-            def getPipelines = queryAPI("${jenkinsBuildRoot}/api/json?tree=jobs[name]&pretty=true&depth1")
+                // Get all pipelines
+                def getPipelines = queryAPI("${jenkinsBuildRoot}/api/json?tree=jobs[name]&pretty=true&depth1")
 
-            // Parse api response to only extract the relevant pipeline
-            getPipelines.jobs.name.each{ pipeline ->
-                if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
-                    Integer sleepTime = 900
-                    Boolean inProgress = true
+                // Parse api response to only extract the relevant pipeline
+                getPipelines.jobs.name.each{ pipeline ->
+                    if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
+                        Integer sleepTime = 900
+                        Boolean inProgress = true
 
-                    while (inProgress) {
-                        // Check if pipeline is in progress using api
-                        context.println "[INFO] Checking if ${pipeline} is running..." //i.e. openjdk8-pipeline
+                        while (inProgress) {
+                            // Check if pipeline is in progress using api
+                            context.println "[INFO] Checking if ${pipeline} is running..." //i.e. openjdk8-pipeline
 
-                        def pipelineInProgress = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
-                        inProgress = pipelineInProgress.building as Boolean
+                            def pipelineInProgress = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
+                            inProgress = pipelineInProgress.building as Boolean
 
-                        if (inProgress) {
-                            // Sleep for a bit, then check again...
-                            context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
-                            context.sleep sleepTime
+                            if (inProgress) {
+                                // Sleep for a bit, then check again...
+                                context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
+                                context.sleep sleepTime
+                            }
+
                         }
 
+                        context.println "[SUCCESS] ${pipeline} is idle. Running regeneration job..."
                     }
 
-                    context.println "[SUCCESS] ${pipeline} is idle. Running regeneration job..."
                 }
 
-            }
+            } // end check stage
 
-        } // end check stage
+            /*
+            * Stage: Regenerate all of the job configurations by job type (i.e. jdk8u-linux-x64-hotspot
+            * jdk8u-linux-x64-openj9, etc.)
+            */
+            context.stage("Regenerate $javaVersion pipeline jobs") {
 
-        /*
-        * Stage: Regenerate all of the job configurations by job type (i.e. jdk8u-linux-x64-hotspot
-        * jdk8u-linux-x64-openj9, etc.)
-        */
-        context.stage("Regenerate $javaVersion pipeline jobs") {
+                context.println "[INFO] Jobs to be regenerated (pulled from config file):"
+                targetConfigurations.each { osarch, variants -> context.println "${osarch}: ${variants}\n" }
 
-            context.println "[INFO] Jobs to be regenerated (pulled from config file):"
-            targetConfigurations.each { osarch, variants -> context.println "${osarch}: ${variants}\n" }
+                // If we're building jdk head, update the javaToBuild
+                context.println "[INFO] Querying adopt api to get the JDK-Head number"
 
-            // If we're building jdk head, update the javaToBuild
-            context.println "[INFO] Querying adopt api to get the JDK-Head number"
+                def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+                Integer jdkHeadNum = Integer.valueOf(JobHelper.getAvailableReleases().tip_version)
 
-            def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
-            Integer jdkHeadNum = Integer.valueOf(JobHelper.getAvailableReleases().tip_version)
+                if (Integer.valueOf(versionNumbers[0]) == jdkHeadNum) {
+                    javaToBuild = "jdk"
+                    context.println "[INFO] This IS JDK-HEAD. javaToBuild is ${javaToBuild}."
+                } else {
+                    javaToBuild = "${javaVersion}"
+                    context.println "[INFO] This IS NOT JDK-HEAD. javaToBuild is ${javaToBuild}..."
+                }
 
-            if (Integer.valueOf(versionNumbers[0]) == jdkHeadNum) {
-                javaToBuild = "jdk"
-                context.println "[INFO] This IS JDK-HEAD. javaToBuild is ${javaToBuild}."
-            } else {
-                javaToBuild = "${javaVersion}"
-                context.println "[INFO] This IS NOT JDK-HEAD. javaToBuild is ${javaToBuild}..."
-            }
+                // Regenerate each os and arch
+                targetConfigurations.keySet().each { osarch ->
 
-            // Regenerate each os and arch
-            targetConfigurations.keySet().each { osarch ->
+                    context.println "[INFO] Regenerating: $osarch"
 
-                context.println "[INFO] Regenerating: $osarch"
+                        for (def variant in targetConfigurations.get(osarch)) {
 
-                    for (def variant in targetConfigurations.get(osarch)) {
+                            context.println "[INFO] Regenerating variant $osarch: $variant..."
 
-                        context.println "[INFO] Regenerating variant $osarch: $variant..."
+                            // Construct configuration for downstream job
+                            Map<String, IndividualBuildConfig> jobConfigurations = [:]
+                            String name = null
+                            Boolean keyFound = false
 
-                        // Construct configuration for downstream job
-                        Map<String, IndividualBuildConfig> jobConfigurations = [:]
-                        String name = null
-                        Boolean keyFound = false
+                            // Using a foreach here as containsKey doesn't work for some reason
+                            buildConfigurations.keySet().each { key ->
+                                if (key == osarch) {
 
-                        // Using a foreach here as containsKey doesn't work for some reason
-                        buildConfigurations.keySet().each { key ->
-                            if (key == osarch) {
-                                
-                                //For build type, generate a configuration
-                                context.println "[INFO] FOUND MATCH! buildConfiguration key: ${key} and config file key: ${osarch}"
-                                keyFound = true
+                                    //For build type, generate a configuration
+                                    context.println "[INFO] FOUND MATCH! buildConfiguration key: ${key} and config file key: ${osarch}"
+                                    keyFound = true
 
-                                def platformConfig = buildConfigurations.get(key) as Map<String, ?>
+                                    def platformConfig = buildConfigurations.get(key) as Map<String, ?>
 
-                                name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
+                                    name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
 
-                                if (platformConfig.containsKey('additionalFileNameTag')) {
-                                    name += "-${platformConfig.additionalFileNameTag}"
+                                    if (platformConfig.containsKey('additionalFileNameTag')) {
+                                        name += "-${platformConfig.additionalFileNameTag}"
+                                    }
+
+                                    jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
                                 }
-
-                                jobConfigurations[name] = buildConfiguration(platformConfig, variant, javaToBuild)
                             }
-                        }
 
-                        if (keyFound == false) {
-                            context.println "[WARNING] Config file key: ${osarch} not recognised. Valid configuration keys for ${javaToBuild} are ${buildConfigurations.keySet()}.\n[WARNING] ${osarch} WILL NOT BE REGENERATED! Setting build result to UNSTABLE..."
-                            currentBuild.result = "UNSTABLE"
-                        } else {
-                            // Make job
-                            if (jobConfigurations.get(name) != null) {
-                                makeJob(jobConfigurations, name)
+                            if (keyFound == false) {
+                                context.println "[WARNING] Config file key: ${osarch} not recognised. Valid configuration keys for ${javaToBuild} are ${buildConfigurations.keySet()}.\n[WARNING] ${osarch} WILL NOT BE REGENERATED! Setting build result to UNSTABLE..."
+                                currentBuild.result = "UNSTABLE"
                             } else {
-                                // Unexpected error when building or getting the configuration
-                                context.println "[ERROR] IndividualBuildConfig is malformed for key: ${osarch}."
-                                currentBuild.result = "FAILURE"
+                                // Make job
+                                if (jobConfigurations.get(name) != null) {
+                                    makeJob(jobConfigurations, name)
+                                } else {
+                                    // Unexpected error when building or getting the configuration
+                                    context.println "[ERROR] IndividualBuildConfig is malformed for key: ${osarch}."
+                                    currentBuild.result = "FAILURE"
+                                }
                             }
-                        }
 
-                    } // end variant for loop
+                        } // end variant for loop
 
-                    context.println "[SUCCESS] ${osarch} regenerated!\n"
+                        context.println "[SUCCESS] ${osarch} regenerated!\n"
 
-            } // end key foreach loop
+                } // end key foreach loop
 
-        } // end stage
-
+            } // end stage
+        } // end timestamps
     } // end regenerate()
 
 }
