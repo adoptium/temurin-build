@@ -33,7 +33,6 @@ class Regeneration implements Serializable {
     private final def gitBranch
 
     private final def jenkinsBuildRoot
-
     private String javaToBuild
 
     public Regeneration(
@@ -264,6 +263,7 @@ class Regeneration implements Serializable {
     */
     @SuppressWarnings("unused")
     def regenerate() {
+        public def versionNumbers = javaVersion =~ /\d+/
 
         /*
         * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
@@ -275,7 +275,7 @@ class Regeneration implements Serializable {
 
             // Parse api response to only extract the relevant pipeline
             getPipelines.jobs.name.each{ pipeline ->
-                if (pipeline.contains("pipeline") && pipeline.contains(javaVersion)) {
+                if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
                     Integer sleepTime = 900
                     Boolean inProgress = true
 
@@ -316,12 +316,11 @@ class Regeneration implements Serializable {
             def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
             Integer jdkHeadNum = Integer.valueOf(JobHelper.getAvailableReleases().tip_version)
 
-            def regex = javaVersion =~ /\d+/
-            if (Integer.valueOf(regex[0]) == jdkHeadNum) {
+            if (Integer.valueOf(versionNumbers[0]) == jdkHeadNum) {
                 javaToBuild = "jdk"
                 context.println "[INFO] This IS JDK-HEAD. javaToBuild is ${javaToBuild}."
             } else {
-                javaToBuild = "${javaVersion}u"
+                javaToBuild = "${javaVersion}"
                 context.println "[INFO] This IS NOT JDK-HEAD. javaToBuild is ${javaToBuild}..."
             }
 

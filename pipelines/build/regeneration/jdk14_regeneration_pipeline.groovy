@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-String javaVersion = "jdk14"
+String javaVersion = "jdk14u"
 
 node ("master") {
   try {
@@ -24,7 +24,7 @@ node ("master") {
     println "[INFO] Found buildConfigurations:\n$buildConfigurations"
 
     // Load targetConfigurations from config file. This is what is being run in the nightlies
-    load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}u.groovy"
+    load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}.groovy"
 
     println "[INFO] Found targetConfigurations:\n$targetConfigurations"
 
