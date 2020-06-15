@@ -38,7 +38,7 @@ function setOpenJdkVersion() {
   then
     # Use Adopt API to get the JDK Head number
     echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
-    local featureNumber=$(curl https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
+    local featureNumber=$(curl -v https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
     
     # Checks the api request was successfull and the return value is a number
     if [ -z "${featureNumber}" ] || ! [[ "${featureNumber}" -gt 0 ]]

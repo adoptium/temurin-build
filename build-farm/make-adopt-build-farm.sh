@@ -30,7 +30,7 @@ if [ -z "${JAVA_FEATURE_VERSION}" ]
 then
   # Use Adopt API to get the JDK Head number
   echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
-  JAVA_FEATURE_VERSION=$(curl https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
+  JAVA_FEATURE_VERSION=$(curl -v https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
     
   # Checks the api request was successfull and the return value is a number
   if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
