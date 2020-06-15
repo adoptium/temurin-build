@@ -17,16 +17,16 @@ the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 This script generates dockerfiles that are able to build each specific JDK.
 The script takes several options :
 
-| Option       | Description                                                                      | Example                                                 |
-|--------------|----------------------------------------------------------------------------------|---------------------------------------------------------|
-| -h \| --help | Prints help for the script option                                                | `./dockerfile_generator.sh --help`                      |
-| --build      | Build the docker image from the generated file & create an interactive container | `./dockerfile_generator.sh --build`                     |
-| --clean      | Removes all dockerfiles from '--path'                                            | `./dockerfile_generator.sh --clean`                     |
-| --comments   | Prints comments into the dockerfile                                              | `./dockerfile_generator.sh --comments`                  |
-| --jdk        | Specify which JDK the image is able to build (defaults to jdk8)                  | `./dockerfile_generator.sh --jdk 11`                    |
-| --path       | Specify where to save the Dockerfile (defaults to $PWD)                          | `./dockerfile_generator.sh --path /home/user/Documents` |
-| --print      | Print the dockerfile to screen once generated                                    | `./dockerfile_generator.sh --print`                     |
-| --openj9     | Make the image able to build a JDK w/ OpenJ9 JIT                                 | `./dockerfile_generator.sh --openj9`                    |
+| Option                  | Description                                                                      | Example                                                 |
+|-------------------------|----------------------------------------------------------------------------------|---------------------------------------------------------|
+| -h \| --help            | Prints help for the script option                                                | `./dockerfile_generator.sh --help`                      |
+| --build                 | Build the docker image from the generated file & create an interactive container | `./dockerfile_generator.sh --build`                     |
+| --clean                 | Removes all dockerfiles from '--path'                                            | `./dockerfile_generator.sh --clean`                     |
+| --comments              | Prints comments into the dockerfile                                              | `./dockerfile_generator.sh --comments`                  |
+| --path \<FILEPATH\>     | Specify where to save the Dockerfile (defaults to $PWD)                          | `./dockerfile_generator.sh --path /home/user/Documents` |
+| --print                 | Print the dockerfile to screen once generated                                    | `./dockerfile_generator.sh --print`                     |
+| --openj9                | Make the image able to build a JDK w/ OpenJ9 JIT                                 | `./dockerfile_generator.sh --openj9`                    |
+| -v \| --version \<JDK\> | Specify which JDK the image is able to build (defaults to jdk8)                  | `./dockerfile_generator.sh --v jdk11`                   |
 
 By default, the script will generate a Dockerfile to create an image able to build JDK with Hotspot, in the current directory.
 

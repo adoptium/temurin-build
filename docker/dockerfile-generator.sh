@@ -53,9 +53,13 @@ processArgs() {
         PRINT=true
         shift
         ;;
-      --jdk)
-        JDK_VERSION="$2"
-        checkJDK
+      -v | --version)
+	if [ $2 == "jdk" ]; then
+	  JDK_VERSION=$JDK_MAX
+	else
+	  JDK_VERSION=$(echo $2 | tr -d [:alpha:])
+        fi
+	checkJDK
         shift
         shift
         ;;
@@ -85,25 +89,20 @@ usage() {
   Options:
 	  --help | -h		Print this message and exit
 	  --build		Build the docker image after generation and create interactive container
-	  --clean		Remove all dockerfiles (Dockerfile.JDK*) from '--path'
+	  --clean		Remove all dockerfiles (Dockerfile*) from '--path'
 	  --comments		Prints comments into the dockerfile
-	  --jdk			Specify which JDK the docker image will be able to build (Default: 8)
 	  --path <FILEPATH>	Specify where to save the dockerfile (Default: $PWD)
 	  --print		Print the Dockerfile to screen after generation
-	  --openj9		Make the Dockerfile able to build w/OpenJ9 JIT"
+	  --openj9		Make the Dockerfile able to build w/OpenJ9 JIT
+	  --version | -v <JDK>	Specify which JDK the docker image will be able to build (Default: jdk8)"
 }
 
 # Checks to ensure the input JDK is valid
 checkJDK() {
-  if [ ${JDK_VERSION} == "next" ]; then
-    JDK_VERSION=${JDK_MAX}
-  fi
-
   if ! ((JDK_VERSION >= 8 && JDK_VERSION <= JDK_MAX)); then
-    echo "Please input a JDK between 8 & ${JDK_MAX} or 'next'"
+    echo "Please input a JDK between 8 & ${JDK_MAX}, or 'jdk'"
     exit 1
   fi
-
 }
 
 # Put in license, 'FROM' statement and 'LABEL' statement
