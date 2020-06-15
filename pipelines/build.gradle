@@ -19,6 +19,9 @@ sourceSets {
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://repository.mulesoft.org/nexus/content/repositories/public/org/testng/testng/7.2.0/"
+    }
 }
 
 task uberjar(type: Jar) {
