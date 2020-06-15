@@ -14,7 +14,7 @@ the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 # Generating Dockerfiles
 
-This script is to automatically generate a dockerfile that is able to build a specified JDK.
+This script generates dockerfiles that are able to build each specific JDK.
 The script takes several options :
 
 | Option       | Description                                                                      | Example                                                 |

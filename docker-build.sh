@@ -76,11 +76,14 @@ buildOpenJDKViaDocker()
   # TODO This could be extracted overridden by the user if we support more
   # architectures going forwards
   local container_architecture="x86_64/ubuntu"
-  # Build variant flag for the docker_generator script
-  local BVFLAG=""
+  local build_variant_flag=""
   BUILD_CONFIG[DOCKER_FILE_PATH]="docker/${BUILD_CONFIG[OPENJDK_CORE_VERSION]}/$container_architecture"
-  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ] && BVFLAG="--openj9"
-  docker/dockerfile_generator.sh --jdk "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" $BVFLAG
+  
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
+    build_variant_flag="--openj9"
+  fi
+
+  docker/dockerfile_generator.sh --jdk "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" "$build_variant_flag"
   # shellcheck disable=SC1090
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
 
