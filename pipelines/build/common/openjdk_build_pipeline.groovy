@@ -112,7 +112,7 @@ class Build {
         def testStages = [:]
         List testList = []
 
-        if (buildConfig.VARIANT == "hotspot-jfr" || buildConfig.VARIANT == "corretto") {
+        if (buildConfig.VARIANT == "corretto") {
             testList = buildConfig.TEST_LIST.minus(['sanity.external'])
         } else {
             testList = buildConfig.TEST_LIST
