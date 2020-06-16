@@ -21,10 +21,7 @@ class Config15 {
                 ],
                 configureArgs       : [
                         "openj9"      : '--disable-ccache --enable-dtrace --enable-jitserver',
-                        "hotspot"     : '--disable-ccache --enable-dtrace',
-                        "hotspot-jfr" : '--disable-ccache --enable-dtrace',
-                        "corretto"    : '--disable-ccache --enable-dtrace',
-                        "SapMachine"  : '--disable-ccache --enable-dtrace'
+                        "hotspot"     : '--disable-ccache --enable-dtrace'
                 ]
         ],
 

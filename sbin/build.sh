@@ -83,7 +83,7 @@ configuringBootJDKConfigureParameter()
 configuringMacOSCodesignParameter()
 {
   if [ ! -z "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
-    # This commmand needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
+    # This command needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
     addConfigureArg "--with-macosx-codesign-identity=" "\"${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}\""
   fi
 }
@@ -184,8 +184,12 @@ configuringVersionStringParameter()
       addConfigureArg "--with-user-release-suffix=" "${dateSuffix}"
     fi
 
-    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ ${BUILD_CONFIG[ADOPT_PATCHES]} == true ]; then
-      addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
+      addConfigureArg "--enable-jfr" ""
+
+      if [ ${BUILD_CONFIG[ADOPT_PATCHES]} == true ]; then
+        addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
+      fi
     fi
 
     # Set the update version (e.g. 131), this gets passed in from the calling script
