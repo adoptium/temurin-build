@@ -83,7 +83,7 @@ configuringBootJDKConfigureParameter()
 configuringMacOSCodesignParameter()
 {
   if [ ! -z "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
-    # This commmand needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
+    # This command needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
     addConfigureArg "--with-macosx-codesign-identity=" "\"${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}\""
   fi
 }
@@ -185,7 +185,7 @@ configuringVersionStringParameter()
     fi
 
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
-      addConfigureArg "--enable-jfr"
+      addConfigureArg "--enable-jfr" ""
 
       if [ ${BUILD_CONFIG[ADOPT_PATCHES]} == true ]; then
         addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
