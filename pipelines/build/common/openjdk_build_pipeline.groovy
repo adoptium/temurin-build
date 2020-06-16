@@ -66,7 +66,7 @@ class Build {
             def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
             context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
 
-            def response = JobHelper.getAvailableReleases()
+            def response = JobHelper.getAvailableReleases(context)
             Integer headVersion = Integer.valueOf(response.tip_version)
             if (headVersion == null) {
                 context.println "Failure on api connection or parsing."

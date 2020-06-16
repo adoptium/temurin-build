@@ -315,7 +315,7 @@ class Regeneration implements Serializable {
                 context.println "[INFO] Querying adopt api to get the JDK-Head number"
 
                 def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
-                Integer jdkHeadNum = Integer.valueOf(JobHelper.getAvailableReleases().tip_version)
+                Integer jdkHeadNum = Integer.valueOf(JobHelper.getAvailableReleases(context).tip_version)
 
                 if (Integer.valueOf(versionNumbers[0]) == jdkHeadNum) {
                     javaToBuild = "jdk"
