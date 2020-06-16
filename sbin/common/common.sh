@@ -36,18 +36,32 @@ function setOpenJdkVersion() {
 
   if [ -z "${featureNumber}" ]
   then
-    # Use Adopt API to get the JDK Head number
-    echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
-    local featureNumber=$(curl -v https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
-    
-    # Checks the api request was successfull and the return value is a number
+    retryCount=1
+    retryMax=5
+    until [ "$retryCount" -ge "$retryMax" ]
+    do
+        # Use Adopt API to get the JDK Head number
+        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
+        local featureNumber=$(curl -v https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
+        
+        # Checks the api request was successful and the return value is a number
+        if [ -z "${featureNumber}" ] || ! [[ "${featureNumber}" -gt 0 ]]
+        then
+            echo "RETRYWARNING: Query ${retryCount} failed. Retrying in 30 seconds (max retries = ${retryMax})..."
+            retryCount=$((retryCount+1)) 
+            sleep 30000
+        else
+            echo "featureNumber FOUND: ${featureNumber}" && break
+        fi
+    done
+
+    # Fail build if we still can't find the head number
     if [ -z "${featureNumber}" ] || ! [[ "${featureNumber}" -gt 0 ]]
     then
-        echo "Failed to query or parse the adopt api. Dumping headers via curl -v https://api.adoptopenjdk.net/v3/info/available_releases..."
+        echo "Failed ${retryCount} times to query or parse the adopt api. Dumping headers via curl -v https://api.adoptopenjdk.net/v3/info/available_releases and exiting..."
         curl -v https://api.adoptopenjdk.net/v3/info/available_releases
         exit 1
     fi
-    echo "featureNumber is $featureNumber"
   fi
 
   # feature number e.g. 11
