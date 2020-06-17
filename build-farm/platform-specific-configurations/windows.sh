@@ -42,11 +42,7 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
           "x86-32") downloadArch="x32";;
           *) downloadArch="$ARCHITECTURE";;
         esac
-        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/hotspot/normal/adoptopenjdk"
-        # Add in a specific case for JDK15+ OpenJ9 builds due to openjdk-build#1890
-        if [ "$JAVA_FEATURE_VERSION" -ge 15 ] && [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
-            apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/openj9/normal/adoptopenjdk"
-        fi
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/\${VARIANT}/normal/adoptopenjdk"
         apiURL=$(eval echo ${apiUrlTemplate})
         # make-adopt-build-farm.sh has 'set -e'. We need to disable that
         # for the fallback mechanism, as downloading of the GA binary might
