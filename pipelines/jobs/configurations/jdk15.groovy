@@ -26,6 +26,9 @@ targetConfigurations = [
         "aarch64Linux": [
                 "hotspot",
                 "openj9"
+        ],
+        "arm32Linux"  : [
+                "hotspot"
         ]
 ]
 

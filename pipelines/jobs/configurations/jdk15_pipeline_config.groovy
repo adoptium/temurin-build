@@ -79,6 +79,15 @@ class Config15 {
 
         ],
 
+        arm32Linux    : [
+                os                  : 'linux',
+                arch                : 'arm',
+                // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
+                //test                : ['sanity.openjdk', 'sanity.perf']
+                test                : false,
+                configureArgs       : '--enable-dtrace=auto'
+        ],
+
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
