@@ -23,7 +23,6 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 # sbin/common.sh but we didn't want to refactor all of this on release day.
 function isHotSpot() {
   [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ] ||
-  [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] ||
   [ "${VARIANT}" == "${BUILD_VARIANT_SAP}" ] ||
   [ "${VARIANT}" == "${BUILD_VARIANT_CORRETTO}" ]
 }
