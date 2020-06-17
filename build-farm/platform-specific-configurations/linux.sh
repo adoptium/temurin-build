@@ -147,14 +147,6 @@ then
   export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u"
 fi
 
-if [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
-then
-  export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-jdk8u-jfr-incubator"
-  export BOOT_JDK_VERSION="8"
-  export BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
-  export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
-fi
-
 if [ "${ARCHITECTURE}" == "riscv64" ]
 then
 	echo RISCV cross-compilation ... Downloading latest nightly OpenJ9/x64 as build JDK

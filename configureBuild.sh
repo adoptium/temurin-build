@@ -26,7 +26,7 @@
 set -eu
 
 # i.e. Where we are
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/sbin/common/constants.sh"
@@ -35,30 +35,26 @@ source "$SCRIPT_DIR/sbin/common/constants.sh"
 source "$SCRIPT_DIR/sbin/common/common.sh"
 
 # Bring in the source signal handler
-sourceSignalHandler()
-{
+sourceSignalHandler() {
   #shellcheck source=signalhandler.sh
   source "$SCRIPT_DIR/signalhandler.sh"
 }
 
 # Parse the command line arguments
-parseCommandLineArgs()
-{
+parseCommandLineArgs() {
   # Defer most of the work to the shared function in common-functions.sh
   parseConfigurationArguments "$@"
 
   # this check is to maintain backwards compatibility and allow user to use
   # -v rather than the mandatory argument
-  if [[ "${BUILD_CONFIG[OPENJDK_FOREST_NAME]}" == "" ]]
-  then
-    if [[ $# -eq 0 ]]
-    then
+  if [[ "${BUILD_CONFIG[OPENJDK_FOREST_NAME]}" == "" ]]; then
+    if [[ $# -eq 0 ]]; then
       echo "Please provide a java version to build as an argument"
       exit 1
     fi
 
-    while [[ $# -gt 1 ]] ; do
-      shift;
+    while [[ $# -gt 1 ]]; do
+      shift
     done
 
     # Now that we've processed the flags, grab the mandatory argument(s)
@@ -69,25 +65,21 @@ parseCommandLineArgs()
 
 # Extra config for OpenJDK variants such as OpenJ9, SAP et al
 # shellcheck disable=SC2153
-doAnyBuildVariantOverrides()
-{
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ]]
-  then
+doAnyBuildVariantOverrides() {
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ]]; then
     local branch="sapmachine10"
-    BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}};
+    BUILD_CONFIG[BRANCH]=${branch:-${BUILD_CONFIG[BRANCH]}}
   fi
 }
 
 # Set the working directory for this build
-setWorkingDirectory()
-{
-  if [ -z "${BUILD_CONFIG[WORKSPACE_DIR]}" ] ; then
-    if [[ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ]];
-    then
-       BUILD_CONFIG[WORKSPACE_DIR]="/openjdk/";
-     else
-       BUILD_CONFIG[WORKSPACE_DIR]="$PWD/workspace";
-       mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
+setWorkingDirectory() {
+  if [ -z "${BUILD_CONFIG[WORKSPACE_DIR]}" ]; then
+    if [[ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ]]; then
+      BUILD_CONFIG[WORKSPACE_DIR]="/openjdk/"
+    else
+      BUILD_CONFIG[WORKSPACE_DIR]="$PWD/workspace"
+      mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
     fi
   else
     echo "Workspace dir is ${BUILD_CONFIG[WORKSPACE_DIR]}"
@@ -101,10 +93,11 @@ determineBuildProperties() {
   local build_type=
   local default_build_full_name=
   # From jdk12 there is no build type in the build output directory name
-  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || \
-     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] || \
-     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK14_CORE_VERSION}" ] || \
-     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] ||
+    [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] ||
+    [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK14_CORE_VERSION}" ] ||
+    [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK15_CORE_VERSION}" ] ||
+    [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
     build_type=normal
     default_build_full_name=${BUILD_CONFIG[OS_KERNEL_NAME]}-${BUILD_CONFIG[OS_ARCHITECTURE]}-${BUILD_CONFIG[JVM_VARIANT]}-release
   else
@@ -129,7 +122,7 @@ setVariablesForConfigure() {
     "darwin")
       local jdk_path="j2sdk-bundle/jdk*.jdk"
       local jre_path="j2re-bundle/jre*.jre"
-    ;;
+      ;;
     esac
   else
     local jdk_path="jdk"
@@ -138,7 +131,7 @@ setVariablesForConfigure() {
     "darwin")
       local jdk_path="jdk-bundle/jdk-*.jdk"
       local jre_path="jre-bundle/jre-*.jre"
-    ;;
+      ;;
     esac
   fi
 
@@ -148,41 +141,37 @@ setVariablesForConfigure() {
   BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
 }
 
-
 # Set the repository to build from, defaults to AdoptOpenJDK if not set by the user
 # shellcheck disable=SC2153
 setRepository() {
 
-  local suffix;
+  local suffix
 
   # Location of Extensions for OpenJ9 project
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]
-  then
-    suffix="ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}";
-  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ]]
-  then
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
+    suffix="ibmruntimes/openj9-openjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ]]; then
     # TODO need to map versions to SAP branches going forwards
     # sapmachine10 is the current branch for OpenJDK10 mainline
     # (equivalent to jdk/jdk10 on hotspot)
-    suffix="SAP/SapMachine";
-  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]]
-  then
+    suffix="SAP/SapMachine"
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]]; then
     suffix="corretto/corretto-${BUILD_CONFIG[OPENJDK_CORE_VERSION]:3}"
   else
-    suffix="adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}";
+    suffix="adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
   fi
 
-  local repository;
+  local repository
 
-  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
-    repository="git@github.com:${suffix}";
+  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]]; then
+    repository="git@github.com:${suffix}"
   else
-    repository="https://github.com/${suffix}";
+    repository="https://github.com/${suffix}"
   fi
 
-  repository="$(echo "${repository}" | awk '{print tolower($0)}')";
+  repository="$(echo "${repository}" | awk '{print tolower($0)}')"
 
-  BUILD_CONFIG[REPOSITORY]="${BUILD_CONFIG[REPOSITORY]:-${repository}}";
+  BUILD_CONFIG[REPOSITORY]="${BUILD_CONFIG[REPOSITORY]:-${repository}}"
 }
 
 # Specific architectures need to have special build settings
@@ -194,53 +183,54 @@ processArgumentsforSpecificArchitectures() {
   local configure_args_for_any_platform=""
 
   case "${BUILD_CONFIG[OS_ARCHITECTURE]}" in
-    "s390x")
-      if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
-        jvm_variant=zero
-      else
-        jvm_variant=server
-      fi
-
-      if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 12 ]; then
-        build_full_name=linux-s390x-${jvm_variant}-release
-      else
-        build_full_name=linux-s390x-normal-${jvm_variant}-release
-      fi
-
-      # This is to ensure consistency with the defaults defined in setMakeArgs()
-      if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
-        make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true product-images legacy-jre-image"
-      else
-        make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true images"
-      fi
-    ;;
-
-    "ppc64le")
+  "s390x")
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
+      jvm_variant=zero
+    else
       jvm_variant=server
+    fi
 
-      if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] || \
-         [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] || \
-         [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK14_CORE_VERSION}" ] || \
-         [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
-        build_full_name=linux-ppc64-${jvm_variant}-release
-      else
-        build_full_name=linux-ppc64-normal-${jvm_variant}-release
-      fi
+    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 12 ]; then
+      build_full_name=linux-s390x-${jvm_variant}-release
+    else
+      build_full_name=linux-s390x-normal-${jvm_variant}-release
+    fi
 
-      if [ "$(command -v rpm)" ]; then
-        # shellcheck disable=SC1083
-        BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]:="--build=$(rpm --eval %{_host})"}
-      fi
+    # This is to ensure consistency with the defaults defined in setMakeArgs()
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
+      make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true product-images legacy-jre-image"
+    else
+      make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true images"
+    fi
     ;;
 
-    "armv7l")
-      if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && isHotSpot; then
-        jvm_variant=zero
-      else
-        jvm_variant=server,client
-        make_args_for_any_platform="DEBUG_BINARIES=true images legacy-jre-image"
-      fi
-      configure_args_for_any_platform="--with-jobs=${BUILD_CONFIG[NUM_PROCESSORS]}"
+  "ppc64le")
+    jvm_variant=server
+
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] ||
+      [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] ||
+      [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK14_CORE_VERSION}" ] ||
+      [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK15_CORE_VERSION}" ] ||
+      [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_CORE_VERSION}" ]; then
+      build_full_name=linux-ppc64-${jvm_variant}-release
+    else
+      build_full_name=linux-ppc64-normal-${jvm_variant}-release
+    fi
+
+    if [ "$(command -v rpm)" ]; then
+      # shellcheck disable=SC1083
+      BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]:="--build=$(rpm --eval %{_host})"}
+    fi
+    ;;
+
+  "armv7l")
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && isHotSpot; then
+      jvm_variant=zero
+    else
+      jvm_variant=server,client
+      make_args_for_any_platform="DEBUG_BINARIES=true images legacy-jre-image"
+    fi
+    configure_args_for_any_platform="--with-jobs=${BUILD_CONFIG[NUM_PROCESSORS]}"
     ;;
 
   esac
@@ -258,61 +248,60 @@ setMakeCommandForOS() {
   case "$OS_KERNEL_NAME" in
   "aix")
     make_command_name="gmake"
-  ;;
+    ;;
   "sunos")
     make_command_name="gmake"
-  ;;
+    ;;
   esac
 
   BUILD_CONFIG[MAKE_COMMAND_NAME]=${BUILD_CONFIG[MAKE_COMMAND_NAME]:-$make_command_name}
 }
 
 function configureMacFreeFont() {
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-        BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="true";
-        BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true";
-    fi
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+    BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="true"
+    BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="true"
+  fi
 
-    echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
-    echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
+  echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
+  echo "[debug] COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG=${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
 }
 
 function setMakeArgs() {
-    echo "JDK Image folder name: ${BUILD_CONFIG[JDK_PATH]}"
-    echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
+  echo "JDK Image folder name: ${BUILD_CONFIG[JDK_PATH]}"
+  echo "JRE Image folder name: ${BUILD_CONFIG[JRE_PATH]}"
 
-    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
-      case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
-      "darwin") BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images mac-legacy-jre-bundle"} ;;
-      *) BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images legacy-jre-image"} ;;
-      esac
-    else
-      BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}
-    fi
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
+    case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    "darwin") BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images mac-legacy-jre-bundle"} ;;
+    *) BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images legacy-jre-image"} ;;
+    esac
+  else
+    BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}
+  fi
 
-    BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-""}
+  BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-""}
 }
-
 
 ################################################################################
 
 configure_build() {
-    configDefaults
+  configDefaults
 
-    # Parse the CL Args, see ${SCRIPT_DIR}/configureBuild.sh for details
-    parseCommandLineArgs "$@"
+  # Parse the CL Args, see ${SCRIPT_DIR}/configureBuild.sh for details
+  parseCommandLineArgs "$@"
 
-    # Update the configuration with the arguments passed in, the platform etc
-    setVariablesForConfigure
-    setRepository
-    processArgumentsforSpecificArchitectures
-    setMakeCommandForOS
+  # Update the configuration with the arguments passed in, the platform etc
+  setVariablesForConfigure
+  setRepository
+  processArgumentsforSpecificArchitectures
+  setMakeCommandForOS
 
-    determineBuildProperties
-    sourceSignalHandler
-    doAnyBuildVariantOverrides
-    setWorkingDirectory
-    configureMacFreeFont
-    setMakeArgs
-    setBootJdk
+  determineBuildProperties
+  sourceSignalHandler
+  doAnyBuildVariantOverrides
+  setWorkingDirectory
+  configureMacFreeFont
+  setMakeArgs
+  setBootJdk
 }

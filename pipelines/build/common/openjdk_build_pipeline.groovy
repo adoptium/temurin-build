@@ -112,7 +112,7 @@ class Build {
         def testStages = [:]
         List testList = []
 
-        if (buildConfig.VARIANT == "hotspot-jfr" || buildConfig.VARIANT == "corretto") {
+        if (buildConfig.VARIANT == "corretto") {
             testList = buildConfig.TEST_LIST.minus(['sanity.external'])
         } else {
             testList = buildConfig.TEST_LIST
@@ -505,7 +505,10 @@ class Build {
         return context.stage("build") {
             if (cleanWorkspace) {
                 try {
-                    if (buildConfig.TARGET_OS == "windows" && buildConfig.VARIANT == "openj9") {
+                    if (buildConfig.TARGET_OS == "windows") {
+                        // Softlayer machines struggle to clean themselves
+                        // https://github.com/AdoptOpenJDK/openjdk-build/issues/1855
+                        context.sh(script: "rm -rf C:/workspace/openjdk-build/workspace/build/src/build/*/jdk/gensrc")
                         context.cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
                     } else {
                         context.cleanWs notFailBuild: true
@@ -595,7 +598,7 @@ class Build {
 
                 } catch (Exception e) {
                     currentBuild.result = 'FAILURE'
-                    context.println "Execution error: " + e.getMessage()
+                    context.println "Execution error: ${e}"
                 }
             }
         }
