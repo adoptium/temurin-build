@@ -598,7 +598,7 @@ class Build {
 
                 } catch (Exception e) {
                     currentBuild.result = 'FAILURE'
-                    context.println "Execution error: " + e.getMessage()
+                    context.println "Execution error: ${e}"
                 }
             }
         }
