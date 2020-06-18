@@ -83,7 +83,7 @@ buildOpenJDKViaDocker()
     build_variant_flag="--openj9"
   fi
 
-  docker/dockerfile-generator.sh --jdk "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" "$build_variant_flag"
+  docker/dockerfile-generator.sh --version "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" "$build_variant_flag"
   # shellcheck disable=SC1090
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
 
