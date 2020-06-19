@@ -599,7 +599,6 @@ class Build {
                 } catch (Exception e) {
                     currentBuild.result = 'FAILURE'
                     context.println "Execution error: ${e}"
-                    context.sh(script: "echo INFO: Printing file permissions in local directory && ls -la")
                 }
             }
         }
