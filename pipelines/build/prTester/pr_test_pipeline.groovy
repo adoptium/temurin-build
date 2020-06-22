@@ -1,4 +1,5 @@
 import groovy.json.JsonSlurper
+import java.nio.file.NoSuchFileException
 
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,28 +47,40 @@ class PullRequestTestPipeline implements Serializable {
         Map<String, ?> config = generateConfig(javaVersion)
         context.checkout([$class: 'GitSCM', userRemoteConfigs: [[url: config.GIT_URL]], branches: [[name: branch]]])
 
-        println "${javaVersion} ${config.disableJob}"
+        context.println "${javaVersion} ${config.disableJob}"
         context.jobDsl targets: "pipelines/jobs/pipeline_job_template.groovy", ignoreExisting: false, additionalParameters: config
     }
 
     def runTests() {
 
         def jobs = [:]
+        Boolean pipelineFailed = false
 
-        println "loading ${context.WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
+        context.println "loading ${context.WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
         Closure regenerationScript = context.load "${context.WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
 
         javaVersions.each({ javaVersion ->
             // generate top level job
             generatePipelineJob(javaVersion)
-            println "[INFO] Running regeneration script..."
-
-            println "loading ${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy"
-            def buildConfigurations = context.load "${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy"
+            context.println "[INFO] Running regeneration script..."
+               
+            def buildConfigurations
+            Boolean updateRepo = false
+            context.println "loading ${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy"
+            try {
+                buildConfigurations = context.load "${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy"
+            } catch (NoSuchFileException e) {
+                context.println "[WARNING] ${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy does not exist. Trying jdk${javaVersion}u_pipeline_config.groovy..."
+                buildConfigurations = context.load "${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}u_pipeline_config.groovy"
+                updateRepo = true
+            }
+            
+            String actualJavaVersion = updateRepo ? "jdk${javaVersion}u" : "jdk${javaVersion}"
 
             regenerationScript(
-                    "jdk${javaVersion}u",
+                    actualJavaVersion,
                     buildConfigurations,
+                    testConfigurations,
                     currentBuild,
                     context,
                     "build-scripts-pr-tester/build-test",
@@ -76,10 +89,10 @@ class PullRequestTestPipeline implements Serializable {
                     "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test"
             ).regenerate()
 
-            println "[SUCCESS] All done!"
+            context.println "[SUCCESS] All done!"
 
             jobs["Test building Java ${javaVersion}"] = {
-                context.catchError {
+                try {
                     context.stage("Test building Java ${javaVersion}") {
                         context.build job: "${BUILD_FOLDER}/openjdk${javaVersion}-pipeline",
                                 propagate: true,
@@ -87,10 +100,18 @@ class PullRequestTestPipeline implements Serializable {
                                         context.string(name: 'releaseType', value: "Nightly Without Publish")
                                 ]
                     }
+                } catch (err) {
+                    context.println "[ERROR] PIPELINE FAILED\n$err"
+                    pipelineFailed = true
                 }
             }
         })
         context.parallel jobs
+
+        if (!pipelineFailed) {
+            context.println "[INFO] Cleaning up..."
+            context.cleanWs notFailBuild: true
+        }
     }
 
 }
@@ -101,7 +122,7 @@ Map<String, ?> defaultTestConfigurations = [
         ]
 ]
 
-List<Integer> defaultJavaVersions = [8, 11, 14, 15]
+List<Integer> defaultJavaVersions = [8, 11, 14, 15, 16]
 
 defaultGitRepo = "https://github.com/AdoptOpenJDK/openjdk-build"
 

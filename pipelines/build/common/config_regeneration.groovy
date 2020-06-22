@@ -285,7 +285,19 @@ class Regeneration implements Serializable {
                             context.println "[INFO] Checking if ${pipeline} is running..." //i.e. openjdk8-pipeline
 
                             def pipelineInProgress = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
-                            inProgress = pipelineInProgress.building as Boolean
+
+                            // If query fails, check to see if the pipeline been run before
+                            if (pipelineInProgress == null) {
+                                def getPipelineBuilds = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/api/json?pretty=true&depth1")
+
+                                if (getPipelineBuilds.builds == []) {
+                                    context.println "[SUCCESS] ${pipeline} has not been run before. Running regeneration job..."
+                                    inProgress = false
+                                }
+
+                            } else {
+                                inProgress = pipelineInProgress.building as Boolean
+                            }
 
                             if (inProgress) {
                                 // Sleep for a bit, then check again...
