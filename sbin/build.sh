@@ -399,7 +399,9 @@ executeTemplatedFile() {
   stepIntoTheWorkingDirectory
 
   echo "Currently at '${PWD}'"
-  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
+
+  # Execute the build passing the workspace dir and target dir as params for configure.txt
+  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh" ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]}
   exitCode=$?
 
   if [ "${exitCode}" -eq 1 ]; then
