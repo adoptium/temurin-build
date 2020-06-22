@@ -83,7 +83,7 @@ configuringBootJDKConfigureParameter()
 configuringMacOSCodesignParameter()
 {
   if [ ! -z "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
-    # This commmand needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
+    # This command needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
     addConfigureArg "--with-macosx-codesign-identity=" "\"${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}\""
   fi
 }
@@ -184,8 +184,16 @@ configuringVersionStringParameter()
       addConfigureArg "--with-user-release-suffix=" "${dateSuffix}"
     fi
 
-    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ ${BUILD_CONFIG[ADOPT_PATCHES]} == true ]; then
-      addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
+
+      # No JFR support in AIX or zero builds (s390 or armv7l)
+      if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "s390x" ] && [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "aix" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "armv7l" ]; then
+        addConfigureArg "--enable-jfr" ""
+      fi
+
+      if [ ${BUILD_CONFIG[ADOPT_PATCHES]} == true ]; then
+        addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
+      fi
     fi
 
     # Set the update version (e.g. 131), this gets passed in from the calling script
@@ -391,7 +399,9 @@ executeTemplatedFile() {
   stepIntoTheWorkingDirectory
 
   echo "Currently at '${PWD}'"
-  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
+
+  # Execute the build passing the workspace dir and target dir as params for configure.txt
+  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh" ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]}
   exitCode=$?
 
   if [ "${exitCode}" -eq 1 ]; then
@@ -438,15 +448,12 @@ buildSharedLibs() {
     local gradleJavaHome=$(getGradleHome)
     echo "Running gradle with $gradleJavaHome"
 
-
     gradlecount=1
-    rc=1
-    while [[ $rc -ne 0 && $gradlecount -le 3 ]]
-    do
-        JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache bash ./gradlew --no-daemon clean uberjar
-        rc=$?
-        echo "gradle attempt $gradlecount : rc=$rc "
-        gradlecount=$(( gradlecount + 1 ))
+    while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache bash ./gradlew --no-daemon clean uberjar; do
+      echo "RETRYWARNING: Gradle failed on attempt $gradlecount"
+      sleep 120 # Wait before retrying in case of network/server outage ...
+      gradlecount=$(( gradlecount + 1 ))
+      [ $gradlecount -gt 3 ] && exit 1
     done
 
     export GRADLE_USER_HOME="$WORKSPACE/.gradle"

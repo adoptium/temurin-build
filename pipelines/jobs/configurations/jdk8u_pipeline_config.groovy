@@ -26,8 +26,6 @@ class Config8 {
                 additionalNodeLabels: 'centos6',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
                 configureArgs       : [
-                        "hotspot"     : '--enable-jfr',
-                        "hotspot-jfr" : '--enable-jfr',
                         "openj9"      : '--enable-jitserver'
                 ]
         ],

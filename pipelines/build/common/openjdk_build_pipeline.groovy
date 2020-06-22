@@ -62,13 +62,13 @@ class Build {
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
         } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
-            // Query the Adopt api to get the "most_recent_feature_version" (currently 15)
+            // Query the Adopt api to get the "tip_version"
             def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
-            context.println "Querying Adopt Api for the JDK-Head number (most_recent_feature_version)..."
+            context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
 
-            def response = JobHelper.getAvailableReleases()
-            Integer headVersion = Integer.valueOf(response.most_recent_feature_version)
-            if (headVersion.equalsIgnoreCase(null)) {
+            def response = JobHelper.getAvailableReleases(context)
+            Integer headVersion = Integer.valueOf(response.tip_version)
+            if (headVersion == null) {
                 context.println "Failure on api connection or parsing."
                 throw new Exception()
             }
@@ -112,7 +112,7 @@ class Build {
         def testStages = [:]
         List testList = []
 
-        if (buildConfig.VARIANT == "hotspot-jfr" || buildConfig.VARIANT == "corretto") {
+        if (buildConfig.VARIANT == "corretto") {
             testList = buildConfig.TEST_LIST.minus(['sanity.external'])
         } else {
             testList = buildConfig.TEST_LIST
@@ -158,7 +158,7 @@ class Build {
             String versionOutput = matcher.group('version')
             context.println(versionOutput)
 
-            return new VersionInfo().parse(versionOutput, buildConfig.ADOPT_BUILD_NUMBER)
+            return new VersionInfo().parse(consoleOut, versionOutput, buildConfig.ADOPT_BUILD_NUMBER)
         }
         return null
     }
@@ -311,7 +311,7 @@ class Build {
         context.copyArtifacts(
                 projectName: "build-scripts/release/create_installer_windows",
                 selector: context.specific("${installerJob.getNumber()}"),
-                filter: 'wix/ReleaseDir/OpenJDK*jdk_*_windows*.msi',
+                filter: 'wix/ReleaseDir/*',
                 fingerprintArtifacts: true,
                 target: "workspace/target/",
                 flatten: true)
@@ -342,7 +342,7 @@ class Build {
                 context.copyArtifacts(
                     projectName: "build-scripts/release/create_installer_windows",
                     selector: context.specific("${jreinstallerJob.getNumber()}"),
-                    filter: 'wix/ReleaseDir/OpenJDK*jre_*_windows*.msi',
+                    filter: 'wix/ReleaseDir/*',
                     fingerprintArtifacts: true,
                     target: "workspace/target/",
                     flatten: true
@@ -400,27 +400,31 @@ class Build {
 
     def writeMetadata(VersionInfo version) {
         /*
-    example data:
-    {
-        "WARNING": "THIS METADATA FILE IS STILL IN ALPHA DO NOT USE ME",
-        "os": "linux",
-        "arch": "x64",
-        "variant": "hotspot",
-        "version": "jdk8u",
-        "tag": "jdk8u202-b08",
-        "version_data": {
-            "adopt_build_number": 2,
-            "major": 8,
-            "minor": 0,
-            "security": 202,
-            "build": 8,
-            "version": "8u202-b08",
-            "semver": "8.0.202+8.2"
-        },
-        "binary_type": "jdk",
-        "sha256": "c1b8fb7298d66a5bca9b830e8d612a85bbc52c81b9a88cef4dd71f2f37b289f1"
-    }
-    */
+        example data:
+            {
+                "WARNING": "THIS METADATA FILE IS STILL IN ALPHA DO NOT USE ME",
+                "os": "mac",
+                "arch": "x64",
+                "variant": "hotspot",
+                "version": {
+                    "minor": 0,
+                    "full_version_output": "<output of java --version>",
+                    "security": 0,
+                    "pre": null,
+                    "adopt_build_number": 0,
+                    "major": 15,
+                    "version": "15+28-202006220910",
+                    "semver": "15.0.0+28.0.202006220910",
+                    "build": 28,
+                    "opt": "202006220910",
+                    "configure_arguments": <output of bash configure>
+                },
+                "scmRef": "",
+                "version_data": "jdk15",
+                "binary_type": "jdk",
+                "sha256": "<shasum>"
+            }
+        */
 
         MetaData data = formMetadata(version)
 
@@ -505,7 +509,10 @@ class Build {
         return context.stage("build") {
             if (cleanWorkspace) {
                 try {
-                    if (buildConfig.TARGET_OS == "windows" && buildConfig.VARIANT == "openj9") {
+                    if (buildConfig.TARGET_OS == "windows") {
+                        // Softlayer machines struggle to clean themselves
+                        // https://github.com/AdoptOpenJDK/openjdk-build/issues/1855
+                        context.sh(script: "rm -rf C:/workspace/openjdk-build/workspace/build/src/build/*/jdk/gensrc")
                         context.cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
                     } else {
                         context.cleanWs notFailBuild: true
@@ -523,6 +530,8 @@ class Build {
                     String versionOut = context.readFile("workspace/target/version.txt")
 
                     versionInfo = parseVersionOutput(versionOut)
+
+                    versionInfo.configure_arguments = context.readFile("workspace/target/configure.txt")
                 }
                 writeMetadata(versionInfo)
                 context.archiveArtifacts artifacts: "workspace/target/*"
@@ -595,7 +604,8 @@ class Build {
 
                 } catch (Exception e) {
                     currentBuild.result = 'FAILURE'
-                    context.println "Execution error: " + e.getMessage()
+                    context.println "Execution error: ${e}"
+                    throw e
                 }
             }
         }

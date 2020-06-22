@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-String javaVersion = "jdk12u"
+String javaVersion = "jdk16"
 
 node ("master") {
   try {

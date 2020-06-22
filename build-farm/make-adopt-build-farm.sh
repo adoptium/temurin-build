@@ -28,8 +28,32 @@ JAVA_FEATURE_VERSION=$(echo "${JAVA_TO_BUILD}" | tr -d "[:alpha:]")
 
 if [ -z "${JAVA_FEATURE_VERSION}" ]
 then
-    # THIS NEEDS TO BE UPDATED WHEN HEAD UPDATES (the latest tag that jdk/jdk contains)
-    JAVA_FEATURE_VERSION=15
+    retryCount=1
+    retryMax=5
+    until [ "$retryCount" -ge "$retryMax" ]
+    do
+        # Use Adopt API to get the JDK Head number
+        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
+        JAVA_FEATURE_VERSION=$(curl -v https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
+        
+        # Checks the api request was successful and the return value is a number
+        if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
+        then
+            echo "RETRYWARNING: Query ${retryCount} failed. Retrying in 30 seconds (max retries = ${retryMax})..."
+            retryCount=$((retryCount+1)) 
+            sleep 30000
+        else
+            echo "JAVA_FEATURE_VERSION FOUND: ${JAVA_FEATURE_VERSION}" && break
+        fi
+    done
+
+    # Fail build if we still can't find the head number
+    if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
+    then
+        echo "Failed ${retryCount} times to query or parse the adopt api. Dumping headers via curl -v https://api.adoptopenjdk.net/v3/info/available_releases and exiting..."
+        curl -v https://api.adoptopenjdk.net/v3/info/available_releases
+        exit 1
+    fi
 fi
 
 echo "BUILD TYPE: "
@@ -63,7 +87,8 @@ case "${JDK_BOOT_VERSION}" in
       "12")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK12_BOOT_DIR}";;
       "13")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK13_BOOT_DIR}";;
       "14")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK14_BOOT_DIR}";;
-      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK15_BOOT_DIR}";;
+      "15")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK15_BOOT_DIR}";;
+      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK16_BOOT_DIR}";;
 esac
 
 if [ ! -d "${JDK_BOOT_DIR}" ]
