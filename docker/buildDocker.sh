@@ -4,7 +4,7 @@ set -u
 jdkVersion=''
 bootDir=''
 buildVariant="hotspot"
-useEclipseDockerFiles=false
+useEclipseOpenJ9DockerFiles=false
 cleanWorkspace=false
 
 #takes in all arguments to determine script options
@@ -30,7 +30,7 @@ parseCommandLineArgs()
 				"--openj9" | "-j9")
 					buildVariant="openj9";;
 				"--use-eclipse-docker-files" | "-e" )
-					useEclipseDockerFiles=true; buildVariant="eclipse";;
+					useEclipseOpenJ9DockerFiles=true; buildVariant="eclipse";;
 				"--help" | "-h" )
 					usage; exit 0;;
 				*) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised."; usage; exit 1;;
@@ -105,7 +105,7 @@ checkArgs()
 	fi
 }
 
-useEclipseDockerFiles()
+useEclipseOpenJ9DockerFiles()
 {
 	mkdir -p $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant/EclipseDockerfiles
 	cd $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant/EclipseDockerfiles
@@ -125,11 +125,11 @@ useEclipseDockerFiles()
 		if [ ${jdk} != "jdk" ]; then
 			jdk=${jdk%?}
 		fi
-		manualDockerCommands ${jdk}
+		eclipseDockerCommands ${jdk}
 	done
 }
 
-manualDockerCommands()
+eclipseDockerCommands()
 {
 	local jdk=$1
 	docker build -t ${jdk}-${buildVariant}-dfc -f Dockerfile .
@@ -169,8 +169,8 @@ setupGit()
 parseCommandLineArgs $@
 checkJDKVersion
 mkdir -p $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant
-if [[ "$useEclipseDockerFiles" == "true" ]]; then
-	useEclipseDockerFiles
+if [[ "$useEclipseOpenJ9DockerFiles" == "true" ]]; then
+	useEclipseOpenJ9DockerFiles
 else
 	setupGit
 	buildDocker
