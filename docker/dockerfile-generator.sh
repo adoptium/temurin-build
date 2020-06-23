@@ -12,6 +12,7 @@ JDK_MAX=
 JDK_GA=
 
 setJDKVars() {
+# shellcheck disable=SC2002 # Disable UUOC error
   wget -q https://api.adoptopenjdk.net/v3/info/available_releases
   JDK_MAX=$(cat available_releases \
 	  | grep 'tip_version' \
