@@ -9,12 +9,20 @@ DOCKERFILE_PATH=
 # Default to JDK8
 JDK_VERSION=8
 JDK_MAX=
+JDK_GA=
 
-setJDKMax() {
-  JDK_MAX=$(wget -q https://api.adoptopenjdk.net/v3/info/available_releases -O - \
-	  | grep 'most_recent_feature_version' \
+setJDKVars() {
+# shellcheck disable=SC2002 # Disable UUOC error
+  wget -q https://api.adoptopenjdk.net/v3/info/available_releases
+  JDK_MAX=$(cat available_releases \
+	  | grep 'tip_version' \
 	  | cut -d':' -f 2 \
 	  | sed 's/,//g; s/ //g')
+  JDK_GA=$(cat available_releases \
+          | grep 'most_recent_feature_release' \
+          | cut -d':' -f 2 \
+          | sed 's/,//g; s/ //g')
+  rm available_releases
 }
 
 processArgs() {
@@ -23,6 +31,11 @@ processArgs() {
   while [[ $# -gt 0 ]]
   do	
     arg="$1"
+    # Stop the script failing when passed an empty variable
+    if [ -z $arg ]; then
+      shift
+      continue
+    fi
     case $arg in
       -h | --help)
         usage
@@ -147,7 +160,11 @@ RUN apt-get update \\
   && apt-get update \\
   && apt-get -y upgrade \\
   && apt-get install -qq -y --no-install-recommends \\
+    ant \\
+    ant-contrib \\
     autoconf \\
+    ca-certificates \\
+    cmake \\
     cpio \\
     curl \\
     file \\
@@ -159,11 +176,13 @@ RUN apt-get update \\
     libfreetype6-dev \\
     libx11-dev \\
     libxext-dev \\
+    libxi-dev \\
     libxrandr-dev \\
     libxrender-dev \\
     libxt-dev \\
     libxtst-dev \\
     make \\
+    perl \\
     ssh \\
     systemtap-sdt-dev \\
     unzip \\
@@ -171,10 +190,16 @@ RUN apt-get update \\
     zip \\" >> $DOCKERFILE_PATH
 
   if [ ${OPENJ9} = true ]; then
-    echo "    libdwarf-dev \\
+    echo "    libexpat1-dev \\
+    libdwarf-dev \\
+    libffi-dev \\
+    libfontconfig \\
     libnuma-dev \\
+    libssl-dev \\
     nasm \\
-    pkg-config \\" >> $DOCKERFILE_PATH
+    pkg-config \\
+    xvfb \\
+    zlib1g-dev" >> $DOCKERFILE_PATH
   else 
     echo "    ccache \\
     g++ \\
@@ -198,26 +223,27 @@ RUN mkdir -p /openjdk/build" >> $DOCKERFILE_PATH
 printgcc() {
   if [ ${COMMENTS} == true ]; then
     echo "
-# Make sure build uses GCC 7.3
+# Make sure build uses GCC 7.5
 # Create links for GCC to access the C library and gcc,g++" >> $DOCKERFILE_PATH
   fi
 
   echo "
 RUN cd /usr/local \\
-  && wget -O gcc-7.tar.xz "https://ci.adoptopenjdk.net/userContent/gcc/gcc730+ccache.x86_64.tar.xz" \\
+  && wget -O gcc-7.tar.xz "https://ci.adoptopenjdk.net/userContent/gcc/gcc750+ccache.x86_64.tar.xz" \\
   && tar -xJf gcc-7.tar.xz \\
   && rm -rf gcc-7.tar.xz" >> $DOCKERFILE_PATH
 
   echo "
-RUN ln -s /usr/lib/x86_64-linux-gnu /usr/lib64 \\
-  && ln -s /usr/include/x86_64-linux-gnu/* /usr/local/gcc/include \\
-  && ln -s /usr/local/gcc/bin/g++-7.3 /usr/bin/g++ \\
-  && ln -s /usr/local/gcc/bin/gcc-7.3 /usr/bin/gcc \\
-  && ln -s /usr/local/gcc/bin/ccache /usr/local/bin/ccache" >> $DOCKERFILE_PATH
+RUN ln -sf /usr/lib/x86_64-linux-gnu /usr/lib64 \\
+  && ln -sf /usr/include/x86_64-linux-gnu/* /usr/local/gcc/include \\
+  && ln -sf /usr/local/gcc/bin/g++-7.5 /usr/bin/g++ \\
+  && ln -sf /usr/local/gcc/bin/gcc-7.5 /usr/bin/gcc \\
+  && ln -sf /usr/local/gcc/bin/ccache /usr/local/bin/ccache" >> $DOCKERFILE_PATH
 }
 
 printDockerJDKs() {
-  if [ ${JDK_VERSION} != 8 ]; then
+  # JDK8 uses zulu-7 to as it's bootjdk
+  if [ ${JDK_VERSION} != 8 ] && [ ${JDK_VERSION} != ${JDK_MAX} ]; then
     if [ ${COMMENTS} == true ]; then
       echo "
     # Extract JDK$((JDK_VERSION-1)) to use as a boot jdk" >> $DOCKERFILE_PATH
@@ -225,6 +251,17 @@ printDockerJDKs() {
     printJDK $((JDK_VERSION-1))
     echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/java /usr/bin/java" >> $DOCKERFILE_PATH
     echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/javac /usr/bin/javac" >> $DOCKERFILE_PATH
+  fi
+
+  # Build 'jdk' with the most recent GA release
+  if [ ${JDK_VERSION} == ${JDK_MAX} ]; then
+    if [ ${COMMENTS} == true ]; then
+      echo "
+    # Extract JDK${JDK_GA} to use as a boot jdk" >> $DOCKERFILE_PATH
+    fi
+    printJDK ${JDK_GA}
+    echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/java /usr/bin/java" >> $DOCKERFILE_PATH
+    echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/javac /usr/bin/javac" >> $DOCKERFILE_PATH
   fi
  
   # if JDK_VERSION is 9, another jdk8 doesn't need to be extracted
@@ -259,9 +296,9 @@ printUserCreate(){
 ARG HostUID
 ENV HostUID=\$HostUID
 RUN useradd -u \$HostUID -ms /bin/bash build
+WORKDIR /openjdk/build
 RUN chown -R build /openjdk/
-USER build
-WORKDIR /openjdk/build/" >> $DOCKERFILE_PATH
+USER build" >> $DOCKERFILE_PATH
 }
 
 printContainerVars(){
@@ -297,7 +334,7 @@ BUILD_CONFIG[BUILD_FULL_NAME]=\"linux-x86_64-normal-server-release\"" >> $DOCKER
 fi
 }
 
-setJDKMax
+setJDKVars
 processArgs "$@"
 generateFile
 generateConfig
