@@ -4,6 +4,7 @@ set -eu
 OPENJ9=false
 BUILD=false
 COMMENTS=false
+PRINT=false
 DOCKERFILE_DIR=
 DOCKERFILE_PATH=
 # Default to JDK8
