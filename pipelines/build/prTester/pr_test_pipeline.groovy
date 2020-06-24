@@ -111,6 +111,9 @@ class PullRequestTestPipeline implements Serializable {
         if (!pipelineFailed) {
             context.println "[INFO] Cleaning up..."
             context.cleanWs notFailBuild: true
+        } else {
+            context.println "[ERROR] Pipelines failed. Setting build result to FAILURE..."
+            currentBuild.result = 'FAILURE'
         }
     }
 
