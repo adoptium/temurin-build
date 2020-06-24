@@ -92,20 +92,21 @@ class PullRequestTestPipeline implements Serializable {
             context.println "[SUCCESS] All done!"
 
             jobs["Test building Java ${javaVersion}"] = {
-                try {
-                    context.stage("Test building Java ${javaVersion}") {
+                context.stage("Test building Java ${javaVersion}") {
+                    try {
                         context.build job: "${BUILD_FOLDER}/openjdk${javaVersion}-pipeline",
-                                propagate: true,
-                                parameters: [
-                                        context.string(name: 'releaseType', value: "Nightly Without Publish")
-                                ]
+                            propagate: true,
+                            parameters: [
+                                context.string(name: 'releaseType', value: "Nightly Without Publish")
+                            ]
+                    } catch (err) {
+                        context.println "[ERROR] ${actualJavaVersion} PIPELINE FAILED\n$err"
+                        pipelineFailed = true
                     }
-                } catch (err) {
-                    context.println "[ERROR] PIPELINE FAILED\n$err"
-                    pipelineFailed = true
                 }
             }
         })
+        
         context.parallel jobs
 
         if (!pipelineFailed) {
