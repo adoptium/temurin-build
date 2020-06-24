@@ -28,7 +28,7 @@ setJDKVars() {
 
 processArgs() {
   local arg
-  local cleanRepo
+  local cleanRepo=false
   while [[ $# -gt 0 ]]
   do	
     arg="$1"
