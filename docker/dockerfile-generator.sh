@@ -200,7 +200,7 @@ RUN apt-get update \\
     nasm \\
     pkg-config \\
     xvfb \\
-    zlib1g-dev" >> $DOCKERFILE_PATH
+    zlib1g-dev \\" >> $DOCKERFILE_PATH
   else 
     echo "    ccache \\
     g++ \\
