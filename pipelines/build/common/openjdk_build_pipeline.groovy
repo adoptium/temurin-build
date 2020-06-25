@@ -604,7 +604,7 @@ class Build {
 
                 } catch (Exception e) {
                     currentBuild.result = 'FAILURE'
-                    context.println "Execution error: " + e.printStackTrace()
+                    context.println "Execution error: ${e}\n" + e.printStackTrace()
                 }
             }
         }
