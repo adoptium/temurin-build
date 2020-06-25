@@ -3,6 +3,7 @@ import common.MetaData
 @Library('local-lib@master')
 import common.VersionInfo
 import groovy.json.*
+import hudson.Functions
 
 import java.util.regex.Matcher
 
@@ -604,7 +605,8 @@ class Build {
 
                 } catch (Exception e) {
                     currentBuild.result = 'FAILURE'
-                    context.println "Execution error: ${e}\n" + e.printStackTrace()
+                    context.println "Execution error: ${e}"
+                    context.println Functions.printThrowable(e)
                 }
             }
         }
