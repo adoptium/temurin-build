@@ -61,6 +61,11 @@ parseCommandLineArgs() {
     setOpenJdkVersion "$1"
     setDockerVolumeSuffix "$1"
   fi
+
+  # This check is to set the JAVA_HOME to the --jdk-boot-dir parameter (if both the param exists and JAVA_HOME doesn't)
+  if [ -d "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] && [ -n "${JAVA_HOME:+x}" ]; then
+    export JAVA_HOME="${BUILD_CONFIG[JDK_BOOT_DIR]}"
+  fi
 }
 
 # Extra config for OpenJDK variants such as OpenJ9, SAP et al
