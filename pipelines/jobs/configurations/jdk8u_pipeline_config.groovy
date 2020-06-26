@@ -23,7 +23,7 @@ class Config8 {
         x64Linux      : [
                 os                  : 'linux',
                 arch                : 'x64',
-                additionalNodeLabels: 'centos6',
+                dockerImage         : 'adoptopenjdk/centos6_build_image',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver'

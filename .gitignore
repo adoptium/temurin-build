@@ -1,3 +1,6 @@
 .idea/
 shellcheck-stable
 workspace
+pipelines/.gradle
+pipelines/gradle-cache
+pipelines/target
