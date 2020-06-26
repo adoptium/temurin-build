@@ -22,9 +22,6 @@ repositories {
     maven {
         url "https://repository.mulesoft.org/nexus/content/repositories/public/"
     }
-    maven {
-        url "https://repo.jenkins-ci.org/releases/"
-    }
 }
 
 task uberjar(type: Jar) {
@@ -36,8 +33,6 @@ task uberjar(type: Jar) {
 
 dependencies {
     compile 'org.codehaus.groovy:groovy-all:3.0.4'
-    // https://mvnrepository.com/artifact/org.jenkins-ci.main/jenkins-core?repo=jenkins-releases
-    compile 'org.jenkins-ci.main:jenkins-core:2.238'
     testCompile('org.junit.jupiter:junit-jupiter-api:5.4.1')
     testRuntime('org.junit.jupiter:junit-jupiter-engine:5.4.1')
 }
