@@ -566,6 +566,7 @@ class Build {
                         if (buildConfig.DOCKER_IMAGE) {
                             // Docker build environment
                             context.node(buildConfig.NODE_LABEL + "&&dockerBuild") {
+                                context.docker.image(buildConfig.DOCKER_IMAGE).pull()
                                 context.docker.image(buildConfig.DOCKER_IMAGE).inside {
                                     buildScripts(false, filename)
                                 }
