@@ -51,7 +51,7 @@ OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.2+7, mixed mode)"""
 
     @Test
     void addsFullVersionOutput() {
-        VersionInfo parsed = new VersionInfo().parse(versionOut, "11.0.2+7, null)
+        VersionInfo parsed = new VersionInfo().parse(versionOut, "11.0.2+7", null)
         Assertions.assertEquals(11, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(2, parsed.security)
