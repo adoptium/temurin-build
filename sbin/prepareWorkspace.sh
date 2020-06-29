@@ -472,7 +472,7 @@ checkingAndDownloadCaCerts() {
     git remote add origin -f "${BUILD_CONFIG[ADOPTOPENJDK_BUILD_REPO_URI]}"
     git config core.sparsecheckout true
     echo "security/*" >>.git/info/sparse-checkout
-    git pull origin "${BUILD_CONFIG[ADOPTOPENJDK_BUILD_REPO_BRANCH]}"
+    git pull origin "${BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]}"
   fi
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
