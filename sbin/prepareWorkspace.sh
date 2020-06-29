@@ -469,7 +469,7 @@ checkingAndDownloadCaCerts() {
     downloadCerts "$caLink"
   elif [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" != "true" ]; then
     git init
-    git remote add origin -f "${BUILD_CONFIG[ADOPTOPENJDK_BUILD_REPO_URI]}"
+    git remote add origin -f "${BUILD_CONFIG[OPENJDK_BUILD_REPO_URI]}"
     git config core.sparsecheckout true
     echo "security/*" >>.git/info/sparse-checkout
     git pull origin "${BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]}"
