@@ -604,7 +604,11 @@ class Build {
 
                 } catch (Exception e) {
                     currentBuild.result = 'FAILURE'
-                    context.println "Execution error: ${e}\n" + e.printStackTrace()
+                    context.println "Execution error: ${e}"
+                    def sw = new StringWriter()
+                    def pw = new PrintWriter(sw)
+                    e.printStackTrace(pw)
+                    context.println sw.toString()
                 }
             }
         }
