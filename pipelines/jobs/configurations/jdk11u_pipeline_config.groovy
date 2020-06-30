@@ -23,7 +23,12 @@ class Config11 {
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
-                additionalNodeLabels: 'centos6',
+                additionalNodeLabels: [
+                        openj9  : 'centos6'
+                ],
+                dockerImage         : [
+                        hotspot : 'adoptopenjdk/centos6_build_image'
+                ],
                 test                : [
                         nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
@@ -33,7 +38,8 @@ class Config11 {
                         "hotspot"     : '--disable-ccache --enable-dtrace=auto',
                         "corretto"    : '--disable-ccache --enable-dtrace=auto',
                         "SapMachine"  : '--disable-ccache --enable-dtrace=auto'
-                ]
+                ],
+                codebuild           : true
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed

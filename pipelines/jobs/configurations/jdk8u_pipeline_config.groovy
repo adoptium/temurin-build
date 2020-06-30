@@ -23,11 +23,17 @@ class Config8 {
         x64Linux      : [
                 os                  : 'linux',
                 arch                : 'x64',
-                additionalNodeLabels: 'centos6',
+                additionalNodeLabels: [
+                        openj9  : 'centos6'
+                ],
+                dockerImage         : [
+                        hotspot : 'adoptopenjdk/centos6_build_image'
+                ],
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver'
-                ]
+                ],
+                codebuild           : true
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed

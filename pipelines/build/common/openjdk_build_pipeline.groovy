@@ -563,27 +563,52 @@ class Build {
                     context.stage("queue") {
                         def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
 
-                        if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
-                            context.node(buildConfig.NODE_LABEL) {
-                                // This is to avoid windows path length issues.
-                                context.echo("checking ${buildConfig.TARGET_OS}")
-                                if (buildConfig.TARGET_OS == "windows") {
-                                    // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
-                                    def workspace = "C:/workspace/openjdk-build/"
-                                    if (env.CYGWIN_WORKSPACE) {
-                                        workspace = env.CYGWIN_WORKSPACE
-                                    }
-                                    context.echo("changing ${workspace}")
-                                    context.ws(workspace) {
+                        if (buildConfig.DOCKER_IMAGE) {
+                            // Docker build environment
+                            def label = buildConfig.NODE_LABEL + "&&dockerBuild"
+                            if (buildConfig.CODEBUILD) {
+                                label = "codebuild"
+                            }
+                            if (NodeHelper.nodeIsOnline(label) || (buildConfig.CODEBUILD)) {
+                                context.node(label) {
+                                    context.docker.image(buildConfig.DOCKER_IMAGE).pull()
+                                    context.docker.image(buildConfig.DOCKER_IMAGE).inside {
+                                        // Cannot clean workspace from inside docker container
+                                        if (cleanWorkspace) {
+                                            try {
+                                                context.cleanWs notFailBuild: true
+                                            } catch (e) {
+                                                context.println "Failed to clean ${e}"
+                                            }
+                                            cleanWorkspace = false
+                                        }
                                         buildScripts(cleanWorkspace, filename)
                                     }
-                                } else {
-                                    buildScripts(cleanWorkspace, filename)
                                 }
                             }
                         } else {
-                            context.error("No node of this type exists: ${buildConfig.NODE_LABEL}")
-                            return
+                            if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
+                                context.node(buildConfig.NODE_LABEL) {
+                                    // This is to avoid windows path length issues.
+                                    context.echo("checking ${buildConfig.TARGET_OS}")
+                                    if (buildConfig.TARGET_OS == "windows") {
+                                        // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
+                                        def workspace = "C:/workspace/openjdk-build/"
+                                        if (env.CYGWIN_WORKSPACE) {
+                                            workspace = env.CYGWIN_WORKSPACE
+                                        }
+                                        context.echo("changing ${workspace}")
+                                        context.ws(workspace) {
+                                            buildScripts(cleanWorkspace, filename)
+                                        }
+                                    } else {
+                                        buildScripts(cleanWorkspace, filename)
+                                    }
+                                }   
+                            } else {
+                                context.error("No node of this type exists: ${buildConfig.NODE_LABEL}")
+                                return
+                            }
                         }
                     }
 

@@ -16,6 +16,8 @@ class IndividualBuildConfigTest {
                  SCM_REF                   : "f",
                  BUILD_ARGS                : "g",
                  NODE_LABEL                : "h",
+                 CODEBUILD                 : false,
+                 DOCKER_IMAGE              : "o",
                  CONFIGURE_ARGS            : "i",
                  OVERRIDE_FILE_NAME_VERSION: "j",
                  ADDITIONAL_FILE_NAME_TAG  : "k",

@@ -47,6 +47,14 @@ class ContextStub {
 
     ContextStub library(Map) {}
 
+    ContextStub docker
+
+    ContextStub inside(Closure c) {}
+
+    ContextStub image(String) {}
+
+    ContextStub pull() {}
+
     String getResult() {}
 
     Integer getNumber() {}
