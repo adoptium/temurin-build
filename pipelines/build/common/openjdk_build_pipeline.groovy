@@ -568,8 +568,15 @@ class Build {
                             context.node(buildConfig.NODE_LABEL + "&&dockerBuild") {
                                 context.docker.image(buildConfig.DOCKER_IMAGE).pull()
                                 context.docker.image(buildConfig.DOCKER_IMAGE).inside {
-                                    // No need to clean the workspace
-                                    cleanWorkspace = false
+                                    // Cannot clean workspace from inside docker container
+                                    if (cleanWorkspace) {
+                                        try {
+                                            context.cleanWs notFailBuild: true
+                                        } catch (e) {
+                                            context.println "Failed to clean ${e}"
+                                        }
+                                        cleanWorkspace = false
+                                    }
                                     buildScripts(cleanWorkspace, filename)
                                 }
                             }
