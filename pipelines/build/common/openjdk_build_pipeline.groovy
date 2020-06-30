@@ -565,19 +565,24 @@ class Build {
 
                         if (buildConfig.DOCKER_IMAGE) {
                             // Docker build environment
-                            context.node(buildConfig.NODE_LABEL + "&&dockerBuild") {
-                                context.docker.image(buildConfig.DOCKER_IMAGE).pull()
-                                context.docker.image(buildConfig.DOCKER_IMAGE).inside {
-                                    // Cannot clean workspace from inside docker container
-                                    if (cleanWorkspace) {
-                                        try {
-                                            context.cleanWs notFailBuild: true
-                                        } catch (e) {
-                                            context.println "Failed to clean ${e}"
+                            if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL) || (buildConfig.CODEBUILD)) {
+                                if (buildConfig.CODEBUILD) {
+                                    buildConfig.NODE_LABEL="codebuild"
+                                }
+                                context.node(buildConfig.NODE_LABEL + "&&dockerBuild") {
+                                    context.docker.image(buildConfig.DOCKER_IMAGE).pull()
+                                    context.docker.image(buildConfig.DOCKER_IMAGE).inside {
+                                        // Cannot clean workspace from inside docker container
+                                        if (cleanWorkspace) {
+                                            try {
+                                                context.cleanWs notFailBuild: true
+                                            } catch (e) {
+                                                context.println "Failed to clean ${e}"
+                                            }
+                                            cleanWorkspace = false
                                         }
-                                        cleanWorkspace = false
+                                        buildScripts(cleanWorkspace, filename)
                                     }
-                                    buildScripts(cleanWorkspace, filename)
                                 }
                             }
                         } else {

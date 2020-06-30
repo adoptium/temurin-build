@@ -58,6 +58,8 @@ class Builder implements Serializable {
 
         def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
+        def dockerImage = getDockerImage(platformConfig, variant)
+
         def buildArgs = getBuildArgs(platformConfig, variant)
 
         if (additionalBuildArgs) {
@@ -75,7 +77,8 @@ class Builder implements Serializable {
                 SCM_REF: scmReference,
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
-                DOCKER_IMAGE: platformConfig.dockerImage as String,
+                CODEBUILD: platformConfig.codebuild as Boolean,
+                DOCKER_IMAGE: dockerImage,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
                 OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
@@ -118,6 +121,18 @@ class Builder implements Serializable {
             }
         }
         return []
+    }
+
+    def getDockerImage(Map<String, ?> configuration, String variant) {
+        def dockerImageValue = ""
+        if (configuration.containsKey("dockerImage")) {
+            if (isMap(configuration.dockerImage)) {
+                dockerImageValue = (configuration.dockerImage as Map<String, ?>).get(variant)
+            } else {
+                dockerImageValue = configuration.dockerImage
+            }
+        }
+        return dockerImageValue
     }
 
     /**
