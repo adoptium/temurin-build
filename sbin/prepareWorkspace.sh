@@ -107,7 +107,7 @@ checkoutAndCloneOpenJDKGitRepo() {
 }
 
 # Checkout the required code to build from the given cached git repo
-# Set checkoutRc to result so we can retry 
+# Set checkoutRc to result so we can retry
 checkoutRequiredCodeToBuild() {
   checkoutRc=1
 
@@ -341,7 +341,7 @@ downloadFile() {
   local url="$2"
 
   echo downloadFile: Saving "url" to "$targetFileName"
-  
+
   # Temporary fudge as curl on my windows boxes is exiting with RC=127
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     wget -O "${targetFileName}" "${url}" || exit 2
@@ -469,10 +469,10 @@ checkingAndDownloadCaCerts() {
     downloadCerts "$caLink"
   elif [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" != "true" ]; then
     git init
-    git remote add origin -f https://github.com/AdoptOpenJDK/openjdk-build.git
+    git remote add origin -f "${BUILD_CONFIG[OPENJDK_BUILD_REPO_URI]}"
     git config core.sparsecheckout true
     echo "security/*" >>.git/info/sparse-checkout
-    git pull origin master
+    git pull origin "${BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]}"
   fi
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit

@@ -32,6 +32,8 @@
 # map. This is why we can't have nice things.
 CONFIG_PARAMS=(
 ADOPT_PATCHES
+OPENJDK_BUILD_REPO_BRANCH
+OPENJDK_BUILD_REPO_URI
 BRANCH
 BUILD_FULL_NAME
 BUILD_VARIANT
@@ -173,6 +175,12 @@ function parseConfigurationArguments() {
 
       case "$opt" in
         "--" ) break 2;;
+
+        "--openjdk-build-repo-branch" )
+        BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]="$1"; shift;;
+
+        "--openjdk-build-repo-uri" )
+        BUILD_CONFIG[OPENJDK_BUILD_REPO_URI]="$1"; shift;;
 
         "--build-variant" )
         BUILD_CONFIG[BUILD_VARIANT]="$1"; shift;;
@@ -337,6 +345,12 @@ function configDefaults() {
 
   # The OpenJDK source code repository to build from, e.g. an AdoptOpenJDK repo
   BUILD_CONFIG[REPOSITORY]=""
+
+  # The default AdoptOpenJDK/openjdk-build repo branch
+  BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]="master"
+
+  # The default AdoptOpenJDK/openjdk-build repo uri
+  BUILD_CONFIG[OPENJDK_BUILD_REPO_URI]="https://github.com/AdoptOpenJDK/openjdk-build.git"
 
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false"
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="false"
