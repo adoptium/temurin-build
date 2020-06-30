@@ -27,7 +27,7 @@ class Config11 {
                         openj9  : 'centos6'
                 ],
                 dockerImage         : [
-                        hostpot : 'adoptopenjdk/centos6_build_image'
+                        hotspot : 'adoptopenjdk/centos6_build_image'
                 ],
                 test                : [
                         nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
