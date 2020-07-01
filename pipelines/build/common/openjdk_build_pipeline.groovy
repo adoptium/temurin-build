@@ -67,11 +67,7 @@ class Build {
             context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
 
             def response = JobHelper.getAvailableReleases(context)
-            Integer headVersion = Integer.valueOf(response.tip_version)
-            if (headVersion == null) {
-                context.println "Failure on api connection or parsing."
-                throw new Exception()
-            }
+            int headVersion = (int) response.getAt("tip_version")
             context.println "Found Java Version Number: ${headVersion}"
             return headVersion
         } else {
@@ -570,17 +566,17 @@ class Build {
                                 label = "codebuild"
                             }
                             context.node(label) {
+                                // Cannot clean workspace from inside docker container
+                                if (cleanWorkspace) {
+                                    try {
+                                        context.cleanWs notFailBuild: true
+                                    } catch (e) {
+                                        context.println "Failed to clean ${e}"
+                                    }
+                                    cleanWorkspace = false
+                                }
                                 context.docker.image(buildConfig.DOCKER_IMAGE).pull()
                                 context.docker.image(buildConfig.DOCKER_IMAGE).inside {
-                                    // Cannot clean workspace from inside docker container
-                                    if (cleanWorkspace) {
-                                        try {
-                                            context.cleanWs notFailBuild: true
-                                        } catch (e) {
-                                            context.println "Failed to clean ${e}"
-                                        }
-                                        cleanWorkspace = false
-                                    }
                                     buildScripts(cleanWorkspace, filename)
                                 }
                             }
