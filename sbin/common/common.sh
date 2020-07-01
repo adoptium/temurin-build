@@ -49,7 +49,7 @@ function setOpenJdkVersion() {
         then
             echo "RETRYWARNING: Query ${retryCount} failed. Retrying in 30 seconds (max retries = ${retryMax})..."
             retryCount=$((retryCount+1)) 
-            sleep 30000
+            sleep 30
         else
             echo "featureNumber FOUND: ${featureNumber}" && break
         fi
