@@ -569,23 +569,22 @@ class Build {
                             if (buildConfig.CODEBUILD) {
                                 label = "codebuild"
                             }
-                            if (NodeHelper.nodeIsOnline(label) || (buildConfig.CODEBUILD)) {
-                                context.node(label) {
-                                    context.docker.image(buildConfig.DOCKER_IMAGE).pull()
-                                    context.docker.image(buildConfig.DOCKER_IMAGE).inside {
-                                        // Cannot clean workspace from inside docker container
-                                        if (cleanWorkspace) {
-                                            try {
-                                                context.cleanWs notFailBuild: true
-                                            } catch (e) {
-                                                context.println "Failed to clean ${e}"
-                                            }
-                                            cleanWorkspace = false
+                            context.node(label) {
+                                context.docker.image(buildConfig.DOCKER_IMAGE).pull()
+                                context.docker.image(buildConfig.DOCKER_IMAGE).inside {
+                                    // Cannot clean workspace from inside docker container
+                                    if (cleanWorkspace) {
+                                        try {
+                                            context.cleanWs notFailBuild: true
+                                        } catch (e) {
+                                            context.println "Failed to clean ${e}"
                                         }
-                                        buildScripts(cleanWorkspace, filename)
+                                        cleanWorkspace = false
                                     }
+                                    buildScripts(cleanWorkspace, filename)
                                 }
                             }
+
                         } else {
                             if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
                                 context.node(buildConfig.NODE_LABEL) {
