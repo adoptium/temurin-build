@@ -31,8 +31,7 @@ class Config14 {
                         "openj9"      : '--disable-ccache --enable-dtrace=auto --enable-jitserver',
                         "hotspot"     : '--disable-ccache --enable-dtrace=auto',
                         "SapMachine"  : '--disable-ccache --enable-dtrace=auto'
-                ],
-                codebuild           : true
+                ]
         ],
 
         x64LinuxXL    : [
