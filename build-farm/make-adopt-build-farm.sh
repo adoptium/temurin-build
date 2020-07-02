@@ -34,7 +34,7 @@ then
     do
         # Use Adopt API to get the JDK Head number
         echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
-        JAVA_FEATURE_VERSION=$(curl -v https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
+        JAVA_FEATURE_VERSION=$(curl -q https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
         
         # Checks the api request was successful and the return value is a number
         if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
@@ -52,6 +52,7 @@ then
     then
         echo "Failed ${retryCount} times to query or parse the adopt api. Dumping headers via curl -v https://api.adoptopenjdk.net/v3/info/available_releases and exiting..."
         curl -v https://api.adoptopenjdk.net/v3/info/available_releases
+        echo curl returned RC $? in make_adopt_build_farm.sh
         exit 1
     fi
 fi
