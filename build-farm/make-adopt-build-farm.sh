@@ -128,6 +128,11 @@ echo "TAG: ${TAG}"
 # shellcheck source=build-farm/set-platform-specific-configurations.sh
 source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
 
+if [ "x${FILENAME}" = "x" ] ; then
+    echo "FILENAME must be set in the environment"
+    exit 1
+fi
+
 echo "Filename will be: $FILENAME"
 
 export BUILD_ARGS="${BUILD_ARGS} --use-jep319-certs"
