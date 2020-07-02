@@ -38,8 +38,7 @@ class Config11 {
                         "hotspot"     : '--disable-ccache --enable-dtrace=auto',
                         "corretto"    : '--disable-ccache --enable-dtrace=auto',
                         "SapMachine"  : '--disable-ccache --enable-dtrace=auto'
-                ],
-                codebuild           : true
+                ]
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
