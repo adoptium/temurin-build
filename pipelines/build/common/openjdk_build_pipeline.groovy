@@ -3,6 +3,7 @@ import common.MetaData
 @Library('local-lib@master')
 import common.VersionInfo
 import groovy.json.*
+import java.nio.file.NoSuchFileException
 
 import java.util.regex.Matcher
 
@@ -46,6 +47,7 @@ class Build {
     final def env
     final def currentBuild
     VersionInfo versionInfo = null
+    String scmRef = ""
 
     Build(IndividualBuildConfig buildConfig, def context, def env, def currentBuild) {
         this.buildConfig = buildConfig
@@ -217,7 +219,7 @@ class Build {
 
                     context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
 
-                    writeMetadata(versionInfo)
+                    writeMetadata(versionInfo, false)
                     context.archiveArtifacts artifacts: "workspace/target/*"
                 }
             }
@@ -367,7 +369,7 @@ class Build {
                 if (buildConfig.TARGET_OS == "mac" || buildConfig.TARGET_OS == "windows") {
                     try {
                         context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
-                        writeMetadata(versionData)
+                        writeMetadata(versionData, false)
                         context.archiveArtifacts artifacts: "workspace/target/*"
                     } catch (e) {
                         context.println("Failed to build ${buildConfig.TARGET_OS} installer ${e}")
@@ -390,11 +392,45 @@ class Build {
                 .toList()
     }
 
-    MetaData formMetadata(VersionInfo version) {
-        return new MetaData(buildConfig.TARGET_OS, buildConfig.SCM_REF, version, buildConfig.JAVA_TO_BUILD, buildConfig.VARIANT, buildConfig.ARCHITECTURE)
+    MetaData formMetadata(VersionInfo version, Boolean initialWrite) {
+
+        if (initialWrite) {
+            context.println "FIRST METADATA WRITE OUT! Checking if we have a scm reference in the build config..."
+
+            String scmRefPath = "workspace/target/scmref.txt"
+            scmRef = buildConfig.SCM_REF
+
+            if (scmRef != "") {
+                // Use the buildConfig scmref if it is set
+                context.println "SCM_REF has been set (${buildConfig.SCM_REF})! Using it to build the inital metadata over ${scmRefPath}..."
+            } else {
+                // If we don't have a scmref set in config, check if we have a scmref from the build
+                context.println "SCM_REF is NOT set. Attempting to read ${scmRefPath}..."
+                try {
+                    scmRef = context.readFile(scmRefPath).trim()
+                    context.println "scmref.txt found: ${scmRef}"
+                } catch (NoSuchFileException e) {
+                    // In rare cases, we will fail to create the scmref.txt file
+                    context.println "WARNING: $scmRefPath was not found. Using build config SCM_REF instead (even if it's empty)..."
+                }
+
+            }
+
+        }
+
+        // We have to setup the scmRef variable for the first run due to formMetadata sometimes being initiated from a downstream job on a master node with no access to scmref.txt
+        return new MetaData(
+            buildConfig.TARGET_OS,
+            scmRef,
+            version,
+            buildConfig.JAVA_TO_BUILD,
+            buildConfig.VARIANT,
+            buildConfig.ARCHITECTURE
+        )
+
     }
 
-    def writeMetadata(VersionInfo version) {
+    def writeMetadata(VersionInfo version, Boolean initialWrite) {
         /*
         example data:
             {
@@ -415,14 +451,14 @@ class Build {
                     "opt": "202006220910",
                     "configure_arguments": <output of bash configure>
                 },
-                "scmRef": "",
+                "scmRef": "<output of git describe OR the value of buildConfig.SCM_REF>",
                 "version_data": "jdk15",
                 "binary_type": "jdk",
                 "sha256": "<shasum>"
             }
         */
 
-        MetaData data = formMetadata(version)
+        MetaData data = initialWrite ? formMetadata(version, true) : formMetadata(version, false)
 
         listArchives().each({ file ->
             def type = "jdk"
@@ -529,7 +565,7 @@ class Build {
 
                     versionInfo.configure_arguments = context.readFile("workspace/target/configure.txt")
                 }
-                writeMetadata(versionInfo)
+                writeMetadata(versionInfo, true)
                 context.archiveArtifacts artifacts: "workspace/target/*"
             } finally {
                 if (buildConfig.TARGET_OS == "aix") {

@@ -334,7 +334,7 @@ Alongside the built assets a metadata file will be created with info about the b
         "opt": "202006220910",
         "configure_arguments": <output of bash configure>
     },
-    "scmRef": "",
+    "scmRef": "<output of git describe OR the value of buildConfig.SCM_REF>",
     "version_data": "jdk15",
     "binary_type": "jdk",
     "sha256": "<shasum>"

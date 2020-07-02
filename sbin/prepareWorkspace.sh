@@ -176,6 +176,55 @@ checkoutRequiredCodeToBuild() {
     fi
   fi
 
+  # Get the latest tag to stick in the scmref metadata, using the build config tag if it exists
+  local scmrefPath="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}scmref.txt"
+
+  if [ $rc -eq 0 ]; then
+
+    if [ -z "${BUILD_CONFIG[TAG]}" ]; then
+      # If SCM_REF is not set
+      echo "INFO: Extracting latest tag for the scmref using git describe since no tag is set in the build config..."
+
+      local describeReturn=0
+      git describe || describeReturn=$?
+
+      if [ $describeReturn -eq 0 ]; then
+        # Tag will be something similar to jdk-11.0.8+8_adopt-160-g824f8474f5
+        # jdk-11.0.8+8_adopt = TAGNAME
+        # 160 = NUMBER OF COMMITS ON TOP OF THE ORIGINAL TAGGED OBJECT
+        # g824f8474f5 = THE SHORT HASH OF THE MOST RECENT COMMIT
+        echo "SUCCESS: TAG FOUND! Exporting to $scmrefPath..."
+        git describe > $scmrefPath
+
+      else
+        # No annotated tags can describe the latest commit
+        echo "WARNING: git describe FAILED. There is likely additional error output above (exit code was $describeReturn). Trying again using git describe --tags to match a lightweight (non-annotated) tag"
+        local describeReturn=0
+        git describe --tags || describeReturn=$?
+
+        if [ $describeReturn -eq 0 ]; then
+          # Will match commits that are not named
+          echo "SUCCESS: TAG FOUND USING --tags! Exporting to $scmrefPath..."
+          git describe --tags > $scmrefPath
+        else
+          # Use the shortend commit hash as a scmref if all else fails
+          echo "FINAL WARNING: git describe --tags FAILED. There is likely additional error output above (exit code was $describeReturn). Exporting the abbreviated commit hash using git describe --always as a failsafe to $scmrefPath"
+          git describe --always | tee "$scmrefPath"
+        fi
+
+      fi
+
+    else
+      # SCM_REF is set. Use it over the git describe output
+      echo "SUCCESS: BUILD_CONFIG[TAG] is set. Exporting to $scmrefPath..."
+      echo -n ${BUILD_CONFIG[TAG]} | tee "$scmrefPath"
+    fi
+
+  else
+    # Previous steps failed so don't bother trying to get the tags
+    echo "WARNING: Cannot get tag due to previous failures. $scmrefPath will NOT be created!"
+  fi
+
   # Restore command failure shell abort
   set -e
 
