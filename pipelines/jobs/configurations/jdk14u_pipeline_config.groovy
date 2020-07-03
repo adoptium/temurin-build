@@ -20,11 +20,9 @@ class Config14 {
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        openj9  : 'centos6'
-                ],
-                dockerImage         : [
-                        hotspot : 'adoptopenjdk/centos6_build_image'
+                dockerImage         : 'adoptopenjdk/centos6_build_image',
+                dockerFile: [
+                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
                 configureArgs       : [
@@ -36,7 +34,10 @@ class Config14 {
 
         x64LinuxXL    : [
                 os                   : 'linux',
-                additionalNodeLabels : 'centos6',
+                dockerImage          : 'adoptopenjdk/centos6_build_image',
+                dockerFile: [
+                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
+                ],
                 arch                 : 'x64',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
