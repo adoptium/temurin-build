@@ -53,7 +53,7 @@ class ContextStub {
 
     ContextStub image(String) {}
 
-    ContextStub build(String) {}
+    ContextStub build(String s, Closure) {}
 
     ContextStub pull() {}
 
