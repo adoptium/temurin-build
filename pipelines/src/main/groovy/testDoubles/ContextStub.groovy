@@ -53,6 +53,8 @@ class ContextStub {
 
     ContextStub image(String) {}
 
+    ContextStub build(String) {}
+
     ContextStub pull() {}
 
     String getResult() {}
