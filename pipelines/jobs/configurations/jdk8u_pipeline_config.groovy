@@ -23,12 +23,9 @@ class Config8 {
         x64Linux      : [
                 os                  : 'linux',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        openj9  : 'centos6'
-                ],
                 dockerImage         : 'adoptopenjdk/centos6_build_image',
                 dockerFile: [
-                        openj9  : '../dockerFiles/cuda.dockerfile'
+                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
                 configureArgs       : [
@@ -128,7 +125,10 @@ class Config8 {
 
         x64LinuxXL       : [
                 os                   : 'linux',
-                additionalNodeLabels : 'centos6',
+                dockerImage          : 'adoptopenjdk/centos6_build_image',
+                dockerFile: [
+                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
+                ],
                 arch                 : 'x64',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-jitserver',

@@ -576,6 +576,7 @@ class Build {
                                     cleanWorkspace = false
                                 }
                                 if (buildConfig.DOCKER_FILE) {
+                                    context.checkout context.scm
                                     context.sh(script: "cp ${buildConfig.DOCKER_FILE} Dockerfile")
                                     context.docker.build("build-image").inside {    
                                         buildScripts(cleanWorkspace, filename)
