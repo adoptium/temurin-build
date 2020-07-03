@@ -576,7 +576,7 @@ class Build {
                                     cleanWorkspace = false
                                 }
                                 if (buildConfig.DOCKER_FILE) {
-                                    // context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE}", "-f ${buildConfig.DOCKER_FILE}").inside {
+                                    context.sh(script: "mv $buildConfig.DOCKER_FILE $WORKSPACE/Dockerfile")
                                     context.docker.build("build-image").inside {    
                                         buildScripts(cleanWorkspace, filename)
                                     }
