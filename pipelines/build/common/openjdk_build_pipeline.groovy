@@ -575,9 +575,15 @@ class Build {
                                     }
                                     cleanWorkspace = false
                                 }
-                                context.docker.image(buildConfig.DOCKER_IMAGE).pull()
-                                context.docker.image(buildConfig.DOCKER_IMAGE).inside {
-                                    buildScripts(cleanWorkspace, filename)
+                                if (buildConfig.DOCKER_FILE) {
+                                    context.docker.build("build-image", buildConfig.DOCKER_FILE, "--build-arg image=${buildConfig.DOCKER_IMAGE}").inside {
+                                        buildScripts(cleanWorkspace, filename)
+                                    }
+                                } else {
+                                    context.docker.image(buildConfig.DOCKER_IMAGE).pull()
+                                    context.docker.image(buildConfig.DOCKER_IMAGE).inside {
+                                        buildScripts(cleanWorkspace, filename)
+                                    }
                                 }
                             }
 

@@ -26,8 +26,9 @@ class Config8 {
                 additionalNodeLabels: [
                         openj9  : 'centos6'
                 ],
-                dockerImage         : [
-                        hotspot : 'adoptopenjdk/centos6_build_image'
+                dockerImage         : 'adoptopenjdk/centos6_build_image',
+                dockerFile: [
+                        openj9  : '../dockerFiles/cuda.dockerfile'
                 ],
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
                 configureArgs       : [

@@ -23,9 +23,7 @@ class Config14 {
                 additionalNodeLabels: [
                         openj9  : 'centos6'
                 ],
-                dockerImage         : [
-                        hotspot : 'adoptopenjdk/centos6_build_image'
-                ],
+                dockerImage         : 'adoptopenjdk/centos6_build_image',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
                 configureArgs       : [
                         "openj9"      : '--disable-ccache --enable-dtrace=auto --enable-jitserver',

@@ -18,6 +18,7 @@ class IndividualBuildConfigTest {
                  NODE_LABEL                : "h",
                  CODEBUILD                 : false,
                  DOCKER_IMAGE              : "o",
+                 DOCKER_FILE               : "p",
                  CONFIGURE_ARGS            : "i",
                  OVERRIDE_FILE_NAME_VERSION: "j",
                  ADDITIONAL_FILE_NAME_TAG  : "k",
