@@ -578,7 +578,7 @@ class Build {
                                 if (buildConfig.DOCKER_FILE) {
                                     context.checkout context.scm
                                     context.sh(script: "cp ${buildConfig.DOCKER_FILE} Dockerfile")
-                                    context.docker.build("build-image").inside {    
+                                    context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE}").inside {    
                                         buildScripts(cleanWorkspace, filename)
                                     }
                                 } else {
