@@ -48,6 +48,8 @@ class Build {
     final def currentBuild
     VersionInfo versionInfo = null
     String scmRef = ""
+    String fullVersionOutput = ""
+    String configureArguments = ""
 
     Build(IndividualBuildConfig buildConfig, def context, def env, def currentBuild) {
         this.buildConfig = buildConfig
@@ -394,21 +396,24 @@ class Build {
 
     MetaData formMetadata(VersionInfo version, Boolean initialWrite) {
 
+        // We have to setup some attributes for the first run since formMetadata is sometimes initiated from downstream job on master node with no access to the required files
         if (initialWrite) {
-            context.println "FIRST METADATA WRITE OUT! Checking if we have a scm reference in the build config..."
+
+            // Get scmRef
+            context.println "INFO: FIRST METADATA WRITE OUT! Checking if we have a scm reference in the build config..."
 
             String scmRefPath = "workspace/target/scmref.txt"
             scmRef = buildConfig.SCM_REF
 
             if (scmRef != "") {
                 // Use the buildConfig scmref if it is set
-                context.println "SCM_REF has been set (${buildConfig.SCM_REF})! Using it to build the inital metadata over ${scmRefPath}..."
+                context.println "SUCCESS: SCM_REF has been set (${buildConfig.SCM_REF})! Using it to build the inital metadata over ${scmRefPath}..."
             } else {
                 // If we don't have a scmref set in config, check if we have a scmref from the build
-                context.println "SCM_REF is NOT set. Attempting to read ${scmRefPath}..."
+                context.println "INFO: SCM_REF is NOT set. Attempting to read ${scmRefPath}..."
                 try {
                     scmRef = context.readFile(scmRefPath).trim()
-                    context.println "scmref.txt found: ${scmRef}"
+                    context.println "SUCCESS: scmref.txt found: ${scmRef}"
                 } catch (NoSuchFileException e) {
                     // In rare cases, we will fail to create the scmref.txt file
                     context.println "WARNING: $scmRefPath was not found. Using build config SCM_REF instead (even if it's empty)..."
@@ -416,16 +421,40 @@ class Build {
 
             }
 
+            // Get full version output
+            String versionPath = "workspace/target/version.txt"
+            context.println "INFO: Attempting to read ${versionPath}..."
+
+            try {
+                fullVersionOutput = context.readFile(versionPath)
+                context.println "SUCCESS: version.txt found"
+            } catch (NoSuchFileException e) {
+                context.println "ERROR: ${versionPath} was not found. Exiting..."
+                throw new Exception()
+            }
+
+            // Get configure args
+            String configurePath = "workspace/target/configure.txt"
+            context.println "INFO: Attempting to read ${configurePath}..."
+
+            try {
+                configureArguments = context.readFile(configurePath)
+                context.println "SUCCESS: configure.txt found"
+            } catch (NoSuchFileException e) {
+                context.println "ERROR: ${configurePath} was not found. Exiting..."
+                throw new Exception()
+            }
         }
 
-        // We have to setup the scmRef variable for the first run due to formMetadata sometimes being initiated from a downstream job on a master node with no access to scmref.txt
         return new MetaData(
             buildConfig.TARGET_OS,
             scmRef,
             version,
             buildConfig.JAVA_TO_BUILD,
             buildConfig.VARIANT,
-            buildConfig.ARCHITECTURE
+            buildConfig.ARCHITECTURE,
+            fullVersionOutput,
+            configureArguments
         )
 
     }
@@ -437,22 +466,24 @@ class Build {
                 "WARNING": "THIS METADATA FILE IS STILL IN ALPHA DO NOT USE ME",
                 "os": "mac",
                 "arch": "x64",
-                "variant": "hotspot",
+                "variant": "openj9",
                 "version": {
                     "minor": 0,
                     "security": 0,
                     "pre": null,
                     "adopt_build_number": 0,
                     "major": 15,
-                    "version": "15+28-202006220910",
-                    "semver": "15.0.0+28.0.202006220910",
-                    "build": 28,
-                    "opt": "202006220910"
+                    "version": "15+29-202007070926",
+                    "semver": "15.0.0+29.0.202007070926",
+                    "build": 29,
+                    "opt": "202007070926"
                 },
-                "scmRef": "<output of git describe OR the value of buildConfig.SCM_REF>",
+                "scmRef": "<output of git describe OR buildConfig.SCM_REF>",
                 "version_data": "jdk15",
-                "binary_type": "jdk",
-                "sha256": "<shasum>"
+                "binary_type": "debugimage",
+                "sha256": "<shasum>",
+                "full_version_output": <output of java --version>,
+                "configure_arguments": <output of bash configure>
             }
         */
 
