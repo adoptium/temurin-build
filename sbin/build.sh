@@ -447,8 +447,10 @@ buildSharedLibs() {
 
     local gradleJavaHome=$(getGradleHome)
 
-    if [ -z "${GRADLE_USER_HOME}" ]; then
+    if [ -z "${BUILD_CONFIG[GRADLE_USER_HOME]}" ]; then
       export GRADLE_USER_HOME="${BUILD_CONFIG[WORKSPACE_DIR]}/.gradle"
+    else
+      export GRADLE_USER_HOME="${BUILD_CONFIG[GRADLE_USER_HOME]}"
     fi
 
     echo "Running gradle with $gradleJavaHome at ${GRADLE_USER_HOME}"
