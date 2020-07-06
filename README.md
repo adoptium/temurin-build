@@ -323,7 +323,6 @@ Alongside the built assets a metadata file will be created with info about the b
     "variant": "hotspot",
     "version": {
         "minor": 0,
-        "full_version_output": "<output of java --version>",
         "security": 0,
         "pre": null,
         "adopt_build_number": 0,
@@ -331,8 +330,7 @@ Alongside the built assets a metadata file will be created with info about the b
         "version": "15+28-202006220910",
         "semver": "15.0.0+28.0.202006220910",
         "build": 28,
-        "opt": "202006220910",
-        "configure_arguments": <output of bash configure>
+        "opt": "202006220910"
     },
     "scmRef": "<output of git describe OR the value of buildConfig.SCM_REF>",
     "version_data": "jdk15",

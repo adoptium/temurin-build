@@ -156,7 +156,7 @@ class Build {
             String versionOutput = matcher.group('version')
             context.println(versionOutput)
 
-            return new VersionInfo().parse(consoleOut, versionOutput, buildConfig.ADOPT_BUILD_NUMBER)
+            return new VersionInfo().parse(versionOutput, buildConfig.ADOPT_BUILD_NUMBER)
         }
         return null
     }
@@ -440,7 +440,6 @@ class Build {
                 "variant": "hotspot",
                 "version": {
                     "minor": 0,
-                    "full_version_output": "<output of java --version>",
                     "security": 0,
                     "pre": null,
                     "adopt_build_number": 0,
@@ -448,8 +447,7 @@ class Build {
                     "version": "15+28-202006220910",
                     "semver": "15.0.0+28.0.202006220910",
                     "build": 28,
-                    "opt": "202006220910",
-                    "configure_arguments": <output of bash configure>
+                    "opt": "202006220910"
                 },
                 "scmRef": "<output of git describe OR the value of buildConfig.SCM_REF>",
                 "version_data": "jdk15",
@@ -562,8 +560,6 @@ class Build {
                     String versionOut = context.readFile("workspace/target/version.txt")
 
                     versionInfo = parseVersionOutput(versionOut)
-
-                    versionInfo.configure_arguments = context.readFile("workspace/target/configure.txt")
                 }
                 writeMetadata(versionInfo, true)
                 context.archiveArtifacts artifacts: "workspace/target/*"
