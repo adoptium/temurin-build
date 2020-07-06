@@ -338,7 +338,7 @@ function configDefaults() {
   BUILD_CONFIG[JDK_PATH]=""
   BUILD_CONFIG[JRE_PATH]=""
 
-# The value defined for GRADLE_USER_HOME
+  # The default value defined for GRADLE_USER_HOME
   BUILD_CONFIG[GRADLE_USER_HOME]=""
 
   # The O/S architecture, e.g. x86_64 for a modern intel / Mac OS X
