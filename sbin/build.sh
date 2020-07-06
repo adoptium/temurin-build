@@ -460,10 +460,10 @@ buildSharedLibs() {
     local gradleJavaHome=$(getGradleJavaHome)
     local gradleUserHome=$(getGradleUserHome)
 
-    echo "Running gradle with $gradleJavaHome at ${gradleUserHome}"
+    echo "Running gradle with $gradleJavaHome at $gradleUserHome"
 
     gradlecount=1
-    while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME="${gradleUserHome}" bash ./gradlew --no-daemon clean shadowJar; do
+    while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME="$gradleUserHome" bash ./gradlew --no-daemon clean shadowJar; do
       echo "RETRYWARNING: Gradle failed on attempt $gradlecount"
       sleep 120 # Wait before retrying in case of network/server outage ...
       gradlecount=$(( gradlecount + 1 ))
