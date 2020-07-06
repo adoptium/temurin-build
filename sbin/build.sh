@@ -417,7 +417,7 @@ executeTemplatedFile() {
 
 }
 
-getGradleHome() {
+getGradleJavaHome() {
   local gradleJavaHome=""
 
   if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
@@ -442,16 +442,23 @@ getGradleHome() {
   echo $gradleJavaHome
 }
 
+getGradleUserHome() {
+  local gradleUserHome=""
+
+  if [ -z "${BUILD_CONFIG[GRADLE_USER_HOME]}" ]; then
+    gradleUserHome="${BUILD_CONFIG[WORKSPACE_DIR]}/.gradle"
+  else
+    gradleUserHome="${BUILD_CONFIG[GRADLE_USER_HOME]}"
+  fi
+
+  echo $gradleUserHome
+}
+
 buildSharedLibs() {
     cd "${LIB_DIR}"
 
-    local gradleJavaHome=$(getGradleHome)
-
-    if [ -z "${BUILD_CONFIG[GRADLE_USER_HOME]}" ]; then
-      export GRADLE_USER_HOME="${BUILD_CONFIG[WORKSPACE_DIR]}/.gradle"
-    else
-      export GRADLE_USER_HOME="${BUILD_CONFIG[GRADLE_USER_HOME]}"
-    fi
+    local gradleJavaHome=$(getGradleJavaHome)
+    export GRADLE_USER_HOME=$(getGradleUserHome)
 
     echo "Running gradle with $gradleJavaHome at ${GRADLE_USER_HOME}"
 
@@ -473,7 +480,7 @@ parseJavaVersionString() {
   local javaVersion=$(JAVA_HOME="$PRODUCT_HOME" "$PRODUCT_HOME"/bin/java -version 2>&1)
 
   cd "${LIB_DIR}"
-  local gradleJavaHome=$(getGradleHome)
+  local gradleJavaHome=$(getGradleJavaHome)
   local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f openjdk-semver $ADOPT_BUILD_NUMBER | tr -d '\n')
 
   echo $version
