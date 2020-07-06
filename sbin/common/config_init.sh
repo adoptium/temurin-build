@@ -56,7 +56,7 @@ FREETYPE
 FREETYPE_DIRECTORY
 FREETYPE_FONT_BUILD_TYPE_PARAM
 FREETYPE_FONT_VERSION
-GRADLE_USER_HOME
+GRADLE_USER_HOME_DIR
 KEEP_CONTAINER
 JDK_BOOT_DIR
 JDK_PATH
@@ -234,8 +234,8 @@ function parseConfigurationArguments() {
         "--freetype-version" )
         BUILD_CONFIG[FREETYPE_FONT_VERSION]="$1"; shift;;
 
-        "--gradle-user-home" )
-        BUILD_CONFIG[GRADLE_USER_HOME]="$1"; shift;;
+        "--gradle-user-home-dir" )
+        BUILD_CONFIG[GRADLE_USER_HOME_DIR]="$1"; shift;;
 
         "--skip-freetype" | "-F" )
         BUILD_CONFIG[FREETYPE]=false;;
@@ -339,7 +339,7 @@ function configDefaults() {
   BUILD_CONFIG[JRE_PATH]=""
 
   # The default value defined for GRADLE_USER_HOME
-  BUILD_CONFIG[GRADLE_USER_HOME]=""
+  BUILD_CONFIG[GRADLE_USER_HOME_DIR]=""
 
   # The O/S architecture, e.g. x86_64 for a modern intel / Mac OS X
   BUILD_CONFIG[OS_ARCHITECTURE]=${arch}

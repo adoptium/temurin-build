@@ -445,10 +445,10 @@ getGradleJavaHome() {
 getGradleUserHome() {
   local gradleUserHome=""
 
-  if [ -z "${BUILD_CONFIG[GRADLE_USER_HOME]}" ]; then
-    gradleUserHome="${BUILD_CONFIG[WORKSPACE_DIR]}/.gradle"
+  if [ -n "${BUILD_CONFIG[GRADLE_USER_HOME_DIR]}" ]; then
+    gradleUserHome="${BUILD_CONFIG[GRADLE_USER_HOME_DIR]}"
   else
-    gradleUserHome="${BUILD_CONFIG[GRADLE_USER_HOME]}"
+    gradleUserHome="${BUILD_CONFIG[WORKSPACE_DIR]}/.gradle"
   fi
 
   echo $gradleUserHome
