@@ -417,7 +417,7 @@ executeTemplatedFile() {
 
 }
 
-getGradleHome() {
+getGradleJavaHome() {
   local gradleJavaHome=""
 
   if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
@@ -442,16 +442,28 @@ getGradleHome() {
   echo $gradleJavaHome
 }
 
+getGradleUserHome() {
+  local gradleUserHome=""
+
+  if [ -n "${BUILD_CONFIG[GRADLE_USER_HOME_DIR]}" ]; then
+    gradleUserHome="${BUILD_CONFIG[GRADLE_USER_HOME_DIR]}"
+  else
+    gradleUserHome="${BUILD_CONFIG[WORKSPACE_DIR]}/.gradle"
+  fi
+
+  echo $gradleUserHome
+}
+
 buildSharedLibs() {
     cd "${LIB_DIR}"
 
-    local gradleJavaHome=$(getGradleHome)
-    export GRADLE_USER_HOME="${BUILD_CONFIG[WORKSPACE_DIR]}/.gradle"
+    local gradleJavaHome=$(getGradleJavaHome)
+    local gradleUserHome=$(getGradleUserHome)
 
-    echo "Running gradle with $gradleJavaHome at ${GRADLE_USER_HOME}"
+    echo "Running gradle with $gradleJavaHome at $gradleUserHome"
 
     gradlecount=1
-    while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME="${GRADLE_USER_HOME}" bash ./gradlew --no-daemon clean shadowJar; do
+    while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME="$gradleUserHome" bash ./gradlew --no-daemon clean shadowJar; do
       echo "RETRYWARNING: Gradle failed on attempt $gradlecount"
       sleep 120 # Wait before retrying in case of network/server outage ...
       gradlecount=$(( gradlecount + 1 ))
@@ -468,7 +480,7 @@ parseJavaVersionString() {
   local javaVersion=$(JAVA_HOME="$PRODUCT_HOME" "$PRODUCT_HOME"/bin/java -version 2>&1)
 
   cd "${LIB_DIR}"
-  local gradleJavaHome=$(getGradleHome)
+  local gradleJavaHome=$(getGradleJavaHome)
   local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f openjdk-semver $ADOPT_BUILD_NUMBER | tr -d '\n')
 
   echo $version
