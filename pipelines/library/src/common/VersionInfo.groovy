@@ -7,8 +7,6 @@ class VersionInfo {
     Integer minor // 0
     Integer security // 181
     Integer build // 8
-    String full_version_output
-    String configure_arguments
     String opt
     String version
     String pre
@@ -18,13 +16,7 @@ class VersionInfo {
     VersionInfo() {
     }
 
-    VersionInfo parse(String FULL_VERSION, String PUBLISH_NAME, String ADOPT_BUILD_NUMBER) {
-
-        if (FULL_VERSION != null && FULL_VERSION != "") {
-            full_version_output = FULL_VERSION
-        } else {
-            full_version_output = null
-        }
+    VersionInfo parse(String PUBLISH_NAME, String ADOPT_BUILD_NUMBER) {
 
         if (PUBLISH_NAME != null) {
             if (!matchPre223(PUBLISH_NAME)) {

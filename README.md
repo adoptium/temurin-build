@@ -320,24 +320,24 @@ Alongside the built assets a metadata file will be created with info about the b
     "WARNING": "THIS METADATA FILE IS STILL IN ALPHA DO NOT USE ME",
     "os": "mac",
     "arch": "x64",
-    "variant": "hotspot",
+    "variant": "openj9",
     "version": {
         "minor": 0,
-        "full_version_output": "<output of java --version>",
         "security": 0,
         "pre": null,
         "adopt_build_number": 0,
         "major": 15,
-        "version": "15+28-202006220910",
-        "semver": "15.0.0+28.0.202006220910",
-        "build": 28,
-        "opt": "202006220910",
-        "configure_arguments": <output of bash configure>
+        "version": "15+29-202007070926",
+        "semver": "15.0.0+29.0.202007070926",
+        "build": 29,
+        "opt": "202007070926"
     },
-    "scmRef": "<output of git describe OR the value of buildConfig.SCM_REF>",
+    "scmRef": "<output of git describe OR buildConfig.SCM_REF>",
     "version_data": "jdk15",
-    "binary_type": "jdk",
-    "sha256": "<shasum>"
+    "binary_type": "debugimage",
+    "sha256": "<shasum>",
+    "full_version_output": <output of java --version>,
+    "configure_arguments": <output of bash configure>
 }
 ```
 
