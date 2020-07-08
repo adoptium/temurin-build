@@ -179,7 +179,6 @@ JDK_FIX_VERSION=0
         - Create a New Item in the folder linked above that copies the `pipeline_jobs_generator_jdk` job. Call it `pipeline_jobs_generator_jdk<new-version-number>`. 
         - Change the `Script Path` setting of the new job to `pipelines/build/regeneration/jdk<new-version-number>_regeneration_pipeline.groovy`. Don't worry if this currently doesn't exist in this repo, you'll add it in step 3.
         - Update the `Script Path` setting of the JDK-HEAD job (`pipeline_jobs_generator_jdk`) to whatever the new JDK HEAD is. I.e. if the new head is JDK16, change `Script Path` to `pipelines/build/regeneration/jdk16_regeneration_pipeline.groovy`
-        - At some point the JDK N version will get to be maintained in an update repository. At that point a switch-over of job names from `jdkXX` to `jdkXXu` has to happen.
     * If you are REMOVING a JDK version: 
       - Delete the job `pipeline_jobs_generator_jdk<version-you-want-to-delete>`
   2. Create the new build configurations for the release - https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations: 
@@ -188,6 +187,23 @@ JDK_FIX_VERSION=0
   3. Create a new Regeneration Pipeline for the downstream jobs - https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build/regeneration: Create a new `jdk<new-version-number>_regeneration_pipeline.groovy`. Ensure that the `javaVersion`, `targetConfigurations` and `buildConfigurations` variables are what they should be for the new version. Don't remove any old version configs. While you're here, make sure all of the current releases have a `regeneration_pipeline.groovy` file (including head). If they don't, create one using the same technique as above.
   4. Build the `pipeline_jobs_generator` that you just made. Ensure the equivalant `openjdkxx_pipeline` to the generator exists or this will fail. If the job fails or is unstable, search the console log for `WARNING` or `ERROR` messages for why. Once it has completed successfully, the [pipeline](https://ci.adoptopenjdk.net/job/build-scripts/) is ready to go!
    
+### Update Repository
+At some point in a java version's lifecycle, the JDK version will be maintained in an update repository. The first notification of this will be via mail list in one of two places:
+- [jdk-dev](https://mail.openjdk.java.net/mailman/listinfo/jdk-dev)
+- [jdk-updates-dev](https://mail.openjdk.java.net/mailman/listinfo/jdk-updates-dev)
+When this occurs, usually a TSC member will create the `jdk<version>u` update repo ([example of the JDK11u one](https://github.com/AdoptOpenJDK/openjdk-jdk11u)) via our Skara mirroring jobs that pull in the commit and tag info from the Mercurial repository. To find out more about Skara and our other mirroring jobs, see https://github.com/AdoptOpenJDK/openjdk-build/tree/master/git-hg.
+
+When the repo has been created, a few changes to the codebase will be necessary where the code references a jdk version but not it's new update version. I.e. `jdk11` became `jdk11u` when it was moved to an update repository.
+
+*If a product is to be moved to an update repo, follow these steps in chronological order to ensure our builds continue to function:*
+1. Update the [configurations](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations)
+  - Rename the nightly build targets file (it will be named `jdkxx.groovy`, [example here](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/jobs/configurations/jdk15.groovy)) to be `jdkxxu.groovy`. Do the same for the pipeline config file (named `jdkxx_pipeline_config.groovy`, [example here](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/jobs/configurations/jdk15_pipeline_config.groovy)).
+2. Update the `javaToBuild` from `jdkxx` to `jdkxxu` inside the [pipeline job](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build) that is being shifted to an update repository.
+3. Update the `JDKXX_VERSION` from `jdkxx` to `jdkxxu` inside the [build script constants](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/sbin/common/constants.sh) that is being shifted to an update repository.
+4. Update the jenkins jobs
+  - Rename the [job regenerator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/) that's version is being moved to an update repository from `pipeline_jobs_generator_jdkxx` to `pipeline_jobs_generator_jdkxxu`
+5. Finally, update the documentation to account for the changes you have just done. You can do this pretty easily by searching the repo for all occurrences of `jdkxx` using the following URL (replacing `xx` with the version number to change) and updating the locations where it would make sense to do so:
+  - https://github.com/AdoptOpenJDK/openjdk-build/search?q=jdkxx
 
 ## Summary on point releases
 

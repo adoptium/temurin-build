@@ -1,3 +1,4 @@
+import java.nio.file.NoSuchFileException
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -12,16 +13,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-String javaVersion = "jdk8u"
+String javaVersion = "jdk8"
 
 node ("master") {
   try {
     def scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
 
-    def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
+    // Load buildConfigurations from config file. This is what the nightlies & releases use to setup their downstream jobs
+    def buildConfigurations = null
+    def buildConfigPath = "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
+    try {
+      buildConfigurations = load buildConfigPath
+    } catch (NoSuchFileException e) {
+      javaVersion = javaVersion + "u"
+      println "[INFO] ${buildConfigPath} does not exist, chances are we want a ${javaVersion} repo.\n[INFO] Trying ${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy..."
 
-    println "[INFO] Found buildConfigurations:\n$buildConfigurations"
+      buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
+    }
+
+    if (buildConfigurations != null) {
+      println "[INFO] Found buildConfigurations:\n$buildConfigurations"
+    }
+    else {
+      throw new Exception("[ERROR] Could not find buildConfigurations for ${javaVersion}")
+    }
 
     // Load targetConfigurations from config file. This is what is being run in the nightlies
     load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}.groovy"
