@@ -4,7 +4,6 @@
 steps:
   # using the AdoptOpenJDK build scripts to build the OpenJDK binaries.
   - bash: |
-      PATH="/usr/bin:$PATH"
       CONFIGURE_ARGS=
       BUILD_ARGS=
       if [ "$(JAVA_TO_BUILD)" == "jdk" ]
@@ -33,6 +32,7 @@ steps:
       then
           CONFIGURE_ARGS="--with-target-bits=32 --target=x86 ${CONFIGURE_ARGS}"
       fi
+
       ./makejdk-any-platform.sh \
         ${EXTRA_MAKEJDK_ANY_PLATFORM_OPTIONS} \
         --jdk-boot-dir "${JDK_BOOT_DIR}" \

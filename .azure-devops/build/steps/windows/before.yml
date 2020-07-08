@@ -17,7 +17,7 @@ steps:
       if not exist "${{ parameters.javaHomeDir }}" mkdir ${{ parameters.javaHomeDir }};
     displayName: "[Windows Before] create required directories"
 
-  # download cygwin installer, jdk8u, bootjdk, and visual studio 2013 installer
+  # download jdk8u, bootjdk
   - powershell: |
       $ProgressPreference = 'SilentlyContinue';
       Invoke-WebRequest -UseBasicParsing 'https://api.adoptopenjdk.net/v3/binary/latest/8/ga/windows/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk' -OutFile '${{ parameters.dependenciesDir }}\jdk8.zip';
@@ -38,8 +38,8 @@ steps:
     displayName: "[Windows Before] download and install Cygwin"
 
   # add cygwin bin to PATH
-  - bash: |
-      echo "##vso[task.setvariable variable=Path]$(Agent.BuildDirectory)\cygwin64\bin;%PATH%"
+  - script: |
+      echo ##vso[task.setvariable variable=Path]$(Agent.BuildDirectory)\cygwin64\bin;%PATH%
     displayName: "[Windows Before] add cygwin to PATH"
 
   # unzip downloaded JDK zip files to directories, bsdtar is installed by cygwin
