@@ -83,7 +83,7 @@ configuringBootJDKConfigureParameter()
 configuringMacOSCodesignParameter()
 {
   if [ ! -z "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
-    # This commmand needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
+    # This command needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
     addConfigureArg "--with-macosx-codesign-identity=" "\"${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}\""
   fi
 }
@@ -184,8 +184,16 @@ configuringVersionStringParameter()
       addConfigureArg "--with-user-release-suffix=" "${dateSuffix}"
     fi
 
-    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ ${BUILD_CONFIG[ADOPT_PATCHES]} == true ]; then
-      addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
+
+      # No JFR support in AIX or zero builds (s390 or armv7l)
+      if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "s390x" ] && [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "aix" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "armv7l" ]; then
+        addConfigureArg "--enable-jfr" ""
+      fi
+
+      if [ ${BUILD_CONFIG[ADOPT_PATCHES]} == true ]; then
+        addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
+      fi
     fi
 
     # Set the update version (e.g. 131), this gets passed in from the calling script
@@ -391,7 +399,9 @@ executeTemplatedFile() {
   stepIntoTheWorkingDirectory
 
   echo "Currently at '${PWD}'"
-  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
+
+  # Execute the build passing the workspace dir and target dir as params for configure.txt
+  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh" ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]}
   exitCode=$?
 
   if [ "${exitCode}" -eq 1 ]; then
@@ -407,7 +417,7 @@ executeTemplatedFile() {
 
 }
 
-getGradleHome() {
+getGradleJavaHome() {
   local gradleJavaHome=""
 
   if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
@@ -432,13 +442,33 @@ getGradleHome() {
   echo $gradleJavaHome
 }
 
+getGradleUserHome() {
+  local gradleUserHome=""
+
+  if [ -n "${BUILD_CONFIG[GRADLE_USER_HOME_DIR]}" ]; then
+    gradleUserHome="${BUILD_CONFIG[GRADLE_USER_HOME_DIR]}"
+  else
+    gradleUserHome="${BUILD_CONFIG[WORKSPACE_DIR]}/.gradle"
+  fi
+
+  echo $gradleUserHome
+}
+
 buildSharedLibs() {
     cd "${LIB_DIR}"
 
-    local gradleJavaHome=$(getGradleHome)
-    echo "Running gradle with $gradleJavaHome"
+    local gradleJavaHome=$(getGradleJavaHome)
+    local gradleUserHome=$(getGradleUserHome)
 
-    JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME=./gradle-cache bash ./gradlew --no-daemon clean uberjar
+    echo "Running gradle with $gradleJavaHome at $gradleUserHome"
+
+    gradlecount=1
+    while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME="$gradleUserHome" bash ./gradlew --no-daemon clean shadowJar; do
+      echo "RETRYWARNING: Gradle failed on attempt $gradlecount"
+      sleep 120 # Wait before retrying in case of network/server outage ...
+      gradlecount=$(( gradlecount + 1 ))
+      [ $gradlecount -gt 3 ] && exit 1
+    done
 
     # Test that the parser can execute as fail fast rather than waiting till after the build to find out
     "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
@@ -450,7 +480,7 @@ parseJavaVersionString() {
   local javaVersion=$(JAVA_HOME="$PRODUCT_HOME" "$PRODUCT_HOME"/bin/java -version 2>&1)
 
   cd "${LIB_DIR}"
-  local gradleJavaHome=$(getGradleHome)
+  local gradleJavaHome=$(getGradleJavaHome)
   local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f openjdk-semver $ADOPT_BUILD_NUMBER | tr -d '\n')
 
   echo $version
@@ -473,17 +503,28 @@ printJavaVersionString()
   esac
   if [[ -d "$PRODUCT_HOME" ]]; then
      echo "'$PRODUCT_HOME' found"
-     if ! "$PRODUCT_HOME"/bin/java -version; then
+     if [ ! -r "$PRODUCT_HOME/bin/java" ]; then
        echo "===$PRODUCT_HOME===="
        ls -alh "$PRODUCT_HOME"
 
        echo "===$PRODUCT_HOME/bin/===="
        ls -alh "$PRODUCT_HOME/bin/"
 
-       echo " Error executing 'java' does not exist in '$PRODUCT_HOME'."
+       echo "Error 'java' does not exist in '$PRODUCT_HOME'."
        exit -1
+     elif [ "${ARCHITECTURE}" == "riscv64" ]; then
+       # riscv is cross compiled, so we cannot run it on the build system
+       # This is a temporary plausible solution in the absence of another fix
+       cat << EOT > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/version.txt"
+openjdk version "11.0.0-internal" 2020-05-22
+OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.0-internal+0-adhoc.jenkins.openj9-openjdk-jdk11)
+Eclipse OpenJ9 VM AdoptOpenJDK (build master-000000000, JRE 11 Linux riscv-64-Bit Compressed References 20200505_46 (JIT disabled, AOT disabled)
+OpenJ9   - 000000000
+OMR      - 000000000
+JCL      - 000000000 based on jdk-11.0.0+0)
+EOT
      else
-       # repeat version string around easy to find output
+       # print version string around easy to find output
        # do not modify these strings as jenkins looks for them
        echo "=JAVA VERSION OUTPUT="
        "$PRODUCT_HOME"/bin/java -version 2>&1
@@ -725,11 +766,6 @@ createOpenJDKTarArchive()
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
-
-  COMPRESS=gzip
-
-  if which pigz >/dev/null 2>&1; then COMPRESS=pigz; fi
-  echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 

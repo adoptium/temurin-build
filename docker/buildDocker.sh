@@ -4,8 +4,8 @@ set -u
 jdkVersion=''
 bootDir=''
 buildVariant="hotspot"
-useEclipseDockerFiles=false
-useEclipseDockerSlavesFiles=false
+useEclipseOpenJ9DockerFiles=false
+cleanWorkspace=false
 
 #takes in all arguments to determine script options
 parseCommandLineArgs()
@@ -21,6 +21,8 @@ parseCommandLineArgs()
 			case "$opt" in
 				"--all" | "-a" )
 					jdkVersion="all";;
+				"--clean" | "-c" )
+					cleanWorkspace=true;;
 				"--version" | "-v" )
 					jdkVersion="$1"; shift;;
 				"--jdk-boot-dir" | "-J")
@@ -28,9 +30,7 @@ parseCommandLineArgs()
 				"--openj9" | "-j9")
 					buildVariant="openj9";;
 				"--use-eclipse-docker-files" | "-e" )
-					useEclipseDockerFiles=true; buildVariant="eclipse";;
-				"--use-eclipse-docker-slave-files" | "-es" )
-					useEclipseDockerSlavesFiles=true; buildVariant="eclipse_slave";;
+					useEclipseOpenJ9DockerFiles=true; buildVariant="eclipse";;
 				"--help" | "-h" )
 					usage; exit 0;;
 				*) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised."; usage; exit 1;;
@@ -45,10 +45,10 @@ usage()
 	echo
 	echo "Usage: ./buildDocker.sh	--all|-a 				Build all support JDK versions"
 	echo "			--version|-v 				Build the specified JDK version"
+	echo "			--clean | -c				Clean the old workspace"
 	echo "			--jdk-boot-dir|-J			Specify the boot JDK directory"
 	echo "			--openj9|-j9				Builds using OpenJ9 instead of Hotspot"
 	echo "			--use-eclipse-docker-files|-e		Builds the specified jdk using the Eclipse Openj9 dockerfiles"
-	echo "			--use-eclipse-docker-slave-files|-es 	Builds the specified jdk using the Eclipse ../jenkins/docker-slaves dockerfiles"
 	echo
 }
 
@@ -99,51 +99,46 @@ checkArgs()
         	echo "WORKSPACE not found, setting it as environment variable 'HOME'"
         	WORKSPACE=$HOME
 	fi
-	if [[ "$useEclipseDockerFiles" == true && "$useEclipseDockerSlavesFiles" == true ]]; then
-		echo "Unable to use both kinds of dockerfiles at once, Select a single option."
-		exit 1
-        fi
-}
-
-useEclipseDockerFiles()
-{
-	cd $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant && mkdir -p EclipseDockerfiles
-	cd EclipseDockerfiles
-	for jdk in $jdkVersion
-	do
-		# ${jdk%?} will remove the 'u' from 'jdk__u' when needed.
-		curl -o Dockerfile.$jdk https://raw.githubusercontent.com/eclipse/openj9/master/buildenv/docker/${jdk%?}/x86_64/ubuntu16/Dockerfile;
-		sharedEclipseDockerCommands $jdk
-	done
-}
-
-useEclipseDockerSlavesFiles()
-{
-	cd $WORKSPACE/DockerBuildFolder/
-	git clone https://github.com/eclipse/openj9 $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant 
-	cd $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant/buildenv/jenkins/docker-slaves/x86/centos6.9
-	if [ -f "known_hosts" ]; then 
-		rm known_hosts
+	if [ "$cleanWorkspace" == true ]; then
+		echo "Cleaning workspace"
+		rm -rf $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant
 	fi
+}
+
+useEclipseOpenJ9DockerFiles()
+{
+	mkdir -p $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant/EclipseDockerfiles
+	cd $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant/EclipseDockerfiles
+	wget https://raw.githubusercontent.com/eclipse/openj9/master/buildenv/docker/mkdocker.sh
+	chmod +x mkdocker.sh
+	# Generate an Ubuntu1804 Dockerfile using mkdocker.sh
+	$WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant/EclipseDockerfiles/mkdocker.sh --dist=ubuntu --version=18 --print >> $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant/EclipseDockerfiles/Dockerfile
+	
+	# This Dockerfile requires an ssh key, authorized_key and known_hosts file to build
+	ssh-keygen -q -f id_rsa -t rsa -N ''
+	cat id_rsa.pub >> authorized_keys
 	ssh-keyscan github.com >> $PWD/known_hosts
-	cp $HOME/.ssh/id_rsa.pub $PWD
-	mv id_rsa.pub authorized_keys
+
+	# ${jdk%?} will remove the 'u' from 'jdkXXu'.
 	for jdk in $jdkVersion
 	do
-		cp Dockerfile $PWD/Dockerfile.$jdk
-		sharedEclipseDockerCommands $jdk
+		if [ ${jdk} != "jdk" ]; then
+			jdk=${jdk%?}
+		fi
+		eclipseDockerCommands ${jdk}
 	done
 }
 
-sharedEclipseDockerCommands()
+eclipseDockerCommands()
 {
 	local jdk=$1
-	docker build -t $jdk -f Dockerfile.$jdk .
-	docker run -it -u root -d --name=${jdk}-Eclipse $jdk
-	docker exec -u root -i ${jdk}-Eclipse sh -c "git clone https://github.com/ibmruntimes/openj9-openjdk-${jdk%?}"
-	docker exec -u root -i ${jdk}-Eclipse sh -c "cd openj9-openjdk-${jdk%?} && bash ./get_source.sh && bash ./configure --with-freemarker-jar=/root/freemarker.jar && make all"
-	docker stop ${jdk}-Eclipse
-	docker rm ${jdk}-Eclipse
+	docker build -t ${jdk}-${buildVariant}-dfc -f Dockerfile .
+	docker run -it -u root -d --name=${jdk}-${buildVariant} ${jdk}-${buildVariant}-dfc
+	docker exec -u root -i ${jdk}-${buildVariant} sh -c "git clone https://github.com/ibmruntimes/openj9-openjdk-${jdk}"
+	docker exec -u root -i ${jdk}-${buildVariant} sh -c "cd openj9-openjdk-${jdk} && bash ./get_source.sh && bash ./configure --with-freemarker-jar=/root/freemarker.jar && make all"
+	docker stop ${jdk}-${buildVariant}
+	docker rm ${jdk}-${buildVariant}
+	docker rmi ${jdk}-${buildVariant}-dfc
 }
 
 buildDocker()
@@ -174,10 +169,8 @@ setupGit()
 parseCommandLineArgs $@
 checkJDKVersion
 mkdir -p $WORKSPACE/DockerBuildFolder/$jdkVersion-$buildVariant
-if [[ "$useEclipseDockerFiles" == "true" ]]; then
-	useEclipseDockerFiles
-elif [[ "$useEclipseDockerSlavesFiles" == "true" ]]; then
-	useEclipseDockerSlavesFiles
+if [[ "$useEclipseOpenJ9DockerFiles" == "true" ]]; then
+	useEclipseOpenJ9DockerFiles
 else
 	setupGit
 	buildDocker

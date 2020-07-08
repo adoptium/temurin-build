@@ -23,7 +23,6 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 # sbin/common.sh but we didn't want to refactor all of this on release day.
 function isHotSpot() {
   [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ] ||
-  [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] ||
   [ "${VARIANT}" == "${BUILD_VARIANT_SAP}" ] ||
   [ "${VARIANT}" == "${BUILD_VARIANT_CORRETTO}" ]
 }
@@ -77,7 +76,7 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
         mkdir -p "$bootDir"
         echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
         releaseType="ga"
-        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/mac/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/mac/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptopenjdk"
         apiURL=$(eval echo ${apiUrlTemplate})
         # make-adopt-build-farm.sh has 'set -e'. We need to disable that
         # for the fallback mechanism, as downloading of the GA binary might
@@ -99,6 +98,12 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
       fi
     fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+    "$JDK_BOOT_DIR/bin/java" -version
+    executedJavaVersion=$?
+    if [ $executedJavaVersion -ne 0 ]; then
+        echo "Failed to obtain or find a valid boot jdk"
+        exit 1
+    fi
     "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 

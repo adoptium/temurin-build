@@ -42,7 +42,7 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
           "x86-32") downloadArch="x32";;
           *) downloadArch="$ARCHITECTURE";;
         esac
-        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/hotspot/normal/adoptopenjdk"
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/\${VARIANT}/normal/adoptopenjdk"
         apiURL=$(eval echo ${apiUrlTemplate})
         # make-adopt-build-farm.sh has 'set -e'. We need to disable that
         # for the fallback mechanism, as downloading of the GA binary might
@@ -66,6 +66,12 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
       fi
     fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+    "$JDK_BOOT_DIR/bin/java" -version
+    executedJavaVersion=$?
+    if [ $executedJavaVersion -ne 0 ]; then
+        echo "Failed to obtain or find a valid boot jdk"
+        exit 1
+    fi
     "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 

@@ -23,10 +23,12 @@ class Config8 {
         x64Linux      : [
                 os                  : 'linux',
                 arch                : 'x64',
-                additionalNodeLabels: 'centos6',
+                dockerImage         : 'adoptopenjdk/centos6_build_image',
+                dockerFile: [
+                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
+                ],
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
                 configureArgs       : [
-                        "hotspot-jfr" : '--enable-jfr',
                         "openj9"      : '--enable-jitserver'
                 ]
         ],
@@ -69,7 +71,10 @@ class Config8 {
         ppc64Aix      : [
                 os  : 'aix',
                 arch: 'ppc64',
-                additionalNodeLabels: 'xlc13',
+                additionalNodeLabels: [
+                        hotspot: 'xlc13&&aix710',
+                        openj9:  'xlc13&&aix715'
+                ],
                 test: [
                         nightly: ['sanity.openjdk'],
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
@@ -120,7 +125,10 @@ class Config8 {
 
         x64LinuxXL       : [
                 os                   : 'linux',
-                additionalNodeLabels : 'centos6',
+                dockerImage          : 'adoptopenjdk/centos6_build_image',
+                dockerFile: [
+                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
+                ],
                 arch                 : 'x64',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-jitserver',

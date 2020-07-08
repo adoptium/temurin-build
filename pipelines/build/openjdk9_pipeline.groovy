@@ -18,7 +18,7 @@ node ("master") {
     def scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
     Closure configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
-    def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/jdk9_pipeline_config.groovy"
+    def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaToBuild}_pipeline_config.groovy"
 
     configureBuild(
             javaToBuild,

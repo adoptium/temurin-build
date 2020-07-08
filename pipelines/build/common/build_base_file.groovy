@@ -1,6 +1,6 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
-import groovy.json.JsonSlurper
+import groovy.json.*
 
 import java.util.regex.Matcher
 
@@ -58,6 +58,10 @@ class Builder implements Serializable {
 
         def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
+        def dockerImage = getDockerImage(platformConfig, variant)
+
+        def dockerFile = getDockerFile(platformConfig, variant)
+
         def buildArgs = getBuildArgs(platformConfig, variant)
 
         if (additionalBuildArgs) {
@@ -75,6 +79,9 @@ class Builder implements Serializable {
                 SCM_REF: scmReference,
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+                CODEBUILD: platformConfig.codebuild as Boolean,
+                DOCKER_IMAGE: dockerImage,
+                DOCKER_FILE: dockerFile,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
                 OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
@@ -117,6 +124,30 @@ class Builder implements Serializable {
             }
         }
         return []
+    }
+
+    def getDockerImage(Map<String, ?> configuration, String variant) {
+        def dockerImageValue = ""
+        if (configuration.containsKey("dockerImage")) {
+            if (isMap(configuration.dockerImage)) {
+                dockerImageValue = (configuration.dockerImage as Map<String, ?>).get(variant)
+            } else {
+                dockerImageValue = configuration.dockerImage
+            }
+        }
+        return dockerImageValue
+    }
+
+    def getDockerFile(Map<String, ?> configuration, String variant) {
+        def dockerFileValue = ""
+        if (configuration.containsKey("dockerFile")) {
+            if (isMap(configuration.dockerFile)) {
+                dockerFileValue = (configuration.dockerFile as Map<String, ?>).get(variant)
+            } else {
+                dockerFileValue = configuration.dockerFile
+            }
+        }
+        return dockerFileValue
     }
 
     /**
@@ -208,8 +239,14 @@ class Builder implements Serializable {
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
         } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
-            // This needs to get updated when JDK HEAD version updates
-            return Integer.valueOf("15")
+            // Query the Adopt api to get the "tip_version"
+            def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+            context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
+
+            def response = JobHelper.getAvailableReleases(context)
+            int headVersion = (int) response.getAt("tip_version")
+            context.println "Found Java Version Number: ${headVersion}"
+            return headVersion
         } else {
             context.error("Failed to read java version '${javaToBuild}'")
             throw new Exception()

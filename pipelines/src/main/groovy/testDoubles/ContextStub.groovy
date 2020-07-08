@@ -13,6 +13,10 @@ class ContextStub {
         Map<String, ?> targetConfigurations;
     }
 
+    class CustomScript {
+        void regenerate() {}
+    }
+
     String scm
 
     ContextStub string(Map s) {}
@@ -43,6 +47,16 @@ class ContextStub {
 
     ContextStub library(Map) {}
 
+    ContextStub docker
+
+    ContextStub inside(Closure c) {}
+
+    ContextStub image(String) {}
+
+    ContextStub build(String s, Closure) {}
+
+    ContextStub pull() {}
+
     String getResult() {}
 
     Integer getNumber() {}
@@ -61,11 +75,19 @@ class ContextStub {
 
     String writeFile(Map s) {}
 
-    Configuration load(String s) {}
+    Closure<CustomScript> load(String s) {}
 
     String readFile(String s) {}
 
     String ws(String s, Closure) {}
 
     String getAbsoluteUrl() {}
+
+    String WORKSPACE
+
+    ContextStub timestamps(Closure ignore) {}
+
+    ContextStub timeout(Map<String, ?> ignore, Closure<? extends Object> ignore2) {}
+
+    String overrideScmref() {}
 }

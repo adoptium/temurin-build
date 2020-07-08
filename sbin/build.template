@@ -31,7 +31,7 @@ if [[ ! -z "$alreadyConfigured" ]] ; then
 else
   #Templated var that, gets replaced by build.sh
   # shellcheck disable=SC1073,SC1054,SC1083
-  {configureArg}
+  {configureArg} | tee "$1/$2/configure.txt"
 
   exitCode=$?
   if [ "${exitCode}" -ne 0 ]; then

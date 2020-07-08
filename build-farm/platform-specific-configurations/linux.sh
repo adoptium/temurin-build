@@ -97,7 +97,7 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
         mkdir -p "$bootDir"
         echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
         releaseType="ga"
-        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptopenjdk"
         apiURL=$(eval echo ${apiUrlTemplate})
         # make-adopt-build-farm.sh has 'set -e'. We need to disable that
         # for the fallback mechanism, as downloading of the GA binary might
@@ -119,6 +119,12 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
       fi
     fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+    "$JDK_BOOT_DIR/bin/java" -version
+    executedJavaVersion=$?
+    if [ $executedJavaVersion -ne 0 ]; then
+        echo "Failed to obtain or find a valid boot jdk"
+        exit 1
+    fi
     "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
@@ -141,10 +147,21 @@ then
   export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u"
 fi
 
-if [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+if [ "${ARCHITECTURE}" == "riscv64" ]
 then
-  export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-jdk8u-jfr-incubator"
-  export BOOT_JDK_VERSION="8"
-  export BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
-  export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+	echo RISCV cross-compilation ... Downloading latest nightly OpenJ9/x64 as build JDK
+	export BUILDJDK=$WORKSPACE/buildjdk
+	rm -rf "$BUILDJDK"
+	mkdir "$BUILDJDK"
+	wget -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/x64/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
+	"$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g'
+	export RISCV64=/opt/riscv_toolchain_linux
+	export LD_LIBRARY_PATH=$RISCV64/lib64
+	export PATH="$RISCV64/bin:$PATH"
+	# riscv has to use a cross compiler
+	export CC=$RISCV64/bin/riscv64-unknown-linux-gnu-gcc
+	export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
+	CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK_BOOT_DIR --with-build-jdk=$BUILDJDK"
+	BUILD_ARGS="${BUILD_ARGS} -F"
 fi
+

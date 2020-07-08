@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-String javaVersion = "jdk10"
+String javaVersion = "jdk10u"
 
 node ("master") {
   try {
@@ -23,16 +23,24 @@ node ("master") {
 
     println "[INFO] Found buildConfigurations:\n$buildConfigurations"
 
+    // Load targetConfigurations from config file. This is what is being run in the nightlies
+    load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}.groovy"
+
+    println "[INFO] Found targetConfigurations:\n$targetConfigurations"
+
     Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
 
     println "[INFO] Running regeneration script..."
     regenerationScript(
-      javaVersion,
-      buildConfigurations,
-      scmVars,
-      currentBuild,
-      this,
-      env
+            javaVersion,
+            buildConfigurations,
+            targetConfigurations,
+            currentBuild,
+            this,
+            null,
+            null,
+            null,
+            null
     ).regenerate()
       
     println "[SUCCESS] All done!"

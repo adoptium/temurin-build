@@ -1,4 +1,4 @@
-class Config15 {
+class Config16 {
   final Map<String, Map<String, ?>> buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
@@ -82,15 +82,6 @@ class Config15 {
 
         ],
 
-        arm32Linux    : [
-                os                  : 'linux',
-                arch                : 'arm',
-                // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
-                //test                : ['sanity.openjdk', 'sanity.perf']
-                test                : false,
-                configureArgs       : '--enable-dtrace=auto'
-        ],
-
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
@@ -105,5 +96,5 @@ class Config15 {
 
 }
 
-Config15 config = new Config15()
+Config16 config = new Config16()
 return config.buildConfigurations

@@ -12,13 +12,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-def javaToBuild = "jdk15"
+def javaToBuild = "jdk"
 
 node ("master") {
     def scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
     Closure configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
-    def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaToBuild}_pipeline_config.groovy"
+    def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/jdk16_pipeline_config.groovy"
 
     configureBuild(
             javaToBuild,

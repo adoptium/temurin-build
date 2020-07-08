@@ -49,7 +49,11 @@ checkoutAndCloneOpenJDKGitRepo() {
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
-    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep "${BUILD_CONFIG[REPOSITORY]} "
+    # Ensure cached origin fetch remote repo is correct version and repo (eg.jdk11u, or jdk), remember "jdk" sub-string of jdk11u hence grep with "\s"
+    # eg. origin https://github.com/adoptopenjdk/openjdk-jdk11u (fetch)
+    # eg. origin https://github.com/adoptopenjdk/openjdk-jdk (fetch)
+    # eg. origin git@github.com:adoptopenjdk/openjdk-jdk.git (fetch)
+    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
     local isValidGitRepo=$?
     set -e
 
@@ -74,28 +78,17 @@ checkoutAndCloneOpenJDKGitRepo() {
     cloneOpenJDKGitRepo
   fi
 
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-
-  local tag="${BUILD_CONFIG[TAG]}"
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
-    git fetch --tags
-    if git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
-      echo "looks like the scm ref given is a valid tag, so treat it as a tag"
-      tag="${BUILD_CONFIG[BRANCH]}"
-      BUILD_CONFIG[TAG]="${tag}"
+  checkoutRequiredCodeToBuild
+  if [ $checkoutRc -ne 0 ]; then
+    echo "RETRYWARNING: Checkout required source failed, cleaning workspace and retrying..."
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    cloneOpenJDKGitRepo
+    checkoutRequiredCodeToBuild
+    if [ $checkoutRc -ne 0 ]; then
+      echo "RETRYWARNING: Checkout failed on clean workspace retry, failing job..."
+      exit 1
     fi
-  fi
-
-  if [ "${tag}" ]; then
-    echo "Checking out tag ${tag}"
-    git fetch origin "refs/tags/${tag}:refs/tags/${tag}"
-    git checkout "${tag}"
-    git reset --hard
-    echo "Checked out tag ${tag}"
-  else
-    git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}"
-    git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
-    git reset --hard "origin/${BUILD_CONFIG[BRANCH]}"
   fi
 
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 11 ]]; then
@@ -111,6 +104,137 @@ checkoutAndCloneOpenJDKGitRepo() {
   updateOpenj9Sources
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+}
+
+# Checkout the required code to build from the given cached git repo
+# Set checkoutRc to result so we can retry
+checkoutRequiredCodeToBuild() {
+  checkoutRc=1
+
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+
+  echo "checkoutRequiredCodeToBuild:"
+  echo "  workspace = ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  echo "  BUILD_VARIANT = ${BUILD_CONFIG[BUILD_VARIANT]}"
+  echo "  TAG = ${BUILD_CONFIG[TAG]}"
+  echo "  BRANCH = ${BUILD_CONFIG[BRANCH]}"
+
+  # Ensure commands don't abort shell
+  set +e
+  local rc=0
+
+  local tag="${BUILD_CONFIG[TAG]}"
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
+    git fetch --tags || rc=$?
+    if [ $rc -eq 0 ]; then
+      if git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
+        echo "looks like the scm ref given is a valid tag, so treat it as a tag"
+        tag="${BUILD_CONFIG[BRANCH]}"
+        BUILD_CONFIG[TAG]="${tag}"
+      fi
+    else
+      echo "Failed cmd: git fetch --tags"
+    fi
+  fi
+
+  if [ $rc -eq 0 ]; then
+    if [ "${tag}" ]; then
+      echo "Checking out tag ${tag}"
+      git fetch origin "refs/tags/${tag}:refs/tags/${tag}" || rc=$?
+      if [ $rc -eq 0 ]; then
+        git checkout "${tag}" || rc=$?
+        if [ $rc -eq 0 ]; then
+          git reset --hard || rc=$?
+          if [ $rc -eq 0 ]; then
+            echo "Checked out tag ${tag}"
+          else
+            echo "Failed cmd: git reset --hard"
+          fi
+        else
+          echo "Failed cmd: git checkout \"${tag}\""
+        fi
+      else
+        echo "Failed cmd: git fetch origin \"refs/tags/${tag}:refs/tags/${tag}\""
+      fi
+    else
+      git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}" || rc=$?
+      if [ $rc -eq 0 ]; then
+        git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} || rc=$?
+        if [ $rc -eq 0 ]; then
+          git reset --hard "origin/${BUILD_CONFIG[BRANCH]}" || rc=$?
+          if [ $rc -eq 0 ]; then
+            echo "Checked out origin/${BUILD_CONFIG[BRANCH]}"
+          else
+            echo "Failed cmd: git reset --hard \"origin/${BUILD_CONFIG[BRANCH]}\""
+          fi
+        else
+          echo "Failed cmd: git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
+        fi
+      else
+        echo "Failed cmd: git remote set-branches --add origin \"${BUILD_CONFIG[BRANCH]}\""
+      fi
+    fi
+  fi
+
+  # Get the latest tag to stick in the scmref metadata, using the build config tag if it exists
+  local scmrefPath="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}scmref.txt"
+
+  if [ $rc -eq 0 ]; then
+
+    if [ -z "${BUILD_CONFIG[TAG]}" ]; then
+      # If SCM_REF is not set
+      echo "INFO: Extracting latest tag for the scmref using git describe since no tag is set in the build config..."
+
+      local describeReturn=0
+      git describe || describeReturn=$?
+
+      if [ $describeReturn -eq 0 ]; then
+        # Tag will be something similar to jdk-11.0.8+8_adopt-160-g824f8474f5
+        # jdk-11.0.8+8_adopt = TAGNAME
+        # 160 = NUMBER OF COMMITS ON TOP OF THE ORIGINAL TAGGED OBJECT
+        # g824f8474f5 = THE SHORT HASH OF THE MOST RECENT COMMIT
+        echo "SUCCESS: TAG FOUND! Exporting to $scmrefPath..."
+        git describe > $scmrefPath
+
+      else
+        # No annotated tags can describe the latest commit
+        echo "WARNING: git describe FAILED. There is likely additional error output above (exit code was $describeReturn). Trying again using git describe --tags to match a lightweight (non-annotated) tag"
+        local describeReturn=0
+        git describe --tags || describeReturn=$?
+
+        if [ $describeReturn -eq 0 ]; then
+          # Will match commits that are not named
+          echo "SUCCESS: TAG FOUND USING --tags! Exporting to $scmrefPath..."
+          git describe --tags > $scmrefPath
+        else
+          # Use the shortend commit hash as a scmref if all else fails
+          echo "FINAL WARNING: git describe --tags FAILED. There is likely additional error output above (exit code was $describeReturn). Exporting the abbreviated commit hash using git describe --always as a failsafe to $scmrefPath"
+          git describe --always | tee "$scmrefPath"
+        fi
+
+      fi
+
+    else
+      # SCM_REF is set. Use it over the git describe output
+      echo "SUCCESS: BUILD_CONFIG[TAG] is set. Exporting to $scmrefPath..."
+      echo -n ${BUILD_CONFIG[TAG]} | tee "$scmrefPath"
+    fi
+
+  else
+    # Previous steps failed so don't bother trying to get the tags
+    echo "WARNING: Cannot get tag due to previous failures. $scmrefPath will NOT be created!"
+  fi
+
+  # Restore command failure shell abort
+  set -e
+
+  if [ $rc -eq 0 ]; then
+    echo "checkoutRequiredCodeToBuild succeeded"
+  else
+    echo "checkoutRequiredCodeToBuild failed rc=$rc"
+  fi
+
+  checkoutRc=$rc
 }
 
 # Set the git clone arguments
@@ -242,7 +366,12 @@ checkingAndDownloadingFreemarker() {
     echo "Skipping FREEMARKER download"
   else
 
-    wget -nc --no-check-certificate "https://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
+    # www.mirrorservice.org unavailable - issue #1867
+    #wget -nc --no-check-certificate "https://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
+
+    wget "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" ||
+      curl -o "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
+
     # Allow fallback to curl since wget fails cert check on macos - issue #1194
     wget "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" ||
       curl -o "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc"
@@ -260,11 +389,13 @@ downloadFile() {
   local targetFileName="$1"
   local url="$2"
 
+  echo downloadFile: Saving "url" to "$targetFileName"
+
   # Temporary fudge as curl on my windows boxes is exiting with RC=127
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    wget -O "${targetFileName}" "${url}"
+    wget -O "${targetFileName}" "${url}" || exit 2
   else
-    curl -L -o "${targetFileName}" "${url}"
+    curl --fail -L -o "${targetFileName}" "${url}" || exit 2
   fi
 
   if [ $# -ge 3 ]; then
@@ -291,8 +422,8 @@ checkingAndDownloadingFreeType() {
   if [[ ! -z "$FOUND_FREETYPE" ]]; then
     echo "Skipping FreeType download"
   else
-    downloadFile "freetype.tar.gz" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
-    downloadFile "freetype.tar.gz.sig" "https://download.savannah.gnu.org/releases/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz.sig"
+    downloadFile "freetype.tar.gz" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
+    downloadFile "freetype.tar.gz.sig" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz.sig"
     checkFingerprint "freetype.tar.gz.sig" "freetype.tar.gz" "freetype" "58E0 C111 E39F 5408 C5D3 EC76 C1A6 0EAC E707 FDA5" "${FREETYPE_LIB_CHECKSUM}"
 
     rm -rf "./freetype" || true
@@ -387,10 +518,10 @@ checkingAndDownloadCaCerts() {
     downloadCerts "$caLink"
   elif [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" != "true" ]; then
     git init
-    git remote add origin -f https://github.com/AdoptOpenJDK/openjdk-build.git
+    git remote add origin -f "${BUILD_CONFIG[OPENJDK_BUILD_REPO_URI]}"
     git config core.sparsecheckout true
     echo "security/*" >>.git/info/sparse-checkout
-    git pull origin master
+    git pull origin "${BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]}"
   fi
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit

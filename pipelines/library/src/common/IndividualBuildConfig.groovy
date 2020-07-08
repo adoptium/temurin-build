@@ -12,6 +12,9 @@ class IndividualBuildConfig implements Serializable {
     final String SCM_REF
     final String BUILD_ARGS
     final String NODE_LABEL
+    final boolean CODEBUILD
+    final String DOCKER_IMAGE
+    final String DOCKER_FILE
     final String CONFIGURE_ARGS
     final String OVERRIDE_FILE_NAME_VERSION
     final String ADDITIONAL_FILE_NAME_TAG
@@ -43,6 +46,9 @@ class IndividualBuildConfig implements Serializable {
         SCM_REF = map.get("SCM_REF")
         BUILD_ARGS = map.get("BUILD_ARGS")
         NODE_LABEL = map.get("NODE_LABEL")
+        CODEBUILD = map.get("CODEBUILD")
+        DOCKER_IMAGE = map.get("DOCKER_IMAGE")
+        DOCKER_FILE = map.get("DOCKER_FILE")
         CONFIGURE_ARGS = map.get("CONFIGURE_ARGS")
         OVERRIDE_FILE_NAME_VERSION = map.get("OVERRIDE_FILE_NAME_VERSION")
         ADDITIONAL_FILE_NAME_TAG = map.get("ADDITIONAL_FILE_NAME_TAG")
@@ -79,6 +85,9 @@ class IndividualBuildConfig implements Serializable {
                 SCM_REF                   : SCM_REF,
                 BUILD_ARGS                : BUILD_ARGS,
                 NODE_LABEL                : NODE_LABEL,
+                CODEBUILD                 : CODEBUILD,
+                DOCKER_IMAGE              : DOCKER_IMAGE,
+                DOCKER_FILE               : DOCKER_FILE,
                 CONFIGURE_ARGS            : CONFIGURE_ARGS,
                 OVERRIDE_FILE_NAME_VERSION: OVERRIDE_FILE_NAME_VERSION,
                 ADDITIONAL_FILE_NAME_TAG  : ADDITIONAL_FILE_NAME_TAG,

@@ -12,29 +12,37 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-String javaVersion = "jdk8"
+String javaVersion = "jdk8u"
 
 node ("master") {
   try {
     def scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
-  
+
     def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
 
     println "[INFO] Found buildConfigurations:\n$buildConfigurations"
+
+    // Load targetConfigurations from config file. This is what is being run in the nightlies
+    load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}.groovy"
+
+    println "[INFO] Found targetConfigurations:\n$targetConfigurations"
 
     Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
 
     println "[INFO] Running regeneration script..."
     regenerationScript(
-      javaVersion,
-      buildConfigurations,
-      scmVars,
-      currentBuild,
-      this,
-      env
+            javaVersion,
+            buildConfigurations,
+            targetConfigurations,
+            currentBuild,
+            this,
+            null,
+            null,
+            null,
+            null
     ).regenerate()
-      
+
     println "[SUCCESS] All done!"
 
   } finally {
@@ -42,5 +50,5 @@ node ("master") {
     println "[INFO] Cleaning up..."
     cleanWs()
   }
-  
+
 }

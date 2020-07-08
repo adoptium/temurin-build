@@ -1,40 +1,47 @@
-class Config11 {
+class Config14 {
   final Map<String, Map<String, ?>> buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels : 'macos10.14',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
-                configureArgs       : [
-                        "openj9"      : '--enable-dtrace=auto --with-cmake',
-                        "hotspot"     : '--enable-dtrace=auto'
-                ]
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
-        x64MacXL    : [
+        x64MacXL: [
                 os                   : 'mac',
                 arch                 : 'x64',
                 additionalNodeLabels : 'macos10.14',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 additionalFileNameTag: "macosXL",
-                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto --with-cmake'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
         ],
 
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
-                additionalNodeLabels: 'centos6',
-                test                : [
-                        nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
+                dockerImage         : 'adoptopenjdk/centos6_build_image',
+                dockerFile: [
+                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
+                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
                 configureArgs       : [
-                        "openj9"      : '--disable-ccache --enable-jitserver --enable-dtrace=auto',
+                        "openj9"      : '--disable-ccache --enable-dtrace=auto --enable-jitserver',
                         "hotspot"     : '--disable-ccache --enable-dtrace=auto',
-                        "hotspot-jfr" : '--disable-ccache --enable-dtrace=auto',
-                        "corretto"    : '--disable-ccache --enable-dtrace=auto',
                         "SapMachine"  : '--disable-ccache --enable-dtrace=auto'
                 ]
+        ],
+
+        x64LinuxXL    : [
+                os                   : 'linux',
+                dockerImage          : 'adoptopenjdk/centos6_build_image',
+                dockerFile: [
+                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
+                ],
+                arch                 : 'x64',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto --enable-jitserver'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -42,8 +49,7 @@ class Config11 {
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: [
-                        hotspot: 'win2012',
-                        openj9:  'win2012&&vs2017'
+                        hotspot: 'win2012&&vs2017'
                 ],
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
@@ -55,7 +61,7 @@ class Config11 {
                 os                   : 'windows',
                 arch                 : 'x64',
                 additionalNodeLabels : 'win2012&&vs2017',
-                test                 : ['sanity.openjdk', 'sanity.system'],
+                test                 : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "windowsXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -64,8 +70,7 @@ class Config11 {
                 os                  : 'windows',
                 arch                : 'x86-32',
                 additionalNodeLabels: [
-                        hotspot: 'win2012',
-                        openj9:  'win2012&&mingw-standalone'
+                        hotspot: 'win2012&&vs2017'
                 ],
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
@@ -76,7 +81,10 @@ class Config11 {
         ppc64Aix    : [
                 os                  : 'aix',
                 arch                : 'ppc64',
-                additionalNodeLabels: 'xlc13',
+                additionalNodeLabels: [
+                        hotspot: 'xlc16&&aix710',
+                        openj9:  'xlc16&&aix715'
+                ],
                 test                : [
                         nightly: ['sanity.openjdk'],
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system']
@@ -87,14 +95,15 @@ class Config11 {
                 os                  : 'linux',
                 arch                : 's390x',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
-                configureArgs       : '--disable-ccache --enable-dtrace=auto'
+                configureArgs        : '--disable-ccache --enable-dtrace=auto'
         ],
 
-        sparcv9Solaris    : [
-                os                  : 'solaris',
-                arch                : 'sparcv9',
-                test                : false,
-                configureArgs       : '--enable-dtrace=auto'
+        s390xLinuxXL    : [
+                os                   : 'linux',
+                arch                 : 's390x',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
         ],
 
         ppc64leLinux    : [
@@ -105,7 +114,6 @@ class Config11 {
                         "hotspot"     : '--disable-ccache --enable-dtrace=auto',
                         "openj9"      : '--disable-ccache --enable-dtrace=auto --enable-jitserver'
                 ]
-
         ],
 
         arm32Linux    : [
@@ -117,6 +125,14 @@ class Config11 {
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
+        ppc64leLinuxXL    : [
+                os                   : 'linux',
+                arch                 : 'ppc64le',
+                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                additionalFileNameTag: "linuxXL",
+                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
+        ],
+
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
@@ -124,48 +140,9 @@ class Config11 {
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 configureArgs       : '--enable-dtrace=auto'
         ],
-
-        /*
-        "x86-32Windows"    : [
-                os                 : 'windows',
-                arch               : 'x86-32',
-                additionalNodeLabels: 'win2012&&x86-32',
-                test                : false
-        ],
-        */
-        x64LinuxXL    : [
-                os                   : 'linux',
-                additionalNodeLabels : 'centos6',
-                arch                 : 'x64',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
-                additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-jitserver --enable-dtrace=auto'
-        ],
-        s390xLinuxXL    : [
-                os                   : 'linux',
-                arch                 : 's390x',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
-                additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
-        ],
-        ppc64leLinuxXL    : [
-                os                   : 'linux',
-                arch                 : 'ppc64le',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
-                additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto --enable-jitserver'
-        ],
-        aarch64LinuxXL    : [
-                os                   : 'linux',
-                additionalNodeLabels : 'centos7',
-                arch                 : 'aarch64',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
-                additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
-        ],
   ]
-
+  
 }
 
-Config11 config = new Config11()
+Config14 config = new Config14()
 return config.buildConfigurations
