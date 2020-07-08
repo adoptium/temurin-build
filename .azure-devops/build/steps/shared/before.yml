@@ -57,3 +57,9 @@ steps:
       DATE=$(date -u +%Y-%m-%d-%H-%M)
       echo "##vso[task.setvariable variable=FILENAME]Open${UPPERCASE_JAVA_TO_BUILD}-jdk_${ARCHITECTURE}_${TARGET_OS}_${VARIANT}_${DATE}"
     displayName: "[Shared Before] set FILENAME variable"
+
+  # invoke template to set BOOTJDK_VERSION
+  - template: set_boot_jdk_version.yml
+
+  # set up work directories
+  - template: config_directories.yml
