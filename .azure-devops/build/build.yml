@@ -1,11 +1,11 @@
 # Build Stages Template
 #
 # supported platform & versions:
-#    macOS: jdk11u, jdk13u, and jdk
-#    windows: jdk8u, jdk11u, jdk13u, and jdk
+#    macOS: jdk11u, jdk14u, jdk15u, and jdk
+#    windows: jdk8u, jdk11u, jdk14u, jdk15u, and jdk
 #
 # required pipeline level variable(s):
-#    JAVA_TO_BUILD: jdk8u|jdk11u|jdk13u|jdk
+#    JAVA_TO_BUILD: jdk8u | jdk11u | jdk14u | jdk15u | jdk
 # 
 # optional pipeline level variable(s):
 #    EXTRA_MAKEJDK_ANY_PLATFORM_OPTIONS: other options in makejdk-any-platform.sh
@@ -28,7 +28,7 @@ stages:
     # jdk8u cannot be built on macOS 10.14 or 10.13
     condition: ne(variables.JAVA_TO_BUILD, 'jdk8u')
     jobs:
-      - job: build_macOS
+      - job: build_macOS_x64
         displayName: "Build macOS x64 HotSpot"
         pool:
           vmImage: macOS-10.14
@@ -46,7 +46,7 @@ stages:
     displayName: "Build Windows x64 HotSpot Binaries"
     dependsOn: []
     jobs:
-      - job: build_macOS
+      - job: build_windows_x64
         timeoutInMinutes: 120
         displayName: "Build Windows x64 HotSpot"
         pool:
@@ -65,7 +65,7 @@ stages:
     displayName: "Build Windows x86 HotSpot Binaries"
     dependsOn: []
     jobs:
-      - job: build_macOS
+      - job: build_windows_x86
         timeoutInMinutes: 120
         displayName: "Build Windows x86 HotSpot"
         pool:

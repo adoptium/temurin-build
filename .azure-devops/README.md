@@ -6,8 +6,10 @@ Supported Versions/Platforms:
 
 | JDK Version    | macOS x64 | Windows x64 | Windows x86-32 |
 | -------------- | --------- | ----------- | -------------- |
-| jdk8u hotspot  | ✔️        | ✔️          | ✔️            |
+| jdk8u hotspot  | ❌        | ✔️          | ✔️            |
 | jdk11u hotspot | ✔️        | ✔️          | ✔️            |
+| jdk14u hotspot | ✔️        | ✔️          | ✔️            |
+| jdk15u hotspot | ✔️        | ✔️          | ✔️            |
 | jdk-tip hotspot| ✔️        | ✔️          | ✔️            |
 
 
@@ -20,7 +22,7 @@ If you don't have an Azure DevOps organization, you can start from
 
 2. Required Pipeline Variables:
 
-    1. `JAVA_TO_BUILD`: jdk8u | jdk11u | jdk
+    1. `JAVA_TO_BUILD`: jdk8u | jdk11u | jdk14u | jdk15u | jdk
 
 3. Optional Pipeline Variables:
 

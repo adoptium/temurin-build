@@ -7,7 +7,7 @@ steps:
   # set system environment variable VARIANT to hotspot
   - bash: |
       echo "##vso[task.setvariable variable=VARIANT]hotspot"
-    displayName: "[Pre] set VARIANT environment variables"
+    displayName: "[Shared Before] set VARIANT environment variables"
 
   # check for required environment variables
   # pipeline will be terminated if environment variables are not defined
@@ -31,27 +31,21 @@ steps:
         echo "##vso[task.logissue type=error;]$ERR_MESSAGE_MISSING_ENV"
         echo "##vso[task.complete result=Failed;]"
       fi;
-    displayName: "[Pre] check required environment variables"
+    displayName: "[Shared Before] check required environment variables"
 
   # set up HOME directory and it will be used by Cygwin
   - bash: |
       echo "##vso[task.setvariable variable=HOME]$(Agent.BuildDirectory)"
-    displayName: "[Pre] set HOME environment variable"
+    displayName: "[Shared Before] set HOME environment variable"
 
   # set up git crlf configuration
   # this step is required on Windows platform and should be placed before the -checkout task
   - bash: |
       git config --global core.autocrlf input
-    displayName: "[Pre] configure crlf option"
+    displayName: "[Shared Before] configure crlf option"
 
   # self checkout openjdk-build repo
   - checkout: self
-
-  # set the git authorization header for subsequent git pull/clone operations...
-  # <This step is unnecessary on your local workstation, can be approximated by using SSH URIs>
-  - bash: |
-      git config --global --add http.https://dev.azure.com.extraheader "AUTHORIZATION: bearer $(System.AccessToken)"
-    displayName: "[Pre] add auth header"
 
   # set the FILENAME environment varialbe
   # based on https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy#L374
@@ -62,4 +56,4 @@ steps:
       # get date in format UTC YYYY-mm-dd-HH-MM, e.g, 2020-01-02-22-52
       DATE=$(date -u +%Y-%m-%d-%H-%M)
       echo "##vso[task.setvariable variable=FILENAME]Open${UPPERCASE_JAVA_TO_BUILD}-jdk_${ARCHITECTURE}_${TARGET_OS}_${VARIANT}_${DATE}"
-    displayName: "[Pre] set FILENAME variable"
+    displayName: "[Shared Before] set FILENAME variable"
