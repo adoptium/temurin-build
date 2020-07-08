@@ -4,10 +4,3 @@ steps:
       printenv
     displayName: "[Shared After] show all env vars"
     condition: eq(variables['system.debug'], 'true')
-
-  # unset the global git authorization header. Remove this to ensure we have cleaned up any authorization keys
-  # that could be abused by further runs of this pipeline instance.
-  - bash: |
-      git config --global --unset http.https://dev.azure.com.extraheader
-    displayName: "[Shared After] remove git auth header(s)"
-    condition: always()
