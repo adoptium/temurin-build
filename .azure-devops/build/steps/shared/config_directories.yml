@@ -12,4 +12,4 @@ steps:
       mkdir -p ${{ parameters.jdkBootDir }}
       mkdir -p ${{ parameters.javaHomeDir }}
       mkdir -p ${{ parameters.dependenciesDir }}
-    displayName: "[macOS Before] create required directories"
+    displayName: "[Shared Before] create required directories"
