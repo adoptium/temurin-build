@@ -60,6 +60,3 @@ steps:
 
   # invoke template to set BOOTJDK_VERSION
   - template: set_boot_jdk_version.yml
-
-  # set up work directories
-  - template: config_directories.yml
