@@ -4,6 +4,8 @@
 steps:
   # using the AdoptOpenJDK build scripts to build the OpenJDK binaries.
   - bash: |
+      export PATH="/usr/bin:$PATH"
+
       CONFIGURE_ARGS=
       BUILD_ARGS=
       if [ "$(JAVA_TO_BUILD)" == "jdk" ]
