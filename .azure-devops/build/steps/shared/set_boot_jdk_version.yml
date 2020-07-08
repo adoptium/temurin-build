@@ -4,7 +4,7 @@ steps:
       if [ "$(JAVA_TO_BUILD)" == "jdk" ]
       then
           BOOTJDK_VERSION=15
-      elif [ "$(JAVA_TO_BUILD)" == "jdk15u" ]
+      elif [ "$(JAVA_TO_BUILD)" == "jdk15" ]
       then
           BOOTJDK_VERSION=14
       elif [ "$(JAVA_TO_BUILD)" == "jdk14u" ]

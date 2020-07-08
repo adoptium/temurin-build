@@ -9,8 +9,8 @@ Supported Versions/Platforms:
 | jdk8u hotspot  | ❌        | ✔️          | ✔️            |
 | jdk11u hotspot | ✔️        | ✔️          | ✔️            |
 | jdk14u hotspot | ✔️        | ✔️          | ✔️            |
-| jdk15u hotspot | ✔️        | ✔️          | ✔️            |
-| jdk-tip hotspot| ✔️        | ✔️          | ✔️            |
+| jdk15 hotspot  | ✔️        | ✔️          | ❌            |
+| jdk-tip hotspot| ✔️        | ✔️          | ❌            |
 
 
 ## Requirements

@@ -7,18 +7,28 @@ steps:
       PATH="/usr/bin:$PATH"
       CONFIGURE_ARGS=
       BUILD_ARGS=
-      if [ "$(JAVA_TO_BUILD)" == "jdk8u" ]
+      if [ "$(JAVA_TO_BUILD)" == "jdk" ]
       then
-          CONFIGURE_ARGS="--disable-ccache --with-toolchain-version=2013"
-          BUILD_ARGS="--freetype-version 2.5.3"
+          CONFIGURE_ARGS="--disable-warnings-as-errors --disable-ccache --with-toolchain-version=2017"
+          BUILD_ARGS="--jvm-variant client,server"
+      elif [ "$(JAVA_TO_BUILD)" == "jdk15" ]
+      then
+          CONFIGURE_ARGS="--disable-warnings-as-errors --disable-ccache --with-toolchain-version=2017"
+          BUILD_ARGS="--jvm-variant client,server"
+      elif [ "$(JAVA_TO_BUILD)" == "jdk14u" ]
+      then
+          CONFIGURE_ARGS="--disable-warnings-as-errors --disable-ccache --with-toolchain-version=2017"
+          BUILD_ARGS="--jvm-variant client,server"
       elif [ "$(JAVA_TO_BUILD)" == "jdk11u" ]
       then
           CONFIGURE_ARGS="--disable-warnings-as-errors --disable-ccache --with-toolchain-version=2017"
           BUILD_ARGS="--jvm-variant client,server"
-      else
-          CONFIGURE_ARGS="--disable-warnings-as-errors --disable-ccache --with-toolchain-version=2017"
-          BUILD_ARGS="--jvm-variant client,server"
+      elif [ "$(JAVA_TO_BUILD)" == "jdk8u" ]
+      then
+          CONFIGURE_ARGS="--disable-ccache --with-toolchain-version=2013"
+          BUILD_ARGS="--freetype-version 2.5.3"
       fi
+
       if [ "${ARCHITECTURE}" == "x86-32" ]
       then
           CONFIGURE_ARGS="--with-target-bits=32 --target=x86 ${CONFIGURE_ARGS}"
