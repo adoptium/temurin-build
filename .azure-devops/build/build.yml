@@ -29,6 +29,7 @@ stages:
     condition: ne(variables.JAVA_TO_BUILD, 'jdk8u')
     jobs:
       - job: build_macOS_x64
+        timeoutInMinutes: 120
         displayName: "Build macOS x64 HotSpot"
         pool:
           vmImage: macOS-latest
