@@ -14,7 +14,7 @@ limitations under the License.
 
 def javaToBuild = "jdk8u"
 
-node("master") {
+node ("master") {
     def scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
     Closure configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
