@@ -4,6 +4,9 @@ if(!binding.hasVariable('triggerSchedule')) {
     triggerSchedule = "@daily"
 }
 
+// Block nightly build for release
+triggerSchedule = "0 0 31 2 0"
+
 gitRefSpec = ""
 propagateFailures = false
 runTests = true
