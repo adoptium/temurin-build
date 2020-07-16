@@ -10,7 +10,11 @@ doInit="false"
 doReset="false"
 doTagging="false"
 doUpdate="false"
-hgRepo="https://hg.openjdk.java.net/jdk8u/jdk8u"
+if [ -z ${HG_REPO} ]; then
+  hgRepo="https://hg.openjdk.java.net/jdk8u/jdk8u"
+else 
+  hgRepo="$HG_REPO"
+fi
 tag="jdk8u172-b08"
 workingBranch="master"
 
