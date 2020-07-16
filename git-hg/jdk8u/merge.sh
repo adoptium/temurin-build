@@ -247,7 +247,7 @@ commitId=$(git rev-list -n 1  $tag)
 cd "$REPO"
 git merge --abort || true
 git rebase --abort || true
-git checkout $workingBranch || git checkout -b $workingBranch
+git checkout $workingBranch
 
 # Get rid of existing tag that we are about to create
 if [ "$doTagging" == "true" ]; then
