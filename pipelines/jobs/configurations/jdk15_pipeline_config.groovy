@@ -94,7 +94,7 @@ class Config15 {
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
-                additionalNodeLabels: 'centos7',
+                dockerImage         : 'adoptopenjdk/centos7_build_image',
                 test                : [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
