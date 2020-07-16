@@ -143,7 +143,7 @@ function rebuildLocalRepo() {
     mkdir -p "$REPO"
     cd "$REPO"
     git clone $UPSTREAM_GIT_REPO .
-    git checkout master
+    git checkout master || git checkout -b master
 
     # Step 3 Setup remotes
     addRemotes
