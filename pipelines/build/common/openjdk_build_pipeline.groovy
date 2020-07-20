@@ -185,7 +185,6 @@ class Build {
                     filter = "**/OpenJDK*_mac_*.tar.gz"
                     certificate = "\"Developer ID Application: London Jamocha Community CIC\""
 
-                    // currently only macos10.10 can sign
                     nodeFilter = "${nodeFilter}&&macos10.14"
                 }
 
@@ -361,26 +360,26 @@ class Build {
             return
         }
 
-        context.stage("installer") {
-            context.node('master') {
+        context.node('master') {
+            context.stage("installer") {
                 switch (buildConfig.TARGET_OS) {
                     case "mac": buildMacInstaller(versionData); break
                     case "linux": buildLinuxInstaller(versionData); break
                     case "windows": buildWindowsInstaller(versionData); break
                     default: return; break
                 }
-            }
 
-            // Archive the Mac and Windows pkg/msi
-            // (Linux installer job produces no artifacts, it just uploads rpm/deb to the repositories)
-            if (buildConfig.TARGET_OS == "mac" || buildConfig.TARGET_OS == "windows") {
-                try {
-                    context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
-                    writeMetadata(versionData, false)
-                    context.archiveArtifacts artifacts: "workspace/target/*"
-                } catch (e) {
-                    context.println("Failed to build ${buildConfig.TARGET_OS} installer ${e}")
-                    currentBuild.result = 'FAILURE'
+                // Archive the Mac and Windows pkg/msi
+                // (Linux installer job produces no artifacts, it just uploads rpm/deb to the repositories)
+                if (buildConfig.TARGET_OS == "mac" || buildConfig.TARGET_OS == "windows") {
+                    try {
+                        context.sh 'for file in $(ls workspace/target/*.tar.gz workspace/target/*.pkg workspace/target/*.msi); do sha256sum "$file" > $file.sha256.txt ; done'
+                        writeMetadata(versionData, false)
+                        context.archiveArtifacts artifacts: "workspace/target/*"
+                    } catch (e) {
+                        context.println("Failed to build ${buildConfig.TARGET_OS} installer ${e}")
+                        currentBuild.result = 'FAILURE'
+                    }
                 }
             }
         }
