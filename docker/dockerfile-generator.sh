@@ -191,7 +191,9 @@ RUN apt-get update \\
     zip \\" >> $DOCKERFILE_PATH
 
   if [ ${OPENJ9} = true ]; then
-    echo "    libexpat1-dev \\
+    echo "    gcc-7 \\
+    g++-7 \\
+    libexpat1-dev \\
     libdwarf-dev \\
     libffi-dev \\
     libfontconfig \\
@@ -224,22 +226,11 @@ RUN mkdir -p /openjdk/build" >> $DOCKERFILE_PATH
 printgcc() {
   if [ ${COMMENTS} == true ]; then
     echo "
-# Make sure build uses GCC 7.5
-# Create links for GCC to access the C library and gcc,g++" >> $DOCKERFILE_PATH
+# Make sure build uses GCC 7" >> $DOCKERFILE_PATH
   fi
 
   echo "
-RUN cd /usr/local \\
-  && wget -O gcc-7.tar.xz "https://ci.adoptopenjdk.net/userContent/gcc/gcc750+ccache.x86_64.tar.xz" \\
-  && tar -xJf gcc-7.tar.xz \\
-  && rm -rf gcc-7.tar.xz" >> $DOCKERFILE_PATH
-
-  echo "
-RUN ln -sf /usr/lib/x86_64-linux-gnu /usr/lib64 \\
-  && ln -sf /usr/include/x86_64-linux-gnu/* /usr/local/gcc/include \\
-  && ln -sf /usr/local/gcc/bin/g++-7.5 /usr/bin/g++ \\
-  && ln -sf /usr/local/gcc/bin/gcc-7.5 /usr/bin/gcc \\
-  && ln -sf /usr/local/gcc/bin/ccache /usr/local/bin/ccache" >> $DOCKERFILE_PATH
+ENV CC=gcc-7 CXX=g++-7" >> $DOCKERFILE_PATH
 }
 
 printDockerJDKs() {
