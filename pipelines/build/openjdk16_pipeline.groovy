@@ -21,7 +21,7 @@ node ("master") {
     scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
     configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
-    buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaToBuild}_pipeline_config.groovy"
+    buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/jdk16_pipeline_config.groovy"
 }
 
 if (scmVars != null && configureBuild != null && buildConfigurations != null) {
