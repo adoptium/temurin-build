@@ -108,15 +108,60 @@ class Build {
         return "${jobName}"
     }
 
+    private def getJDKBranch() {
+
+        def jdkBranch
+        
+        if (buildConfig.VARIANT == "corretto") {
+            jdkBranch = 'develop'
+        } else if (buildConfig.VARIANT == "openj9") {
+            jdkBranch = 'openj9'
+        } else if (buildConfig.VARIANT == "hotspot"){
+            jdkBranch = 'dev'
+        } else {
+            context.error("Unrecognized build variant '${buildConfig.VARIANT}' ")
+            throw new Exception()
+        }
+        return jdkBranch
+    }
+    
+    private def getJDKRepo() {
+        
+        def jdkRepo
+        def suffix
+        def javaNumber = getJavaVersionNumber()
+        
+        if (buildConfig.VARIANT == "corretto") {
+            suffix="corretto/corretto-${javaNumber}"
+        } else if (buildConfig.VARIANT == "openj9") {
+            suffix = "ibmruntimes/openj9-openjdk-jdk${javaNumber}"
+        } else if (buildConfig.VARIANT == "hotspot"){
+            suffix = "adoptopenjdk/openjdk-${buildConfig.JAVA_TO_BUILD}"
+        } else {
+            context.error("Unrecognized build variant '${buildConfig.VARIANT}' ")
+            throw new Exception()
+        }
+        
+        jdkRepo = "https://github.com/${suffix}"
+        if (buildConfig.BUILD_ARGS.include("--ssh")) {
+            jdkRepo = "git@github.com:${suffix}"
+        }
+        
+        return jdkRepo
+    }
+    
     def runTests() {
         def testStages = [:]
         List testList = []
+        def jdkBranch = getJDKBranch()
+        def jdkRepo = getJDKRepo()
 
         if (buildConfig.VARIANT == "corretto") {
             testList = buildConfig.TEST_LIST.minus(['sanity.external'])
         } else {
             testList = buildConfig.TEST_LIST
         }
+
         testList.each { testType ->
 			
 			// For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
@@ -136,7 +181,9 @@ class Build {
 										parameters: [
 												context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
 												context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
-												context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}")]
+												context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}"),
+												context.string(name: 'JDK_REPO', value: jdkRepo),
+												context.string(name: 'JDK_BRANCH', value: jdkBranch)]
 							}
 						} else {
 							context.println "Requested test job that does not exist or is disabled: ${jobName}"
