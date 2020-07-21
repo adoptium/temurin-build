@@ -1,7 +1,7 @@
 #!/bin/bash
 set -u
 
-BOOTDIR=''
+BOOTDIR=""
 VARIANT="hotspot"
 useEclipseOpenJ9DockerFiles=false
 CLEAN=false
@@ -51,7 +51,7 @@ parseCommandLineArgs()
 				"--openj9" | "-j9")
 					VARIANT="openj9";;
 				"--use-eclipse-docker-files" | "-e" )
-					useEclipseOpenJ9DockerFiles=true; VARIANT="eclipse";;
+					useEclipseOpenJ9DockerFiles=true; VARIANT="eclipsei_openj9";;
 				"--help" | "-h" )
 					usage; exit 0;;
 				*) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised."; usage; exit 1;;
@@ -75,6 +75,7 @@ usage()
 checkJDK() {
   if ! ((JDK_VERSION >= 8 && JDK_VERSION <= JDK_MAX)); then
     echo "Please input a JDK between 8 & ${JDK_MAX}, or 'jdk'"
+    echo "i.e. The following formats will work for jdk8: 'jdk8u', 'jdk8' , '8'"
     exit 1
   fi
 }
