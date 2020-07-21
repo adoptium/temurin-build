@@ -14,29 +14,27 @@ limitations under the License.
 
 def javaToBuild = "jdk9u"
 
-node ("master") {
-    def scmVars = checkout scm
-    load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
-    Closure configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
-    def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaToBuild}_pipeline_config.groovy"
+def scmVars = checkout scm
+load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
+Closure configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
+def buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaToBuild}_pipeline_config.groovy"
 
-    configureBuild(
-            javaToBuild,
-            buildConfigurations,
-            targetConfigurations,
-            enableTests,
-            releaseType,
-            scmReference,
-            overridePublishName,
-            additionalConfigureArgs,
-            scmVars,
-            additionalBuildArgs,
-            overrideFileNameVersion,
-            cleanWorkspaceBeforeBuild,
-            adoptBuildNumber,
-            propagateFailures,
-            currentBuild,
-            this,
-            env
-    ).doBuild()
-}
+configureBuild(
+    javaToBuild,
+    buildConfigurations,
+    targetConfigurations,
+    enableTests,
+    releaseType,
+    scmReference,
+    overridePublishName,
+    additionalConfigureArgs,
+    scmVars,
+    additionalBuildArgs,
+    overrideFileNameVersion,
+    cleanWorkspaceBeforeBuild,
+    adoptBuildNumber,
+    propagateFailures,
+    currentBuild,
+    this,
+    env
+).doBuild()
