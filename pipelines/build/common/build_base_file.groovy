@@ -70,6 +70,12 @@ class Builder implements Serializable {
 
         def testList = getTestList(platformConfig)
 
+        // Always clean on mac due to https://github.com/AdoptOpenJDK/openjdk-build/issues/1980
+        def cleanWorkspace = cleanWorkspaceBeforeBuild
+        if (platformConfig.os == "mac") {
+            cleanWorkspace = true
+        }
+
         return new IndividualBuildConfig(
                 JAVA_TO_BUILD: javaToBuild,
                 ARCHITECTURE: platformConfig.arch as String,
@@ -90,7 +96,7 @@ class Builder implements Serializable {
                 PUBLISH_NAME: publishName,
                 ADOPT_BUILD_NUMBER: adoptBuildNumber,
                 ENABLE_TESTS: enableTests,
-                CLEAN_WORKSPACE: cleanWorkspaceBeforeBuild
+                CLEAN_WORKSPACE: cleanWorkspace
         )
     }
 
