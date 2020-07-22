@@ -143,7 +143,7 @@ class Build {
         }
         
         jdkRepo = "https://github.com/${suffix}"
-        if (buildConfig.BUILD_ARGS.include("--ssh")) {
+        if (buildConfig.BUILD_ARGS.count("--ssh") > 0) {
             jdkRepo = "git@github.com:${suffix}"
         }
         
