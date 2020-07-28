@@ -108,15 +108,60 @@ class Build {
         return "${jobName}"
     }
 
+    private def getJDKBranch() {
+
+        def jdkBranch
+        
+        if (buildConfig.VARIANT == "corretto") {
+            jdkBranch = 'develop'
+        } else if (buildConfig.VARIANT == "openj9") {
+            jdkBranch = 'openj9'
+        } else if (buildConfig.VARIANT == "hotspot"){
+            jdkBranch = 'dev'
+        } else {
+            context.error("Unrecognized build variant '${buildConfig.VARIANT}' ")
+            throw new Exception()
+        }
+        return jdkBranch
+    }
+    
+    private def getJDKRepo() {
+        
+        def jdkRepo
+        def suffix
+        def javaNumber = getJavaVersionNumber()
+        
+        if (buildConfig.VARIANT == "corretto") {
+            suffix="corretto/corretto-${javaNumber}"
+        } else if (buildConfig.VARIANT == "openj9") {
+            suffix = "ibmruntimes/openj9-openjdk-jdk${javaNumber}"
+        } else if (buildConfig.VARIANT == "hotspot"){
+            suffix = "adoptopenjdk/openjdk-${buildConfig.JAVA_TO_BUILD}"
+        } else {
+            context.error("Unrecognized build variant '${buildConfig.VARIANT}' ")
+            throw new Exception()
+        }
+        
+        jdkRepo = "https://github.com/${suffix}"
+        if (buildConfig.BUILD_ARGS.count("--ssh") > 0) {
+            jdkRepo = "git@github.com:${suffix}"
+        }
+        
+        return jdkRepo
+    }
+    
     def runTests() {
         def testStages = [:]
         List testList = []
+        def jdkBranch = getJDKBranch()
+        def jdkRepo = getJDKRepo()
 
         if (buildConfig.VARIANT == "corretto") {
             testList = buildConfig.TEST_LIST.minus(['sanity.external'])
         } else {
             testList = buildConfig.TEST_LIST
         }
+
         testList.each { testType ->
 			
 			// For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
@@ -136,7 +181,9 @@ class Build {
 										parameters: [
 												context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
 												context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
-												context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}")]
+												context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}"),
+												context.string(name: 'JDK_REPO', value: jdkRepo),
+												context.string(name: 'JDK_BRANCH', value: jdkBranch)]
 							}
 						} else {
 							context.println "Requested test job that does not exist or is disabled: ${jobName}"
@@ -166,47 +213,49 @@ class Build {
     def sign(VersionInfo versionInfo) {
         // Sign and archive jobs if needed
         // TODO: This version info check needs to be updated when the notarization fix gets applied to other versions.
-        if (buildConfig.TARGET_OS == "windows" || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 8 && buildConfig.VARIANT != "openj9") || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 13)) {
-            context.node('master') {
-                context.stage("sign") {
-                    def filter = ""
-                    def certificate = ""
+        if (
+            buildConfig.TARGET_OS == "windows" ||
+        (buildConfig.TARGET_OS == "mac" && versionInfo.major == 8 && buildConfig.VARIANT != "openj9") || (buildConfig.TARGET_OS == "mac" && versionInfo.major == 13)
+        ) {
+            context.stage("sign") {
+                def filter = ""
+                def certificate = ""
 
-                    def nodeFilter = "${buildConfig.TARGET_OS}"
+                def nodeFilter = "${buildConfig.TARGET_OS}"
 
-                    if (buildConfig.TARGET_OS == "windows") {
-                        filter = "**/OpenJDK*_windows_*.zip"
-                        certificate = "C:\\Users\\jenkins\\windows.p12"
-                        nodeFilter = "${nodeFilter}&&build"
+                if (buildConfig.TARGET_OS == "windows") {
+                    filter = "**/OpenJDK*_windows_*.zip"
+                    certificate = "C:\\Users\\jenkins\\windows.p12"
+                    nodeFilter = "${nodeFilter}&&build"
 
-                    } else if (buildConfig.TARGET_OS == "mac") {
-                        filter = "**/OpenJDK*_mac_*.tar.gz"
-                        certificate = "\"Developer ID Application: London Jamocha Community CIC\""
+                } else if (buildConfig.TARGET_OS == "mac") {
+                    filter = "**/OpenJDK*_mac_*.tar.gz"
+                    certificate = "\"Developer ID Application: London Jamocha Community CIC\""
 
-                        // currently only macos10.10 can sign
-                        nodeFilter = "${nodeFilter}&&macos10.14"
-                    }
+                    nodeFilter = "${nodeFilter}&&macos10.14"
+                }
 
-                    def params = [
-                            context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
-                            context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
-                            context.string(name: 'OPERATING_SYSTEM', value: "${buildConfig.TARGET_OS}"),
-                            context.string(name: 'VERSION', value: "${versionInfo.major}"),
-                            context.string(name: 'FILTER', value: "${filter}"),
-                            context.string(name: 'CERTIFICATE', value: "${certificate}"),
-                            ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"],
-                    ]
+                def params = [
+                        context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                        context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                        context.string(name: 'OPERATING_SYSTEM', value: "${buildConfig.TARGET_OS}"),
+                        context.string(name: 'VERSION', value: "${versionInfo.major}"),
+                        context.string(name: 'FILTER', value: "${filter}"),
+                        context.string(name: 'CERTIFICATE', value: "${certificate}"),
+                        ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"],
+                ]
 
-                    def signJob = context.build job: "build-scripts/release/sign_build",
-                            propagate: true,
-                            parameters: params
-                    
-                   // Output notification of downstream failure (the build will fail automatically)
-                   def jobResult = signJob.getResult()
-                   if (jobResult != 'SUCCESS') {
-                       context.println "ERROR: downstream sign_build ${jobResult}.\nSee ${signJob.getAbsoluteUrl()} for details"
-                   } 
+                def signJob = context.build job: "build-scripts/release/sign_build",
+                        propagate: true,
+                        parameters: params
+                
+                // Output notification of downstream failure (the build will fail automatically)
+                def jobResult = signJob.getResult()
+                if (jobResult != 'SUCCESS') {
+                    context.println "ERROR: downstream sign_build ${jobResult}.\nSee ${signJob.getAbsoluteUrl()} for details"
+                } 
 
+                context.node('master') {
                     //Copy signed artifact back and rearchive
                     context.sh "rm workspace/target/* || true"
 
@@ -361,11 +410,12 @@ class Build {
         context.node('master') {
             context.stage("installer") {
                 switch (buildConfig.TARGET_OS) {
-                        case "mac": buildMacInstaller(versionData); break
-                        case "linux": buildLinuxInstaller(versionData); break
-                        case "windows": buildWindowsInstaller(versionData); break
-                	default: return; break
+                    case "mac": buildMacInstaller(versionData); break
+                    case "linux": buildLinuxInstaller(versionData); break
+                    case "windows": buildWindowsInstaller(versionData); break
+                    default: return; break
                 }
+
                 // Archive the Mac and Windows pkg/msi
                 // (Linux installer job produces no artifacts, it just uploads rpm/deb to the repositories)
                 if (buildConfig.TARGET_OS == "mac" || buildConfig.TARGET_OS == "windows") {

@@ -70,6 +70,12 @@ class Builder implements Serializable {
 
         def testList = getTestList(platformConfig)
 
+        // Always clean on mac due to https://github.com/AdoptOpenJDK/openjdk-build/issues/1980
+        def cleanWorkspace = cleanWorkspaceBeforeBuild
+        if (platformConfig.os == "mac") {
+            cleanWorkspace = true
+        }
+
         return new IndividualBuildConfig(
                 JAVA_TO_BUILD: javaToBuild,
                 ARCHITECTURE: platformConfig.arch as String,
@@ -90,7 +96,7 @@ class Builder implements Serializable {
                 PUBLISH_NAME: publishName,
                 ADOPT_BUILD_NUMBER: adoptBuildNumber,
                 ENABLE_TESTS: enableTests,
-                CLEAN_WORKSPACE: cleanWorkspaceBeforeBuild
+                CLEAN_WORKSPACE: cleanWorkspace
         )
     }
 
@@ -303,17 +309,16 @@ class Builder implements Serializable {
             tag = publishName
         }
 
-        context.node("master") {
-            context.stage("publish") {
-                context.build job: 'build-scripts/release/refactor_openjdk_release_tool',
-                        parameters: [
-                                ['$class': 'BooleanParameterValue', name: 'RELEASE', value: release],
-                                context.string(name: 'TAG', value: tag),
-                                context.string(name: 'TIMESTAMP', value: timestamp),
-                                context.string(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
-                                context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${currentBuild.getNumber()}"),
-                                context.string(name: 'VERSION', value: determineReleaseToolRepoVersion())]
-            }
+        context.stage("publish") {
+            context.build job: 'build-scripts/release/refactor_openjdk_release_tool',
+                    parameters: [
+                        ['$class': 'BooleanParameterValue', name: 'RELEASE', value: release],
+                        context.string(name: 'TAG', value: tag),
+                        context.string(name: 'TIMESTAMP', value: timestamp),
+                        context.string(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
+                        context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${currentBuild.getNumber()}"),
+                        context.string(name: 'VERSION', value: determineReleaseToolRepoVersion())
+                    ]
         }
     }
 

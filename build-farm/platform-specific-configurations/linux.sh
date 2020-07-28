@@ -128,8 +128,8 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
     "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
-# Any version above 10
-if [ "$JAVA_FEATURE_VERSION" -gt 10 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+# Any version above 10, OpenJ9 or arm32 (See support#33 ref arm)
+if [ "$JAVA_FEATURE_VERSION" -gt 10 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ] || [ "${ARCHITECTURE}" == "arm" ]; then
     # If we have the RedHat devtoolset 7 installed, use gcc 7 from there, else /usr/local/gcc/bin
     if [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
       export PATH=/usr/local/gcc/bin:$PATH

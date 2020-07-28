@@ -515,13 +515,14 @@ printJavaVersionString()
      elif [ "${ARCHITECTURE}" == "riscv64" ]; then
        # riscv is cross compiled, so we cannot run it on the build system
        # This is a temporary plausible solution in the absence of another fix
+       local jdkversion=$(getOpenJdkVersion)
        cat << EOT > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/version.txt"
-openjdk version "11.0.0-internal" 2020-05-22
-OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.0-internal+0-adhoc.jenkins.openj9-openjdk-jdk11)
-Eclipse OpenJ9 VM AdoptOpenJDK (build master-000000000, JRE 11 Linux riscv-64-Bit Compressed References 20200505_46 (JIT disabled, AOT disabled)
+openjdk version "${jdkversion%%+*}" "$(date +%Y-%m-%d)"
+OpenJDK Runtime Environment AdoptOpenJDK (build ${jdkversion%%+*}+0-$(date +%Y%m%d%H%M))
+Eclipse OpenJ9 VM AdoptOpenJDK (build master-000000000, JRE 11 Linux riscv-64-Bit Compressed References $(date +%Y%m%d)_00 (JIT disabled, AOT disabled)
 OpenJ9   - 000000000
 OMR      - 000000000
-JCL      - 000000000 based on jdk-11.0.0+0)
+JCL      - 000000000 based on ${jdkversion})
 EOT
      else
        # print version string around easy to find output
