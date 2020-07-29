@@ -147,7 +147,7 @@ class Config15 {
                 arch                 : 'aarch64',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace'
         ],
   ]
 
