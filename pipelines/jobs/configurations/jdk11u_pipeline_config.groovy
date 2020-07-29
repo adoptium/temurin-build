@@ -32,10 +32,10 @@ class Config11 {
                         release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
                 configureArgs       : [
-                        "openj9"      : '--disable-ccache --enable-jitserver --enable-dtrace=auto',
-                        "hotspot"     : '--disable-ccache --enable-dtrace=auto',
-                        "corretto"    : '--disable-ccache --enable-dtrace=auto',
-                        "SapMachine"  : '--disable-ccache --enable-dtrace=auto'
+                        "openj9"      : '--enable-jitserver --enable-dtrace=auto',
+                        "hotspot"     : '--enable-dtrace=auto',
+                        "corretto"    : '--enable-dtrace=auto',
+                        "SapMachine"  : '--enable-dtrace=auto'
                 ]
         ],
 
@@ -92,7 +92,7 @@ class Config11 {
                 os                  : 'linux',
                 arch                : 's390x',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
-                configureArgs       : '--disable-ccache --enable-dtrace=auto'
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         sparcv9Solaris    : [
@@ -107,8 +107,8 @@ class Config11 {
                 arch                : 'ppc64le',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 configureArgs       : [
-                        "hotspot"     : '--disable-ccache --enable-dtrace=auto',
-                        "openj9"      : '--disable-ccache --enable-dtrace=auto --enable-jitserver'
+                        "hotspot"     : '--enable-dtrace=auto',
+                        "openj9"      : '--enable-dtrace=auto --enable-jitserver'
                 ]
 
         ],
@@ -147,21 +147,21 @@ class Config11 {
                 arch                 : 'x64',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-jitserver --enable-dtrace=auto'
+                configureArgs        : '--with-noncompressedrefs --enable-jitserver --enable-dtrace=auto'
         ],
         s390xLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 's390x',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
         ],
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto --enable-jitserver'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto --enable-jitserver'
         ],
         aarch64LinuxXL    : [
                 os                   : 'linux',
@@ -169,7 +169,7 @@ class Config11 {
                 arch                 : 'aarch64',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
         ],
         riscv64Linux      :  [
                 os                   : 'linux',

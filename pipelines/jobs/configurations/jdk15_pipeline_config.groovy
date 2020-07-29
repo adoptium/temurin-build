@@ -26,8 +26,8 @@ class Config15 {
                 ],
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
                 configureArgs       : [
-                        "openj9"      : '--disable-ccache --enable-dtrace --enable-jitserver',
-                        "hotspot"     : '--disable-ccache --enable-dtrace'
+                        "openj9"      : '--enable-dtrace --enable-jitserver',
+                        "hotspot"     : '--enable-dtrace'
                 ]
         ],
 
@@ -40,7 +40,7 @@ class Config15 {
                 ],
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs       : '--with-noncompressedrefs --disable-ccache --enable-dtrace --enable-jitserver'
+                configureArgs       : '--with-noncompressedrefs --enable-dtrace --enable-jitserver'
         ],
 
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
@@ -93,8 +93,9 @@ class Config15 {
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
+
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
-                configureArgs       : '--disable-ccache --enable-dtrace'
+                configureArgs       : '--enable-dtrace'
         ],
 
         s390xLinuxXL  : [
@@ -102,7 +103,7 @@ class Config15 {
                 arch                 : 's390x',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace'
         ],
 
         ppc64leLinux    : [
@@ -110,8 +111,8 @@ class Config15 {
                 arch                : 'ppc64le',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 configureArgs       : [
-                        "hotspot"     : '--disable-ccache --enable-dtrace',
-                        "openj9"      : '--disable-ccache --enable-dtrace --enable-jitserver'
+                        "hotspot"     : '--enable-dtrace',
+                        "openj9"      : '--enable-dtrace --enable-jitserver'
                 ]
         ],
 
@@ -146,7 +147,7 @@ class Config15 {
                 arch                 : 'aarch64',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace=auto'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
         ],
   ]
 

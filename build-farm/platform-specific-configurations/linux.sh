@@ -147,6 +147,10 @@ then
   export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u"
 fi
 
+if which ccache 2> /dev/null; then
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
+fi
+
 if [ "${ARCHITECTURE}" == "riscv64" ]
 then
 	echo RISCV cross-compilation ... Downloading latest nightly OpenJ9/x64 as build JDK
