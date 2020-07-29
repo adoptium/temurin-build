@@ -32,31 +32,34 @@ node ("master") {
       buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
     }
 
-    if (buildConfigurations != null) {
-      println "[INFO] Found buildConfigurations:\n$buildConfigurations"
-    }
-    else {
-      throw new Exception("[ERROR] Could not find buildConfigurations for ${javaVersion}")
-    }
+    if (buildConfigurations == null) { throw new Exception("[ERROR] Could not find buildConfigurations for ${javaVersion}") }
 
     // Load targetConfigurations from config file. This is what is being run in the nightlies
     load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}.groovy"
 
-    println "[INFO] Found targetConfigurations:\n$targetConfigurations"
+    // Pull in paramterised values (or use defaults if they're not defined)
+    def jobRoot = "$JOB_ROOT" != "" ? JOB_ROOT : "build-scripts"
+    def jenkinsBuildRoot = "$JENKINS_BUILD_ROOT" != "" ? JENKINS_BUILD_ROOT : "https://ci.adoptopenjdk.net/job/build-scripts/"
+
+    println "[INFO] Running regeneration script with the following configuration:"
+    println "VERSION: $javaVersion"
+    println "BUILD CONFIGURATIONS: $buildConfigurations"
+    println "JOBS TO GENERATE: $targetConfigurations"
+    println "JOB ROOT: $jobRoot"
+    println "JENKINS ROOT: $jenkinsBuildRoot"
 
     Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
 
-    println "[INFO] Running regeneration script..."
     regenerationScript(
-            javaVersion,
-            buildConfigurations,
-            targetConfigurations,
-            currentBuild,
-            this,
-            null,
-            null,
-            null,
-            null
+      javaVersion,
+      buildConfigurations,
+      targetConfigurations,
+      currentBuild,
+      this,
+      jobRoot,
+      null,
+      null,
+      jenkinsBuildRoot
     ).regenerate()
       
     println "[SUCCESS] All done!"
