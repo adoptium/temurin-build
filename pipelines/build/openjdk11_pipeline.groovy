@@ -29,6 +29,7 @@ if (scmVars != null && configureBuild != null && buildConfigurations != null) {
         javaToBuild,
         buildConfigurations,
         targetConfigurations,
+        dockerExcludes,
         enableTests,
         releaseType,
         scmReference,
