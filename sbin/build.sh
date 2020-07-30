@@ -621,25 +621,32 @@ removingUnnecessaryFiles() {
   esac
   rm -rf "${dirToRemove}"/demo || true
 
-  # .diz files may be present on any platform
-  # Note that on AIX, find does not support the '-delete' option.
-  find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.diz" | xargs rm -f || true
+  # In OpenJ9 builds, debug symbols are captured in the debug image:
+  # we don't want another copy of them in the main JDK or JRE archives.
+  # Builds for other variants don't normally include debug symbols,
+  # but if they were explicitly requested via the configure option
+  # '--with-native-debug-symbols=(external|zipped)' leave them alone.
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] ; then
+    # .diz files may be present on any platform
+    # Note that on AIX, find does not support the '-delete' option.
+    find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.diz" | xargs rm -f || true
 
-  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
-    *cygwin*)
-      # on Windows, we want to remove .map and .pdb files
-      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.map" -delete || true
-      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.pdb" -delete || true
-      ;;
-    darwin)
-      # on MacOSX, we want to remove .dSYM folders
-      find "${jdkTargetPath}" "${jreTargetPath}" -type d -name "*.dSYM" | xargs -I "{}" rm -rf "{}"
-      ;;
-    *)
-      # on other platforms, we want to remove .debuginfo files
-      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.debuginfo" | xargs rm -f || true
-      ;;
-  esac
+    case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+      *cygwin*)
+        # on Windows, we want to remove .map and .pdb files
+        find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.map" -delete || true
+        find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.pdb" -delete || true
+        ;;
+      darwin)
+        # on MacOSX, we want to remove .dSYM folders
+        find "${jdkTargetPath}" "${jreTargetPath}" -type d -name "*.dSYM" | xargs -I "{}" rm -rf "{}"
+        ;;
+      *)
+        # on other platforms, we want to remove .debuginfo files
+        find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.debuginfo" | xargs rm -f || true
+        ;;
+    esac
+  fi
 
   echo "Finished removing unnecessary files from ${jdkTargetPath}"
 }
