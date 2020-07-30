@@ -96,6 +96,14 @@ if [ ! -d "${JDK_BOOT_DIR}" ]
 then
   echo Setting JDK_BOOT_DIR to \$JAVA_HOME
   export JDK_BOOT_DIR="${JAVA_HOME}"
+
+  # Without this, a blank value can be passed into makejdk-any-platform.sh which causes an obscure parsing failure
+  if [ ! -d "${JDK_BOOT_DIR}" ]
+  then
+    echo "[ERROR] No JDK Boot Directory has been found, the likelyhood is that neither JDK${JDK_BOOT_VERSION}_BOOT_DIR or JAVA_HOME are set on this machine"
+    exit 2
+  fi
+
 fi
 
 echo "Boot jdk directory: ${JDK_BOOT_DIR}:"
