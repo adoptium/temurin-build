@@ -142,9 +142,10 @@ if [ "$JAVA_FEATURE_VERSION" -gt 10 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPEN
     fi
 fi
 
-if [ "${ARCHITECTURE}" == "aarch64" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
-then
+if [ "${ARCHITECTURE}" == "aarch64" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]; then
   export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u"
+elif [ "${ARCHITECTURE}" == "arm" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]; then
+  export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-aarch32-jdk8u"
 fi
 
 if which ccache 2> /dev/null; then

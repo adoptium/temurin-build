@@ -225,7 +225,7 @@ processArgumentsforSpecificArchitectures() {
 
   "armv7l")
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && isHotSpot; then
-      jvm_variant=zero
+      jvm_variant=client
     else
       jvm_variant=server,client
       make_args_for_any_platform="DEBUG_BINARIES=true images legacy-jre-image"
