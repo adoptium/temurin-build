@@ -43,7 +43,7 @@ node('master') {
     
     println "[INFO] JDK${javaVersion}: disableJob = ${config.disableJob}"
 
-    if (Boolean.parseBoolean(enableAutomation) == true) {
+    if (Boolean.parseBoolean(enablePipelineSchedule) == true) {
       try {
         config.triggerSchedule = target.triggerSchedule
       } catch (Exception ex) {
