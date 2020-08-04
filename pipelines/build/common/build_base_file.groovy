@@ -46,6 +46,7 @@ class Builder implements Serializable {
     boolean release
     boolean publish
     boolean enableTests
+    boolean enableInstallers
     boolean cleanWorkspaceBeforeBuild
     boolean propagateFailures
 
@@ -97,6 +98,7 @@ class Builder implements Serializable {
                 PUBLISH_NAME: publishName,
                 ADOPT_BUILD_NUMBER: adoptBuildNumber,
                 ENABLE_TESTS: enableTests,
+                ENABLE_INSTALLERS: enableInstallers,
                 CLEAN_WORKSPACE: cleanWorkspace
         )
     }
@@ -373,6 +375,7 @@ class Builder implements Serializable {
         context.echo "Java: ${javaToBuild}"
         context.echo "OS: ${targetConfigurations}"
         context.echo "Enable tests: ${enableTests}"
+        context.echo "Enable Installers: ${enableInstallers}"
         context.echo "Publish: ${publish}"
         context.echo "Release: ${release}"
         context.echo "Tag/Branch name: ${scmReference}"
@@ -450,6 +453,7 @@ return {
     String targetConfigurations,
     String dockerExcludes,
     String enableTests,
+    String enableInstallers,
     String releaseType,
     String scmReference,
     String overridePublishName,
@@ -495,6 +499,7 @@ return {
             targetConfigurations: new JsonSlurper().parseText(targetConfigurations) as Map,
             dockerExcludes: buildsExcludeDocker,
             enableTests: Boolean.parseBoolean(enableTests),
+            enableInstallers: Boolean.parseBoolean(enableInstallers),
             publish: publish,
             release: release,
             scmReference: scmReference,

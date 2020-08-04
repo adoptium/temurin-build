@@ -121,14 +121,20 @@ class PullRequestTestPipeline implements Serializable {
 }
 
 Map<String, ?> defaultTestConfigurations = [
-        "x64Linux": [
-                "hotspot",
-                "openj9"
-        ],
-        "aarch64Linux": [
-                "hotspot",
-                "openj9"
-        ]
+    "x64Linux": [
+        "hotspot",
+        "openj9"
+    ],
+    "aarch64Linux": [
+        "hotspot",
+        "openj9"
+    ],
+    "x64Windows": [
+        "hotspot"
+    ],
+    "x64Mac": [
+        "hotspot"
+    ]
 ]
 
 List<Integer> defaultJavaVersions = [8, 11, 15, 16]

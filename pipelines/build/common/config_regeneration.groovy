@@ -211,6 +211,7 @@ class Regeneration implements Serializable {
                 PUBLISH_NAME: "",
                 ADOPT_BUILD_NUMBER: "",
                 ENABLE_TESTS: true,
+                ENABLE_INSTALLERS: true,
                 CLEAN_WORKSPACE: true
             )
         } catch (Exception e) {
