@@ -21,3 +21,17 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 if [ "${JAVA_TO_BUILD}" == "${JDK15_VERSION}" ]; then
   export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-portola"
 fi
+
+# Any version above 8 (11 for now due to openjdk-build#1409
+if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
+    BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+    BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+    export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+    "$JDK_BOOT_DIR/bin/java" -version
+    executedJavaVersion=$?
+    if [ $executedJavaVersion -ne 0 ]; then
+        echo "Failed to obtain or find a valid boot jdk"
+        exit 1
+    fi
+    "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
+fi
