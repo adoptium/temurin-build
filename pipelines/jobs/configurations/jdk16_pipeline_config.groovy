@@ -34,8 +34,7 @@ class Config16 {
         x64AlpineLinux  : [
                 os                  : 'alpine-linux',
                 arch                : 'x64',
-                // dockerImage         : 'adoptopenjdk/alpine3_build_image',
-                dockerImage         : 'gdams/alpine3_build_image',
+                dockerImage         : 'adoptopenjdk/alpine3_build_image',
                 test                : [
                         // TODO: enable tests
                         nightly: false,
