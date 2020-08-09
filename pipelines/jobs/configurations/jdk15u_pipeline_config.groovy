@@ -46,6 +46,18 @@ class Config15 {
                 configureArgs       : '--with-noncompressedrefs --enable-dtrace --enable-jitserver'
         ],
 
+        x64AlpineLinux  : [
+                os                  : 'alpine-linux',
+                arch                : 'x64',
+                dockerImage         : 'adoptopenjdk/alpine3_build_image',
+                test                : [
+                        // TODO: enable tests
+                        nightly: false,
+                        // release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
+                        release: false
+                ]
+        ],
+
         // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows: [
                 os                  : 'windows',

@@ -18,6 +18,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
-if [ "${JAVA_TO_BUILD}" == "${JDKHEAD_VERSION}" ]; then
+if [ "${JAVA_TO_BUILD}" == "${JDK15_VERSION}" ]; then
   export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-portola"
 fi

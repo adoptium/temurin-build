@@ -13,6 +13,9 @@ targetConfigurations = [
         "x64LinuxXL"  : [
                 "openj9"
         ],
+        "x64AlpineLinux" : [
+                "hotspot"
+        ],
         "x32Windows"  : [
                 "hotspot"
         ],
