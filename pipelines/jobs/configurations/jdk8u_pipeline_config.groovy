@@ -111,9 +111,7 @@ class Config8 {
         arm32Linux    : [
                 os  : 'linux',
                 arch: 'arm',
-                // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
-                //test                : ['sanity.openjdk']
-                test: false
+                test                : ['sanity.openjdk']
         ],
 
         aarch64Linux  : [
