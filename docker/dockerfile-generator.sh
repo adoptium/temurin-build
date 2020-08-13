@@ -274,6 +274,7 @@ RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptopenj
 printCopyFolders(){
   echo "
 COPY sbin /openjdk/sbin
+COPY security /openjdk/security
 COPY workspace/config /openjdk/config
 COPY pipelines /openjdk/pipelines" >> $DOCKERFILE_PATH
 }

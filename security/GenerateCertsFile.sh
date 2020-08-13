@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+set -euo pipefail
 
-# Delete any existing file
-rm -f certdata.txt*
+# Remove files from last run if present
+rm -f ca-bundle.crt cacerts
 
-# Grab our certificate information to use from the Mozilla site
-wget https://hg.mozilla.org/mozilla-central/raw-file/tip/security/nss/lib/ckfw/builtins/certdata.txt .
+# Convert Mozilla's list of certificates into a PEM file
+./mk-ca-bundle.pl -n ca-bundle.crt
 
-# Call the script to generate our crt file
-perl mk-ca-bundle.pl -n > ca-bundle.crt
-
-# Finally use the keyutil application
-java -jar keyutil-0.4.0.jar --import --new-keystore trustStore.jks --password changeit --force-new-overwrite --import-pem-file ca-bundle.crt
+# Convert PEM file into JKS keystore
+java -jar keyutil-0.4.0.jar \
+    --import \
+    --new-keystore cacerts \
+    --password changeit \
+    --force-new-overwrite \
+    --import-pem-file ca-bundle.crt
