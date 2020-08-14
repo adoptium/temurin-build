@@ -494,7 +494,7 @@ checkingAndDownloadingFreeType() {
 
 # Generates cacerts file
 prepareCacerts() {
-    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/security"
+    cd "$SCRIPT_DIR/../security"
     ./GenerateCertsFile.sh
 }
 

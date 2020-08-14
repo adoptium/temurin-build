@@ -349,7 +349,7 @@ configureCommandParameters()
 
   if [ "${BUILD_CONFIG[CUSTOM_CACERTS]}" != "false" ] ; then
     echo "Configure custom cacerts file security/cacerts"
-    addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "${BUILD_CONFIG[WORKSPACE_DIR]}/security/cacerts"
+    addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "$SCRIPT_DIR/../security/cacerts"
   fi
 
   # Now we add any configure arguments the user has specified on the command line.
