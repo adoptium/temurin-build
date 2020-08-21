@@ -46,7 +46,7 @@ awk '
 # becomes `OU=GlobalSign Root CA - R2,O=GlobalSign,CN=GlobalSign`. The full
 # subject needs to be used to prevent alias collisions.
 for FILE in certs/*.crt; do
-    SUBJECT=$(openssl x509 -subject -noout -in $FILE)
+    SUBJECT=$(openssl x509 -subject -noout -in "$FILE")
     TRIMMED_SUBJECT="${SUBJECT#*subject= /}"
     ALIAS="${TRIMMED_SUBJECT//\//,}"
 
