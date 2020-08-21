@@ -495,7 +495,7 @@ checkingAndDownloadingFreeType() {
 # Generates cacerts file
 prepareCacerts() {
     cd "$SCRIPT_DIR/../security"
-    ./GenerateCertsFile.sh
+    ./mk-cacerts.sh
 }
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, etc.)
