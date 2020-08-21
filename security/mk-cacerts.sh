@@ -32,10 +32,10 @@ fi
 
 # Split them PEM file into individual files because keytool cannot do it on its
 # own.
-gawk '
+awk '
   split_after == 1 {n++;split_after=0}
   /-----END CERTIFICATE-----/ {split_after=1}
-  {print > "certs/cert" n ".crt"}' < ca-bundle.crt
+  {print > ("certs/cert" n ".crt")}' < ca-bundle.crt
 
 # Import each CA certificate individually into the keystore. As alias, we use
 # the subject which looks like
