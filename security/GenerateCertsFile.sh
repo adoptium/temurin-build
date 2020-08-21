@@ -17,8 +17,14 @@ set -euo pipefail
 # Remove files from last run if present
 rm -f ca-bundle.crt cacerts
 
-# Convert Mozilla's list of certificates into a PEM file
-./mk-ca-bundle.pl -n ca-bundle.crt
+if ! [ -f "certdata.txt" ] ; then
+    echo "Local certdata.txt missing, aborting." >&2
+    exit 1
+fi
+
+# Convert Mozilla's list of certificates into a PEM file. The -n switch makes
+# it use the local certdata.txt in this folder.
+./mk-ca-bundle.pl -v -n ca-bundle.crt
 
 # Convert PEM file into JKS keystore
 java -jar keyutil-0.4.0.jar \
