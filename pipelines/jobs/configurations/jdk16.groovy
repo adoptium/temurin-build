@@ -7,6 +7,9 @@ targetConfigurations = [
                 "hotspot",
                 "openj9"
         ],
+        "x64AlpineLinux" : [
+                "hotspot"
+        ],
         "x64Windows"  : [
                 "hotspot",
                 "openj9"
