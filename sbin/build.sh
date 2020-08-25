@@ -826,6 +826,94 @@ fixJavaHomeUnderDocker() {
   fi
 }
 
+addInfoToReleaseFile(){
+  # Extra information is added to the release file here
+  cd ${BUILD_CONFIG[JDK_PATH]}
+  addImplementor
+  addBuildSHA
+  addBuildNumber
+  addFullVersion
+  addBuildOS
+  addJVMVariant
+  addJVMVersion
+  # OpenJ9 specific options
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    addHeapSize
+  fi
+}
+
+addBuildNumber(){
+  # If variable is populated add it to the release file
+  if [[ ${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]} ]]; then
+    echo -e BUILD_NUMBER=\"${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}\" >> release
+  fi
+}
+
+addHeapSize(){
+  local jdkPath=${BUILD_CONFIG[JDK_PATH]}
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+    if [ -d $jdkPath/jre/lib/amd64/compressedrefs ] || [ -d $jdkPath/lib/compressedrefs ]; then
+      echo -e HEAP_SIZE=\"Standard\" >> release
+    else # Large heap has the folder /jre/lib/amd64/default or /lib/default
+      echo -e HEAP_SIZE=\"Large\" >> release
+    fi
+  fi
+}
+
+addImplementor(){
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+    echo -e IMPLEMENTOR=\"AdoptOpenJDK\" >> release
+  fi  
+}
+
+addJVMVersion(){
+  local javaLoc="${BUILD_CONFIG[JDK_PATH]}/bin/java"
+  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "cygwin" ]; then
+    javaLoc="${BUILD_CONFIG[JDK_PATH]}/bin/java.exe"
+  elif [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]; then
+    javaLoc="${BUILD_CONFIG[JDK_PATH]}/Contents/Home/bin/java"
+  fi
+  local jvmVersion = $($javaLoc -XshowSettings:properties -version 2>&1 | grep 'java.vm.version' | sed 's/^.*= //')
+  echo -e JVM_VERSION=\"$jvmVersion\" >> release
+}
+
+addFullVersion(){
+      echo -e FULL_VERSION=\"${BUILD_CONFIG[TAG]}\" >> release
+}
+
+addJVMVariant(){
+  local jvmName=""
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    jvmName="Openj9";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
+    jvmName="Corretto";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
+    jvmName="Hotspot";
+  fi
+  echo -e JVM_VARIANT=\"$jvmName\" >> release
+}
+
+addBuildSHA(){
+  local buildSHA=$(git -C ${BUILD_CONFIG[WORKSPACE_DIR]} rev-parse --short HEAD)
+  echo -e BUILD_SOURCE=\"$buildSHA\" >> release
+}
+
+addBuildOS(){
+  local buildOS=""
+  local buildVer=""
+  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "cygwin" ]; then
+    buildOS=$(systeminfo | sed -n 's/^OS Name:[[:blank:]]*//p')
+    buildVer=$(systeminfo | sed -n 's/^OS Version:[[:blank:]]*//p')
+  elif [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]; then
+    buildOS=$(sw_vers | sed -n 's/^ProductName:[[:blank:]]*//p')
+    buildVer=$(sw_vers | tail -n 2 | awk '{print $2}')
+  elif [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
+    buildOS=$(uname -s)
+    buildVer=$(uname -r)
+  fi
+  echo -e BUILD_INFO=\"OS: $buildOS Version: $buildVer\" >> release
+}
+
 ################################################################################
 
 loadConfigFromFile
@@ -847,6 +935,7 @@ buildTemplatedFile
 executeTemplatedFile
 
 printJavaVersionString
+addInfoToReleaseFile
 
 removingUnnecessaryFiles
 copyFreeFontForMacOS
