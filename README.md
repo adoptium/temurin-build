@@ -166,7 +166,7 @@ the one you are trying to build.
 -k, --keep
 if using docker, keep the container after the build.
 
---make-exploded
+--make-exploded-image
 creates an exploded image (useful for codesigning jmods). Use --assemble-exploded-image once you have signed the jmods to complete the packaging steps.
 
 -n, --no-colour

@@ -200,7 +200,7 @@ function parseConfigurationArguments() {
         "--make-args" )
         BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]="$1"; shift;;
 
-        "--make-exploded" )
+        "--make-exploded-image" )
         BUILD_CONFIG[MAKE_EXPLODED]=true;;
 
         "--assemble-exploded-image" )
