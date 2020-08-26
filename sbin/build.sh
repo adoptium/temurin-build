@@ -374,7 +374,6 @@ buildTemplatedFile() {
 
   echo "Currently at '${PWD}'"
 
-  # Skip configure for prebuilt exploded image
   FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
   echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
 
