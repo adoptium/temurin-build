@@ -374,6 +374,7 @@ buildTemplatedFile() {
 
   echo "Currently at '${PWD}'"
 
+  # Skip configure for prebuilt exploded image
   FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
   echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
 
@@ -385,6 +386,11 @@ buildTemplatedFile() {
     ADDITIONAL_MAKE_TARGETS=" test-image debug-image"
   elif [ "$JDK_VERSION_NUMBER" -gt 8 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
     ADDITIONAL_MAKE_TARGETS=" test-image"
+  fi
+
+  if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" == "true" ]]; then
+    # In order to make an exploded image we cannot have any additional targets
+    ADDITIONAL_MAKE_TARGETS=""
   fi
 
   FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]} ${ADDITIONAL_MAKE_TARGETS}"
@@ -834,6 +840,16 @@ cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
 parseArguments "$@"
 
+if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
+  buildTemplatedFile
+  executeTemplatedFile
+  removingUnnecessaryFiles
+  copyFreeFontForMacOS
+  createOpenJDKTarArchive
+  showCompletionMessage
+  exit 0
+fi
+
 buildSharedLibs
 
 wipeOutOldTargetDir
@@ -846,11 +862,13 @@ configureCommandParameters
 buildTemplatedFile
 executeTemplatedFile
 
-printJavaVersionString
+if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
+  printJavaVersionString
+  removingUnnecessaryFiles
+  copyFreeFontForMacOS
+  createOpenJDKTarArchive
+fi
 
-removingUnnecessaryFiles
-copyFreeFontForMacOS
-createOpenJDKTarArchive
 showCompletionMessage
 
 # ccache is not detected properly TODO

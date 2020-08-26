@@ -631,9 +631,11 @@ applyPatches() {
 ##################################################################
 
 function configureWorkspace() {
-  createWorkspace
-  downloadingRequiredDependencies
-  relocateToTmpIfNeeded
-  checkoutAndCloneOpenJDKGitRepo
-  applyPatches
+  if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" != "true" ]]; then
+    createWorkspace
+    downloadingRequiredDependencies
+    relocateToTmpIfNeeded
+    checkoutAndCloneOpenJDKGitRepo
+    applyPatches
+  fi
 }
