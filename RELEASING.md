@@ -142,7 +142,7 @@ The following examples all use `-m1` as an example - this gets replaced with a l
 3. OpenJDK extensions branches the `openj9` branch to create the release branch, called `openj9-0.nn.0`
 4. Ask someone in the extensions team to make the following modifications:
    * Update [closed/get_j9_source.sh](https://github.com/ibmruntimes/openj9-openjdk-jdk11/blob/openj9/closed/get_j9_source.sh) (Link is for JDK11, chnage as appropriate!) to pull in Eclipse OpenJ9 & OMR milestone 1 tags e.g. `openj9-0.nn.0-m1`([Sample PR](https://github.com/ibmruntimes/openj9-openjdk-jdk11/commit/4607d33d99c566054261557fdf34bcbfaefc6480))
-   * Update custom-spec.gmk.in with correct `J9JDK_EXT_VERSION` for the release, [Sample commit for 11](https://github.com/ibmruntimes/openj9-openjdk-jdk8/commit/8512fe26e568962d4ee08f82f2f59d3bb241bb9d) and [Sample commit for 11](https://github.com/ibmruntimes/openj9-openjdk-jdk11/commit/c7964e29fea19a7803a86bc991de0d0e45547dc8) e.g:
+   * Update custom-spec.gmk.in with correct `J9JDK_EXT_VERSION` for the release, [Sample commit for 8](https://github.com/ibmruntimes/openj9-openjdk-jdk8/commit/8512fe26e568962d4ee08f82f2f59d3bb241bb9d) and [Sample commit for 11](https://github.com/ibmruntimes/openj9-openjdk-jdk11/commit/c7964e29fea19a7803a86bc991de0d0e45547dc8) e.g:
 ```
 jdk11+ ==> J9JDK_EXT_VERSION       := 11.0.5.0-m1
 jdk8     ==>  J9JDK_EXT_VERSION       := $(JDK_MINOR_VERSION).$(JDK_MICRO_VERSION).$(JDK_MOD_VERSION).$(JDK_FIX_VERSION)-m1
@@ -154,6 +154,7 @@ JDK_FIX_VERSION=0
    * `targetConfigurations`: remove all "hotspot" entries
    * `releaseType`: `Nightly`
    * `overridePublishName`: github binaries publish name, e.g. `jdk8u232-b09_openj9-0.17.0-m1` or `jdk-11.0.5+10_openj9-0.17.0-m1`
+   (Note: Everything before the underscore should be copied from the OPENJDK_TAG value inside <extensions_repo_url>/closed/openjdk-tag.gmk)
    * `scmReference`: extensions release branch: e.g. `openj9-0.17.0`
    * `additionalConfigureArgs`: JDK8: `--with-milestone=fcs`, JDK11+: `--without-version-pre --without-version-opt`
    * `enableTests`: "ticked"
