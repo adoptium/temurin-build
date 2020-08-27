@@ -32,6 +32,7 @@
 # map. This is why we can't have nice things.
 CONFIG_PARAMS=(
 ADOPT_PATCHES
+ASSEMBLE_EXPLODED_IMAGE
 OPENJDK_BUILD_REPO_BRANCH
 OPENJDK_BUILD_REPO_URI
 BRANCH
@@ -65,6 +66,7 @@ TEST_IMAGE_PATH
 JVM_VARIANT
 MACOSX_CODESIGN_IDENTITY
 MAKE_ARGS_FOR_ANY_PLATFORM
+MAKE_EXPLODED
 MAKE_COMMAND_NAME
 NUM_PROCESSORS
 OPENJDK_BUILD_NUMBER
@@ -197,6 +199,12 @@ function parseConfigurationArguments() {
 
         "--make-args" )
         BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]="$1"; shift;;
+
+        "--make-exploded-image" )
+        BUILD_CONFIG[MAKE_EXPLODED]=true;;
+
+        "--assemble-exploded-image" )
+        BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=true;;
 
         "--codesign-identity" )
         BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]="$1"; shift;;
@@ -352,6 +360,9 @@ function configDefaults() {
 
   # The OpenJDK source code repository to build from, e.g. an AdoptOpenJDK repo
   BUILD_CONFIG[REPOSITORY]=""
+
+  BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]:-"false"}
+  BUILD_CONFIG[MAKE_EXPLODED]=${BUILD_CONFIG[MAKE_EXPLODED]:-"false"}
 
   # The default AdoptOpenJDK/openjdk-build repo branch
   BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]="master"
