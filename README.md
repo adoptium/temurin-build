@@ -169,6 +169,9 @@ if using docker, keep the container after the build.
 --make-exploded-image
 creates an exploded image (useful for codesigning jmods). Use --assemble-exploded-image once you have signed the jmods to complete the packaging steps.
 
+--custom-cacerts <true|false>
+If true (default), a custom cacerts file will be generated based on Mozilla's list of CA certificates (see folder security/). If false, the file shipped by OpenJDK will be used. 
+
 -n, --no-colour
 disable colour output.
 
