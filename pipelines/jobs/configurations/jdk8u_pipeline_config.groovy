@@ -102,6 +102,7 @@ class Config8 {
         ppc64leLinux  : [
                 os  : 'linux',
                 arch: 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver'
@@ -142,6 +143,7 @@ class Config8 {
         ppc64leLinuxXL       : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 additionalFileNameTag: "linuxXL",
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
                 configureArgs        : '--with-noncompressedrefs --enable-jitserver'

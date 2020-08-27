@@ -105,6 +105,7 @@ class Config11 {
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
                 configureArgs       : [
                         "hotspot"     : '--enable-dtrace=auto',
@@ -159,6 +160,7 @@ class Config11 {
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto --enable-jitserver'
