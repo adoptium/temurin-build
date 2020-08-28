@@ -567,6 +567,11 @@ getDebugImageArchivePath() {
   echo "${jdkArchivePath}-debug-image"
 }
 
+getDebugSymbolsArchivePath() {
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-debug-symbols"
+}
+
 # Clean up
 removingUnnecessaryFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
@@ -631,28 +636,56 @@ removingUnnecessaryFiles() {
   # but if they were explicitly requested via the configure option
   # '--with-native-debug-symbols=(external|zipped)' leave them alone.
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] ; then
-    # .diz files may be present on any platform
-    # Note that on AIX, find does not support the '-delete' option.
-    find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.diz" | xargs rm -f || true
+    deleteDebugSymbols
+  fi
 
+  if [ ${BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]} == true ]; then
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
       *cygwin*)
-        # on Windows, we want to remove .map and .pdb files
-        find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.map" -delete || true
-        find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.pdb" -delete || true
+        # on Windows, we want to take .pdb files
+        debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.pdb")
         ;;
       darwin)
-        # on MacOSX, we want to remove .dSYM folders
-        find "${jdkTargetPath}" "${jreTargetPath}" -type d -name "*.dSYM" | xargs -I "{}" rm -rf "{}"
+        # on MacOSX, we want to take .dSYM folders
+        debugSymbols=$(find "${jdkTargetPath}" -print -type d -name "*.dSYM")
         ;;
       *)
-        # on other platforms, we want to remove .debuginfo files
-        find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.debuginfo" | xargs rm -f || true
+        # on other platforms, we want to take .debuginfo files
+        debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.debuginfo")
         ;;
     esac
+
+    if [ -n "${debugSymbols}" ] ; then
+      local debugSymbolsTargetPath=$(getDebugSymbolsArchivePath)
+      echo "${debugSymbols}" | cpio -pdm ${debugSymbolsTargetPath}
+    fi
+
+    deleteDebugSymbols
   fi
 
   echo "Finished removing unnecessary files from ${jdkTargetPath}"
+}
+
+deleteDebugSymbols() {
+  # .diz files may be present on any platform
+  # Note that on AIX, find does not support the '-delete' option.
+  find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.diz" | xargs rm -f || true
+
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    *cygwin*)
+      # on Windows, we want to remove .map and .pdb files
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.map" -delete || true
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.pdb" -delete || true
+      ;;
+    darwin)
+      # on MacOSX, we want to remove .dSYM folders
+      find "${jdkTargetPath}" "${jreTargetPath}" -type d -name "*.dSYM" | xargs -I "{}" rm -rf "{}"
+      ;;
+    *)
+      # on other platforms, we want to remove .debuginfo files
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.debuginfo" | xargs rm -f || true
+      ;;
+  esac
 }
 
 moveFreetypeLib() {
@@ -778,6 +811,7 @@ createOpenJDKTarArchive()
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
+  local debugSymbolsTargetPath=$(getDebugSymbolsArchivePath)
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
@@ -794,6 +828,11 @@ createOpenJDKTarArchive()
     echo "OpenJDK debug image path will be ${debugImageTargetPath}."
     local debugImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debugimage}")
     createArchive "${debugImageTargetPath}" "${debugImageName}"
+  fi
+  if [ -d "${debugSymbolsTargetPath}" ]; then
+    echo "OpenJDK debug symbols path will be ${debugSymbolsTargetPath}."
+    local debugSymbolsName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debug-symbols}")
+    createArchive "${debugSymbolsTargetPath}" "${debugSymbolsName}"
   fi
   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
