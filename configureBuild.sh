@@ -281,6 +281,10 @@ function setMakeArgs() {
     "darwin") BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images mac-legacy-jre-bundle"} ;;
     *) BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images legacy-jre-image"} ;;
     esac
+    # In order to build an exploded image, no other make targets can be used
+    if [ "${BUILD_CONFIG[MAKE_EXPLODED]}" == "true" ]; then
+      BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=""
+    fi
   else
     BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}
   fi
