@@ -93,6 +93,7 @@ USE_JEP319_CERTS
 USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
 USER_SUPPLIED_MAKE_ARGS
+VENDOR
 WORKING_DIR
 WORKSPACE_DIR
 )
@@ -304,6 +305,9 @@ function parseConfigurationArguments() {
         "--use-jep319-certs" )
         BUILD_CONFIG[USE_JEP319_CERTS]=true;;
 
+        "--vendor" | "-ve" )
+        BUILD_CONFIG[VENDOR]="$1"; shift;;
+
         "--version"  | "-v" )
         setOpenJdkVersion "$1"
         setDockerVolumeSuffix "$1"; shift;;
@@ -481,6 +485,9 @@ function configDefaults() {
   BUILD_CONFIG[ADOPT_PATCHES]=true
 
   BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false
+
+  # Used in 'release' file for jdk8u
+  BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"AdoptOpenJDK"}
 }
 
 # Declare the map of build configuration that we're going to use
