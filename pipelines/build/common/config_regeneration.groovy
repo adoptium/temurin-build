@@ -468,7 +468,7 @@ class Regeneration implements Serializable {
 
                         } // end variant for loop
 
-                        context.println "[SUCCESS] ${osarch} regenerated!\n"
+                        context.println "[SUCCESS] ${osarch} completed!\n"
 
                 } // end key foreach loop
 
