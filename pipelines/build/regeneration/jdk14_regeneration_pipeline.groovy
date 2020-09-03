@@ -40,6 +40,7 @@ node ("master") {
     // Pull in paramterised values (or use defaults if they're not defined)
     def jobRoot = "$JOB_ROOT" != "" ? JOB_ROOT : "build-scripts"
     def jenkinsBuildRoot = "$JENKINS_BUILD_ROOT" != "" ? JENKINS_BUILD_ROOT : "https://ci.adoptopenjdk.net/job/build-scripts/"
+    def excludes = "$EXCLUDES_LIST" != "" ? EXCLUDES_LIST : ""
 
     println "[INFO] Running regeneration script with the following configuration:"
     println "VERSION: $javaVersion"
@@ -47,6 +48,7 @@ node ("master") {
     println "JOBS TO GENERATE: $targetConfigurations"
     println "JOB ROOT: $jobRoot"
     println "JENKINS ROOT: $jenkinsBuildRoot"
+    println "EXCLUDES LIST: $excludes"
 
     Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
 
@@ -54,6 +56,7 @@ node ("master") {
       javaVersion,
       buildConfigurations,
       targetConfigurations,
+      excludes,
       currentBuild,
       this,
       jobRoot,
