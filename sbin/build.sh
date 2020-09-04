@@ -150,7 +150,9 @@ getOpenJdkVersion() {
     fi
   else
     version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
-
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+      version=$(echo $version | cut -d'_' -f 2)
+    fi
     # TODO remove pending #1016
     version=${version%_adopt}
     version=${version#aarch64-shenandoah-}

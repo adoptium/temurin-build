@@ -39,6 +39,7 @@ export BUILD_VARIANT_HOTSPOT="hotspot"
 export BUILD_VARIANT_OPENJ9="openj9"
 export BUILD_VARIANT_CORRETTO="corretto"
 export BUILD_VARIANT_SAP="SapMachine"
+export BUILD_VARIANT_DRAGONWELL="dragonwell"
 
 export GIT_TAGS_TO_SEARCH=100
 

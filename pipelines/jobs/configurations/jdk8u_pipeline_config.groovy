@@ -25,11 +25,16 @@ class Config8 {
                 arch                : 'x64',
                 dockerImage         : 'adoptopenjdk/centos6_build_image',
                 dockerFile: [
-                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
+                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile',
+                        dragonwell: 'pipelines/build/dockerFiles/dragonwell.dockerfile'
                 ],
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
                 configureArgs       : [
-                        "openj9"      : '--enable-jitserver'
+                        "openj9"      : '--enable-jitserver',
+                        "dragonwell"  : '--enable-jfr --enable-unlimited-crypto --with-jvm-variants=server  --with-zlib=system',
+                ],
+                buildArgs : [
+                        "dragonwell" : '--jdk-boot-dir /opt/dragonwell/j2sdk-image/'
                 ]
         ],
 
