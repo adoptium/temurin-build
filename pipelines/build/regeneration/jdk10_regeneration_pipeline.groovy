@@ -50,17 +50,50 @@ node ("master") {
 
     Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
 
-    regenerationScript(
-      javaVersion,
-      buildConfigurations,
-      targetConfigurations,
-      currentBuild,
-      this,
-      jobRoot,
-      null,
-      null,
-      jenkinsBuildRoot
-    ).regenerate()
+    // Pass in credentials if they exist
+    if (JENKINS_AUTH != "") {
+
+      // Single quotes here are not a mistake, jenkins actually checks that it's single quoted and that the id starts/ends with '${}'
+      withCredentials([
+        usernamePassword(
+          credentialsId: '${JENKINS_AUTH}',
+          usernameVariable: 'jenkinsUsername',
+          passwordVariable: 'jenkinsToken'
+        )
+      ]) {
+        regenerationScript(
+          javaVersion,
+          buildConfigurations,
+          targetConfigurations,
+          currentBuild,
+          this,
+          jobRoot,
+          null,
+          null,
+          jenkinsBuildRoot,
+          jenkinsUsername,
+          jenkinsToken
+        ).regenerate()
+      }
+
+    } else {
+
+      println "[WARNING] No Jenkins API Credentials have been provided! If your server does not have anonymous read enabled, you may encounter 403 api request error codes."
+      regenerationScript(
+        javaVersion,
+        buildConfigurations,
+        targetConfigurations,
+        currentBuild,
+        this,
+        jobRoot,
+        null,
+        null,
+        jenkinsBuildRoot,
+        null,
+        null
+      ).regenerate()
+
+    }
       
     println "[SUCCESS] All done!"
 
