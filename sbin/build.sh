@@ -246,10 +246,18 @@ configuringVersionStringParameter()
 
     addConfigureArg "--without-version-pre" ""
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
-    addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
-    addConfigureArg "--with-vendor-url=" "https://adoptopenjdk.net/"
-    addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
-    addConfigureArg "--with-vendor-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-support/issues"
+    
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
+        addConfigureArg "--with-vendor-name=" "Alibaba"
+        addConfigureArg "--with-vendor-url=" "http://www.alibabagroup.com"
+        addConfigureArg "--with-vendor-bug-url=" "mailto:dragonwell_use@googlegroups.com"
+        addConfigureArg "--with-vendor-version-string=" "\"(Alibaba Dragonwell)\""
+    else
+        addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
+        addConfigureArg "--with-vendor-url=" "https://adoptopenjdk.net/"
+        addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
+        addConfigureArg "--with-vendor-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-support/issues"
+    fi
 
     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
       addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/eclipse/openj9/issues"

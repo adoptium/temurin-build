@@ -32,9 +32,6 @@ class Config8 {
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver',
                         "dragonwell"  : '--enable-jfr --enable-unlimited-crypto --with-jvm-variants=server  --with-zlib=system',
-                ],
-                buildArgs : [
-                        "dragonwell" : '--jdk-boot-dir /opt/dragonwell/j2sdk-image/'
                 ]
         ],
 

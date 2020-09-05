@@ -123,8 +123,7 @@ class PullRequestTestPipeline implements Serializable {
 Map<String, ?> defaultTestConfigurations = [
     "x64Linux": [
         "hotspot",
-        "openj9",
-        "dragonwell"
+        "openj9"
     ],
     "aarch64Linux": [
         "hotspot",

@@ -56,7 +56,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
       git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch"
     else
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" # | grep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
     fi
     local isValidGitRepo=$?
     set -e
@@ -263,14 +263,9 @@ updateOpenj9Sources() {
 
 updateDragonwellSources() {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
-    # Building OpenJDK with Dragonwell must run get_source.sh to clone Dragonwell repositories
-    subrepos="corba jaxp jaxws langtools jdk hotspot nashorn"
-    GITURL="https://gitee.com/joeylee97"
-    REPO_PREFIX="dragonwell8_"
-    for repo in ${subrepos}; do
-      REPOURL=${GITURL}/${REPO_PREFIX}${repo}.git
-      git clone ${REPOURL} ${repo}
-    done
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
+    bash get_source_dragonwell.sh --site github
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
 

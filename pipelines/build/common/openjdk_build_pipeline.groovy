@@ -88,6 +88,7 @@ class Build {
         switch (buildConfig.VARIANT) {
             case "openj9": variant = "j9"; break
             case "corretto": variant = "corretto"; break
+            case "dragonwell": variant = "dragonwell"; break;
             default: variant = "hs"
         }
 
@@ -118,6 +119,8 @@ class Build {
             jdkBranch = 'openj9'
         } else if (buildConfig.VARIANT == "hotspot"){
             jdkBranch = 'dev'
+        } else if (buildConfig.VARIANT == "dragonwell") {
+            jdkBranch = 'master'
         } else {
             context.error("Unrecognized build variant '${buildConfig.VARIANT}' ")
             throw new Exception()
@@ -135,8 +138,10 @@ class Build {
             suffix="corretto/corretto-${javaNumber}"
         } else if (buildConfig.VARIANT == "openj9") {
             suffix = "ibmruntimes/openj9-openjdk-jdk${javaNumber}"
-        } else if (buildConfig.VARIANT == "hotspot"){
+        } else if (buildConfig.VARIANT == "hotspot") {
             suffix = "adoptopenjdk/openjdk-${buildConfig.JAVA_TO_BUILD}"
+        } else if (buildConfig.VARIANT == "dragonwell") {
+            suffix = "alibaba/dragonwell${javaNumber}"
         } else {
             context.error("Unrecognized build variant '${buildConfig.VARIANT}' ")
             throw new Exception()

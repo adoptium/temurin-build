@@ -2,13 +2,11 @@ ARG image
 
 FROM $image
 
-RUN mkdir -p /opt/dragonwell
-COPY --from=dragonwelljdk/build_jdk:8u /opt/dragonwell_8.3.3_boot /opt/dragonwell8
-COPY --from=dragonwelljdk/build_jdk:11u /opt/dragonwell_11.0.5.1 /opt/dragonwell11
-# COPY --from=joeylee97/dragonwell:v1 /opt/dragonwell/dragonwell8 /root/jenkins/workspace/build-scripts/jobs/jdk8u/jdk8u-linux-x64-dragonwell/workspace/dragonwell8
-# COPY --from=joeylee97/dragonwell:v1 /opt/dragonwell/.gradle /root/.gradle
-# COPY --from=joeylee97/dragonwell:v1 /root/buildfiles /root/buildfiles
+RUN \
+    # Dragonewell 8 requires a dragonwell 8 BootJDK
+    mkdir -p /opt/dragonwell; \
+    wget https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.4.4_jdk8u262-ga/Alibaba_Dragonwell_8.4.4-GA_Linux_x64.tar.gz; \
+    tar -xf Alibaba_Dragonwell_8.4.4-GA_Linux_x64.tar.gz -C /opt/; \
+    mv /opt/jdk8u262-b10 /opt/dragonwell8
 
-ENV \
-    JDK8_BOOT_DIR="/opt/dragonwell8" \
-    JDK11_BOOT_DIR="/opt/dragonwell11"
+ENV JDK7_BOOT_DIR="/opt/dragonwell8"

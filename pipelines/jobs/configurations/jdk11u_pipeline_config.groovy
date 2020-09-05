@@ -25,8 +25,7 @@ class Config11 {
                 arch                : 'x64',
                 dockerImage         : 'adoptopenjdk/centos6_build_image',
                 dockerFile: [
-                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile',
-                        dragonwell: 'pipelines/build/dockerFiles/dragonwell.dockerfile'
+                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                : [
                         nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
