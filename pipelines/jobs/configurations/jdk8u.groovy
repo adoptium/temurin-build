@@ -7,7 +7,7 @@ targetConfigurations = [
                 "hotspot",
                 "openj9",
                 "corretto",
-                "alibiba"
+                "dragonwell"
         ],
         "x32Windows"    : [
                 "hotspot",
