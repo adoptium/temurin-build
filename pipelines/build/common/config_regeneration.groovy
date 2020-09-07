@@ -1,6 +1,6 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
-import groovy.json.*
+import groovy.json.JsonSlurper
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -35,6 +35,8 @@ class Regeneration implements Serializable {
 
     private final def jenkinsBuildRoot
     private String javaToBuild
+
+    private final String excludedConst = "EXCLUDED"
 
     public Regeneration(
         String javaVersion,
@@ -218,7 +220,7 @@ class Regeneration implements Serializable {
             // Check if it's in the excludes list
             if (overridePlatform(platformConfig, variant)) {
                 context.println "[INFO] Excluding $platformConfig.os: $variant from $javaToBuild regeneration due to it being in the EXCLUDES_LIST..."
-                return "EXCLUDED"
+                return excludedConst
             }
 
             def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
@@ -453,7 +455,7 @@ class Regeneration implements Serializable {
                                 currentBuild.result = "UNSTABLE"
                             } else {
                                 // Skip variant job make if it's marked as excluded
-                                if (jobConfigurations.get(name) == "EXCLUDED") {
+                                if (jobConfigurations.get(name) == excludedConst) {
                                     continue
                                 }
                                 // Make job
