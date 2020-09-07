@@ -117,3 +117,9 @@ In order to test whether your changes work use the
 [test-build-script-pull-request](https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/test-build-script-pull-request/)
 job! Pass it your fork name (e.g. https://github.com/sxa555/openjdk-build) and the name of the branch
 and it will run a build using your updated scripts.
+
+## Which OS levels do we build on?
+
+The operating systems/distributions which we buid or are documented in the
+[openjdk-build wiki](https://github.com/AdoptOpenJDK/openjdk-build/wiki/%5BWIP%5D-Minimum-OS-levels).
+Runtime platforms are in our [supported platforms page](https://adoptopenjdk.net/supported_platforms.html).
