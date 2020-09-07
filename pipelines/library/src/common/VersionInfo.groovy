@@ -10,7 +10,7 @@ class VersionInfo {
     String opt
     String version
     String pre
-    Integer adopt_build_number = 1
+    Integer adopt_build_number
     String semver
 
     VersionInfo() {
@@ -24,8 +24,12 @@ class VersionInfo {
             }
         }
 
-        if (ADOPT_BUILD_NUMBER) {
+        // ADOPT_BUILD_NUMBER is a string, so we also need to account for an empty string value
+        if (ADOPT_BUILD_NUMBER != null && ADOPT_BUILD_NUMBER != "") {
             adopt_build_number = Integer.parseInt(ADOPT_BUILD_NUMBER)
+        } else if (opt != null) {
+            // if an opt is present then set adopt_build_number to pad out the semver
+            adopt_build_number = 0
         }
 
         semver = formSemver()
@@ -34,7 +38,7 @@ class VersionInfo {
 
     private Integer or0(Matcher matched, String groupName) {
         def number = matched.group(groupName)
-        if (number) {
+        if (number != null) {
             return number as Integer
         } else {
             return 0
@@ -126,9 +130,12 @@ class VersionInfo {
 
             semver += "+"
             semver += (build ?: "0")
-            semver += "." + adopt_build_number
 
-            if (opt) {
+            if (adopt_build_number != null) {
+                semver += "." + adopt_build_number
+            }
+
+            if (opt != null) {
                 semver += "." + opt
             }
             return semver
@@ -146,7 +153,7 @@ class VersionInfo {
         if (major != null) {
             def semver = major + "." + minor + "." + security
 
-            if (pre) {
+            if (pre != null) {
                 semver += "-" + pre
             }
             return semver

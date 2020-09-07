@@ -34,8 +34,39 @@ function setOpenJdkVersion() {
 
   local featureNumber=$(echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | tr -d "[:alpha:]")
 
+  if [ -z "${featureNumber}" ]
+  then
+    retryCount=1
+    retryMax=5
+    until [ "$retryCount" -ge "$retryMax" ]
+    do
+        # Use Adopt API to get the JDK Head number
+        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
+        local featureNumber=$(curl -q https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
+        
+        # Checks the api request was successful and the return value is a number
+        if [ -z "${featureNumber}" ] || ! [[ "${featureNumber}" -gt 0 ]]
+        then
+            echo "RETRYWARNING: Query ${retryCount} failed. Retrying in 30 seconds (max retries = ${retryMax})..."
+            retryCount=$((retryCount+1)) 
+            sleep 30
+        else
+            echo "featureNumber FOUND: ${featureNumber}" && break
+        fi
+    done
+
+    # Fail build if we still can't find the head number
+    if [ -z "${featureNumber}" ] || ! [[ "${featureNumber}" -gt 0 ]]
+    then
+        echo "Failed ${retryCount} times to query or parse the adopt api. Dumping headers via curl -v https://api.adoptopenjdk.net/v3/info/available_releases and exiting..."
+        curl -v https://api.adoptopenjdk.net/v3/info/available_releases
+        echo curl returned RC $? in common.sh
+        exit 1
+    fi
+  fi
+
   # feature number e.g. 11
-  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber:-14}
+  BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber}
 
 }
 
@@ -94,8 +125,8 @@ createOpenJDKArchive()
   fi
 
   COMPRESS=gzip
-  if which pigz; then
-    COMPRESS=pigz;
+  if which pigz > /dev/null 2>&1; then
+    COMPRESS=pigz
   fi
   echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
 
@@ -129,9 +160,16 @@ function setBootJdk() {
 
     # shellcheck disable=SC2046,SC2230
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+      set +e
       BUILD_CONFIG[JDK_BOOT_DIR]="$(/usr/libexec/java_home)"
+      local returnCode=$?
+      set -e
+
+      if [[ ${returnCode} -ne 0 ]]; then
+        BUILD_CONFIG[JDK_BOOT_DIR]="$(dirname "$(dirname "$(greadlink -f "$(which javac)")")")"
+      fi
     else
-      BUILD_CONFIG[JDK_BOOT_DIR]=$(dirname $(dirname $(readlink -f $(which javac))))
+      BUILD_CONFIG[JDK_BOOT_DIR]="$(dirname "$(dirname "$(readlink -f "$(which javac)")")")"
     fi
 
     echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
@@ -147,7 +185,6 @@ function setBootJdk() {
 # be treated as such by the build scripts
 function isHotSpot() {
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] ||
-  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] ||
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ] ||
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]
 }

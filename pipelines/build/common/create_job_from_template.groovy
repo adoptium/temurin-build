@@ -48,14 +48,14 @@ pipelineJob("$buildFolder/$JOB_NAME") {
             scriptPath('pipelines/build/common/kick_off_build.groovy')
         }
     }
-    concurrentBuild(false)
     properties {
-        copyArtifactPermissionProperty {
+	disableConcurrentBuilds()
+        copyArtifactPermission {
             projectNames('*')
         }
     }
     logRotator {
-        numToKeep(10)
+        numToKeep(30)
         artifactNumToKeep(1)
     }
 
@@ -71,12 +71,16 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>SCM_REF</strong></dt><dd>Source code ref to build, i.e branch, tag, commit id</dd>
                 <dt><strong>BUILD_ARGS</strong></dt><dd>args to pass to makejdk-any-platform.sh</dd>
                 <dt><strong>NODE_LABEL</strong></dt><dd>Labels of node to build on</dd>
+                <dt><strong>CODEBUILD</strong></dt><dd>Use a dynamic codebuild machine if no other machine is available</dd>
+                <dt><strong>DOCKER_IMAGE</strong></dt><dd>Use a docker build environment</dd>
+                <dt><strong>DOCKER_FILE</strong></dt><dd>Relative path to a dockerfile to be built and used on top of the DOCKER_IMAGE</dd>
                 <dt><strong>CONFIGURE_ARGS</strong></dt><dd>Arguments for ./configure</dd>
                 <dt><strong>OVERRIDE_FILE_NAME_VERSION</strong></dt><dd>Set the version string on the file name</dd>
                 <dt><strong>RELEASE</strong></dt><dd>Is this build a release</dd>
                 <dt><strong>PUBLISH_NAME</strong></dt><dd>Set name of publish</dd>
                 <dt><strong>ADOPT_BUILD_NUMBER</strong></dt><dd>Adopt build number</dd>
                 <dt><strong>ENABLE_TESTS</strong></dt><dd>Run tests</dd>
+                <dt><strong>ENABLE_INSTALLERS</strong></dt><dd>Run installers</dd>
                 <dt><strong>CLEAN_WORKSPACE</strong></dt><dd>Wipe out workspace before build</dd>
             </dl>
         """)

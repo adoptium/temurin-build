@@ -1,0 +1,62 @@
+# before.yml
+# 1. check required environment variables
+# 2. checkout openjdk-build repo
+# 3. set shared environment variables
+
+steps:
+  # set system environment variable VARIANT to hotspot
+  - bash: |
+      echo "##vso[task.setvariable variable=VARIANT]hotspot"
+    displayName: "[Shared Before] set VARIANT environment variables"
+
+  # check for required environment variables
+  # pipeline will be terminated if environment variables are not defined
+  # reference: https://docs.microsoft.com/en-us/azure/devops/pipelines/scripts/logging-commands
+  - bash: |
+      ERR_MESSAGE_MISSING_ENV=''
+
+      if [ -z $(JAVA_TO_BUILD) ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set JAVA_TO_BUILD to jdk8u, jdk11u, jdk, etc. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$ARCHITECTURE" ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set ARCHITECTURE. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ -z "$TARGET_OS" ]; then
+        ERR_MESSAGE_MISSING_ENV="Pipeline must set TARGET_OS. $ERR_MESSAGE_MISSING_ENV"
+      fi;
+
+      if [ ! -z "$ERR_MESSAGE_MISSING_ENV" ]; then
+        echo "##vso[task.logissue type=error;]$ERR_MESSAGE_MISSING_ENV"
+        echo "##vso[task.complete result=Failed;]"
+      fi;
+    displayName: "[Shared Before] check required environment variables"
+
+  # set up HOME directory and it will be used by Cygwin
+  - bash: |
+      echo "##vso[task.setvariable variable=HOME]$(Agent.BuildDirectory)"
+    displayName: "[Shared Before] set HOME environment variable"
+
+  # set up git crlf configuration
+  # this step is required on Windows platform and should be placed before the -checkout task
+  - bash: |
+      git config --global core.autocrlf input
+    displayName: "[Shared Before] configure crlf option"
+
+  # self checkout openjdk-build repo
+  - checkout: self
+
+  # set the FILENAME environment varialbe
+  # based on https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy#L374
+  # TODO: support more options
+  - bash: |
+      # convert JAVA_TO_BUILD to upper case
+      UPPERCASE_JAVA_TO_BUILD=$(echo "$JAVA_TO_BUILD" | tr '[:lower:]' '[:upper:]')
+      # get date in format UTC YYYY-mm-dd-HH-MM, e.g, 2020-01-02-22-52
+      DATE=$(date -u +%Y-%m-%d-%H-%M)
+      echo "##vso[task.setvariable variable=FILENAME]Open${UPPERCASE_JAVA_TO_BUILD}-jdk_${ARCHITECTURE}_${TARGET_OS}_${VARIANT}_${DATE}"
+    displayName: "[Shared Before] set FILENAME variable"
+
+  # invoke template to set BOOTJDK_VERSION
+  - template: set_boot_jdk_version.yml

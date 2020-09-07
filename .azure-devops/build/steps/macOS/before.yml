@@ -1,0 +1,61 @@
+# before.yml
+# install macOS platform dependencies & set environment variables
+
+parameters:
+  # store all the downloaded files
+  dependenciesDir: "$(Agent.BuildDirectory)/tmp"
+  # directory to download the JDK used to bootstrap the build
+  jdkBootDir: "$(Agent.BuildDirectory)/jdk/boot"
+  # store jdk used for gradle
+  javaHomeDir: "$(Agent.BuildDirectory)/jdk/home"
+
+steps:
+  # create all required directories before downloading files & installing jdks
+  - bash: |
+      mkdir -p ${{ parameters.jdkBootDir }}
+      mkdir -p ${{ parameters.javaHomeDir }}
+      mkdir -p ${{ parameters.dependenciesDir }}
+    displayName: "[macOS Before] create required directories"
+
+  # install Xcode command line tools based on
+  # https://github.com/AdoptOpenJDK/openjdk-infrastructure/blob/master/ansible/playbooks/AdoptOpenJDK_Unix_Playbook/roles/Common/scripts/install-xcode.sh
+  - bash: |
+      touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress;
+      PROD=$(softwareupdate -l |
+        grep "\*.*Command Line" |
+        head -n 1 | awk -F"*" '{print $2}' |
+        sed -e 's/^ *//' |
+        tr -d '\n')
+      softwareupdate -i "$PROD" --verbose;
+      rm /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress;
+    displayName: "[macOS Before] install Xcode command line tools"
+
+  # based on
+  # https://github.com/AdoptOpenJDK/openjdk-infrastructure/blob/master/ansible/playbooks/AdoptOpenJDK_Unix_Playbook/roles/Common/vars/MacOSX.yml
+  - bash: |
+      brew install autoconf ccache coreutils wget
+    displayName: "[macOS Before] brew install autoconf, ccache, coreutils, and wget"
+
+  # download JDKs from AdoptOpenJDK
+  - bash: |
+      wget -O "${{ parameters.dependenciesDir }}/openjdk8.tar.gz" "https://api.adoptopenjdk.net/v3/binary/latest/8/ga/mac/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk"
+      if [ "${BOOTJDK_VERSION}" == "15" ]
+      then
+          wget -O "${{ parameters.dependenciesDir }}/openjdk.tar.gz" "https://api.adoptopenjdk.net/v3/binary/latest/${BOOTJDK_VERSION}/ea/mac/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk"
+      else
+          wget -O "${{ parameters.dependenciesDir }}/openjdk.tar.gz" "https://api.adoptopenjdk.net/v3/binary/latest/${BOOTJDK_VERSION}/ga/mac/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk"
+      fi
+    displayName: "[macOS Before] download JDKs from AdoptOpenJDK"
+
+  # untar downloaded JDK files & move it to directories
+  - bash: |
+      tar -xzf "${{ parameters.dependenciesDir }}/openjdk8.tar.gz" --strip-components=3 -C ${{ parameters.javaHomeDir }}
+      tar -xzf "${{ parameters.dependenciesDir }}/openjdk.tar.gz" --strip-components=3 -C ${{ parameters.jdkBootDir }}
+    displayName: "[macOS Before] extracting downloaded JDKs to directories"
+
+  # set system veraibles that will be used by following steps
+  - bash: |
+      echo "##vso[task.setvariable variable=JDK_BOOT_DIR]${{ parameters.jdkBootDir }}"
+      echo "##vso[task.setvariable variable=JAVA_HOME]${{ parameters.javaHomeDir }}"
+      echo "##vso[task.setvariable variable=PATH]${{ parameters.jdkBootDir }}/bin;$PATH"
+    displayName: "[macOS Before] set JDK_BOOT_DIR, JAVA_HOME, and PATH environment variables"

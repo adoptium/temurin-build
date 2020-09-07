@@ -28,8 +28,33 @@ JAVA_FEATURE_VERSION=$(echo "${JAVA_TO_BUILD}" | tr -d "[:alpha:]")
 
 if [ -z "${JAVA_FEATURE_VERSION}" ]
 then
-    # THIS NEEDS TO BE UPDATED WHEN HEAD UPDATES (the latest tag that jdk/jdk contains)
-    JAVA_FEATURE_VERSION=14
+    retryCount=1
+    retryMax=5
+    until [ "$retryCount" -ge "$retryMax" ]
+    do
+        # Use Adopt API to get the JDK Head number
+        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
+        JAVA_FEATURE_VERSION=$(curl -q https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
+        
+        # Checks the api request was successful and the return value is a number
+        if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
+        then
+            echo "RETRYWARNING: Query ${retryCount} failed. Retrying in 30 seconds (max retries = ${retryMax})..."
+            retryCount=$((retryCount+1)) 
+            sleep 30
+        else
+            echo "JAVA_FEATURE_VERSION FOUND: ${JAVA_FEATURE_VERSION}" && break
+        fi
+    done
+
+    # Fail build if we still can't find the head number
+    if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
+    then
+        echo "Failed ${retryCount} times to query or parse the adopt api. Dumping headers via curl -v https://api.adoptopenjdk.net/v3/info/available_releases and exiting..."
+        curl -v https://api.adoptopenjdk.net/v3/info/available_releases
+        echo curl returned RC $? in make_adopt_build_farm.sh
+        exit 1
+    fi
 fi
 
 echo "BUILD TYPE: "
@@ -49,11 +74,13 @@ VARIANT_ARG=""
 if [ -z "${JDK_BOOT_VERSION}" ]
 then
   echo "Detecting boot jdk for: ${JAVA_TO_BUILD}"
-  currentBuildNumber=$(echo "${JAVA_TO_BUILD}" | tr -d "[:alpha:]")
-  echo "Found build version: ${currentBuildNumber}"
-  JDK_BOOT_VERSION=$((currentBuildNumber-1))
-  echo "Boot jdk version: ${JDK_BOOT_VERSION}"
+  echo "Found build version: ${JAVA_FEATURE_VERSION}"
+  JDK_BOOT_VERSION=$(($JAVA_FEATURE_VERSION-1))
 fi
+echo "Required boot JDK version: ${JDK_BOOT_VERSION}"
+
+# shellcheck source=build-farm/set-platform-specific-configurations.sh
+source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
 
 case "${JDK_BOOT_VERSION}" in
       "7")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";;
@@ -63,17 +90,28 @@ case "${JDK_BOOT_VERSION}" in
       "11")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK11_BOOT_DIR}";;
       "12")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK12_BOOT_DIR}";;
       "13")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK13_BOOT_DIR}";;
-      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK14_BOOT_DIR}";;
+      "14")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK14_BOOT_DIR}";;
+      "15")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK15_BOOT_DIR}";;
+      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK16_BOOT_DIR}";;
 esac
+
 
 if [ ! -d "${JDK_BOOT_DIR}" ]
 then
   echo Setting JDK_BOOT_DIR to \$JAVA_HOME
   export JDK_BOOT_DIR="${JAVA_HOME}"
+
+  # Without this, a blank value can be passed into makejdk-any-platform.sh which causes an obscure parsing failure
+  if [ ! -d "${JDK_BOOT_DIR}" ]
+  then
+    echo "[ERROR] No JDK Boot Directory has been found, the likelihood is that neither JDK${JDK_BOOT_VERSION}_BOOT_DIR or JAVA_HOME are set on this machine"
+    exit 2
+  fi
 fi
 
 echo "Boot jdk directory: ${JDK_BOOT_DIR}:"
-java -version 2>&1 | sed 's/^/BOOT JDK: /'
+${JDK_BOOT_DIR}/bin/java -version 2>&1 | sed 's/^/BOOT JDK: /'
+java -version 2>&1 | sed 's/^/JDK IN PATH: /g'
 
 if [ "${RELEASE}" == "true" ]; then
   OPTIONS="${OPTIONS} --release --clean-libs"
@@ -98,8 +136,11 @@ fi
 echo "BRANCH: ${BRANCH} (For release either BRANCH or TAG should be set)"
 echo "TAG: ${TAG}"
 
-# shellcheck source=build-farm/set-platform-specific-configurations.sh
-source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
+
+if [ "x${FILENAME}" = "x" ] ; then
+    echo "FILENAME must be set in the environment"
+    exit 1
+fi
 
 echo "Filename will be: $FILENAME"
 
@@ -108,4 +149,4 @@ export BUILD_ARGS="${BUILD_ARGS} --use-jep319-certs"
 echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
 
 # shellcheck disable=SC2086
-bash "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
+bash -c "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args \"${CONFIGURE_ARGS_FOR_ANY_PLATFORM}\" --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"

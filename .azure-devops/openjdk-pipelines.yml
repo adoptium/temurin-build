@@ -1,0 +1,8 @@
+name: "AdoptOpenJDK-$(JAVA_TO_BUILD)-$(Date:yyyy-MM-dd)"
+
+trigger: none
+
+pr: none
+
+stages:
+  - template: ./build/build.yml

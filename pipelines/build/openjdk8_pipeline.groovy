@@ -1,5 +1,3 @@
-package groovy.common
-
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,169 +12,41 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-def buildConfigurations = [
-        x64Mac        : [
-                os                  : 'mac',
-                arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot : 'build-macstadium-macos1010-1',
-                        corretto: 'build-macstadium-macos1010-1',
-                        openj9  : 'build-macstadium-macos1010-2'
-                ],
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
-        ],
-
-        x64MacXL      : [
-                os                   : 'mac',
-                arch                 : 'x64',
-                additionalNodeLabels : 'build-macstadium-macos1010-2',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'special.openjdk'],
-                additionalFileNameTag: "macosXL",
-                configureArgs        : '--with-noncompressedrefs'
-        ],
-
-        x64Linux      : [
-                os                  : 'linux',
-                arch                : 'x64',
-                additionalNodeLabels: 'centos6',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
-                configureArgs       : [
-                        "hotspot-jfr" : '--enable-jfr'
-                ]
-        ],
-
-        // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
-        x64Windows    : [
-                os                  : 'windows',
-                arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot : 'win2008',
-                        corretto: 'win2008',
-                        openj9  : 'win2012&&mingw-cygwin'
-                ],
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
-        ],
-
-        x64WindowsXL    : [
-                os                   : 'windows',
-                arch                 : 'x64',
-                additionalNodeLabels : 'win2012&&mingw-cygwin',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                additionalFileNameTag: "windowsXL",
-                configureArgs        : '--with-noncompressedrefs'
-        ],
-
-        x32Windows    : [
-                os                  : 'windows',
-                arch                : 'x86-32',
-                additionalNodeLabels: [
-                        hotspot : 'win2008',
-                        corretto: 'win2008',
-                        openj9  : 'win2012&&mingw-cygwin'
-                ],
-                buildArgs : [
-                        hotspot : '--jvm-variant client,server'
-                ],
-                test                : ['sanity.openjdk', 'special.openjdk']
-        ],
-
-        ppc64Aix      : [
-                os  : 'aix',
-                arch: 'ppc64',
-                additionalNodeLabels: 'xlc13',
-                test: [
-                        nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
-                ]
-        ],
-
-        s390xLinux    : [
-                os  : 'linux',
-                arch: 's390x',
-                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
-        ],
-
-        sparcv9Solaris: [
-                os  : 'solaris',
-                arch: 'sparcv9',
-                test: false
-        ],
-
-        x64Solaris    : [
-                os                  : 'solaris',
-                arch                : 'x64',
-                test                : false
-        ],
-
-        ppc64leLinux  : [
-                os  : 'linux',
-                arch: 'ppc64le',
-                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
-        ],
-
-        arm32Linux    : [
-                os  : 'linux',
-                arch: 'arm',
-                // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
-                //test                : ['sanity.openjdk']
-                test: false
-        ],
-
-        aarch64Linux  : [
-                os                  : 'linux',
-                arch                : 'aarch64',
-                additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
-        ],
-
-        x64LinuxXL       : [
-                os                   : 'linux',
-                additionalNodeLabels : 'centos6',
-                arch                 : 'x64',
-                additionalFileNameTag: "linuxXL",
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                configureArgs        : '--with-noncompressedrefs'
-        ],
-        s390xLinuxXL       : [
-                os                   : 'linux',
-                arch                 : 's390x',
-                additionalFileNameTag: "linuxXL",
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                configureArgs        : '--with-noncompressedrefs'
-        ],
-        ppc64leLinuxXL       : [
-                os                   : 'linux',
-                arch                 : 'ppc64le',
-                additionalFileNameTag: "linuxXL",
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
-                configureArgs        : '--with-noncompressedrefs'
-        ],
-]
-
 def javaToBuild = "jdk8u"
+def scmVars = null
+Closure configureBuild = null
+def buildConfigurations = null
 
-node("master") {
-    def scmVars = checkout scm
+node ("master") {
+    scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
-    Closure configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
+    configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
+    buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaToBuild}_pipeline_config.groovy"
+}
 
+if (scmVars != null && configureBuild != null && buildConfigurations != null) {
     configureBuild(
-            javaToBuild,
-            buildConfigurations,
-            targetConfigurations,
-            enableTests,
-            releaseType,
-            scmReference,
-            overridePublishName,
-            additionalConfigureArgs,
-            scmVars,
-            additionalBuildArgs,
-            overrideFileNameVersion,
-            cleanWorkspaceBeforeBuild,
-            adoptBuildNumber,
-            propagateFailures,
-            currentBuild,
-            this,
-            env
+        javaToBuild,
+        buildConfigurations,
+        targetConfigurations,
+        dockerExcludes,
+        enableTests,
+        enableInstallers,
+        releaseType,
+        scmReference,
+        overridePublishName,
+        additionalConfigureArgs,
+        scmVars,
+        additionalBuildArgs,
+        overrideFileNameVersion,
+        cleanWorkspaceBeforeBuild,
+        adoptBuildNumber,
+        propagateFailures,
+        currentBuild,
+        this,
+        env
     ).doBuild()
+} else {
+    println "[ERROR] One or more setup parameters are null.\nscmVars = ${scmVars}\nconfigureBuild = ${configureBuild}\nbuildConfigurations = ${buildConfigurations}"
+    throw new Exception()
 }

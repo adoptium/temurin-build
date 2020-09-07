@@ -1,0 +1,6 @@
+steps:
+  # display all environment variables when system.debug is set to true
+  - bash: |
+      printenv
+    displayName: "[Shared After] show all env vars"
+    condition: eq(variables['system.debug'], 'true')

@@ -43,7 +43,7 @@ fi
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
 then
   # CentOS 6 has openssl 1.0.1 so we use a self-installed 1.0.2 from the playbooks
-  if grep 'release 6' /etc/redhat-release >/dev/null 2>&1 || grep 'jessie' /etc/os-release >/dev/null 2>&1; then
+  if grep 'release 6' /etc/redhat-release >/dev/null 2>&1 || grep 'jessie' /etc/os-release >/dev/null 2>&1 || grep 'SUSE' /etc/os-release >/dev/null 2>&1; then
     if [ -r /usr/local/openssl-1.0.2/include/openssl/opensslconf.h ]; then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/usr/local/openssl-1.0.2"
     else
@@ -75,6 +75,9 @@ fi
 if [ "${ARCHITECTURE}" == "arm" ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000"
+  if [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="$CONFIGURE_ARGS_FOR_ANY_PLATFORM --with-extra-ldflags=-latomic"
+  fi
   if [ "$JAVA_FEATURE_VERSION" -ge 11 ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="$CONFIGURE_ARGS_FOR_ANY_PLATFORM --disable-warnings-as-errors"
   fi
@@ -89,31 +92,52 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
     BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
     BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
     if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-      export $BOOT_JDK_VARIABLE="$PWD/jdk-$BOOT_JDK_VERSION"
-      if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE/bin")" ]; then
-        mkdir -p "$(eval echo "\$$BOOT_JDK_VARIABLE")"
-        wget -q -O - "https://api.adoptopenjdk.net/v2/binary/releases/openjdk${BOOT_JDK_VERSION}?os=linux&release=latest&arch=${ARCHITECTURE}&heap_size=normal&type=jdk&openjdk_impl=hotspot" | tar xpzf - --strip-components=1 -C "$(eval echo "\$$BOOT_JDK_VARIABLE")"
+      bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+      # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
+      # instead of BOOT_JDK_VARIABLE (no '$').
+      export ${BOOT_JDK_VARIABLE}="$bootDir"
+      if [ ! -d "$bootDir/bin" ]; then
+        mkdir -p "$bootDir"
+        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
+        releaseType="ga"
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptopenjdk"
+        apiURL=$(eval echo ${apiUrlTemplate})
+        # make-adopt-build-farm.sh has 'set -e'. We need to disable that
+        # for the fallback mechanism, as downloading of the GA binary might
+        # fail.
+        set +e
+        wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
+        retVal=$?
+        set -e
+        if [ $retVal -ne 0 ]; then
+          # We must be a JDK HEAD build for which no boot JDK exists other than
+          # nightlies?
+          echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+          echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} ..."
+          # shellcheck disable=SC2034
+          releaseType="ea"
+          apiURL=$(eval echo ${apiUrlTemplate})
+          wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
+        fi
       fi
     fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+    "$JDK_BOOT_DIR/bin/java" -version
+    executedJavaVersion=$?
+    if [ $executedJavaVersion -ne 0 ]; then
+        echo "Failed to obtain or find a valid boot jdk"
+        exit 1
+    fi
+    "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
-# Any version above 10
-if [ "$JAVA_FEATURE_VERSION" -gt 10 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+# Any version above 10, OpenJ9 or arm32 (See support#33 ref arm)
+if [ "$JAVA_FEATURE_VERSION" -gt 10 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ] || [ "${ARCHITECTURE}" == "arm" ]; then
     # If we have the RedHat devtoolset 7 installed, use gcc 7 from there, else /usr/local/gcc/bin
-    if [ -r /opt/rh/devtoolset-7/root/usr/bin ]; then
-      export PATH=/opt/rh/devtoolset-7/root/usr/bin:$PATH
-      [ -r /opt/rh/devtoolset-7/root/usr/bin/gcc ] && export CC=/opt/rh/devtoolset-7/root/usr/bin/gcc
-      [ -r /opt/rh/devtoolset-7/root/usr/bin/g++ ] && export CXX=/opt/rh/devtoolset-7/root/usr/bin/g++
-    elif [ -r /usr/local/gcc/bin/gcc-7.3 ]; then
+    if [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
       export PATH=/usr/local/gcc/bin:$PATH
-      [ -r /usr/local/gcc/bin/gcc-7.3 ] && export CC=/usr/local/gcc/bin/gcc-7.3
-      [ -r /usr/local/gcc/bin/g++-7.3 ] && export CXX=/usr/local/gcc/bin/g++-7.3
-      export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
-    elif [ -r /usr/local/gcc/bin/gcc-7.4 ]; then
-      export PATH=/usr/local/gcc/bin:$PATH
-      [ -r /usr/local/gcc/bin/gcc-7.4 ] && export CC=/usr/local/gcc/bin/gcc-7.4
-      [ -r /usr/local/gcc/bin/g++-7.4 ] && export CXX=/usr/local/gcc/bin/g++-7.4
+      [ -r /usr/local/gcc/bin/gcc-7.5 ] && export CC=/usr/local/gcc/bin/gcc-7.5
+      [ -r /usr/local/gcc/bin/g++-7.5 ] && export CXX=/usr/local/gcc/bin/g++-7.5
       export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
     elif [ -r /usr/bin/gcc-7 ]; then
       [ -r /usr/bin/gcc-7 ] && export CC=/usr/bin/gcc-7
@@ -121,15 +145,25 @@ if [ "$JAVA_FEATURE_VERSION" -gt 10 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPEN
     fi
 fi
 
-if [ "${ARCHITECTURE}" == "aarch64" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
-then
-  export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-aarch64-jdk8u"
+if which ccache 2> /dev/null; then
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
 fi
 
-if [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT_JFR}" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+if [ "${ARCHITECTURE}" == "riscv64" ]
 then
-  export BUILD_ARGS="${BUILD_ARGS} -r https://github.com/AdoptOpenJDK/openjdk-jdk8u-jfr-incubator"
-  export BOOT_JDK_VERSION="8"
-  export BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
-  export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+	echo RISCV cross-compilation ... Downloading latest nightly OpenJ9/x64 as build JDK
+	export BUILDJDK=$WORKSPACE/buildjdk
+	rm -rf "$BUILDJDK"
+	mkdir "$BUILDJDK"
+	wget -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/x64/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
+	"$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g'
+	export RISCV64=/opt/riscv_toolchain_linux
+	export LD_LIBRARY_PATH=$RISCV64/lib64
+	export PATH="$RISCV64/bin:$PATH"
+	# riscv has to use a cross compiler
+	export CC=$RISCV64/bin/riscv64-unknown-linux-gnu-gcc
+	export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
+	CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK_BOOT_DIR --with-build-jdk=$BUILDJDK"
+	BUILD_ARGS="${BUILD_ARGS} -F"
 fi
+

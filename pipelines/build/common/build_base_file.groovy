@@ -1,6 +1,6 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
-import groovy.json.JsonSlurper
+import groovy.json.*
 
 import java.util.regex.Matcher
 
@@ -39,12 +39,14 @@ class Builder implements Serializable {
     String additionalConfigureArgs
     Map<String, List<String>> targetConfigurations
     Map<String, Map<String, ?>> buildConfigurations
+    Map<String, List<String>> dockerExcludes
     String scmReference
     String publishName
 
     boolean release
     boolean publish
     boolean enableTests
+    boolean enableInstallers
     boolean cleanWorkspaceBeforeBuild
     boolean propagateFailures
 
@@ -58,6 +60,10 @@ class Builder implements Serializable {
 
         def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
+        def dockerImage = getDockerImage(platformConfig, variant)
+
+        def dockerFile = getDockerFile(platformConfig, variant)
+
         def buildArgs = getBuildArgs(platformConfig, variant)
 
         if (additionalBuildArgs) {
@@ -65,6 +71,12 @@ class Builder implements Serializable {
         }
 
         def testList = getTestList(platformConfig)
+
+        // Always clean on mac due to https://github.com/AdoptOpenJDK/openjdk-build/issues/1980
+        def cleanWorkspace = cleanWorkspaceBeforeBuild
+        if (platformConfig.os == "mac") {
+            cleanWorkspace = true
+        }
 
         return new IndividualBuildConfig(
                 JAVA_TO_BUILD: javaToBuild,
@@ -75,6 +87,9 @@ class Builder implements Serializable {
                 SCM_REF: scmReference,
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+                CODEBUILD: platformConfig.codebuild as Boolean,
+                DOCKER_IMAGE: dockerImage,
+                DOCKER_FILE: dockerFile,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
                 OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
@@ -83,7 +98,8 @@ class Builder implements Serializable {
                 PUBLISH_NAME: publishName,
                 ADOPT_BUILD_NUMBER: adoptBuildNumber,
                 ENABLE_TESTS: enableTests,
-                CLEAN_WORKSPACE: cleanWorkspaceBeforeBuild
+                ENABLE_INSTALLERS: enableInstallers,
+                CLEAN_WORKSPACE: cleanWorkspace
         )
     }
 
@@ -117,6 +133,59 @@ class Builder implements Serializable {
             }
         }
         return []
+    }
+
+    def dockerOverride(Map<String, ?> configuration, String variant) {
+        Boolean overrideDocker = false
+        if (dockerExcludes == {}) {
+            return overrideDocker 
+        }
+
+        String stringArch = configuration.arch as String
+        String stringOs = configuration.os as String
+        String estimatedKey = stringArch + stringOs.capitalize()
+
+        if (configuration.containsKey("additionalFileNameTag")) {
+            estimatedKey = estimatedKey + "XL"
+        }
+
+        if (dockerExcludes.containsKey(estimatedKey)) {
+
+            if (dockerExcludes[estimatedKey].contains(variant)) {
+                overrideDocker = true
+            }
+
+        }
+
+        return overrideDocker
+    }
+
+    def getDockerImage(Map<String, ?> configuration, String variant) {
+        def dockerImageValue = ""
+
+        if (configuration.containsKey("dockerImage") && !dockerOverride(configuration, variant)) {
+            if (isMap(configuration.dockerImage)) {
+                dockerImageValue = (configuration.dockerImage as Map<String, ?>).get(variant)
+            } else {
+                dockerImageValue = configuration.dockerImage
+            }
+        }
+
+        return dockerImageValue
+    }
+
+    def getDockerFile(Map<String, ?> configuration, String variant) {
+        def dockerFileValue = ""
+
+        if (configuration.containsKey("dockerFile") && !dockerOverride(configuration, variant)) {
+            if (isMap(configuration.dockerFile)) {
+                dockerFileValue = (configuration.dockerFile as Map<String, ?>).get(variant)
+            } else {
+                dockerFileValue = configuration.dockerFile
+            }
+        }
+
+        return dockerFileValue
     }
 
     /**
@@ -203,15 +272,23 @@ class Builder implements Serializable {
     }
 
     Integer getJavaVersionNumber() {
-        // version should be something like "jdk8u"
+        // version should be something like "jdk8u" or "jdk" for HEAD
         Matcher matcher = javaToBuild =~ /.*?(?<version>\d+).*?/
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
+        } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
+            // Query the Adopt api to get the "tip_version"
+            def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+            context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
+
+            def response = JobHelper.getAvailableReleases(context)
+            int headVersion = (int) response.getAt("tip_version")
+            context.println "Found Java Version Number: ${headVersion}"
+            return headVersion
         } else {
-            context.error("Failed to read java version")
+            context.error("Failed to read java version '${javaToBuild}'")
             throw new Exception()
         }
-
     }
 
 
@@ -229,27 +306,6 @@ class Builder implements Serializable {
         def parentDir = currentBuild.fullProjectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/"))
         return parentDir + "/jobs/" + javaToBuild
     }
-
-    // Generate a job from template at `create_job_from_template.groovy`
-    def createJob(jobName, jobFolder, IndividualBuildConfig config) {
-        Map<String, ?> params = config.toMap().clone() as Map
-        params.put("JOB_NAME", jobName)
-        params.put("JOB_FOLDER", jobFolder)
-
-        params.put("GIT_URI", scmVars["GIT_URL"])
-        if (scmVars["GIT_BRANCH"] != "detached") {
-            params.put("GIT_BRANCH", scmVars["GIT_BRANCH"])
-        } else {
-            params.put("GIT_BRANCH", scmVars["GIT_COMMIT"])
-        }
-
-        params.put("BUILD_CONFIG", config.toJson())
-
-        def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
-
-        return create
-    }
-
 
     def checkConfigIsSane(Map<String, IndividualBuildConfig> jobConfigurations) {
 
@@ -278,24 +334,23 @@ class Builder implements Serializable {
             return
         }
 
-        def timestamp = new Date().format("YYYY-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
+        def timestamp = new Date().format("yyyy-MM-dd-HH-mm", TimeZone.getTimeZone("UTC"))
         def tag = "${javaToBuild}-${timestamp}"
 
         if (publishName) {
             tag = publishName
         }
 
-        context.node("master") {
-            context.stage("publish") {
-                context.build job: 'build-scripts/release/refactor_openjdk_release_tool',
-                        parameters: [
-                                ['$class': 'BooleanParameterValue', name: 'RELEASE', value: release],
-                                context.string(name: 'TAG', value: tag),
-                                context.string(name: 'TIMESTAMP', value: timestamp),
-                                context.string(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
-                                context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${currentBuild.getNumber()}"),
-                                context.string(name: 'VERSION', value: determineReleaseToolRepoVersion())]
-            }
+        context.stage("publish") {
+            context.build job: 'build-scripts/release/refactor_openjdk_release_tool',
+                    parameters: [
+                        ['$class': 'BooleanParameterValue', name: 'RELEASE', value: release],
+                        context.string(name: 'TAG', value: tag),
+                        context.string(name: 'TIMESTAMP', value: timestamp),
+                        context.string(name: 'UPSTREAM_JOB_NAME', value: env.JOB_NAME),
+                        context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${currentBuild.getNumber()}"),
+                        context.string(name: 'VERSION', value: determineReleaseToolRepoVersion())
+                    ]
         }
     }
 
@@ -320,12 +375,13 @@ class Builder implements Serializable {
         context.echo "Java: ${javaToBuild}"
         context.echo "OS: ${targetConfigurations}"
         context.echo "Enable tests: ${enableTests}"
+        context.echo "Enable Installers: ${enableInstallers}"
         context.echo "Publish: ${publish}"
         context.echo "Release: ${release}"
         context.echo "Tag/Branch name: ${scmReference}"
 
-        jobConfigurations.each { configuration ->
-            jobs[configuration.key] = {
+          jobConfigurations.each { configuration ->
+              jobs[configuration.key] = {
                 IndividualBuildConfig config = configuration.value
 
                 // jdk11u-linux-x64-hotspot
@@ -334,68 +390,70 @@ class Builder implements Serializable {
 
                 // i.e jdk10u/job/jdk11u-linux-x64-hotspot
                 def downstreamJobName = "${jobFolder}/${jobTopName}"
-
                 context.echo "build name " + downstreamJobName
 
                 context.catchError {
                     // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
                     context.stage(configuration.key) {
-                        // generate job
-                        createJob(jobTopName, jobFolder, config)
+                      context.echo "Created job " + downstreamJobName
+                      
+                      // execute build
+                      def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
 
-                        context.echo "Created job " + downstreamJobName
-                        // execute build
-                        def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
+                      if (downstreamJob.getResult() == 'SUCCESS') {
+                          // copy artifacts from build
+                          context.node("master") {
+                              context.catchError {
 
-                        if (downstreamJob.getResult() == 'SUCCESS') {
-                            // copy artifacts from build
-                            context.node("master") {
-                                context.catchError {
+                                  //Remove the previous artifacts
+                                  context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
 
-                                    //Remove the previous artifacts
-                                    context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
+                                  context.copyArtifacts(
+                                          projectName: downstreamJobName,
+                                          selector: context.specific("${downstreamJob.getNumber()}"),
+                                          filter: 'workspace/target/*',
+                                          fingerprintArtifacts: true,
+                                          target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
+                                          flatten: true)
 
-                                    context.copyArtifacts(
-                                            projectName: downstreamJobName,
-                                            selector: context.specific("${downstreamJob.getNumber()}"),
-                                            filter: 'workspace/target/*',
-                                            fingerprintArtifacts: true,
-                                            target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
-                                            flatten: true)
+                                  // Checksum
+                                  context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
 
-                                    // Checksum
-                                    context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+                                  // Archive in Jenkins
+                                  context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
+                              }
+                          }
+                      } else if (propagateFailures) {
+                          context.error("Build failed due to downstream failure of ${downstreamJobName}")
+                          currentBuild.result = "FAILURE"
+                      }
 
-                                    // Archive in Jenkins
-                                    context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
-                                }
-                            }
-                        } else if (propagateFailures) {
-                            context.error("Build failed due to downstream failure of ${downstreamJobName}")
-                            currentBuild.result = "FAILURE"
-                        }
                     }
                 }
-            }
-        }
-        context.parallel jobs
+              }
+          }
+          context.parallel jobs
 
-        // publish to github if needed
-        // Dont publish release automatically
-        if (publish && !release) {
-            //During testing just remove the publish
-            publishBinary()
-        } else if (publish && release) {
-            context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
-        }
+          // publish to github if needed
+          // Dont publish release automatically
+          if (publish && !release) {
+              //During testing just remove the publish
+              publishBinary()
+          } else if (publish && release) {
+              context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
+          }
+
     }
+
 }
 
 return {
     String javaToBuild,
     Map<String, Map<String, ?>> buildConfigurations,
     String targetConfigurations,
+    String dockerExcludes,
     String enableTests,
+    String enableInstallers,
     String releaseType,
     String scmReference,
     String overridePublishName,
@@ -430,25 +488,32 @@ return {
             }
         }
 
+        def buildsExcludeDocker = [:]
+        if (dockerExcludes != "" && dockerExcludes != null) {
+            buildsExcludeDocker = new JsonSlurper().parseText(dockerExcludes) as Map
+        }
+
         return new Builder(
-                javaToBuild: javaToBuild,
-                buildConfigurations: buildConfigurations,
-                targetConfigurations: new JsonSlurper().parseText(targetConfigurations) as Map,
-                enableTests: Boolean.parseBoolean(enableTests),
-                publish: publish,
-                release: release,
-                scmReference: scmReference,
-                publishName: publishName,
-                additionalConfigureArgs: additionalConfigureArgs,
-                scmVars: scmVars,
-                additionalBuildArgs: additionalBuildArgs,
-                overrideFileNameVersion: overrideFileNameVersion,
-                cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
-                adoptBuildNumber: adoptBuildNumber,
-                propagateFailures: Boolean.parseBoolean(propagateFailures),
-                currentBuild: currentBuild,
-                context: context,
-                env: env
+            javaToBuild: javaToBuild,
+            buildConfigurations: buildConfigurations,
+            targetConfigurations: new JsonSlurper().parseText(targetConfigurations) as Map,
+            dockerExcludes: buildsExcludeDocker,
+            enableTests: Boolean.parseBoolean(enableTests),
+            enableInstallers: Boolean.parseBoolean(enableInstallers),
+            publish: publish,
+            release: release,
+            scmReference: scmReference,
+            publishName: publishName,
+            additionalConfigureArgs: additionalConfigureArgs,
+            scmVars: scmVars,
+            additionalBuildArgs: additionalBuildArgs,
+            overrideFileNameVersion: overrideFileNameVersion,
+            cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
+            adoptBuildNumber: adoptBuildNumber,
+            propagateFailures: Boolean.parseBoolean(propagateFailures),
+            currentBuild: currentBuild,
+            context: context,
+            env: env
         )
 
 }

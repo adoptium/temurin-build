@@ -10,7 +10,7 @@ source constants.sh
 cd "$REPO"
 if [ -d ".git" ];then
   git reset --hard
-  git checkout master
+  git checkout master || git checkout -b master
   git merge --abort || true
   git am --abort || true
 fi
@@ -22,7 +22,7 @@ git fetch --all --no-tags
 if git rev-parse -q --verify "dev" ; then
   git checkout dev
 else
-  git checkout -b dev upstream/dev
+  git checkout -b dev upstream/dev || git checkout -b dev
 fi
 
 cd $SCRIPT_DIR

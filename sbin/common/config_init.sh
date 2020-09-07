@@ -32,6 +32,9 @@
 # map. This is why we can't have nice things.
 CONFIG_PARAMS=(
 ADOPT_PATCHES
+ASSEMBLE_EXPLODED_IMAGE
+OPENJDK_BUILD_REPO_BRANCH
+OPENJDK_BUILD_REPO_URI
 BRANCH
 BUILD_FULL_NAME
 BUILD_VARIANT
@@ -45,6 +48,7 @@ COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
 DEBUG_DOCKER
+DEBUG_IMAGE_PATH
 DISABLE_ADOPT_BRANCH_SAFETY
 DOCKER
 DOCKER_FILE_PATH
@@ -53,13 +57,16 @@ FREETYPE
 FREETYPE_DIRECTORY
 FREETYPE_FONT_BUILD_TYPE_PARAM
 FREETYPE_FONT_VERSION
+GRADLE_USER_HOME_DIR
 KEEP_CONTAINER
 JDK_BOOT_DIR
 JDK_PATH
 JRE_PATH
 TEST_IMAGE_PATH
 JVM_VARIANT
+MACOSX_CODESIGN_IDENTITY
 MAKE_ARGS_FOR_ANY_PLATFORM
+MAKE_EXPLODED
 MAKE_COMMAND_NAME
 NUM_PROCESSORS
 OPENJDK_BUILD_NUMBER
@@ -172,6 +179,12 @@ function parseConfigurationArguments() {
       case "$opt" in
         "--" ) break 2;;
 
+        "--openjdk-build-repo-branch" )
+        BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]="$1"; shift;;
+
+        "--openjdk-build-repo-uri" )
+        BUILD_CONFIG[OPENJDK_BUILD_REPO_URI]="$1"; shift;;
+
         "--build-variant" )
         BUILD_CONFIG[BUILD_VARIANT]="$1"; shift;;
 
@@ -186,6 +199,15 @@ function parseConfigurationArguments() {
 
         "--make-args" )
         BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]="$1"; shift;;
+
+        "--make-exploded-image" )
+        BUILD_CONFIG[MAKE_EXPLODED]=true;;
+
+        "--assemble-exploded-image" )
+        BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=true;;
+
+        "--codesign-identity" )
+        BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]="$1"; shift;;
 
         "--clean-docker-build" | "-c" )
         BUILD_CONFIG[CLEAN_DOCKER_BUILD]=true;;
@@ -219,6 +241,9 @@ function parseConfigurationArguments() {
 
         "--freetype-version" )
         BUILD_CONFIG[FREETYPE_FONT_VERSION]="$1"; shift;;
+
+        "--gradle-user-home-dir" )
+        BUILD_CONFIG[GRADLE_USER_HOME_DIR]="$1"; shift;;
 
         "--skip-freetype" | "-F" )
         BUILD_CONFIG[FREETYPE]=false;;
@@ -300,7 +325,7 @@ function setBranch() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     branch="openj9";
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
-    branch="preview-release";
+    branch="develop";
   fi
 
   BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}
@@ -321,6 +346,9 @@ function configDefaults() {
   BUILD_CONFIG[JDK_PATH]=""
   BUILD_CONFIG[JRE_PATH]=""
 
+  # The default value defined for GRADLE_USER_HOME
+  BUILD_CONFIG[GRADLE_USER_HOME_DIR]=""
+
   # The O/S architecture, e.g. x86_64 for a modern intel / Mac OS X
   BUILD_CONFIG[OS_ARCHITECTURE]=${arch}
 
@@ -332,6 +360,15 @@ function configDefaults() {
 
   # The OpenJDK source code repository to build from, e.g. an AdoptOpenJDK repo
   BUILD_CONFIG[REPOSITORY]=""
+
+  BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]:-"false"}
+  BUILD_CONFIG[MAKE_EXPLODED]=${BUILD_CONFIG[MAKE_EXPLODED]:-"false"}
+
+  # The default AdoptOpenJDK/openjdk-build repo branch
+  BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]="master"
+
+  # The default AdoptOpenJDK/openjdk-build repo uri
+  BUILD_CONFIG[OPENJDK_BUILD_REPO_URI]="https://github.com/AdoptOpenJDK/openjdk-build.git"
 
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false"
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="false"
@@ -351,6 +388,8 @@ function configDefaults() {
 
   BUILD_CONFIG[SIGN]="false"
   BUILD_CONFIG[JDK_BOOT_DIR]=""
+
+  BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]=${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]:-""}
 
   BUILD_CONFIG[NUM_PROCESSORS]="1"
   BUILD_CONFIG[TARGET_FILE_NAME]="OpenJDK.tar.gz"
