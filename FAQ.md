@@ -12,26 +12,11 @@ won't necessarily have access to see thse links):
 - [build](https://github.com/orgs/AdoptOpenJDK/teams/build) - `Write` access which lets you approve and merge PRs and run and configure most jenkins jobs
 - [release](https://github.com/orgs/AdoptOpenJDK/teams/build) - Allows you to run the release jobs in jenkins
 
-## How do I build OpenJDK in a docker image?
-
-If you do not want to set up your machine with all the prerequisites for
-building openjdk, you can use our docker images under the [docker]
-directory as follows (first version builds HotSpot, second builds J9 - the
-final parameter can be adjusted to build whichever version you want as long
-as we have a valid dockerfile for it in this repository):
-
-```
-./makejdk-any-platform.sh --docker --clean-docker-build jdk8u
-./makejdk-any-platform.sh --docker --clean-docker-build --build-variant openj9 jdk13u
-```
-
-We test these dockerfiles on a regular basis in the
-[Dockerfilecheck](https://ci.adoptopenjdk.net/job/DockerfileCheck/) job
-to ensure they continue to work in a stable fashion.
-
 ## How do I find my way around AdoptOpenJDK's build automation scripts?
 
 I wrote this diagram partially for my own benefit in [issue 957](https://github.com/AdoptOpenJDK/openjdk-build/issues/957) that lists the Jenkins jobs (`J`), groovy scripts from github (`G`), shell scripts (`S`) and environment scripts (`E`). I think it would be useful to incorporate this into the documentation (potentially annotated with a bit more info) so people can find their way around the myriad of script levels that we now have.
+Note that the "end-user" scripts start at `makejdk-any-platform.sh` and a
+diagram of those relationships can be seen [here](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/docs/images/AdoptOpenJDK_Build_Script_Relationships.png)
 
 ```
 J - build-scripts/job/utils/job/build-pipeline-generator
@@ -72,8 +57,8 @@ In terms of compilers, these are what we currently use for each release:
 
 | Version | OS      | Compiler |
 |---------|---------|----------|
-| JDK8    | Linux   | GCC 4.8 (HotSpot) GCC 7.3 (OpenJ9) GCC 7.4 (OpenJ9/s390x) |
-| JDK11+  | Linux   | GCC 7.3 (except s390x which uses GCC 7.4)			|
+| JDK8    | Linux   | GCC 4.8 (HotSpot) GCC 7.6 (OpenJ9)                        |
+| JDK11+  | Linux   | GCC 7.5                            			|
 | JDK8    | Windows | VS2013 (12.0) (HotSpot) or VS2010 (10.0) (OpenJ9)		|
 | JDK11+  | Windows | VS2017							|
 | JDK8/11 | AIX     | xlC/C++ 13.1.3						|
@@ -106,9 +91,11 @@ Unless the last release was an LTS one, you will generally want to remove one of
 
 ## How to add a new variant
 
-Simply modify the [pipeline files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build) as well as any environment-specific change syou need to make in the [platform files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
+First you will need to add support into the [pipeline files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build) as well as any environment-specific change syou need to make in the [platform files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
+For an example, see [this PR where Dragonwell was added](https://github.com/AdoptOpenJDK/openjdk-build/pull/2051/files)
+For more information on other changes required, see [this document](https://github.com/AdoptOpenJDK/TSC/wiki/Adding-a-new-build-variant)
 
-## How do I change the parameters, such as configure flags, for a build
+## How do I change the parameters, such as configure flags, for a jenkins build
 
 Either
 - Modify the environment files in [platform-specific-configurations](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
