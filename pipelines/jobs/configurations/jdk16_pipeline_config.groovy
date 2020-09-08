@@ -36,7 +36,7 @@ class Config16 {
                         hotspot: 'win2012&&vs2017'
                 ],
                 buildArgs : [
-                        hotspot : '--jvm-variant client,server'
+                        hotspot : '--jvm-variant server'
                 ],
                 test                : [
                         nightly: false,

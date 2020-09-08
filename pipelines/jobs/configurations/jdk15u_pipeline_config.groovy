@@ -51,7 +51,7 @@ class Config15 {
                         hotspot: 'win2012&&vs2017'
                 ],
                 buildArgs : [
-                        hotspot : '--jvm-variant client,server'
+                        hotspot : '--jvm-variant server'
                 ],
                 test                : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
         ],
