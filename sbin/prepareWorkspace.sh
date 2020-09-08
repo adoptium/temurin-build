@@ -495,7 +495,7 @@ checkingAndDownloadingFreeType() {
 # Generates cacerts file
 prepareCacerts() {
     cd "$SCRIPT_DIR/../security"
-    ./mk-cacerts.sh
+    ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
 }
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, etc.)

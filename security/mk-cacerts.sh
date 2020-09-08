@@ -14,6 +14,30 @@
 #
 set -euo pipefail
 
+PROGRAM_NAME="${0##*/}"
+KEYTOOL="keytool" # By default, use keytool from PATH.
+HELP=false
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -k|--keytool) KEYTOOL="$2"; shift ;;
+        -h|--help) HELP=true ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
+
+if [ "$HELP" = true ] ; then
+    echo "Usage: $PROGRAM_NAME [options]"
+    echo ""
+    echo "Generates a new cacerts keystore from certdata.txt in the working directory."
+    echo ""
+    echo "Options:"
+    echo "-h, --help            Show this help message and exit."
+    echo "-k, --keytool <path>  keytool to use to create the cacerts keystore."
+    exit 0
+fi
+
 # Remove files from last run if present
 rm -f ca-bundle.crt cacerts
 rm -rf certs && mkdir certs
@@ -52,7 +76,7 @@ for FILE in certs/*.crt; do
 
     echo "Processing certificate with alias: $ALIAS" 
 
-    keytool -noprompt \
+    "$KEYTOOL" -noprompt \
       -import \
       -alias "$ALIAS" \
       -file "$FILE" \
