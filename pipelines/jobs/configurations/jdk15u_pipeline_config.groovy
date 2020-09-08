@@ -50,9 +50,6 @@ class Config15 {
                 additionalNodeLabels: [
                         hotspot: 'win2012&&vs2017'
                 ],
-                buildArgs : [
-                        hotspot : '--jvm-variant server'
-                ],
                 test                : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
         ],
 
