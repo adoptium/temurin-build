@@ -249,7 +249,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[FREETYPE]=false;;
 
         "--help" | "-h" )
-        man ./makejdk-any-platform.1;;
+        man ./makejdk-any-platform.1 && exit 0;;
 
         "--ignore-container" | "-i" )
         BUILD_CONFIG[REUSE_CONTAINER]=false;;
