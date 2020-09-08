@@ -215,8 +215,7 @@ For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 This is typically used in conjunction with -b.
 
 --use-jep319-certs
-Use certs defined in JEP319 in Java 8/9. This will increase the volume of traffic downloaded, however will
-provide an upto date ca cert list.
+Use certs defined in JEP319 in Java 8/9. Deprecated, has no effect.
 
 -v, --version
 specify the OpenJDK version to build e.g. jdk8u.  Left for backwards compatibility.
