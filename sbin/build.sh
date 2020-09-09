@@ -357,6 +357,11 @@ configureCommandParameters()
   echo "Configuring jvm variants if provided"
   addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
 
+  if [ "${BUILD_CONFIG[CUSTOM_CACERTS]}" != "false" ] ; then
+    echo "Configure custom cacerts file security/cacerts"
+    addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "$SCRIPT_DIR/../security/cacerts"
+  fi
+
   # Now we add any configure arguments the user has specified on the command line.
   CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}"
 
