@@ -93,17 +93,6 @@ class PullRequestTestPipeline implements Serializable {
 
             jobs["Test building Java ${javaVersion}"] = {
                 context.stage("Test building Java ${javaVersion}") {
-                    wrappers {
-                        downstreamCommitStatus {
-                            context("Test building Java ${javaVersion}")
-                            triggeredStatus("The job has triggered")
-                            startedStatus("The job has started")
-                            statusUrl()
-                            completedStatus('SUCCESS', "The job has passed")
-                            completedStatus('FAILURE', "The job has failed")
-                            completedStatus('ERROR', "The job has resulted in an error")
-                        }
-                    }
                     try {
                         context.build job: "${BUILD_FOLDER}/openjdk${javaVersion}-pipeline",
                             propagate: true,
