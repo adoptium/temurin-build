@@ -1,20 +1,21 @@
 # openjdk-build FAQ
 
-This document will cover who to perform various repeatable tasks in the
-repository that might not otherwise be obvious.
+This document covers cover how to perform various repeatable tasks in the
+repository that might not otherwise be obvious from just looking at the
+repository.
 
 ## Access control in this repository
 
-The two github teams relevant to this repository are as follows (Note, you
+The GitHub teams relevant to this repository are as follows (Note, you
 won't necessarily have access to see thse links):
 
 - [GetOpenJDK](https://github.com/orgs/AdoptOpenJDK/teams/getopenjdk) - `Triage` level of access which lets you assign issues to people
-- [build](https://github.com/orgs/AdoptOpenJDK/teams/build) - `Write` access which lets you approve and merge PRs and run and configure most jenkins jobs
-- [release](https://github.com/orgs/AdoptOpenJDK/teams/build) - Allows you to run the release jobs in jenkins
+- [build](https://github.com/orgs/AdoptOpenJDK/teams/build) - `Write` access which lets you approve and merge PRs and run and configure most Jenkins jobs
+- [release](https://github.com/orgs/AdoptOpenJDK/teams/build) - Allows you to run the release jobs in Jenkins
 
 ## How do I find my way around AdoptOpenJDK's build automation scripts?
 
-I wrote this diagram partially for my own benefit in [issue 957](https://github.com/AdoptOpenJDK/openjdk-build/issues/957) that lists the Jenkins jobs (`J`), groovy scripts from github (`G`), shell scripts (`S`) and environment scripts (`E`). I think it would be useful to incorporate this into the documentation (potentially annotated with a bit more info) so people can find their way around the myriad of script levels that we now have.
+I wrote this diagram partially for my own benefit in [issue 957](https://github.com/AdoptOpenJDK/openjdk-build/issues/957) that lists the Jenkins jobs (`J`), Groovy scripts from GitHub (`G`), shell scripts (`S`) and environment scripts (`E`). I think it would be useful to incorporate this into the documentation (potentially annotated with a bit more info) so people can find their way around the myriad of script levels that we now have.
 Note that the "end-user" scripts start at `makejdk-any-platform.sh` and a
 diagram of those relationships can be seen [here](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/docs/images/AdoptOpenJDK_Build_Script_Relationships.png)
 
@@ -72,7 +73,7 @@ All machines at AdoptOpenJDK are set up using the ansible playbooks from the
 
 ## Adding a new major release to be built
 
-1. Create the new release repository under github.com/adoptopenjdk (generally `openjdk-jdkxx`)
+1. Create the new release repository under GitHub.com/adoptopenjdk (generally `openjdk-jdkxx`)
 2. Add the release to the list at [pipeline file](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build)
 3. Adjust the PR testing pipline [Example](https://github.com/AdoptOpenJDK/openjdk-build/pull/1394) to use the new release
 
@@ -85,17 +86,19 @@ Unless the last release was an LTS one, you will generally want to remove one of
 ## How to enable/disable a particular build configuration
 
 1. Add/Remove it from the configuration files in https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations
-2. if you're removing one and it's not just temporarily, you may want to delete the specific job from jenkins too
+2. if you're removing one and it's not just temporarily, you may want to delete the specific job from Jenkins too
 
 [Example PR - removing aarch64 OpenJ9 builds](https://github.com/AdoptOpenJDK/openjdk-build/pull/1452)
 
-## How to add a new variant
+## How to add a new build variant
+
+We perform different builds such as the based openjdk (hotspot), builds from the Eclipse OpenJ9 codebase as well as others such as Corretto and SAPMachine. These alternatives are referred to as build variants.
 
 First you will need to add support into the [pipeline files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build) as well as any environment-specific change syou need to make in the [platform files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
 For an example, see [this PR where Dragonwell was added](https://github.com/AdoptOpenJDK/openjdk-build/pull/2051/files)
 For more information on other changes required, see [this document](https://github.com/AdoptOpenJDK/TSC/wiki/Adding-a-new-build-variant)
 
-## How do I change the parameters, such as configure flags, for a jenkins build
+## How do I change the parameters, such as configure flags, for a Jenkins build
 
 Either
 - Modify the environment files in [platform-specific-configurations](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
@@ -105,7 +108,7 @@ Either
 
 ## How to do a new release build
 
-   Since it's quite long, this is covered in a separate [RELEASING.md](RELEASING.md) document
+Since it's quite long, this is covered in a separate [RELEASING.md](RELEASING.md) document
 
 ## I've modified the build scripts - how can I test my changes?
 
@@ -116,7 +119,8 @@ the shell scripts.
 In order to test whether your changes work use the
 [test-build-script-pull-request](https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/test-build-script-pull-request/)
 job! Pass it your fork name (e.g. https://github.com/sxa555/openjdk-build) and the name of the branch
-and it will run a build using your updated scripts.
+and it will run a build using your updated scripts. Contact someone in the
+build team if you are unable to run the job.
 
 ## Which OS levels do we build on?
 

@@ -23,7 +23,7 @@ repository (`git clone https://github.com/AdoptOpenJDK/openjdk-build` and
 kick off a build a follows with this script. The `-J` parameter specifies
 the "boot JDK" which should generally be one major version prior to the one
 you are building (although one of the same major version will also work).
-Note that the build variant default to HotSpot if omitted.
+Note that the build variant defaults to HotSpot if omitted.
 
 ```
 ./makejdk-any-platform.sh (-J /usr/lib/jvm/jdk-xx) (--build-variant <hotspot|openj9|corretto|SapMachine|dragonwell>) <jdk8u|jdk11u|jdk15u|jdk>
@@ -36,10 +36,10 @@ e.g.
 ## How do I build OpenJDK in a docker image?
 
 If you do not want to set up your machine with all the prerequisites for
-building openjdk, you can use our docker images under the [docker]
+building OpenJDK, you can use our docker images under the [docker]
 directory as follows (first version builds HotSpot, second builds J9 - the
 final parameter can be adjusted to build whichever version you want as long
-as we can generate valid dockerfile for it:
+as we can generate valid dockerfile for it):
 
 ```
 ./makejdk-any-platform.sh --docker --clean-docker-build jdk8u
