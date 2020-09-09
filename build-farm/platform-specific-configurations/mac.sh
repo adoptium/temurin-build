@@ -57,7 +57,7 @@ then
   # Login to KeyChain
   # shellcheck disable=SC2046
   # shellcheck disable=SC2006
-  security unlock-keychain -p `cat ~/.password`
+  security unlock-keychain -p `cat ~/.password` login.keychain-db
   export BUILD_ARGS="${BUILD_ARGS} --codesign-identity 'Developer ID Application: London Jamocha Community CIC'"
 fi
 
