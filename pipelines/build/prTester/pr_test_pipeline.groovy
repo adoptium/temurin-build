@@ -138,6 +138,10 @@ Map<String, ?> defaultTestConfigurations = [
         "hotspot",
         "openj9"
     ],
+    "aarch64Linux": [
+        "hotspot",
+        "openj9"
+    ],
     "x64Windows": [
         "hotspot"
     ],
