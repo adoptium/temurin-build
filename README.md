@@ -119,7 +119,7 @@ branch which may contain a very small diff set to the master branch
 (which is a clone from the OpenJDK mercurial forest).
 
 -B, --build-number <build_number>
-specify the OpenJDK build number to build from, e.g. b12.
+specify the OpenJDK build number to build hfrom, e.g. b12.
 For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 9.0.4+11 (for Java 9+) with the build number being the suffix at the end.
 
@@ -138,7 +138,7 @@ specify any custom user configuration arguments.
 clean out any 'bad' local git repo you already have.
 
 --create-debug-symbols-package
-create a debug-symbols only archive if debug symbols are generated.
+create a debug-symbols only archive (if debug symbols were generated).
 
 -d, --destination <path>
 specify the location for the built binary, e.g. /path/.
