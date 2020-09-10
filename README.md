@@ -13,7 +13,7 @@ https://www.adoptopenjdk.net and https://api.adoptopenjdk.net.
 ```
 ./makejdk-any-platform.sh <jdk8u|jdk9u|jdk10u|jdk11u|jdk12u|jdk13u|jdk14u|jdk15|jdk>
 i.e:
-./makejdk-any-platform.sh jdk8u
+    ./makejdk-any-platform.sh jdk8u
 ```
 
 ##### Build jdk inside a docker container
@@ -124,7 +124,7 @@ specify any custom user configuration arguments.
 clean out any 'bad' local git repo you already have.
 
 --create-debug-symbols-package
-create a debug-symbols only archive if debug symbols are generated.
+create a debug-symbols only archive (if debug symbols were generated).
 
 -d, --destination <path>
 specify the location for the built binary, e.g. /path/.

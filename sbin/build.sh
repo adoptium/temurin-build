@@ -281,14 +281,19 @@ configureDebugParameters() {
   # other options include fastdebug and slowdebug.
   addConfigureArg "--with-debug-level=" "release"
 
-  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-    addConfigureArg "--disable-zip-debug-info" ""
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
-      addConfigureArg "--disable-debug-symbols" ""
-    fi
+  # If debug symbols package is requested, generate them separately
+  if [ ${BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]} == true ]; then
+    addConfigureArg "--with-native-debug-symbols=" "external"
   else
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
-      addConfigureArg "--with-native-debug-symbols=" "none"
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+      addConfigureArg "--disable-zip-debug-info" ""
+      if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
+        addConfigureArg "--disable-debug-symbols" ""
+      fi
+    else
+      if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
+        addConfigureArg "--with-native-debug-symbols=" "none"
+      fi
     fi
   fi
 }
@@ -655,6 +660,7 @@ removingUnnecessaryFiles() {
         ;;
     esac
 
+    # if debug symbols were found, copy them to a different folder 
     if [ -n "${debugSymbols}" ] ; then
       local debugSymbolsTargetPath=$(getDebugSymbolsArchivePath)
       echo "${debugSymbols}" | cpio -pdm ${debugSymbolsTargetPath}
