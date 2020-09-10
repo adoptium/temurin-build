@@ -35,7 +35,8 @@ class Config11 {
                         "openj9"      : '--enable-jitserver --enable-dtrace=auto',
                         "hotspot"     : '--enable-dtrace=auto',
                         "corretto"    : '--enable-dtrace=auto',
-                        "SapMachine"  : '--enable-dtrace=auto'
+                        "SapMachine"  : '--enable-dtrace=auto',
+                        "dragonwell"  : '--enable-dtrace=auto --enable-unlimited-crypto  --with-jvm-variants=server --with-zlib=system --with-jvm-features=zgc'
                 ]
         ],
 

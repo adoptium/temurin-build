@@ -47,6 +47,7 @@ CONTAINER_NAME
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
+CUSTOM_CACERTS
 DEBUG_DOCKER
 DEBUG_IMAGE_PATH
 DISABLE_ADOPT_BRANCH_SAFETY
@@ -207,6 +208,9 @@ function parseConfigurationArguments() {
         "--assemble-exploded-image" )
         BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=true;;
 
+        "--custom-cacerts" )
+        BUILD_CONFIG[CUSTOM_CACERTS]="$1"; shift;;
+
         "--codesign-identity" )
         BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]="$1"; shift;;
 
@@ -250,7 +254,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[FREETYPE]=false;;
 
         "--help" | "-h" )
-        man ./makejdk-any-platform.1;;
+        man ./makejdk-any-platform.1 && exit 0;;
 
         "--ignore-container" | "-i" )
         BUILD_CONFIG[REUSE_CONTAINER]=false;;
@@ -328,6 +332,8 @@ function setBranch() {
   local branch="dev"
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     branch="openj9";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+    branch="master";
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
     branch="develop";
   fi
@@ -466,6 +472,9 @@ function configDefaults() {
   # Any extra config / make args provided by the user
   BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""}
   BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]:-""}
+
+  # Whether to use AdoptOpenJDK's cacerts file (true) or use the file provided by OpenJDK (false)
+  BUILD_CONFIG[CUSTOM_CACERTS]=${BUILD_CONFIG[CUSTOM_CACERTS]:-"true"}
 
   BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-"docker"}
 

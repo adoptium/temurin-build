@@ -150,7 +150,9 @@ getOpenJdkVersion() {
     fi
   else
     version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
-
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+      version=$(echo $version | cut -d'_' -f 2)
+    fi
     # TODO remove pending #1016
     version=${version%_adopt}
     version=${version#aarch64-shenandoah-}
@@ -360,6 +362,11 @@ configureCommandParameters()
 
   echo "Configuring jvm variants if provided"
   addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
+
+  if [ "${BUILD_CONFIG[CUSTOM_CACERTS]}" != "false" ] ; then
+    echo "Configure custom cacerts file security/cacerts"
+    addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "$SCRIPT_DIR/../security/cacerts"
+  fi
 
   # Now we add any configure arguments the user has specified on the command line.
   CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}"

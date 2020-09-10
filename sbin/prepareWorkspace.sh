@@ -53,7 +53,11 @@ checkoutAndCloneOpenJDKGitRepo() {
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk11u (fetch)
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk (fetch)
     # eg. origin git@github.com:adoptopenjdk/openjdk-jdk.git (fetch)
-    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch"
+    else
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
+    fi
     local isValidGitRepo=$?
     set -e
 
@@ -102,6 +106,7 @@ checkoutAndCloneOpenJDKGitRepo() {
   git clean -ffdx
 
   updateOpenj9Sources
+  updateDragonwellSources
 
   createSourceTagFile
 
@@ -252,6 +257,14 @@ updateOpenj9Sources() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     bash get_source.sh --openssl-version=1.1.1g
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+  fi
+}
+
+updateDragonwellSources() {
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
+    bash get_source_dragonwell.sh --site github
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
@@ -492,44 +505,15 @@ checkingAndDownloadingFreeType() {
   fi
 }
 
-# Download our security certificates
-downloadCerts() {
-  local caLink="$1"
+# Generates cacerts file
+prepareCacerts() {
+    echo "Generating cacerts from Mozilla's bundle"
 
-  mkdir -p "security"
-  # Temporary fudge as curl on my windows boxes is exiting with RC=127
-  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    wget -O "./security/cacerts" "${caLink}"
-  else
-    curl -L -o "./security/cacerts" "${caLink}"
-  fi
+    cd "$SCRIPT_DIR/../security"
+    ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
 }
 
-# Certificate Authority Certs (CA Certs)
-checkingAndDownloadCaCerts() {
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
-
-  echo "Retrieving cacerts file if needed"
-  # Ensure it's the latest we pull in
-  rm -rf "cacerts_area"
-  mkdir "cacerts_area" || exit
-  cd "cacerts_area" || exit
-
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
-    local caLink="https://github.com/corretto/corretto-8/blob/preview-release/cacerts?raw=true"
-    downloadCerts "$caLink"
-  elif [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" != "true" ]; then
-    git init
-    git remote add origin -f "${BUILD_CONFIG[OPENJDK_BUILD_REPO_URI]}"
-    git config core.sparsecheckout true
-    echo "security/*" >>.git/info/sparse-checkout
-    git pull origin "${BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]}"
-  fi
-
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
-}
-
-# Download all of the dependencies for OpenJDK (Alsa, FreeType, CACerts et al)
+# Download all of the dependencies for OpenJDK (Alsa, FreeType, etc.)
 downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
@@ -569,10 +553,6 @@ downloadingRequiredDependencies() {
   else
     echo "Skipping Freetype"
   fi
-
-  echo "Checking and download CaCerts dependency"
-  checkingAndDownloadCaCerts
-
 }
 
 function moveTmpToWorkspaceLocation() {
@@ -658,5 +638,6 @@ function configureWorkspace() {
     relocateToTmpIfNeeded
     checkoutAndCloneOpenJDKGitRepo
     applyPatches
+    prepareCacerts
   fi
 }
