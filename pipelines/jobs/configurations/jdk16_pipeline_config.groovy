@@ -41,6 +41,18 @@ class Config16 {
                 ]
         ],
 
+        x32Windows: [
+                os                  : 'windows',
+                arch                : 'x86-32',
+                additionalNodeLabels: [
+                        hotspot: 'win2012&&vs2017'
+                ],
+                buildArgs : [
+                        hotspot : '--jvm-variant client,server'
+                ],
+                test                : ['sanity.openjdk']
+        ],
+
         ppc64Aix    : [
                 os                  : 'aix',
                 arch                : 'ppc64',
