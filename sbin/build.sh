@@ -180,6 +180,12 @@ configuringVersionStringParameter()
 
   local dateSuffix=$(date -u +%Y%m%d%H%M)
 
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
+    BUILD_CONFIG[VENDOR]="Alibaba"
+  else
+    BUILD_CONFIG[VENDOR]="AdoptOpenJDK"
+  fi
+
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
 
     if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
@@ -248,14 +254,14 @@ configuringVersionStringParameter()
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
     
     if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
-        addConfigureArg "--with-vendor-name=" "Alibaba"
+        addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]}"
+        addConfigureArg "--with-vendor-version-string=" "\"(Alibaba Dragonwell)\""
         addConfigureArg "--with-vendor-url=" "http://www.alibabagroup.com"
         addConfigureArg "--with-vendor-bug-url=" "mailto:dragonwell_use@googlegroups.com"
-        addConfigureArg "--with-vendor-version-string=" "\"(Alibaba Dragonwell)\""
-    else
+    else # ${BUILD_CONFIG[VENDOR]} defaults to AdoptOpenJDK
+        addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]}"
         addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
         addConfigureArg "--with-vendor-url=" "https://adoptopenjdk.net/"
-        addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
         addConfigureArg "--with-vendor-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-support/issues"
     fi
 
@@ -846,6 +852,119 @@ fixJavaHomeUnderDocker() {
   fi
 }
 
+addInfoToReleaseFile(){
+  # Extra information is added to the release file here
+  cd $PRODUCT_HOME
+  JAVA_LOC="$PRODUCT_HOME/bin/java"
+  addImplementor
+  addBuildSHA
+  addFullVersion
+  addSemVer
+  addBuildOS
+  addJVMVariant
+  addJVMVersion
+  # OpenJ9 specific options
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    addHeapSize
+    addJ9Tag
+  fi
+  mirrorToJRE
+  addImageType
+}
+
+addHeapSize(){ # Adds an identifier for heap size on OpenJ9 builds
+  local heapSize=""
+  if [[ $($JAVA_LOC -version 2>&1 | grep 'Compressed References') ]]; then
+    heapSize="Standard"
+  else
+    heapSize="Large"
+  fi
+  echo -e HEAP_SIZE=\"$heapSize\" >> release
+}
+
+addImplementor(){
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+    echo -e IMPLEMENTOR=\"${BUILD_CONFIG[VENDOR]}\" >> release
+  fi  
+}
+
+addJVMVersion(){ # Adds the JVM version i.e. openj9-0.21.0
+  local jvmVersion=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.vm.version' | sed 's/^.*= //' | tr -d '\r')
+  echo -e JVM_VERSION=\"$jvmVersion\" >> release
+}
+
+addFullVersion(){ # Adds the full version including build number i.e. 11.0.9+5-202009040847
+  local fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
+  echo -e FULL_VERSION=\"$fullVer\" >> release
+}
+
+addJVMVariant(){
+  echo -e JVM_VARIANT=\"${BUILD_CONFIG[BUILD_VARIANT]^}\" >> release
+}
+
+addBuildSHA(){ # git SHA of the build repository i.e. openjdk-build
+  local buildSHA=$(git -C ${BUILD_CONFIG[WORKSPACE_DIR]} rev-parse --short HEAD)
+  echo -e BUILD_SOURCE=\"git:$buildSHA\" >> release
+}
+
+addBuildOS(){
+  local buildOS="Unknown"
+  local buildVer="Unknown"
+  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]; then
+    buildOS=$(sw_vers | sed -n 's/^ProductName:[[:blank:]]*//p')
+    buildVer=$(sw_vers | tail -n 2 | awk '{print $2}')
+  elif [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
+    buildOS=$(uname -s)
+    buildVer=$(uname -r)
+  else # Fall back to java properties OS/Version info
+    buildOS=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'os.name' | sed 's/^.*= //' | tr -d '\r')
+    buildVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'os.version' | sed 's/^.*= //' | tr -d '\r')
+  fi
+  echo -e BUILD_INFO=\"OS: $buildOS Version: $buildVer\" >> release
+}
+
+addJ9Tag(){
+  # java.vm.version varies or for OpenJ9 depending on if it is a release build i.e. master-*gitSha* or 0.21.0
+  # This code makes sure that a version number is always present in the release file i.e. openj9-0.21.0
+  if [ ${BUILD_CONFIG[RELEASE]} = false ]; then
+    local j9Location="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/openj9"
+    # Pull the tag associated with the J9 commit being used
+    local j9Tag=$(git -C $j9Location describe --abbrev=0)
+    echo -e OPENJ9_TAG=\"$j9Tag\" >> release
+  fi
+}
+
+addSemVer(){ # Pulls the semantic version from the tag associated with the openjdk repo
+  local fullVer=$(getOpenJdkVersion)
+  local semVer="$fullVer"
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+    semVer=$(echo "$semVer" | cut -c4- | awk -F'[\-b0]+' '{print $1"+"$2}' | sed 's/u/.0./')
+  else
+    semVer=$(echo "$semVer" | cut -c5-)
+  fi
+  echo -e SEMANTIC_VERSION=\"$semVer\" >> release
+}
+
+mirrorToJRE(){
+  stepIntoTheWorkingDirectory
+
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+  "darwin")
+    JRE_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JRE_PATH]}/Contents/Home)
+  ;;
+  *)
+    JRE_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JRE_PATH]})
+  ;;
+  esac
+
+  cp -f $PRODUCT_HOME/release $JRE_HOME/release
+}
+
+addImageType(){
+  echo -e IMAGE_TYPE=\"JDK\" >> $PRODUCT_HOME/release
+  echo -e IMAGE_TYPE=\"JRE\" >> $JRE_HOME/release
+}
+
 ################################################################################
 
 loadConfigFromFile
@@ -878,6 +997,7 @@ executeTemplatedFile
 
 if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   printJavaVersionString
+  addInfoToReleaseFile
   removingUnnecessaryFiles
   copyFreeFontForMacOS
   createOpenJDKTarArchive
