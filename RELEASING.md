@@ -141,7 +141,7 @@ The following examples all use `-m1` as an example - this gets replaced with a l
 2. Eclipse OpenJ9 tag the commit in the "release" branch that they want to be the milestone level as e.g. `openj9-0.17.0-m1`
 3. OpenJDK extensions branches the `openj9` branch to create the release branch, called `openj9-0.nn.0`
 4. Ask someone in the extensions team to make the following modifications:
-   * If this is M2 then check for new jdk tag to merge into the release branch:
+   * If this is milestone 2 (m2) then check for new jdk tag to merge into the release branch:
      - Merge into the OpenJ9 extensions release branch (e.g. `openj9-0.17.0`) the latest tag merged from OpenJDK (automated jobs merge the tag into `openj9-staging`, but not the release branch so this has to be done manually). eg.:
        - `git checkout openj9-0.18.0`
        - `git merge -m"Merge jdk-11.0.6+10" jdk-11.0.6+10`
