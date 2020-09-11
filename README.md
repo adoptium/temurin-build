@@ -294,15 +294,20 @@ to your local platform and then build OpenJDK and place the result in
 `/home/openjdk/target/MyOpenJDK11.tar.gz`.
 
 # Metadata
-**This is still in alpha do not rely on this yet**
 Alongside the built assets a metadata file will be created with info about the build. This will be a JSON document of the form:
 
 ```
 {
-    "WARNING": "THIS METADATA FILE IS STILL IN ALPHA DO NOT USE ME",
+    "vendor": "AdoptOpenJDK",
     "os": "mac",
     "arch": "x64",
     "variant": "openj9",
+    "variant_version": {
+        "major": "0",
+        "minor": "22",
+        "security": "0",
+        "tags": "m2"
+    },
     "version": {
         "minor": 0,
         "security": 0,
@@ -315,6 +320,7 @@ Alongside the built assets a metadata file will be created with info about the b
         "opt": "202007070926"
     },
     "scmRef": "<output of git describe OR buildConfig.SCM_REF>",
+    "buildRef": "<build-repo-name/build-commit-sha>",
     "version_data": "jdk15",
     "binary_type": "debugimage",
     "sha256": "<shasum>",

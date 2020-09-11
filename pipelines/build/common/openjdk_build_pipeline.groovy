@@ -50,6 +50,13 @@ class Build {
     String scmRef = ""
     String fullVersionOutput = ""
     String configureArguments = ""
+    String j9Major = ""
+    String j9Minor = ""
+    String j9Security = ""
+    String j9Tags = ""
+    String vendorName = ""
+    String buildSource = ""
+    Map variantVersion = [:]
 
     Build(IndividualBuildConfig buildConfig, def context, def env, def currentBuild) {
         this.buildConfig = buildConfig
@@ -457,7 +464,7 @@ class Build {
             // Get scmRef
             context.println "INFO: FIRST METADATA WRITE OUT! Checking if we have a scm reference in the build config..."
 
-            String scmRefPath = "workspace/target/scmref.txt"
+            String scmRefPath = "workspace/target/metadata/scmref.txt"
             scmRef = buildConfig.SCM_REF
 
             if (scmRef != "") {
@@ -476,8 +483,8 @@ class Build {
 
             }
 
-            // Get full version output
-            String versionPath = "workspace/target/version.txt"
+            // Get Full Version Output
+            String versionPath = "workspace/target/metadata/version.txt"
             context.println "INFO: Attempting to read ${versionPath}..."
 
             try {
@@ -488,8 +495,8 @@ class Build {
                 throw new Exception()
             }
 
-            // Get configure args
-            String configurePath = "workspace/target/configure.txt"
+            // Get Configure Args
+            String configurePath = "workspace/target/metadata/configure.txt"
             context.println "INFO: Attempting to read ${configurePath}..."
 
             try {
@@ -499,14 +506,90 @@ class Build {
                 context.println "ERROR: ${configurePath} was not found. Exiting..."
                 throw new Exception()
             }
+
+            // Get Variant Version for OpenJ9
+            if (buildConfig.VARIANT == "openj9") {
+                String j9MajorPath = "workspace/target/metadata/variant_version/major.txt"
+                String j9MinorPath = "workspace/target/metadata/variant_version/minor.txt"
+                String j9SecurityPath = "workspace/target/metadata/variant_version/security.txt"
+                String j9TagsPath = "workspace/target/metadata/variant_version/tags.txt"
+
+                context.println "INFO: Build variant openj9 detected..."
+
+                context.println "INFO: Attempting to read workspace/target/metadata/variant_version/major.txt..."
+                try {
+                    j9Major = context.readFile(j9MajorPath)
+                    context.println "SUCCESS: major.txt found"
+                } catch (NoSuchFileException e) {
+                    context.println "ERROR: ${j9MajorPath} was not found. Exiting..."
+                    throw new Exception()
+                }
+
+                context.println "INFO: Attempting to read workspace/target/metadata/variant_version/minor.txt..."
+                try {
+                    j9Minor = context.readFile(j9MinorPath)
+                    context.println "SUCCESS: minor.txt found"
+                } catch (NoSuchFileException e) {
+                    context.println "ERROR: ${j9MinorPath} was not found. Exiting..."
+                    throw new Exception()
+                }
+
+                context.println "INFO: Attempting to read workspace/target/metadata/variant_version/security.txt..."
+                try {
+                    j9Security = context.readFile(j9SecurityPath)
+                    context.println "SUCCESS: security.txt found"
+                } catch (NoSuchFileException e) {
+                    context.println "ERROR: ${j9SecurityPath} was not found. Exiting..."
+                    throw new Exception()
+                }
+
+                context.println "INFO: Attempting to read workspace/target/metadata/variant_version/tags.txt..."
+                try {
+                    j9Tags = context.readFile(j9TagsPath)
+                    context.println "SUCCESS: tags.txt found"
+                } catch (NoSuchFileException e) {
+                    context.println "ERROR: ${j9TagsPath} was not found. Exiting..."
+                    throw new Exception()
+                }
+
+                variantVersion = [major: j9Major, minor: j9Minor, security: j9Security, tags: j9Tags]
+            }
+
+            // Get Vendor
+            String vendorPath = "workspace/target/metadata/vendor.txt"
+            context.println "INFO: Attempting to read ${vendorPath}..."
+
+            try {
+                vendorName = context.readFile(vendorPath)
+                context.println "SUCCESS: vendor.txt found"
+            } catch (NoSuchFileException e) {
+                context.println "ERROR: ${vendorPath} was not found. Exiting..."
+                throw new Exception()
+            }
+
+            // Get Build Source
+            String buildSourcePath = "workspace/target/metadata/buildSource.txt"
+            context.println "INFO: Attempting to read ${buildSourcePath}..."
+
+            try {
+                buildSource = context.readFile(buildSourcePath)
+                context.println "SUCCESS: buildSource.txt found"
+            } catch (NoSuchFileException e) {
+                context.println "ERROR: ${buildSourcePath} was not found. Exiting..."
+                throw new Exception()
+            }
+        
         }
 
         return new MetaData(
+            vendorName,
             buildConfig.TARGET_OS,
             scmRef,
+            buildSource,
             version,
             buildConfig.JAVA_TO_BUILD,
             buildConfig.VARIANT,
+            variantVersion,
             buildConfig.ARCHITECTURE,
             fullVersionOutput,
             configureArguments
@@ -518,10 +601,16 @@ class Build {
         /*
         example data:
             {
-                "WARNING": "THIS METADATA FILE IS STILL IN ALPHA DO NOT USE ME",
+                "vendor": "AdoptOpenJDK",
                 "os": "mac",
                 "arch": "x64",
                 "variant": "openj9",
+                "variant_version": {
+                    "major": "0",
+                    "minor": "22",
+                    "security": "0",
+                    "tags": "m2"
+                },
                 "version": {
                     "minor": 0,
                     "security": 0,
@@ -534,6 +623,7 @@ class Build {
                     "opt": "202007070926"
                 },
                 "scmRef": "<output of git describe OR buildConfig.SCM_REF>",
+                "buildRef": "<build-repo-name/build-commit-sha>",
                 "version_data": "jdk15",
                 "binary_type": "debugimage",
                 "sha256": "<shasum>",
@@ -645,7 +735,7 @@ class Build {
                 envVars.add("FILENAME=${filename}" as String)
                 context.withEnv(envVars) {
                     context.sh(script: "./build-farm/make-adopt-build-farm.sh")
-                    String versionOut = context.readFile("workspace/target/version.txt")
+                    String versionOut = context.readFile("workspace/target/metadata/version.txt")
 
                     versionInfo = parseVersionOutput(versionOut)
                 }

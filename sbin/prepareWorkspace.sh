@@ -184,7 +184,7 @@ checkoutRequiredCodeToBuild() {
   fi
 
   # Get the latest tag to stick in the scmref metadata, using the build config tag if it exists
-  local scmrefPath="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}scmref.txt"
+  local scmrefPath="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
 
   if [ $rc -eq 0 ]; then
 
