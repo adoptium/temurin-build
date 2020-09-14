@@ -29,7 +29,7 @@ jobs:
         TARGET_OS: linux
         FILENAME: OpenJDK.tar.gz
 
-  build_linux15+:
+  build_linux15_plus:
     name: Linux
     runs-on: ubuntu-latest
     container:
