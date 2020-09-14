@@ -34,27 +34,30 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        version: [jdk8u, jdk11u]
+        version: [jdk8u, jdk11u, jdk15u, jdk]
         vm: [hotspot, openj9]
 
     steps:
     - uses: actions/checkout@v2
 
-    - name Set env
+    - name: Install Dependencies
       run: |
-        version=$(echo $matrix.version | tr -d "[:alpha:]")
-        echo ::set-env name=BOOTJDK_VERSION::$(($version -1))
+        brew install bash nasm
 
     - uses: actions/setup-java@v1
+      id: setup-java
       with:
-        java-version: ${{ BOOTJDK_VERSION }}
+        java-version: 7
+      if: matrix.version == 'jdk8u'
         
     - name: Build macOS
-      run: ./build-farm/make-adopt-build-farm.sh
+      run: |
+        export JAVA_HOME=$JAVA_HOME_11_X64
+        ./build-farm/make-adopt-build-farm.sh
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
         VARIANT: ${{ matrix.vm }}
         TARGET_OS: mac
         FILENAME: OpenJDK.tar.gz
-
+        JDK7_BOOT_DIR: ${{ steps.setup-java-adopt.outputs.path }}
