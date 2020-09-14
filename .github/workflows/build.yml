@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build_linux:
+    name: Linux
+    container:
+      image: adoptopenjdk/centos6_build_image
+    strategy:
+      matrix:
+        version: [jdk8u, jdk11u]
+        vm: [hotspot, openj9]
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: Build Linux
+      run: ./build-farm/make-adopt-build-farm.sh
+      env:
+        JAVA_TO_BUILD: ${{ matrix.version }}
+        ARCHITECTURE: x64
+        VARIANT: ${{ matrix.vm }}
+        TARGET_OS: linux
+        FILENAME: OpenJDK.tar.gz
+
+  build_linux15+:
+    name: Linux
+    container:
+      image: adoptopenjdk/centos7_build_image
+    strategy:
+      matrix:
+        version: [jdk15u, jdk]
+        vm: [hotspot, openj9]
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: Build Linux
+      run: ./build-farm/make-adopt-build-farm.sh
+      env:
+        JAVA_TO_BUILD: ${{ matrix.version }}
+        ARCHITECTURE: x64
+        VARIANT: ${{ matrix.vm }}
+        TARGET_OS: linux
+        FILENAME: OpenJDK.tar.gz

@@ -243,6 +243,7 @@ printDockerJDKs() {
     printJDK $((JDK_VERSION-1))
     echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/java /usr/bin/java" >> $DOCKERFILE_PATH
     echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/javac /usr/bin/javac" >> $DOCKERFILE_PATH
+    echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/keytool /usr/bin/keytool" >> $DOCKERFILE_PATH
   fi
 
   # Build 'jdk' with the most recent GA release
@@ -254,6 +255,7 @@ printDockerJDKs() {
     printJDK ${JDK_GA}
     echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/java /usr/bin/java" >> $DOCKERFILE_PATH
     echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/javac /usr/bin/javac" >> $DOCKERFILE_PATH
+    echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/keytool /usr/bin/keytool" >> $DOCKERFILE_PATH
   fi
  
   # if JDK_VERSION is 9, another jdk8 doesn't need to be extracted
@@ -274,6 +276,7 @@ RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptopenj
 printCopyFolders(){
   echo "
 COPY sbin /openjdk/sbin
+COPY security /openjdk/security
 COPY workspace/config /openjdk/config
 COPY pipelines /openjdk/pipelines" >> $DOCKERFILE_PATH
 }

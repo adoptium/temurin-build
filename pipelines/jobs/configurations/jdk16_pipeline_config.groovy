@@ -35,9 +35,6 @@ class Config16 {
                 additionalNodeLabels: [
                         hotspot: 'win2012&&vs2017'
                 ],
-                buildArgs : [
-                        hotspot : '--jvm-variant client,server'
-                ],
                 test                : [
                         nightly: false,
                         release: ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']

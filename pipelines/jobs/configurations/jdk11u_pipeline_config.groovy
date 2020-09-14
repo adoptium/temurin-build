@@ -35,7 +35,8 @@ class Config11 {
                         "openj9"      : '--enable-jitserver --enable-dtrace=auto',
                         "hotspot"     : '--enable-dtrace=auto',
                         "corretto"    : '--enable-dtrace=auto',
-                        "SapMachine"  : '--enable-dtrace=auto'
+                        "SapMachine"  : '--enable-dtrace=auto',
+                        "dragonwell"  : '--enable-dtrace=auto --enable-unlimited-crypto  --with-jvm-variants=server --with-zlib=system --with-jvm-features=zgc'
                 ]
         ],
 
@@ -173,7 +174,7 @@ class Config11 {
         ],
         riscv64Linux      :  [
                 os                   : 'linux',
-                additionalNodeLabels : 'riscvcross',
+                dockerImage          : 'adoptopenjdk/centos6_build_image',
                 arch                 : 'riscv64',
                 configureArgs        : '--disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root'
         ],
