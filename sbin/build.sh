@@ -538,7 +538,7 @@ printJavaVersionString()
        local jdkversion=$(getOpenJdkVersion)
        cat << EOT > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/version.txt"
 openjdk version "${jdkversion%%+*}" "$(date +%Y-%m-%d)"
-OpenJDK Runtime Environment AdoptOpenJDK (build ${jdkversion%%+*}+0-$(date +%Y%m%d%H%M))
+OpenJDK Runtime Environment AdoptOpenJDK (build ${jdkversion}-$(date +%Y%m%d%H%M))
 Eclipse OpenJ9 VM AdoptOpenJDK (build master-000000000, JRE 11 Linux riscv-64-Bit Compressed References $(date +%Y%m%d)_00 (JIT disabled, AOT disabled)
 OpenJ9   - 000000000
 OMR      - 000000000
