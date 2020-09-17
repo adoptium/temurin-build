@@ -702,8 +702,13 @@ moveFreetypeLib() {
 
   # codesign freetype before it is bundled
   if [ ! -z "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
-    ENTITLEMENTS="$WORKSPACE/entitlements.plist"
-    codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" "${SOURCE_LIB_NAME}"
+    # test if codesign certificate is usable
+    if touch test && codesign --sign "Developer ID Application: London Jamocha Community CIC" test && rm -rf test; then
+      ENTITLEMENTS="$WORKSPACE/entitlements.plist"
+      codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" "${SOURCE_LIB_NAME}"
+    else
+      echo "skipping codesign as certificate cannot be found"
+    fi
   fi
 
   cp "${SOURCE_LIB_NAME}" "${TARGET_LIB_NAME}"
