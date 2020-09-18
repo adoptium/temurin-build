@@ -75,6 +75,10 @@ jobs:
         vm: [hotspot, openj9]
 
     steps:
+    - name: Set git config --global core.autocrlf false
+      run: git config --global core.autocrlf false
+      shell: bash
+
     - uses: actions/checkout@v2
 
     - uses: actions/setup-java@v1
@@ -83,15 +87,24 @@ jobs:
         java-version: 7
       if: matrix.version == 'jdk8u'
 
-    - name: Install Dependencies
+    - name: Install Cygwin
       run: |
-        dotnet tool install --global WGET;
-        Install-Package ManagedCuda -Confirm
+        choco install cygwin -y
+        choco install cyg-get -y
+        cyg-get wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl
+
+    - name: Install Cuda
+      run: |
+        Invoke-WebRequest -UseBasicParsing 'https://developer.nvidia.com/compute/cuda/9.0/Prod/network_installers/cuda_9.0.176_win10_network-exe' -OutFile 'C:\temp\cuda_9.0.176_win10_network-exe.exe'
+        Start-Process -Wait -FilePath 'C:\temp\cuda_9.0.176_win10_network-exe.exe' -ArgumentList '-s compiler_9.0 nvml_dev_9.0'
+      if: matrix.vm == 'openj9'
 
     - name: Build Windows
       run: |
-        ./build-farm/make-adopt-build-farm.sh
-      shell: bash
+        path C:\tools\cygwin\bin;%path%
+        set JAVA_HOME=%JAVA_HOME_11_X64%
+        bash build-farm/make-adopt-build-farm.sh
+      shell: cmd
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
