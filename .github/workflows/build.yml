@@ -112,3 +112,4 @@ jobs:
         TARGET_OS: windows
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
+        BUILD_ARGS: --skip-freetype
