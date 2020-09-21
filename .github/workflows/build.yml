@@ -100,12 +100,9 @@ jobs:
     - name: Set PATH
       run: echo '::add-path::C:\cygwin64\bin;C:\Program Files\Git\bin;'
 
-    - name: Visual Studio 2013
+    - name: Install Visual Studio 2013
       run: |
-        Invoke-WebRequest 'https://go.microsoft.com/fwlink/?LinkId=532495' -OutFile 'C:\temp\vs2013.exe'
-        Start-Process -Wait -FilePath 'C:\temp\vs2013.exe' -ArgumentList '--wait --quiet --norestart'
-        regsvr32 /s 'C:\Program Files (x86)\Microsoft Visual Studio 12.0\DIA SDK\bin\msdia120.dll'
-        regsvr32 /s 'C:\Program Files (x86)\Microsoft Visual Studio 12.0\DIA SDK\bin\amd64\msdia120.dll'
+        choco install visualstudiocommunity2013
       if: matrix.version == 'jdk8u'
 
     - name: Install Cuda
@@ -124,6 +121,35 @@ jobs:
         Invoke-WebRequest 'https://www.nasm.us/pub/nasm/releasebuilds/2.13.03/win64/nasm-2.13.03-win64.zip' -OutFile 'C:\temp\nasm-2.13.03.zip'
         Expand-Archive -LiteralPath 'C:\temp\nasm-2.13.03.zip' -DestinationPath 'C:\openjdk'
       if: matrix.vm == 'openj9'
+
+    - name: Download OpenSSL
+      run: |
+        Invoke-WebRequest -UseBasicParsing 'https://www.openssl.org/source/openssl-1.1.1g.tar.gz' -OutFile 'C:\temp\OpenSSL-1.1.1g.tar.gz'
+        cd C:\temp
+        tar -xf C:/temp/OpenSSL-1.1.1g.tar.gz --force-local -C C:/temp
+      if: matrix.vm == 'openj9'
+
+    - name: Install OpenSSL VS2013
+      run: |
+        set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
+        call vcvarsall.bat AMD64
+        cd C:\temp\OpenSSL-1.1.1g
+        perl C:\temp\OpenSSL-1.1.1g\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1g-x86_64-VS2013
+        nmake install && nmake -f makefile clean
+      working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC'
+      shell: cmd
+      if: matrix.vm == 'openj9' && matrix.version == 'jdk8u'
+
+    - name: Install OpenSSL VS2017
+      run: |
+        set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
+        call vcvarsall.bat AMD64
+        cd C:\temp\OpenSSL-1.1.1g
+        perl C:\temp\OpenSSL-1.1.1g\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1g-x86_64-VS2017
+        nmake install && nmake -f makefile clean
+      working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build'
+      shell: cmd
+      if: matrix.vm == 'openj9' && matrix.version != 'jdk8u'
 
     - name: Cygwin git configuration
       shell: bash
