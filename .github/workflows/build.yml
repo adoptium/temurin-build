@@ -83,6 +83,7 @@ jobs:
 
     - name: Install Cygwin
       run: |
+        New-Item -Path C:\ -Name 'openjdk' -ItemType 'directory'
         Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
         Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
         # change git config to not replace Line endings
@@ -104,8 +105,13 @@ jobs:
 
     - name: Install Freemarker
       run: |
-        New-Item -Path C:\ -Name 'openjdk' -ItemType 'directory'
         Invoke-WebRequest 'https://repo.maven.apache.org/maven2/freemarker/freemarker/2.3.8/freemarker-2.3.8.jar' -OutFile 'C:\openjdk\freemarker.jar'
+      if: matrix.vm == 'openj9'
+
+    - name: Install NASM
+      run: |
+        Invoke-WebRequest 'https://www.nasm.us/pub/nasm/releasebuilds/2.13.03/win64/nasm-2.13.03-win64.zip' -OutFile 'C:\temp\nasm-2.13.03.zip'
+        Expand-Archive -LiteralPath 'C:\temp\nasm-2.13.03.zip' -DestinationPath 'C:\openjdk'; `
       if: matrix.vm == 'openj9'
 
     - name: Cygwin git configuration
