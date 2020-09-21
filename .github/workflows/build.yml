@@ -102,6 +102,12 @@ jobs:
         Start-Process -Wait -FilePath 'C:\temp\cuda_9.0.176_win10_network-exe.exe' -ArgumentList '-s compiler_9.0 nvml_dev_9.0'
       if: matrix.vm == 'openj9'
 
+    - name: Install Freemarker
+      run: |
+        New-Item -Path C:\ -Name 'openjdk' -ItemType 'directory'
+        Invoke-WebRequest 'https://repo.maven.apache.org/maven2/freemarker/freemarker/2.3.8/freemarker-2.3.8.jar' -OutFile 'C:\openjdk\freemarker.jar'
+      if: matrix.vm == 'openj9'
+
     - name: Cygwin git configuration
       shell: bash
       run: mkdir $HOME && git config --system core.autocrlf false
@@ -111,7 +117,6 @@ jobs:
     - name: Build Windows
       run: |
         set JAVA_HOME=%JAVA_HOME_11_X64%
-        dir
         bash build-farm/make-adopt-build-farm.sh
       shell: cmd
       env:
