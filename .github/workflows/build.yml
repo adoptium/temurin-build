@@ -81,26 +81,34 @@ jobs:
         java-version: 7
       if: matrix.version == 'jdk8u'
 
+    - name: Git configuration
+      run: git config --global core.autocrlf false
+
     - name: Install Cygwin
       run: |
-        choco install cygwin -y
-        choco install cyg-get -y
-        cyg-get wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl
-        echo '::add-path::C:\tools\cygwin\bin;C:\cygwin\bin'
+        Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
+        Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
+        # change git config to not replace Line endings
+        C:\cygwin64\bin\git config --system core.autocrlf false
 
-    - name: Git configuration
+    - name: Install Git
       run: |
-        git config --global core.autocrlf false
+        Invoke-WebRequest 'http://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile C:\temp\git.exe
+        Start-Process -Wait -FilePath C:\temp\git.exe -ArgumentList '/SILENT /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
+        echo '::add-path::C:\cygwin64\bin;C:\Program Files\Git\bin;'
+
+    # - name: Install Cygwin
+    #   run: |
+    #     choco install cygwin -y
+    #     choco install cyg-get -y
+    #     cyg-get wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl
+    #     echo '::add-path::C:\tools\cygwin\bin;C:\cygwin\bin'
 
     - name: Install Cuda
       run: |
         Invoke-WebRequest -UseBasicParsing 'https://developer.nvidia.com/compute/cuda/9.0/Prod/network_installers/cuda_9.0.176_win10_network-exe' -OutFile 'C:\temp\cuda_9.0.176_win10_network-exe.exe'
         Start-Process -Wait -FilePath 'C:\temp\cuda_9.0.176_win10_network-exe.exe' -ArgumentList '-s compiler_9.0 nvml_dev_9.0'
       if: matrix.vm == 'openj9'
-
-    - name: Cygwin git configuration
-      shell: bash
-      run: mkdir $HOME && git config --global core.autocrlf false
 
     - uses: actions/checkout@v2
 
