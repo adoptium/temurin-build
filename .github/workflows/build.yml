@@ -100,6 +100,14 @@ jobs:
     - name: Set PATH
       run: echo '::add-path::C:\cygwin64\bin;C:\Program Files\Git\bin;'
 
+    - name: Visual Studio 2013
+      run: |
+        Invoke-WebRequest 'https://go.microsoft.com/fwlink/?LinkId=532495' -OutFile 'C:\temp\vs2013.exe'
+        Start-Process -Wait -FilePath 'C:\temp\vs2013.exe' -ArgumentList '--wait --quiet --norestart'
+        regsvr32 /s 'C:\Program Files (x86)\Microsoft Visual Studio 12.0\DIA SDK\bin\msdia120.dll'
+        regsvr32 /s 'C:\Program Files (x86)\Microsoft Visual Studio 12.0\DIA SDK\bin\amd64\msdia120.dll'
+      if: matrix.version == 'jdk8u'
+
     - name: Install Cuda
       run: |
         Invoke-WebRequest -UseBasicParsing 'https://developer.nvidia.com/compute/cuda/9.0/Prod/network_installers/cuda_9.0.176_win10_network-exe' -OutFile 'C:\temp\cuda_9.0.176_win10_network-exe.exe'
