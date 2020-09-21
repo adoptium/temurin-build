@@ -75,19 +75,22 @@ jobs:
         vm: [hotspot, openj9]
 
     steps:
-    - uses: actions/setup-java@v1
-      id: setup-java
-      with:
-        java-version: 7
-      if: matrix.version == 'jdk8u'
-
     - name: Install Cygwin
       run: |
         New-Item -Path C:\ -Name 'openjdk' -ItemType 'directory'
         Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
         Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
-        # change git config to not replace Line endings
-        C:\cygwin64\bin\git config --system core.autocrlf false
+
+    - uses: actions/setup-java@v1
+      id: setup-java7
+      with:
+        java-version: 7
+      if: matrix.version == 'jdk8u'
+
+    - uses: actions/setup-java@v1
+      id: setup-java11
+      with:
+        java-version: 11
 
     - name: Install Git
       run: |
@@ -111,7 +114,7 @@ jobs:
     - name: Install NASM
       run: |
         Invoke-WebRequest 'https://www.nasm.us/pub/nasm/releasebuilds/2.13.03/win64/nasm-2.13.03-win64.zip' -OutFile 'C:\temp\nasm-2.13.03.zip'
-        Expand-Archive -LiteralPath 'C:\temp\nasm-2.13.03.zip' -DestinationPath 'C:\openjdk'; `
+        Expand-Archive -LiteralPath 'C:\temp\nasm-2.13.03.zip' -DestinationPath 'C:\openjdk'
       if: matrix.vm == 'openj9'
 
     - name: Cygwin git configuration
@@ -120,9 +123,15 @@ jobs:
 
     - uses: actions/checkout@v2
 
+    - name: Set JAVA_HOME
+      run: echo "::set-env name=JAVA_HOME::$(cygpath ${{ steps.setup-java11.outputs.path }})"
+
+    - name: Set JDK7_BOOT_DIR
+      run: echo "::set-env name=JDK7_BOOT_DIR::$(cygpath ${{ steps.setup-java7.outputs.path }})"
+      if: matrix.version == 'jdk8u'
+
     - name: Build Windows
       run: |
-        set JAVA_HOME=%JAVA_HOME_11_X64%
         bash build-farm/make-adopt-build-farm.sh
       shell: cmd
       env:
@@ -131,4 +140,3 @@ jobs:
         VARIANT: ${{ matrix.vm }}
         TARGET_OS: windows
         FILENAME: OpenJDK.tar.gz
-        JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
