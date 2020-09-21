@@ -81,9 +81,6 @@ jobs:
         java-version: 7
       if: matrix.version == 'jdk8u'
 
-    - name: Git configuration
-      run: git config --global core.autocrlf false
-
     - name: Install Cygwin
       run: |
         Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
@@ -93,16 +90,11 @@ jobs:
 
     - name: Install Git
       run: |
-        Invoke-WebRequest 'http://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile C:\temp\git.exe
-        Start-Process -Wait -FilePath C:\temp\git.exe -ArgumentList '/SILENT /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
-        echo '::add-path::C:\cygwin64\bin;C:\Program Files\Git\bin;'
+        Invoke-WebRequest 'https://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile 'C:\temp\git.exe'
+        Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
 
-    # - name: Install Cygwin
-    #   run: |
-    #     choco install cygwin -y
-    #     choco install cyg-get -y
-    #     cyg-get wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl
-    #     echo '::add-path::C:\tools\cygwin\bin;C:\cygwin\bin'
+    - name: Set PATH
+      run: echo '::add-path::C:\cygwin64\bin;C:\Program Files\Git\bin;'
 
     - name: Install Cuda
       run: |
@@ -110,13 +102,18 @@ jobs:
         Start-Process -Wait -FilePath 'C:\temp\cuda_9.0.176_win10_network-exe.exe' -ArgumentList '-s compiler_9.0 nvml_dev_9.0'
       if: matrix.vm == 'openj9'
 
+    - name: Cygwin git configuration
+      shell: bash
+      run: mkdir $HOME && git config --system core.autocrlf false
+
     - uses: actions/checkout@v2
 
     - name: Build Windows
       run: |
-        export JAVA_HOME="$JAVA_HOME_11_X64"
-        ./build-farm/make-adopt-build-farm.sh
-      shell: bash
+        set JAVA_HOME=%JAVA_HOME_11_X64%
+        dir
+        bash build-farm/make-adopt-build-farm.sh
+      shell: cmd
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
@@ -124,4 +121,3 @@ jobs:
         TARGET_OS: windows
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
-        BUILD_ARGS: "--skip-freetype"
