@@ -334,7 +334,7 @@ class Regeneration implements Serializable {
                             if (inProgress) {
                                 // Sleep for a bit, then check again...
                                 context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
-                                context.sleep sleepTime
+                                context.sleep "${sleepTime}s"
                             }
 
                         }
