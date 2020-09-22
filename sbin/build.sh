@@ -854,22 +854,35 @@ fixJavaHomeUnderDocker() {
 
 addInfoToReleaseFile(){
   # Extra information is added to the release file here
+  echo "===GENERATING RELEASE FILE==="
   cd $PRODUCT_HOME
   JAVA_LOC="$PRODUCT_HOME/bin/java"
+  echo "ADDING IMPLEMENTOR"
   addImplementor
+  echo "ADDING BUILD SHA"
   addBuildSHA
+  echo "ADDING FULL VER"
   addFullVersion
+  echo "ADDING SEM VER"
   addSemVer
+  echo "ADDING BUILD OS"
   addBuildOS
+  echo "ADDING VARIANT"
   addJVMVariant
+  echo "ADDING JVM VERSION"
   addJVMVersion
   # OpenJ9 specific options
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    echo "ADDING HEAP SIZE"
     addHeapSize
+    echo "ADDING J9 TAG"
     addJ9Tag
   fi
+  echo "MIRRORING TO JRE"
   mirrorToJRE
+  echo "ADDING IMAGE TYPE"
   addImageType
+  echo "===RELEASE FILE GENERATED==="
 }
 
 addHeapSize(){ # Adds an identifier for heap size on OpenJ9 builds
@@ -903,8 +916,12 @@ addJVMVariant(){
 }
 
 addBuildSHA(){ # git SHA of the build repository i.e. openjdk-build
-  local buildSHA=$(git -C ${BUILD_CONFIG[WORKSPACE_DIR]} rev-parse --short HEAD)
-  echo -e BUILD_SOURCE=\"git:$buildSHA\" >> release
+  local buildSHA=$(git -C ${BUILD_CONFIG[WORKSPACE_DIR]} rev-parse --short HEAD 2>/dev/null)
+  if [[ $buildSHA ]]; then
+    echo -e BUILD_SOURCE=\"git:$buildSHA\" >> release
+  else
+    echo "Unable to fetch build SHA, does a work tree exist?..."
+  fi
 }
 
 addBuildOS(){
@@ -938,7 +955,7 @@ addSemVer(){ # Pulls the semantic version from the tag associated with the openj
   local fullVer=$(getOpenJdkVersion)
   local semVer="$fullVer"
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-    semVer=$(echo "$semVer" | cut -c4- | awk -F'[\-b0]+' '{print $1"+"$2}' | sed 's/u/.0./')
+    semVer=$(echo "$semVer" | cut -c4- | awk -F'[-b0]+' '{print $1"+"$2}' | sed 's/u/.0./')
   else
     semVer=$(echo "$semVer" | cut -c5-)
   fi
