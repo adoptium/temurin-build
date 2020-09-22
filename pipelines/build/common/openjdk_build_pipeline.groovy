@@ -230,7 +230,7 @@ class Build {
 
                 if (buildConfig.TARGET_OS == "windows") {
                     filter = "**/OpenJDK*_windows_*.zip"
-                    certificate = "C:\\Users\\jenkins\\windows.p12"
+                    certificate = "C:\\openjdk\\windows.p12"
                     nodeFilter = "${nodeFilter}&&build"
 
                 } else if (buildConfig.TARGET_OS == "mac") {
@@ -338,7 +338,7 @@ class Build {
 
     private void buildWindowsInstaller(VersionInfo versionData) {
         def filter = "**/OpenJDK*jdk_*_windows*.zip"
-        def certificate = "C:\\Users\\jenkins\\windows.p12"
+        def certificate = "C:\\openjdk\\windows.p12"
 
         def buildNumber = versionData.build
 
