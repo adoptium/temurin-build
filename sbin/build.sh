@@ -481,7 +481,7 @@ buildSharedLibs() {
     gradlecount=1
     while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME="$gradleUserHome" bash ./gradlew --no-daemon clean shadowJar; do
       echo "RETRYWARNING: Gradle failed on attempt $gradlecount"
-      sleep 120 # Wait before retrying in case of network/server outage ...
+      sleep 120s # Wait before retrying in case of network/server outage ...
       gradlecount=$(( gradlecount + 1 ))
       [ $gradlecount -gt 3 ] && exit 1
     done

@@ -335,7 +335,7 @@ class Regeneration implements Serializable {
     }
 
     /**
-    * Main function. Ran from regeneration_pipeline.groovy, this will be what jenkins will run first.
+    * Main function. Ran from jdkxx_regeneration_pipeline.groovy, this will be what jenkins will run first.
     */
     @SuppressWarnings("unused")
     def regenerate() {
@@ -345,55 +345,50 @@ class Regeneration implements Serializable {
             /*
             * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
             */
-            if (jobRootDir.contains("pr-tester")) {
-                // No need to check if we're going to overwrite anything for the PR tester
-                context.println "[SUCCESS] Don't need to check if the pr-tester is running. Running regeneration job..."
-            } else {
-                context.stage("Check $javaVersion pipeline status") {
+            context.stage("Check $javaVersion pipeline status") {
 
-                    // Get all pipelines
-                    def getPipelines = queryAPI("${jenkinsBuildRoot}/api/json?tree=jobs[name]&pretty=true&depth1")
+                // Get all pipelines
+                def getPipelines = queryAPI("${jenkinsBuildRoot}/api/json?tree=jobs[name]&pretty=true&depth1")
 
-                    // Parse api response to only extract the relevant pipeline
-                    getPipelines.jobs.name.each{ pipeline ->
-                        if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
-                            Integer sleepTime = 900
-                            Boolean inProgress = true
+                // Parse api response to only extract the relevant pipeline
+                getPipelines.jobs.name.each{ pipeline ->
+                    if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
+                        Integer sleepTime = 900
+                        Boolean inProgress = true
 
-                            while (inProgress) {
-                                // Check if pipeline is in progress using api
-                                context.println "[INFO] Checking if ${pipeline} is running..." //i.e. openjdk8-pipeline
+                        while (inProgress) {
+                            // Check if pipeline is in progress using api
+                            context.println "[INFO] Checking if ${pipeline} is running..." //i.e. openjdk8-pipeline
 
-                                def pipelineInProgress = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
+                            def pipelineInProgress = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
 
-                                // If query fails, check to see if the pipeline been run before
-                                if (pipelineInProgress == null) {
-                                    def getPipelineBuilds = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/api/json?pretty=true&depth1")
+                            // If query fails, check to see if the pipeline has been run before
+                            if (pipelineInProgress == null) {
+                                def getPipelineBuilds = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/api/json?pretty=true&depth1")
 
-                                    if (getPipelineBuilds.builds == []) {
-                                        context.println "[SUCCESS] ${pipeline} has not been run before. Running regeneration job..."
-                                        inProgress = false
-                                    }
-
-                                } else {
-                                    inProgress = pipelineInProgress.building as Boolean
+                                if (getPipelineBuilds.builds == []) {
+                                    context.println "[SUCCESS] ${pipeline} has not been run before. Running regeneration job..."
+                                    inProgress = false
                                 }
 
-                                if (inProgress) {
-                                    // Sleep for a bit, then check again...
-                                    context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
-                                    context.sleep sleepTime
-                                }
-
+                            } else {
+                                inProgress = pipelineInProgress.building as Boolean
                             }
 
-                            context.println "[SUCCESS] ${pipeline} is idle. Running regeneration job..."
+                            if (inProgress) {
+                                // Sleep for a bit, then check again...
+                                context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
+                                context.sleep "${sleepTime}s"
+                            }
+
                         }
 
+                        context.println "[SUCCESS] ${pipeline} is idle. Running regeneration job..."
                     }
 
-                } // end check stage
-            }
+                }
+
+            } // end check stage
 
             /*
             * Stage: Regenerate all of the job configurations by job type (i.e. jdk8u-linux-x64-hotspot
