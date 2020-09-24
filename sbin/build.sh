@@ -743,10 +743,44 @@ makeACopyOfLibFreeFontForMacOSX() {
 }
 
 
-# Get the tags from the git repo and choose the latest tag when there is more than one for the same SHA.
+# Get the tags from the git repo and choose the latest chronologically ordered tag for the given JDK version.
+#
+# Note, we have to chronologically order, as with a Shallow cloned (depth=1) git repo there is no "topo-order"
+# for tags, also commit date order cannot be used either as the commit dates do not necessarily follow chronologically.
+#
 # Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
 getFirstTagFromOpenJDKGitRepo()
 {
+    # JDK8 tag sorting:
+    # Tag Format "jdk8uLLL-bBB"
+    # cut chars 1-5 => LLL-bBB
+    # awk "-b" separator into a single "-" => LLL-BB
+    # Sort by build level BB first
+    # Then do "stable" sort (keeping BBB order) by build level LLL
+    local jdk8_tag_sort1="sort -t- -k2n"
+    local jdk8_tag_sort2="sort -t- -k1n -s"
+    local jdk8_get_tag_cmd="grep -v _openj9 | grep -v _adopt | cut -c6- | awk -F'[\-b]+' '{print \$1\"-\"\$2}' | $jdk8_tag_sort1 | $jdk8_tag_sort2 | sed 's/^/jdk8u/' | sed 's/-/-b/' | tail -1"
+
+    # JDK11+ tag sorting:
+    # We use sort and tail to choose the latest tag in case more than one refers the same commit.
+    # Versions tags are formatted: jdk-V[.W[.X]]+B; with V, W, X, B being numeric.
+    # Transform "-" to "." in tag so we can sort as: "jdk.V[.W[.X]]+B"
+    # First, sort on build number (B):
+    local jdk11plus_tag_sort1="sort -t+ -k2n"
+    # Second, (stable) sort on (V), (W), (X):
+    local jdk11plus_tag_sort2="sort -t. -k2n -k3n -k4n -s"
+    jdk11plus_get_tag_cmd="grep -v _openj9 | grep -v _adopt | sed 's/jdk-/jdk./g' | $jdk11plus_tag_sort1 | $jdk11plus_tag_sort2 | sed 's/jdk./jdk-/g' | tail -1"
+
+    # Choose tag search keyword and get cmd based on version
+    local TAG_SEARCH="jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}*+*"
+    local get_tag_cmd=$jdk11plus_get_tag_cmd
+    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]
+    then
+      TAG_SEARCH="jdk8u*-b*"
+      get_tag_cmd=$jdk8_get_tag_cmd
+    fi
+
+
     # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon...
     # Read OPENJDK_TAG value from that file..
     local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
@@ -754,20 +788,8 @@ getFirstTagFromOpenJDKGitRepo()
       firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
     else
       git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-      revList=$(git rev-list --tags --topo-order --max-count=$GIT_TAGS_TO_SEARCH)
-      if [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]]; then
-        # For the development tree jdk/jdk, there might be two major versions in development
-        # in parallel. One in stabilization mode, and the currently active developement line
-        # Thus, add an explicit grep on the specified FEATURE_VERSION so as to appropriately
-        # set the correct build number later on.
-        firstMatchingNameFromRepo=$(git describe --tags $revList | grep "jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" | grep -v openj9 | grep -v _adopt | grep -v "\-ga" | head -1)
-      else
-        firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | grep -v _adopt | grep -v "\-ga" | head -1)
-      fi
-      # this may not find the correct tag if there are multiples on the commit so find commit
-      # that contains this tag and then use `git tag` to find the real tag
-      revList=$(git rev-list -n 1 $firstMatchingNameFromRepo --)
-      firstMatchingNameFromRepo=$(git tag --points-at $revList | grep -v "\-ga" | tail -1)
+
+      firstMatchingNameFromRepo=$(eval "git tag -l $TAG_SEARCH | $get_tag_cmd")
     fi
 
     if [ -z "$firstMatchingNameFromRepo" ]; then
