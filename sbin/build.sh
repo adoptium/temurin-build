@@ -180,10 +180,22 @@ configuringVersionStringParameter()
 
   local dateSuffix=$(date -u +%Y%m%d%H%M)
 
+  # Configures "vendor" jdk properties
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
     BUILD_CONFIG[VENDOR]="Alibaba"
-  else
-    BUILD_CONFIG[VENDOR]="AdoptOpenJDK"
+    BUILD_CONFIG[VENDOR_VERSION]="\"(Alibaba Dragonwell)\""
+    BUILD_CONFIG[VENDOR_URL]="http://www.alibabagroup.com"
+    BUILD_CONFIG[VENDOR_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse/openj9/issues"
+  fi
+
+  addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]:-"AdoptOpenJDK"}"
+  addConfigureArg "--with-vendor-url=" "${BUILD_CONFIG[VENDOR_URL]:-"https://adoptopenjdk.net/"}"
+  addConfigureArg "--with-vendor-bug-url=" "${BUILD_CONFIG[VENDOR_BUG_URL]:-"https://github.com/AdoptOpenJDK/openjdk-support/issues"}"
+  addConfigureArg "--with-vendor-vm-bug-url=" "${BUILD_CONFIG[VENDOR_VM_BUG_URL]:-"https://github.com/AdoptOpenJDK/openjdk-support/issues"}"
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
+    addConfigureArg "--with-vendor-version-string=" "${BUILD_CONFIG[VENDOR_VERSION]:-"${BUILD_CONFIG[BUILD_VARIANT]^}"}"
   fi
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
@@ -199,9 +211,6 @@ configuringVersionStringParameter()
         addConfigureArg "--enable-jfr" ""
       fi
 
-      if [ ${BUILD_CONFIG[ADOPT_PATCHES]} == true ]; then
-        addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
-      fi
     fi
 
     # Set the update version (e.g. 131), this gets passed in from the calling script
@@ -252,24 +261,6 @@ configuringVersionStringParameter()
 
     addConfigureArg "--without-version-pre" ""
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
-    
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
-        addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]}"
-        addConfigureArg "--with-vendor-version-string=" "\"(Alibaba Dragonwell)\""
-        addConfigureArg "--with-vendor-url=" "http://www.alibabagroup.com"
-        addConfigureArg "--with-vendor-bug-url=" "mailto:dragonwell_use@googlegroups.com"
-    else # ${BUILD_CONFIG[VENDOR]} defaults to AdoptOpenJDK
-        addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]}"
-        addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
-        addConfigureArg "--with-vendor-url=" "https://adoptopenjdk.net/"
-        addConfigureArg "--with-vendor-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-support/issues"
-    fi
-
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
-      addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/eclipse/openj9/issues"
-    else
-      addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-support/issues"
-    fi
   fi
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
