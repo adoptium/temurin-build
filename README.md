@@ -137,6 +137,9 @@ specify any custom user configuration arguments.
 --clean-git-repo
 clean out any 'bad' local git repo you already have.
 
+--create-debug-symbols-package
+create a debug-symbols only archive (if debug symbols were generated).
+
 -d, --destination <path>
 specify the location for the built binary, e.g. /path/.
 This is typically used in conjunction with -T to create a custom path
