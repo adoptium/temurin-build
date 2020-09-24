@@ -102,7 +102,7 @@ Here are the steps:
    * [OpenJ9 ONLY] `overridePublishName`: github binaries publish name (NOTE: If you are doing a point release, do NOT adjust this as we don't want the filenames to include the `.x` part), e.g. `jdk8u232-b09_openj9-0.14.0` or `jdk-11.0.5+10_openj9-0.14.0`
    * `adoptBuildNumber`: Leave blank unless you are doing a point release in which case it should be a number starting at `1` for the first point release.
    * [OpenJ9 only] `scmReference`: extensions release branch: e.g. `openj9-0.14.0`
-   * `additionalConfigureArgs`: For JDK8 add `--with-milestone=fcs`, for later releases use `--without-version-pre --without-version-opt`
+   * `additionalConfigureArgs`: For JDK8 add `--with-milestone=fcs`, for later releases use `--without-version-pre --without-version-opt` (for EA releases use: `--with-version-pre=ea --without-version-opt`)
    * `scmReference`: One of the following:
      * For HotSpot JDK8, use the openjdk tag as-is e.g. `jdk8u232-b09`
      * For HotSpot JDK11+, it's the same tag suffixed with `_adopt` e.g. `jdk-13.0.1+9_adopt`
@@ -141,6 +141,16 @@ The following examples all use `-m1` as an example - this gets replaced with a l
 2. Eclipse OpenJ9 tag the commit in the "release" branch that they want to be the milestone level as e.g. `openj9-0.17.0-m1`
 3. OpenJDK extensions branches the `openj9` branch to create the release branch, called `openj9-0.nn.0`
 4. Ask someone in the extensions team to make the following modifications:
+   * If this is milestone 2 (m2) then check for new jdk tag to merge into the release branch:
+     - Merge into the OpenJ9 extensions release branch (e.g. `openj9-0.17.0`) the latest tag merged from OpenJDK (automated jobs merge the tag into `openj9-staging`, but not the release branch so this has to be done manually). eg.:
+       - `git checkout openj9-0.18.0`
+       - `git merge -m"Merge jdk-11.0.6+10" jdk-11.0.6+10`
+       - Resolve any merge conflicts again if necessary.
+     -   Create a Pull Request and Merge (using a Merge Commit, do not Squash&Merge, otherwise we lose track of history).
+     - Update closed/openjdk-tag.gmk with tag just merged. (This is used for the java - version) e.g.:
+   ```
+   OPENJDK_TAG:= jdk-11.0.6+10
+   ```
    * Update [closed/get_j9_source.sh](https://github.com/ibmruntimes/openj9-openjdk-jdk11/blob/openj9/closed/get_j9_source.sh) (Link is for JDK11, chnage as appropriate!) to pull in Eclipse OpenJ9 & OMR milestone 1 tags e.g. `openj9-0.nn.0-m1`([Sample PR](https://github.com/ibmruntimes/openj9-openjdk-jdk11/commit/4607d33d99c566054261557fdf34bcbfaefc6480))
    * Update custom-spec.gmk.in with correct `J9JDK_EXT_VERSION` for the release, [Sample commit for 8](https://github.com/ibmruntimes/openj9-openjdk-jdk8/commit/8512fe26e568962d4ee08f82f2f59d3bb241bb9d) and [Sample commit for 11](https://github.com/ibmruntimes/openj9-openjdk-jdk11/commit/c7964e29fea19a7803a86bc991de0d0e45547dc8) e.g:
 ```
@@ -156,7 +166,7 @@ JDK_FIX_VERSION=0
    * `overridePublishName`: github binaries publish name, e.g. `jdk8u232-b09_openj9-0.17.0-m1` or `jdk-11.0.5+10_openj9-0.17.0-m1`
    (Note: Everything before the underscore should be copied from the OPENJDK_TAG value inside <extensions_repo_url>/closed/openjdk-tag.gmk)
    * `scmReference`: extensions release branch: e.g. `openj9-0.17.0`
-   * `additionalConfigureArgs`: JDK8: `--with-milestone=fcs`, JDK11+: `--without-version-pre --without-version-opt`
+   * `additionalConfigureArgs`: JDK8: `--with-milestone=fcs`, JDK11+: `--without-version-pre --without-version-opt` (for EA releases use: `--with-version-pre=ea --without-version-opt`)
    * `enableTests`: "ticked"
    * SUBMIT!!
 6. Triage the results and publish as required with using the publish name from `overridePublishName` in the previous step but with `RELEASE` UNCHECKED as this is not a full release build.
@@ -170,7 +180,7 @@ JDK_FIX_VERSION=0
 - Eventually after rampdown and final phase testing the GA build is tagged and released, e.g. the `jdk-13-ga` code level is tagged along side the actual release build tag.
 - When a new release occurs, we must also update one of our job generators to match the new jdk versions and remove old STR that are no longer needed. The full details on what these are in https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/regeneration/README.md but for a quick run down on how to update them when we want to build a new release, follow the steps below:
 
-  1. Update the Job Folder - https://ci.adoptopenjdk.net/job/build-scripts/job/utils/: The jobs themselves you are looking for are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD).
+  1. Update the Job Folder - https://ci.adoptopenjdk.net/job/build-scripts/job/utils/: The jobs themselves you are looking for are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD). Firstly, ensure that the job description of each generator (and it's parameter's descriptions) are up to date. Then, follow these steps:
     * If you are ADDING a JDK version: 
       - Ensure that JDK N-1 is available as build JDK on the builders. For example in order to build JDK 15, JDK 14 needs to be installed on the build machines. As a temporary measure, [code](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/build-farm/platform-specific-configurations/linux.sh#L110) so as to download the JDK to the builder via the API has been added. NOTE: For the transition period shortly after a new JDK has been branched, there might not yet exist a generally available release of JDK N-1.
       - Ensure that JDK sources are being mirrored. Example [infrastructure request](https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1096)

@@ -4,7 +4,7 @@ class Config11 {
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels : 'macos10.14',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                test                : 'default',
                 configureArgs       : [
                         "openj9"      : '--enable-dtrace=auto --with-cmake',
                         "hotspot"     : '--enable-dtrace=auto'
@@ -15,7 +15,7 @@ class Config11 {
                 os                   : 'mac',
                 arch                 : 'x64',
                 additionalNodeLabels : 'macos10.14',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                test                 : 'default',
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto --with-cmake'
         ],
@@ -27,15 +27,13 @@ class Config11 {
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
-                test                : [
-                        nightly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
-                ],
+                test                : 'default',
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver --enable-dtrace=auto',
                         "hotspot"     : '--enable-dtrace=auto',
                         "corretto"    : '--enable-dtrace=auto',
-                        "SapMachine"  : '--enable-dtrace=auto'
+                        "SapMachine"  : '--enable-dtrace=auto',
+                        "dragonwell"  : '--enable-dtrace=auto --enable-unlimited-crypto  --with-jvm-variants=server --with-zlib=system --with-jvm-features=zgc'
                 ]
         ],
 
@@ -50,14 +48,14 @@ class Config11 {
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
-                test                : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
+                test                : 'default'
         ],
 
         x64WindowsXL    : [
                 os                   : 'windows',
                 arch                 : 'x64',
                 additionalNodeLabels : 'win2012&&vs2017',
-                test                 : ['sanity.openjdk', 'sanity.system'],
+                test                 : 'default',
                 additionalFileNameTag: "windowsXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -72,7 +70,7 @@ class Config11 {
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
-                test                : ['sanity.openjdk']
+                test                : 'default'
         ],
 
         ppc64Aix    : [
@@ -82,16 +80,13 @@ class Config11 {
                         hotspot: 'xlc13&&aix710',
                         openj9:  'xlc13&&aix715'
                 ],
-                test                : [
-                        nightly: ['sanity.openjdk'],
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
-                ]
+                test                : 'default'
         ],
 
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
@@ -105,7 +100,7 @@ class Config11 {
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                test                : 'default',
                 configureArgs       : [
                         "hotspot"     : '--enable-dtrace=auto',
                         "openj9"      : '--enable-dtrace=auto --enable-jitserver'
@@ -126,7 +121,7 @@ class Config11 {
                 os                  : 'linux',
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
@@ -145,21 +140,21 @@ class Config11 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 arch                 : 'x64',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                test                 : "default",
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-jitserver --enable-dtrace=auto'
         ],
         s390xLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 's390x',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
         ],
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto --enable-jitserver'
         ],
@@ -167,7 +162,7 @@ class Config11 {
                 os                   : 'linux',
                 dockerImage          : 'adoptopenjdk/centos7_build_image',
                 arch                 : 'aarch64',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
         ],

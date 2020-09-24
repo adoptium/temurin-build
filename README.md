@@ -10,31 +10,45 @@ https://www.adoptopenjdk.net and https://api.adoptopenjdk.net.
 
 ##### Build jdk natively on your system
 
+
+To do this you will need to have your machine set up with a suitable
+compiler and various other tools available. We set up our machines using
+ansible playbooks from
+the https://github.com/adoptopenjdk/openjdk-infrastructure repository
+although you can also look at the [dockerfile generator](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/docker/dockerfile-generator.sh) for a list of
+required packages for Ubuntu.
+
+Once you've got all of the prerequisites installed, clone this openjdk-build
+repository (`git clone https://github.com/AdoptOpenJDK/openjdk-build` and
+kick off a build a follows with this script. The `-J` parameter specifies
+the "boot JDK" which should generally be one major version prior to the one
+you are building (although one of the same major version will also work).
+Note that the build variant defaults to HotSpot if omitted.
+
 ```
-./makejdk-any-platform.sh <jdk8u|jdk9u|jdk10u|jdk11u|jdk12u|jdk13u|jdk14u|jdk15|jdk>
-i.e:
-./makejdk-any-platform.sh jdk8u
+./makejdk-any-platform.sh (-J /usr/lib/jvm/jdk-xx) (--build-variant <hotspot|openj9|corretto|SapMachine|dragonwell>) <jdk8u|jdk11u|jdk15u|jdk>
+```
+e.g.
+```
+./makejdk-any-platform.sh -J /usr/lib/jvm/jdk-10.0.2 --build-variant hotspot jdk11u
 ```
 
-##### Build jdk inside a docker container
+## How do I build OpenJDK in a docker image?
+
+If you do not want to set up your machine with all the prerequisites for
+building OpenJDK, you can use our docker images under the [docker]
+directory as follows (first version builds HotSpot, second builds J9 - the
+final parameter can be adjusted to build whichever version you want as long
+as we can generate valid dockerfile for it):
+
 ```
-./makejdk-any-platform.sh --docker jdk8u
-```
-If you need sudo to run docker on your system.
-```
-./makejdk-any-platform.sh --sudo --docker jdk8u
+./makejdk-any-platform.sh --docker --clean-docker-build jdk8u
+./makejdk-any-platform.sh --docker --clean-docker-build --build-variant openj9 jdk11u
 ```
 
-## Build
-The build has 2 modes, native and docker.
-
-### Native
-Native builds run on whatever platform the script is invoked on, i.e
-if you invoke a native build on MacOS it will build a JDK for MacOS.
-
-### Docker
-This runs a build inside a docker container. Currently this will always
-build a linux JDK.
+We test these dockerfiles on a regular basis in the
+[Dockerfilecheck](https://ci.adoptopenjdk.net/job/DockerfileCheck/) job
+to ensure they continue to work in a stable fashion.
 
 ## Repository contents
 
@@ -43,7 +57,7 @@ personally or at build farm scale.
 
 1. The `build-farm` folder contains shell scripts for multi configuration Jenkins
 build jobs used for building Adopt OpenJDK binaries.
-2. The `docker` folder contains DockerFiles which can be used as part of building
+2. The `docker` folder contains tools for generating dockerfiles which can be used as part of building
 OpenJDK inside a Docker container.
 3. The `docs` folder contains images and utility scripts to produce up to date
 documentation.
@@ -122,6 +136,9 @@ specify any custom user configuration arguments.
 
 --clean-git-repo
 clean out any 'bad' local git repo you already have.
+
+--create-debug-symbols-package
+create a debug-symbols only archive (if debug symbols were generated).
 
 -d, --destination <path>
 specify the location for the built binary, e.g. /path/.
@@ -239,82 +256,45 @@ The structure of a build is:
 
  1. Configuration phase determines what the configuration of the build is based on your current
 platform and and optional arguments provided
- 1. Configuration is written out to `built_config.cfg`
+ 1. Configuration is written out to `config/built_config.cfg`
  1. Build is kicked off by either creating a docker container or running the native build script
  1. Build reads in configuration from `built_config.cfg`
  1. Downloads source, dependencies and prepares build workspace
- 1. Configure and invoke OpenJDK build via `make`
+ 1. Invoke OpenJDK build via `make`
  1. Package up built artifacts
 
-- Configuration phase is primarily performed by `configureBuild.sh` and `makejdk-any-platform.sh`.
-- If a docker container is required it is built by `docker-build.sh`.
-- In the build phase `sbin/build.sh` is invoked either natively or inside the docker container.
-`sbin/build.sh` invokes `sbin/prepareWorkspace.sh` to download dependencies, source and perform
+- Configuration phase is primarily performed by [configureBuild.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/configureBuild.sh) and [makejdk-any-platform.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/makejdk-any-platform.sh).
+- If a docker container is required it is built by [docker-build.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/docker-build.sh) otherwise [native-build.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/native-build.sh).
+- In the build phase [sbin/build.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/sbin/build.sh) is invoked either natively or inside the docker container.
+`sbin/build.sh` invokes [sbin/prepareWorkspace.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/sbin/prepareWorkspace.sh) to download dependencies, source and perform
 general preparation.
 - Rest of the build and packaging is then handled from `sbin/build.sh`
 
-## Building OpenJDK
+## Building OpenJDK from other locations
 
-### Building on the Build Farm
-
-In order to build an OpenJDK variant on the build farm you need to follow the
-[Adding-a-new-build-variant](https://github.com/AdoptOpenJDK/TSC/wiki/Adding-a-new-build-variant)
-instructions.  The configuration options are often set in the Jenkins job and
-passed into `makejdk-any-platform.sh` script.
-
-Note that the build nodes (list of hosts on the LH side inside Jenkins) also
-have configuration where things like the BOOT_JDK environment variable is set.
-
-### Building via Docker in your local environment
-
-The simplest way to build OpenJDK using these scripts is to run `makejdk-any-platform.sh`
-and have your user be in the Docker group on the machine (or use the `--sudo`
-option to prefix all of your Docker commands with `sudo`). This script will create
-a Docker container that will be configured with all of the required dependencies
-and a base operating system in order to build OpenJDK.
-
-Make sure you have started your Docker Daemon first!  For help with getting
-docker follow the instructions [here](https://docs.docker.com/engine/installation/).
-Once you have Docker started you can then use the script below to build OpenJDK.
-
-Example Usage (TODO Add example of openj9):
-
-`./makejdk-any-platform.sh --docker --sudo jdk8u`
-
-#### Configuring Docker for non sudo use
-
-To use the Docker commands without using the `--sudo` option, you will need to be
-in the Docker group which can be achieved with the following three commands
-(performed as `root`)
-
-**Security Warning!** Please read the [Linux Post Install](https://docs.docker.com/install/linux/linux-postinstall/) guidance before you do this.
-
-1. `sudo groupadd docker`: creates the Docker group if it does not already exist
-2. `sudo gpasswd -a yourusernamehere docker`: adds a user to the Docker group
-3. `sudo service docker restart`: restarts the Docker service so the above changes can take effect
-
-### Building natively in your local environment
-
-Please note that your build host will need to have certain pre-requisites met.  
-We provide Ansible scripts in the
-[openjdk-infrastructure](https://www.github.com/AdoptOpenJDK/openjdk-infrastructure)
-project for setting these pre-requisites.
-
-Example Usage (TODO Add example of openj9):
-
-`./makejdk-any-platform.sh -s src -d target -T MyOpenJDK10.tar.gz jdk10`
-
-This would clone OpenJDK source from _https://github.com/AdoptOpenJDK/openjdk-jdk10
-to `src` under your current directory, configure the build with sensible defaults 
-according to your local platform and then build (Adopt) OpenJDK and place the result in
-`target/MyOpenJDK10.tar.gz`.
-
-### Building OpenJDK from a non Adopt source
+### Building OpenJDK from a non-AdoptOpenJDK repository
 
 These scripts default to using AdoptOpenJDK as the OpenJDK source repo to build
-from, but you can override this with the `-r` flag.
+from, but you can override this with the `-r` flag. If you want to run from a
+non-default branch you can also specify -b e.g.
 
-#Metadata
+```
+./makejdk-any-platform.sh -r https://github.com/sxa/openjdk-jdk8u -b main -J /usr/lib/jvm/java-1.7.0 jdk8u
+```
+
+### Building in a custom directory
+
+Example Usage
+
+```
+./makejdk-any-platform.sh -J /usr/lib/jvm/jdk-10.0.2 -s $HOME/openjdk-jdk11u/src -d $HOME/openjdk-jdk11u/build -T MyOpenJDK11.tar.gz jdk11u
+```
+This would clone OpenJDK source from _https://github.com/AdoptOpenJDK/openjdk-jdk11u_
+to `$HOME/openjdk-jdk11u/src`, configure the build with sensible defaults according
+to your local platform and then build OpenJDK and place the result in
+`/home/openjdk/target/MyOpenJDK11.tar.gz`.
+
+# Metadata
 **This is still in alpha do not rely on this yet**
 Alongside the built assets a metadata file will be created with info about the build. This will be a JSON document of the form:
 
@@ -345,10 +325,6 @@ Alongside the built assets a metadata file will be created with info about the b
 ```
 
 It is worth noting the additional tags on the semver is the adopt build number.
-
-# Build farm
-
-The documentation for files that define the build farm builds can be found at [Build Farm Definition](/docs/build.md).
 
 # Build status
 

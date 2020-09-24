@@ -88,7 +88,7 @@ signRelease()
       # Login to KeyChain
       # shellcheck disable=SC2046
       # shellcheck disable=SC2006
-      security unlock-keychain -p `cat ~/.password`
+      security unlock-keychain -p `cat ~/.password` login.keychain-db
 
       ENTITLEMENTS="$WORKSPACE/entitlements.plist"
       xattr -cr .
