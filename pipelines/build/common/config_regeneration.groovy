@@ -1,6 +1,7 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
+import java.util.Base64
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -34,6 +35,9 @@ class Regeneration implements Serializable {
     private final def gitBranch
 
     private final def jenkinsBuildRoot
+    private final def jenkinsUsername
+    private final def jenkinsToken
+
     private String javaToBuild
     private final List<String> defaultTestList = ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external']
 
@@ -49,7 +53,9 @@ class Regeneration implements Serializable {
         String jobRootDir,
         String gitUri,
         String gitBranch,
-        String jenkinsBuildRoot
+        String jenkinsBuildRoot,
+        String jenkinsUsername,
+        String jenkinsToken
     ) {
         this.javaVersion = javaVersion
         this.buildConfigurations = buildConfigurations
@@ -61,6 +67,8 @@ class Regeneration implements Serializable {
         this.gitUri = gitUri
         this.gitBranch = gitBranch
         this.jenkinsBuildRoot = jenkinsBuildRoot
+        this.jenkinsUsername = jenkinsUsername
+        this.jenkinsToken = jenkinsToken
     }
 
     /*
@@ -325,6 +333,13 @@ class Regeneration implements Serializable {
         try {
             def parser = new JsonSlurper()
             def get = new URL(query).openConnection()
+
+            String jenkinsAuth = ""
+            if (jenkinsUsername != "") {
+                jenkinsAuth = "Basic " + new String(Base64.getEncoder().encode("$jenkinsUsername:$jenkinsToken".getBytes()))
+            }
+            get.setRequestProperty ("Authorization", jenkinsAuth)
+
             def response = parser.parseText(get.getInputStream().getText())
             return response
         } catch (Exception e) {
@@ -487,12 +502,16 @@ return {
     String jobRootDir,
     String gitUri,
     String gitBranch,
-    String jenkinsBuildRoot
+    String jenkinsBuildRoot,
+    String jenkinsUsername,
+    String jenkinsToken
         ->
         if (jobRootDir == null) jobRootDir = "build-scripts";
         if (gitUri == null) gitUri = "https://github.com/AdoptOpenJDK/openjdk-build.git";
         if (gitBranch == null) gitBranch = "master";
         if (jenkinsBuildRoot == null) jenkinsBuildRoot = "https://ci.adoptopenjdk.net/job/build-scripts/";
+        if (jenkinsUsername == null) jenkinsUsername = ""
+        if (jenkinsToken == null) jenkinsToken = ""
 
         def excludedBuilds = [:]
         if (excludes != "" && excludes != null) {
@@ -509,6 +528,8 @@ return {
             jobRootDir,
             gitUri,
             gitBranch,
-            jenkinsBuildRoot
+            jenkinsBuildRoot,
+            jenkinsUsername,
+            jenkinsToken
         )
 }
