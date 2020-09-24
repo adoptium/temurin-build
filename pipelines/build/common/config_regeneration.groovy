@@ -25,6 +25,7 @@ class Regeneration implements Serializable {
     private final String javaVersion
     private final Map<String, Map<String, ?>> buildConfigurations
     private final Map<String, ?> targetConfigurations
+    private final Map<String, ?> excludedBuilds
     private final def currentBuild
     private final def context
 
@@ -35,10 +36,13 @@ class Regeneration implements Serializable {
     private final def jenkinsBuildRoot
     private String javaToBuild
 
+    private final String excludedConst = "EXCLUDED"
+
     public Regeneration(
         String javaVersion,
         Map<String, Map<String, ?>> buildConfigurations,
         Map<String, ?> targetConfigurations,
+        Map<String, ?> excludedBuilds,
         currentBuild,
         context,
         String jobRootDir,
@@ -49,6 +53,7 @@ class Regeneration implements Serializable {
         this.javaVersion = javaVersion
         this.buildConfigurations = buildConfigurations
         this.targetConfigurations = targetConfigurations
+        this.excludedBuilds = excludedBuilds
         this.currentBuild = currentBuild
         this.context = context
         this.jobRootDir = jobRootDir
@@ -174,6 +179,36 @@ class Regeneration implements Serializable {
     }
 
     /*
+    * Checks if the platform/arch/variant is in the EXCLUDES_LIST Parameter.
+    * @param configuration
+    * @param variant
+    */
+    def overridePlatform(Map<String, ?> configuration, String variant) {
+        Boolean overridePlatform = false
+        if (excludedBuilds == [:]) {
+            return overridePlatform 
+        }
+
+        String stringArch = configuration.arch as String
+        String stringOs = configuration.os as String
+        String estimatedKey = stringArch + stringOs.capitalize()
+
+        if (configuration.containsKey("additionalFileNameTag")) {
+            estimatedKey = estimatedKey + "XL"
+        }
+
+        if (excludedBuilds.containsKey(estimatedKey)) {
+
+            if (excludedBuilds[estimatedKey].contains(variant)) {
+                overridePlatform = true
+            }
+
+        }
+
+        return overridePlatform
+    }
+
+    /*
     * Create IndividualBuildConfig for jobDsl. Used as a placeholder since the pipelines overwrite this.
     * @param platformConfig
     * @param variant
@@ -181,6 +216,13 @@ class Regeneration implements Serializable {
     */
     IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant, String javaToBuild) {
         try {
+
+            // Check if it's in the excludes list
+            if (overridePlatform(platformConfig, variant)) {
+                context.println "[INFO] Excluding $platformConfig.os: $variant from $javaToBuild regeneration due to it being in the EXCLUDES_LIST..."
+                return excludedConst
+            }
+
             def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
             def dockerImage = getDockerImage(platformConfig, variant)
@@ -412,11 +454,15 @@ class Regeneration implements Serializable {
                                 context.println "[WARNING] Config file key: ${osarch} not recognised. Valid configuration keys for ${javaToBuild} are ${buildConfigurations.keySet()}.\n[WARNING] ${osarch} WILL NOT BE REGENERATED! Setting build result to UNSTABLE..."
                                 currentBuild.result = "UNSTABLE"
                             } else {
+                                // Skip variant job make if it's marked as excluded
+                                if (jobConfigurations.get(name) == excludedConst) {
+                                    continue
+                                }
                                 // Make job
-                                if (jobConfigurations.get(name) != null) {
+                                else if (jobConfigurations.get(name) != null) {
                                     makeJob(jobConfigurations, name)
+                                // Unexpected error when building or getting the configuration
                                 } else {
-                                    // Unexpected error when building or getting the configuration
                                     context.println "[ERROR] IndividualBuildConfig is malformed for key: ${osarch}."
                                     currentBuild.result = "FAILURE"
                                 }
@@ -424,7 +470,7 @@ class Regeneration implements Serializable {
 
                         } // end variant for loop
 
-                        context.println "[SUCCESS] ${osarch} regenerated!\n"
+                        context.println "[SUCCESS] ${osarch} completed!\n"
 
                 } // end key foreach loop
 
@@ -438,6 +484,7 @@ return {
     String javaVersion,
     Map<String, Map<String, ?>> buildConfigurations,
     Map<String, ?> targetConfigurations,
+    String excludes,
     def currentBuild,
     def context,
     String jobRootDir,
@@ -450,5 +497,21 @@ return {
         if (gitBranch == null) gitBranch = "master";
         if (jenkinsBuildRoot == null) jenkinsBuildRoot = "https://ci.adoptopenjdk.net/job/build-scripts/";
 
-        return new Regeneration(javaVersion, buildConfigurations, targetConfigurations, currentBuild, context, jobRootDir, gitUri, gitBranch, jenkinsBuildRoot)
+        def excludedBuilds = [:]
+        if (excludes != "" && excludes != null) {
+            excludedBuilds = new JsonSlurper().parseText(excludes) as Map
+        }
+        
+        return new Regeneration(
+            javaVersion,
+            buildConfigurations,
+            targetConfigurations,
+            excludedBuilds,
+            currentBuild,
+            context,
+            jobRootDir,
+            gitUri,
+            gitBranch,
+            jenkinsBuildRoot
+        )
 }

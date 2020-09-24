@@ -86,12 +86,14 @@ class PullRequestTestPipeline implements Serializable {
             }
             
             String actualJavaVersion = updateRepo ? "jdk${javaVersion}u" : "jdk${javaVersion}"
+            def excludedBuilds = ""
 
             // Generate downstream pipeline jobs
             regenerationScript(
                     actualJavaVersion,
                     buildConfigurations,
                     testConfigurations,
+                    excludedBuilds,
                     currentBuild,
                     context,
                     "build-scripts-pr-tester/build-test",
