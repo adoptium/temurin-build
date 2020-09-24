@@ -35,6 +35,7 @@ class Regeneration implements Serializable {
 
     private final def jenkinsBuildRoot
     private String javaToBuild
+    private final List<String> defaultTestList = ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external']
 
     private final String excludedConst = "EXCLUDED"
 
@@ -168,14 +169,15 @@ class Regeneration implements Serializable {
     * @param configuration
     */
     List<String> getTestList(Map<String, ?> configuration) {
-        if (configuration.containsKey("test")) {
+        List<String> testList = []
+        if (configuration.containsKey("test") && configuration.get("test")) {
             if (isMap(configuration.test)) {
-                return (configuration.test as Map).get("nightly") as List<String> // no need to check for release
-            } else {
-                return configuration.test as List<String>
+                testList = (configuration.test as Map).get("nightly") as List<String> // no need to check for release
             }
+            testList = defaultTestList
         }
-        return []
+        testList.unique()
+        return testList
     }
 
     /*

@@ -5,8 +5,8 @@ class Config16 {
                 arch                : 'x64',
                 additionalNodeLabels: 'macos10.14',
                 test                : [
-                        nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ],
                 configureArgs       : '--enable-dtrace'
         ],
@@ -19,8 +19,8 @@ class Config16 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                : [
-                        nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
                 configureArgs       : [
                         "openj9"      : '--enable-dtrace --enable-jitserver',
@@ -36,8 +36,8 @@ class Config16 {
                         hotspot: 'win2012&&vs2017'
                 ],
                 test                : [
-                        nightly: false,
-                        release: ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
                 ]
         ],
 
@@ -61,8 +61,8 @@ class Config16 {
                         openj9:  'xlc16&&aix715'
                 ],
                 test                : [
-                        nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system']
                 ]
         ],
 
@@ -71,8 +71,8 @@ class Config16 {
                 os                  : 'linux',
                 arch                : 's390x',
                 test                : [
-                        nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ],
                 configureArgs       : '--enable-dtrace'
         ],
@@ -81,8 +81,8 @@ class Config16 {
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 test                : [
-                        nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                        nightly: [],
+                        weekly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ],
                 configureArgs       : [
                         "hotspot"     : '--enable-dtrace',
@@ -96,8 +96,8 @@ class Config16 {
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
                 test                : [
-                        nightly: false,
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
                 ],
                 configureArgs       : '--enable-dtrace'
         ],
