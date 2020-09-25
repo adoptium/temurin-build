@@ -27,6 +27,10 @@ class Config8 {
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
+                dockerNode          : [ 
+                        hotspot       : 'dockernodetesthotspot',
+                        openj9        : 'dockernodetestopenj9',
+                ],
                 test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver'
