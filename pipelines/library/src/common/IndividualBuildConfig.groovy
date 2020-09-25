@@ -24,6 +24,7 @@ class IndividualBuildConfig implements Serializable {
     final String PUBLISH_NAME
     final String ADOPT_BUILD_NUMBER
     final boolean ENABLE_TESTS
+    final boolean ENABLE_INSTALLERS
     final boolean CLEAN_WORKSPACE
 
     IndividualBuildConfig(String json) {
@@ -59,6 +60,7 @@ class IndividualBuildConfig implements Serializable {
         PUBLISH_NAME = map.get("PUBLISH_NAME")
         ADOPT_BUILD_NUMBER = map.get("ADOPT_BUILD_NUMBER")
         ENABLE_TESTS = map.get("ENABLE_TESTS")
+        ENABLE_INSTALLERS = map.get("ENABLE_INSTALLERS")
         CLEAN_WORKSPACE = map.get("CLEAN_WORKSPACE")
     }
 
@@ -99,6 +101,7 @@ class IndividualBuildConfig implements Serializable {
                 PUBLISH_NAME              : PUBLISH_NAME,
                 ADOPT_BUILD_NUMBER        : ADOPT_BUILD_NUMBER,
                 ENABLE_TESTS              : ENABLE_TESTS,
+                ENABLE_INSTALLERS         : ENABLE_INSTALLERS,
                 CLEAN_WORKSPACE           : CLEAN_WORKSPACE
         ]
     }

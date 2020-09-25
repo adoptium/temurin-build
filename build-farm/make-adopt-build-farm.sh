@@ -41,7 +41,7 @@ then
         then
             echo "RETRYWARNING: Query ${retryCount} failed. Retrying in 30 seconds (max retries = ${retryMax})..."
             retryCount=$((retryCount+1)) 
-            sleep 30
+            sleep 30s
         else
             echo "JAVA_FEATURE_VERSION FOUND: ${JAVA_FEATURE_VERSION}" && break
         fi
@@ -79,6 +79,9 @@ then
 fi
 echo "Required boot JDK version: ${JDK_BOOT_VERSION}"
 
+# shellcheck source=build-farm/set-platform-specific-configurations.sh
+source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
+
 case "${JDK_BOOT_VERSION}" in
       "7")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";;
       "8")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK8_BOOT_DIR}";;
@@ -92,10 +95,18 @@ case "${JDK_BOOT_VERSION}" in
       *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK16_BOOT_DIR}";;
 esac
 
+
 if [ ! -d "${JDK_BOOT_DIR}" ]
 then
   echo Setting JDK_BOOT_DIR to \$JAVA_HOME
   export JDK_BOOT_DIR="${JAVA_HOME}"
+
+  # Without this, a blank value can be passed into makejdk-any-platform.sh which causes an obscure parsing failure
+  if [ ! -d "${JDK_BOOT_DIR}" ]
+  then
+    echo "[ERROR] No JDK Boot Directory has been found, the likelihood is that neither JDK${JDK_BOOT_VERSION}_BOOT_DIR or JAVA_HOME are set on this machine"
+    exit 2
+  fi
 fi
 
 echo "Boot jdk directory: ${JDK_BOOT_DIR}:"
@@ -125,8 +136,6 @@ fi
 echo "BRANCH: ${BRANCH} (For release either BRANCH or TAG should be set)"
 echo "TAG: ${TAG}"
 
-# shellcheck source=build-farm/set-platform-specific-configurations.sh
-source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
 
 if [ "x${FILENAME}" = "x" ] ; then
     echo "FILENAME must be set in the environment"

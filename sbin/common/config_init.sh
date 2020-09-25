@@ -32,6 +32,7 @@
 # map. This is why we can't have nice things.
 CONFIG_PARAMS=(
 ADOPT_PATCHES
+ASSEMBLE_EXPLODED_IMAGE
 OPENJDK_BUILD_REPO_BRANCH
 OPENJDK_BUILD_REPO_URI
 BRANCH
@@ -46,6 +47,7 @@ CONTAINER_NAME
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
+CREATE_DEBUG_SYMBOLS_PACKAGE
 DEBUG_DOCKER
 DEBUG_IMAGE_PATH
 DISABLE_ADOPT_BRANCH_SAFETY
@@ -65,6 +67,7 @@ TEST_IMAGE_PATH
 JVM_VARIANT
 MACOSX_CODESIGN_IDENTITY
 MAKE_ARGS_FOR_ANY_PLATFORM
+MAKE_EXPLODED
 MAKE_COMMAND_NAME
 NUM_PROCESSORS
 OPENJDK_BUILD_NUMBER
@@ -91,6 +94,11 @@ USE_JEP319_CERTS
 USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
 USER_SUPPLIED_MAKE_ARGS
+VENDOR
+VENDOR_URL
+VENDOR_BUG_URL
+VENDOR_VERSION
+VENDOR_VM_BUG_URL
 WORKING_DIR
 WORKSPACE_DIR
 )
@@ -198,6 +206,12 @@ function parseConfigurationArguments() {
         "--make-args" )
         BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]="$1"; shift;;
 
+        "--make-exploded-image" )
+        BUILD_CONFIG[MAKE_EXPLODED]=true;;
+
+        "--assemble-exploded-image" )
+        BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=true;;
+
         "--codesign-identity" )
         BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]="$1"; shift;;
 
@@ -209,6 +223,9 @@ function parseConfigurationArguments() {
 
         "--clean-libs" )
         BUILD_CONFIG[CLEAN_LIBS]=true;;
+
+        "--create-debug-symbols-package" )
+        BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]="true";;
 
         "--disable-adopt-branch-safety" )
         BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=true;;
@@ -241,7 +258,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[FREETYPE]=false;;
 
         "--help" | "-h" )
-        man ./makejdk-any-platform.1;;
+        man ./makejdk-any-platform.1 && exit 0;;
 
         "--ignore-container" | "-i" )
         BUILD_CONFIG[REUSE_CONTAINER]=false;;
@@ -296,6 +313,9 @@ function parseConfigurationArguments() {
         "--use-jep319-certs" )
         BUILD_CONFIG[USE_JEP319_CERTS]=true;;
 
+        "--vendor" | "-ve" )
+        BUILD_CONFIG[VENDOR]="$1"; shift;;
+
         "--version"  | "-v" )
         setOpenJdkVersion "$1"
         setDockerVolumeSuffix "$1"; shift;;
@@ -316,6 +336,8 @@ function setBranch() {
   local branch="dev"
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     branch="openj9";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+    branch="master";
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
     branch="develop";
   fi
@@ -353,6 +375,9 @@ function configDefaults() {
   # The OpenJDK source code repository to build from, e.g. an AdoptOpenJDK repo
   BUILD_CONFIG[REPOSITORY]=""
 
+  BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]:-"false"}
+  BUILD_CONFIG[MAKE_EXPLODED]=${BUILD_CONFIG[MAKE_EXPLODED]:-"false"}
+
   # The default AdoptOpenJDK/openjdk-build repo branch
   BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]="master"
 
@@ -374,6 +399,9 @@ function configDefaults() {
       BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
       ;;
   esac
+
+  # The default behavior of whether we want to create a separate debug symbols archive
+  BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]="false"
 
   BUILD_CONFIG[SIGN]="false"
   BUILD_CONFIG[JDK_BOOT_DIR]=""
@@ -470,6 +498,9 @@ function configDefaults() {
   BUILD_CONFIG[ADOPT_PATCHES]=true
 
   BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false
+
+  # Used in 'release' file for jdk8u
+  BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"AdoptOpenJDK"}
 }
 
 # Declare the map of build configuration that we're going to use

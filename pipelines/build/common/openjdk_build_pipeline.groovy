@@ -88,6 +88,7 @@ class Build {
         switch (buildConfig.VARIANT) {
             case "openj9": variant = "j9"; break
             case "corretto": variant = "corretto"; break
+            case "dragonwell": variant = "dragonwell"; break;
             default: variant = "hs"
         }
 
@@ -118,6 +119,8 @@ class Build {
             jdkBranch = 'openj9'
         } else if (buildConfig.VARIANT == "hotspot"){
             jdkBranch = 'dev'
+        } else if (buildConfig.VARIANT == "dragonwell") {
+            jdkBranch = 'master'
         } else {
             context.error("Unrecognized build variant '${buildConfig.VARIANT}' ")
             throw new Exception()
@@ -135,8 +138,10 @@ class Build {
             suffix="corretto/corretto-${javaNumber}"
         } else if (buildConfig.VARIANT == "openj9") {
             suffix = "ibmruntimes/openj9-openjdk-jdk${javaNumber}"
-        } else if (buildConfig.VARIANT == "hotspot"){
+        } else if (buildConfig.VARIANT == "hotspot") {
             suffix = "adoptopenjdk/openjdk-${buildConfig.JAVA_TO_BUILD}"
+        } else if (buildConfig.VARIANT == "dragonwell") {
+            suffix = "alibaba/dragonwell${javaNumber}"
         } else {
             context.error("Unrecognized build variant '${buildConfig.VARIANT}' ")
             throw new Exception()
@@ -225,7 +230,7 @@ class Build {
 
                 if (buildConfig.TARGET_OS == "windows") {
                     filter = "**/OpenJDK*_windows_*.zip"
-                    certificate = "C:\\Users\\jenkins\\windows.p12"
+                    certificate = "C:\\openjdk\\windows.p12"
                     nodeFilter = "${nodeFilter}&&build"
 
                 } else if (buildConfig.TARGET_OS == "mac") {
@@ -333,7 +338,7 @@ class Build {
 
     private void buildWindowsInstaller(VersionInfo versionData) {
         def filter = "**/OpenJDK*jdk_*_windows*.zip"
-        def certificate = "C:\\Users\\jenkins\\windows.p12"
+        def certificate = "C:\\openjdk\\windows.p12"
 
         def buildNumber = versionData.build
 
@@ -669,6 +674,7 @@ class Build {
                     context.println "File name: ${filename}"
 
                     def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
+                    def enableInstallers = Boolean.valueOf(buildConfig.ENABLE_INSTALLERS)
                     def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
 
                     context.stage("queue") {
@@ -746,7 +752,9 @@ class Build {
                     }
 
                     //buildInstaller if needed
-                    buildInstaller(versionInfo)
+                    if (enableInstallers) {
+                        buildInstaller(versionInfo)
+                    }
 
                 } catch (Exception e) {
                     currentBuild.result = 'FAILURE'
