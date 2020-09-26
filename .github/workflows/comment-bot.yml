@@ -1,0 +1,24 @@
+on:
+  pull_request_target:
+    types: [ opened ]
+
+jobs:
+  comment:
+    name: Add Comment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create comment
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Thank you for creating a pull request!
+            There are several commands you can add as comments to trigger builds:
+            - `build-linux` - trigger all github actions Linux builds - RECOMMENDED
+            - `build-windows` - trigger all github actions Windows builds
+            - `build-macos` - trigger all github actions macOS builds - please use sparingly
+            - `build-all` - trigger all github actions builds
+
+            If you are making a change to the jenkins pipeline scripts then please run the following command:
+            - `run-tests` - this will trigger all jenkins builds in a matrix
