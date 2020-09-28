@@ -124,7 +124,10 @@ class Config11 {
                 os                  : 'linux',
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
-                test                : 'default',
+                test                : [
+                        nightly: ['sanity.functional', 'extended.functional', 'sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
+                        weekly : ['extended.openjdk', 'extended.perf', 'extended.external', 'special.openjdk','special.functional', 'special.system', 'special.perf']
+                ],
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
