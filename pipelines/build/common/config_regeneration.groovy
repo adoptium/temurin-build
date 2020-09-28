@@ -368,9 +368,10 @@ class Regeneration implements Serializable {
                 // Parse api response to only extract the relevant pipeline
                 getPipelines.jobs.name.each{ pipeline ->
                     if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
+                        // TODO: Paramaterise this
                         Integer sleepTime = 900
+                        
                         Boolean inProgress = true
-
                         while (inProgress) {
                             // Check if pipeline is in progress using api
                             context.println "[INFO] Checking if ${pipeline} is running..." //i.e. openjdk8-pipeline
@@ -394,8 +395,7 @@ class Regeneration implements Serializable {
                                 // Sleep for a bit, then check again...
                                 context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
 
-                                // Unfortunately, we can't use advanced sleep time here ("900s") since it must be an int
-                                context.sleep sleepTime
+                                context.sleep(time: sleepTime, unit: "SECONDS")
                             }
 
                         }
