@@ -101,6 +101,7 @@ class Config8 {
         ppc64leLinux  : [
                 os  : 'linux',
                 arch: 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 test                 : 'default',
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver'
@@ -144,6 +145,7 @@ class Config8 {
         ppc64leLinuxXL       : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 additionalFileNameTag: "linuxXL",
                 test                 : 'default',
                 configureArgs        : '--with-noncompressedrefs --enable-jitserver'
