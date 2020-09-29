@@ -781,6 +781,12 @@ makeACopyOfLibFreeFontForMacOSX() {
 # Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
 getFirstTagFromOpenJDKGitRepo()
 {
+    # Solaris needs to use gnusort
+    if [ $(uname) == "SunOS" ]; then
+      sort_cmd=gsort
+    else
+      sort_cmd=sort
+    fi
     # JDK8 tag sorting:
     # Tag Format "jdk8uLLL-bBB"
     # cut chars 1-5 => LLL-bBB
@@ -788,8 +794,8 @@ getFirstTagFromOpenJDKGitRepo()
     # prefix "-" to allow line numbering stable sorting using nl => -LLL-BB
     # Sort by build level BB first
     # Then do "stable" sort (keeping BB order) by build level LLL
-    local jdk8_tag_sort1="sort -t- -k3n"
-    local jdk8_tag_sort2="sort -t- -k2n"
+    local jdk8_tag_sort1="$sort_cmd -t- -k3n"
+    local jdk8_tag_sort2="$sort_cmd -t- -k2n"
     local jdk8_get_tag_cmd="grep -v _openj9 | grep -v _adopt | cut -c6- | awk -F'[\-b]+' '{print \$1\"-\"\$2}' | sed 's/^/-/' | $jdk8_tag_sort1 | nl | $jdk8_tag_sort2 | cut -f2- | sed 's/^-/jdk8u/' | sed 's/-/-b/' | tail -1"
 
     # JDK11+ tag sorting:
@@ -797,9 +803,9 @@ getFirstTagFromOpenJDKGitRepo()
     # Versions tags are formatted: jdk-V[.W[.X]]+B; with V, W, X, B being numeric.
     # Transform "-" to "." in tag so we can sort as: "jdk.V[.W[.X]]+B"
     # First, sort on build number (B):
-    local jdk11plus_tag_sort1="sort -t+ -k2n"
+    local jdk11plus_tag_sort1="$sort_cmd -t+ -k2n"
     # Second, (stable) sort on (V), (W), (X):
-    local jdk11plus_tag_sort2="sort -t. -k2n -k3n -k4n"
+    local jdk11plus_tag_sort2="$sort_cmd -t. -k2n -k3n -k4n"
     jdk11plus_get_tag_cmd="grep -v _openj9 | grep -v _adopt | sed 's/jdk-/jdk./g' | $jdk11plus_tag_sort1 | nl | $jdk11plus_tag_sort2 | cut -f2- | sed 's/jdk./jdk-/g' | tail -1"
 
     # Choose tag search keyword and get cmd based on version
