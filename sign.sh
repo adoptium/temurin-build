@@ -64,7 +64,7 @@ signRelease()
         echo "Signing ${f}"
         if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; then
           echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error - RC $? ... Retrying in 10 seconds"
-          sleep 10
+          sleep 10s
           "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
         fi        
       done
@@ -76,7 +76,7 @@ signRelease()
         echo "Signing ${f}"
         if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; then
           echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error - RC $? ... Retrying in 10 seconds"
-          sleep 10
+          sleep 10s
           "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
         fi
       done
@@ -88,7 +88,7 @@ signRelease()
       # Login to KeyChain
       # shellcheck disable=SC2046
       # shellcheck disable=SC2006
-      security unlock-keychain -p `cat ~/.password`
+      security unlock-keychain -p `cat ~/.password` login.keychain-db
 
       ENTITLEMENTS="$WORKSPACE/entitlements.plist"
       xattr -cr .

@@ -53,7 +53,11 @@ checkoutAndCloneOpenJDKGitRepo() {
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk11u (fetch)
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk (fetch)
     # eg. origin git@github.com:adoptopenjdk/openjdk-jdk.git (fetch)
-    git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch"
+    else
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
+    fi
     local isValidGitRepo=$?
     set -e
 
@@ -61,7 +65,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     if [ "${isValidGitRepo}" == "0" ]; then
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
-      sleep 10
+      sleep 10s
       echo "Pulling latest changes from git openjdk source repository"
     elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
       echo "Removing current git repo as it is the wrong type"
@@ -102,6 +106,9 @@ checkoutAndCloneOpenJDKGitRepo() {
   git clean -ffdx
 
   updateOpenj9Sources
+  updateDragonwellSources
+
+  createSourceTagFile
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
@@ -250,6 +257,14 @@ updateOpenj9Sources() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     bash get_source.sh --openssl-version=1.1.1g
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+  fi
+}
+
+updateDragonwellSources() {
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
+    bash get_source_dragonwell.sh --site github
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
@@ -628,12 +643,33 @@ applyPatches() {
   fi
 }
 
+# jdk8u requires a .hgtip file to populate the "SOURCE" tag in the release file.
+# Creates .hgtip and populates it with the git sha of the last commit(s).
+createSourceTagFile(){
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+    local OpenJDK_TopDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    local OpenJDK_SHA=$(git -C $OpenJDK_TopDir rev-parse --short HEAD)
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+      # OpenJ9 list 3 SHA's in their release file: OpenJDK, OpenJ9, and OMR.
+      local OpenJ9_TopDir="$OpenJDK_TopDir/openj9"
+      local OMR_TopDir="$OpenJDK_TopDir/omr"
+      local OpenJ9_SHA=$(git -C $OpenJ9_TopDir rev-parse --short HEAD)
+      local OMR_SHA=$(git -C $OMR_TopDir rev-parse --short HEAD)
+      (printf "OpenJDK: %s OpenJ9: %s OMR: %s" $OpenJDK_SHA $OpenJ9_SHA $OMR_SHA) > $OpenJDK_TopDir/.hgtip
+    else # Other variants only list the main repo SHA.
+      (printf "OpenJDK: %s" $OpenJDK_SHA) > $OpenJDK_TopDir/.hgtip
+    fi
+  fi
+}
+
 ##################################################################
 
 function configureWorkspace() {
-  createWorkspace
-  downloadingRequiredDependencies
-  relocateToTmpIfNeeded
-  checkoutAndCloneOpenJDKGitRepo
-  applyPatches
+  if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" != "true" ]]; then
+    createWorkspace
+    downloadingRequiredDependencies
+    relocateToTmpIfNeeded
+    checkoutAndCloneOpenJDKGitRepo
+    applyPatches
+  fi
 }

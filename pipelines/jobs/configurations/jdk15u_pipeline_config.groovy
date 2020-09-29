@@ -4,7 +4,7 @@ class Config15 {
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: 'macos10.14',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace'
         ],
 
@@ -12,7 +12,7 @@ class Config15 {
                 os                   : 'mac',
                 arch                 : 'x64',
                 additionalNodeLabels : 'macos10.14',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                test                 : 'default',
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace'
         ],
@@ -24,7 +24,7 @@ class Config15 {
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional'],
+                test                : 'default',
                 configureArgs       : [
                         "openj9"      : '--enable-dtrace --enable-jitserver',
                         "hotspot"     : '--enable-dtrace'
@@ -38,7 +38,7 @@ class Config15 {
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                test                : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs       : '--with-noncompressedrefs --enable-dtrace --enable-jitserver'
         ],
@@ -50,17 +50,14 @@ class Config15 {
                 additionalNodeLabels: [
                         hotspot: 'win2012&&vs2017'
                 ],
-                buildArgs : [
-                        hotspot : '--jvm-variant client,server'
-                ],
-                test                : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
+                test                : 'default'
         ],
 
         x64WindowsXL: [
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: 'win2012&&vs2017',
-                test                : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system'],
+                test                : 'default',
                 additionalFileNameTag: "windowsXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -74,7 +71,7 @@ class Config15 {
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
-                test                : ['sanity.openjdk']
+                test                : 'default'
         ],
 
         ppc64Aix    : [
@@ -84,24 +81,20 @@ class Config15 {
                         hotspot: 'xlc16&&aix710',
                         openj9:  'xlc16&&aix715'
                 ],
-                test                : [
-                        nightly: ['sanity.openjdk'],
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system']
-                ]
+                test                : 'default'
         ],
 
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
-
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace'
         ],
 
         s390xLinuxXL  : [
                 os                   : 'linux',
                 arch                 : 's390x',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace'
         ],
@@ -113,7 +106,7 @@ class Config15 {
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                test                : 'default',
                 configureArgs       : [
                         "hotspot"     : '--enable-dtrace',
                         "openj9"      : '--enable-dtrace --enable-jitserver'
@@ -127,7 +120,7 @@ class Config15 {
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace'
         ],
@@ -137,7 +130,10 @@ class Config15 {
                 arch                : 'arm',
                 // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
                 //test                : ['sanity.openjdk', 'sanity.perf'],
-                test                : false,
+                test                : [
+                        nightly: ['sanity.openjdk'],
+                        weekly : []
+                ],
                 configureArgs       : '--enable-dtrace'
         ],
 
@@ -145,7 +141,7 @@ class Config15 {
                 os                  : 'linux',
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf'],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace'
         ],
 
@@ -153,7 +149,7 @@ class Config15 {
                 os                   : 'linux',
                 dockerImage          : 'adoptopenjdk/centos7_build_image',
                 arch                 : 'aarch64',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system'],
+                test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace'
         ],

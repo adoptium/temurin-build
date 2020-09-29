@@ -4,7 +4,10 @@ class Config9 {
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: 'build-macstadium-macos1010-1',
-                test                : ['sanity.openjdk', 'sanity.system'],
+                test                : [
+                        nightly: ['sanity.openjdk', 'sanity.system'],
+                        weekly : []
+                ],
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
@@ -12,7 +15,10 @@ class Config9 {
                 os                  : 'linux',
                 arch                : 'x64',
                 additionalNodeLabels: 'centos6',
-                test                : ['sanity.openjdk', 'sanity.system', 'sanity.external'],
+                test                : [
+                        nightly: ['sanity.openjdk', 'sanity.system', 'sanity.external'],
+                        weekly : []
+                ],
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
@@ -24,7 +30,10 @@ class Config9 {
                         hotspot: 'win2012',
                         openj9:  'win2012&&mingw-cygwin'
                 ],
-                test                : ['sanity.openjdk']
+                test                : [
+                        nightly: ['sanity.openjdk'],
+                        weekly : []
+                ]
         ],
 
         ppc64Aix    : [
@@ -37,7 +46,10 @@ class Config9 {
                 os                  : 'linux',
                 arch                : 's390x',
                 additionalNodeLabels: 'rhel7',
-                test                : ['sanity.openjdk', 'sanity.system'],
+                test                : [
+                        nightly: ['sanity.openjdk', 'sanity.system'],
+                        weekly : []
+                ],
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
@@ -52,14 +64,20 @@ class Config9 {
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk', 'sanity.system'],
+                test                : [
+                        nightly: ['sanity.openjdk', 'sanity.system'],
+                        weekly : []
+                ],
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                : ['sanity.openjdk'],
+                test                : [
+                        nightly: ['sanity.openjdk'],
+                        weekly : []
+                ],
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
@@ -67,7 +85,10 @@ class Config9 {
                 os                  : 'linux',
                 arch                : 'aarch64',
                 additionalNodeLabels: 'centos7',
-                test                : ['sanity.openjdk'],
+                test                : [
+                        nightly: ['sanity.openjdk'],
+                        weekly : []
+                ],
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
