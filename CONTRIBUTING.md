@@ -21,6 +21,12 @@ The PR comment should be formed by a one-line subject, followed by one line of w
 
 Where your PR fixes an issue, it should include a reference to the issue's identifier in the first line of the commit comment.  The comment should provide enough information for a reviewer to understand the changes and their relation to the rest of the code.
 
+### Running Tests
+There are labels that can be added to this pull request to trigger GitHub Actions builds:
+- `build-linux` - trigger all github actions Linux builds - RECOMMENDED
+- `build-windows` - trigger all github actions Windows builds
+- `build-macos` - trigger all github actions macOS builds - please use sparingly
+
 ### Licensing and Developer certificate of origin
 When you submit any copyrighted material to the project via a pull request, issue tracker, or any other means, you agree to license the material under [the project's open source license](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/LICENSE), and warrant that you have the legal authority to do so, whether or not you state this explicitly.
 

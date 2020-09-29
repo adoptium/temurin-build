@@ -1,13 +1,14 @@
 name: Build
 
 on:
-  issue_comment:
-    types: [created]
+  pull_request:
+    types:
+      - labeled
 
 jobs:
   build_linux:
     name: Linux
-    if: contains(github.event.comment.html_url, '/pull/') && contains(github.event.comment.body, 'build-linux')
+    if: github.event.label.name == 'build-linux'
     runs-on: [ubuntu-latest]
     container:
       image: adoptopenjdk/centos7_build_image
@@ -17,16 +18,7 @@ jobs:
         vm: [hotspot, openj9]
 
     steps:
-    - uses: khan/pull-request-comment-trigger@master
-      id: check_linux
-      with:
-        trigger: 'build-linux'
-        reaction: +1
-      env:
-        GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-
     - uses: actions/checkout@v2
-      if: steps.check_linux.outputs.triggered == 'true'
         
     - name: Build Linux
       run: ./build-farm/make-adopt-build-farm.sh
@@ -36,11 +28,10 @@ jobs:
         VARIANT: ${{ matrix.vm }}
         TARGET_OS: linux
         FILENAME: OpenJDK.tar.gz
-      if: steps.check_linux.outputs.triggered == 'true'
 
   build_macos:
     name: macOS
-    if: contains(github.event.comment.html_url, '/pull/') && contains(github.event.comment.body, 'build-mac')
+    if: github.event.label.name == 'build-mac'
     runs-on: [macos-latest]
     strategy:
       matrix:
@@ -48,27 +39,17 @@ jobs:
         vm: [hotspot, openj9]
 
     steps:
-    - uses: khan/pull-request-comment-trigger@master
-      id: check_macos
-      with:
-        trigger: 'build-macos'
-        reaction: +1
-      env:
-        GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-  
     - uses: actions/checkout@v2
-      if: steps.check_macos.outputs.triggered == 'true'
 
     - name: Install Dependencies
       run: |
         brew install bash binutils freetype gnu-sed nasm
-      if: steps.check_macos.outputs.triggered == 'true'
 
     - uses: actions/setup-java@v1
       id: setup-java
       with:
         java-version: 7
-      if: matrix.version == 'jdk8u' && steps.check_macos.outputs.triggered == 'true'
+      if: matrix.version == 'jdk8u'
         
     - name: Build macOS
       run: |
@@ -85,4 +66,3 @@ jobs:
         TARGET_OS: mac
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
-      if: steps.check_macos.outputs.triggered == 'true'
