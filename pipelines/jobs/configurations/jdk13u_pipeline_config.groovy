@@ -120,9 +120,10 @@ class Config13 {
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                // TODO Temporarily remove the ARM tests because we don't have fast enough hardware
-                //test                : ['sanity.openjdk', 'sanity.perf']
-                test                : false,
+                test                : [
+                        nightly: ['sanity.openjdk'],
+                        weekly : []
+                ],
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
