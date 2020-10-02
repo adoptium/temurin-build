@@ -105,6 +105,16 @@ class Config16 {
                 ],
                 configureArgs       : '--enable-dtrace'
         ],
+
+        arm32Linux    : [
+                os                  : 'linux',
+                arch                : 'arm',
+                test                : [
+                        nightly: ['sanity.openjdk'],
+                        weekly : []
+                ],
+                configureArgs       : '--enable-dtrace'
+        ]
   ]
 
 }
