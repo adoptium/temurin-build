@@ -118,6 +118,18 @@ class Regeneration implements Serializable {
         return dockerFileValue
     }
 
+    def getDockerNode(Map<String, ?> configuration, String variant) {
+        def dockerNodeValue = ""
+        if (configuration.containsKey("dockerNode")) {
+            if (isMap(configuration.dockerNode)) {
+                dockerNodeValue = (configuration.dockerNode as Map<String, ?>).get(variant)
+            } else {
+                dockerNodeValue = configuration.dockerNode
+            }
+        }
+        return dockerNodeValue
+    }
+
     /**
     * Builds up a node param string that defines what nodes are eligible to run the given job. Used as a placeholder since the pipelines overwrite this.
     * @param configuration
@@ -239,6 +251,8 @@ class Regeneration implements Serializable {
 
             def dockerFile = getDockerFile(platformConfig, variant)
 
+            def dockerNode = getDockerNode(platformConfig, variant)
+
             def buildArgs = getBuildArgs(platformConfig, variant)
 
             def testList = getTestList(platformConfig)
@@ -255,6 +269,7 @@ class Regeneration implements Serializable {
                 CODEBUILD: platformConfig.codebuild as Boolean,
                 DOCKER_IMAGE: dockerImage,
                 DOCKER_FILE: dockerFile,
+                DOCKER_NODE: dockerNode,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
                 OVERRIDE_FILE_NAME_VERSION: "",
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,

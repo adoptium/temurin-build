@@ -683,6 +683,10 @@ class Build {
                         if (buildConfig.DOCKER_IMAGE) {
                             // Docker build environment
                             def label = buildConfig.NODE_LABEL + "&&dockerBuild"
+                            if (buildConfig.DOCKER_NODE) {
+                                label = buildConfig.NODE_LABEL + "&&" + "$buildConfig.DOCKER_NODE"
+                            }
+
                             if (buildConfig.CODEBUILD) {
                                 label = "codebuild"
                             }
