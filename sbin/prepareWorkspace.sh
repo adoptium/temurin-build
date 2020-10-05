@@ -624,8 +624,12 @@ applyPatches() {
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     for patch in "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/patches/"*.patch; do
       echo "applying $patch"
-      patch -p1 <"$patch"
+      git apply "$patch"
     done
+    # TODO Remove when https://mail.openjdk.java.net/pipermail/build-dev/2020-July/027872.html is resolved
+    if [ -f fixpath.exe ]; then
+      chmod +x fixpath.exe
+    fi
   fi
 }
 

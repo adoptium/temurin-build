@@ -28,7 +28,12 @@ TOOLCHAIN_VERSION=""
 
 # Any version above 8 (11 for now due to openjdk-build#1409
 if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
-    BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+    if [ "$ARCHITECTURE" == "aarch64" ]; then
+      # Windows aarch64 cross compiles requires same version boot jdk
+      BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION))"
+    else
+      BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+    fi
     BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
     if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
@@ -36,13 +41,14 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
       # instead of BOOT_JDK_VARIABLE (no '$').
       export ${BOOT_JDK_VARIABLE}="$bootDir"
       if [ ! -d "$bootDir/bin" ]; then
-        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
-        releaseType="ga"
         # This is needed to convert x86-32 to x32 which is what the API uses
         case "$ARCHITECTURE" in
           "x86-32") downloadArch="x32";;
+          "aarch64") downloadArch="x64";;
           *) downloadArch="$ARCHITECTURE";;
         esac
+        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
+        releaseType="ga"
         apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/\${VARIANT}/normal/adoptopenjdk"
         apiURL=$(eval echo ${apiUrlTemplate})
         # make-adopt-build-farm.sh has 'set -e'. We need to disable that
@@ -192,6 +198,15 @@ then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     fi
   fi
+fi
+
+if [ "${ARCHITECTURE}" == "aarch64" ]
+then
+  # TODO Remove when https://mail.openjdk.java.net/pipermail/build-dev/2020-July/027872.html is resolved
+  export BUILD_ARGS="${BUILD_ARGS} --patches https://github.com/gdams/adopt_patches.git"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --openjdk-target=aarch64-unknown-cygwin --with-build-jdk=$JDK_BOOT_DIR \
+  --with-ucrt-dll-dir=/cygdrive/c/progra~2/WINDOW~4/10/bin/10.0.18362.0/arm64/ucrt/ --with-msvcr-dll=/cygdrive/c/progra~2/MIB055~1/2019/Community/VC/Redist/MSVC/14.27.29016/arm64/Microsoft.VC142.CRT/vcruntime140.dll \
+  --with-msvcp-dll=/cygdrive/c/progra~2/MIB055~1/2019/Community/VC/Redist/MSVC/14.27.29016/arm64/Microsoft.VC142.CRT/msvcp140.dll --with-vcruntime-1-dll=/cygdrive/c/progra~2/MIB055~1/2019/Community/VC/Redist/MSVC/14.27.29016/arm64/Microsoft.VC142.CRT/vcruntime140_1.dll"
 fi
 
 if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
