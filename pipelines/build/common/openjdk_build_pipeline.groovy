@@ -133,7 +133,7 @@ class Build {
         def jdkRepo
         def suffix
         def javaNumber = getJavaVersionNumber()
-        
+
         if (buildConfig.VARIANT == "corretto") {
             suffix="corretto/corretto-${javaNumber}"
         } else if (buildConfig.VARIANT == "openj9") {
@@ -707,8 +707,26 @@ class Build {
                                     }
                                 } else {
                                     context.docker.image(buildConfig.DOCKER_IMAGE).pull()
-                                    context.docker.image(buildConfig.DOCKER_IMAGE).inside {
-                                        buildScripts(cleanWorkspace, filename)
+                                    if (buildConfig.TARGET_OS == "windows") {
+                                        context.powershell("git config --system core.autocrlf false")
+                                        context.checkout context.scm
+                                        // Generate environment variables for docker
+                                        def env_list = "-e FILENAME=${filename}"
+                                        buildConfig.toEnvVars().each { name ->
+                                            switch(name){
+                                                case ~/TEST_LIST=\[.*\]/ : context.println "Skipping ${name}"
+                                                case ~/.*=$/ : context.println "Skipping ${name}"
+                                                default:
+                                                    name = name.split("=")
+                                                    env_list += " -e ${name[0]}=\'${name[1]}\'"
+                                            }
+                                        }
+                                        context.println "ENV LIST: ${env_list}"
+                                        context.powershell("docker run -i ${env_list} -w ${env.WORKSPACE} -v ${env.WORKSPACE}:${env.WORKSPACE} ${buildConfig.DOCKER_IMAGE} bash ./build-farm/make-adopt-build-farm.sh")
+                                    } else {
+                                        context.docker.image(buildConfig.DOCKER_IMAGE).inside {
+                                            buildScripts(cleanWorkspace, filename)
+                                        }
                                     }
                                 }
                             }
