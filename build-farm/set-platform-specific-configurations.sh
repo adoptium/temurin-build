@@ -26,4 +26,9 @@ fi
 export VARIANT_ARG="--build-variant ${VARIANT}"
 
 # shellcheck disable=SC1091,SC1090
-source "$SCRIPT_DIR/platform-specific-configurations/${OPERATING_SYSTEM}.sh"
+if [ ! -z "$PLATFORM_CONFIG_PATH" ]
+then
+    source "$SCRIPT_DIR/${PLATFORM_CONFIG_PATH}"
+else
+    source "$SCRIPT_DIR/platform-specific-configurations/${OPERATING_SYSTEM}.sh"
+fi

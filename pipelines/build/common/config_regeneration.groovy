@@ -34,6 +34,8 @@ class Regeneration implements Serializable {
     private final def gitUri
     private final def gitBranch
 
+    private final def jobTemplatePath
+    private final def scriptPath
     private final def jenkinsBuildRoot
     private final def jenkinsUsername
     private final def jenkinsToken
@@ -53,6 +55,8 @@ class Regeneration implements Serializable {
         String jobRootDir,
         String gitUri,
         String gitBranch,
+        String jobTemplatePath,
+        String scriptPath,
         String jenkinsBuildRoot,
         String jenkinsUsername,
         String jenkinsToken
@@ -66,6 +70,8 @@ class Regeneration implements Serializable {
         this.jobRootDir = jobRootDir
         this.gitUri = gitUri
         this.gitBranch = gitBranch
+        this.jobTemplatePath = jobTemplatePath
+        this.scriptPath = scriptPath
         this.jenkinsBuildRoot = jenkinsBuildRoot
         this.jenkinsUsername = jenkinsUsername
         this.jenkinsToken = jenkinsToken
@@ -128,6 +134,14 @@ class Regeneration implements Serializable {
             }
         }
         return dockerNodeValue
+    }
+
+    def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
+        def platformSpecificConfigPath = ""
+        if (configuration.containsKey("platformSpecificConfigPath")) {
+            platformSpecificConfigPath = configuration.platformSpecificConfigPath
+        }
+        return platformSpecificConfigPath
     }
 
     /**
@@ -253,6 +267,8 @@ class Regeneration implements Serializable {
 
             def dockerNode = getDockerNode(platformConfig, variant)
 
+            def platformSpecificConfigPath = getPlatformSpecificConfigPath(platformConfig)
+
             def buildArgs = getBuildArgs(platformConfig, variant)
 
             def testList = getTestList(platformConfig)
@@ -270,6 +286,7 @@ class Regeneration implements Serializable {
                 DOCKER_IMAGE: dockerImage,
                 DOCKER_FILE: dockerFile,
                 DOCKER_NODE: dockerNode,
+                PLATFORM_CONFIG_PATH: platformSpecificConfigPath,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
                 OVERRIDE_FILE_NAME_VERSION: "",
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
@@ -306,13 +323,14 @@ class Regeneration implements Serializable {
         Map<String, ?> params = config.toMap().clone() as Map
         params.put("JOB_NAME", jobName)
         params.put("JOB_FOLDER", jobFolder)
+        params.put("SCRIPT_PATH", scriptPath)
 
         params.put("GIT_URI", gitUri)
         params.put("GIT_BRANCH", gitBranch)
 
         params.put("BUILD_CONFIG", config.toJson())
 
-        def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
+        def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
 
         return create
     }
@@ -519,6 +537,8 @@ return {
     String jobRootDir,
     String gitUri,
     String gitBranch,
+    String jobTemplatePath,
+    String scriptPath,
     String jenkinsBuildRoot,
     String jenkinsUsername,
     String jenkinsToken
@@ -545,6 +565,8 @@ return {
             jobRootDir,
             gitUri,
             gitBranch,
+            jobTemplatePath,
+            scriptPath,
             jenkinsBuildRoot,
             jenkinsUsername,
             jenkinsToken

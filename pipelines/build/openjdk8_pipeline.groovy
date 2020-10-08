@@ -20,11 +20,25 @@ def buildConfigurations = null
 node ("master") {
     scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
-    configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
-    buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaToBuild}_pipeline_config.groovy"
+
+    // Load BASE_FILE_PATH. This is where build_base_file.groovy is located. It runs the downstream job setup and configuration retrieval services.
+    def configureBuild = null
+    if ("$BASE_FILE_PATH" != "") {
+        configureBuild = load "${WORKSPACE}/${BASE_FILE_PATH}"
+    } else {
+        configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
+    }
+
+    // Load BUILD_CONFIG_FILE_PATH. This is where jdkxx_pipeline_config.groovy is located. It contains the build configurations for each platform, architecture and variant.
+    if ("$BUILD_CONFIG_FILE_PATH" != "") {
+        buildConfigurations = load "${WORKSPACE}/${BUILD_CONFIG_FILE_PATH}"
+    } else {
+        buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaToBuild}_pipeline_config.groovy"
+    }
+
 }
 
-if (scmVars != null && configureBuild != null && buildConfigurations != null) {
+if (scmVars != null && (configureBuild != null || buildConfigurations != null)) {
     configureBuild(
         javaToBuild,
         buildConfigurations,

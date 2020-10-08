@@ -71,6 +71,8 @@ class Builder implements Serializable {
 
         def dockerNode = getDockerNode(platformConfig, variant)
 
+        def platformSpecificConfigPath = getPlatformSpecificConfigPath(platformConfig)
+
         def buildArgs = getBuildArgs(platformConfig, variant)
 
         if (additionalBuildArgs) {
@@ -98,6 +100,7 @@ class Builder implements Serializable {
                 DOCKER_IMAGE: dockerImage,
                 DOCKER_FILE: dockerFile,
                 DOCKER_NODE: dockerNode,
+                PLATFORM_CONFIG_PATH: platformSpecificConfigPath,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
                 OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
@@ -225,6 +228,14 @@ class Builder implements Serializable {
             }
         }
         return dockerNodeValue
+    }
+
+    def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
+        def platformSpecificConfigPath = ""
+        if (configuration.containsKey("platformSpecificConfigPath")) {
+            platformSpecificConfigPath = configuration.platformSpecificConfigPath
+        }
+        return platformSpecificConfigPath
     }
 
     /**
