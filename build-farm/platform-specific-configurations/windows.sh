@@ -26,7 +26,7 @@ export OPENJ9_NASM_VERSION=2.13.03
 TOOLCHAIN_VERSION=""
 
 # Any version above 8 (11 for now due to openjdk-build#1409
-if [ "$JAVA_FEATURE_VERSION" -gt 8 ]; then
+if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
     BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
     BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
     if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
