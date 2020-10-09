@@ -1,0 +1,108 @@
+steps:
+    - script: |
+        brew update
+      displayName: 'Update brew'
+      condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+    # Install macOS required dependencies
+    - script: |
+        set -e
+        brew install xmlstarlet ant ant-contrib tree gnu-sed
+      displayName: "macOS: install dependencies"
+      condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+
+    - script: |
+        npm install tap-xunit -g
+      displayName: "install tap-xunit"
+
+    - script: |
+        echo "##vso[task.setvariable variable=DISPLAY]:1";
+        echo "##vso[task.setvariable variable=OPENJDK_SOURCES]$BUILD_REPOSITORY_LOCALPATH";
+        echo "##vso[task.setvariable variable=OPENJDK_BINARY]$PIPELINE_WORKSPACE/openjdkbinary";
+        echo "##vso[task.setvariable variable=TEST_JDK_HOME]$PIPELINE_WORKSPACE/openjdkbinary/j2sdk-image";
+        echo "##vso[task.setvariable variable=TEST_DIR]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests"
+        echo "##vso[task.setvariable variable=TKG_DIR]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests/TKG"
+        echo "##vso[task.setvariable variable=JRE_IMAGE]$PIPELINE_WORKSPACE/j2re-image";
+        echo "##vso[task.setvariable variable=BUILD_ROOT]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests/test-result";
+      displayName: "Set environment varaibles"
+    - script: |
+        echo "DISPLAY ${DISPLAY}";
+        echo "OPENJDK_SOURCES ${OPENJDK_SOURCES}";
+        echo "TEST_JDK_HOME ${TEST_JDK_HOME}";
+        echo "TEST_DIR ${TEST_DIR}";
+        echo "TKG_DIR ${TKG_DIR}";
+        echo "COMMON_TESTRESULTSDIRECTORY ${COMMON_TESTRESULTSDIRECTORY}";
+        echo "PIPELINE_WORKSPACE ${PIPELINE_WORKSPACE}";
+        echo "BUILD_LIST ${BUILD_LIST}";
+        echo "TEST_TARGET ${TEST_TARGET}";
+        echo "Agent.OS_ARCHITECTURE $(Agent.OS)_$(ARCHITECTURE)";
+      displayName: "Print environment varaibles"
+
+    - script: |
+        cd $COMMON_TESTRESULTSDIRECTORY;
+        git clone -b master --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests
+      displayName: "Clone openjdk test repo"
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: $(Agent.OS)_$(ARCHITECTURE)
+        patterns: '**/*$(ARCHITECTURE)_$(TARGET_OS)*.tar.gz'
+        path: $(OPENJDK_BINARY)
+      displayName: "Download *$(ARCHITECTURE)_$(TARGET_OS)*.tar.gz"
+
+    - script: |
+        cd $TEST_DIR
+        echo "./get.sh -s $PIPELINE_WORKSPACE -t $TEST_DIR -r upstream";
+        ./get.sh -s $PIPELINE_WORKSPACE -t $TEST_DIR -r upstream;
+        if [ -f "job.properties" ]; then
+          TEST_JDK_HOME=`grep "TEST_JDK_HOME" job.properties | cut -d'=' -f2`
+          echo "TEST_JDK_HOME is set to $TEST_JDK_HOME"
+          echo "##vso[task.setvariable variable=TEST_JDK_HOME]$TEST_JDK_HOME";
+        fi
+        echo "TEST_JDK_HOME $TEST_JDK_HOME"
+      displayName: "Get TKG"
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: $(ORIGINAL_TEST_TARGET)_$(Agent.OS)_$(ARCHITECTURE)
+        patterns: '**/parallelList.mk'
+        path: $(TKG_DIR)
+      displayName: "Download parallelList.mk from $(ORIGINAL_TEST_TARGET)_$(Agent.OS)_$(ARCHITECTURE)"
+
+    # Build test suites
+    - script: |
+        echo "TEST_JDK_HOME=$TEST_JDK_HOME"
+        cd $TKG_DIR
+        make compile
+      displayName: "Build test suites"
+    - script: |
+        cd $TKG_DIR
+        echo "make $TEST_TARGET"
+        make $TEST_TARGET
+      displayName: "Execute test suites"
+
+    #Find the TAP file
+    - script: |
+        cd $TKG_DIR
+        TAP_FILE_PATH=$(find . -type f -name "*.tap" -print | head -n 1)
+        echo "TAP_FILE_PATH: $TAP_FILE_PATH"
+        echo "##vso[task.setvariable variable=TAP_FILE_PATH]$TAP_FILE_PATH";
+      displayName: "Search for TAP file"
+    # Convert TAP file to XML file
+    # We use .tap.xml file to distinguish from other xml configuration files
+    - script: |
+        cd $TKG_DIR
+        # tap-xunit will cause exit code 1 if there is any failed test, `||` true can mitigate this error
+        cat "$TAP_FILE_PATH" | tap-xunit > results.tap.xml || true
+      displayName: "Convert TAP to XML file"
+
+    # Publish the .tap.xml file to AzDO
+    # even though the we use tap-xunit, we still need to use JUnit plugin
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: "JUnit"
+        testResultsFiles: "**/*.tap.xml"
+        searchFolder: $(TKG_DIR)
+        mergeTestResults: true
+        failTaskOnFailedTests: $(FAIL_TASK_ON_FAILED_TESTS)
+        testRunTitle: $(ORIGINAL_TEST_TARGET)_$(TARGET_OS)_$(ARCHITECTURE)_$(TEST_NAME)
+      displayName: "Publish test result"

@@ -1,0 +1,30 @@
+
+jobs:
+  - job: generate_parallelList_${{ parameters.buildList }}
+    displayName: "Generate parallelList"
+    variables:
+      BUILD_LIST: ${{ parameters.buildList }}
+      TEST_TARGET: ${{ parameters.testTarget }}
+      NUM_MACHINES: ${{ length(parameters.machineArray) }}
+    pool: ${{ parameters.pool }}
+
+    steps:
+      - template: ./steps/parallel.yml
+
+  - job: "${{ parameters.jobName }}"
+    displayName: "${{ parameters.testTarget }}"
+    dependsOn: generate_parallelList_${{ parameters.buildList }}
+    variables:
+      BUILD_LIST: ${{ parameters.buildList }}
+      FAIL_TASK_ON_FAILED_TESTS: ${{ parameters.failTaskOnTestFailures }}
+      ORIGINAL_TEST_TARGET: ${{ parameters.testTarget }}
+    pool: ${{ parameters.pool }}
+    strategy:
+      matrix:
+        ${{ each i in parameters.machineArray }}:
+          testList_${{ i }}:
+            TEST_TARGET: "-f parallelList.mk testList_${{ i }}"
+            TEST_NAME: "testList_${{ i }}"
+
+    steps:
+      - template: ./steps/test.yml

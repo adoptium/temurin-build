@@ -47,7 +47,7 @@ CONTAINER_NAME
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
-CUSTOM_CACERTS
+CREATE_DEBUG_SYMBOLS_PACKAGE
 DEBUG_DOCKER
 DEBUG_IMAGE_PATH
 DISABLE_ADOPT_BRANCH_SAFETY
@@ -95,6 +95,10 @@ USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
 USER_SUPPLIED_MAKE_ARGS
 VENDOR
+VENDOR_URL
+VENDOR_BUG_URL
+VENDOR_VERSION
+VENDOR_VM_BUG_URL
 WORKING_DIR
 WORKSPACE_DIR
 )
@@ -208,9 +212,6 @@ function parseConfigurationArguments() {
         "--assemble-exploded-image" )
         BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=true;;
 
-        "--custom-cacerts" )
-        BUILD_CONFIG[CUSTOM_CACERTS]="$1"; shift;;
-
         "--codesign-identity" )
         BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]="$1"; shift;;
 
@@ -222,6 +223,9 @@ function parseConfigurationArguments() {
 
         "--clean-libs" )
         BUILD_CONFIG[CLEAN_LIBS]=true;;
+
+        "--create-debug-symbols-package" )
+        BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]="true";;
 
         "--disable-adopt-branch-safety" )
         BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=true;;
@@ -396,6 +400,9 @@ function configDefaults() {
       ;;
   esac
 
+  # The default behavior of whether we want to create a separate debug symbols archive
+  BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]="false"
+
   BUILD_CONFIG[SIGN]="false"
   BUILD_CONFIG[JDK_BOOT_DIR]=""
 
@@ -472,9 +479,6 @@ function configDefaults() {
   # Any extra config / make args provided by the user
   BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""}
   BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]:-""}
-
-  # Whether to use AdoptOpenJDK's cacerts file (true) or use the file provided by OpenJDK (false)
-  BUILD_CONFIG[CUSTOM_CACERTS]=${BUILD_CONFIG[CUSTOM_CACERTS]:-"true"}
 
   BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-"docker"}
 

@@ -28,6 +28,9 @@ class PullRequestTestPipeline implements Serializable {
 
     String BUILD_FOLDER = "build-scripts-pr-tester/build-test"
 
+    /*
+    * Creates a configuration for the top level pipeline job
+    */
     Map<String, ?> generateConfig(def javaVersion) {
         return [
                 PR_BUILDER          : true,
@@ -43,14 +46,20 @@ class PullRequestTestPipeline implements Serializable {
         ]
     }
 
+    /*
+    * Generates the top level pipeline job 
+    */
     def generatePipelineJob(def javaVersion) {
         Map<String, ?> config = generateConfig(javaVersion)
         context.checkout([$class: 'GitSCM', userRemoteConfigs: [[url: config.GIT_URL]], branches: [[name: branch]]])
 
-        context.println "${javaVersion} ${config.disableJob}"
+        context.println "JDK${javaVersion} disableJob = ${config.disableJob}"
         context.jobDsl targets: "pipelines/jobs/pipeline_job_template.groovy", ignoreExisting: false, additionalParameters: config
     }
 
+    /*
+    * Main function, called from the pr tester in jenkins itself
+    */
     def runTests() {
 
         def jobs = [:]
@@ -63,7 +72,8 @@ class PullRequestTestPipeline implements Serializable {
             // generate top level job
             generatePipelineJob(javaVersion)
             context.println "[INFO] Running regeneration script..."
-               
+            
+            // Load platform specific build configs
             def buildConfigurations
             Boolean updateRepo = false
             context.println "loading ${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy"
@@ -76,11 +86,14 @@ class PullRequestTestPipeline implements Serializable {
             }
             
             String actualJavaVersion = updateRepo ? "jdk${javaVersion}u" : "jdk${javaVersion}"
+            def excludedBuilds = ""
 
+            // Generate downstream pipeline jobs
             regenerationScript(
                     actualJavaVersion,
                     buildConfigurations,
                     testConfigurations,
+                    excludedBuilds,
                     currentBuild,
                     context,
                     "build-scripts-pr-tester/build-test",
@@ -91,6 +104,7 @@ class PullRequestTestPipeline implements Serializable {
 
             context.println "[SUCCESS] All done!"
 
+            // Run tester against the host pr
             jobs["Test building Java ${javaVersion}"] = {
                 context.stage("Test building Java ${javaVersion}") {
                     try {
@@ -109,6 +123,7 @@ class PullRequestTestPipeline implements Serializable {
         
         context.parallel jobs
 
+        // Only clean up the space if the tester passed
         if (!pipelineFailed) {
             context.println "[INFO] Cleaning up..."
             context.cleanWs notFailBuild: true
