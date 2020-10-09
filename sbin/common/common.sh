@@ -176,7 +176,7 @@ function setBootJdk() {
     echo "If this is incorrect explicitly configure JDK_BOOT_DIR using --jdk-boot-dir"
 
     # Calculate version number of boot jdk
-    export BOOT_JDK_VERSION_NUMBER=$(${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/java -XshowSettings:properties -version 2>&1 | awk '/java.specification.version/{gsub(/1\./,"",$3);print $3}')
+    export BOOT_JDK_VERSION_NUMBER=$(${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/java -XshowSettings:properties -version 2>&1 | awk '/java.specification.version/{print $3}' | awk -F. '{print$NF}')
     if [ -z "$BOOT_JDK_VERSION_NUMBER" ]; then
       echo "[ERROR] The BOOT_JDK_VERSION_NUMBER was not found. Likelihood is that the boot jdk settings properties don't contain a java.specification.version..."
       ${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/java -XshowSettings:properties -version 2>&1
@@ -186,7 +186,7 @@ function setBootJdk() {
     # If bootjdk isn't the same version and isn't a n-1 version, crash out with informational message
     export REQUIRED_BOOT_JDK=$((${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}-1))
 
-    if [ ${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} -ne $BOOT_JDK_VERSION_NUMBER ] && [ $REQUIRED_BOOT_JDK -ne $BOOT_JDK_VERSION_NUMBER ]; then
+    if [[ ${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} -ne $BOOT_JDK_VERSION_NUMBER ]] && [[ $REQUIRED_BOOT_JDK -ne $BOOT_JDK_VERSION_NUMBER ]]; then
       echo "[ERROR] A JDK${BOOT_JDK_VERSION_NUMBER} boot jdk cannot build a JDK${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} binary"
       echo "[ERROR] Please download a JDK${REQUIRED_BOOT_JDK} (preferable) OR JDK${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} binary and pass it into this script using -J, --jdk-boot-dir"
       exit 2
