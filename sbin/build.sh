@@ -1018,7 +1018,7 @@ addSemVer(){ # Pulls the semantic version from the tag associated with the openj
   local fullVer=$(getOpenJdkVersion)
   SEM_VER="$fullVer"
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-    semVer=$(echo "$semVer" | cut -c4- | awk -F'[-b0]+' '{print $1"+"$2}' | sed 's/u/.0./')
+    SEM_VER=$(echo "$semVer" | cut -c4- | awk -F'[-b0]+' '{print $1"+"$2}' | sed 's/u/.0./')
   else
     SEM_VER=$(echo "$SEM_VER" | cut -c5-) # i.e. 11.0.2+12
   fi
@@ -1066,7 +1066,7 @@ addVariantVersionToJson(){
     echo -n ${major:-"0"} > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/major.txt
     echo -n ${minor:-"0"} > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/minor.txt
     echo -n ${security:-"0"} > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/security.txt
-    echo -n $tags > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/tags.txt
+    echo -n ${tags:-""} > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/tags.txt
   fi
 }
 
@@ -1075,8 +1075,13 @@ addVendorToJson(){
 }
 
 addSourceToJson(){ # Pulls the basename of the origin repo, or uses 'openjdk-build' in rare cases of failure
-  local repoName=$(basename -s .git $(cd ${BUILD_CONFIG[WORKSPACE_DIR]} && git config --get remote.origin.url))
-  echo -n "${repoName:-"openjdk-build"}/$BUILD_SHA" > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt
+  local repoName=$(basename -s .git $(cd ${BUILD_CONFIG[WORKSPACE_DIR]} && git config --get remote.origin.url 2>/dev/null))
+  local buildSHA=$(git -C ${BUILD_CONFIG[WORKSPACE_DIR]} rev-parse --short HEAD 2>/dev/null)
+  if [[ $buildSHA ]]; then
+    echo -n "${repoName:-"openjdk-build"}/$buildSHA" > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt
+  else
+    echo "Unable to fetch build SHA, does a work tree exist?..."
+  fi
 }
 
 ################################################################################
