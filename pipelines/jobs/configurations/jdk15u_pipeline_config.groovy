@@ -47,8 +47,8 @@ class Config15 {
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot: 'win2012&&vs2017'
+                dockerImage: [
+                        hotspot: 'adoptopenjdk/windows2016_build_image:vs2017'
                 ],
                 test                : 'default'
         ],
@@ -65,8 +65,8 @@ class Config15 {
         x32Windows: [
                 os                  : 'windows',
                 arch                : 'x86-32',
-                additionalNodeLabels: [
-                        hotspot: 'win2012&&vs2017'
+                dockerImage: [
+                        hotspot: 'adoptopenjdk/windows2016_build_image:vs2017'
                 ],
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'

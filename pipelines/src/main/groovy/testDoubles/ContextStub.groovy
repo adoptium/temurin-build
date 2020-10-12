@@ -51,6 +51,8 @@ class ContextStub {
 
     ContextStub inside(Closure c) {}
 
+    ContextStub powershell(String) {}
+
     ContextStub image(String) {}
 
     ContextStub build(String s, Closure) {}

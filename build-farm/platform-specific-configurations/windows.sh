@@ -181,6 +181,14 @@ then
   fi
 fi
 
+if [ ! -z "${DOCKER_IMAGE}" ]; then
+  # Docker does not support persistent 8dot3name creation
+  fsutil behavior set disable8dot3 0
+  fsutil file setshortname 'c:\program files (x86)' 'PROGRA~2'
+  fsutil file setshortname 'c:\program files (x86)\Microsoft Visual Studio' 'MIB055~1'
+  fsutil file setshortname 'c:\program files (x86)\Windows Kits' 'WINDOW~4'
+fi
+
 if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=${TOOLCHAIN_VERSION}"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=${TOOLCHAIN_VERSION}"
 fi

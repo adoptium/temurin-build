@@ -41,8 +41,10 @@ class Config11 {
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
+                dockerImage: [
+                        hotspot: 'adoptopenjdk/windows2016_build_image:vs2017'
+                ],
                 additionalNodeLabels: [
-                        hotspot: 'win2012',
                         openj9:  'win2012&&vs2017'
                 ],
                 buildArgs : [

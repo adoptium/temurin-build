@@ -231,7 +231,7 @@ class Build {
                 if (buildConfig.TARGET_OS == "windows") {
                     filter = "**/OpenJDK*_windows_*.zip"
                     certificate = "C:\\openjdk\\windows.p12"
-                    nodeFilter = "${nodeFilter}&&build"
+                    nodeFilter = "${nodeFilter}&&build&&win2012"
 
                 } else if (buildConfig.TARGET_OS == "mac") {
                     filter = "**/OpenJDK*_mac_*.tar.gz"
@@ -439,14 +439,25 @@ class Build {
 
 
     List<String> listArchives() {
-        return context.sh(
-                script: '''find workspace/target/ | egrep '(.tar.gz|.zip|.msi|.pkg|.deb|.rpm)$' ''',
+        if (buildConfig.DOCKER_IMAGE && buildConfig.TARGET_OS == "windows") {
+            return context.powershell(
+                script: "docker run -i -w ${env.WORKSPACE} -v ${env.WORKSPACE}:${env.WORKSPACE} ${buildConfig.DOCKER_IMAGE} '''find workspace/target/ | egrep '(.tar.gz|.zip|.msi|.pkg|.deb|.rpm)\$' '''",
                 returnStdout: true,
                 returnStatus: false
-        )
-                .trim()
-                .split('\n')
-                .toList()
+            )
+                    .trim()
+                    .split('\n')
+                    .toList()
+        } else {
+            return context.sh(
+                    script: '''find workspace/target/ | egrep '(.tar.gz|.zip|.msi|.pkg|.deb|.rpm)$' ''',
+                    returnStdout: true,
+                    returnStatus: false
+            )
+                    .trim()
+                    .split('\n')
+                    .toList()
+        }
     }
 
     MetaData formMetadata(VersionInfo version, Boolean initialWrite) {
@@ -554,13 +565,17 @@ class Build {
                 type = "debugimage"
             }
 
-            String hash = context.sh(script: """\
-                                              if [ -x "\$(command -v shasum)" ]; then
-                                                (shasum -a 256 | cut -f1 -d' ') <$file
-                                              else
-                                                sha256sum $file | cut -f1 -d' '
-                                              fi
-                                            """.stripIndent(), returnStdout: true, returnStatus: false)
+            if (buildConfig.DOCKER_IMAGE && buildConfig.TARGET_OS == "windows") {
+                String hash = context.powershell(script: "docker run -i -w ${env.WORKSPACE} -v ${env.WORKSPACE}:${env.WORKSPACE} ${buildConfig.DOCKER_IMAGE} (shasum -a 256 | cut -f1 -d' ') <$file").stripIndent(), returnStdout: true, returnStatus: false)     
+            } else {
+                String hash = context.sh(script: """\
+                                                if [ -x "\$(command -v shasum)" ]; then
+                                                    (shasum -a 256 | cut -f1 -d' ') <$file
+                                                else
+                                                    sha256sum $file | cut -f1 -d' '
+                                                fi
+                                                """.stripIndent(), returnStdout: true, returnStatus: false)                               
+            }
 
             hash = hash.replaceAll("\n", "")
 
@@ -708,21 +723,30 @@ class Build {
                                 } else {
                                     context.docker.image(buildConfig.DOCKER_IMAGE).pull()
                                     if (buildConfig.TARGET_OS == "windows") {
-                                        context.powershell("git config --system core.autocrlf false")
-                                        context.checkout context.scm
-                                        // Generate environment variables for docker
-                                        def env_list = "-e FILENAME=${filename}"
-                                        buildConfig.toEnvVars().each { name ->
-                                            switch(name){
-                                                case ~/TEST_LIST=\[.*\]/ : context.println "Skipping ${name}"
-                                                case ~/.*=$/ : context.println "Skipping ${name}"
-                                                default:
-                                                    name = name.split("=")
-                                                    env_list += " -e ${name[0]}=\'${name[1]}\'"
+                                        // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
+                                        def workspace = "C:/workspace/openjdk-build/"
+                                        context.echo("changing ${workspace}")
+                                        context.ws(workspace) {
+                                            context.powershell("git config --system core.autocrlf false")
+                                            context.checkout context.scm
+                                            // Generate environment variables for docker
+                                            String env_list = "-e FILENAME=${filename}"
+                                            buildConfig.toEnvVars().each { name ->
+                                                switch(name){
+                                                    case ~/TEST_LIST=\[.*\]/ : context.println "Skipping ${name}"
+                                                    case ~/.*=$/ : context.println "Skipping ${name}"
+                                                    default:
+                                                        name = name.split("=")
+                                                        env_list += " -e ${name[0]}=\'${name[1]}\'"
+                                                }
                                             }
+                                            context.println "ENV LIST: ${env_list}"
+                                            context.powershell("docker run -i ${env_list} -w ${env.WORKSPACE} -v ${env.WORKSPACE}:${env.WORKSPACE} ${buildConfig.DOCKER_IMAGE} bash ./build-farm/make-adopt-build-farm.sh")
+                                            String versionOut = context.readFile("workspace/target/version.txt")
+                                            versionInfo = parseVersionOutput(versionOut)
+                                            writeMetadata(versionInfo, true)
+                                            context.archiveArtifacts artifacts: "workspace/target/*"
                                         }
-                                        context.println "ENV LIST: ${env_list}"
-                                        context.powershell("docker run -i ${env_list} -w ${env.WORKSPACE} -v ${env.WORKSPACE}:${env.WORKSPACE} ${buildConfig.DOCKER_IMAGE} bash ./build-farm/make-adopt-build-farm.sh")
                                     } else {
                                         context.docker.image(buildConfig.DOCKER_IMAGE).inside {
                                             buildScripts(cleanWorkspace, filename)
