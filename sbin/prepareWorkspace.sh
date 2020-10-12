@@ -77,7 +77,7 @@ checkoutAndCloneOpenJDKGitRepo() {
       exit 1
     fi
   elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
-    echo "Didn't find a valid openjdk git repository at $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} so re-cloning the source to openjdk"
+    echo "Could not find a valid openjdk git repository at $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} so re-cloning the source to openjdk"
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     cloneOpenJDKGitRepo
   fi
