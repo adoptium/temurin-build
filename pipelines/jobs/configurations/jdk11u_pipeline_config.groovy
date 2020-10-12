@@ -7,7 +7,7 @@ class Config11 {
                 test                : 'default',
                 configureArgs       : [
                         "openj9"      : '--enable-dtrace=auto --with-cmake',
-                        "hotspot"     : '--enable-dtrace=auto --with-jvm-features=shenandoahgc'
+                        "hotspot"     : '--enable-dtrace=auto'
                 ]
         ],
 
@@ -30,7 +30,7 @@ class Config11 {
                 test                : 'default',
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver --enable-dtrace=auto',
-                        "hotspot"     : '--enable-dtrace=auto --with-jvm-features=shenandoahgc',
+                        "hotspot"     : '--enable-dtrace=auto',
                         "corretto"    : '--enable-dtrace=auto',
                         "SapMachine"  : '--enable-dtrace=auto',
                         "dragonwell"  : '--enable-dtrace=auto --enable-unlimited-crypto --with-jvm-variants=server --with-zlib=system --with-jvm-features=zgc'
@@ -46,7 +46,7 @@ class Config11 {
                         openj9:  'win2012&&vs2017'
                 ],
                 buildArgs : [
-                        hotspot : '--jvm-variant client,server --with-jvm-features=shenandoahgc'
+                        hotspot : '--jvm-variant client,server'
                 ],
                 test                : 'default'
         ],
@@ -127,7 +127,7 @@ class Config11 {
                         nightly: ['sanity.functional', 'extended.functional', 'sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
                         weekly : ['extended.openjdk', 'extended.perf', 'extended.external', 'special.openjdk','special.functional', 'special.system', 'special.perf']
                 ],
-                configureArgs       : '--enable-dtrace=auto --with-jvm-features=shenandoahgc'
+                configureArgs       : '--enable-dtrace=auto'
         ],
 
         /*
