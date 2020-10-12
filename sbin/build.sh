@@ -180,10 +180,22 @@ configuringVersionStringParameter()
 
   local dateSuffix=$(date -u +%Y%m%d%H%M)
 
+  # Configures "vendor" jdk properties
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
     BUILD_CONFIG[VENDOR]="Alibaba"
-  else
-    BUILD_CONFIG[VENDOR]="AdoptOpenJDK"
+    BUILD_CONFIG[VENDOR_VERSION]="\"(Alibaba Dragonwell)\""
+    BUILD_CONFIG[VENDOR_URL]="http://www.alibabagroup.com"
+    BUILD_CONFIG[VENDOR_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse/openj9/issues"
+  fi
+
+  addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]:-"AdoptOpenJDK"}"
+  addConfigureArg "--with-vendor-url=" "${BUILD_CONFIG[VENDOR_URL]:-"https://adoptopenjdk.net/"}"
+  addConfigureArg "--with-vendor-bug-url=" "${BUILD_CONFIG[VENDOR_BUG_URL]:-"https://github.com/AdoptOpenJDK/openjdk-support/issues"}"
+  addConfigureArg "--with-vendor-vm-bug-url=" "${BUILD_CONFIG[VENDOR_VM_BUG_URL]:-"https://github.com/AdoptOpenJDK/openjdk-support/issues"}"
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
+    addConfigureArg "--with-vendor-version-string=" "${BUILD_CONFIG[VENDOR_VERSION]:-"${BUILD_CONFIG[BUILD_VARIANT]^}"}"
   fi
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
@@ -199,9 +211,6 @@ configuringVersionStringParameter()
         addConfigureArg "--enable-jfr" ""
       fi
 
-      if [ ${BUILD_CONFIG[ADOPT_PATCHES]} == true ]; then
-        addConfigureArg "--with-vendor-name=" "AdoptOpenJDK"
-      fi
     fi
 
     # Set the update version (e.g. 131), this gets passed in from the calling script
@@ -252,24 +261,6 @@ configuringVersionStringParameter()
 
     addConfigureArg "--without-version-pre" ""
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
-    
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
-        addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]}"
-        addConfigureArg "--with-vendor-version-string=" "\"(Alibaba Dragonwell)\""
-        addConfigureArg "--with-vendor-url=" "http://www.alibabagroup.com"
-        addConfigureArg "--with-vendor-bug-url=" "mailto:dragonwell_use@googlegroups.com"
-    else # ${BUILD_CONFIG[VENDOR]} defaults to AdoptOpenJDK
-        addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]}"
-        addConfigureArg "--with-vendor-version-string=" "AdoptOpenJDK"
-        addConfigureArg "--with-vendor-url=" "https://adoptopenjdk.net/"
-        addConfigureArg "--with-vendor-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-support/issues"
-    fi
-
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
-      addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/eclipse/openj9/issues"
-    else
-      addConfigureArg "--with-vendor-vm-bug-url=" "https://github.com/AdoptOpenJDK/openjdk-support/issues"
-    fi
   fi
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
@@ -297,14 +288,19 @@ configureDebugParameters() {
   # other options include fastdebug and slowdebug.
   addConfigureArg "--with-debug-level=" "release"
 
-  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-    addConfigureArg "--disable-zip-debug-info" ""
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
-      addConfigureArg "--disable-debug-symbols" ""
-    fi
+  # If debug symbols package is requested, generate them separately
+  if [ ${BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]} == true ]; then
+    addConfigureArg "--with-native-debug-symbols=" "external"
   else
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
-      addConfigureArg "--with-native-debug-symbols=" "none"
+    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+      addConfigureArg "--disable-zip-debug-info" ""
+      if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
+        addConfigureArg "--disable-debug-symbols" ""
+      fi
+    else
+      if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
+        addConfigureArg "--with-native-debug-symbols=" "none"
+      fi
     fi
   fi
 }
@@ -485,7 +481,7 @@ buildSharedLibs() {
     gradlecount=1
     while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME="$gradleUserHome" bash ./gradlew --no-daemon clean shadowJar; do
       echo "RETRYWARNING: Gradle failed on attempt $gradlecount"
-      sleep 120 # Wait before retrying in case of network/server outage ...
+      sleep 120s # Wait before retrying in case of network/server outage ...
       gradlecount=$(( gradlecount + 1 ))
       [ $gradlecount -gt 3 ] && exit 1
     done
@@ -583,6 +579,11 @@ getDebugImageArchivePath() {
   echo "${jdkArchivePath}-debug-image"
 }
 
+getDebugSymbolsArchivePath() {
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-debug-symbols"
+}
+
 # Clean up
 removingUnnecessaryFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
@@ -647,28 +648,57 @@ removingUnnecessaryFiles() {
   # but if they were explicitly requested via the configure option
   # '--with-native-debug-symbols=(external|zipped)' leave them alone.
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] ; then
-    # .diz files may be present on any platform
-    # Note that on AIX, find does not support the '-delete' option.
-    find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.diz" | xargs rm -f || true
+    deleteDebugSymbols
+  fi
 
+  if [ ${BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]} == true ]; then
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
       *cygwin*)
-        # on Windows, we want to remove .map and .pdb files
-        find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.map" -delete || true
-        find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.pdb" -delete || true
+        # on Windows, we want to take .pdb files
+        debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.pdb")
         ;;
       darwin)
-        # on MacOSX, we want to remove .dSYM folders
-        find "${jdkTargetPath}" "${jreTargetPath}" -type d -name "*.dSYM" | xargs -I "{}" rm -rf "{}"
+        # on MacOSX, we want to take .dSYM folders
+        debugSymbols=$(find "${jdkTargetPath}" -print -type d -name "*.dSYM")
         ;;
       *)
-        # on other platforms, we want to remove .debuginfo files
-        find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.debuginfo" | xargs rm -f || true
+        # on other platforms, we want to take .debuginfo files
+        debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.debuginfo")
         ;;
     esac
+
+    # if debug symbols were found, copy them to a different folder 
+    if [ -n "${debugSymbols}" ] ; then
+      local debugSymbolsTargetPath=$(getDebugSymbolsArchivePath)
+      echo "${debugSymbols}" | cpio -pdm ${debugSymbolsTargetPath}
+    fi
+
+    deleteDebugSymbols
   fi
 
   echo "Finished removing unnecessary files from ${jdkTargetPath}"
+}
+
+deleteDebugSymbols() {
+  # .diz files may be present on any platform
+  # Note that on AIX, find does not support the '-delete' option.
+  find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.diz" | xargs rm -f || true
+
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    *cygwin*)
+      # on Windows, we want to remove .map and .pdb files
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.map" -delete || true
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.pdb" -delete || true
+      ;;
+    darwin)
+      # on MacOSX, we want to remove .dSYM folders
+      find "${jdkTargetPath}" "${jreTargetPath}" -type d -name "*.dSYM" | xargs -I "{}" rm -rf "{}"
+      ;;
+    *)
+      # on other platforms, we want to remove .debuginfo files
+      find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.debuginfo" | xargs rm -f || true
+      ;;
+  esac
 }
 
 moveFreetypeLib() {
@@ -743,10 +773,45 @@ makeACopyOfLibFreeFontForMacOSX() {
 }
 
 
-# Get the tags from the git repo and choose the latest tag when there is more than one for the same SHA.
+# Get the tags from the git repo and choose the latest chronologically ordered tag for the given JDK version.
+#
+# Note, we have to chronologically order, as with a Shallow cloned (depth=1) git repo there is no "topo-order"
+# for tags, also commit date order cannot be used either as the commit dates do not necessarily follow chronologically.
+#
 # Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
 getFirstTagFromOpenJDKGitRepo()
 {
+    # JDK8 tag sorting:
+    # Tag Format "jdk8uLLL-bBB"
+    # cut chars 1-5 => LLL-bBB
+    # awk "-b" separator into a single "-" => LLL-BB
+    # prefix "-" to allow line numbering stable sorting using nl => -LLL-BB
+    # Sort by build level BB first
+    # Then do "stable" sort (keeping BB order) by build level LLL
+    local jdk8_tag_sort1="sort -t- -k3n"
+    local jdk8_tag_sort2="sort -t- -k2n"
+    local jdk8_get_tag_cmd="grep -v _openj9 | grep -v _adopt | cut -c6- | awk -F'[\-b]+' '{print \$1\"-\"\$2}' | sed 's/^/-/' | $jdk8_tag_sort1 | nl | $jdk8_tag_sort2 | cut -f2- | sed 's/^-/jdk8u/' | sed 's/-/-b/' | tail -1"
+
+    # JDK11+ tag sorting:
+    # We use sort and tail to choose the latest tag in case more than one refers the same commit.
+    # Versions tags are formatted: jdk-V[.W[.X]]+B; with V, W, X, B being numeric.
+    # Transform "-" to "." in tag so we can sort as: "jdk.V[.W[.X]]+B"
+    # First, sort on build number (B):
+    local jdk11plus_tag_sort1="sort -t+ -k2n"
+    # Second, (stable) sort on (V), (W), (X):
+    local jdk11plus_tag_sort2="sort -t. -k2n -k3n -k4n"
+    jdk11plus_get_tag_cmd="grep -v _openj9 | grep -v _adopt | sed 's/jdk-/jdk./g' | $jdk11plus_tag_sort1 | nl | $jdk11plus_tag_sort2 | cut -f2- | sed 's/jdk./jdk-/g' | tail -1"
+
+    # Choose tag search keyword and get cmd based on version
+    local TAG_SEARCH="jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}*+*"
+    local get_tag_cmd=$jdk11plus_get_tag_cmd
+    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]
+    then
+      TAG_SEARCH="jdk8u*-b*"
+      get_tag_cmd=$jdk8_get_tag_cmd
+    fi
+
+
     # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon...
     # Read OPENJDK_TAG value from that file..
     local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
@@ -754,20 +819,8 @@ getFirstTagFromOpenJDKGitRepo()
       firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
     else
       git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-      revList=$(git rev-list --tags --topo-order --max-count=$GIT_TAGS_TO_SEARCH)
-      if [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]]; then
-        # For the development tree jdk/jdk, there might be two major versions in development
-        # in parallel. One in stabilization mode, and the currently active developement line
-        # Thus, add an explicit grep on the specified FEATURE_VERSION so as to appropriately
-        # set the correct build number later on.
-        firstMatchingNameFromRepo=$(git describe --tags $revList | grep "jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" | grep -v openj9 | grep -v _adopt | grep -v "\-ga" | head -1)
-      else
-        firstMatchingNameFromRepo=$(git describe --tags $revList | grep jdk | grep -v openj9 | grep -v _adopt | grep -v "\-ga" | head -1)
-      fi
-      # this may not find the correct tag if there are multiples on the commit so find commit
-      # that contains this tag and then use `git tag` to find the real tag
-      revList=$(git rev-list -n 1 $firstMatchingNameFromRepo --)
-      firstMatchingNameFromRepo=$(git tag --points-at $revList | grep -v "\-ga" | tail -1)
+
+      firstMatchingNameFromRepo=$(eval "git tag -l $TAG_SEARCH | $get_tag_cmd")
     fi
 
     if [ -z "$firstMatchingNameFromRepo" ]; then
@@ -799,6 +852,7 @@ createOpenJDKTarArchive()
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
+  local debugSymbolsTargetPath=$(getDebugSymbolsArchivePath)
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
@@ -815,6 +869,11 @@ createOpenJDKTarArchive()
     echo "OpenJDK debug image path will be ${debugImageTargetPath}."
     local debugImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debugimage}")
     createArchive "${debugImageTargetPath}" "${debugImageName}"
+  fi
+  if [ -d "${debugSymbolsTargetPath}" ]; then
+    echo "OpenJDK debug symbols path will be ${debugSymbolsTargetPath}."
+    local debugSymbolsName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debug-symbols}")
+    createArchive "${debugSymbolsTargetPath}" "${debugSymbolsName}"
   fi
   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
@@ -854,22 +913,35 @@ fixJavaHomeUnderDocker() {
 
 addInfoToReleaseFile(){
   # Extra information is added to the release file here
+  echo "===GENERATING RELEASE FILE==="
   cd $PRODUCT_HOME
   JAVA_LOC="$PRODUCT_HOME/bin/java"
+  echo "ADDING IMPLEMENTOR"
   addImplementor
+  echo "ADDING BUILD SHA"
   addBuildSHA
+  echo "ADDING FULL VER"
   addFullVersion
+  echo "ADDING SEM VER"
   addSemVer
+  echo "ADDING BUILD OS"
   addBuildOS
+  echo "ADDING VARIANT"
   addJVMVariant
+  echo "ADDING JVM VERSION"
   addJVMVersion
   # OpenJ9 specific options
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    echo "ADDING HEAP SIZE"
     addHeapSize
+    echo "ADDING J9 TAG"
     addJ9Tag
   fi
+  echo "MIRRORING TO JRE"
   mirrorToJRE
+  echo "ADDING IMAGE TYPE"
   addImageType
+  echo "===RELEASE FILE GENERATED==="
 }
 
 addHeapSize(){ # Adds an identifier for heap size on OpenJ9 builds
@@ -903,8 +975,12 @@ addJVMVariant(){
 }
 
 addBuildSHA(){ # git SHA of the build repository i.e. openjdk-build
-  local buildSHA=$(git -C ${BUILD_CONFIG[WORKSPACE_DIR]} rev-parse --short HEAD)
-  echo -e BUILD_SOURCE=\"git:$buildSHA\" >> release
+  local buildSHA=$(git -C ${BUILD_CONFIG[WORKSPACE_DIR]} rev-parse --short HEAD 2>/dev/null)
+  if [[ $buildSHA ]]; then
+    echo -e BUILD_SOURCE=\"git:$buildSHA\" >> release
+  else
+    echo "Unable to fetch build SHA, does a work tree exist?..."
+  fi
 }
 
 addBuildOS(){
@@ -938,7 +1014,7 @@ addSemVer(){ # Pulls the semantic version from the tag associated with the openj
   local fullVer=$(getOpenJdkVersion)
   local semVer="$fullVer"
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-    semVer=$(echo "$semVer" | cut -c4- | awk -F'[\-b0]+' '{print $1"+"$2}' | sed 's/u/.0./')
+    semVer=$(echo "$semVer" | cut -c4- | awk -F'[-b0]+' '{print $1"+"$2}' | sed 's/u/.0./')
   else
     semVer=$(echo "$semVer" | cut -c5-)
   fi

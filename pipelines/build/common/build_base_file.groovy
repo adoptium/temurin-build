@@ -55,7 +55,12 @@ class Builder implements Serializable {
     def context
     def currentBuild
 
-
+    final List<String> nightly = ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external']
+    final List<String> weekly = [
+                           'extended.openjdk', 'extended.perf', 'extended.external',
+                           'special.openjdk','special.functional', 'special.system', 'special.perf'
+                           ]
+        
     IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant) {
 
         def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
@@ -63,6 +68,8 @@ class Builder implements Serializable {
         def dockerImage = getDockerImage(platformConfig, variant)
 
         def dockerFile = getDockerFile(platformConfig, variant)
+
+        def dockerNode = getDockerNode(platformConfig, variant)
 
         def buildArgs = getBuildArgs(platformConfig, variant)
 
@@ -90,6 +97,7 @@ class Builder implements Serializable {
                 CODEBUILD: platformConfig.codebuild as Boolean,
                 DOCKER_IMAGE: dockerImage,
                 DOCKER_FILE: dockerFile,
+                DOCKER_NODE: dockerNode,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
                 OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
@@ -122,17 +130,36 @@ class Builder implements Serializable {
 
         return ""
     }
-
+    
+    /*
+    * Get the list of tests from jdk*_pipeline_config.groovy. 
+    * @param configuration
+    */
     List<String> getTestList(Map<String, ?> configuration) {
-        if (configuration.containsKey("test")) {
+        List<String> testList = []
+        /* 
+        * No test key or key value is test: false  --- test disabled
+        * Key value is test: 'default' --- nightly build trigger 'nightly' test set, release build trigger 'nightly' + 'weekly' test sets
+        * Key value is test: [customized map] specified nightly and weekly test lists
+        */
+        if (configuration.containsKey("test") && configuration.get("test")) {
             def testJobType = release ? "release" : "nightly"
             if (isMap(configuration.test)) {
-                return (configuration.test as Map).get(testJobType) as List<String>
+                if ( testJobType == "nightly" ) {
+                    testList = (configuration.test as Map).get("nightly") as List<String>
+                } else {
+                    testList = ((configuration.test as Map).get("nightly") as List<String>) + ((configuration.test as Map).get("weekly") as List<String>)
+                }
             } else {
-                return configuration.test as List<String>
+                if ( testJobType == "nightly" ) {
+                    testList = nightly
+                } else {
+                    testList = nightly + weekly
+                }
             }
         }
-        return []
+        testList.unique()
+        return testList
     }
 
     def dockerOverride(Map<String, ?> configuration, String variant) {
@@ -186,6 +213,18 @@ class Builder implements Serializable {
         }
 
         return dockerFileValue
+    }
+
+    def getDockerNode(Map<String, ?> configuration, String variant) {
+        def dockerNodeValue = ""
+        if (configuration.containsKey("dockerNode")) {
+            if (isMap(configuration.dockerNode)) {
+                dockerNodeValue = (configuration.dockerNode as Map<String, ?>).get(variant)
+            } else {
+                dockerNodeValue = configuration.dockerNode
+            }
+        }
+        return dockerNodeValue
     }
 
     /**

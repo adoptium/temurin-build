@@ -1,0 +1,66 @@
+steps:
+    - script: |
+        brew update
+      displayName: 'Update brew'
+      condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+
+    # Install macOS required dependencies
+    - script: |
+        set -e
+        brew install xmlstarlet ant ant-contrib tree gnu-sed
+      displayName: "macOS: install dependencies"
+      condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
+
+    - script: |
+        echo "##vso[task.setvariable variable=OPENJDK_BINARY]$PIPELINE_WORKSPACE/openjdkbinary";
+        echo "##vso[task.setvariable variable=TEST_JDK_HOME]$PIPELINE_WORKSPACE/openjdkbinary/j2sdk-image";
+        echo "##vso[task.setvariable variable=TEST_DIR]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests"
+        echo "##vso[task.setvariable variable=TKG_DIR]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests/TKG"
+      displayName: "Set environment varaibles"
+    - script: |
+        echo "TEST_JDK_HOME ${TEST_JDK_HOME}";
+        echo "TEST_DIR ${TEST_DIR}";
+        echo "TEST_DIR ${TEST_DIR}";
+        echo "OPENJDK_BINARY ${OPENJDK_BINARY}";
+        echo "ADOPT_TEST_REPO_BRANCH ${ADOPT_TEST_REPO_BRANCH}";
+        echo "ADOPT_TEST_REPO_URI ${ADOPT_TEST_REPO_URI}";
+      displayName: "Print environment varaibles"
+
+    # clone AdoptOpenJDK/openjdk-tests repo
+    - script: |
+        cd $COMMON_TESTRESULTSDIRECTORY
+        git clone -b master --depth 1 https://github.com/AdoptOpenJDK/openjdk-tests
+      displayName: "Clone openjdk test repo"
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifact: $(Agent.OS)_$(ARCHITECTURE)
+        patterns: '**/*$(ARCHITECTURE)_$(TARGET_OS)*.tar.gz'
+        path: $(OPENJDK_BINARY)
+      displayName: "Download *$(ARCHITECTURE)_$(TARGET_OS)*.tar.gz"
+
+    # Get test framework and SDK
+    - script: |
+        cd $TEST_DIR
+        echo "./get.sh -s $PIPELINE_WORKSPACE -t $TEST_DIR -r upstream";
+        ./get.sh -s $PIPELINE_WORKSPACE -t $TEST_DIR -r upstream
+        if [ -f "job.properties" ]; then
+          TEST_JDK_HOME=`grep "TEST_JDK_HOME" job.properties | cut -d'=' -f2`
+          echo "TEST_JDK_HOME is set to $TEST_JDK_HOME"
+          echo "##vso[task.setvariable variable=TEST_JDK_HOME]$TEST_JDK_HOME";
+        fi
+      displayName: "Get test framework"
+
+    # Generate parallelList.mk
+    - script: |
+        echo "TEST_JDK_HOME=$TEST_JDK_HOME"
+        cd $TKG_DIR
+        echo "make genParallelList TEST=$TEST_TARGET NUM_MACHINES=$NUM_MACHINES"
+        make genParallelList TEST=$TEST_TARGET NUM_MACHINES=$NUM_MACHINES
+      displayName: "make genParallelList"
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: $(TKG_DIR)/parallelList.mk
+        artifactName: $(TEST_TARGET)_$(Agent.OS)_$(ARCHITECTURE)
+        displayName: "Publish parallelList.mk in $(TEST_TARGET)_$(Agent.OS)_$(ARCHITECTURE)"

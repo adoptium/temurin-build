@@ -6,3 +6,4 @@ pr: none
 
 stages:
   - template: ./build/build.yml
+  - template: ./test/sanity.yml

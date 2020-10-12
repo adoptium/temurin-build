@@ -230,7 +230,7 @@ class Build {
 
                 if (buildConfig.TARGET_OS == "windows") {
                     filter = "**/OpenJDK*_windows_*.zip"
-                    certificate = "C:\\Users\\jenkins\\windows.p12"
+                    certificate = "C:\\openjdk\\windows.p12"
                     nodeFilter = "${nodeFilter}&&build"
 
                 } else if (buildConfig.TARGET_OS == "mac") {
@@ -338,7 +338,7 @@ class Build {
 
     private void buildWindowsInstaller(VersionInfo versionData) {
         def filter = "**/OpenJDK*jdk_*_windows*.zip"
-        def certificate = "C:\\Users\\jenkins\\windows.p12"
+        def certificate = "C:\\openjdk\\windows.p12"
 
         def buildNumber = versionData.build
 
@@ -683,6 +683,10 @@ class Build {
                         if (buildConfig.DOCKER_IMAGE) {
                             // Docker build environment
                             def label = buildConfig.NODE_LABEL + "&&dockerBuild"
+                            if (buildConfig.DOCKER_NODE) {
+                                label = buildConfig.NODE_LABEL + "&&" + "$buildConfig.DOCKER_NODE"
+                            }
+
                             if (buildConfig.CODEBUILD) {
                                 label = "codebuild"
                             }
