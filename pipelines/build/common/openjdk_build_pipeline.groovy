@@ -231,7 +231,7 @@ class Build {
                 if (buildConfig.TARGET_OS == "windows") {
                     filter = "**/OpenJDK*_windows_*.zip"
                     certificate = "C:\\openjdk\\windows.p12"
-                    nodeFilter = "${nodeFilter}&&build"
+                    nodeFilter = "${nodeFilter}&&build&&win2012"
 
                 } else if (buildConfig.TARGET_OS == "mac") {
                     filter = "**/OpenJDK*_mac_*.tar.gz"
