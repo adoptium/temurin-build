@@ -75,9 +75,10 @@ configureBootJDKConfigureParameter() {
   addConfigureArgIfValueIsNotEmpty "--with-boot-jdk=" "${BUILD_CONFIG[JDK_BOOT_DIR]}"
 }
 
-# Configure the Shenandoah GC build parameter for JDK 11-15
+# Shenandaoh was backported to Java 11 as of 11.0.9 but requires this build
+# parameter to ensure its inclusion. For Java 12+ this is automatically set
 configureShenandoahBuildParameter() {
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" -ge "${JDK11_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" -le "${JDK15_CORE_VERSION}" ]; then
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" -eq "${JDK11_CORE_VERSION}" ]; then
       addConfigureArg "--with-jvm-features=" "shenandoahgc"
   fi
 }
