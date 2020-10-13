@@ -8,7 +8,7 @@ on:
 jobs:
   build_linux:
     name: Linux
-    if: github.event.label.name == 'build-linux'
+    if: contains(github.event.pull_request.labels.*.name, 'build-linux')
     runs-on: [ubuntu-latest]
     container:
       image: adoptopenjdk/centos7_build_image
@@ -31,7 +31,7 @@ jobs:
 
   build_macos:
     name: macOS
-    if: github.event.label.name == 'build-mac'
+    if: contains(github.event.pull_request.labels.*.name, 'build-mac')
     runs-on: [macos-latest]
     strategy:
       matrix:
