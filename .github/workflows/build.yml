@@ -1,18 +1,57 @@
 name: Build
 
 on:
-  pull_request:
-    types:
-      - labeled
+  push:
+    branches-ignore:
+      - master
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: "Platform(s) to execute on"
+        required: true
+        default: "Linux x64"
 
 jobs:
-  build_linux:
-    name: Linux
-    if: contains(github.event.pull_request.labels.*.name, 'build-linux')
-    runs-on: [ubuntu-latest]
+  prerequisites:
+    name: Prerequisites
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check_submit.outputs.should_run }}
+      bundle_id: ${{ steps.check_bundle_id.outputs.bundle_id }}
+      platform_linux_x64: ${{ steps.check_platforms.outputs.platform_linux_x64 }}
+      platform_windows_x64: ${{ steps.check_platforms.outputs.platform_windows_x64 }}
+      platform_macos_x64: ${{ steps.check_platforms.outputs.platform_macos_x64 }}
+
+    steps:
+      - name: Check if submit tests should actually run depending on secrets and manual triggering
+        id: check_submit
+        run: echo "::set-output name=should_run::${{ github.event.inputs.platforms != '' || (!secrets.JDK_SUBMIT_FILTER || startsWith(github.ref, 'refs/heads/submit/')) }}"
+
+      - name: Check which platforms should be included
+        id: check_platforms
+        run: |
+          echo "::set-output name=platform_linux_x64::${{ contains(github.event.inputs.platforms, 'linux x64') || (github.event.inputs.platforms == '' && (secrets.JDK_SUBMIT_PLATFORMS == '' || contains(secrets.JDK_SUBMIT_PLATFORMS, 'linux x64'))) }}"
+          echo "::set-output name=platform_windows_x64::${{ contains(github.event.inputs.platforms, 'windows x64') || (github.event.inputs.platforms == '' && (secrets.JDK_SUBMIT_PLATFORMS == '' || contains(secrets.JDK_SUBMIT_PLATFORMS, 'windows x64'))) }}"
+          echo "::set-output name=platform_macos_x64::${{ contains(github.event.inputs.platforms, 'macos x64') || (github.event.inputs.platforms == '' && (secrets.JDK_SUBMIT_PLATFORMS == '' || contains(secrets.JDK_SUBMIT_PLATFORMS, 'macos x64'))) }}"
+        if: steps.check_submit.outputs.should_run != 'false'
+
+      - name: Determine unique bundle identifier
+        run: echo "::set-output name=bundle_id::${GITHUB_ACTOR}_${GITHUB_SHA:0:8}"
+        if: steps.check_submit.outputs.should_run != 'false'
+
+      - name: Checkout the source
+        uses: actions/checkout@v2
+        if: steps.check_submit.outputs.should_run != 'false'
+
+  linux_x64_build:
+    name: Linux x64
+    runs-on: ubuntu-latest
+    needs: prerequisites
+    if: needs.prerequisites.outputs.should_run != 'false' && needs.prerequisites.outputs.platform_linux_x64 != 'false'
     container:
       image: adoptopenjdk/centos7_build_image
     strategy:
+      fail-fast: false
       matrix:
         version: [jdk8u, jdk11u, jdk15u, jdk]
         vm: [hotspot, openj9]
@@ -29,10 +68,11 @@ jobs:
         TARGET_OS: linux
         FILENAME: OpenJDK.tar.gz
 
-  build_macos:
-    name: macOS
-    if: contains(github.event.pull_request.labels.*.name, 'build-mac')
-    runs-on: [macos-latest]
+  macos_x64_build:
+    name: macOS x64
+    runs-on: "macos-latest"
+    needs: prerequisites
+    if: needs.prerequisites.outputs.should_run != 'false' && needs.prerequisites.outputs.platform_macos_x64 != 'false'
     strategy:
       matrix:
         version: [jdk8u, jdk11u, jdk15u, jdk]
