@@ -20,7 +20,20 @@ node ("master") {
   try {
     def scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
-  
+
+    // Load gitUri and gitBranch. These determine where we will be pulling configs from.
+    def repoUri = "$REPOSITORY_URL" != "" ? REPOSITORY_URL : "https://github.com/AdoptOpenJDK/openjdk-build.git"
+    def repoBranch = "$REPOSITORY_BRANCH" != "" ? REPOSITORY_BRANCH : "master"
+
+    // Checkout into the branch and url place
+    checkout(
+      [
+        $class: 'GitSCM',
+        branches: [[name: repoBranch ]],
+        userRemoteConfigs: [[ url: repoUri ]]
+      ]
+    )
+
     // Load buildConfigurations from config file. This is what the nightlies & releases use to setup their downstream jobs
     def buildConfigurations = null
     def buildConfigPath = "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
@@ -60,14 +73,20 @@ node ("master") {
     // Pull in other paramterised values (or use defaults if they're not defined)
     def jobRoot = "$JOB_ROOT" != "" ? JOB_ROOT : "build-scripts"
     def jenkinsBuildRoot = "$JENKINS_BUILD_ROOT" != "" ? JENKINS_BUILD_ROOT : "https://ci.adoptopenjdk.net/job/build-scripts/"
+    def jobTemplatePath = "$JOB_TEMPLATE_PATH" != "" ? JOB_TEMPLATE_PATH : "pipelines/build/common/create_job_from_template.groovy"
+    def scriptPath = "$SCRIPT_PATH" != "" ? SCRIPT_PATH : "pipelines/build/common/kick_off_build.groovy"
     def excludes = "$EXCLUDES_LIST" != "" ? EXCLUDES_LIST : ""
 
     println "[INFO] Running regeneration script with the following configuration:"
     println "VERSION: $javaVersion"
+    println "REPOSITORY URL: $repoUri"
+    println "REPOSITORY BRANCH: $repoBranch"
     println "BUILD CONFIGURATIONS: $buildConfigurations"
     println "JOBS TO GENERATE: $targetConfigurations"
     println "JOB ROOT: $jobRoot"
     println "JENKINS ROOT: $jenkinsBuildRoot"
+    println "JOB TEMPLATE PATH: $jobTemplatePath"
+    println "SCRIPT PATH: $scriptPath"
     println "EXCLUDES LIST: $excludes"
 
     Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
@@ -91,8 +110,10 @@ node ("master") {
           currentBuild,
           this,
           jobRoot,
-          null,
-          null,
+          repoUri,
+          repoBranch,
+          jobTemplatePath,
+          scriptPath,
           jenkinsBuildRoot,
           jenkinsUsername,
           jenkinsToken
@@ -110,8 +131,10 @@ node ("master") {
         currentBuild,
         this,
         jobRoot,
-        null,
-        null,
+        repoUri,
+        repoBranch,
+        jobTemplatePath,
+        scriptPath,
         jenkinsBuildRoot,
         null,
         null

@@ -45,7 +45,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                     }
                 }
             }
-            scriptPath("$SCRIPT_PATH")
+            scriptPath("${SCRIPT_PATH}")
         }
     }
     properties {
