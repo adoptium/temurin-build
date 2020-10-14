@@ -33,6 +33,7 @@ limitations under the License.
 //@CompileStatic(extensions = "JenkinsTypeCheckHelperExtension")
 class Builder implements Serializable {
     String javaToBuild
+    String activeNodeTimeout
     String adoptBuildNumber
     String overrideFileNameVersion
     String additionalBuildArgs
@@ -94,6 +95,7 @@ class Builder implements Serializable {
                 SCM_REF: scmReference,
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+                ACTIVE_NODE_TIMEOUT: activeNodeTimeout,
                 CODEBUILD: platformConfig.codebuild as Boolean,
                 DOCKER_IMAGE: dockerImage,
                 DOCKER_FILE: dockerFile,
@@ -490,6 +492,7 @@ return {
     String javaToBuild,
     Map<String, Map<String, ?>> buildConfigurations,
     String targetConfigurations,
+    String activeNodeTimeout,
     String dockerExcludes,
     String enableTests,
     String enableInstallers,
@@ -536,6 +539,7 @@ return {
             javaToBuild: javaToBuild,
             buildConfigurations: buildConfigurations,
             targetConfigurations: new JsonSlurper().parseText(targetConfigurations) as Map,
+            activeNodeTimeout: activeNodeTimeout,
             dockerExcludes: buildsExcludeDocker,
             enableTests: Boolean.parseBoolean(enableTests),
             enableInstallers: Boolean.parseBoolean(enableInstallers),

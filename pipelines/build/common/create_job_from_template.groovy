@@ -71,6 +71,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>SCM_REF</strong></dt><dd>Source code ref to build, i.e branch, tag, commit id</dd>
                 <dt><strong>BUILD_ARGS</strong></dt><dd>args to pass to makejdk-any-platform.sh</dd>
                 <dt><strong>NODE_LABEL</strong></dt><dd>Labels of node to build on</dd>
+                <dt><strong>ACTIVE_NODE_TIMEOUT</strong></dt><dd>Number of minutes we will wait for a label-matching node to become active.</dd>
                 <dt><strong>CODEBUILD</strong></dt><dd>Use a dynamic codebuild machine if no other machine is available</dd>
                 <dt><strong>DOCKER_IMAGE</strong></dt><dd>Use a docker build environment</dd>
                 <dt><strong>DOCKER_FILE</strong></dt><dd>Relative path to a dockerfile to be built and used on top of the DOCKER_IMAGE</dd>

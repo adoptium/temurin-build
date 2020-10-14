@@ -266,6 +266,7 @@ class Regeneration implements Serializable {
                 SCM_REF: "",
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+                ACTIVE_NODE_TIMEOUT: "",
                 CODEBUILD: platformConfig.codebuild as Boolean,
                 DOCKER_IMAGE: dockerImage,
                 DOCKER_FILE: dockerFile,
