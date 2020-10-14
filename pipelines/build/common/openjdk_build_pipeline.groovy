@@ -195,7 +195,8 @@ class Build {
 												context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
 												context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}"),
 												context.string(name: 'JDK_REPO', value: jdkRepo),
-												context.string(name: 'JDK_BRANCH', value: jdkBranch)]
+												context.string(name: 'JDK_BRANCH', value: jdkBranch),
+												context.string(name: 'ACTIVE_NODE_TIMEOUT', value: "${buildConfig.ACTIVE_NODE_TIMEOUT}")]
 							}
 						} else {
 							context.println "Requested test job that does not exist or is disabled: ${jobName}"
