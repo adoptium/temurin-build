@@ -24,12 +24,20 @@ node ("master") {
     buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/jdk16_pipeline_config.groovy"
 }
 
+// Active Node Timeout undefined check. Should never happen.
+String activeNodeTimeoutProxy = "";
+if (binding.hasVariable(activeNodeTimeout)) {
+    activeNodeTimeoutProxy = activeNodeTimeout
+} else {
+    echo "openjdk8_pipeline.groovy script could not find activeNodeTimeout variable. Defaulted to blank."
+}
+
 if (scmVars != null && configureBuild != null && buildConfigurations != null) {
     configureBuild(
         javaToBuild,
         buildConfigurations,
         targetConfigurations,
-        activeNodeTimeout,
+        activeNodeTimeoutProxy,
         dockerExcludes,
         enableTests,
         enableInstallers,

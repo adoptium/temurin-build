@@ -760,8 +760,10 @@ class Build {
         context.println("No active node matches this label: " + label)
 
         int activeNodeTimeout = 0
-        if (buildConfig.ACTIVE_NODE_TIMEOUT.isInteger()) {
-            activeNodeTimeout = buildConfig.ACTIVE_NODE_TIMEOUT as Integer
+        if (buildConfig.ACTIVE_NODE_TIMEOUT != null) {
+            if (buildConfig.ACTIVE_NODE_TIMEOUT.isInteger()) {
+                activeNodeTimeout = buildConfig.ACTIVE_NODE_TIMEOUT as Integer
+            }
         }
 
 
