@@ -20,6 +20,7 @@ class IndividualBuildConfigTest {
                  DOCKER_IMAGE              : "o",
                  DOCKER_FILE               : "p",
                  DOCKER_NODE               : "q",
+                 PLATFORM_CONFIG_PATH      : "r",
                  CONFIGURE_ARGS            : "i",
                  OVERRIDE_FILE_NAME_VERSION: "j",
                  ADDITIONAL_FILE_NAME_TAG  : "k",

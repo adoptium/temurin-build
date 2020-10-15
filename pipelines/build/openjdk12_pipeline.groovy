@@ -22,7 +22,6 @@ node ("master") {
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
 
     // Load baseFilePath. This is where build_base_file.groovy is located. It runs the downstream job setup and configuration retrieval services.
-    def configureBuild = null
     if ("$baseFilePath" != "") {
         configureBuild = load "${WORKSPACE}/${baseFilePath}"
     } else {
