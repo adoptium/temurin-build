@@ -4,6 +4,7 @@ import common.MetaData
 import common.VersionInfo
 import groovy.json.*
 import java.nio.file.NoSuchFileException
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
 import java.util.regex.Matcher
 
@@ -73,14 +74,21 @@ class Build {
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
         } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
-            // Query the Adopt api to get the "tip_version"
-            def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
-            context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
+            try {
+                context.timeout(time: 1, unit: "HOURS") {
+                    // Query the Adopt api to get the "tip_version"
+                    def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+                    context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
 
-            def response = JobHelper.getAvailableReleases(context)
-            int headVersion = (int) response.getAt("tip_version")
-            context.println "Found Java Version Number: ${headVersion}"
-            return headVersion
+                    def response = JobHelper.getAvailableReleases(context)
+                    int headVersion = (int) response.getAt("tip_version")
+                    context.println "Found Java Version Number: ${headVersion}"
+                    return headVersion
+                }
+            } catch (FlowInterruptedException e) {
+                context.println "[ERROR] Adopt API Request timeout (1 HOUR) has been reached. Exiting..."
+                throw new Exception()
+            }
         } else {
             context.error("Failed to read java version '${javaToBuild}'")
             throw new Exception()
@@ -716,35 +724,77 @@ class Build {
         return context.stage("build") {
             if (cleanWorkspace) {
                 try {
-                    if (buildConfig.TARGET_OS == "windows") {
-                        // Windows machines struggle to clean themselves, see:
-                        // https://github.com/AdoptOpenJDK/openjdk-build/issues/1855
-                        context.sh(script: "rm -rf C:/workspace/openjdk-build/workspace/build/src/build/*/jdk/gensrc")
-                        // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1419
-                        context.sh(script: "rm -rf J:/jenkins/tmp/workspace/build/src/build/*/jdk/gensrc")
-                        context.cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
-                    } else {
-                        context.cleanWs notFailBuild: true
+
+                    try {
+                        context.timeout(time: 1, unit: "HOURS") {
+                            if (buildConfig.TARGET_OS == "windows") {
+                                // Windows machines struggle to clean themselves, see:
+                                // https://github.com/AdoptOpenJDK/openjdk-build/issues/1855
+                                context.sh(script: "rm -rf C:/workspace/openjdk-build/workspace/build/src/build/*/jdk/gensrc")
+                                // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1419
+                                context.sh(script: "rm -rf J:/jenkins/tmp/workspace/build/src/build/*/jdk/gensrc")
+                                context.cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
+                            } else {
+                                context.cleanWs notFailBuild: true
+                            }
+                        }
+                    } catch (FlowInterruptedException e) {
+                        context.println "[ERROR] Node Clean workspace timeout (1 HOUR) has been reached. Exiting..."
+                        throw new Exception()
                     }
+
                 } catch (e) {
                     context.println "Failed to clean ${e}"
                 }
             }
-            context.checkout context.scm
+
+            try {
+                context.timeout(time: 1, unit: "HOURS") {
+                    context.checkout context.scm
+                }
+            } catch (FlowInterruptedException e) {
+                context.println "[ERROR] Node checkout workspace timeout (1 HOUR) has been reached. Exiting..."
+                throw new Exception()
+            }
+
             try {
                 List<String> envVars = buildConfig.toEnvVars()
                 envVars.add("FILENAME=${filename}" as String)
-                context.withEnv(envVars) {
-                    context.sh(script: "./build-farm/make-adopt-build-farm.sh")
-                    String versionOut = context.readFile("workspace/target/metadata/version.txt")
 
+                context.withEnv(envVars) {
+                    try {
+                        context.timeout(time: 6, unit: "HOURS") {
+                            context.sh(script: "./build-farm/make-adopt-build-farm.sh")
+                        }
+                    } catch (FlowInterruptedException e) {
+                        context.println "[ERROR] Node checkout workspace timeout (6 HOURS) has been reached. Exiting..."
+                        throw new Exception()
+                    }
+
+                    String versionOut = context.readFile("workspace/target/metadata/version.txt")
                     versionInfo = parseVersionOutput(versionOut)
                 }
+
                 writeMetadata(versionInfo, true)
-                context.archiveArtifacts artifacts: "workspace/target/*"
+
+                try {
+                    context.timeout(time: 3, unit: "HOURS") {
+                        context.archiveArtifacts artifacts: "workspace/target/*"
+                    }
+                } catch (FlowInterruptedException e) {
+                    context.println "[ERROR] Build archive timeout (3 HOURS) has been reached. Exiting..."
+                    throw new Exception()
+                }
             } finally {
                 if (buildConfig.TARGET_OS == "aix") {
-                    context.cleanWs notFailBuild: true
+                    try {
+                        context.timeout(time: 1, unit: "HOURS") {
+                            context.cleanWs notFailBuild: true
+                        }
+                    } catch (FlowInterruptedException e) {
+                        context.println "[ERROR] AIX clean workspace timeout (1 HOUR) has been reached. Exiting..."
+                        throw new Exception()
+                    }
                 }
             }
         }
@@ -785,39 +835,40 @@ class Build {
     }
 
     def build() {
-        context.timestamps {
-            context.timeout(time: 18, unit: "HOURS") {
-                try {
+        try {
+            context.println "Build config"
+            context.println buildConfig.toJson()
 
-                    context.println "Build config"
-                    context.println buildConfig.toJson()
+            def filename = determineFileName()
 
-                    def filename = determineFileName()
+            context.println "Executing tests: ${buildConfig.TEST_LIST}"
+            context.println "Build num: ${env.BUILD_NUMBER}"
+            context.println "File name: ${filename}"
 
-                    context.println "Executing tests: ${buildConfig.TEST_LIST}"
-                    context.println "Build num: ${env.BUILD_NUMBER}"
-                    context.println "File name: ${filename}"
+            def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
+            def enableInstallers = Boolean.valueOf(buildConfig.ENABLE_INSTALLERS)
+            def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
 
-                    def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
-                    def enableInstallers = Boolean.valueOf(buildConfig.ENABLE_INSTALLERS)
-                    def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
+            context.stage("queue") {
+                if (buildConfig.DOCKER_IMAGE) {
+                    // Docker build environment
+                    def label = buildConfig.NODE_LABEL + "&&dockerBuild"
+                    if (buildConfig.DOCKER_NODE) {
+                        label = buildConfig.NODE_LABEL + "&&" + "$buildConfig.DOCKER_NODE"
+                    }
 
-                    context.stage("queue") {
-                        if (buildConfig.DOCKER_IMAGE) {
-                            // Docker build environment
-                            def label = buildConfig.NODE_LABEL + "&&dockerBuild"
-                            if (buildConfig.DOCKER_NODE) {
-                                label = buildConfig.NODE_LABEL + "&&" + "$buildConfig.DOCKER_NODE"
-                            }
+                    if (buildConfig.CODEBUILD) {
+                        label = "codebuild"
+                    }
 
-                            if (buildConfig.CODEBUILD) {
-                                label = "codebuild"
-                            }
+                    waitForANodeToBecomeActive(label)
+                    context.node(label) {
+                        // Cannot clean workspace from inside docker container
+                        if (cleanWorkspace) {
 
-                            waitForANodeToBecomeActive(label)
-                            context.node(label) {
-                                // Cannot clean workspace from inside docker container
-                                if (cleanWorkspace) {
+                            try {
+
+                                context.timeout(time: 1, unit: "HOURS") {
                                     try {
                                         context.cleanWs notFailBuild: true
                                     } catch (e) {
@@ -825,67 +876,110 @@ class Build {
                                     }
                                     cleanWorkspace = false
                                 }
-                                if (buildConfig.DOCKER_FILE) {
-                                    context.checkout context.scm
-                                    context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE} -f ${buildConfig.DOCKER_FILE} .").inside {    
-                                        buildScripts(cleanWorkspace, filename)
-                                    }
-                                } else {
-                                    context.docker.image(buildConfig.DOCKER_IMAGE).pull()
-                                    context.docker.image(buildConfig.DOCKER_IMAGE).inside {
-                                        buildScripts(cleanWorkspace, filename)
-                                    }
-                                }
-                            }
 
-                        } else {
-                            waitForANodeToBecomeActive(buildConfig.NODE_LABEL)
-                            context.node(buildConfig.NODE_LABEL) {
-                                // This is to avoid windows path length issues.
-                                context.echo("checking ${buildConfig.TARGET_OS}")
-                                if (buildConfig.TARGET_OS == "windows") {
-                                    // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
-                                    def workspace = "C:/workspace/openjdk-build/"
-                                    if (env.CYGWIN_WORKSPACE) {
-                                        workspace = env.CYGWIN_WORKSPACE
-                                    }
-                                    context.echo("changing ${workspace}")
-                                    context.ws(workspace) {
-                                        buildScripts(cleanWorkspace, filename)
-                                    }
-                                } else {
-                                    buildScripts(cleanWorkspace, filename)
+                            } catch (FlowInterruptedException e) {
+                                context.println "[ERROR] Master clean workspace timeout (1 HOUR) has been reached. Exiting..."
+                                throw new Exception()
+                            }
+                            
+                        }
+
+                        if (buildConfig.DOCKER_FILE) {
+                            try {
+                                context.timeout(time: 1, unit: "HOURS") {
+                                    context.checkout context.scm
                                 }
+                            } catch (FlowInterruptedException e) {
+                                context.println "[ERROR] Master docker file scm checkout timeout (1 HOUR) has been reached. Exiting..."
+                                throw new Exception()
+                            }
+                            context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE} -f ${buildConfig.DOCKER_FILE} .").inside {    
+                                buildScripts(cleanWorkspace, filename)
+                            }
+                        } else {
+                            try {
+                                context.timeout(time: 2, unit: "HOURS") {
+                                    context.docker.image(buildConfig.DOCKER_IMAGE).pull()
+                                }
+                            } catch (FlowInterruptedException e) {
+                                context.println "[ERROR] Master docker image pull timeout (2 HOURS) has been reached. Exiting..."
+                                throw new Exception()
+                            }
+                            context.docker.image(buildConfig.DOCKER_IMAGE).inside {
+                                buildScripts(cleanWorkspace, filename)
                             }
                         }
                     }
 
-                    // Sign and archive jobs if needed
-                    sign(versionInfo)
+                } else {
+                    waitForANodeToBecomeActive(buildConfig.NODE_LABEL)
+                    context.node(buildConfig.NODE_LABEL) {
+                        // This is to avoid windows path length issues.
+                        context.echo("checking ${buildConfig.TARGET_OS}")
+                        if (buildConfig.TARGET_OS == "windows") {
+                            // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
+                            def workspace = "C:/workspace/openjdk-build/"
+                            if (env.CYGWIN_WORKSPACE) {
+                                workspace = env.CYGWIN_WORKSPACE
+                            }
+                            context.echo("changing ${workspace}")
+                            context.ws(workspace) {
+                                buildScripts(cleanWorkspace, filename)
+                            }
+                        } else {
+                            buildScripts(cleanWorkspace, filename)
+                        }
+                    }
+                }
+            }
 
-                    if (enableTests && buildConfig.TEST_LIST.size() > 0) {
-                        try {
+            // Sign and archive jobs if needed
+            try {
+                context.timeout(time: 2, unit: "HOURS") {
+                    sign(versionInfo)
+                }
+            } catch (FlowInterruptedException e) {
+                context.println "[ERROR] Sign job timeout (2 HOURS) has been reached. Exiting..."
+                throw new Exception()
+            }
+
+            if (enableTests && buildConfig.TEST_LIST.size() > 0) {
+                try {
+
+                    try {
+                        context.timeout(time: 16, unit: "HOURS") {
                             def testStages = runTests()
                             context.parallel testStages
-                        } catch (Exception e) {
-                            context.println "Failed test: ${e}"
                         }
-                    }
-
-                    //buildInstaller if needed
-                    if (enableInstallers) {
-                        buildInstaller(versionInfo)
+                    } catch (FlowInterruptedException e) {
+                        context.println "[ERROR] Test job timeout (16 HOURS) has been reached. Exiting..."
+                        throw new Exception()
                     }
 
                 } catch (Exception e) {
-                    currentBuild.result = 'FAILURE'
-                    context.println "Execution error: ${e}"
-                    def sw = new StringWriter()
-                    def pw = new PrintWriter(sw)
-                    e.printStackTrace(pw)
-                    context.println sw.toString()
+                    context.println "Failed test: ${e}"
                 }
             }
+
+            //buildInstaller if needed
+            if (enableInstallers) {
+                try {
+                    context.timeout(time: 2, unit: "HOURS") {
+                        buildInstaller(versionInfo)
+                    }
+                } catch (FlowInterruptedException e) {
+                    context.println "[ERROR] Installer job timeout (2 HOURS) has been reached. Exiting..."
+                    throw new Exception()
+                }    
+            }
+
+        } catch (Exception e) {
+            currentBuild.result = 'FAILURE'
+            context.println "Execution error: ${e}"
+            def sw = new StringWriter()
+            def pw = new PrintWriter(sw)
+            e.printStackTrace(pw)
+            context.println sw.toString()
         }
     }
 }
