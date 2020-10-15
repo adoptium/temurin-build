@@ -176,7 +176,7 @@ function setBootJdk() {
     echo "If this is incorrect explicitly configure JDK_BOOT_DIR using --jdk-boot-dir"
 
     # Calculate version number of boot jdk. Output on Windows contains \r, hence gsub("\r", "", $3).
-    export BOOT_JDK_VERSION_NUMBER=$("${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/java" -XshowSettings:properties -version 2>&1 | awk '/java.specification.version/{gsub(/1\./,"",$3);gsub("\r", "", $3);print $3}' | tr -d \\r)
+    export BOOT_JDK_VERSION_NUMBER=$("${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/java" -XshowSettings:properties -version 2>&1 | awk '/java.specification.version/{gsub(/1\./,"",$3);gsub("\r", "", $3);print $3}')
     if [ -z "$BOOT_JDK_VERSION_NUMBER" ]; then
       echo "[ERROR] The BOOT_JDK_VERSION_NUMBER was not found. Likelihood is that the boot jdk settings properties don't contain a java.specification.version..."
       "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/java" -XshowSettings:properties -version 2>&1
