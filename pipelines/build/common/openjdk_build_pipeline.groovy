@@ -814,7 +814,6 @@ class Build {
                                 label = "codebuild"
                             }
 
-                            waitForANodeToBecomeActive(label)
                             context.node(label) {
                                 // Cannot clean workspace from inside docker container
                                 if (cleanWorkspace) {
