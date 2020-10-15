@@ -99,7 +99,11 @@ class PullRequestTestPipeline implements Serializable {
                     "build-scripts-pr-tester/build-test",
                     gitRepo,
                     branch,
-                    "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test"
+                    null,
+                    null,
+                    "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test",
+                    null,
+                    null
             ).regenerate()
 
             context.println "[SUCCESS] All done!"

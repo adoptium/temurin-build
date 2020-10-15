@@ -546,6 +546,8 @@ return {
         if (jobRootDir == null) jobRootDir = "build-scripts";
         if (gitUri == null) gitUri = "https://github.com/AdoptOpenJDK/openjdk-build.git";
         if (gitBranch == null) gitBranch = "master";
+        if (jobTemplatePath == null) jobTemplatePath = "pipelines/build/common/create_job_from_template.groovy";
+        if (scriptPath == null) scriptPath = "pipelines/build/common/kick_off_build.groovy"
         if (jenkinsBuildRoot == null) jenkinsBuildRoot = "https://ci.adoptopenjdk.net/job/build-scripts/";
         if (jenkinsUsername == null) jenkinsUsername = ""
         if (jenkinsToken == null) jenkinsToken = ""
