@@ -62,6 +62,15 @@ class Builder implements Serializable {
                            'extended.openjdk', 'extended.perf', 'extended.external',
                            'special.openjdk','special.functional', 'special.system', 'special.perf'
                            ]
+    
+    // Declare timeouts for each critical stage (unit is HOURS)
+    Map pipelineTimeouts = [
+        API_REQUEST_TIMEOUT : 1,
+        REMOVE_ARTIFACTS_TIMEOUT : 2,
+        COPY_ARTIFACTS_TIMEOUT : 6,
+        ARCHIVE_ARTIFACTS_TIMEOUT : 6,
+        PUBLISH_ARTIFACTS_TIMEOUT : 3
+    ]
         
     IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant) {
 
@@ -319,21 +328,22 @@ class Builder implements Serializable {
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
         } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
+            int headVersion
             try {
-                context.timeout(time: 1, unit: "HOURS") {
+                context.timeout(time: pipelineTimeouts.API_REQUEST_TIMEOUT, unit: "HOURS") {
                     // Query the Adopt api to get the "tip_version"
                     def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
                     context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
 
                     def response = JobHelper.getAvailableReleases(context)
-                    int headVersion = (int) response.getAt("tip_version")
+                    headVersion = (int) response.getAt("tip_version")
                     context.println "Found Java Version Number: ${headVersion}"
-                    return headVersion
                 }
             } catch (FlowInterruptedException e) {
-                context.println "[ERROR] Adopt API Request timeout (1 HOUR) has been reached. Exiting..."
+                context.println "[ERROR] Adopt API Request timeout (${pipelineTimeouts.API_REQUEST_TIMEOUT} HOURS) has been reached. Exiting..."
                 throw new Exception()
             }
+            return headVersion
         } else {
             context.error("Failed to read java version '${javaToBuild}'")
             throw new Exception()
@@ -447,14 +457,7 @@ class Builder implements Serializable {
                             context.echo "Created job " + downstreamJobName
                             
                             // execute build
-                            try {
-                                context.timeout(time: 18, unit: "HOURS") {
-                                    def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
-                                }
-                            } catch (FlowInterruptedException e) {
-                                context.println "[ERROR] Downstream job (${downstreamJobName}) timeout (18 HOURS) has been reached. Exiting..."
-                                throw new Exception()
-                            }
+                            def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
 
                             if (downstreamJob.getResult() == 'SUCCESS') {
                                 // copy artifacts from build
@@ -463,16 +466,16 @@ class Builder implements Serializable {
 
                                         //Remove the previous artifacts
                                         try {
-                                            context.timeout(time: 2, unit: "HOURS") {
+                                            context.timeout(time: pipelineTimeouts.REMOVE_ARTIFACTS_TIMEOUT, unit: "HOURS") {
                                                 context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
                                             }
                                         } catch (FlowInterruptedException e) {
-                                            context.println "[ERROR] Previous artifact removal timeout (2 HOURS) has been reached. Exiting..."
+                                            context.println "[ERROR] Previous artifact removal timeout (${pipelineTimeouts.REMOVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting..."
                                             throw new Exception()
                                         }   
 
                                         try {
-                                            context.timeout(time: 6, unit: "HOURS") {
+                                            context.timeout(time: pipelineTimeouts.COPY_ARTIFACTS_TIMEOUT, unit: "HOURS") {
                                                 context.copyArtifacts(
                                                         projectName: downstreamJobName,
                                                         selector: context.specific("${downstreamJob.getNumber()}"),
@@ -483,7 +486,7 @@ class Builder implements Serializable {
                                                 )
                                             }
                                         } catch (FlowInterruptedException e) {
-                                            context.println "[ERROR] Copy artifact timeout (6 HOURS) has been reached. Exiting..."
+                                            context.println "[ERROR] Copy artifact timeout (${pipelineTimeouts.COPY_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting..."
                                             throw new Exception()
                                         }
 
@@ -492,11 +495,11 @@ class Builder implements Serializable {
 
                                         // Archive in Jenkins
                                         try {
-                                            context.timeout(time: 6, unit: "HOURS") {
+                                            context.timeout(time: pipelineTimeouts.ARCHIVE_ARTIFACTS_TIMEOUT, unit: "HOURS") {
                                                 context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
                                             }
                                         } catch (FlowInterruptedException e) {
-                                            context.println "[ERROR] Archive artifact timeout (6 HOURS) has been reached. Exiting..."
+                                            context.println "[ERROR] Archive artifact timeout (${pipelineTimeouts.ARCHIVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName}has been reached. Exiting..."
                                             throw new Exception()
                                         }
 
@@ -518,11 +521,11 @@ class Builder implements Serializable {
             if (publish && !release) {
                 //During testing just remove the publish
                 try {
-                    context.timeout(time: 3, unit: "HOURS") {
+                    context.timeout(time: pipelineTimeouts.PUBLISH_ARTIFACTS_TIMEOUT, unit: "HOURS") {
                         publishBinary()
                     }
                 } catch (FlowInterruptedException e) {
-                    context.println "[ERROR] Publish binary timeout (3 HOURS) has been reached. Exiting..."
+                    context.println "[ERROR] Publish binary timeout (${pipelineTimeouts.PUBLISH_ARTIFACTS_TIMEOUT} HOURS) has been reached. Exiting..."
                     throw new Exception()
                 }
             } else if (publish && release) {
