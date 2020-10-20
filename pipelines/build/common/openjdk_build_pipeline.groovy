@@ -879,6 +879,7 @@ class Build {
                     }
 
                     waitForANodeToBecomeActive(label)
+                    context.println "[NODE SHIFT] MOVING INTO DOCKER NODE MATCHING LABELNAME ${label}..."
                     context.node(label) {
                         // Cannot clean workspace from inside docker container
                         if (cleanWorkspace) {
@@ -928,9 +929,11 @@ class Build {
                             }
                         }
                     }
+                    context.println "[NODE SHIFT] OUT OF DOCKER NODE (LABELNAME ${label}!)"
 
                 } else {
                     waitForANodeToBecomeActive(buildConfig.NODE_LABEL)
+                    context.println "[NODE SHIFT] MOVING INTO NODE MATCHING LABELNAME ${buildConfig.NODE_LABEL}..."
                     context.node(buildConfig.NODE_LABEL) {
                         // This is to avoid windows path length issues.
                         context.echo("checking ${buildConfig.TARGET_OS}")
@@ -948,6 +951,7 @@ class Build {
                             buildScripts(cleanWorkspace, filename)
                         }
                     }
+                    context.println "[NODE SHIFT] OUT OF NODE (LABELNAME ${buildConfig.NODE_LABEL}!)"
                 }
             }
 
