@@ -20,7 +20,10 @@ class Config15 {
         x64Linux  : [
                 os                  : 'linux',
                 arch                : 'x64',
-                dockerImage         : 'adoptopenjdk/centos6_build_image',
+                dockerImage: [
+                        hotspot     : 'adoptopenjdk/centos6_build_image',
+                        openj9      : 'adoptopenjdk/centos7_build_image'
+                ],
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
@@ -34,7 +37,7 @@ class Config15 {
         x64LinuxXL  : [
                 os                  : 'linux',
                 arch                : 'x64',
-                dockerImage         : 'adoptopenjdk/centos6_build_image',
+                dockerImage         : 'adoptopenjdk/centos7_build_image',
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
