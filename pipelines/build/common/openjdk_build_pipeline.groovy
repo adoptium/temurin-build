@@ -750,40 +750,6 @@ class Build {
         }
     }
 
-    def waitForANodeToBecomeActive(def label) {
-        def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
-
-        if (NodeHelper.nodeIsOnline(label)) {
-            return
-        }
-
-        context.println("No active node matches this label: " + label)
-
-        int activeNodeTimeout = 0
-        if (buildConfig.ACTIVE_NODE_TIMEOUT.isInteger()) {
-            activeNodeTimeout = buildConfig.ACTIVE_NODE_TIMEOUT as Integer
-        }
-
-
-        if (activeNodeTimeout > 0) {
-            context.println("Will check again periodically until a node labelled " + label + " comes online, or " + buildConfig.ACTIVE_NODE_TIMEOUT + " minutes (ACTIVE_NODE_TIMEOUT) has passed.")
-            int x = 0
-            while (x < activeNodeTimeout) {
-                context.sleep(60 * 1000)  // 1 minute sleep
-                if (NodeHelper.nodeIsOnline(label)) {
-                    context.println("A node which matches this label is now active: " + label)
-                    return
-                }
-                x++
-            }
-            context.error("No node matching this label became active prior to the timeout: " + label)
-            throw new Exception()
-        } else {
-            context.error("As the timeout value is set to 0, we will not wait for a node to become active.")
-            throw new Exception()
-        }
-    }
-
     def build() {
         context.timestamps {
             context.timeout(time: 18, unit: "HOURS") {
@@ -803,6 +769,8 @@ class Build {
                     def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
 
                     context.stage("queue") {
+                        def NodeHelper = context.library(identifier: 'openjdk-jenkins-helper@master').NodeHelper
+
                         if (buildConfig.DOCKER_IMAGE) {
                             // Docker build environment
                             def label = buildConfig.NODE_LABEL + "&&dockerBuild"
@@ -838,23 +806,27 @@ class Build {
                             }
 
                         } else {
-                            waitForANodeToBecomeActive(buildConfig.NODE_LABEL)
-                            context.node(buildConfig.NODE_LABEL) {
-                                // This is to avoid windows path length issues.
-                                context.echo("checking ${buildConfig.TARGET_OS}")
-                                if (buildConfig.TARGET_OS == "windows") {
-                                    // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
-                                    def workspace = "C:/workspace/openjdk-build/"
-                                    if (env.CYGWIN_WORKSPACE) {
-                                        workspace = env.CYGWIN_WORKSPACE
-                                    }
-                                    context.echo("changing ${workspace}")
-                                    context.ws(workspace) {
+                            if (NodeHelper.nodeIsOnline(buildConfig.NODE_LABEL)) {
+                                context.node(buildConfig.NODE_LABEL) {
+                                    // This is to avoid windows path length issues.
+                                    context.echo("checking ${buildConfig.TARGET_OS}")
+                                    if (buildConfig.TARGET_OS == "windows") {
+                                        // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
+                                        def workspace = "C:/workspace/openjdk-build/"
+                                        if (env.CYGWIN_WORKSPACE) {
+                                            workspace = env.CYGWIN_WORKSPACE
+                                        }
+                                        context.echo("changing ${workspace}")
+                                        context.ws(workspace) {
+                                            buildScripts(cleanWorkspace, filename)
+                                        }
+                                    } else {
                                         buildScripts(cleanWorkspace, filename)
                                     }
-                                } else {
-                                    buildScripts(cleanWorkspace, filename)
-                                }
+                                }   
+                            } else {
+                                context.error("No node of this type exists: ${buildConfig.NODE_LABEL}")
+                                return
                             }
                         }
                     }

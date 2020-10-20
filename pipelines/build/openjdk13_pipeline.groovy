@@ -29,7 +29,6 @@ if (scmVars != null && configureBuild != null && buildConfigurations != null) {
         javaToBuild,
         buildConfigurations,
         targetConfigurations,
-        activeNodeTimeout,
         dockerExcludes,
         enableTests,
         enableInstallers,
