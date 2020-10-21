@@ -133,19 +133,24 @@ class Build {
     private def getJDKBranch() {
 
         def jdkBranch
-        
-        if (buildConfig.VARIANT == "corretto") {
-            jdkBranch = 'develop'
-        } else if (buildConfig.VARIANT == "openj9") {
-            jdkBranch = 'openj9'
-        } else if (buildConfig.VARIANT == "hotspot"){
-            jdkBranch = 'dev'
-        } else if (buildConfig.VARIANT == "dragonwell") {
-            jdkBranch = 'master'
+
+        if (buildConfig.SCM_REF) {
+            jdkBranch = buildConfig.SCM_REF
         } else {
-            context.error("Unrecognised build variant '${buildConfig.VARIANT}' ")
-            throw new Exception()
+            if (buildConfig.VARIANT == "corretto") {
+                jdkBranch = 'develop'
+            } else if (buildConfig.VARIANT == "openj9") {
+                jdkBranch = 'openj9'
+            } else if (buildConfig.VARIANT == "hotspot"){
+                jdkBranch = 'dev'
+            } else if (buildConfig.VARIANT == "dragonwell") {
+                jdkBranch = 'master'
+            } else {
+                context.error("Unrecognised build variant '${buildConfig.VARIANT}' ")
+                throw new Exception()
+            }
         }
+
         return jdkBranch
     }
     
@@ -189,6 +194,7 @@ class Build {
         List testList = []
         def jdkBranch = getJDKBranch()
         def jdkRepo = getJDKRepo()
+        def openj9Branch = buildConfig.SCM_REF ? buildConfig.SCM_REF : "master"
 
         if (buildConfig.VARIANT == "corretto") {
             testList = buildConfig.TEST_LIST.minus(['sanity.external'])
@@ -220,6 +226,7 @@ class Build {
 												context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}"),
 												context.string(name: 'JDK_REPO', value: jdkRepo),
 												context.string(name: 'JDK_BRANCH', value: jdkBranch),
+												context.string(name: 'OPENJ9_BRANCH', value: openj9Branch),
 												context.string(name: 'ACTIVE_NODE_TIMEOUT', value: "${buildConfig.ACTIVE_NODE_TIMEOUT}")]
 							}
 						} else {
