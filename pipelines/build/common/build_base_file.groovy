@@ -63,7 +63,9 @@ class Builder implements Serializable {
         'sanity.perf',
         'sanity.external'
     ]
-
+    
+    // Temporarily remove weekly tests due to lack of machine capacity during release
+    /*
     final List<String> weekly = [
         'extended.openjdk',
         'extended.perf',
@@ -73,6 +75,7 @@ class Builder implements Serializable {
         'special.system',
         'special.perf'
     ]
+    */
     
     /*
     Returns an IndividualBuildConfig that is passed down to the downstream job.
