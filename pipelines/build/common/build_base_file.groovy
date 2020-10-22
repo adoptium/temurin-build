@@ -58,7 +58,8 @@ class Builder implements Serializable {
 
     final List<String> nightly = ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external']
     final List<String> weekly = [
-     /*                      'extended.openjdk', 'extended.perf', 'extended.external',
+     /*    Temporarily remove weekly tests due to lack of machine capacity during release                  
+                           'extended.openjdk', 'extended.perf', 'extended.external',
                            'special.openjdk','special.functional', 'special.system', 'special.perf' */
                            ]
         
