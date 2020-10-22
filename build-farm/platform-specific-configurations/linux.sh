@@ -101,7 +101,7 @@ fi
       # Set to a default location as linked in the ansible playbooks
       if [ -x /usr/lib/jvm/jdk-${BOOT_JDK_VERSION}/bin/javac ]; then
         echo Could not use ${BOOT_JDK_VARIABLE} - using /usr/lib/jvm/jdk-${BOOT_JDK_VERSION}
-        export BOOT_JDK_DIR="/usr/lib/jvm/jdk-${BOOT_JDK_VERSION}"
+        export ${BOOT_JDK_VARIABLE}="/usr/lib/jvm/jdk-${BOOT_JDK_VERSION}"
       else
         mkdir -p "$bootDir"
         echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
