@@ -27,21 +27,29 @@ export OPENSSL_VERSION=1.1.1i
 
 TOOLCHAIN_VERSION=""
 
+<<<<<<< HEAD
 # Any version above 8 (11 for now due to openjdk-build#1409
 if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
-    if [ "$ARCHITECTURE" == "aarch64" ]; then
-      # Windows aarch64 cross compiles requires same version boot jdk
-      BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION))"
-    else
-      BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
-    fi
-    BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
-    if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-      bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
-      # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
-      # instead of BOOT_JDK_VARIABLE (no '$').
-      export ${BOOT_JDK_VARIABLE}="$bootDir"
-      if [ ! -d "$bootDir/bin" ]; then
+  if [ "$ARCHITECTURE" == "aarch64" ]; then
+    # Windows aarch64 cross compiles requires same version boot jdk
+    BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION))"
+  else
+    BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+  fi
+  BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+  if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
+    bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+    # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
+    # instead of BOOT_JDK_VARIABLE (no '$').
+    export ${BOOT_JDK_VARIABLE}="$bootDir"
+    if [ ! -x "$bootDir/bin/javac" ]; then
+      # Set to a default location as linked in the ansible playbooks
+      if [ -x /cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}/bin/javac ]; then
+        echo Could not use ${BOOT_JDK_VARIABLE} - using /cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}
+        export ${BOOT_JDK_VARIABLE}="/usr/lib/jvm/jdk-${BOOT_JDK_VERSION}"
+      else
+        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
+        releaseType="ga"
         # This is needed to convert x86-32 to x32 which is what the API uses
         case "$ARCHITECTURE" in
           "x86-32") downloadArch="x32";;
@@ -73,14 +81,15 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
         mv $(ls -d jdk-${BOOT_JDK_VERSION}*) "$bootDir"
       fi
     fi
-    export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
-    "$JDK_BOOT_DIR/bin/java" -version
-    executedJavaVersion=$?
-    if [ $executedJavaVersion -ne 0 ]; then
-        echo "Failed to obtain or find a valid boot jdk"
-        exit 1
-    fi
-    "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
+  fi
+  export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+  "$JDK_BOOT_DIR/bin/java" -version
+  executedJavaVersion=$?
+  if [ $executedJavaVersion -ne 0 ]; then
+      echo "Failed to obtain or find a valid boot jdk"
+      exit 1
+  fi
+  "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
 if [ "${ARCHITECTURE}" == "x86-32" ]
