@@ -58,8 +58,8 @@ class Builder implements Serializable {
 
     final List<String> nightly = ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external']
     final List<String> weekly = [
-                           'extended.openjdk', 'extended.perf', 'extended.external',
-                           'special.openjdk','special.functional', 'special.system', 'special.perf'
+     /*                      'extended.openjdk', 'extended.perf', 'extended.external',
+                           'special.openjdk','special.functional', 'special.system', 'special.perf' */
                            ]
         
     IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant) {
