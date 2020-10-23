@@ -803,6 +803,11 @@ class Build {
                     def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
 
                     context.stage("queue") {
+                        // This loads the library containing two Helper classes, and causes them to be
+                        // imported/updated from their repo. Without the library being imported here, runTests 
+                        // method will fail to execute the post-build test jobs for reasons unknown.
+                        context.library(identifier: 'openjdk-jenkins-helper@master')
+
                         if (buildConfig.DOCKER_IMAGE) {
                             // Docker build environment
                             def label = buildConfig.NODE_LABEL + "&&dockerBuild"
