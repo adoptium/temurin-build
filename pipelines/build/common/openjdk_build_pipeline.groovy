@@ -658,6 +658,12 @@ class Build {
             data.binary_type = type
             data.sha256 = hash
 
+            String feedbackWord = initialWrite == true ? "INITIALISED" : "OVERWRITTEN"
+            context.println "[INFO] METADATA ${feedbackWord}!"
+            context.println "===NEW METADATA OUTPUT==="
+            context.println JsonOutput.prettyPrint(JsonOutput.toJson(data.asMap()))
+            context.println "=/=NEW METADATA OUTPUT=/="
+
             context.writeFile file: "${file}.json", text: JsonOutput.prettyPrint(JsonOutput.toJson(data.asMap()))
         })
     }
