@@ -21,9 +21,9 @@ node ("master") {
   def buildFailures = 0
   def testStats = []
 
-  // Get the number of "Failed Builds"
+  // Get the number of "Failing Builds"
   stage("getBuildFailures") {
-    def builds = sh(returnStdout: true, script: "wget -q -O - ${jenkinsUrl}/view/Failed%20Builds/api/json")
+    def builds = sh(returnStdout: true, script: "wget -q -O - ${jenkinsUrl}/view/Failing%20Builds/api/json")
     def json = new JsonSlurper().parseText(builds)
     buildFailures = json.jobs.size()
   }
@@ -45,6 +45,7 @@ node ("master") {
         def testCasePassed = 0
         def testCaseFailed = 0
         def testCaseDisabled = 0
+        def testJobNumber = 0
 
         // Get all pipeline builds started by "timer", as those are Nightlies
         def pipeline = sh(returnStdout: true, script: "wget -q -O - ${trssUrl}/api/getBuildHistory?buildName=${pipelineName}\\&startBy=timer")
@@ -58,6 +59,7 @@ node ("master") {
           def pipelineTestJobs = sh(returnStdout: true, script: "wget -q -O - ${trssUrl}/api/getAllChildBuilds?parentId=${pipeline_id}\\&buildNameRegex=^Test_.*")
           def pipelineTestJobsJson = new JsonSlurper().parseText(pipelineTestJobs)
           if (pipelineTestJobsJson.size() > 0) {
+            testJobNumber = pipelineTestJobsJson.size()
             pipelineTestJobsJson.each { testJob ->
               if (testJob.buildResult.equals("SUCCESS")) {
                 testJobSuccess += 1
@@ -81,7 +83,8 @@ node ("master") {
                           testJobFailure:   testJobFailure,
                           testCasePassed:   testCasePassed,
                           testCaseFailed:   testCaseFailed,
-                          testCaseDisabled: testCaseDisabled]
+                          testCaseDisabled: testCaseDisabled,
+                          testJobNumber:    testJobNumber]
         testStats.add(testResult)
       }
     }
@@ -94,12 +97,13 @@ node ("master") {
     echo "==================================================================================="
     testStats.each { pipeline ->
       echo "Pipeline : ${pipeline.name} : ${pipeline.url}"
-      echo "  => Test job SUCCESS   = ${pipeline.testJobSuccess}"
-      echo "  => Test job UNSTABLE  = ${pipeline.testJobUnstable}"
-      echo "  => Test job FAILURE   = ${pipeline.testJobFailure}"
-      echo "  => Test case Passed   = ${pipeline.testCasePassed}"
-      echo "  => Test case Failed   = ${pipeline.testCaseFailed}"
-      echo "  => Test case Disabled = ${pipeline.testCaseDisabled}"
+      echo "  => Number of Test jobs = ${pipeline.testJobNumber}" 
+      echo "  => Test job SUCCESS    = ${pipeline.testJobSuccess}"
+      echo "  => Test job UNSTABLE   = ${pipeline.testJobUnstable}"
+      echo "  => Test job FAILURE    = ${pipeline.testJobFailure}"
+      echo "  => Test case Passed    = ${pipeline.testCasePassed}"
+      echo "  => Test case Failed    = ${pipeline.testCaseFailed}"
+      echo "  => Test case Disabled  = ${pipeline.testCaseDisabled}"
       echo "==================================================================================="
     }
   }
