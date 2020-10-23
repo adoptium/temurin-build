@@ -22,7 +22,7 @@ limitations under the License.
 String buildFolder = "$JOB_FOLDER"
 
 if (!binding.hasVariable('GIT_URI')) GIT_URI = "https://github.com/AdoptOpenJDK/openjdk-build.git"
-if (!binding.hasVariable('GIT_BRANCH')) GIT_BRANCH = "new_build_scripts"
+if (!binding.hasVariable('GIT_BRANCH')) GIT_BRANCH = "master"
 
 folder(buildFolder) {
     description 'Automatically generated build jobs.'
