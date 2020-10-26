@@ -229,7 +229,7 @@ class Builder implements Serializable {
 
     /*
     Retrieves the dockerImage attribute from the build configurations.
-    This specifies the docker hub org and image to pull or build in case we don't have one stored in this repository.
+    This specifies the DockerHub org and image to pull or build in case we don't have one stored in this repository.
     If this isn't specified, the openjdk_build_pipeline.groovy will assume we are not building the jdk inside of a container.
     */
     def getDockerImage(Map<String, ?> configuration, String variant) {
@@ -342,7 +342,7 @@ class Builder implements Serializable {
     }
 
     /*
-    Imports the build configurations for the target version based off it's key and variant.
+    Imports the build configurations for the target version based off its key and variant.
     E.g. { "x64Linux" : [ "hotspot", "openj9" ] }
     */
     Map<String, IndividualBuildConfig> getJobConfigurations() {

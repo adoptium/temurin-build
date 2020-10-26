@@ -780,7 +780,7 @@ class Build {
 
     /*
     Executed on a build node, the function checks out the repository and executes the build via ./make-adopt-build-farm.sh
-    Once the build completes, it will calculate it's version output, commit the first metadata writeout and archives the build results.
+    Once the build completes, it will calculate its version output, commit the first metadata writeout, and archive the build results.
     */
     def buildScripts(cleanWorkspace, filename) {
         return context.stage("build") {
@@ -924,7 +924,7 @@ class Build {
                                         buildScripts(cleanWorkspace, filename)
                                     }
 
-                                // Otherwise, pull the docker image from docker hub 
+                                // Otherwise, pull the docker image from DockerHub
                                 } else {
                                     context.docker.image(buildConfig.DOCKER_IMAGE).pull()
                                     context.docker.image(buildConfig.DOCKER_IMAGE).inside {
