@@ -109,9 +109,23 @@ class VersionInfo {
                 major = or0(matched223, 'major')
                 minor = or0(matched223, 'minor')
                 security = or0(matched223, 'security')
-                if (matched223.group('pre') != null) pre = matched223.group('pre')
+
+                if (matched223.group('pre') != null) {
+                    pre = matched223.group('pre')
+                } else {
+                    // Unique case for builds with ea in the version string (i.e. 1.8.0_272-ea-b10)
+                    // See https://github.com/AdoptOpenJDK/openjdk-build/issues/2172
+                    if (versionString.contains("ea")) {
+                        pre = "ea"
+                    }
+                }
+
                 build = or0(matched223, 'build')
-                if (matched223.group('opt') != null) opt = matched223.group('opt')
+
+                if (matched223.group('opt') != null) {
+                    opt = matched223.group('opt')
+                }
+
                 version = matched223.group('version')
                 return true
             }
