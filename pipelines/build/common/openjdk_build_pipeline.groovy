@@ -245,7 +245,6 @@ class Build {
             context.println("matched")
             String versionOutput = matcher.group('version')
 
-            // 11.0.9+10-202010192351
             context.println(versionOutput)
 
             return new VersionInfo().parse(versionOutput, buildConfig.ADOPT_BUILD_NUMBER)
@@ -326,7 +325,7 @@ class Build {
     }
 
     /*
-    Run the Linux installer downstream job.
+    Run the Mac installer downstream job.
     */
     private void buildMacInstaller(VersionInfo versionData) {
         def filter = "**/OpenJDK*_mac_*.tar.gz"
@@ -657,7 +656,9 @@ class Build {
     }
 
     /*
-    Calculates and writes out the metadata to a file. The metadata defines and summarises a build and the jdk it creates. The adopt v3 api makes use of it in it's endpoints to quickly display information about the jdk binaries that are stored on github. 
+    Calculates and writes out the metadata to a file.
+    The metadata defines and summarises a build and the jdk it creates.
+    The adopt v3 api makes use of it in its endpoints to quickly display information about the jdk binaries that are stored on github. 
     */
     def writeMetadata(VersionInfo version, Boolean initialWrite) {
         /*

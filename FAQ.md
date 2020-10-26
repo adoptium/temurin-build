@@ -58,15 +58,15 @@ In terms of compilers, these are what we currently use for each release:
 
 | Version | OS      | Compiler |
 |---------|---------|----------|
-| JDK8    | Linux   | GCC 4.8 (HotSpot) GCC 7.6 (OpenJ9) |
-| JDK11+  | Linux   | GCC 7.5 |
+| JDK8    | Linux   | GCC 4.8 (HotSpot) GCC 7.6 (OpenJ9)                |
+| JDK11+  | Linux   | GCC 7.5                                           |
 | JDK8    | Windows | VS2013 (12.0) (HotSpot) or VS2010 (10.0) (OpenJ9) |
-| JDK11+  | Windows | VS2017 |
-| JDK8/11 | AIX     | xlC/C++ 13.1.3 |
-| JDK13+  | AIX     | xlC/C++ 16.1.0 |
-| JDK8    | macos   | GCC 4.2.1 (LLVM 2336.11.00 |
-| JDK11   | macos   | clang-700.1.81 |
-| JDK13+  | macos   | clang-900.0.39.2 |
+| JDK11+  | Windows | VS2017                                            |
+| JDK8/11 | AIX     | xlC/C++ 13.1.3                                    |
+| JDK13+  | AIX     | xlC/C++ 16.1.0                                    |
+| JDK8    | macos   | GCC 4.2.1 (LLVM 2336.11.00                        |
+| JDK11   | macos   | clang-700.1.81                                    |
+| JDK13+  | macos   | clang-900.0.39.2                                  |
 
 All machines at AdoptOpenJDK are set up using the ansible playbooks from the
 [infrastructure](https://github.com/adoptopenjdk/openjdk-infrastructure) repository.

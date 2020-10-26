@@ -326,8 +326,8 @@ Alongside the built assets a metadata file will be created with info about the b
     "version_data": "jdk15",
     "binary_type": "debugimage",
     "sha256": "<shasum>",
-    "full_version_output": <output of java --version>,
-    "configure_arguments": <output of bash configure>
+    "full_version_output": "<output of java --version>",
+    "configure_arguments": "<output of bash configure>"
 }
 ```
 
