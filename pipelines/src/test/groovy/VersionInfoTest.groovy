@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 class VersionInfoTest {
     @Test
     void doesNotDefaultAdoptNumber() {
-        VersionInfo parsed = new VersionInfo().parse("11.0.2+10", null)
+        VersionInfo parsed = new VersionInfo().parse(this, "11.0.2+10", null)
         Assertions.assertEquals(11, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(2, parsed.security)
@@ -19,7 +19,7 @@ class VersionInfoTest {
 
     @Test
     void addsZeroAdoptBuildWhenThereIsAnOpt() {
-        VersionInfo parsed = new VersionInfo().parse("11.0.8-ea+10", null)
+        VersionInfo parsed = new VersionInfo().parse(this, "11.0.8-ea+10", null)
         Assertions.assertEquals(11, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(8, parsed.security)
@@ -33,7 +33,7 @@ class VersionInfoTest {
 
     @Test
     void addsAdoptBuildNum() {
-        VersionInfo parsed = new VersionInfo().parse("11.0.2+10", "2")
+        VersionInfo parsed = new VersionInfo().parse(this, "11.0.2+10", "2")
         Assertions.assertEquals(11, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(2, parsed.security)
