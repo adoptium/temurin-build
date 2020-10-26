@@ -832,7 +832,7 @@ class Build {
 
     /*
     Pulls in and applies the activeNodeTimeout parameter.
-    The function will use the jenkins helper nodeIsOnline lib to check every minute if a node with the specified label has come online.
+    The function will use the jenkins helper nodeIsOnline lib to check once a minute if a node with the specified label has come online.
     If it doesn't find one or the timeout is set to 0 (default), it'll crash out. Otherwise, it'll return and jump onto the node.
     */
     def waitForANodeToBecomeActive(def label) {
@@ -916,7 +916,7 @@ class Build {
                                     cleanWorkspace = false
                                 }
 
-                                // Use our docker file if we have one
+                                // Use our docker file if DOCKER_FILE is defined
                                 if (buildConfig.DOCKER_FILE) {
                                     context.checkout context.scm
                                     context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE} -f ${buildConfig.DOCKER_FILE} .").inside {    
