@@ -4,7 +4,7 @@ node('master') {
   (8..30).each({javaVersion -> 
 
     if (retiredVersions.contains(javaVersion)) {
-      println "[INFO] $javaVersion is a retired version that isn't built anymore. Skipping generation..."
+      println "[INFO] $javaVersion is a retired version that isn't currently built. Skipping generation..."
       return
     }
     
