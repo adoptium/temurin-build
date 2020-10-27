@@ -13,31 +13,20 @@ class VersionInfo {
     Integer adopt_build_number
     String semver
 
-    def context
+    private final context
 
-    VersionInfo() {
+    VersionInfo(def context) {
+        this.context = context
     }
 
-    VersionInfo parse(def outputStream, String PUBLISH_NAME, String ADOPT_BUILD_NUMBER) {
-        context = outputStream
-
+    VersionInfo parse(String PUBLISH_NAME, String ADOPT_BUILD_NUMBER) {
         context.println "[INFO] ATTEMPTING TO PARSE PUBLISH_NAME: $PUBLISH_NAME"
 
         if (PUBLISH_NAME != null) {
             if (!matchPre223(PUBLISH_NAME)) {
-                context.println "[WARNING] Failed to match matchAltPre223 regex! Attempting to match223 regex..."
                 match223(PUBLISH_NAME)
             }
         }
-
-        context.println "[INFO] FINISHED PARSING PUBLISH_NAME:"
-        context.println "major = ${major}"
-        context.println "minor = ${minor}"
-        context.println "security = ${security}"
-        context.println "build = ${build}"
-        context.println "opt = ${opt}"
-        context.println "version = ${version}"
-        context.println "pre = ${pre}"
 
         // ADOPT_BUILD_NUMBER is a string, so we also need to account for an empty string value
         if (ADOPT_BUILD_NUMBER != null && ADOPT_BUILD_NUMBER != "") {
@@ -46,10 +35,24 @@ class VersionInfo {
             // if an opt is present then set adopt_build_number to pad out the semver
             adopt_build_number = 0
         }
-        context.println "adopt build number = ${adopt_build_number}"
 
         semver = formSemver()
-        context.println "semver = ${semver}"
+
+        // Lay this out exactly as it would be in the metadata
+        context.println "[INFO] FINISHED PARSING PUBLISH_NAME:"
+        context.println """
+        {
+            minor: ${minor},
+            security: ${security},
+            pre: ${pre},
+            adopt_build_number: ${adopt_build_number},
+            major: ${major},
+            version: ${version},
+            semver: ${semver},
+            build: ${build},
+            opt: ${opt}
+        }
+        """
 
         return this
     }
@@ -96,6 +99,7 @@ class VersionInfo {
             return true
         }
 
+        context.println "[WARNING] Failed to match matchAltPre223 regex: ${pre223regex}\n[WARNING] Attempting to match223 regex..."
         return false
     }
 
@@ -120,7 +124,7 @@ class VersionInfo {
             version = matched.group('version')
             return true
         } else {
-            context.println "[WARNING] Failed to match pre223 regex! Attempting to matchAltPre223 regex..."
+            context.println "[WARNING] Failed to match pre223 regex: ${pre223regex}\n[WARNING] Attempting to matchAltPre223 regex..."
             return matchAltPre223(versionString)
         }
     }

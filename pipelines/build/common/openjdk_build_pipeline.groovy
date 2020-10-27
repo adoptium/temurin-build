@@ -218,7 +218,7 @@ class Build {
             String versionOutput = matcher.group('version')
             context.println(versionOutput)
 
-            return new VersionInfo().parse(context, versionOutput, buildConfig.ADOPT_BUILD_NUMBER)
+            return new VersionInfo(context).parse(versionOutput, buildConfig.ADOPT_BUILD_NUMBER)
         }
         return null
     }
