@@ -145,7 +145,7 @@ class VersionInfo {
             context.println "[INFO] Attempting to match223 regex: ${regex}"
             final matched223 = versionString =~ /^${regex}.*/
             if (matched223.matches()) {
-                context.println "[SUCCESS] match223 regex ${regex} matched!"
+                context.println "[SUCCESS] match223 regex matched!"
 
                 major = or0(matched223, 'major')
                 minor = or0(matched223, 'minor')
