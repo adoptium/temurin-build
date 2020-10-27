@@ -65,6 +65,7 @@ class Builder implements Serializable {
     ]
     
     // Temporarily remove weekly tests due to lack of machine capacity during release
+    final List<String> weekly = []
     /*
     final List<String> weekly = [
         'extended.openjdk',
