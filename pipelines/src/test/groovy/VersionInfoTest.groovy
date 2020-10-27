@@ -24,9 +24,9 @@ class VersionInfoTest {
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(8, parsed.security)
         Assertions.assertEquals(10, parsed.build)
-        Assertions.assertEquals("ea", parsed.opt)
+        Assertions.assertNull(parsed.opt)
         Assertions.assertEquals("11.0.8-ea+10", parsed.version)
-        Assertions.assertNull(parsed.pre)
+        Assertions.assertEquals("ea", parsed.pre)
         Assertions.assertEquals(0, parsed.adopt_build_number)
         Assertions.assertEquals("11.0.8-ea+10", parsed.semver)
     }
