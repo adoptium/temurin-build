@@ -37,11 +37,13 @@ node ("master") {
 
 }
 
+// If a parameter below hasn't been declared above, it is declared in the jenkins job itself
 if (scmVars != null && (configureBuild != null || buildConfigurations != null)) {
     configureBuild(
         javaToBuild,
         buildConfigurations,
         targetConfigurations,
+        activeNodeTimeout,
         dockerExcludes,
         enableTests,
         enableInstallers,
