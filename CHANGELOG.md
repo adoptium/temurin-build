@@ -1,4 +1,8 @@
-# Changelog for openjdk-build scripts
+# Changelog for openjdk-build scripts (DEPRECATED)
+
+## DEPRECATION NOTES
+
+**THIS DOCUMENT IS NO LONGER POPULATED. PLEASE SEE THE [MASTER COMMIT HISTORY](https://github.com/AdoptOpenJDK/openjdk-build/commits/master) FOR A MORE UP TO DATE LOG**
 
 ## Version 1.0.0 (14th May 2018)
 

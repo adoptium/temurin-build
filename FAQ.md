@@ -7,7 +7,7 @@ repository.
 ## Access control in this repository
 
 The GitHub teams relevant to this repository are as follows (Note, you
-won't necessarily have access to see thse links):
+won't necessarily have access to see these links):
 
 - [GetOpenJDK](https://github.com/orgs/AdoptOpenJDK/teams/getopenjdk) - `Triage` level of access which lets you assign issues to people
 - [build](https://github.com/orgs/AdoptOpenJDK/teams/build) - `Write` access which lets you approve and merge PRs and run and configure most Jenkins jobs
@@ -19,9 +19,9 @@ I wrote this diagram partially for my own benefit in [issue 957](https://github.
 Note that the "end-user" scripts start at `makejdk-any-platform.sh` and a
 diagram of those relationships can be seen [here](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/docs/images/AdoptOpenJDK_Build_Script_Relationships.png)
 
-```
+```markdown
 J - build-scripts/job/utils/job/build-pipeline-generator
-G   - Create openjdk*-pipeline jobs from pipelines/jobs/popeline_job_template.groovy
+G   - Create openjdk*-pipeline jobs from pipelines/jobs/pipeline_job_template.groovy
 J   - openjdk11-pipeline
 G     - pipelines/build/openjdk*_pipeline.groovy
 G       - pipelines/build/common/build_base_file.groovy
@@ -58,15 +58,15 @@ In terms of compilers, these are what we currently use for each release:
 
 | Version | OS      | Compiler |
 |---------|---------|----------|
-| JDK8    | Linux   | GCC 4.8 (HotSpot) GCC 7.6 (OpenJ9)                        |
-| JDK11+  | Linux   | GCC 7.5                            			|
-| JDK8    | Windows | VS2013 (12.0) (HotSpot) or VS2010 (10.0) (OpenJ9)		|
-| JDK11+  | Windows | VS2017							|
-| JDK8/11 | AIX     | xlC/C++ 13.1.3						|
-| JDK13+  | AIX     | xlC/C++ 16.1.0						|
-| JDK8    | macos   | GCC 4.2.1 (LLVM 2336.11.00				|
-| JDK11   | macos   | clang-700.1.81						|
-| JDK13+  | macos   | clang-900.0.39.2						|
+| JDK8    | Linux   | GCC 4.8 (HotSpot) GCC 7.6 (OpenJ9)                |
+| JDK11+  | Linux   | GCC 7.5                                           |
+| JDK8    | Windows | VS2013 (12.0) (HotSpot) or VS2010 (10.0) (OpenJ9) |
+| JDK11+  | Windows | VS2017                                            |
+| JDK8/11 | AIX     | xlC/C++ 13.1.3                                    |
+| JDK13+  | AIX     | xlC/C++ 16.1.0                                    |
+| JDK8    | macos   | GCC 4.2.1 (LLVM 2336.11.00                        |
+| JDK11   | macos   | clang-700.1.81                                    |
+| JDK13+  | macos   | clang-900.0.39.2                                  |
 
 All machines at AdoptOpenJDK are set up using the ansible playbooks from the
 [infrastructure](https://github.com/adoptopenjdk/openjdk-infrastructure) repository.
@@ -75,7 +75,7 @@ All machines at AdoptOpenJDK are set up using the ansible playbooks from the
 
 1. Create the new release repository under GitHub.com/adoptopenjdk (generally `openjdk-jdkxx`)
 2. Add the release to the list at [pipeline file](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build)
-3. Adjust the PR testing pipline [Example](https://github.com/AdoptOpenJDK/openjdk-build/pull/1394) to use the new release
+3. Adjust the PR testing pipeline [Example](https://github.com/AdoptOpenJDK/openjdk-build/pull/1394) to use the new release
 
 ## Removing a major release once you've added a new one
 
@@ -94,13 +94,14 @@ Unless the last release was an LTS one, you will generally want to remove one of
 
 We perform different builds such as the based openjdk (hotspot), builds from the Eclipse OpenJ9 codebase as well as others such as Corretto and SAPMachine. These alternatives are referred to as build variants.
 
-First you will need to add support into the [pipeline files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build) as well as any environment-specific change syou need to make in the [platform files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
+First you will need to add support into the [pipeline files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build) as well as any environment-specific changes you need to make in the [platform files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
 For an example, see [this PR where Dragonwell was added](https://github.com/AdoptOpenJDK/openjdk-build/pull/2051/files)
 For more information on other changes required, see [this document](https://github.com/AdoptOpenJDK/TSC/wiki/Adding-a-new-build-variant)
 
 ## How do I change the parameters, such as configure flags, for a Jenkins build
 
-Either
+Either:
+
 - Modify the environment files in [platform-specific-configurations](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
 - Modify the [pipeline files](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/build), although this is normally only done for configuration differences such as OpenJ9 Large Heap builds
 
@@ -122,6 +123,6 @@ For more information, see the [PR testing documentation](./pipelines/build/prTes
 
 ## Which OS levels do we build on?
 
-The operating systems/distributions which we buid or are documented in the
+The operating systems/distributions which we build or are documented in the
 [openjdk-build wiki](https://github.com/AdoptOpenJDK/openjdk-build/wiki/%5BWIP%5D-Minimum-OS-levels).
 Runtime platforms are in our [supported platforms page](https://adoptopenjdk.net/supported_platforms.html).
