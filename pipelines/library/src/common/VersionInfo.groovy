@@ -158,14 +158,6 @@ class VersionInfo {
                 if (matched223.group('pre') != null) {
                     pre = matched223.group('pre')
                     context.println "[SUCCESS] regex group (pre) of last 223 regex matched to ${pre}"
-                } else {
-                    // Unique case for builds with ea in the version string (i.e. 1.8.0_272-ea-b10)
-                    // See https://github.com/AdoptOpenJDK/openjdk-build/issues/2172
-                    if (versionString.contains("ea")) {
-                        String eaString = "ea"
-                        pre = eaString
-                        context.println "[SUCCESS] Version string contains ea. Setting pre to ${eaString}"
-                    }
                 }
 
                 build = or0(matched223, 'build')
