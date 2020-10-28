@@ -43,6 +43,9 @@ class Regeneration implements Serializable {
 
     private final String excludedConst = "EXCLUDED"
 
+    /*
+    Constructor
+    */
     public Regeneration(
         String javaVersion,
         Map<String, Map<String, ?>> buildConfigurations,
@@ -94,6 +97,11 @@ class Regeneration implements Serializable {
         return configureArgs
     }
 
+    /*
+    Retrieves the dockerImage attribute from the build configurations.
+    This specifies the DockerHub org and image to pull or build in case we don't have one stored in this repository.
+    If this isn't specified, the openjdk_build_pipeline.groovy will assume we are not building the jdk inside of a container.
+    */
     def getDockerImage(Map<String, ?> configuration, String variant) {
         def dockerImageValue = ""
         if (configuration.containsKey("dockerImage")) {
@@ -106,6 +114,11 @@ class Regeneration implements Serializable {
         return dockerImageValue
     }
 
+    /*
+    Retrieves the dockerFile attribute from the build configurations.
+    This specifies the path of the dockerFile relative to this repository.
+    If a dockerFile is not specified, the openjdk_build_pipeline.groovy will attempt to pull one from DockerHub.
+    */
     def getDockerFile(Map<String, ?> configuration, String variant) {
         def dockerFileValue = ""
         if (configuration.containsKey("dockerFile")) {
@@ -118,6 +131,11 @@ class Regeneration implements Serializable {
         return dockerFileValue
     }
 
+    /*
+    Retrieves the dockerNode attribute from the build configurations.
+    This determines what the additional label will be if we are building the jdk in a docker container.
+    Defaults to &&dockerBuild in openjdk_build_pipeline.groovy if it's not supplied in the build configuration.
+    */
     def getDockerNode(Map<String, ?> configuration, String variant) {
         def dockerNodeValue = ""
         if (configuration.containsKey("dockerNode")) {
@@ -359,7 +377,7 @@ class Regeneration implements Serializable {
             def response = parser.parseText(get.getInputStream().getText())
             return response
         } catch (Exception e) {
-            // Failed to connect to jenkins api or a parsing error occured
+            // Failed to connect to jenkins api or a parsing error occurred
             context.println "[ERROR] Failure on jenkins api connection or parsing.\nError: ${e}"
             currentBuild.result = "FAILURE"
         }
@@ -374,7 +392,7 @@ class Regeneration implements Serializable {
             def versionNumbers = javaVersion =~ /\d+/
 
             /*
-            * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
+            * Stage: Check that the pipeline isn't in in-progress or queued up. Once clear, run the regeneration job
             */
             context.stage("Check $javaVersion pipeline status") {
 
@@ -384,7 +402,7 @@ class Regeneration implements Serializable {
                 // Parse api response to only extract the relevant pipeline
                 getPipelines.jobs.name.each{ pipeline ->
                     if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
-                        // TODO: Paramaterise this
+                        // TODO: Parametrise this
                         Integer sleepTime = 900
                         
                         Boolean inProgress = true
