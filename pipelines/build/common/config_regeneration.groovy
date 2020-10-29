@@ -138,13 +138,6 @@ class Regeneration implements Serializable {
     */
     def formAdditionalBuildNodeLabels(Map<String, ?> configuration, String variant) {
         def buildTag = "build"
-
-        if (configuration.os == "windows" && variant == "openj9") {
-            buildTag = "buildj9"
-        } else if (configuration.arch == "s390x" && variant == "openj9") {
-            buildTag = "(buildj9||build)&&openj9"
-        }
-
         def labels = "${buildTag}"
 
         if (configuration.containsKey("additionalNodeLabels")) {
