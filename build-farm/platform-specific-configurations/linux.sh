@@ -74,12 +74,12 @@ fi
 
 if [ "${ARCHITECTURE}" == "arm" ]
 then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=4 --with-memory-size=2000"
   if [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="$CONFIGURE_ARGS_FOR_ANY_PLATFORM --with-extra-ldflags=-latomic"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-latomic"
   fi
   if [ "$JAVA_FEATURE_VERSION" -ge 11 ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="$CONFIGURE_ARGS_FOR_ANY_PLATFORM --disable-warnings-as-errors"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
   fi
   if [ ! -z "${NUM_PROCESSORS}" ]
   then
