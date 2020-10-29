@@ -180,12 +180,18 @@ configureVersionStringParameter() {
 
   local dateSuffix=$(date -u +%Y%m%d%H%M)
 
-  # Configures "vendor" jdk properties
+  # Configures "vendor" jdk properties.
+  # AdoptOpenJDK default values are set after this code block
+  # TODO 1. We should probably look at having these values passed through a config
+  # file as opposed to hardcoding in shell
+  # TODO 2. This highlights us conflating variant with vendor. e.g. OpenJ9 is really
+  # a technical variant with Eclipse as the vendor
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
     BUILD_CONFIG[VENDOR]="Alibaba"
     BUILD_CONFIG[VENDOR_VERSION]="\"(Alibaba Dragonwell)\""
     BUILD_CONFIG[VENDOR_URL]="http://www.alibabagroup.com"
     BUILD_CONFIG[VENDOR_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse/openj9/issues"
   fi
