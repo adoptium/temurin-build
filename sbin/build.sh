@@ -364,7 +364,11 @@ configureCommandParameters() {
   echo "Configuring jvm variants if provided"
   addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
 
-  # Now we add any configure arguments the user has specified on the command line.
+  # Now we add any platform-specific args after the configure args, so they can override if necessary.
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
+
+  # Finally, we add any configure arguments the user has specified on the command line.
+  # This is done last, to ensure the user can override any args they need to.
   CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}"
 
   configureFreetypeLocation
@@ -391,7 +395,7 @@ buildTemplatedFile() {
 
   echo "Currently at '${PWD}'"
 
-  FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
+  FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS}"
   echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
 
   # If it's Java 9+ then we also make test-image to build the native test libraries,
