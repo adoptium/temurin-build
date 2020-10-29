@@ -409,9 +409,13 @@ downloadFile() {
 
   # Temporary fudge as curl on my windows boxes is exiting with RC=127
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    wget -O "${targetFileName}" "${url}" || exit 2
-  else
-    curl --fail -L -o "${targetFileName}" "${url}" || exit 2
+    if ! wget -O "${targetFileName}" "${url}"; then
+       echo ERROR: Failed to download "${url}" - exiting
+       exit 2
+    fi
+  elif ! curl --fail -L -o "${targetFileName}" "${url}"; then
+    echo ERROR: Failed to download "${url}" - exiting
+    exit 2
   fi
 
   if [ $# -ge 3 ]; then
@@ -420,7 +424,7 @@ downloadFile() {
     local actualChecksum=$(sha256File ${targetFileName})
 
     if [ "${actualChecksum}" != "${expectedChecksum}" ]; then
-      echo "Failed to verify checksum on ${targetFileName} ${url}"
+      echo "ERROR: Failed to verify checksum on ${targetFileName} ${url}"
 
       echo "Expected ${expectedChecksum} got ${actualChecksum}"
       exit 1
