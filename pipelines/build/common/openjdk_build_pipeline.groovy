@@ -247,7 +247,7 @@ class Build {
 
             context.println(versionOutput)
 
-            return new VersionInfo().parse(versionOutput, buildConfig.ADOPT_BUILD_NUMBER)
+            return new VersionInfo(context).parse(versionOutput, buildConfig.ADOPT_BUILD_NUMBER)
         }
         return null
     }

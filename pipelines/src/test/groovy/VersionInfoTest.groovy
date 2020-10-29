@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 class VersionInfoTest {
     @Test
     void doesNotDefaultAdoptNumber() {
-        VersionInfo parsed = new VersionInfo().parse("11.0.2+10", null)
+        VersionInfo parsed = new VersionInfo(this).parse("11.0.2+10", null)
         Assertions.assertEquals(11, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(2, parsed.security)
@@ -19,7 +19,7 @@ class VersionInfoTest {
 
     @Test
     void addsZeroAdoptBuildWhenThereIsAnOpt() {
-        VersionInfo parsed = new VersionInfo().parse("11.0.2+10-202010281332.username.dirname", null)
+        VersionInfo parsed = new VersionInfo(this).parse("11.0.2+10-202010281332.username.dirname", null)
         Assertions.assertEquals(11, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(2, parsed.security)
@@ -33,7 +33,7 @@ class VersionInfoTest {
 
     @Test
     void parsesJdk11NightlyPreAndOpt() {
-        VersionInfo parsed = new VersionInfo().parse("11.0.2-ea+10-202010281332.username.dirname", null)
+        VersionInfo parsed = new VersionInfo(this).parse("11.0.2-ea+10-202010281332.username.dirname", null)
         Assertions.assertEquals(11, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(2, parsed.security)
@@ -47,7 +47,7 @@ class VersionInfoTest {
 
     @Test
     void parsesJdk8NightlyPreAndOpt() {
-        VersionInfo parsed = new VersionInfo().parse("1.8.0_272-ea-202010281332-b10", null)
+        VersionInfo parsed = new VersionInfo(this).parse("1.8.0_272-ea-202010281332-b10", null)
         Assertions.assertEquals(8, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(272, parsed.security)
@@ -61,7 +61,7 @@ class VersionInfoTest {
 
     @Test
     void parsesJdk11Release() {
-        VersionInfo parsed = new VersionInfo().parse("11.0.2+10", null)
+        VersionInfo parsed = new VersionInfo(this).parse("11.0.2+10", null)
         Assertions.assertEquals(11, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(2, parsed.security)
@@ -75,7 +75,7 @@ class VersionInfoTest {
 
     @Test
     void parsesJdk8Release() {
-        VersionInfo parsed = new VersionInfo().parse("1.8.0_272-b10", null)
+        VersionInfo parsed = new VersionInfo(this).parse("1.8.0_272-b10", null)
         Assertions.assertEquals(8, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(272, parsed.security)
@@ -89,7 +89,7 @@ class VersionInfoTest {
 
     @Test
     void parsesJdk11ReleaseWithEA() {
-        VersionInfo parsed = new VersionInfo().parse("11.0.2-ea+10", null)
+        VersionInfo parsed = new VersionInfo(this).parse("11.0.2-ea+10", null)
         Assertions.assertEquals(11, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(2, parsed.security)
@@ -103,7 +103,7 @@ class VersionInfoTest {
 
     @Test
     void parsesJdk8ReleaseWithEA() {
-        VersionInfo parsed = new VersionInfo().parse("1.8.0_272-ea-b10", null)
+        VersionInfo parsed = new VersionInfo(this).parse("1.8.0_272-ea-b10", null)
         Assertions.assertEquals(8, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(272, parsed.security)
@@ -117,7 +117,7 @@ class VersionInfoTest {
 
     @Test
     void addsAdoptBuildNum() {
-        VersionInfo parsed = new VersionInfo().parse("11.0.2+10", "2")
+        VersionInfo parsed = new VersionInfo(this).parse("11.0.2+10", "2")
         Assertions.assertEquals(11, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
         Assertions.assertEquals(2, parsed.security)
