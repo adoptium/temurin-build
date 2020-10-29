@@ -540,9 +540,11 @@ printJavaVersionString() {
        # riscv is cross compiled, so we cannot run it on the build system
        # This is a temporary plausible solution in the absence of another fix
        local jdkversion=$(getOpenJdkVersion)
+       local jdkversionNoPrefix=${jdkversion#jdk-}
+       local jdkShortVersion=${jdkversionNoPrefix%%+*}
        cat << EOT > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/version.txt"
-openjdk version "${jdkversion%%+*}" "$(date +%Y-%m-%d)"
-OpenJDK Runtime Environment AdoptOpenJDK (build ${jdkversion}-$(date +%Y%m%d%H%M))
+openjdk version "${jdkShortVersion}" "$(date +%Y-%m-%d)"
+OpenJDK Runtime Environment AdoptOpenJDK (build ${jdkversionNoPrefix}-$(date +%Y%m%d%H%M))
 Eclipse OpenJ9 VM AdoptOpenJDK (build master-000000000, JRE 11 Linux riscv-64-Bit Compressed References $(date +%Y%m%d)_00 (JIT disabled, AOT disabled)
 OpenJ9   - 000000000
 OMR      - 000000000
