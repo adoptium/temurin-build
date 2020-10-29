@@ -55,53 +55,46 @@ signRelease()
   case "$OPERATING_SYSTEM" in
     "windows")
       echo "Signing Windows release"
-      signToolPath=${signToolPath:-"/cygdrive/c/Program Files/Microsoft SDKs/Windows/v7.1/Bin/signtool.exe"}
+      signToolPath=${signToolPath:-"/cygdrive/c/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x64/signtool.exe"}
 
       # Sign .exe files
       FILES=$(find . -type f -name '*.exe')
       echo "$FILES" | while read -r f;
       do
         echo "Signing ${f}"
-        "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f";
+        if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; then
+          echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error - RC $? ... Retrying in 10 seconds"
+          sleep 10s
+          "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
+        fi        
       done
 
       # Sign .dll files
       FILES=$(find . -type f -name '*.dll')
       echo "$FILES" | while read -r f;
       do
-        "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f";
+        echo "Signing ${f}"
+        if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; then
+          echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error - RC $? ... Retrying in 10 seconds"
+          sleep 10s
+          "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
+        fi
       done
       ;;
     "mac"*)
+      # TODO: Remove this completly once https://github.com/AdoptOpenJDK/openjdk-jdk11u/commit/b3250adefed0c1778f38a7e221109ae12e7c421e has been backported to JDK8u
       echo "Signing OSX release"
-      ENTITLEMENTS="$WORKSPACE/entitlements.plist"
 
       # Login to KeyChain
       # shellcheck disable=SC2046
       # shellcheck disable=SC2006
-      security unlock-keychain -p `cat ~/.password`
+      security unlock-keychain -p `cat ~/.password` login.keychain-db
+
+      ENTITLEMENTS="$WORKSPACE/entitlements.plist"
+      xattr -cr .
       # Sign all files with the executable permission bit set.
       FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
       echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
-
-      # Loop through jmods, extract, sign and repack
-      JMODS_DIR=$(find "$TMP_DIR" -type d -name jmods 2>/dev/null || echo "")
-      if [[ -n $JMODS_DIR ]]; then
-        cd "$JMODS_DIR"
-        for jmod in ./*; do
-          rm -rf tmp
-          # Use brew install p7zip to get 7z
-          7z x "$jmod" -otmp
-          cd tmp
-          FILES=$(find bin lib -type f 2>/dev/null || echo "")
-          if [[ -n $FILES ]]; then
-            echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
-          fi
-          7z a -r ../"$jmod" .
-          cd ../
-          rm -rf tmp
-        done
-      fi
       ;;
     *)
       echo "Skipping code signing as it's not supported on $OPERATING_SYSTEM"

@@ -10,7 +10,11 @@ doInit="false"
 doReset="false"
 doTagging="false"
 doUpdate="false"
-hgRepo="https://hg.openjdk.java.net/jdk8u/jdk8u"
+if [ -z ${HG_REPO} ]; then
+  hgRepo="https://hg.openjdk.java.net/jdk8u/jdk8u"
+else 
+  hgRepo="$HG_REPO"
+fi
 tag="jdk8u172-b08"
 workingBranch="master"
 
@@ -103,6 +107,8 @@ function updateRepo() {
     git clone "hg::${repoLocation}" .
   fi
 
+  addRemotes
+
   cd "$MIRROR/$repoName"
   git fetch origin
   git pull origin
@@ -137,7 +143,7 @@ function rebuildLocalRepo() {
     mkdir -p "$REPO"
     cd "$REPO"
     git clone $UPSTREAM_GIT_REPO .
-    git checkout master
+    git checkout master || git checkout -b master
 
     # Step 3 Setup remotes
     addRemotes

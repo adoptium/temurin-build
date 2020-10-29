@@ -38,9 +38,11 @@ targetConfigurations = [
         "arm32Linux"  : [
                 "hotspot"
         ],
-        "linuxXL"     : [
+        "x64LinuxXL"     : [
                 "openj9"
         ]
 ]
+
+disableJob = true
 
 return this

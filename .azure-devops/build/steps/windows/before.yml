@@ -1,0 +1,64 @@
+# before.yml
+# install Windows platform dependencies & set environment variables
+
+parameters:
+  # store all the downloaded files
+  dependenciesDir: '$(Agent.BuildDirectory)\tmp'
+  # directory to download the JDK used to bootstrap the build
+  jdkBootDir: '$(Agent.BuildDirectory)\jdk\boot'
+  # store jdk used for gradle
+  javaHomeDir: '$(Agent.BuildDirectory)\jdk\home'
+
+steps:
+  # create all required directories before downloading files & installing jdks
+  - script: |
+      if not exist "${{ parameters.dependenciesDir }}" mkdir ${{ parameters.dependenciesDir }};
+      if not exist "${{ parameters.jdkBootDir }}" mkdir ${{ parameters.jdkBootDir }};
+      if not exist "${{ parameters.javaHomeDir }}" mkdir ${{ parameters.javaHomeDir }};
+    displayName: "[Windows Before] create required directories"
+
+  # download jdk8u, bootjdk
+  - powershell: |
+      $ProgressPreference = 'SilentlyContinue';
+      Invoke-WebRequest -UseBasicParsing 'https://api.adoptopenjdk.net/v3/binary/latest/8/ga/windows/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk' -OutFile '${{ parameters.dependenciesDir }}\jdk8.zip';
+      if ('$(BOOTJDK_VERSION)' -eq '7') {
+        Invoke-WebRequest -UseBasicParsing "https://cdn.azul.com/zulu/bin/zulu7.38.0.11-ca-jdk7.0.262-win_x64.zip" -OutFile '${{ parameters.dependenciesDir }}\jdk.zip';
+      } elseif ('$(BOOTJDK_VERSION)' -eq '15'){
+        Invoke-WebRequest -UseBasicParsing "https://api.adoptopenjdk.net/v3/binary/latest/$(BOOTJDK_VERSION)/ea/windows/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk" -OutFile '${{ parameters.dependenciesDir }}\jdk.zip';
+      } else {
+        Invoke-WebRequest -UseBasicParsing "https://api.adoptopenjdk.net/v3/binary/latest/$(BOOTJDK_VERSION)/ga/windows/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk" -OutFile '${{ parameters.dependenciesDir }}\jdk.zip';
+      }
+    displayName: "[Windows Before] download JDKs from AdoptOpenJDK & Azul"
+
+  # install cygwin and build dependencies
+  - powershell: |
+      $ProgressPreference = 'SilentlyContinue';
+      Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile '${{ parameters.dependenciesDir }}\cygwin.exe';
+      Start-Process -Wait -FilePath '${{ parameters.dependenciesDir }}\cygwin.exe' -ArgumentList '--packages wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir $(Agent.BuildDirectory)\cygwin_packages --root $(Agent.BuildDirectory)\cygwin64';
+    displayName: "[Windows Before] download and install Cygwin"
+
+  # add cygwin bin to PATH
+  - script: |
+      echo ##vso[task.setvariable variable=Path]$(Agent.BuildDirectory)\cygwin64\bin;%PATH%
+    displayName: "[Windows Before] add cygwin to PATH"
+
+  # unzip downloaded JDK zip files to directories, bsdtar is installed by cygwin
+  - bash: |
+      bsdtar --strip-components=1 -xvf $(cygpath -u '${{ parameters.dependenciesDir }}\jdk8.zip') -C '${{ parameters.javaHomeDir }}'
+      bsdtar --strip-components=1 -xvf $(cygpath -u '${{ parameters.dependenciesDir }}\jdk.zip') -C '${{ parameters.jdkBootDir }}'
+    displayName: "[Windows Before] extracting downloaded JDKs to directories"
+
+  # download and install visual studio 2013 for build jdk8u
+  - powershell: |
+      $ProgressPreference = 'SilentlyContinue';
+      Invoke-WebRequest -UseBasicParsing 'https://go.microsoft.com/fwlink/?LinkId=532495' -OutFile '${{ parameters.dependenciesDir }}\vs2013.exe';
+      Start-Process -Wait -FilePath '${{ parameters.dependenciesDir }}\vs2013.exe' -ArgumentList '/Silent /NoRestart';
+    displayName: "[Windows Before] jdk8u install VS2013"
+    condition: eq(variables['JAVA_TO_BUILD'], 'jdk8u')
+
+  # set system veraibles that will be used by following steps
+  # cygpath is used to make sure JDK_BOOT_DIR & JAVA_HOME is correct in cygwin bash
+  - bash: |
+      echo "##vso[task.setvariable variable=JDK_BOOT_DIR]$(cygpath -u '${{ parameters.jdkBootDir }}')"
+      echo "##vso[task.setvariable variable=JAVA_HOME]$(cygpath -u '${{ parameters.javaHomeDir }}')"
+    displayName: "[Windows Before] update Windows environment variables"

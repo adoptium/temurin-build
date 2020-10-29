@@ -10,7 +10,7 @@ class VersionInfo {
     String opt
     String version
     String pre
-    Integer adopt_build_number = 1
+    Integer adopt_build_number
     String semver
 
     VersionInfo() {
@@ -24,8 +24,12 @@ class VersionInfo {
             }
         }
 
-        if (ADOPT_BUILD_NUMBER) {
+        // ADOPT_BUILD_NUMBER is a string, so we also need to account for an empty string value
+        if (ADOPT_BUILD_NUMBER != null && ADOPT_BUILD_NUMBER != "") {
             adopt_build_number = Integer.parseInt(ADOPT_BUILD_NUMBER)
+        } else if (opt != null) {
+            // if an opt is present then set adopt_build_number to pad out the semver
+            adopt_build_number = 0
         }
 
         semver = formSemver()
@@ -34,15 +38,19 @@ class VersionInfo {
 
     private Integer or0(Matcher matched, String groupName) {
         def number = matched.group(groupName)
-        if (number) {
+        if (number != null) {
             return number as Integer
         } else {
             return 0
         }
     }
 
+    // Matches JDK8 "Nightly" format, or "Release" with pre
     private boolean matchAltPre223(versionString) {
-        //1.8.0_202-internal-201903130451-b08
+        //<version><-milestone><-user-release-suffix(timestamp)><-build>
+        //1.8.0_202-internal-201903130451-b08 (nightly, milestone = internal (defaulted))
+        //1.8.0_272-ea-202010231715-b10 (nightly, milestone = ea)
+        //1.8.0_272-ea-b10 (release, milestone = ea)
         final pre223regex = "(?<version>1\\.(?<major>[0-8])\\.0(_(?<update>[0-9]+))?(-(?<additional>.*))?)"
         final matched = versionString =~ /${pre223regex}/
 
@@ -54,11 +62,23 @@ class VersionInfo {
                 String additional = matched.group('additional')
                 additional.split("-")
                         .each { val ->
+                            // Is it build: b<number>
                             def matcher = val =~ /b(?<build>[0-9]+)/
-                            if (matcher.matches()) build = Integer.parseInt(matcher.group("build"));
-
-                            matcher = val =~ /^(?<opt>[0-9]{12})$/
-                            if (matcher.matches()) opt = matcher.group("opt");
+                            if (matcher.matches()) {
+                                build = Integer.parseInt(matcher.group("build"));
+                            } else {
+                                // Is it the user-release-suffix timestamp set as opt: <12 digits>
+                                matcher = val =~ /^(?<opt>[0-9]{12})$/
+                                if (matcher.matches()) {
+                                    opt = matcher.group("opt");
+                                } else {
+                                    // Is it milestone set as pre: <AlphaNumeric> 
+                                    matcher = val =~ /(?<pre>[a-zA-Z0-9]+)/
+                                    if (matcher.matches()) {
+                                        pre = matcher.group("pre");
+                                    }
+                                }
+                            }
                         }
             }
             version = matched.group('version')
@@ -68,7 +88,9 @@ class VersionInfo {
         return false
     }
 
+    // Matches JDK8 "Release" version format with no-pre
     private boolean matchPre223(versionString) {
+        //1.8.0_272-b10
         final pre223regex = "jdk\\-?(?<version>(?<major>[0-8]+)(u(?<update>[0-9]+))?(-b(?<build>[0-9]+))(_(?<opt>[-a-zA-Z0-9\\.]+))?)"
         final matched = versionString =~ /${pre223regex}/
 
@@ -85,6 +107,7 @@ class VersionInfo {
         }
     }
 
+    // Match JDK9+
     private boolean match223(versionString) {
         //Regexes based on those in http://openjdk.java.net/jeps/223
         // Technically the standard supports an arbitrary number of numbers, we will support 3 for now
@@ -126,9 +149,12 @@ class VersionInfo {
 
             semver += "+"
             semver += (build ?: "0")
-            semver += "." + adopt_build_number
 
-            if (opt) {
+            if (adopt_build_number != null) {
+                semver += "." + adopt_build_number
+            }
+
+            if (opt != null) {
                 semver += "." + opt
             }
             return semver
@@ -146,7 +172,7 @@ class VersionInfo {
         if (major != null) {
             def semver = major + "." + minor + "." + security
 
-            if (pre) {
+            if (pre != null) {
                 semver += "-" + pre
             }
             return semver

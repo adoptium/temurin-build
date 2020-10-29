@@ -12,6 +12,11 @@ class IndividualBuildConfig implements Serializable {
     final String SCM_REF
     final String BUILD_ARGS
     final String NODE_LABEL
+    final String ACTIVE_NODE_TIMEOUT
+    final boolean CODEBUILD
+    final String DOCKER_IMAGE
+    final String DOCKER_FILE
+    final String DOCKER_NODE
     final String CONFIGURE_ARGS
     final String OVERRIDE_FILE_NAME_VERSION
     final String ADDITIONAL_FILE_NAME_TAG
@@ -20,6 +25,7 @@ class IndividualBuildConfig implements Serializable {
     final String PUBLISH_NAME
     final String ADOPT_BUILD_NUMBER
     final boolean ENABLE_TESTS
+    final boolean ENABLE_INSTALLERS
     final boolean CLEAN_WORKSPACE
 
     IndividualBuildConfig(String json) {
@@ -43,6 +49,11 @@ class IndividualBuildConfig implements Serializable {
         SCM_REF = map.get("SCM_REF")
         BUILD_ARGS = map.get("BUILD_ARGS")
         NODE_LABEL = map.get("NODE_LABEL")
+        ACTIVE_NODE_TIMEOUT = map.get("ACTIVE_NODE_TIMEOUT")
+        CODEBUILD = map.get("CODEBUILD")
+        DOCKER_IMAGE = map.get("DOCKER_IMAGE")
+        DOCKER_FILE = map.get("DOCKER_FILE")
+        DOCKER_NODE = map.get("DOCKER_NODE")
         CONFIGURE_ARGS = map.get("CONFIGURE_ARGS")
         OVERRIDE_FILE_NAME_VERSION = map.get("OVERRIDE_FILE_NAME_VERSION")
         ADDITIONAL_FILE_NAME_TAG = map.get("ADDITIONAL_FILE_NAME_TAG")
@@ -51,6 +62,7 @@ class IndividualBuildConfig implements Serializable {
         PUBLISH_NAME = map.get("PUBLISH_NAME")
         ADOPT_BUILD_NUMBER = map.get("ADOPT_BUILD_NUMBER")
         ENABLE_TESTS = map.get("ENABLE_TESTS")
+        ENABLE_INSTALLERS = map.get("ENABLE_INSTALLERS")
         CLEAN_WORKSPACE = map.get("CLEAN_WORKSPACE")
     }
 
@@ -79,6 +91,11 @@ class IndividualBuildConfig implements Serializable {
                 SCM_REF                   : SCM_REF,
                 BUILD_ARGS                : BUILD_ARGS,
                 NODE_LABEL                : NODE_LABEL,
+                ACTIVE_NODE_TIMEOUT       : ACTIVE_NODE_TIMEOUT,
+                CODEBUILD                 : CODEBUILD,
+                DOCKER_IMAGE              : DOCKER_IMAGE,
+                DOCKER_FILE               : DOCKER_FILE,
+                DOCKER_NODE               : DOCKER_NODE,
                 CONFIGURE_ARGS            : CONFIGURE_ARGS,
                 OVERRIDE_FILE_NAME_VERSION: OVERRIDE_FILE_NAME_VERSION,
                 ADDITIONAL_FILE_NAME_TAG  : ADDITIONAL_FILE_NAME_TAG,
@@ -87,6 +104,7 @@ class IndividualBuildConfig implements Serializable {
                 PUBLISH_NAME              : PUBLISH_NAME,
                 ADOPT_BUILD_NUMBER        : ADOPT_BUILD_NUMBER,
                 ENABLE_TESTS              : ENABLE_TESTS,
+                ENABLE_INSTALLERS         : ENABLE_INSTALLERS,
                 CLEAN_WORKSPACE           : CLEAN_WORKSPACE
         ]
     }

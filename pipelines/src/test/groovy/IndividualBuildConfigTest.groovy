@@ -16,6 +16,11 @@ class IndividualBuildConfigTest {
                  SCM_REF                   : "f",
                  BUILD_ARGS                : "g",
                  NODE_LABEL                : "h",
+                 ACTIVE_NODE_TIMEOUT       : "r",
+                 CODEBUILD                 : false,
+                 DOCKER_IMAGE              : "o",
+                 DOCKER_FILE               : "p",
+                 DOCKER_NODE               : "q",
                  CONFIGURE_ARGS            : "i",
                  OVERRIDE_FILE_NAME_VERSION: "j",
                  ADDITIONAL_FILE_NAME_TAG  : "k",
@@ -24,6 +29,7 @@ class IndividualBuildConfigTest {
                  PUBLISH_NAME              : "m",
                  ADOPT_BUILD_NUMBER        : "n",
                  ENABLE_TESTS              : true,
+                 ENABLE_INSTALLERS         : true,
                  CLEAN_WORKSPACE           : false]
         )
 

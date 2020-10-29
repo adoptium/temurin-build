@@ -1,0 +1,55 @@
+# build_hotspot.yml
+# run the ./makejdk-any-platform.sh and upload generated files to artifacts
+
+steps:
+  # using the AdoptOpenJDK build scripts to build the OpenJDK binaries.
+  - bash: |
+      export PATH="/usr/bin:$PATH"
+
+      CONFIGURE_ARGS=
+      BUILD_ARGS=
+      if [ "$(JAVA_TO_BUILD)" == "jdk" ]
+      then
+          CONFIGURE_ARGS="--disable-warnings-as-errors --disable-ccache --with-toolchain-version=2017"
+          BUILD_ARGS="--jvm-variant client,server"
+      elif [ "$(JAVA_TO_BUILD)" == "jdk15" ]
+      then
+          CONFIGURE_ARGS="--disable-warnings-as-errors --disable-ccache --with-toolchain-version=2017"
+          BUILD_ARGS="--jvm-variant client,server"
+      elif [ "$(JAVA_TO_BUILD)" == "jdk14u" ]
+      then
+          CONFIGURE_ARGS="--disable-warnings-as-errors --disable-ccache --with-toolchain-version=2017"
+          BUILD_ARGS="--jvm-variant client,server"
+      elif [ "$(JAVA_TO_BUILD)" == "jdk11u" ]
+      then
+          CONFIGURE_ARGS="--disable-warnings-as-errors --disable-ccache --with-toolchain-version=2017"
+          BUILD_ARGS="--jvm-variant client,server"
+      elif [ "$(JAVA_TO_BUILD)" == "jdk8u" ]
+      then
+          CONFIGURE_ARGS="--disable-ccache --with-toolchain-version=2013"
+          BUILD_ARGS="--freetype-version 2.5.3"
+      fi
+
+      if [ "${ARCHITECTURE}" == "x86-32" ]
+      then
+          CONFIGURE_ARGS="--with-target-bits=32 --target=x86 ${CONFIGURE_ARGS}"
+      fi
+
+      ./makejdk-any-platform.sh \
+        ${EXTRA_MAKEJDK_ANY_PLATFORM_OPTIONS} \
+        --jdk-boot-dir "${JDK_BOOT_DIR}" \
+        --configure-args "${CONFIGURE_ARGS}" \
+        --destination artifacts \
+        --target-file-name "${FILENAME}.zip" \
+        ${BUILD_ARGS} \
+        --use-jep319-certs \
+        --build-variant "$(VARIANT)" \
+        $(JAVA_TO_BUILD)
+    displayName: "[Windows Build] start makejdk-any-platform process"
+
+  # upload the produced JDK/JRE binary to the build artifact service.
+  - task: PublishPipelineArtifact@1
+    inputs:
+      artifactName: $(Agent.OS)_$(ARCHITECTURE)
+      targetPath: "$(Build.SourcesDirectory)/workspace/artifacts"
+    displayName: "[Windows Build] update JKD/JRE artifact"

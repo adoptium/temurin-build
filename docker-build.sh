@@ -66,7 +66,7 @@ buildDockerContainer()
 
   writeConfigToFile
 
-  ${BUILD_CONFIG[DOCKER]} build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
+  ${BUILD_CONFIG[DOCKER]} build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" --build-arg "HostUID=${UID}"
 }
 
 # Execute the (Adopt) OpenJDK build inside the Docker Container
@@ -76,11 +76,52 @@ buildOpenJDKViaDocker()
   # TODO This could be extracted overridden by the user if we support more
   # architectures going forwards
   local container_architecture="x86_64/ubuntu"
-
+  local build_variant_flag=""
   BUILD_CONFIG[DOCKER_FILE_PATH]="docker/${BUILD_CONFIG[OPENJDK_CORE_VERSION]}/$container_architecture"
+  
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
+    build_variant_flag="--openj9"
+  fi
+  docker/dockerfile-generator.sh --version "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" "$build_variant_flag"
 
   # shellcheck disable=SC1090
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
+
+    local openjdk_core_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
+    # test-image and debug-image targets are optional - build scripts check whether the directories exist
+    local openjdk_test_image_path="test"
+    local openjdk_debug_image_path="debug-image"
+    local jdk_directory=""
+    local jre_directory=""
+
+    if [ "$openjdk_core_version" == "${JDK8_CORE_VERSION}" ]; then
+      case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+      "darwin")
+        jdk_directory="j2sdk-bundle/jdk*.jdk"
+        jre_directory="j2re-bundle/jre*.jre"
+      ;;
+      *)
+        jdk_directory="j2sdk-image"
+        jre_directory="j2re-image"
+      ;;
+      esac
+    else
+      case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+      "darwin")
+        jdk_directory="jdk-bundle/jdk-*.jdk"
+        jre_directory="jre-bundle/jre-*.jre"
+      ;;
+      *)
+        jdk_directory="jdk"
+        jre_directory="jre"
+      ;;
+      esac
+    fi
+
+    BUILD_CONFIG[JDK_PATH]=$jdk_directory
+    BUILD_CONFIG[JRE_PATH]=$jre_directory
+    BUILD_CONFIG[TEST_IMAGE_PATH]=$openjdk_test_image_path
+    BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
 
   if [ -z "$(command -v docker)" ]; then
      # shellcheck disable=SC2154
@@ -132,24 +173,39 @@ buildOpenJDKViaDocker()
   local dockerEntrypoint=(--entrypoint /openjdk/sbin/build.sh "${BUILD_CONFIG[CONTAINER_NAME]}")
   if [[ "${BUILD_CONFIG[DEBUG_DOCKER]}" == "true" ]] ; then
      dockerMode=(-t -i)
-     dockerEntrypoint=(--entrypoint "/bin/sh" "${BUILD_CONFIG[CONTAINER_NAME]}" -c "echo 'DEBUG DOCKER BUILD\\nTo build jdk run\\n/openjdk/sbin/build.sh'; /bin/bash")
+     dockerEntrypoint=(--entrypoint "/bin/sh" "${BUILD_CONFIG[CONTAINER_NAME]}" -c "/bin/bash")
   fi
 
-  # shellcheck disable=SC2140
-  # Pass in the last important variables into the Docker container and call
-  # the /openjdk/sbin/build.sh script inside
-  ${BUILD_CONFIG[DOCKER]} run \
-       "${dockerMode[@]}" \
-       --cpuset-cpus="${cpuSet}" \
-       -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build" \
-       -v "${hostDir}/workspace/target":"/${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}:Z" \
-       "${gitSshAccess[@]}" \
-       -e DEBUG_DOCKER_FLAG="${BUILD_CONFIG[DEBUG_DOCKER]}" \
-       -e BUILD_VARIANT="${BUILD_CONFIG[BUILD_VARIANT]}" \
-       "${dockerEntrypoint[@]}"
-  
+  # Command without gitSshAccess or dockerMode arrays
+  local commandString=(
+         "--cpuset-cpus=${cpuSet}" 
+         -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build"
+         -v "${hostDir}"/workspace/target:/"${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}":Z 
+         -v "${hostDir}"/pipelines:/openjdk/pipelines 
+         -e "DEBUG_DOCKER_FLAG=${BUILD_CONFIG[DEBUG_DOCKER]}" 
+         -e "BUILD_VARIANT=${BUILD_CONFIG[BUILD_VARIANT]}"
+          "${dockerEntrypoint[@]:+${dockerEntrypoint[@]}}")
+
+  # If build specifies --ssh, add array to the command string
+  if [[ "${BUILD_CONFIG[USE_SSH]}" == "true" ]] ; then
+        commandString=("${gitSshAccess[@]:+${gitSshAccess[@]}}" "${commandString[@]}")
+  fi
+
+  # If build specifies --debug-docker, add array to the command string
+  if [[ "${BUILD_CONFIG[DEBUG_DOCKER]}" == "true" ]] ; then
+        commandString=("${dockerMode[@]:+${dockerMode[@]}}" "${commandString[@]}")
+        echo "DEBUG DOCKER MODE. To build jdk run /openjdk/sbin/build.sh"
+  fi
+
+  # Run the command string in Docker
+  ${BUILD_CONFIG[DOCKER]} run --name "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" "${commandString[@]}"
+
+  # Tell user where the resulting binary can be found on the host system
+  echo "The finished image can be found in ${hostDir}/workspace/target on the host system"
+
   # If we didn't specify to keep the container then remove it
-  if [[ -z ${BUILD_CONFIG[KEEP_CONTAINER]} ]] ; then
-    ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm {}
+  if [[ "${BUILD_CONFIG[KEEP_CONTAINER]}" == "false" ]] ; then
+	  echo "Removing container ${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}"
+	  ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$(NF) }' | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm {}
   fi
 }

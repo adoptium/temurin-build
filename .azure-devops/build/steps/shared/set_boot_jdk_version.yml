@@ -1,0 +1,21 @@
+steps:
+  - bash: |
+      BOOTJDK_VERSION=
+      if [ "$(JAVA_TO_BUILD)" == "jdk" ]
+      then
+          BOOTJDK_VERSION=15
+      elif [ "$(JAVA_TO_BUILD)" == "jdk15" ]
+      then
+          BOOTJDK_VERSION=14
+      elif [ "$(JAVA_TO_BUILD)" == "jdk14u" ]
+      then
+          BOOTJDK_VERSION=13
+      elif [ "$(JAVA_TO_BUILD)" == "jdk11u" ]
+      then
+          BOOTJDK_VERSION=10
+      elif [ "$(JAVA_TO_BUILD)" == "jdk8u" ]
+      then
+          BOOTJDK_VERSION=7
+      fi
+      echo "##vso[task.setvariable variable=BOOTJDK_VERSION]${BOOTJDK_VERSION}"
+    displayName: "[Shared Before] set BOOTJDK_VERSION"

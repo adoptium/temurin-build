@@ -1,0 +1,80 @@
+# Build Stages Template
+#
+# supported platform & versions:
+#    macOS: jdk11u, jdk14u, jdk15, and jdk
+#    windows: jdk8u, jdk11u, jdk14u, jdk15, and jdk
+#
+# required pipeline level variable(s):
+#    JAVA_TO_BUILD: jdk8u | jdk11u | jdk14u | jdk15 | jdk
+# 
+# optional pipeline level variable(s):
+#    EXTRA_MAKEJDK_ANY_PLATFORM_OPTIONS: other options in makejdk-any-platform.sh
+#
+# required stage level variable(s):
+#    TARGET_OS: mac|windows
+#    ARCHITECTURE: x64|x86-32
+#
+# Azure DevOps Microsoft-Hosted agents can be found at:
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted
+#
+stages:
+  - stage: build_macOS_x64_hotspot_binaries
+    variables:
+      skipComponentGovernanceDetection: true
+      TARGET_OS: "mac"
+      ARCHITECTURE: "x64"
+    displayName: "Build macOS x64 HotSpot Binaries"
+    dependsOn: []
+    # jdk8u cannot be built on macOS 10.14 or 10.13
+    condition: ne(variables.JAVA_TO_BUILD, 'jdk8u')
+    jobs:
+      - job: build_macOS_x64
+        timeoutInMinutes: 120
+        displayName: "Build macOS x64 HotSpot"
+        pool:
+          vmImage: macOS-latest
+        steps:
+          - template: ./steps/shared/before.yml
+          - template: ./steps/macOS/before.yml
+          - template: ./steps/macOS/build_hotspot.yml
+          - template: ./steps/shared/after.yml
+
+  - stage: build_windows_x64_hotspot_binaries
+    variables:
+      skipComponentGovernanceDetection: true
+      TARGET_OS: "windows"
+      ARCHITECTURE: "x64"
+    displayName: "Build Windows x64 HotSpot Binaries"
+    dependsOn: []
+    jobs:
+      - job: build_windows_x64
+        timeoutInMinutes: 120
+        displayName: "Build Windows x64 HotSpot"
+        pool:
+          vmImage: vs2017-win2016
+        steps:
+          - template: ./steps/shared/before.yml
+          - template: ./steps/windows/before.yml
+          - template: ./steps/windows/build_hotspot.yml
+          - template: ./steps/shared/after.yml
+
+  - stage: build_windows_x86_hotspot_binaries
+    variables:
+      skipComponentGovernanceDetection: true
+      TARGET_OS: "windows"
+      ARCHITECTURE: "x86-32"
+    displayName: "Build Windows x86 HotSpot Binaries"
+    dependsOn: []
+    # disable windows x86 build for jdk15 and jdk
+    condition: and(ne(variables.JAVA_TO_BUILD, 'jdk15'), ne(variables.JAVA_TO_BUILD, 'jdk'))
+    jobs:
+      - job: build_windows_x86
+        timeoutInMinutes: 120
+        displayName: "Build Windows x86 HotSpot"
+        pool:
+          vmImage: vs2017-win2016
+        steps:
+          - template: ./steps/shared/before.yml
+          - template: ./steps/windows/before.yml
+          - template: ./steps/windows/build_hotspot.yml
+          - template: ./steps/shared/after.yml
