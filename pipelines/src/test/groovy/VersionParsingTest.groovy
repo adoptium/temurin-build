@@ -45,7 +45,7 @@ OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.3+9-201903122221, mixed mode)"
         Assertions.assertEquals(202, parsed.security)
         Assertions.assertEquals(8, parsed.build)
         Assertions.assertEquals("201903130451", parsed.opt)
-        Assertions.assertEquals("8.0.202+8.23.201903130451", parsed.semver)
+        Assertions.assertEquals("8.0.202-internal+8.23.201903130451", parsed.semver)
     }
 
     @Test
