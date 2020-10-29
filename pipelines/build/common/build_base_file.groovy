@@ -56,13 +56,33 @@ class Builder implements Serializable {
     def context
     def currentBuild
 
-    final List<String> nightly = ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external']
+    final List<String> nightly = [
+        'sanity.openjdk',
+        'sanity.system',
+        'extended.system',
+        'sanity.perf',
+        'sanity.external'
+    ]
+    
+    // Temporarily remove weekly tests due to lack of machine capacity during release
+    final List<String> weekly = []
+    /*
     final List<String> weekly = [
-     /*    Temporarily remove weekly tests due to lack of machine capacity during release                  
-                           'extended.openjdk', 'extended.perf', 'extended.external',
-                           'special.openjdk','special.functional', 'special.system', 'special.perf' */
-                           ]
-        
+        'extended.openjdk',
+        'extended.perf',
+        'extended.external',
+        'special.openjdk',
+        'special.functional',
+        'special.system',
+        'special.perf'
+    ]
+    */
+    
+    /*
+    Returns an IndividualBuildConfig that is passed down to the downstream job.
+    It uses several helper functions to pull in and parse the build configuration for the job.
+    This overrides the default IndividualBuildConfig generated in config_regeneration.groovy.
+    */
     IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant) {
 
         def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
@@ -114,11 +134,18 @@ class Builder implements Serializable {
         )
     }
 
+    /*
+    Returns true if possibleMap is a Map. False otherwise. 
+    */
     static def isMap(possibleMap) {
         return Map.class.isInstance(possibleMap)
     }
 
 
+    /*
+    Retrieves the buildArgs attribute from the build configurations.
+    These eventually get passed to ./makejdk-any-platform.sh and make images.
+    */
     String getBuildArgs(Map<String, ?> configuration, variant) {
         if (configuration.containsKey('buildArgs')) {
             if (isMap(configuration.buildArgs)) {
@@ -135,8 +162,8 @@ class Builder implements Serializable {
     }
     
     /*
-    * Get the list of tests from jdk*_pipeline_config.groovy. 
-    * @param configuration
+    Get the list of tests to run from the build configurations.
+    We run different test categories depending on if this build is a release or nightly. This function parses and applies this to the individual build config.
     */
     List<String> getTestList(Map<String, ?> configuration) {
         List<String> testList = []
@@ -147,24 +174,35 @@ class Builder implements Serializable {
         */
         if (configuration.containsKey("test") && configuration.get("test")) {
             def testJobType = release ? "release" : "nightly"
+
             if (isMap(configuration.test)) {
+
                 if ( testJobType == "nightly" ) {
                     testList = (configuration.test as Map).get("nightly") as List<String>
                 } else {
                     testList = ((configuration.test as Map).get("nightly") as List<String>) + ((configuration.test as Map).get("weekly") as List<String>)
                 }
+
             } else {
+                
+                // Default to the test sets declared if one isn't set in the build configuration
                 if ( testJobType == "nightly" ) {
                     testList = nightly
                 } else {
                     testList = nightly + weekly
                 }
+
             }
         }
+
         testList.unique()
         return testList
     }
 
+    /*
+    Parses and applies the dockerExcludes parameter.
+    Any platforms/variants that are declared in this parameter are marked as excluded from docker building via this function. Even if they have a docker image or file declared in the build configurations!
+    */
     def dockerOverride(Map<String, ?> configuration, String variant) {
         Boolean overrideDocker = false
         if (dockerExcludes == {}) {
@@ -190,6 +228,11 @@ class Builder implements Serializable {
         return overrideDocker
     }
 
+    /*
+    Retrieves the dockerImage attribute from the build configurations.
+    This specifies the DockerHub org and image to pull or build in case we don't have one stored in this repository.
+    If this isn't specified, the openjdk_build_pipeline.groovy will assume we are not building the jdk inside of a container.
+    */
     def getDockerImage(Map<String, ?> configuration, String variant) {
         def dockerImageValue = ""
 
@@ -204,6 +247,11 @@ class Builder implements Serializable {
         return dockerImageValue
     }
 
+    /*
+    Retrieves the dockerFile attribute from the build configurations.
+    This specifies the path of the dockerFile relative to this repository.
+    If a dockerFile is not specified, the openjdk_build_pipeline.groovy will attempt to pull one from DockerHub.
+    */
     def getDockerFile(Map<String, ?> configuration, String variant) {
         def dockerFileValue = ""
 
@@ -218,6 +266,11 @@ class Builder implements Serializable {
         return dockerFileValue
     }
 
+    /*
+    Retrieves the dockerNode attribute from the build configurations.
+    This determines what the additional label will be if we are building the jdk in a docker container.
+    Defaults to &&dockerBuild in openjdk_build_pipeline.groovy if it's not supplied in the build configuration.
+    */
     def getDockerNode(Map<String, ?> configuration, String variant) {
         def dockerNodeValue = ""
         if (configuration.containsKey("dockerNode")) {
@@ -230,12 +283,10 @@ class Builder implements Serializable {
         return dockerNodeValue
     }
 
-    /**
-     * Builds up a node param string that defines what nodes are eligible to run the given job
-     * @param configuration
-     * @param variant
-     * @return
-     */
+    /*
+    Constructs any necessary additional build labels from the build configurations.
+    This builds up a node param string that defines what nodes are eligible to run the given job.
+    */
     def formAdditionalBuildNodeLabels(Map<String, ?> configuration, String variant) {
         def buildTag = "build"
 
@@ -264,6 +315,10 @@ class Builder implements Serializable {
         return labels
     }
 
+    /*
+    Retrieves the configureArgs attribute from the build configurations.
+    These eventually get passed to ./makejdk-any-platform.sh and bash configure.
+    */
     static String getConfigureArgs(Map<String, ?> configuration, String additionalConfigureArgs, String variant) {
         def configureArgs = ""
 
@@ -287,10 +342,14 @@ class Builder implements Serializable {
         return configureArgs
     }
 
+    /*
+    Imports the build configurations for the target version based off its key and variant.
+    E.g. { "x64Linux" : [ "hotspot", "openj9" ] }
+    */
     Map<String, IndividualBuildConfig> getJobConfigurations() {
         Map<String, IndividualBuildConfig> jobConfigurations = [:]
 
-        //Parse config passed to jenkins job
+        //Parse nightly config passed to jenkins job
         targetConfigurations
                 .each { target ->
 
@@ -299,12 +358,14 @@ class Builder implements Serializable {
                         def platformConfig = buildConfigurations.get(target.key) as Map<String, ?>
 
                         target.value.each { variant ->
+                            // Construct a rough job name from the build config and variant
                             String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
 
                             if (platformConfig.containsKey('additionalFileNameTag')) {
                                 name += "-${platformConfig.additionalFileNameTag}"
                             }
 
+                            // Fill in the name's value with an IndividualBuildConfig
                             jobConfigurations[name] = buildConfiguration(platformConfig, variant)
                         }
                     }
@@ -313,6 +374,9 @@ class Builder implements Serializable {
         return jobConfigurations
     }
 
+    /*
+    Returns the java version number for this pipeline (e.g. 8, 11, 15, 16)
+    */
     Integer getJavaVersionNumber() {
         // version should be something like "jdk8u" or "jdk" for HEAD
         Matcher matcher = javaToBuild =~ /.*?(?<version>\d+).*?/
@@ -334,21 +398,33 @@ class Builder implements Serializable {
     }
 
 
+    /*
+    Returns the release tool version string to use in the release job
+    */
     def determineReleaseToolRepoVersion() {
         def number = getJavaVersionNumber()
 
         return "jdk${number}"
     }
 
+    /*
+    Returns the job name of the target downstream job
+    */
     def getJobName(displayName) {
         return "${javaToBuild}-${displayName}"
     }
 
+    /*
+    Returns the jenkins folder of where it's assumed the downstream build jobs have been regenerated
+    */
     def getJobFolder() {
         def parentDir = currentBuild.fullProjectName.substring(0, currentBuild.fullProjectName.lastIndexOf("/"))
         return parentDir + "/jobs/" + javaToBuild
     }
 
+    /*
+    Ensures that we don't release multiple variants at the same time
+    */
     def checkConfigIsSane(Map<String, IndividualBuildConfig> jobConfigurations) {
 
         if (release) {
@@ -368,7 +444,9 @@ class Builder implements Serializable {
         return true
     }
 
-    // Call job to push artifacts to github
+    /* 
+    Call job to push artifacts to github. Usually it's only executed on a nightly build
+    */
     def publishBinary() {
         if (release) {
             // make sure to skip on release
@@ -396,6 +474,9 @@ class Builder implements Serializable {
         }
     }
 
+    /*
+    Main function. This is what is executed remotely via the openjdkxx-pipeline and pr tester jobs
+    */
     @SuppressWarnings("unused")
     def doBuild() {
 
@@ -430,7 +511,7 @@ class Builder implements Serializable {
                 def jobTopName = getJobName(configuration.key)
                 def jobFolder = getJobFolder()
 
-                // i.e jdk10u/job/jdk11u-linux-x64-hotspot
+                // i.e jdk11u/job/jdk11u-linux-x64-hotspot
                 def downstreamJobName = "${jobFolder}/${jobTopName}"
                 context.echo "build name " + downstreamJobName
 
@@ -477,7 +558,7 @@ class Builder implements Serializable {
           context.parallel jobs
 
           // publish to github if needed
-          // Dont publish release automatically
+          // Don't publish release automatically
           if (publish && !release) {
               //During testing just remove the publish
               publishBinary()

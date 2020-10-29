@@ -66,9 +66,15 @@ class VersionInfo {
         }
     }
 
+    // Matches JDK8 "Nightly" format, or "Release" with pre
     private boolean matchAltPre223(versionString) {
-        //1.8.0_202-internal-201903130451-b08
+        //<version><-milestone><-user-release-suffix(timestamp)><-build>
+        //1.8.0_202-internal-201903130451-b08 (nightly, milestone = internal (defaulted))
+        //1.8.0_272-ea-202010231715-b10 (nightly, milestone = ea)
+        //1.8.0_272-ea-b10 (release, milestone = ea)
         final pre223regex = "(?<version>1\\.(?<major>[0-8])\\.0(_(?<update>[0-9]+))?(-(?<additional>.*))?)"
+        context.println "[INFO] Attempting to match AltPre223 regex: ${pre223regex}"
+
         final matched = versionString =~ /${pre223regex}/
 
         if (matched.matches()) {
@@ -79,34 +85,45 @@ class VersionInfo {
             if (matched.group('additional') != null) {
                 context.println "[INFO] Parsing additional group of matchAltPre223 regex..."
                 String additional = matched.group('additional')
-                additional.split("-")
-                        .each { val ->
-                            def matcher = val =~ /b(?<build>[0-9]+)/
+                
+                additional.split("-").each { val ->
+                    // Is it build: b<number>
+                    def matcher = val =~ /b(?<build>[0-9]+)/
+                    if (matcher.matches()) {
+                        build = Integer.parseInt(matcher.group("build"))
+                        context.println "[SUCCESS] matchAltPre223 regex group (build) matched to ${build}"
+                    } else {
+                        // Is it the user-release-suffix timestamp set as opt: <12 digits>
+                        matcher = val =~ /^(?<opt>[0-9]{12})$/
+                        if (matcher.matches()) {
+                            opt = matcher.group("opt")
+                            context.println "[SUCCESS] matchAltPre223 regex group (opt) matched to ${opt}"
+                        } else {
+                            // Is it milestone set as pre: <AlphaNumeric> 
+                            matcher = val =~ /(?<pre>[a-zA-Z0-9]+)/
                             if (matcher.matches()) {
-                                build = Integer.parseInt(matcher.group("build"))
-                                context.println "[SUCCESS] matchAltPre223 regex group (build) matched to ${build}"
-                            }
-
-                            matcher = val =~ /^(?<opt>[0-9]{12})$/
-
-                            if (matcher.matches()) {
-                                opt = matcher.group("opt")
-                                context.println "[SUCCESS] matchAltPre223 regex group (opt) matched to ${opt}"
+                                pre = matcher.group("pre")
+                                context.println "[SUCCESS] matchAltPre223 regex group (pre) matched to ${pre}"
                             }
                         }
+                    }
+                }
+
             }
             version = matched.group('version')
             return true
         }
 
-        context.println "[WARNING] Failed to match matchAltPre223 regex: ${pre223regex}\n[WARNING] Attempting to match223 regex..."
+        context.println "[WARNING] Failed to match matchAltPre223 regex."
         return false
     }
 
+    // Matches JDK8 "Release" version format with no-pre
     private boolean matchPre223(versionString) {
-        context.println "[INFO] Attempting to match pre223 regex..."
-
+        //1.8.0_272-b10
         final pre223regex = "jdk\\-?(?<version>(?<major>[0-8]+)(u(?<update>[0-9]+))?(-b(?<build>[0-9]+))(_(?<opt>[-a-zA-Z0-9\\.]+))?)"
+        context.println "[INFO] Attempting to match pre223 regex: ${pre223regex}"
+
         final matched = versionString =~ /${pre223regex}/
 
         if (matched.matches()) {
@@ -124,14 +141,13 @@ class VersionInfo {
             version = matched.group('version')
             return true
         } else {
-            context.println "[WARNING] Failed to match pre223 regex: ${pre223regex}\n[WARNING] Attempting to matchAltPre223 regex..."
+            context.println "[WARNING] Failed to match pre223 regex."
             return matchAltPre223(versionString)
         }
     }
 
+    // Match JDK9+
     private boolean match223(versionString) {
-        context.println "[INFO] Attempting to match223 regex..."
-
         //Regexes based on those in http://openjdk.java.net/jeps/223
         // Technically the standard supports an arbitrary number of numbers, we will support 3 for now
         final vnumRegex = "(?<major>[0-9]+)(\\.(?<minor>[0-9]+))?(\\.(?<security>[0-9]+))?"
@@ -170,7 +186,7 @@ class VersionInfo {
                 version = matched223.group('version')
                 return true
             }
-            context.println "[WARNING] FAILED to match last 223 regex"
+            context.println "[WARNING] Failed to match last 223 regex."
         }
 
         return false
