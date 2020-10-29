@@ -58,6 +58,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
 
     parameters {
         textParam('targetConfigurations', JsonOutput.prettyPrint(JsonOutput.toJson(targetConfigurations)))
+        stringParam('activeNodeTimeout', "0", 'Number of minutes we will wait for a label-matching node to become active.')
         stringParam('dockerExcludes', "", 'Map of targetConfigurations to exclude from docker building. If a targetConfiguration (i.e. { "x64LinuxXL": [ "openj9" ], "aarch64Linux": [ "hotspot", "openj9" ] }) has been entered into this field, jenkins will build the jdk without using docker. This param overrides the dockerImage and dockerFile downstream job parameters.')
         choiceParam('releaseType', ['Nightly', 'Nightly Without Publish', 'Release'], 'Nightly - release a standard nightly build.<br/>Nightly Without Publish - run a nightly but do not publish.<br/>Release - this is a release, this will need to be manually promoted.')
         stringParam('overridePublishName', "", '<strong>REQUIRED for OpenJ9</strong>: Name that determines the publish name (and is used by the meta-data file), defaults to scmReference(minus _adopt if present).<br/>Nightly builds: Leave blank (defaults to a date_time stamp).<br/>OpenJ9 Release build Java 8 example <code>jdk8u192-b12_openj9-0.12.1</code> and for OpenJ9 Java 11 example <code>jdk-11.0.2+9_openj9-0.12.1</code>.')

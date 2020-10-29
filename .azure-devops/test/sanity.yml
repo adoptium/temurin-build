@@ -1,0 +1,37 @@
+
+stages:
+  - stage: Test_openjdk_hs_sanity_functional_x86_64_mac
+    displayName: "Test_openjdk_hs_sanity.functional_x86-64_mac"
+    # depends on the build stage in .azure-devops/build/build.yml
+    dependsOn: build_macOS_x64_hotspot_binaries
+    variables:
+      TARGET_OS: "mac"
+      ARCHITECTURE: "x64"
+    jobs:
+      - template: ./jobs/template.yml
+        parameters:
+          pool:
+            vmImage: macOS-latest
+          buildList: "functional"
+          testTarget: "sanity.functional.regular"
+          jobName: "sanity_openjdk"
+          failTaskOnTestFailures: true
+          machineArray: [0]
+
+  - stage: Test_openjdk_hs_sanity_openjdk_x86_64_mac
+    displayName: "Test_openjdk_hs_sanity.openjdk_x86-64_mac"
+    # depends on the build stage in .azure-devops/build/build.yml
+    dependsOn: build_macOS_x64_hotspot_binaries
+    variables:
+      TARGET_OS: "mac"
+      ARCHITECTURE: "x64"
+    jobs:
+      - template: ./jobs/template.yml
+        parameters:
+          pool:
+            vmImage: macOS-latest
+          buildList: "openjdk"
+          testTarget: "sanity.openjdk"
+          jobName: "sanity_openjdk"
+          failTaskOnTestFailures: true
+          machineArray: [0, 1]
