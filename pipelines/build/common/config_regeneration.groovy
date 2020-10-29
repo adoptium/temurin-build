@@ -395,46 +395,51 @@ class Regeneration implements Serializable {
             * Stage: Check that the pipeline isn't in in-progress or queued up. Once clear, run the regeneration job
             */
             context.stage("Check $javaVersion pipeline status") {
+                if (jobRootDir.contains("pr-tester")) {
+                    // No need to check if we're going to overwrite anything for the PR tester
+                    context.println "[SUCCESS] Don't need to check if the pr-tester is running as concurrency is disabled. Running regeneration job..."
+                } else {
+                    // Get all pipelines
+                    def getPipelines = queryAPI("${jenkinsBuildRoot}/api/json?tree=jobs[name]&pretty=true&depth1")
 
-                // Get all pipelines
-                def getPipelines = queryAPI("${jenkinsBuildRoot}/api/json?tree=jobs[name]&pretty=true&depth1")
+                    // Parse api response to only extract the relevant pipeline
+                    getPipelines.jobs.name.each{ pipeline ->
+                        if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
+                            // TODO: Paramaterise this
+                            Integer sleepTime = 900
+                            
+                            Boolean inProgress = true
+                            while (inProgress) {
+                                // Check if pipeline is in progress using api
+                                context.println "[INFO] Checking if ${pipeline} is running..." //i.e. openjdk8-pipeline
 
-                // Parse api response to only extract the relevant pipeline
-                getPipelines.jobs.name.each{ pipeline ->
-                    if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
-                        // TODO: Parametrise this
-                        Integer sleepTime = 900
-                        
-                        Boolean inProgress = true
-                        while (inProgress) {
-                            // Check if pipeline is in progress using api
-                            context.println "[INFO] Checking if ${pipeline} is running..." //i.e. openjdk8-pipeline
+                                def pipelineInProgress = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
 
-                            def pipelineInProgress = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
+                                // If query fails, check to see if the pipeline has been run before
+                                if (pipelineInProgress == null) {
+                                    def getPipelineBuilds = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/api/json?pretty=true&depth1")
 
-                            // If query fails, check to see if the pipeline has been run before
-                            if (pipelineInProgress == null) {
-                                def getPipelineBuilds = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/api/json?pretty=true&depth1")
-
-                                if (getPipelineBuilds.builds == []) {
-                                    context.println "[SUCCESS] ${pipeline} has not been run before. Running regeneration job..."
-                                    inProgress = false
+                                    if (getPipelineBuilds.builds == []) {
+                                        context.println "[SUCCESS] ${pipeline} has not been run before. Running regeneration job..."
+                                        inProgress = false
+                                    }
+                                
+                                } else {
+                                    inProgress = pipelineInProgress.building as Boolean
                                 }
 
-                            } else {
-                                inProgress = pipelineInProgress.building as Boolean
+                                if (inProgress) {
+                                    // Sleep for a bit, then check again...
+                                    context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
+
+                                    context.sleep(time: sleepTime, unit: "SECONDS")
+                                }
+
                             }
 
-                            if (inProgress) {
-                                // Sleep for a bit, then check again...
-                                context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
-
-                                context.sleep(time: sleepTime, unit: "SECONDS")
-                            }
-
+                            context.println "[SUCCESS] ${pipeline} is idle. Running regeneration job..."
                         }
 
-                        context.println "[SUCCESS] ${pipeline} is idle. Running regeneration job..."
                     }
 
                 }
