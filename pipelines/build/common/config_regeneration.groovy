@@ -396,8 +396,8 @@ class Regeneration implements Serializable {
             return response
         } catch (Exception e) {
             // Failed to connect to jenkins api or a parsing error occurred
-            context.println "[ERROR] Failure on jenkins api connection or parsing.\nError: ${e}"
-            currentBuild.result = "FAILURE"
+            context.println "[ERROR] Failure on jenkins api connection or parsing.\n${e}"
+            throw new Exception()
         }
     }
 
