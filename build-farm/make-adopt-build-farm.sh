@@ -67,7 +67,8 @@ OPTIONS=""
 
 EXTENSION=""
 # shellcheck disable=SC2034
-CONFIGURE_ARGS_FOR_ANY_PLATFORM=${CONFIGURE_ARGS:-""}
+CONFIGURE_ARGS_FOR_ANY_PLATFORM=""
+CONFIGURE_ARGS=${CONFIGURE_ARGS:-""}
 BUILD_ARGS=${BUILD_ARGS:-""}
 VARIANT_ARG=""
 
@@ -81,6 +82,9 @@ echo "Required boot JDK version: ${JDK_BOOT_VERSION}"
 
 # shellcheck source=build-farm/set-platform-specific-configurations.sh
 source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
+
+# Adding the externally-supplied CONFIGURE_ARGS last, so any user-supplied arguments have priority.
+CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} ${CONFIGURE_ARGS}"
 
 case "${JDK_BOOT_VERSION}" in
       "7")    export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK7_BOOT_DIR}";;
