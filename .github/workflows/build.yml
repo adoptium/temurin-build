@@ -53,6 +53,22 @@ jobs:
     - name: Build macOS
       run: |
         export JAVA_HOME=$JAVA_HOME_11_X64
+
+        # Configure Xcode version explicitly. Default versions may change any time.
+        # Available versions: https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.md#xcode
+        case "${{ matrix.version }}" in
+          "jdk8u"|"jdk11u"|"jdk15u")
+            export DEVELOPER_DIR="/Applications/Xcode_11.7.app/Contents/Developer"
+            ;;
+          "jdk")
+            export DEVELOPER_DIR="/Applications/Xcode_12.1.app/Contents/Developer"
+            ;;
+          *)
+            echo "Unknown JDK version: ${{ matrix.version }}" >&2
+            exit 1
+            ;;
+        esac
+
         # Skip freetype build on jdk11+
         if [ ${{ matrix.version }} != "jdk8u" ]; then
           export BUILD_ARGS="--skip-freetype"
