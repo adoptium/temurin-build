@@ -78,7 +78,7 @@ configureBootJDKConfigureParameter() {
 # Shenandaoh was backported to Java 11 as of 11.0.9 but requires this build
 # parameter to ensure its inclusion. For Java 12+ this is automatically set
 configureShenandoahBuildParameter() {
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" -eq "${JDK11_CORE_VERSION}" ]; then
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ]; then
       addConfigureArg "--with-jvm-features=" "shenandoahgc"
   fi
 }
@@ -133,7 +133,7 @@ getOpenJdkVersion() {
   local version
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
-    local corrVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/metadata/version.txt
+    local corrVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
 
     local corrVersion="$(cut -d'.' -f 1 <${corrVerFile})"
 
@@ -180,12 +180,18 @@ configureVersionStringParameter() {
 
   local dateSuffix=$(date -u +%Y%m%d%H%M)
 
-  # Configures "vendor" jdk properties
+  # Configures "vendor" jdk properties.
+  # AdoptOpenJDK default values are set after this code block
+  # TODO 1. We should probably look at having these values passed through a config
+  # file as opposed to hardcoding in shell
+  # TODO 2. This highlights us conflating variant with vendor. e.g. OpenJ9 is really
+  # a technical variant with Eclipse as the vendor
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
     BUILD_CONFIG[VENDOR]="Alibaba"
     BUILD_CONFIG[VENDOR_VERSION]="\"(Alibaba Dragonwell)\""
     BUILD_CONFIG[VENDOR_URL]="http://www.alibabagroup.com"
     BUILD_CONFIG[VENDOR_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse/openj9/issues"
   fi
@@ -358,7 +364,11 @@ configureCommandParameters() {
   echo "Configuring jvm variants if provided"
   addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
 
-  # Now we add any configure arguments the user has specified on the command line.
+  # Now we add any platform-specific args after the configure args, so they can override if necessary.
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
+
+  # Finally, we add any configure arguments the user has specified on the command line.
+  # This is done last, to ensure the user can override any args they need to.
   CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}"
 
   configureFreetypeLocation
@@ -385,7 +395,7 @@ buildTemplatedFile() {
 
   echo "Currently at '${PWD}'"
 
-  FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
+  FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS}"
   echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
 
   # If it's Java 9+ then we also make test-image to build the native test libraries,
@@ -530,9 +540,11 @@ printJavaVersionString() {
        # riscv is cross compiled, so we cannot run it on the build system
        # This is a temporary plausible solution in the absence of another fix
        local jdkversion=$(getOpenJdkVersion)
+       local jdkversionNoPrefix=${jdkversion#jdk-}
+       local jdkShortVersion=${jdkversionNoPrefix%%+*}
        cat << EOT > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/version.txt"
-openjdk version "${jdkversion%%+*}" "$(date +%Y-%m-%d)"
-OpenJDK Runtime Environment AdoptOpenJDK (build ${jdkversion}-$(date +%Y%m%d%H%M))
+openjdk version "${jdkShortVersion}" "$(date +%Y-%m-%d)"
+OpenJDK Runtime Environment AdoptOpenJDK (build ${jdkversionNoPrefix}-$(date +%Y%m%d%H%M))
 Eclipse OpenJ9 VM AdoptOpenJDK (build master-000000000, JRE 11 Linux riscv-64-Bit Compressed References $(date +%Y%m%d)_00 (JIT disabled, AOT disabled)
 OpenJ9   - 000000000
 OMR      - 000000000
