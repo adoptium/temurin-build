@@ -61,13 +61,15 @@ class Builder implements Serializable {
         'sanity.system',
         'extended.system',
         'sanity.perf',
-        'sanity.external'
+        'sanity.functional',
+        'extended.functional'
     ]
 
     final List<String> weekly = [
         'extended.openjdk',
         'extended.perf',
-        'special.functional'
+        'special.functional',
+        'sanity.external'
     ]
  
     /*
