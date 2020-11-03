@@ -57,11 +57,8 @@ class Builder implements Serializable {
     def currentBuild
 
     final List<String> nightly = ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external']
-    final List<String> weekly = [
-     /*                      'extended.openjdk', 'extended.perf', 'extended.external',
-                           'special.openjdk','special.functional', 'special.system', 'special.perf' */
-                           ]
-        
+    final List<String> weekly = ['extended.openjdk', 'extended.perf', 'special.functional']
+
     IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant) {
 
         def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
