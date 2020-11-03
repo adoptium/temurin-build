@@ -807,6 +807,8 @@ class Build {
                         context.sh(script: "rm -rf C:/workspace/openjdk-build/workspace/build/src/build/*/jdk/gensrc")
                         // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1419
                         context.sh(script: "rm -rf J:/jenkins/tmp/workspace/build/src/build/*/jdk/gensrc")
+                        // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1662
+                        context.sh(script: "rm -rf E:/jenkins/tmp/workspace/build/src/build/*/jdk/gensrc")
                         context.cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
                     } else {
                         context.cleanWs notFailBuild: true
