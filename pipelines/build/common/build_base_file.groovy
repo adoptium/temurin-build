@@ -70,7 +70,6 @@ class Builder implements Serializable {
         'special.functional'
     ]
  
-    
     /*
     Returns an IndividualBuildConfig that is passed down to the downstream job.
     It uses several helper functions to pull in and parse the build configuration for the job.

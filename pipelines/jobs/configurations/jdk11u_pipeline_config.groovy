@@ -112,10 +112,7 @@ class Config11 {
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                  : [
-                        nightly: ['sanity.openjdk'],
-                        weekly : []
-                ],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
@@ -123,10 +120,7 @@ class Config11 {
                 os                  : 'linux',
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
-                test                : [
-                        nightly: ['sanity.functional', 'extended.functional', 'sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
-                        weekly : ['extended.openjdk', 'extended.perf', 'extended.external', 'special.openjdk','special.functional', 'special.system', 'special.perf']
-                ],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace=auto'
         ],
 

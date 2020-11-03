@@ -111,10 +111,7 @@ class Config8 {
         arm32Linux    : [
                 os  : 'linux',
                 arch: 'arm',
-                test: [
-                        nightly: ['sanity.openjdk'],
-                        weekly : []
-                ]
+                test: 'default'
         ],
 
         aarch64Linux  : [

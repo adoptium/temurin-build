@@ -131,10 +131,7 @@ class Config15 {
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                : [
-                        nightly: ['sanity.openjdk'],
-                        weekly : []
-                ],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace'
         ],
 
