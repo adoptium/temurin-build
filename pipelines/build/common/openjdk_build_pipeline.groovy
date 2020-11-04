@@ -158,19 +158,24 @@ class Build {
     private def getJDKBranch() {
 
         def jdkBranch
-        
-        if (buildConfig.VARIANT == "corretto") {
-            jdkBranch = 'develop'
-        } else if (buildConfig.VARIANT == "openj9") {
-            jdkBranch = 'openj9'
-        } else if (buildConfig.VARIANT == "hotspot"){
-            jdkBranch = 'dev'
-        } else if (buildConfig.VARIANT == "dragonwell") {
-            jdkBranch = 'master'
+
+        if (buildConfig.SCM_REF) {
+            jdkBranch = buildConfig.SCM_REF
         } else {
-            context.error("Unrecognised build variant '${buildConfig.VARIANT}' ")
-            throw new Exception()
+            if (buildConfig.VARIANT == "corretto") {
+                jdkBranch = 'develop'
+            } else if (buildConfig.VARIANT == "openj9") {
+                jdkBranch = 'openj9'
+            } else if (buildConfig.VARIANT == "hotspot"){
+                jdkBranch = 'dev'
+            } else if (buildConfig.VARIANT == "dragonwell") {
+                jdkBranch = 'master'
+            } else {
+                context.error("Unrecognised build variant '${buildConfig.VARIANT}' ")
+                throw new Exception()
+            }
         }
+
         return jdkBranch
     }
     
@@ -214,6 +219,7 @@ class Build {
         List testList = []
         def jdkBranch = getJDKBranch()
         def jdkRepo = getJDKRepo()
+        def openj9Branch = buildConfig.SCM_REF ? buildConfig.SCM_REF : "master"
 
         if (buildConfig.VARIANT == "corretto") {
             testList = buildConfig.TEST_LIST.minus(['sanity.external'])
@@ -245,6 +251,7 @@ class Build {
 												context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}"),
 												context.string(name: 'JDK_REPO', value: jdkRepo),
 												context.string(name: 'JDK_BRANCH', value: jdkBranch),
+												context.string(name: 'OPENJ9_BRANCH', value: openj9Branch),
 												context.string(name: 'ACTIVE_NODE_TIMEOUT', value: "${buildConfig.ACTIVE_NODE_TIMEOUT}")]
 							}
 						} else {
@@ -272,7 +279,7 @@ class Build {
 
             context.println(versionOutput)
 
-            return new VersionInfo().parse(versionOutput, buildConfig.ADOPT_BUILD_NUMBER)
+            return new VersionInfo(context).parse(versionOutput, buildConfig.ADOPT_BUILD_NUMBER)
         }
         return null
     }
@@ -827,6 +834,8 @@ class Build {
                                 context.sh(script: "rm -rf C:/workspace/openjdk-build/workspace/build/src/build/*/jdk/gensrc")
                                 // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1419
                                 context.sh(script: "rm -rf J:/jenkins/tmp/workspace/build/src/build/*/jdk/gensrc")
+                                // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1662
+                                context.sh(script: "rm -rf E:/jenkins/tmp/workspace/build/src/build/*/jdk/gensrc")
                                 context.cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
                             } else {
                                 context.cleanWs notFailBuild: true
