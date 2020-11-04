@@ -951,161 +951,163 @@ class Build {
     */
     @SuppressWarnings("unused")
     def build() {
-        try {
-            context.println "Build config"
-            context.println buildConfig.toJson()
-
-            def filename = determineFileName()
-
-            context.println "Executing tests: ${buildConfig.TEST_LIST}"
-            context.println "Build num: ${env.BUILD_NUMBER}"
-            context.println "File name: ${filename}"
-
-            def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
-            def enableInstallers = Boolean.valueOf(buildConfig.ENABLE_INSTALLERS)
-            def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
-
-            context.stage("queue") {
-                if (buildConfig.DOCKER_IMAGE) {
-                    // Docker build environment
-                    def label = buildConfig.NODE_LABEL + "&&dockerBuild"
-                    if (buildConfig.DOCKER_NODE) {
-                        label = buildConfig.NODE_LABEL + "&&" + "$buildConfig.DOCKER_NODE"
-                    }
-
-                    if (buildConfig.CODEBUILD) {
-                        label = "codebuild"
-                    }
-
-                    waitForANodeToBecomeActive(label)
-                    context.println "[NODE SHIFT] MOVING INTO DOCKER NODE MATCHING LABELNAME ${label}..."
-                    context.node(label) {
-                        // Cannot clean workspace from inside docker container
-                        if (cleanWorkspace) {
-
-                            try {
-                                context.timeout(time: buildTimeouts.MASTER_CLEAN_TIMEOUT, unit: "HOURS") {
-                                    // Cannot clean workspace from inside docker container
-                                    if (cleanWorkspace) {
-                                        try {
-                                            context.cleanWs notFailBuild: true
-                                        } catch (e) {
-                                            context.println "Failed to clean ${e}"
-                                        }
-                                        cleanWorkspace = false
-                                    }
-                                }
-                            } catch (FlowInterruptedException e) {
-                                context.println "[ERROR] Master clean workspace timeout (${buildTimeouts.MASTER_CLEAN_TIMEOUT} HOURS) has been reached. Exiting..."
-                                throw new Exception()
-                            }
-                            
-                        }
-
-                        // Use our docker file if DOCKER_FILE is defined
-                        if (buildConfig.DOCKER_FILE) {
-                            try {
-                                context.timeout(time: buildTimeouts.DOCKER_CHECKOUT_TIMEOUT, unit: "HOURS") {
-                                    context.checkout context.scm
-                                }
-                            } catch (FlowInterruptedException e) {
-                                context.println "[ERROR] Master docker file scm checkout timeout (${buildTimeouts.DOCKER_CHECKOUT_TIMEOUT} HOURS) has been reached. Exiting..."
-                                throw new Exception()
-                            }
-
-                            context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE} -f ${buildConfig.DOCKER_FILE} .").inside {    
-                                buildScripts(cleanWorkspace, filename)
-                            }
-                        // Otherwise, pull the docker image from DockerHub
-                        } else {
-                            try {
-                                context.timeout(time: buildTimeouts.DOCKER_PULL_TIMEOUT, unit: "HOURS") {
-                                    context.docker.image(buildConfig.DOCKER_IMAGE).pull()
-                                }
-                            } catch (FlowInterruptedException e) {
-                                context.println "[ERROR] Master docker image pull timeout (${buildTimeouts.DOCKER_PULL_TIMEOUT} HOURS) has been reached. Exiting..."
-                                throw new Exception()
-                            }
-
-                            context.docker.image(buildConfig.DOCKER_IMAGE).inside {
-                                buildScripts(cleanWorkspace, filename)
-                            }
-                        }
-                    }
-                    context.println "[NODE SHIFT] OUT OF DOCKER NODE (LABELNAME ${label}!)"
-                
-                // Build the jdk outside of docker container...
-                } else {
-                    waitForANodeToBecomeActive(buildConfig.NODE_LABEL)
-                    context.println "[NODE SHIFT] MOVING INTO NODE MATCHING LABELNAME ${buildConfig.NODE_LABEL}..."
-                    context.node(buildConfig.NODE_LABEL) {
-                        // This is to avoid windows path length issues.
-                        context.echo("checking ${buildConfig.TARGET_OS}")
-                        if (buildConfig.TARGET_OS == "windows") {
-                            // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
-                            def workspace = "C:/workspace/openjdk-build/"
-                            if (env.CYGWIN_WORKSPACE) {
-                                workspace = env.CYGWIN_WORKSPACE
-                            }
-                            context.echo("changing ${workspace}")
-                            context.ws(workspace) {
-                                buildScripts(cleanWorkspace, filename)
-                            }
-                        } else {
-                            buildScripts(cleanWorkspace, filename)
-                        }
-                    }
-                    context.println "[NODE SHIFT] OUT OF NODE (LABELNAME ${buildConfig.NODE_LABEL}!)"
-                }
-            }
-
-            // Sign and archive jobs if needed
+        context.timestamps {
             try {
-                context.timeout(time: buildTimeouts.SIGN_JOB_TIMEOUT, unit: "HOURS") {
-                    sign(versionInfo)
-                }
-            } catch (FlowInterruptedException e) {
-                context.println "[ERROR] Sign job timeout (${buildTimeouts.SIGN_JOB_TIMEOUT} HOURS) has been reached. Exiting..."
-                throw new Exception()
-            }
+                context.println "Build config"
+                context.println buildConfig.toJson()
 
-            if (enableTests && buildConfig.TEST_LIST.size() > 0) {
-                try {
-                    try {
-                        context.timeout(time: buildTimeouts.TEST_JOBS_TIMEOUT, unit: "HOURS") {
-                            // Run tests if we have a test list
-                            def testStages = runTests()
-                            context.parallel testStages
+                def filename = determineFileName()
+
+                context.println "Executing tests: ${buildConfig.TEST_LIST}"
+                context.println "Build num: ${env.BUILD_NUMBER}"
+                context.println "File name: ${filename}"
+
+                def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
+                def enableInstallers = Boolean.valueOf(buildConfig.ENABLE_INSTALLERS)
+                def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
+
+                context.stage("queue") {
+                    if (buildConfig.DOCKER_IMAGE) {
+                        // Docker build environment
+                        def label = buildConfig.NODE_LABEL + "&&dockerBuild"
+                        if (buildConfig.DOCKER_NODE) {
+                            label = buildConfig.NODE_LABEL + "&&" + "$buildConfig.DOCKER_NODE"
                         }
-                    } catch (FlowInterruptedException e) {
-                        context.println "[ERROR] Test job timeout (${buildTimeouts.TEST_JOBS_TIMEOUT} HOURS) has been reached. Exiting..."
-                        throw new Exception()
-                    }
-                } catch (Exception e) {
-                    context.println "Failed test: ${e}"
-                }
-            }
 
-            //buildInstaller if needed
-            if (enableInstallers) {
+                        if (buildConfig.CODEBUILD) {
+                            label = "codebuild"
+                        }
+
+                        waitForANodeToBecomeActive(label)
+                        context.println "[NODE SHIFT] MOVING INTO DOCKER NODE MATCHING LABELNAME ${label}..."
+                        context.node(label) {
+                            // Cannot clean workspace from inside docker container
+                            if (cleanWorkspace) {
+
+                                try {
+                                    context.timeout(time: buildTimeouts.MASTER_CLEAN_TIMEOUT, unit: "HOURS") {
+                                        // Cannot clean workspace from inside docker container
+                                        if (cleanWorkspace) {
+                                            try {
+                                                context.cleanWs notFailBuild: true
+                                            } catch (e) {
+                                                context.println "Failed to clean ${e}"
+                                            }
+                                            cleanWorkspace = false
+                                        }
+                                    }
+                                } catch (FlowInterruptedException e) {
+                                    context.println "[ERROR] Master clean workspace timeout (${buildTimeouts.MASTER_CLEAN_TIMEOUT} HOURS) has been reached. Exiting..."
+                                    throw new Exception()
+                                }
+                                
+                            }
+
+                            // Use our docker file if DOCKER_FILE is defined
+                            if (buildConfig.DOCKER_FILE) {
+                                try {
+                                    context.timeout(time: buildTimeouts.DOCKER_CHECKOUT_TIMEOUT, unit: "HOURS") {
+                                        context.checkout context.scm
+                                    }
+                                } catch (FlowInterruptedException e) {
+                                    context.println "[ERROR] Master docker file scm checkout timeout (${buildTimeouts.DOCKER_CHECKOUT_TIMEOUT} HOURS) has been reached. Exiting..."
+                                    throw new Exception()
+                                }
+
+                                context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE} -f ${buildConfig.DOCKER_FILE} .").inside {    
+                                    buildScripts(cleanWorkspace, filename)
+                                }
+                            // Otherwise, pull the docker image from DockerHub
+                            } else {
+                                try {
+                                    context.timeout(time: buildTimeouts.DOCKER_PULL_TIMEOUT, unit: "HOURS") {
+                                        context.docker.image(buildConfig.DOCKER_IMAGE).pull()
+                                    }
+                                } catch (FlowInterruptedException e) {
+                                    context.println "[ERROR] Master docker image pull timeout (${buildTimeouts.DOCKER_PULL_TIMEOUT} HOURS) has been reached. Exiting..."
+                                    throw new Exception()
+                                }
+
+                                context.docker.image(buildConfig.DOCKER_IMAGE).inside {
+                                    buildScripts(cleanWorkspace, filename)
+                                }
+                            }
+                        }
+                        context.println "[NODE SHIFT] OUT OF DOCKER NODE (LABELNAME ${label}!)"
+                    
+                    // Build the jdk outside of docker container...
+                    } else {
+                        waitForANodeToBecomeActive(buildConfig.NODE_LABEL)
+                        context.println "[NODE SHIFT] MOVING INTO NODE MATCHING LABELNAME ${buildConfig.NODE_LABEL}..."
+                        context.node(buildConfig.NODE_LABEL) {
+                            // This is to avoid windows path length issues.
+                            context.echo("checking ${buildConfig.TARGET_OS}")
+                            if (buildConfig.TARGET_OS == "windows") {
+                                // See https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1284#issuecomment-621909378 for justification of the below path
+                                def workspace = "C:/workspace/openjdk-build/"
+                                if (env.CYGWIN_WORKSPACE) {
+                                    workspace = env.CYGWIN_WORKSPACE
+                                }
+                                context.echo("changing ${workspace}")
+                                context.ws(workspace) {
+                                    buildScripts(cleanWorkspace, filename)
+                                }
+                            } else {
+                                buildScripts(cleanWorkspace, filename)
+                            }
+                        }
+                        context.println "[NODE SHIFT] OUT OF NODE (LABELNAME ${buildConfig.NODE_LABEL}!)"
+                    }
+                }
+
+                // Sign and archive jobs if needed
                 try {
-                    context.timeout(time: buildTimeouts.INSTALLER_JOBS_TIMEOUT, unit: "HOURS") {
-                        buildInstaller(versionInfo)
+                    context.timeout(time: buildTimeouts.SIGN_JOB_TIMEOUT, unit: "HOURS") {
+                        sign(versionInfo)
                     }
                 } catch (FlowInterruptedException e) {
-                    context.println "[ERROR] Installer job timeout (${buildTimeouts.INSTALLER_JOBS_TIMEOUT} HOURS) has been reached. Exiting..."
+                    context.println "[ERROR] Sign job timeout (${buildTimeouts.SIGN_JOB_TIMEOUT} HOURS) has been reached. Exiting..."
                     throw new Exception()
-                }    
-            }
+                }
 
-        // Generic catch all. Will usually be the last message in the log.
-        } catch (Exception e) {
-            currentBuild.result = 'FAILURE'
-            context.println "Execution error: ${e}"
-            def sw = new StringWriter()
-            def pw = new PrintWriter(sw)
-            e.printStackTrace(pw)
-            context.println sw.toString()
+                if (enableTests && buildConfig.TEST_LIST.size() > 0) {
+                    try {
+                        try {
+                            context.timeout(time: buildTimeouts.TEST_JOBS_TIMEOUT, unit: "HOURS") {
+                                // Run tests if we have a test list
+                                def testStages = runTests()
+                                context.parallel testStages
+                            }
+                        } catch (FlowInterruptedException e) {
+                            context.println "[ERROR] Test job timeout (${buildTimeouts.TEST_JOBS_TIMEOUT} HOURS) has been reached. Exiting..."
+                            throw new Exception()
+                        }
+                    } catch (Exception e) {
+                        context.println "Failed test: ${e}"
+                    }
+                }
+
+                //buildInstaller if needed
+                if (enableInstallers) {
+                    try {
+                        context.timeout(time: buildTimeouts.INSTALLER_JOBS_TIMEOUT, unit: "HOURS") {
+                            buildInstaller(versionInfo)
+                        }
+                    } catch (FlowInterruptedException e) {
+                        context.println "[ERROR] Installer job timeout (${buildTimeouts.INSTALLER_JOBS_TIMEOUT} HOURS) has been reached. Exiting..."
+                        throw new Exception()
+                    }    
+                }
+
+            // Generic catch all. Will usually be the last message in the log.
+            } catch (Exception e) {
+                currentBuild.result = 'FAILURE'
+                context.println "Execution error: ${e}"
+                def sw = new StringWriter()
+                def pw = new PrintWriter(sw)
+                e.printStackTrace(pw)
+                context.println sw.toString()
+            }
         }
     }
 }
