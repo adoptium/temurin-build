@@ -1110,7 +1110,11 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   exit 0
 fi
 
-buildSharedLibs
+# Our Solaris build environment has performance issues so disabling this for now
+# Refhttps://github.com/AdoptOpenJDK/openjdk-build/issues/2206
+if [ "${ARCHITECTURE}" != "sparcv9" ]; then
+  buildSharedLibs
+fi
 
 wipeOutOldTargetDir
 createTargetDir
