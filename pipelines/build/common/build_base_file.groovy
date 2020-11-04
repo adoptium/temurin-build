@@ -56,6 +56,10 @@ class Builder implements Serializable {
     def context
     def currentBuild
 
+    /* 
+    Test targets triggered in 'nightly' build pipelines running 6 days per week 
+    nightly + weekly to be run during a 'release' pipeline 
+    */
     final List<String> nightly = [
         'sanity.openjdk',
         'sanity.system',
@@ -64,7 +68,10 @@ class Builder implements Serializable {
         'sanity.functional',
         'extended.functional'
     ]
-
+    /* 
+    Test targets triggered in 'weekly' build pipelines running once per week 
+    nightly + weekly to be run during a 'release' pipeline 
+    */
     final List<String> weekly = [
         'extended.openjdk',
         'extended.perf',
