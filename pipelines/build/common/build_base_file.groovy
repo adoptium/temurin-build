@@ -56,28 +56,29 @@ class Builder implements Serializable {
     def context
     def currentBuild
 
+    /* 
+    Test targets triggered in 'nightly' build pipelines running 6 days per week 
+    nightly + weekly to be run during a 'release' pipeline 
+    */
     final List<String> nightly = [
         'sanity.openjdk',
         'sanity.system',
         'extended.system',
         'sanity.perf',
-        'sanity.external'
+        'sanity.functional',
+        'extended.functional'
     ]
-    
-    // Temporarily remove weekly tests due to lack of machine capacity during release
-    final List<String> weekly = []
-    /*
+    /* 
+    Test targets triggered in 'weekly' build pipelines running once per week 
+    nightly + weekly to be run during a 'release' pipeline 
+    */
     final List<String> weekly = [
         'extended.openjdk',
         'extended.perf',
-        'extended.external',
-        'special.openjdk',
         'special.functional',
-        'special.system',
-        'special.perf'
+        'sanity.external'
     ]
-    */
-    
+ 
     /*
     Returns an IndividualBuildConfig that is passed down to the downstream job.
     It uses several helper functions to pull in and parse the build configuration for the job.
