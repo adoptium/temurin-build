@@ -71,7 +71,6 @@ class Build {
         DOCKER_CHECKOUT_TIMEOUT : 1,
         DOCKER_PULL_TIMEOUT : 2,
         SIGN_JOB_TIMEOUT : 2,
-        TEST_JOBS_TIMEOUT : 10,
         INSTALLER_JOBS_TIMEOUT : 3
     ]
 
@@ -1072,16 +1071,9 @@ class Build {
 
                 if (enableTests && buildConfig.TEST_LIST.size() > 0) {
                     try {
-                        try {
-                            context.timeout(time: buildTimeouts.TEST_JOBS_TIMEOUT, unit: "HOURS") {
-                                // Run tests if we have a test list
-                                def testStages = runTests()
-                                context.parallel testStages
-                            }
-                        } catch (FlowInterruptedException e) {
-                            context.println "[ERROR] Test job timeout (${buildTimeouts.TEST_JOBS_TIMEOUT} HOURS) has been reached. Exiting..."
-                            throw new Exception()
-                        }
+                        // Run tests if we have a test list, don't use timeouts as the jobs have their own
+                        def testStages = runTests()
+                        context.parallel testStages
                     } catch (Exception e) {
                         context.println "Failed test: ${e}"
                     }
