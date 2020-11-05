@@ -194,7 +194,7 @@ class Build {
         List testList = []
         def jdkBranch = getJDKBranch()
         def jdkRepo = getJDKRepo()
-        def openj9Branch = buildConfig.SCM_REF ? buildConfig.SCM_REF : "master"
+        def openj9Branch = (buildConfig.SCM_REF && buildConfig.VARIANT == "openj9") ? buildConfig.SCM_REF : "master"
 
         if (buildConfig.VARIANT == "corretto") {
             testList = buildConfig.TEST_LIST.minus(['sanity.external'])
