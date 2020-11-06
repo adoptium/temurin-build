@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 String javaVersion = "jdk11"
+String DEFAULT_BUILD_PATH = "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
+String DEFAULT_TARGET_PATH = "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}.groovy"
 
 node ("master") {
   try {
@@ -36,16 +38,16 @@ node ("master") {
 
     // Load buildConfigurations from config file. This is what the nightlies & releases use to setup their downstream jobs
     def buildConfigurations = null
-    def buildConfigPath = "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
+    def buildConfigPath = (params.BUILD_CONFIG_PATH) ? "${WORKSPACE}/${BUILD_CONFIG_PATH}" : DEFAULT_BUILD_PATH
 
     // Use default config path if param is empty
-    if (BUILD_CONFIG_PATH == "") {
+    if (buildConfigPath == DEFAULT_BUILD_PATH) {
 
       try {
-        buildConfigurations = load buildConfigPath
+        buildConfigurations = load DEFAULT_BUILD_PATH
       } catch (NoSuchFileException e) {
         javaVersion = javaVersion + "u"
-        println "[INFO] ${buildConfigPath} does not exist, chances are we want a ${javaVersion} version.\n[INFO] Trying ${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
+        println "[WARNING] ${DEFAULT_BUILD_PATH} does not exist, chances are we want a ${javaVersion} version.\n[WARNING] Trying ${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
 
         buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
       }
@@ -57,17 +59,28 @@ node ("master") {
 
       // Since we can't check if the file is jdkxxu file or not, some regex is needed here in lieu of the try-catch above
       Matcher matcher = "$buildConfigPath" =~ /.*?(?<version>\d+u).*?/
-      if (matcher.matches()) { javaVersion = javaVersion + "u" }
+      if (matcher.matches()) {
+        javaVersion = javaVersion + "u"
+      }
 
     }
 
-    if (buildConfigurations == null) { throw new Exception("[ERROR] Could not find buildConfigurations for ${javaVersion}") }
+    if (buildConfigurations == null) {
+      throw new Exception("[ERROR] Could not find buildConfigurations for ${javaVersion}")
+    }
 
     // Load targetConfigurations from config file. This is what is being run in the nightlies
-    if (TARGET_CONFIG_PATH != "") {
-      load "${WORKSPACE}/${TARGET_CONFIG_PATH}"
+    def targetConfigPath = (params.TARGET_CONFIG_PATH) ? "${WORKSPACE}/${TARGET_CONFIG_PATH}" : DEFAULT_TARGET_PATH
+
+    // Use default config path if param is empty
+    if (targetConfigPath == DEFAULT_TARGET_PATH) {
+      load DEFAULT_TARGET_PATH
     } else {
-      load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}.groovy"
+      load targetConfigPath
+    }
+
+    if (targetConfigurations == null) {
+      throw new Exception("[ERROR] Could not find targetConfigurations for ${javaVersion}")
     }
     
     // Pull in other parametrised values (or use defaults if they're not defined)
