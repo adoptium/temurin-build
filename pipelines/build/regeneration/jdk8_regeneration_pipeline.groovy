@@ -22,8 +22,8 @@ node ("master") {
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
 
     // Load gitUri and gitBranch. These determine where we will be pulling configs from.
-    def repoUri = "$REPOSITORY_URL" != "" ? REPOSITORY_URL : "https://github.com/AdoptOpenJDK/openjdk-build.git"
-    def repoBranch = "$REPOSITORY_BRANCH" != "" ? REPOSITORY_BRANCH : "master"
+    def repoUri = (params.REPOSITORY_URL) ?: "https://github.com/AdoptOpenJDK/openjdk-build.git"
+    def repoBranch = (params.REPOSITORY_BRANCH) ?: "master"
 
     // Checkout into the branch and url place
     checkout(
@@ -70,12 +70,12 @@ node ("master") {
       load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}.groovy"
     }
     
-    // Pull in other paramterised values (or use defaults if they're not defined)
-    def jobRoot = "$JOB_ROOT" != "" ? JOB_ROOT : "build-scripts"
-    def jenkinsBuildRoot = "$JENKINS_BUILD_ROOT" != "" ? JENKINS_BUILD_ROOT : "https://ci.adoptopenjdk.net/job/build-scripts/"
-    def jobTemplatePath = "$JOB_TEMPLATE_PATH" != "" ? JOB_TEMPLATE_PATH : "pipelines/build/common/create_job_from_template.groovy"
-    def scriptPath = "$SCRIPT_PATH" != "" ? SCRIPT_PATH : "pipelines/build/common/kick_off_build.groovy"
-    def excludes = "$EXCLUDES_LIST" != "" ? EXCLUDES_LIST : ""
+    // Pull in other parametrised values (or use defaults if they're not defined)
+    def jobRoot = (params.JOB_ROOT) ?: "build-scripts"
+    def jenkinsBuildRoot = (params.JENKINS_BUILD_ROOT) ?: "https://ci.adoptopenjdk.net/job/build-scripts/"
+    def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: "pipelines/build/common/create_job_from_template.groovy"
+    def scriptPath = (params.SCRIPT_PATH) ?: "pipelines/build/common/kick_off_build.groovy"
+    def excludes = (params.EXCLUDES_LIST) ?: ""
 
     println "[INFO] Running regeneration script with the following configuration:"
     println "VERSION: $javaVersion"

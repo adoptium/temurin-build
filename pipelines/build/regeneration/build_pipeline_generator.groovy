@@ -5,20 +5,20 @@ node('master') {
   def generatedPipelines = []
 
   // Load gitUri and gitBranch. These determine where we will be pulling configs from.
-  def repoUri = "$REPOSITORY_URL" != "" ? REPOSITORY_URL : "https://github.com/AdoptOpenJDK/openjdk-build.git"
-  def repoBranch = "$REPOSITORY_BRANCH" != "" ? REPOSITORY_BRANCH : "master"
+  def repoUri = (params.REPOSITORY_URL) ?: "https://github.com/AdoptOpenJDK/openjdk-build.git"
+  def repoBranch = (params.REPOSITORY_BRANCH) ?: "master"
   
   // Load jobRoot. This is where the openjdkxx-pipeline jobs will be created.
-  def jobRoot = "$JOB_ROOT" != "" ? JOB_ROOT : "build-scripts"
+  def jobRoot = (params.JOB_ROOT) ?: "build-scripts"
 
   // Load scriptFolderPath. This is the folder where the openjdkxx-pipeline.groovy code is located compared to the repository root. These are the top level pipeline jobs.
-  def scriptFolderPath = "$SCRIPT_FOLDER_PATH" != "" ? SCRIPT_FOLDER_PATH : "pipelines/build"
+  def scriptFolderPath = (params.SCRIPT_FOLDER_PATH) ?: "pipelines/build"
 
   // Load nightlyFolderPath. This is the folder where the jdkxx.groovy code is located compared to the repository root. These define what the default set of nightlies will be.
-  def nightlyFolderPath = "$NIGHTLY_FOLDER_PATH" != "" ? NIGHTLY_FOLDER_PATH : "pipelines/jobs/configurations"
+  def nightlyFolderPath = (params.NIGHTLY_FOLDER_PATH) ?: "pipelines/jobs/configurations"
 
   // Load jobTemplatePath. This is where the pipeline_job_template.groovy code is located compared to the repository root. This actually sets up the pipeline job using the parameters above.
-  def jobTemplatePath = "$JOB_TEMPLATE_PATH" != "" ? JOB_TEMPLATE_PATH : "pipelines/jobs/pipeline_job_template.groovy"
+  def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: "pipelines/jobs/pipeline_job_template.groovy"
 
   println "[INFO] Running generator script with the following configuration:"
   println "REPOSITORY_URL = $repoUri"
