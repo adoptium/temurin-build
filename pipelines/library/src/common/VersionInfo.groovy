@@ -1,11 +1,13 @@
 package common
 
 import java.util.regex.Matcher
+import java.lang.IllegalArgumentException
 
 class VersionInfo {
     Integer major // 8
     Integer minor // 0
     Integer security // 181
+    Integer patch
     Integer build // 8
     String opt
     String version
@@ -44,6 +46,7 @@ class VersionInfo {
         {
             minor: ${minor},
             security: ${security},
+            patch: ${patch},
             pre: ${pre},
             adopt_build_number: ${adopt_build_number},
             major: ${major},
@@ -148,9 +151,20 @@ class VersionInfo {
 
     // Match JDK9+
     private boolean match223(versionString) {
+        // jdk9+ version string format:
+        //   jdk-<major>[.<minor>][.<security>][.<patch>][-<pre>]+<build>[-<opt>]
+        // eg.
+        // jdk-15+36
+        // jdk-11.0.9+11
+        // jdk-11.0.9.1+1
+        // jdk-11.0.9-ea+11
+        // jdk-11.0.9+11-202011050024
+        // jdk-11.0.9+11-adhoc.username-myfolder
+        //
         //Regexes based on those in http://openjdk.java.net/jeps/223
-        // Technically the standard supports an arbitrary number of numbers, we will support 3 for now
-        final vnumRegex = "(?<major>[0-9]+)(\\.(?<minor>[0-9]+))?(\\.(?<security>[0-9]+))?"
+        // Note, currently openjdk only uses the first regex format of 223
+        // Technically the standard supports an arbitrary number of numbers, we will support 4 for now
+        final vnumRegex = "(?<major>[0-9]+)(\\.(?<minor>[0-9]+))?(\\.(?<security>[0-9]+))?(\\.(?<patch>[0-9]+))?"
         final preRegex = "(?<pre>[a-zA-Z0-9]+)"
         final buildRegex = "(?<build>[0-9]+)"
         final optRegex = "(?<opt>[-a-zA-Z0-9\\.]+)"
@@ -171,12 +185,25 @@ class VersionInfo {
                 minor = or0(matched223, 'minor')
                 security = or0(matched223, 'security')
 
-                if (matched223.group('pre') != null) {
-                    pre = matched223.group('pre')
-                    context.println "[SUCCESS] regex group (pre) of last 223 regex matched to ${pre}"
+                if (matched223.group('patch') != null) {
+                   patch = matched223.group('patch') as Integer
+                    context.println "[SUCCESS] regex group (patch) of 223 regex matched to ${patch}"
                 }
 
-                build = or0(matched223, 'build')
+                try {
+                    if (matched223.group('pre') != null) {
+                        pre = matched223.group('pre')
+                        context.println "[SUCCESS] regex group (pre) of last 223 regex matched to ${pre}"
+                    }
+                } catch(IllegalArgumentException e) {
+                    // Ignore as 'pre' is not in the given regex
+                }
+
+                try {
+                    build = or0(matched223, 'build')
+                } catch(IllegalArgumentException e) {
+                    // Ignore as 'build' is not in the given regex
+                }
 
                 if (matched223.group('opt') != null) {
                     opt = matched223.group('opt')
@@ -188,6 +215,8 @@ class VersionInfo {
             }
             context.println "[WARNING] Failed to match last 223 regex."
         }
+
+        context.println "[WARNING] Failed to match 223 regex."
 
         return false
     }
@@ -202,6 +231,11 @@ class VersionInfo {
 
             semver += "+"
             semver += (build ?: "0")
+
+            if (semver.equals("11.0.9+1") && patch == 1) {
+                // Map 11.0.9.1+1 to 11.0.9+11
+                semver = "11.0.9+11"
+            }
 
             if (adopt_build_number != null) {
                 semver += "." + adopt_build_number
