@@ -55,7 +55,8 @@ Finally, for similar reasons to avoiding individual copyright statements, we don
 If you're changing a shellscript, please make sure you run `./shellcheck.sh` before submitting your PR. This will also run in a GitHub check titled `Linter / Shellcheck` to ensure you comply to our coding style guidelines.
 
 After we receive your pull request our [GitHub Checks](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/.github/workflows) will test your changes.
-If you're making any changes to our groovy files, you'll be more interested in our [pr-tester](https://ci.adoptopenjdk.net/view/build-tester/job/build-scripts-pr-tester/job/openjdk-build-pr-tester/) jenkins job which executes a set of test pipelines in a semi-live environment (See the [README.md in prTester/](pipelines/build/prTester/README.md) for more information on that). Watch for the results posted as a comment to the PR, investigate and fix any failures.
+If you're making any changes to our groovy files, you'll be more interested in our [pr-tester](https://ci.adoptopenjdk.net/view/build-tester/job/build-scripts-pr-tester/job/openjdk-build-pr-tester/) jenkins job which executes a set of test pipelines in a semi-live environment. Watch for the results posted as a comment to the PR, investigate and fix any failures.
+Please see the [README.md in prTester/](pipelines/build/prTester/README.md) for more information on any of this.
 
 Fixes can simply be pushed to the same branch from which you opened your pull request. GitHub will automatically re-test when new commits are pushed and update the results.
 
