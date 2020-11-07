@@ -29,155 +29,171 @@ jobs:
         TARGET_OS: linux
         FILENAME: OpenJDK.tar.gz
 
-  build_macos:
-    name: macOS
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        version: [jdk8u, jdk11u, jdk15u, jdk]
-        vm: [hotspot, openj9]
+  # build_macos:
+  #   name: macOS
+  #   runs-on: macos-latest
+  #   strategy:
+  #     matrix:
+  #       version: [jdk8u, jdk11u, jdk15u, jdk]
+  #       vm: [hotspot, openj9]
 
-    steps:
-    - uses: actions/checkout@v2
+  #   steps:
+  #   - uses: actions/checkout@v2
 
-    - name: Install Dependencies
-      run: |
-        brew install bash binutils freetype gnu-sed nasm
+  #   - name: Install Dependencies
+  #     run: |
+  #       brew install bash binutils freetype gnu-sed nasm
 
-    - uses: actions/setup-java@v1
-      id: setup-java
-      with:
-        java-version: 7
-      if: matrix.version == 'jdk8u'
-        
-    - name: Build macOS
-      run: |
-        export JAVA_HOME=$JAVA_HOME_11_X64
-        # Skip freetype build on jdk11+
-        if [ ${{ matrix.version }} != "jdk8u" ]; then
-          export BUILD_ARGS="--skip-freetype"
-        fi
-        ./build-farm/make-adopt-build-farm.sh
-      env:
-        JAVA_TO_BUILD: ${{ matrix.version }}
-        ARCHITECTURE: x64
-        VARIANT: ${{ matrix.vm }}
-        TARGET_OS: mac
-        FILENAME: OpenJDK.tar.gz
-        JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
+  #   - uses: actions/setup-java@v1
+  #     id: setup-java
+  #     with:
+  #       java-version: 7
+  #     if: matrix.version == 'jdk8u'
 
-  build_windows:
-    name: Windows
-    runs-on: windows-2016
-    strategy:
-      matrix:
-        version: [jdk8u, jdk11u, jdk15u, jdk]
-        vm: [hotspot, openj9]
+  #   - name: Build macOS
+  #     run: |
+  #       export JAVA_HOME=$JAVA_HOME_11_X64
 
-    steps:
-    - name: Install Cygwin
-      run: |
-        New-Item -Path C:\ -Name 'openjdk' -ItemType 'directory'
-        Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
-        Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages autoconf,automake,bsdtar,cpio,curl,gcc-core,git,gnupg,grep,libtool,make,mingw64-x86_64-gcc-core,perl,rsync,unzip,wget,zip --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
+  #       # Configure Xcode version explicitly. Default versions may change any time.
+  #       # Available versions: https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.md#xcode
+  #       case "${{ matrix.version }}" in
+  #         "jdk8u"|"jdk11u"|"jdk15u")
+  #           export DEVELOPER_DIR="/Applications/Xcode_11.7.app/Contents/Developer"
+  #           ;;
+  #         "jdk")
+  #           export DEVELOPER_DIR="/Applications/Xcode_12.1.app/Contents/Developer"
+  #           ;;
+  #         *)
+  #           echo "Unknown JDK version: ${{ matrix.version }}" >&2
+  #           exit 1
+  #           ;;
+  #       esac
 
-    - uses: actions/setup-java@v1
-      id: setup-java7
-      with:
-        java-version: 7
-      if: matrix.version == 'jdk8u'
+  #       # Skip freetype build on jdk11+
+  #       if [ ${{ matrix.version }} != "jdk8u" ]; then
+  #         export BUILD_ARGS="--skip-freetype"
+  #       fi
+  #       ./build-farm/make-adopt-build-farm.sh
+  #     env:
+  #       JAVA_TO_BUILD: ${{ matrix.version }}
+  #       ARCHITECTURE: x64
+  #       VARIANT: ${{ matrix.vm }}
+  #       TARGET_OS: mac
+  #       FILENAME: OpenJDK.tar.gz
+  #       JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
 
-    - uses: actions/setup-java@v1
-      id: setup-java11
-      with:
-        java-version: 11
+build_windows:
+     name: Windows
+     runs-on: windows-2016
+     strategy:
+       matrix:
+         version: [jdk8u, jdk11u, jdk15u, jdk]
+         vm: [hotspot, openj9]
 
-    - name: Install Git
-      run: |
-        Invoke-WebRequest 'https://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile 'C:\temp\git.exe'
-        Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
+     steps:
+     - name: Install Cygwin
+       run: |
+         New-Item -Path C:\ -Name 'openjdk' -ItemType 'directory'
+         Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
+         Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages autoconf,automake,bsdtar,cpio,curl,gcc-core,git,gnupg,grep,libtool,make,mingw64-x86_64-gcc-core,perl,rsync,unzip,wget,zip --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
 
-    - name: Set PATH
-      run: echo '::add-path::C:\cygwin64\bin;C:\Program Files\Git\bin;'
+     - uses: actions/setup-java@v1
+       id: setup-java7
+       with:
+         java-version: 7
+       if: matrix.version == 'jdk8u'
 
-    - name: Install Visual Studio 2013
-      run: |
-        choco install visualstudiocommunity2013
-      if: matrix.version == 'jdk8u'
+     - uses: actions/setup-java@v1
+       id: setup-java11
+       with:
+         java-version: 11
 
-    - name: Install Cuda
-      run: |
-        Invoke-WebRequest -UseBasicParsing 'https://developer.nvidia.com/compute/cuda/9.0/Prod/network_installers/cuda_9.0.176_win10_network-exe' -OutFile 'C:\temp\cuda_9.0.176_win10_network-exe.exe'
-        Start-Process -Wait -FilePath 'C:\temp\cuda_9.0.176_win10_network-exe.exe' -ArgumentList '-s compiler_9.0 nvml_dev_9.0'
-      if: matrix.vm == 'openj9'
+     - name: Install Git
+       run: |
+         Invoke-WebRequest 'https://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile 'C:\temp\git.exe'
+         Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
 
-    - name: Install Freemarker
-      run: |
-        Invoke-WebRequest 'https://repo.maven.apache.org/maven2/freemarker/freemarker/2.3.8/freemarker-2.3.8.jar' -OutFile 'C:\openjdk\freemarker.jar'
-      if: matrix.vm == 'openj9'
+     - name: Set PATH
+       run: echo '::add-path::C:\cygwin64\bin;C:\Program Files\Git\bin;'
 
-    - name: Install Clang
-      run: |
-        choco install llvm --version=7.0.0
-        mklink /D "C:\openjdk\LLVM64" "C:\Program Files\LLVM"
-      shell: cmd
-      if: matrix.vm == 'openj9'
+     - name: Install Visual Studio 2013
+       run: |
+         choco install visualstudiocommunity2013
+       if: matrix.version == 'jdk8u'
 
-    - name: Install NASM
-      run: |
-        Invoke-WebRequest 'https://www.nasm.us/pub/nasm/releasebuilds/2.13.03/win64/nasm-2.13.03-win64.zip' -OutFile 'C:\temp\nasm-2.13.03.zip'
-        Expand-Archive -LiteralPath 'C:\temp\nasm-2.13.03.zip' -DestinationPath 'C:\openjdk'
-      if: matrix.vm == 'openj9'
+     - name: Install Cuda
+       run: |
+         Invoke-WebRequest -UseBasicParsing 'https://developer.nvidia.com/compute/cuda/9.0/Prod/network_installers/cuda_9.0.176_win10_network-exe' -OutFile 'C:\temp\cuda_9.0.176_win10_network-exe.exe'
+         Start-Process -Wait -FilePath 'C:\temp\cuda_9.0.176_win10_network-exe.exe' -ArgumentList '-s compiler_9.0 nvml_dev_9.0'
+       if: matrix.vm == 'openj9'
 
-    - name: Download OpenSSL
-      run: |
-        Invoke-WebRequest -UseBasicParsing 'https://www.openssl.org/source/openssl-1.1.1g.tar.gz' -OutFile 'C:\temp\OpenSSL-1.1.1g.tar.gz'
-        cd C:\temp
-        tar -xf C:/temp/OpenSSL-1.1.1g.tar.gz --force-local -C C:/temp
-      if: matrix.vm == 'openj9'
+     - name: Install Freemarker
+       run: |
+         Invoke-WebRequest 'https://repo.maven.apache.org/maven2/freemarker/freemarker/2.3.8/freemarker-2.3.8.jar' -OutFile 'C:\openjdk\freemarker.jar'
+       if: matrix.vm == 'openj9'
 
-    - name: Install OpenSSL VS2013
-      run: |
-        set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
-        call vcvarsall.bat AMD64
-        cd C:\temp\OpenSSL-1.1.1g
-        perl C:\temp\OpenSSL-1.1.1g\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1g-x86_64-VS2013
-        nmake install && nmake -f makefile clean
-      working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC'
-      shell: cmd
-      if: matrix.vm == 'openj9' && matrix.version == 'jdk8u'
+     - name: Install Clang
+       run: |
+         choco install llvm --version=7.0.0
+         mklink /D "C:\openjdk\LLVM64" "C:\Program Files\LLVM"
+       shell: cmd
+       if: matrix.vm == 'openj9'
 
-    - name: Install OpenSSL VS2017
-      run: |
-        set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
-        call vcvarsall.bat AMD64
-        cd C:\temp\OpenSSL-1.1.1g
-        perl C:\temp\OpenSSL-1.1.1g\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1g-x86_64-VS2017
-        nmake install && nmake -f makefile clean
-      working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build'
-      shell: cmd
-      if: matrix.vm == 'openj9' && matrix.version != 'jdk8u'
+     - name: Install NASM
+       run: |
+         Invoke-WebRequest 'https://www.nasm.us/pub/nasm/releasebuilds/2.13.03/win64/nasm-2.13.03-win64.zip' -OutFile 'C:\temp\nasm-2.13.03.zip'
+         Expand-Archive -LiteralPath 'C:\temp\nasm-2.13.03.zip' -DestinationPath 'C:\openjdk'
+       if: matrix.vm == 'openj9'
 
-    - name: Cygwin git configuration
-      shell: bash
-      run: mkdir $HOME && git config --system core.autocrlf false
+     - name: Download OpenSSL
+       run: |
+         Invoke-WebRequest -UseBasicParsing 'https://www.openssl.org/source/openssl-1.1.1g.tar.gz' -OutFile 'C:\temp\OpenSSL-1.1.1g.tar.gz'
+         cd C:\temp
+         tar -xf C:/temp/OpenSSL-1.1.1g.tar.gz --force-local -C C:/temp
+       if: matrix.vm == 'openj9'
 
-    - uses: actions/checkout@v2
+     - name: Install OpenSSL VS2013
+       run: |
+         set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
+         call vcvarsall.bat AMD64
+         cd C:\temp\OpenSSL-1.1.1g
+         perl C:\temp\OpenSSL-1.1.1g\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1g-x86_64-VS2013
+         nmake install && nmake -f makefile clean
+       working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC'
+       shell: cmd
+       if: matrix.vm == 'openj9' && matrix.version == 'jdk8u'
 
-    - name: Set JAVA_HOME
-      run: echo "::set-env name=JAVA_HOME::$(cygpath ${{ steps.setup-java11.outputs.path }})"
+     - name: Install OpenSSL VS2017
+       run: |
+         set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
+         call vcvarsall.bat AMD64
+         cd C:\temp\OpenSSL-1.1.1g
+         perl C:\temp\OpenSSL-1.1.1g\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1g-x86_64-VS2017
+         nmake install && nmake -f makefile clean
+       working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build'
+       shell: cmd
+       if: matrix.vm == 'openj9' && matrix.version != 'jdk8u'
 
-    - name: Set JDK7_BOOT_DIR
-      run: echo "::set-env name=JDK7_BOOT_DIR::$(cygpath ${{ steps.setup-java7.outputs.path }})"
-      if: matrix.version == 'jdk8u'
+     - name: Cygwin git configuration
+       shell: bash
+       run: mkdir $HOME && git config --system core.autocrlf false
 
-    - name: Build Windows
-      run: |
-        bash build-farm/make-adopt-build-farm.sh
-      shell: cmd
-      env:
-        JAVA_TO_BUILD: ${{ matrix.version }}
-        ARCHITECTURE: x64
-        VARIANT: ${{ matrix.vm }}
-        TARGET_OS: windows
-        FILENAME: OpenJDK.tar.gz
+     - uses: actions/checkout@v2
+
+     - name: Set JAVA_HOME
+       run: echo "::set-env name=JAVA_HOME::$(cygpath ${{ steps.setup-java11.outputs.path }})"
+
+     - name: Set JDK7_BOOT_DIR
+       run: echo "::set-env name=JDK7_BOOT_DIR::$(cygpath ${{ steps.setup-java7.outputs.path }})"
+       if: matrix.version == 'jdk8u'
+
+     - name: Build Windows
+       run: |
+         bash build-farm/make-adopt-build-farm.sh
+       shell: cmd
+       env:
+         JAVA_TO_BUILD: ${{ matrix.version }}
+         ARCHITECTURE: x64
+         VARIANT: ${{ matrix.vm }}
+         TARGET_OS: windows
+         FILENAME: OpenJDK.tar.gz 

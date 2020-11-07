@@ -1,6 +1,7 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
+import java.util.Base64
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,6 +26,7 @@ class Regeneration implements Serializable {
     private final String javaVersion
     private final Map<String, Map<String, ?>> buildConfigurations
     private final Map<String, ?> targetConfigurations
+    private final Map<String, ?> excludedBuilds
     private final def currentBuild
     private final def context
 
@@ -33,28 +35,43 @@ class Regeneration implements Serializable {
     private final def gitBranch
 
     private final def jenkinsBuildRoot
-    private String javaToBuild
+    private final def jenkinsUsername
+    private final def jenkinsToken
 
+    private String javaToBuild
+    private final List<String> defaultTestList = ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external']
+
+    private final String excludedConst = "EXCLUDED"
+
+    /*
+    Constructor
+    */
     public Regeneration(
         String javaVersion,
         Map<String, Map<String, ?>> buildConfigurations,
         Map<String, ?> targetConfigurations,
+        Map<String, ?> excludedBuilds,
         currentBuild,
         context,
         String jobRootDir,
         String gitUri,
         String gitBranch,
-        String jenkinsBuildRoot
+        String jenkinsBuildRoot,
+        String jenkinsUsername,
+        String jenkinsToken
     ) {
         this.javaVersion = javaVersion
         this.buildConfigurations = buildConfigurations
         this.targetConfigurations = targetConfigurations
+        this.excludedBuilds = excludedBuilds
         this.currentBuild = currentBuild
         this.context = context
         this.jobRootDir = jobRootDir
         this.gitUri = gitUri
         this.gitBranch = gitBranch
         this.jenkinsBuildRoot = jenkinsBuildRoot
+        this.jenkinsUsername = jenkinsUsername
+        this.jenkinsToken = jenkinsToken
     }
 
     /*
@@ -80,6 +97,11 @@ class Regeneration implements Serializable {
         return configureArgs
     }
 
+    /*
+    Retrieves the dockerImage attribute from the build configurations.
+    This specifies the DockerHub org and image to pull or build in case we don't have one stored in this repository.
+    If this isn't specified, the openjdk_build_pipeline.groovy will assume we are not building the jdk inside of a container.
+    */
     def getDockerImage(Map<String, ?> configuration, String variant) {
         def dockerImageValue = ""
         if (configuration.containsKey("dockerImage")) {
@@ -92,6 +114,11 @@ class Regeneration implements Serializable {
         return dockerImageValue
     }
 
+    /*
+    Retrieves the dockerFile attribute from the build configurations.
+    This specifies the path of the dockerFile relative to this repository.
+    If a dockerFile is not specified, the openjdk_build_pipeline.groovy will attempt to pull one from DockerHub.
+    */
     def getDockerFile(Map<String, ?> configuration, String variant) {
         def dockerFileValue = ""
         if (configuration.containsKey("dockerFile")) {
@@ -104,6 +131,23 @@ class Regeneration implements Serializable {
         return dockerFileValue
     }
 
+    /*
+    Retrieves the dockerNode attribute from the build configurations.
+    This determines what the additional label will be if we are building the jdk in a docker container.
+    Defaults to &&dockerBuild in openjdk_build_pipeline.groovy if it's not supplied in the build configuration.
+    */
+    def getDockerNode(Map<String, ?> configuration, String variant) {
+        def dockerNodeValue = ""
+        if (configuration.containsKey("dockerNode")) {
+            if (isMap(configuration.dockerNode)) {
+                dockerNodeValue = (configuration.dockerNode as Map<String, ?>).get(variant)
+            } else {
+                dockerNodeValue = configuration.dockerNode
+            }
+        }
+        return dockerNodeValue
+    }
+
     /**
     * Builds up a node param string that defines what nodes are eligible to run the given job. Used as a placeholder since the pipelines overwrite this.
     * @param configuration
@@ -112,13 +156,6 @@ class Regeneration implements Serializable {
     */
     def formAdditionalBuildNodeLabels(Map<String, ?> configuration, String variant) {
         def buildTag = "build"
-
-        if (configuration.os == "windows" && variant == "openj9") {
-            buildTag = "buildj9"
-        } else if (configuration.arch == "s390x" && variant == "openj9") {
-            buildTag = "(buildj9||build)&&openj9"
-        }
-
         def labels = "${buildTag}"
 
         if (configuration.containsKey("additionalNodeLabels")) {
@@ -163,14 +200,45 @@ class Regeneration implements Serializable {
     * @param configuration
     */
     List<String> getTestList(Map<String, ?> configuration) {
-        if (configuration.containsKey("test")) {
+        List<String> testList = []
+        if (configuration.containsKey("test") && configuration.get("test")) {
             if (isMap(configuration.test)) {
-                return (configuration.test as Map).get("nightly") as List<String> // no need to check for release
-            } else {
-                return configuration.test as List<String>
+                testList = (configuration.test as Map).get("nightly") as List<String> // no need to check for release
             }
+            testList = defaultTestList
         }
-        return []
+        testList.unique()
+        return testList
+    }
+
+    /*
+    * Checks if the platform/arch/variant is in the EXCLUDES_LIST Parameter.
+    * @param configuration
+    * @param variant
+    */
+    def overridePlatform(Map<String, ?> configuration, String variant) {
+        Boolean overridePlatform = false
+        if (excludedBuilds == [:]) {
+            return overridePlatform 
+        }
+
+        String stringArch = configuration.arch as String
+        String stringOs = configuration.os as String
+        String estimatedKey = stringArch + stringOs.capitalize()
+
+        if (configuration.containsKey("additionalFileNameTag")) {
+            estimatedKey = estimatedKey + "XL"
+        }
+
+        if (excludedBuilds.containsKey(estimatedKey)) {
+
+            if (excludedBuilds[estimatedKey].contains(variant)) {
+                overridePlatform = true
+            }
+
+        }
+
+        return overridePlatform
     }
 
     /*
@@ -181,11 +249,20 @@ class Regeneration implements Serializable {
     */
     IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant, String javaToBuild) {
         try {
+
+            // Check if it's in the excludes list
+            if (overridePlatform(platformConfig, variant)) {
+                context.println "[INFO] Excluding $platformConfig.os: $variant from $javaToBuild regeneration due to it being in the EXCLUDES_LIST..."
+                return excludedConst
+            }
+
             def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
             def dockerImage = getDockerImage(platformConfig, variant)
 
             def dockerFile = getDockerFile(platformConfig, variant)
+
+            def dockerNode = getDockerNode(platformConfig, variant)
 
             def buildArgs = getBuildArgs(platformConfig, variant)
 
@@ -200,9 +277,11 @@ class Regeneration implements Serializable {
                 SCM_REF: "",
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+                ACTIVE_NODE_TIMEOUT: "",
                 CODEBUILD: platformConfig.codebuild as Boolean,
                 DOCKER_IMAGE: dockerImage,
                 DOCKER_FILE: dockerFile,
+                DOCKER_NODE: dockerNode,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
                 OVERRIDE_FILE_NAME_VERSION: "",
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
@@ -281,17 +360,24 @@ class Regeneration implements Serializable {
         try {
             def parser = new JsonSlurper()
             def get = new URL(query).openConnection()
+
+            String jenkinsAuth = ""
+            if (jenkinsUsername != "") {
+                jenkinsAuth = "Basic " + new String(Base64.getEncoder().encode("$jenkinsUsername:$jenkinsToken".getBytes()))
+            }
+            get.setRequestProperty ("Authorization", jenkinsAuth)
+
             def response = parser.parseText(get.getInputStream().getText())
             return response
         } catch (Exception e) {
-            // Failed to connect to jenkins api or a parsing error occured
+            // Failed to connect to jenkins api or a parsing error occurred
             context.println "[ERROR] Failure on jenkins api connection or parsing.\nError: ${e}"
             currentBuild.result = "FAILURE"
         }
     }
 
     /**
-    * Main function. Ran from regeneration_pipeline.groovy, this will be what jenkins will run first.
+    * Main function. Ran from jdkxx_regeneration_pipeline.groovy, this will be what jenkins will run first.
     */
     @SuppressWarnings("unused")
     def regenerate() {
@@ -299,30 +385,30 @@ class Regeneration implements Serializable {
             def versionNumbers = javaVersion =~ /\d+/
 
             /*
-            * Stage: Check that the pipeline isn't in inprogress or queued up. Once clear, run the regeneration job
+            * Stage: Check that the pipeline isn't in in-progress or queued up. Once clear, run the regeneration job
             */
-            if (jobRootDir.contains("pr-tester")) {
-                // No need to check if we're going to overwrite anything for the PR tester
-                context.println "[SUCCESS] Don't need to check if the pr-tester is running. Running regeneration job..."
-            } else {
-                context.stage("Check $javaVersion pipeline status") {
-
+            context.stage("Check $javaVersion pipeline status") {
+                if (jobRootDir.contains("pr-tester")) {
+                    // No need to check if we're going to overwrite anything for the PR tester
+                    context.println "[SUCCESS] Don't need to check if the pr-tester is running as concurrency is disabled. Running regeneration job..."
+                } else {
                     // Get all pipelines
                     def getPipelines = queryAPI("${jenkinsBuildRoot}/api/json?tree=jobs[name]&pretty=true&depth1")
 
                     // Parse api response to only extract the relevant pipeline
                     getPipelines.jobs.name.each{ pipeline ->
                         if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
+                            // TODO: Paramaterise this
                             Integer sleepTime = 900
+                            
                             Boolean inProgress = true
-
                             while (inProgress) {
                                 // Check if pipeline is in progress using api
                                 context.println "[INFO] Checking if ${pipeline} is running..." //i.e. openjdk8-pipeline
 
                                 def pipelineInProgress = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/lastBuild/api/json?pretty=true&depth1")
 
-                                // If query fails, check to see if the pipeline been run before
+                                // If query fails, check to see if the pipeline has been run before
                                 if (pipelineInProgress == null) {
                                     def getPipelineBuilds = queryAPI("${jenkinsBuildRoot}/job/${pipeline}/api/json?pretty=true&depth1")
 
@@ -330,7 +416,7 @@ class Regeneration implements Serializable {
                                         context.println "[SUCCESS] ${pipeline} has not been run before. Running regeneration job..."
                                         inProgress = false
                                     }
-
+                                
                                 } else {
                                     inProgress = pipelineInProgress.building as Boolean
                                 }
@@ -338,7 +424,8 @@ class Regeneration implements Serializable {
                                 if (inProgress) {
                                     // Sleep for a bit, then check again...
                                     context.println "[INFO] ${pipeline} is running. Sleeping for ${sleepTime} seconds while waiting for ${pipeline} to complete..."
-                                    context.sleep sleepTime
+
+                                    context.sleep(time: sleepTime, unit: "SECONDS")
                                 }
 
                             }
@@ -348,8 +435,9 @@ class Regeneration implements Serializable {
 
                     }
 
-                } // end check stage
-            }
+                }
+
+            } // end check stage
 
             /*
             * Stage: Regenerate all of the job configurations by job type (i.e. jdk8u-linux-x64-hotspot
@@ -412,11 +500,15 @@ class Regeneration implements Serializable {
                                 context.println "[WARNING] Config file key: ${osarch} not recognised. Valid configuration keys for ${javaToBuild} are ${buildConfigurations.keySet()}.\n[WARNING] ${osarch} WILL NOT BE REGENERATED! Setting build result to UNSTABLE..."
                                 currentBuild.result = "UNSTABLE"
                             } else {
+                                // Skip variant job make if it's marked as excluded
+                                if (jobConfigurations.get(name) == excludedConst) {
+                                    continue
+                                }
                                 // Make job
-                                if (jobConfigurations.get(name) != null) {
+                                else if (jobConfigurations.get(name) != null) {
                                     makeJob(jobConfigurations, name)
+                                // Unexpected error when building or getting the configuration
                                 } else {
-                                    // Unexpected error when building or getting the configuration
                                     context.println "[ERROR] IndividualBuildConfig is malformed for key: ${osarch}."
                                     currentBuild.result = "FAILURE"
                                 }
@@ -424,7 +516,7 @@ class Regeneration implements Serializable {
 
                         } // end variant for loop
 
-                        context.println "[SUCCESS] ${osarch} regenerated!\n"
+                        context.println "[SUCCESS] ${osarch} completed!\n"
 
                 } // end key foreach loop
 
@@ -438,17 +530,40 @@ return {
     String javaVersion,
     Map<String, Map<String, ?>> buildConfigurations,
     Map<String, ?> targetConfigurations,
+    String excludes,
     def currentBuild,
     def context,
     String jobRootDir,
     String gitUri,
     String gitBranch,
-    String jenkinsBuildRoot
+    String jenkinsBuildRoot,
+    String jenkinsUsername,
+    String jenkinsToken
         ->
         if (jobRootDir == null) jobRootDir = "build-scripts";
         if (gitUri == null) gitUri = "https://github.com/AdoptOpenJDK/openjdk-build.git";
         if (gitBranch == null) gitBranch = "master";
         if (jenkinsBuildRoot == null) jenkinsBuildRoot = "https://ci.adoptopenjdk.net/job/build-scripts/";
+        if (jenkinsUsername == null) jenkinsUsername = ""
+        if (jenkinsToken == null) jenkinsToken = ""
 
-        return new Regeneration(javaVersion, buildConfigurations, targetConfigurations, currentBuild, context, jobRootDir, gitUri, gitBranch, jenkinsBuildRoot)
+        def excludedBuilds = [:]
+        if (excludes != "" && excludes != null) {
+            excludedBuilds = new JsonSlurper().parseText(excludes) as Map
+        }
+        
+        return new Regeneration(
+            javaVersion,
+            buildConfigurations,
+            targetConfigurations,
+            excludedBuilds,
+            currentBuild,
+            context,
+            jobRootDir,
+            gitUri,
+            gitBranch,
+            jenkinsBuildRoot,
+            jenkinsUsername,
+            jenkinsToken
+        )
 }

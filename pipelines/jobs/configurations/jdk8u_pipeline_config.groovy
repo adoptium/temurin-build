@@ -8,14 +8,14 @@ class Config8 {
                         corretto: 'build-macstadium-macos1010-1',
                         openj9  : 'macos10.14'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
+                test                 : 'default'
         ],
 
         x64MacXL      : [
                 os                   : 'mac',
                 arch                 : 'x64',
                 additionalNodeLabels : 'macos10.14',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'special.openjdk'],
+                test                 : 'default',
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -28,7 +28,7 @@ class Config8 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile',
                         dragonwell: 'pipelines/build/dockerFiles/dragonwell.dockerfile'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional', 'special.openjdk'],
+                test                 : 'default',
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver',
                         "dragonwell"  : '--enable-jfr --enable-unlimited-crypto --with-jvm-variants=server  --with-zlib=system',
@@ -44,14 +44,14 @@ class Config8 {
                         corretto: 'win2012',
                         openj9  : 'win2012&&mingw-cygwin'
                 ],
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
+                test                 : 'default'
         ],
 
         x64WindowsXL    : [
                 os                   : 'windows',
                 arch                 : 'x64',
                 additionalNodeLabels : 'win2012&&mingw-cygwin',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                test                 : 'default',
                 additionalFileNameTag: "windowsXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -67,7 +67,7 @@ class Config8 {
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
-                test                : ['sanity.openjdk', 'special.openjdk']
+                test                 : 'default'
         ],
 
         ppc64Aix      : [
@@ -77,16 +77,13 @@ class Config8 {
                         hotspot: 'xlc13&&aix710',
                         openj9:  'xlc13&&aix715'
                 ],
-                test: [
-                        nightly: ['sanity.openjdk'],
-                        release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
-                ]
+                test                 : 'default'
         ],
 
         s390xLinux    : [
                 os  : 'linux',
                 arch: 's390x',
-                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
+                test                 : 'default'
         ],
 
         sparcv9Solaris: [
@@ -104,7 +101,8 @@ class Config8 {
         ppc64leLinux  : [
                 os  : 'linux',
                 arch: 'ppc64le',
-                test: ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                additionalNodeLabels : 'centos7',
+                test                 : 'default',
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver'
                 ]
@@ -113,14 +111,14 @@ class Config8 {
         arm32Linux    : [
                 os  : 'linux',
                 arch: 'arm',
-                test                : ['sanity.openjdk']
+                test: 'default'
         ],
 
         aarch64Linux  : [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
-                test                : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk']
+                test                 : 'default'
         ],
 
         x64LinuxXL       : [
@@ -132,20 +130,21 @@ class Config8 {
                 arch                 : 'x64',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-jitserver',
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                test                 : 'default'
         ],
         s390xLinuxXL       : [
                 os                   : 'linux',
                 arch                 : 's390x',
                 additionalFileNameTag: "linuxXL",
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                test                 : 'default',
                 configureArgs        : '--with-noncompressedrefs'
         ],
         ppc64leLinuxXL       : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 additionalFileNameTag: "linuxXL",
-                test                 : ['sanity.openjdk', 'sanity.system', 'extended.system', 'special.openjdk'],
+                test                 : 'default',
                 configureArgs        : '--with-noncompressedrefs --enable-jitserver'
         ],
   ]

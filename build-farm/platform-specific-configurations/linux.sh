@@ -74,12 +74,12 @@ fi
 
 if [ "${ARCHITECTURE}" == "arm" ]
 then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="--with-jobs=4 --with-memory-size=2000"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=4 --with-memory-size=2000"
   if [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="$CONFIGURE_ARGS_FOR_ANY_PLATFORM --with-extra-ldflags=-latomic"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-latomic"
   fi
   if [ "$JAVA_FEATURE_VERSION" -ge 11 ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="$CONFIGURE_ARGS_FOR_ANY_PLATFORM --disable-warnings-as-errors"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
   fi
   if [ ! -z "${NUM_PROCESSORS}" ]
   then
@@ -131,18 +131,14 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
     "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
-# Any version above 10, OpenJ9 or arm32 (See support#33 ref arm)
-if [ "$JAVA_FEATURE_VERSION" -gt 10 ] || [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ] || [ "${ARCHITECTURE}" == "arm" ]; then
-    # If we have the RedHat devtoolset 7 installed, use gcc 7 from there, else /usr/local/gcc/bin
-    if [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
-      export PATH=/usr/local/gcc/bin:$PATH
-      [ -r /usr/local/gcc/bin/gcc-7.5 ] && export CC=/usr/local/gcc/bin/gcc-7.5
-      [ -r /usr/local/gcc/bin/g++-7.5 ] && export CXX=/usr/local/gcc/bin/g++-7.5
-      export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
-    elif [ -r /usr/bin/gcc-7 ]; then
-      [ -r /usr/bin/gcc-7 ] && export CC=/usr/bin/gcc-7
-      [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
-    fi
+if [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
+  export PATH=/usr/local/gcc/bin:$PATH
+  [ -r /usr/local/gcc/bin/gcc-7.5 ] && export CC=/usr/local/gcc/bin/gcc-7.5
+  [ -r /usr/local/gcc/bin/g++-7.5 ] && export CXX=/usr/local/gcc/bin/g++-7.5
+  export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
+elif [ -r /usr/bin/gcc-7 ]; then
+  [ -r /usr/bin/gcc-7 ] && export CC=/usr/bin/gcc-7
+  [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
 fi
 
 if which ccache 2> /dev/null; then

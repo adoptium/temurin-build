@@ -49,6 +49,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
+    
     # Ensure cached origin fetch remote repo is correct version and repo (eg.jdk11u, or jdk), remember "jdk" sub-string of jdk11u hence grep with "\s"
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk11u (fetch)
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk (fetch)
@@ -56,7 +57,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
       git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch"
     else
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | egrep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
     fi
     local isValidGitRepo=$?
     set -e
@@ -65,7 +66,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     if [ "${isValidGitRepo}" == "0" ]; then
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
-      sleep 10
+      sleep 10s
       echo "Pulling latest changes from git openjdk source repository"
     elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
       echo "Removing current git repo as it is the wrong type"
@@ -77,8 +78,8 @@ checkoutAndCloneOpenJDKGitRepo() {
       exit 1
     fi
   elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
-    # If it doesn't exist, clone it
-    echo "Didn't find any existing openjdk repository at $(pwd)/${BUILD_CONFIG[WORKING_DIR]} so cloning the source to openjdk"
+    echo "Could not find a valid openjdk git repository at $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} so re-cloning the source to openjdk"
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     cloneOpenJDKGitRepo
   fi
 
@@ -184,7 +185,7 @@ checkoutRequiredCodeToBuild() {
   fi
 
   # Get the latest tag to stick in the scmref metadata, using the build config tag if it exists
-  local scmrefPath="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}scmref.txt"
+  local scmrefPath="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
 
   if [ $rc -eq 0 ]; then
 
@@ -256,7 +257,7 @@ updateOpenj9Sources() {
   # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    bash get_source.sh --openssl-version=1.1.1g
+    bash get_source.sh --openssl-version=1.1.1h
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
@@ -408,9 +409,13 @@ downloadFile() {
 
   # Temporary fudge as curl on my windows boxes is exiting with RC=127
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    wget -O "${targetFileName}" "${url}" || exit 2
-  else
-    curl --fail -L -o "${targetFileName}" "${url}" || exit 2
+    if ! wget -O "${targetFileName}" "${url}"; then
+       echo ERROR: Failed to download "${url}" - exiting
+       exit 2
+    fi
+  elif ! curl --fail -L -o "${targetFileName}" "${url}"; then
+    echo ERROR: Failed to download "${url}" - exiting
+    exit 2
   fi
 
   if [ $# -ge 3 ]; then
@@ -419,7 +424,7 @@ downloadFile() {
     local actualChecksum=$(sha256File ${targetFileName})
 
     if [ "${actualChecksum}" != "${expectedChecksum}" ]; then
-      echo "Failed to verify checksum on ${targetFileName} ${url}"
+      echo "ERROR: Failed to verify checksum on ${targetFileName} ${url}"
 
       echo "Expected ${expectedChecksum} got ${actualChecksum}"
       exit 1
