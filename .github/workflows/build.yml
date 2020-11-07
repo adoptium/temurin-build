@@ -82,7 +82,7 @@ jobs:
   #       FILENAME: OpenJDK.tar.gz
   #       JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
 
-build_windows:
+  build_windows:
      name: Windows
      runs-on: windows-2016
      strategy:
