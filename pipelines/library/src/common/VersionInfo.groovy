@@ -230,12 +230,15 @@ class VersionInfo {
             }
 
             semver += "+"
-            semver += (build ?: "0")
+            
+            def sem_build = (build ?: 0)
 
-            if (semver.equals("11.0.9+1") && patch == 1) {
-                // Map 11.0.9.1+1 to 11.0.9+11
-                semver = "11.0.9+11"
+            // if "patch" then increment semver build by patchx100
+            if (patch > 0) {
+                sem_build += (patch * 100)
             }
+
+            semver += sem_build
 
             if (adopt_build_number != null) {
                 semver += "." + adopt_build_number
