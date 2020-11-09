@@ -159,6 +159,7 @@ class VersionInfoTest {
         Assertions.assertNull(parsed.opt)
         Assertions.assertNull(parsed.adopt_build_number)
         Assertions.assertEquals("11.0.9+11", parsed.semver)
+        Assertions.assertEquals("11.0.9.11", parsed.msi_product_version)
     }
 
     // jdk-11.0.9.1+1
@@ -175,6 +176,7 @@ class VersionInfoTest {
         Assertions.assertNull(parsed.opt)
         Assertions.assertEquals(2, parsed.adopt_build_number)
         Assertions.assertEquals("11.0.9+101.2", parsed.semver)
+        Assertions.assertEquals("11.0.9.101", parsed.msi_product_version)
     }
 
     // jdk-11.0.9-ea+11

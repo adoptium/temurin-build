@@ -14,6 +14,7 @@ class VersionInfo {
     String pre
     Integer adopt_build_number
     String semver
+    String msi_product_version
 
     private final context
 
@@ -39,6 +40,7 @@ class VersionInfo {
         }
 
         semver = formSemver()
+        msi_product_version = formMSIProductVersion() 
 
         // Lay this out exactly as it would be in the metadata
         context.println "[INFO] FINISHED PARSING PUBLISH_NAME:"
@@ -52,6 +54,7 @@ class VersionInfo {
             major: ${major},
             version: ${version},
             semver: ${semver},
+            msi_product_version: ${msi_product_version},
             build: ${build},
             opt: ${opt}
         }
@@ -248,6 +251,29 @@ class VersionInfo {
                 semver += "." + opt
             }
             return semver
+        } else {
+            return null
+        }
+    }
+
+    
+    /**
+     * Form ProductVersion with only 4 number with dot , ie 11.0.9.0 or 11.0.9.101
+     */
+    String formMSIProductVersion() {
+        if (major != null) {
+            def productVersion = major + "." + minor + "." + security
+
+            def sem_build = (build ?: 0)
+
+            // if "patch" then increment productVersion build by patchx100
+            if (patch > 0) {
+                sem_build += (patch * 100)
+            }
+
+            productVersion += sem_build
+
+            return productVersion
         } else {
             return null
         }

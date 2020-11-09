@@ -417,6 +417,7 @@ class Build {
                         context.string(name: 'PRODUCT_MINOR_VERSION', value: "${versionData.minor}"),
                         context.string(name: 'PRODUCT_MAINTENANCE_VERSION', value: "${versionData.security}"),
                         context.string(name: 'PRODUCT_PATCH_VERSION', value: "${buildNumber}"),
+                        context.string(name: 'MSI_PRODUCT_VERSION', value: "${versionData.msi_product_version}"),
                         context.string(name: 'PRODUCT_CATEGORY', value: "jdk"),
                         context.string(name: 'JVM', value: "${buildConfig.VARIANT}"),
                         context.string(name: 'SIGNING_CERTIFICATE', value: "${certificate}"),
