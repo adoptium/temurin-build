@@ -236,8 +236,8 @@ class VersionInfo {
             
             def sem_build = (build ?: 0)
 
-            // if "patch" then increment semver build by patchx100
-            if (patch > 0) {
+            // if "patch" then increment semver build by patch x 100
+            if (patch != null && patch > 0) {
                 sem_build += (patch * 100)
             }
 
@@ -266,8 +266,8 @@ class VersionInfo {
 
             def sem_build = (build ?: 0)
 
-            // if "patch" then increment productVersion build by patchx100
-            if (patch > 0) {
+            // if "patch" then increment productVersion build by patch x 100
+            if (patch != null && patch > 0) {
                 sem_build += (patch * 100)
             }
 
