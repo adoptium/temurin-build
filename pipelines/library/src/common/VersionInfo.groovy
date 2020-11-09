@@ -271,7 +271,7 @@ class VersionInfo {
                 sem_build += (patch * 100)
             }
 
-            productVersion += sem_build
+            productVersion += "." + sem_build
 
             return productVersion
         } else {
