@@ -112,7 +112,7 @@ class PullRequestTestPipeline implements Serializable {
                             propagate: true,
                             parameters: [
                                 context.string(name: 'releaseType', value: "Nightly Without Publish"),
-                                context.string(name: 'activeNodeTimeout', value: "15")
+                                context.string(name: 'activeNodeTimeout', value: "0")
                             ]
                     } catch (err) {
                         context.println "[ERROR] ${actualJavaVersion} PIPELINE FAILED\n$err"
