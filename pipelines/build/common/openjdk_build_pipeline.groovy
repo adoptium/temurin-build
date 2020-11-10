@@ -977,7 +977,6 @@ class Build {
                             label = "codebuild"
                         }
 
-                        waitForANodeToBecomeActive(label)
                         context.println "[NODE SHIFT] MOVING INTO DOCKER NODE MATCHING LABELNAME ${label}..."
                         context.node(label) {
                             // Cannot clean workspace from inside docker container
