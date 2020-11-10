@@ -87,10 +87,18 @@ jobs:
      runs-on: windows-2016
      strategy:
        matrix:
-         version: [jdk8u, jdk11u, jdk15u, jdk]
+         version: [jdk11u, jdk15u, jdk]
+        #  version: [jdk8u, jdk11u, jdk15u, jdk]
          vm: [hotspot, openj9]
 
      steps:
+     - name: Restore cygwin packages from cache
+       id: cygwin
+       uses: actions/cache@v2
+       with:
+        path: C:\cygwin_packages
+        key: cygwin-packages-${{ runner.os }}-v1
+          
      - name: Install Cygwin
        run: |
          New-Item -Path C:\ -Name 'openjdk' -ItemType 'directory'
