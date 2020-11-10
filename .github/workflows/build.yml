@@ -153,6 +153,22 @@ jobs:
          Expand-Archive -LiteralPath 'C:\temp\nasm-2.13.03.zip' -DestinationPath 'C:\openjdk'
        if: matrix.vm == 'openj9'
 
+     - name: Restore OpenSSL VS2013 from cache
+       id: openssl-2013
+       uses: actions/cache@v2
+       with:
+        path: C:\openjdk\OpenSSL-1.1.1g-x86_64-VS2013
+        key: openssl-2013-${{ runner.os }}-v1
+       if: matrix.vm == 'openj9' && matrix.version == 'jdk8u'
+
+     - name: Restore OpenSSL VS2017 from cache
+       id: openssl-2017
+       uses: actions/cache@v2
+       with:
+        path: C:\openjdk\OpenSSL-1.1.1g-x86_64-VS2017
+        key: openssl-2017-${{ runner.os }}-v1
+       if: matrix.vm == 'openj9' && matrix.version != 'jdk8u'
+
      - name: Download OpenSSL
        run: |
          Invoke-WebRequest -UseBasicParsing 'https://www.openssl.org/source/openssl-1.1.1g.tar.gz' -OutFile 'C:\temp\OpenSSL-1.1.1g.tar.gz'
@@ -169,7 +185,7 @@ jobs:
          nmake install && nmake -f makefile clean
        working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC'
        shell: cmd
-       if: matrix.vm == 'openj9' && matrix.version == 'jdk8u'
+       if: matrix.vm == 'openj9' && matrix.version == 'jdk8u' && steps.openssl-2013.outputs.cache-hit != 'true'
 
      - name: Install OpenSSL VS2017
        run: |
@@ -180,7 +196,7 @@ jobs:
          nmake install && nmake -f makefile clean
        working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build'
        shell: cmd
-       if: matrix.vm == 'openj9' && matrix.version != 'jdk8u'
+       if: matrix.vm == 'openj9' && matrix.version != 'jdk8u' && steps.openssl-2017.outputs.cache-hit != 'true'
 
      - name: Cygwin git configuration
        shell: bash
