@@ -159,11 +159,29 @@ class VersionInfoTest {
         Assertions.assertNull(parsed.opt)
         Assertions.assertNull(parsed.adopt_build_number)
         Assertions.assertEquals("11.0.9+11", parsed.semver)
+        Assertions.assertEquals("11.0.9.11", parsed.msi_product_version)
     }
 
     // jdk-11.0.9.1+1
     @Test
     void parsesJdk223Format3() {
+        VersionInfo parsed = new VersionInfo(this).parse("11.0.9.1+1", null)
+        Assertions.assertEquals(11, parsed.major)
+        Assertions.assertEquals(0, parsed.minor)
+        Assertions.assertEquals(9, parsed.security)
+        Assertions.assertEquals(1, parsed.patch)
+        Assertions.assertEquals(1, parsed.build)
+        Assertions.assertNull(parsed.pre)
+        Assertions.assertEquals("11.0.9.1+1", parsed.version)
+        Assertions.assertNull(parsed.opt)
+        Assertions.assertNull(parsed.adopt_build_number)
+        Assertions.assertEquals("11.0.9+101", parsed.semver)
+        Assertions.assertEquals("11.0.9.101", parsed.msi_product_version)
+    }
+
+    // jdk-11.0.9.1+1 AdoptBuildNumber "2"
+    @Test
+    void parsesJdk223Format3AdoptBuildNumber2() {
         VersionInfo parsed = new VersionInfo(this).parse("11.0.9.1+1", "2")
         Assertions.assertEquals(11, parsed.major)
         Assertions.assertEquals(0, parsed.minor)
@@ -174,7 +192,8 @@ class VersionInfoTest {
         Assertions.assertEquals("11.0.9.1+1", parsed.version)
         Assertions.assertNull(parsed.opt)
         Assertions.assertEquals(2, parsed.adopt_build_number)
-        Assertions.assertEquals("11.0.9+11.2", parsed.semver)
+        Assertions.assertEquals("11.0.9+101.2", parsed.semver)
+        Assertions.assertEquals("11.0.9.101", parsed.msi_product_version)
     }
 
     // jdk-11.0.9-ea+11

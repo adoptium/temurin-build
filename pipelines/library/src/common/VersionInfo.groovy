@@ -14,6 +14,7 @@ class VersionInfo {
     String pre
     Integer adopt_build_number
     String semver
+    String msi_product_version
 
     private final context
 
@@ -39,6 +40,7 @@ class VersionInfo {
         }
 
         semver = formSemver()
+        msi_product_version = formMSIProductVersion() 
 
         // Lay this out exactly as it would be in the metadata
         context.println "[INFO] FINISHED PARSING PUBLISH_NAME:"
@@ -52,6 +54,7 @@ class VersionInfo {
             major: ${major},
             version: ${version},
             semver: ${semver},
+            msi_product_version: ${msi_product_version},
             build: ${build},
             opt: ${opt}
         }
@@ -230,12 +233,18 @@ class VersionInfo {
             }
 
             semver += "+"
-            semver += (build ?: "0")
+            
+            def sem_build = (build ?: 0)
 
-            if (semver.equals("11.0.9+1") && patch == 1) {
-                // Map 11.0.9.1+1 to 11.0.9+11
-                semver = "11.0.9+11"
+            // if "patch" then increment semver build by patch x 100
+            // semver only supports major.minor.security, so to support openjdk patch branches
+            // we have to ensure the semver build is incremented by 100 (greater than expected number of builds per version)
+            // to ensure semver version ordering
+            if (patch != null && patch > 0) {
+                sem_build += (patch * 100)
             }
+
+            semver += sem_build
 
             if (adopt_build_number != null) {
                 semver += "." + adopt_build_number
@@ -245,6 +254,31 @@ class VersionInfo {
                 semver += "." + opt
             }
             return semver
+        } else {
+            return null
+        }
+    }
+
+    
+    /**
+     * Form ProductVersion with only 4 number with dot , ie 11.0.9.0 or 11.0.9.101
+     */
+    String formMSIProductVersion() {
+        if (major != null) {
+            def productVersion = major + "." + minor + "." + security
+
+            def msi_revision = (build ?: 0)
+
+            // if "patch" then increment productVersion MSI revision by patch x 100
+            // To ensure Win MSI product version order when openjdk do a patch branch
+            // we have to ensure the productVersion MSI revision is incremented by 100 (greater than expected number of builds per version)
+            if (patch != null && patch > 0) {
+                msi_revision += (patch * 100)
+            }
+
+            productVersion += "." + msi_revision
+
+            return productVersion
         } else {
             return null
         }
