@@ -237,6 +237,9 @@ class VersionInfo {
             def sem_build = (build ?: 0)
 
             // if "patch" then increment semver build by patch x 100
+            // semver only supports major.minor.security, so to support openjdk patch branches
+            // we have to ensure the semver build is incremented by 100 (greater than expected number of builds per version)
+            // to ensure semver version ordering
             if (patch != null && patch > 0) {
                 sem_build += (patch * 100)
             }
@@ -264,14 +267,16 @@ class VersionInfo {
         if (major != null) {
             def productVersion = major + "." + minor + "." + security
 
-            def sem_build = (build ?: 0)
+            def msi_revision = (build ?: 0)
 
-            // if "patch" then increment productVersion build by patch x 100
+            // if "patch" then increment productVersion MSI revision by patch x 100
+            // To ensure Win MSI product version order when openjdk do a patch branch
+            // we have to ensure the productVersion MSI revision is incremented by 100 (greater than expected number of builds per version)
             if (patch != null && patch > 0) {
-                sem_build += (patch * 100)
+                msi_revision += (patch * 100)
             }
 
-            productVersion += "." + sem_build
+            productVersion += "." + msi_revision
 
             return productVersion
         } else {
