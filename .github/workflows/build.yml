@@ -11,11 +11,18 @@ jobs:
     name: Linux
     runs-on: ubuntu-latest
     container:
-      image: adoptopenjdk/centos7_build_image
+      image: ${{ matrix.image }}
     strategy:
       matrix:
+        os: [linux]
         version: [jdk8u, jdk11u, jdk15u, jdk]
         vm: [hotspot, openj9]
+        image: [adoptopenjdk/centos7_build_image]
+        include:
+          - os: alpine-linux
+            version: jdk
+            vm: hotspot
+            image: adoptopenjdk/alpine3_build_image
 
     steps:
     - uses: actions/checkout@v2
@@ -26,7 +33,7 @@ jobs:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
         VARIANT: ${{ matrix.vm }}
-        TARGET_OS: linux
+        TARGET_OS: ${{ matrix.os }}
         FILENAME: OpenJDK.tar.gz
 
   # build_macos:
