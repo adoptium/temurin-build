@@ -240,7 +240,7 @@ class Regeneration implements Serializable {
     def overridePlatform(Map<String, ?> configuration, String variant) {
         Boolean overridePlatform = false
         if (excludedBuilds == [:]) {
-            return overridePlatform 
+            return overridePlatform
         }
 
         String stringArch = configuration.arch as String
@@ -422,7 +422,7 @@ class Regeneration implements Serializable {
                     if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
                         // TODO: Parametrise this
                         Integer sleepTime = 900
-                        
+
                         Boolean inProgress = true
                         while (inProgress) {
                             // Check if pipeline is in progress using api
@@ -591,7 +591,7 @@ return {
         if (excludes != "" && excludes != null) {
             excludedBuilds = new JsonSlurper().parseText(excludes) as Map
         }
-        
+
         return new Regeneration(
             javaVersion,
             buildConfigurations,

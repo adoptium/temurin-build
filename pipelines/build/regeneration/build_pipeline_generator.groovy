@@ -9,7 +9,7 @@ node('master') {
     // Load gitUri and gitBranch. These determine where we will be pulling configs from.
     def repoUri = (params.REPOSITORY_URL) ?: "https://github.com/AdoptOpenJDK/openjdk-build.git"
     def repoBranch = (params.REPOSITORY_BRANCH) ?: "master"
-    
+
     // Load jobRoot. This is where the openjdkxx-pipeline jobs will be created.
     def jobRoot = (params.JOB_ROOT) ?: "build-scripts"
 
@@ -56,8 +56,8 @@ node('master') {
         userRemoteConfigs: [ remoteConfigs ]
       ]
     )
-    
-    (8..30).each({javaVersion -> 
+
+    (8..30).each({javaVersion ->
 
       if (retiredVersions.contains(javaVersion)) {
         println "[INFO] $javaVersion is a retired version that isn't currently built. Skipping generation..."
@@ -73,7 +73,7 @@ node('master') {
         SCRIPT              : "${scriptFolderPath}/openjdk${javaVersion}_pipeline.groovy",
         disableJob          : false
       ];
-      
+
       def target;
       try {
         target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}u.groovy"
@@ -85,7 +85,7 @@ node('master') {
           return
         }
       }
-      
+
       config.put("targetConfigurations", target.targetConfigurations)
 
       // hack as jenkins groovy does not seem to allow us to check if disableJob exists
@@ -94,7 +94,7 @@ node('master') {
       } catch (Exception ex) {
         config.put("disableJob", false)
       }
-      
+
       println "[INFO] JDK${javaVersion}: disableJob = ${config.disableJob}"
 
       // Set job schedule

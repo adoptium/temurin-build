@@ -47,7 +47,7 @@ class PullRequestTestPipeline implements Serializable {
     }
 
     /*
-    * Generates the top level pipeline job 
+    * Generates the top level pipeline job
     */
     def generatePipelineJob(def javaVersion) {
         Map<String, ?> config = generateConfig(javaVersion)
@@ -72,7 +72,7 @@ class PullRequestTestPipeline implements Serializable {
             // generate top level job
             generatePipelineJob(javaVersion)
             context.println "[INFO] Running regeneration script..."
-            
+
             // Load platform specific build configs
             def buildConfigurations
             Boolean updateRepo = false
@@ -84,7 +84,7 @@ class PullRequestTestPipeline implements Serializable {
                 buildConfigurations = context.load "${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}u_pipeline_config.groovy"
                 updateRepo = true
             }
-            
+
             String actualJavaVersion = updateRepo ? "jdk${javaVersion}u" : "jdk${javaVersion}"
             def excludedBuilds = ""
 
@@ -124,7 +124,7 @@ class PullRequestTestPipeline implements Serializable {
                 }
             }
         })
-        
+
         context.parallel jobs
 
         // Only clean up the space if the tester passed
