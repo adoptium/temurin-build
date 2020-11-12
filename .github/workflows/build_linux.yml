@@ -1,0 +1,38 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build_linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+    strategy:
+      matrix:
+        os: [linux]
+        version: [jdk8u, jdk11u, jdk15u, jdk]
+        vm: [hotspot, openj9]
+        image: [adoptopenjdk/centos7_build_image]
+        include:
+          - os: alpine-linux
+            version: jdk
+            vm: hotspot
+            image: adoptopenjdk/alpine3_build_image
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: Build Linux
+      run: ./build-farm/make-adopt-build-farm.sh
+      env:
+        JAVA_TO_BUILD: ${{ matrix.version }}
+        ARCHITECTURE: x64
+        VARIANT: ${{ matrix.vm }}
+        TARGET_OS: ${{ matrix.os }}
+        FILENAME: OpenJDK.tar.gz
+
