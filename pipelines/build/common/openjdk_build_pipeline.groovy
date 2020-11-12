@@ -64,7 +64,7 @@ class Build {
         API_REQUEST_TIMEOUT : 1,
         NODE_CLEAN_TIMEOUT : 1,
         NODE_CHECKOUT_TIMEOUT : 1,
-        BUILD_JDK_TIMEOUT : 6,
+        BUILD_JDK_TIMEOUT : 8,
         BUILD_ARCHIVE_TIMEOUT : 3,
         AIX_CLEAN_TIMEOUT : 1,
         MASTER_CLEAN_TIMEOUT : 1,
