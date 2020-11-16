@@ -34,6 +34,7 @@ if (scmVars != null && configureBuild != null && buildConfigurations != null) {
         dockerExcludes,
         enableTests,
         enableInstallers,
+        enableSigner,
         releaseType,
         scmReference,
         overridePublishName,

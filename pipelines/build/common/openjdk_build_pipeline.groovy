@@ -1038,6 +1038,7 @@ class Build {
 
                 def enableTests = Boolean.valueOf(buildConfig.ENABLE_TESTS)
                 def enableInstallers = Boolean.valueOf(buildConfig.ENABLE_INSTALLERS)
+                def enableSigner = Boolean.valueOf(buildConfig.ENABLE_SIGNER)
                 def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
 
                 context.stage("queue") {
@@ -1144,13 +1145,15 @@ class Build {
                 }
 
                 // Sign and archive jobs if needed
-                try {
-                    context.timeout(time: buildTimeouts.SIGN_JOB_TIMEOUT, unit: "HOURS") {
-                        sign(versionInfo)
+                if (enableSigner) {
+                    try {
+                        context.timeout(time: buildTimeouts.SIGN_JOB_TIMEOUT, unit: "HOURS") {
+                            sign(versionInfo)
+                        }
+                    } catch (FlowInterruptedException e) {
+                        context.println "[ERROR] Sign job timeout (${buildTimeouts.SIGN_JOB_TIMEOUT} HOURS) has been reached OR the downstream sign job failed. Exiting..."
+                        throw new Exception()
                     }
-                } catch (FlowInterruptedException e) {
-                    context.println "[ERROR] Sign job timeout (${buildTimeouts.SIGN_JOB_TIMEOUT} HOURS) has been reached OR the downstream sign job failed. Exiting..."
-                    throw new Exception()
                 }
 
                 if (enableTests && buildConfig.TEST_LIST.size() > 0) {
