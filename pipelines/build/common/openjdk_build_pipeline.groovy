@@ -430,6 +430,9 @@ class Build {
             buildNumber = String.format("%02d", versionData.build)
         }
 
+        // Get version patch number if one is present
+        def patch_version = versionData.patch ?: 0
+
         // Execute installer job
         def installerJob = context.build job: "build-scripts/release/create_installer_windows",
                 propagate: true,
@@ -440,7 +443,7 @@ class Build {
                         context.string(name: 'PRODUCT_MAJOR_VERSION', value: "${versionData.major}"),
                         context.string(name: 'PRODUCT_MINOR_VERSION', value: "${versionData.minor}"),
                         context.string(name: 'PRODUCT_MAINTENANCE_VERSION', value: "${versionData.security}"),
-                        context.string(name: 'PRODUCT_PATCH_VERSION', value: "${versionData.patch}"),
+                        context.string(name: 'PRODUCT_PATCH_VERSION', value: "${patch_version}"),
                         context.string(name: 'PRODUCT_BUILD_NUMBER', value: "${buildNumber}"),
                         context.string(name: 'MSI_PRODUCT_VERSION', value: "${versionData.msi_product_version}"),
                         context.string(name: 'PRODUCT_CATEGORY', value: "jdk"),
@@ -472,7 +475,7 @@ class Build {
                             context.string(name: 'PRODUCT_MAJOR_VERSION', value: "${versionData.major}"),
                             context.string(name: 'PRODUCT_MINOR_VERSION', value: "${versionData.minor}"),
                             context.string(name: 'PRODUCT_MAINTENANCE_VERSION', value: "${versionData.security}"),
-                            context.string(name: 'PRODUCT_PATCH_VERSION', value: "${versionData.patch}"),
+                            context.string(name: 'PRODUCT_PATCH_VERSION', value: "${patch_version}"),
                             context.string(name: 'PRODUCT_BUILD_NUMBER', value: "${buildNumber}"),
                             context.string(name: 'MSI_PRODUCT_VERSION', value: "${versionData.msi_product_version}"),
                             context.string(name: 'PRODUCT_CATEGORY', value: "jre"),
