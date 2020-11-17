@@ -538,7 +538,7 @@ printJavaVersionString() {
        exit -1
      elif [ "${ARCHITECTURE}" == "riscv64" ]; then
        # riscv is cross compiled, so we cannot run it on the build system
-       # This is a temporary plausible solution in the absence of another fix
+       # So we fake it for now and retrive the version out from a downstream job on a riscv machine after the build
        local jdkversion=$(getOpenJdkVersion)
        local jdkversionNoPrefix=${jdkversion#jdk-}
        local jdkShortVersion=${jdkversionNoPrefix%%+*}

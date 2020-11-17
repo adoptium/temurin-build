@@ -177,16 +177,16 @@ class Build {
 
         return jdkBranch
     }
-    
+
     /*
     Retrieve the corresponding OpenJDK source code repository. This is used the downstream tests to determine what source code the tests should run against.
     */
     private def getJDKRepo() {
-        
+
         def jdkRepo
         def suffix
         def javaNumber = getJavaVersionNumber()
-        
+
         if (buildConfig.VARIANT == "corretto") {
             suffix="corretto/corretto-${javaNumber}"
         } else if (buildConfig.VARIANT == "openj9") {
@@ -199,15 +199,15 @@ class Build {
             context.error("Unrecognised build variant '${buildConfig.VARIANT}' ")
             throw new Exception()
         }
-        
+
         jdkRepo = "https://github.com/${suffix}"
         if (buildConfig.BUILD_ARGS.count("--ssh") > 0) {
             jdkRepo = "git@github.com:${suffix}"
         }
-        
+
         return jdkRepo
     }
-    
+
     /*
     Run the downstream test jobs based off the configuration passed down from the top level pipeline jobs.
     If we try to call a test job that doesn't exist, the pipeline will not fail but it will print out a warning.
@@ -227,7 +227,7 @@ class Build {
         }
 
         testList.each { testType ->
-			
+
 			// For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
 			try {
 				context.println "Running test: ${testType}"
@@ -326,12 +326,12 @@ class Build {
                 def signJob = context.build job: "build-scripts/release/sign_build",
                         propagate: true,
                         parameters: params
-                
+
                 // Output notification of downstream failure (the build will fail automatically)
                 def jobResult = signJob.getResult()
                 if (jobResult != 'SUCCESS') {
                     context.println "ERROR: downstream sign_build ${jobResult}.\nSee ${signJob.getAbsoluteUrl()} for details"
-                } 
+                }
 
                 context.node('master') {
                     //Copy signed artifact back and archive again
@@ -376,7 +376,7 @@ class Build {
                         context.string(name: 'CERTIFICATE', value: "${certificate}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
                 ]
-        
+
         context.copyArtifacts(
                 projectName: "build-scripts/release/create_installer_mac",
                 selector: context.specific("${installerJob.getNumber()}"),
@@ -413,7 +413,7 @@ class Build {
                         context.string(name: 'ARCHITECTURE', value: "${buildConfig.ARCHITECTURE}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${nodeFilter}"]
                 ]
-        
+
     }
 
     /*
@@ -461,7 +461,7 @@ class Build {
         listArchives().each({ file ->
 
             if (file.contains("-jre")) {
-                
+
                 context.println("We have a JRE. Running another installer for it...")
                 def jreinstallerJob = context.build job: "build-scripts/release/create_installer_windows",
                         propagate: true,
@@ -490,8 +490,8 @@ class Build {
                     target: "workspace/target/",
                     flatten: true
                 )
-            } 
-            
+            }
+
         })
     }
 
@@ -532,7 +532,7 @@ class Build {
 
 
     /*
-    Lists and returns any compressed archived contents of the top directory of the build node 
+    Lists and returns any compressed archived contents of the top directory of the build node
     */
     List<String> listArchives() {
         return context.sh(
@@ -693,7 +693,7 @@ class Build {
     /*
     Calculates and writes out the metadata to a file.
     The metadata defines and summarises a build and the jdk it creates.
-    The adopt v3 api makes use of it in its endpoints to quickly display information about the jdk binaries that are stored on github. 
+    The adopt v3 api makes use of it in its endpoints to quickly display information about the jdk binaries that are stored on github.
     */
     def writeMetadata(VersionInfo version, Boolean initialWrite) {
         /*
@@ -820,6 +820,46 @@ class Build {
     }
 
     /*
+    Run the Riscv version reader downstream job.
+    In short, we archive the build artifacts to expose them to the job and run ./java version, copying the output back to here.
+    See riscv_version_out.groovy.
+    */
+    def readRiscvVersionString() {
+        // Archive the artifacts early so we can copy them over to the downstream job
+        try {
+            context.timeout(time: buildTimeouts.BUILD_ARCHIVE_TIMEOUT, unit: "HOURS") {
+                context.archiveArtifacts artifacts: "workspace/target/*"
+            }
+        } catch (FlowInterruptedException e) {
+            context.println "[ERROR] Build archive timeout (${buildTimeouts.BUILD_ARCHIVE_TIMEOUT} HOURS) has been reached. Exiting..."
+            throw new Exception()
+        }
+
+        // Setup params for downstream job & execute
+        String shortJobName = env.JOB_NAME.split('/').last()
+        String copyFileFilter = "${shortJobName}_${env.BUILD_NUMBER}_version.txt"
+
+        def riscvJob = context.build job: "build-scripts/utils/riscv-version-out",
+            propagate: true,
+            parameters: [
+                context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                context.string(name: 'JDK_FILE_FILTER', value: "OpenJDK*-jdk*_linux_*.tar.gz"),
+                context.string(name: 'FILENAME', value: "${copyFileFilter}")
+            ]
+
+        context.copyArtifacts(
+            projectName: "build-scripts/utils/riscv-version-out",
+            selector: context.specific("${riscvJob.getNumber()}"),
+            filter: "RiscvVersionOuts/${copyFileFilter}",
+            target: "workspace/target/",
+            flatten: true
+        )
+
+        return context.readFile("workspace/target/${copyFileFilter}")
+    }
+
+    /*
     Executed on a build node, the function checks out the repository and executes the build via ./make-adopt-build-farm.sh
     Once the build completes, it will calculate its version output, commit the first metadata writeout, and archive the build results.
     */
@@ -879,7 +919,16 @@ class Build {
                         throw new Exception()
                     }
 
-                    String versionOut = context.readFile("workspace/target/metadata/version.txt")
+                    // Run a downstream job on riscv machine that returns the java version
+                    // otherwise, just read the version.txt
+                    String versionOut
+                    if (buildConfig.ARCHITECTURE.contains("riscv")) {
+                        context.println "[WARNING] Don't read faked version.txt on riscv! Archiving early and running downstream job on riscv machine to retrieve java version..."
+                        versionOut = readRiscvVersionString()
+                    } else {
+                        versionOut = context.readFile("workspace/target/metadata/version.txt")
+                    }
+
                     versionInfo = parseVersionOutput(versionOut)
                 }
 
@@ -887,7 +936,10 @@ class Build {
 
                 try {
                     context.timeout(time: buildTimeouts.BUILD_ARCHIVE_TIMEOUT, unit: "HOURS") {
-                        context.archiveArtifacts artifacts: "workspace/target/*"
+                        // We have already archived riscv artifacts
+                        if (!buildConfig.ARCHITECTURE.contains("riscv")) {
+                            context.archiveArtifacts artifacts: "workspace/target/*"
+                        }
                     }
                 } catch (FlowInterruptedException e) {
                     context.println "[ERROR] Build archive timeout (${buildTimeouts.BUILD_ARCHIVE_TIMEOUT} HOURS) has been reached. Exiting..."
@@ -975,7 +1027,7 @@ class Build {
                     method will fail to execute the post-build test jobs for reasons unknown.
                     */
                     context.library(identifier: 'openjdk-jenkins-helper@master')
-                    
+
                     if (buildConfig.DOCKER_IMAGE) {
                         // Docker build environment
                         def label = buildConfig.NODE_LABEL + "&&dockerBuild"
@@ -1008,7 +1060,7 @@ class Build {
                                     context.println "[ERROR] Master clean workspace timeout (${buildTimeouts.MASTER_CLEAN_TIMEOUT} HOURS) has been reached. Exiting..."
                                     throw new Exception()
                                 }
-                                
+
                             }
 
                             // Use our docker file if DOCKER_FILE is defined
@@ -1022,7 +1074,7 @@ class Build {
                                     throw new Exception()
                                 }
 
-                                context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE} -f ${buildConfig.DOCKER_FILE} .").inside {    
+                                context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE} -f ${buildConfig.DOCKER_FILE} .").inside {
                                     buildScripts(cleanWorkspace, filename)
                                 }
                             // Otherwise, pull the docker image from DockerHub
@@ -1042,7 +1094,7 @@ class Build {
                             }
                         }
                         context.println "[NODE SHIFT] OUT OF DOCKER NODE (LABELNAME ${label}!)"
-                    
+
                     // Build the jdk outside of docker container...
                     } else {
                         waitForANodeToBecomeActive(buildConfig.NODE_LABEL)
@@ -1097,7 +1149,7 @@ class Build {
                     } catch (FlowInterruptedException e) {
                         context.println "[ERROR] Installer job timeout (${buildTimeouts.INSTALLER_JOBS_TIMEOUT} HOURS) has been reached. Exiting..."
                         throw new Exception()
-                    }    
+                    }
                 }
 
             // Generic catch all. Will usually be the last message in the log.
