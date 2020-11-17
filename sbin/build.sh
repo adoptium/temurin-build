@@ -806,7 +806,7 @@ getFirstTagFromOpenJDKGitRepo() {
   local jdk11plus_tag_sort1="sort -t+ -k2,2n"
   # Second, (stable) sort on (V), (W), (X), (P): P(Patch) is optional and defaulted to "0"
   local jdk11plus_tag_sort2="sort -t. -k2,2n -k3,3n -k4,4n -k5,5n"
-  jdk11plus_get_tag_cmd="grep -v _openj9 | grep -v _adopt | sed 's/jdk-/jdk./g' | sed 's/+/.0.+/g' | $jdk11plus_tag_sort1 | nl | $jdk11plus_tag_sort2 | sed 's/.0.+/+/g' | cut -f2- | sed 's/jdk./jdk-/g' | tail -1"
+  jdk11plus_get_tag_cmd="grep -v _openj9 | grep -v _adopt | sed 's/jdk-/jdk./g' | sed 's/+/.0.+/g' | $jdk11plus_tag_sort1 | nl | $jdk11plus_tag_sort2 | sed 's/\.0\.+/+/g' | cut -f2- | sed 's/jdk./jdk-/g' | tail -1"
 
   # Choose tag search keyword and get cmd based on version
   local TAG_SEARCH="jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}*+*"
