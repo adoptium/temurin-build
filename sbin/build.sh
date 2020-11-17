@@ -792,19 +792,21 @@ getFirstTagFromOpenJDKGitRepo() {
   # prefix "-" to allow line numbering stable sorting using nl => -LLL-BB
   # Sort by build level BB first
   # Then do "stable" sort (keeping BB order) by build level LLL
-  local jdk8_tag_sort1="sort -t- -k3n"
-  local jdk8_tag_sort2="sort -t- -k2n"
+  local jdk8_tag_sort1="sort -t- -k3,3n"
+  local jdk8_tag_sort2="sort -t- -k2,2n"
   local jdk8_get_tag_cmd="grep -v _openj9 | grep -v _adopt | cut -c6- | awk -F'[\-b]+' '{print \$1\"-\"\$2}' | sed 's/^/-/' | $jdk8_tag_sort1 | nl | $jdk8_tag_sort2 | cut -f2- | sed 's/^-/jdk8u/' | sed 's/-/-b/' | tail -1"
 
   # JDK11+ tag sorting:
   # We use sort and tail to choose the latest tag in case more than one refers the same commit.
   # Versions tags are formatted: jdk-V[.W[.X[.P]]]+B; with V, W, X, P, B being numeric.
   # Transform "-" to "." in tag so we can sort as: "jdk.V[.W[.X[.P]]]+B"
+  # Transform "+" to ".0.+" during the sort so that .P (patch) is defaulted to "0" for those
+  # that don't have one, and the trailing "." to terminate the 5th field from the +
   # First, sort on build number (B):
-  local jdk11plus_tag_sort1="sort -t+ -k2n"
-  # Second, (stable) sort on (V), (W), (X):
-  local jdk11plus_tag_sort2="sort -t. -k2n -k3n -k4n -k5n"
-  jdk11plus_get_tag_cmd="grep -v _openj9 | grep -v _adopt | sed 's/jdk-/jdk./g' | $jdk11plus_tag_sort1 | nl | $jdk11plus_tag_sort2 | cut -f2- | sed 's/jdk./jdk-/g' | tail -1"
+  local jdk11plus_tag_sort1="sort -t+ -k2,2n"
+  # Second, (stable) sort on (V), (W), (X), (P): P(Patch) is optional and defaulted to "0"
+  local jdk11plus_tag_sort2="sort -t. -k2,2n -k3,3n -k4,4n -k5,5n"
+  jdk11plus_get_tag_cmd="grep -v _openj9 | grep -v _adopt | sed 's/jdk-/jdk./g' | sed 's/+/.0.+/g' | $jdk11plus_tag_sort1 | nl | $jdk11plus_tag_sort2 | sed 's/\.0\.+/+/g' | cut -f2- | sed 's/jdk./jdk-/g' | tail -1"
 
   # Choose tag search keyword and get cmd based on version
   local TAG_SEARCH="jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}*+*"
