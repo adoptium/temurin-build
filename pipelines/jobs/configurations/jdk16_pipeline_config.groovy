@@ -37,9 +37,9 @@ class Config16 {
                 dockerImage         : 'adoptopenjdk/alpine3_build_image',
                 test                : [
                         // TODO: enable tests
-                        nightly: false,
+                        nightly: [],
                         // release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
-                        release: false
+                        release: []
                 ]
         ],
 
