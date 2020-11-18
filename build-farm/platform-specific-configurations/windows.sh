@@ -89,7 +89,7 @@ then
       # https://github.com/AdoptOpenJDK/openjdk-build/issues/243
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="/c/cygwin64/bin:/usr/bin:$PATH"
-      #Remove temporarily: TOOLCHAIN_VERSION="2013"
+      TOOLCHAIN_VERSION="2013"
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
@@ -132,7 +132,7 @@ then
       export PATH="$PATH:/c/cygwin64/bin"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1h-x86_64-VS2013 --enable-openssl-bundling"
-      #Remove temporarily: TOOLCHAIN_VERSION="2013"
+      TOOLCHAIN_VERSION="2013"
     elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
     then
       TOOLCHAIN_VERSION="2013"
