@@ -19,6 +19,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
 export ANT_HOME=/cygdrive/C/Projects/OpenJDK/apache-ant-1.10.1
+export DRAGONWELL8_BOOTSTRAP=/cygdrive/C/openjdk/dragonwell-bootstrap/jdk8u272-ga
 export ALLOW_DOWNLOADS=true
 export LANG=C
 export OPENJ9_NASM_VERSION=2.13.03
@@ -189,6 +190,13 @@ then
     then
       TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
+    fi
+  fi
+
+  if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+  then
+    if [[ -d "${DRAGONWELL8_BOOTSTRAP}" ]]; then
+      export JDK_BOOT_DIR="${DRAGONWELL8_BOOTSTRAP}"
     fi
   fi
 fi
