@@ -95,10 +95,6 @@ class Config16 {
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                dockerImage         : 'adoptopenjdk/centos7_build_image',
-                dockerFile: [
-                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
-                ],
                 test                : [
                         nightly: [],
                         weekly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
