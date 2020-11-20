@@ -539,10 +539,11 @@ printJavaVersionString() {
      elif [ "${ARCHITECTURE}" == "riscv64" ]; then
        # riscv is cross compiled, so we cannot run it on the build system
        # So we fake it for now and retrive the version out from a downstream job on a riscv machine after the build
+       echo "Warning: java version can't be run on RISC-V build system. Faking version for now..."
        local jdkversion=$(getOpenJdkVersion)
        local jdkversionNoPrefix=${jdkversion#jdk-}
        local jdkShortVersion=${jdkversionNoPrefix%%+*}
-       cat << EOT > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/version.txt"
+       cat << EOT > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/fakedVersion.txt"
 openjdk version "${jdkShortVersion}" "$(date +%Y-%m-%d)"
 OpenJDK Runtime Environment AdoptOpenJDK (build ${jdkversionNoPrefix}-$(date +%Y%m%d%H%M))
 Eclipse OpenJ9 VM AdoptOpenJDK (build master-000000000, JRE 11 Linux riscv-64-Bit Compressed References $(date +%Y%m%d)_00 (JIT disabled, AOT disabled)

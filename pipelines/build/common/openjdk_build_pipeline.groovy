@@ -57,6 +57,7 @@ class Build {
     String j9Tags = ""
     String vendorName = ""
     String buildSource = ""
+    String riscvVersionPath = ""
     Map variantVersion = [:]
 
     // Declare timeouts for each critical stage (unit is HOURS)
@@ -578,11 +579,14 @@ class Build {
 
             // Get Full Version Output
             String versionPath = "workspace/target/metadata/version.txt"
+            if (buildConfig.ARCHITECTURE.contains("riscv")) {
+                versionPath = riscvVersionPath
+            }
             context.println "INFO: Attempting to read ${versionPath}..."
 
             try {
                 fullVersionOutput = context.readFile(versionPath)
-                context.println "SUCCESS: version.txt found"
+                context.println "SUCCESS: ${versionPath} found"
             } catch (NoSuchFileException e) {
                 context.println "ERROR: ${versionPath} was not found. Exiting..."
                 throw new Exception()
@@ -671,7 +675,7 @@ class Build {
                 context.println "ERROR: ${buildSourcePath} was not found. Exiting..."
                 throw new Exception()
             }
-        
+
         }
 
         return new MetaData(
@@ -852,11 +856,13 @@ class Build {
             projectName: "build-scripts/utils/riscv-version-out",
             selector: context.specific("${riscvJob.getNumber()}"),
             filter: "RiscvVersionOuts/${copyFileFilter}",
-            target: "workspace/target/",
+            target: "workspace/target/metadata",
             flatten: true
         )
 
-        return context.readFile("workspace/target/${copyFileFilter}")
+        // We assign to a variable so it can be used in formMetadata() to find the correct version info
+        riscvVersionPath = "workspace/target/metadata/${copyFileFilter}"
+        return context.readFile(riscvVersionPath)
     }
 
     /*
@@ -936,8 +942,11 @@ class Build {
 
                 try {
                     context.timeout(time: buildTimeouts.BUILD_ARCHIVE_TIMEOUT, unit: "HOURS") {
-                        // We have already archived riscv artifacts
-                        if (!buildConfig.ARCHITECTURE.contains("riscv")) {
+                        // We have already archived riscv artifacts, so only archive the metadata files
+                        if (buildConfig.ARCHITECTURE.contains("riscv")) {
+                            context.println "[INFO] Archiving JSON Files..."
+                            context.archiveArtifacts artifacts: "workspace/target/*.json"
+                        } else {
                             context.archiveArtifacts artifacts: "workspace/target/*"
                         }
                     }
