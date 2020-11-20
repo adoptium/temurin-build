@@ -105,10 +105,6 @@ class Config15 {
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                dockerImage          : 'adoptopenjdk/centos7_build_image',
-                dockerFile: [
-                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
-                ],
                 test                : 'default',
                 configureArgs       : [
                         "hotspot"     : '--enable-dtrace',
@@ -119,10 +115,6 @@ class Config15 {
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
-                dockerImage          : 'adoptopenjdk/centos7_build_image',
-                dockerFile: [
-                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
-                ],
                 test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace'
