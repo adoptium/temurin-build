@@ -15,7 +15,7 @@ class Config16 {
                 os                   : 'mac',
                 arch                 : 'x64',
                 additionalNodeLabels : 'macos10.14',
-                test                 : 'default'
+                test                 : 'default',
                 additionalFileNameTag: "macosXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace'
         ],
@@ -47,7 +47,7 @@ class Config16 {
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
-                test                 : 'default'
+                test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace --enable-jitserver'
         ],
@@ -81,7 +81,7 @@ class Config16 {
                 os                   : 'windows',
                 arch                 : 'x64',
                 additionalNodeLabels : 'win2012&&vs2017',
-                test                 : 'default'
+                test                 : 'default',
                 additionalFileNameTag: "windowsXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
@@ -125,7 +125,7 @@ class Config16 {
         s390xLinuxXL  : [
                 os                   : 'linux',
                 arch                 : 's390x',
-                test                 : 'default'
+                test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace'
         ],
@@ -147,7 +147,7 @@ class Config16 {
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
-                test                 : 'default'
+                test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace'
         ],
@@ -167,7 +167,7 @@ class Config16 {
                 os                   : 'linux',
                 dockerImage          : 'adoptopenjdk/centos7_build_image',
                 arch                 : 'aarch64',
-                test                 : 'default'
+                test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace'
         ],
