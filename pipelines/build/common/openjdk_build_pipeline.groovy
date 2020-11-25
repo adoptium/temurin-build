@@ -824,7 +824,7 @@ class Build {
     }
 
     /*
-    Run the Riscv version reader downstream job.
+    Run the RISC-V version reader downstream job.
     In short, we archive the build artifacts to expose them to the job and run ./java version, copying the output back to here.
     See riscv_version_out.groovy.
     */
