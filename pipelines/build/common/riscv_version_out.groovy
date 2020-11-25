@@ -61,7 +61,7 @@ node ("riscv&&ci.role.test") {
                     sh "tar -zxvf ${jdkFileFilter} && rm ${jdkFileFilter}"
 
                     String jdkDir = sh(
-                        script: "ls | grep jdk*",
+                        script: "ls | grep jdk",
                         returnStdout: true,
                         returnStatus: false
                     ).trim()
