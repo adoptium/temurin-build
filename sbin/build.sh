@@ -790,6 +790,15 @@ makeACopyOfLibFreeFontForMacOSX() {
 #
 # Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
 getFirstTagFromOpenJDKGitRepo() {
+
+  # Save current directory of caller so we can return to that directory at the end of this function
+  # Some caller's are not in the git repo root, but instead build/*/images directory like the archive functions
+  # and any function called after removingUnnecessaryFiles()
+  local savePwd="${PWD}"
+
+  # Change to openjdk git repo root to find build tag
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+
   # JDK8 tag sorting:
   # Tag Format "jdk8uLLL-bBB"
   # cut chars 1-5 => LLL-bBB
@@ -837,6 +846,9 @@ getFirstTagFromOpenJDKGitRepo() {
   else
     echo "$firstMatchingNameFromRepo"
   fi
+
+  # Restore pwd
+  cd "$savePwd"
 }
 
 createArchive() {
@@ -1024,7 +1036,7 @@ addSemVer() { # Pulls the semantic version from the tag associated with the open
   local fullVer=$(getOpenJdkVersion)
   SEM_VER="$fullVer"
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-    SEM_VER=$(echo "$semVer" | cut -c4- | awk -F'[-b0]+' '{print $1"+"$2}' | sed 's/u/.0./')
+    SEM_VER=$(echo "$SEM_VER" | cut -c4- | awk -F'[-b0]+' '{print $1"+"$2}' | sed 's/u/.0./')
   else
     SEM_VER=$(echo "$SEM_VER" | cut -c5-) # i.e. 11.0.2+12
   fi
