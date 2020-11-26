@@ -61,10 +61,11 @@ class Build {
     Map variantVersion = [:]
 
     // Declare timeouts for each critical stage (unit is HOURS)
-    Map buildTimeouts = [
+    static Map buildTimeouts = [
         API_REQUEST_TIMEOUT : 1,
         NODE_CLEAN_TIMEOUT : 1,
         NODE_CHECKOUT_TIMEOUT : 1,
+        NODE_CHECKOUT_SCM_STAGE : 20, // Mins as Jenkins checkout timeouts are in mins
         BUILD_JDK_TIMEOUT : 8,
         BUILD_ARCHIVE_TIMEOUT : 3,
         AIX_CLEAN_TIMEOUT : 1,
@@ -908,7 +909,17 @@ class Build {
 
             try {
                 context.timeout(time: buildTimeouts.NODE_CHECKOUT_TIMEOUT, unit: "HOURS") {
-                    context.checkout context.scm
+                    context.checkout([
+                        $class: 'GitSCM',
+                        userRemoteConfigs: [
+                            [ url: "https://github.com/AdoptOpenJDK/openjdk-build" ]
+                        ],
+                        extensions: [
+                            [ $class: 'CheckoutOption', timeout: buildTimeouts.NODE_CHECKOUT_SCM_STAGE ],
+                            [ $class: 'CloneOption', timeout: buildTimeouts.NODE_CHECKOUT_SCM_STAGE ],
+                            [ $class: 'SubmoduleOption', timeout: buildTimeouts.NODE_CHECKOUT_SCM_STAGE ]
+                        ]
+                    ])
                 }
             } catch (FlowInterruptedException e) {
                 context.println "[ERROR] Node checkout workspace timeout (${buildTimeouts.NODE_CHECKOUT_TIMEOUT} HOURS) has been reached. Exiting..."
