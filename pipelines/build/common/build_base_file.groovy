@@ -603,7 +603,7 @@ class Builder implements Serializable {
                         publishBinary()
                     }
                 } catch (FlowInterruptedException e) {
-                    context.println "[ERROR] Publish binary timeout (${pipelineTimeouts.PUBLISH_ARTIFACTS_TIMEOUT} HOURS) has been reached. Exiting..."
+                    context.println "[ERROR] Publish binary timeout (${pipelineTimeouts.PUBLISH_ARTIFACTS_TIMEOUT} HOURS) has been reached OR the downstream publish job failed. Exiting..."
                     throw new Exception()
                 }
             } else if (publish && release) {

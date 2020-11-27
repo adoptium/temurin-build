@@ -1141,7 +1141,7 @@ class Build {
                         sign(versionInfo)
                     }
                 } catch (FlowInterruptedException e) {
-                    context.println "[ERROR] Sign job timeout (${buildTimeouts.SIGN_JOB_TIMEOUT} HOURS) has been reached. Exiting..."
+                    context.println "[ERROR] Sign job timeout (${buildTimeouts.SIGN_JOB_TIMEOUT} HOURS) has been reached OR the downstream sign job failed. Exiting..."
                     throw new Exception()
                 }
 
@@ -1162,7 +1162,7 @@ class Build {
                             buildInstaller(versionInfo)
                         }
                     } catch (FlowInterruptedException e) {
-                        context.println "[ERROR] Installer job timeout (${buildTimeouts.INSTALLER_JOBS_TIMEOUT} HOURS) has been reached. Exiting..."
+                        context.println "[ERROR] Installer job timeout (${buildTimeouts.INSTALLER_JOBS_TIMEOUT} HOURS) has been reached OR the downstream installer job failed. Exiting..."
                         throw new Exception()
                     }
                 }
