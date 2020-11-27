@@ -11,11 +11,18 @@ jobs:
     name: Linux
     runs-on: ubuntu-latest
     container:
-      image: adoptopenjdk/centos7_build_image
+      image: ${{ matrix.image }}
     strategy:
       matrix:
+        os: [linux]
         version: [jdk8u, jdk11u, jdk15u, jdk]
         vm: [hotspot, openj9]
+        image: [adoptopenjdk/centos7_build_image]
+        include:
+          - os: alpine-linux
+            version: jdk
+            vm: hotspot
+            image: adoptopenjdk/alpine3_build_image
 
     steps:
     - uses: actions/checkout@v2
@@ -26,42 +33,58 @@ jobs:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
         VARIANT: ${{ matrix.vm }}
-        TARGET_OS: linux
+        TARGET_OS: ${{ matrix.os }}
         FILENAME: OpenJDK.tar.gz
 
-  build_macos:
-    name: macOS
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        version: [jdk8u, jdk11u, jdk15u, jdk]
-        vm: [hotspot, openj9]
+  # build_macos:
+  #   name: macOS
+  #   runs-on: macos-latest
+  #   strategy:
+  #     matrix:
+  #       version: [jdk8u, jdk11u, jdk15u, jdk]
+  #       vm: [hotspot, openj9]
 
-    steps:
-    - uses: actions/checkout@v2
+  #   steps:
+  #   - uses: actions/checkout@v2
 
-    - name: Install Dependencies
-      run: |
-        brew install bash binutils freetype gnu-sed nasm
+  #   - name: Install Dependencies
+  #     run: |
+  #       brew install bash binutils freetype gnu-sed nasm
 
-    - uses: actions/setup-java@v1
-      id: setup-java
-      with:
-        java-version: 7
-      if: matrix.version == 'jdk8u'
+  #   - uses: actions/setup-java@v1
+  #     id: setup-java
+  #     with:
+  #       java-version: 7
+  #     if: matrix.version == 'jdk8u'
         
-    - name: Build macOS
-      run: |
-        export JAVA_HOME=$JAVA_HOME_11_X64
-        # Skip freetype build on jdk11+
-        if [ ${{ matrix.version }} != "jdk8u" ]; then
-          export BUILD_ARGS="--skip-freetype"
-        fi
-        ./build-farm/make-adopt-build-farm.sh
-      env:
-        JAVA_TO_BUILD: ${{ matrix.version }}
-        ARCHITECTURE: x64
-        VARIANT: ${{ matrix.vm }}
-        TARGET_OS: mac
-        FILENAME: OpenJDK.tar.gz
-        JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
+  #   - name: Build macOS
+  #     run: |
+  #       export JAVA_HOME=$JAVA_HOME_11_X64
+
+  #       # Configure Xcode version explicitly. Default versions may change any time.
+  #       # Available versions: https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.md#xcode
+  #       case "${{ matrix.version }}" in
+  #         "jdk8u"|"jdk11u"|"jdk15u")
+  #           export DEVELOPER_DIR="/Applications/Xcode_11.7.app/Contents/Developer"
+  #           ;;
+  #         "jdk")
+  #           export DEVELOPER_DIR="/Applications/Xcode_12.1.app/Contents/Developer"
+  #           ;;
+  #         *)
+  #           echo "Unknown JDK version: ${{ matrix.version }}" >&2
+  #           exit 1
+  #           ;;
+  #       esac
+
+  #       # Skip freetype build on jdk11+
+  #       if [ ${{ matrix.version }} != "jdk8u" ]; then
+  #         export BUILD_ARGS="--skip-freetype"
+  #       fi
+  #       ./build-farm/make-adopt-build-farm.sh
+  #     env:
+  #       JAVA_TO_BUILD: ${{ matrix.version }}
+  #       ARCHITECTURE: x64
+  #       VARIANT: ${{ matrix.vm }}
+  #       TARGET_OS: mac
+  #       FILENAME: OpenJDK.tar.gz
+  #       JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}

@@ -3,6 +3,7 @@ import common.IndividualBuildConfig
 import groovy.json.*
 
 import java.util.regex.Matcher
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,27 +57,38 @@ class Builder implements Serializable {
     def context
     def currentBuild
 
+    /* 
+    Test targets triggered in 'nightly' build pipelines running 6 days per week 
+    nightly + weekly to be run during a 'release' pipeline 
+    */
     final List<String> nightly = [
         'sanity.openjdk',
         'sanity.system',
         'extended.system',
         'sanity.perf',
-        'sanity.external'
+        'sanity.functional',
+        'extended.functional'
     ]
-
-    // Temporarily remove weekly tests due to lack of machine capacity during release
-    final List<String> weekly = []
-    /*
+    
+    /* 
+    Test targets triggered in 'weekly' build pipelines running once per week 
+    nightly + weekly to be run during a 'release' pipeline 
+    */
     final List<String> weekly = [
         'extended.openjdk',
         'extended.perf',
-        'extended.external',
-        'special.openjdk',
         'special.functional',
-        'special.system',
-        'special.perf'
+        'sanity.external'
     ]
-    */
+
+    // Declare timeouts for each critical stage (unit is HOURS)
+    Map pipelineTimeouts = [
+        API_REQUEST_TIMEOUT : 1,
+        REMOVE_ARTIFACTS_TIMEOUT : 2,
+        COPY_ARTIFACTS_TIMEOUT : 6,
+        ARCHIVE_ARTIFACTS_TIMEOUT : 6,
+        PUBLISH_ARTIFACTS_TIMEOUT : 3
+    ]
 
     /*
     Returns an IndividualBuildConfig that is passed down to the downstream job.
@@ -305,13 +317,6 @@ class Builder implements Serializable {
     */
     def formAdditionalBuildNodeLabels(Map<String, ?> configuration, String variant) {
         def buildTag = "build"
-
-        if (configuration.os == "windows" && variant == "openj9") {
-            buildTag = "buildj9"
-        } else if (configuration.arch == "s390x" && variant == "openj9") {
-            buildTag = "(buildj9||build)&&openj9"
-        }
-
         def labels = "${buildTag}"
 
         if (configuration.containsKey("additionalNodeLabels")) {
@@ -399,13 +404,21 @@ class Builder implements Serializable {
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
         } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
-            // Query the Adopt api to get the "tip_version"
-            def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
-            context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
+            int headVersion
+            try {
+                context.timeout(time: pipelineTimeouts.API_REQUEST_TIMEOUT, unit: "HOURS") {
+                    // Query the Adopt api to get the "tip_version"
+                    def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+                    context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
 
-            def response = JobHelper.getAvailableReleases(context)
-            int headVersion = (int) response.getAt("tip_version")
-            context.println "Found Java Version Number: ${headVersion}"
+                    def response = JobHelper.getAvailableReleases(context)
+                    headVersion = (int) response.getAt("tip_version")
+                    context.println "Found Java Version Number: ${headVersion}"
+                }
+            } catch (FlowInterruptedException e) {
+                context.println "[ERROR] Adopt API Request timeout (${pipelineTimeouts.API_REQUEST_TIMEOUT} HOURS) has been reached. Exiting..."
+                throw new Exception()
+            }
             return headVersion
         } else {
             context.error("Failed to read java version '${javaToBuild}'")
@@ -495,95 +508,126 @@ class Builder implements Serializable {
     */
     @SuppressWarnings("unused")
     def doBuild() {
+        context.timestamps {
+            Map<String, IndividualBuildConfig> jobConfigurations = getJobConfigurations()
 
-        Map<String, IndividualBuildConfig> jobConfigurations = getJobConfigurations()
-
-        if (!checkConfigIsSane(jobConfigurations)) {
-            return
-        }
-
-        if (release) {
-            currentBuild.setKeepLog(true)
-            if (publishName) {
-                currentBuild.setDisplayName(publishName)
+            if (!checkConfigIsSane(jobConfigurations)) {
+                return
             }
-        }
 
-        def jobs = [:]
+            if (release) {
+                currentBuild.setKeepLog(true)
+                if (publishName) {
+                    currentBuild.setDisplayName(publishName)
+                }
+            }
 
-        context.echo "Java: ${javaToBuild}"
-        context.echo "OS: ${targetConfigurations}"
-        context.echo "Enable tests: ${enableTests}"
-        context.echo "Enable Installers: ${enableInstallers}"
-        context.echo "Publish: ${publish}"
-        context.echo "Release: ${release}"
-        context.echo "Tag/Branch name: ${scmReference}"
+            def jobs = [:]
 
-          jobConfigurations.each { configuration ->
-              jobs[configuration.key] = {
-                IndividualBuildConfig config = configuration.value
+            context.echo "Java: ${javaToBuild}"
+            context.echo "OS: ${targetConfigurations}"
+            context.echo "Enable tests: ${enableTests}"
+            context.echo "Enable Installers: ${enableInstallers}"
+            context.echo "Publish: ${publish}"
+            context.echo "Release: ${release}"
+            context.echo "Tag/Branch name: ${scmReference}"
 
-                // jdk11u-linux-x64-hotspot
-                def jobTopName = getJobName(configuration.key)
-                def jobFolder = getJobFolder()
+            jobConfigurations.each { configuration ->
+                jobs[configuration.key] = {
+                    IndividualBuildConfig config = configuration.value
 
-                // i.e jdk11u/job/jdk11u-linux-x64-hotspot
-                def downstreamJobName = "${jobFolder}/${jobTopName}"
-                context.echo "build name " + downstreamJobName
+                    // jdk11u-linux-x64-hotspot
+                    def jobTopName = getJobName(configuration.key)
+                    def jobFolder = getJobFolder()
 
-                context.catchError {
-                    // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
-                    context.stage(configuration.key) {
-                      context.echo "Created job " + downstreamJobName
+                    // i.e jdk11u/job/jdk11u-linux-x64-hotspot
+                    def downstreamJobName = "${jobFolder}/${jobTopName}"
+                    context.echo "build name " + downstreamJobName
 
-                      // execute build
-                      def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
+                    context.catchError {
+                        // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
+                        context.stage(configuration.key) {
+                            context.echo "Created job " + downstreamJobName
+                            
+                            // execute build
+                            def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
 
-                      if (downstreamJob.getResult() == 'SUCCESS') {
-                          // copy artifacts from build
-                          context.node("master") {
-                              context.catchError {
+                            if (downstreamJob.getResult() == 'SUCCESS') {
+                                // copy artifacts from build
+                                context.println "[NODE SHIFT] MOVING INTO MASTER NODE..."
+                                context.node("master") {
+                                    context.catchError {
 
-                                  //Remove the previous artifacts
-                                  context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
+                                        //Remove the previous artifacts
+                                        try {
+                                            context.timeout(time: pipelineTimeouts.REMOVE_ARTIFACTS_TIMEOUT, unit: "HOURS") {
+                                                context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
+                                            }
+                                        } catch (FlowInterruptedException e) {
+                                            context.println "[ERROR] Previous artifact removal timeout (${pipelineTimeouts.REMOVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting..."
+                                            throw new Exception()
+                                        }   
 
-                                  context.copyArtifacts(
-                                          projectName: downstreamJobName,
-                                          selector: context.specific("${downstreamJob.getNumber()}"),
-                                          filter: 'workspace/target/*',
-                                          fingerprintArtifacts: true,
-                                          target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
-                                          flatten: true)
+                                        try {
+                                            context.timeout(time: pipelineTimeouts.COPY_ARTIFACTS_TIMEOUT, unit: "HOURS") {
+                                                context.copyArtifacts(
+                                                        projectName: downstreamJobName,
+                                                        selector: context.specific("${downstreamJob.getNumber()}"),
+                                                        filter: 'workspace/target/*',
+                                                        fingerprintArtifacts: true,
+                                                        target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
+                                                        flatten: true
+                                                )
+                                            }
+                                        } catch (FlowInterruptedException e) {
+                                            context.println "[ERROR] Copy artifact timeout (${pipelineTimeouts.COPY_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting..."
+                                            throw new Exception()
+                                        }
 
-                                  // Checksum
-                                  context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+                                        // Checksum
+                                        context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
 
-                                  // Archive in Jenkins
-                                  context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
-                              }
-                          }
-                      } else if (propagateFailures) {
-                          context.error("Build failed due to downstream failure of ${downstreamJobName}")
-                          currentBuild.result = "FAILURE"
-                      }
+                                        // Archive in Jenkins
+                                        try {
+                                            context.timeout(time: pipelineTimeouts.ARCHIVE_ARTIFACTS_TIMEOUT, unit: "HOURS") {
+                                                context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
+                                            }
+                                        } catch (FlowInterruptedException e) {
+                                            context.println "[ERROR] Archive artifact timeout (${pipelineTimeouts.ARCHIVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName}has been reached. Exiting..."
+                                            throw new Exception()
+                                        }
 
+                                    }
+                                }
+                                context.println "[NODE SHIFT] OUT OF MASTER NODE!"
+                            } else if (propagateFailures) {
+                                context.error("Build failed due to downstream failure of ${downstreamJobName}")
+                                currentBuild.result = "FAILURE"
+                            }
+                        }
                     }
                 }
-              }
-          }
-          context.parallel jobs
+            }
+            context.parallel jobs
 
-          // publish to github if needed
-          // Don't publish release automatically
-          if (publish && !release) {
-              //During testing just remove the publish
-              publishBinary()
-          } else if (publish && release) {
-              context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
-          }
+            // publish to github if needed
+            // Dont publish release automatically
+            if (publish && !release) {
+                //During testing just remove the publish
+                try {
+                    context.timeout(time: pipelineTimeouts.PUBLISH_ARTIFACTS_TIMEOUT, unit: "HOURS") {
+                        publishBinary()
+                    }
+                } catch (FlowInterruptedException e) {
+                    context.println "[ERROR] Publish binary timeout (${pipelineTimeouts.PUBLISH_ARTIFACTS_TIMEOUT} HOURS) has been reached OR the downstream publish job failed. Exiting..."
+                    throw new Exception()
+                }
+            } else if (publish && release) {
+                context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
+            }
 
+        }
     }
-
 }
 
 return {

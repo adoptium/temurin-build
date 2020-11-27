@@ -15,7 +15,7 @@ class ParseVersion {
         } else {
             def versionString = args[args.length - 2]
             def adoptBuildNumber = args[args.length - 1]
-            version = new VersionInfo().parse(versionString, adoptBuildNumber)
+            version = new VersionInfo(this).parse(versionString, adoptBuildNumber)
         }
 
         printVersion(parsedArgs, version)
@@ -42,7 +42,7 @@ class ParseVersion {
         while ((line = reader.readLine()) != null) {
             Matcher matcher = (line =~ /.*\(build (?<version>.*)\).*/)
             if (matcher.matches()) {
-                VersionInfo version = new VersionInfo().parse(matcher.group("version"), args[args.length - 1])
+                VersionInfo version = new VersionInfo(this).parse(matcher.group("version"), args[args.length - 1])
                 return version
             }
         }

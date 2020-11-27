@@ -26,6 +26,12 @@ repositories {
     maven {
         url "https://repository.mulesoft.org/nexus/content/repositories/public/"
     }
+    maven {
+        url 'https://repo.jenkins-ci.org/releases'
+    }
+    maven {
+        url "https://repo.jenkins-ci.org/public"
+    }
 }
 
 shadowJar {
@@ -33,6 +39,8 @@ shadowJar {
 }
 
 dependencies {
+    compile group: 'org.jenkins-ci.main', name: 'jenkins-core', version: '2.85', ext: 'pom'
+    compile group: 'org.jenkins-ci.plugins.workflow', name: 'workflow-step-api', version: '2.22', ext: 'jar'
     compile 'org.codehaus.groovy:groovy-all:3.0.4'
     testCompile('org.junit.jupiter:junit-jupiter-api:5.4.1')
     testRuntime('org.junit.jupiter:junit-jupiter-engine:5.4.1')
