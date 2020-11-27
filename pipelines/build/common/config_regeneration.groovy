@@ -529,7 +529,7 @@ class Regeneration implements Serializable {
                                     makeJob(jobConfigurations, name)
                                 // Unexpected error when building or getting the configuration
                                 } else {
-                                    context.println "[ERROR] IndividualBuildConfig is malformed for key: ${osarch}."
+                                    context.println "[ERROR] IndividualBuildConfig is malformed or null for key: ${osarch} : ${variant}."
                                     currentBuild.result = "FAILURE"
                                 }
                             }
