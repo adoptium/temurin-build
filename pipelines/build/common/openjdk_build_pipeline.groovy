@@ -43,6 +43,7 @@ limitations under the License.
 
 class Build {
     final IndividualBuildConfig buildConfig
+    final Map<String, ?> DEFAULTS_JSON
 
     final def context
     final def env
@@ -78,8 +79,15 @@ class Build {
     /*
     Constructor
     */
-    Build(IndividualBuildConfig buildConfig, def context, def env, def currentBuild) {
+    Build(
+        IndividualBuildConfig buildConfig,
+        Map<String, ?> DEFAULTS_JSON,
+        def context,
+        def env,
+        def currentBuild
+    ) {
         this.buildConfig = buildConfig
+        this.DEFAULTS_JSON = DEFAULTS_JSON
         this.context = context
         this.currentBuild = currentBuild
         this.env = env
@@ -229,39 +237,39 @@ class Build {
 
         testList.each { testType ->
 
-			// For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
-			try {
-				context.println "Running test: ${testType}"
-				testStages["${testType}"] = {
-					context.stage("${testType}") {
+            // For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
+            try {
+                context.println "Running test: ${testType}"
+                testStages["${testType}"] = {
+                    context.stage("${testType}") {
 
-						// example jobName: Test_openjdk11_hs_sanity.system_ppc64_aix
-						def jobName = determineTestJobName(testType)
+                        // example jobName: Test_openjdk11_hs_sanity.system_ppc64_aix
+                        def jobName = determineTestJobName(testType)
 
-						def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+                        def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 
                         // Execute test job
-						if (JobHelper.jobIsRunnable(jobName as String)) {
-							context.catchError {
-								context.build job: jobName,
-										propagate: false,
-										parameters: [
-												context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
-												context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
-												context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}"),
-												context.string(name: 'JDK_REPO', value: jdkRepo),
-												context.string(name: 'JDK_BRANCH', value: jdkBranch),
-												context.string(name: 'OPENJ9_BRANCH', value: openj9Branch),
-												context.string(name: 'ACTIVE_NODE_TIMEOUT', value: "${buildConfig.ACTIVE_NODE_TIMEOUT}")]
-							}
-						} else {
-							context.println "[WARNING] Requested test job that does not exist or is disabled: ${jobName}"
-						}
-					}
-				}
-			} catch (Exception e) {
-				context.println "Failed execute test: ${e.getLocalizedMessage()}"
-			}
+                        if (JobHelper.jobIsRunnable(jobName as String)) {
+                            context.catchError {
+                                context.build job: jobName,
+                                        propagate: false,
+                                        parameters: [
+                                                context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+                                                context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+                                                context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}"),
+                                                context.string(name: 'JDK_REPO', value: jdkRepo),
+                                                context.string(name: 'JDK_BRANCH', value: jdkBranch),
+                                                context.string(name: 'OPENJ9_BRANCH', value: openj9Branch),
+                                                context.string(name: 'ACTIVE_NODE_TIMEOUT', value: "${buildConfig.ACTIVE_NODE_TIMEOUT}")]
+                            }
+                        } else {
+                            context.println "[WARNING] Requested test job that does not exist or is disabled: ${jobName}"
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                context.println "Failed execute test: ${e.getLocalizedMessage()}"
+            }
         }
         return testStages
     }
@@ -920,6 +928,9 @@ class Build {
                 List<String> envVars = buildConfig.toEnvVars()
                 envVars.add("FILENAME=${filename}" as String)
 
+                // Add for use in setting up the platform configs
+                envVars.add("DEFAULT_PLATFORM_CONFIGS=${DEFAULTS_JSON['configDirectories']['platform']}" as String)
+
                 // Execute build
                 context.withEnv(envVars) {
                     try {
@@ -1038,7 +1049,7 @@ class Build {
 
                 context.stage("queue") {
                     /* This loads the library containing two Helper classes, and causes them to be
-                    imported/updated from their repo. Without the library being imported here, runTests 
+                    imported/updated from their repo. Without the library being imported here, runTests
                     method will fail to execute the post-build test jobs for reasons unknown.
                     */
                     context.library(identifier: 'openjdk-jenkins-helper@master')
@@ -1049,7 +1060,7 @@ class Build {
                         if (buildConfig.DOCKER_NODE) {
                             label = buildConfig.NODE_LABEL + "&&" + "$buildConfig.DOCKER_NODE"
                         }
-                        
+
                         if (buildConfig.CODEBUILD) {
                             label = "codebuild"
                         }
@@ -1092,7 +1103,7 @@ class Build {
                                 context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE} -f ${buildConfig.DOCKER_FILE} .").inside {
                                     buildScripts(cleanWorkspace, filename)
                                 }
-                                
+
                             // Otherwise, pull the docker image from DockerHub
                             } else {
                                 try {
@@ -1183,6 +1194,7 @@ class Build {
 
 return {
     buildConfigArg,
+    DEFAULTS_JSON,
     context,
     env,
     currentBuild ->
@@ -1194,8 +1206,10 @@ return {
         }
 
         return new Build(
-                buildConfig,
-                context,
-                env,
-                currentBuild)
+            buildConfig,
+            new JsonSlurper().parseText(DEFAULTS_JSON) as Map,
+            context,
+            env,
+            currentBuild
+        )
 }

@@ -30,5 +30,5 @@ if [ ! -z "$PLATFORM_CONFIG_PATH" ]
 then
     source "$SCRIPT_DIR/${PLATFORM_CONFIG_PATH}"
 else
-    source "$SCRIPT_DIR/platform-specific-configurations/${OPERATING_SYSTEM}.sh"
+    source "$SCRIPT_DIR/${DEFAULT_PLATFORM_CONFIGS}/${OPERATING_SYSTEM}.sh"
 fi

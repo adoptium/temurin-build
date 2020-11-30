@@ -1,4 +1,9 @@
 import java.nio.file.NoSuchFileException
+import groovy.json.JsonSlurper
+
+// Retrieve Defaults
+String RELATIVE_DEFAULT_FILEPATH = "../defaults.json"
+def DEFAULTS_JSON = new JsonSlurper().parse(new File(RELATIVE_DEFAULT_FILEPATH)) as Map
 
 node('master') {
   timestamps {
@@ -7,26 +12,23 @@ node('master') {
     def generatedPipelines = []
 
     // Load gitUri and gitBranch. These determine where we will be pulling configs from.
-    def repoUri = (params.REPOSITORY_URL) ?: "https://github.com/AdoptOpenJDK/openjdk-build.git"
-    def repoBranch = (params.REPOSITORY_BRANCH) ?: "master"
+    def repoUri = (params.REPOSITORY_URL) ?: DEFAULTS_JSON["repository"]["url"]
+    def repoBranch = (params.REPOSITORY_BRANCH) ?: DEFAULTS_JSON["repository"]["branch"]
 
     // Load jobRoot. This is where the openjdkxx-pipeline jobs will be created.
-    def jobRoot = (params.JOB_ROOT) ?: "build-scripts"
+    def jobRoot = (params.JOB_ROOT) ?: DEFAULTS_JSON["jenkinsDetails"]["rootDirectory"]
 
     // Load scriptFolderPath. This is the folder where the openjdkxx-pipeline.groovy code is located compared to the repository root. These are the top level pipeline jobs.
-    def scriptFolderPath = (params.SCRIPT_FOLDER_PATH) ?: "pipelines/build"
+    def scriptFolderPath = (params.SCRIPT_FOLDER_PATH) ?: DEFAULTS_JSON["scriptDirectories"]["upstream"]
 
     // Load nightlyFolderPath. This is the folder where the jdkxx.groovy code is located compared to the repository root. These define what the default set of nightlies will be.
-    def nightlyFolderPath = (params.NIGHTLY_FOLDER_PATH) ?: "pipelines/jobs/configurations"
+    def nightlyFolderPath = (params.NIGHTLY_FOLDER_PATH) ?: DEFAULTS_JSON["configDirectories"]["nightly"]
 
     // Load jobTemplatePath. This is where the pipeline_job_template.groovy code is located compared to the repository root. This actually sets up the pipeline job using the parameters above.
-    def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: "pipelines/jobs/pipeline_job_template.groovy"
+    def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON["jobTemplateDirectories"]["upstream"]
 
     // Load enablePipelineSchedule. This determines whether we will be generating the pipelines with a schedule (defined in jdkxx.groovy) or not
-    def enablePipelineSchedule = true
-    if (Boolean.parseBoolean(Upgraded) == false) {
-      enablePipelineSchedule = false
-    }
+    def enablePipelineSchedule = params.ENABLE_PIPELINE_SCHEDULE ? Boolean.parseBoolean(ENABLE_PIPELINE_SCHEDULE) : true
 
     // Load credentials to be used in checking out. This is in case we are checking out a URL that is not Adopts and they don't have their ssh key on the machine
     def checkoutCreds = (params.SSH_CREDENTIALS) ?: ""
@@ -107,6 +109,8 @@ node('master') {
       }
 
       println "[INFO] JDK${javaVersion}: triggerSchedule = ${config.triggerSchedule}"
+
+      config.put("defaultVariables", DEFAULTS_JSON)
 
       println "[INFO] FINAL CONFIG FOR $javaVersion"
       println config

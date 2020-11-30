@@ -25,7 +25,9 @@ OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.3+9-201903122221, mixed mode)"
 
     def parse(String version) {
         IndividualBuildConfig config = new IndividualBuildConfig([ADOPT_BUILD_NUMBER: 23]);
-        def build = new Build(config, new ContextStub(), new EnvStub(), new CurrentBuildStub())
+
+        // Use a dead map for DEFAULTS_JSON as it's not being tested here
+        def build = new Build(config, [:], new ContextStub(), new EnvStub(), new CurrentBuildStub())
         return build.parseVersionOutput("=JAVA VERSION OUTPUT=\n" + version + "\n=/JAVA VERSION OUTPUT=")
     }
 

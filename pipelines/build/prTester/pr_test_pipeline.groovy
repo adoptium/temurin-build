@@ -24,6 +24,7 @@ class PullRequestTestPipeline implements Serializable {
     String branch
     String gitRepo
     Map<String, ?> testConfigurations
+    Map<String, ?> DEFAULTS_JSON
     List<Integer> javaVersions
 
     String BUILD_FOLDER = "build-scripts-pr-tester/build-test"
@@ -39,7 +40,7 @@ class PullRequestTestPipeline implements Serializable {
                 BRANCH              : "${branch}",
                 BUILD_FOLDER        : BUILD_FOLDER,
                 JOB_NAME            : "openjdk${javaVersion}-pipeline",
-                SCRIPT              : "pipelines/build/openjdk${javaVersion}_pipeline.groovy",
+                SCRIPT              : "${DEFAULTS_JSON['scriptDirectories']['upstream']}/openjdk${javaVersion}_pipeline.groovy",
                 disableJob          : false,
                 triggerSchedule     : "0 0 31 2 0",
                 targetConfigurations: testConfigurations
@@ -54,7 +55,7 @@ class PullRequestTestPipeline implements Serializable {
         context.checkout([$class: 'GitSCM', userRemoteConfigs: [[url: config.GIT_URL]], branches: [[name: branch]]])
 
         context.println "JDK${javaVersion} disableJob = ${config.disableJob}"
-        context.jobDsl targets: "pipelines/jobs/pipeline_job_template.groovy", ignoreExisting: false, additionalParameters: config
+        context.jobDsl targets: DEFAULTS_JSON["jobTemplateDirectories"]["upstream"], ignoreExisting: false, additionalParameters: config
     }
 
     /*
@@ -65,8 +66,8 @@ class PullRequestTestPipeline implements Serializable {
         def jobs = [:]
         Boolean pipelineFailed = false
 
-        context.println "loading ${context.WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
-        Closure regenerationScript = context.load "${context.WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
+        context.println "loading ${context.WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']['regeneration']}"
+        Closure regenerationScript = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']['regeneration']}"
 
         javaVersions.each({ javaVersion ->
             // generate top level job
@@ -76,12 +77,12 @@ class PullRequestTestPipeline implements Serializable {
             // Load platform specific build configs
             def buildConfigurations
             Boolean updateRepo = false
-            context.println "loading ${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy"
+            context.println "loading ${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy"
             try {
-                buildConfigurations = context.load "${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy"
+                buildConfigurations = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy"
             } catch (NoSuchFileException e) {
-                context.println "[WARNING] ${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy does not exist. Trying jdk${javaVersion}u_pipeline_config.groovy..."
-                buildConfigurations = context.load "${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}u_pipeline_config.groovy"
+                context.println "[WARNING] ${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy does not exist. Trying jdk${javaVersion}u_pipeline_config.groovy..."
+                buildConfigurations = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}u_pipeline_config.groovy"
                 updateRepo = true
             }
 
@@ -90,20 +91,21 @@ class PullRequestTestPipeline implements Serializable {
 
             // Generate downstream pipeline jobs
             regenerationScript(
-                    actualJavaVersion,
-                    buildConfigurations,
-                    testConfigurations,
-                    excludedBuilds,
-                    currentBuild,
-                    context,
-                    "build-scripts-pr-tester/build-test",
-                    gitRepo,
-                    branch,
-                    null,
-                    null,
-                    "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test",
-                    null,
-                    null
+                actualJavaVersion,
+                buildConfigurations,
+                testConfigurations,
+                DEFAULTS_JSON,
+                excludedBuilds,
+                currentBuild,
+                context,
+                "build-scripts-pr-tester/build-test",
+                gitRepo,
+                branch,
+                null,
+                null,
+                "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test",
+                null,
+                null
             ).regenerate()
 
             context.println "[SUCCESS] All done!"
@@ -159,7 +161,11 @@ Map<String, ?> defaultTestConfigurations = [
 
 List<Integer> defaultJavaVersions = [8, 11, 15, 16]
 
-defaultGitRepo = "https://github.com/AdoptOpenJDK/openjdk-build"
+// Retrieve defaults
+String RELATIVE_DEFAULT_FILEPATH = "../build/defaults.json"
+def DEFAULTS_JSON = new JsonSlurper().parse(new File(RELATIVE_DEFAULT_FILEPATH)) as Map
+
+defaultGitRepo = DEFAULTS_JSON['repository']['url']
 
 return {
     String branch,
@@ -170,10 +176,11 @@ return {
     String versions = null
         ->
 
-        context.load "pipelines/build/common/import_lib.groovy"
+        context.load DEFAULTS_JSON['importLibraryScript']
 
         Map<String, ?> testConfig = defaultTestConfigurations
         List<Integer> javaVersions = defaultJavaVersions
+        Map<String, ?> defaultJson = DEFAULTS_JSON
 
         if (gitRepo == null) {
             gitRepo = defaultGitRepo
@@ -189,11 +196,13 @@ return {
 
 
         return new PullRequestTestPipeline(
-                gitRepo: gitRepo,
-                branch: branch,
-                testConfigurations: testConfig,
-                javaVersions: javaVersions,
+            gitRepo: gitRepo,
+            branch: branch,
+            testConfigurations: testConfig,
+            DEFAULTS_JSON: defaultJson,
+            javaVersions: javaVersions,
 
-                context: context,
-                currentBuild: currentBuild)
+            context: context,
+            currentBuild: currentBuild
+        )
 }

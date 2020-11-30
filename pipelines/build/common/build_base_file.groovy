@@ -27,7 +27,7 @@ limitations under the License.
  *
  * This:
  *
- * 1. Generate job for each configuration based on  create_job_from_template.groovy
+ * 1. Generate job for each configuration based on create_job_from_template.groovy
  * 2. Execute job
  * 3. Push generated artifacts to github
  */
@@ -41,6 +41,7 @@ class Builder implements Serializable {
     String additionalConfigureArgs
     Map<String, List<String>> targetConfigurations
     Map<String, Map<String, ?>> buildConfigurations
+    Map<String, ?> DEFAULTS_JSON
     Map<String, List<String>> dockerExcludes
     String scmReference
     String publishName
@@ -57,9 +58,9 @@ class Builder implements Serializable {
     def context
     def currentBuild
 
-    /* 
-    Test targets triggered in 'nightly' build pipelines running 6 days per week 
-    nightly + weekly to be run during a 'release' pipeline 
+    /*
+    Test targets triggered in 'nightly' build pipelines running 6 days per week
+    nightly + weekly to be run during a 'release' pipeline
     */
     final List<String> nightly = [
         'sanity.openjdk',
@@ -69,10 +70,10 @@ class Builder implements Serializable {
         'sanity.functional',
         'extended.functional'
     ]
-    
-    /* 
-    Test targets triggered in 'weekly' build pipelines running once per week 
-    nightly + weekly to be run during a 'release' pipeline 
+
+    /*
+    Test targets triggered in 'weekly' build pipelines running once per week
+    nightly + weekly to be run during a 'release' pipeline
     */
     final List<String> weekly = [
         'extended.openjdk',
@@ -548,7 +549,7 @@ class Builder implements Serializable {
                         // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
                         context.stage(configuration.key) {
                             context.echo "Created job " + downstreamJobName
-                            
+
                             // execute build
                             def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
 
@@ -566,7 +567,7 @@ class Builder implements Serializable {
                                         } catch (FlowInterruptedException e) {
                                             context.println "[ERROR] Previous artifact removal timeout (${pipelineTimeouts.REMOVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting..."
                                             throw new Exception()
-                                        }   
+                                        }
 
                                         try {
                                             context.timeout(time: pipelineTimeouts.COPY_ARTIFACTS_TIMEOUT, unit: "HOURS") {
@@ -634,6 +635,7 @@ return {
     String javaToBuild,
     Map<String, Map<String, ?>> buildConfigurations,
     String targetConfigurations,
+    Map<String, ?> DEFAULTS_JSON,
     String activeNodeTimeout,
     String dockerExcludes,
     String enableTests,
@@ -681,6 +683,7 @@ return {
             javaToBuild: javaToBuild,
             buildConfigurations: buildConfigurations,
             targetConfigurations: new JsonSlurper().parseText(targetConfigurations) as Map,
+            DEFAULTS_JSON: new JsonSlurper().parseText(DEFAULTS_JSON) as Map,
             activeNodeTimeout: activeNodeTimeout,
             dockerExcludes: buildsExcludeDocker,
             enableTests: Boolean.parseBoolean(enableTests),

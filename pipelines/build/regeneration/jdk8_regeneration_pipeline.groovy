@@ -1,5 +1,7 @@
 import java.nio.file.NoSuchFileException
 import java.util.regex.Matcher
+import groovy.json.JsonSlurper
+
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,17 +17,22 @@ limitations under the License.
 */
 
 String javaVersion = "jdk8"
-String DEFAULT_BUILD_PATH = "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
-String DEFAULT_TARGET_PATH = "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}.groovy"
+
+// Retrieve Defaults
+String RELATIVE_DEFAULT_FILEPATH = "../defaults.json"
+def DEFAULTS_JSON = new JsonSlurper().parse(new File(RELATIVE_DEFAULT_FILEPATH)) as Map
 
 node ("master") {
+  String DEFAULT_BUILD_PATH = "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
+  String DEFAULT_TARGET_PATH = "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
+
   try {
-    def scmVars = checkout scm
-    load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
+    checkout scm
+    load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
 
     // Load gitUri and gitBranch. These determine where we will be pulling configs from.
-    def repoUri = (params.REPOSITORY_URL) ?: "https://github.com/AdoptOpenJDK/openjdk-build.git"
-    def repoBranch = (params.REPOSITORY_BRANCH) ?: "master"
+    def repoUri = (params.REPOSITORY_URL) ?: DEFAULTS_JSON["repository"]["url"]
+    def repoBranch = (params.REPOSITORY_BRANCH) ?: DEFAULTS_JSON["repository"]["branch"]
 
     // Checkout into the branch and url place
     checkout(
@@ -46,7 +53,7 @@ node ("master") {
       try {
         buildConfigurations = load DEFAULT_BUILD_PATH
       } catch (NoSuchFileException e) {
-        javaVersion = javaVersion + "u"
+        javaVersion += "u"
         println "[WARNING] ${DEFAULT_BUILD_PATH} does not exist, chances are we want a ${javaVersion} version.\n[WARNING] Trying ${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
 
         buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
@@ -60,7 +67,7 @@ node ("master") {
       // Since we can't check if the file is jdkxxu file or not, some regex is needed here in lieu of the try-catch above
       Matcher matcher = "$buildConfigPath" =~ /.*?(?<version>\d+u).*?/
       if (matcher.matches()) {
-        javaVersion = javaVersion + "u"
+        javaVersion += "u"
       }
 
     }
@@ -82,12 +89,12 @@ node ("master") {
     if (targetConfigurations == null) {
       throw new Exception("[ERROR] Could not find targetConfigurations for ${javaVersion}")
     }
-    
+
     // Pull in other parametrised values (or use defaults if they're not defined)
-    def jobRoot = (params.JOB_ROOT) ?: "build-scripts"
-    def jenkinsBuildRoot = (params.JENKINS_BUILD_ROOT) ?: "https://ci.adoptopenjdk.net/job/build-scripts/"
-    def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: "pipelines/build/common/create_job_from_template.groovy"
-    def scriptPath = (params.SCRIPT_PATH) ?: "pipelines/build/common/kick_off_build.groovy"
+    def jobRoot = (params.JOB_ROOT) ?: DEFAULTS_JSON["jenkinsDetails"]["rootDirectory"]
+    def jenkinsBuildRoot = (params.JENKINS_BUILD_ROOT) ?: "${DEFAULTS_JSON['jenkinsDetails']["rootUrl"]}/job/${jobRoot}/"
+    def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON["jobTemplateDirectories"]["downstream"]
+    def scriptPath = (params.SCRIPT_PATH) ?: DEFAULTS_JSON["scriptDirectories"]["downstream"]
     def excludes = (params.EXCLUDES_LIST) ?: ""
 
     println "[INFO] Running regeneration script with the following configuration:"
@@ -102,7 +109,7 @@ node ("master") {
     println "SCRIPT PATH: $scriptPath"
     println "EXCLUDES LIST: $excludes"
 
-    Closure regenerationScript = load "${WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
+    Closure regenerationScript = load "${WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']["regeneration"]}"
 
     // Pass in credentials if they exist
     if (JENKINS_AUTH != "") {
@@ -119,6 +126,7 @@ node ("master") {
           javaVersion,
           buildConfigurations,
           targetConfigurations,
+          DEFAULTS_JSON,
           excludes,
           currentBuild,
           this,
@@ -140,6 +148,7 @@ node ("master") {
         javaVersion,
         buildConfigurations,
         targetConfigurations,
+        DEFAULTS_JSON,
         excludes,
         currentBuild,
         this,

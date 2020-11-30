@@ -26,6 +26,7 @@ class Regeneration implements Serializable {
     private final String javaVersion
     private final Map<String, Map<String, ?>> buildConfigurations
     private final Map<String, ?> targetConfigurations
+    private final Map<String, ?> DEFAULTS_JSON
     private final Map<String, ?> excludedBuilds
     private final def currentBuild
     private final def context
@@ -43,7 +44,7 @@ class Regeneration implements Serializable {
     private String javaToBuild
     private final List<String> defaultTestList = ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external']
 
-    private final String excludedConst = "EXCLUDED"
+    private final String EXCLUDED_CONST = "EXCLUDED"
 
     /*
     Constructor
@@ -52,6 +53,7 @@ class Regeneration implements Serializable {
         String javaVersion,
         Map<String, Map<String, ?>> buildConfigurations,
         Map<String, ?> targetConfigurations,
+        Map<String, ?> DEFAULTS_JSON,
         Map<String, ?> excludedBuilds,
         currentBuild,
         context,
@@ -67,6 +69,7 @@ class Regeneration implements Serializable {
         this.javaVersion = javaVersion
         this.buildConfigurations = buildConfigurations
         this.targetConfigurations = targetConfigurations
+        this.DEFAULTS_JSON = DEFAULTS_JSON
         this.excludedBuilds = excludedBuilds
         this.currentBuild = currentBuild
         this.context = context
@@ -267,7 +270,7 @@ class Regeneration implements Serializable {
             // Check if it's in the excludes list
             if (overridePlatform(platformConfig, variant)) {
                 context.println "[INFO] Excluding $platformConfig.os: $variant from $javaToBuild regeneration due to it being in the EXCLUDES_LIST..."
-                return excludedConst
+                return EXCLUDED_CONST
             }
 
             def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
@@ -311,9 +314,7 @@ class Regeneration implements Serializable {
                 CLEAN_WORKSPACE: true
             )
         } catch (Exception e) {
-            // Catch invalid configurations
-            context.println "[ERROR] Failed to create IndividualBuildConfig for platformConfig: ${platformConfig}.\nError: ${e}"
-            currentBuild.result = "FAILURE"
+            throw new Exception("[ERROR] Failed to create IndividualBuildConfig for platformConfig: ${platformConfig}.\n${e}")
         }
     }
 
@@ -340,6 +341,7 @@ class Regeneration implements Serializable {
         params.put("GIT_URI", gitUri)
         params.put("GIT_BRANCH", gitBranch)
 
+        params.put("DEFAULTS_JSON", DEFAULTS_JSON)
         params.put("BUILD_CONFIG", config.toJson())
 
         def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
@@ -376,7 +378,6 @@ class Regeneration implements Serializable {
     */
     def queryAPI(String query) {
         try {
-            def parser = new JsonSlurper()
             def get = new URL(query).openConnection()
 
             String jenkinsAuth = ""
@@ -385,7 +386,7 @@ class Regeneration implements Serializable {
             }
             get.setRequestProperty ("Authorization", jenkinsAuth)
 
-            def response = parser.parseText(get.getInputStream().getText())
+            def response = new JsonSlurper().parseText(get.getInputStream().getText())
             return response
         } catch (Exception e) {
             // Failed to connect to jenkins api or a parsing error occurred
@@ -417,9 +418,9 @@ class Regeneration implements Serializable {
                     // Parse api response to only extract the relevant pipeline
                     getPipelines.jobs.name.each { pipeline ->
                         if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
-                            // TODO: Paramaterise this
+                            // TODO: Parametrise this
                             Integer sleepTime = 900
-                            
+
                             Boolean inProgress = true
                             while (inProgress) {
                                 // Check if pipeline is in progress using api
@@ -435,7 +436,7 @@ class Regeneration implements Serializable {
                                         context.println "[SUCCESS] ${pipeline} has not been run before. Running regeneration job..."
                                         inProgress = false
                                     }
-                                
+
                                 } else {
                                     inProgress = pipelineInProgress.building as Boolean
                                 }
@@ -520,7 +521,7 @@ class Regeneration implements Serializable {
                                 currentBuild.result = "UNSTABLE"
                             } else {
                                 // Skip variant job make if it's marked as excluded
-                                if (jobConfigurations.get(name) == excludedConst) {
+                                if (jobConfigurations.get(name) == EXCLUDED_CONST) {
                                     continue
                                 }
                                 // Make job
@@ -528,8 +529,7 @@ class Regeneration implements Serializable {
                                     makeJob(jobConfigurations, name)
                                 // Unexpected error when building or getting the configuration
                                 } else {
-                                    context.println "[ERROR] IndividualBuildConfig is malformed or null for key: ${osarch} : ${variant}."
-                                    currentBuild.result = "FAILURE"
+                                    throw new Exception("[ERROR] IndividualBuildConfig is malformed or null for key: ${osarch} : ${variant}.")
                                 }
                             }
 
@@ -549,6 +549,7 @@ return {
     String javaVersion,
     Map<String, Map<String, ?>> buildConfigurations,
     Map<String, ?> targetConfigurations,
+    Map<String, ?> DEFAULTS_JSON,
     String excludes,
     def currentBuild,
     def context,
@@ -561,24 +562,6 @@ return {
     String jenkinsUsername,
     String jenkinsToken
         ->
-        if (jobRootDir == null) {
-            jobRootDir = "build-scripts"
-        }
-        if (gitUri == null) {
-            gitUri = "https://github.com/AdoptOpenJDK/openjdk-build.git"
-        }
-        if (gitBranch == null) {
-            gitBranch = "master"
-        }
-        if (jobTemplatePath == null) {
-            jobTemplatePath = "pipelines/build/common/create_job_from_template.groovy"
-        }
-        if (scriptPath == null) {
-            scriptPath = "pipelines/build/common/kick_off_build.groovy"
-        }
-        if (jenkinsBuildRoot == null) {
-            jenkinsBuildRoot = "https://ci.adoptopenjdk.net/job/build-scripts/"
-        }
         if (jenkinsUsername == null) {
             jenkinsUsername = ""
         }
@@ -595,6 +578,7 @@ return {
             javaVersion,
             buildConfigurations,
             targetConfigurations,
+            DEFAULTS_JSON,
             excludedBuilds,
             currentBuild,
             context,
