@@ -1,9 +1,5 @@
 import groovy.json.JsonOutput
 
-if(!binding.hasVariable('triggerSchedule')) {
-    triggerSchedule = "@daily"
-}
-
 gitRefSpec = ""
 propagateFailures = false
 runTests = true
@@ -42,9 +38,13 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         }
     }
     disabled(disableJob)
-    triggers {
-        cron(triggerSchedule)
+
+    if (binding.hasVariable('triggerSchedule')) {
+        triggers {
+            cron(triggerSchedule)
+        }
     }
+
     logRotator {
         numToKeep(60)
         artifactNumToKeep(2)
