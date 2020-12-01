@@ -101,7 +101,7 @@ Don't be scared off by this document! If you already understand the stuff in th
 During the week before release we lock down the openjdk-build repository to
 only include "critical" fixes (i.e. those which will otherwise cause a build
 break or other problem which will prevent shipping the release builds. This
-stops lask minute changes going in which may destabilise things.
+stops last minute changes going in which may destabilise things.
 
 If a change has to go in during this "lockdown" period it should be done by
 posting a comment saying "Requesting approval to merge during the lockdown
@@ -113,7 +113,8 @@ lockdown period.
 
 Here are the steps:
 
-1. Disabling nightly testing so the release builds aren't delayed by any nightly test runs (`ENABLE_TESTS: false` in [config_regeneration.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/config_regeneration.groovy#L292)
+1. Disabling nightly testing so the release builds aren't delayed by any nightly test runs (`ENABLE_TESTS: false` in [config_regeneration.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/config_regeneration.groovy#L292) and set `runtests` to `false` in
+[pipeline_job_template.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/jobs/pipeline_job_template.groovy#L9))
 2. If desired, add a banner to the website to indicate that the releases are coming in the near future ([Sample PR](https://github.com/AdoptOpenJDK/openjdk-website/pull/702/files))
 3. Build and Test the OpenJDK for "release" at AdoptOpenJDK using a build pipeline job as follows:
    - Job: https://ci.adoptopenjdk.net/job/build-scripts/job/openjdk8-pipeline/build (Switch `openjdk8` for your version number)
