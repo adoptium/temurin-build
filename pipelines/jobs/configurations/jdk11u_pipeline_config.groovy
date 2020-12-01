@@ -119,7 +119,11 @@ class Config11 {
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
-                dockerImage         : 'adoptopenjdk/centos7_build_image',
+                dockerImage         : [
+                        openj9:  'adoptopenjdk/centos7_build_image',
+                        hotspot: 'adoptopenjdk/centos7_build_image',
+                        dragonwell: 'registry.cn-hangzhou.aliyuncs.com/dragonwell/centos7_gcc9_build_image'
+                ],
                 test                : 'default',
                 configureArgs       : '--enable-dtrace=auto'
         ],
