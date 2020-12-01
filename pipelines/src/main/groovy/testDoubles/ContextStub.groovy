@@ -79,6 +79,12 @@ class ContextStub {
 
     String readFile(String s) {}
 
+    String readJSON(String s) {}
+
+    Closure<CustomScript> entrySet(String s) {}
+
+    String remove() {}
+
     String ws(String s, Closure) {}
 
     String getAbsoluteUrl() {}
