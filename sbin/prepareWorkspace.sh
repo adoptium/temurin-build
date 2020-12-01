@@ -57,7 +57,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
       git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch"
     else
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | egrep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | egrep "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
     fi
     local isValidGitRepo=$?
     set -e
