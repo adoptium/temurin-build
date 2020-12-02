@@ -515,7 +515,21 @@ prepareCacerts() {
     echo "Generating cacerts from Mozilla's bundle"
 
     cd "$SCRIPT_DIR/../security"
-    ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
+    # Our Solaris/SPARC box exhibits slowness when running keytool
+    # Therefore pull the cacerts file from the latest Solaris/x64 build
+    if [ "$ARCHITECTURE" = "sparcv9" ]; then
+      mkdir tmp
+      cd tmp || exit 1
+      wget -q -O jdk8build.tgz "https://api.adoptopenjdk.net/v3/binary/latest/8/ea/solaris/sparcv9/jre/hotspot/normal/adoptopenjdk?project=jdk"
+      CACERTSFILE=`gzip -cd jdk8build.tgz | tar tf - | grep /cacerts$`
+      [ ! -z "$CACERTSFILE" ] && gzip -cd jdk8build.tgz | tar xf - "$CACERTSFILE"
+      cp "$CACERTSFILE" .. || exit 1
+      cd ..
+      rm -r tmp
+      echo Solaris/SPARC: Successfully extracted cacerts from x64 build: `ls -l cacerts`
+    else
+      ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
+    fi
 }
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, etc.)
