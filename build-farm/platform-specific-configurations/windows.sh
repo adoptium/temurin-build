@@ -149,12 +149,22 @@ then
     fi
 
     CUDA_VERSION=9.0
-    CUDA_HOME="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v$CUDA_VERSION"
+    CUDA_HOME_FULL="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v$CUDA_VERSION"
     # use cygpath to map to 'short' names (without spaces)
-    CUDA_HOME=$(cygpath -ms "$CUDA_HOME")
+    CUDA_HOME=$(cygpath -ms "$CUDA_HOME_FULL")
+    if [[ $CUDA_HOME == *" "* ]]; then
+      echo "[ERROR] All CUDA_HOME path folders must have either (a) no spaces, or (b) a shortened version configured in the environment."
+      echo "CUDA_HOME unshortened: ${CUDA_HOME_FULL}"
+      echo "CUDA_HOME shortened: ${CUDA_HOME}"
+      exit 1
+    fi
     if [ -f "$(cygpath -u $CUDA_HOME/include/cuda.h)" ]
     then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-cuda --with-cuda=$CUDA_HOME"
+    else
+      echo "[ERROR] The following file could not be found: $CUDA_HOME/include/cuda.h"
+      echo "Please check that CUDA is correctly installed."
+      exit 1
     fi
 
     # LLVM needs to be before cygwin as at least one machine has clang in cygwin #813
