@@ -131,7 +131,8 @@ removes the existing docker container and persistent volume before starting
 a new docker based build.
 
 -C, --configure-args <args>
-specify any custom user configuration arguments.
+specify any custom user configuration arguments, using 
+temporary_speech_mark_placeholder in the place of any speech marks.
 
 --clean-git-repo
 clean out any 'bad' local git repo you already have.
