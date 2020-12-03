@@ -81,7 +81,7 @@ class ContextStub {
 
     String readJSON(String s) {}
 
-    Closure<CustomScript> entrySet(String s) {}
+    String entrySet() {}
 
     String remove() {}
 
