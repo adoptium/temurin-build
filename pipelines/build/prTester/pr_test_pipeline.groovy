@@ -163,7 +163,7 @@ List<Integer> defaultJavaVersions = [8, 11, 15, 16]
 
 // Retrieve defaults
 String RELATIVE_DEFAULT_FILEPATH = "../build/defaults.json"
-def DEFAULTS_JSON = readJSON file: RELATIVE_DEFAULT_FILEPATH as Map
+Map<String, ?> DEFAULTS_JSON = readJSON file: RELATIVE_DEFAULT_FILEPATH as Map
 
 defaultGitRepo = DEFAULTS_JSON['repository']['url']
 

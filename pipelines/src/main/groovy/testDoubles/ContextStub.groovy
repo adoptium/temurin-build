@@ -79,7 +79,7 @@ class ContextStub {
 
     String readFile(String s) {}
 
-    String readJSON(String s) {}
+    Map<String, ?> readJSON(String file) {}
 
     String entrySet() {}
 
