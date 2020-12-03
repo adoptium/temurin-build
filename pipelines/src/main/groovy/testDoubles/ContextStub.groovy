@@ -81,7 +81,7 @@ class ContextStub {
 
     String readJSON(String s) {}
 
-    def entrySet() {}
+    String entrySet() {}
 
     String remove() {}
 
