@@ -29,6 +29,7 @@ node ("master") {
   String DEFAULT_TARGET_PATH = "${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
 
   try {
+    checkout scm
     load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
 
     // Load gitUri and gitBranch. These determine where we will be pulling configs from.
