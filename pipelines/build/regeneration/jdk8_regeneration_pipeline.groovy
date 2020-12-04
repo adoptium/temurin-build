@@ -1,5 +1,6 @@
 import java.nio.file.NoSuchFileException
 import java.util.regex.Matcher
+import groovy.json.JsonSlurper
 
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +20,7 @@ String javaVersion = "jdk8"
 
 // Retrieve Defaults
 String RELATIVE_DEFAULT_FILEPATH = "../defaults.json"
-Map<String, ?> DEFAULTS_JSON = readJSON(RELATIVE_DEFAULT_FILEPATH) as Map
+Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parse(readFile(RELATIVE_DEFAULT_FILEPATH)) as Map
 
 node ("master") {
   String DEFAULT_BUILD_PATH = "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
