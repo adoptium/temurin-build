@@ -3,7 +3,7 @@ import groovy.json.JsonSlurper
 
 // Retrieve Defaults
 String RELATIVE_DEFAULT_FILEPATH = "../defaults.json"
-Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parse(readFile(file: RELATIVE_DEFAULT_FILEPATH)) as Map
+Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(readFile(RELATIVE_DEFAULT_FILEPATH)) as Map
 
 node('master') {
   timestamps {
