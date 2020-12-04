@@ -6,7 +6,7 @@ String DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-b
 node('master') {
   timestamps {
     // Retrieve Defaults
-    def defaultsText = new JsonSlurper().parseText(new URL(DEFAULTS_FILE_URL).openConnection().getInputStream().getText())
+    def defaultsText = new JsonSlurper().parse(new URL(DEFAULTS_FILE_URL).openConnection().getInputStream().getText())
     Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(defaultsText) as Map
 
     def retiredVersions = [9, 10, 12, 13, 14]
