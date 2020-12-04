@@ -23,8 +23,7 @@ String DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-b
 node ("master") {
   // Retrieve Defaults
   def get = new URL(DEFAULTS_FILE_URL).openConnection()
-  def defaultsText = new JsonSlurper().parseText(get.getInputStream().getText())
-  Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(defaultsText) as Map
+  Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(get.getInputStream().getText()) as Map
 
   String DEFAULT_BUILD_PATH = "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
   String DEFAULT_TARGET_PATH = "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
