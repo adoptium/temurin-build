@@ -111,7 +111,7 @@ node('master') {
 
       println "[INFO] JDK${javaVersion}: triggerSchedule = ${config.triggerSchedule}"
 
-      config.put("defaultVariables", DEFAULTS_JSON)
+      config.put("defaultsJson", DEFAULTS_JSON)
 
       println "[INFO] FINAL CONFIG FOR $javaVersion"
       println config
