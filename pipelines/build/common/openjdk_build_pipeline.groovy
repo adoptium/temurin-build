@@ -917,6 +917,10 @@ class Build {
             try {
                 context.timeout(time: buildTimeouts.NODE_CHECKOUT_TIMEOUT, unit: "HOURS") {
                     context.checkout context.scm
+
+                    // Perform a git clean outside of checkout to avoid the Jenkins enforced 10 minute timeout
+                    // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1553
+                    context.sh(script: "git clean -fdx")
                 }
             } catch (FlowInterruptedException e) {
                 context.println "[ERROR] Node checkout workspace timeout (${buildTimeouts.NODE_CHECKOUT_TIMEOUT} HOURS) has been reached. Exiting..."
@@ -1094,6 +1098,10 @@ class Build {
                                 try {
                                     context.timeout(time: buildTimeouts.DOCKER_CHECKOUT_TIMEOUT, unit: "HOURS") {
                                         context.checkout context.scm
+
+                                        // Perform a git clean outside of checkout to avoid the Jenkins enforced 10 minute timeout
+                                        // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1553
+                                        context.sh(script: "git clean -fdx")
                                     }
                                 } catch (FlowInterruptedException e) {
                                     context.println "[ERROR] Master docker file scm checkout timeout (${buildTimeouts.DOCKER_CHECKOUT_TIMEOUT} HOURS) has been reached. Exiting..."

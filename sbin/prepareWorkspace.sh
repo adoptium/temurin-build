@@ -57,7 +57,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
       git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch"
     else
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | egrep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | egrep "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
     fi
     local isValidGitRepo=$?
     set -e
@@ -66,7 +66,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     if [ "${isValidGitRepo}" == "0" ]; then
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
-      sleep 10s
+      sleep 10
       echo "Pulling latest changes from git openjdk source repository"
     elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
       echo "Removing current git repo as it is the wrong type"
@@ -515,7 +515,21 @@ prepareCacerts() {
     echo "Generating cacerts from Mozilla's bundle"
 
     cd "$SCRIPT_DIR/../security"
-    ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
+    # Our Solaris/SPARC box exhibits slowness when running keytool
+    # Therefore pull the cacerts file from the latest Solaris/x64 build
+    if [ "$ARCHITECTURE" = "sparcv9" ]; then
+      mkdir tmp
+      cd tmp || exit 1
+      wget -q -O jdk8build.tgz "https://api.adoptopenjdk.net/v3/binary/latest/8/ea/solaris/sparcv9/jre/hotspot/normal/adoptopenjdk?project=jdk"
+      CACERTSFILE=`gzip -cd jdk8build.tgz | tar tf - | grep /cacerts$`
+      [ ! -z "$CACERTSFILE" ] && gzip -cd jdk8build.tgz | tar xf - "$CACERTSFILE"
+      cp "$CACERTSFILE" .. || exit 1
+      cd ..
+      rm -r tmp
+      echo Solaris/SPARC: Successfully extracted cacerts from x64 build: `ls -l cacerts`
+    else
+      ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
+    fi
 }
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, etc.)

@@ -155,48 +155,53 @@ createOpenJDKArchive()
 }
 
 function setBootJdk() {
-  if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
-    echo "Searching for JDK_BOOT_DIR"
+  # Stops setting the bootJDK on the host machine when running docker-build
+  if [ "${BUILD_CONFIG[DOCKER]}" != "docker" ] || ([ "${BUILD_CONFIG[DOCKER]}" == "docker" ] && [ "${BUILD_CONFIG[DOCKER_FILE_PATH]}" != "" ]) ; then
+    if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
+      echo "Searching for JDK_BOOT_DIR"
 
-    # shellcheck disable=SC2046,SC2230
-    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
-      set +e
-      BUILD_CONFIG[JDK_BOOT_DIR]="$(/usr/libexec/java_home)"
-      local returnCode=$?
-      set -e
+      # shellcheck disable=SC2046,SC2230
+      if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+        set +e
+        BUILD_CONFIG[JDK_BOOT_DIR]="$(/usr/libexec/java_home)"
+        local returnCode=$?
+        set -e
 
-      if [[ ${returnCode} -ne 0 ]]; then
-        BUILD_CONFIG[JDK_BOOT_DIR]="$(dirname "$(dirname "$(greadlink -f "$(which javac)")")")"
+        if [[ ${returnCode} -ne 0 ]]; then
+          BUILD_CONFIG[JDK_BOOT_DIR]="$(dirname "$(dirname "$(greadlink -f "$(which javac)")")")"
+        fi
+      else
+        BUILD_CONFIG[JDK_BOOT_DIR]="$(dirname "$(dirname "$(readlink -f "$(which javac)")")")"
       fi
+
+      echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+      echo "If this is incorrect explicitly configure JDK_BOOT_DIR using --jdk-boot-dir"
+
+      # Calculate version number of boot jdk. Output on Windows contains \r, hence gsub("\r", "", $3).
+      export BOOT_JDK_VERSION_NUMBER=$("${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/java" -XshowSettings:properties -version 2>&1 | awk '/java.specification.version/{gsub(/1\./,"",$3);gsub("\r", "", $3);print $3}')
+      if [ -z "$BOOT_JDK_VERSION_NUMBER" ]; then
+        echo "[ERROR] The BOOT_JDK_VERSION_NUMBER was not found. Likelihood is that the boot jdk settings properties don't contain a java.specification.version..."
+        "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/java" -XshowSettings:properties -version 2>&1
+        exit 2
+      fi
+
+      # If bootjdk isn't the same version and isn't a n-1 version, crash out with informational message
+      export REQUIRED_BOOT_JDK=$((${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}-1))
+
+      if [ ${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} -ne $BOOT_JDK_VERSION_NUMBER ] && [ $REQUIRED_BOOT_JDK -ne $BOOT_JDK_VERSION_NUMBER ]; then
+        echo "[ERROR] A JDK${BOOT_JDK_VERSION_NUMBER} boot jdk cannot build a JDK${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} binary"
+        echo "[ERROR] Please download a JDK${REQUIRED_BOOT_JDK} (preferable) OR JDK${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} binary and pass it into this script using -J, --jdk-boot-dir"
+        exit 2
+      fi
+
     else
-      BUILD_CONFIG[JDK_BOOT_DIR]="$(dirname "$(dirname "$(readlink -f "$(which javac)")")")"
+      echo "Overriding JDK_BOOT_DIR, set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
     fi
 
-    echo "Guessing JDK_BOOT_DIR: ${BUILD_CONFIG[JDK_BOOT_DIR]}"
-    echo "If this is incorrect explicitly configure JDK_BOOT_DIR using --jdk-boot-dir"
-
-    # Calculate version number of boot jdk. Output on Windows contains \r, hence gsub("\r", "", $3).
-    export BOOT_JDK_VERSION_NUMBER=$("${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/java" -XshowSettings:properties -version 2>&1 | awk '/java.specification.version/{gsub(/1\./,"",$3);gsub("\r", "", $3);print $3}')
-    if [ -z "$BOOT_JDK_VERSION_NUMBER" ]; then
-      echo "[ERROR] The BOOT_JDK_VERSION_NUMBER was not found. Likelihood is that the boot jdk settings properties don't contain a java.specification.version..."
-      "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/java" -XshowSettings:properties -version 2>&1
-      exit 2
-    fi
-
-    # If bootjdk isn't the same version and isn't a n-1 version, crash out with informational message
-    export REQUIRED_BOOT_JDK=$((${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}-1))
-
-    if [ ${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} -ne $BOOT_JDK_VERSION_NUMBER ] && [ $REQUIRED_BOOT_JDK -ne $BOOT_JDK_VERSION_NUMBER ]; then
-      echo "[ERROR] A JDK${BOOT_JDK_VERSION_NUMBER} boot jdk cannot build a JDK${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} binary"
-      echo "[ERROR] Please download a JDK${REQUIRED_BOOT_JDK} (preferable) OR JDK${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} binary and pass it into this script using -J, --jdk-boot-dir"
-      exit 2
-    fi
-
+    echo "Boot dir set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
   else
-    echo "Overriding JDK_BOOT_DIR, set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
+    echo "Skipping setting boot JDK on docker host machine"
   fi
-
-  echo "Boot dir set to ${BUILD_CONFIG[JDK_BOOT_DIR]}"
 }
 
 # A function that returns true if the variant is based on HotSpot and should
