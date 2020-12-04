@@ -2,8 +2,8 @@ import java.nio.file.NoSuchFileException
 import groovy.json.JsonSlurper
 
 // Retrieve Defaults
-String RELATIVE_DEFAULT_FILEPATH = "../defaults.json"
-Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(readFile(RELATIVE_DEFAULT_FILEPATH)) as Map
+String DEFAULTS_STRING = readFile("../defaults.json")
+Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_STRING) as Map
 
 node('master') {
   timestamps {

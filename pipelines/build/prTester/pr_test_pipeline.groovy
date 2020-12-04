@@ -162,8 +162,8 @@ Map<String, ?> defaultTestConfigurations = [
 List<Integer> defaultJavaVersions = [8, 11, 15, 16]
 
 // Retrieve defaults
-String RELATIVE_DEFAULT_FILEPATH = "../defaults.json"
-Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(readFile(RELATIVE_DEFAULT_FILEPATH)) as Map
+String DEFAULTS_STRING = readFile("../defaults.json")
+Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_STRING) as Map
 
 defaultGitRepo = DEFAULTS_JSON['repository']['url']
 
