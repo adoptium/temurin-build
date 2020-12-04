@@ -1,12 +1,11 @@
 import java.nio.file.NoSuchFileException
 import groovy.json.JsonSlurper
 
-// Retrieve Defaults
-def DEFAULTS_STRING = readFile(file: "../defaults.json")
-Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_STRING) as Map
-
 node('master') {
   timestamps {
+    // Retrieve Defaults
+    String DEFAULTS_STRING = readFile("../defaults.json")
+    Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_STRING) as Map
 
     def retiredVersions = [9, 10, 12, 13, 14]
     def generatedPipelines = []

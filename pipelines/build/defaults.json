@@ -19,7 +19,8 @@
     "scriptDirectories"      : {
         "upstream"           : "pipelines/build",
         "downstream"         : "pipelines/build/common/kick_off_build.groovy",
-        "regeneration"       : "pipelines/build/common/config_regeneration.groovy"
+        "regeneration"       : "pipelines/build/common/config_regeneration.groovy",
+        "tester"             : "pipelines/build/prTester/pr_test_pipeline.groovy"
     },
     "baseFileDirectories": {
         "upstream"           : "pipelines/build/common/build_base_file.groovy",

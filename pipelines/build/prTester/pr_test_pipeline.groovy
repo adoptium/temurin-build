@@ -161,17 +161,12 @@ Map<String, ?> defaultTestConfigurations = [
 
 List<Integer> defaultJavaVersions = [8, 11, 15, 16]
 
-// Retrieve defaults
-def DEFAULTS_STRING = readFile(file: "../defaults.json")
-Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_STRING) as Map
-
-defaultGitRepo = DEFAULTS_JSON['repository']['url']
-
 return {
     String branch,
     def currentBuild,
     def context,
-    String gitRepo = defaultGitRepo,
+    String gitRepo,
+    Map<String, ?> DEFAULTS_JSON,
     String testConfigurations = null,
     String versions = null
         ->
@@ -183,7 +178,7 @@ return {
         Map<String, ?> defaultJson = DEFAULTS_JSON
 
         if (gitRepo == null) {
-            gitRepo = defaultGitRepo
+            gitRepo = DEFAULTS_JSON['repository']['url']
         }
 
         if (testConfigurations != null) {

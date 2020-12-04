@@ -18,11 +18,11 @@ limitations under the License.
 
 String javaVersion = "jdk8"
 
-// Retrieve Defaults
-def DEFAULTS_STRING = readFile(file: "../defaults.json")
-Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_STRING) as Map
-
 node ("master") {
+  // Retrieve Defaults
+  String DEFAULTS_STRING = readFile(file: "../defaults.json")
+  Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_STRING) as Map
+
   String DEFAULT_BUILD_PATH = "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
   String DEFAULT_TARGET_PATH = "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
 
