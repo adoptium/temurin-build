@@ -19,7 +19,7 @@ limitations under the License.
 String javaVersion = "jdk8"
 
 // Retrieve Defaults
-String DEFAULTS_STRING = readFile("../defaults.json")
+def DEFAULTS_STRING = readFile(file: "../defaults.json")
 Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_STRING) as Map
 
 node ("master") {

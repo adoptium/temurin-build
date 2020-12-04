@@ -77,7 +77,7 @@ class ContextStub {
 
     Closure<CustomScript> load(String s) {}
 
-    String readFile(String s) {}
+    String readFile(String file) {}
 
     Map<String, ?> readJSON(String file) {}
 
