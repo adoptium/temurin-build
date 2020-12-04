@@ -29,6 +29,7 @@ node ("master") {
   String DEFAULT_TARGET_PATH = "${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
 
   try {
+    // Checkout needed so we can load the library
     checkout scm
     load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
 
@@ -50,13 +51,13 @@ node ("master") {
     def buildConfigPath = (params.BUILD_CONFIG_PATH) ? "${WORKSPACE}/${BUILD_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULT_BUILD_PATH}"
 
     // Use default config path if param is empty
-    if (buildConfigPath == DEFAULT_BUILD_PATH) {
+    if (buildConfigPath == "${WORKSPACE}/${DEFAULT_BUILD_PATH}") {
 
       try {
-        buildConfigurations = load DEFAULT_BUILD_PATH
+        buildConfigurations = load buildConfigPath
       } catch (NoSuchFileException e) {
         javaVersion += "u"
-        println "[WARNING] ${DEFAULT_BUILD_PATH} does not exist, chances are we want a ${javaVersion} version.\n[WARNING] Trying ${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
+        println "[WARNING] ${buildConfigPath} does not exist, chances are we want a ${javaVersion} version.\n[WARNING] Trying ${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
 
         buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
       }
@@ -79,13 +80,7 @@ node ("master") {
 
     // Load targetConfigurations from config file. This is what is being run in the nightlies
     def targetConfigPath = (params.TARGET_CONFIG_PATH) ? "${WORKSPACE}/${TARGET_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULT_TARGET_PATH}"
-
-    // Use default config path if param is empty
-    if (targetConfigPath == DEFAULT_TARGET_PATH) {
-      load DEFAULT_TARGET_PATH
-    } else {
-      load targetConfigPath
-    }
+    load targetConfigPath
 
     if (targetConfigurations == null) {
       throw new Exception("[ERROR] Could not find targetConfigurations for ${javaVersion}")
