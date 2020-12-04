@@ -19,7 +19,8 @@ String DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-b
 
 node("master") {
     // Retrieve Defaults
-    def defaultsText = new JsonSlurper().parseText(new URL(DEFAULTS_FILE_URL).openConnection().getInputStream().getText())
+    def get = new URL(DEFAULTS_FILE_URL).openConnection()
+    def defaultsText = new JsonSlurper().parseText(get.getInputStream().getText())
     Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(defaultsText) as Map
 
     String branch = "${ghprbActualCommit}"
