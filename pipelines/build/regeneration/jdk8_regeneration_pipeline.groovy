@@ -25,9 +25,6 @@ node ("master") {
   def get = new URL(DEFAULTS_FILE_URL).openConnection()
   Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(get.getInputStream().getText()) as Map
 
-  String DEFAULT_BUILD_PATH = "${DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
-  String DEFAULT_TARGET_PATH = "${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
-
   try {
     // Checkout needed so we can load the library
     checkout scm
@@ -48,6 +45,7 @@ node ("master") {
 
     // Load buildConfigurations from config file. This is what the nightlies & releases use to setup their downstream jobs
     def buildConfigurations = null
+    String DEFAULT_BUILD_PATH = "${DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
     def buildConfigPath = (params.BUILD_CONFIG_PATH) ? "${WORKSPACE}/${BUILD_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULT_BUILD_PATH}"
 
     // Use default config path if param is empty
@@ -79,6 +77,7 @@ node ("master") {
     }
 
     // Load targetConfigurations from config file. This is what is being run in the nightlies
+    String DEFAULT_TARGET_PATH = "${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
     def targetConfigPath = (params.TARGET_CONFIG_PATH) ? "${WORKSPACE}/${TARGET_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULT_TARGET_PATH}"
     load targetConfigPath
 
