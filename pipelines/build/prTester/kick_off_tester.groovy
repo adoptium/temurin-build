@@ -14,10 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//TODO: Change me
+String DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/build/defaults.json"
+
 node("master") {
-    // Retrieve defaults
-    String DEFAULTS_STRING = readFile("../defaults.json")
-    Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_STRING) as Map
+    // Retrieve Defaults
+    def defaultsText = new JsonSlurper().parseText(new URL(DEFAULTS_FILE_URL).openConnection().getInputStream().getText())
+    Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(defaultsText) as Map
 
     String branch = "${ghprbActualCommit}"
     String url = DEFAULTS_JSON['repository']['url']

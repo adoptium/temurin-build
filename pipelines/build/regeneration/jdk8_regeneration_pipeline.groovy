@@ -17,11 +17,13 @@ limitations under the License.
 */
 
 String javaVersion = "jdk8"
+//TODO: Change me
+String DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/build/defaults.json"
 
 node ("master") {
   // Retrieve Defaults
-  String DEFAULTS_STRING = readFile(file: "../defaults.json")
-  Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_STRING) as Map
+  def defaultsText = new JsonSlurper().parseText(new URL(DEFAULTS_FILE_URL).openConnection().getInputStream().getText())
+  Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(defaultsText) as Map
 
   String DEFAULT_BUILD_PATH = "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
   String DEFAULT_TARGET_PATH = "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"

@@ -1,11 +1,13 @@
 import java.nio.file.NoSuchFileException
 import groovy.json.JsonSlurper
+//TODO: Change me
+String DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/build/defaults.json"
 
 node('master') {
   timestamps {
     // Retrieve Defaults
-    String DEFAULTS_STRING = readFile("../defaults.json")
-    Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_STRING) as Map
+    def defaultsText = new JsonSlurper().parseText(new URL(DEFAULTS_FILE_URL).openConnection().getInputStream().getText())
+    Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(defaultsText) as Map
 
     def retiredVersions = [9, 10, 12, 13, 14]
     def generatedPipelines = []
