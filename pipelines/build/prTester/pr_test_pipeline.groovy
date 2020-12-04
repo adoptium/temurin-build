@@ -62,84 +62,85 @@ class PullRequestTestPipeline implements Serializable {
     * Main function, called from the pr tester in jenkins itself
     */
     def runTests() {
+        timestamps {
 
-        def jobs = [:]
-        Boolean pipelineFailed = false
+            def jobs = [:]
+            Boolean pipelineFailed = false
 
-        context.println "loading ${context.WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']['regeneration']}"
-        Closure regenerationScript = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']['regeneration']}"
+            context.println "loading ${context.WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']['regeneration']}"
+            Closure regenerationScript = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']['regeneration']}"
 
-        javaVersions.each({ javaVersion ->
-            // generate top level job
-            generatePipelineJob(javaVersion)
-            context.println "[INFO] Running regeneration script..."
+            javaVersions.each({ javaVersion ->
+                // generate top level job
+                generatePipelineJob(javaVersion)
+                context.println "[INFO] Running regeneration script..."
 
-            // Load platform specific build configs
-            def buildConfigurations
-            Boolean updateRepo = false
-            context.println "loading ${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy"
-            try {
-                buildConfigurations = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy"
-            } catch (NoSuchFileException e) {
-                context.println "[WARNING] ${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy does not exist. Trying jdk${javaVersion}u_pipeline_config.groovy..."
-                buildConfigurations = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}u_pipeline_config.groovy"
-                updateRepo = true
-            }
+                // Load platform specific build configs
+                def buildConfigurations
+                Boolean updateRepo = false
+                context.println "loading ${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy"
+                try {
+                    buildConfigurations = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy"
+                } catch (NoSuchFileException e) {
+                    context.println "[WARNING] ${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy does not exist. Trying jdk${javaVersion}u_pipeline_config.groovy..."
+                    buildConfigurations = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}u_pipeline_config.groovy"
+                    updateRepo = true
+                }
 
-            String actualJavaVersion = updateRepo ? "jdk${javaVersion}u" : "jdk${javaVersion}"
-            def excludedBuilds = ""
+                String actualJavaVersion = updateRepo ? "jdk${javaVersion}u" : "jdk${javaVersion}"
+                def excludedBuilds = ""
 
-            // Generate downstream pipeline jobs
-            regenerationScript(
-                actualJavaVersion,
-                buildConfigurations,
-                testConfigurations,
-                DEFAULTS_JSON,
-                excludedBuilds,
-                currentBuild,
-                context,
-                "build-scripts-pr-tester/build-test",
-                gitRepo,
-                branch,
-                null,
-                null,
-                "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test",
-                null,
-                null
-            ).regenerate()
+                // Generate downstream pipeline jobs
+                regenerationScript(
+                    actualJavaVersion,
+                    buildConfigurations,
+                    testConfigurations,
+                    DEFAULTS_JSON,
+                    excludedBuilds,
+                    currentBuild,
+                    context,
+                    "build-scripts-pr-tester/build-test",
+                    gitRepo,
+                    branch,
+                    null,
+                    null,
+                    "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test",
+                    null,
+                    null
+                ).regenerate()
 
-            context.println "[SUCCESS] All done!"
+                context.println "[SUCCESS] All done!"
 
-            // Run tester against the host pr
-            jobs["Test building Java ${javaVersion}"] = {
-                context.stage("Test building Java ${javaVersion}") {
-                    try {
-                        context.build job: "${BUILD_FOLDER}/openjdk${javaVersion}-pipeline",
-                            propagate: true,
-                            parameters: [
-                                context.string(name: 'releaseType', value: "Nightly Without Publish"),
-                                context.string(name: 'activeNodeTimeout', value: "0")
-                            ]
-                    } catch (err) {
-                        context.println "[ERROR] ${actualJavaVersion} PIPELINE FAILED\n$err"
-                        pipelineFailed = true
+                // Run tester against the host pr
+                jobs["Test building Java ${javaVersion}"] = {
+                    context.stage("Test building Java ${javaVersion}") {
+                        try {
+                            context.build job: "${BUILD_FOLDER}/openjdk${javaVersion}-pipeline",
+                                propagate: true,
+                                parameters: [
+                                    context.string(name: 'releaseType', value: "Nightly Without Publish"),
+                                    context.string(name: 'activeNodeTimeout', value: "0")
+                                ]
+                        } catch (err) {
+                            context.println "[ERROR] ${actualJavaVersion} PIPELINE FAILED\n$err"
+                            pipelineFailed = true
+                        }
                     }
                 }
+            })
+
+            context.parallel jobs
+
+            // Only clean up the space if the tester passed
+            if (!pipelineFailed) {
+                context.println "[INFO] Cleaning up..."
+                context.cleanWs notFailBuild: true
+            } else {
+                context.println "[ERROR] Pipelines failed. Setting build result to FAILURE..."
+                currentBuild.result = 'FAILURE'
             }
-        })
-
-        context.parallel jobs
-
-        // Only clean up the space if the tester passed
-        if (!pipelineFailed) {
-            context.println "[INFO] Cleaning up..."
-            context.cleanWs notFailBuild: true
-        } else {
-            context.println "[ERROR] Pipelines failed. Setting build result to FAILURE..."
-            currentBuild.result = 'FAILURE'
         }
     }
-
 }
 
 Map<String, ?> defaultTestConfigurations = [

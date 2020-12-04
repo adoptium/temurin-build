@@ -35,6 +35,7 @@ jobs:
         VARIANT: ${{ matrix.vm }}
         TARGET_OS: ${{ matrix.os }}
         FILENAME: OpenJDK.tar.gz
+        DEFAULT_PLATFORM_CONFIGS: platform-specific-configurations
 
   # build_macos:
   #   name: macOS
@@ -87,4 +88,5 @@ jobs:
   #       VARIANT: ${{ matrix.vm }}
   #       TARGET_OS: mac
   #       FILENAME: OpenJDK.tar.gz
+  #       DEFAULT_PLATFORM_CONFIGS: platform-specific-configurations
   #       JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
