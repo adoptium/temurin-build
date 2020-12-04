@@ -25,11 +25,10 @@ node ("master") {
   def get = new URL(DEFAULTS_FILE_URL).openConnection()
   Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(get.getInputStream().getText()) as Map
 
-  String DEFAULT_BUILD_PATH = "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
-  String DEFAULT_TARGET_PATH = "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
+  String DEFAULT_BUILD_PATH = "${DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
+  String DEFAULT_TARGET_PATH = "${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
 
   try {
-    checkout scm
     load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
 
     // Load gitUri and gitBranch. These determine where we will be pulling configs from.
@@ -47,7 +46,7 @@ node ("master") {
 
     // Load buildConfigurations from config file. This is what the nightlies & releases use to setup their downstream jobs
     def buildConfigurations = null
-    def buildConfigPath = (params.BUILD_CONFIG_PATH) ? "${WORKSPACE}/${BUILD_CONFIG_PATH}" : DEFAULT_BUILD_PATH
+    def buildConfigPath = (params.BUILD_CONFIG_PATH) ? "${WORKSPACE}/${BUILD_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULT_BUILD_PATH}"
 
     // Use default config path if param is empty
     if (buildConfigPath == DEFAULT_BUILD_PATH) {
@@ -63,7 +62,6 @@ node ("master") {
 
     } else {
 
-      buildConfigPath = "${WORKSPACE}/${BUILD_CONFIG_PATH}"
       buildConfigurations = load buildConfigPath
 
       // Since we can't check if the file is jdkxxu file or not, some regex is needed here in lieu of the try-catch above
@@ -79,7 +77,7 @@ node ("master") {
     }
 
     // Load targetConfigurations from config file. This is what is being run in the nightlies
-    def targetConfigPath = (params.TARGET_CONFIG_PATH) ? "${WORKSPACE}/${TARGET_CONFIG_PATH}" : DEFAULT_TARGET_PATH
+    def targetConfigPath = (params.TARGET_CONFIG_PATH) ? "${WORKSPACE}/${TARGET_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULT_TARGET_PATH}"
 
     // Use default config path if param is empty
     if (targetConfigPath == DEFAULT_TARGET_PATH) {
@@ -111,7 +109,7 @@ node ("master") {
     println "SCRIPT PATH: $scriptPath"
     println "EXCLUDES LIST: $excludes"
 
-    Closure regenerationScript = load "${WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']["regeneration"]}"
+    Closure regenerationScript = load "${WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']['regeneration']}"
 
     // Pass in credentials if they exist
     if (JENKINS_AUTH != "") {
@@ -171,7 +169,7 @@ node ("master") {
   } finally {
     // Always clean up, even on failure (doesn't delete the dsls)
     println "[INFO] Cleaning up..."
-    cleanWs()
+    cleanWs deleteDirs: true
   }
 
 }
