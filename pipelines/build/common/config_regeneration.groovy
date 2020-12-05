@@ -1,6 +1,7 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 import java.util.Base64
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -341,7 +342,7 @@ class Regeneration implements Serializable {
         params.put("GIT_URI", gitUri)
         params.put("GIT_BRANCH", gitBranch)
 
-        params.put("DEFAULTS_JSON", DEFAULTS_JSON)
+        params.put("DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(DEFAULTS_JSON)))
         params.put("BUILD_CONFIG", config.toJson())
 
         def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params

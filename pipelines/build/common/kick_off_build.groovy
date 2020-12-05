@@ -22,14 +22,14 @@ Downstream job root executor file, it sets up the library and runs the bash scri
 
 // We have to declare JSON defaults again because we're utilising it's content at start of job
 def LOCAL_DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_JSON) as Map
-def builder;
+def downstreamBuilder = null
 node("master") {
     checkout scm
     load LOCAL_DEFAULTS_JSON["importLibraryScript"]
-    builder = load LOCAL_DEFAULTS_JSON["baseFileDirectories"]["downstream"]
+    downstreamBuilder = load LOCAL_DEFAULTS_JSON["baseFileDirectories"]["downstream"]
 }
 
-builder(
+downstreamBuilder(
     BUILD_CONFIGURATION,
     LOCAL_DEFAULTS_JSON,
     this,
