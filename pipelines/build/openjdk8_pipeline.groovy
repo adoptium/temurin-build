@@ -24,10 +24,10 @@ node ("master") {
     scmVars = checkout scm
 
     // Load defaultsJson. These are passed down from the build_pipeline_generator and is a JSON object containing some default constants.
-    if (!params.defaultsJson) {
+    if (!params.defaultsJson || defaultsJson == "") {
         throw new Exception("[ERROR] No Defaults JSON found! Please ensure the defaultsJson parameter is populated and not altered during parameter declaration.")
     } else {
-        DEFAULTS_JSON = new JsonSlurper().parseText(params.defaultsJson) as Map
+        DEFAULTS_JSON = new JsonSlurper().parseText(defaultsJson)
     }
 
     load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
