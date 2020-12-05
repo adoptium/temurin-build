@@ -683,7 +683,7 @@ return {
             javaToBuild: javaToBuild,
             buildConfigurations: buildConfigurations,
             targetConfigurations: new JsonSlurper().parseText(targetConfigurations) as Map,
-            DEFAULTS_JSON: new JsonSlurper().parseText(DEFAULTS_JSON) as Map,
+            DEFAULTS_JSON: DEFAULTS_JSON,
             activeNodeTimeout: activeNodeTimeout,
             dockerExcludes: buildsExcludeDocker,
             enableTests: Boolean.parseBoolean(enableTests),
