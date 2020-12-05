@@ -43,7 +43,8 @@ class PullRequestTestPipeline implements Serializable {
                 SCRIPT              : "${DEFAULTS_JSON['scriptDirectories']['upstream']}/openjdk${javaVersion}_pipeline.groovy",
                 disableJob          : false,
                 triggerSchedule     : "0 0 31 2 0",
-                targetConfigurations: testConfigurations
+                targetConfigurations: testConfigurations,
+                defaultsJson        : DEFAULTS_JSON
         ]
     }
 
@@ -51,6 +52,7 @@ class PullRequestTestPipeline implements Serializable {
     * Generates the top level pipeline job
     */
     def generatePipelineJob(def javaVersion) {
+        context.println "[INFO] Running Pipeline Generation Script..."
         Map<String, ?> config = generateConfig(javaVersion)
         context.checkout([$class: 'GitSCM', userRemoteConfigs: [[url: config.GIT_URL]], branches: [[name: branch]]])
 
@@ -71,7 +73,7 @@ class PullRequestTestPipeline implements Serializable {
         javaVersions.each({ javaVersion ->
             // generate top level job
             generatePipelineJob(javaVersion)
-            context.println "[INFO] Running regeneration script..."
+            context.println "[INFO] Running downstream jobs regeneration script..."
 
             // Load platform specific build configs
             def buildConfigurations
@@ -81,6 +83,7 @@ class PullRequestTestPipeline implements Serializable {
                 buildConfigurations = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy"
             } catch (NoSuchFileException e) {
                 context.println "[WARNING] ${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy does not exist. Trying jdk${javaVersion}u_pipeline_config.groovy..."
+
                 buildConfigurations = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}u_pipeline_config.groovy"
                 updateRepo = true
             }
