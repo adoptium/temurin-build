@@ -1215,7 +1215,7 @@ return {
 
         return new Build(
             buildConfig,
-            new JsonSlurper().parseText(DEFAULTS_JSON) as Map,
+            DEFAULTS_JSON,
             context,
             env,
             currentBuild
