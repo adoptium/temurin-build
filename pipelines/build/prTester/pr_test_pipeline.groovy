@@ -173,7 +173,7 @@ return {
 
         Map<String, ?> testConfig = defaultTestConfigurations
         List<Integer> javaVersions = defaultJavaVersions
-        Map<String, ?> defaultJson = DEFAULTS_JSON
+        Map<String, ?> defaultsJson = DEFAULTS_JSON
 
         if (gitRepo == null) {
             gitRepo = DEFAULTS_JSON['repository']['url']
@@ -192,7 +192,7 @@ return {
             gitRepo: gitRepo,
             branch: branch,
             testConfigurations: testConfig,
-            DEFAULTS_JSON: defaultJson,
+            DEFAULTS_JSON: defaultsJson,
             javaVersions: javaVersions,
 
             context: context,
