@@ -18,7 +18,7 @@ def javaToBuild = "jdk8u"
 def scmVars = null
 Closure configureBuild = null
 def buildConfigurations = null
-def DEFAULTS_JSON = null
+Map<String, ?> DEFAULTS_JSON = null
 
 node ("master") {
     scmVars = checkout scm
@@ -27,7 +27,7 @@ node ("master") {
     if (!params.defaultsJson || defaultsJson == "") {
         throw new Exception("[ERROR] No Defaults JSON found! Please ensure the defaultsJson parameter is populated and not altered during parameter declaration.")
     } else {
-        DEFAULTS_JSON = new JsonSlurper().parseText(defaultsJson)
+        DEFAULTS_JSON = new JsonSlurper().parseText(defaultsJson) as Map
     }
 
     load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
