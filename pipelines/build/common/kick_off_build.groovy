@@ -22,6 +22,10 @@ Downstream job root executor file, it sets up the library and runs the bash scri
 
 // We have to declare JSON defaults again because we're utilising it's content at start of job
 def LOCAL_DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_JSON) as Map
+if (!LOCAL_DEFAULTS_JSON) {
+    throw new Exception("[ERROR] No Defaults JSON found! Please ensure the DEFAULTS_JSON parameter is populated and not altered during parameter declaration.")
+}
+
 def downstreamBuilder = null
 node("master") {
     checkout scm
