@@ -31,8 +31,11 @@ node('master') {
     // Load jobTemplatePath. This is where the pipeline_job_template.groovy code is located compared to the repository root. This actually sets up the pipeline job using the parameters above.
     def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON["jobTemplateDirectories"]["upstream"]
 
-    // Load enablePipelineSchedule. This determines whether we will be generating the pipelines with a schedule (defined in jdkxx.groovy) or not
-    def enablePipelineSchedule = params.ENABLE_PIPELINE_SCHEDULE ? Boolean.parseBoolean(ENABLE_PIPELINE_SCHEDULE) : true
+    // Load enablePipelineSchedule. This determines whether we will be generating the pipelines with a schedule (defined in jdkxx.groovy) or not.
+    def enablePipelineSchedule = false
+    if (params.ENABLE_PIPELINE_SCHEDULE) {
+      enablePipelineSchedule = true
+    }
 
     // Load credentials to be used in checking out. This is in case we are checking out a URL that is not Adopts and they don't have their ssh key on the machine
     def checkoutCreds = (params.SSH_CREDENTIALS) ?: ""
@@ -106,13 +109,15 @@ node('master') {
       // Set job schedule
       if (enablePipelineSchedule == true) {
         try {
-          config.put("triggerSchedule", target.triggerSchedule)
+          config.put("pipelineSchedule", target.triggerSchedule)
         } catch (Exception ex) {
-          config.put("triggerSchedule", "@daily")
+          config.put("pipelineSchedule", "@daily")
         }
+      } else {
+        config.put("pipelineSchedule", "")
       }
 
-      println "[INFO] JDK${javaVersion}: triggerSchedule = ${config.triggerSchedule}"
+      println "[INFO] JDK${javaVersion}: pipelineSchedule = ${config.pipelineSchedule}"
 
       config.put("defaultsJson", DEFAULTS_JSON)
 
