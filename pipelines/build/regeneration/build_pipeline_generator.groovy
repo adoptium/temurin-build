@@ -1,5 +1,6 @@
 import java.nio.file.NoSuchFileException
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 //TODO: Change me
 String DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/build/defaults.json"
 
@@ -122,7 +123,7 @@ node('master') {
       config.put("defaultsJson", DEFAULTS_JSON)
 
       println "[INFO] FINAL CONFIG FOR $javaVersion"
-      println config
+      println JsonOutput.prettyPrint(JsonOutput.toJson(config))
 
       def create = jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: config
 
