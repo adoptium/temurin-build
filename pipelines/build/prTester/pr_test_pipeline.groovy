@@ -103,8 +103,8 @@ class PullRequestTestPipeline implements Serializable {
                 "build-scripts-pr-tester/build-test",
                 gitRepo,
                 branch,
-                null,
-                null,
+                DEFAULTS_JSON["jobTemplateDirectories"]["downstream"],
+                DEFAULTS_JSON["scriptDirectories"]["downstream"],
                 "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test",
                 null,
                 null
