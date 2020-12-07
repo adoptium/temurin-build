@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,33 +18,43 @@ def javaToBuild = "jdk14u"
 def scmVars = null
 Closure configureBuild = null
 def buildConfigurations = null
+Map<String, ?> DEFAULTS_JSON = null
 
 node ("master") {
     scmVars = checkout scm
-    load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
+
+    // Load defaultsJson. These are passed down from the build_pipeline_generator and is a JSON object containing some default constants.
+    if (!params.defaultsJson || defaultsJson == "") {
+        throw new Exception("[ERROR] No Defaults JSON found! Please ensure the defaultsJson parameter is populated and not altered during parameter declaration.")
+    } else {
+        DEFAULTS_JSON = new JsonSlurper().parseText(defaultsJson) as Map
+    }
+
+    load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
 
     // Load baseFilePath. This is where build_base_file.groovy is located. It runs the downstream job setup and configuration retrieval services.
-    if ("$baseFilePath" != "") {
+    if (params.baseFilePath) {
         configureBuild = load "${WORKSPACE}/${baseFilePath}"
     } else {
-        configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
+        configureBuild = load "${WORKSPACE}/${DEFAULTS_JSON['baseFileDirectories']['upstream']}"
     }
 
     // Load buildConfigFilePath. This is where jdkxx_pipeline_config.groovy is located. It contains the build configurations for each platform, architecture and variant.
-    if ("$buildConfigFilePath" != "") {
+    if (params.buildConfigFilePath) {
         buildConfigurations = load "${WORKSPACE}/${buildConfigFilePath}"
     } else {
-        buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaToBuild}_pipeline_config.groovy"
+        buildConfigurations = load "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/${javaToBuild}_pipeline_config.groovy"
     }
 
 }
 
 // If a parameter below hasn't been declared above, it is declared in the jenkins job itself
-if (scmVars != null && (configureBuild != null || buildConfigurations != null)) {
+if (scmVars != null || configureBuild != null || buildConfigurations != null) {
     configureBuild(
         javaToBuild,
         buildConfigurations,
         targetConfigurations,
+        DEFAULTS_JSON,
         activeNodeTimeout,
         dockerExcludes,
         enableTests,
@@ -62,6 +74,5 @@ if (scmVars != null && (configureBuild != null || buildConfigurations != null)) 
         env
     ).doBuild()
 } else {
-    println "[ERROR] One or more setup parameters are null.\nscmVars = ${scmVars}\nconfigureBuild = ${configureBuild}\nbuildConfigurations = ${buildConfigurations}"
-    throw new Exception()
+    throw new Exception("[ERROR] One or more setup parameters are null.\nscmVars = ${scmVars}\nconfigureBuild = ${configureBuild}\nbuildConfigurations = ${buildConfigurations}")
 }
