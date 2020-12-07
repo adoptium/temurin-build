@@ -114,8 +114,6 @@ node('master') {
         } catch (Exception ex) {
           config.put("pipelineSchedule", "@daily")
         }
-      } else {
-        config.put("pipelineSchedule", "")
       }
 
       println "[INFO] JDK${javaVersion}: pipelineSchedule = ${config.pipelineSchedule}"

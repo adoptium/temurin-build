@@ -7,7 +7,7 @@ runInstaller = true
 
 // if true means this is running in the pr builder pipeline
 if (binding.hasVariable('PR_BUILDER')) {
-    triggerSchedule = "0 0 31 2 0"
+    pipelineSchedule = "0 0 31 2 0"
     gitRefSpec = "+refs/pull/*:refs/remotes/origin/pr/* +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*"
     propagateFailures = true
     runTests = false
@@ -39,7 +39,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
     disabled(disableJob)
 
-    if (binding.hasVariable('pipelineSchedule') && binding.getVariable(pipelineSchedule) != "") {
+    if (binding.hasVariable('pipelineSchedule')) {
         triggers {
             cron(pipelineSchedule)
         }
