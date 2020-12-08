@@ -57,7 +57,7 @@ function parseArguments() {
 # Add an argument to the configure call
 addConfigureArg() {
   # Only add an arg if it is not overridden by a user-specified arg.
-  if [[ ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]} != *"$1"* ]] && [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]} != *"$1"* ]]; then
+  if [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]} != *"$1"* ]]; then
     CONFIGURE_ARGS="${CONFIGURE_ARGS} ${1}${2}"
   fi
 }
@@ -368,9 +368,6 @@ configureCommandParameters() {
     echo "Configure custom cacerts file security/cacerts"
     addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "$SCRIPT_DIR/../security/cacerts"
   fi
-
-  # Now we add any platform-specific args after the configure args, so they can override if necessary.
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
 
   # Finally, we add any configure arguments the user has specified on the command line.
   # This is done last, to ensure the user can override any args they need to.
