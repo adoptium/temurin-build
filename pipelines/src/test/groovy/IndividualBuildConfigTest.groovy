@@ -30,6 +30,7 @@ class IndividualBuildConfigTest {
                  ADOPT_BUILD_NUMBER        : "n",
                  ENABLE_TESTS              : true,
                  ENABLE_INSTALLERS         : true,
+                 ENABLE_SIGNER             : true,
                  CLEAN_WORKSPACE           : false]
         )
 

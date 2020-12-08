@@ -49,6 +49,7 @@ class Builder implements Serializable {
     boolean publish
     boolean enableTests
     boolean enableInstallers
+    boolean enableSigner
     boolean cleanWorkspaceBeforeBuild
     boolean propagateFailures
 
@@ -141,6 +142,7 @@ class Builder implements Serializable {
                 ADOPT_BUILD_NUMBER: adoptBuildNumber,
                 ENABLE_TESTS: enableTests,
                 ENABLE_INSTALLERS: enableInstallers,
+                ENABLE_SIGNER: enableSigner,
                 CLEAN_WORKSPACE: cleanWorkspace
         )
     }
@@ -511,6 +513,7 @@ class Builder implements Serializable {
             context.echo "OS: ${targetConfigurations}"
             context.echo "Enable tests: ${enableTests}"
             context.echo "Enable Installers: ${enableInstallers}"
+            context.echo "Enable Signer: ${enableSigner}"
             context.echo "Publish: ${publish}"
             context.echo "Release: ${release}"
             context.echo "Tag/Branch name: ${scmReference}"
@@ -622,6 +625,7 @@ return {
     String dockerExcludes,
     String enableTests,
     String enableInstallers,
+    String enableSigner,
     String releaseType,
     String scmReference,
     String overridePublishName,
@@ -669,6 +673,7 @@ return {
             dockerExcludes: buildsExcludeDocker,
             enableTests: Boolean.parseBoolean(enableTests),
             enableInstallers: Boolean.parseBoolean(enableInstallers),
+            enableSigner: Boolean.parseBoolean(enableSigner),
             publish: publish,
             release: release,
             scmReference: scmReference,

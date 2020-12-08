@@ -8,6 +8,7 @@ gitRefSpec = ""
 propagateFailures = false
 runTests = true
 runInstaller = true
+runSigner = true
 
 // if true means this is running in the pr builder pipeline
 if (binding.hasVariable('PR_BUILDER')) {
@@ -16,6 +17,7 @@ if (binding.hasVariable('PR_BUILDER')) {
     propagateFailures = true
     runTests = false
     runInstaller = false
+    runSigner = false
 }
 
 if (!binding.hasVariable('disableJob')) {
@@ -65,6 +67,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         stringParam('scmReference', "", 'Tag name or Branch name from which to build. Nightly builds: Defaults to, Hotspot=dev, OpenJ9=openj9, others=master.</br>Release builds: For hotspot JDK8 this would be the OpenJDK tag, for hotspot JDK11+ this would be the Adopt merge tag for the desired OpenJDK tag eg.jdk-11.0.4+10_adopt, and for OpenJ9 this will be the release branch, eg.openj9-0.14.0.')
         booleanParam('enableTests', runTests, 'If set to true the test pipeline will be executed')
         booleanParam('enableInstallers', runInstaller, 'If set to true the installer pipeline will be executed')
+        booleanParam('enableSigner', runSigner, 'If set to true the signer pipeline will be executed')
         stringParam('additionalConfigureArgs', "", "Additional arguments that will be ultimately passed to OpenJDK's <code>./configure</code>")
         stringParam('additionalBuildArgs', "", "Additional arguments to be passed to <code>makejdk-any-platform.sh</code>")
         stringParam('overrideFileNameVersion', "", "When forming the filename, ignore the part of the filename derived from the publishName or timestamp and override it.<br/>For instance if you set this to 'FOO' the final file name will be of the form: <code>OpenJDK8U-jre_ppc64le_linux_openj9_FOO.tar.gz</code>")
