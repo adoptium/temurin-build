@@ -41,9 +41,6 @@ targetConfigurations = [
                 "hotspot",
                 "openj9"
         ],
-        "s390xLinuxXL": [
-                "openj9"
-        ],
         "aarch64Linux": [
                 "hotspot",
                 "openj9"
