@@ -371,7 +371,9 @@ configureCommandParameters() {
 
   # Finally, we add any configure arguments the user has specified on the command line.
   # This is done last, to ensure the user can override any args they need to.
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}"
+  # The substitution allows the user to pass in speech marks without having to guess
+  # at the number of escapes needed to ensure that they persist up to this point.
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]//temporary_speech_mark_placeholder/\"}"
 
   configureFreetypeLocation
 
