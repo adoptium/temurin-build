@@ -22,6 +22,7 @@ export ANT_HOME=/cygdrive/C/Projects/OpenJDK/apache-ant-1.10.1
 export ALLOW_DOWNLOADS=true
 export LANG=C
 export OPENJ9_NASM_VERSION=2.13.03
+export OPENSSL_VERSION=1.1.1i
 
 TOOLCHAIN_VERSION=""
 
@@ -81,7 +82,7 @@ then
 
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
   then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1h-x86_32-VS2013 --enable-openssl-bundling"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-${OPENSSL_VERSION}-x86_32-VS2013 --enable-openssl-bundling"
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
@@ -131,7 +132,7 @@ then
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="$PATH:/c/cygwin64/bin"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1h-x86_64-VS2013 --enable-openssl-bundling"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-${OPENSSL_VERSION}-x86_64-VS2013 --enable-openssl-bundling"
       TOOLCHAIN_VERSION="2013"
     elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
     then
@@ -145,7 +146,7 @@ then
     elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
     then
       TOOLCHAIN_VERSION="2017"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1h-x86_64-VS2017 --enable-openssl-bundling"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-${OPENSSL_VERSION}-x86_64-VS2017 --enable-openssl-bundling"
     fi
 
     CUDA_VERSION=9.0
