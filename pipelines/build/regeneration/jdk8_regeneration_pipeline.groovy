@@ -29,10 +29,6 @@ node ("master") {
   }
 
   try {
-    // Checkout needed so we can load the library
-    checkout scm
-    load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
-
     // Load gitUri and gitBranch. These determine where we will be pulling configs from.
     def repoUri = (params.REPOSITORY_URL) ?: DEFAULTS_JSON["repository"]["url"]
     def repoBranch = (params.REPOSITORY_BRANCH) ?: DEFAULTS_JSON["repository"]["branch"]
@@ -45,6 +41,8 @@ node ("master") {
         userRemoteConfigs: [[ url: repoUri ]]
       ]
     )
+
+    load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
 
     // Load buildConfigurations from config file. This is what the nightlies & releases use to setup their downstream jobs
     def buildConfigurations = null
