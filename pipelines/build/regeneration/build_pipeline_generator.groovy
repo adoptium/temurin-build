@@ -20,6 +20,24 @@ node('master') {
     def repoUri = (params.REPOSITORY_URL) ?: DEFAULTS_JSON["repository"]["url"]
     def repoBranch = (params.REPOSITORY_BRANCH) ?: DEFAULTS_JSON["repository"]["branch"]
 
+    // Load credentials to be used in checking out. This is in case we are checking out a URL that is not Adopts and they don't have their ssh key on the machine.
+    def checkoutCreds = (params.SSH_CREDENTIALS) ?: ""
+    def remoteConfigs = [ url: repoUri ]
+    if (checkoutCreds != "") {
+      remoteConfigs.put("credentialsId", "${checkoutCreds}")
+    } else {
+      println "[WARNING] SSH_CREDENTIALS not specified! Checkout to $repoUri may fail if you do not have your ssh key on this machine."
+    }
+
+    // Checkout into repository
+    checkout(
+      [
+        $class: 'GitSCM',
+        branches: [ [ name: repoBranch ] ],
+        userRemoteConfigs: [ remoteConfigs ]
+      ]
+    )
+
     // Load jobRoot. This is where the openjdkxx-pipeline jobs will be created.
     def jobRoot = (params.JOB_ROOT) ?: DEFAULTS_JSON["jenkinsDetails"]["rootDirectory"]
 
@@ -38,9 +56,6 @@ node('master') {
       enablePipelineSchedule = true
     }
 
-    // Load credentials to be used in checking out. This is in case we are checking out a URL that is not Adopts and they don't have their ssh key on the machine
-    def checkoutCreds = (params.SSH_CREDENTIALS) ?: ""
-
     println "[INFO] Running generator script with the following configuration:"
     println "REPOSITORY_URL = $repoUri"
     println "REPOSITORY_BRANCH = $repoBranch"
@@ -49,23 +64,6 @@ node('master') {
     println "NIGHTLY_FOLDER_PATH = $nightlyFolderPath"
     println "JOB_TEMPLATE_PATH = $jobTemplatePath"
     println "ENABLE_PIPELINE_SCHEDULE = $ENABLE_PIPELINE_SCHEDULE"
-
-    // Setup configs for checking out the specified repository
-    def remoteConfigs = [ url: repoUri ]
-    if (checkoutCreds != "") {
-      remoteConfigs.put("credentialsId", "${checkoutCreds}")
-    } else {
-      println "[WARNING] SSH_CREDENTIALS not specified! Checkout to $repoUri may fail if you do not have your ssh key on this machine."
-    }
-
-    // Checkout into repository
-    checkout(
-      [
-        $class: 'GitSCM',
-        branches: [ [ name: repoBranch ] ],
-        userRemoteConfigs: [ remoteConfigs ]
-      ]
-    )
 
     (8..30).each({javaVersion ->
 
