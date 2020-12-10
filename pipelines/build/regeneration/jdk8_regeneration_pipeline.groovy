@@ -1,6 +1,7 @@
 import java.nio.file.NoSuchFileException
 import java.util.regex.Matcher
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -97,8 +98,8 @@ node ("master") {
     println "VERSION: $javaVersion"
     println "REPOSITORY URL: $repoUri"
     println "REPOSITORY BRANCH: $repoBranch"
-    println "BUILD CONFIGURATIONS: $buildConfigurations"
-    println "JOBS TO GENERATE: $targetConfigurations"
+    println "BUILD CONFIGURATIONS: ${JsonOutput.prettyPrint(JsonOutput.toJson(buildConfigurations))}"
+    println "JOBS TO GENERATE: ${JsonOutput.prettyPrint(JsonOutput.toJson(targetConfigurations))}"
     println "JOB ROOT: $jobRoot"
     println "JENKINS ROOT: $jenkinsBuildRoot"
     println "JOB TEMPLATE PATH: $jobTemplatePath"

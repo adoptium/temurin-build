@@ -466,9 +466,6 @@ class Regeneration implements Serializable {
             */
             context.stage("Regenerate $javaVersion pipeline jobs") {
 
-                context.println "[INFO] Jobs to be regenerated (pulled from config file):"
-                targetConfigurations.each { osarch, variants -> context.println "${osarch}: ${variants}\n" }
-
                 // If we're building jdk head, update the javaToBuild
                 context.println "[INFO] Querying adopt api to get the JDK-Head number"
 
