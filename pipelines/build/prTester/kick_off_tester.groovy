@@ -15,7 +15,8 @@ limitations under the License.
 */
 
 //TODO: Change me
-String DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/build/defaults.json"
+// Don't parameterise this as we currently have no need and the job generates its own params anyway
+String DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
 
 node("master") {
     // Retrieve Defaults

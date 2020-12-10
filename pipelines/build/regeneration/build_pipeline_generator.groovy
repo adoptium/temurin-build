@@ -2,7 +2,7 @@ import java.nio.file.NoSuchFileException
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 //TODO: Change me
-String DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/build/defaults.json"
+String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
 
 node('master') {
   timestamps {
