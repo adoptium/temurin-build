@@ -108,7 +108,9 @@ node ("master") {
     println "SCRIPT PATH: $scriptPath"
     println "EXCLUDES LIST: $excludes"
 
-    Closure regenerationScript = load "${WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']['regeneration']}"
+    // Load regen script
+    def regenScriptPath = (params.REGEN_SCRIPT_PATH) ?: DEFAULTS_JSON['scriptDirectories']['regeneration']
+    Closure regenerationScript = load "${WORKSPACE}/${regenScriptPath}"
 
     // Pass in credentials if they exist
     if (JENKINS_AUTH != "") {
