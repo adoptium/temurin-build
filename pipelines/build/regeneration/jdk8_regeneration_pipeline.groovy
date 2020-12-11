@@ -43,7 +43,9 @@ node ("master") {
       ]
     )
 
-    load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
+    // Import adopt class library. This contains our groovy classes, used for carrying across metadata between jobs.
+    def libraryPath = (params.LIBRARY_PATH) ?: DEFAULTS_JSON['importLibraryScript']
+    load "${WORKSPACE}/${libraryPath}"
 
     // Load buildConfigurations from config file. This is what the nightlies & releases use to setup their downstream jobs
     def buildConfigurations = null
