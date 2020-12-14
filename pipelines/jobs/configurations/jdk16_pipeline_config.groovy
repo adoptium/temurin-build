@@ -90,7 +90,7 @@ class Config16 {
                 os                  : 'windows',
                 arch                : 'aarch64',
                 additionalNodeLabels: [
-                        hotspot: 'win2012&&vs2019'
+                        hotspot: 'win2016&&vs2019'
                 ],
                 test                : [
                         nightly: [],
