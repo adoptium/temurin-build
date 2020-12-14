@@ -200,13 +200,8 @@ then
   fi
 fi
 
-if [ "${ARCHITECTURE}" == "aarch64" ]
-then
-  # TODO Remove when https://mail.openjdk.java.net/pipermail/build-dev/2020-July/027872.html is resolved
-  export BUILD_ARGS="${BUILD_ARGS} --patches https://github.com/gdams/adopt_patches.git"
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --openjdk-target=aarch64-unknown-cygwin --with-build-jdk=$JDK_BOOT_DIR \
-  --with-ucrt-dll-dir=/cygdrive/c/progra~2/WINDOW~4/10/bin/10.0.18362.0/arm64/ucrt/ --with-msvcr-dll=/cygdrive/c/progra~2/MIB055~1/2019/Community/VC/Redist/MSVC/14.27.29016/arm64/Microsoft.VC142.CRT/vcruntime140.dll \
-  --with-msvcp-dll=/cygdrive/c/progra~2/MIB055~1/2019/Community/VC/Redist/MSVC/14.27.29016/arm64/Microsoft.VC142.CRT/msvcp140.dll --with-vcruntime-1-dll=/cygdrive/c/progra~2/MIB055~1/2019/Community/VC/Redist/MSVC/14.27.29016/arm64/Microsoft.VC142.CRT/vcruntime140_1.dll"
+if [ "${ARCHITECTURE}" == "aarch64" ]; then
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --openjdk-target=aarch64-unknown-cygwin --with-build-jdk=$JDK_BOOT_DIR"
 fi
 
 if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
