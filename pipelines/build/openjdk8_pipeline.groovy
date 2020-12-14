@@ -30,7 +30,12 @@ node ("master") {
         DEFAULTS_JSON = new JsonSlurper().parseText(defaultsJson) as Map
     }
 
-    load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
+    // Load libraryPath. This contains our groovy classes, used for carrying across metadata between jobs.
+    if (params.libraryPath) {
+        load "${WORKSPACE}/${libraryPath}"
+    } else {
+        load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
+    }
 
     // Load baseFilePath. This is where build_base_file.groovy is located. It runs the downstream job setup and configuration retrieval services.
     if (params.baseFilePath) {

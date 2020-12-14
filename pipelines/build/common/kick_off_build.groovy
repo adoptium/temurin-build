@@ -26,11 +26,14 @@ if (!LOCAL_DEFAULTS_JSON) {
     throw new Exception("[ERROR] No Defaults JSON found! Please ensure the DEFAULTS_JSON parameter is populated and not altered during parameter declaration.")
 }
 
+def libraryPath = (params.CUSTOM_LIBRARY_LOCATION) ?: LOCAL_DEFAULTS_JSON["importLibraryScript"]
+def baseFilePath = (params.CUSTOM_BASEFILE_LOCATION) ?: LOCAL_DEFAULTS_JSON["baseFileDirectories"]["downstream"]
+
 def downstreamBuilder = null
 node("master") {
     checkout scm
-    load LOCAL_DEFAULTS_JSON["importLibraryScript"]
-    downstreamBuilder = load LOCAL_DEFAULTS_JSON["baseFileDirectories"]["downstream"]
+    load libraryPath
+    downstreamBuilder = load baseFilePath
 }
 
 downstreamBuilder(

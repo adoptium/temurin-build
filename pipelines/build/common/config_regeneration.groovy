@@ -37,6 +37,8 @@ class Regeneration implements Serializable {
     private final def gitBranch
 
     private final def jobTemplatePath
+    private final def libraryPath
+    private final def baseFilePath
     private final def scriptPath
     private final def jenkinsBuildRoot
     private final def jenkinsUsername
@@ -62,6 +64,8 @@ class Regeneration implements Serializable {
         String gitUri,
         String gitBranch,
         String jobTemplatePath,
+        String libraryPath,
+        String baseFilePath,
         String scriptPath,
         String jenkinsBuildRoot,
         String jenkinsUsername,
@@ -78,6 +82,8 @@ class Regeneration implements Serializable {
         this.gitUri = gitUri
         this.gitBranch = gitBranch
         this.jobTemplatePath = jobTemplatePath
+        this.libraryPath = libraryPath
+        this.baseFilePath = baseFilePath
         this.scriptPath = scriptPath
         this.jenkinsBuildRoot = jenkinsBuildRoot
         this.jenkinsUsername = jenkinsUsername
@@ -345,6 +351,14 @@ class Regeneration implements Serializable {
         params.put("DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(DEFAULTS_JSON)))
         params.put("BUILD_CONFIG", config.toJson())
 
+        // If we are not using default lib or script param values, be sure to update the downstream jobs
+        if (libraryPath != DEFAULTS_JSON['importLibraryScript']) {
+            params.put("CUSTOM_LIBRARY_LOCATION", libraryPath)
+        }
+        if (baseFilePath != DEFAULTS_JSON["baseFileDirectories"]["downstream"]) {
+            params.put("CUSTOM_BASEFILE_LOCATION", baseFilePath)
+        }
+
         def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
 
         return create
@@ -555,6 +569,8 @@ return {
     String gitUri,
     String gitBranch,
     String jobTemplatePath,
+    String libraryPath,
+    String baseFilePath,
     String scriptPath,
     String jenkinsBuildRoot,
     String jenkinsUsername,
@@ -584,6 +600,8 @@ return {
             gitUri,
             gitBranch,
             jobTemplatePath,
+            libraryPath,
+            baseFilePath,
             scriptPath,
             jenkinsBuildRoot,
             jenkinsUsername,

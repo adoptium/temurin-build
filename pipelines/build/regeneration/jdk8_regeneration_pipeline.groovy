@@ -94,6 +94,7 @@ node ("master") {
     def jenkinsBuildRoot = (params.JENKINS_BUILD_ROOT) ?: "${DEFAULTS_JSON['jenkinsDetails']["rootUrl"]}/job/${jobRoot}/"
     def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON["jobTemplateDirectories"]["downstream"]
     def scriptPath = (params.SCRIPT_PATH) ?: DEFAULTS_JSON["scriptDirectories"]["downstream"]
+    def baseFilePath = (params.BASE_FILE_PATH) ?: DEFAULTS_JSON["baseFileDirectories"]["downstream"]
     def excludes = (params.EXCLUDES_LIST) ?: ""
 
     println "[INFO] Running regeneration script with the following configuration:"
@@ -106,6 +107,8 @@ node ("master") {
     println "JENKINS ROOT: $jenkinsBuildRoot"
     println "JOB TEMPLATE PATH: $jobTemplatePath"
     println "SCRIPT PATH: $scriptPath"
+    println "BASE FILE PATH: $baseFilePath"
+    println "LIBRARY PATH: $libraryPath"
     println "EXCLUDES LIST: $excludes"
 
     // Load regen script
@@ -135,6 +138,8 @@ node ("master") {
           repoUri,
           repoBranch,
           jobTemplatePath,
+          libraryPath,
+          baseFilePath,
           scriptPath,
           jenkinsBuildRoot,
           jenkinsUsername,
@@ -157,6 +162,8 @@ node ("master") {
         repoUri,
         repoBranch,
         jobTemplatePath,
+        libraryPath,
+        baseFilePath,
         scriptPath,
         jenkinsBuildRoot,
         null,

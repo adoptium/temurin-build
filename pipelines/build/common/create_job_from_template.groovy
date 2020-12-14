@@ -88,5 +88,11 @@ pipelineJob("$buildFolder/$JOB_NAME") {
             </dl>
         """)
         textParam('DEFAULTS_JSON', "$DEFAULTS_JSON", "DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING! This passes down default constants to the downstream jobs.")
+        if (binding.hasVariable('CUSTOM_LIBRARY_LOCATION')) {
+            stringParam('CUSTOM_LIBRARY_LOCATION', "$CUSTOM_LIBRARY_LOCATION")
+        }
+        if (binding.hasVariable('CUSTOM_BASEFILE_LOCATION')) {
+            stringParam('CUSTOM_BASEFILE_LOCATION', "$CUSTOM_BASEFILE_LOCATION")
+        }
     }
 }
