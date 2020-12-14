@@ -74,6 +74,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>NODE_LABEL</strong></dt><dd>Labels of node to build on</dd>
                 <dt><strong>ACTIVE_NODE_TIMEOUT</strong></dt><dd>Number of minutes we will wait for a label-matching node to become active.</dd>
                 <dt><strong>CODEBUILD</strong></dt><dd>Use a dynamic codebuild machine if no other machine is available</dd>
+                <dt><strong>CROSS_COMPILE</strong></dt><dd>Set to true if this build is cross compiled</dd>
                 <dt><strong>DOCKER_IMAGE</strong></dt><dd>Use a docker build environment</dd>
                 <dt><strong>DOCKER_FILE</strong></dt><dd>Relative path to a dockerfile to be built and used on top of the DOCKER_IMAGE</dd>
                 <dt><strong>CONFIGURE_ARGS</strong></dt><dd>Arguments for ./configure. Escape all speech marks used within this parameter.</dd>

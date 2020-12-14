@@ -32,6 +32,7 @@ jobs:
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
+        CROSS_COMPILE: false
         VARIANT: ${{ matrix.vm }}
         TARGET_OS: ${{ matrix.os }}
         FILENAME: OpenJDK.tar.gz

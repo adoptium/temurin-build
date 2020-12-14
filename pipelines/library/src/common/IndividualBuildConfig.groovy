@@ -14,6 +14,7 @@ class IndividualBuildConfig implements Serializable {
     final String NODE_LABEL
     final String ACTIVE_NODE_TIMEOUT
     final boolean CODEBUILD
+    final boolean CROSS_COMPILE
     final String DOCKER_IMAGE
     final String DOCKER_FILE
     final String DOCKER_NODE
@@ -52,6 +53,7 @@ class IndividualBuildConfig implements Serializable {
         NODE_LABEL = map.get("NODE_LABEL")
         ACTIVE_NODE_TIMEOUT = map.get("ACTIVE_NODE_TIMEOUT")
         CODEBUILD = map.get("CODEBUILD")
+        CROSS_COMPILE = map.get("CROSS_COMPILE")
         DOCKER_IMAGE = map.get("DOCKER_IMAGE")
         DOCKER_FILE = map.get("DOCKER_FILE")
         DOCKER_NODE = map.get("DOCKER_NODE")
@@ -95,6 +97,7 @@ class IndividualBuildConfig implements Serializable {
                 NODE_LABEL                : NODE_LABEL,
                 ACTIVE_NODE_TIMEOUT       : ACTIVE_NODE_TIMEOUT,
                 CODEBUILD                 : CODEBUILD,
+                CROSS_COMPILE             : CROSS_COMPILE,
                 DOCKER_IMAGE              : DOCKER_IMAGE,
                 DOCKER_FILE               : DOCKER_FILE,
                 DOCKER_NODE               : DOCKER_NODE,
