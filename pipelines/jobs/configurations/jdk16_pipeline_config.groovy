@@ -89,6 +89,7 @@ class Config16 {
         aarch64Windows: [
                 os                  : 'windows',
                 arch                : 'aarch64',
+                crossCompile:       : 'x64',
                 additionalNodeLabels: [
                         hotspot: 'win2016&&vs2019'
                 ],
