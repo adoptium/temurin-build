@@ -17,6 +17,7 @@ import groovy.json.JsonSlurper
 node ("master") {
   def jenkinsUrl = "${params.JENKINS_URL}"
   def trssUrl    = "${params.TRSS_URL}"
+  def slackChannel = "${params.SLACK_CHANNEL}"
 
   def buildFailures = 0
   def testStats = []
@@ -46,6 +47,7 @@ node ("master") {
         def testCaseFailed = 0
         def testCaseDisabled = 0
         def testJobNumber = 0
+        def buildJobNumber = 0
 
         // Get all pipeline builds started by "timer", as those are Nightlies
         def pipeline = sh(returnStdout: true, script: "wget -q -O - ${trssUrl}/api/getBuildHistory?buildName=${pipelineName}\\&startBy=timer")
@@ -75,9 +77,13 @@ node ("master") {
               }
             }
           }
+          // Get all child Build jobs for this pipeline job
+          def pipelineBuildJobs = sh(returnStdout: true, script: "wget -q -O - ${trssUrl}/api/getAllChildBuilds?parentId=${pipeline_id}\\&buildNameRegex=^jdk.*")
+          def pipelineBuildJobsJson = new JsonSlurper().parseText(pipelineBuildJobs)
+          buildJobNumber = pipelineBuildJobsJson.size()
         }
 
-        def testResult = [name: pipelineName, url: pipelineUrl,
+        def testResult = [name: pipelineName, url: pipelineUrl, buildJobNumber: buildJobNumber,
                           testJobSuccess:   testJobSuccess,
                           testJobUnstable:  testJobUnstable,
                           testJobFailure:   testJobFailure,
@@ -95,8 +101,13 @@ node ("master") {
     echo "==================================================================================="
     echo "Build Failures = ${buildFailures}"
     echo "==================================================================================="
+    def nightlyTestSuccessRating = 0
+    def numTestPipelines = 0
+    def totalBuildJobs = 0
+    def totalTestJobs = 0
     testStats.each { pipeline ->
       echo "Pipeline : ${pipeline.name} : ${pipeline.url}"
+      echo "  => Number of Build jobs = ${pipeline.buildJobNumber}"
       echo "  => Number of Test jobs = ${pipeline.testJobNumber}" 
       echo "  => Test job SUCCESS    = ${pipeline.testJobSuccess}"
       echo "  => Test job UNSTABLE   = ${pipeline.testJobUnstable}"
@@ -105,7 +116,33 @@ node ("master") {
       echo "  => Test case Failed    = ${pipeline.testCaseFailed}"
       echo "  => Test case Disabled  = ${pipeline.testCaseDisabled}"
       echo "==================================================================================="
+      totalBuildJobs += pipeline.buildJobNumber
+      totalTestJobs += pipeline.testJobNumber
+      // Did tests run? (build may have failed)
+      if (pipeline.testJobNumber > 0) {
+        numTestPipelines += 1
+        // Pipeline Test % success rating: Failure twice as signficant as a Success, Unstable counts as -1/4
+        nightlyTestSuccessRating += (((pipeline.testJobSuccess)-(pipeline.testJobUnstable*0.25)-(pipeline.testJobFailure*2))*100)/(pipeline.testJobNumber)
+      }
     }
+    // Average test success rating across all pipelines
+    nightlyTestSuccessRating = nightlyTestSuccessRating/numTestPipelines
+
+    // Build % success rating: Successes as % of build total
+    def buildSuccesses = totalBuildJobs - buildFailures
+    def nightlyBuildSuccessRating = ((buildSuccesses)*100)/(totalBuildJobs)
+
+    // Overall % success rating: Average build & test % success rating
+    def overallNightlySuccessRating = ((nightlyBuildSuccessRating+nightlyTestSuccessRating)/2).intValue()
+
+    echo "======> Total number of Build jobs    = ${totalBuildJobs}"
+    echo "======> Total number of Test jobs     = ${totalTestJobs}" 
+    echo "======> Nightly Build Success Rating  = ${nightlyBuildSuccessRating.intValue()} %"
+    echo "======> Nightly Test Success Rating   = ${nightlyTestSuccessRating.intValue()} %"
+    echo "======> Overall Nightly Build & Test Success Rating = ${overallNightlySuccessRating} %"
+
+    // Slack message:
+    slackSend(channel: slackChannel, color: 'good', message: 'AdoptOpenJDK Jenkins Nightly Build & Test Pipeline Success Rating: '+overallNightlySuccessRating+' %')
   }
 }
 
