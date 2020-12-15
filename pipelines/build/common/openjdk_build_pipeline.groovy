@@ -854,7 +854,7 @@ class Build {
         def filter = ""
 
         if (buildConfig.TARGET_OS == "windows") {
-            filter = "**/OpenJDK*-jdk*_windows_*.zip"
+            filter = "**\\OpenJDK*-jdk*_windows_*.zip"
         } else {
             filter = "**/OpenJDK*-jdk*.tar.gz"
         }
