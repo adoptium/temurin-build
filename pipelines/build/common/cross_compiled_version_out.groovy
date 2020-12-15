@@ -14,7 +14,7 @@ import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
  */
 
 // TODO: ADD THE ACTIVE NODE TIMEOUT LOGIC HERE OR GET IT MERGED INTO JOB HELPER (https://github.com/AdoptOpenJDK/openjdk-build/issues/2235)
-String nodeLabel = params.NODE ? params.NODE : ""
+String nodeLabel = (params.NODE) ?: ""
 
 node (nodeLabel) {
     timestamps {
