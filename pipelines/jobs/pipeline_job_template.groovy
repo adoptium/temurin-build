@@ -30,6 +30,9 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
                     remote {
                         url("${GIT_URL}")
                         refspec(gitRefSpec)
+                        if (binding.hasVariable("CHECKOUT_CREDENTIALS")) {
+                            credentials(CHECKOUT_CREDENTIALS)
+                        }
                     }
                     branch("${BRANCH}")
                 }

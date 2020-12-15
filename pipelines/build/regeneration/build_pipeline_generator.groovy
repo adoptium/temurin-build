@@ -77,6 +77,7 @@ node('master') {
         GIT_URL             : repoUri,
         BRANCH              : repoBranch,
         BUILD_FOLDER        : jobRoot,
+        CHECKOUT_CREDENTIALS: checkoutCreds,
         JOB_NAME            : "openjdk${javaVersion}-pipeline",
         SCRIPT              : "${scriptFolderPath}/openjdk${javaVersion}_pipeline.groovy",
         disableJob          : false

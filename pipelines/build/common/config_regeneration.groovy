@@ -41,8 +41,8 @@ class Regeneration implements Serializable {
     private final def baseFilePath
     private final def scriptPath
     private final def jenkinsBuildRoot
-    private final def jenkinsUsername
-    private final def jenkinsToken
+    private final def jenkinsCreds
+    private final def checkoutCreds
 
     private String javaToBuild
     private final List<String> defaultTestList = ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external']
@@ -68,8 +68,8 @@ class Regeneration implements Serializable {
         String baseFilePath,
         String scriptPath,
         String jenkinsBuildRoot,
-        String jenkinsUsername,
-        String jenkinsToken
+        String jenkinsCreds,
+        String checkoutCreds
     ) {
         this.javaVersion = javaVersion
         this.buildConfigurations = buildConfigurations
@@ -86,8 +86,8 @@ class Regeneration implements Serializable {
         this.baseFilePath = baseFilePath
         this.scriptPath = scriptPath
         this.jenkinsBuildRoot = jenkinsBuildRoot
-        this.jenkinsUsername = jenkinsUsername
-        this.jenkinsToken = jenkinsToken
+        this.jenkinsCreds = jenkinsCreds
+        this.checkoutCreds = checkoutCreds
     }
 
     /*
@@ -351,12 +351,17 @@ class Regeneration implements Serializable {
         params.put("DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(DEFAULTS_JSON)))
         params.put("BUILD_CONFIG", config.toJson())
 
-        // If we are not using default lib or script param values, be sure to update the downstream jobs
+        // If we are not using default lib or script param values, be sure to update the initial downstream job script file
         if (libraryPath != DEFAULTS_JSON['importLibraryScript']) {
             params.put("CUSTOM_LIBRARY_LOCATION", libraryPath)
         }
         if (baseFilePath != DEFAULTS_JSON["baseFileDirectories"]["downstream"]) {
             params.put("CUSTOM_BASEFILE_LOCATION", baseFilePath)
+        }
+
+        // Pass in checkout creds if needs be
+        if (checkoutCreds != "") {
+            params.put("CHECKOUT_CREDENTIALS", checkoutCreds)
         }
 
         def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
@@ -395,11 +400,13 @@ class Regeneration implements Serializable {
         try {
             def get = new URL(query).openConnection()
 
-            String jenkinsAuth = ""
-            if (jenkinsUsername != "") {
-                jenkinsAuth = "Basic " + new String(Base64.getEncoder().encode("$jenkinsUsername:$jenkinsToken".getBytes()))
+            // Set request credentials if they exist
+            if (jenkinsCreds != "") {
+                context.withCredentials([usernamePassword(credentialsId: '${jenkinsCreds}', usernameVariable: 'jenkinsUsername', passwordVariable: 'jenkinsToken')]) {
+                    jenkinsAuth = "Basic " + new String(Base64.getEncoder().encode("$jenkinsUsername:$jenkinsToken".getBytes()))
+                    get.setRequestProperty ("Authorization", jenkinsAuth)
+                }
             }
-            get.setRequestProperty ("Authorization", jenkinsAuth)
 
             def response = new JsonSlurper().parseText(get.getInputStream().getText())
             return response
@@ -573,15 +580,9 @@ return {
     String baseFilePath,
     String scriptPath,
     String jenkinsBuildRoot,
-    String jenkinsUsername,
-    String jenkinsToken
+    String jenkinsCreds,
+    String checkoutCreds
         ->
-        if (jenkinsUsername == null) {
-            jenkinsUsername = ""
-        }
-        if (jenkinsToken == null) {
-            jenkinsToken = ""
-        }
 
         def excludedBuilds = [:]
         if (excludes != "" && excludes != null) {
@@ -604,7 +605,7 @@ return {
             baseFilePath,
             scriptPath,
             jenkinsBuildRoot,
-            jenkinsUsername,
-            jenkinsToken
+            jenkinsCreds,
+            checkoutCreds
         )
 }
