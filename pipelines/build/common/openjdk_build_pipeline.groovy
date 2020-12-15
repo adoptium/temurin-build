@@ -514,7 +514,12 @@ class Build {
                 switch (buildConfig.TARGET_OS) {
                     case "mac": buildMacInstaller(versionData); break
                     case "linux": buildLinuxInstaller(versionData); break
-                    case "windows": buildWindowsInstaller(versionData); break
+                    case "windows":
+                        // Currently we cannot build aarch64 installers https://github.com/AdoptOpenJDK/openjdk-installer/issues/276
+                        if (buildConfig.ARCHITECTURE != "aarch64") {
+                            buildWindowsInstaller(versionData)
+                        }
+                        break
                     default: return; break
                 }
 
