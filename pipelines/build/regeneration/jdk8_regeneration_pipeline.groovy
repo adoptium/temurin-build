@@ -34,12 +34,22 @@ node ("master") {
     def repoUri = (params.REPOSITORY_URL) ?: DEFAULTS_JSON["repository"]["url"]
     def repoBranch = (params.REPOSITORY_BRANCH) ?: DEFAULTS_JSON["repository"]["branch"]
 
+    // Load credentials to be used in checking out. This is in case we are checking out a URL that is not Adopts and they don't have their ssh key on the machine.
+    def checkoutCreds = (params.CHECKOUT_CREDENTIALS) ?: ""
+    def remoteConfigs = [ url: repoUri ]
+    if (checkoutCreds != "") {
+      // NOTE: This currently does not work with user credentials due to https://issues.jenkins.io/browse/JENKINS-60349
+      remoteConfigs.put("credentialsId", "${checkoutCreds}")
+    } else {
+      println "[WARNING] CHECKOUT_CREDENTIALS not specified! Checkout to $repoUri may fail if you do not have your ssh key on this machine."
+    }
+
     // Checkout into the branch and url place
     checkout(
       [
         $class: 'GitSCM',
-        branches: [[name: repoBranch ]],
-        userRemoteConfigs: [[ url: repoUri ]]
+        branches: [[ name: repoBranch ]],
+        userRemoteConfigs: [ remoteConfigs ]
       ]
     )
 
@@ -96,6 +106,7 @@ node ("master") {
     def scriptPath = (params.SCRIPT_PATH) ?: DEFAULTS_JSON["scriptDirectories"]["downstream"]
     def baseFilePath = (params.BASE_FILE_PATH) ?: DEFAULTS_JSON["baseFileDirectories"]["downstream"]
     def excludes = (params.EXCLUDES_LIST) ?: ""
+    def jenkinsCreds = (params.JENKINS_AUTH) ?: ""
 
     println "[INFO] Running regeneration script with the following configuration:"
     println "VERSION: $javaVersion"
@@ -111,21 +122,17 @@ node ("master") {
     println "LIBRARY PATH: $libraryPath"
     println "EXCLUDES LIST: $excludes"
 
-    // Load regen script
+    // Load regen script and execute base file
     def regenScriptPath = (params.REGEN_SCRIPT_PATH) ?: DEFAULTS_JSON['scriptDirectories']['regeneration']
     Closure regenerationScript = load "${WORKSPACE}/${regenScriptPath}"
 
-    // Pass in credentials if they exist
-    if (JENKINS_AUTH != "") {
-
-      // Single quotes here are not a mistake, jenkins actually checks that it's single quoted and that the id starts/ends with '${}'
-      withCredentials([
-        usernamePassword(
-          credentialsId: '${JENKINS_AUTH}',
+    if (jenkinsCreds != "") {
+      withCredentials([usernamePassword(
+          credentialsId: jenkinsCreds,
           usernameVariable: 'jenkinsUsername',
           passwordVariable: 'jenkinsToken'
-        )
-      ]) {
+      )]) {
+        def jenkinsUserColonPass = "$jenkinsUsername:$jenkinsToken"
         regenerationScript(
           javaVersion,
           buildConfigurations,
@@ -142,14 +149,13 @@ node ("master") {
           baseFilePath,
           scriptPath,
           jenkinsBuildRoot,
-          jenkinsUsername,
-          jenkinsToken
+          jenkinsUserColonPass,
+          checkoutCreds
         ).regenerate()
       }
-
     } else {
-
       println "[WARNING] No Jenkins API Credentials have been provided! If your server does not have anonymous read enabled, you may encounter 403 api request error codes."
+
       regenerationScript(
         javaVersion,
         buildConfigurations,
@@ -166,10 +172,9 @@ node ("master") {
         baseFilePath,
         scriptPath,
         jenkinsBuildRoot,
-        null,
-        null
+        jenkinsCreds,
+        checkoutCreds
       ).regenerate()
-
     }
 
     println "[SUCCESS] All done!"
