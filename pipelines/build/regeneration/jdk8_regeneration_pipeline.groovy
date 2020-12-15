@@ -35,12 +35,13 @@ node ("master") {
     def repoBranch = (params.REPOSITORY_BRANCH) ?: DEFAULTS_JSON["repository"]["branch"]
 
     // Load credentials to be used in checking out. This is in case we are checking out a URL that is not Adopts and they don't have their ssh key on the machine.
-    def checkoutCreds = (params.SSH_CREDENTIALS) ?: ""
+    def checkoutCreds = (params.CHECKOUT_CREDENTIALS) ?: ""
     def remoteConfigs = [ url: repoUri ]
     if (checkoutCreds != "") {
+      // Note: Only global creds are supported right now. See https://issues.jenkins.io/browse/JENKINS-60349?attachmentOrder=desc
       remoteConfigs.put("credentialsId", "${checkoutCreds}")
     } else {
-      println "[WARNING] SSH_CREDENTIALS not specified! Checkout to $repoUri may fail if you do not have your ssh key on this machine."
+      println "[WARNING] CHECKOUT_CREDENTIALS not specified! Checkout to $repoUri may fail if you do not have your ssh key on this machine."
     }
 
     // Checkout into the branch and url place
