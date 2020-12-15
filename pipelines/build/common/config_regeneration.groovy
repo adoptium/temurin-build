@@ -402,12 +402,11 @@ class Regeneration implements Serializable {
 
             // Set request credentials if they exist
             if (jenkinsCreds != "") {
-                context.withCredentials([usernamePassword(credentialsId: '${jenkinsCreds}', usernameVariable: 'jenkinsUsername', passwordVariable: 'jenkinsToken')]) {
-                    jenkinsAuth = "Basic " + new String(Base64.getEncoder().encode("$jenkinsUsername:$jenkinsToken".getBytes()))
+                context.withCredentials([usernameColonPassword(credentialsId: "${jenkinsCreds}", variable: 'CREDS')]) {
+                    jenkinsAuth = "Basic " + new String(Base64.getEncoder().encode("$CREDS".getBytes()))
                     get.setRequestProperty ("Authorization", jenkinsAuth)
                 }
             }
-
             def response = new JsonSlurper().parseText(get.getInputStream().getText())
             return response
         } catch (Exception e) {
