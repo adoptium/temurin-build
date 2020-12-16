@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-def javaToBuild = "jdk16"
+def javaToBuild = "jdk"
 def scmVars = null
 Closure configureBuild = null
 def buildConfigurations = null
@@ -21,7 +21,7 @@ node ("master") {
     scmVars = checkout scm
     load "${WORKSPACE}/pipelines/build/common/import_lib.groovy"
     configureBuild = load "${WORKSPACE}/pipelines/build/common/build_base_file.groovy"
-    buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/jdk16_pipeline_config.groovy"
+    buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/jdk17_pipeline_config.groovy"
 }
 
 // If a parameter below hasn't been declared above, it is declared in the jenkins job itself
