@@ -86,6 +86,20 @@ class Config16 {
                 configureArgs        : '--with-noncompressedrefs'
         ],
 
+        aarch64Windows: [
+                os                  : 'windows',
+                arch                : 'aarch64',
+                crossCompile        : 'x64',
+                additionalNodeLabels: [
+                        hotspot: 'win2016&&vs2019'
+                ],
+                test                : [
+                        nightly: [],
+                        weekly : []
+                ]
+        ],
+
+
         x32Windows: [
                 os                  : 'windows',
                 arch                : 'x86-32',

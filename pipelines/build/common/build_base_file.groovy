@@ -99,6 +99,8 @@ class Builder implements Serializable {
 
         def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
+        def archLabel = getArchLabel(platformConfig, variant)
+
         def dockerImage = getDockerImage(platformConfig, variant)
 
         def dockerFile = getDockerFile(platformConfig, variant)
@@ -127,9 +129,10 @@ class Builder implements Serializable {
                 TEST_LIST: testList,
                 SCM_REF: scmReference,
                 BUILD_ARGS: buildArgs,
-                NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+                NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${archLabel}",
                 ACTIVE_NODE_TIMEOUT: activeNodeTimeout,
                 CODEBUILD: platformConfig.codebuild as Boolean,
+                CROSS_COMPILE: platformConfig.crossCompile as Boolean,
                 DOCKER_IMAGE: dockerImage,
                 DOCKER_FILE: dockerFile,
                 DOCKER_NODE: dockerNode,
@@ -239,6 +242,17 @@ class Builder implements Serializable {
         }
 
         return overrideDocker
+    }
+
+    def getArchLabel(Map<String, ?> configuration, String variant) {
+        def archLabelVal = ""
+        // Workaround for cross compiled architectures
+        if (configuration.containsKey("crossCompile")) {
+            archLabelVal = configuration.crossCompile
+        } else {
+            archLabelVal = configuration.arch
+        }
+        return archLabelVal
     }
 
     /*

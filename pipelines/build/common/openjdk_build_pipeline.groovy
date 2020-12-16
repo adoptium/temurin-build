@@ -57,7 +57,7 @@ class Build {
     String j9Tags = ""
     String vendorName = ""
     String buildSource = ""
-    String riscvVersionPath = ""
+    String crossCompileVersionPath = ""
     Map variantVersion = [:]
 
     // Declare timeouts for each critical stage (unit is HOURS)
@@ -430,6 +430,12 @@ class Build {
         if (versionData.major == 8) {
             buildNumber = String.format("%02d", versionData.build)
         }
+        
+        def INSTALLER_ARCH = "${buildConfig.ARCHITECTURE}"
+        // Wix toolset requires aarch64 builds to be called arm64
+        if (buildConfig.ARCHITECTURE == "aarch64") {
+            INSTALLER_ARCH = "arm64"
+        }
 
         // Get version patch number if one is present
         def patch_version = versionData.patch ?: 0
@@ -450,7 +456,7 @@ class Build {
                         context.string(name: 'PRODUCT_CATEGORY', value: "jdk"),
                         context.string(name: 'JVM', value: "${buildConfig.VARIANT}"),
                         context.string(name: 'SIGNING_CERTIFICATE', value: "${certificate}"),
-                        context.string(name: 'ARCH', value: "${buildConfig.ARCHITECTURE}"),
+                        context.string(name: 'ARCH', value: "${INSTALLER_ARCH}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${buildConfig.TARGET_OS}&&wix"]
                 ]
         context.copyArtifacts(
@@ -582,8 +588,8 @@ class Build {
 
             // Get Full Version Output
             String versionPath = "workspace/target/metadata/version.txt"
-            if (buildConfig.ARCHITECTURE.contains("riscv")) {
-                versionPath = riscvVersionPath
+            if (buildConfig.CROSS_COMPILE) {
+                versionPath = crossCompileVersionPath
             }
             context.println "INFO: Attempting to read ${versionPath}..."
 
@@ -830,11 +836,11 @@ class Build {
     }
 
     /*
-    Run the RISC-V version reader downstream job.
+    Run the cross comile version reader downstream job.
     In short, we archive the build artifacts to expose them to the job and run ./java version, copying the output back to here.
-    See riscv_version_out.groovy.
+    See cross_compiled_version_out.groovy.
     */
-    def readRiscvVersionString() {
+    def readCrossCompiledVersionString() {
         // Archive the artifacts early so we can copy them over to the downstream job
         try {
             context.timeout(time: buildTimeouts.BUILD_ARCHIVE_TIMEOUT, unit: "HOURS") {
@@ -849,26 +855,38 @@ class Build {
         String shortJobName = env.JOB_NAME.split('/').last()
         String copyFileFilter = "${shortJobName}_${env.BUILD_NUMBER}_version.txt"
 
-        def riscvJob = context.build job: "build-scripts/utils/riscv-version-out",
+        def nodeFilter = "${buildConfig.TARGET_OS}&&${buildConfig.ARCHITECTURE}"
+
+        def filter = ""
+
+        if (buildConfig.TARGET_OS == "windows") {
+            filter = "**\\OpenJDK*-jdk*_windows_*.zip"
+        } else {
+            filter = "**/OpenJDK*-jdk*.tar.gz"
+        }
+
+        def crossCompileVersionOut = context.build job: "build-scripts/utils/cross-compiled-version-out",
             propagate: true,
             parameters: [
                 context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
                 context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
-                context.string(name: 'JDK_FILE_FILTER', value: "OpenJDK*-jdk*_linux_*.tar.gz"),
-                context.string(name: 'FILENAME', value: "${copyFileFilter}")
+                context.string(name: 'JDK_FILE_FILTER', value: "${filter}"),
+                context.string(name: 'FILENAME', value: "${copyFileFilter}"),
+                context.string(name: 'NODE', value: "${nodeFilter}"),
+                context.string(name: 'OS', value: "${buildConfig.TARGET_OS}")
             ]
 
         context.copyArtifacts(
-            projectName: "build-scripts/utils/riscv-version-out",
-            selector: context.specific("${riscvJob.getNumber()}"),
-            filter: "RiscvVersionOuts/${copyFileFilter}",
+            projectName: "build-scripts/utils/cross-compiled-version-out",
+            selector: context.specific("${crossCompileVersionOut.getNumber()}"),
+            filter: "CrossCompiledVersionOuts/${copyFileFilter}",
             target: "workspace/target/metadata",
             flatten: true
         )
 
         // We assign to a variable so it can be used in formMetadata() to find the correct version info
-        riscvVersionPath = "workspace/target/metadata/${copyFileFilter}"
-        return context.readFile(riscvVersionPath)
+        crossCompileVersionPath = "workspace/target/metadata/${copyFileFilter}"
+        return context.readFile(crossCompileVersionPath)
     }
 
     /*
@@ -938,9 +956,9 @@ class Build {
                     // Run a downstream job on riscv machine that returns the java version
                     // otherwise, just read the version.txt
                     String versionOut
-                    if (buildConfig.ARCHITECTURE.contains("riscv")) {
-                        context.println "[WARNING] Don't read faked version.txt on riscv! Archiving early and running downstream job on riscv machine to retrieve java version..."
-                        versionOut = readRiscvVersionString()
+                    if (buildConfig.CROSS_COMPILE) {
+                        context.println "[WARNING] Don't read faked version.txt on cross compiled build! Archiving early and running downstream job to retrieve java version..."
+                        versionOut = readCrossCompiledVersionString()
                     } else {
                         versionOut = context.readFile("workspace/target/metadata/version.txt")
                     }
@@ -952,8 +970,8 @@ class Build {
 
                 try {
                     context.timeout(time: buildTimeouts.BUILD_ARCHIVE_TIMEOUT, unit: "HOURS") {
-                        // We have already archived riscv artifacts, so only archive the metadata files
-                        if (buildConfig.ARCHITECTURE.contains("riscv")) {
+                        // We have already archived cross compiled artifacts, so only archive the metadata files
+                        if (buildConfig.CROSS_COMPILE) {
                             context.println "[INFO] Archiving JSON Files..."
                             context.archiveArtifacts artifacts: "workspace/target/*.json"
                         } else {

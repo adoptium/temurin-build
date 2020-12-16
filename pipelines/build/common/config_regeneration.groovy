@@ -97,6 +97,17 @@ class Regeneration implements Serializable {
         return configureArgs
     }
 
+    def getArchLabel(Map<String, ?> configuration, String variant) {
+        def archLabelVal = ""
+        // Workaround for cross compiled architectures
+        if (configuration.containsKey("crossCompile")) {
+            archLabelVal = configuration.crossCompile
+        } else {
+            archLabelVal = configuration.arch
+        }
+        return archLabelVal
+    }
+
     /*
     Retrieves the dockerImage attribute from the build configurations.
     This specifies the DockerHub org and image to pull or build in case we don't have one stored in this repository.
@@ -258,6 +269,8 @@ class Regeneration implements Serializable {
 
             def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
+            def archLabel = getArchLabel(platformConfig, variant)
+
             def dockerImage = getDockerImage(platformConfig, variant)
 
             def dockerFile = getDockerFile(platformConfig, variant)
@@ -276,9 +289,10 @@ class Regeneration implements Serializable {
                 TEST_LIST: testList,
                 SCM_REF: "",
                 BUILD_ARGS: buildArgs,
-                NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+                NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${archLabel}",
                 ACTIVE_NODE_TIMEOUT: "",
                 CODEBUILD: platformConfig.codebuild as Boolean,
+                CROSS_COMPILE: platformConfig.crossCompile as Boolean,
                 DOCKER_IMAGE: dockerImage,
                 DOCKER_FILE: dockerFile,
                 DOCKER_NODE: dockerNode,
