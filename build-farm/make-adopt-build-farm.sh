@@ -96,7 +96,8 @@ case "${JDK_BOOT_VERSION}" in
       "13")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK13_BOOT_DIR}";;
       "14")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK14_BOOT_DIR}";;
       "15")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK15_BOOT_DIR}";;
-      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK16_BOOT_DIR}";;
+      "16")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK16_BOOT_DIR}";;
+      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK17_BOOT_DIR}";;
 esac
 
 
