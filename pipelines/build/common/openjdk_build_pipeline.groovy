@@ -488,7 +488,7 @@ class Build {
                             context.string(name: 'PRODUCT_CATEGORY', value: "jre"),
                             context.string(name: 'JVM', value: "${buildConfig.VARIANT}"),
                             context.string(name: 'SIGNING_CERTIFICATE', value: "${certificate}"),
-                            context.string(name: 'ARCH', value: "${buildConfig.ARCHITECTURE}"),
+                            context.string(name: 'ARCH', value: "${INSTALLER_ARCH}"),
                             ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${buildConfig.TARGET_OS}&&wix"]
                         ]
 
