@@ -430,6 +430,12 @@ class Build {
         if (versionData.major == 8) {
             buildNumber = String.format("%02d", versionData.build)
         }
+        
+        def INSTALLER_ARCH = "${buildConfig.ARCHITECTURE}"
+        // Wix toolset requires aarch64 builds to be called arm64
+        if (buildConfig.ARCHITECTURE == "aarch64") {
+            INSTALLER_ARCH = "arm64"
+        }
 
         // Get version patch number if one is present
         def patch_version = versionData.patch ?: 0
@@ -450,7 +456,7 @@ class Build {
                         context.string(name: 'PRODUCT_CATEGORY', value: "jdk"),
                         context.string(name: 'JVM', value: "${buildConfig.VARIANT}"),
                         context.string(name: 'SIGNING_CERTIFICATE', value: "${certificate}"),
-                        context.string(name: 'ARCH', value: "${buildConfig.ARCHITECTURE}"),
+                        context.string(name: 'ARCH', value: "${INSTALLER_ARCH}"),
                         ['$class': 'LabelParameterValue', name: 'NODE_LABEL', label: "${buildConfig.TARGET_OS}&&wix"]
                 ]
         context.copyArtifacts(
@@ -514,12 +520,7 @@ class Build {
                 switch (buildConfig.TARGET_OS) {
                     case "mac": buildMacInstaller(versionData); break
                     case "linux": buildLinuxInstaller(versionData); break
-                    case "windows":
-                        // Currently we cannot build aarch64 installers https://github.com/AdoptOpenJDK/openjdk-installer/issues/276
-                        if (buildConfig.ARCHITECTURE != "aarch64") {
-                            buildWindowsInstaller(versionData)
-                        }
-                        break
+                    case "windows": buildWindowsInstaller(versionData); break
                     default: return; break
                 }
 
