@@ -588,7 +588,7 @@ class Build {
 
             // Get Full Version Output
             String versionPath = "workspace/target/metadata/version.txt"
-            if (buildConfig.CROSS_COMPILE) {
+            if (buildConfig.BUILD_ARGS.contains('--cross-compile')) {
                 versionPath = crossCompileVersionPath
             }
             context.println "INFO: Attempting to read ${versionPath}..."
@@ -956,7 +956,7 @@ class Build {
                     // Run a downstream job on riscv machine that returns the java version
                     // otherwise, just read the version.txt
                     String versionOut
-                    if (buildConfig.CROSS_COMPILE) {
+                    if (buildConfig.BUILD_ARGS.contains('--cross-compile')) {
                         context.println "[WARNING] Don't read faked version.txt on cross compiled build! Archiving early and running downstream job to retrieve java version..."
                         versionOut = readCrossCompiledVersionString()
                     } else {
@@ -971,7 +971,7 @@ class Build {
                 try {
                     context.timeout(time: buildTimeouts.BUILD_ARCHIVE_TIMEOUT, unit: "HOURS") {
                         // We have already archived cross compiled artifacts, so only archive the metadata files
-                        if (buildConfig.CROSS_COMPILE) {
+                        if (buildConfig.BUILD_ARGS.contains('--cross-compile')) {
                             context.println "[INFO] Archiving JSON Files..."
                             context.archiveArtifacts artifacts: "workspace/target/*.json"
                         } else {

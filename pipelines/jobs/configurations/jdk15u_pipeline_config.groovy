@@ -46,13 +46,10 @@ class Config15 {
                 configureArgs       : '--with-noncompressedrefs --enable-dtrace --enable-jitserver'
         ],
 
-        // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot: 'win2012&&vs2017'
-                ],
+                additionalNodeLabels: 'win2012&&vs2017',
                 test                : 'default'
         ],
 
@@ -68,9 +65,7 @@ class Config15 {
         x32Windows: [
                 os                  : 'windows',
                 arch                : 'x86-32',
-                additionalNodeLabels: [
-                        hotspot: 'win2012&&vs2017'
-                ],
+                additionalNodeLabels: 'win2012&&vs2017',
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
