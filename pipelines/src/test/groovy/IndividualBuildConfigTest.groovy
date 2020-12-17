@@ -18,7 +18,6 @@ class IndividualBuildConfigTest {
                  NODE_LABEL                : "h",
                  ACTIVE_NODE_TIMEOUT       : "r",
                  CODEBUILD                 : false,
-                 CROSS_COMPILE             : false,
                  DOCKER_IMAGE              : "o",
                  DOCKER_FILE               : "p",
                  DOCKER_NODE               : "q",

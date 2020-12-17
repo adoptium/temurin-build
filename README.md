@@ -148,6 +148,9 @@ This is typically used in conjunction with -T to create a custom path
 -D, --docker
 build OpenJDK in a docker container.
 
+--cross-compile
+use this if you are cross compiling - it will skip the java -version checks at the end
+
 --debug-docker
 debug OpenJDK build script in a docker container. Only valid if -D is selected.
 

@@ -64,13 +64,10 @@ class Config16 {
                 ]
         ],
 
-        // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot: 'win2012&&vs2017'
-                ],
+                additionalNodeLabels: 'win2012&&vs2017',
                 test                : [
                         nightly: [],
                         weekly : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
@@ -90,9 +87,8 @@ class Config16 {
                 os                  : 'windows',
                 arch                : 'aarch64',
                 crossCompile        : 'x64',
-                additionalNodeLabels: [
-                        hotspot: 'win2016&&vs2019'
-                ],
+                additionalBuildArgs : '--cross-compile',
+                additionalNodeLabels: 'win2016&&vs2019',
                 test                : [
                         nightly: [],
                         weekly : []
@@ -103,9 +99,7 @@ class Config16 {
         x32Windows: [
                 os                  : 'windows',
                 arch                : 'x86-32',
-                additionalNodeLabels: [
-                        hotspot: 'win2012&&vs2017'
-                ],
+                additionalNodeLabels: 'win2012&&vs2017',
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
