@@ -128,7 +128,7 @@ node ("master") {
 
     if (jenkinsCreds != "") {
       withCredentials([usernamePassword(
-          credentialsId: '${jenkinsCreds}',
+          credentialsId: JENKINS_AUTH,
           usernameVariable: 'jenkinsUsername',
           passwordVariable: 'jenkinsToken'
       )]) {
