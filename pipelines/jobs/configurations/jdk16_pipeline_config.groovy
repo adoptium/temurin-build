@@ -87,7 +87,7 @@ class Config16 {
                 os                  : 'windows',
                 arch                : 'aarch64',
                 crossCompile        : 'x64',
-                additionalBuildArgs : '--cross-compile',
+                buildArgs           : '--cross-compile',
                 additionalNodeLabels: 'win2016&&vs2019',
                 test                : [
                         nightly: [],
