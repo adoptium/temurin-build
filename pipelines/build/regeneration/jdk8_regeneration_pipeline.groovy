@@ -38,7 +38,7 @@ node ("master") {
     def checkoutCreds = (params.CHECKOUT_CREDENTIALS) ?: ""
     def remoteConfigs = [ url: repoUri ]
     if (checkoutCreds != "") {
-      // Note: Only global creds are supported right now. See https://issues.jenkins.io/browse/JENKINS-60349?attachmentOrder=desc
+      // NOTE: This currently does not work with user credentials due to https://issues.jenkins.io/browse/JENKINS-60349
       remoteConfigs.put("credentialsId", "${checkoutCreds}")
     } else {
       println "[WARNING] CHECKOUT_CREDENTIALS not specified! Checkout to $repoUri may fail if you do not have your ssh key on this machine."
@@ -127,25 +127,56 @@ node ("master") {
     def regenScriptPath = (params.REGEN_SCRIPT_PATH) ?: DEFAULTS_JSON['scriptDirectories']['regeneration']
     Closure regenerationScript = load "${WORKSPACE}/${regenScriptPath}"
 
-    regenerationScript(
-      javaVersion,
-      buildConfigurations,
-      targetConfigurations,
-      DEFAULTS_JSON,
-      excludes,
-      currentBuild,
-      this,
-      jobRoot,
-      repoUri,
-      repoBranch,
-      jobTemplatePath,
-      libraryPath,
-      baseFilePath,
-      scriptPath,
-      jenkinsBuildRoot,
-      jenkinsCreds,
-      checkoutCreds
-    ).regenerate()
+    if (jenkinsCreds != "") {
+      withCredentials([usernamePassword(
+          credentialsId: '${JENKINS_AUTH}',
+          usernameVariable: 'jenkinsUsername',
+          passwordVariable: 'jenkinsToken'
+      )]) {
+        def jenkinsUserColonPass = "$jenkinsUsername:$jenkinsToken"
+        regenerationScript(
+          javaVersion,
+          buildConfigurations,
+          targetConfigurations,
+          DEFAULTS_JSON,
+          excludes,
+          currentBuild,
+          this,
+          jobRoot,
+          repoUri,
+          repoBranch,
+          jobTemplatePath,
+          libraryPath,
+          baseFilePath,
+          scriptPath,
+          jenkinsBuildRoot,
+          jenkinsUserColonPass,
+          checkoutCreds
+        ).regenerate()
+      }
+    } else {
+      println "[WARNING] No Jenkins API Credentials have been provided! If your server does not have anonymous read enabled, you may encounter 403 api request error codes."
+
+      regenerationScript(
+        javaVersion,
+        buildConfigurations,
+        targetConfigurations,
+        DEFAULTS_JSON,
+        excludes,
+        currentBuild,
+        this,
+        jobRoot,
+        repoUri,
+        repoBranch,
+        jobTemplatePath,
+        libraryPath,
+        baseFilePath,
+        scriptPath,
+        jenkinsBuildRoot,
+        jenkinsCreds,
+        checkoutCreds
+      ).regenerate()
+    }
 
     println "[SUCCESS] All done!"
 
