@@ -80,13 +80,14 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>DOCKER_IMAGE</strong></dt><dd>Use a docker build environment</dd>
                 <dt><strong>DOCKER_FILE</strong></dt><dd>Relative path to a dockerfile to be built and used on top of the DOCKER_IMAGE</dd>
                 <dt><strong>PLATFORM_CONFIG_PATH</strong></dt><dd>Relative path to the platform specific configuration for this paticular OS</dd>
-                <dt><strong>CONFIGURE_ARGS</strong></dt><dd>Arguments for ./configure</dd>
+                <dt><strong>CONFIGURE_ARGS</strong></dt><dd>Arguments for ./configure. Escape all speech marks used within this parameter.</dd>
                 <dt><strong>OVERRIDE_FILE_NAME_VERSION</strong></dt><dd>Set the version string on the file name</dd>
                 <dt><strong>RELEASE</strong></dt><dd>Is this build a release</dd>
                 <dt><strong>PUBLISH_NAME</strong></dt><dd>Set name of publish</dd>
                 <dt><strong>ADOPT_BUILD_NUMBER</strong></dt><dd>Adopt build number</dd>
                 <dt><strong>ENABLE_TESTS</strong></dt><dd>Run tests</dd>
                 <dt><strong>ENABLE_INSTALLERS</strong></dt><dd>Run installers</dd>
+                <dt><strong>ENABLE_SIGNER</strong></dt><dd>Run signer</dd>
                 <dt><strong>CLEAN_WORKSPACE</strong></dt><dd>Wipe out workspace before build</dd>
             </dl>
         """)

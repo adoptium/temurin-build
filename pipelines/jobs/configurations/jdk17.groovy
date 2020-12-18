@@ -8,17 +8,23 @@ targetConfigurations = [
         ],
         "x64Linux"    : [
                 "hotspot",
-                "openj9",
-                "corretto",
-                "dragonwell"
+                "openj9"
+        ],
+        "x64LinuxXL"  : [
+                "openj9"
+        ],
+        "x64AlpineLinux" : [
+                "hotspot"
         ],
         "x64Windows"  : [
                 "hotspot",
-                "openj9",
-                "dragonwell"
-        ],
-        "x64WindowsXL"  : [
                 "openj9"
+        ],
+        "x64WindowsXL": [
+                "openj9"
+        ],
+        "aarch64Windows" : [
+                "hotspot"
         ],
         "x32Windows"  : [
                 "hotspot"
@@ -31,6 +37,9 @@ targetConfigurations = [
                 "hotspot",
                 "openj9"
         ],
+        "ppc64leLinuxXL": [
+                "openj9"
+        ],
         "s390xLinux"  : [
                 "hotspot",
                 "openj9"
@@ -39,27 +48,15 @@ targetConfigurations = [
                 "hotspot",
                 "openj9"
         ],
-        "arm32Linux"  : [
-                "hotspot"
-        ],
-        "x64LinuxXL"     : [
-                "openj9"
-        ],
-        "s390xLinuxXL"     : [
-                "openj9"
-        ],
-        "ppc64leLinuxXL"     : [
-                "openj9"
-        ],
         "aarch64LinuxXL": [
                 "openj9"
         ],
-        "riscv64Linux": [
-                "openj9"
+        "arm32Linux"  : [
+                "hotspot"
         ]
 ]
 
-// 23:30
-triggerSchedule="TZ=UTC\n30 23 * * *"
+// 05:30
+triggerSchedule="TZ=UTC\n30 05 * * *"
 
 return this

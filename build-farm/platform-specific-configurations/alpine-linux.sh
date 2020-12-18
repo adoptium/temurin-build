@@ -25,6 +25,36 @@ export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --dis
 if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
     BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
     BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+    if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
+      bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+      # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
+      # instead of BOOT_JDK_VARIABLE (no '$').
+      export ${BOOT_JDK_VARIABLE}="$bootDir"
+      if [ ! -d "$bootDir/bin" ]; then
+        mkdir -p "$bootDir"
+        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
+        releaseType="ga"
+        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/alpine-linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptopenjdk"
+        apiURL=$(eval echo ${apiUrlTemplate})
+        # make-adopt-build-farm.sh has 'set -e'. We need to disable that
+        # for the fallback mechanism, as downloading of the GA binary might
+        # fail.
+        set +e
+        wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
+        retVal=$?
+        set -e
+        if [ $retVal -ne 0 ]; then
+          # We must be a JDK HEAD build for which no boot JDK exists other than
+          # nightlies?
+          echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+          echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} ..."
+          # shellcheck disable=SC2034
+          releaseType="ea"
+          apiURL=$(eval echo ${apiUrlTemplate})
+          wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
+        fi
+      fi
+    fi
     export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
     "$JDK_BOOT_DIR/bin/java" -version
     executedJavaVersion=$?

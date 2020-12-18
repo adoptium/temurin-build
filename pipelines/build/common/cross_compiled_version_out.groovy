@@ -1,21 +1,22 @@
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 /**
- * This file is a jenkins job for extracting a version string from a cross-compiled, riscv binary.
+ * This file is a jenkins job for extracting a version string from a cross-compiled binary.
  * See https://github.com/AdoptOpenJDK/openjdk-build/issues/1773 for the inspiration for this.
  *
  * This file is referenced by the upstream job at pipelines/build/common/openjdk_build_pipeline.groovy.
- * This job is run at build-scripts/job/utils/job/riscv-version-out/.
+ * This job is run at build-scripts/job/utils/job/cross-compiled-version-out/.
  *
  * The job looks like:
- *  1. Switch into a riscv node
+ *  1. Switch into a suitable node
  *  2. Retrieve the artifacts built in the upstream job
  *  3. Run java -version and export to file
  *  4. Expose to the upstream job by archiving file
  */
 
 // TODO: ADD THE ACTIVE NODE TIMEOUT LOGIC HERE OR GET IT MERGED INTO JOB HELPER (https://github.com/AdoptOpenJDK/openjdk-build/issues/2235)
+String nodeLabel = (params.NODE) ?: ""
 
-node ("riscv&&ci.role.test") {
+node (nodeLabel) {
     timestamps {
         try {
             Integer JOB_TIMEOUT = 1
@@ -24,6 +25,8 @@ node ("riscv&&ci.role.test") {
                 String jobNumber = params.UPSTREAM_JOB_NUMBER ? params.UPSTREAM_JOB_NUMBER : ""
                 String jdkFileFilter = params.JDK_FILE_FILTER ? params.JDK_FILE_FILTER : ""
                 String fileName = params.FILENAME ? params.FILENAME : ""
+                String os = params.OS ? params.OS : ""
+
 
                 println "[INFO] PARAMS:"
                 println "UPSTREAM_JOB_NAME = ${jobName}"
@@ -38,8 +41,8 @@ node ("riscv&&ci.role.test") {
                     }
                 }
 
-                if (fileExists('RiscvVersionOuts')) {
-                    dir('RiscvVersionOuts') {
+                if (fileExists('CrossCompiledVersionOuts')) {
+                    dir('CrossCompiledVersionOuts') {
                         deleteDir()
                     }
                 }
@@ -58,7 +61,11 @@ node ("riscv&&ci.role.test") {
                     )
 
                     println "[INFO] Unzipping..."
-                    sh "tar -zxvf ${jdkFileFilter} && rm ${jdkFileFilter}"
+                    if (os == "windows") {
+                        sh "unzip ${jdkFileFilter} && rm ${jdkFileFilter}"
+                    } else {
+                        sh "tar -zxvf ${jdkFileFilter} && rm ${jdkFileFilter}"
+                    }
 
                     String jdkDir = sh(
                         script: "ls | grep jdk",
@@ -90,7 +97,7 @@ node ("riscv&&ci.role.test") {
                 }
 
                 // Write java version to file
-                dir ("RiscvVersionOuts") {
+                dir ("CrossCompiledVersionOuts") {
                     println "[INFO] Writing java version to ${fileName}..."
                     writeFile (
                         file: fileName,
@@ -100,8 +107,8 @@ node ("riscv&&ci.role.test") {
                 }
 
                 // Archive version.txt file
-                println "[INFO] Archiving RiscvVersionOuts/${fileName} to artifactory..."
-                archiveArtifacts artifacts: "RiscvVersionOuts/${fileName}"
+                println "[INFO] Archiving CrossCompiledVersionOuts/${fileName} to artifactory..."
+                archiveArtifacts artifacts: "CrossCompiledVersionOuts/${fileName}"
 
                 println "[SUCCESS] ${fileName} archived! Cleaning up..."
             }

@@ -37,7 +37,6 @@ class Config11 {
                 ]
         ],
 
-        // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
@@ -119,23 +118,11 @@ class Config11 {
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
-                dockerImage         : [
-                        openj9:  'adoptopenjdk/centos7_build_image',
-                        hotspot: 'adoptopenjdk/centos7_build_image',
-                        dragonwell: 'registry.cn-hangzhou.aliyuncs.com/dragonwell/centos7_gcc9_build_image'
-                ],
+                dockerImage         : 'adoptopenjdk/centos7_build_image',
                 test                : 'default',
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
-        /*
-        "x86-32Windows"    : [
-                os                 : 'windows',
-                arch               : 'x86-32',
-                additionalNodeLabels: 'win2012&&x86-32',
-                test                : false
-        ],
-        */
         x64LinuxXL    : [
                 os                   : 'linux',
                 dockerImage          : 'adoptopenjdk/centos6_build_image',
@@ -174,6 +161,8 @@ class Config11 {
                 os                   : 'linux',
                 dockerImage          : 'adoptopenjdk/centos6_build_image',
                 arch                 : 'riscv64',
+                crossCompile         : 'x64',
+                buildArgs            : '--cross-compile',
                 configureArgs        : '--disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root'
         ],
   ]

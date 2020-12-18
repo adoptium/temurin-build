@@ -35,7 +35,6 @@ class Config8 {
                 ]
         ],
 
-        // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows    : [
                 os                  : 'windows',
                 arch                : 'x64',

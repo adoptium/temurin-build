@@ -19,15 +19,22 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
 export ANT_HOME=/cygdrive/C/Projects/OpenJDK/apache-ant-1.10.1
+export DRAGONWELL8_BOOTSTRAP=/cygdrive/C/openjdk/dragonwell-bootstrap/jdk8u272-ga
 export ALLOW_DOWNLOADS=true
 export LANG=C
 export OPENJ9_NASM_VERSION=2.13.03
+export OPENSSL_VERSION=1.1.1i
 
 TOOLCHAIN_VERSION=""
 
 # Any version above 8 (11 for now due to openjdk-build#1409
 if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
-    BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+    if [ "$ARCHITECTURE" == "aarch64" ]; then
+      # Windows aarch64 cross compiles requires same version boot jdk
+      BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION))"
+    else
+      BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+    fi
     BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
     if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
@@ -35,13 +42,14 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
       # instead of BOOT_JDK_VARIABLE (no '$').
       export ${BOOT_JDK_VARIABLE}="$bootDir"
       if [ ! -d "$bootDir/bin" ]; then
-        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
-        releaseType="ga"
         # This is needed to convert x86-32 to x32 which is what the API uses
         case "$ARCHITECTURE" in
           "x86-32") downloadArch="x32";;
+          "aarch64") downloadArch="x64";;
           *) downloadArch="$ARCHITECTURE";;
         esac
+        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
+        releaseType="ga"
         apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/\${VARIANT}/normal/adoptopenjdk"
         apiURL=$(eval echo ${apiUrlTemplate})
         # make-adopt-build-farm.sh has 'set -e'. We need to disable that
@@ -81,7 +89,7 @@ then
 
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
   then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1h-x86_32-VS2013 --enable-openssl-bundling"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-${OPENSSL_VERSION}-x86_32-VS2013 --enable-openssl-bundling"
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
@@ -131,7 +139,7 @@ then
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="$PATH:/c/cygwin64/bin"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --disable-ccache"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1h-x86_64-VS2013 --enable-openssl-bundling"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/cygdrive/c/openjdk/OpenSSL-${OPENSSL_VERSION}-x86_64-VS2013 --enable-openssl-bundling"
       TOOLCHAIN_VERSION="2013"
     elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
     then
@@ -145,7 +153,7 @@ then
     elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
     then
       TOOLCHAIN_VERSION="2017"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-1.1.1h-x86_64-VS2017 --enable-openssl-bundling"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-${OPENSSL_VERSION}-x86_64-VS2017 --enable-openssl-bundling"
     fi
 
     CUDA_VERSION=9.0
@@ -191,6 +199,17 @@ then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     fi
   fi
+
+  if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+  then
+    if [[ -d "${DRAGONWELL8_BOOTSTRAP}" ]]; then
+      export JDK_BOOT_DIR="${DRAGONWELL8_BOOTSTRAP}"
+    fi
+  fi
+fi
+
+if [ "${ARCHITECTURE}" == "aarch64" ]; then
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --openjdk-target=aarch64-unknown-cygwin --with-build-jdk=$JDK_BOOT_DIR"
 fi
 
 if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
