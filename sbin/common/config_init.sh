@@ -48,7 +48,7 @@ COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
 CREATE_DEBUG_SYMBOLS_PACKAGE
 CUSTOM_CACERTS
-CROSS_COMPILE
+CROSSCOMPILE
 DEBUG_DOCKER
 DEBUG_IMAGE_PATH
 DISABLE_ADOPT_BRANCH_SAFETY
@@ -271,7 +271,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
 
         "--cross-compile" )
-        BUILD_CONFIG[CROSS_COMPILE]=true;;
+        BUILD_CONFIG[CROSSCOMPILE]=true;;
 
         "--keep" | "-k" )
         BUILD_CONFIG[KEEP_CONTAINER]=true;;
@@ -504,7 +504,7 @@ function configDefaults() {
 
   BUILD_CONFIG[RELEASE]=false
 
-  BUILD_CONFIG[CROSS_COMPILE]=false
+  BUILD_CONFIG[CROSSCOMPILE]=false
 
   # By default assume we have adopt patches applied to the repo
   BUILD_CONFIG[ADOPT_PATCHES]=true
