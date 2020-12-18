@@ -41,6 +41,9 @@ then
     export COMPILER_WARNINGS_FATAL=false
     echo "Compiler Warnings set to: $COMPILER_WARNINGS_FATAL"
   fi
+  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
+  fi
 else
   export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
