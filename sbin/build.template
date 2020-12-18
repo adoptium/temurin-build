@@ -39,10 +39,19 @@ else
   fi
 fi
 
+# unset CROSS_COMPILE as used by OpenSSL make
+export CROSS_COMPILE_SAVE=$CROSS_COMPILE
+unset CROSS_COMPILE
+
 #Templated var that, gets replaced by build.sh
 {makeCommandArg}
 
 exitCode=$?
+
+# restore CROSS_COMPILE
+export CROSS_COMPILE=$CROSS_COMPILE_SAVE
+unset CROSS_COMPILE_SAVE
+
 # shellcheck disable=SC2181
 if [ "${exitCode}" -ne 0 ]; then
    exit 3;
