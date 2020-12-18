@@ -169,7 +169,7 @@ class Builder implements Serializable {
                     return buildArgs.get(variant)
                 }
             } else {
-                context.error("Incorrect buildArgs type")
+                return configuration.buildArgs
             }
         }
 
