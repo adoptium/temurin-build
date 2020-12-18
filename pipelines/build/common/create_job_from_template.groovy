@@ -90,7 +90,9 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>CLEAN_WORKSPACE</strong></dt><dd>Wipe out workspace before build</dd>
             </dl>
         """)
-        textParam('DEFAULTS_JSON', "$DEFAULTS_JSON", "DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING! This passes down default constants to the downstream jobs.")
+        textParam('DEFAULTS_JSON', "$DEFAULTS_JSON", """
+        <strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes down default constants to the downstream jobs.
+        """)
         if (binding.hasVariable('CUSTOM_LIBRARY_LOCATION')) {
             stringParam('CUSTOM_LIBRARY_LOCATION', "$CUSTOM_LIBRARY_LOCATION")
         }

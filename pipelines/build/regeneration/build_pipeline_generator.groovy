@@ -91,7 +91,7 @@ node('master') {
         try {
           target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
         } catch(NoSuchFileException e2) {
-          println "[WARNING] No config found for JDK${javaVersion}"
+          println "[WARNING] No config found for JDK${javaVersion}. Skipping generation..."
           return
         }
       }
