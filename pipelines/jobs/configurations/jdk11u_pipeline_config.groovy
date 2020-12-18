@@ -162,7 +162,7 @@ class Config11 {
                 dockerImage          : 'adoptopenjdk/centos6_build_image',
                 arch                 : 'riscv64',
                 crossCompile         : 'x64',
-                additionalBuildArgs  : '--cross-compile',
+                buildArgs            : '--cross-compile',
                 configureArgs        : '--disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root'
         ],
   ]
