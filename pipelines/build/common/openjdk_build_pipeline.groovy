@@ -862,7 +862,7 @@ class Build {
         if (buildConfig.TARGET_OS == "windows") {
             filter = "**\\OpenJDK*-jdk*_windows_*.zip"
         } else {
-            filter = "**/OpenJDK*-jdk*.tar.gz"
+            filter = "OpenJDK*-jdk*_linux_*.tar.gz"
         }
 
         def crossCompileVersionOut = context.build job: "build-scripts/utils/cross-compiled-version-out",
