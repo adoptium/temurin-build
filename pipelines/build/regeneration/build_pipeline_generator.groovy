@@ -49,7 +49,7 @@ node('master') {
     def nightlyFolderPath = (params.NIGHTLY_FOLDER_PATH) ?: DEFAULTS_JSON["configDirectories"]["nightly"]
 
     // Load jobTemplatePath. This is where the pipeline_job_template.groovy code is located compared to the repository root. This actually sets up the pipeline job using the parameters above.
-    def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON["jobTemplateDirectories"]["upstream"]
+    def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON["templateDirectories"]["upstream"]
 
     // Load enablePipelineSchedule. This determines whether we will be generating the pipelines with a schedule (defined in jdkxx.groovy) or not.
     def enablePipelineSchedule = false
@@ -64,7 +64,7 @@ node('master') {
     println "SCRIPT_FOLDER_PATH = $scriptFolderPath"
     println "NIGHTLY_FOLDER_PATH = $nightlyFolderPath"
     println "JOB_TEMPLATE_PATH = $jobTemplatePath"
-    println "ENABLE_PIPELINE_SCHEDULE = $ENABLE_PIPELINE_SCHEDULE"
+    println "ENABLE_PIPELINE_SCHEDULE = $enablePipelineSchedule"
 
     (8..30).each({javaVersion ->
 

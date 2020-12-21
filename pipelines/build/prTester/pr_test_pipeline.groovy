@@ -57,7 +57,7 @@ class PullRequestTestPipeline implements Serializable {
         context.checkout([$class: 'GitSCM', userRemoteConfigs: [[url: config.GIT_URL]], branches: [[name: branch]]])
 
         context.println "JDK${javaVersion} disableJob = ${config.disableJob}"
-        context.jobDsl targets: DEFAULTS_JSON["jobTemplateDirectories"]["upstream"], ignoreExisting: false, additionalParameters: config
+        context.jobDsl targets: DEFAULTS_JSON["templateDirectories"]["upstream"], ignoreExisting: false, additionalParameters: config
     }
 
     /*
@@ -103,7 +103,7 @@ class PullRequestTestPipeline implements Serializable {
                 "build-scripts-pr-tester/build-test",
                 gitRepo,
                 branch,
-                DEFAULTS_JSON["jobTemplateDirectories"]["downstream"],
+                DEFAULTS_JSON["templateDirectories"]["downstream"],
                 DEFAULTS_JSON["scriptDirectories"]["downstream"],
                 "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test",
                 null,

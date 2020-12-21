@@ -91,7 +91,7 @@ node ("master") {
     // Pull in other parametrised values (or use defaults if they're not defined)
     def jobRoot = (params.JOB_ROOT) ?: DEFAULTS_JSON["jenkinsDetails"]["rootDirectory"]
     def jenkinsBuildRoot = (params.JENKINS_BUILD_ROOT) ?: "${DEFAULTS_JSON['jenkinsDetails']["rootUrl"]}/job/${jobRoot}/"
-    def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON["jobTemplateDirectories"]["downstream"]
+    def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON["templateDirectories"]["downstream"]
     def scriptPath = (params.SCRIPT_PATH) ?: DEFAULTS_JSON["scriptDirectories"]["downstream"]
     def excludes = (params.EXCLUDES_LIST) ?: ""
 
