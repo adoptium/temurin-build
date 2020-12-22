@@ -231,6 +231,8 @@ The following examples all use `-m1` as an example - this gets replaced with a l
   
   4. Build the `pipeline_jobs_generator` that you just made. Ensure the equivalent `openjdkxx_pipeline` to the generator exists or this will fail. If the job fails or is unstable, search the console log for `WARNING` or `ERROR` messages for why. Once it has completed successfully, the [pipeline](https://ci.adoptopenjdk.net/job/build-scripts/) is ready to go!
 
+  5. Update the view for the [build and test pipeline calendar](https://ci.adoptopenjdk.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version 
+
 ### Update Repository
 
 At some point in a java version's lifecycle, the JDK version will be maintained in an update repository. The first notification of this will be via mail list in one of two places:
