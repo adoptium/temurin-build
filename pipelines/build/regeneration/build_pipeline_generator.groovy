@@ -2,7 +2,8 @@ import java.nio.file.NoSuchFileException
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 //TODO: Change me
-String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
+String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
+String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: ADOPT_DEFAULTS_FILE_URL
 
 node('master') {
   timestamps {
@@ -10,7 +11,7 @@ node('master') {
     def get = new URL(DEFAULTS_FILE_URL).openConnection()
     Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(get.getInputStream().getText()) as Map
     if (!DEFAULTS_JSON) {
-      throw new Exception("[ERROR] No DEFAULTS_JSON found at ${DEFAULTS_FILE_URL}. Please ensure this path is correct and it leads to a JSON or Map object file.")
+      throw new Exception("[ERROR] No DEFAULTS_JSON found at ${DEFAULTS_FILE_URL}. Please ensure this path is correct and leads to a JSON or Map object file.")
     }
 
     def retiredVersions = [9, 10, 12, 13, 14]
@@ -30,7 +31,7 @@ node('master') {
       println "[WARNING] CHECKOUT_CREDENTIALS not specified! Checkout to $repoUri may fail if you do not have your ssh key on this machine."
     }
 
-    // Checkout into repository
+    // Checkout into user repository
     checkout(
       [
         $class: 'GitSCM',
@@ -39,17 +40,69 @@ node('master') {
       ]
     )
 
+    // Load the adopt class library so we can use the ConfigHandler class here. If we don't find an import library script in the user's repo, we checkout to openjdk-build and use the one that's present there. Finally, we check back out to the user repo.
+    def libraryPath = (params.LIBRARY_PATH) ?: DEFAULTS_JSON['importLibraryScript']
+    try {
+      load "${WORKSPACE}/${libraryPath}"
+    } catch (NoSuchFileException e) {
+      println "[WARNING] ${libraryPath} does not exist in your repository. Attempting to pull Adopt's library script instead."
+      checkout([$class: 'GitSCM',
+        branches: [ [ name: "master" ] ],
+        userRemoteConfigs: [ [ url: "https://github.com/AdoptOpenJDK/openjdk-build" ] ]
+      ])
+
+      try {
+        load "${WORKSPACE}/${libraryPath}"
+      } catch (NoSuchFileException e2) {
+        def getAdopt = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
+        String adoptlibPath = new JsonSlurper().parseText(getAdopt.getInputStream().getText())['importLibraryScript']
+        load "${WORKSPACE}/${adoptlibPath}"
+      }
+
+      checkout([$class: 'GitSCM',
+        branches: [ [ name: repoBranch ] ],
+        userRemoteConfigs: [ remoteConfigs ]
+      ])
+
+    }
+
+    def configHandler = new ConfigHandler(this, [ branch: repoBranch, remotes: remoteConfigs ])
+
     // Load jobRoot. This is where the openjdkxx-pipeline jobs will be created.
     def jobRoot = (params.JOB_ROOT) ?: DEFAULTS_JSON["jenkinsDetails"]["rootDirectory"]
 
     // Load scriptFolderPath. This is the folder where the openjdkxx-pipeline.groovy code is located compared to the repository root. These are the top level pipeline jobs.
     def scriptFolderPath = (params.SCRIPT_FOLDER_PATH) ?: DEFAULTS_JSON["scriptDirectories"]["upstream"]
 
+    if (!fileExists(scriptFolderPath)) {
+      println "[WARNING] ${scriptFolderPath} does not exist in your chosen repository. Updating it to use Adopt's instead"
+      configHandler.checkoutAdopt()
+      scriptFolderPath = "${WORKSPACE}/${configHandler.getAdoptDefaultsJson()['scriptDirectories']['upstream']}"
+      println "[SUCCESS] The path is now ${scriptFolderPath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
+      configHandler.checkoutCustom()
+    }
+
     // Load nightlyFolderPath. This is the folder where the jdkxx.groovy code is located compared to the repository root. These define what the default set of nightlies will be.
     def nightlyFolderPath = (params.NIGHTLY_FOLDER_PATH) ?: DEFAULTS_JSON["configDirectories"]["nightly"]
 
+    if (!fileExists(nightlyFolderPath)) {
+      println "[WARNING] ${nightlyFolderPath} does not exist in your chosen repository. Updating it to use Adopt's instead"
+      configHandler.checkoutAdopt()
+      nightlyFolderPath = "${WORKSPACE}/${configHandler.getAdoptDefaultsJson()['configDirectories']['nightly']}"
+      println "[SUCCESS] The path is now ${nightlyFolderPath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
+      configHandler.checkoutCustom()
+    }
+
     // Load jobTemplatePath. This is where the pipeline_job_template.groovy code is located compared to the repository root. This actually sets up the pipeline job using the parameters above.
     def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON["templateDirectories"]["upstream"]
+
+    if (!fileExists(jobTemplatePath)) {
+      println "[WARNING] ${jobTemplatePath} does not exist in your chosen repository. Updating it to use Adopt's instead"
+      configHandler.checkoutAdopt()
+      jobTemplatePath = "${WORKSPACE}/${configHandler.getAdoptDefaultsJson()['templateDirectories']['upstream']}"
+      println "[SUCCESS] The path is now ${jobTemplatePath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
+      configHandler.checkoutCustom()
+    }
 
     // Load enablePipelineSchedule. This determines whether we will be generating the pipelines with a schedule (defined in jdkxx.groovy) or not.
     def enablePipelineSchedule = false
@@ -89,10 +142,19 @@ node('master') {
         target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}u.groovy"
       } catch(NoSuchFileException e) {
         try {
+          println "[WARNING] jdk${javaVersion}u.groovy does not exist, chances are we want a jdk${javaVersion}.groovy file.\n[WARNING] Trying ${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
           target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
         } catch(NoSuchFileException e2) {
-          println "[WARNING] No config found for JDK${javaVersion}. Skipping generation..."
-          return
+          println "[FINAL WARNING] jdk${javaVersion}.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's nightly folder path in as a failsafe..."
+
+          configHandler.checkoutAdopt()
+          try {
+            target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
+          } catch (NoSuchFileException e3) {
+            target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}u.groovy"
+          }
+          configHandler.checkoutCustom()
+
         }
       }
 
