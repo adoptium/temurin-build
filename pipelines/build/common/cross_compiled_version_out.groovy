@@ -33,6 +33,7 @@ node (nodeLabel) {
                 println "UPSTREAM_JOB_NUMBER = ${jobNumber}"
                 println "JDK_FILE_FILTER = ${jdkFileFilter}"
                 println "FILENAME = ${fileName}"
+                println "OS = ${os}"
 
                 // Verify any previous binaries and versions have been cleaned out
                 if (fileExists('OpenJDKBinary')) {
