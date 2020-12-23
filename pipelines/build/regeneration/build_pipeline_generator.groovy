@@ -91,7 +91,7 @@ node('master') {
     if (!fileExists(scriptFolderPath)) {
       println "[WARNING] ${scriptFolderPath} does not exist in your chosen repository. Updating it to use Adopt's instead"
       checkoutAdopt()
-      scriptFolderPath = "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['scriptDirectories']['upstream']}"
+      scriptFolderPath = ADOPT_DEFAULTS_JSON['scriptDirectories']['upstream']
       println "[SUCCESS] The path is now ${scriptFolderPath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
       checkoutUser()
     }
@@ -102,7 +102,7 @@ node('master') {
     if (!fileExists(nightlyFolderPath)) {
       println "[WARNING] ${nightlyFolderPath} does not exist in your chosen repository. Updating it to use Adopt's instead"
       checkoutAdopt()
-      nightlyFolderPath = "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['configDirectories']['nightly']}"
+      nightlyFolderPath = ADOPT_DEFAULTS_JSON['configDirectories']['nightly']
       println "[SUCCESS] The path is now ${nightlyFolderPath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
       checkoutUser()
     }
@@ -113,7 +113,7 @@ node('master') {
     if (!fileExists(jobTemplatePath)) {
       println "[WARNING] ${jobTemplatePath} does not exist in your chosen repository. Updating it to use Adopt's instead"
       checkoutAdopt()
-      jobTemplatePath = "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['templateDirectories']['upstream']}"
+      jobTemplatePath = ADOPT_DEFAULTS_JSON['templateDirectories']['upstream']
       println "[SUCCESS] The path is now ${jobTemplatePath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
       checkoutUser()
     }
