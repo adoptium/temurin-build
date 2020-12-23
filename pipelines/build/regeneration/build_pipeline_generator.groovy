@@ -196,6 +196,9 @@ node('master') {
           } catch (Exception ex) {
             config.put("pipelineSchedule", "@daily")
           }
+        } else {
+          // Else here as template will detect pipelineSchedule even if inside the conditional
+          config.put("pipelineSchedule", "")
         }
 
         println "[INFO] JDK${javaVersion}: pipelineSchedule = ${config.pipelineSchedule}"

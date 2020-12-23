@@ -44,7 +44,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
     disabled(disableJob)
 
-    if (binding.hasVariable('pipelineSchedule')) {
+    if (binding.hasVariable('pipelineSchedule') && binding.getVariable('pipelineSchedule') != "") {
         triggers {
             cron(pipelineSchedule)
         }
