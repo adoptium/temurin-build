@@ -204,7 +204,13 @@ node('master') {
       println "[INFO] FINAL CONFIG FOR $javaVersion"
       println JsonOutput.prettyPrint(JsonOutput.toJson(config))
 
-      def create = jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: config
+      try {
+        jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: config
+      } catch (Exception e) {
+        checkoutAdopt()
+        jobDsl targets: ADOPT_DEFAULTS_JSON['templateDirectories']['upstream'], ignoreExisting: false, additionalParameters: config
+        checkoutUser()
+      }
 
       target.disableJob = false
 
