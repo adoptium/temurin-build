@@ -103,7 +103,10 @@ class Config16 {
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
-                test                : ['sanity.openjdk']
+                test                : [
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
+                ]
         ],
 
         ppc64Aix    : [
