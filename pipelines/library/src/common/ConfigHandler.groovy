@@ -42,7 +42,7 @@ class ConfigHandler {
     /*
     Changes dir to the user's repo
     */
-    public void checkoutCustom () {
+    public void checkoutUser () {
         context.checkout([$class: 'GitSCM',
             branches: [ [ name: configs["branch"] ] ],
             userRemoteConfigs: [ configs["remotes"] ]

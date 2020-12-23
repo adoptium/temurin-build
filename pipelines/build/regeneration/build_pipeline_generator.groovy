@@ -1,29 +1,54 @@
 import java.nio.file.NoSuchFileException
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
-//TODO: Change me
-String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
-String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: ADOPT_DEFAULTS_FILE_URL
 
 node('master') {
-  timestamps {
-    // Retrieve Defaults
-    def get = new URL(DEFAULTS_FILE_URL).openConnection()
-    Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(get.getInputStream().getText()) as Map
-    if (!DEFAULTS_JSON) {
-      throw new Exception("[ERROR] No DEFAULTS_JSON found at ${DEFAULTS_FILE_URL}. Please ensure this path is correct and leads to a JSON or Map object file.")
-    }
+  //TODO: Change me
+  String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
+  def getAdopt = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
+  Map<String, ?> ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(getAdopt.getInputStream().getText()) as Map
 
+  String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: ADOPT_DEFAULTS_FILE_URL
+  def getUser = new URL(DEFAULTS_FILE_URL).openConnection()
+  Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(getUser.getInputStream().getText()) as Map
+  if (!DEFAULTS_JSON) {
+    throw new Exception("[ERROR] No DEFAULTS_JSON found at ${DEFAULTS_FILE_URL}. Please ensure this path is correct and leads to a JSON or Map object file.")
+  }
+
+  Map remoteConfigs = [:]
+  def repoBranch = null
+
+  /*
+  Changes dir to Adopt's repo. Use closures as methods aren't accepted inside node blocks
+  */
+  def checkoutAdopt = { ->
+    checkout([$class: 'GitSCM',
+      branches: [ [ name: ADOPT_DEFAULTS_JSON["repository"]["branch"] ] ],
+      userRemoteConfigs: [ [ url: ADOPT_DEFAULTS_JSON["repository"]["url"] ] ]
+    ])
+  }
+
+  /*
+  Changes dir to the user's repo. Use closures as methods aren't accepted inside node blocks
+  */
+  def checkoutUser = { ->
+    checkout([$class: 'GitSCM',
+      branches: [ [ name: repoBranch ] ],
+      userRemoteConfigs: [ remoteConfigs ]
+    ])
+  }
+
+  timestamps {
     def retiredVersions = [9, 10, 12, 13, 14]
     def generatedPipelines = []
 
     // Load gitUri and gitBranch. These determine where we will be pulling configs from.
     def repoUri = (params.REPOSITORY_URL) ?: DEFAULTS_JSON["repository"]["url"]
-    def repoBranch = (params.REPOSITORY_BRANCH) ?: DEFAULTS_JSON["repository"]["branch"]
+    repoBranch = (params.REPOSITORY_BRANCH) ?: DEFAULTS_JSON["repository"]["branch"]
 
     // Load credentials to be used in checking out. This is in case we are checking out a URL that is not Adopts and they don't have their ssh key on the machine.
     def checkoutCreds = (params.CHECKOUT_CREDENTIALS) ?: ""
-    def remoteConfigs = [ url: repoUri ]
+    remoteConfigs = [ url: repoUri ]
     if (checkoutCreds != "") {
       // NOTE: This currently does not work with user credentials due to https://issues.jenkins.io/browse/JENKINS-60349
       remoteConfigs.put("credentialsId", "${checkoutCreds}")
@@ -46,27 +71,16 @@ node('master') {
       load "${WORKSPACE}/${libraryPath}"
     } catch (NoSuchFileException e) {
       println "[WARNING] ${libraryPath} does not exist in your repository. Attempting to pull Adopt's library script instead."
-      checkout([$class: 'GitSCM',
-        branches: [ [ name: "master" ] ],
-        userRemoteConfigs: [ [ url: "https://github.com/AdoptOpenJDK/openjdk-build" ] ]
-      ])
 
+      checkoutAdopt()
       try {
         load "${WORKSPACE}/${libraryPath}"
       } catch (NoSuchFileException e2) {
-        def getAdopt = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
-        String adoptlibPath = new JsonSlurper().parseText(getAdopt.getInputStream().getText())['importLibraryScript']
-        load "${WORKSPACE}/${adoptlibPath}"
+        load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
       }
-
-      checkout([$class: 'GitSCM',
-        branches: [ [ name: repoBranch ] ],
-        userRemoteConfigs: [ remoteConfigs ]
-      ])
+      checkoutUser()
 
     }
-
-    def configHandler = new ConfigHandler(this, [ branch: repoBranch, remotes: remoteConfigs ])
 
     // Load jobRoot. This is where the openjdkxx-pipeline jobs will be created.
     def jobRoot = (params.JOB_ROOT) ?: DEFAULTS_JSON["jenkinsDetails"]["rootDirectory"]
@@ -76,10 +90,10 @@ node('master') {
 
     if (!fileExists(scriptFolderPath)) {
       println "[WARNING] ${scriptFolderPath} does not exist in your chosen repository. Updating it to use Adopt's instead"
-      configHandler.checkoutAdopt()
-      scriptFolderPath = "${WORKSPACE}/${configHandler.getAdoptDefaultsJson()['scriptDirectories']['upstream']}"
+      checkoutAdopt()
+      scriptFolderPath = "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['scriptDirectories']['upstream']}"
       println "[SUCCESS] The path is now ${scriptFolderPath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
-      configHandler.checkoutCustom()
+      checkoutUser()
     }
 
     // Load nightlyFolderPath. This is the folder where the jdkxx.groovy code is located compared to the repository root. These define what the default set of nightlies will be.
@@ -87,10 +101,10 @@ node('master') {
 
     if (!fileExists(nightlyFolderPath)) {
       println "[WARNING] ${nightlyFolderPath} does not exist in your chosen repository. Updating it to use Adopt's instead"
-      configHandler.checkoutAdopt()
-      nightlyFolderPath = "${WORKSPACE}/${configHandler.getAdoptDefaultsJson()['configDirectories']['nightly']}"
+      checkoutAdopt()
+      nightlyFolderPath = "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['configDirectories']['nightly']}"
       println "[SUCCESS] The path is now ${nightlyFolderPath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
-      configHandler.checkoutCustom()
+      checkoutUser()
     }
 
     // Load jobTemplatePath. This is where the pipeline_job_template.groovy code is located compared to the repository root. This actually sets up the pipeline job using the parameters above.
@@ -98,10 +112,10 @@ node('master') {
 
     if (!fileExists(jobTemplatePath)) {
       println "[WARNING] ${jobTemplatePath} does not exist in your chosen repository. Updating it to use Adopt's instead"
-      configHandler.checkoutAdopt()
-      jobTemplatePath = "${WORKSPACE}/${configHandler.getAdoptDefaultsJson()['templateDirectories']['upstream']}"
+      checkoutAdopt()
+      jobTemplatePath = "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['templateDirectories']['upstream']}"
       println "[SUCCESS] The path is now ${jobTemplatePath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
-      configHandler.checkoutCustom()
+      checkoutUser()
     }
 
     // Load enablePipelineSchedule. This determines whether we will be generating the pipelines with a schedule (defined in jdkxx.groovy) or not.
@@ -145,15 +159,20 @@ node('master') {
           println "[WARNING] jdk${javaVersion}u.groovy does not exist, chances are we want a jdk${javaVersion}.groovy file.\n[WARNING] Trying ${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
           target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
         } catch(NoSuchFileException e2) {
-          println "[FINAL WARNING] jdk${javaVersion}.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's nightly folder path in as a failsafe..."
+          println "[WARNING] jdk${javaVersion}.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's nightlies in..."
 
-          configHandler.checkoutAdopt()
+          checkoutAdopt()
           try {
-            target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
+            target = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['configDirectories']['nightly']}/jdk${javaVersion}.groovy"
           } catch (NoSuchFileException e3) {
-            target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}u.groovy"
+            try {
+              target = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['configDirectories']['nightly']}/jdk${javaVersion}u.groovy"
+            } catch (NoSuchFileException e4) {
+              println "[WARNING] No config found for JDK${javaVersion}"
+              return
+            }
           }
-          configHandler.checkoutCustom()
+          checkoutUser()
 
         }
       }
