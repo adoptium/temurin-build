@@ -11,8 +11,8 @@ node('master') {
   String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: ADOPT_DEFAULTS_FILE_URL
   def getUser = new URL(DEFAULTS_FILE_URL).openConnection()
   Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(getUser.getInputStream().getText()) as Map
-  if (!DEFAULTS_JSON) {
-    throw new Exception("[ERROR] No DEFAULTS_JSON found at ${DEFAULTS_FILE_URL}. Please ensure this path is correct and leads to a JSON or Map object file.")
+  if (!DEFAULTS_JSON || !Map.class.isInstance(DEFAULTS_JSON)) {
+    throw new Exception("[ERROR] No DEFAULTS_JSON found at ${DEFAULTS_FILE_URL} or it is not a valid JSON object. Please ensure this path is correct and leads to a JSON or Map object file.")
   }
 
   Map remoteConfigs = [:]

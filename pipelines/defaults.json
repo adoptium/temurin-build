@@ -1,6 +1,6 @@
 {
     "repository"             : {
-        "url"                : "https://github.com/AdoptOpenJDK/openjdk-build",
+        "url"                : "https://github.com/AdoptOpenJDK/openjdk-build.git",
         "branch"             : "master"
     },
     "jenkinsDetails"         : {
