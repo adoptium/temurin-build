@@ -198,7 +198,7 @@ node('master') {
           }
         } else {
           // Else here as template will detect pipelineSchedule even if inside the conditional
-          config.put("pipelineSchedule", "")
+          config.put("noSchedule", "")
         }
 
         println "[INFO] JDK${javaVersion}: pipelineSchedule = ${config.pipelineSchedule}"
