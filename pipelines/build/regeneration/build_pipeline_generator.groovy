@@ -120,7 +120,7 @@ node('master') {
       }
 
       // Load enablePipelineSchedule. This determines whether we will be generating the pipelines with a schedule (defined in jdkxx.groovy) or not.
-      def enablePipelineSchedule = false
+      Boolean enablePipelineSchedule = false
       if (params.ENABLE_PIPELINE_SCHEDULE) {
         enablePipelineSchedule = true
       }
@@ -190,7 +190,7 @@ node('master') {
         println "[INFO] JDK${javaVersion}: disableJob = ${config.disableJob}"
 
         // Set job schedule
-        if (enablePipelineSchedule == true) {
+        if (enablePipelineSchedule) {
           try {
             config.put("pipelineSchedule", target.triggerSchedule)
           } catch (Exception ex) {
