@@ -190,7 +190,7 @@ node('master') {
         println "[INFO] JDK${javaVersion}: disableJob = ${config.disableJob}"
 
         // Set job schedule
-        if (enablePipelineSchedule) {
+        if (enablePipelineSchedule.toBoolean()) {
           try {
             config.put("pipelineSchedule", target.triggerSchedule)
           } catch (Exception ex) {
