@@ -191,11 +191,7 @@ node('master') {
 
         // Set job schedule
         if (enablePipelineSchedule.toBoolean()) {
-          try {
-            config.put("pipelineSchedule", target.triggerSchedule)
-          } catch (Exception ex) {
-            config.put("pipelineSchedule", "@daily")
-          }
+          config.put("pipelineSchedule", target.triggerSchedule)
         } else {
           // Else here as template will detect pipelineSchedule even if inside the conditional
           config.put("noSchedule", "")
