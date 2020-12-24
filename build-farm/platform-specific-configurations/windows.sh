@@ -152,7 +152,7 @@ then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
-      TOOLCHAIN_VERSION="2019"
+      TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-${OPENSSL_VERSION}-x86_64-VS2017 --enable-openssl-bundling"
     elif [ "$JAVA_FEATURE_VERSION" -gt 11 ]
     then
