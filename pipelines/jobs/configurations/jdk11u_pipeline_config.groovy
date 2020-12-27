@@ -43,7 +43,7 @@ class Config11 {
                 arch                : 'x64',
                 additionalNodeLabels: [
                         hotspot:    'win2012',
-                        openj9:     'win2012&&vs2017'
+                        openj9:     'win2012&&vs2017',
                         dragonwell: 'win2012&&dragonwell'
                 ],
                 buildArgs : [
