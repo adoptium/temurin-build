@@ -62,7 +62,7 @@ class Config16 {
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: 'win2012&&vs2017',
-                test                : 'default',
+                test                : 'default'
         ],
         
         x64WindowsXL: [
