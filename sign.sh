@@ -94,8 +94,8 @@ signRelease()
         echo "Signing ${f}"
         for ((i = 0; i < ${#TIMESTAMPKEYS[@]}; i++))
         do
-          if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t ${TIMESTAMPVALUES[i]} "$f"; then
-            echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${TIMESTAMPVALUES[i]} - RC $? ... Trying new server in 5 seconds"
+          if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${TIMESTAMPVALUES[i]}" "$f"; then
+            echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at "${TIMESTAMPVALUES[i]}" - RC $? ... Trying new server in 5 seconds"
             sleep 5s
           fi
         done
@@ -108,8 +108,8 @@ signRelease()
         echo "Signing ${f}"
         for ((i = 0; i < ${#TIMESTAMPKEYS[@]}; i++))
         do
-          if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t ${TIMESTAMPVALUES[i]} "$f"; then
-            echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${TIMESTAMPVALUES[i]} - RC $? ... Retrying in 5 seconds"
+          if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${TIMESTAMPVALUES[i]}" "$f"; then
+            echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at "${TIMESTAMPVALUES[i]}" - RC $? ... Retrying in 5 seconds"
             sleep 5s
           fi
         done
