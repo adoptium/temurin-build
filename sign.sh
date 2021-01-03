@@ -33,6 +33,16 @@ WORKSPACE=$(pwd)
 TMP_DIR_NAME="tmp"
 TMP_DIR="${WORKSPACE}/${TMP_DIR_NAME}/"
 
+# List of valid timestamp servers:
+# http://timestamp.comodoca.com/authenticode -> OK 02/08/2030 -> Sectigo RSA Time Stamping Signer #1
+# http://timestamp.sectigo.com -> OK 02/08/2030 -> Sectigo RSA Time Stamping Signer #1 .. same as previous but with another url
+# http://timestamp.comodoca.com/rfc3161 -> OK 02/08/2030 -> Sectigo RSA Time Stamping Signer #1 .. same as previous but with another url
+# http://tsa.startssl.com/rfc3161 -> OK 15/08/2028 -> WoSign Time Stamping Signer ( buyed by WoTrus )
+# http://tsa.starfieldtech.com -> OK 17/09/2027 -> Starfield Timestamp Authority - G2
+# http://timestamp.globalsign.com/scripts/timstamp.dll -> OK 24/06/2027 -> GlobalSign TSA for MS Authenticode - G2
+# http://timestamp.digicert.com -> OK 22/10/2024 -> DigiCert Timestamp Responder
+TIMESTAMP_SERVER_CONFIG="./serverTimestamp.properties"
+
 checkSignConfiguration() {
   if [[ "${OPERATING_SYSTEM}" == "windows" ]] ; then
     if [ ! -f "${SIGNING_CERTIFICATE}" ]
@@ -49,9 +59,29 @@ checkSignConfiguration() {
   fi
 }
 
+# Array for holding the TIMESTAMP config
+TIMESTAMPKEYS=()
+TIMESTAMPVALUES=()
+
+# Read in the time stamp server config
+function readTimestampServerConfig()
+{
+  if [ -f "$TIMESTAMP_SERVER_CONFIG" ]
+  then
+    while IFS='=' read -r key value
+    do
+      TIMESTAMPKEYS+=("$key")
+      TIMESTAMPVALUES+=("$value")
+    done < "$TIMESTAMP_SERVER_CONFIG"
+  fi
+}
+
 # Sign the built binary
 signRelease()
 {
+
+  readTimestampServerConfig
+
   case "$OPERATING_SYSTEM" in
     "windows")
       echo "Signing Windows release"
@@ -62,11 +92,13 @@ signRelease()
       echo "$FILES" | while read -r f;
       do
         echo "Signing ${f}"
-        if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.globalsign.com/scripts/timestamp.dll "$f"; then
-          echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error - RC $? ... Retrying in 10 seconds"
-          sleep 10s
-          "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.globalsign.com/scripts/timestamp.dll "$f"
-        fi        
+        for ((i = 0; i < ${#TIMESTAMPKEYS[@]}; i++))
+        do
+          if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t ${TIMESTAMPVALUES[i]} "$f"; then
+            echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${TIMESTAMPVALUES[i]} - RC $? ... Trying new server in 5 seconds"
+            sleep 5s
+          fi
+        done
       done
 
       # Sign .dll files
@@ -74,11 +106,13 @@ signRelease()
       echo "$FILES" | while read -r f;
       do
         echo "Signing ${f}"
-        if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.globalsign.com/scripts/timestamp.dll "$f"; then
-          echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error - RC $? ... Retrying in 10 seconds"
-          sleep 10s
-          "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.globalsign.com/scripts/timestamp.dll "$f"
-        fi
+        for ((i = 0; i < ${#TIMESTAMPKEYS[@]}; i++))
+        do
+          if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t ${TIMESTAMPVALUES[i]} "$f"; then
+            echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${TIMESTAMPVALUES[i]} - RC $? ... Retrying in 5 seconds"
+            sleep 5s
+          fi
+        done
       done
       ;;
     "mac"*)
