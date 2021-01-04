@@ -41,7 +41,8 @@ class Config8 {
                 additionalNodeLabels: [
                         hotspot : 'win2012',
                         corretto: 'win2012',
-                        openj9  : 'win2012&&mingw-cygwin'
+                        openj9  : 'win2012&&mingw-cygwin',
+                        dragonwell: 'win2012&&dragonwell'
                 ],
                 test                 : 'default'
         ],
