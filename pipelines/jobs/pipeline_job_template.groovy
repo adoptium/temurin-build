@@ -44,10 +44,8 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
     disabled(disableJob)
 
-    if (binding.hasVariable('pipelineSchedule')) {
-        triggers {
-            cron(pipelineSchedule)
-        }
+    triggers {
+        cron(pipelineSchedule)
     }
 
     logRotator {
