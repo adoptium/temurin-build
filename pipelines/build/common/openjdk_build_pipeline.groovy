@@ -70,9 +70,7 @@ class Build {
         AIX_CLEAN_TIMEOUT : 1,
         MASTER_CLEAN_TIMEOUT : 1,
         DOCKER_CHECKOUT_TIMEOUT : 1,
-        DOCKER_PULL_TIMEOUT : 2,
-        SIGN_JOB_TIMEOUT : 2,
-        INSTALLER_JOBS_TIMEOUT : 3
+        DOCKER_PULL_TIMEOUT : 2
     ]
 
     /*
@@ -1168,11 +1166,10 @@ class Build {
                 // Sign and archive jobs if needed
                 if (enableSigner) {
                     try {
-                        context.timeout(time: buildTimeouts.SIGN_JOB_TIMEOUT, unit: "HOURS") {
-                            sign(versionInfo)
-                        }
+                        // Sign job timeout managed by Jenkins job config
+                        sign(versionInfo)
                     } catch (FlowInterruptedException e) {
-                        context.println "[ERROR] Sign job timeout (${buildTimeouts.SIGN_JOB_TIMEOUT} HOURS) has been reached OR the downstream sign job failed. Exiting..."
+                        context.println "[ERROR] downstream sign job failed. Exiting..."
                         throw new Exception()
                     }
                 }
@@ -1190,11 +1187,10 @@ class Build {
                 //buildInstaller if needed
                 if (enableInstallers) {
                     try {
-                        context.timeout(time: buildTimeouts.INSTALLER_JOBS_TIMEOUT, unit: "HOURS") {
-                            buildInstaller(versionInfo)
-                        }
+                        // Installer job timeout managed by Jenkins job config
+                        buildInstaller(versionInfo)
                     } catch (FlowInterruptedException e) {
-                        context.println "[ERROR] Installer job timeout (${buildTimeouts.INSTALLER_JOBS_TIMEOUT} HOURS) has been reached OR the downstream installer job failed. Exiting..."
+                        context.println "[ERROR] downstream installer job failed. Exiting..."
                         throw new Exception()
                     }
                 }
