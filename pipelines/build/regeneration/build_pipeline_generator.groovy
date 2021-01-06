@@ -152,7 +152,8 @@ node('master') {
           CHECKOUT_CREDENTIALS: checkoutCreds,
           JOB_NAME            : "openjdk${javaVersion}-pipeline",
           SCRIPT              : "${scriptFolderPath}/openjdk${javaVersion}_pipeline.groovy",
-          disableJob          : false
+          disableJob          : false,
+          pipelineSchedule    : ""
         ];
 
         def target;
@@ -212,6 +213,7 @@ node('master') {
         try {
           jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: config
         } catch (Exception e) {
+          println "[WARNING] Something went wrong when creating the job dsl. It may be because we are trying to pull the template inside a user repository. Using Adopt's template instead...\n${e}"
           checkoutAdopt()
           jobDsl targets: ADOPT_DEFAULTS_JSON['templateDirectories']['upstream'], ignoreExisting: false, additionalParameters: config
           checkoutUser()
