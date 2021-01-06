@@ -109,7 +109,7 @@ node ("master") {
           buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}u_pipeline_config.groovy"
           javaVersion += "u"
         } catch (NoSuchFileException e2) {
-          println "[WARNING] ${javaVersion}_pipeline_config.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's build config in..."
+          println "[WARNING] ${javaVersion}u_pipeline_config.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's build config in..."
 
           checkoutAdopt()
           try {
@@ -205,13 +205,14 @@ node ("master") {
     if (jenkinsCreds == "") { println "[WARNING] No Jenkins API Credentials have been provided! If your server does not have anonymous read enabled, you may encounter 403 api request error codes." }
 
     // Load regen script and execute base file
+    Closure regenerationScript
     def regenScriptPath = (params.REGEN_SCRIPT_PATH) ?: DEFAULTS_JSON['scriptDirectories']['regeneration']
     try {
-      Closure regenerationScript = load "${WORKSPACE}/${regenScriptPath}"
+      regenerationScript = load "${WORKSPACE}/${regenScriptPath}"
     } catch (NoSuchFileException e) {
       println "[WARNING] ${regenScriptPath} does not exist in your chosen repository. Using adopt's script path instead"
       checkoutAdopt()
-      Closure regenerationScript = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['scriptDirectories']['regeneration']}"
+      regenerationScript = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['scriptDirectories']['regeneration']}"
       checkoutUser()
     }
 
@@ -243,8 +244,6 @@ node ("master") {
         ).regenerate()
       }
     } else {
-      println "[WARNING] No Jenkins API Credentials have been provided! If your server does not have anonymous read enabled, you may encounter 403 api request error codes."
-
       regenerationScript(
         javaVersion,
         buildConfigurations,
