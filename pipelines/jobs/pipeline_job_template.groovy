@@ -78,6 +78,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         booleanParam('cleanWorkspaceBeforeBuild', false, "Clean out the workspace before the build")
         booleanParam('propagateFailures', propagateFailures, "If true, a failure of <b>ANY</b> downstream build (but <b>NOT</b> test) will cause the whole build to fail")
         stringParam('adoptBuildNumber', "", "Empty by default. If you ever need to re-release then bump this number. Currently this is only added to the build metadata file.")
-        textParam('defaultsJson', JsonOutput.prettyPrint(JsonOutput.toJson(defaultsJson)), '<strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes down default constants to the downstream jobs.')
+        textParam('defaultsJson', JsonOutput.prettyPrint(JsonOutput.toJson(defaultsJson)), '<strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes down the user\'s default constants to the downstream jobs.')
+        textParam('adoptDefaultsJson', JsonOutput.prettyPrint(JsonOutput.toJson(adoptDefaultsJson)), '<strong>DO NOT ALTER THIS PARAM UNDER ANY CIRCUMSTANCES!</strong> This passes down adopt\'s default constants to the downstream jobs. NOTE: <code>defaultsJson</code> has priority, the constants contained within this param will only be used as a failsafe.')
     }
 }

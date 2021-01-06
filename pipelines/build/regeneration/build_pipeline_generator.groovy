@@ -204,6 +204,7 @@ node('master') {
         println "[INFO] JDK${javaVersion}: pipelineSchedule = ${config.pipelineSchedule}"
 
         config.put("defaultsJson", DEFAULTS_JSON)
+        config.put("adoptDefaultsJson", ADOPT_DEFAULTS_JSON)
 
         println "[INFO] FINAL CONFIG FOR $javaVersion"
         println JsonOutput.prettyPrint(JsonOutput.toJson(config))

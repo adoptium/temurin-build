@@ -363,7 +363,11 @@ class Regeneration implements Serializable {
         params.put("GIT_URI", gitRemoteConfigs['url'])
         params.put("GIT_BRANCH", gitBranch)
 
+        def repoHandler = new RepoHandler(context, [branch: gitBranch, remotes: gitRemoteConfigs])
         params.put("DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(DEFAULTS_JSON)))
+        Map ADOPT_DEFAULTS_JSON = repoHandler.getAdoptDefaultsJson()
+        params.put("ADOPT_DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(ADOPT_DEFAULTS_JSON)))
+
         params.put("BUILD_CONFIG", config.toJson())
 
         // If we are not using default lib or script param values, be sure to update the initial downstream job script file
@@ -383,9 +387,8 @@ class Regeneration implements Serializable {
             def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
         } catch (Exception e) {
             context.println "[WARNING] Something went wrong when creating the job dsl. It may be because we are trying to pull the template inside a user repository. Using Adopt's template instead...\n${e}"
-            def repoHandler = new RepoHandler(context, [branch: gitBranch, configs: gitRemoteConfigs])
             repoHandler.checkoutAdopt()
-            def create = context.jobDsl targets: repoHandler.getAdoptDefaultsJson()['templateDirectories']['downstream'], ignoreExisting: false, additionalParameters: params
+            def create = context.jobDsl targets: ADOPT_DEFAULTS_JSON['templateDirectories']['downstream'], ignoreExisting: false, additionalParameters: params
             repoHandler.checkoutUser()
         }
         return create
