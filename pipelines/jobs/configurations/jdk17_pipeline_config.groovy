@@ -141,6 +141,7 @@ class Config17 {
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
+                additionalNodeLabels: 'centos7',
                 test                : [
                         nightly: [],
                         weekly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
@@ -155,6 +156,7 @@ class Config17 {
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace'
