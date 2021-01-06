@@ -1,5 +1,6 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
+import common.RepoHandler
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import java.util.Base64
@@ -24,6 +25,7 @@ This file is a job that regenerates all of the build configurations in pipelines
 2) Attempts to create downstream job dsl's for each pipeline job configuration
 */
 class Regeneration implements Serializable {
+    private final RepoHandler repoHandler
     private final String javaVersion
     private final Map<String, Map<String, ?>> buildConfigurations
     private final Map<String, ?> targetConfigurations
@@ -53,6 +55,7 @@ class Regeneration implements Serializable {
     Constructor
     */
     public Regeneration(
+        RepoHandler repoHandler,
         String javaVersion,
         Map<String, Map<String, ?>> buildConfigurations,
         Map<String, ?> targetConfigurations,
@@ -71,6 +74,7 @@ class Regeneration implements Serializable {
         String jenkinsCreds,
         String checkoutCreds
     ) {
+        this.repoHandler = repoHandler
         this.javaVersion = javaVersion
         this.buildConfigurations = buildConfigurations
         this.targetConfigurations = targetConfigurations
@@ -378,8 +382,14 @@ class Regeneration implements Serializable {
             params.put("CHECKOUT_CREDENTIALS", checkoutCreds)
         }
 
-        def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
-
+        try {
+            def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
+        } catch (Exception e) {
+            context.println "[WARNING] Something went wrong when creating the job dsl. It may be because we are trying to pull the template inside a user repository. Trying again from Adopt's repository...\n${e}"
+            repoHandler.checkoutAdopt()
+            def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
+            repoHandler.checkoutUser()
+        }
         return create
     }
 
@@ -577,6 +587,7 @@ class Regeneration implements Serializable {
 }
 
 return {
+    RepoHandler repoHandler,
     String javaVersion,
     Map<String, Map<String, ?>> buildConfigurations,
     Map<String, ?> targetConfigurations,
@@ -602,6 +613,7 @@ return {
         }
 
         return new Regeneration(
+            repoHandler,
             javaVersion,
             buildConfigurations,
             targetConfigurations,

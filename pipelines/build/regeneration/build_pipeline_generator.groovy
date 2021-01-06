@@ -8,6 +8,9 @@ node('master') {
     String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
     def getAdopt = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
     Map<String, ?> ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(getAdopt.getInputStream().getText()) as Map
+    if (!ADOPT_DEFAULTS_JSON || !Map.class.isInstance(ADOPT_DEFAULTS_JSON)) {
+      throw new Exception("[ERROR] No ADOPT_DEFAULTS_JSON found at ${ADOPT_DEFAULTS_FILE_URL} or it is not a valid JSON object. Please ensure this path is correct and leads to a JSON or Map object file. NOTE: Since this adopt's defaults and unlikely to change location, this is likely a network or GitHub issue.")
+    }
 
     String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: ADOPT_DEFAULTS_FILE_URL
     def getUser = new URL(DEFAULTS_FILE_URL).openConnection()
@@ -66,7 +69,7 @@ node('master') {
         ]
       )
 
-      // Load the adopt class library so we can use the ConfigHandler class here. If we don't find an import library script in the user's repo, we checkout to openjdk-build and use the one that's present there. Finally, we check back out to the user repo.
+      // Load the adopt class library so we can use their classes here. If we don't find an import library script in the user's repo, we checkout to openjdk-build and use the one that's present there. Finally, we check back out to the user repo.
       def libraryPath = (params.LIBRARY_PATH) ?: DEFAULTS_JSON['importLibraryScript']
       try {
         load "${WORKSPACE}/${libraryPath}"
@@ -93,7 +96,7 @@ node('master') {
         println "[WARNING] ${scriptFolderPath} does not exist in your chosen repository. Updating it to use Adopt's instead"
         checkoutAdopt()
         scriptFolderPath = ADOPT_DEFAULTS_JSON['scriptDirectories']['upstream']
-        println "[SUCCESS] The path is now ${scriptFolderPath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
+        println "[SUCCESS] The path is now ${scriptFolderPath} relative to ${ADOPT_DEFAULTS_JSON['repository']['url']}"
         checkoutUser()
       }
 
@@ -104,7 +107,7 @@ node('master') {
         println "[WARNING] ${nightlyFolderPath} does not exist in your chosen repository. Updating it to use Adopt's instead"
         checkoutAdopt()
         nightlyFolderPath = ADOPT_DEFAULTS_JSON['configDirectories']['nightly']
-        println "[SUCCESS] The path is now ${nightlyFolderPath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
+        println "[SUCCESS] The path is now ${nightlyFolderPath} relative to ${ADOPT_DEFAULTS_JSON['repository']['url']}"
         checkoutUser()
       }
 
@@ -115,7 +118,7 @@ node('master') {
         println "[WARNING] ${jobTemplatePath} does not exist in your chosen repository. Updating it to use Adopt's instead"
         checkoutAdopt()
         jobTemplatePath = ADOPT_DEFAULTS_JSON['templateDirectories']['upstream']
-        println "[SUCCESS] The path is now ${jobTemplatePath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
+        println "[SUCCESS] The path is now ${jobTemplatePath} relative to ${ADOPT_DEFAULTS_JSON['repository']['url']}"
         checkoutUser()
       }
 

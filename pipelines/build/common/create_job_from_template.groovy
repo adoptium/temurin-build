@@ -44,7 +44,6 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                     branch("${GIT_BRANCH}")
                     extensions {
                         //repo clean is performed after scm checkout in pipelines/build/common/openjdk_build_pipeline.groovy
-
                         pruneStaleBranch()
                     }
                 }
