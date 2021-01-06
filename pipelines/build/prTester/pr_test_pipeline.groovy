@@ -42,7 +42,7 @@ class PullRequestTestPipeline implements Serializable {
                 JOB_NAME            : "openjdk${javaVersion}-pipeline",
                 SCRIPT              : "${DEFAULTS_JSON['scriptDirectories']['upstream']}/openjdk${javaVersion}_pipeline.groovy",
                 disableJob          : false,
-                triggerSchedule     : "0 0 31 2 0",
+                pipelineSchedule    : "0 0 31 2 0",
                 targetConfigurations: testConfigurations,
                 defaultsJson        : DEFAULTS_JSON
         ]
@@ -101,9 +101,10 @@ class PullRequestTestPipeline implements Serializable {
                 currentBuild,
                 context,
                 "build-scripts-pr-tester/build-test",
-                gitRepo,
+                [url: gitRepo],
                 branch,
                 DEFAULTS_JSON["templateDirectories"]["downstream"],
+                DEFAULTS_JSON["importLibraryScript"],
                 DEFAULTS_JSON["scriptDirectories"]["downstream"],
                 "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test",
                 null,

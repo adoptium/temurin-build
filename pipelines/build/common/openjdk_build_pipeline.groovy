@@ -116,13 +116,11 @@ class Build {
                     context.println "Found Java Version Number: ${headVersion}"
                 }
             } catch (FlowInterruptedException e) {
-                context.println "[ERROR] Adopt API Request timeout (${buildTimeouts.API_REQUEST_TIMEOUT} HOURS) has been reached. Exiting..."
-                throw new Exception()
+                throw new Exception("[ERROR] Adopt API Request timeout (${buildTimeouts.API_REQUEST_TIMEOUT} HOURS) has been reached. Exiting...")
             }
             return headVersion
         } else {
-            context.error("Failed to read java version '${javaToBuild}'")
-            throw new Exception()
+            throw new Exception("Failed to read java version '${javaToBuild}'")
         }
     }
 
@@ -179,8 +177,7 @@ class Build {
             } else if (buildConfig.VARIANT == "dragonwell") {
                 jdkBranch = 'master'
             } else {
-                context.error("Unrecognised build variant '${buildConfig.VARIANT}' ")
-                throw new Exception()
+                throw new Exception("Unrecognised build variant '${buildConfig.VARIANT}' ")
             }
         }
 
@@ -205,8 +202,7 @@ class Build {
         } else if (buildConfig.VARIANT == "dragonwell") {
             suffix = "alibaba/dragonwell${javaNumber}"
         } else {
-            context.error("Unrecognised build variant '${buildConfig.VARIANT}' ")
-            throw new Exception()
+            throw new Exception("Unrecognised build variant '${buildConfig.VARIANT}' ")
         }
 
         jdkRepo = "https://github.com/${suffix}"
@@ -605,8 +601,7 @@ class Build {
                 fullVersionOutput = context.readFile(versionPath)
                 context.println "SUCCESS: ${versionPath} found"
             } catch (NoSuchFileException e) {
-                context.println "ERROR: ${versionPath} was not found. Exiting..."
-                throw new Exception()
+                throw new Exception("ERROR: ${versionPath} was not found. Exiting...")
             }
 
             // Get Configure Args
@@ -617,8 +612,7 @@ class Build {
                 configureArguments = context.readFile(configurePath)
                 context.println "SUCCESS: configure.txt found"
             } catch (NoSuchFileException e) {
-                context.println "ERROR: ${configurePath} was not found. Exiting..."
-                throw new Exception()
+                throw new Exception("ERROR: ${configurePath} was not found. Exiting...")
             }
 
             // Get Variant Version for OpenJ9
@@ -635,8 +629,7 @@ class Build {
                     j9Major = context.readFile(j9MajorPath)
                     context.println "SUCCESS: major.txt found"
                 } catch (NoSuchFileException e) {
-                    context.println "ERROR: ${j9MajorPath} was not found. Exiting..."
-                    throw new Exception()
+                    throw new Exception("ERROR: ${j9MajorPath} was not found. Exiting...")
                 }
 
                 context.println "INFO: Attempting to read workspace/target/metadata/variant_version/minor.txt..."
@@ -644,8 +637,7 @@ class Build {
                     j9Minor = context.readFile(j9MinorPath)
                     context.println "SUCCESS: minor.txt found"
                 } catch (NoSuchFileException e) {
-                    context.println "ERROR: ${j9MinorPath} was not found. Exiting..."
-                    throw new Exception()
+                    throw new Exception("ERROR: ${j9MinorPath} was not found. Exiting...")
                 }
 
                 context.println "INFO: Attempting to read workspace/target/metadata/variant_version/security.txt..."
@@ -653,8 +645,7 @@ class Build {
                     j9Security = context.readFile(j9SecurityPath)
                     context.println "SUCCESS: security.txt found"
                 } catch (NoSuchFileException e) {
-                    context.println "ERROR: ${j9SecurityPath} was not found. Exiting..."
-                    throw new Exception()
+                    throw new Exception("ERROR: ${j9SecurityPath} was not found. Exiting...")
                 }
 
                 context.println "INFO: Attempting to read workspace/target/metadata/variant_version/tags.txt..."
@@ -662,8 +653,7 @@ class Build {
                     j9Tags = context.readFile(j9TagsPath)
                     context.println "SUCCESS: tags.txt found"
                 } catch (NoSuchFileException e) {
-                    context.println "ERROR: ${j9TagsPath} was not found. Exiting..."
-                    throw new Exception()
+                    throw new Exception("ERROR: ${j9TagsPath} was not found. Exiting...")
                 }
 
                 variantVersion = [major: j9Major, minor: j9Minor, security: j9Security, tags: j9Tags]
@@ -677,8 +667,7 @@ class Build {
                 vendorName = context.readFile(vendorPath)
                 context.println "SUCCESS: vendor.txt found"
             } catch (NoSuchFileException e) {
-                context.println "ERROR: ${vendorPath} was not found. Exiting..."
-                throw new Exception()
+                throw new Exception("ERROR: ${vendorPath} was not found. Exiting...")
             }
 
             // Get Build Source
@@ -689,8 +678,7 @@ class Build {
                 buildSource = context.readFile(buildSourcePath)
                 context.println "SUCCESS: buildSource.txt found"
             } catch (NoSuchFileException e) {
-                context.println "ERROR: ${buildSourcePath} was not found. Exiting..."
-                throw new Exception()
+                throw new Exception("ERROR: ${buildSourcePath} was not found. Exiting...")
             }
 
         }
@@ -855,8 +843,7 @@ class Build {
                 context.archiveArtifacts artifacts: "workspace/target/*"
             }
         } catch (FlowInterruptedException e) {
-            context.println "[ERROR] Build archive timeout (${buildTimeouts.BUILD_ARCHIVE_TIMEOUT} HOURS) has been reached. Exiting..."
-            throw new Exception()
+            throw new Exception("[ERROR] Build archive timeout (${buildTimeouts.BUILD_ARCHIVE_TIMEOUT} HOURS) has been reached. Exiting...")
         }
 
         // Setup params for downstream job & execute
@@ -923,8 +910,7 @@ class Build {
                             }
                         }
                     } catch (FlowInterruptedException e) {
-                        context.println "[ERROR] Node Clean workspace timeout (${buildTimeouts.NODE_CLEAN_TIMEOUT} HOURS) has been reached. Exiting..."
-                        throw new Exception()
+                        throw new Exception("[ERROR] Node Clean workspace timeout (${buildTimeouts.NODE_CLEAN_TIMEOUT} HOURS) has been reached. Exiting...")
                     }
 
                 } catch (e) {
@@ -941,8 +927,7 @@ class Build {
                     context.sh(script: "git clean -fdx")
                 }
             } catch (FlowInterruptedException e) {
-                context.println "[ERROR] Node checkout workspace timeout (${buildTimeouts.NODE_CHECKOUT_TIMEOUT} HOURS) has been reached. Exiting..."
-                throw new Exception()
+                throw new Exception("[ERROR] Node checkout workspace timeout (${buildTimeouts.NODE_CHECKOUT_TIMEOUT} HOURS) has been reached. Exiting...")
             }
 
             try {
@@ -960,8 +945,7 @@ class Build {
                             context.sh(script: "./build-farm/make-adopt-build-farm.sh")
                         }
                     } catch (FlowInterruptedException e) {
-                        context.println "[ERROR] Build JDK timeout (${buildTimeouts.BUILD_JDK_TIMEOUT} HOURS) has been reached. Exiting..."
-                        throw new Exception()
+                        throw new Exception("[ERROR] Build JDK timeout (${buildTimeouts.BUILD_JDK_TIMEOUT} HOURS) has been reached. Exiting...")
                     }
 
                     // Run a downstream job on riscv machine that returns the java version
@@ -990,8 +974,7 @@ class Build {
                         }
                     }
                 } catch (FlowInterruptedException e) {
-                    context.println "[ERROR] Build archive timeout (${buildTimeouts.BUILD_ARCHIVE_TIMEOUT} HOURS) has been reached. Exiting..."
-                    throw new Exception()
+                    throw new Exception("[ERROR] Build archive timeout (${buildTimeouts.BUILD_ARCHIVE_TIMEOUT} HOURS) has been reached. Exiting...")
                 }
             } finally {
                 if (buildConfig.TARGET_OS == "aix") {
@@ -1000,8 +983,7 @@ class Build {
                             context.cleanWs notFailBuild: true
                         }
                     } catch (FlowInterruptedException e) {
-                        context.println "[ERROR] AIX clean workspace timeout (${buildTimeouts.AIX_CLEAN_TIMEOUT} HOURS) has been reached. Exiting..."
-                        throw new Exception()
+                        throw new Exception("[ERROR] AIX clean workspace timeout (${buildTimeouts.AIX_CLEAN_TIMEOUT} HOURS) has been reached. Exiting...")
                     }
                 }
             }
@@ -1041,11 +1023,9 @@ class Build {
                 }
                 x++
             }
-            context.error("No node matching this label became active prior to the timeout: " + label)
-            throw new Exception()
+            throw new Exception("No node matching this label became active prior to the timeout: " + label)
         } else {
-            context.error("As the timeout value is set to 0, we will not wait for a node to become active.")
-            throw new Exception()
+            throw new Exception("As the timeout value is set to 0, we will not wait for a node to become active.")
         }
     }
 
@@ -1106,8 +1086,7 @@ class Build {
                                         }
                                     }
                                 } catch (FlowInterruptedException e) {
-                                    context.println "[ERROR] Master clean workspace timeout (${buildTimeouts.MASTER_CLEAN_TIMEOUT} HOURS) has been reached. Exiting..."
-                                    throw new Exception()
+                                    throw new Exception("[ERROR] Master clean workspace timeout (${buildTimeouts.MASTER_CLEAN_TIMEOUT} HOURS) has been reached. Exiting...")
                                 }
 
                             }
@@ -1123,8 +1102,7 @@ class Build {
                                         context.sh(script: "git clean -fdx")
                                     }
                                 } catch (FlowInterruptedException e) {
-                                    context.println "[ERROR] Master docker file scm checkout timeout (${buildTimeouts.DOCKER_CHECKOUT_TIMEOUT} HOURS) has been reached. Exiting..."
-                                    throw new Exception()
+                                    throw new Exception("[ERROR] Master docker file scm checkout timeout (${buildTimeouts.DOCKER_CHECKOUT_TIMEOUT} HOURS) has been reached. Exiting...")
                                 }
 
                                 context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE} -f ${buildConfig.DOCKER_FILE} .").inside {
@@ -1138,8 +1116,7 @@ class Build {
                                         context.docker.image(buildConfig.DOCKER_IMAGE).pull()
                                     }
                                 } catch (FlowInterruptedException e) {
-                                    context.println "[ERROR] Master docker image pull timeout (${buildTimeouts.DOCKER_PULL_TIMEOUT} HOURS) has been reached. Exiting..."
-                                    throw new Exception()
+                                    throw new Exception("[ERROR] Master docker image pull timeout (${buildTimeouts.DOCKER_PULL_TIMEOUT} HOURS) has been reached. Exiting...")
                                 }
 
                                 context.docker.image(buildConfig.DOCKER_IMAGE).inside {
@@ -1181,8 +1158,7 @@ class Build {
                             sign(versionInfo)
                         }
                     } catch (FlowInterruptedException e) {
-                        context.println "[ERROR] Sign job timeout (${buildTimeouts.SIGN_JOB_TIMEOUT} HOURS) has been reached OR the downstream sign job failed. Exiting..."
-                        throw new Exception()
+                        throw new Exception("[ERROR] Sign job timeout (${buildTimeouts.SIGN_JOB_TIMEOUT} HOURS) has been reached OR the downstream sign job failed. Exiting...")
                     }
                 }
 
@@ -1203,8 +1179,7 @@ class Build {
                             buildInstaller(versionInfo)
                         }
                     } catch (FlowInterruptedException e) {
-                        context.println "[ERROR] Installer job timeout (${buildTimeouts.INSTALLER_JOBS_TIMEOUT} HOURS) has been reached OR the downstream installer job failed. Exiting..."
-                        throw new Exception()
+                        throw new Exception("[ERROR] Installer job timeout (${buildTimeouts.INSTALLER_JOBS_TIMEOUT} HOURS) has been reached OR the downstream installer job failed. Exiting...")
                     }
                 }
 

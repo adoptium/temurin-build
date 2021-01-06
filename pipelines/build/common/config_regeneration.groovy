@@ -25,7 +25,6 @@ This file is a job that regenerates all of the build configurations in pipelines
 2) Attempts to create downstream job dsl's for each pipeline job configuration
 */
 class Regeneration implements Serializable {
-    private final RepoHandler repoHandler
     private final String javaVersion
     private final Map<String, Map<String, ?>> buildConfigurations
     private final Map<String, ?> targetConfigurations
@@ -35,7 +34,7 @@ class Regeneration implements Serializable {
     private final def context
 
     private final def jobRootDir
-    private final def gitUri
+    private final def gitRemoteConfigs
     private final def gitBranch
 
     private final def jobTemplatePath
@@ -55,7 +54,6 @@ class Regeneration implements Serializable {
     Constructor
     */
     public Regeneration(
-        RepoHandler repoHandler,
         String javaVersion,
         Map<String, Map<String, ?>> buildConfigurations,
         Map<String, ?> targetConfigurations,
@@ -64,7 +62,7 @@ class Regeneration implements Serializable {
         currentBuild,
         context,
         String jobRootDir,
-        String gitUri,
+        Map gitRemoteConfigs,
         String gitBranch,
         String jobTemplatePath,
         String libraryPath,
@@ -74,7 +72,6 @@ class Regeneration implements Serializable {
         String jenkinsCreds,
         String checkoutCreds
     ) {
-        this.repoHandler = repoHandler
         this.javaVersion = javaVersion
         this.buildConfigurations = buildConfigurations
         this.targetConfigurations = targetConfigurations
@@ -83,7 +80,7 @@ class Regeneration implements Serializable {
         this.currentBuild = currentBuild
         this.context = context
         this.jobRootDir = jobRootDir
-        this.gitUri = gitUri
+        this.gitRemoteConfigs = gitRemoteConfigs
         this.gitBranch = gitBranch
         this.jobTemplatePath = jobTemplatePath
         this.libraryPath = libraryPath
@@ -363,7 +360,7 @@ class Regeneration implements Serializable {
         params.put("JOB_FOLDER", jobFolder)
         params.put("SCRIPT_PATH", scriptPath)
 
-        params.put("GIT_URI", gitUri)
+        params.put("GIT_URI", gitRemoteConfigs['url'])
         params.put("GIT_BRANCH", gitBranch)
 
         params.put("DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(DEFAULTS_JSON)))
@@ -385,9 +382,10 @@ class Regeneration implements Serializable {
         try {
             def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
         } catch (Exception e) {
-            context.println "[WARNING] Something went wrong when creating the job dsl. It may be because we are trying to pull the template inside a user repository. Trying again from Adopt's repository...\n${e}"
+            context.println "[WARNING] Something went wrong when creating the job dsl. It may be because we are trying to pull the template inside a user repository. Using Adopt's template instead...\n${e}"
+            def repoHandler = new RepoHandler(context, [branch: gitBranch, configs: gitRemoteConfigs])
             repoHandler.checkoutAdopt()
-            def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
+            def create = context.jobDsl targets: repoHandler.getAdoptDefaultsJson()['templateDirectories']['downstream'], ignoreExisting: false, additionalParameters: params
             repoHandler.checkoutUser()
         }
         return create
@@ -434,8 +432,7 @@ class Regeneration implements Serializable {
             return response
         } catch (Exception e) {
             // Failed to connect to jenkins api or a parsing error occurred
-            context.println "[ERROR] Failure on jenkins api connection or parsing.\n${e}"
-            throw new Exception()
+            throw new Exception("[ERROR] Failure on jenkins api connection or parsing.\n${e}")
         }
     }
 
@@ -587,7 +584,6 @@ class Regeneration implements Serializable {
 }
 
 return {
-    RepoHandler repoHandler,
     String javaVersion,
     Map<String, Map<String, ?>> buildConfigurations,
     Map<String, ?> targetConfigurations,
@@ -596,7 +592,7 @@ return {
     def currentBuild,
     def context,
     String jobRootDir,
-    String gitUri,
+    Map gitRemoteConfigs,
     String gitBranch,
     String jobTemplatePath,
     String libraryPath,
@@ -613,7 +609,6 @@ return {
         }
 
         return new Regeneration(
-            repoHandler,
             javaVersion,
             buildConfigurations,
             targetConfigurations,
@@ -622,7 +617,7 @@ return {
             currentBuild,
             context,
             jobRootDir,
-            gitUri,
+            gitRemoteConfigs,
             gitBranch,
             jobTemplatePath,
             libraryPath,

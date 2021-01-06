@@ -51,14 +51,28 @@ node ("master") {
       println "[WARNING] CHECKOUT_CREDENTIALS not specified! Checkout to $repoUri may fail if you do not have your ssh key on this machine."
     }
 
-    // Checkout into the branch and url place
-    checkout(
-      [
-        $class: 'GitSCM',
-        branches: [[ name: repoBranch ]],
+    /*
+    Changes dir to Adopt's repo. Use closures as methods aren't accepted inside node blocks
+    */
+    def checkoutAdopt = { ->
+      checkout([$class: 'GitSCM',
+        branches: [ [ name: ADOPT_DEFAULTS_JSON["repository"]["branch"] ] ],
+        userRemoteConfigs: [ [ url: ADOPT_DEFAULTS_JSON["repository"]["url"] ] ]
+      ])
+    }
+
+    /*
+    Changes dir to the user's repo. Use closures as methods aren't accepted inside node blocks
+    */
+    def checkoutUser = { ->
+      checkout([$class: 'GitSCM',
+        branches: [ [ name: repoBranch ] ],
         userRemoteConfigs: [ remoteConfigs ]
-      ]
-    )
+      ])
+    }
+
+    // Checkout into the branch and url place
+    checkoutUser()
 
     // Import adopt class library. This contains our groovy classes, used for carrying across metadata between jobs.
     def libraryPath = (params.LIBRARY_PATH) ?: DEFAULTS_JSON['importLibraryScript']
@@ -67,26 +81,15 @@ node ("master") {
     } catch (NoSuchFileException e) {
       println "[WARNING] ${libraryPath} does not exist in your repository. Attempting to pull Adopt's library script instead."
 
-      checkout([$class: 'GitSCM',
-        branches: [ [ name: ADOPT_DEFAULTS_JSON["repository"]["branch"] ] ],
-        userRemoteConfigs: [ [ url: ADOPT_DEFAULTS_JSON["repository"]["url"] ] ]
-      ])
-
+      checkoutAdopt()
       try {
         load "${WORKSPACE}/${libraryPath}"
       } catch (NoSuchFileException e2) {
         load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
       }
-
-      checkout([$class: 'GitSCM',
-        branches: [ [ name: repoBranch ] ],
-        userRemoteConfigs: [ remoteConfigs ]
-      ])
+      checkoutUser()
 
     }
-
-    // Create a handler object so we can switch between adopt's repo and the user's
-    def repoHandler = new RepoHandler(this, [ branch: repoBranch, remotes: remoteConfigs ])
 
     // Load buildConfigurations from config file. This is what the nightlies & releases use to setup their downstream jobs
     def buildConfigurations = null
@@ -108,14 +111,14 @@ node ("master") {
         } catch (NoSuchFileException e2) {
           println "[WARNING] ${javaVersion}_pipeline_config.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's build config in..."
 
-          repoHandler.checkoutAdopt()
+          checkoutAdopt()
           try {
             buildConfigurations = load "${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
           } catch (NoSuchFileException e3) {
             buildConfigurations = load "${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}u_pipeline_config.groovy"
             javaVersion += "u"
           }
-          repoHandler.checkoutUser()
+          checkoutUser()
         }
       }
 
@@ -143,9 +146,9 @@ node ("master") {
       load targetConfigPath
     } catch (NoSuchFileException e) {
       println "[WARNING] ${targetConfigPath} does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's nightly config in..."
-      repoHandler.checkoutAdopt()
+      checkoutAdopt()
       load targetConfigPath
-      repoHandler.checkoutUser()
+      checkoutUser()
     }
 
     if (targetConfigurations == null) {
@@ -220,7 +223,6 @@ node ("master") {
       )]) {
         def jenkinsUserColonPass = "$jenkinsUsername:$jenkinsToken"
         regenerationScript(
-          repoHandler,
           javaVersion,
           buildConfigurations,
           targetConfigurations,
@@ -229,7 +231,7 @@ node ("master") {
           currentBuild,
           this,
           jobRoot,
-          repoUri,
+          remoteConfigs,
           repoBranch,
           jobTemplatePath,
           libraryPath,
@@ -244,7 +246,6 @@ node ("master") {
       println "[WARNING] No Jenkins API Credentials have been provided! If your server does not have anonymous read enabled, you may encounter 403 api request error codes."
 
       regenerationScript(
-        repoHandler,
         javaVersion,
         buildConfigurations,
         targetConfigurations,
@@ -253,7 +254,7 @@ node ("master") {
         currentBuild,
         this,
         jobRoot,
-        repoUri,
+        remoteConfigs,
         repoBranch,
         jobTemplatePath,
         libraryPath,
