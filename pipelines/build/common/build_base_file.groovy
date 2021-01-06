@@ -451,10 +451,11 @@ class Builder implements Serializable {
 
     /*
     Ensures that we don't release multiple variants at the same time
+    Unless this is the weekend weekly release build that won't have a publishName
     */
     def checkConfigIsSane(Map<String, IndividualBuildConfig> jobConfigurations) {
 
-        if (release) {
+        if (release && publishName) {
 
             // Doing a release
             def variants = jobConfigurations
@@ -514,8 +515,9 @@ class Builder implements Serializable {
             }
 
             if (release) {
-                currentBuild.setKeepLog(true)
                 if (publishName) {
+                    // Only keep release logs for real releases, not the weekend weekly release test builds that are not published
+                    currentBuild.setKeepLog(true)
                     currentBuild.setDisplayName(publishName)
                 }
             }

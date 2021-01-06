@@ -53,7 +53,9 @@ targetConfigurations = [
         ]
 ]
 
-// 20:26
-triggerSchedule="TZ=UTC\n26 20 * * *"
+// 23:30 Tue, Thur
+triggerSchedule_nightly="TZ=UTC\n30 23 * * 2,4"
+// 23:30 Sat
+triggerSchedule_weekly="TZ=UTC\n30 23 * * 6"
 
 return this
