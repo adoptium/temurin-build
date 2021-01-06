@@ -100,6 +100,7 @@ class Config15 {
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
+                additionalNodeLabels: 'centos7',
                 test                : 'default',
                 configureArgs       : [
                         "hotspot"     : '--enable-dtrace',
@@ -110,6 +111,7 @@ class Config15 {
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace'
