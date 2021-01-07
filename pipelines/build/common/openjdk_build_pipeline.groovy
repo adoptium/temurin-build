@@ -506,6 +506,7 @@ class Build {
     /*
     Build installer master function. This builds the downstream installer jobs on completion of the sign and test jobs.
     The installers create our rpm, msi and pkg files that allow for an easier installation of the jdk binaries over a compressed archive.
+    For Mac, we also clean up pkgs on master node from previous runs, if needed (Ref openjdk-build#2350).
     */
     def buildInstaller(VersionInfo versionData) {
         if (versionData == null || versionData.major == null) {
@@ -516,7 +517,7 @@ class Build {
         context.node('master') {
             context.stage("installer") {
                 switch (buildConfig.TARGET_OS) {
-                    case "mac": buildMacInstaller(versionData); break
+                    case "mac": context.sh 'rm -f workspace/target/*.pkg; done'; buildMacInstaller(versionData); break
                     case "linux": buildLinuxInstaller(versionData); break
                     case "windows": buildWindowsInstaller(versionData); break
                     default: return; break
