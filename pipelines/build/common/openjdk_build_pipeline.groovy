@@ -517,7 +517,7 @@ class Build {
         context.node('master') {
             context.stage("installer") {
                 switch (buildConfig.TARGET_OS) {
-                    case "mac": context.sh 'rm -f workspace/target/*.pkg; done'; buildMacInstaller(versionData); break
+                    case "mac": context.sh 'rm -f workspace/target/*.pkg workspace/target/*.pkg.json workspace/target/*.pkg.sha256.txt; done'; buildMacInstaller(versionData); break
                     case "linux": buildLinuxInstaller(versionData); break
                     case "windows": buildWindowsInstaller(versionData); break
                     default: return; break
