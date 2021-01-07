@@ -317,10 +317,9 @@ class Builder implements Serializable {
     /*
     Retrieves the platformSpecificConfigPath from the build configurations.
     This determines where the location of the operating system setup files are in comparison to the repository root.
-    Defaults to build-farm/platform-specific-configurations/${OPERATING_SYSTEM}.sh
     */
     def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
-        def platformSpecificConfigPath = ""
+        def platformSpecificConfigPath = DEFAULTS_JSON['configDirectories']['platform']
         if (configuration.containsKey("platformSpecificConfigPath")) {
             platformSpecificConfigPath = configuration.platformSpecificConfigPath
         }

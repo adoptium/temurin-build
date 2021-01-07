@@ -61,13 +61,7 @@ node('master') {
       }
 
       // Checkout into user repository
-      checkout(
-        [
-          $class: 'GitSCM',
-          branches: [ [ name: repoBranch ] ],
-          userRemoteConfigs: [ remoteConfigs ]
-        ]
-      )
+      checkoutUser()
 
       // Load the adopt class library so we can use their classes here. If we don't find an import library script in the user's repo, we checkout to openjdk-build and use the one that's present there. Finally, we check back out to the user repo.
       def libraryPath = (params.LIBRARY_PATH) ?: DEFAULTS_JSON['importLibraryScript']
@@ -77,13 +71,8 @@ node('master') {
         println "[WARNING] ${libraryPath} does not exist in your repository. Attempting to pull Adopt's library script instead."
 
         checkoutAdopt()
-        try {
-          load "${WORKSPACE}/${libraryPath}"
-        } catch (NoSuchFileException e2) {
-          load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
-        }
+        load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
         checkoutUser()
-
       }
 
       // Load jobRoot. This is where the openjdkxx-pipeline jobs will be created.

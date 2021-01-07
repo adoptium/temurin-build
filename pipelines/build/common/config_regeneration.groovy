@@ -177,7 +177,7 @@ class Regeneration implements Serializable {
     }
 
     def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
-        def platformSpecificConfigPath = ""
+        def platformSpecificConfigPath = DEFAULTS_JSON['configDirectories']['platform']
         if (configuration.containsKey("platformSpecificConfigPath")) {
             platformSpecificConfigPath = configuration.platformSpecificConfigPath
         }
@@ -363,7 +363,10 @@ class Regeneration implements Serializable {
         params.put("GIT_URI", gitRemoteConfigs['url'])
         params.put("GIT_BRANCH", gitBranch)
 
-        def repoHandler = new RepoHandler(context, [branch: gitBranch, remotes: gitRemoteConfigs])
+        Map userRemoteConfigs = [branch: gitBranch, remotes: gitRemoteConfigs]
+        params.put("USER_REMOTE_CONFIGS", userRemoteConfigs)
+        def repoHandler = new RepoHandler(context, userRemoteConfigs)
+
         params.put("DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(DEFAULTS_JSON)))
         Map ADOPT_DEFAULTS_JSON = repoHandler.getAdoptDefaultsJson()
         params.put("ADOPT_DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(ADOPT_DEFAULTS_JSON)))

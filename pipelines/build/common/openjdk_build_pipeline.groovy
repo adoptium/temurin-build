@@ -2,6 +2,7 @@ import common.IndividualBuildConfig
 import common.MetaData
 @Library('local-lib@master')
 import common.VersionInfo
+import common.RepoHandler
 import groovy.json.*
 import java.nio.file.NoSuchFileException
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
@@ -43,7 +44,9 @@ limitations under the License.
 
 class Build {
     final IndividualBuildConfig buildConfig
-    final Map<String, ?> DEFAULTS_JSON
+    final Map USER_REMOTE_CONFIGS
+    final Map DEFAULTS_JSON
+    final Map ADOPT_DEFAULTS_JSON
 
     final def context
     final def env
@@ -81,13 +84,17 @@ class Build {
     */
     Build(
         IndividualBuildConfig buildConfig,
-        Map<String, ?> DEFAULTS_JSON,
+        Map USER_REMOTE_CONFIGS,
+        Map DEFAULTS_JSON,
+        Map ADOPT_DEFAULTS_JSON,
         def context,
         def env,
         def currentBuild
     ) {
         this.buildConfig = buildConfig
+        this.USER_REMOTE_CONFIGS = USER_REMOTE_CONFIGS
         this.DEFAULTS_JSON = DEFAULTS_JSON
+        this.ADOPT_DEFAULTS_JSON = ADOPT_DEFAULTS_JSON
         this.context = context
         this.currentBuild = currentBuild
         this.env = env
@@ -434,7 +441,7 @@ class Build {
         if (versionData.major == 8) {
             buildNumber = String.format("%02d", versionData.build)
         }
-        
+
         def INSTALLER_ARCH = "${buildConfig.ARCHITECTURE}"
         // Wix toolset requires aarch64 builds to be called arm64
         if (buildConfig.ARCHITECTURE == "aarch64") {
@@ -935,21 +942,24 @@ class Build {
                 List<String> envVars = buildConfig.toEnvVars()
                 envVars.add("FILENAME=${filename}" as String)
 
-                // Add for use in setting up the platform configs
-                envVars.add("DEFAULT_PLATFORM_CONFIGS=${DEFAULTS_JSON['configDirectories']['platform']}" as String)
+                // Add in the ADOPT_DEFAULT_PLATFORM_CONFIGS path so it can be used if the user doesn't have one
+                envVars.add("ADOPT_DEFAULT_PLATFORM_CONFIGS=${ADOPT_DEFAULTS_JSON['configDirectories']['platform']}" as String)
 
                 // Execute build
                 context.withEnv(envVars) {
                     try {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
+                            def repoHandler = new RepoHandler(context, USER_REMOTE_CONFIGS)
+
+                            repoHandler.checkoutAdopt()
                             context.sh(script: "./build-farm/make-adopt-build-farm.sh")
+                            repoHandler.checkoutUser()
                         }
                     } catch (FlowInterruptedException e) {
                         throw new Exception("[ERROR] Build JDK timeout (${buildTimeouts.BUILD_JDK_TIMEOUT} HOURS) has been reached. Exiting...")
                     }
 
-                    // Run a downstream job on riscv machine that returns the java version
-                    // otherwise, just read the version.txt
+                    // Run a downstream job on riscv machine that returns the java version. Otherwise, just read the version.txt
                     String versionOut
                     if (buildConfig.BUILD_ARGS.contains('--cross-compile')) {
                         context.println "[WARNING] Don't read faked version.txt on cross compiled build! Archiving early and running downstream job to retrieve java version..."
@@ -1198,7 +1208,9 @@ class Build {
 
 return {
     buildConfigArg,
+    USER_REMOTE_CONFIGS,
     DEFAULTS_JSON,
+    ADOPT_DEFAULTS_JSON,
     context,
     env,
     currentBuild ->
@@ -1211,7 +1223,9 @@ return {
 
         return new Build(
             buildConfig,
+            USER_REMOTE_CONFIGS,
             DEFAULTS_JSON,
+            ADOPT_DEFAULTS_JSON,
             context,
             env,
             currentBuild

@@ -90,11 +90,14 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>CLEAN_WORKSPACE</strong></dt><dd>Wipe out workspace before build</dd>
             </dl>
         """)
+        textParam('USER_REMOTE_CONFIGS', "$USER_REMOTE_CONFIGS", """
+        <strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes down the user's git checkout configs to the downstream job.
+        """)
         textParam('DEFAULTS_JSON', "$DEFAULTS_JSON", """
-        <strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes the user's default constants to the downstream jobs.
+        <strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes the user's default constants to the downstream job.
         """)
         textParam('ADOPT_DEFAULTS_JSON', "$ADOPT_DEFAULTS_JSON", """
-        <strong>DO NOT ALTER THIS PARAM UNDER ANY CIRCUMSTANCES!</strong> This passes down adopt's default constants to the downstream jobs. NOTE: <code>DEFAULTS_JSON</code> has priority, the constants contained within this param will only be used as a failsafe.
+        <strong>DO NOT ALTER THIS PARAM UNDER ANY CIRCUMSTANCES!</strong> This passes down adopt's default constants to the downstream job. NOTE: <code>DEFAULTS_JSON</code> has priority, the constants contained within this param will only be used as a failsafe.
         """)
         if (binding.hasVariable('CUSTOM_LIBRARY_LOCATION')) {
             stringParam('CUSTOM_LIBRARY_LOCATION', "$CUSTOM_LIBRARY_LOCATION")

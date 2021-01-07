@@ -25,10 +25,24 @@ fi
 
 export VARIANT_ARG="--build-variant ${VARIANT}"
 
-# shellcheck disable=SC1091,SC1090
-if [ ! -z "$PLATFORM_CONFIG_PATH" ]
+# Attempt to download and source the user's custom platform config
+PLATFORM_CONFIG_FILEPATH="$SCRIPT_DIR/platform-specific-configurations/platformConfigFile.sh"
+
+echo "Attempting to download user platform configuration file from ${platformSpecificConfigPath}"
+# make-adopt-build-farm.sh has 'set -e'. We need to disable that
+# for the fallback mechanism, as downloading of the file might fail
+set +e
+curl -v "${platformSpecificConfigPath}" --output "${PLATFORM_CONFIG_FILEPATH}"
+ret=$?
+set -e
+
+if [ $ret -ne 0 ]
 then
-    source "$SCRIPT_DIR/${PLATFORM_CONFIG_PATH}"
-else
-    source "$SCRIPT_DIR/${DEFAULT_PLATFORM_CONFIGS}/${OPERATING_SYSTEM}.sh"
+    # If there is no user platform config, use adopt's as a default instead
+    ADOPT_PLATFORM_FILEPATH="${ADOPT_DEFAULT_PLATFORM_CONFIGS}/${OPERATING_SYSTEM}.sh"
+    echo "Failed to download a user platform configuration file. Downloading Adopt's platform configuration file instead from ${ADOPT_PLATFORM_FILEPATH}"
+    curl -v "${ADOPT_PLATFORM_FILEPATH}" --output "${PLATFORM_CONFIG_FILEPATH}"
 fi
+
+echo "File downloaded successfully as ${PLATFORM_CONFIG_FILEPATH}. Executing..."
+source "${PLATFORM_CONFIG_FILEPATH}"

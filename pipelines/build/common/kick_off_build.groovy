@@ -24,9 +24,9 @@ Downstream job root executor file, it sets up the library and runs the bash scri
 // We have to declare JSON defaults again because we're utilising it's content at start of job
 def LOCAL_DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_JSON) as Map
 if (!LOCAL_DEFAULTS_JSON) {
-    throw new Exception("[ERROR] No Defaults JSON found! Please ensure the DEFAULTS_JSON parameter is populated and not altered during parameter declaration.")
+    throw new Exception("[ERROR] No User Defaults JSON found! Please ensure the DEFAULTS_JSON parameter is populated and not altered during parameter declaration.")
 }
-def ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_JSON) as Map
+def ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(ADOPT_DEFAULTS_JSON) as Map
 if (!ADOPT_DEFAULTS_JSON) {
     throw new Exception("[ERROR] No Adopt Defaults JSON found! Please ensure the ADOPT_DEFAULTS_JSON parameter is populated and not altered during parameter declaration.")
 }
@@ -70,7 +70,9 @@ node("master") {
 
 downstreamBuilder(
     BUILD_CONFIGURATION,
+    USER_REMOTE_CONFIGS,
     LOCAL_DEFAULTS_JSON,
+    ADOPT_DEFAULTS_JSON,
     this,
     env,
     currentBuild
