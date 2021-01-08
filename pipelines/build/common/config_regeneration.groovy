@@ -384,6 +384,8 @@ class Regeneration implements Serializable {
         // Pass in checkout creds if needs be
         if (checkoutCreds != "") {
             params.put("CHECKOUT_CREDENTIALS", checkoutCreds)
+        } else {
+            params.put("CHECKOUT_CREDENTIALS", "")
         }
 
         def create = null

@@ -37,9 +37,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                     remote {
                         url(GIT_URI)
                         refspec(" +refs/pull/*:refs/remotes/origin/pr/* +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*")
-                        if (binding.hasVariable("CHECKOUT_CREDENTIALS")) {
-                            credentials(CHECKOUT_CREDENTIALS)
-                        }
+                        credentials("${CHECKOUT_CREDENTIALS}")
                     }
                     branch("${GIT_BRANCH}")
                     extensions {
