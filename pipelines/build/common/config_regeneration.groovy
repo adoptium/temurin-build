@@ -464,7 +464,7 @@ class Regeneration implements Serializable {
 
                     // Parse api response to only extract the relevant pipeline
                     getPipelines.jobs.name.each { pipeline ->
-                        if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
+                        if (pipeline == "openjdk${versionNumbers[0]}-pipeline") {
                             // TODO: Parameterise this
                             Integer sleepTime = 900
 
