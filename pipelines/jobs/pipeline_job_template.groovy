@@ -44,6 +44,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
     disabled(disableJob)
 
+    // Trying to use an if statement here to toggle schedules has proved troublesome in the past https://github.com/AdoptOpenJDK/openjdk-build/pull/2132#discussion_r552046743
     triggers {
         cron(pipelineSchedule)
     }

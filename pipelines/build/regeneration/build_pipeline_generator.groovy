@@ -147,13 +147,13 @@ node('master') {
 
         def target;
         try {
-          target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}u.groovy"
+          target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
         } catch(NoSuchFileException e) {
           try {
-            println "[WARNING] jdk${javaVersion}u.groovy does not exist, chances are we want a jdk${javaVersion}.groovy file. Trying ${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
-            target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
+            println "[WARNING] jdk${javaVersion}.groovy does not exist, chances are we want a jdk${javaVersion}u.groovy file. Trying ${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}u.groovy"
+            target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}u.groovy"
           } catch(NoSuchFileException e2) {
-            println "[WARNING] jdk${javaVersion}.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's nightlies in..."
+            println "[WARNING] jdk${javaVersion}u.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's nightlies in..."
 
             checkoutAdopt()
             try {
