@@ -52,8 +52,8 @@ node ("master") {
     def libraryPath = (params.baseFilePath) ?: DEFAULTS_JSON['importLibraryScript']
     try {
         load "${WORKSPACE}/${libraryPath}"
-    } catch (NoSuchFileException e) {
-        println "[WARNING] ${libraryPath} does not exist in your repository. Attempting to pull Adopt's library script instead."
+    } catch (Exception e) {
+        println "[WARNING] ${libraryPath} could not be loaded, likely because it does not exist in your repository. Error:\n${e}\nAttempting to pull Adopt's library script instead..."
 
         checkoutAdopt()
         load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
