@@ -1,5 +1,6 @@
 package common
 
+import java.nio.file.NoSuchFileException
 import groovy.json.JsonSlurper
 
 /*
@@ -23,7 +24,11 @@ Downstream job root executor file, it sets up the library and runs the bash scri
 // We have to declare JSON defaults again because we're utilising it's content at start of job
 def LOCAL_DEFAULTS_JSON = new JsonSlurper().parseText(DEFAULTS_JSON) as Map
 if (!LOCAL_DEFAULTS_JSON) {
-    throw new Exception("[ERROR] No Defaults JSON found! Please ensure the DEFAULTS_JSON parameter is populated and not altered during parameter declaration.")
+    throw new Exception("[ERROR] No User Defaults JSON found! Please ensure the DEFAULTS_JSON parameter is populated and not altered during parameter declaration.")
+}
+def ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(ADOPT_DEFAULTS_JSON) as Map
+if (!ADOPT_DEFAULTS_JSON) {
+    throw new Exception("[ERROR] No Adopt Defaults JSON found! Please ensure the ADOPT_DEFAULTS_JSON parameter is populated and not altered during parameter declaration.")
 }
 
 def libraryPath = (params.CUSTOM_LIBRARY_LOCATION) ?: LOCAL_DEFAULTS_JSON["importLibraryScript"]
@@ -31,14 +36,43 @@ def baseFilePath = (params.CUSTOM_BASEFILE_LOCATION) ?: LOCAL_DEFAULTS_JSON["bas
 
 def downstreamBuilder = null
 node("master") {
+    /*
+    Changes dir to Adopt's repo. Use closures as methods aren't accepted inside node blocks
+    */
+    def checkoutAdopt = { ->
+      checkout([$class: 'GitSCM',
+        branches: [ [ name: ADOPT_DEFAULTS_JSON["repository"]["branch"] ] ],
+        userRemoteConfigs: [ [ url: ADOPT_DEFAULTS_JSON["repository"]["url"] ] ]
+      ])
+    }
+
     checkout scm
-    load libraryPath
-    downstreamBuilder = load baseFilePath
+
+    try {
+        load libraryPath
+    } catch (NoSuchFileException e) {
+        println "[WARNING] Using Adopt's import library script as none was found at ${libraryPath}"
+        checkoutAdopt()
+        load ADOPT_DEFAULTS_JSON["importLibraryScript"]
+        checkout scm
+    }
+
+    try {
+        downstreamBuilder = load baseFilePath
+    } catch (NoSuchFileException e) {
+        println "[WARNING] Using Adopt's base file script as none was found at ${baseFilePath}"
+        checkoutAdopt()
+        downstreamBuilder = load ADOPT_DEFAULTS_JSON["baseFileDirectories"]["downstream"]
+        checkout scm
+    }
+
 }
 
 downstreamBuilder(
     BUILD_CONFIGURATION,
+    USER_REMOTE_CONFIGS,
     LOCAL_DEFAULTS_JSON,
+    ADOPT_DEFAULTS_JSON,
     this,
     env,
     currentBuild

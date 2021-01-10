@@ -50,6 +50,5 @@ if (scmVars != null && configureBuild != null && buildConfigurations != null) {
         env
     ).doBuild()
 } else {
-    println "[ERROR] One or more setup parameters are null.\nscmVars = ${scmVars}\nconfigureBuild = ${configureBuild}\nbuildConfigurations = ${buildConfigurations}"
-    throw new Exception()
+    throw new Exception("[ERROR] One or more setup parameters are null.\nscmVars = ${scmVars}\nconfigureBuild = ${configureBuild}\nbuildConfigurations = ${buildConfigurations}")
 }

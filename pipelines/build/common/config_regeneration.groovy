@@ -1,5 +1,6 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
+import common.RepoHandler
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import java.util.Base64
@@ -33,7 +34,7 @@ class Regeneration implements Serializable {
     private final def context
 
     private final def jobRootDir
-    private final def gitUri
+    private final def gitRemoteConfigs
     private final def gitBranch
 
     private final def jobTemplatePath
@@ -61,7 +62,7 @@ class Regeneration implements Serializable {
         currentBuild,
         context,
         String jobRootDir,
-        String gitUri,
+        Map gitRemoteConfigs,
         String gitBranch,
         String jobTemplatePath,
         String libraryPath,
@@ -79,7 +80,7 @@ class Regeneration implements Serializable {
         this.currentBuild = currentBuild
         this.context = context
         this.jobRootDir = jobRootDir
-        this.gitUri = gitUri
+        this.gitRemoteConfigs = gitRemoteConfigs
         this.gitBranch = gitBranch
         this.jobTemplatePath = jobTemplatePath
         this.libraryPath = libraryPath
@@ -176,7 +177,7 @@ class Regeneration implements Serializable {
     }
 
     def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
-        def platformSpecificConfigPath = ""
+        def platformSpecificConfigPath = DEFAULTS_JSON['configDirectories']['platform']
         if (configuration.containsKey("platformSpecificConfigPath")) {
             platformSpecificConfigPath = configuration.platformSpecificConfigPath
         }
@@ -359,10 +360,17 @@ class Regeneration implements Serializable {
         params.put("JOB_FOLDER", jobFolder)
         params.put("SCRIPT_PATH", scriptPath)
 
-        params.put("GIT_URI", gitUri)
+        params.put("GIT_URI", gitRemoteConfigs['url'])
         params.put("GIT_BRANCH", gitBranch)
 
+        Map userRemoteConfigs = [branch: gitBranch, remotes: gitRemoteConfigs]
+        params.put("USER_REMOTE_CONFIGS", userRemoteConfigs)
+        def repoHandler = new RepoHandler(context, userRemoteConfigs)
+
         params.put("DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(DEFAULTS_JSON)))
+        Map ADOPT_DEFAULTS_JSON = repoHandler.getAdoptDefaultsJson()
+        params.put("ADOPT_DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(ADOPT_DEFAULTS_JSON)))
+
         params.put("BUILD_CONFIG", config.toJson())
 
         // If we are not using default lib or script param values, be sure to update the initial downstream job script file
@@ -376,9 +384,19 @@ class Regeneration implements Serializable {
         // Pass in checkout creds if needs be
         if (checkoutCreds != "") {
             params.put("CHECKOUT_CREDENTIALS", checkoutCreds)
+        } else {
+            params.put("CHECKOUT_CREDENTIALS", "")
         }
 
-        def create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
+        def create = null
+        try {
+            create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
+        } catch (Exception e) {
+            context.println "[WARNING] Something went wrong when creating the job dsl. It may be because we are trying to pull the template inside a user repository. Using Adopt's template instead. Error:\n${e}"
+            repoHandler.checkoutAdopt()
+            create = context.jobDsl targets: ADOPT_DEFAULTS_JSON['templateDirectories']['downstream'], ignoreExisting: false, additionalParameters: params
+            repoHandler.checkoutUser()
+        }
 
         return create
     }
@@ -424,8 +442,7 @@ class Regeneration implements Serializable {
             return response
         } catch (Exception e) {
             // Failed to connect to jenkins api or a parsing error occurred
-            context.println "[ERROR] Failure on jenkins api connection or parsing.\n${e}"
-            throw new Exception()
+            throw new Exception("[ERROR] Failure on jenkins api connection or parsing.\n${e}")
         }
     }
 
@@ -451,7 +468,7 @@ class Regeneration implements Serializable {
 
                     // Parse api response to only extract the relevant pipeline
                     getPipelines.jobs.name.each { pipeline ->
-                        if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
+                        if (pipeline == "openjdk${versionNumbers[0]}-pipeline") {
                             // TODO: Parameterise this
                             Integer sleepTime = 900
 
@@ -585,7 +602,7 @@ return {
     def currentBuild,
     def context,
     String jobRootDir,
-    String gitUri,
+    Map gitRemoteConfigs,
     String gitBranch,
     String jobTemplatePath,
     String libraryPath,
@@ -610,7 +627,7 @@ return {
             currentBuild,
             context,
             jobRootDir,
-            gitUri,
+            gitRemoteConfigs,
             gitBranch,
             jobTemplatePath,
             libraryPath,

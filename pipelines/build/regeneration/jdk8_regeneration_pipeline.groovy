@@ -19,13 +19,20 @@ limitations under the License.
 
 String javaVersion = "jdk8"
 //TODO: Change me
-String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
+String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
+String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: ADOPT_DEFAULTS_FILE_URL
 
 node ("master") {
   // Retrieve Defaults
+  def getAdopt = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
+  Map<String, ?> ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(getAdopt.getInputStream().getText()) as Map
+  if (!ADOPT_DEFAULTS_JSON || !Map.class.isInstance(ADOPT_DEFAULTS_JSON)) {
+    throw new Exception("[ERROR] No ADOPT_DEFAULTS_JSON found at ${ADOPT_DEFAULTS_FILE_URL} or it is not a valid JSON object. Please ensure this path is correct and leads to a JSON or Map object file. NOTE: Since this adopt's defaults and unlikely to change location, this is likely a network or GitHub issue.")
+  }
+
   def get = new URL(DEFAULTS_FILE_URL).openConnection()
   Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(get.getInputStream().getText()) as Map
-  if (!DEFAULTS_JSON) {
+  if (!DEFAULTS_JSON || !Map.class.isInstance(DEFAULTS_JSON)) {
     throw new Exception("[ERROR] No DEFAULTS_JSON found at ${DEFAULTS_FILE_URL}. Please ensure this path is correct and it leads to a JSON or Map object file.")
   }
 
@@ -38,27 +45,55 @@ node ("master") {
     def checkoutCreds = (params.CHECKOUT_CREDENTIALS) ?: ""
     def remoteConfigs = [ url: repoUri ]
     if (checkoutCreds != "") {
-      // NOTE: This currently does not work with user credentials due to https://issues.jenkins.io/browse/JENKINS-60349
+      // This currently does not work with user credentials due to https://issues.jenkins.io/browse/JENKINS-60349
       remoteConfigs.put("credentialsId", "${checkoutCreds}")
     } else {
       println "[WARNING] CHECKOUT_CREDENTIALS not specified! Checkout to $repoUri may fail if you do not have your ssh key on this machine."
     }
 
-    // Checkout into the branch and url place
-    checkout(
-      [
-        $class: 'GitSCM',
-        branches: [[ name: repoBranch ]],
+    /*
+    Changes dir to Adopt's repo. Use closures as methods aren't accepted inside node blocks
+    */
+    def checkoutAdopt = { ->
+      checkout([$class: 'GitSCM',
+        branches: [ [ name: ADOPT_DEFAULTS_JSON["repository"]["branch"] ] ],
+        userRemoteConfigs: [ [ url: ADOPT_DEFAULTS_JSON["repository"]["url"] ] ]
+      ])
+    }
+
+    /*
+    Changes dir to the user's repo. Use closures as methods aren't accepted inside node blocks
+    */
+    def checkoutUser = { ->
+      checkout([$class: 'GitSCM',
+        branches: [ [ name: repoBranch ] ],
         userRemoteConfigs: [ remoteConfigs ]
-      ]
-    )
+      ])
+    }
+
+    // Checkout into the branch and url place
+    checkoutUser()
 
     // Import adopt class library. This contains our groovy classes, used for carrying across metadata between jobs.
     def libraryPath = (params.LIBRARY_PATH) ?: DEFAULTS_JSON['importLibraryScript']
-    load "${WORKSPACE}/${libraryPath}"
+    try {
+      load "${WORKSPACE}/${libraryPath}"
+    } catch (NoSuchFileException e) {
+      println "[WARNING] ${libraryPath} does not exist in your repository. Attempting to pull Adopt's library script instead."
+
+      checkoutAdopt()
+      try {
+        load "${WORKSPACE}/${libraryPath}"
+      } catch (NoSuchFileException e2) {
+        load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
+      }
+      checkoutUser()
+
+    }
 
     // Load buildConfigurations from config file. This is what the nightlies & releases use to setup their downstream jobs
     def buildConfigurations = null
+    // TODO: Create an issue for the hardcoded part of this
     String DEFAULT_BUILD_PATH = "${DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
     def buildConfigPath = (params.BUILD_CONFIG_PATH) ? "${WORKSPACE}/${BUILD_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULT_BUILD_PATH}"
 
@@ -68,10 +103,23 @@ node ("master") {
       try {
         buildConfigurations = load buildConfigPath
       } catch (NoSuchFileException e) {
-        javaVersion += "u"
-        println "[WARNING] ${buildConfigPath} does not exist, chances are we want a ${javaVersion} version.\n[WARNING] Trying ${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
+        try {
+          println "[WARNING] ${buildConfigPath} does not exist, chances are we want a U version.\n[WARNING] Trying ${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}u_pipeline_config.groovy"
 
-        buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}_pipeline_config.groovy"
+          buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}u_pipeline_config.groovy"
+          javaVersion += "u"
+        } catch (NoSuchFileException e2) {
+          println "[WARNING] ${javaVersion}u_pipeline_config.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's build config in..."
+
+          checkoutAdopt()
+          try {
+            buildConfigurations = load "${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
+          } catch (NoSuchFileException e3) {
+            buildConfigurations = load "${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}u_pipeline_config.groovy"
+            javaVersion += "u"
+          }
+          checkoutUser()
+        }
       }
 
     } else {
@@ -93,7 +141,15 @@ node ("master") {
     // Load targetConfigurations from config file. This is what is being run in the nightlies
     String DEFAULT_TARGET_PATH = "${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
     def targetConfigPath = (params.TARGET_CONFIG_PATH) ? "${WORKSPACE}/${TARGET_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULT_TARGET_PATH}"
-    load targetConfigPath
+
+    try {
+      load targetConfigPath
+    } catch (NoSuchFileException e) {
+      println "[WARNING] ${targetConfigPath} does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's nightly config in..."
+      checkoutAdopt()
+      load targetConfigPath
+      checkoutUser()
+    }
 
     if (targetConfigurations == null) {
       throw new Exception("[ERROR] Could not find targetConfigurations for ${javaVersion}")
@@ -102,9 +158,34 @@ node ("master") {
     // Pull in other parametrised values (or use defaults if they're not defined)
     def jobRoot = (params.JOB_ROOT) ?: DEFAULTS_JSON["jenkinsDetails"]["rootDirectory"]
     def jenkinsBuildRoot = (params.JENKINS_BUILD_ROOT) ?: "${DEFAULTS_JSON['jenkinsDetails']["rootUrl"]}/job/${jobRoot}/"
+
     def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON["templateDirectories"]["downstream"]
+    if (!fileExists(jobTemplatePath)) {
+      println "[WARNING] ${jobTemplatePath} does not exist in your chosen repository. Updating it to use Adopt's instead"
+      checkoutAdopt()
+      jobTemplatePath = ADOPT_DEFAULTS_JSON['templateDirectories']['downstream']
+      println "[SUCCESS] The path is now ${jobTemplatePath} relative to ${ADOPT_DEFAULTS_JSON['repository']['url']}"
+      checkoutUser()
+    }
+
     def scriptPath = (params.SCRIPT_PATH) ?: DEFAULTS_JSON["scriptDirectories"]["downstream"]
+    if (!fileExists(scriptPath)) {
+      println "[WARNING] ${scriptPath} does not exist in your chosen repository. Updating it to use Adopt's instead"
+      checkoutAdopt()
+      scriptPath = ADOPT_DEFAULTS_JSON['scriptDirectories']['downstream']
+      println "[SUCCESS] The path is now ${scriptPath} relative to ${ADOPT_DEFAULTS_JSON['repository']['url']}"
+      checkoutUser()
+    }
+
     def baseFilePath = (params.BASE_FILE_PATH) ?: DEFAULTS_JSON["baseFileDirectories"]["downstream"]
+    if (!fileExists(baseFilePath)) {
+      println "[WARNING] ${baseFilePath} does not exist in your chosen repository. Updating it to use Adopt's instead"
+      checkoutAdopt()
+      baseFilePath = ADOPT_DEFAULTS_JSON['baseFileDirectories']['downstream']
+      println "[SUCCESS] The path is now ${baseFilePath} relative to ${ADOPT_DEFAULTS_JSON['repository']['url']}"
+      checkoutUser()
+    }
+
     def excludes = (params.EXCLUDES_LIST) ?: ""
     def jenkinsCreds = (params.JENKINS_AUTH) ?: ""
 
@@ -124,8 +205,16 @@ node ("master") {
     if (jenkinsCreds == "") { println "[WARNING] No Jenkins API Credentials have been provided! If your server does not have anonymous read enabled, you may encounter 403 api request error codes." }
 
     // Load regen script and execute base file
+    Closure regenerationScript
     def regenScriptPath = (params.REGEN_SCRIPT_PATH) ?: DEFAULTS_JSON['scriptDirectories']['regeneration']
-    Closure regenerationScript = load "${WORKSPACE}/${regenScriptPath}"
+    try {
+      regenerationScript = load "${WORKSPACE}/${regenScriptPath}"
+    } catch (NoSuchFileException e) {
+      println "[WARNING] ${regenScriptPath} does not exist in your chosen repository. Using adopt's script path instead"
+      checkoutAdopt()
+      regenerationScript = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['scriptDirectories']['regeneration']}"
+      checkoutUser()
+    }
 
     if (jenkinsCreds != "") {
       withCredentials([usernamePassword(
@@ -143,7 +232,7 @@ node ("master") {
           currentBuild,
           this,
           jobRoot,
-          repoUri,
+          remoteConfigs,
           repoBranch,
           jobTemplatePath,
           libraryPath,
@@ -155,8 +244,6 @@ node ("master") {
         ).regenerate()
       }
     } else {
-      println "[WARNING] No Jenkins API Credentials have been provided! If your server does not have anonymous read enabled, you may encounter 403 api request error codes."
-
       regenerationScript(
         javaVersion,
         buildConfigurations,
@@ -166,7 +253,7 @@ node ("master") {
         currentBuild,
         this,
         jobRoot,
-        repoUri,
+        remoteConfigs,
         repoBranch,
         jobTemplatePath,
         libraryPath,

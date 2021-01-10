@@ -1,4 +1,5 @@
 import groovy.json.JsonSlurper
+import java.nio.file.NoSuchFileException
 
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,34 +22,67 @@ def buildConfigurations = null
 Map<String, ?> DEFAULTS_JSON = null
 
 node ("master") {
-    scmVars = checkout scm
-
-    // Load defaultsJson. These are passed down from the build_pipeline_generator and is a JSON object containing some default constants.
+    // Load defaultsJson. These are passed down from the build_pipeline_generator and is a JSON object containing user's default constants.
     if (!params.defaultsJson || defaultsJson == "") {
-        throw new Exception("[ERROR] No Defaults JSON found! Please ensure the defaultsJson parameter is populated and not altered during parameter declaration.")
+        throw new Exception("[ERROR] No User Defaults JSON found! Please ensure the defaultsJson parameter is populated and not altered during parameter declaration.")
     } else {
         DEFAULTS_JSON = new JsonSlurper().parseText(defaultsJson) as Map
     }
 
-    // Load libraryPath. This contains our groovy classes, used for carrying across metadata between jobs.
-    if (params.libraryPath) {
-        load "${WORKSPACE}/${libraryPath}"
+    // Load adoptDefaultsJson. These are passed down from the build_pipeline_generator and is a JSON object containing adopt's default constants.
+    if (!params.adoptDefaultsJson || adoptDefaultsJson == "") {
+        throw new Exception("[ERROR] No Adopt Defaults JSON found! Please ensure the adoptDefaultsJson parameter is populated and not altered during parameter declaration.")
     } else {
-        load "${WORKSPACE}/${DEFAULTS_JSON['importLibraryScript']}"
+        ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(adoptDefaultsJson) as Map
+    }
+
+    /*
+    Changes dir to Adopt's repo. Use closures as methods aren't accepted inside node blocks
+    */
+    def checkoutAdopt = { ->
+      checkout([$class: 'GitSCM',
+        branches: [ [ name: ADOPT_DEFAULTS_JSON["repository"]["branch"] ] ],
+        userRemoteConfigs: [ [ url: ADOPT_DEFAULTS_JSON["repository"]["url"] ] ]
+      ])
+    }
+
+    scmVars = checkout scm
+
+    // Load the adopt class library so we can use their classes here. If we don't find an import library script in the user's repo, we checkout to openjdk-build and use the one that's present there. Finally, we check back out to the user repo.
+    def libraryPath = (params.baseFilePath) ?: DEFAULTS_JSON['importLibraryScript']
+    try {
+        load "${WORKSPACE}/${libraryPath}"
+    } catch (NoSuchFileException e) {
+        println "[WARNING] ${libraryPath} does not exist in your repository. Attempting to pull Adopt's library script instead."
+
+        checkoutAdopt()
+        load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
+        checkout scm
     }
 
     // Load baseFilePath. This is where build_base_file.groovy is located. It runs the downstream job setup and configuration retrieval services.
-    if (params.baseFilePath) {
+    def baseFilePath = (params.baseFilePath) ?: DEFAULTS_JSON['baseFileDirectories']['upstream']
+    try {
         configureBuild = load "${WORKSPACE}/${baseFilePath}"
-    } else {
-        configureBuild = load "${WORKSPACE}/${DEFAULTS_JSON['baseFileDirectories']['upstream']}"
+    } catch (NoSuchFileException e) {
+        println "[WARNING] ${baseFilePath} does not exist in your repository. Attempting to pull Adopt's base file script instead."
+
+        checkoutAdopt()
+        configureBuild = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['baseFileDirectories']['upstream']}"
+        checkout scm
     }
 
     // Load buildConfigFilePath. This is where jdkxx_pipeline_config.groovy is located. It contains the build configurations for each platform, architecture and variant.
-    if (params.buildConfigFilePath) {
+    def buildConfigFilePath = (params.buildConfigFilePath) ?: "${DEFAULTS_JSON['configDirectories']['build']}/${javaToBuild}_pipeline_config.groovy"
+    try {
         buildConfigurations = load "${WORKSPACE}/${buildConfigFilePath}"
-    } else {
-        buildConfigurations = load "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/${javaToBuild}_pipeline_config.groovy"
+    } catch (NoSuchFileException e) {
+        println "[WARNING] ${buildConfigFilePath} does not exist in your repository. Attempting to pull Adopt's build configs instead."
+
+        checkoutAdopt()
+        // TODO: MAke the config directories versionable
+        buildConfigurations = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaToBuild}_pipeline_config.groovy"
+        checkout scm
     }
 
 }

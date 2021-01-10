@@ -317,10 +317,9 @@ class Builder implements Serializable {
     /*
     Retrieves the platformSpecificConfigPath from the build configurations.
     This determines where the location of the operating system setup files are in comparison to the repository root.
-    Defaults to build-farm/platform-specific-configurations/${OPERATING_SYSTEM}.sh
     */
     def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
-        def platformSpecificConfigPath = ""
+        def platformSpecificConfigPath = DEFAULTS_JSON['configDirectories']['platform']
         if (configuration.containsKey("platformSpecificConfigPath")) {
             platformSpecificConfigPath = configuration.platformSpecificConfigPath
         }
@@ -432,13 +431,11 @@ class Builder implements Serializable {
                     context.println "Found Java Version Number: ${headVersion}"
                 }
             } catch (FlowInterruptedException e) {
-                context.println "[ERROR] Adopt API Request timeout (${pipelineTimeouts.API_REQUEST_TIMEOUT} HOURS) has been reached. Exiting..."
-                throw new Exception()
+                throw new Exception("[ERROR] Adopt API Request timeout (${pipelineTimeouts.API_REQUEST_TIMEOUT} HOURS) has been reached. Exiting...")
             }
             return headVersion
         } else {
-            context.error("Failed to read java version '${javaToBuild}'")
-            throw new Exception()
+            throw new Exception("Failed to read java version '${javaToBuild}'")
         }
     }
 
@@ -581,8 +578,7 @@ class Builder implements Serializable {
                                                 context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
                                             }
                                         } catch (FlowInterruptedException e) {
-                                            context.println "[ERROR] Previous artifact removal timeout (${pipelineTimeouts.REMOVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting..."
-                                            throw new Exception()
+                                            throw new Exception("[ERROR] Previous artifact removal timeout (${pipelineTimeouts.REMOVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting...")
                                         }
 
                                         try {
@@ -597,8 +593,7 @@ class Builder implements Serializable {
                                                 )
                                             }
                                         } catch (FlowInterruptedException e) {
-                                            context.println "[ERROR] Copy artifact timeout (${pipelineTimeouts.COPY_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting..."
-                                            throw new Exception()
+                                            throw new Exception("[ERROR] Copy artifact timeout (${pipelineTimeouts.COPY_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting...")
                                         }
 
                                         // Checksum
@@ -610,8 +605,7 @@ class Builder implements Serializable {
                                                 context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
                                             }
                                         } catch (FlowInterruptedException e) {
-                                            context.println "[ERROR] Archive artifact timeout (${pipelineTimeouts.ARCHIVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName}has been reached. Exiting..."
-                                            throw new Exception()
+                                            throw new Exception("[ERROR] Archive artifact timeout (${pipelineTimeouts.ARCHIVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName}has been reached. Exiting...")
                                         }
 
                                     }
@@ -636,8 +630,7 @@ class Builder implements Serializable {
                         publishBinary()
                     }
                 } catch (FlowInterruptedException e) {
-                    context.println "[ERROR] Publish binary timeout (${pipelineTimeouts.PUBLISH_ARTIFACTS_TIMEOUT} HOURS) has been reached OR the downstream publish job failed. Exiting..."
-                    throw new Exception()
+                    throw new Exception("[ERROR] Publish binary timeout (${pipelineTimeouts.PUBLISH_ARTIFACTS_TIMEOUT} HOURS) has been reached OR the downstream publish job failed. Exiting...")
                 }
             } else if (publish && release) {
                 context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"

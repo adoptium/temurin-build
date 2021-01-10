@@ -37,14 +37,11 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                     remote {
                         url(GIT_URI)
                         refspec(" +refs/pull/*:refs/remotes/origin/pr/* +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*")
-                        if (binding.hasVariable("CHECKOUT_CREDENTIALS")) {
-                            credentials(CHECKOUT_CREDENTIALS)
-                        }
+                        credentials("${CHECKOUT_CREDENTIALS}")
                     }
                     branch("${GIT_BRANCH}")
                     extensions {
                         //repo clean is performed after scm checkout in pipelines/build/common/openjdk_build_pipeline.groovy
-
                         pruneStaleBranch()
                     }
                 }
@@ -91,8 +88,14 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>CLEAN_WORKSPACE</strong></dt><dd>Wipe out workspace before build</dd>
             </dl>
         """)
+        textParam('USER_REMOTE_CONFIGS', "$USER_REMOTE_CONFIGS", """
+        <strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes down the user's git checkout configs to the downstream job.
+        """)
         textParam('DEFAULTS_JSON', "$DEFAULTS_JSON", """
-        <strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes down default constants to the downstream jobs.
+        <strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes the user's default constants to the downstream job.
+        """)
+        textParam('ADOPT_DEFAULTS_JSON', "$ADOPT_DEFAULTS_JSON", """
+        <strong>DO NOT ALTER THIS PARAM UNDER ANY CIRCUMSTANCES!</strong> This passes down adopt's default constants to the downstream job. NOTE: <code>DEFAULTS_JSON</code> has priority, the constants contained within this param will only be used as a failsafe.
         """)
         if (binding.hasVariable('CUSTOM_LIBRARY_LOCATION')) {
             stringParam('CUSTOM_LIBRARY_LOCATION', "$CUSTOM_LIBRARY_LOCATION")

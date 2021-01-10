@@ -8,6 +8,9 @@ node('master') {
     String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
     def getAdopt = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
     Map<String, ?> ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(getAdopt.getInputStream().getText()) as Map
+    if (!ADOPT_DEFAULTS_JSON || !Map.class.isInstance(ADOPT_DEFAULTS_JSON)) {
+      throw new Exception("[ERROR] No ADOPT_DEFAULTS_JSON found at ${ADOPT_DEFAULTS_FILE_URL} or it is not a valid JSON object. Please ensure this path is correct and leads to a JSON or Map object file. NOTE: Since this adopt's defaults and unlikely to change location, this is likely a network or GitHub issue.")
+    }
 
     String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: ADOPT_DEFAULTS_FILE_URL
     def getUser = new URL(DEFAULTS_FILE_URL).openConnection()
@@ -58,15 +61,9 @@ node('master') {
       }
 
       // Checkout into user repository
-      checkout(
-        [
-          $class: 'GitSCM',
-          branches: [ [ name: repoBranch ] ],
-          userRemoteConfigs: [ remoteConfigs ]
-        ]
-      )
+      checkoutUser()
 
-      // Load the adopt class library so we can use the ConfigHandler class here. If we don't find an import library script in the user's repo, we checkout to openjdk-build and use the one that's present there. Finally, we check back out to the user repo.
+      // Load the adopt class library so we can use their classes here. If we don't find an import library script in the user's repo, we checkout to openjdk-build and use the one that's present there. Finally, we check back out to the user repo.
       def libraryPath = (params.LIBRARY_PATH) ?: DEFAULTS_JSON['importLibraryScript']
       try {
         load "${WORKSPACE}/${libraryPath}"
@@ -74,13 +71,8 @@ node('master') {
         println "[WARNING] ${libraryPath} does not exist in your repository. Attempting to pull Adopt's library script instead."
 
         checkoutAdopt()
-        try {
-          load "${WORKSPACE}/${libraryPath}"
-        } catch (NoSuchFileException e2) {
-          load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
-        }
+        load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
         checkoutUser()
-
       }
 
       // Load jobRoot. This is where the openjdkxx-pipeline jobs will be created.
@@ -93,7 +85,7 @@ node('master') {
         println "[WARNING] ${scriptFolderPath} does not exist in your chosen repository. Updating it to use Adopt's instead"
         checkoutAdopt()
         scriptFolderPath = ADOPT_DEFAULTS_JSON['scriptDirectories']['upstream']
-        println "[SUCCESS] The path is now ${scriptFolderPath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
+        println "[SUCCESS] The path is now ${scriptFolderPath} relative to ${ADOPT_DEFAULTS_JSON['repository']['url']}"
         checkoutUser()
       }
 
@@ -104,7 +96,7 @@ node('master') {
         println "[WARNING] ${nightlyFolderPath} does not exist in your chosen repository. Updating it to use Adopt's instead"
         checkoutAdopt()
         nightlyFolderPath = ADOPT_DEFAULTS_JSON['configDirectories']['nightly']
-        println "[SUCCESS] The path is now ${nightlyFolderPath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
+        println "[SUCCESS] The path is now ${nightlyFolderPath} relative to ${ADOPT_DEFAULTS_JSON['repository']['url']}"
         checkoutUser()
       }
 
@@ -115,7 +107,7 @@ node('master') {
         println "[WARNING] ${jobTemplatePath} does not exist in your chosen repository. Updating it to use Adopt's instead"
         checkoutAdopt()
         jobTemplatePath = ADOPT_DEFAULTS_JSON['templateDirectories']['upstream']
-        println "[SUCCESS] The path is now ${jobTemplatePath} relative to https://github.com/AdoptOpenJDK/openjdk-build"
+        println "[SUCCESS] The path is now ${jobTemplatePath} relative to ${ADOPT_DEFAULTS_JSON['repository']['url']}"
         checkoutUser()
       }
 
@@ -149,18 +141,19 @@ node('master') {
           CHECKOUT_CREDENTIALS: checkoutCreds,
           JOB_NAME            : "openjdk${javaVersion}-pipeline",
           SCRIPT              : "${scriptFolderPath}/openjdk${javaVersion}_pipeline.groovy",
-          disableJob          : false
+          disableJob          : false,
+          pipelineSchedule    : ""
         ];
 
         def target;
         try {
-          target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}u.groovy"
+          target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
         } catch(NoSuchFileException e) {
           try {
-            println "[WARNING] jdk${javaVersion}u.groovy does not exist, chances are we want a jdk${javaVersion}.groovy file. Trying ${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
-            target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}.groovy"
+            println "[WARNING] jdk${javaVersion}.groovy does not exist, chances are we want a jdk${javaVersion}u.groovy file. Trying ${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}u.groovy"
+            target = load "${WORKSPACE}/${nightlyFolderPath}/jdk${javaVersion}u.groovy"
           } catch(NoSuchFileException e2) {
-            println "[WARNING] jdk${javaVersion}.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's nightlies in..."
+            println "[WARNING] jdk${javaVersion}u.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's nightlies in..."
 
             checkoutAdopt()
             try {
@@ -200,6 +193,7 @@ node('master') {
         println "[INFO] JDK${javaVersion}: pipelineSchedule = ${config.pipelineSchedule}"
 
         config.put("defaultsJson", DEFAULTS_JSON)
+        config.put("adoptDefaultsJson", ADOPT_DEFAULTS_JSON)
 
         println "[INFO] FINAL CONFIG FOR $javaVersion"
         println JsonOutput.prettyPrint(JsonOutput.toJson(config))
@@ -207,6 +201,7 @@ node('master') {
         try {
           jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: config
         } catch (Exception e) {
+          println "[WARNING] Something went wrong when creating the job dsl. It may be because we are trying to pull the template inside a user repository. Using Adopt's template instead...\n${e}"
           checkoutAdopt()
           jobDsl targets: ADOPT_DEFAULTS_JSON['templateDirectories']['upstream'], ignoreExisting: false, additionalParameters: config
           checkoutUser()
