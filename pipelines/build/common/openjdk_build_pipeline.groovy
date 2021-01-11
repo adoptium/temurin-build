@@ -219,6 +219,8 @@ class Build {
         def jdkRepo = getJDKRepo()
         def openj9Branch = (buildConfig.SCM_REF && buildConfig.VARIANT == "openj9") ? buildConfig.SCM_REF : "master"
 
+        def additionalTestLabel = buildConfig.ADDITIONAL_TEST_LABEL
+
         if (buildConfig.VARIANT == "corretto") {
             testList = buildConfig.TEST_LIST.minus(['sanity.external'])
         } else {
@@ -250,6 +252,7 @@ class Build {
 												context.string(name: 'JDK_REPO', value: jdkRepo),
 												context.string(name: 'JDK_BRANCH', value: jdkBranch),
 												context.string(name: 'OPENJ9_BRANCH', value: openj9Branch),
+												context.string(name: 'LABEL_ADDITION', value: additionalTestLabel),
 												context.string(name: 'ACTIVE_NODE_TIMEOUT', value: "${buildConfig.ACTIVE_NODE_TIMEOUT}")]
 							}
 						} else {

@@ -99,6 +99,8 @@ class Builder implements Serializable {
 
         def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
+        def additionalTestLabels = formAdditionalTestLabels(platformConfig, variant)
+
         def archLabel = getArchLabel(platformConfig, variant)
 
         def dockerImage = getDockerImage(platformConfig, variant)
@@ -130,6 +132,7 @@ class Builder implements Serializable {
                 SCM_REF: scmReference,
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${archLabel}",
+                ADDITIONAL_TEST_LABEL: "${additionalTestLabels}",
                 ACTIVE_NODE_TIMEOUT: activeNodeTimeout,
                 CODEBUILD: platformConfig.codebuild as Boolean,
                 DOCKER_IMAGE: dockerImage,
@@ -328,6 +331,32 @@ class Builder implements Serializable {
 
             if (additionalNodeLabels != null) {
                 labels = "${additionalNodeLabels}&&${labels}"
+            }
+        }
+
+        return labels
+    }
+
+    /**
+    * Builds up additional test labels
+    * @param configuration
+    * @param variant
+    * @return
+    */
+    def formAdditionalTestLabels(Map<String, ?> configuration, String variant) {
+        def labels = ""
+
+        if (configuration.containsKey("additionalTestLabels")) {
+            def additionalTestLabels
+
+            if (isMap(configuration.additionalTestLabels)) {
+                additionalTestLabels = (configuration.additionalTestLabels as Map<String, ?>).get(variant)
+            } else {
+                additionalTestLabels = configuration.additionalTestLabels
+            }
+
+            if (additionalTestLabels != null) {
+                labels = "${additionalTestLabels}"
             }
         }
 
