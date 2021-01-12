@@ -53,6 +53,7 @@ class Builder implements Serializable {
     boolean enableSigner
     boolean cleanWorkspaceBeforeBuild
     boolean propagateFailures
+    boolean useAdoptBashScripts
 
     def env
     def scmVars
@@ -142,6 +143,7 @@ class Builder implements Serializable {
                 PLATFORM_CONFIG_PATH: platformSpecificConfigPath,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
                 OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
+                USE_ADOPT_BASH_SCRIPTS: useAdoptBashScripts,
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
                 JDK_BOOT_VERSION: platformConfig.bootJDK as String,
                 RELEASE: release,
@@ -653,6 +655,7 @@ return {
     String releaseType,
     String scmReference,
     String overridePublishName,
+    String useAdoptBashScripts,
     String additionalConfigureArgs,
     def scmVars,
     String additionalBuildArgs,
@@ -707,6 +710,7 @@ return {
             scmVars: scmVars,
             additionalBuildArgs: additionalBuildArgs,
             overrideFileNameVersion: overrideFileNameVersion,
+            useAdoptBashScripts: Boolean.parseBoolean(useAdoptBashScripts),
             cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
             adoptBuildNumber: adoptBuildNumber,
             propagateFailures: Boolean.parseBoolean(propagateFailures),

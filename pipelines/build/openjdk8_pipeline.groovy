@@ -106,6 +106,7 @@ if (scmVars != null || configureBuild != null || buildConfigurations != null) {
         scmVars,
         additionalBuildArgs,
         overrideFileNameVersion,
+        useAdoptBashScripts,
         cleanWorkspaceBeforeBuild,
         adoptBuildNumber,
         propagateFailures,
