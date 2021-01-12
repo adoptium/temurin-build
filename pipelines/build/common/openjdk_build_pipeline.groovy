@@ -47,10 +47,10 @@ class Build {
     final Map USER_REMOTE_CONFIGS
     final Map DEFAULTS_JSON
     final Map ADOPT_DEFAULTS_JSON
-
     final def context
     final def env
     final def currentBuild
+
     VersionInfo versionInfo = null
     String scmRef = ""
     String fullVersionOutput = ""
@@ -1221,9 +1221,14 @@ return {
             buildConfig = buildConfigArg as IndividualBuildConfig
         }
 
+        def userRemoteConfigs = [:]
+        if (USER_REMOTE_CONFIGS != "" && USER_REMOTE_CONFIGS != null) {
+            userRemoteConfigs = new JsonSlurper().parseText(USER_REMOTE_CONFIGS) as Map
+        }
+
         return new Build(
             buildConfig,
-            USER_REMOTE_CONFIGS,
+            userRemoteConfigs,
             DEFAULTS_JSON,
             ADOPT_DEFAULTS_JSON,
             context,
