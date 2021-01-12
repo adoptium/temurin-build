@@ -44,11 +44,11 @@ node ("master") {
     // Load credentials to be used in checking out. This is in case we are checking out a URL that is not Adopts and they don't have their ssh key on the machine.
     def checkoutCreds = (params.CHECKOUT_CREDENTIALS) ?: ""
     def remoteConfigs = new JsonSlurper().parseText('{ "url": "" }') as Map
-    remoteConfigs.put("url", repoUri)
+    remoteConfigs.url = repoUri
 
     if (checkoutCreds != "") {
       // This currently does not work with user credentials due to https://issues.jenkins.io/browse/JENKINS-60349
-      remoteConfigs.put("credentialsId", "${checkoutCreds}")
+      remoteConfigs.credentialsId = "${checkoutCreds}"
     } else {
       println "[WARNING] CHECKOUT_CREDENTIALS not specified! Checkout to $repoUri may fail if you do not have your ssh key on this machine."
     }

@@ -365,9 +365,9 @@ class Regeneration implements Serializable {
 
         // We have to use JsonSlurpers throughout the code for instantiating maps for consistancy and parsing reasons
         Map userRemoteConfigs = new JsonSlurper().parseText('{"branch" : "", "remotes": ""}') as Map
-        userRemoteConfigs.put("branch", gitBranch)
-        userRemoteConfigs.put("remotes", gitRemoteConfigs)
-        params.put("USER_REMOTE_CONFIGS", userRemoteConfigs)
+        userRemoteConfigs.branch = gitBranch
+        userRemoteConfigs.remotes = gitRemoteConfigs
+        params.put("USER_REMOTE_CONFIGS", JsonOutput.prettyPrint(JsonOutput.toJson(userRemoteConfigs)))
 
         def repoHandler = new RepoHandler(context, userRemoteConfigs)
 

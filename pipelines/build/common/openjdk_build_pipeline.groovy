@@ -1223,7 +1223,7 @@ return {
 
         return new Build(
             buildConfig,
-            userRemoteConfigs,
+            USER_REMOTE_CONFIGS,
             DEFAULTS_JSON,
             ADOPT_DEFAULTS_JSON,
             context,

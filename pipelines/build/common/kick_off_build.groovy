@@ -34,6 +34,7 @@ if (!ADOPT_DEFAULTS_JSON) {
 def libraryPath = (params.CUSTOM_LIBRARY_LOCATION) ?: LOCAL_DEFAULTS_JSON["importLibraryScript"]
 def baseFilePath = (params.CUSTOM_BASEFILE_LOCATION) ?: LOCAL_DEFAULTS_JSON["baseFileDirectories"]["downstream"]
 
+def userRemoteConfigs = [:]
 def downstreamBuilder = null
 node("master") {
     /*
@@ -48,7 +49,6 @@ node("master") {
 
     checkout scm
 
-    def userRemoteConfigs = [:]
     if (params.USER_REMOTE_CONFIGS) {
         userRemoteConfigs = new JsonSlurper().parseText(USER_REMOTE_CONFIGS) as Map
     }
