@@ -363,9 +363,14 @@ class Regeneration implements Serializable {
         params.put("GIT_URI", gitRemoteConfigs['url'])
         params.put("GIT_BRANCH", gitBranch)
 
-        Map userRemoteConfigs = [:]
-        userRemoteConfigs.put("branch", gitBranch)
-        userRemoteConfigs.put("remotes", gitRemoteConfigs)
+        Map userRemoteConfigs = new JsonSlurper().parseText(
+            """
+            {
+                branch: ${gitBranch},
+                remotes: ${gitRemoteConfigs}
+            }
+            """
+        )
         params.put("USER_REMOTE_CONFIGS", userRemoteConfigs)
 
         def repoHandler = new RepoHandler(context, userRemoteConfigs)
