@@ -74,7 +74,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         stringParam('additionalConfigureArgs', "", "Additional arguments that will be ultimately passed to OpenJDK's <code>./configure</code>")
         stringParam('additionalBuildArgs', "", "Additional arguments to be passed to <code>makejdk-any-platform.sh</code>")
         stringParam('overrideFileNameVersion', "", "When forming the filename, ignore the part of the filename derived from the publishName or timestamp and override it.<br/>For instance if you set this to 'FOO' the final file name will be of the form: <code>OpenJDK8U-jre_ppc64le_linux_openj9_FOO.tar.gz</code>")
-        booleanParam('useAdoptBashScripts', true, "If enabled, the downstream job will pull and execute <code>make-adopt-build-farm.sh</code> from AdoptOpenJDK/openjdk-build. If disabled, it will use whatever the job is running inside of at the time, usually it's the default repository is in the configuration.")
+        booleanParam('useAdoptBashScripts', true, "If enabled, the downstream job will pull and execute <code>make-adopt-build-farm.sh</code> from AdoptOpenJDK/openjdk-build. If disabled, it will use whatever the job is running inside of at the time, usually it's the default repository in the configuration.")
         booleanParam('cleanWorkspaceBeforeBuild', false, "Clean out the workspace before the build")
         booleanParam('propagateFailures', propagateFailures, "If true, a failure of <b>ANY</b> downstream build (but <b>NOT</b> test) will cause the whole build to fail")
         stringParam('adoptBuildNumber', "", "Empty by default. If you ever need to re-release then bump this number. Currently this is only added to the build metadata file.")

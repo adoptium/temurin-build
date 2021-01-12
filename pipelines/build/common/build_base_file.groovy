@@ -33,32 +33,32 @@ limitations under the License.
  */
 //@CompileStatic(extensions = "JenkinsTypeCheckHelperExtension")
 class Builder implements Serializable {
-    String javaToBuild
-    String activeNodeTimeout
-    String adoptBuildNumber
-    String overrideFileNameVersion
-    String additionalBuildArgs
-    String additionalConfigureArgs
-    Map<String, List<String>> targetConfigurations
-    Map<String, Map<String, ?>> buildConfigurations
-    Map<String, ?> DEFAULTS_JSON
-    Map<String, List<String>> dockerExcludes
-    String scmReference
-    String publishName
+    private final String javaToBuild
+    private final String activeNodeTimeout
+    private final String adoptBuildNumber
+    private final String overrideFileNameVersion
+    private final String additionalBuildArgs
+    private final String additionalConfigureArgs
+    private final Map<String, List<String>> targetConfigurations
+    private final Map<String, Map<String, ?>> buildConfigurations
+    private final Map<String, ?> DEFAULTS_JSON
+    private final Map<String, List<String>> dockerExcludes
+    private final String scmReference
+    private final String publishName
 
-    boolean release
-    boolean publish
-    boolean enableTests
-    boolean enableInstallers
-    boolean enableSigner
-    boolean cleanWorkspaceBeforeBuild
-    boolean propagateFailures
-    boolean useAdoptBashScripts
+    private final boolean release
+    private final boolean publish
+    private final boolean enableTests
+    private final boolean enableInstallers
+    private final boolean enableSigner
+    private final boolean cleanWorkspaceBeforeBuild
+    private final boolean propagateFailures
+    private final boolean useAdoptBashScripts
 
-    def env
-    def scmVars
-    def context
-    def currentBuild
+    private final def env
+    private final def scmVars
+    private final def context
+    private final def currentBuild
 
     /*
     Test targets triggered in 'nightly' build pipelines running 6 days per week
@@ -94,6 +94,61 @@ class Builder implements Serializable {
     ]
 
     /*
+    Constructor
+    */
+    public Builder(
+        String javaToBuild,
+        Map<String, Map<String, ?>> buildConfigurations,
+        Map<String, List<String>> targetConfigurations,
+        Map<String, ?> DEFAULTS_JSON,
+        String activeNodeTimeout,
+        Map<String, List<String>> dockerExcludes,
+        Boolean enableTests,
+        Boolean enableInstallers,
+        Boolean enableSigner,
+        Boolean publish,
+        Boolean release,
+        String scmReference,
+        String publishName,
+        String additionalConfigureArgs,
+        def scmVars,
+        String additionalBuildArgs,
+        String overrideFileNameVersion,
+        Boolean useAdoptBashScripts,
+        Boolean cleanWorkspaceBeforeBuild,
+        String adoptBuildNumber,
+        Boolean propagateFailures,
+        def currentBuild,
+        def context,
+        def env
+    ) {
+        this.javaToBuild = javaToBuild
+        this.buildConfigurations = buildConfigurations
+        this.targetConfigurations = targetConfigurations
+        this.DEFAULTS_JSON = DEFAULTS_JSON
+        this.activeNodeTimeout = activeNodeTimeout
+        this.dockerExcludes = dockerExcludes
+        this.enableTests = enableTests
+        this.enableInstallers = enableInstallers
+        this.enableSigner = enableSigner
+        this.publish = publish
+        this.release = release
+        this.scmReference = scmReference
+        this.publishName = publishName
+        this.additionalConfigureArgs = additionalConfigureArgs
+        this.scmVars = scmVars
+        this.additionalBuildArgs = additionalBuildArgs
+        this.overrideFileNameVersion = overrideFileNameVersion
+        this.useAdoptBashScripts = useAdoptBashScripts
+        this.cleanWorkspaceBeforeBuild = cleanWorkspaceBeforeBuild
+        this.adoptBuildNumber = adoptBuildNumber
+        this.propagateFailures = propagateFailures
+        this.currentBuild = currentBuild
+        this.context = context
+        this.env = env
+    }
+
+    /*
     Returns an IndividualBuildConfig that is passed down to the downstream job.
     It uses several helper functions to pull in and parse the build configuration for the job.
     This overrides the default IndividualBuildConfig generated in config_regeneration.groovy.
@@ -127,32 +182,32 @@ class Builder implements Serializable {
         }
 
         return new IndividualBuildConfig(
-                JAVA_TO_BUILD: javaToBuild,
-                ARCHITECTURE: platformConfig.arch as String,
-                TARGET_OS: platformConfig.os as String,
-                VARIANT: variant,
-                TEST_LIST: testList,
-                SCM_REF: scmReference,
-                BUILD_ARGS: buildArgs,
-                NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${archLabel}",
-                ACTIVE_NODE_TIMEOUT: activeNodeTimeout,
-                CODEBUILD: platformConfig.codebuild as Boolean,
-                DOCKER_IMAGE: dockerImage,
-                DOCKER_FILE: dockerFile,
-                DOCKER_NODE: dockerNode,
-                PLATFORM_CONFIG_PATH: platformSpecificConfigPath,
-                CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
-                OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
-                USE_ADOPT_BASH_SCRIPTS: useAdoptBashScripts,
-                ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
-                JDK_BOOT_VERSION: platformConfig.bootJDK as String,
-                RELEASE: release,
-                PUBLISH_NAME: publishName,
-                ADOPT_BUILD_NUMBER: adoptBuildNumber,
-                ENABLE_TESTS: enableTests,
-                ENABLE_INSTALLERS: enableInstallers,
-                ENABLE_SIGNER: enableSigner,
-                CLEAN_WORKSPACE: cleanWorkspace
+            JAVA_TO_BUILD: javaToBuild,
+            ARCHITECTURE: platformConfig.arch as String,
+            TARGET_OS: platformConfig.os as String,
+            VARIANT: variant,
+            TEST_LIST: testList,
+            SCM_REF: scmReference,
+            BUILD_ARGS: buildArgs,
+            NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${archLabel}",
+            ACTIVE_NODE_TIMEOUT: activeNodeTimeout,
+            CODEBUILD: platformConfig.codebuild as Boolean,
+            DOCKER_IMAGE: dockerImage,
+            DOCKER_FILE: dockerFile,
+            DOCKER_NODE: dockerNode,
+            PLATFORM_CONFIG_PATH: platformSpecificConfigPath,
+            CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
+            OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
+            USE_ADOPT_BASH_SCRIPTS: useAdoptBashScripts,
+            ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
+            JDK_BOOT_VERSION: platformConfig.bootJDK as String,
+            RELEASE: release,
+            PUBLISH_NAME: publishName,
+            ADOPT_BUILD_NUMBER: adoptBuildNumber,
+            ENABLE_TESTS: enableTests,
+            ENABLE_INSTALLERS: enableInstallers,
+            ENABLE_SIGNER: enableSigner,
+            CLEAN_WORKSPACE: cleanWorkspace
         )
     }
 
