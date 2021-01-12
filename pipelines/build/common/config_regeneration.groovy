@@ -186,6 +186,32 @@ class Regeneration implements Serializable {
         return labels
     }
 
+    /**
+    * Builds up additional test labels
+    * @param configuration
+    * @param variant
+    * @return
+    */
+    def formAdditionalTestLabels(Map<String, ?> configuration, String variant) {
+        def labels = ""
+
+        if (configuration.containsKey("additionalTestLabels")) {
+            def additionalTestLabels
+
+            if (isMap(configuration.additionalTestLabels)) {
+                additionalTestLabels = (configuration.additionalTestLabels as Map<String, ?>).get(variant)
+            } else {
+                additionalTestLabels = configuration.additionalTestLabels
+            }
+
+            if (additionalTestLabels != null) {
+                labels = "${additionalTestLabels}"
+            }
+        }
+
+        return labels
+    }
+
     /*
     * Get build args from jdk*_pipeline_config.groovy. Used when creating the IndividualBuildConfig.
     * @param configuration
@@ -268,6 +294,8 @@ class Regeneration implements Serializable {
             }
 
             def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
+ 
+            def additionalTestLabels = formAdditionalTestLabels(platformConfig, variant)
 
             def archLabel = getArchLabel(platformConfig, variant)
 
@@ -290,6 +318,7 @@ class Regeneration implements Serializable {
                 SCM_REF: "",
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${archLabel}",
+                ADDITIONAL_TEST_LABEL: "${additionalTestLabels}",
                 ACTIVE_NODE_TIMEOUT: "",
                 CODEBUILD: platformConfig.codebuild as Boolean,
                 DOCKER_IMAGE: dockerImage,
