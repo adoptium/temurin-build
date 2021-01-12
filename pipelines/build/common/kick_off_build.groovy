@@ -50,7 +50,7 @@ node("master") {
 
     def userRemoteConfigs = ""
     if (params.USER_REMOTE_CONFIGS) {
-        userRemoteConfigs = new JsonSlurper().parseText(USER_REMOTE_CONFIGS) as Map
+        userRemoteConfigs = new Map(USER_REMOTE_CONFIGS)
     }
 
     try {
