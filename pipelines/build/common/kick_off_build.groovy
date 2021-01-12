@@ -48,9 +48,9 @@ node("master") {
 
     checkout scm
 
-    def userRemoteConfigs = ""
+    def userRemoteConfigs = [:]
     if (params.USER_REMOTE_CONFIGS) {
-        userRemoteConfigs = new Map(USER_REMOTE_CONFIGS)
+        userRemoteConfigs = USER_REMOTE_CONFIGS as Map
     }
 
     try {
