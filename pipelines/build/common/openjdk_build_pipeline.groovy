@@ -1221,11 +1221,6 @@ return {
             buildConfig = buildConfigArg as IndividualBuildConfig
         }
 
-        def userRemoteConfigs = [:]
-        if (USER_REMOTE_CONFIGS != "" && USER_REMOTE_CONFIGS != null) {
-            userRemoteConfigs = new JsonSlurper().parseText(USER_REMOTE_CONFIGS) as Map
-        }
-
         return new Build(
             buildConfig,
             userRemoteConfigs,

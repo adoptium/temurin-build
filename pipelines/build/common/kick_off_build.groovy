@@ -48,6 +48,11 @@ node("master") {
 
     checkout scm
 
+    def userRemoteConfigs = ""
+    if (params.USER_REMOTE_CONFIGS) {
+        userRemoteConfigs = new JsonSlurper().parseText(USER_REMOTE_CONFIGS) as Map
+    }
+
     try {
         load libraryPath
     } catch (NoSuchFileException e) {
@@ -70,7 +75,7 @@ node("master") {
 
 downstreamBuilder(
     BUILD_CONFIGURATION,
-    USER_REMOTE_CONFIGS,
+    userRemoteConfigs,
     LOCAL_DEFAULTS_JSON,
     ADOPT_DEFAULTS_JSON,
     this,
