@@ -186,6 +186,32 @@ class Regeneration implements Serializable {
         return labels
     }
 
+    /**
+    * Builds up additional test labels
+    * @param configuration
+    * @param variant
+    * @return
+    */
+    def formAdditionalTestLabels(Map<String, ?> configuration, String variant) {
+        def labels = ""
+
+        if (configuration.containsKey("additionalTestLabels")) {
+            def additionalTestLabels
+
+            if (isMap(configuration.additionalTestLabels)) {
+                additionalTestLabels = (configuration.additionalTestLabels as Map<String, ?>).get(variant)
+            } else {
+                additionalTestLabels = configuration.additionalTestLabels
+            }
+
+            if (additionalTestLabels != null) {
+                labels = "${additionalTestLabels}"
+            }
+        }
+
+        return labels
+    }
+
     /*
     * Get build args from jdk*_pipeline_config.groovy. Used when creating the IndividualBuildConfig.
     * @param configuration
@@ -230,7 +256,7 @@ class Regeneration implements Serializable {
     def overridePlatform(Map<String, ?> configuration, String variant) {
         Boolean overridePlatform = false
         if (excludedBuilds == [:]) {
-            return overridePlatform 
+            return overridePlatform
         }
 
         String stringArch = configuration.arch as String
@@ -268,6 +294,8 @@ class Regeneration implements Serializable {
             }
 
             def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
+ 
+            def additionalTestLabels = formAdditionalTestLabels(platformConfig, variant)
 
             def archLabel = getArchLabel(platformConfig, variant)
 
@@ -290,6 +318,7 @@ class Regeneration implements Serializable {
                 SCM_REF: "",
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${archLabel}",
+                ADDITIONAL_TEST_LABEL: "${additionalTestLabels}",
                 ACTIVE_NODE_TIMEOUT: "",
                 CODEBUILD: platformConfig.codebuild as Boolean,
                 DOCKER_IMAGE: dockerImage,
@@ -411,10 +440,10 @@ class Regeneration implements Serializable {
 
                     // Parse api response to only extract the relevant pipeline
                     getPipelines.jobs.name.each{ pipeline ->
-                        if (pipeline.contains("pipeline") && pipeline.contains(versionNumbers[0])) {
+                        if (pipeline == "openjdk${versionNumbers[0]}-pipeline") {
                             // TODO: Paramaterise this
                             Integer sleepTime = 900
-                            
+
                             Boolean inProgress = true
                             while (inProgress) {
                                 // Check if pipeline is in progress using api
@@ -430,7 +459,7 @@ class Regeneration implements Serializable {
                                         context.println "[SUCCESS] ${pipeline} has not been run before. Running regeneration job..."
                                         inProgress = false
                                     }
-                                
+
                                 } else {
                                     inProgress = pipelineInProgress.building as Boolean
                                 }
@@ -565,7 +594,7 @@ return {
         if (excludes != "" && excludes != null) {
             excludedBuilds = new JsonSlurper().parseText(excludes) as Map
         }
-        
+
         return new Regeneration(
             javaVersion,
             buildConfigurations,

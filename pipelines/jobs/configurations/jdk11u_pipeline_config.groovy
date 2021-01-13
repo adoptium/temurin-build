@@ -41,8 +41,9 @@ class Config11 {
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: [
-                        hotspot: 'win2012',
-                        openj9:  'win2012&&vs2017'
+                        hotspot:    'win2012',
+                        openj9:     'win2012&&vs2017',
+                        dragonwell: 'win2012&&dragonwell'
                 ],
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'

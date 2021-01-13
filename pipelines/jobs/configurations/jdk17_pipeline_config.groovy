@@ -34,6 +34,9 @@ class Config17 {
                         nightly: [],
                         weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
                 ],
+                additionalTestLabels: [
+                        openj9      : '!(centos6||rhel6)'
+                ],
                 configureArgs       : [
                         "openj9"      : '--enable-dtrace --enable-jitserver',
                         "hotspot"     : '--enable-dtrace'
@@ -48,6 +51,9 @@ class Config17 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                 : 'default',
+                additionalTestLabels: [
+                        openj9      : '!(centos6||rhel6)'
+                ],
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace --enable-jitserver'
         ],
@@ -141,6 +147,7 @@ class Config17 {
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
+                additionalNodeLabels: 'centos7',
                 test                : [
                         nightly: [],
                         weekly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
@@ -155,6 +162,7 @@ class Config17 {
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace'
