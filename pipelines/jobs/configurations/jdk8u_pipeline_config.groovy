@@ -42,7 +42,7 @@ class Config8 {
                         hotspot : 'win2012',
                         corretto: 'win2012',
                         openj9  : 'win2012&&mingw-cygwin',
-                        dragonwell: 'win2012&&dragonwell'
+                        dragonwell: 'win2012'
                 ],
                 test                 : 'default'
         ],
