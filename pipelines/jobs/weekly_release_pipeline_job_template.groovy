@@ -1,3 +1,4 @@
+import groovy.json.JsonOutput
 
 folder("${BUILD_FOLDER}")
 
@@ -27,5 +28,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
 
     parameters {
         stringParam('buildPipeline', "${BUILD_FOLDER}/${PIPELINE}", 'The build pipeline to invoke.')
+        textParam('scmReferences', JsonOutput.prettyPrint(JsonOutput.toJson(weekly_release_scmReferences)), 'The map of scmReferences for each variant.')
+        textParam('targetConfigurations', JsonOutput.prettyPrint(JsonOutput.toJson(targetConfigurations)), 'The map of platforms and variants to build.')
     }
 }

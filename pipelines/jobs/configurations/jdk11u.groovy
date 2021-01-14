@@ -64,4 +64,12 @@ triggerSchedule_nightly="TZ=UTC\n05 18 * * 2,4"
 // 17:05 Sat
 triggerSchedule_weekly="TZ=UTC\n05 17 * * 6"
 
+// scmReferences to use for weekly release build
+weekly_release_scmReferences=[
+        "hotspot"        : "jdk-11.0.10+8_adopt",
+        "openj9"         : "v0.24.0-release",
+        "corretto"       : "",
+        "dragonwell"     : ""
+]
+
 return this

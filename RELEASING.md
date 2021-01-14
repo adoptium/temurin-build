@@ -259,6 +259,10 @@ When the repo has been created, a few changes to the codebase will be necessary 
 
   - https://github.com/AdoptOpenJDK/openjdk-build/search?q=jdkxx
 
+### Post Release Tasks
+Once all the release binaries have been published the following tasks should be completed:
+1. Reset the "weekly_release_scmReferences" (change to "") for the weekend release test build so it is using HEAD streams: https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations
+
 ## Summary on point releases
 
 Occasionally we may have to do an out-of-band release that does not align with a quarterly release from the upstream OpenJDK project. This may occur if there has been a problem with our build process that we missed at GA time, to fix a critical issue, or when a project outside OpenJDK (e.g. OpenJ9) needs to do an interim release. In order to do such a release, follow the steps included in the process above which I'll repeat here for clarity:
