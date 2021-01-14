@@ -1,3 +1,4 @@
+import groovy.json.*
 
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +14,43 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+stage("Submit Release Pipelines") {
+    // Map of <variant> : <scmRef>
+    def Map<String, String> scmRefs = new JsonSlurper().parseText("${params.scmReferences}") as Map
 
-stage("invoke_pipeline_as_release") {
-    build job: "${params.buildPipeline}",
-          parameters: [
-                          [$class: 'StringParameterValue', name: 'releaseType', value: 'Release']
+    // Map of <platform> : [<variant>,<variant>,..]
+    def Map<String, List<String>> targetConfigurations = new JsonSlurper().parseText("${params.targetConfigurations}") as Map
+
+    def jobs = [:]
+
+    // For each variant create a release pipeline job
+    scmRefs.each{ variant ->
+        def variantName = variant.key
+        def scmRef = variant.value
+        def Map<String, List<String>> targetConfig = [:]
+
+        targetConfigurations.each{ target ->
+            if (target.value.contains(variantName)) {
+                targetConfig.put(target.key,[variantName])
+            }
+        }
+
+        if (!targetConfig.isEmpty()) {
+            echo("Creating ${params.buildPipeline} - ${variantName}")
+            jobs[variantName] = {
+                stage("Build - ${params.buildPipeline} - ${variantName}") {
+                  build job: "${params.buildPipeline}",
+                      parameters: [
+                          string(name: 'releaseType',        value: 'Release'),
+                          string(name: 'scmReference',       value: scmRef),
+                          text(name: 'targetConfigurations', value: JsonOutput.prettyPrint(JsonOutput.toJson(targetConfig)))
                       ]
+                }
+            }
+        }
+    }
+
+    // Submit jobs
+    parallel jobs
 }
 

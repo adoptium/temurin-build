@@ -60,6 +60,7 @@ node('master') {
     config.JOB_NAME = "weekly-openjdk${javaVersion}-pipeline"
     config.SCRIPT   = "pipelines/build/common/weekly_release_pipeline.groovy"
     config.PIPELINE = "openjdk${javaVersion}-pipeline"
+    config.weekly_release_scmReferences = target.weekly_release_scmReferences
 
     if (Boolean.parseBoolean(enablePipelineSchedule) == true) {
       try {
