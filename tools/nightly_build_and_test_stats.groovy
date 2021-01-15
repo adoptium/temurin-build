@@ -49,38 +49,48 @@ node ("master") {
         def testJobNumber = 0
         def buildJobNumber = 0
 
-        // Get all pipeline builds started by "timer", as those are Nightlies
-        def pipeline = sh(returnStdout: true, script: "wget -q -O - ${trssUrl}/api/getBuildHistory?buildName=${pipelineName}\\&startBy=timer")
+        // Find all pipeline builds started by "timer", as those are Nightlies
+        // or upstream project "build-scripts/weekly-openjdkNN-pipeline", as those are weekend weekly release jobs
+        def pipeline = sh(returnStdout: true, script: "wget -q -O - ${trssUrl}/api/getBuildHistory?buildName=${pipelineName}")
         def pipelineJson = new JsonSlurper().parseText(pipeline)
         if (pipelineJson.size() > 0) {
-          // First in list is last Nightly job
-          def pipeline_id = pipelineJson[0]._id
-          pipelineUrl = pipelineJson[0].buildUrl 
+          // Find first in list started by timer or upstream weekly job
+          def pipeline_id = null
+          pipelineJson.find { job ->
+            if ((job.startBy.startsWith("timer")) || (job.startBy.startsWith("upstream project \"build-scripts/weekly-${pipelineName}\""))) {
+              pipeline_id = job._id
+              pipelineUrl = job.buildUrl
+              return true
+            }
+            return false
+          }
 
-          // Get all child Test jobs for this pipeline job
-          def pipelineTestJobs = sh(returnStdout: true, script: "wget -q -O - ${trssUrl}/api/getAllChildBuilds?parentId=${pipeline_id}\\&buildNameRegex=^Test_.*")
-          def pipelineTestJobsJson = new JsonSlurper().parseText(pipelineTestJobs)
-          if (pipelineTestJobsJson.size() > 0) {
-            testJobNumber = pipelineTestJobsJson.size()
-            pipelineTestJobsJson.each { testJob ->
-              if (testJob.buildResult.equals("SUCCESS")) {
-                testJobSuccess += 1
-              } else if (testJob.buildResult.equals("UNSTABLE")) {
-                testJobUnstable += 1
-              } else {
-                testJobFailure += 1
-              }
-              if (testJob.testSummary != null) {
-                testCasePassed += testJob.testSummary.passed
-                testCaseFailed += testJob.testSummary.failed
-                testCaseDisabled += testJob.testSummary.disabled
+          if (pipeline_id != null) {
+            // Get all child Test jobs for this pipeline job
+            def pipelineTestJobs = sh(returnStdout: true, script: "wget -q -O - ${trssUrl}/api/getAllChildBuilds?parentId=${pipeline_id}\\&buildNameRegex=^Test_.*")
+            def pipelineTestJobsJson = new JsonSlurper().parseText(pipelineTestJobs)
+            if (pipelineTestJobsJson.size() > 0) {
+              testJobNumber = pipelineTestJobsJson.size()
+              pipelineTestJobsJson.each { testJob ->
+                if (testJob.buildResult.equals("SUCCESS")) {
+                  testJobSuccess += 1
+                } else if (testJob.buildResult.equals("UNSTABLE")) {
+                  testJobUnstable += 1
+                } else {
+                  testJobFailure += 1
+                }
+                if (testJob.testSummary != null) {
+                  testCasePassed += testJob.testSummary.passed
+                  testCaseFailed += testJob.testSummary.failed
+                  testCaseDisabled += testJob.testSummary.disabled
+                }
               }
             }
+            // Get all child Build jobs for this pipeline job
+            def pipelineBuildJobs = sh(returnStdout: true, script: "wget -q -O - ${trssUrl}/api/getAllChildBuilds?parentId=${pipeline_id}\\&buildNameRegex=^jdk.*")
+            def pipelineBuildJobsJson = new JsonSlurper().parseText(pipelineBuildJobs)
+            buildJobNumber = pipelineBuildJobsJson.size()
           }
-          // Get all child Build jobs for this pipeline job
-          def pipelineBuildJobs = sh(returnStdout: true, script: "wget -q -O - ${trssUrl}/api/getAllChildBuilds?parentId=${pipeline_id}\\&buildNameRegex=^jdk.*")
-          def pipelineBuildJobsJson = new JsonSlurper().parseText(pipelineBuildJobs)
-          buildJobNumber = pipelineBuildJobsJson.size()
         }
 
         def testResult = [name: pipelineName, url: pipelineUrl, buildJobNumber: buildJobNumber,
