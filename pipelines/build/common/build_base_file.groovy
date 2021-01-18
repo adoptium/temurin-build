@@ -33,30 +33,30 @@ limitations under the License.
  */
 //@CompileStatic(extensions = "JenkinsTypeCheckHelperExtension")
 class Builder implements Serializable {
-    private final String javaToBuild
-    private final Map<String, Map<String, ?>> buildConfigurations
-    private final Map<String, List<String>> targetConfigurations
-    private final Map<String, ?> DEFAULTS_JSON
-    private final String activeNodeTimeout
-    private final Map<String, List<String>> dockerExcludes
-    private final boolean enableTests
-    private final boolean enableInstallers
-    private final boolean enableSigner
-    private final boolean publish
-    private final boolean release
-    private final String scmReference
-    private final String publishName
-    private final String additionalConfigureArgs
-    private final def scmVars
-    private final String additionalBuildArgs
-    private final String overrideFileNameVersion
-    private final boolean useAdoptBashScripts
-    private final boolean cleanWorkspaceBeforeBuild
-    private final String adoptBuildNumber
-    private final boolean propagateFailures
-    private final def currentBuild
-    private final def context
-    private final def env
+    String javaToBuild
+    Map<String, Map<String, ?>> buildConfigurations
+    Map<String, List<String>> targetConfigurations
+    Map<String, ?> DEFAULTS_JSON
+    String activeNodeTimeout
+    Map<String, List<String>> dockerExcludes
+    boolean enableTests
+    boolean enableInstallers
+    boolean enableSigner
+    boolean publish
+    boolean release
+    String scmReference
+    String publishName
+    String additionalConfigureArgs
+    def scmVars
+    String additionalBuildArgs
+    String overrideFileNameVersion
+    boolean useAdoptBashScripts
+    boolean cleanWorkspaceBeforeBuild
+    String adoptBuildNumber
+    boolean propagateFailures
+    def currentBuild
+    def context
+    def env
 
     /*
     Test targets triggered in 'nightly' build pipelines running 6 days per week
@@ -90,61 +90,6 @@ class Builder implements Serializable {
         ARCHIVE_ARTIFACTS_TIMEOUT : 6,
         PUBLISH_ARTIFACTS_TIMEOUT : 3
     ]
-
-    /*
-    Constructor
-    */
-    public Builder(
-        String javaToBuild,
-        Map<String, Map<String, ?>> buildConfigurations,
-        Map<String, List<String>> targetConfigurations,
-        Map<String, ?> DEFAULTS_JSON,
-        String activeNodeTimeout,
-        Map<String, List<String>> dockerExcludes,
-        Boolean enableTests,
-        Boolean enableInstallers,
-        Boolean enableSigner,
-        Boolean publish,
-        Boolean release,
-        String scmReference,
-        String publishName,
-        String additionalConfigureArgs,
-        def scmVars,
-        String additionalBuildArgs,
-        String overrideFileNameVersion,
-        Boolean useAdoptBashScripts,
-        Boolean cleanWorkspaceBeforeBuild,
-        String adoptBuildNumber,
-        Boolean propagateFailures,
-        def currentBuild,
-        def context,
-        def env
-    ) {
-        this.javaToBuild = javaToBuild
-        this.buildConfigurations = buildConfigurations
-        this.targetConfigurations = targetConfigurations
-        this.DEFAULTS_JSON = DEFAULTS_JSON
-        this.activeNodeTimeout = activeNodeTimeout
-        this.dockerExcludes = dockerExcludes
-        this.enableTests = enableTests
-        this.enableInstallers = enableInstallers
-        this.enableSigner = enableSigner
-        this.publish = publish
-        this.release = release
-        this.scmReference = scmReference
-        this.publishName = publishName
-        this.additionalConfigureArgs = additionalConfigureArgs
-        this.scmVars = scmVars
-        this.additionalBuildArgs = additionalBuildArgs
-        this.overrideFileNameVersion = overrideFileNameVersion
-        this.useAdoptBashScripts = useAdoptBashScripts
-        this.cleanWorkspaceBeforeBuild = cleanWorkspaceBeforeBuild
-        this.adoptBuildNumber = adoptBuildNumber
-        this.propagateFailures = propagateFailures
-        this.currentBuild = currentBuild
-        this.context = context
-        this.env = env
-    }
 
     /*
     Returns an IndividualBuildConfig that is passed down to the downstream job.
@@ -746,30 +691,30 @@ return {
         }
 
         return new Builder(
-            javaToBuild,
-            buildConfigurations,
-            new JsonSlurper().parseText(targetConfigurations) as Map,
-            DEFAULTS_JSON,
-            activeNodeTimeout,
-            buildsExcludeDocker,
-            Boolean.parseBoolean(enableTests),
-            Boolean.parseBoolean(enableInstallers),
-            Boolean.parseBoolean(enableSigner),
-            publish,
-            release,
-            scmReference,
-            publishName,
-            additionalConfigureArgs,
-            scmVars,
-            additionalBuildArgs,
-            overrideFileNameVersion,
-            Boolean.parseBoolean(useAdoptBashScripts),
-            Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
-            adoptBuildNumber,
-            Boolean.parseBoolean(propagateFailures),
-            currentBuild,
-            context,
-            env
+            javaToBuild: javaToBuild,
+            buildConfigurations: buildConfigurations,
+            targetConfigurations: new JsonSlurper().parseText(targetConfigurations) as Map,
+            DEFAULTS_JSON: DEFAULTS_JSON,
+            activeNodeTimeout: activeNodeTimeout,
+            dockerExcludes: buildsExcludeDocker,
+            enableTests: Boolean.parseBoolean(enableTests),
+            enableInstallers: Boolean.parseBoolean(enableInstallers),
+            enableSigner: Boolean.parseBoolean(enableSigner),
+            publish: publish,
+            release: release,
+            scmReference: scmReference,
+            publishName: publishName,
+            additionalConfigureArgs: additionalConfigureArgs,
+            scmVars: scmVars,
+            additionalBuildArgs: additionalBuildArgs,
+            overrideFileNameVersion: overrideFileNameVersion,
+            useAdoptBashScripts: Boolean.parseBoolean(useAdoptBashScripts),
+            cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
+            adoptBuildNumber: adoptBuildNumber,
+            propagateFailures: Boolean.parseBoolean(propagateFailures),
+            currentBuild: currentBuild,
+            context: context,
+            env: env
         )
 
 }
