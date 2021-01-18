@@ -951,7 +951,7 @@ class Build {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
                             def repoHandler = new RepoHandler(context, USER_REMOTE_CONFIGS)
 
-                            if (buildConfig.USE_ADOPT_BASH_SCRIPTS == true) {
+                            if (buildConfig.USE_ADOPT_BASH_SCRIPTS == "true") {
                                 context.println "[CHECKOUT] Checking out to AdoptOpenJDK/openjdk-build to use their bash scripts..."
                                 repoHandler.checkoutAdopt()
                                 context.sh(script: "./build-farm/make-adopt-build-farm.sh")
