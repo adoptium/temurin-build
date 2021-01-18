@@ -522,7 +522,6 @@ class Builder implements Serializable {
     @SuppressWarnings("unused")
     def doBuild() {
         context.timestamps {
-            context.println "[DEBUG] use adopt bash scripts = ${useAdoptBashScripts}"
             Map<String, IndividualBuildConfig> jobConfigurations = getJobConfigurations()
 
             if (!checkConfigIsSane(jobConfigurations)) {
