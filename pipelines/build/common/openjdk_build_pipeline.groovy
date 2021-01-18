@@ -950,7 +950,7 @@ class Build {
                 context.withEnv(envVars) {
                     try {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
-                            if (useAdoptBashScripts) {
+                            if (useAdoptBashScripts == true) {
                                 context.println "[CHECKOUT] Checking out to AdoptOpenJDK/openjdk-build to use their bash scripts..."
                                 repoHandler.checkoutAdopt()
                                 context.sh(script: "./build-farm/make-adopt-build-farm.sh")
@@ -1066,6 +1066,11 @@ class Build {
                 def enableSigner = Boolean.valueOf(buildConfig.ENABLE_SIGNER)
                 def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
                 def useAdoptBashScripts = Boolean.valueOf(buildConfig.USE_ADOPT_BASH_SCRIPTS)
+                context.println "ENABLE_TESTS: ${enableTests}"
+                context.println "ENABLE_INSTALLERS: ${enableInstallers}"
+                context.println "ENABLE_SIGNER: ${enableSigner}"
+                context.println "CLEAN_WORKSPACE: ${cleanWorkspace}"
+                context.println "USE_ADOPT_BASH_SCRIPTS: ${useAdoptBashScripts}"
 
                 context.stage("queue") {
                     /* This loads the library containing two Helper classes, and causes them to be
