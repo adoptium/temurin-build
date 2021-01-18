@@ -34,31 +34,29 @@ limitations under the License.
 //@CompileStatic(extensions = "JenkinsTypeCheckHelperExtension")
 class Builder implements Serializable {
     private final String javaToBuild
-    private final String activeNodeTimeout
-    private final String adoptBuildNumber
-    private final String overrideFileNameVersion
-    private final String additionalBuildArgs
-    private final String additionalConfigureArgs
-    private final Map<String, List<String>> targetConfigurations
     private final Map<String, Map<String, ?>> buildConfigurations
+    private final Map<String, List<String>> targetConfigurations
     private final Map<String, ?> DEFAULTS_JSON
+    private final String activeNodeTimeout
     private final Map<String, List<String>> dockerExcludes
-    private final String scmReference
-    private final String publishName
-
-    private final boolean release
-    private final boolean publish
     private final boolean enableTests
     private final boolean enableInstallers
     private final boolean enableSigner
-    private final boolean cleanWorkspaceBeforeBuild
-    private final boolean propagateFailures
-    private final boolean useAdoptBashScripts
-
-    private final def env
+    private final boolean publish
+    private final boolean release
+    private final String scmReference
+    private final String publishName
+    private final String additionalConfigureArgs
     private final def scmVars
-    private final def context
+    private final String additionalBuildArgs
+    private final String overrideFileNameVersion
+    private final boolean useAdoptBashScripts
+    private final boolean cleanWorkspaceBeforeBuild
+    private final String adoptBuildNumber
+    private final boolean propagateFailures
     private final def currentBuild
+    private final def context
+    private final def env
 
     /*
     Test targets triggered in 'nightly' build pipelines running 6 days per week
@@ -748,30 +746,30 @@ return {
         }
 
         return new Builder(
-            javaToBuild: javaToBuild,
-            buildConfigurations: buildConfigurations,
-            targetConfigurations: new JsonSlurper().parseText(targetConfigurations) as Map,
-            DEFAULTS_JSON: DEFAULTS_JSON,
-            activeNodeTimeout: activeNodeTimeout,
-            dockerExcludes: buildsExcludeDocker,
-            enableTests: Boolean.parseBoolean(enableTests),
-            enableInstallers: Boolean.parseBoolean(enableInstallers),
-            enableSigner: Boolean.parseBoolean(enableSigner),
-            publish: publish,
-            release: release,
-            scmReference: scmReference,
-            publishName: publishName,
-            additionalConfigureArgs: additionalConfigureArgs,
-            scmVars: scmVars,
-            additionalBuildArgs: additionalBuildArgs,
-            overrideFileNameVersion: overrideFileNameVersion,
-            useAdoptBashScripts: Boolean.parseBoolean(useAdoptBashScripts),
-            cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
-            adoptBuildNumber: adoptBuildNumber,
-            propagateFailures: Boolean.parseBoolean(propagateFailures),
-            currentBuild: currentBuild,
-            context: context,
-            env: env
+            javaToBuild,
+            buildConfigurations,
+            new JsonSlurper().parseText(targetConfigurations) as Map,
+            DEFAULTS_JSON,
+            activeNodeTimeout,
+            buildsExcludeDocker,
+            Boolean.parseBoolean(enableTests),
+            Boolean.parseBoolean(enableInstallers),
+            Boolean.parseBoolean(enableSigner),
+            publish,
+            release,
+            scmReference,
+            publishName,
+            additionalConfigureArgs,
+            scmVars,
+            additionalBuildArgs,
+            overrideFileNameVersion,
+            Boolean.parseBoolean(useAdoptBashScripts),
+            Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
+            adoptBuildNumber,
+            Boolean.parseBoolean(propagateFailures),
+            currentBuild,
+            context,
+            env
         )
 
 }
