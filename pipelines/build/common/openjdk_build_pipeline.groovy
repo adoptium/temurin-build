@@ -942,8 +942,8 @@ class Build {
                 List<String> envVars = buildConfig.toEnvVars()
                 envVars.add("FILENAME=${filename}" as String)
 
-                // Add in the ADOPT_DEFAULT_PLATFORM_CONFIGS path so it can be used if the user doesn't have one
-                envVars.add("ADOPT_DEFAULT_PLATFORM_CONFIGS=${ADOPT_DEFAULTS_JSON['configDirectories']['platform']}" as String)
+                // Add in the adopt platform config path so it can be used if the user doesn't have one
+                envVars.add("ADOPT_PLATFORM_CONFIG_LOCATION=https://raw.githubusercontent.com/${ADOPT_DEFAULTS_JSON['configDirectories']['platform']}" as String)
 
                 // Execute build
                 context.withEnv(envVars) {

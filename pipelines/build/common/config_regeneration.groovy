@@ -177,7 +177,7 @@ class Regeneration implements Serializable {
     }
 
     def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
-        def platformSpecificConfigPath = DEFAULTS_JSON['configDirectories']['platform']
+        def platformSpecificConfigPath = "https://raw.githubusercontent.com/${DEFAULTS_JSON['configDirectories']['platform']}"
         if (configuration.containsKey("platformSpecificConfigPath")) {
             platformSpecificConfigPath = configuration.platformSpecificConfigPath
         }
@@ -322,7 +322,7 @@ class Regeneration implements Serializable {
                 DOCKER_IMAGE: dockerImage,
                 DOCKER_FILE: dockerFile,
                 DOCKER_NODE: dockerNode,
-                PLATFORM_CONFIG_PATH: platformSpecificConfigPath,
+                PLATFORM_CONFIG_LOCATION: platformSpecificConfigPath,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
                 OVERRIDE_FILE_NAME_VERSION: "",
                 USE_ADOPT_BASH_SCRIPTS: true,

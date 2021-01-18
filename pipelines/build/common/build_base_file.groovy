@@ -138,7 +138,7 @@ class Builder implements Serializable {
             DOCKER_IMAGE: dockerImage,
             DOCKER_FILE: dockerFile,
             DOCKER_NODE: dockerNode,
-            PLATFORM_CONFIG_PATH: platformSpecificConfigPath,
+            PLATFORM_CONFIG_LOCATION: platformSpecificConfigPath,
             CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
             OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
             USE_ADOPT_BASH_SCRIPTS: useAdoptBashScripts,
@@ -319,7 +319,7 @@ class Builder implements Serializable {
     This determines where the location of the operating system setup files are in comparison to the repository root.
     */
     def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
-        def platformSpecificConfigPath = DEFAULTS_JSON['configDirectories']['platform']
+        def platformSpecificConfigPath = "https://raw.githubusercontent.com/${DEFAULTS_JSON['configDirectories']['platform']}"
         if (configuration.containsKey("platformSpecificConfigPath")) {
             platformSpecificConfigPath = configuration.platformSpecificConfigPath
         }

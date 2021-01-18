@@ -17,7 +17,7 @@ class IndividualBuildConfig implements Serializable {
     final String DOCKER_IMAGE
     final String DOCKER_FILE
     final String DOCKER_NODE
-    final String PLATFORM_CONFIG_PATH
+    final String PLATFORM_CONFIG_LOCATION
     final String CONFIGURE_ARGS
     final String OVERRIDE_FILE_NAME_VERSION
     final boolean USE_ADOPT_BASH_SCRIPTS
@@ -57,7 +57,7 @@ class IndividualBuildConfig implements Serializable {
         DOCKER_IMAGE = map.get("DOCKER_IMAGE")
         DOCKER_FILE = map.get("DOCKER_FILE")
         DOCKER_NODE = map.get("DOCKER_NODE")
-        PLATFORM_CONFIG_PATH = map.get("PLATFORM_CONFIG_PATH")
+        PLATFORM_CONFIG_LOCATION = map.get("PLATFORM_CONFIG_LOCATION")
         CONFIGURE_ARGS = map.get("CONFIGURE_ARGS")
         OVERRIDE_FILE_NAME_VERSION = map.get("OVERRIDE_FILE_NAME_VERSION")
         USE_ADOPT_BASH_SCRIPTS = map.get("USE_ADOPT_BASH_SCRIPTS")
@@ -102,7 +102,7 @@ class IndividualBuildConfig implements Serializable {
                 DOCKER_IMAGE              : DOCKER_IMAGE,
                 DOCKER_FILE               : DOCKER_FILE,
                 DOCKER_NODE               : DOCKER_NODE,
-                PLATFORM_CONFIG_PATH      : PLATFORM_CONFIG_PATH,
+                PLATFORM_CONFIG_LOCATION  : PLATFORM_CONFIG_LOCATION,
                 CONFIGURE_ARGS            : CONFIGURE_ARGS,
                 OVERRIDE_FILE_NAME_VERSION: OVERRIDE_FILE_NAME_VERSION,
                 USE_ADOPT_BASH_SCRIPTS    : USE_ADOPT_BASH_SCRIPTS,
