@@ -141,7 +141,7 @@ class Builder implements Serializable {
             PLATFORM_CONFIG_LOCATION: platformSpecificConfigPath,
             CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
             OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
-            USE_ADOPT_BASH_SCRIPTS: useAdoptBashScripts,
+            USE_ADOPT_BASH_SCRIPTS: useAdoptBashScripts as Boolean,
             ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
             JDK_BOOT_VERSION: platformConfig.bootJDK as String,
             RELEASE: release,
@@ -542,6 +542,7 @@ class Builder implements Serializable {
             context.echo "Enable tests: ${enableTests}"
             context.echo "Enable Installers: ${enableInstallers}"
             context.echo "Enable Signer: ${enableSigner}"
+            context.echo "Use Adopt's Scripts: ${useAdoptBashScripts}"
             context.echo "Publish: ${publish}"
             context.echo "Release: ${release}"
             context.echo "Tag/Branch name: ${scmReference}"
