@@ -26,12 +26,11 @@ fi
 export VARIANT_ARG="--build-variant ${VARIANT}"
 
 # Attempt to download and source the user's custom platform config
-if [ ! -d "$SCRIPT_DIR/platform-specific-configurations" ]
-then
-    mkdir "$SCRIPT_DIR/platform-specific-configurations"
-fi
 PLATFORM_CONFIG_FILEPATH="$SCRIPT_DIR/platform-specific-configurations/platformConfigFile.sh"
-
+if [ ! -f "${PLATFORM_CONFIG_FILEPATH}" ]
+then
+    mkdir -p "${PLATFORM_CONFIG_FILEPATH}"
+fi
 echo "Attempting to download user platform configuration file from ${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
 # make-adopt-build-farm.sh has 'set -e'. We need to disable that for the fallback mechanism, as downloading might fail
 set +e
@@ -47,5 +46,5 @@ then
     curl "${ADOPT_PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh" --output "${PLATFORM_CONFIG_FILEPATH}"
 fi
 
-echo "File downloaded successfully as ${PLATFORM_CONFIG_FILEPATH}. Executing..."
+echo "Config file downloaded successfully to ${PLATFORM_CONFIG_FILEPATH}"
 source "${PLATFORM_CONFIG_FILEPATH}"
