@@ -141,7 +141,7 @@ class Builder implements Serializable {
             PLATFORM_CONFIG_LOCATION: platformSpecificConfigPath,
             CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
             OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
-            USE_ADOPT_BASH_SCRIPTS: useAdoptBashScripts as Boolean,
+            USE_ADOPT_BASH_SCRIPTS: useAdoptBashScripts,
             ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
             JDK_BOOT_VERSION: platformConfig.bootJDK as String,
             RELEASE: release,
@@ -522,6 +522,7 @@ class Builder implements Serializable {
     @SuppressWarnings("unused")
     def doBuild() {
         context.timestamps {
+            context.println "[DEBUG] use adopt bash scripts = ${useAdoptBashScripts}"
             Map<String, IndividualBuildConfig> jobConfigurations = getJobConfigurations()
 
             if (!checkConfigIsSane(jobConfigurations)) {

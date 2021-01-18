@@ -87,7 +87,6 @@ node ("master") {
 
 }
 
-println "[DEBUG] use adopt bash scripts = ${useAdoptBashScripts}"
 // If a parameter below hasn't been declared above, it is declared in the jenkins job itself
 if (scmVars != null || configureBuild != null || buildConfigurations != null) {
     configureBuild(
