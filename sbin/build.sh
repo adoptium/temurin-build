@@ -149,11 +149,25 @@ getOpenJdkVersion() {
       local fixNum="$(cut -d'.' -f 5 <${corrVerFile})"
       version="jdk-${corrVersion}.${minorNum}.${updateNum}+${buildNum}.${fixNum}"
     fi
-  else
-    version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
-    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+    local dragonwellVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
+    if [ -r "${dragonwellVerFile}" ]; then
+      if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+        local updateNum="$(cut -d'.' -f 2 <${dragonwellVerFile})"
+        local buildNum="$(cut -d'.' -f 6 <${dragonwellVerFile})"
+        version="jdk8u${updateNum}-b${buildNum}"
+      else
+        local minorNum="$(cut -d'.' -f 2 <${dragonwellVerFile})"
+        local updateNum="$(cut -d'.' -f 3 <${dragonwellVerFile})"
+        local buildNum="$(cut -d'.' -f 5 <${dragonwellVerFile})"
+        version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
+      fi
+    else
+      version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
       version=$(echo $version | cut -d'_' -f 2)
     fi
+  else
+    version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
     # TODO remove pending #1016
     version=${version%_adopt}
     version=${version#aarch64-shenandoah-}
@@ -819,6 +833,10 @@ getFirstTagFromOpenJDKGitRepo() {
     get_tag_cmd=$jdk8_get_tag_cmd
   fi
 
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+    TAG_SEARCH="dragonwell-*_jdk*"
+  fi
+
   # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon...
   # Read OPENJDK_TAG value from that file..
   local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
@@ -826,7 +844,6 @@ getFirstTagFromOpenJDKGitRepo() {
     firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
   else
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-
     firstMatchingNameFromRepo=$(eval "git tag -l $TAG_SEARCH | $get_tag_cmd")
   fi
 
