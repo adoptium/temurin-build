@@ -1146,7 +1146,7 @@ class Build {
                     // Build the jdk outside of docker container...
                     } else {
                         waitForANodeToBecomeActive(buildConfig.NODE_LABEL)
-                        context.println "[NODE SHIFT] MOVING INTO NODE MATCHING LABELNAME ${buildConfig.NODE_LABEL}..."
+                        context.println "[NODE SHIFT] MOVING INTO JENKINS NODE MATCHING LABELNAME ${buildConfig.NODE_LABEL}..."
                         context.node(buildConfig.NODE_LABEL) {
                             // This is to avoid windows path length issues.
                             context.echo("checking ${buildConfig.TARGET_OS}")
@@ -1164,7 +1164,7 @@ class Build {
                                 buildScripts(cleanWorkspace, filename, useAdoptBashScripts)
                             }
                         }
-                        context.println "[NODE SHIFT] OUT OF NODE (LABELNAME ${buildConfig.NODE_LABEL}!)"
+                        context.println "[NODE SHIFT] OUT OF JENKINS NODE (LABELNAME ${buildConfig.NODE_LABEL}!)"
                     }
                 }
 
