@@ -234,6 +234,11 @@ class Build {
 				context.println "Running test: ${testType}"
 				testStages["${testType}"] = {
 					context.stage("${testType}") {
+						def keep_test_reportdir = buildConfig.KEEP_TEST_REPORTDIR
+						if (("${testType}".contains("openjdk")) || ("${testType}".contains("jck"))) {
+							// Keep test reportdir always for JUnit targets
+							keep_test_reportdir = "true"
+						}
 
 						// example jobName: Test_openjdk11_hs_sanity.system_ppc64_aix
 						def jobName = determineTestJobName(testType)
@@ -253,6 +258,7 @@ class Build {
 												context.string(name: 'JDK_BRANCH', value: jdkBranch),
 												context.string(name: 'OPENJ9_BRANCH', value: openj9Branch),
 												context.string(name: 'LABEL_ADDITION', value: additionalTestLabel),
+												context.string(name: 'KEEP_REPORTDIR', value: "${keep_test_reportdir}"),
 												context.string(name: 'ACTIVE_NODE_TIMEOUT', value: "${buildConfig.ACTIVE_NODE_TIMEOUT}")]
 							}
 						} else {
