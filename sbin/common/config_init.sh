@@ -228,7 +228,7 @@ function parseConfigurationArguments() {
         "--clean-libs" )
         BUILD_CONFIG[CLEAN_LIBS]=true;;
 
-        "--create-debug-symbols-package" )
+        "--create-debug-image" )
         BUILD_CONFIG[CREATE_DEBUG_IMAGE]="true";;
 
         "--disable-adopt-branch-safety" )
