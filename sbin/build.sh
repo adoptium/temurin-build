@@ -294,7 +294,7 @@ configureDebugParameters() {
   addConfigureArg "--with-debug-level=" "release"
 
   # If debug symbols package is requested, generate them separately
-  if [ ${BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]} == true ]; then
+  if [ ${BUILD_CONFIG[CREATE_DEBUG_IMAGE]} == true ]; then
     addConfigureArg "--with-native-debug-symbols=" "external"
   else
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
@@ -583,11 +583,6 @@ getDebugImageArchivePath() {
   echo "${jdkArchivePath}-debug-image"
 }
 
-getDebugSymbolsArchivePath() {
-  local jdkArchivePath=$(getJdkArchivePath)
-  echo "${jdkArchivePath}-debug-symbols"
-}
-
 # Clean up
 removingUnnecessaryFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
@@ -652,7 +647,7 @@ removingUnnecessaryFiles() {
     deleteDebugSymbols
   fi
 
-  if [ ${BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]} == true ]; then
+  if [ ${BUILD_CONFIG[CREATE_DEBUG_IMAGE]} == true ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
     *cygwin*)
       # on Windows, we want to take .pdb files
@@ -670,8 +665,7 @@ removingUnnecessaryFiles() {
 
     # if debug symbols were found, copy them to a different folder
     if [ -n "${debugSymbols}" ]; then
-      local debugSymbolsTargetPath=$(getDebugSymbolsArchivePath)
-      echo "${debugSymbols}" | cpio -pdm ${debugSymbolsTargetPath}
+      echo "${debugSymbols}" | cpio -pdm ${debugImageTargetPath}
     fi
 
     deleteDebugSymbols
@@ -861,7 +855,6 @@ createOpenJDKTarArchive() {
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
-  local debugSymbolsTargetPath=$(getDebugSymbolsArchivePath)
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
@@ -878,11 +871,6 @@ createOpenJDKTarArchive() {
     echo "OpenJDK debug image path will be ${debugImageTargetPath}."
     local debugImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debugimage}")
     createArchive "${debugImageTargetPath}" "${debugImageName}"
-  fi
-  if [ -d "${debugSymbolsTargetPath}" ]; then
-    echo "OpenJDK debug symbols path will be ${debugSymbolsTargetPath}."
-    local debugSymbolsName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debug-symbols}")
-    createArchive "${debugSymbolsTargetPath}" "${debugSymbolsName}"
   fi
   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
