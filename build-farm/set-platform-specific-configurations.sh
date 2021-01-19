@@ -42,6 +42,14 @@ echo "Attempting to download user platform configuration file from ${PLATFORM_CO
 set +e
 # TODO: Remove the specific filename value (OPERATING_SYSTEM) for user specific paths
 curl "https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh" --output "${PLATFORM_CONFIG_FILEPATH}"
+
+echo "[DEBUG] SCRIPT_DIR contents:"
+ls -l "${SCRIPT_DIR}"
+echo "[DEBUG] SCRIPT_DIR/platform-specific-configurations contents:"
+ls -l "${SCRIPT_DIR}/platform-specific-configurations"
+echo "[DEBUG] ${PLATFORM_CONFIG_FILEPATH} contents:"
+cat "${PLATFORM_CONFIG_FILEPATH}"
+
 ret=$?
 set -e
 
