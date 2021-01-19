@@ -52,6 +52,7 @@ class Builder implements Serializable {
     boolean enableSigner
     boolean cleanWorkspaceBeforeBuild
     boolean propagateFailures
+    boolean keepTestReportDir
 
     def env
     def scmVars
@@ -133,6 +134,7 @@ class Builder implements Serializable {
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${archLabel}",
                 ADDITIONAL_TEST_LABEL: "${additionalTestLabels}",
+                KEEP_TEST_REPORTDIR: keepTestReportDir,
                 ACTIVE_NODE_TIMEOUT: activeNodeTimeout,
                 CODEBUILD: platformConfig.codebuild as Boolean,
                 DOCKER_IMAGE: dockerImage,
@@ -561,6 +563,7 @@ class Builder implements Serializable {
             context.echo "Publish: ${publish}"
             context.echo "Release: ${release}"
             context.echo "Tag/Branch name: ${scmReference}"
+            context.echo "Keep test reportdir: ${keepTestReportDir}"
 
             jobConfigurations.each { configuration ->
                 jobs[configuration.key] = {
@@ -680,6 +683,7 @@ return {
     String cleanWorkspaceBeforeBuild,
     String adoptBuildNumber,
     String propagateFailures,
+    String keepTestReportDir,
     def currentBuild,
     def context,
     def env ->
@@ -729,6 +733,7 @@ return {
             cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
             adoptBuildNumber: adoptBuildNumber,
             propagateFailures: Boolean.parseBoolean(propagateFailures),
+            keepTestReportDir: Boolean.parseBoolean(keepTestReportDir),
             currentBuild: currentBuild,
             context: context,
             env: env

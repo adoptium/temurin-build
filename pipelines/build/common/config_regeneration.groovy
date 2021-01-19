@@ -319,6 +319,7 @@ class Regeneration implements Serializable {
                 BUILD_ARGS: buildArgs,
                 NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${archLabel}",
                 ADDITIONAL_TEST_LABEL: "${additionalTestLabels}",
+                KEEP_TEST_REPORTDIR: false,
                 ACTIVE_NODE_TIMEOUT: "",
                 CODEBUILD: platformConfig.codebuild as Boolean,
                 DOCKER_IMAGE: dockerImage,
