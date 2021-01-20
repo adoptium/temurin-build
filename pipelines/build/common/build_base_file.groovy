@@ -320,10 +320,13 @@ class Builder implements Serializable {
     */
     def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
         List splitUserUrl = DEFAULTS_JSON['repository']['url'].minus(".git").split('/')
+        context.println "[DEBUG] splitUserUrl = $splitUserUrl"
         // e.g. https://github.com/AdoptOpenJDK/openjdk-build.git will produce AdoptOpenJDK/openjdk-build
         String userOrgRepo = "${splitUserUrl[splitUserUrl.size() - 2]}/${splitUserUrl[splitUserUrl.size() - 1]}"
+        context.println "[DEBUG] userOrgRepo = $userOrgRepo"
 
         def platformSpecificConfigPath = "https://raw.githubusercontent.com/${userOrgRepo}/${DEFAULTS_JSON['repository']['branch']}/${DEFAULTS_JSON['configDirectories']['platform']}"
+        context.println "[DEBUG] platformSpecificConfigPath = $platformSpecificConfigPath"
 
         if (configuration.containsKey("platformSpecificConfigPath")) {
             platformSpecificConfigPath = "https://raw.githubusercontent.com/${userOrgRepo}/${DEFAULTS_JSON['repository']['branch']}/${configuration.platformSpecificConfigPath}"
