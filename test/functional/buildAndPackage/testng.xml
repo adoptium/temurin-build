@@ -23,7 +23,7 @@
     </test>
     <test name="CudaEnabledTest">
 		<classes>
-			<class name="net.adoptopenjdk.test.build.cuda.CudaEnabledTest"/>
+			<class name="net.adoptopenjdk.test.CudaEnabledTest"/>
 		</classes>
 	</test>
 </suite>
