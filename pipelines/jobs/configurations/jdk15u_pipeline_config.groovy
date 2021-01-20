@@ -28,6 +28,9 @@ class Config15 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                : 'default',
+                additionalTestLabels: [
+                        openj9      : '!(centos6||rhel6)'
+                ],
                 configureArgs       : [
                         "openj9"      : '--enable-dtrace --enable-jitserver',
                         "hotspot"     : '--enable-dtrace'
@@ -42,17 +45,17 @@ class Config15 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                : 'default',
+                additionalTestLabels: [
+                        openj9      : '!(centos6||rhel6)'
+                ],
                 additionalFileNameTag: "linuxXL",
                 configureArgs       : '--with-noncompressedrefs --enable-dtrace --enable-jitserver'
         ],
 
-        // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
-                additionalNodeLabels: [
-                        hotspot: 'win2012&&vs2017'
-                ],
+                additionalNodeLabels: 'win2012&&vs2017',
                 test                : 'default'
         ],
 
@@ -68,9 +71,7 @@ class Config15 {
         x32Windows: [
                 os                  : 'windows',
                 arch                : 'x86-32',
-                additionalNodeLabels: [
-                        hotspot: 'win2012&&vs2017'
-                ],
+                additionalNodeLabels: 'win2012&&vs2017',
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
@@ -105,10 +106,7 @@ class Config15 {
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                dockerImage          : 'adoptopenjdk/centos7_build_image',
-                dockerFile: [
-                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
-                ],
+                additionalNodeLabels: 'centos7',
                 test                : 'default',
                 configureArgs       : [
                         "hotspot"     : '--enable-dtrace',
@@ -119,10 +117,7 @@ class Config15 {
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
-                dockerImage          : 'adoptopenjdk/centos7_build_image',
-                dockerFile: [
-                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
-                ],
+                additionalNodeLabels : 'centos7',
                 test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace'
@@ -131,10 +126,7 @@ class Config15 {
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                : [
-                        nightly: ['sanity.openjdk'],
-                        weekly : []
-                ],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace'
         ],
 

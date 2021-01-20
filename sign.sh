@@ -62,10 +62,10 @@ signRelease()
       echo "$FILES" | while read -r f;
       do
         echo "Signing ${f}"
-        if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; then
+        if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.globalsign.com/scripts/timestamp.dll "$f"; then
           echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error - RC $? ... Retrying in 10 seconds"
           sleep 10s
-          "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
+          "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.globalsign.com/scripts/timestamp.dll "$f"
         fi        
       done
 
@@ -74,10 +74,10 @@ signRelease()
       echo "$FILES" | while read -r f;
       do
         echo "Signing ${f}"
-        if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"; then
+        if ! "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.globalsign.com/scripts/timestamp.dll "$f"; then
           echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error - RC $? ... Retrying in 10 seconds"
           sleep 10s
-          "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.verisign.com/scripts/timstamp.dll "$f"
+          "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t http://timestamp.globalsign.com/scripts/timestamp.dll "$f"
         fi
       done
       ;;

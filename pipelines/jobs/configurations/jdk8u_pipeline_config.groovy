@@ -35,14 +35,14 @@ class Config8 {
                 ]
         ],
 
-        // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows    : [
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: [
                         hotspot : 'win2012',
                         corretto: 'win2012',
-                        openj9  : 'win2012&&mingw-cygwin'
+                        openj9  : 'win2012&&mingw-cygwin',
+                        dragonwell: 'win2012'
                 ],
                 test                 : 'default'
         ],
@@ -111,10 +111,7 @@ class Config8 {
         arm32Linux    : [
                 os  : 'linux',
                 arch: 'arm',
-                test: [
-                        nightly: ['sanity.openjdk'],
-                        weekly : []
-                ]
+                test: 'default'
         ],
 
         aarch64Linux  : [

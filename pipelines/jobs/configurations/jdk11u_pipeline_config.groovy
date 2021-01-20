@@ -37,13 +37,13 @@ class Config11 {
                 ]
         ],
 
-        // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: [
-                        hotspot: 'win2012',
-                        openj9:  'win2012&&vs2017'
+                        hotspot:    'win2012',
+                        openj9:     'win2012&&vs2017',
+                        dragonwell: 'win2012'
                 ],
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
@@ -112,10 +112,7 @@ class Config11 {
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                  : [
-                        nightly: ['sanity.openjdk'],
-                        weekly : []
-                ],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
@@ -123,21 +120,10 @@ class Config11 {
                 os                  : 'linux',
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
-                test                : [
-                        nightly: ['sanity.functional', 'extended.functional', 'sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external'],
-                        weekly : ['extended.openjdk', 'extended.perf', 'extended.external', 'special.openjdk','special.functional', 'special.system', 'special.perf']
-                ],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace=auto'
         ],
 
-        /*
-        "x86-32Windows"    : [
-                os                 : 'windows',
-                arch               : 'x86-32',
-                additionalNodeLabels: 'win2012&&x86-32',
-                test                : false
-        ],
-        */
         x64LinuxXL    : [
                 os                   : 'linux',
                 dockerImage          : 'adoptopenjdk/centos6_build_image',
@@ -176,6 +162,8 @@ class Config11 {
                 os                   : 'linux',
                 dockerImage          : 'adoptopenjdk/centos6_build_image',
                 arch                 : 'riscv64',
+                crossCompile         : 'x64',
+                buildArgs            : '--cross-compile',
                 configureArgs        : '--disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root'
         ],
   ]

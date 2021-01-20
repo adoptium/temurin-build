@@ -25,11 +25,13 @@ if [ "${ARCHITECTURE}" == "x64" ]; then
   export MEMORY=4000
 elif [ "${ARCHITECTURE}" == "sparcv9" ]; then
   export CUPS="--with-cups=/opt/csw/lib/ --with-cups-include=/usr/local/cups-1.5.4-src"
+  export FREETYPE="--with-freetype=/usr/local/"
   export MEMORY=16000
 fi
 
-export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} ${CUPS} --with-freetype=/usr/local/ --with-memory-size=${MEMORY}"
-export PATH=/opt/solarisstudio12.3/bin/:/opt/csw/bin/:/usr/ccs/bin:$PATH
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} ${CUPS} ${FREETYPE} --with-memory-size=${MEMORY}"
+# /usr/sfw/bin required for OpenSSL (build#2265)
+export PATH=/opt/solarisstudio12.3/bin/:/opt/csw/bin/:/usr/ccs/bin:$PATH:/usr/sfw/bin
 
 export LC_ALL=C
 export HOTSPOT_DISABLE_DTRACE_PROBES=true

@@ -24,6 +24,7 @@ node ("master") {
     buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaToBuild}_pipeline_config.groovy"
 }
 
+// If a parameter below hasn't been declared above, it is declared in the jenkins job itself
 if (scmVars != null && configureBuild != null && buildConfigurations != null) {
     configureBuild(
         javaToBuild,
@@ -33,6 +34,7 @@ if (scmVars != null && configureBuild != null && buildConfigurations != null) {
         dockerExcludes,
         enableTests,
         enableInstallers,
+        enableSigner,
         releaseType,
         scmReference,
         overridePublishName,
@@ -43,6 +45,7 @@ if (scmVars != null && configureBuild != null && buildConfigurations != null) {
         cleanWorkspaceBeforeBuild,
         adoptBuildNumber,
         propagateFailures,
+        keepTestReportDir,
         currentBuild,
         this,
         env

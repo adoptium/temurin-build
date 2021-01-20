@@ -87,7 +87,9 @@ class ContextStub {
 
     ContextStub timestamps(Closure ignore) {}
 
-    ContextStub timeout(Map<String, ?> ignore, Closure<? extends Object> ignore2) {}
+    ContextStub timeout(Map, Closure) {}
+
+    ContextStub sleep(Map) {}
 
     String overrideScmref() {}
 }

@@ -57,7 +57,7 @@ function parseArguments() {
 # Add an argument to the configure call
 addConfigureArg() {
   # Only add an arg if it is not overridden by a user-specified arg.
-  if [[ ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]} != *"$1"* ]] && [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]} != *"$1"* ]]; then
+  if [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]} != *"$1"* ]]; then
     CONFIGURE_ARGS="${CONFIGURE_ARGS} ${1}${2}"
   fi
 }
@@ -78,7 +78,7 @@ configureBootJDKConfigureParameter() {
 # Shenandaoh was backported to Java 11 as of 11.0.9 but requires this build
 # parameter to ensure its inclusion. For Java 12+ this is automatically set
 configureShenandoahBuildParameter() {
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" -eq "${JDK11_CORE_VERSION}" ]; then
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ]; then
       addConfigureArg "--with-jvm-features=" "shenandoahgc"
   fi
 }
@@ -133,7 +133,7 @@ getOpenJdkVersion() {
   local version
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
-    local corrVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/metadata/version.txt
+    local corrVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
 
     local corrVersion="$(cut -d'.' -f 1 <${corrVerFile})"
 
@@ -173,19 +173,25 @@ configureVersionStringParameter() {
   local openJdkVersion=$(getOpenJdkVersion)
   echo "OpenJDK repo tag is ${openJdkVersion}"
 
-  # --with-milestone=fcs deprecated at jdk11, removed at jdk12
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 12 ]; then
+  # --with-milestone=fcs deprecated at jdk12+ and not used for jdk11- (we use --without-version-pre/opt)
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == 8 ] && [ "${BUILD_CONFIG[RELEASE]}" == "true" ]; then
     addConfigureArg "--with-milestone=" "fcs"
   fi
 
   local dateSuffix=$(date -u +%Y%m%d%H%M)
 
-  # Configures "vendor" jdk properties
+  # Configures "vendor" jdk properties.
+  # AdoptOpenJDK default values are set after this code block
+  # TODO 1. We should probably look at having these values passed through a config
+  # file as opposed to hardcoding in shell
+  # TODO 2. This highlights us conflating variant with vendor. e.g. OpenJ9 is really
+  # a technical variant with Eclipse as the vendor
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
     BUILD_CONFIG[VENDOR]="Alibaba"
     BUILD_CONFIG[VENDOR_VERSION]="\"(Alibaba Dragonwell)\""
     BUILD_CONFIG[VENDOR_URL]="http://www.alibabagroup.com"
     BUILD_CONFIG[VENDOR_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse/openj9/issues"
   fi
@@ -358,8 +364,16 @@ configureCommandParameters() {
   echo "Configuring jvm variants if provided"
   addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
 
-  # Now we add any configure arguments the user has specified on the command line.
-  CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}"
+  if [ "${BUILD_CONFIG[CUSTOM_CACERTS]}" != "false" ] ; then
+    echo "Configure custom cacerts file security/cacerts"
+    addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "$SCRIPT_DIR/../security/cacerts"
+  fi
+
+  # Finally, we add any configure arguments the user has specified on the command line.
+  # This is done last, to ensure the user can override any args they need to.
+  # The substitution allows the user to pass in speech marks without having to guess
+  # at the number of escapes needed to ensure that they persist up to this point.
+  CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]//temporary_speech_mark_placeholder/\"}"
 
   configureFreetypeLocation
 
@@ -370,8 +384,8 @@ configureCommandParameters() {
 stepIntoTheWorkingDirectory() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || exit
 
-  # corretto nest their source under /src in their dir
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
+  # corretto/corretto-8 (jdk-8 only) nest their source under /src in their dir
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ] && [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
     cd "src"
   fi
 
@@ -385,7 +399,7 @@ buildTemplatedFile() {
 
   echo "Currently at '${PWD}'"
 
-  FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS} ${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]}"
+  FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS}"
   echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
 
   # If it's Java 9+ then we also make test-image to build the native test libraries,
@@ -526,18 +540,10 @@ printJavaVersionString() {
 
        echo "Error 'java' does not exist in '$PRODUCT_HOME'."
        exit -1
-     elif [ "${ARCHITECTURE}" == "riscv64" ]; then
-       # riscv is cross compiled, so we cannot run it on the build system
-       # This is a temporary plausible solution in the absence of another fix
-       local jdkversion=$(getOpenJdkVersion)
-       cat << EOT > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/version.txt"
-openjdk version "${jdkversion%%+*}" "$(date +%Y-%m-%d)"
-OpenJDK Runtime Environment AdoptOpenJDK (build ${jdkversion}-$(date +%Y%m%d%H%M))
-Eclipse OpenJ9 VM AdoptOpenJDK (build master-000000000, JRE 11 Linux riscv-64-Bit Compressed References $(date +%Y%m%d)_00 (JIT disabled, AOT disabled)
-OpenJ9   - 000000000
-OMR      - 000000000
-JCL      - 000000000 based on ${jdkversion})
-EOT
+     elif [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
+       # job is cross compiled, so we cannot run it on the build system
+       # So we leave it for now and retrive the version from a downstream job after the build
+       echo "Warning: java version can't be run on cross compiled build system. Faking version for now..."
      else
        # print version string around easy to find output
        # do not modify these strings as jenkins looks for them
@@ -773,6 +779,15 @@ makeACopyOfLibFreeFontForMacOSX() {
 #
 # Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
 getFirstTagFromOpenJDKGitRepo() {
+
+  # Save current directory of caller so we can return to that directory at the end of this function
+  # Some caller's are not in the git repo root, but instead build/*/images directory like the archive functions
+  # and any function called after removingUnnecessaryFiles()
+  local savePwd="${PWD}"
+
+  # Change to openjdk git repo root to find build tag
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+
   # JDK8 tag sorting:
   # Tag Format "jdk8uLLL-bBB"
   # cut chars 1-5 => LLL-bBB
@@ -780,19 +795,21 @@ getFirstTagFromOpenJDKGitRepo() {
   # prefix "-" to allow line numbering stable sorting using nl => -LLL-BB
   # Sort by build level BB first
   # Then do "stable" sort (keeping BB order) by build level LLL
-  local jdk8_tag_sort1="sort -t- -k3n"
-  local jdk8_tag_sort2="sort -t- -k2n"
+  local jdk8_tag_sort1="sort -t- -k3,3n"
+  local jdk8_tag_sort2="sort -t- -k2,2n"
   local jdk8_get_tag_cmd="grep -v _openj9 | grep -v _adopt | cut -c6- | awk -F'[\-b]+' '{print \$1\"-\"\$2}' | sed 's/^/-/' | $jdk8_tag_sort1 | nl | $jdk8_tag_sort2 | cut -f2- | sed 's/^-/jdk8u/' | sed 's/-/-b/' | tail -1"
 
   # JDK11+ tag sorting:
   # We use sort and tail to choose the latest tag in case more than one refers the same commit.
-  # Versions tags are formatted: jdk-V[.W[.X]]+B; with V, W, X, B being numeric.
-  # Transform "-" to "." in tag so we can sort as: "jdk.V[.W[.X]]+B"
+  # Versions tags are formatted: jdk-V[.W[.X[.P]]]+B; with V, W, X, P, B being numeric.
+  # Transform "-" to "." in tag so we can sort as: "jdk.V[.W[.X[.P]]]+B"
+  # Transform "+" to ".0.+" during the sort so that .P (patch) is defaulted to "0" for those
+  # that don't have one, and the trailing "." to terminate the 5th field from the +
   # First, sort on build number (B):
-  local jdk11plus_tag_sort1="sort -t+ -k2n"
-  # Second, (stable) sort on (V), (W), (X):
-  local jdk11plus_tag_sort2="sort -t. -k2n -k3n -k4n"
-  jdk11plus_get_tag_cmd="grep -v _openj9 | grep -v _adopt | sed 's/jdk-/jdk./g' | $jdk11plus_tag_sort1 | nl | $jdk11plus_tag_sort2 | cut -f2- | sed 's/jdk./jdk-/g' | tail -1"
+  local jdk11plus_tag_sort1="sort -t+ -k2,2n"
+  # Second, (stable) sort on (V), (W), (X), (P): P(Patch) is optional and defaulted to "0"
+  local jdk11plus_tag_sort2="sort -t. -k2,2n -k3,3n -k4,4n -k5,5n"
+  jdk11plus_get_tag_cmd="grep -v _openj9 | grep -v _adopt | sed 's/jdk-/jdk./g' | sed 's/+/.0.+/g' | $jdk11plus_tag_sort1 | nl | $jdk11plus_tag_sort2 | sed 's/\.0\.+/+/g' | cut -f2- | sed 's/jdk./jdk-/g' | tail -1"
 
   # Choose tag search keyword and get cmd based on version
   local TAG_SEARCH="jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}*+*"
@@ -818,6 +835,9 @@ getFirstTagFromOpenJDKGitRepo() {
   else
     echo "$firstMatchingNameFromRepo"
   fi
+
+  # Restore pwd
+  cd "$savePwd"
 }
 
 createArchive() {
@@ -1005,7 +1025,7 @@ addSemVer() { # Pulls the semantic version from the tag associated with the open
   local fullVer=$(getOpenJdkVersion)
   SEM_VER="$fullVer"
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-    SEM_VER=$(echo "$semVer" | cut -c4- | awk -F'[-b0]+' '{print $1"+"$2}' | sed 's/u/.0./')
+    SEM_VER=$(echo "$SEM_VER" | cut -c4- | awk -F'[-b0]+' '{print $1"+"$2}' | sed 's/u/.0./')
   else
     SEM_VER=$(echo "$SEM_VER" | cut -c5-) # i.e. 11.0.2+12
   fi
@@ -1089,7 +1109,11 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   exit 0
 fi
 
-buildSharedLibs
+# Our Solaris build environment has performance issues so disabling this for now
+# Refhttps://github.com/AdoptOpenJDK/openjdk-build/issues/2206
+if [ "${ARCHITECTURE}" != "sparcv9" ]; then
+  buildSharedLibs
+fi
 
 wipeOutOldTargetDir
 createTargetDir

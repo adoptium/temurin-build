@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-def javaToBuild = "jdk"
+def javaToBuild = "jdk16"
 def scmVars = null
 Closure configureBuild = null
 def buildConfigurations = null
@@ -24,6 +24,7 @@ node ("master") {
     buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/jdk16_pipeline_config.groovy"
 }
 
+// If a parameter below hasn't been declared above, it is declared in the jenkins job itself
 if (scmVars != null && configureBuild != null && buildConfigurations != null) {
     configureBuild(
         javaToBuild,
@@ -33,6 +34,7 @@ if (scmVars != null && configureBuild != null && buildConfigurations != null) {
         dockerExcludes,
         enableTests,
         enableInstallers,
+        enableSigner,
         releaseType,
         scmReference,
         overridePublishName,
@@ -43,6 +45,7 @@ if (scmVars != null && configureBuild != null && buildConfigurations != null) {
         cleanWorkspaceBeforeBuild,
         adoptBuildNumber,
         propagateFailures,
+        keepTestReportDir,
         currentBuild,
         this,
         env
