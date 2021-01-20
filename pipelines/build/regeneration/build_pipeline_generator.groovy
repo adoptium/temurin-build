@@ -117,6 +117,12 @@ node('master') {
         enablePipelineSchedule = true
       }
 
+      // Load useAdoptBashScripts. This determines whether we will checkout to adopt's repository before running make-adopt-build-farm.sh or if we use the user's bash scripts.
+      Boolean useAdoptBashScripts = false
+      if (params.USE_ADOPT_BASH_SCRIPTS) {
+        useAdoptBashScripts = true
+      }
+
       println "[INFO] Running generator script with the following configuration:"
       println "REPOSITORY_URL = $repoUri"
       println "REPOSITORY_BRANCH = $repoBranch"
@@ -125,6 +131,7 @@ node('master') {
       println "NIGHTLY_FOLDER_PATH = $nightlyFolderPath"
       println "JOB_TEMPLATE_PATH = $jobTemplatePath"
       println "ENABLE_PIPELINE_SCHEDULE = $enablePipelineSchedule"
+      println "USE_ADOPT_BASH_SCRIPTS = $useAdoptBashScripts"
 
       (8..30).each({javaVersion ->
 
@@ -142,7 +149,7 @@ node('master') {
           JOB_NAME            : "openjdk${javaVersion}-pipeline",
           SCRIPT              : "${scriptFolderPath}/openjdk${javaVersion}_pipeline.groovy",
           disableJob          : false,
-          pipelineSchedule    : ""
+          pipelineSchedule    : "0 0 31 2 0" // 31st Feb, so will never run
         ];
 
         def target;
@@ -182,12 +189,14 @@ node('master') {
 
         println "[INFO] JDK${javaVersion}: disableJob = ${config.disableJob}"
 
-        // Set job schedule
         if (enablePipelineSchedule.toBoolean()) {
           config.put("pipelineSchedule", target.triggerSchedule)
+        }
+
+        if (useAdoptBashScripts.toBoolean()) {
+          config.put("adoptScripts", true)
         } else {
-          // Else here as template will detect pipelineSchedule even if inside the conditional
-          config.put("noSchedule", "")
+          config.put("adoptScripts", false)
         }
 
         println "[INFO] JDK${javaVersion}: pipelineSchedule = ${config.pipelineSchedule}"
