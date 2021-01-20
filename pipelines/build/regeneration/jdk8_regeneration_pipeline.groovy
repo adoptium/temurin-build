@@ -95,45 +95,29 @@ node ("master") {
 
     // Load buildConfigurations from config file. This is what the nightlies & releases use to setup their downstream jobs
     def buildConfigurations = null
-    // TODO: Create an issue for the hardcoded part of this
-    String DEFAULT_BUILD_PATH = "${DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
-    def buildConfigPath = (params.BUILD_CONFIG_PATH) ? "${WORKSPACE}/${BUILD_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULT_BUILD_PATH}"
+    def buildConfigPath = (params.BUILD_CONFIG_PATH) ? "${WORKSPACE}/${BUILD_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}"
 
-    // Use default config path if param is empty
-    if (buildConfigPath == "${WORKSPACE}/${DEFAULT_BUILD_PATH}") {
-
+    try {
+      // TODO: Create an issue to address the hardcoded parts below
+      buildConfigurations = load "${buildConfigPath}/${javaVersion}_pipeline_config.groovy"
+    } catch (NoSuchFileException e) {
       try {
-        buildConfigurations = load buildConfigPath
-      } catch (NoSuchFileException e) {
-        try {
-          println "[WARNING] ${buildConfigPath} does not exist, chances are we want a U version.\n[WARNING] Trying ${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}u_pipeline_config.groovy"
+        println "[WARNING] ${buildConfigPath}/${javaVersion}_pipeline_config.groovy does not exist, chances are we want a U version..."
 
-          buildConfigurations = load "${WORKSPACE}/pipelines/jobs/configurations/${javaVersion}u_pipeline_config.groovy"
-          javaVersion += "u"
-        } catch (NoSuchFileException e2) {
-          println "[WARNING] ${javaVersion}u_pipeline_config.groovy does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's build config in..."
-
-          checkoutAdopt()
-          try {
-            buildConfigurations = load "${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
-          } catch (NoSuchFileException e3) {
-            buildConfigurations = load "${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}u_pipeline_config.groovy"
-            javaVersion += "u"
-          }
-          checkoutUser()
-        }
-      }
-
-    } else {
-
-      buildConfigurations = load buildConfigPath
-
-      // Since we can't check if the file is jdkxxu file or not, some regex is needed here in lieu of the try-catch above
-      Matcher matcher = "$buildConfigPath" =~ /.*?(?<version>\d+u).*?/
-      if (matcher.matches()) {
+        buildConfigurations = load "${buildConfigPath}/${javaVersion}u_pipeline_config.groovy"
         javaVersion += "u"
-      }
+      } catch (NoSuchFileException e2) {
+        println "[WARNING] U version does not exist either. Likelihood is we are generating from a repository that isn't Adopt's. Pulling Adopt's build config in..."
 
+        checkoutAdopt()
+        try {
+          buildConfigurations = load "${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
+        } catch (NoSuchFileException e3) {
+          buildConfigurations = load "${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}u_pipeline_config.groovy"
+          javaVersion += "u"
+        }
+        checkoutUser()
+      }
     }
 
     if (buildConfigurations == null) {
@@ -141,8 +125,7 @@ node ("master") {
     }
 
     // Load targetConfigurations from config file. This is what is being run in the nightlies
-    String DEFAULT_TARGET_PATH = "${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
-    def targetConfigPath = (params.TARGET_CONFIG_PATH) ? "${WORKSPACE}/${TARGET_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULT_TARGET_PATH}"
+    def targetConfigPath = (params.TARGET_CONFIG_PATH) ? "${WORKSPACE}/${TARGET_CONFIG_PATH}/${javaVersion}.groovy" : "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['nightly']}/${javaVersion}.groovy"
 
     try {
       load targetConfigPath
@@ -224,7 +207,7 @@ node ("master") {
           usernameVariable: 'jenkinsUsername',
           passwordVariable: 'jenkinsToken'
       )]) {
-        def jenkinsUserColonPass = "$jenkinsUsername:$jenkinsToken"
+        String jenkinsUserColonPass = "$jenkinsUsername:$jenkinsToken"
         regenerationScript(
           javaVersion,
           buildConfigurations,
