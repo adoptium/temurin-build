@@ -176,10 +176,19 @@ class Regeneration implements Serializable {
         return dockerNodeValue
     }
 
+    /*
+    Retrieves the platformSpecificConfigPath from the build configurations.
+    This determines where the location of the operating system setup files are in comparison to the repository root. The param is formatted like this because we need to download and source the file from the bash scripts.
+    */
     def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
-        def platformSpecificConfigPath = "https://raw.githubusercontent.com/${DEFAULTS_JSON['configDirectories']['platform']}"
+        List splitUserUrl = DEFAULTS_JSON['repository']['url'].minus(".git").split('/')
+        // e.g. https://github.com/AdoptOpenJDK/openjdk-build.git will produce AdoptOpenJDK/openjdk-build
+        String userOrgRepo = "${splitUserUrl[splitUserUrl.size() - 2]}/${splitUserUrl[splitUserUrl.size() - 1]}"
+
+        def platformSpecificConfigPath = "https://raw.githubusercontent.com/${userOrgRepo}/${DEFAULTS_JSON['repository']['branch']}/${DEFAULTS_JSON['configDirectories']['platform']}"
+
         if (configuration.containsKey("platformSpecificConfigPath")) {
-            platformSpecificConfigPath = configuration.platformSpecificConfigPath
+            platformSpecificConfigPath = "https://raw.githubusercontent.com/${userOrgRepo}/${DEFAULTS_JSON['repository']['branch']}/${configuration.platformSpecificConfigPath}"
         }
         return platformSpecificConfigPath
     }

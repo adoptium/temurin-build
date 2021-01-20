@@ -14,7 +14,7 @@
     "configDirectories"      : {
         "build"              : "pipelines/jobs/configurations",
         "nightly"            : "pipelines/jobs/configurations",
-        "platform"           : "M-Davies/openjdk-build/build-farm/platform-specific-configurations"
+        "platform"           : "build-farm/platform-specific-configurations"
     },
     "scriptDirectories"      : {
         "upstream"           : "pipelines/build",
