@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Scanner;
-import net.adoptopenjdk.test.build.common.BuildIs;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.log4testng.Logger;
@@ -19,25 +18,24 @@ public class CudaEnabledTest {
 
     private static Logger logger = Logger.getLogger(CudaEnabledTest.class);
 
-    /**
-     * Returns true if, and only if, we're running on a build & platform this test
-     * is relevant to.
-     */
-    private boolean rightEnvForTest() {
-        String arch = System.getProperty("os.arch");
-        
-        return BuildIs.createdByThisVendor("AdoptOpenJDK")
-               && BuildIs.usingAnOpenJ9VM()
-               && "amd64, x86, ppc".contains(System.getProperty("os.arch"))
-               && "Windows, Linux".contains(System.getProperty("os.name").split(" ")[0]);
+    public int getJDKVersion() {
+        String javaVersion = System.getProperty("java.version");
+        if (javaVersion.startsWith("1.")) {
+            javaVersion = javaVersion.substring(2);
+        }
+        int dotIndex = javaVersion.indexOf('.');
+        int dashIndex = javaVersion.indexOf('-');
+        try {
+            return Integer.parseInt(javaVersion.substring(0, dotIndex > -1 ? dotIndex : dashIndex > -1 ? dashIndex : javaVersion.length()));
+        } catch (NumberFormatException e) {
+            System.out.println("Cannot determine System.getProperty('java.version')=" + javaVersion + "\n");
+            return -1;
+        }
     }
 
     @Test
     public void testIfCudaIsEnabled() {
-        if(!rightEnvForTest()) {
-        	logger.info("Wrong environment for test. Skipped!");
-        	return;
-        }
+
         logger.info("Starting test to see if CUDA functionality is enabled in this build.");
         
         //Stage 1: Find the location of the j9prt lib file.
@@ -47,7 +45,7 @@ public class CudaEnabledTest {
         	jreSubdir = "/jre";
         }
         if("Linux".contains(System.getProperty("os.name").split(" ")[0])) {
-            if(BuildIs.thisMajorVersion(8)) {
+            if(getJDKVersion() == 8) {
                 prtLibDirectory += jreSubdir + "/lib/amd64/compressedrefs";
             } else {
                 prtLibDirectory += "/lib/compressedrefs";
@@ -55,7 +53,7 @@ public class CudaEnabledTest {
         }
         //windows
         if("Windows".contains(System.getProperty("os.name").split(" ")[0])) {
-            if(BuildIs.thisMajorVersion(8)) {
+            if(getJDKVersion() == 8) {
                 //jdk8 32: 
                 prtLibDirectory += jreSubdir + "/bin/compressedrefs";
                 if(!(new File(prtLibDirectory)).exists()) {
