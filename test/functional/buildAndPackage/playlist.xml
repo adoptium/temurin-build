@@ -28,6 +28,9 @@
         <groups>
             <group>functional</group>
         </groups>
+         <vendors>
+            <vendor>adoptopenjdk</vendor>
+        </vendors>
     </test>
     <test>
 		<testCaseName>CudaEnabledTest</testCaseName>
@@ -39,8 +42,12 @@
 		<groups>
 			<group>functional</group>
 		</groups>
+        <platformRequirements>os.linux</platformRequirements>
         <impls>
             <impl>openj9</impl>
         </impls>
+        <vendors>
+            <vendor>adoptopenjdk</vendor>
+        </vendors>
 	</test>
 </playlist>
