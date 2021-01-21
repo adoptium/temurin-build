@@ -59,6 +59,13 @@ VersionParsingTest > parsesJava11NightlyString() STANDARD_OUT
     11.0.3+9-201903122221
 ```
 
+- To run the suite locally, execute:
+
+```bash
+cd pipelines/
+./gradlew --info test
+```
+
 ### Linter
 
 This group consists of [GitHub Status Checks](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/about-status-checks) run inside GitHub itself. They lint / analyse any changes you make to ensure they conform to our writing standards.

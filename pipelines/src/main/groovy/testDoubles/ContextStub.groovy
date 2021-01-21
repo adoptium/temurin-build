@@ -57,6 +57,10 @@ class ContextStub {
 
     ContextStub pull() {}
 
+    String minus(String s) {}
+
+    String split(String s) {}
+
     String getResult() {}
 
     Integer getNumber() {}
@@ -84,10 +88,6 @@ class ContextStub {
     String entrySet() {}
 
     String remove() {}
-
-    abstract String minus(String s)
-
-    abstract String split(String s)
 
     String ws(String s, Closure) {}
 
