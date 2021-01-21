@@ -26,7 +26,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-        
+
     - name: Build Linux
       run: ./build-farm/make-adopt-build-farm.sh
       env:
@@ -35,7 +35,7 @@ jobs:
         VARIANT: ${{ matrix.vm }}
         TARGET_OS: ${{ matrix.os }}
         FILENAME: OpenJDK.tar.gz
-        DEFAULT_PLATFORM_CONFIGS: platform-specific-configurations
+        DEFAULT_PLATFORM_CONFIGS: build-farm/platform-specific-configurations
 
   # build_macos:
   #   name: macOS
@@ -57,7 +57,7 @@ jobs:
   #     with:
   #       java-version: 7
   #     if: matrix.version == 'jdk8u'
-        
+
   #   - name: Build macOS
   #     run: |
   #       export JAVA_HOME=$JAVA_HOME_11_X64

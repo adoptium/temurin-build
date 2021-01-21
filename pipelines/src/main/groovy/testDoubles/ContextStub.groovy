@@ -85,9 +85,9 @@ class ContextStub {
 
     String remove() {}
 
-    String minus(String s) {}
+    abstract String minus(String s)
 
-    String split(String s) {}
+    abstract String split(String s)
 
     String ws(String s, Closure) {}
 

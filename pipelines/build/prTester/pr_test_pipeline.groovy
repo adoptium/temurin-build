@@ -44,7 +44,8 @@ class PullRequestTestPipeline implements Serializable {
                 disableJob          : false,
                 pipelineSchedule    : "0 0 31 2 0",
                 targetConfigurations: testConfigurations,
-                defaultsJson        : DEFAULTS_JSON
+                defaultsJson        : DEFAULTS_JSON,
+                adoptScripts        : true
         ]
     }
 
@@ -105,6 +106,7 @@ class PullRequestTestPipeline implements Serializable {
                 branch,
                 DEFAULTS_JSON["templateDirectories"]["downstream"],
                 DEFAULTS_JSON["importLibraryScript"],
+                DEFAULTS_JSON["baseFileDirectories"]["downstream"],
                 DEFAULTS_JSON["scriptDirectories"]["downstream"],
                 "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test",
                 null,
