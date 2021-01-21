@@ -231,6 +231,8 @@ The following examples all use `-m1` as an example - this gets replaced with a l
   
   4. Build the `pipeline_jobs_generator` that you just made. Ensure the equivalent `openjdkxx_pipeline` to the generator exists or this will fail. If the job fails or is unstable, search the console log for `WARNING` or `ERROR` messages for why. Once it has completed successfully, the [pipeline](https://ci.adoptopenjdk.net/job/build-scripts/) is ready to go!
 
+  5. Update the view for the [build and test pipeline calendar](https://ci.adoptopenjdk.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version 
+
 ### Update Repository
 
 At some point in a java version's lifecycle, the JDK version will be maintained in an update repository. The first notification of this will be via mail list in one of two places:
@@ -256,6 +258,10 @@ When the repo has been created, a few changes to the codebase will be necessary 
 5. Finally, update the documentation to account for the changes you have just done. You can do this pretty easily by searching the repo for all occurrences of `jdkxx` using the following URL (replacing `xx` with the version number to change) and updating the locations where it would make sense to do so:
 
   - https://github.com/AdoptOpenJDK/openjdk-build/search?q=jdkxx
+
+### Post Release Tasks
+Once all the release binaries have been published the following tasks should be completed:
+1. Reset the "weekly_release_scmReferences" (change to "") for the weekend release test build so it is using HEAD streams: https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations
 
 ## Summary on point releases
 

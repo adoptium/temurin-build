@@ -72,6 +72,8 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>SCM_REF</strong></dt><dd>Source code ref to build, i.e branch, tag, commit id</dd>
                 <dt><strong>BUILD_ARGS</strong></dt><dd>args to pass to makejdk-any-platform.sh</dd>
                 <dt><strong>NODE_LABEL</strong></dt><dd>Labels of node to build on</dd>
+                <dt><strong>ADDITIONAL_TEST_LABEL</strong></dt><dd>Additional label for test jobs</dd>
+                <dt><strong>KEEP_TEST_REPORTDIR</strong></dt><dd>If true, test report dir (including core files where generated) will be kept even when the testcase passes, failed testcases always keep the report dir. Does not apply to JUnit jobs which are always kept, eg.openjdk.</dd>
                 <dt><strong>ACTIVE_NODE_TIMEOUT</strong></dt><dd>Number of minutes we will wait for a label-matching node to become active.</dd>
                 <dt><strong>CODEBUILD</strong></dt><dd>Use a dynamic codebuild machine if no other machine is available</dd>
                 <dt><strong>DOCKER_IMAGE</strong></dt><dd>Use a docker build environment</dd>

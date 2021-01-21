@@ -110,6 +110,7 @@ if (scmVars != null || configureBuild != null || buildConfigurations != null) {
         cleanWorkspaceBeforeBuild,
         adoptBuildNumber,
         propagateFailures,
+        keepTestReportDir,
         currentBuild,
         this,
         env

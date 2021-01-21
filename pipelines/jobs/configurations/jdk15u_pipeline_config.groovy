@@ -28,6 +28,9 @@ class Config15 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                : 'default',
+                additionalTestLabels: [
+                        openj9      : '!(centos6||rhel6)'
+                ],
                 configureArgs       : [
                         "openj9"      : '--enable-dtrace --enable-jitserver',
                         "hotspot"     : '--enable-dtrace'
@@ -42,6 +45,9 @@ class Config15 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                : 'default',
+                additionalTestLabels: [
+                        openj9      : '!(centos6||rhel6)'
+                ],
                 additionalFileNameTag: "linuxXL",
                 configureArgs       : '--with-noncompressedrefs --enable-dtrace --enable-jitserver'
         ],
@@ -100,6 +106,7 @@ class Config15 {
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
+                additionalNodeLabels: 'centos7',
                 test                : 'default',
                 configureArgs       : [
                         "hotspot"     : '--enable-dtrace',
@@ -110,6 +117,7 @@ class Config15 {
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace'

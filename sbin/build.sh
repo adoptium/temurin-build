@@ -540,7 +540,7 @@ printJavaVersionString() {
 
        echo "Error 'java' does not exist in '$PRODUCT_HOME'."
        exit -1
-     elif [ "${BUILD_CONFIG[CROSS_COMPILE]}" == "true" ]; then
+     elif [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
        # job is cross compiled, so we cannot run it on the build system
        # So we leave it for now and retrive the version from a downstream job after the build
        echo "Warning: java version can't be run on cross compiled build system. Faking version for now..."

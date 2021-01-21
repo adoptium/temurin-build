@@ -16,6 +16,8 @@ class IndividualBuildConfigTest {
                  SCM_REF                   : "f",
                  BUILD_ARGS                : "g",
                  NODE_LABEL                : "h",
+                 ADDITIONAL_TEST_LABEL     : "t",
+                 KEEP_TEST_REPORTDIR       : false,
                  ACTIVE_NODE_TIMEOUT       : "r",
                  CODEBUILD                 : false,
                  DOCKER_IMAGE              : "o",

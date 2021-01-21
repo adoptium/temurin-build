@@ -18,6 +18,17 @@ set -e
 
 PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+## Sanity check as this script requires various environment variables so fail
+## fast if one or more are not present. MAYBE autodetect defaults in future?
+
+SANEVARS=0
+[ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u && SANEVARS=1
+[ -z "$TARGET_OS"     ] && echo TARGET_OS not defined - set to e.g. linux     && SANEVARS=1
+[ -z "$VARIANT"       ] && echo VARIANT not defined - set to e.g. hotspot     && SANEVARS=1
+[ -z "$ARCHITECTURE"  ] && echo ARCHITECTURE not defined - set to e.g. x64    && SANEVARS=1
+[ -z "$FILENAME"      ] && echo FILENAME not defined - set to e.g. jdk.tar.gz && SANEVARS=1
+[ "$SANEVARS" != "0"  ] && echo Please correct the above omissions in the environment then retry && exit 1
+
 ## Very very build farm specific configuration
 
 export OPERATING_SYSTEM

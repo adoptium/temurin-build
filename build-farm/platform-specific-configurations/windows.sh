@@ -150,10 +150,14 @@ then
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
-    elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
+    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
       TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-${OPENSSL_VERSION}-x86_64-VS2017 --enable-openssl-bundling"
+    elif [ "$JAVA_FEATURE_VERSION" -gt 11 ]
+    then
+      TOOLCHAIN_VERSION="2019"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar --with-openssl=/cygdrive/c/openjdk/OpenSSL-${OPENSSL_VERSION}-x86_64-VS2019 --enable-openssl-bundling"
     fi
 
     CUDA_VERSION=9.0

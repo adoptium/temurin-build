@@ -4,10 +4,7 @@ class Config16 {
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: 'macos10.14',
-                test                : [
-                        nightly: [],
-                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
-                ],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace'
         ],
         
@@ -30,9 +27,9 @@ class Config16 {
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
-                test                : [
-                        nightly: [],
-                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
+                test                : 'default',
+                additionalTestLabels: [
+                        openj9      : '!(centos6||rhel6)'
                 ],
                 configureArgs       : [
                         "openj9"      : '--enable-dtrace --enable-jitserver',
@@ -48,6 +45,9 @@ class Config16 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                 : 'default',
+                additionalTestLabels: [
+                        openj9      : '!(centos6||rhel6)'
+                ],
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace --enable-jitserver'
         ],
@@ -68,10 +68,7 @@ class Config16 {
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: 'win2012&&vs2017',
-                test                : [
-                        nightly: [],
-                        weekly : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
-                ]
+                test                : 'default'
         ],
         
         x64WindowsXL: [
@@ -103,7 +100,7 @@ class Config16 {
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
-                test                : ['sanity.openjdk']
+                test                : 'default'
         ],
 
         ppc64Aix    : [
@@ -113,20 +110,14 @@ class Config16 {
                         hotspot: 'xlc16&&aix710',
                         openj9:  'xlc16&&aix715'
                 ],
-                test                : [
-                        nightly: [],
-                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system']
-                ]
+                test                : 'default'
         ],
 
 
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
-                test                : [
-                        nightly: [],
-                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
-                ],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace'
         ],
         
@@ -141,10 +132,8 @@ class Config16 {
         ppc64leLinux    : [
                 os                  : 'linux',
                 arch                : 'ppc64le',
-                test                : [
-                        nightly: [],
-                        weekly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
-                ],
+                additionalNodeLabels: 'centos7',
+                test                : 'default',
                 configureArgs       : [
                         "hotspot"     : '--enable-dtrace',
                         "openj9"      : '--enable-dtrace --enable-jitserver'
@@ -155,6 +144,7 @@ class Config16 {
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
+                additionalNodeLabels : 'centos7',
                 test                 : 'default',
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace'
@@ -164,10 +154,7 @@ class Config16 {
                 os                  : 'linux',
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
-                test                : [
-                        nightly: [],
-                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
-                ],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace'
         ],
         
@@ -183,10 +170,7 @@ class Config16 {
         arm32Linux    : [
                 os                  : 'linux',
                 arch                : 'arm',
-                test                : [
-                        nightly: ['sanity.openjdk'],
-                        weekly : []
-                ],
+                test                : 'default',
                 configureArgs       : '--enable-dtrace'
         ]
   ]

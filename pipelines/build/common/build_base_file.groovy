@@ -54,6 +54,7 @@ class Builder implements Serializable {
     boolean cleanWorkspaceBeforeBuild
     String adoptBuildNumber
     boolean propagateFailures
+    boolean keepTestReportDir
     def currentBuild
     def context
     def env
@@ -100,6 +101,8 @@ class Builder implements Serializable {
 
         def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
 
+        def additionalTestLabels = formAdditionalTestLabels(platformConfig, variant)
+
         def archLabel = getArchLabel(platformConfig, variant)
 
         def dockerImage = getDockerImage(platformConfig, variant)
@@ -133,6 +136,8 @@ class Builder implements Serializable {
             SCM_REF: scmReference,
             BUILD_ARGS: buildArgs,
             NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${archLabel}",
+            ADDITIONAL_TEST_LABEL: "${additionalTestLabels}",
+            KEEP_TEST_REPORTDIR: keepTestReportDir,
             ACTIVE_NODE_TIMEOUT: activeNodeTimeout,
             CODEBUILD: platformConfig.codebuild as Boolean,
             DOCKER_IMAGE: dockerImage,
@@ -355,6 +360,32 @@ class Builder implements Serializable {
         return labels
     }
 
+    /**
+    * Builds up additional test labels
+    * @param configuration
+    * @param variant
+    * @return
+    */
+    def formAdditionalTestLabels(Map<String, ?> configuration, String variant) {
+        def labels = ""
+
+        if (configuration.containsKey("additionalTestLabels")) {
+            def additionalTestLabels
+
+            if (isMap(configuration.additionalTestLabels)) {
+                additionalTestLabels = (configuration.additionalTestLabels as Map<String, ?>).get(variant)
+            } else {
+                additionalTestLabels = configuration.additionalTestLabels
+            }
+
+            if (additionalTestLabels != null) {
+                labels = "${additionalTestLabels}"
+            }
+        }
+
+        return labels
+    }
+
     /*
     Retrieves the configureArgs attribute from the build configurations.
     These eventually get passed to ./makejdk-any-platform.sh and bash configure.
@@ -470,10 +501,11 @@ class Builder implements Serializable {
 
     /*
     Ensures that we don't release multiple variants at the same time
+    Unless this is the weekend weekly release build that won't have a publishName
     */
     def checkConfigIsSane(Map<String, IndividualBuildConfig> jobConfigurations) {
 
-        if (release) {
+        if (release && publishName) {
 
             // Doing a release
             def variants = jobConfigurations
@@ -533,8 +565,9 @@ class Builder implements Serializable {
             }
 
             if (release) {
-                currentBuild.setKeepLog(true)
                 if (publishName) {
+                    // Only keep release logs for real releases, not the weekend weekly release test builds that are not published
+                    currentBuild.setKeepLog(true)
                     currentBuild.setDisplayName(publishName)
                 }
             }
@@ -550,6 +583,7 @@ class Builder implements Serializable {
             context.echo "Publish: ${publish}"
             context.echo "Release: ${release}"
             context.echo "Tag/Branch name: ${scmReference}"
+            context.echo "Keep test reportdir: ${keepTestReportDir}"
 
             jobConfigurations.each { configuration ->
                 jobs[configuration.key] = {
@@ -666,6 +700,7 @@ return {
     String cleanWorkspaceBeforeBuild,
     String adoptBuildNumber,
     String propagateFailures,
+    String keepTestReportDir,
     def currentBuild,
     def context,
     def env ->
@@ -717,6 +752,7 @@ return {
             cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
             adoptBuildNumber: adoptBuildNumber,
             propagateFailures: Boolean.parseBoolean(propagateFailures),
+            keepTestReportDir: Boolean.parseBoolean(keepTestReportDir),
             currentBuild: currentBuild,
             context: context,
             env: env

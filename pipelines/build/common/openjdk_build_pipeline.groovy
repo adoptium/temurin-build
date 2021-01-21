@@ -74,9 +74,7 @@ class Build {
         AIX_CLEAN_TIMEOUT : 1,
         MASTER_CLEAN_TIMEOUT : 1,
         DOCKER_CHECKOUT_TIMEOUT : 1,
-        DOCKER_PULL_TIMEOUT : 2,
-        SIGN_JOB_TIMEOUT : 2,
-        INSTALLER_JOBS_TIMEOUT : 3
+        DOCKER_PULL_TIMEOUT : 2
     ]
 
     /*
@@ -232,6 +230,8 @@ class Build {
         def jdkRepo = getJDKRepo()
         def openj9Branch = (buildConfig.SCM_REF && buildConfig.VARIANT == "openj9") ? buildConfig.SCM_REF : "master"
 
+        def additionalTestLabel = buildConfig.ADDITIONAL_TEST_LABEL
+
         if (buildConfig.VARIANT == "corretto") {
             testList = buildConfig.TEST_LIST.minus(['sanity.external'])
         } else {
@@ -240,11 +240,16 @@ class Build {
 
         testList.each { testType ->
 
-            // For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
-            try {
-                context.println "Running test: ${testType}"
-                testStages["${testType}"] = {
-                    context.stage("${testType}") {
+			// For each requested test, i.e 'sanity.openjdk', 'sanity.system', 'sanity.perf', 'sanity.external', call test job
+			try {
+				context.println "Running test: ${testType}"
+				testStages["${testType}"] = {
+					context.stage("${testType}") {
+						def keep_test_reportdir = buildConfig.KEEP_TEST_REPORTDIR
+						if (("${testType}".contains("openjdk")) || ("${testType}".contains("jck"))) {
+							// Keep test reportdir always for JUnit targets
+							keep_test_reportdir = "true"
+						}
 
                         // example jobName: Test_openjdk11_hs_sanity.system_ppc64_aix
                         def jobName = determineTestJobName(testType)
@@ -252,27 +257,29 @@ class Build {
                         def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
 
                         // Execute test job
-                        if (JobHelper.jobIsRunnable(jobName as String)) {
-                            context.catchError {
-                                context.build job: jobName,
-                                        propagate: false,
-                                        parameters: [
-                                                context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
-                                                context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
-                                                context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}"),
-                                                context.string(name: 'JDK_REPO', value: jdkRepo),
-                                                context.string(name: 'JDK_BRANCH', value: jdkBranch),
-                                                context.string(name: 'OPENJ9_BRANCH', value: openj9Branch),
-                                                context.string(name: 'ACTIVE_NODE_TIMEOUT', value: "${buildConfig.ACTIVE_NODE_TIMEOUT}")]
-                            }
-                        } else {
-                            context.println "[WARNING] Requested test job that does not exist or is disabled: ${jobName}"
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                context.println "Failed execute test: ${e.getLocalizedMessage()}"
-            }
+						if (JobHelper.jobIsRunnable(jobName as String)) {
+							context.catchError {
+								context.build job: jobName,
+										propagate: false,
+										parameters: [
+												context.string(name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_NUMBER}"),
+												context.string(name: 'UPSTREAM_JOB_NAME', value: "${env.JOB_NAME}"),
+												context.string(name: 'RELEASE_TAG', value: "${buildConfig.SCM_REF}"),
+												context.string(name: 'JDK_REPO', value: jdkRepo),
+												context.string(name: 'JDK_BRANCH', value: jdkBranch),
+												context.string(name: 'OPENJ9_BRANCH', value: openj9Branch),
+												context.string(name: 'LABEL_ADDITION', value: additionalTestLabel),
+												context.string(name: 'KEEP_REPORTDIR', value: "${keep_test_reportdir}"),
+												context.string(name: 'ACTIVE_NODE_TIMEOUT', value: "${buildConfig.ACTIVE_NODE_TIMEOUT}")]
+							}
+						} else {
+							context.println "[WARNING] Requested test job that does not exist or is disabled: ${jobName}"
+						}
+					}
+				}
+			} catch (Exception e) {
+				context.println "Failed to execute test: ${e.getLocalizedMessage()}"
+			}
         }
         return testStages
     }
@@ -519,6 +526,7 @@ class Build {
     /*
     Build installer master function. This builds the downstream installer jobs on completion of the sign and test jobs.
     The installers create our rpm, msi and pkg files that allow for an easier installation of the jdk binaries over a compressed archive.
+    For Mac, we also clean up pkgs on master node from previous runs, if needed (Ref openjdk-build#2350).
     */
     def buildInstaller(VersionInfo versionData) {
         if (versionData == null || versionData.major == null) {
@@ -529,7 +537,7 @@ class Build {
         context.node('master') {
             context.stage("installer") {
                 switch (buildConfig.TARGET_OS) {
-                    case "mac": buildMacInstaller(versionData); break
+                    case "mac": context.sh 'rm -f workspace/target/*.pkg workspace/target/*.pkg.json workspace/target/*.pkg.sha256.txt; done'; buildMacInstaller(versionData); break
                     case "linux": buildLinuxInstaller(versionData); break
                     case "windows": buildWindowsInstaller(versionData); break
                     default: return; break
@@ -864,7 +872,7 @@ class Build {
         if (buildConfig.TARGET_OS == "windows") {
             filter = "**\\OpenJDK*-jdk*_windows_*.zip"
         } else {
-            filter = "**/OpenJDK*-jdk*.tar.gz"
+            filter = "OpenJDK*-jdk*_${buildConfig.TARGET_OS}_*.tar.gz"
         }
 
         def crossCompileVersionOut = context.build job: "build-scripts/utils/cross-compiled-version-out",
@@ -996,7 +1004,10 @@ class Build {
                     throw new Exception("[ERROR] Build archive timeout (${buildTimeouts.BUILD_ARCHIVE_TIMEOUT} HOURS) has been reached. Exiting...")
                 }
             } finally {
-                if (buildConfig.TARGET_OS == "aix") {
+                // post-build workspace clean:
+                //   AIX due to limited ram drive space
+                //   s390x due to limited available disk space on Marist nodes 
+                if (buildConfig.TARGET_OS == "aix" || buildConfig.ARCHITECTURE == "s390x") {
                     try {
                         context.timeout(time: buildTimeouts.AIX_CLEAN_TIMEOUT, unit: "HOURS") {
                             context.cleanWs notFailBuild: true
@@ -1174,9 +1185,8 @@ class Build {
                 // Sign and archive jobs if needed
                 if (enableSigner) {
                     try {
-                        context.timeout(time: buildTimeouts.SIGN_JOB_TIMEOUT, unit: "HOURS") {
-                            sign(versionInfo)
-                        }
+                        // Sign job timeout managed by Jenkins job config
+                        sign(versionInfo)
                     } catch (FlowInterruptedException e) {
                         throw new Exception("[ERROR] Sign job timeout (${buildTimeouts.SIGN_JOB_TIMEOUT} HOURS) has been reached OR the downstream sign job failed. Exiting...")
                     }
@@ -1195,9 +1205,8 @@ class Build {
                 //buildInstaller if needed
                 if (enableInstallers) {
                     try {
-                        context.timeout(time: buildTimeouts.INSTALLER_JOBS_TIMEOUT, unit: "HOURS") {
-                            buildInstaller(versionInfo)
-                        }
+                        // Installer job timeout managed by Jenkins job config
+                        buildInstaller(versionInfo)
                     } catch (FlowInterruptedException e) {
                         throw new Exception("[ERROR] Installer job timeout (${buildTimeouts.INSTALLER_JOBS_TIMEOUT} HOURS) has been reached OR the downstream installer job failed. Exiting...")
                     }

@@ -190,7 +190,7 @@ node('master') {
         println "[INFO] JDK${javaVersion}: disableJob = ${config.disableJob}"
 
         if (enablePipelineSchedule.toBoolean()) {
-          config.put("pipelineSchedule", target.triggerSchedule)
+          config.put("pipelineSchedule", target.triggerSchedule_nightly)
         }
 
         if (useAdoptBashScripts.toBoolean()) {
@@ -199,12 +199,12 @@ node('master') {
           config.put("adoptScripts", false)
         }
 
-        println "[INFO] JDK${javaVersion}: pipelineSchedule = ${config.pipelineSchedule}"
+        println "[INFO] JDK${javaVersion}: nightly pipelineSchedule = ${config.pipelineSchedule}"
 
         config.put("defaultsJson", DEFAULTS_JSON)
         config.put("adoptDefaultsJson", ADOPT_DEFAULTS_JSON)
 
-        println "[INFO] FINAL CONFIG FOR $javaVersion"
+        println "[INFO] FINAL CONFIG FOR NIGHTLY $javaVersion"
         println JsonOutput.prettyPrint(JsonOutput.toJson(config))
 
         try {
@@ -218,7 +218,40 @@ node('master') {
 
         target.disableJob = false
 
-        generatedPipelines.add(javaVersion)
+        generatedPipelines.add("Nightly JDK${javaVersion}")
+
+        // Create weekly release pipeline
+        config.JOB_NAME = "weekly-openjdk${javaVersion}-pipeline"
+        config.SCRIPT = (params.WEEKLY_SCRIPT_PATH) ?: DEFAULTS_JSON['scriptDirectories']['weekly']
+        if (!fileExists(config.SCRIPT)) {
+          println "[WARNING] ${config.SCRIPT} does not exist in your chosen repository. Updating it to use Adopt's instead"
+          checkoutAdopt()
+          config.SCRIPT = ADOPT_DEFAULTS_JSON['scriptDirectories']['weekly']
+          println "[SUCCESS] The path is now ${config.SCRIPT} relative to ${ADOPT_DEFAULTS_JSON['repository']['url']}"
+          checkoutUser()
+        }
+        config.PIPELINE = "openjdk${javaVersion}-pipeline"
+        config.weekly_release_scmReferences = target.weekly_release_scmReferences
+        def weeklyTemplatePath = (params.WEEKLY_TEMPLATE_PATH) ?: DEFAULTS_JSON['templateDirectories']['weekly']
+
+        if (enablePipelineSchedule.toBoolean()) {
+          config.put("pipelineSchedule", target.triggerSchedule_weekly)
+        }
+
+        println "[INFO] JDK${javaVersion}: weekly pipelineSchedule = ${config.pipelineSchedule}"
+
+        try {
+          jobDsl targets: weeklyTemplatePath, ignoreExisting: false, additionalParameters: config
+        } catch (Exception e) {
+          println "[WARNING] Something went wrong when creating the weekly job dsl. It may be because we are trying to pull the template inside a user repository. Using Adopt's template instead...\n${e}"
+          checkoutAdopt()
+          jobDsl targets: ADOPT_DEFAULTS_JSON['templateDirectories']['weeklyTemplatePath'], ignoreExisting: false, additionalParameters: config
+          checkoutUser()
+        }
+
+        target.disableJob = false
+
+        generatedPipelines.add("Weekly JDK${javaVersion}")
       })
 
       // Fail if nothing was generated
@@ -230,11 +263,9 @@ node('master') {
       }
 
     }
-
   } finally {
     // Always clean up, even on failure (doesn't delete the dsls)
     println "[INFO] Cleaning up..."
     cleanWs deleteDirs: true
   }
-
 }
