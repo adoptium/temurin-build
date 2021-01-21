@@ -80,9 +80,12 @@ function readTimestampServerConfig()
 signRelease()
 {
 
+  # This reads in timestamp servers from $TIMESTAMP_SERVER_CONFIG - if you make changes to that file
+  # then please also make the same changes in hte openjdk-installer repo.
   readTimestampServerConfig
 
   case "$OPERATING_SYSTEM" in
+    
     "windows")
       echo "Signing Windows release"
       signToolPath=${signToolPath:-"/cygdrive/c/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x64/signtool.exe"}
