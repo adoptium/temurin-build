@@ -324,7 +324,7 @@ class Builder implements Serializable {
     This determines where the location of the operating system setup files are in comparison to the repository root. The param is formatted like this because we need to download and source the file from the bash scripts.
     */
     def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
-        List splitUserUrl = DEFAULTS_JSON['repository']['url'].minus(".git").split('/')
+        def splitUserUrl = ((String)DEFAULTS_JSON['repository']['url']).minus(".git").split('/')
         // e.g. https://github.com/AdoptOpenJDK/openjdk-build.git will produce AdoptOpenJDK/openjdk-build
         String userOrgRepo = "${splitUserUrl[splitUserUrl.size() - 2]}/${splitUserUrl[splitUserUrl.size() - 1]}"
 
