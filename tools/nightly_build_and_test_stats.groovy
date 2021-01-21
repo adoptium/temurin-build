@@ -49,7 +49,7 @@ node ("master") {
         def testJobNumber = 0
         def buildJobNumber = 0
 
-        // Find all pipeline builds started by "timer", as those are Nightlies
+        // Find all "Done" pipeline builds started by "timer", as those are Nightlies
         // or upstream project "build-scripts/weekly-openjdkNN-pipeline", as those are weekend weekly release jobs
         def pipeline = sh(returnStdout: true, script: "wget -q -O - ${trssUrl}/api/getBuildHistory?buildName=${pipelineName}")
         def pipelineJson = new JsonSlurper().parseText(pipeline)
@@ -57,7 +57,7 @@ node ("master") {
           // Find first in list started by timer or upstream weekly job
           def pipeline_id = null
           pipelineJson.find { job ->
-            if ((job.startBy.startsWith("timer")) || (job.startBy.startsWith("upstream project \"build-scripts/weekly-${pipelineName}\""))) {
+            if (job.status != null && job.status.equals("Done") && job.startBy != null && ((job.startBy.startsWith("timer")) || (job.startBy.startsWith("upstream project \"build-scripts/weekly-${pipelineName}\"")))) {
               pipeline_id = job._id
               pipelineUrl = job.buildUrl
               return true
@@ -136,11 +136,22 @@ node ("master") {
       }
     }
     // Average test success rating across all pipelines
-    nightlyTestSuccessRating = nightlyTestSuccessRating/numTestPipelines
+    if (numTestPipelines > 0) {
+      nightlyTestSuccessRating = nightlyTestSuccessRating/numTestPipelines
+    } else {
+      // If no Tests were run assume 0% success
+      nightlyTestSuccessRating = 0
+    }
 
     // Build % success rating: Successes as % of build total
     def buildSuccesses = totalBuildJobs - buildFailures
-    def nightlyBuildSuccessRating = ((buildSuccesses)*100)/(totalBuildJobs)
+    def nightlyBuildSuccessRating = 0
+    if (totalBuildJobs > 0) {    
+      nightlyBuildSuccessRating = ((buildSuccesses)*100)/(totalBuildJobs)
+    } else {
+      // If no Builds were run assume 0% success
+      nightlyBuildSuccessRating = 0
+    }
 
     // Overall % success rating: Average build & test % success rating
     def overallNightlySuccessRating = ((nightlyBuildSuccessRating+nightlyTestSuccessRating)/2).intValue()
