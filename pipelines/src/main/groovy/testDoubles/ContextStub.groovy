@@ -85,6 +85,10 @@ class ContextStub {
 
     String remove() {}
 
+    String minus(String s) {}
+
+    String split(String s) {}
+
     String ws(String s, Closure) {}
 
     String getAbsoluteUrl() {}
