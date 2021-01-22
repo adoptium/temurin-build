@@ -37,11 +37,11 @@ fi
 PLATFORM_CONFIG_FILEPATH="$SCRIPT_DIR/platform-specific-configurations/platformConfigFile.sh"
 
 # Attempt to download and source the user's custom platform config
-echo "Attempting to download user platform configuration file from ${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
+echo "Attempting to download user platform configuration file from https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
 # make-adopt-build-farm.sh has 'set -e'. We need to disable that for the fallback mechanism, as downloading might fail
 set +e
 # TODO: Remove the specific filename value (OPERATING_SYSTEM) for user specific paths
-curl "${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh" > "${PLATFORM_CONFIG_FILEPATH}"
+curl "https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh" > "${PLATFORM_CONFIG_FILEPATH}"
 
 ret=$?
 set -e
@@ -49,8 +49,8 @@ set -e
 if [ $ret -ne 0 ]
 then
     # If there is no user platform config, use adopt's as a default instead
-    echo "Failed to download a user platform configuration file. Downloading Adopt's platform configuration file instead from ${ADOPT_PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
-    curl "${ADOPT_PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh" > "${PLATFORM_CONFIG_FILEPATH}"
+    echo "Failed to download a user platform configuration file. Downloading Adopt's platform configuration file instead from https://raw.githubusercontent.com/${ADOPT_PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
+    curl "https://raw.githubusercontent.com/${ADOPT_PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh" > "${PLATFORM_CONFIG_FILEPATH}"
 fi
 
 echo "Config file downloaded successfully to ${PLATFORM_CONFIG_FILEPATH}"
