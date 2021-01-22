@@ -35,7 +35,7 @@ jobs:
         VARIANT: ${{ matrix.vm }}
         TARGET_OS: ${{ matrix.os }}
         FILENAME: OpenJDK.tar.gz
-        DEFAULT_PLATFORM_CONFIGS: build-farm/platform-specific-configurations
+        PLATFORM_CONFIG_LOCATION: AdoptOpenJDK/openjdk-build/master/build-farm/platform-specific-configurations
 
   # build_macos:
   #   name: macOS
