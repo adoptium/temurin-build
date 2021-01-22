@@ -6,6 +6,7 @@ import groovy.json.JsonSlurper
 class RepoHandler {
     private final def context
     private final Map configs
+    private Map USER_DEFAULTS_JSON
     private final Map ADOPT_DEFAULTS_JSON
 
     // TODO: Change me
@@ -23,17 +24,32 @@ class RepoHandler {
     }
 
     /*
-    Getter to retrieve user's config defaults
+    Getter to retrieve user's git remote config
     */
-    public Map<String, ?> getUserDefaultsJson() {
+    public Map<String, ?> getUserRemoteConfigs() {
         return configs
     }
 
     /*
-    Getter to retrieve adopt's config defaults
+    Getter to retrieve adopt's defaults
     */
     public Map<String, ?> getAdoptDefaultsJson() {
         return ADOPT_DEFAULTS_JSON
+    }
+
+    /*
+    Getter to retrieve adopt's defaults
+    */
+    public Map<String, ?> getUserDefaultsJson() {
+        return USER_DEFAULTS_JSON
+    }
+
+    /*
+    Setter to retrieve and save a user defaults json inside the object
+    */
+    public Map<String, ?> setUserDefaultsJson(String url) {
+        def get = new URL(url).openConnection()
+        this.USER_DEFAULTS_JSON = new JsonSlurper().parseText(get.getInputStream().getText()) as Map
     }
 
     /*

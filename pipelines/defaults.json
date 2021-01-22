@@ -19,8 +19,8 @@
     },
     "scriptDirectories"      : {
         "upstream"           : "pipelines/build",
-        "weekly"             : "pipelines/build/common/weekly_release_pipeline.groovy",
         "downstream"         : "pipelines/build/common/kick_off_build.groovy",
+        "weekly"             : "pipelines/build/common/weekly_release_pipeline.groovy",
         "regeneration"       : "pipelines/build/common/config_regeneration.groovy",
         "tester"             : "pipelines/build/prTester/pr_test_pipeline.groovy"
     },

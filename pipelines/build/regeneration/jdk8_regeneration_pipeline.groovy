@@ -48,7 +48,7 @@ node ("master") {
 
     if (checkoutCreds != "") {
       // This currently does not work with user credentials due to https://issues.jenkins.io/browse/JENKINS-60349
-      remoteConfigs.credentialsId = "${checkoutCreds}"
+      remoteConfigs.credentials = "${checkoutCreds}"
     } else {
       println "[WARNING] CHECKOUT_CREDENTIALS not specified! Checkout to $repoUri may fail if you do not have your ssh key on this machine."
     }
