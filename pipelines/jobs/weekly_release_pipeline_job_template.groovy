@@ -19,7 +19,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
     disabled(disableJob)
     triggers {
-        cron(triggerSchedule)
+        cron(pipelineSchedule)
     }
     logRotator {
         numToKeep(60)
