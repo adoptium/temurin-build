@@ -6,7 +6,7 @@ if(!binding.hasVariable('triggerSchedule')) {
 
 gitRefSpec = ""
 propagateFailures = false
-runTests = false
+runTests = true
 runInstaller = true
 runSigner = true
 
