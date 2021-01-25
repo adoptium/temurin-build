@@ -262,6 +262,8 @@ When the repo has been created, a few changes to the codebase will be necessary 
 ### Post Release Tasks
 Once all the release binaries have been published the following tasks should be completed:
 1. Reset the "weekly_release_scmReferences" (change to "") for the weekend release test build so it is using HEAD streams: https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations
+2. If the latest version just released has come to the end of its non-LTS lifecycle (2 CPU updates, eg.jdk-15.0.2), then disable and retire that version form the Nightly pipeline builds:
+   - eg.https://github.com/AdoptOpenJDK/openjdk-build/pull/2403/files
 
 ## Summary on point releases
 
