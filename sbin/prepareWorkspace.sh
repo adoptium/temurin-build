@@ -266,7 +266,17 @@ updateOpenj9Sources() {
 updateDragonwellSources() {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    bash get_source_dragonwell.sh --site github
+    local target_scm
+    if [ -n "${BUILD_CONFIG[TAG]}" ]; then
+      target_scm="${BUILD_CONFIG[TAG]}"
+    else
+      target_scm="${BUILD_CONFIG[BRANCH]}"
+    fi
+    if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
+      bash get_source_dragonwell.sh --site github --branch "${target_scm}"
+    else
+      bash get_source_dragonwell.sh --site github --branch "${target_scm}" -r
+    fi
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
