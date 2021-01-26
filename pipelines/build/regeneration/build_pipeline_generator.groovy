@@ -218,7 +218,7 @@ node('master') {
 
         target.disableJob = false
 
-        generatedPipelines.add("Nightly JDK${javaVersion}")
+        generatedPipelines.add(config["JOB_NAME"])
 
         // Create weekly release pipeline
         config.JOB_NAME = "weekly-openjdk${javaVersion}-pipeline"
@@ -238,7 +238,8 @@ node('master') {
           config.put("pipelineSchedule", target.triggerSchedule_weekly)
         }
 
-        println "[INFO] JDK${javaVersion}: weekly pipelineSchedule = ${config.pipelineSchedule}"
+        println "[INFO] CREATING JDK${javaVersion} WEEKLY RELEASE PIPELINE WITH CONFIG:"
+        println JsonOutput.prettyPrint(JsonOutput.toJson(config))
 
         try {
           jobDsl targets: weeklyTemplatePath, ignoreExisting: false, additionalParameters: config
@@ -251,7 +252,7 @@ node('master') {
 
         target.disableJob = false
 
-        generatedPipelines.add("Weekly JDK${javaVersion}")
+        generatedPipelines.add(config["JOB_NAME"])
       })
 
       // Fail if nothing was generated

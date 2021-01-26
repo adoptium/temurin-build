@@ -42,7 +42,7 @@ class PullRequestTestPipeline implements Serializable {
                 JOB_NAME            : "openjdk${javaVersion}-pipeline",
                 SCRIPT              : "${DEFAULTS_JSON['scriptDirectories']['upstream']}/openjdk${javaVersion}_pipeline.groovy",
                 disableJob          : false,
-                pipelineSchedule    : "0 0 31 2 0",
+                pipelineSchedule    : "0 0 31 2 0", // 31st Feb so will never run
                 targetConfigurations: testConfigurations,
                 defaultsJson        : DEFAULTS_JSON,
                 adoptScripts        : true
