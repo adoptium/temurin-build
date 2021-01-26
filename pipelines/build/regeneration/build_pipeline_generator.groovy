@@ -135,7 +135,14 @@ node('master') {
       println "ENABLE_PIPELINE_SCHEDULE = $enablePipelineSchedule"
       println "USE_ADOPT_BASH_SCRIPTS = $useAdoptBashScripts"
 
-      (8..30).each({javaVersion ->
+      // Collect available JDK versions to check for generation (tip_version + 1 just in case it is out of date on a release day)
+      def JobHelper = library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+      println "Querying Adopt Api for the JDK-Head number (tip_version)..."
+
+      def response = JobHelper.getAvailableReleases(this)
+      int headVersion = (int) response.getAt("tip_version")
+
+      (8..headVersion+1).each({javaVersion ->
 
         if (retiredVersions.contains(javaVersion)) {
           println "[INFO] $javaVersion is a retired version that isn't currently built. Skipping generation..."

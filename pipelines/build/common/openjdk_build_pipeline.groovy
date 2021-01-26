@@ -1009,7 +1009,7 @@ class Build {
             } finally {
                 // post-build workspace clean:
                 //   AIX due to limited ram drive space
-                //   s390x due to limited available disk space on Marist nodes 
+                //   s390x due to limited available disk space on Marist nodes
                 if (buildConfig.TARGET_OS == "aix" || buildConfig.ARCHITECTURE == "s390x") {
                     try {
                         context.timeout(time: buildTimeouts.AIX_CLEAN_TIMEOUT, unit: "HOURS") {
