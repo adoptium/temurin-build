@@ -12,6 +12,8 @@ class IndividualBuildConfig implements Serializable {
     final String SCM_REF
     final String BUILD_ARGS
     final String NODE_LABEL
+    final String ADDITIONAL_TEST_LABEL
+    final boolean KEEP_TEST_REPORTDIR
     final String ACTIVE_NODE_TIMEOUT
     final boolean CODEBUILD
     final String DOCKER_IMAGE
@@ -26,6 +28,7 @@ class IndividualBuildConfig implements Serializable {
     final String ADOPT_BUILD_NUMBER
     final boolean ENABLE_TESTS
     final boolean ENABLE_INSTALLERS
+    final boolean ENABLE_SIGNER
     final boolean CLEAN_WORKSPACE
 
     IndividualBuildConfig(String json) {
@@ -49,6 +52,8 @@ class IndividualBuildConfig implements Serializable {
         SCM_REF = map.get("SCM_REF")
         BUILD_ARGS = map.get("BUILD_ARGS")
         NODE_LABEL = map.get("NODE_LABEL")
+        ADDITIONAL_TEST_LABEL = map.get("ADDITIONAL_TEST_LABEL")
+        KEEP_TEST_REPORTDIR = map.get("KEEP_TEST_REPORTDIR")
         ACTIVE_NODE_TIMEOUT = map.get("ACTIVE_NODE_TIMEOUT")
         CODEBUILD = map.get("CODEBUILD")
         DOCKER_IMAGE = map.get("DOCKER_IMAGE")
@@ -63,6 +68,7 @@ class IndividualBuildConfig implements Serializable {
         ADOPT_BUILD_NUMBER = map.get("ADOPT_BUILD_NUMBER")
         ENABLE_TESTS = map.get("ENABLE_TESTS")
         ENABLE_INSTALLERS = map.get("ENABLE_INSTALLERS")
+        ENABLE_SIGNER = map.get("ENABLE_SIGNER")
         CLEAN_WORKSPACE = map.get("CLEAN_WORKSPACE")
     }
 
@@ -91,6 +97,8 @@ class IndividualBuildConfig implements Serializable {
                 SCM_REF                   : SCM_REF,
                 BUILD_ARGS                : BUILD_ARGS,
                 NODE_LABEL                : NODE_LABEL,
+                ADDITIONAL_TEST_LABEL     : ADDITIONAL_TEST_LABEL,
+                KEEP_TEST_REPORTDIR       : KEEP_TEST_REPORTDIR,
                 ACTIVE_NODE_TIMEOUT       : ACTIVE_NODE_TIMEOUT,
                 CODEBUILD                 : CODEBUILD,
                 DOCKER_IMAGE              : DOCKER_IMAGE,
@@ -105,6 +113,7 @@ class IndividualBuildConfig implements Serializable {
                 ADOPT_BUILD_NUMBER        : ADOPT_BUILD_NUMBER,
                 ENABLE_TESTS              : ENABLE_TESTS,
                 ENABLE_INSTALLERS         : ENABLE_INSTALLERS,
+                ENABLE_SIGNER             : ENABLE_SIGNER,
                 CLEAN_WORKSPACE           : CLEAN_WORKSPACE
         ]
     }

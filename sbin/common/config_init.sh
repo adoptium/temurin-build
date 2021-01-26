@@ -42,12 +42,13 @@ CERTIFICATE
 CLEAN_DOCKER_BUILD
 CLEAN_GIT_REPO
 CLEAN_LIBS
-CONFIGURE_ARGS_FOR_ANY_PLATFORM
 CONTAINER_NAME
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
-CREATE_DEBUG_SYMBOLS_PACKAGE
+CREATE_DEBUG_IMAGE
+CUSTOM_CACERTS
+CROSSCOMPILE
 DEBUG_DOCKER
 DEBUG_IMAGE_PATH
 DISABLE_ADOPT_BRANCH_SAFETY
@@ -212,6 +213,9 @@ function parseConfigurationArguments() {
         "--assemble-exploded-image" )
         BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=true;;
 
+        "--custom-cacerts" )
+        BUILD_CONFIG[CUSTOM_CACERTS]="$1"; shift;;
+
         "--codesign-identity" )
         BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]="$1"; shift;;
 
@@ -224,8 +228,8 @@ function parseConfigurationArguments() {
         "--clean-libs" )
         BUILD_CONFIG[CLEAN_LIBS]=true;;
 
-        "--create-debug-symbols-package" )
-        BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]="true";;
+        "--create-debug-image" )
+        BUILD_CONFIG[CREATE_DEBUG_IMAGE]="true";;
 
         "--disable-adopt-branch-safety" )
         BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=true;;
@@ -265,6 +269,9 @@ function parseConfigurationArguments() {
 
         "--jdk-boot-dir" | "-J" )
         BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
+
+        "--cross-compile" )
+        BUILD_CONFIG[CROSSCOMPILE]=true;;
 
         "--keep" | "-k" )
         BUILD_CONFIG[KEEP_CONTAINER]=true;;
@@ -401,7 +408,7 @@ function configDefaults() {
   esac
 
   # The default behavior of whether we want to create a separate debug symbols archive
-  BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]="false"
+  BUILD_CONFIG[CREATE_DEBUG_IMAGE]="false"
 
   BUILD_CONFIG[SIGN]="false"
   BUILD_CONFIG[JDK_BOOT_DIR]=""
@@ -480,6 +487,9 @@ function configDefaults() {
   BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""}
   BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]:-""}
 
+  # Whether to use AdoptOpenJDK's cacerts file (true) or use the file provided by OpenJDK (false)
+  BUILD_CONFIG[CUSTOM_CACERTS]=${BUILD_CONFIG[CUSTOM_CACERTS]:-"true"}
+
   BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-"docker"}
 
   BUILD_CONFIG[TMP_SPACE_BUILD]=${BUILD_CONFIG[TMP_SPACE_BUILD]:-false}
@@ -493,6 +503,8 @@ function configDefaults() {
   BUILD_CONFIG[USE_JEP319_CERTS]=false
 
   BUILD_CONFIG[RELEASE]=false
+
+  BUILD_CONFIG[CROSSCOMPILE]=false
 
   # By default assume we have adopt patches applied to the repo
   BUILD_CONFIG[ADOPT_PATCHES]=true

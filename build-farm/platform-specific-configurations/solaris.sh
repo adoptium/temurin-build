@@ -30,7 +30,8 @@ elif [ "${ARCHITECTURE}" == "sparcv9" ]; then
 fi
 
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} ${CUPS} ${FREETYPE} --with-memory-size=${MEMORY}"
-export PATH=/opt/solarisstudio12.3/bin/:/opt/csw/bin/:/usr/ccs/bin:$PATH
+# /usr/sfw/bin required for OpenSSL (build#2265)
+export PATH=/opt/solarisstudio12.3/bin/:/opt/csw/bin/:/usr/ccs/bin:$PATH:/usr/sfw/bin
 
 export LC_ALL=C
 export HOTSPOT_DISABLE_DTRACE_PROBES=true

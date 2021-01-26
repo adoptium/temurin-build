@@ -1,13 +1,16 @@
-class Config15 {
+class Config17 {
   final Map<String, Map<String, ?>> buildConfigurations = [
         x64Mac    : [
                 os                  : 'mac',
                 arch                : 'x64',
                 additionalNodeLabels: 'macos10.14',
-                test                : 'default',
+                test                : [
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                ],
                 configureArgs       : '--enable-dtrace'
         ],
-
+        
         x64MacXL    : [
                 os                   : 'mac',
                 arch                 : 'x64',
@@ -27,7 +30,10 @@ class Config15 {
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
-                test                : 'default',
+                test                : [
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
+                ],
                 additionalTestLabels: [
                         openj9      : '!(centos6||rhel6)'
                 ],
@@ -36,37 +42,65 @@ class Config15 {
                         "hotspot"     : '--enable-dtrace'
                 ]
         ],
-
+        
         x64LinuxXL  : [
-                os                  : 'linux',
-                arch                : 'x64',
-                dockerImage         : 'adoptopenjdk/centos7_build_image',
+                os                   : 'linux',
+                arch                 : 'x64',
+                dockerImage          : 'adoptopenjdk/centos7_build_image',
                 dockerFile: [
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
-                test                : 'default',
+                test                 : 'default',
                 additionalTestLabels: [
                         openj9      : '!(centos6||rhel6)'
                 ],
                 additionalFileNameTag: "linuxXL",
-                configureArgs       : '--with-noncompressedrefs --enable-dtrace --enable-jitserver'
+                configureArgs        : '--with-noncompressedrefs --enable-dtrace --enable-jitserver'
+        ],
+
+        x64AlpineLinux  : [
+                os                  : 'alpine-linux',
+                arch                : 'x64',
+                dockerImage         : 'adoptopenjdk/alpine3_build_image',
+                test                : [
+                        // TODO: enable tests
+                        nightly: [],
+                        // release: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external', 'special.functional']
+                        release: []
+                ]
         ],
 
         x64Windows: [
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: 'win2012&&vs2017',
-                test                : 'default'
+                test                : [
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
+                ]
         ],
-
+        
         x64WindowsXL: [
-                os                  : 'windows',
-                arch                : 'x64',
-                additionalNodeLabels: 'win2012&&vs2017',
-                test                : 'default',
+                os                   : 'windows',
+                arch                 : 'x64',
+                additionalNodeLabels : 'win2012&&vs2017',
+                test                 : 'default',
                 additionalFileNameTag: "windowsXL",
                 configureArgs        : '--with-noncompressedrefs'
         ],
+
+        aarch64Windows: [
+                os                  : 'windows',
+                arch                : 'aarch64',
+                crossCompile        : 'x64',
+                buildArgs           : '--cross-compile',
+                additionalNodeLabels: 'win2016&&vs2019',
+                test                : [
+                        nightly: [],
+                        weekly : []
+                ]
+        ],
+
 
         x32Windows: [
                 os                  : 'windows',
@@ -75,7 +109,7 @@ class Config15 {
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
-                test                : 'default'
+                test                : ['sanity.openjdk']
         ],
 
         ppc64Aix    : [
@@ -85,16 +119,23 @@ class Config15 {
                         hotspot: 'xlc16&&aix710',
                         openj9:  'xlc16&&aix715'
                 ],
-                test                : 'default'
+                test                : [
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system']
+                ]
         ],
+
 
         s390xLinux    : [
                 os                  : 'linux',
                 arch                : 's390x',
-                test                : 'default',
+                test                : [
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                ],
                 configureArgs       : '--enable-dtrace'
         ],
-
+        
         s390xLinuxXL  : [
                 os                   : 'linux',
                 arch                 : 's390x',
@@ -107,13 +148,17 @@ class Config15 {
                 os                  : 'linux',
                 arch                : 'ppc64le',
                 additionalNodeLabels: 'centos7',
-                test                : 'default',
+                test                : [
+                        nightly: [],
+                        weekly: ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                ],
                 configureArgs       : [
                         "hotspot"     : '--enable-dtrace',
                         "openj9"      : '--enable-dtrace --enable-jitserver'
                 ]
-        ],
 
+        ],
+        
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
@@ -123,21 +168,17 @@ class Config15 {
                 configureArgs        : '--with-noncompressedrefs --disable-ccache --enable-dtrace'
         ],
 
-        arm32Linux    : [
-                os                  : 'linux',
-                arch                : 'arm',
-                test                : 'default',
-                configureArgs       : '--enable-dtrace'
-        ],
-
         aarch64Linux    : [
                 os                  : 'linux',
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
-                test                : 'default',
+                test                : [
+                        nightly: [],
+                        weekly : ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf']
+                ],
                 configureArgs       : '--enable-dtrace'
         ],
-
+        
         aarch64LinuxXL    : [
                 os                   : 'linux',
                 dockerImage          : 'adoptopenjdk/centos7_build_image',
@@ -146,9 +187,19 @@ class Config15 {
                 additionalFileNameTag: "linuxXL",
                 configureArgs        : '--with-noncompressedrefs --enable-dtrace'
         ],
+
+        arm32Linux    : [
+                os                  : 'linux',
+                arch                : 'arm',
+                test                : [
+                        nightly: ['sanity.openjdk'],
+                        weekly : []
+                ],
+                configureArgs       : '--enable-dtrace'
+        ]
   ]
 
 }
 
-Config15 config = new Config15()
+Config17 config = new Config17()
 return config.buildConfigurations

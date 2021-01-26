@@ -18,6 +18,17 @@ set -e
 
 PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+## Sanity check as this script requires various environment variables so fail
+## fast if one or more are not present. MAYBE autodetect defaults in future?
+
+SANEVARS=0
+[ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u && SANEVARS=1
+[ -z "$TARGET_OS"     ] && echo TARGET_OS not defined - set to e.g. linux     && SANEVARS=1
+[ -z "$VARIANT"       ] && echo VARIANT not defined - set to e.g. hotspot     && SANEVARS=1
+[ -z "$ARCHITECTURE"  ] && echo ARCHITECTURE not defined - set to e.g. x64    && SANEVARS=1
+[ -z "$FILENAME"      ] && echo FILENAME not defined - set to e.g. jdk.tar.gz && SANEVARS=1
+[ "$SANEVARS" != "0"  ] && echo Please correct the above omissions in the environment then retry && exit 1
+
 ## Very very build farm specific configuration
 
 export OPERATING_SYSTEM
@@ -96,7 +107,8 @@ case "${JDK_BOOT_VERSION}" in
       "13")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK13_BOOT_DIR}";;
       "14")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK14_BOOT_DIR}";;
       "15")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK15_BOOT_DIR}";;
-      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK16_BOOT_DIR}";;
+      "16")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK16_BOOT_DIR}";;
+      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK17_BOOT_DIR}";;
 esac
 
 
@@ -151,6 +163,10 @@ echo "Filename will be: $FILENAME"
 export BUILD_ARGS="${BUILD_ARGS} --use-jep319-certs"
 
 echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
+
+# Convert all speech marks in config args to make them safe to pass in.
+# These will be converted back into speech marks shortly before we use them, in build.sh.
+CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM//\"/temporary_speech_mark_placeholder}"
 
 # shellcheck disable=SC2086
 bash -c "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args \"${CONFIGURE_ARGS_FOR_ANY_PLATFORM}\" --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"

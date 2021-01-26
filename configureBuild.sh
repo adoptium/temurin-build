@@ -186,7 +186,6 @@ processArgumentsforSpecificArchitectures() {
   local jvm_variant=server
   local build_full_name=""
   local make_args_for_any_platform=""
-  local configure_args_for_any_platform=""
 
   case "${BUILD_CONFIG[OS_ARCHITECTURE]}" in
   "s390x")
@@ -237,7 +236,9 @@ processArgumentsforSpecificArchitectures() {
       jvm_variant=server,client
       make_args_for_any_platform="DEBUG_BINARIES=true images legacy-jre-image"
     fi
-    configure_args_for_any_platform="--with-jobs=${BUILD_CONFIG[NUM_PROCESSORS]}"
+    if [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""} != *"--with-jobs"* ]]; then
+      BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="--with-jobs=${BUILD_CONFIG[NUM_PROCESSORS]} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS:-''}"
+    fi
     ;;
 
   esac
@@ -245,7 +246,7 @@ processArgumentsforSpecificArchitectures() {
   BUILD_CONFIG[JVM_VARIANT]=${BUILD_CONFIG[JVM_VARIANT]:-$jvm_variant}
   BUILD_CONFIG[BUILD_FULL_NAME]=${BUILD_CONFIG[BUILD_FULL_NAME]:-$build_full_name}
   BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-$make_args_for_any_platform}
-  BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-$configure_args_for_any_platform}
+  BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""}
 }
 
 # Different platforms have different default make commands
@@ -290,8 +291,6 @@ function setMakeArgs() {
   else
     BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"images"}
   fi
-
-  BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[CONFIGURE_ARGS_FOR_ANY_PLATFORM]:-""}
 }
 
 ################################################################################

@@ -54,10 +54,11 @@ checkoutAndCloneOpenJDKGitRepo() {
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk11u (fetch)
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk (fetch)
     # eg. origin git@github.com:adoptopenjdk/openjdk-jdk.git (fetch)
+    # eg. origin https://github.com/alibaba/dragonwell8.git (fetch)
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | egrep "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
     else
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | egrep "${BUILD_CONFIG[REPOSITORY]}.git\|${BUILD_CONFIG[REPOSITORY]}\s"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | egrep "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
     fi
     local isValidGitRepo=$?
     set -e
@@ -66,7 +67,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     if [ "${isValidGitRepo}" == "0" ]; then
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
-      sleep 10s
+      sleep 10
       echo "Pulling latest changes from git openjdk source repository"
     elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
       echo "Removing current git repo as it is the wrong type"
@@ -257,7 +258,7 @@ updateOpenj9Sources() {
   # Building OpenJDK with OpenJ9 must run get_source.sh to clone openj9 and openj9-omr repositories
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    bash get_source.sh --openssl-version=1.1.1h
+    bash get_source.sh --openssl-version=1.1.1i
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
@@ -265,7 +266,17 @@ updateOpenj9Sources() {
 updateDragonwellSources() {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    bash get_source_dragonwell.sh --site github
+    local target_scm
+    if [ -n "${BUILD_CONFIG[TAG]}" ]; then
+      target_scm="${BUILD_CONFIG[TAG]}"
+    else
+      target_scm="${BUILD_CONFIG[BRANCH]}"
+    fi
+    if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
+      bash get_source_dragonwell.sh --site github --branch "${target_scm}"
+    else
+      bash get_source_dragonwell.sh --site github --branch "${target_scm}" -r
+    fi
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
@@ -510,44 +521,15 @@ checkingAndDownloadingFreeType() {
   fi
 }
 
-# Download our security certificates
-downloadCerts() {
-  local caLink="$1"
+# Generates cacerts file
+prepareCacerts() {
+    echo "Generating cacerts from Mozilla's bundle"
 
-  mkdir -p "security"
-  # Temporary fudge as curl on my windows boxes is exiting with RC=127
-  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    wget -O "./security/cacerts" "${caLink}"
-  else
-    curl -L -o "./security/cacerts" "${caLink}"
-  fi
+    cd "$SCRIPT_DIR/../security"
+    ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
 }
 
-# Certificate Authority Certs (CA Certs)
-checkingAndDownloadCaCerts() {
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
-
-  echo "Retrieving cacerts file if needed"
-  # Ensure it's the latest we pull in
-  rm -rf "cacerts_area"
-  mkdir "cacerts_area" || exit
-  cd "cacerts_area" || exit
-
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
-    local caLink="https://github.com/corretto/corretto-8/blob/preview-release/cacerts?raw=true"
-    downloadCerts "$caLink"
-  elif [ "${BUILD_CONFIG[USE_JEP319_CERTS]}" != "true" ]; then
-    git init
-    git remote add origin -f "${BUILD_CONFIG[OPENJDK_BUILD_REPO_URI]}"
-    git config core.sparsecheckout true
-    echo "security/*" >>.git/info/sparse-checkout
-    git pull origin "${BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]}"
-  fi
-
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
-}
-
-# Download all of the dependencies for OpenJDK (Alsa, FreeType, CACerts et al)
+# Download all of the dependencies for OpenJDK (Alsa, FreeType, etc.)
 downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
@@ -587,10 +569,6 @@ downloadingRequiredDependencies() {
   else
     echo "Skipping Freetype"
   fi
-
-  echo "Checking and download CaCerts dependency"
-  checkingAndDownloadCaCerts
-
 }
 
 function moveTmpToWorkspaceLocation() {
@@ -676,5 +654,6 @@ function configureWorkspace() {
     relocateToTmpIfNeeded
     checkoutAndCloneOpenJDKGitRepo
     applyPatches
+    prepareCacerts
   fi
 }

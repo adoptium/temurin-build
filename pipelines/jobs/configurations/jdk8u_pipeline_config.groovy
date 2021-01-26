@@ -31,18 +31,18 @@ class Config8 {
                 test                 : 'default',
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver',
-                        "dragonwell"  : '--enable-jfr --enable-unlimited-crypto --with-jvm-variants=server  --with-zlib=system',
+                        "dragonwell"  : '--enable-unlimited-crypto --with-jvm-variants=server  --with-zlib=system',
                 ]
         ],
 
-        // Currently we have to be quite specific about which windows to use as not all of them have freetype installed
         x64Windows    : [
                 os                  : 'windows',
                 arch                : 'x64',
                 additionalNodeLabels: [
                         hotspot : 'win2012',
                         corretto: 'win2012',
-                        openj9  : 'win2012&&mingw-cygwin'
+                        openj9  : 'win2012&&mingw-cygwin',
+                        dragonwell: 'win2012'
                 ],
                 test                 : 'default'
         ],

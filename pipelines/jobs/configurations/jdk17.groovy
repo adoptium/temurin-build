@@ -13,7 +13,7 @@ targetConfigurations = [
         "x64LinuxXL"  : [
                 "openj9"
         ],
-        "x32Windows"  : [
+        "x64AlpineLinux" : [
                 "hotspot"
         ],
         "x64Windows"  : [
@@ -22,6 +22,12 @@ targetConfigurations = [
         ],
         "x64WindowsXL": [
                 "openj9"
+        ],
+        "aarch64Windows" : [
+                "hotspot"
+        ],
+        "x32Windows"  : [
+                "hotspot"
         ],
         "ppc64Aix"    : [
                 "hotspot",
@@ -38,9 +44,6 @@ targetConfigurations = [
                 "hotspot",
                 "openj9"
         ],
-        "s390xLinuxXL": [
-                "openj9"
-        ],
         "aarch64Linux": [
                 "hotspot",
                 "openj9"
@@ -53,10 +56,10 @@ targetConfigurations = [
         ]
 ]
 
-// 23:30 Tue, Thur
-triggerSchedule_nightly="TZ=UTC\n30 23 * * 2,4"
-// 23:30 Sat
-triggerSchedule_weekly="TZ=UTC\n30 23 * * 6"
+// 03:30 Wed, Fri
+triggerSchedule_nightly="TZ=UTC\n30 03 * * 3,5"
+// 12:05 Sun
+triggerSchedule_weekly="TZ=UTC\n05 12 * * 7"
 
 // scmReferences to use for weekly release build
 weekly_release_scmReferences=[
@@ -65,7 +68,5 @@ weekly_release_scmReferences=[
         "corretto"       : "",
         "dragonwell"     : ""
 ]
-
-disableJob = true
 
 return this

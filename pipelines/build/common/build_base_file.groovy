@@ -3,6 +3,7 @@ import common.IndividualBuildConfig
 import groovy.json.*
 
 import java.util.regex.Matcher
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,8 +49,10 @@ class Builder implements Serializable {
     boolean publish
     boolean enableTests
     boolean enableInstallers
+    boolean enableSigner
     boolean cleanWorkspaceBeforeBuild
     boolean propagateFailures
+    boolean keepTestReportDir
 
     def env
     def scmVars
@@ -78,7 +81,16 @@ class Builder implements Serializable {
         'special.functional',
         'sanity.external'
     ]
- 
+
+    // Declare timeouts for each critical stage (unit is HOURS)
+    Map pipelineTimeouts = [
+        API_REQUEST_TIMEOUT : 1,
+        REMOVE_ARTIFACTS_TIMEOUT : 2,
+        COPY_ARTIFACTS_TIMEOUT : 6,
+        ARCHIVE_ARTIFACTS_TIMEOUT : 6,
+        PUBLISH_ARTIFACTS_TIMEOUT : 3
+    ]
+
     /*
     Returns an IndividualBuildConfig that is passed down to the downstream job.
     It uses several helper functions to pull in and parse the build configuration for the job.
@@ -87,6 +99,10 @@ class Builder implements Serializable {
     IndividualBuildConfig buildConfiguration(Map<String, ?> platformConfig, String variant) {
 
         def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
+
+        def additionalTestLabels = formAdditionalTestLabels(platformConfig, variant)
+
+        def archLabel = getArchLabel(platformConfig, variant)
 
         def dockerImage = getDockerImage(platformConfig, variant)
 
@@ -116,7 +132,9 @@ class Builder implements Serializable {
                 TEST_LIST: testList,
                 SCM_REF: scmReference,
                 BUILD_ARGS: buildArgs,
-                NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${platformConfig.arch}",
+                NODE_LABEL: "${additionalNodeLabels}&&${platformConfig.os}&&${archLabel}",
+                ADDITIONAL_TEST_LABEL: "${additionalTestLabels}",
+                KEEP_TEST_REPORTDIR: keepTestReportDir,
                 ACTIVE_NODE_TIMEOUT: activeNodeTimeout,
                 CODEBUILD: platformConfig.codebuild as Boolean,
                 DOCKER_IMAGE: dockerImage,
@@ -131,6 +149,7 @@ class Builder implements Serializable {
                 ADOPT_BUILD_NUMBER: adoptBuildNumber,
                 ENABLE_TESTS: enableTests,
                 ENABLE_INSTALLERS: enableInstallers,
+                ENABLE_SIGNER: enableSigner,
                 CLEAN_WORKSPACE: cleanWorkspace
         )
     }
@@ -155,7 +174,7 @@ class Builder implements Serializable {
                     return buildArgs.get(variant)
                 }
             } else {
-                context.error("Incorrect buildArgs type")
+                return configuration.buildArgs
             }
         }
 
@@ -227,6 +246,17 @@ class Builder implements Serializable {
         }
 
         return overrideDocker
+    }
+
+    def getArchLabel(Map<String, ?> configuration, String variant) {
+        def archLabelVal = ""
+        // Workaround for cross compiled architectures
+        if (configuration.containsKey("crossCompile")) {
+            archLabelVal = configuration.crossCompile
+        } else {
+            archLabelVal = configuration.arch
+        }
+        return archLabelVal
     }
 
     /*
@@ -309,6 +339,32 @@ class Builder implements Serializable {
         return labels
     }
 
+    /**
+    * Builds up additional test labels
+    * @param configuration
+    * @param variant
+    * @return
+    */
+    def formAdditionalTestLabels(Map<String, ?> configuration, String variant) {
+        def labels = ""
+
+        if (configuration.containsKey("additionalTestLabels")) {
+            def additionalTestLabels
+
+            if (isMap(configuration.additionalTestLabels)) {
+                additionalTestLabels = (configuration.additionalTestLabels as Map<String, ?>).get(variant)
+            } else {
+                additionalTestLabels = configuration.additionalTestLabels
+            }
+
+            if (additionalTestLabels != null) {
+                labels = "${additionalTestLabels}"
+            }
+        }
+
+        return labels
+    }
+
     /*
     Retrieves the configureArgs attribute from the build configurations.
     These eventually get passed to ./makejdk-any-platform.sh and bash configure.
@@ -377,13 +433,21 @@ class Builder implements Serializable {
         if (matcher.matches()) {
             return Integer.parseInt(matcher.group('version'))
         } else if ("jdk".equalsIgnoreCase(javaToBuild.trim())) {
-            // Query the Adopt api to get the "tip_version"
-            def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
-            context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
+            int headVersion
+            try {
+                context.timeout(time: pipelineTimeouts.API_REQUEST_TIMEOUT, unit: "HOURS") {
+                    // Query the Adopt api to get the "tip_version"
+                    def JobHelper = context.library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+                    context.println "Querying Adopt Api for the JDK-Head number (tip_version)..."
 
-            def response = JobHelper.getAvailableReleases(context)
-            int headVersion = (int) response.getAt("tip_version")
-            context.println "Found Java Version Number: ${headVersion}"
+                    def response = JobHelper.getAvailableReleases(context)
+                    headVersion = (int) response.getAt("tip_version")
+                    context.println "Found Java Version Number: ${headVersion}"
+                }
+            } catch (FlowInterruptedException e) {
+                context.println "[ERROR] Adopt API Request timeout (${pipelineTimeouts.API_REQUEST_TIMEOUT} HOURS) has been reached. Exiting..."
+                throw new Exception()
+            }
             return headVersion
         } else {
             context.error("Failed to read java version '${javaToBuild}'")
@@ -418,10 +482,11 @@ class Builder implements Serializable {
 
     /*
     Ensures that we don't release multiple variants at the same time
+    Unless this is the weekend weekly release build that won't have a publishName
     */
     def checkConfigIsSane(Map<String, IndividualBuildConfig> jobConfigurations) {
 
-        if (release) {
+        if (release && publishName) {
 
             // Doing a release
             def variants = jobConfigurations
@@ -473,95 +538,130 @@ class Builder implements Serializable {
     */
     @SuppressWarnings("unused")
     def doBuild() {
+        context.timestamps {
+            Map<String, IndividualBuildConfig> jobConfigurations = getJobConfigurations()
 
-        Map<String, IndividualBuildConfig> jobConfigurations = getJobConfigurations()
-
-        if (!checkConfigIsSane(jobConfigurations)) {
-            return
-        }
-
-        if (release) {
-            currentBuild.setKeepLog(true)
-            if (publishName) {
-                currentBuild.setDisplayName(publishName)
+            if (!checkConfigIsSane(jobConfigurations)) {
+                return
             }
-        }
 
-        def jobs = [:]
+            if (release) {
+                if (publishName) {
+                    // Only keep release logs for real releases, not the weekend weekly release test builds that are not published
+                    currentBuild.setKeepLog(true)
+                    currentBuild.setDisplayName(publishName)
+                }
+            }
 
-        context.echo "Java: ${javaToBuild}"
-        context.echo "OS: ${targetConfigurations}"
-        context.echo "Enable tests: ${enableTests}"
-        context.echo "Enable Installers: ${enableInstallers}"
-        context.echo "Publish: ${publish}"
-        context.echo "Release: ${release}"
-        context.echo "Tag/Branch name: ${scmReference}"
+            def jobs = [:]
 
-          jobConfigurations.each { configuration ->
-              jobs[configuration.key] = {
-                IndividualBuildConfig config = configuration.value
+            context.echo "Java: ${javaToBuild}"
+            context.echo "OS: ${targetConfigurations}"
+            context.echo "Enable tests: ${enableTests}"
+            context.echo "Enable Installers: ${enableInstallers}"
+            context.echo "Enable Signer: ${enableSigner}"
+            context.echo "Publish: ${publish}"
+            context.echo "Release: ${release}"
+            context.echo "Tag/Branch name: ${scmReference}"
+            context.echo "Keep test reportdir: ${keepTestReportDir}"
 
-                // jdk11u-linux-x64-hotspot
-                def jobTopName = getJobName(configuration.key)
-                def jobFolder = getJobFolder()
+            jobConfigurations.each { configuration ->
+                jobs[configuration.key] = {
+                    IndividualBuildConfig config = configuration.value
 
-                // i.e jdk11u/job/jdk11u-linux-x64-hotspot
-                def downstreamJobName = "${jobFolder}/${jobTopName}"
-                context.echo "build name " + downstreamJobName
+                    // jdk11u-linux-x64-hotspot
+                    def jobTopName = getJobName(configuration.key)
+                    def jobFolder = getJobFolder()
 
-                context.catchError {
-                    // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
-                    context.stage(configuration.key) {
-                      context.echo "Created job " + downstreamJobName
-                      
-                      // execute build
-                      def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
+                    // i.e jdk10u/job/jdk11u-linux-x64-hotspot
+                    def downstreamJobName = "${jobFolder}/${jobTopName}"
+                    context.echo "build name " + downstreamJobName
 
-                      if (downstreamJob.getResult() == 'SUCCESS') {
-                          // copy artifacts from build
-                          context.node("master") {
-                              context.catchError {
+                    context.catchError {
+                        // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
+                        context.stage(configuration.key) {
+                            context.echo "Created job " + downstreamJobName
+                            
+                            // execute build
+                            def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
 
-                                  //Remove the previous artifacts
-                                  context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
+                            if (downstreamJob.getResult() == 'SUCCESS') {
+                                // copy artifacts from build
+                                context.println "[NODE SHIFT] MOVING INTO MASTER NODE..."
+                                context.node("master") {
+                                    context.catchError {
 
-                                  context.copyArtifacts(
-                                          projectName: downstreamJobName,
-                                          selector: context.specific("${downstreamJob.getNumber()}"),
-                                          filter: 'workspace/target/*',
-                                          fingerprintArtifacts: true,
-                                          target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
-                                          flatten: true)
+                                        //Remove the previous artifacts
+                                        try {
+                                            context.timeout(time: pipelineTimeouts.REMOVE_ARTIFACTS_TIMEOUT, unit: "HOURS") {
+                                                context.sh "rm target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/* || true"
+                                            }
+                                        } catch (FlowInterruptedException e) {
+                                            context.println "[ERROR] Previous artifact removal timeout (${pipelineTimeouts.REMOVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting..."
+                                            throw new Exception()
+                                        }   
 
-                                  // Checksum
-                                  context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
+                                        try {
+                                            context.timeout(time: pipelineTimeouts.COPY_ARTIFACTS_TIMEOUT, unit: "HOURS") {
+                                                context.copyArtifacts(
+                                                        projectName: downstreamJobName,
+                                                        selector: context.specific("${downstreamJob.getNumber()}"),
+                                                        filter: 'workspace/target/*',
+                                                        fingerprintArtifacts: true,
+                                                        target: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/",
+                                                        flatten: true
+                                                )
+                                            }
+                                        } catch (FlowInterruptedException e) {
+                                            context.println "[ERROR] Copy artifact timeout (${pipelineTimeouts.COPY_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting..."
+                                            throw new Exception()
+                                        }
 
-                                  // Archive in Jenkins
-                                  context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
-                              }
-                          }
-                      } else if (propagateFailures) {
-                          context.error("Build failed due to downstream failure of ${downstreamJobName}")
-                          currentBuild.result = "FAILURE"
-                      }
+                                        // Checksum
+                                        context.sh 'for file in $(ls target/*/*/*/*.tar.gz target/*/*/*/*.zip); do sha256sum "$file" > $file.sha256.txt ; done'
 
+                                        // Archive in Jenkins
+                                        try {
+                                            context.timeout(time: pipelineTimeouts.ARCHIVE_ARTIFACTS_TIMEOUT, unit: "HOURS") {
+                                                context.archiveArtifacts artifacts: "target/${config.TARGET_OS}/${config.ARCHITECTURE}/${config.VARIANT}/*"
+                                            }
+                                        } catch (FlowInterruptedException e) {
+                                            context.println "[ERROR] Archive artifact timeout (${pipelineTimeouts.ARCHIVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName}has been reached. Exiting..."
+                                            throw new Exception()
+                                        }
+
+                                    }
+                                }
+                                context.println "[NODE SHIFT] OUT OF MASTER NODE!"
+                            } else if (propagateFailures) {
+                                context.error("Build failed due to downstream failure of ${downstreamJobName}")
+                                currentBuild.result = "FAILURE"
+                            }
+
+                        }
                     }
                 }
-              }
-          }
-          context.parallel jobs
+            }
+            context.parallel jobs
 
-          // publish to github if needed
-          // Don't publish release automatically
-          if (publish && !release) {
-              //During testing just remove the publish
-              publishBinary()
-          } else if (publish && release) {
-              context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
-          }
+            // publish to github if needed
+            // Dont publish release automatically
+            if (publish && !release) {
+                //During testing just remove the publish
+                try {
+                    context.timeout(time: pipelineTimeouts.PUBLISH_ARTIFACTS_TIMEOUT, unit: "HOURS") {
+                        publishBinary()
+                    }
+                } catch (FlowInterruptedException e) {
+                    context.println "[ERROR] Publish binary timeout (${pipelineTimeouts.PUBLISH_ARTIFACTS_TIMEOUT} HOURS) has been reached OR the downstream publish job failed. Exiting..."
+                    throw new Exception()
+                }
+            } else if (publish && release) {
+                context.println "NOT PUBLISHING RELEASE AUTOMATICALLY"
+            }
 
+        }
     }
-
 }
 
 return {
@@ -572,6 +672,7 @@ return {
     String dockerExcludes,
     String enableTests,
     String enableInstallers,
+    String enableSigner,
     String releaseType,
     String scmReference,
     String overridePublishName,
@@ -582,6 +683,7 @@ return {
     String cleanWorkspaceBeforeBuild,
     String adoptBuildNumber,
     String propagateFailures,
+    String keepTestReportDir,
     def currentBuild,
     def context,
     def env ->
@@ -619,6 +721,7 @@ return {
             dockerExcludes: buildsExcludeDocker,
             enableTests: Boolean.parseBoolean(enableTests),
             enableInstallers: Boolean.parseBoolean(enableInstallers),
+            enableSigner: Boolean.parseBoolean(enableSigner),
             publish: publish,
             release: release,
             scmReference: scmReference,
@@ -630,6 +733,7 @@ return {
             cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
             adoptBuildNumber: adoptBuildNumber,
             propagateFailures: Boolean.parseBoolean(propagateFailures),
+            keepTestReportDir: Boolean.parseBoolean(keepTestReportDir),
             currentBuild: currentBuild,
             context: context,
             env: env

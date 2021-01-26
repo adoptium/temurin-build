@@ -131,13 +131,14 @@ removes the existing docker container and persistent volume before starting
 a new docker based build.
 
 -C, --configure-args <args>
-specify any custom user configuration arguments.
+specify any custom user configuration arguments, using 
+temporary_speech_mark_placeholder in the place of any speech marks.
 
 --clean-git-repo
 clean out any 'bad' local git repo you already have.
 
---create-debug-symbols-package
-create a debug-symbols only archive (if debug symbols were generated).
+--create-debug-image
+create a debug-image archive with the debug symbols.
 
 -d, --destination <path>
 specify the location for the built binary, e.g. /path/.
@@ -146,6 +147,9 @@ This is typically used in conjunction with -T to create a custom path
 
 -D, --docker
 build OpenJDK in a docker container.
+
+--cross-compile
+use this if you are cross compiling - it will skip the java -version checks at the end
 
 --debug-docker
 debug OpenJDK build script in a docker container. Only valid if -D is selected.
@@ -184,6 +188,9 @@ if using docker, keep the container after the build.
 
 --make-exploded-image
 creates an exploded image (useful for codesigning jmods). Use --assemble-exploded-image once you have signed the jmods to complete the packaging steps.
+
+--custom-cacerts <true|false>
+If true (default), a custom cacerts file will be generated based on Mozilla's list of CA certificates (see folder security/). If false, the file shipped by OpenJDK will be used. 
 
 -n, --no-colour
 disable colour output.
@@ -228,8 +235,7 @@ For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 This is typically used in conjunction with -b.
 
 --use-jep319-certs
-Use certs defined in JEP319 in Java 8/9. This will increase the volume of traffic downloaded, however will
-provide an up to date ca cert list.
+Use certs defined in JEP319 in Java 8/9. Deprecated, has no effect.
 
 -v, --version
 specify the OpenJDK version to build e.g. jdk8u.  Left for backwards compatibility.
