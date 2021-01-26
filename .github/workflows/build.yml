@@ -43,12 +43,22 @@ jobs:
 
   build_windows:
      name: Windows
-     runs-on: windows-2016
+     runs-on: ${{ matrix.os }}
      strategy:
        matrix:
+         os: [windows-2016]
          version: [jdk11u, jdk16, jdk]
-        #  version: [jdk8u, jdk11u, jdk16, jdk]
-         vm: [hotspot, openj9]
+         vm: [hotspot]
+         include:
+          - os: windows-2016
+            version: jdk11u
+            vm: openj9
+          - os: windows-2019
+            version: jdk16
+            vm: openj9
+          - os: windows-2019
+            version: jdk
+            vm: openj9
 
      steps:
      - name: Restore cygwin packages from cache
