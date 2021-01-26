@@ -62,7 +62,7 @@ checkSignConfiguration() {
 # Sign the built binary
 signRelease()
 {
-  TIMESTAMPSERVERS=`cut -d= -f2 < $WORKSPACE/$TIMESTAMP_SERVER_CONFIG | tr -d \\\\r`
+  TIMESTAMPSERVERS=$(cut -d= -f2 < "$WORKSPACE/$TIMESTAMP_SERVER_CONFIG" | tr -d \\\\r)
 
   case "$OPERATING_SYSTEM" in
     "windows")
@@ -71,23 +71,23 @@ signRelease()
 
       # Sign .exe files
       FILES=$(find . -type f -name '*.exe' -o -name '*.dll')
-      echo "$FILES" | while read -r f;
+      for f in $FILES
       do
         echo "Signing ${f}"
         STAMPED=false
         for SERVER in $TIMESTAMPSERVERS; do
           if [ "$STAMPED" = "false" ]; then
-            echo Signing $f using $SERVER
+            echo "Signing $f using $SERVER"
             if "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"; then
               STAMPED=true
             else
               echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${SERVER} - Trying new server in 5 seconds"
-              sleep 5
+              sleep 2
             fi
           fi
         done
         if [ "$STAMPED" = "false" ]; then
-          echo Failed to sign ${f} using any time server - aborting
+          echo "Failed to sign ${f} using any time server - aborting"
           exit 1
         fi
       done
@@ -148,7 +148,8 @@ parseArguments "$@"
 extractArchive
 
 # Set jdkDir to the top level directory from the tarball/zipball
-jdkDir=$(ls -1d $TMP_DIR/* | head -1 | xargs basename)
+# shellcheck disable=SC2012
+jdkDir=$(ls -1 "${TMP_DIR}" | head -1 | xargs basename)
 
 cd "${TMP_DIR}/${jdkDir}" || exit 1
 signRelease
