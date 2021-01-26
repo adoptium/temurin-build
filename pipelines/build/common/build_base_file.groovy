@@ -53,6 +53,7 @@ class Builder implements Serializable {
     boolean cleanWorkspaceBeforeBuild
     boolean propagateFailures
     boolean keepTestReportDir
+    boolean keepReleaseLogs
 
     def env
     def scmVars
@@ -547,8 +548,8 @@ class Builder implements Serializable {
 
             if (release) {
                 if (publishName) {
-                    // Only keep release logs for real releases, not the weekend weekly release test builds that are not published
-                    currentBuild.setKeepLog(true)
+                    // Keep Jenkins release logs for real releases
+                    currentBuild.setKeepLog(keepReleaseLogs)
                     currentBuild.setDisplayName(publishName)
                 }
             }
@@ -564,6 +565,7 @@ class Builder implements Serializable {
             context.echo "Release: ${release}"
             context.echo "Tag/Branch name: ${scmReference}"
             context.echo "Keep test reportdir: ${keepTestReportDir}"
+            context.echo "Keey release logs: ${keepReleaseLogs}"
 
             jobConfigurations.each { configuration ->
                 jobs[configuration.key] = {
@@ -684,6 +686,7 @@ return {
     String adoptBuildNumber,
     String propagateFailures,
     String keepTestReportDir,
+    String keepReleaseLogs,
     def currentBuild,
     def context,
     def env ->
@@ -734,6 +737,7 @@ return {
             adoptBuildNumber: adoptBuildNumber,
             propagateFailures: Boolean.parseBoolean(propagateFailures),
             keepTestReportDir: Boolean.parseBoolean(keepTestReportDir),
+            keepReleaseLogs: Boolean.parseBoolean(keepReleaseLogs),
             currentBuild: currentBuild,
             context: context,
             env: env
