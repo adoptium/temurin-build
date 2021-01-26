@@ -54,20 +54,20 @@ node("master") {
     }
 
     try {
-        load libraryPath
+        load "${WORKSPACE}/${libraryPath}"
     } catch (NoSuchFileException e) {
-        println "[WARNING] Using Adopt's import library script as none was found at ${libraryPath}"
+        println "[WARNING] Using Adopt's import library script as none was found at ${WORKSPACE}/${libraryPath}"
         checkoutAdopt()
-        load ADOPT_DEFAULTS_JSON["importLibraryScript"]
+        load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
         checkout scm
     }
 
     try {
-        downstreamBuilder = load baseFilePath
+        downstreamBuilder = load "${WORKSPACE}/${baseFilePath}"
     } catch (NoSuchFileException e) {
         println "[WARNING] Using Adopt's base file script as none was found at ${baseFilePath}"
         checkoutAdopt()
-        downstreamBuilder = load ADOPT_DEFAULTS_JSON["baseFileDirectories"]["downstream"]
+        downstreamBuilder = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['baseFileDirectories']['downstream']}"
         checkout scm
     }
 

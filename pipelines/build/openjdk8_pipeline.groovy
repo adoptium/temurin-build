@@ -80,7 +80,6 @@ node ("master") {
         println "[WARNING] ${buildConfigFilePath} does not exist in your repository. Attempting to pull Adopt's build configs instead."
 
         checkoutAdopt()
-        // TODO: MAke the config directories versionable
         buildConfigurations = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaToBuild}_pipeline_config.groovy"
         checkout scm
     }

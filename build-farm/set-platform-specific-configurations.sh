@@ -37,11 +37,10 @@ fi
 PLATFORM_CONFIG_FILEPATH="$SCRIPT_DIR/platform-specific-configurations/platformConfigFile.sh"
 
 # Attempt to download and source the user's custom platform config
-echo "Attempting to download user platform configuration file from https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
+echo "Attempting to download user platform configuration file from https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}"
 # make-adopt-build-farm.sh has 'set -e'. We need to disable that for the fallback mechanism, as downloading might fail
 set +e
-# TODO: Remove the specific filename value (OPERATING_SYSTEM) for user specific paths
-curl "https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh" > "${PLATFORM_CONFIG_FILEPATH}"
+curl "https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}" > "${PLATFORM_CONFIG_FILEPATH}"
 
 ret=$?
 set -e

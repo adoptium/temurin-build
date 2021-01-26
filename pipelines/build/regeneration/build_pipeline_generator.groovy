@@ -4,6 +4,7 @@ import groovy.json.JsonOutput
 
 node('master') {
   try {
+    // Pull in Adopt defaults
     //TODO: Change me
     String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
     def getAdopt = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
@@ -12,6 +13,7 @@ node('master') {
       throw new Exception("[ERROR] No ADOPT_DEFAULTS_JSON found at ${ADOPT_DEFAULTS_FILE_URL} or it is not a valid JSON object. Please ensure this path is correct and leads to a JSON or Map object file. NOTE: Since this adopt's defaults and unlikely to change location, this is likely a network or GitHub issue.")
     }
 
+    // Pull in User defaults
     String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: ADOPT_DEFAULTS_FILE_URL
     def getUser = new URL(DEFAULTS_FILE_URL).openConnection()
     Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(getUser.getInputStream().getText()) as Map
@@ -46,7 +48,7 @@ node('master') {
       def retiredVersions = [9, 10, 12, 13, 14, 15]
       def generatedPipelines = []
 
-      // Load gitUri and gitBranch. These determine where we will be pulling configs from.
+      // Load gitUri and gitBranch. These determine where we will be pulling user configs from.
       def repoUri = (params.REPOSITORY_URL) ?: DEFAULTS_JSON["repository"]["url"]
       repoBranch = (params.REPOSITORY_BRANCH) ?: DEFAULTS_JSON["repository"]["branch"]
 
@@ -101,7 +103,7 @@ node('master') {
       }
 
       // Load jobTemplatePath. This is where the pipeline_job_template.groovy code is located compared to the repository root. This actually sets up the pipeline job using the parameters above.
-      def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON["templateDirectories"]["upstream"]
+      def jobTemplatePath = (params.JOB_TEMPLATE_PATH) ?: DEFAULTS_JSON['templateDirectories']['upstream']
 
       if (!fileExists(jobTemplatePath)) {
         println "[WARNING] ${jobTemplatePath} does not exist in your chosen repository. Updating it to use Adopt's instead"
@@ -149,7 +151,8 @@ node('master') {
           JOB_NAME            : "openjdk${javaVersion}-pipeline",
           SCRIPT              : "${scriptFolderPath}/openjdk${javaVersion}_pipeline.groovy",
           disableJob          : false,
-          pipelineSchedule    : "0 0 31 2 0" // 31st Feb, so will never run
+          pipelineSchedule    : "0 0 31 2 0", // 31st Feb, so will never run,
+          adoptScripts        : false
         ];
 
         def target;
@@ -187,16 +190,12 @@ node('master') {
           config.put("disableJob", false)
         }
 
-        println "[INFO] JDK${javaVersion}: disableJob = ${config.disableJob}"
-
         if (enablePipelineSchedule.toBoolean()) {
           config.put("pipelineSchedule", target.triggerSchedule_nightly)
         }
 
         if (useAdoptBashScripts.toBoolean()) {
           config.put("adoptScripts", true)
-        } else {
-          config.put("adoptScripts", false)
         }
 
         println "[INFO] JDK${javaVersion}: nightly pipelineSchedule = ${config.pipelineSchedule}"
@@ -207,6 +206,7 @@ node('master') {
         println "[INFO] FINAL CONFIG FOR NIGHTLY $javaVersion"
         println JsonOutput.prettyPrint(JsonOutput.toJson(config))
 
+        // Create the nightly job, using adopt's template if the user's one fails
         try {
           jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: config
         } catch (Exception e) {
@@ -232,14 +232,19 @@ node('master') {
         }
         config.PIPELINE = "openjdk${javaVersion}-pipeline"
         config.weekly_release_scmReferences = target.weekly_release_scmReferences
+
+        // Load weeklyTemplatePath. This is where the weekly_release_pipeline_job_template.groovy code is located compared to the repository root. This actually sets up the weekly pipeline job using the parameters above.
         def weeklyTemplatePath = (params.WEEKLY_TEMPLATE_PATH) ?: DEFAULTS_JSON['templateDirectories']['weekly']
 
         if (enablePipelineSchedule.toBoolean()) {
           config.put("pipelineSchedule", target.triggerSchedule_weekly)
         }
 
-        println "[INFO] CREATING JDK${javaVersion} WEEKLY RELEASE PIPELINE WITH CONFIG:"
-        println JsonOutput.prettyPrint(JsonOutput.toJson(config))
+        println "[INFO] CREATING JDK${javaVersion} WEEKLY RELEASE PIPELINE WITH NEW CONFIG VALUES:"
+        println "JOB_NAME = ${config.JOB_NAME}"
+        println "SCRIPT = ${config.SCRIPT}"
+        println "PIPELINE = ${config.PIPELINE}"
+        println "weekly_release_scmReferences = ${config.weekly_release_scmReferences}"
 
         try {
           jobDsl targets: weeklyTemplatePath, ignoreExisting: false, additionalParameters: config
@@ -265,7 +270,7 @@ node('master') {
 
     }
   } finally {
-    // Always clean up, even on failure (doesn't delete the dsls)
+    // Always clean up, even on failure (doesn't delete the created jobs)
     println "[INFO] Cleaning up..."
     cleanWs deleteDirs: true
   }

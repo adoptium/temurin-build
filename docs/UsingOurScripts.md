@@ -75,6 +75,8 @@ The scripts have been designed with a set hierarchy in mind when choosing which 
 3. ADOPT JSON (final priority, when a jenkins args AND a user json arg can't be validated, we will checkout to adopt's repository and use their defaults json (linked above))
 ```
 
+The `ADOPT JSON` level is only used for files and directories. Other parameters (`JOB_ROOT`, `JENKINS_BUILD_ROOT`, etc) only use the first two levels.
+
 As an example, take a look at the [build-pipeline-generator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator/) `SCRIPT_FOLDER_PATH` parameter:
 
 ![Image of the SCRIPT_FOLDER_PATH parameter in jenkins](images/scriptFolderParam.png)
@@ -114,7 +116,7 @@ Once it has been approved and merged, update your scripts to handle the new defa
 
 2. Create a User JSON file containing your default constants that the build scripts will use (see [#the defaults.json](#defaults.json))
 3. Copy the [build-pipeline-generator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator/) and [pipeline_jobs_generator_jdk8u](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/pipeline_jobs_generator_jdk8u/) jobs to your Jenkins instance (replace `jdk8u` with whichever version you intend to build, there should be one job for each jdk version).
-4. Execute the copied `build-pipeline-generator`. Make sure you have filled in the parameters that are not covered by your `defaults.json` (e.g. `DEFAULTS_URL`, `CHECKOUT_CREDENTIALS`). You should now see that the `openjdkx-pipeline` jobs have been successfully created in whatever folder was entered into `JOB_ROOT`
+4. Execute the copied `build-pipeline-generator`. Make sure you have filled in the parameters that are not covered by your `defaults.json` (e.g. `DEFAULTS_URL`, `CHECKOUT_CREDENTIALS`). You should now see that the nightly and weekly pipeline jobs have been successfully created in whatever folder was entered into `JOB_ROOT`
 5. Execute the copied `pipeline_jobs_generator_jdkxx` jobs. Again, make sure you have filled in the parameters that are not covered by your `defaults.json`. You should now see that the `jobs/jdkxx-platform-arch-variant` jobs have been successfully created in whatever folder was entered into `JOB_ROOT`
 
 Congratulations! You should now be able to run our scripts inside your own Jenkins instance.

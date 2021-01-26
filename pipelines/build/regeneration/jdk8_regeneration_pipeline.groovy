@@ -23,13 +23,14 @@ String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/ope
 String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: ADOPT_DEFAULTS_FILE_URL
 
 node ("master") {
-  // Retrieve Defaults
+  // Retrieve Adopt Defaults
   def getAdopt = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
   Map<String, ?> ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(getAdopt.getInputStream().getText()) as Map
   if (!ADOPT_DEFAULTS_JSON || !Map.class.isInstance(ADOPT_DEFAULTS_JSON)) {
     throw new Exception("[ERROR] No ADOPT_DEFAULTS_JSON found at ${ADOPT_DEFAULTS_FILE_URL} or it is not a valid JSON object. Please ensure this path is correct and leads to a JSON or Map object file. NOTE: Since this adopt's defaults and unlikely to change location, this is likely a network or GitHub issue.")
   }
 
+  // Retrieve User Defaults
   def get = new URL(DEFAULTS_FILE_URL).openConnection()
   Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(get.getInputStream().getText()) as Map
   if (!DEFAULTS_JSON || !Map.class.isInstance(DEFAULTS_JSON)) {
@@ -73,7 +74,6 @@ node ("master") {
       ])
     }
 
-    // Checkout into the branch and url place
     checkoutUser()
 
     // Import adopt class library. This contains our groovy classes, used for carrying across metadata between jobs.
@@ -82,15 +82,10 @@ node ("master") {
       load "${WORKSPACE}/${libraryPath}"
     } catch (NoSuchFileException e) {
       println "[WARNING] ${libraryPath} does not exist in your repository. Attempting to pull Adopt's library script instead."
-
       checkoutAdopt()
-      try {
-        load "${WORKSPACE}/${libraryPath}"
-      } catch (NoSuchFileException e2) {
-        load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
-      }
+      libraryPath = ADOPT_DEFAULTS_JSON['importLibraryScript']
+      load "${WORKSPACE}/${libraryPath}"
       checkoutUser()
-
     }
 
     // Load buildConfigurations from config file. This is what the nightlies & releases use to setup their downstream jobs
@@ -107,13 +102,13 @@ node ("master") {
         buildConfigurations = load "${buildConfigPath}/${javaVersion}u_pipeline_config.groovy"
         javaVersion += "u"
       } catch (NoSuchFileException e2) {
-        println "[WARNING] U version does not exist either. Likelihood is we are generating from a repository that isn't Adopt's. Pulling Adopt's build config in..."
+        println "[WARNING] U version does not exist. Likelihood is we are generating from a repository that isn't Adopt's. Pulling Adopt's build config in..."
 
         checkoutAdopt()
         try {
-          buildConfigurations = load "${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
+          buildConfigurations = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}_pipeline_config.groovy"
         } catch (NoSuchFileException e3) {
-          buildConfigurations = load "${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}u_pipeline_config.groovy"
+          buildConfigurations = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaVersion}u_pipeline_config.groovy"
           javaVersion += "u"
         }
         checkoutUser()
@@ -132,7 +127,7 @@ node ("master") {
     } catch (NoSuchFileException e) {
       println "[WARNING] ${targetConfigPath} does not exist, chances are we are generating from a repository that isn't Adopt's. Pulling Adopt's nightly config in..."
       checkoutAdopt()
-      load targetConfigPath
+      load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['configDirectories']['nightly']}"
       checkoutUser()
     }
 
@@ -253,7 +248,7 @@ node ("master") {
     println "[SUCCESS] All done!"
 
   } finally {
-    // Always clean up, even on failure (doesn't delete the dsls)
+    // Always clean up, even on failure (doesn't delete the generated jobs)
     println "[INFO] Cleaning up..."
     cleanWs deleteDirs: true
   }
