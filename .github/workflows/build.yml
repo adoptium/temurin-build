@@ -184,7 +184,7 @@ jobs:
          nmake install && nmake -f makefile clean
        working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build'
        shell: cmd
-       if: matrix.vm == 'openj9' && matrix.version == 'jdk8u' && matrix.version != 'jdk11u' && steps.openssl-2019.outputs.cache-hit != 'true'
+       if: matrix.vm == 'openj9' && matrix.version != 'jdk8u' && matrix.version != 'jdk11u' && steps.openssl-2019.outputs.cache-hit != 'true'
 
      - name: Cygwin git configuration
        shell: bash
