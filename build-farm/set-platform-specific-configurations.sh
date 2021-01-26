@@ -49,7 +49,7 @@ set -e
 if [[ $ret -ne 0 || $fileContents == "404: Not Found" ]]
 then
     # Check to make sure that the a OS file doesn't exist if we can't find a config file from the direct link
-    echo "Failed to a user configuration file, ${PLATFORM_CONFIG_LOCATION} is likely a directory. Trying ${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
+    echo "Failed to a user configuration file, https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION} is likely a directory. Trying https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
     set +e
     curl "https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh" > "${PLATFORM_CONFIG_FILEPATH}"
     ret=$?
