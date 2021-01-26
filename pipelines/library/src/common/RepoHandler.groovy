@@ -6,8 +6,8 @@ import groovy.json.JsonSlurper
 class RepoHandler {
     private final def context
     private final Map configs
-    private Map USER_DEFAULTS_JSON
     private final Map ADOPT_DEFAULTS_JSON
+    private Map USER_DEFAULTS_JSON
 
     // TODO: Change me
     private final String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"

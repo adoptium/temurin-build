@@ -121,6 +121,10 @@ In order to test whether your changes work use the [test-build-script-pull-reque
 Pass it your fork name (e.g. https://github.com/sxa555/openjdk-build) and the name of the branch and it will run a build using your updated scripts.
 For more information, see the [PR testing documentation](./pipelines/build/prTester/README.md).
 
+## I want to use my own configuration files or scripts on my own Jenkins instance. How do I do it?
+
+[Check out our guide to setting up your own scripts and configurations (while not having to keep up with our changes)!](docs/UsingOurScripts.md)
+
 ## Which OS levels do we build on?
 
 The operating systems/distributions which we build or are documented in the
