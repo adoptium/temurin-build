@@ -148,7 +148,7 @@ jobs:
 
      - name: Download OpenSSL
        run: |
-         Invoke-WebRequest -UseBasicParsing 'https://www.openssl.org/source/OpenSSL-1.1.1i.tar.gz' -OutFile 'C:\temp\OpenSSL-1.1.1i.tar.gz'
+         Invoke-WebRequest -UseBasicParsing 'https://www.openssl.org/source/openssl-1.1.1i.tar.gz' -OutFile 'C:\temp\OpenSSL-1.1.1i.tar.gz'
          cd C:\temp
          tar -xf C:/temp/OpenSSL-1.1.1i.tar.gz --force-local -C C:/temp
        if: matrix.vm == 'openj9'
