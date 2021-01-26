@@ -111,6 +111,7 @@ if (scmVars != null || configureBuild != null || buildConfigurations != null) {
         adoptBuildNumber,
         propagateFailures,
         keepTestReportDir,
+        keepReleaseLogs,
         currentBuild,
         this,
         env

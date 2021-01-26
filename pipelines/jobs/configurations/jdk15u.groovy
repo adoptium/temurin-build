@@ -60,10 +60,12 @@ triggerSchedule_weekly="TZ=UTC\n30 23 * * 6"
 
 // scmReferences to use for weekly release build
 weekly_release_scmReferences=[
-        "hotspot"        : "jdk-15.0.1+9_adopt",
-        "openj9"         : "v0.24.0-release",
+        "hotspot"        : "",
+        "openj9"         : "",
         "corretto"       : "",
         "dragonwell"     : ""
 ]
+
+disableJob = true
 
 return this

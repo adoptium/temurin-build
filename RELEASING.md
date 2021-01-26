@@ -262,6 +262,9 @@ When the repo has been created, a few changes to the codebase will be necessary 
 ### Post Release Tasks
 Once all the release binaries have been published the following tasks should be completed:
 1. Reset the "weekly_release_scmReferences" (change to "") for the weekend release test build so it is using HEAD streams: https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations
+2. Re-enable "Tests" for Nightly pipelines, eg.https://github.com/AdoptOpenJDK/openjdk-build/pull/2401/files . After merging, check the build-pipeline-generator runs successfully: https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator . It's possible the script change may require "Script Approval" by a Jenkins Administrator (https://ci.adoptopenjdk.net/scriptApproval/).
+3. If the latest version just released has come to the end of its non-LTS lifecycle (2 CPU updates, eg.jdk-15.0.2), then disable and retire that version form the Nightly pipeline builds:
+   - eg.https://github.com/AdoptOpenJDK/openjdk-build/pull/2403/files
 
 ## Summary on point releases
 

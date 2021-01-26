@@ -137,8 +137,8 @@ temporary_speech_mark_placeholder in the place of any speech marks.
 --clean-git-repo
 clean out any 'bad' local git repo you already have.
 
---create-debug-symbols-package
-create a debug-symbols only archive (if debug symbols were generated).
+--create-debug-image
+create a debug-image archive with the debug symbols.
 
 -d, --destination <path>
 specify the location for the built binary, e.g. /path/.

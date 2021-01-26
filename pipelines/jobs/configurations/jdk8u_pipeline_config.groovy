@@ -31,7 +31,7 @@ class Config8 {
                 test                 : 'default',
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver',
-                        "dragonwell"  : '--enable-jfr --enable-unlimited-crypto --with-jvm-variants=server  --with-zlib=system',
+                        "dragonwell"  : '--enable-unlimited-crypto --with-jvm-variants=server  --with-zlib=system',
                 ]
         ],
 

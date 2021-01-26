@@ -2,7 +2,7 @@ import groovy.json.JsonOutput
 
 gitRefSpec = ""
 propagateFailures = false
-runTests = false
+runTests = true
 runInstaller = true
 runSigner = true
 
@@ -78,6 +78,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         booleanParam('cleanWorkspaceBeforeBuild', false, "Clean out the workspace before the build")
         booleanParam('propagateFailures', propagateFailures, "If true, a failure of <b>ANY</b> downstream build (but <b>NOT</b> test) will cause the whole build to fail")
         booleanParam('keepTestReportDir', false, 'If true, test report dir (including core files where generated) will be kept even when the testcase passes, failed testcases always keep the report dir. Does not apply to JUnit jobs which are always kept, eg.openjdk.')
+        booleanParam('keepReleaseLogs', true, 'If true, "Release" type pipeline Jenkins logs will be marked as "Keep this build forever".')
         stringParam('adoptBuildNumber', "", "Empty by default. If you ever need to re-release then bump this number. Currently this is only added to the build metadata file.")
         textParam('defaultsJson', JsonOutput.prettyPrint(JsonOutput.toJson(defaultsJson)), '<strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes down the user\'s default constants to the downstream jobs.')
         textParam('adoptDefaultsJson', JsonOutput.prettyPrint(JsonOutput.toJson(adoptDefaultsJson)), '<strong>DO NOT ALTER THIS PARAM UNDER ANY CIRCUMSTANCES!</strong> This passes down adopt\'s default constants to the downstream jobs. NOTE: <code>defaultsJson</code> has priority, the constants contained within this param will only be used as a failsafe.')
