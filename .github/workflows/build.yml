@@ -126,39 +126,39 @@ jobs:
        id: openssl-2013
        uses: actions/cache@v2
        with:
-        path: C:\openjdk\OpenSSL-1.1.1h-x86_64-VS2013
-        key: openssl-1.1.1h-2013-${{ runner.os }}-v1
+        path: C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2013
+        key: OpenSSL-1.1.1i-2013-${{ runner.os }}-v1
        if: matrix.vm == 'openj9' && matrix.version == 'jdk8u'
 
      - name: Restore OpenSSL VS2017 from cache
        id: openssl-2017
        uses: actions/cache@v2
        with:
-        path: C:\openjdk\OpenSSL-1.1.1h-x86_64-VS2017
-        key: openssl-1.1.1h-2017-${{ runner.os }}-v1
+        path: C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2017
+        key: OpenSSL-1.1.1i-2017-${{ runner.os }}-v1
        if: matrix.vm == 'openj9' && matrix.version == 'jdk11u'
 
      - name: Restore OpenSSL VS2019 from cache
        id: openssl-2019
        uses: actions/cache@v2
        with:
-        path: C:\openjdk\OpenSSL-1.1.1h-x86_64-VS2019
-        key: openssl-1.1.1h-2019-${{ runner.os }}-v1
+        path: C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2019
+        key: OpenSSL-1.1.1i-2019-${{ runner.os }}-v1
        if: matrix.vm == 'openj9' && matrix.version != 'jdk8u' && matrix.version != 'jdk11u'
 
      - name: Download OpenSSL
        run: |
-         Invoke-WebRequest -UseBasicParsing 'https://www.openssl.org/source/openssl-1.1.1h.tar.gz' -OutFile 'C:\temp\OpenSSL-1.1.1h.tar.gz'
+         Invoke-WebRequest -UseBasicParsing 'https://www.openssl.org/source/OpenSSL-1.1.1i.tar.gz' -OutFile 'C:\temp\OpenSSL-1.1.1i.tar.gz'
          cd C:\temp
-         tar -xf C:/temp/OpenSSL-1.1.1h.tar.gz --force-local -C C:/temp
+         tar -xf C:/temp/OpenSSL-1.1.1i.tar.gz --force-local -C C:/temp
        if: matrix.vm == 'openj9'
 
      - name: Install OpenSSL VS2013
        run: |
          set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
          call vcvarsall.bat AMD64
-         cd C:\temp\OpenSSL-1.1.1h
-         perl C:\temp\OpenSSL-1.1.1h\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1h-x86_64-VS2013
+         cd C:\temp\OpenSSL-1.1.1i
+         perl C:\temp\OpenSSL-1.1.1i\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2013
          nmake install && nmake -f makefile clean
        working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC'
        shell: cmd
@@ -168,8 +168,8 @@ jobs:
        run: |
          set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
          call vcvarsall.bat AMD64
-         cd C:\temp\OpenSSL-1.1.1h
-         perl C:\temp\OpenSSL-1.1.1h\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1h-x86_64-VS2017
+         cd C:\temp\OpenSSL-1.1.1i
+         perl C:\temp\OpenSSL-1.1.1i\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2017
          nmake install && nmake -f makefile clean
        working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build'
        shell: cmd
@@ -179,8 +179,8 @@ jobs:
        run: |
          set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
          call vcvarsall.bat AMD64
-         cd C:\temp\OpenSSL-1.1.1h
-         perl C:\temp\OpenSSL-1.1.1h\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1h-x86_64-VS2019
+         cd C:\temp\OpenSSL-1.1.1i
+         perl C:\temp\OpenSSL-1.1.1i\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2019
          nmake install && nmake -f makefile clean
        working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build'
        shell: cmd
