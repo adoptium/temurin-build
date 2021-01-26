@@ -43,7 +43,8 @@ stage("Submit Release Pipelines") {
                       parameters: [
                           string(name: 'releaseType',        value: 'Release'),
                           string(name: 'scmReference',       value: scmRef),
-                          text(name: 'targetConfigurations', value: JsonOutput.prettyPrint(JsonOutput.toJson(targetConfig)))
+                          text(name: 'targetConfigurations', value: JsonOutput.prettyPrint(JsonOutput.toJson(targetConfig))),
+                          ['$class': 'BooleanParameterValue', name: 'keepReleaseLogs', value: false]
                       ]
                 }
             }
