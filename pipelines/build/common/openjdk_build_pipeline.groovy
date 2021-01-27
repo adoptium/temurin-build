@@ -910,6 +910,7 @@ class Build {
                     try {
                         context.timeout(time: buildTimeouts.NODE_CLEAN_TIMEOUT, unit: "HOURS") {
                             if (buildConfig.TARGET_OS == "windows") {
+                                context.println "env: ${env}"
                                 // Windows machines struggle to clean themselves, see:
                                 // https://github.com/AdoptOpenJDK/openjdk-build/issues/1855
                                 context.sh(script: "rm -rf C:/workspace/openjdk-build/workspace/build/src/build/*/jdk/gensrc")
