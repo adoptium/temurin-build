@@ -910,16 +910,7 @@ class Build {
                     try {
                         context.timeout(time: buildTimeouts.NODE_CLEAN_TIMEOUT, unit: "HOURS") {
                             if (buildConfig.TARGET_OS == "windows") {
-                                context.println "env: ${env}"
-                                // Windows machines struggle to clean themselves, see:
-                                // https://github.com/AdoptOpenJDK/openjdk-build/issues/1855
-                                context.sh(script: "rm -rf C:/workspace/openjdk-build/workspace/build/src/build/*/jdk/gensrc")
-                                // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1419
-                                context.sh(script: "rm -rf J:/jenkins/tmp/workspace/build/src/build/*/jdk/gensrc")
-                                // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1662
-                                context.sh(script: "rm -rf E:/jenkins/tmp/workspace/build/src/build/*/jdk/gensrc")
-                                // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1818
-                                context.sh(script: "rm -rf C:/Jenkins/temp/workspace/build/src/build/*/jdk/gensrc")
+                                context.sh(script: "rm -rf ${env.CYGWIN_WORKSPACE}/workspace/build/src/build/*/jdk/gensrc")
                                 context.cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
                             } else {
                                 context.cleanWs notFailBuild: true
