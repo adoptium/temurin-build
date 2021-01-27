@@ -962,7 +962,8 @@ addInfoToReleaseFile() {
 
 addHeapSize() { # Adds an identifier for heap size on OpenJ9 builds
   local heapSize=""
-  if [[ $($JAVA_LOC -version 2>&1 | grep 'Compressed References') ]]; then
+  local architecture=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'os.arch' | sed 's/^.*= //' | tr -d '\r') # Heap size must be standard for x86 builds (openjdk-build/2412)
+  if [[ $($JAVA_LOC -version 2>&1 | grep 'Compressed References') ]] || [[ "$architecture" == "x86" ]]; then
     heapSize="Standard"
   else
     heapSize="Large"
