@@ -37,30 +37,37 @@ fi
 PLATFORM_CONFIG_FILEPATH="$SCRIPT_DIR/platform-specific-configurations/platformConfigFile.sh"
 
 # Attempt to download and source the user's custom platform config
-echo "Attempting to download user platform configuration file from https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}"
-# make-adopt-build-farm.sh has 'set -e'. We need to disable that for the fallback mechanism, as downloading might fail
-set +e
-curl "https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}" > "${PLATFORM_CONFIG_FILEPATH}"
-ret=$?
-# A download will succeed if the location is a directory
-fileContents=$(cat $PLATFORM_CONFIG_FILEPATH)
-set -e
+rawGithubSource="https://raw.githubusercontent.com"
+echo "Attempting to download user platform configuration file from ${rawGithubSource}/${PLATFORM_CONFIG_LOCATION}"
+ret=0
+fileContents=""
+
+# Uses curl to download the platform config file
+# param 1: LOCATION - Repo path to where the file is located
+# param 2: SUFFIX - Operating system to append
+downloadPlatformConfigFile () {
+    # make-adopt-build-farm.sh has 'set -e'. We need to disable that for the fallback mechanism, as downloading might fail
+    set +e
+    curl "${rawGithubSource}/$1/$2" > "${PLATFORM_CONFIG_FILEPATH}"
+    ret=$?
+    # A download will succeed if the location is a directory
+    fileContents=$(cat $PLATFORM_CONFIG_FILEPATH)
+    set -e
+}
+
+downloadPlatformConfigFile "${PLATFORM_CONFIG_LOCATION}" ""
 
 if [[ $ret -ne 0 || $fileContents == "404: Not Found" ]]
 then
     # Check to make sure that the a OS file doesn't exist if we can't find a config file from the direct link
-    echo "Failed to a user configuration file, https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION} is likely a directory. Trying https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
-    set +e
-    curl "https://raw.githubusercontent.com/${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh" > "${PLATFORM_CONFIG_FILEPATH}"
-    ret=$?
-    fileContents=$(cat $PLATFORM_CONFIG_FILEPATH)
-    set -e
+    echo "Failed to a user configuration file, ${rawGithubSource}/${PLATFORM_CONFIG_LOCATION} is likely a directory. Trying ${rawGithubSource}/${PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
+    downloadPlatformConfigFile "${PLATFORM_CONFIG_LOCATION}" "${OPERATING_SYSTEM}.sh"
 
     if [[ $ret -ne 0 || $fileContents == "404: Not Found" ]]
     then
         # If there is no user platform config, use adopt's as a default instead
-        echo "Failed to download a user platform configuration file. Downloading Adopt's platform configuration file instead from https://raw.githubusercontent.com/${ADOPT_PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
-        curl "https://raw.githubusercontent.com/${ADOPT_PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh" > "${PLATFORM_CONFIG_FILEPATH}"
+        echo "Failed to download a user platform configuration file. Downloading Adopt's platform configuration file instead from ${rawGithubSource}/${ADOPT_PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh"
+        curl "${rawGithubSource}/${ADOPT_PLATFORM_CONFIG_LOCATION}/${OPERATING_SYSTEM}.sh" > "${PLATFORM_CONFIG_FILEPATH}"
     fi
 fi
 
