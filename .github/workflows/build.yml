@@ -195,7 +195,6 @@ jobs:
      - name: Setup 8dot3name
        run: |
           fsutil behavior set disable8dot3 0
-          fsutil file setshortname 'c:\program files (x86)\Microsoft Visual Studio' 'MIB055~1'
           fsutil file setshortname 'c:\program files (x86)\Windows Kits' 'WINDOW~4'
 
      - name: Set JAVA_HOME
