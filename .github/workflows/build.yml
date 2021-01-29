@@ -193,9 +193,7 @@ jobs:
      - uses: actions/checkout@v2
 
      - name: Setup 8dot3name
-       run: |
-          fsutil behavior set disable8dot3 0
-          fsutil file setshortname 'c:\program files (x86)\Windows Kits' 'WINDOW~4'
+       run: fsutil behavior set disable8dot3 0
 
      - name: Set JAVA_HOME
        run: echo "JAVA_HOME=$(cygpath ${{ steps.setup-java11.outputs.path }})" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
