@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test
 
 class RepoHandlerTest {
 
-    // TODO: Change me
-    private String fakeUserDefaults = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/src/test/groovy/fakeDefaults.json"
+    private String fakeUserDefaults = "https://raw.githubusercontent.com/AdoptOpenJDK/openjdk-build/master/pipelines/src/test/groovy/fakeDefaults.json"
 
     private Map testRemote = [
         "branch"  : "foo",

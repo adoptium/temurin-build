@@ -433,6 +433,7 @@ class Regeneration implements Serializable {
             params.put("CHECKOUT_CREDENTIALS", "")
         }
 
+        // Execute job dsl, using adopt's template if the user doesn't have one
         def create = null
         try {
             create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params

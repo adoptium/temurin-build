@@ -36,7 +36,7 @@ then
 fi
 PLATFORM_CONFIG_FILEPATH="$SCRIPT_DIR/platform-specific-configurations/platformConfigFile.sh"
 
-# Attempt to download and source the user's custom platform config
+# Setup for platform config download
 rawGithubSource="https://raw.githubusercontent.com"
 ret=0
 fileContents=""
@@ -55,19 +55,20 @@ function downloadPlatformConfigFile () {
     set -e
 }
 
+# Attempt to download and source the user's custom platform config
 downloadPlatformConfigFile "${PLATFORM_CONFIG_LOCATION}" ""
 contentsErrorRegex="40[0-9]: [a-zA-Z ]+"
 
 if [ $ret -ne 0 ] || [[ $fileContents =~ $contentsErrorRegex ]]
 then
-    # Check to make sure that the a OS file doesn't exist if we can't find a config file from the direct link
-    echo "Failed to a user configuration file, ${rawGithubSource}/${PLATFORM_CONFIG_LOCATION} is likely a directory so we will try and search for a ${OPERATING_SYSTEM}.sh file."
+    # Check to make sure that a OS file doesn't exist if we can't find a config file from the direct link
+    echo "[WARNING] Failed to find a user configuration file, ${rawGithubSource}/${PLATFORM_CONFIG_LOCATION} is likely a directory so we will try and search for a ${OPERATING_SYSTEM}.sh file."
     downloadPlatformConfigFile "${PLATFORM_CONFIG_LOCATION}" "${OPERATING_SYSTEM}.sh"
 
     if [ $ret -ne 0 ] || [[ $fileContents =~ $contentsErrorRegex ]]
     then
         # If there is no user platform config, use adopt's as a default instead
-        echo "Failed to download a user platform configuration file. Downloading Adopt's ${OPERATING_SYSTEM}.sh configuration file instead."
+        echo "[WARNING] Failed to download a user platform configuration file. Downloading Adopt's ${OPERATING_SYSTEM}.sh configuration file instead."
         downloadPlatformConfigFile "${ADOPT_PLATFORM_CONFIG_LOCATION}" "${OPERATING_SYSTEM}.sh"
 
         if [ $ret -ne 0 ] || [[ $fileContents =~ $contentsErrorRegex ]]
@@ -78,5 +79,5 @@ then
     fi
 fi
 
-echo "Config file downloaded successfully to ${PLATFORM_CONFIG_FILEPATH}"
+echo "[SUCCESS] Config file downloaded successfully to ${PLATFORM_CONFIG_FILEPATH}"
 source "${PLATFORM_CONFIG_FILEPATH}"

@@ -45,7 +45,7 @@ class PullRequestTestPipeline implements Serializable {
                 pipelineSchedule    : "0 0 31 2 0", // 31st Feb so will never run
                 targetConfigurations: testConfigurations,
                 defaultsJson        : DEFAULTS_JSON,
-                adoptScripts        : true
+                adoptScripts        : false
         ]
     }
 

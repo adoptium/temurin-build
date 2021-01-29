@@ -9,8 +9,7 @@ class RepoHandler {
     private final Map ADOPT_DEFAULTS_JSON
     private Map USER_DEFAULTS_JSON
 
-    // TODO: Change me
-    private final String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
+    private final String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/AdoptOpenJDK/openjdk-build/master/pipelines/defaults.json"
 
     /*
     Constructor
@@ -38,7 +37,7 @@ class RepoHandler {
     }
 
     /*
-    Getter to retrieve adopt's defaults
+    Getter to retrieve user's defaults
     */
     public Map<String, ?> getUserDefaultsJson() {
         return USER_DEFAULTS_JSON

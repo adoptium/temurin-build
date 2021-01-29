@@ -18,8 +18,7 @@ limitations under the License.
 */
 
 String javaVersion = "jdk8"
-//TODO: Change me
-String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/M-Davies/openjdk-build/parameterised_everything/pipelines/defaults.json"
+String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/AdoptOpenJDK/openjdk-build/master/pipelines/defaults.json"
 String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: ADOPT_DEFAULTS_FILE_URL
 
 node ("master") {
@@ -93,7 +92,6 @@ node ("master") {
     def buildConfigPath = (params.BUILD_CONFIG_PATH) ? "${WORKSPACE}/${BUILD_CONFIG_PATH}" : "${WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}"
 
     try {
-      // TODO: Create an issue to address the hardcoded parts below
       buildConfigurations = load "${buildConfigPath}/${javaVersion}_pipeline_config.groovy"
     } catch (NoSuchFileException e) {
       try {
