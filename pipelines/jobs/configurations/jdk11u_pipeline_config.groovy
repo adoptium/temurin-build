@@ -127,7 +127,7 @@ class Config11 {
                         "openj9" : '--enable-dtrace=auto',
                         "corretto" : '--enable-dtrace=auto',
                         "dragonwell" : "--enable-dtrace=auto --with-extra-cflags=\"-march=armv8.2-a+crypto\" --with-extra-cxxflags=\"-march=armv8.2-a+crypto\""
-                ]
+                ],
         ],
 
         x64LinuxXL    : [
