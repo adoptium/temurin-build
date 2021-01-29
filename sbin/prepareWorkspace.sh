@@ -266,7 +266,17 @@ updateOpenj9Sources() {
 updateDragonwellSources() {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    bash get_source_dragonwell.sh --site github
+    local target_scm
+    if [ -n "${BUILD_CONFIG[TAG]}" ]; then
+      target_scm="${BUILD_CONFIG[TAG]}"
+    else
+      target_scm="${BUILD_CONFIG[BRANCH]}"
+    fi
+    if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
+      bash get_source_dragonwell.sh --site github --branch "${target_scm}"
+    else
+      bash get_source_dragonwell.sh --site github --branch "${target_scm}" -r
+    fi
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
@@ -516,21 +526,7 @@ prepareCacerts() {
     echo "Generating cacerts from Mozilla's bundle"
 
     cd "$SCRIPT_DIR/../security"
-    # Our Solaris/SPARC box exhibits slowness when running keytool
-    # Therefore pull the cacerts file from the latest Solaris/x64 build
-    if [ "$ARCHITECTURE" = "sparcv9" ]; then
-      mkdir tmp
-      cd tmp || exit 1
-      wget -q -O jdk8build.tgz "https://api.adoptopenjdk.net/v3/binary/latest/8/ea/solaris/sparcv9/jre/hotspot/normal/adoptopenjdk?project=jdk"
-      CACERTSFILE=`gzip -cd jdk8build.tgz | tar tf - | grep /cacerts$`
-      [ ! -z "$CACERTSFILE" ] && gzip -cd jdk8build.tgz | tar xf - "$CACERTSFILE"
-      cp "$CACERTSFILE" .. || exit 1
-      cd ..
-      rm -r tmp
-      echo Solaris/SPARC: Successfully extracted cacerts from x64 build: `ls -l cacerts`
-    else
-      ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
-    fi
+    ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
 }
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, etc.)

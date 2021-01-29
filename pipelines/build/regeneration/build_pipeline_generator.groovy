@@ -1,5 +1,5 @@
 node('master') {
-  def retiredVersions = [9, 10, 12, 13, 14]
+  def retiredVersions = [9, 10, 12, 13, 14, 15]
 
   (8..30).each({javaVersion -> 
 

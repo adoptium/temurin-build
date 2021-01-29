@@ -6,7 +6,7 @@ if(!binding.hasVariable('triggerSchedule')) {
 
 gitRefSpec = ""
 propagateFailures = false
-runTests = false
+runTests = true
 runInstaller = true
 runSigner = true
 
@@ -74,6 +74,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         booleanParam('cleanWorkspaceBeforeBuild', false, "Clean out the workspace before the build")
         booleanParam('propagateFailures', propagateFailures, "If true, a failure of <b>ANY</b> downstream build (but <b>NOT</b> test) will cause the whole build to fail")
         booleanParam('keepTestReportDir', false, 'If true, test report dir (including core files where generated) will be kept even when the testcase passes, failed testcases always keep the report dir. Does not apply to JUnit jobs which are always kept, eg.openjdk.')
+        booleanParam('keepReleaseLogs', true, 'If true, "Release" type pipeline Jenkins logs will be marked as "Keep this build forever".')
         stringParam('adoptBuildNumber', "", "Empty by default. If you ever need to re-release then bump this number. Currently this is only added to the build metadata file.")
     }
 }
