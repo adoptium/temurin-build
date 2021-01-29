@@ -483,26 +483,6 @@ getGradleUserHome() {
   echo $gradleUserHome
 }
 
-buildSharedLibs() {
-  cd "${LIB_DIR}"
-
-  local gradleJavaHome=$(getGradleJavaHome)
-  local gradleUserHome=$(getGradleUserHome)
-
-  echo "Running gradle with $gradleJavaHome at $gradleUserHome"
-
-  gradlecount=1
-  while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME="$gradleUserHome" bash ./gradlew --no-daemon clean shadowJar; do
-    echo "RETRYWARNING: Gradle failed on attempt $gradlecount"
-    sleep 120s # Wait before retrying in case of network/server outage ...
-    gradlecount=$((gradlecount + 1))
-    [ $gradlecount -gt 3 ] && exit 1
-  done
-
-  # Test that the parser can execute as fail fast rather than waiting till after the build to find out
-  "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
-}
-
 parseJavaVersionString() {
   ADOPT_BUILD_NUMBER="${ADOPT_BUILD_NUMBER:-1}"
 
@@ -1107,12 +1087,6 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   createOpenJDKTarArchive
   showCompletionMessage
   exit 0
-fi
-
-# Our Solaris build environment has performance issues so disabling this for now
-# Refhttps://github.com/AdoptOpenJDK/openjdk-build/issues/2206
-if [ "${ARCHITECTURE}" != "sparcv9" ]; then
-  buildSharedLibs
 fi
 
 wipeOutOldTargetDir
