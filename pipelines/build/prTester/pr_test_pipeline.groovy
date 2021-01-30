@@ -28,6 +28,10 @@ class PullRequestTestPipeline implements Serializable {
     List<Integer> javaVersions
 
     String BUILD_FOLDER = "build-scripts-pr-tester/build-test"
+    String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/AdoptOpenJDK/openjdk-build/master/pipelines/defaults.json"
+    def getAdopt = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
+    Map<String, ?> ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(getAdopt.getInputStream().getText()) as Map
+
 
     /*
     * Creates a configuration for the top level pipeline job
@@ -45,6 +49,7 @@ class PullRequestTestPipeline implements Serializable {
                 pipelineSchedule    : "0 0 31 2 0", // 31st Feb so will never run
                 targetConfigurations: testConfigurations,
                 defaultsJson        : DEFAULTS_JSON,
+                adoptDefaultsJson   : ADOPT_DEFAULTS_JSON,
                 adoptScripts        : false
         ]
     }
@@ -174,9 +179,6 @@ return {
     String testConfigurations = null,
     String versions = null
         ->
-
-        context.load DEFAULTS_JSON['importLibraryScript']
-
         Map<String, ?> testConfig = defaultTestConfigurations
         List<Integer> javaVersions = defaultJavaVersions
         Map<String, ?> defaultsJson = DEFAULTS_JSON

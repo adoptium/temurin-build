@@ -37,7 +37,7 @@ node ("master") {
     }
 
     /*
-    Changes dir to Adopt's repo. Use closures as methods aren't accepted inside node blocks
+    Changes dir to Adopt's repo. Use closures as functions aren't accepted inside node blocks
     */
     def checkoutAdopt = { ->
       checkout([$class: 'GitSCM',

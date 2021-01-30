@@ -189,6 +189,7 @@ class Regeneration implements Serializable {
         def platformSpecificConfigPath = "${userOrgRepo}/${DEFAULTS_JSON['repository']['branch']}/${DEFAULTS_JSON['configDirectories']['platform']}"
 
         if (configuration.containsKey("platformSpecificConfigPath")) {
+            // e.g. AdoptOpenJDK/openjdk-build/master/build-farm/platform-specific-configurations.linux.sh
             platformSpecificConfigPath = "${userOrgRepo}/${DEFAULTS_JSON['repository']['branch']}/${configuration.platformSpecificConfigPath}"
         }
         return platformSpecificConfigPath
@@ -506,7 +507,7 @@ class Regeneration implements Serializable {
             context.stage("Check $javaVersion pipeline status") {
 
                 if (jobRootDir.contains("pr-tester")) {
-                    // No need to check if we're going to overwrite anything for the PR tester since concurrency isn't enabled
+                    // No need to check if we're going to overwrite anything for the PR tester since concurrency isn't enabled -> https://github.com/AdoptOpenJDK/openjdk-build/pull/2155
                     context.println "[SUCCESS] Don't need to check if the pr-tester is running as concurrency is disabled. Running regeneration job..."
                 } else {
                     // Get all pipelines

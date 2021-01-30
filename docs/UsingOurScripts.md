@@ -71,8 +71,8 @@ The scripts have been designed with a set hierarchy in mind when choosing which 
 
 ```md
 1. JENKINS PARAMETERS (highest priority, args entered here will be what the build scripts use over everything else)
-2. USER JSON (medium priority, args entered here will be pulled in and used when a jenkins parameter isn't entered)
-3. ADOPT JSON (final priority, when a jenkins args AND a user json arg can't be validated, we will checkout to adopt's repository and use their defaults json (linked above))
+2. USER JSON (medium priority, args entered here will be used when a jenkins parameter isn't entered)
+3. ADOPT JSON (final priority, when jenkins parameters AND a user json arg can't be validated, the script will checkout to this repository and use our defaults json (linked above))
 ```
 
 The `ADOPT JSON` level is only used for files and directories. Other parameters (`JOB_ROOT`, `JENKINS_BUILD_ROOT`, etc) only use the first two levels.
@@ -80,7 +80,7 @@ The `ADOPT JSON` level is only used for files and directories. Other parameters 
 As an example, take a look at the [build-pipeline-generator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator/) `SCRIPT_FOLDER_PATH` parameter:
 
 ![Image of the SCRIPT_FOLDER_PATH parameter in jenkins](images/scriptFolderParam.png)
-The script will use whatever has been entered into the parameter field unless it has been left empty, in which case it will use whatever is in the user's `defaults.json.scriptDirectories.upstream` attribute.
+The script will use whatever has been entered into the parameter field unless it has been left empty, in which case it will use whatever is in the user's `defaults.json['scriptDirectories']['upstream']` attribute.
 
 It will then evaluate the existence of that directory in the user's repository and, if it fails to find one, will checkout to AdoptOpenJDK/openjdk-build and use our `defaults.json` (the console log will warn the user of this occuring):
 
@@ -88,13 +88,13 @@ It will then evaluate the existence of that directory in the user's repository a
 00:13:31  [WARNING] pipelines/build/common/weekly_release_pipeline.groovy does not exist in your chosen repository. Updating it to use Adopt's instead
 ```
 
-NOTE: For the defaults that are paths to directories, the scripts will search for files of the same name as Adopt's. Custom named files are not currently supported (so for `configDirectories.platform`, all of the filenames in the specified folder need to be the same as [ours](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)).
+NOTE: For the defaults that are paths to directories, the scripts will search for files of the same name as Adopt's. Custom named files are not currently supported (so for `defaults.json['configDirectories']['platform']`, all of the filenames in the specified folder need to be the same as [ours](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations) or the script will fail to pick up the user's config's and will use Adopt's instead).
 
 ### This is great, but how do I add new defaults?
 
-Create a openjdk-build PR that adds the new defaults in for what they would be for Adopt. Don't forget to update our [RepoHandlerTest.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/src/test/groovy/RepoHandlerTest.groovy) and [fakeDefaults.json](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/src/test/groovy/fakeDefaults.json). Then update any scripts that will need to handle the new default.
+Create a openjdk-build PR that adds the new defaults in for what they would be for Adopt. Don't forget to update our [RepoHandlerTest.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/src/test/groovy/RepoHandlerTest.groovy) and [fakeDefaults.json](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/src/test/groovy/fakeDefaults.json), as well as any jenkins jobs if needs be (if you don't have configuration access, ask in Slack#build for assistance). Then update any scripts that will need to handle the new default, you will likely need to do a bit of searching through the objects mentioned in our `defaults.json` to find where our scripts will need changing.
 
-Once it has been approved and merged, update your scripts to handle the new default and you're done!
+Once it has been approved and merged, update your scripts and/or jenkins jobs to handle the new default and you're done!
 
 ## Starting from scratch
 
@@ -113,7 +113,6 @@ Once it has been approved and merged, update your scripts to handle the new defa
     - [pipelines/build/regeneration/jdkx_regeneration_pipeline.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/regeneration/jdk8_regeneration_pipeline.groovy) - Main downstream generator files. These are what the [pipeline_jobs_generator_jdk8u jenkins jobs](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/pipeline_jobs_generator_jdk8u/) execute on build, generating the [downstream jobs](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/) via `pipelines/build/common/config_regeneration.groovy` (see below).
     - [pipelines/build/common/config_regeneration.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/config_regeneration.groovy) - Base downstream script file. These are what the [pipeline_jobs_generator_jdk8u jenkins jobs](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/pipeline_jobs_generator_jdk8u/) execute after `jdkx_regeneration_pipeline.groovy`, calling the dsl template `pipelines/build/common/create_job_from_template.groovy`.
     - [pipelines/build/common/create_job_from_template.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/create_job_from_template.groovy) - Downstream jobs dsl. This is the dsl job framework of the [downstream jobs]((https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/)).
-
 2. Create a User JSON file containing your default constants that the build scripts will use (see [#the defaults.json](#defaults.json))
 3. Copy the [build-pipeline-generator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator/) and [pipeline_jobs_generator_jdk8u](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/pipeline_jobs_generator_jdk8u/) jobs to your Jenkins instance (replace `jdk8u` with whichever version you intend to build, there should be one job for each jdk version).
 4. Execute the copied `build-pipeline-generator`. Make sure you have filled in the parameters that are not covered by your `defaults.json` (e.g. `DEFAULTS_URL`, `CHECKOUT_CREDENTIALS`). You should now see that the nightly and weekly pipeline jobs have been successfully created in whatever folder was entered into `JOB_ROOT`

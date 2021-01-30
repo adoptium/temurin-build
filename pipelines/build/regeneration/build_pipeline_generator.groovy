@@ -24,7 +24,7 @@ node('master') {
     def repoBranch = null
 
     /*
-    Changes dir to Adopt's repo. Use closures as methods aren't accepted inside node blocks
+    Changes dir to Adopt's repo. Use closures as functions aren't accepted inside node blocks
     */
     def checkoutAdopt = { ->
       checkout([$class: 'GitSCM',
@@ -34,7 +34,7 @@ node('master') {
     }
 
     /*
-    Changes dir to the user's repo. Use closures as methods aren't accepted inside node blocks
+    Changes dir to the user's repo. Use closures as functions aren't accepted inside node blocks
     */
     def checkoutUser = { ->
       checkout([$class: 'GitSCM',

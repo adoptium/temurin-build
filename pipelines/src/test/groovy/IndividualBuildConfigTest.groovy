@@ -26,6 +26,7 @@ class IndividualBuildConfigTest {
                  PLATFORM_CONFIG_LOCATION  : "r",
                  CONFIGURE_ARGS            : "i",
                  OVERRIDE_FILE_NAME_VERSION: "j",
+                 USE_ADOPT_BASH_SCRIPTS    ; true,
                  ADDITIONAL_FILE_NAME_TAG  : "k",
                  JDK_BOOT_VERSION          : "l",
                  RELEASE                   : false,

@@ -182,7 +182,7 @@ class Build {
             } else if (buildConfig.VARIANT == "dragonwell") {
                 jdkBranch = 'master'
             } else {
-                throw new Exception("Unrecognised build variant '${buildConfig.VARIANT}' ")
+                throw new Exception("Unrecognised build variant: ${buildConfig.VARIANT} ")
             }
         }
 
@@ -207,7 +207,7 @@ class Build {
         } else if (buildConfig.VARIANT == "dragonwell") {
             suffix = "alibaba/dragonwell${javaNumber}"
         } else {
-            throw new Exception("Unrecognised build variant '${buildConfig.VARIANT}' ")
+            throw new Exception("Unrecognised build variant: ${buildConfig.VARIANT} ")
         }
 
         jdkRepo = "https://github.com/${suffix}"

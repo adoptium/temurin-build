@@ -57,6 +57,7 @@ function downloadPlatformConfigFile () {
 
 # Attempt to download and source the user's custom platform config
 downloadPlatformConfigFile "${PLATFORM_CONFIG_LOCATION}" ""
+# Regex to spot github api error messages similar to "404: Not Found"
 contentsErrorRegex="40[0-9]: [a-zA-Z ]+"
 
 if [ $ret -ne 0 ] || [[ $fileContents =~ $contentsErrorRegex ]]

@@ -60,7 +60,7 @@ VersionParsingTest > parsesJava11NightlyString() STANDARD_OUT
     11.0.3+9-201903122221
 ```
 
-- To run the suite locally, execute:
+- To run the suite locally:
 
 ```bash
 cd pipelines/
