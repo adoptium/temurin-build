@@ -10,7 +10,7 @@ class Config17 {
                 ],
                 configureArgs       : '--enable-dtrace'
         ],
-        
+
         x64MacXL    : [
                 os                   : 'mac',
                 arch                 : 'x64',
@@ -42,7 +42,7 @@ class Config17 {
                         "hotspot"     : '--enable-dtrace'
                 ]
         ],
-        
+
         x64LinuxXL  : [
                 os                   : 'linux',
                 arch                 : 'x64',
@@ -79,7 +79,7 @@ class Config17 {
                         weekly : ['sanity.openjdk', 'sanity.perf', 'sanity.system', 'extended.system']
                 ]
         ],
-        
+
         x64WindowsXL: [
                 os                   : 'windows',
                 arch                 : 'x64',
@@ -135,7 +135,7 @@ class Config17 {
                 ],
                 configureArgs       : '--enable-dtrace'
         ],
-        
+
         s390xLinuxXL  : [
                 os                   : 'linux',
                 arch                 : 's390x',
@@ -158,7 +158,7 @@ class Config17 {
                 ]
 
         ],
-        
+
         ppc64leLinuxXL    : [
                 os                   : 'linux',
                 arch                 : 'ppc64le',
@@ -178,7 +178,7 @@ class Config17 {
                 ],
                 configureArgs       : '--enable-dtrace'
         ],
-        
+
         aarch64LinuxXL    : [
                 os                   : 'linux',
                 dockerImage          : 'adoptopenjdk/centos7_build_image',
