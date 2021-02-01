@@ -44,15 +44,15 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         }
     }
     disabled(disableJob)
-    triggers {
-        cron(triggerSchedule)
-    }
+
     logRotator {
         numToKeep(60)
         artifactNumToKeep(2)
     }
 
     properties {
+        pipelineTriggers(triggerSchedule)
+
         copyArtifactPermission {
             projectNames('*')
         }
