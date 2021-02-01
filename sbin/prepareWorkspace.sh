@@ -526,7 +526,7 @@ prepareCacerts() {
     echo "Generating cacerts from Mozilla's bundle"
 
     cd "$SCRIPT_DIR/../security"
-    ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
+    time ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
 }
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, etc.)

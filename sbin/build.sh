@@ -892,11 +892,6 @@ createOpenJDKTarArchive() {
   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
-# Echo success
-showCompletionMessage() {
-  echo "All done!"
-}
-
 copyFreeFontForMacOS() {
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
@@ -1114,17 +1109,23 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   exit 0
 fi
 
+echo "build.sh : $(date +%T) : Building shared library with gradle ..."
 buildSharedLibs
 
+echo "build.sh : $(date +%T) : Clearing out target dir ..."
 wipeOutOldTargetDir
 createTargetDir
 
+echo "build.sh : $(date +%T) : Configuring workspace inc. clone and cacerts generation ..."
 configureWorkspace
 
+echo "build.sh : $(date +%T) : Initiating build ..."
 getOpenJDKUpdateAndBuildVersion
 configureCommandParameters
 buildTemplatedFile
 executeTemplatedFile
+
+echo "build.sh : $(date +%T) : Build complete ..."
 
 if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   printJavaVersionString
@@ -1135,7 +1136,7 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   createOpenJDKTarArchive
 fi
 
-showCompletionMessage
+echo "build.sh : $(date +%T) : All done!"
 
 # ccache is not detected properly TODO
 # change grep to something like $GREP -e '^1.*' -e '^2.*' -e '^3\.0.*' -e '^3\.1\.[0123]$'`]
