@@ -33,7 +33,9 @@ class IndividualBuildConfigTest {
                  ENABLE_TESTS              : true,
                  ENABLE_INSTALLERS         : true,
                  ENABLE_SIGNER             : true,
-                 CLEAN_WORKSPACE           : false]
+                 CLEAN_WORKSPACE           : false,
+                 CLEAN_WORKSPACE_AFTER     : false,
+                 CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER : false]
         )
 
         def json = config.toJson()

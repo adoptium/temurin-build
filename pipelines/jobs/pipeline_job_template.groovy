@@ -9,6 +9,7 @@ propagateFailures = false
 runTests = true
 runInstaller = true
 runSigner = true
+cleanWsBuildOutput = true
 
 // if true means this is running in the pr builder pipeline
 if (binding.hasVariable('PR_BUILDER')) {
@@ -72,6 +73,8 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
         stringParam('additionalBuildArgs', "", "Additional arguments to be passed to <code>makejdk-any-platform.sh</code>")
         stringParam('overrideFileNameVersion', "", "When forming the filename, ignore the part of the filename derived from the publishName or timestamp and override it.<br/>For instance if you set this to 'FOO' the final file name will be of the form: <code>OpenJDK8U-jre_ppc64le_linux_openj9_FOO.tar.gz</code>")
         booleanParam('cleanWorkspaceBeforeBuild', false, "Clean out the workspace before the build")
+        booleanParam('cleanWorkspaceAfterBuild', false, "Clean out the workspace after the build")
+        booleanParam('cleanWorkspaceBuildOutputAfterBuild', cleanWsBuildOutput, "Clean out the workspace/build/src/build and workspace/target output only, after the build")
         booleanParam('propagateFailures', propagateFailures, "If true, a failure of <b>ANY</b> downstream build (but <b>NOT</b> test) will cause the whole build to fail")
         booleanParam('keepTestReportDir', false, 'If true, test report dir (including core files where generated) will be kept even when the testcase passes, failed testcases always keep the report dir. Does not apply to JUnit jobs which are always kept, eg.openjdk.')
         booleanParam('keepReleaseLogs', true, 'If true, "Release" type pipeline Jenkins logs will be marked as "Keep this build forever".')
