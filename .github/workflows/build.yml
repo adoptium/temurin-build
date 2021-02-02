@@ -31,7 +31,7 @@ jobs:
             image: adoptopenjdk/centos7_build_image
     steps:
     - uses: actions/checkout@v2
-        
+
     - name: Build Linux
       run: ./build-farm/make-adopt-build-farm.sh
       env:
@@ -40,3 +40,10 @@ jobs:
         VARIANT: ${{ matrix.vm }}
         TARGET_OS: ${{ matrix.os }}
         FILENAME: OpenJDK.tar.gz
+
+    - uses: actions/upload-artifact@v2
+
+      name: Collect and Archive Artifacts
+      with:
+        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+        path: workspace/target/*
