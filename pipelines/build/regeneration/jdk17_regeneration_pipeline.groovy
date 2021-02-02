@@ -201,7 +201,7 @@ node ("master") {
           usernameVariable: 'jenkinsUsername',
           passwordVariable: 'jenkinsToken'
       )]) {
-        String jenkinsUserColonPass = "$jenkinsUsername:$jenkinsToken"
+        String jenkinsCredentials = "$jenkinsUsername:$jenkinsToken"
         regenerationScript(
           javaVersion,
           buildConfigurations,
@@ -218,7 +218,7 @@ node ("master") {
           baseFilePath,
           scriptPath,
           jenkinsBuildRoot,
-          jenkinsUserColonPass,
+          jenkinsCredentials,
           checkoutCreds
         ).regenerate()
       }
