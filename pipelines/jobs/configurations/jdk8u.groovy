@@ -43,9 +43,6 @@ targetConfigurations = [
         "sparcv9Solaris": [
                 "hotspot"
         ],
-        "x64Solaris": [
-                "hotspot"
-        ],
         "x64LinuxXL"       : [
                 "openj9"
         ],
