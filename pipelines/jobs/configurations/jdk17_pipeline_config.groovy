@@ -122,7 +122,8 @@ class Config17 {
                 test                : [
                         nightly: [],
                         weekly : ['sanity.openjdk', 'sanity.system', 'extended.system']
-                ]
+                ],
+                cleanWorkspaceAfterBuild: true
         ],
 
 

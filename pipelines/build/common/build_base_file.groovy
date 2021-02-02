@@ -51,6 +51,8 @@ class Builder implements Serializable {
     boolean enableInstallers
     boolean enableSigner
     boolean cleanWorkspaceBeforeBuild
+    boolean cleanWorkspaceAfterBuild
+    boolean cleanWorkspaceBuildOutputAfterBuild
     boolean propagateFailures
     boolean keepTestReportDir
     boolean keepReleaseLogs
@@ -119,10 +121,18 @@ class Builder implements Serializable {
 
         def testList = getTestList(platformConfig)
 
+        def platformCleanWorkspaceAfterBuild = getCleanWorkspaceAfterBuild(platformConfig)
+
         // Always clean on mac due to https://github.com/AdoptOpenJDK/openjdk-build/issues/1980
         def cleanWorkspace = cleanWorkspaceBeforeBuild
         if (platformConfig.os == "mac") {
             cleanWorkspace = true
+        }
+
+        def cleanWsAfter = cleanWorkspaceAfterBuild
+        if (platformCleanWorkspaceAfterBuild) {
+            // Platform override specified
+            cleanWsAfter = platformCleanWorkspaceAfterBuild
         }
 
         return new IndividualBuildConfig(
@@ -151,7 +161,9 @@ class Builder implements Serializable {
                 ENABLE_TESTS: enableTests,
                 ENABLE_INSTALLERS: enableInstallers,
                 ENABLE_SIGNER: enableSigner,
-                CLEAN_WORKSPACE: cleanWorkspace
+                CLEAN_WORKSPACE: cleanWorkspace,
+                CLEAN_WORKSPACE_AFTER: cleanWsAfter,
+                CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER: cleanWorkspaceBuildOutputAfterBuild
         )
     }
 
@@ -218,6 +230,18 @@ class Builder implements Serializable {
 
         testList.unique()
         return testList
+    }
+
+    /*
+    Get the cleanWorkspaceAfterBuild override for this platform configuration
+    */
+    Boolean getCleanWorkspaceAfterBuild(Map<String, ?> configuration) {
+        Boolean cleanWorkspaceAfterBuild = null
+        if (configuration.containsKey("cleanWorkspaceAfterBuild") && configuration.get("cleanWorkspaceAfterBuild")) {
+            cleanWorkspaceAfterBuild = configuration.cleanWorkspaceAfterBuild as Boolean
+        }
+
+        return cleanWorkspaceAfterBuild
     }
 
     /*
@@ -683,6 +707,8 @@ return {
     String additionalBuildArgs,
     String overrideFileNameVersion,
     String cleanWorkspaceBeforeBuild,
+    String cleanWorkspaceAfterBuild,
+    String cleanWorkspaceBuildOutputAfterBuild,
     String adoptBuildNumber,
     String propagateFailures,
     String keepTestReportDir,
@@ -734,6 +760,8 @@ return {
             additionalBuildArgs: additionalBuildArgs,
             overrideFileNameVersion: overrideFileNameVersion,
             cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
+            cleanWorkspaceAfterBuild: Boolean.parseBoolean(cleanWorkspaceAfterBuild),
+            cleanWorkspaceBuildOutputAfterBuild: Boolean.parseBoolean(cleanWorkspaceBuildOutputAfterBuild),
             adoptBuildNumber: adoptBuildNumber,
             propagateFailures: Boolean.parseBoolean(propagateFailures),
             keepTestReportDir: Boolean.parseBoolean(keepTestReportDir),

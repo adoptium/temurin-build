@@ -30,6 +30,8 @@ class IndividualBuildConfig implements Serializable {
     final boolean ENABLE_INSTALLERS
     final boolean ENABLE_SIGNER
     final boolean CLEAN_WORKSPACE
+    final boolean CLEAN_WORKSPACE_AFTER
+    final boolean CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER
 
     IndividualBuildConfig(String json) {
         this(new JsonSlurper().parseText(json) as Map)
@@ -70,6 +72,8 @@ class IndividualBuildConfig implements Serializable {
         ENABLE_INSTALLERS = map.get("ENABLE_INSTALLERS")
         ENABLE_SIGNER = map.get("ENABLE_SIGNER")
         CLEAN_WORKSPACE = map.get("CLEAN_WORKSPACE")
+        CLEAN_WORKSPACE_AFTER = map.get("CLEAN_WORKSPACE_AFTER")
+        CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER = map.get("CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER")
     }
 
     Map<String, ?> toMap() {
@@ -114,7 +118,9 @@ class IndividualBuildConfig implements Serializable {
                 ENABLE_TESTS              : ENABLE_TESTS,
                 ENABLE_INSTALLERS         : ENABLE_INSTALLERS,
                 ENABLE_SIGNER             : ENABLE_SIGNER,
-                CLEAN_WORKSPACE           : CLEAN_WORKSPACE
+                CLEAN_WORKSPACE           : CLEAN_WORKSPACE,
+                CLEAN_WORKSPACE_AFTER     : CLEAN_WORKSPACE_AFTER,
+                CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER : CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER
         ]
     }
 

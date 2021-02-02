@@ -335,7 +335,9 @@ class Regeneration implements Serializable {
                 ENABLE_TESTS: true,
                 ENABLE_INSTALLERS: true,
                 ENABLE_SIGNER: true,
-                CLEAN_WORKSPACE: true
+                CLEAN_WORKSPACE: true,
+                CLEAN_WORKSPACE_AFTER: true,
+                CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER: false
             )
         } catch (Exception e) {
             // Catch invalid configurations
