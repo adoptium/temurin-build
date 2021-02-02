@@ -82,6 +82,7 @@ This group is a matrix of [GitHub Status Checks](https://docs.github.com/en/free
 
 - The group collects a varied mix of java versions, operating systems and VM variants that each execute [build-farm/make-adopt-build-farm.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/build-farm/make-adopt-build-farm.sh), essentially running a full JDK build as if we were setting up and testing a new Jenkins machine OR as if it was running a build locally on your machine.
 - Each job is run inside a Docker container to ensure reliability between each build. For example, Linux builds use our [centos7_build_image](https://hub.docker.com/r/adoptopenjdk/centos7_build_image) Docker container.
+- At the end of the build, the finished JDK artifact is archived to GitHub for you to download and peruse at your leisure (see [actions/upload-artifact#usage](https://github.com/actions/upload-artifact#usage) for more info).
 - Due to GitHub ratelimiting how many status checks can be run in the space of a few minutes, these checks may take a little while to complete while they're stuck in the queue. Be patient however, as some of your changes may affect one build completely differently to another build.
 
 ### openjdk-build-pr-tester

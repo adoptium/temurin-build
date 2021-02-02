@@ -497,26 +497,6 @@ getGradleUserHome() {
   echo $gradleUserHome
 }
 
-buildSharedLibs() {
-  cd "${LIB_DIR}"
-
-  local gradleJavaHome=$(getGradleJavaHome)
-  local gradleUserHome=$(getGradleUserHome)
-
-  echo "Running gradle with $gradleJavaHome at $gradleUserHome"
-
-  gradlecount=1
-  while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME="$gradleUserHome" bash ./gradlew --no-daemon clean shadowJar; do
-    echo "RETRYWARNING: Gradle failed on attempt $gradlecount"
-    sleep 120s # Wait before retrying in case of network/server outage ...
-    gradlecount=$((gradlecount + 1))
-    [ $gradlecount -gt 3 ] && exit 1
-  done
-
-  # Test that the parser can execute as fail fast rather than waiting till after the build to find out
-  "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
-}
-
 parseJavaVersionString() {
   ADOPT_BUILD_NUMBER="${ADOPT_BUILD_NUMBER:-1}"
 
@@ -892,11 +872,6 @@ createOpenJDKTarArchive() {
   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
 
-# Echo success
-showCompletionMessage() {
-  echo "All done!"
-}
-
 copyFreeFontForMacOS() {
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
@@ -1114,17 +1089,20 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   exit 0
 fi
 
-buildSharedLibs
-
+echo "build.sh : $(date +%T) : Clearing out target dir ..."
 wipeOutOldTargetDir
 createTargetDir
 
+echo "build.sh : $(date +%T) : Configuring workspace inc. clone and cacerts generation ..."
 configureWorkspace
 
+echo "build.sh : $(date +%T) : Initiating build ..."
 getOpenJDKUpdateAndBuildVersion
 configureCommandParameters
 buildTemplatedFile
 executeTemplatedFile
+
+echo "build.sh : $(date +%T) : Build complete ..."
 
 if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   printJavaVersionString
@@ -1135,7 +1113,7 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   createOpenJDKTarArchive
 fi
 
-showCompletionMessage
+echo "build.sh : $(date +%T) : All done!"
 
 # ccache is not detected properly TODO
 # change grep to something like $GREP -e '^1.*' -e '^2.*' -e '^3\.0.*' -e '^3\.1\.[0123]$'`]

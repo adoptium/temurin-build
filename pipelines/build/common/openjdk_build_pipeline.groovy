@@ -201,7 +201,12 @@ class Build {
         if (buildConfig.VARIANT == "corretto") {
             suffix="corretto/corretto-${javaNumber}"
         } else if (buildConfig.VARIANT == "openj9") {
-            suffix = "ibmruntimes/openj9-openjdk-jdk${javaNumber}"
+            def openj9JavaToBuild = buildConfig.JAVA_TO_BUILD
+            if (openj9JavaToBuild.endsWith("u")) {
+                // OpenJ9 extensions repo does not use the "u" suffix
+                openj9JavaToBuild = openj9JavaToBuild.substring(0, openj9JavaToBuild.length() - 1)
+            }
+            suffix = "ibmruntimes/openj9-openjdk-${openj9JavaToBuild}"
         } else if (buildConfig.VARIANT == "hotspot") {
             suffix = "adoptopenjdk/openjdk-${buildConfig.JAVA_TO_BUILD}"
         } else if (buildConfig.VARIANT == "dragonwell") {
