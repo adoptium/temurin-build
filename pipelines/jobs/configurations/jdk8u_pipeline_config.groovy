@@ -119,6 +119,9 @@ class Config8 {
                 os                  : 'linux',
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
+                dockerFile: [
+                        dragonwell: 'pipelines/build/dockerFiles/dragonwell_aarch64.dockerfile'
+                ],
                 test                 : 'default'
         ],
 

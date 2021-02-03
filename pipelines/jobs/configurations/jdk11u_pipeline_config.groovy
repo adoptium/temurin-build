@@ -122,7 +122,12 @@ class Config11 {
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
                 test                : 'default',
-                configureArgs       : '--enable-dtrace=auto'
+                configureArgs       : [
+                        "hotspot" : '--enable-dtrace=auto',
+                        "openj9" : '--enable-dtrace=auto',
+                        "corretto" : '--enable-dtrace=auto',
+                        "dragonwell" : "--enable-dtrace=auto --with-extra-cflags=\"-march=armv8.2-a+crypto\" --with-extra-cxxflags=\"-march=armv8.2-a+crypto\""
+                ]
         ],
 
         x64LinuxXL    : [

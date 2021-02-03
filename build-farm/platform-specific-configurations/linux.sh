@@ -134,7 +134,12 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
     "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
-if [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
+
+if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 11 ] && [ -r /usr/local/gcc9/ ]; then
+  export PATH=/usr/local/gcc9/bin:$PATH
+  export CC=/usr/local/gcc9/bin/gcc-9.3
+  export CC=/usr/local/gcc9/bin/g++-9.3
+elif [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
   export PATH=/usr/local/gcc/bin:$PATH
   [ -r /usr/local/gcc/bin/gcc-7.5 ] && export CC=/usr/local/gcc/bin/gcc-7.5
   [ -r /usr/local/gcc/bin/g++-7.5 ] && export CXX=/usr/local/gcc/bin/g++-7.5
