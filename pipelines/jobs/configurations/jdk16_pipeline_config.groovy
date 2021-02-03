@@ -110,7 +110,8 @@ class Config16 {
                         hotspot: 'xlc16&&aix710',
                         openj9:  'xlc16&&aix715'
                 ],
-                test                : 'default'
+                test                : 'default',
+                cleanWorkspaceAfterBuild: true
         ],
 
 

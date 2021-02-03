@@ -43,9 +43,12 @@ if (scmVars != null && configureBuild != null && buildConfigurations != null) {
         additionalBuildArgs,
         overrideFileNameVersion,
         cleanWorkspaceBeforeBuild,
+        cleanWorkspaceAfterBuild,
+        cleanWorkspaceBuildOutputAfterBuild,
         adoptBuildNumber,
         propagateFailures,
         keepTestReportDir,
+        keepReleaseLogs,
         currentBuild,
         this,
         env

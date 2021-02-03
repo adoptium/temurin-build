@@ -44,6 +44,7 @@ class Builder implements Serializable {
     Map<String, List<String>> dockerExcludes
     String scmReference
     String publishName
+    String releaseType
 
     boolean release
     boolean publish
@@ -51,17 +52,20 @@ class Builder implements Serializable {
     boolean enableInstallers
     boolean enableSigner
     boolean cleanWorkspaceBeforeBuild
+    boolean cleanWorkspaceAfterBuild
+    boolean cleanWorkspaceBuildOutputAfterBuild
     boolean propagateFailures
     boolean keepTestReportDir
+    boolean keepReleaseLogs
 
     def env
     def scmVars
     def context
     def currentBuild
 
-    /* 
-    Test targets triggered in 'nightly' build pipelines running 6 days per week 
-    nightly + weekly to be run during a 'release' pipeline 
+    /*
+    Test targets triggered in 'nightly' build pipelines running 6 days per week
+    nightly + weekly to be run during a 'release' pipeline
     */
     final List<String> nightly = [
         'sanity.openjdk',
@@ -71,9 +75,9 @@ class Builder implements Serializable {
         'sanity.functional',
         'extended.functional'
     ]
-    /* 
-    Test targets triggered in 'weekly' build pipelines running once per week 
-    nightly + weekly to be run during a 'release' pipeline 
+    /*
+    Test targets triggered in 'weekly' build pipelines running once per week
+    nightly + weekly to be run during a 'release' pipeline
     */
     final List<String> weekly = [
         'extended.openjdk',
@@ -118,10 +122,18 @@ class Builder implements Serializable {
 
         def testList = getTestList(platformConfig)
 
+        def platformCleanWorkspaceAfterBuild = getCleanWorkspaceAfterBuild(platformConfig)
+
         // Always clean on mac due to https://github.com/AdoptOpenJDK/openjdk-build/issues/1980
         def cleanWorkspace = cleanWorkspaceBeforeBuild
         if (platformConfig.os == "mac") {
             cleanWorkspace = true
+        }
+
+        def cleanWsAfter = cleanWorkspaceAfterBuild
+        if (platformCleanWorkspaceAfterBuild) {
+            // Platform override specified
+            cleanWsAfter = platformCleanWorkspaceAfterBuild
         }
 
         return new IndividualBuildConfig(
@@ -150,12 +162,14 @@ class Builder implements Serializable {
                 ENABLE_TESTS: enableTests,
                 ENABLE_INSTALLERS: enableInstallers,
                 ENABLE_SIGNER: enableSigner,
-                CLEAN_WORKSPACE: cleanWorkspace
+                CLEAN_WORKSPACE: cleanWorkspace,
+                CLEAN_WORKSPACE_AFTER: cleanWsAfter,
+                CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER: cleanWorkspaceBuildOutputAfterBuild
         )
     }
 
     /*
-    Returns true if possibleMap is a Map. False otherwise. 
+    Returns true if possibleMap is a Map. False otherwise.
     */
     static def isMap(possibleMap) {
         return Map.class.isInstance(possibleMap)
@@ -180,20 +194,23 @@ class Builder implements Serializable {
 
         return ""
     }
-    
+
     /*
     Get the list of tests to run from the build configurations.
     We run different test categories depending on if this build is a release or nightly. This function parses and applies this to the individual build config.
     */
     List<String> getTestList(Map<String, ?> configuration) {
         List<String> testList = []
-        /* 
+        /*
         * No test key or key value is test: false  --- test disabled
-        * Key value is test: 'default' --- nightly build trigger 'nightly' test set, release build trigger 'nightly' + 'weekly' test sets
+        * Key value is test: 'default' --- nightly build trigger 'nightly' test set, weekly build trigger or release build trigger 'nightly' + 'weekly' test sets
         * Key value is test: [customized map] specified nightly and weekly test lists
         */
         if (configuration.containsKey("test") && configuration.get("test")) {
-            def testJobType = release ? "release" : "nightly"
+            def testJobType = "nightly"
+            if (releaseType.equals("Weekly") || releaseType.equals("Release")) {
+                testJobType = "weekly"
+            }
 
             if (isMap(configuration.test)) {
 
@@ -204,7 +221,7 @@ class Builder implements Serializable {
                 }
 
             } else {
-                
+
                 // Default to the test sets declared if one isn't set in the build configuration
                 if ( testJobType == "nightly" ) {
                     testList = nightly
@@ -220,13 +237,25 @@ class Builder implements Serializable {
     }
 
     /*
+    Get the cleanWorkspaceAfterBuild override for this platform configuration
+    */
+    Boolean getCleanWorkspaceAfterBuild(Map<String, ?> configuration) {
+        Boolean cleanWorkspaceAfterBuild = null
+        if (configuration.containsKey("cleanWorkspaceAfterBuild") && configuration.get("cleanWorkspaceAfterBuild")) {
+            cleanWorkspaceAfterBuild = configuration.cleanWorkspaceAfterBuild as Boolean
+        }
+
+        return cleanWorkspaceAfterBuild
+    }
+
+    /*
     Parses and applies the dockerExcludes parameter.
     Any platforms/variants that are declared in this parameter are marked as excluded from docker building via this function. Even if they have a docker image or file declared in the build configurations!
     */
     def dockerOverride(Map<String, ?> configuration, String variant) {
         Boolean overrideDocker = false
         if (dockerExcludes == {}) {
-            return overrideDocker 
+            return overrideDocker
         }
 
         String stringArch = configuration.arch as String
@@ -503,7 +532,7 @@ class Builder implements Serializable {
         return true
     }
 
-    /* 
+    /*
     Call job to push artifacts to github. Usually it's only executed on a nightly build
     */
     def publishBinary() {
@@ -547,8 +576,8 @@ class Builder implements Serializable {
 
             if (release) {
                 if (publishName) {
-                    // Only keep release logs for real releases, not the weekend weekly release test builds that are not published
-                    currentBuild.setKeepLog(true)
+                    // Keep Jenkins release logs for real releases
+                    currentBuild.setKeepLog(keepReleaseLogs)
                     currentBuild.setDisplayName(publishName)
                 }
             }
@@ -564,6 +593,7 @@ class Builder implements Serializable {
             context.echo "Release: ${release}"
             context.echo "Tag/Branch name: ${scmReference}"
             context.echo "Keep test reportdir: ${keepTestReportDir}"
+            context.echo "Keey release logs: ${keepReleaseLogs}"
 
             jobConfigurations.each { configuration ->
                 jobs[configuration.key] = {
@@ -581,7 +611,7 @@ class Builder implements Serializable {
                         // Execute build job for configuration i.e jdk11u/job/jdk11u-linux-x64-hotspot
                         context.stage(configuration.key) {
                             context.echo "Created job " + downstreamJobName
-                            
+
                             // execute build
                             def downstreamJob = context.build job: downstreamJobName, propagate: false, parameters: config.toBuildParams()
 
@@ -599,7 +629,7 @@ class Builder implements Serializable {
                                         } catch (FlowInterruptedException e) {
                                             context.println "[ERROR] Previous artifact removal timeout (${pipelineTimeouts.REMOVE_ARTIFACTS_TIMEOUT} HOURS) for ${downstreamJobName} has been reached. Exiting..."
                                             throw new Exception()
-                                        }   
+                                        }
 
                                         try {
                                             context.timeout(time: pipelineTimeouts.COPY_ARTIFACTS_TIMEOUT, unit: "HOURS") {
@@ -681,9 +711,12 @@ return {
     String additionalBuildArgs,
     String overrideFileNameVersion,
     String cleanWorkspaceBeforeBuild,
+    String cleanWorkspaceAfterBuild,
+    String cleanWorkspaceBuildOutputAfterBuild,
     String adoptBuildNumber,
     String propagateFailures,
     String keepTestReportDir,
+    String keepReleaseLogs,
     def currentBuild,
     def context,
     def env ->
@@ -694,7 +727,7 @@ return {
         }
 
         boolean publish = false
-        if (releaseType == 'Nightly') {
+        if (releaseType == 'Nightly' || releaseType == 'Weekly') {
             publish = true
         }
 
@@ -724,6 +757,7 @@ return {
             enableSigner: Boolean.parseBoolean(enableSigner),
             publish: publish,
             release: release,
+            releaseType: releaseType,
             scmReference: scmReference,
             publishName: publishName,
             additionalConfigureArgs: additionalConfigureArgs,
@@ -731,9 +765,12 @@ return {
             additionalBuildArgs: additionalBuildArgs,
             overrideFileNameVersion: overrideFileNameVersion,
             cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
+            cleanWorkspaceAfterBuild: Boolean.parseBoolean(cleanWorkspaceAfterBuild),
+            cleanWorkspaceBuildOutputAfterBuild: Boolean.parseBoolean(cleanWorkspaceBuildOutputAfterBuild),
             adoptBuildNumber: adoptBuildNumber,
             propagateFailures: Boolean.parseBoolean(propagateFailures),
             keepTestReportDir: Boolean.parseBoolean(keepTestReportDir),
+            keepReleaseLogs: Boolean.parseBoolean(keepReleaseLogs),
             currentBuild: currentBuild,
             context: context,
             env: env

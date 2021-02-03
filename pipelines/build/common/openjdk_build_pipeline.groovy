@@ -67,7 +67,6 @@ class Build {
         NODE_CHECKOUT_TIMEOUT : 1,
         BUILD_JDK_TIMEOUT : 8,
         BUILD_ARCHIVE_TIMEOUT : 3,
-        AIX_CLEAN_TIMEOUT : 1,
         MASTER_CLEAN_TIMEOUT : 1,
         DOCKER_CHECKOUT_TIMEOUT : 1,
         DOCKER_PULL_TIMEOUT : 2
@@ -189,7 +188,12 @@ class Build {
         if (buildConfig.VARIANT == "corretto") {
             suffix="corretto/corretto-${javaNumber}"
         } else if (buildConfig.VARIANT == "openj9") {
-            suffix = "ibmruntimes/openj9-openjdk-jdk${javaNumber}"
+            def openj9JavaToBuild = buildConfig.JAVA_TO_BUILD
+            if (openj9JavaToBuild.endsWith("u")) {
+                // OpenJ9 extensions repo does not use the "u" suffix
+                openj9JavaToBuild = openj9JavaToBuild.substring(0, openj9JavaToBuild.length() - 1)
+            }
+            suffix = "ibmruntimes/openj9-openjdk-${openj9JavaToBuild}"
         } else if (buildConfig.VARIANT == "hotspot") {
             suffix = "adoptopenjdk/openjdk-${buildConfig.JAVA_TO_BUILD}"
         } else if (buildConfig.VARIANT == "dragonwell") {
@@ -332,14 +336,8 @@ class Build {
 
                 // Execute sign job
                 def signJob = context.build job: "build-scripts/release/sign_build",
-                        propagate: true,
-                        parameters: params
-
-                // Output notification of downstream failure (the build will fail automatically)
-                def jobResult = signJob.getResult()
-                if (jobResult != 'SUCCESS') {
-                    context.println "ERROR: downstream sign_build ${jobResult}.\nSee ${signJob.getAbsoluteUrl()} for details"
-                }
+                    propagate: true,
+                    parameters: params
 
                 context.node('master') {
                     //Copy signed artifact back and archive again
@@ -901,25 +899,20 @@ class Build {
     Executed on a build node, the function checks out the repository and executes the build via ./make-adopt-build-farm.sh
     Once the build completes, it will calculate its version output, commit the first metadata writeout, and archive the build results.
     */
-    def buildScripts(cleanWorkspace, filename) {
+    def buildScripts(cleanWorkspace, cleanWorkspaceAfter, cleanWorkspaceBuildOutputAfter, filename) {
         return context.stage("build") {
-
             if (cleanWorkspace) {
                 try {
 
                     try {
                         context.timeout(time: buildTimeouts.NODE_CLEAN_TIMEOUT, unit: "HOURS") {
-                            if (buildConfig.TARGET_OS == "windows") {
-                                // Windows machines struggle to clean themselves, see:
-                                // https://github.com/AdoptOpenJDK/openjdk-build/issues/1855
-                                context.sh(script: "rm -rf C:/workspace/openjdk-build/workspace/build/src/build/*/jdk/gensrc")
-                                // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1419
-                                context.sh(script: "rm -rf J:/jenkins/tmp/workspace/build/src/build/*/jdk/gensrc")
-                                // https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1662
-                                context.sh(script: "rm -rf E:/jenkins/tmp/workspace/build/src/build/*/jdk/gensrc")
-                                context.cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
+                            // Note: Underlying org.apache DirectoryScanner used by cleanWs has a bug scanning where it misses files containing ".." so use rm -rf instead
+                            // Issue: https://issues.jenkins.io/browse/JENKINS-64779
+                            if (context.WORKSPACE != null && !context.WORKSPACE.isEmpty()) {
+                                context.println "Cleaning workspace files: " + context.WORKSPACE + "/*"
+                                context.sh(script: "rm -rf " + context.WORKSPACE + "/*")
                             } else {
-                                context.cleanWs notFailBuild: true
+                                context.println "Warning: Unable to clean workspace as context.WORKSPACE is null/empty"
                             }
                         }
                     } catch (FlowInterruptedException e) {
@@ -992,15 +985,27 @@ class Build {
                 }
             } finally {
                 // post-build workspace clean:
-                //   AIX due to limited ram drive space
-                //   s390x due to limited available disk space on Marist nodes 
-                if (buildConfig.TARGET_OS == "aix" || buildConfig.ARCHITECTURE == "s390x") {
+                if (cleanWorkspaceAfter || cleanWorkspaceBuildOutputAfter) {
                     try {
-                        context.timeout(time: buildTimeouts.AIX_CLEAN_TIMEOUT, unit: "HOURS") {
-                            context.cleanWs notFailBuild: true
+                        context.timeout(time: buildTimeouts.NODE_CLEAN_TIMEOUT, unit: "HOURS") {
+                            // Note: Underlying org.apache DirectoryScanner used by cleanWs has a bug scanning where it misses files containing ".." so use rm -rf instead
+                            // Issue: https://issues.jenkins.io/browse/JENKINS-64779
+                            if (context.WORKSPACE != null && !context.WORKSPACE.isEmpty()) {
+                                if (cleanWorkspaceAfter) {
+                                    context.println "Cleaning workspace files: " + context.WORKSPACE + "/*"
+                                    context.sh(script: "rm -rf " + context.WORKSPACE + "/*")
+                                } else if (cleanWorkspaceBuildOutputAfter) {
+                                    context.println "Cleaning workspace build output files: " + context.WORKSPACE + "/workspace/build/src/build"
+                                    context.sh(script: "rm -rf " + context.WORKSPACE + "/workspace/build/src/build")
+                                    context.println "Cleaning workspace build output files: " + context.WORKSPACE + "/workspace/target"
+                                    context.sh(script: "rm -rf " + context.WORKSPACE + "/workspace/target")
+                                }
+                            } else {
+                                context.println "Warning: Unable to clean workspace as context.WORKSPACE is null/empty"
+                            }
                         }
                     } catch (FlowInterruptedException e) {
-                        context.println "[ERROR] AIX clean workspace timeout (${buildTimeouts.AIX_CLEAN_TIMEOUT} HOURS) has been reached. Exiting..."
+                        context.println "[ERROR] clean workspace timeout (${buildTimeouts.NODE_CLEAN_TIMEOUT} HOURS) has been reached. Exiting..."
                         throw new Exception()
                     }
                 }
@@ -1069,6 +1074,8 @@ class Build {
                 def enableInstallers = Boolean.valueOf(buildConfig.ENABLE_INSTALLERS)
                 def enableSigner = Boolean.valueOf(buildConfig.ENABLE_SIGNER)
                 def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
+                def cleanWorkspaceAfter = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE_AFTER)
+                def cleanWorkspaceBuildOutputAfter = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER)
 
                 context.stage("queue") {
                     /* This loads the library containing two Helper classes, and causes them to be
@@ -1128,7 +1135,7 @@ class Build {
                                 }
 
                                 context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE} -f ${buildConfig.DOCKER_FILE} .").inside {
-                                    buildScripts(cleanWorkspace, filename)
+                                    buildScripts(cleanWorkspace, cleanWorkspaceAfter, cleanWorkspaceBuildOutputAfter, filename)
                                 }
                             // Otherwise, pull the docker image from DockerHub
                             } else {
@@ -1142,7 +1149,7 @@ class Build {
                                 }
 
                                 context.docker.image(buildConfig.DOCKER_IMAGE).inside {
-                                    buildScripts(cleanWorkspace, filename)
+                                    buildScripts(cleanWorkspace, cleanWorkspaceAfter, cleanWorkspaceBuildOutputAfter, filename)
                                 }
                             }
                         }
@@ -1163,10 +1170,10 @@ class Build {
                                 }
                                 context.echo("changing ${workspace}")
                                 context.ws(workspace) {
-                                    buildScripts(cleanWorkspace, filename)
+                                    buildScripts(cleanWorkspace, cleanWorkspaceAfter, cleanWorkspaceBuildOutputAfter, filename)
                                 }
                             } else {
-                                buildScripts(cleanWorkspace, filename)
+                                buildScripts(cleanWorkspace, cleanWorkspaceAfter, cleanWorkspaceBuildOutputAfter, filename)
                             }
                         }
                         context.println "[NODE SHIFT] OUT OF NODE (LABELNAME ${buildConfig.NODE_LABEL}!)"

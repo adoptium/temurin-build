@@ -149,11 +149,25 @@ getOpenJdkVersion() {
       local fixNum="$(cut -d'.' -f 5 <${corrVerFile})"
       version="jdk-${corrVersion}.${minorNum}.${updateNum}+${buildNum}.${fixNum}"
     fi
-  else
-    version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
-    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+    local dragonwellVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
+    if [ -r "${dragonwellVerFile}" ]; then
+      if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+        local updateNum="$(cut -d'.' -f 2 <${dragonwellVerFile})"
+        local buildNum="$(cut -d'.' -f 6 <${dragonwellVerFile})"
+        version="jdk8u${updateNum}-b${buildNum}"
+      else
+        local minorNum="$(cut -d'.' -f 2 <${dragonwellVerFile})"
+        local updateNum="$(cut -d'.' -f 3 <${dragonwellVerFile})"
+        local buildNum="$(cut -d'.' -f 5 <${dragonwellVerFile})"
+        version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
+      fi
+    else
+      version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
       version=$(echo $version | cut -d'_' -f 2)
     fi
+  else
+    version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
     # TODO remove pending #1016
     version=${version%_adopt}
     version=${version#aarch64-shenandoah-}
@@ -294,7 +308,7 @@ configureDebugParameters() {
   addConfigureArg "--with-debug-level=" "release"
 
   # If debug symbols package is requested, generate them separately
-  if [ ${BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]} == true ]; then
+  if [ ${BUILD_CONFIG[CREATE_DEBUG_IMAGE]} == true ]; then
     addConfigureArg "--with-native-debug-symbols=" "external"
   else
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
@@ -483,26 +497,6 @@ getGradleUserHome() {
   echo $gradleUserHome
 }
 
-buildSharedLibs() {
-  cd "${LIB_DIR}"
-
-  local gradleJavaHome=$(getGradleJavaHome)
-  local gradleUserHome=$(getGradleUserHome)
-
-  echo "Running gradle with $gradleJavaHome at $gradleUserHome"
-
-  gradlecount=1
-  while ! JAVA_HOME="$gradleJavaHome" GRADLE_USER_HOME="$gradleUserHome" bash ./gradlew --no-daemon clean shadowJar; do
-    echo "RETRYWARNING: Gradle failed on attempt $gradlecount"
-    sleep 120s # Wait before retrying in case of network/server outage ...
-    gradlecount=$((gradlecount + 1))
-    [ $gradlecount -gt 3 ] && exit 1
-  done
-
-  # Test that the parser can execute as fail fast rather than waiting till after the build to find out
-  "$gradleJavaHome"/bin/java -version 2>&1 | "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f semver 1
-}
-
 parseJavaVersionString() {
   ADOPT_BUILD_NUMBER="${ADOPT_BUILD_NUMBER:-1}"
 
@@ -583,11 +577,6 @@ getDebugImageArchivePath() {
   echo "${jdkArchivePath}-debug-image"
 }
 
-getDebugSymbolsArchivePath() {
-  local jdkArchivePath=$(getJdkArchivePath)
-  echo "${jdkArchivePath}-debug-symbols"
-}
-
 # Clean up
 removingUnnecessaryFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
@@ -652,7 +641,7 @@ removingUnnecessaryFiles() {
     deleteDebugSymbols
   fi
 
-  if [ ${BUILD_CONFIG[CREATE_DEBUG_SYMBOLS_PACKAGE]} == true ]; then
+  if [ ${BUILD_CONFIG[CREATE_DEBUG_IMAGE]} == true ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
     *cygwin*)
       # on Windows, we want to take .pdb files
@@ -670,8 +659,7 @@ removingUnnecessaryFiles() {
 
     # if debug symbols were found, copy them to a different folder
     if [ -n "${debugSymbols}" ]; then
-      local debugSymbolsTargetPath=$(getDebugSymbolsArchivePath)
-      echo "${debugSymbols}" | cpio -pdm ${debugSymbolsTargetPath}
+      echo "${debugSymbols}" | cpio -pdm ${debugImageTargetPath}
     fi
 
     deleteDebugSymbols
@@ -819,6 +807,10 @@ getFirstTagFromOpenJDKGitRepo() {
     get_tag_cmd=$jdk8_get_tag_cmd
   fi
 
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+    TAG_SEARCH="dragonwell-*_jdk*"
+  fi
+
   # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon...
   # Read OPENJDK_TAG value from that file..
   local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
@@ -826,7 +818,6 @@ getFirstTagFromOpenJDKGitRepo() {
     firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
   else
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-
     firstMatchingNameFromRepo=$(eval "git tag -l $TAG_SEARCH | $get_tag_cmd")
   fi
 
@@ -861,7 +852,6 @@ createOpenJDKTarArchive() {
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
-  local debugSymbolsTargetPath=$(getDebugSymbolsArchivePath)
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
@@ -879,17 +869,7 @@ createOpenJDKTarArchive() {
     local debugImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debugimage}")
     createArchive "${debugImageTargetPath}" "${debugImageName}"
   fi
-  if [ -d "${debugSymbolsTargetPath}" ]; then
-    echo "OpenJDK debug symbols path will be ${debugSymbolsTargetPath}."
-    local debugSymbolsName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debug-symbols}")
-    createArchive "${debugSymbolsTargetPath}" "${debugSymbolsName}"
-  fi
   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
-}
-
-# Echo success
-showCompletionMessage() {
-  echo "All done!"
 }
 
 copyFreeFontForMacOS() {
@@ -1109,21 +1089,20 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   exit 0
 fi
 
-# Our Solaris build environment has performance issues so disabling this for now
-# Refhttps://github.com/AdoptOpenJDK/openjdk-build/issues/2206
-if [ "${ARCHITECTURE}" != "sparcv9" ]; then
-  buildSharedLibs
-fi
-
+echo "build.sh : $(date +%T) : Clearing out target dir ..."
 wipeOutOldTargetDir
 createTargetDir
 
+echo "build.sh : $(date +%T) : Configuring workspace inc. clone and cacerts generation ..."
 configureWorkspace
 
+echo "build.sh : $(date +%T) : Initiating build ..."
 getOpenJDKUpdateAndBuildVersion
 configureCommandParameters
 buildTemplatedFile
 executeTemplatedFile
+
+echo "build.sh : $(date +%T) : Build complete ..."
 
 if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   printJavaVersionString
@@ -1134,7 +1113,7 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   createOpenJDKTarArchive
 fi
 
-showCompletionMessage
+echo "build.sh : $(date +%T) : All done!"
 
 # ccache is not detected properly TODO
 # change grep to something like $GREP -e '^1.*' -e '^2.*' -e '^3\.0.*' -e '^3\.1\.[0123]$'`]

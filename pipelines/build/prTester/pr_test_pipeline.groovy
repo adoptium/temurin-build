@@ -153,7 +153,7 @@ Map<String, ?> defaultTestConfigurations = [
     ]
 ]
 
-List<Integer> defaultJavaVersions = [8, 11, 15, 16]
+List<Integer> defaultJavaVersions = [8, 11, 16, 17]
 
 defaultGitRepo = "https://github.com/AdoptOpenJDK/openjdk-build"
 

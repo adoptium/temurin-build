@@ -186,9 +186,9 @@ The following examples all use `-m1` as an example - this gets replaced with a l
    JDK_FIX_VERSION=0
    ```
 
-5. Build and Test the OpenJDK for OpenJ9 "release" at AdoptOpenJDK using a build pipeline job as follows https://ci.adoptopenjdk.net/job/build-scripts/job/openjdkNN-pipeline/build?delay=0sec
+5. Build and Test the OpenJDK for OpenJ9 "release" at AdoptOpenJDK using a "Weekly" releaseType so it runs the extended tests. Submit the Build pipeline job as follows https://ci.adoptopenjdk.net/job/build-scripts/job/openjdkNN-pipeline/build?delay=0sec
    - `targetConfigurations`: remove all "hotspot" entries
-   - `releaseType`: `Nightly`
+   - `releaseType`: `Weekly`
    - `overridePublishName`: github binaries publish name, e.g. `jdk8u232-b09_openj9-0.17.0-m1` or `jdk-11.0.5+10_openj9-0.17.0-m1`
    (Note: Everything before the underscore should be copied from the OPENJDK_TAG value inside <extensions_repo_url>/closed/openjdk-tag.gmk)
    - `scmReference`: extensions release branch: e.g. `openj9-0.17.0`
@@ -262,6 +262,9 @@ When the repo has been created, a few changes to the codebase will be necessary 
 ### Post Release Tasks
 Once all the release binaries have been published the following tasks should be completed:
 1. Reset the "weekly_release_scmReferences" (change to "") for the weekend release test build so it is using HEAD streams: https://github.com/AdoptOpenJDK/openjdk-build/tree/master/pipelines/jobs/configurations
+2. Re-enable "Tests" for Nightly pipelines, eg.https://github.com/AdoptOpenJDK/openjdk-build/pull/2401/files . After merging, check the build-pipeline-generator runs successfully: https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator . It's possible the script change may require "Script Approval" by a Jenkins Administrator (https://ci.adoptopenjdk.net/scriptApproval/).
+3. If the latest version just released has come to the end of its non-LTS lifecycle (2 CPU updates, eg.jdk-15.0.2), then disable and retire that version form the Nightly pipeline builds:
+   - eg.https://github.com/AdoptOpenJDK/openjdk-build/pull/2403/files
 
 ## Summary on point releases
 

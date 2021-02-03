@@ -60,8 +60,7 @@ build jobs used for building Adopt OpenJDK binaries.
 OpenJDK inside a Docker container.
 3. The `docs` folder contains images and utility scripts to produce up to date
 documentation.
-4. The `git-hg` folder contains scripts to clone an OpenJDK mercurial forest into
-a GitHub repo ()and regularly update it).
+4. The `git-hg` folder has now been moved to it's own seperate repository. See [openjdk-mirror-scripts](https://github.com/AdoptOpenJDK/openjdk-mirror-scripts).
 5. The `mercurial-tags/java-tool` folder contains scripts for TODO.
 6. The `pipelines` folder contains the Groovy pipeline scripts for Jenkins
 (e.g. build | test | checksum | release).
@@ -137,8 +136,8 @@ temporary_speech_mark_placeholder in the place of any speech marks.
 --clean-git-repo
 clean out any 'bad' local git repo you already have.
 
---create-debug-symbols-package
-create a debug-symbols only archive (if debug symbols were generated).
+--create-debug-image
+create a debug-image archive with the debug symbols.
 
 -d, --destination <path>
 specify the location for the built binary, e.g. /path/.

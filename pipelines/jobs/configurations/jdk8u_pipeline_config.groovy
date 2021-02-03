@@ -31,7 +31,7 @@ class Config8 {
                 test                 : 'default',
                 configureArgs       : [
                         "openj9"      : '--enable-jitserver',
-                        "dragonwell"  : '--enable-jfr --enable-unlimited-crypto --with-jvm-variants=server  --with-zlib=system',
+                        "dragonwell"  : '--enable-unlimited-crypto --with-jvm-variants=server  --with-zlib=system',
                 ]
         ],
 
@@ -77,7 +77,8 @@ class Config8 {
                         hotspot: 'xlc13&&aix710',
                         openj9:  'xlc13&&aix715'
                 ],
-                test                 : 'default'
+                test                 : 'default',
+                cleanWorkspaceAfterBuild: true
         ],
 
         s390xLinux    : [
@@ -118,6 +119,9 @@ class Config8 {
                 os                  : 'linux',
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
+                dockerFile: [
+                        dragonwell: 'pipelines/build/dockerFiles/dragonwell_aarch64.dockerfile'
+                ],
                 test                 : 'default'
         ],
 

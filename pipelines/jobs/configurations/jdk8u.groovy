@@ -35,15 +35,13 @@ targetConfigurations = [
         ],
         "aarch64Linux"  : [
                 "hotspot",
-                "openj9"
+                "openj9",
+                "dragonwell"
         ],
         "arm32Linux"  : [
                 "hotspot"
         ],
         "sparcv9Solaris": [
-                "hotspot"
-        ],
-        "x64Solaris": [
                 "hotspot"
         ],
         "x64LinuxXL"       : [
@@ -67,8 +65,8 @@ triggerSchedule_weekly="TZ=UTC\n05 12 * * 6"
 
 // scmReferences to use for weekly release build
 weekly_release_scmReferences=[
-        "hotspot"        : "jdk8u282-b07",
-        "openj9"         : "v0.24.0-release",
+        "hotspot"        : "",
+        "openj9"         : "",
         "corretto"       : "",
         "dragonwell"     : ""
 ]
