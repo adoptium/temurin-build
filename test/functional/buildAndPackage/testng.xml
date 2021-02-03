@@ -14,13 +14,20 @@
 
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
 <suite name="BuildAndPackagingTests" parallel="none" verbose="2">
-    <test name="BuildAndPackagingTests">
+
+    <test name="CommonFeatureTests">
         <classes>
             <class name="net.adoptopenjdk.test.VendorPropertiesTest"/>
             <class name="net.adoptopenjdk.test.BundledFreetypeTest"/>
+        </classes>
+    </test>
+
+    <test name="HotspotFeatureTests">
+        <classes>
             <class name="net.adoptopenjdk.test.FeatureTests"/>
         </classes>
     </test>
+
     <test name="CudaEnabledTest">
 		<classes>
 			<class name="net.adoptopenjdk.test.CudaEnabledTest"/>
