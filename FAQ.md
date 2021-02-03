@@ -123,7 +123,7 @@ For more information, see the [PR testing documentation](./pipelines/build/prTes
 
 ## I want to use my own configuration files or scripts on my own Jenkins instance. How do I do it?
 
-[Check out our guide to setting up your own scripts and configurations (while not having to keep up with our changes)!](docs/UsingOurScripts.md)
+Check out [Adopt's guide]((docs/UsingOurScripts.md)) to setting up your own scripts and configurations (while not having to keep up with Adopt's changes)!
 
 ## Which OS levels do we build on?
 

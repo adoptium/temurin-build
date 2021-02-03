@@ -21,7 +21,7 @@ limitations under the License.
 
 String buildFolder = "$JOB_FOLDER"
 
-if (!binding.hasVariable('GIT_URI')) GIT_URI = "https://github.com/AdoptOpenJDK/openjdk-build.git"
+if (!binding.hasVariable('GIT_URL')) GIT_URL = "https://github.com/AdoptOpenJDK/openjdk-build.git"
 if (!binding.hasVariable('GIT_BRANCH')) GIT_BRANCH = "master"
 
 folder(buildFolder) {
@@ -35,7 +35,7 @@ pipelineJob("$buildFolder/$JOB_NAME") {
             scm {
                 git {
                     remote {
-                        url(GIT_URI)
+                        url(GIT_URL)
                         refspec(" +refs/pull/*:refs/remotes/origin/pr/* +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*")
                         credentials("${CHECKOUT_CREDENTIALS}")
                     }

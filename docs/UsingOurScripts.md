@@ -1,10 +1,10 @@
 # Custom environment setting up guide
 
-We have setup our build scripts so that you can plug in configuration files and scripts you have changed while not having to duplicate and maintain our entire codebase separately. This may seem complicated at first but it's pretty simple once you get the hang of the process.
+Adopt have setup their build scripts so that you can plug in configuration files and scripts you have changed while not having to duplicate and maintain Adopt's entire codebase separately. This may seem complicated at first but it's pretty simple once you get the hang of the process.
 
 ## defaults.json
 
-This file contains the default constants and paths used in the build scripts for whichever repository it is located in. As an example, our `defaults.json` file is located [here](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/defaults.json). If you're unsure of any of the fields, see our example map below:
+This file contains the default constants and paths used in the build scripts for whichever repository it is located in. As an example, Adopt's `defaults.json` file is located [here](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/defaults.json). If you're unsure of any of the fields, see Adopt's example map below:
 
 ```json
 {
@@ -19,7 +19,7 @@ This file contains the default constants and paths used in the build scripts for
     "jenkinsDetails"         : {
         // The base URL of the server, usually this is where you would end up if you opened your server from a webpage
         "rootUrl"            : "https://ci.adoptopenjdk.net",
-        // Jenkins directory where our jobs will be generated and run
+        // Jenkins directory where jobs will be generated and run
         "rootDirectory"      : "build-scripts"
     },
     // Jenkins job dsl template paths (relative to this repository root)
@@ -72,7 +72,7 @@ The scripts have been designed with a set hierarchy in mind when choosing which 
 ```md
 1. JENKINS PARAMETERS (highest priority, args entered here will be what the build scripts use over everything else)
 2. USER JSON (medium priority, args entered here will be used when a jenkins parameter isn't entered)
-3. ADOPT JSON (final priority, when jenkins parameters AND a user json arg can't be validated, the script will checkout to this repository and use our defaults json (linked above))
+3. ADOPT JSON (final priority, when jenkins parameters AND a user json arg can't be validated, the script will checkout to this repository and use Adopt's defaults json (linked above))
 ```
 
 The `ADOPT JSON` level is only used for files and directories. Other parameters (`JOB_ROOT`, `JENKINS_BUILD_ROOT`, etc) only use the first two levels.
@@ -82,17 +82,17 @@ As an example, take a look at the [build-pipeline-generator](https://ci.adoptope
 ![Image of the SCRIPT_FOLDER_PATH parameter in jenkins](images/scriptFolderParam.png)
 The script will use whatever has been entered into the parameter field unless it has been left empty, in which case it will use whatever is in the user's `defaults.json['scriptDirectories']['upstream']` attribute.
 
-It will then evaluate the existence of that directory in the user's repository and, if it fails to find one, will checkout to AdoptOpenJDK/openjdk-build and use our `defaults.json` (the console log will warn the user of this occuring):
+It will then evaluate the existence of that directory in the user's repository and, if it fails to find one, will checkout to AdoptOpenJDK/openjdk-build and use Adopt's `defaults.json` (the console log will warn the user of this occuring):
 
 ```
 00:13:31  [WARNING] pipelines/build/common/weekly_release_pipeline.groovy does not exist in your chosen repository. Updating it to use Adopt's instead
 ```
 
-NOTE: For the defaults that are paths to directories, the scripts will search for files of the same name as Adopt's. Custom named files are not currently supported (so for `defaults.json['configDirectories']['platform']`, all of the filenames in the specified folder need to be the same as [ours](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations) or the script will fail to pick up the user's config's and will use Adopt's instead).
+NOTE: For the defaults that are paths to directories, the scripts will search for files of the same name as Adopt's. Custom named files are not currently supported (so for `defaults.json['configDirectories']['platform']`, all of the filenames in the specified folder need to be the same as [Adopt's](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations) or the script will fail to pick up the user's config's and will use Adopt's instead).
 
 ### This is great, but how do I add new defaults?
 
-Create a openjdk-build PR that adds the new defaults in for what they would be for Adopt. Don't forget to update our [RepoHandlerTest.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/src/test/groovy/RepoHandlerTest.groovy) and [fakeDefaults.json](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/src/test/groovy/fakeDefaults.json), as well as any jenkins jobs if needs be (if you don't have configuration access, ask in Slack#build for assistance). Then update any scripts that will need to handle the new default, you will likely need to do a bit of searching through the objects mentioned in our `defaults.json` to find where our scripts will need changing.
+Create a openjdk-build PR that adds the new defaults in for what they would be for Adopt. Don't forget to update Adopt's [RepoHandlerTest.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/src/test/groovy/RepoHandlerTest.groovy) and [fakeDefaults.json](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/src/test/groovy/fakeDefaults.json), as well as any jenkins jobs if needs be (if you don't have configuration access, ask in Slack#build for assistance). Then update any scripts that will need to handle the new default, you will likely need to do a bit of searching through the objects mentioned in Adopt's `defaults.json` to find where Adopt's scripts will need changing.
 
 Once it has been approved and merged, update your scripts and/or jenkins jobs to handle the new default and you're done!
 
@@ -118,4 +118,4 @@ Once it has been approved and merged, update your scripts and/or jenkins jobs to
 4. Execute the copied `build-pipeline-generator`. Make sure you have filled in the parameters that are not covered by your `defaults.json` (e.g. `DEFAULTS_URL`, `CHECKOUT_CREDENTIALS`). You should now see that the nightly and weekly pipeline jobs have been successfully created in whatever folder was entered into `JOB_ROOT`
 5. Execute the copied `pipeline_jobs_generator_jdkxx` jobs. Again, make sure you have filled in the parameters that are not covered by your `defaults.json`. You should now see that the `jobs/jdkxx-platform-arch-variant` jobs have been successfully created in whatever folder was entered into `JOB_ROOT`
 
-Congratulations! You should now be able to run our scripts inside your own Jenkins instance.
+Congratulations! You should now be able to run Adopt's scripts inside your own Jenkins instance.

@@ -58,21 +58,21 @@ function downloadPlatformConfigFile () {
 # Attempt to download and source the user's custom platform config
 downloadPlatformConfigFile "${PLATFORM_CONFIG_LOCATION}" ""
 # Regex to spot github api error messages similar to "404: Not Found"
-contentsErrorRegex="40[0-9]: [a-zA-Z ]+"
+contentsErrorRegex="#!/bin/bash"
 
-if [ $ret -ne 0 ] || [[ $fileContents =~ $contentsErrorRegex ]]
+if [ $ret -ne 0 ] || [[ ! $fileContents =~ $contentsErrorRegex ]]
 then
     # Check to make sure that a OS file doesn't exist if we can't find a config file from the direct link
     echo "[WARNING] Failed to find a user configuration file, ${rawGithubSource}/${PLATFORM_CONFIG_LOCATION} is likely a directory so we will try and search for a ${OPERATING_SYSTEM}.sh file."
     downloadPlatformConfigFile "${PLATFORM_CONFIG_LOCATION}" "${OPERATING_SYSTEM}.sh"
 
-    if [ $ret -ne 0 ] || [[ $fileContents =~ $contentsErrorRegex ]]
+    if [ $ret -ne 0 ] || [[ ! $fileContents =~ $contentsErrorRegex ]]
     then
         # If there is no user platform config, use adopt's as a default instead
         echo "[WARNING] Failed to download a user platform configuration file. Downloading Adopt's ${OPERATING_SYSTEM}.sh configuration file instead."
         downloadPlatformConfigFile "${ADOPT_PLATFORM_CONFIG_LOCATION}" "${OPERATING_SYSTEM}.sh"
 
-        if [ $ret -ne 0 ] || [[ $fileContents =~ $contentsErrorRegex ]]
+        if [ $ret -ne 0 ] || [[ ! $fileContents =~ $contentsErrorRegex ]]
         then
             echo "[ERROR] Failed to download a platform configuration file from User and Adopt's repositories"
             exit 2

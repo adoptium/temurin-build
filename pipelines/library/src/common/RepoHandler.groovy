@@ -18,8 +18,8 @@ class RepoHandler {
         this.context = context
         this.configs = configs
 
-        def get = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
-        this.ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(get.getInputStream().getText()) as Map
+        def getAdopt = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
+        this.ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(getAdopt.getInputStream().getText()) as Map
     }
 
     /*
@@ -47,8 +47,8 @@ class RepoHandler {
     Setter to retrieve and save a user defaults json inside the object
     */
     public Map<String, ?> setUserDefaultsJson(String url) {
-        def get = new URL(url).openConnection()
-        this.USER_DEFAULTS_JSON = new JsonSlurper().parseText(get.getInputStream().getText()) as Map
+        def getUser = new URL(url).openConnection()
+        this.USER_DEFAULTS_JSON = new JsonSlurper().parseText(getUser.getInputStream().getText()) as Map
     }
 
     /*

@@ -47,7 +47,7 @@ node('master') {
       def retiredVersions = [9, 10, 12, 13, 14, 15]
       def generatedPipelines = []
 
-      // Load gitUri and gitBranch. These determine where we will be pulling user configs from.
+      // Load git url and branch and gitBranch. These determine where we will be pulling user configs from.
       def repoUri = (params.REPOSITORY_URL) ?: DEFAULTS_JSON["repository"]["url"]
       repoBranch = (params.REPOSITORY_BRANCH) ?: DEFAULTS_JSON["repository"]["branch"]
 

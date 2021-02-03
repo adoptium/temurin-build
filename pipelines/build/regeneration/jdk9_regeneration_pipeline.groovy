@@ -18,7 +18,6 @@ limitations under the License.
 */
 
 String javaVersion = "jdk9"
-
 String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/AdoptOpenJDK/openjdk-build/master/pipelines/defaults.json"
 String DEFAULTS_FILE_URL = (params.DEFAULTS_URL) ?: ADOPT_DEFAULTS_FILE_URL
 
@@ -31,14 +30,14 @@ node ("master") {
   }
 
   // Retrieve User Defaults
-  def get = new URL(DEFAULTS_FILE_URL).openConnection()
-  Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(get.getInputStream().getText()) as Map
+  def getUser = new URL(DEFAULTS_FILE_URL).openConnection()
+  Map<String, ?> DEFAULTS_JSON = new JsonSlurper().parseText(getUser.getInputStream().getText()) as Map
   if (!DEFAULTS_JSON || !Map.class.isInstance(DEFAULTS_JSON)) {
     throw new Exception("[ERROR] No DEFAULTS_JSON found at ${DEFAULTS_FILE_URL}. Please ensure this path is correct and it leads to a JSON or Map object file.")
   }
 
   try {
-    // Load gitUri and gitBranch. These determine where we will be pulling configs from.
+    // Load git url and branch and gitBranch. These determine where we will be pulling configs from.
     def repoUri = (params.REPOSITORY_URL) ?: DEFAULTS_JSON["repository"]["url"]
     def repoBranch = (params.REPOSITORY_BRANCH) ?: DEFAULTS_JSON["repository"]["branch"]
 
@@ -76,7 +75,7 @@ node ("master") {
 
     checkoutUser()
 
-    // Import adopt class library. This contains our groovy classes, used for carrying across metadata between jobs.
+    // Import adopt class library. This contains groovy classes, used for carrying across metadata between jobs.
     def libraryPath = (params.LIBRARY_PATH) ?: DEFAULTS_JSON['importLibraryScript']
     try {
       load "${WORKSPACE}/${libraryPath}"
@@ -167,6 +166,7 @@ node ("master") {
 
     def excludes = (params.EXCLUDES_LIST) ?: ""
     def jenkinsCreds = (params.JENKINS_AUTH) ?: ""
+    Integer sleepTime = (params.SLEEP_TIME) != "" ? Integer.parseInteger(SLEEP_TIME) : 900
 
     println "[INFO] Running regeneration script with the following configuration:"
     println "VERSION: $javaVersion"
@@ -181,6 +181,7 @@ node ("master") {
     println "BASE FILE PATH: $baseFilePath"
     println "LIBRARY PATH: $libraryPath"
     println "EXCLUDES LIST: $excludes"
+    println "SLEEP_TIME: $sleepTime"
     if (jenkinsCreds == "") { println "[WARNING] No Jenkins API Credentials have been provided! If your server does not have anonymous read enabled, you may encounter 403 api request error codes." }
 
     // Load regen script and execute base file
@@ -208,6 +209,7 @@ node ("master") {
           targetConfigurations,
           DEFAULTS_JSON,
           excludes,
+          sleepTime,
           currentBuild,
           this,
           jobRoot,
@@ -229,6 +231,7 @@ node ("master") {
         targetConfigurations,
         DEFAULTS_JSON,
         excludes,
+        sleepTime,
         currentBuild,
         this,
         jobRoot,

@@ -30,6 +30,7 @@ class Regeneration implements Serializable {
     private final Map<String, ?> targetConfigurations
     private final Map<String, ?> DEFAULTS_JSON
     private final Map<String, ?> excludedBuilds
+    private final Integer sleepTime
     private final def currentBuild
     private final def context
 
@@ -59,6 +60,7 @@ class Regeneration implements Serializable {
         Map<String, ?> targetConfigurations,
         Map<String, ?> DEFAULTS_JSON,
         Map<String, ?> excludedBuilds,
+        Integer sleepTime,
         currentBuild,
         context,
         String jobRootDir,
@@ -402,7 +404,7 @@ class Regeneration implements Serializable {
         params.put("JOB_FOLDER", jobFolder)
         params.put("SCRIPT_PATH", scriptPath)
 
-        params.put("GIT_URI", gitRemoteConfigs['url'])
+        params.put("GIT_URL", gitRemoteConfigs['url'])
         params.put("GIT_BRANCH", gitBranch)
 
         // We have to use JsonSlurpers throughout the code for instantiating maps for consistancy and parsing reasons
@@ -477,15 +479,15 @@ class Regeneration implements Serializable {
     */
     def queryAPI(String query) {
         try {
-            def get = new URL(query).openConnection()
+            def getJenkins = new URL(query).openConnection()
 
             // Set request credentials if they exist
             if (jenkinsCreds != "") {
                 def jenkinsAuth = "Basic " + new String(Base64.getEncoder().encode(jenkinsCreds.getBytes()))
-                get.setRequestProperty ("Authorization", jenkinsAuth)
+                getJenkins.setRequestProperty ("Authorization", jenkinsAuth)
             }
 
-            def response = new JsonSlurper().parseText(get.getInputStream().getText())
+            def response = new JsonSlurper().parseText(getJenkins.getInputStream().getText())
             return response
         } catch (Exception e) {
             // Failed to connect to jenkins api or a parsing error occurred
@@ -516,8 +518,6 @@ class Regeneration implements Serializable {
                     // Parse api response to only extract the relevant pipeline
                     getPipelines.jobs.name.each{ pipeline ->
                         if (pipeline == "openjdk${versionNumbers[0]}-pipeline") {
-                            // TODO: Parameterise this
-                            Integer sleepTime = 900
 
                             Boolean inProgress = true
                             while (inProgress) {
@@ -646,6 +646,7 @@ return {
     Map<String, ?> targetConfigurations,
     Map<String, ?> DEFAULTS_JSON,
     String excludes,
+    Integer sleepTime,
     def currentBuild,
     def context,
     String jobRootDir,
@@ -671,6 +672,7 @@ return {
             targetConfigurations,
             DEFAULTS_JSON,
             excludedBuilds,
+            sleepTime,
             currentBuild,
             context,
             jobRootDir,
