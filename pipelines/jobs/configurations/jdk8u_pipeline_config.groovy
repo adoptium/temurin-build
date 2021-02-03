@@ -77,7 +77,8 @@ class Config8 {
                         hotspot: 'xlc13&&aix710',
                         openj9:  'xlc13&&aix715'
                 ],
-                test                 : 'default'
+                test                 : 'default',
+                cleanWorkspaceAfterBuild: true
         ],
 
         s390xLinux    : [

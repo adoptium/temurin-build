@@ -100,7 +100,7 @@ class Config17 {
                 buildArgs           : [
                         hotspot : '--jvm-variant client,server'
                 ],
-                test                 : 'default'
+                test                : 'default'
         ],
 
         ppc64Aix    : [
@@ -110,7 +110,8 @@ class Config17 {
                         hotspot: 'xlc16&&aix710',
                         openj9:  'xlc16&&aix715'
                 ],
-                test                : 'default'
+                test                : 'default',
+                cleanWorkspaceAfterBuild: true
         ],
 
 
