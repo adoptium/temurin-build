@@ -157,6 +157,7 @@ class Build {
         if (buildConfig.ADDITIONAL_FILE_NAME_TAG) {
             switch (buildConfig.ADDITIONAL_FILE_NAME_TAG) {
                 case ~/.*XL.*/: jobName += "_xl"; break
+                case "mixedrefs": jobName += "_mixed"; break
             }
         }
         return "${jobName}"

@@ -5,19 +5,13 @@ class Config11 {
                 arch                : 'x64',
                 additionalNodeLabels : 'macos10.14',
                 test                : 'default',
+                additionalFileNameTag: [
+                        "openj9"    : "mixedrefs"
+                ],
                 configureArgs       : [
-                        "openj9"      : '--enable-dtrace=auto --with-cmake',
+                        "openj9"      : '--enable-dtrace=auto --with-cmake --with-mixedrefs',
                         "hotspot"     : '--enable-dtrace=auto'
                 ]
-        ],
-
-        x64MacXL    : [
-                os                   : 'mac',
-                arch                 : 'x64',
-                additionalNodeLabels : 'macos10.14',
-                test                 : 'default',
-                additionalFileNameTag: "macosXL",
-                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto --with-cmake'
         ],
 
         x64Linux  : [
@@ -28,8 +22,11 @@ class Config11 {
                         openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
                 ],
                 test                : 'default',
+                additionalFileNameTag: [
+                        "openj9"    : "mixedrefs"
+                ],
                 configureArgs       : [
-                        "openj9"      : '--enable-jitserver --enable-dtrace=auto',
+                        "openj9"      : '--enable-jitserver --enable-dtrace=auto --with-mixedrefs',
                         "hotspot"     : '--enable-dtrace=auto',
                         "corretto"    : '--enable-dtrace=auto',
                         "SapMachine"  : '--enable-dtrace=auto',
@@ -48,16 +45,13 @@ class Config11 {
                 buildArgs : [
                         hotspot : '--jvm-variant client,server'
                 ],
+                configureArgs       : [
+                        "openj9"      : '--with-mixedrefs'
+                ],
+                additionalFileNameTag: [
+                        "openj9"    : "mixedrefs"
+                ],
                 test                : 'default'
-        ],
-
-        x64WindowsXL    : [
-                os                   : 'windows',
-                arch                 : 'x64',
-                additionalNodeLabels : 'win2012&&vs2017',
-                test                 : 'default',
-                additionalFileNameTag: "windowsXL",
-                configureArgs        : '--with-noncompressedrefs'
         ],
 
         x32Windows: [
@@ -81,6 +75,12 @@ class Config11 {
                         openj9:  'xlc13&&aix715'
                 ],
                 test                : 'default',
+                configureArgs       : [
+                        "openj9"      : '--with-mixedrefs'
+                ],
+                additionalFileNameTag: [
+                        "openj9"    : "mixedrefs"
+                ],
                 cleanWorkspaceAfterBuild: true
         ],
 
@@ -88,7 +88,13 @@ class Config11 {
                 os                  : 'linux',
                 arch                : 's390x',
                 test                : 'default',
-                configureArgs       : '--enable-dtrace=auto'
+                additionalFileNameTag: [
+                        "openj9"    : "mixedrefs"
+                ],
+                configureArgs       : [
+                        "openj9"      : '--enable-dtrace=auto --with-mixedrefs',
+                        "hotspot"     : '--enable-dtrace=auto'
+                ]
         ],
 
         sparcv9Solaris    : [
@@ -103,9 +109,12 @@ class Config11 {
                 arch                : 'ppc64le',
                 additionalNodeLabels : 'centos7',
                 test                : 'default',
+                additionalFileNameTag: [
+                        "openj9"    : "mixedrefs"
+                ],
                 configureArgs       : [
                         "hotspot"     : '--enable-dtrace=auto',
-                        "openj9"      : '--enable-dtrace=auto --enable-jitserver'
+                        "openj9"      : '--enable-dtrace=auto --enable-jitserver --with-mixedrefs'
                 ]
 
         ],
@@ -122,48 +131,17 @@ class Config11 {
                 arch                : 'aarch64',
                 dockerImage         : 'adoptopenjdk/centos7_build_image',
                 test                : 'default',
+                additionalFileNameTag: [
+                        "openj9"    : "mixedrefs"
+                ],
                 configureArgs       : [
                         "hotspot" : '--enable-dtrace=auto',
-                        "openj9" : '--enable-dtrace=auto',
+                        "openj9" : '--enable-dtrace=auto --with-mixedrefs',
                         "corretto" : '--enable-dtrace=auto',
                         "dragonwell" : "--enable-dtrace=auto --with-extra-cflags=\"-march=armv8.2-a+crypto\" --with-extra-cxxflags=\"-march=armv8.2-a+crypto\""
                 ]
         ],
 
-        x64LinuxXL    : [
-                os                   : 'linux',
-                dockerImage          : 'adoptopenjdk/centos6_build_image',
-                dockerFile: [
-                        openj9  : 'pipelines/build/dockerFiles/cuda.dockerfile'
-                ],
-                arch                 : 'x64',
-                test                 : "default",
-                additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --enable-jitserver --enable-dtrace=auto'
-        ],
-        s390xLinuxXL    : [
-                os                   : 'linux',
-                arch                 : 's390x',
-                test                 : 'default',
-                additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
-        ],
-        ppc64leLinuxXL    : [
-                os                   : 'linux',
-                arch                 : 'ppc64le',
-                additionalNodeLabels : 'centos7',
-                test                 : 'default',
-                additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto --enable-jitserver'
-        ],
-        aarch64LinuxXL    : [
-                os                   : 'linux',
-                dockerImage          : 'adoptopenjdk/centos7_build_image',
-                arch                 : 'aarch64',
-                test                 : 'default',
-                additionalFileNameTag: "linuxXL",
-                configureArgs        : '--with-noncompressedrefs --enable-dtrace=auto'
-        ],
         riscv64Linux      :  [
                 os                   : 'linux',
                 dockerImage          : 'adoptopenjdk/centos6_build_image',
