@@ -44,6 +44,7 @@ class Builder implements Serializable {
     Map<String, List<String>> dockerExcludes
     String scmReference
     String publishName
+    String releaseType
 
     boolean release
     boolean publish
@@ -202,11 +203,14 @@ class Builder implements Serializable {
         List<String> testList = []
         /* 
         * No test key or key value is test: false  --- test disabled
-        * Key value is test: 'default' --- nightly build trigger 'nightly' test set, release build trigger 'nightly' + 'weekly' test sets
+        * Key value is test: 'default' --- nightly build trigger 'nightly' test set, weekly build trigger or release build trigger 'nightly' + 'weekly' test sets
         * Key value is test: [customized map] specified nightly and weekly test lists
         */
         if (configuration.containsKey("test") && configuration.get("test")) {
-            def testJobType = release ? "release" : "nightly"
+            def testJobType = "nightly"
+            if (releaseType.equals("Weekly") || releaseType.equals("Release")) {
+                testJobType = "weekly"
+            }
 
             if (isMap(configuration.test)) {
 
@@ -723,7 +727,7 @@ return {
         }
 
         boolean publish = false
-        if (releaseType == 'Nightly') {
+        if (releaseType == 'Nightly' || releaseType == 'Weekly') {
             publish = true
         }
 
@@ -753,6 +757,7 @@ return {
             enableSigner: Boolean.parseBoolean(enableSigner),
             publish: publish,
             release: release,
+            releaseType: releaseType,
             scmReference: scmReference,
             publishName: publishName,
             additionalConfigureArgs: additionalConfigureArgs,
