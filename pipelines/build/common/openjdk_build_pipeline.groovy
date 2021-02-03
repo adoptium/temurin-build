@@ -908,7 +908,7 @@ class Build {
     Executed on a build node, the function checks out the repository and executes the build via ./make-adopt-build-farm.sh
     Once the build completes, it will calculate its version output, commit the first metadata writeout, and archive the build results.
     */
-    def buildScripts(cleanWorkspace, filename, useAdoptBashScripts) {
+    def buildScripts(cleanWorkspace, filename, useAdoptShellScripts) {
         return context.stage("build") {
 
             if (cleanWorkspace) {
@@ -969,7 +969,7 @@ class Build {
                 context.withEnv(envVars) {
                     try {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
-                            if (useAdoptBashScripts) {
+                            if (useAdoptShellScripts) {
                                 context.println "[CHECKOUT] Checking out to AdoptOpenJDK/openjdk-build to use their bash scripts..."
                                 repoHandler.checkoutAdopt()
                                 context.sh(script: "./build-farm/make-adopt-build-farm.sh")
@@ -1087,7 +1087,7 @@ class Build {
                 def enableInstallers = Boolean.valueOf(buildConfig.ENABLE_INSTALLERS)
                 def enableSigner = Boolean.valueOf(buildConfig.ENABLE_SIGNER)
                 def cleanWorkspace = Boolean.valueOf(buildConfig.CLEAN_WORKSPACE)
-                def useAdoptBashScripts = Boolean.valueOf(buildConfig.USE_ADOPT_BASH_SCRIPTS)
+                def useAdoptShellScripts = Boolean.valueOf(buildConfig.USE_ADOPT_SHELL_SCRIPTS)
 
                 context.stage("queue") {
                     /* This loads the library containing two Helper classes, and causes them to be
@@ -1145,7 +1145,7 @@ class Build {
                                 }
 
                                 context.docker.build("build-image", "--build-arg image=${buildConfig.DOCKER_IMAGE} -f ${buildConfig.DOCKER_FILE} .").inside {
-                                    buildScripts(cleanWorkspace, filename, useAdoptBashScripts)
+                                    buildScripts(cleanWorkspace, filename, useAdoptShellScripts)
                                 }
 
                             // Otherwise, pull the docker image from DockerHub
@@ -1159,7 +1159,7 @@ class Build {
                                 }
 
                                 context.docker.image(buildConfig.DOCKER_IMAGE).inside {
-                                    buildScripts(cleanWorkspace, filename, useAdoptBashScripts)
+                                    buildScripts(cleanWorkspace, filename, useAdoptShellScripts)
                                 }
                             }
                         }
@@ -1180,10 +1180,10 @@ class Build {
                                 }
                                 context.echo("changing ${workspace}")
                                 context.ws(workspace) {
-                                    buildScripts(cleanWorkspace, filename, useAdoptBashScripts)
+                                    buildScripts(cleanWorkspace, filename, useAdoptShellScripts)
                                 }
                             } else {
-                                buildScripts(cleanWorkspace, filename, useAdoptBashScripts)
+                                buildScripts(cleanWorkspace, filename, useAdoptShellScripts)
                             }
                         }
                         context.println "[NODE SHIFT] OUT OF JENKINS NODE (LABELNAME ${buildConfig.NODE_LABEL}!)"

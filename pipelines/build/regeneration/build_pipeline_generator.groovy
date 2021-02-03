@@ -118,10 +118,10 @@ node('master') {
         enablePipelineSchedule = true
       }
 
-      // Load useAdoptBashScripts. This determines whether we will checkout to adopt's repository before running make-adopt-build-farm.sh or if we use the user's bash scripts.
-      Boolean useAdoptBashScripts = false
-      if (params.USE_ADOPT_BASH_SCRIPTS) {
-        useAdoptBashScripts = true
+      // Load useAdoptShellScripts. This determines whether we will checkout to adopt's repository before running make-adopt-build-farm.sh or if we use the user's bash scripts.
+      Boolean useAdoptShellScripts = false
+      if (params.USE_ADOPT_SHELL_SCRIPTS) {
+        useAdoptShellScripts = true
       }
 
       println "[INFO] Running generator script with the following configuration:"
@@ -132,7 +132,7 @@ node('master') {
       println "NIGHTLY_FOLDER_PATH = $nightlyFolderPath"
       println "JOB_TEMPLATE_PATH = $jobTemplatePath"
       println "ENABLE_PIPELINE_SCHEDULE = $enablePipelineSchedule"
-      println "USE_ADOPT_BASH_SCRIPTS = $useAdoptBashScripts"
+      println "USE_ADOPT_SHELL_SCRIPTS = $useAdoptShellScripts"
 
       // Collect available JDK versions to check for generation (tip_version + 1 just in case it is out of date on a release day)
       def JobHelper = library(identifier: 'openjdk-jenkins-helper@master').JobHelper
@@ -200,7 +200,7 @@ node('master') {
           config.put("pipelineSchedule", target.triggerSchedule_nightly)
         }
 
-        if (useAdoptBashScripts.toBoolean()) {
+        if (useAdoptShellScripts.toBoolean()) {
           config.put("adoptScripts", true)
         }
 

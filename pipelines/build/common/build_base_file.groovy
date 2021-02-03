@@ -50,7 +50,7 @@ class Builder implements Serializable {
     def scmVars
     String additionalBuildArgs
     String overrideFileNameVersion
-    boolean useAdoptBashScripts
+    boolean useAdoptShellScripts
     boolean cleanWorkspaceBeforeBuild
     String adoptBuildNumber
     boolean propagateFailures
@@ -148,7 +148,7 @@ class Builder implements Serializable {
             PLATFORM_CONFIG_LOCATION: platformSpecificConfigPath,
             CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
             OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
-            USE_ADOPT_BASH_SCRIPTS: useAdoptBashScripts,
+            USE_ADOPT_SHELL_SCRIPTS: useAdoptShellScripts,
             ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
             JDK_BOOT_VERSION: platformConfig.bootJDK as String,
             RELEASE: release,
@@ -583,7 +583,7 @@ class Builder implements Serializable {
             context.echo "Enable tests: ${enableTests}"
             context.echo "Enable Installers: ${enableInstallers}"
             context.echo "Enable Signer: ${enableSigner}"
-            context.echo "Use Adopt's Scripts: ${useAdoptBashScripts}"
+            context.echo "Use Adopt's Scripts: ${useAdoptShellScripts}"
             context.echo "Publish: ${publish}"
             context.echo "Release: ${release}"
             context.echo "Tag/Branch name: ${scmReference}"
@@ -697,7 +697,7 @@ return {
     String releaseType,
     String scmReference,
     String overridePublishName,
-    String useAdoptBashScripts,
+    String useAdoptShellScripts,
     String additionalConfigureArgs,
     def scmVars,
     String additionalBuildArgs,
@@ -754,7 +754,7 @@ return {
             scmVars: scmVars,
             additionalBuildArgs: additionalBuildArgs,
             overrideFileNameVersion: overrideFileNameVersion,
-            useAdoptBashScripts: Boolean.parseBoolean(useAdoptBashScripts),
+            useAdoptShellScripts: Boolean.parseBoolean(useAdoptShellScripts),
             cleanWorkspaceBeforeBuild: Boolean.parseBoolean(cleanWorkspaceBeforeBuild),
             adoptBuildNumber: adoptBuildNumber,
             propagateFailures: Boolean.parseBoolean(propagateFailures),

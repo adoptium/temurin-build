@@ -366,7 +366,7 @@ class Regeneration implements Serializable {
                 PLATFORM_CONFIG_LOCATION: platformSpecificConfigPath,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
                 OVERRIDE_FILE_NAME_VERSION: "",
-                USE_ADOPT_BASH_SCRIPTS: true,
+                USE_ADOPT_SHELL_SCRIPTS: true,
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
                 JDK_BOOT_VERSION: platformConfig.bootJDK as String,
                 RELEASE: false,
