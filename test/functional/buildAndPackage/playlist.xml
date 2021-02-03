@@ -15,11 +15,11 @@
 
 <playlist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../TKG/playlist.xsd">
     <test>
-        <testCaseName>BuildAndPackagingTests</testCaseName>
+        <testCaseName>Adopt_HS_FeatureTests</testCaseName>
         <command>
             $(JAVA_COMMAND) $(JVM_OPTIONS) -cp \
             $(Q)$(RESOURCES_DIR)$(P)$(TESTNG)$(P)$(TEST_RESROOT)$(D)BuildAndPackagingTests.jar$(Q) org.testng.TestNG \
-            $(Q)$(TEST_RESROOT)$(D)testng.xml$(Q) -d $(REPORTDIR) -testnames BuildAndPackagingTests -groups $(TEST_GROUP) \
+            $(Q)$(TEST_RESROOT)$(D)testng.xml$(Q) -d $(REPORTDIR) -testnames CommonFeatureTests,HotspotFeatureTests -groups $(TEST_GROUP) \
             -excludegroups $(DEFAULT_EXCLUDE); $(TEST_STATUS)
         </command>
         <levels>
@@ -28,9 +28,30 @@
         <groups>
             <group>functional</group>
         </groups>
+        <impls>
+            <impl>hotspot</impl>
+        </impls>
          <vendors>
             <vendor>adoptopenjdk</vendor>
         </vendors>
+    </test>
+    <test>
+        <testCaseName>Adopt_J9_FeatureTests</testCaseName>
+        <command>
+            $(JAVA_COMMAND) $(JVM_OPTIONS) -cp \
+            $(Q)$(RESOURCES_DIR)$(P)$(TESTNG)$(P)$(TEST_RESROOT)$(D)BuildAndPackagingTests.jar$(Q) org.testng.TestNG \
+            $(Q)$(TEST_RESROOT)$(D)testng.xml$(Q) -d $(REPORTDIR) -testnames CommonFeatureTests -groups $(TEST_GROUP) \
+            -excludegroups $(DEFAULT_EXCLUDE); $(TEST_STATUS)
+        </command>
+        <levels>
+            <level>extended</level>
+        </levels>
+        <groups>
+            <group>functional</group>
+        </groups>
+        <impls>
+            <impl>openj9</impl>
+        </impls>
     </test>
     <test>
 		<testCaseName>CudaEnabledTest</testCaseName>

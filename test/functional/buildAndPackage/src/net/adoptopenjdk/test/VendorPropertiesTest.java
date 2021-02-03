@@ -160,7 +160,7 @@ public class VendorPropertiesTest {
         @Override
         public void javaVendorVersion(String value) {
             assertNotEquals(value.replaceAll("[^0-9]", "").length(), 0,
-                    "java.vendor.version contains no numbers");
+                    "java.vendor.version contains no numbers: " + value);
         }
 
         @Override
@@ -171,7 +171,7 @@ public class VendorPropertiesTest {
         @Override
         public void javaVmVersion(String value) {
             assertNotEquals(value.replaceAll("[^0-9]", "").length(), 0,
-                    "java.vm.version contains no numbers");
+                    "java.vm.version contains no numbers: " + value);
         }
     }
 
