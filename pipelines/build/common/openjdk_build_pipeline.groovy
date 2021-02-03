@@ -336,14 +336,8 @@ class Build {
 
                 // Execute sign job
                 def signJob = context.build job: "build-scripts/release/sign_build",
-                        propagate: true,
-                        parameters: params
-
-                // Output notification of downstream failure (the build will fail automatically)
-                def jobResult = signJob.getResult()
-                if (jobResult != 'SUCCESS') {
-                    context.println "ERROR: downstream sign_build ${jobResult}.\nSee ${signJob.getAbsoluteUrl()} for details"
-                }
+                    propagate: true,
+                    parameters: params
 
                 context.node('master') {
                     //Copy signed artifact back and archive again
