@@ -47,28 +47,29 @@ node("master") {
       ])
     }
 
-    /*
-    Loads a file, changing to Adopt's repo if needs be.
-    */
-    def loadFile = { path, adoptPath ->
-        try {
-            load "${WORKSPACE}/${path}"
-        } catch (NoSuchFileException e) {
-            println "[WARNING] Using Adopt's ${adoptPath} script as none was found at ${WORKSPACE}/${path}"
-            checkoutAdopt()
-            load "${WORKSPACE}/${adoptPath}"
-            checkout scm
-        }
-    }
-
     checkout scm
 
     if (params.USER_REMOTE_CONFIGS) {
         userRemoteConfigs = new JsonSlurper().parseText(USER_REMOTE_CONFIGS) as Map
     }
 
-    loadFile(libraryPath, ADOPT_DEFAULTS_JSON['importLibraryScript'])
-    loadFile(baseFilePath, ADOPT_DEFAULTS_JSON['baseFileDirectories']['downstream'])
+    try {
+        load "${WORKSPACE}/${libraryPath}"
+    } catch (NoSuchFileException e) {
+        println "[WARNING] Using Adopt's import library script as none was found at ${WORKSPACE}/${libraryPath}"
+        checkoutAdopt()
+        load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['importLibraryScript']}"
+        checkout scm
+    }
+
+    try {
+        downstreamBuilder = load "${WORKSPACE}/${baseFilePath}"
+    } catch (NoSuchFileException e) {
+        println "[WARNING] Using Adopt's base file script as none was found at ${baseFilePath}"
+        checkoutAdopt()
+        downstreamBuilder = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['baseFileDirectories']['downstream']}"
+        checkout scm
+    }
 
 }
 
