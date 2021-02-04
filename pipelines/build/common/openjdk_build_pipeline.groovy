@@ -170,7 +170,12 @@ class Build {
         def jdkBranch
 
         if (buildConfig.SCM_REF) {
-            jdkBranch = buildConfig.SCM_REF
+            // We need to override the SCM ref on jdk8 arm builds change aarch64-shenandoah-jdk8u282-b08 to jdk8u282-b08
+            if (buildConfig.JAVA_TO_BUILD == "jdk8u" &&  buildConfig.VARIANT == "hotspot" && (buildConfig.ARCHITECTURE == "aarch64" || buildConfig.ARCHITECTURE == "arm")) {
+                jdkBranch = buildConfig.OVERRIDE_FILE_NAME_VERSION
+            } else {
+                jdkBranch = buildConfig.SCM_REF
+            }
         } else {
             if (buildConfig.VARIANT == "corretto") {
                 jdkBranch = 'develop'
