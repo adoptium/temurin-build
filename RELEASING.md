@@ -186,9 +186,9 @@ The following examples all use `-m1` as an example - this gets replaced with a l
    JDK_FIX_VERSION=0
    ```
 
-5. Build and Test the OpenJDK for OpenJ9 "release" at AdoptOpenJDK using a build pipeline job as follows https://ci.adoptopenjdk.net/job/build-scripts/job/openjdkNN-pipeline/build?delay=0sec
+5. Build and Test the OpenJDK for OpenJ9 "release" at AdoptOpenJDK using a "Weekly" releaseType so it runs the extended tests. Submit the Build pipeline job as follows https://ci.adoptopenjdk.net/job/build-scripts/job/openjdkNN-pipeline/build?delay=0sec
    - `targetConfigurations`: remove all "hotspot" entries
-   - `releaseType`: `Nightly`
+   - `releaseType`: `Weekly`
    - `overridePublishName`: github binaries publish name, e.g. `jdk8u232-b09_openj9-0.17.0-m1` or `jdk-11.0.5+10_openj9-0.17.0-m1`
    (Note: Everything before the underscore should be copied from the OPENJDK_TAG value inside <extensions_repo_url>/closed/openjdk-tag.gmk)
    - `scmReference`: extensions release branch: e.g. `openj9-0.17.0`

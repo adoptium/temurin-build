@@ -130,3 +130,8 @@ Check out [Adopt's guide]((docs/UsingOurScripts.md)) to setting up your own scri
 The operating systems/distributions which we build or are documented in the
 [openjdk-build wiki](https://github.com/AdoptOpenJDK/openjdk-build/wiki/%5BWIP%5D-Minimum-OS-levels).
 Runtime platforms are in our [supported platforms page](https://adoptopenjdk.net/supported_platforms.html).
+
+## How to add a new build pipeline param and associated job configuration?
+
+The following PR: https://github.com/AdoptOpenJDK/openjdk-build/pull/2416
+demonstrates changes required to add a new build pipeline param, and also associated version/platform job configurations for setting the value when needed.

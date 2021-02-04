@@ -89,6 +89,8 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>ENABLE_INSTALLERS</strong></dt><dd>Run installers</dd>
                 <dt><strong>ENABLE_SIGNER</strong></dt><dd>Run signer</dd>
                 <dt><strong>CLEAN_WORKSPACE</strong></dt><dd>Wipe out workspace before build</dd>
+                <dt><strong>CLEAN_WORKSPACE_AFTER</strong></dt><dd>Wipe out workspace after build</dd>
+                <dt><strong>CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER</strong></dt><dd>Wipe out workspace build output only, after build</dd>
             </dl>
         """)
         textParam('USER_REMOTE_CONFIGS', "$USER_REMOTE_CONFIGS", """
