@@ -72,15 +72,26 @@ node ("master") {
         checkout scm
     }
 
+    // Get JDK head number so we can identify which config to pull in for JDK head
+    String headVersion = ""
+    if (javaToBuild == "jdk") {
+        def JobHelper = library(identifier: 'openjdk-jenkins-helper@master').JobHelper
+        println "Querying Adopt Api for the JDK-Head number (tip_version)..."
+
+        def response = JobHelper.getAvailableReleases(this)
+        headVersion = response.getAt("tip_version")
+        println "Found Java Version Number: ${headVersion}"
+    }
+
     // Load buildConfigFilePath. This is where jdkxx_pipeline_config.groovy is located. It contains the build configurations for each platform, architecture and variant.
-    def buildConfigFilePath = (params.buildConfigFilePath) ?: "${DEFAULTS_JSON['configDirectories']['build']}/${javaToBuild}_pipeline_config.groovy"
+    def buildConfigFilePath = (params.buildConfigFilePath) ?: "${DEFAULTS_JSON['configDirectories']['build']}/${javaToBuild}${headVersion}_pipeline_config.groovy"
     try {
         buildConfigurations = load "${WORKSPACE}/${buildConfigFilePath}"
     } catch (NoSuchFileException e) {
         println "[WARNING] ${buildConfigFilePath} does not exist in your repository. Attempting to pull Adopt's build configs instead."
 
         checkoutAdopt()
-        buildConfigurations = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaToBuild}_pipeline_config.groovy"
+        buildConfigurations = load "${WORKSPACE}/${ADOPT_DEFAULTS_JSON['configDirectories']['build']}/${javaToBuild}${headVersion}_pipeline_config.groovy"
         checkout scm
     }
 
