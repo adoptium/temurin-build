@@ -21,7 +21,7 @@ limitations under the License.
 
 String buildFolder = "$JOB_FOLDER"
 
-if (!binding.hasVariable('GIT_URI')) GIT_URI = "https://github.com/AdoptOpenJDK/openjdk-build.git"
+if (!binding.hasVariable('GIT_URL')) GIT_URL = "https://github.com/AdoptOpenJDK/openjdk-build.git"
 if (!binding.hasVariable('GIT_BRANCH')) GIT_BRANCH = "master"
 
 folder(buildFolder) {
@@ -35,18 +35,18 @@ pipelineJob("$buildFolder/$JOB_NAME") {
             scm {
                 git {
                     remote {
-                        url(GIT_URI)
+                        url(GIT_URL)
                         refspec(" +refs/pull/*:refs/remotes/origin/pr/* +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*")
+                        credentials("${CHECKOUT_CREDENTIALS}")
                     }
                     branch("${GIT_BRANCH}")
                     extensions {
                         //repo clean is performed after scm checkout in pipelines/build/common/openjdk_build_pipeline.groovy
-
                         pruneStaleBranch()
                     }
                 }
             }
-            scriptPath('pipelines/build/common/kick_off_build.groovy')
+            scriptPath("${SCRIPT_PATH}")
         }
     }
     properties {
@@ -78,8 +78,10 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>CODEBUILD</strong></dt><dd>Use a dynamic codebuild machine if no other machine is available</dd>
                 <dt><strong>DOCKER_IMAGE</strong></dt><dd>Use a docker build environment</dd>
                 <dt><strong>DOCKER_FILE</strong></dt><dd>Relative path to a dockerfile to be built and used on top of the DOCKER_IMAGE</dd>
+                <dt><strong>PLATFORM_CONFIG_LOCATION</strong></dt><dd>Repo owner, branch name and relative path to the platform specific configuration for this paticular OS</dd>
                 <dt><strong>CONFIGURE_ARGS</strong></dt><dd>Arguments for ./configure. Escape all speech marks used within this parameter.</dd>
                 <dt><strong>OVERRIDE_FILE_NAME_VERSION</strong></dt><dd>Set the version string on the file name</dd>
+                <dt><strong>USE_ADOPT_SHELL_SCRIPTS</strong></dt><dd>Use Adopt's make-adopt-build-farm.sh and other bash scripts</dd>
                 <dt><strong>RELEASE</strong></dt><dd>Is this build a release</dd>
                 <dt><strong>PUBLISH_NAME</strong></dt><dd>Set name of publish</dd>
                 <dt><strong>ADOPT_BUILD_NUMBER</strong></dt><dd>Adopt build number</dd>
@@ -91,5 +93,20 @@ pipelineJob("$buildFolder/$JOB_NAME") {
                 <dt><strong>CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER</strong></dt><dd>Wipe out workspace build output only, after build</dd>
             </dl>
         """)
+        textParam('USER_REMOTE_CONFIGS', "$USER_REMOTE_CONFIGS", """
+        <strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes down the user's git checkout configs to the downstream job.
+        """)
+        textParam('DEFAULTS_JSON', "$DEFAULTS_JSON", """
+        <strong>DO NOT ALTER THIS PARAM UNLESS YOU KNOW WHAT YOU ARE DOING!</strong> This passes the user's default constants to the downstream job.
+        """)
+        textParam('ADOPT_DEFAULTS_JSON', "$ADOPT_DEFAULTS_JSON", """
+        <strong>DO NOT ALTER THIS PARAM UNDER ANY CIRCUMSTANCES!</strong> This passes down adopt's default constants to the downstream job. NOTE: <code>DEFAULTS_JSON</code> has priority, the constants contained within this param will only be used as a failsafe.
+        """)
+        if (binding.hasVariable('CUSTOM_LIBRARY_LOCATION')) {
+            stringParam('CUSTOM_LIBRARY_LOCATION', "$CUSTOM_LIBRARY_LOCATION")
+        }
+        if (binding.hasVariable('CUSTOM_BASEFILE_LOCATION')) {
+            stringParam('CUSTOM_BASEFILE_LOCATION', "$CUSTOM_BASEFILE_LOCATION")
+        }
     }
 }

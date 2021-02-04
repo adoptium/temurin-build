@@ -24,9 +24,14 @@ class PullRequestTestPipeline implements Serializable {
     String branch
     String gitRepo
     Map<String, ?> testConfigurations
+    Map<String, ?> DEFAULTS_JSON
     List<Integer> javaVersions
 
     String BUILD_FOLDER = "build-scripts-pr-tester/build-test"
+    String ADOPT_DEFAULTS_FILE_URL = "https://raw.githubusercontent.com/AdoptOpenJDK/openjdk-build/master/pipelines/defaults.json"
+    def getAdopt = new URL(ADOPT_DEFAULTS_FILE_URL).openConnection()
+    Map<String, ?> ADOPT_DEFAULTS_JSON = new JsonSlurper().parseText(getAdopt.getInputStream().getText()) as Map
+
 
     /*
     * Creates a configuration for the top level pipeline job
@@ -39,67 +44,78 @@ class PullRequestTestPipeline implements Serializable {
                 BRANCH              : "${branch}",
                 BUILD_FOLDER        : BUILD_FOLDER,
                 JOB_NAME            : "openjdk${javaVersion}-pipeline",
-                SCRIPT              : "pipelines/build/openjdk${javaVersion}_pipeline.groovy",
+                SCRIPT              : "${DEFAULTS_JSON['scriptDirectories']['upstream']}/openjdk${javaVersion}_pipeline.groovy",
                 disableJob          : false,
-                triggerSchedule     : "0 0 31 2 0",
-                targetConfigurations: testConfigurations
+                pipelineSchedule    : "0 0 31 2 0", // 31st Feb so will never run
+                targetConfigurations: testConfigurations,
+                defaultsJson        : DEFAULTS_JSON,
+                adoptDefaultsJson   : ADOPT_DEFAULTS_JSON,
+                adoptScripts        : false
         ]
     }
 
     /*
-    * Generates the top level pipeline job 
+    * Generates the top level pipeline job
     */
     def generatePipelineJob(def javaVersion) {
+        context.println "[INFO] Running Pipeline Generation Script..."
         Map<String, ?> config = generateConfig(javaVersion)
         context.checkout([$class: 'GitSCM', userRemoteConfigs: [[url: config.GIT_URL]], branches: [[name: branch]]])
 
         context.println "JDK${javaVersion} disableJob = ${config.disableJob}"
-        context.jobDsl targets: "pipelines/jobs/pipeline_job_template.groovy", ignoreExisting: false, additionalParameters: config
+        context.jobDsl targets: DEFAULTS_JSON["templateDirectories"]["upstream"], ignoreExisting: false, additionalParameters: config
     }
 
     /*
     * Main function, called from the pr tester in jenkins itself
     */
     def runTests() {
-
         def jobs = [:]
         Boolean pipelineFailed = false
 
-        context.println "loading ${context.WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
-        Closure regenerationScript = context.load "${context.WORKSPACE}/pipelines/build/common/config_regeneration.groovy"
+        context.println "loading ${context.WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']['regeneration']}"
+        Closure regenerationScript = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['scriptDirectories']['regeneration']}"
 
         javaVersions.each({ javaVersion ->
             // generate top level job
             generatePipelineJob(javaVersion)
-            context.println "[INFO] Running regeneration script..."
-            
+            context.println "[INFO] Running downstream jobs regeneration script..."
+
             // Load platform specific build configs
             def buildConfigurations
             Boolean updateRepo = false
-            context.println "loading ${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy"
+            context.println "loading ${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy"
             try {
-                buildConfigurations = context.load "${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy"
+                buildConfigurations = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy"
             } catch (NoSuchFileException e) {
-                context.println "[WARNING] ${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}_pipeline_config.groovy does not exist. Trying jdk${javaVersion}u_pipeline_config.groovy..."
-                buildConfigurations = context.load "${context.WORKSPACE}/pipelines/jobs/configurations/jdk${javaVersion}u_pipeline_config.groovy"
+                context.println "[WARNING] ${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}_pipeline_config.groovy does not exist. Trying jdk${javaVersion}u_pipeline_config.groovy..."
+
+                buildConfigurations = context.load "${context.WORKSPACE}/${DEFAULTS_JSON['configDirectories']['build']}/jdk${javaVersion}u_pipeline_config.groovy"
                 updateRepo = true
             }
-            
+
             String actualJavaVersion = updateRepo ? "jdk${javaVersion}u" : "jdk${javaVersion}"
             def excludedBuilds = ""
 
             // Generate downstream pipeline jobs
             regenerationScript(
-                    actualJavaVersion,
-                    buildConfigurations,
-                    testConfigurations,
-                    excludedBuilds,
-                    currentBuild,
-                    context,
-                    "build-scripts-pr-tester/build-test",
-                    gitRepo,
-                    branch,
-                    "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test"
+                actualJavaVersion,
+                buildConfigurations,
+                testConfigurations,
+                DEFAULTS_JSON,
+                excludedBuilds,
+                currentBuild,
+                context,
+                "build-scripts-pr-tester/build-test",
+                [url: gitRepo],
+                branch,
+                DEFAULTS_JSON["templateDirectories"]["downstream"],
+                DEFAULTS_JSON["importLibraryScript"],
+                DEFAULTS_JSON["baseFileDirectories"]["downstream"],
+                DEFAULTS_JSON["scriptDirectories"]["downstream"],
+                "https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test",
+                null,
+                null
             ).regenerate()
 
             context.println "[SUCCESS] All done!"
@@ -121,7 +137,7 @@ class PullRequestTestPipeline implements Serializable {
                 }
             }
         })
-        
+
         context.parallel jobs
 
         // Only clean up the space if the tester passed
@@ -133,7 +149,6 @@ class PullRequestTestPipeline implements Serializable {
             currentBuild.result = 'FAILURE'
         }
     }
-
 }
 
 Map<String, ?> defaultTestConfigurations = [
@@ -155,24 +170,21 @@ Map<String, ?> defaultTestConfigurations = [
 
 List<Integer> defaultJavaVersions = [8, 11, 16, 17]
 
-defaultGitRepo = "https://github.com/AdoptOpenJDK/openjdk-build"
-
 return {
     String branch,
     def currentBuild,
     def context,
-    String gitRepo = defaultGitRepo,
+    String gitRepo,
+    Map<String, ?> DEFAULTS_JSON,
     String testConfigurations = null,
     String versions = null
         ->
-
-        context.load "pipelines/build/common/import_lib.groovy"
-
         Map<String, ?> testConfig = defaultTestConfigurations
         List<Integer> javaVersions = defaultJavaVersions
+        Map<String, ?> defaultsJson = DEFAULTS_JSON
 
         if (gitRepo == null) {
-            gitRepo = defaultGitRepo
+            gitRepo = DEFAULTS_JSON['repository']['url']
         }
 
         if (testConfigurations != null) {
@@ -185,11 +197,13 @@ return {
 
 
         return new PullRequestTestPipeline(
-                gitRepo: gitRepo,
-                branch: branch,
-                testConfigurations: testConfig,
-                javaVersions: javaVersions,
+            gitRepo: gitRepo,
+            branch: branch,
+            testConfigurations: testConfig,
+            DEFAULTS_JSON: defaultsJson,
+            javaVersions: javaVersions,
 
-                context: context,
-                currentBuild: currentBuild)
+            context: context,
+            currentBuild: currentBuild
+        )
 }

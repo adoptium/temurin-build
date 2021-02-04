@@ -43,6 +43,7 @@ This group consists of [GitHub Status Checks](https://docs.github.com/en/free-pr
 
   - [ParseVersion.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/library/src/ParseVersion.groovy)
   - [IndividualBuildConfig.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/library/src/common/IndividualBuildConfig.groovy)
+  - [RepoHandler.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/library/src/common/RepoHandler.groovy)
   - [MetaData.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/library/src/common/MetaData.groovy)
   - [VersionInfo.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/library/src/common/VersionInfo.groovy)
 
@@ -57,6 +58,13 @@ VersionParsingTest > parsesJava11NightlyString() STANDARD_OUT
     =/JAVA VERSION OUTPUT=
     matched
     11.0.3+9-201903122221
+```
+
+- To run the suite locally:
+
+```bash
+cd pipelines/
+./gradlew --info test
 ```
 
 ### Linter
@@ -79,34 +87,9 @@ This group is a matrix of [GitHub Status Checks](https://docs.github.com/en/free
 
 ### openjdk-build-pr-tester
 
-**Seen in the PR Status Checks as `pipeline-build-check`, the job is located [here](https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/openjdk-build-pr-tester/)**
-
-This job runs a set of [sandbox pipelines](https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test/) to test the changes that you have made to our codebase in a mock live Jenkins environment. It's executed by a custom groovy script from the job itself:
-
-```groovy
-node("master") {
-    //String ghprbPullId = "953"
-    //String branch = "pull/${ghprbPullId}"
-
-    //String ghprbActualCommit = "e309f0c8c10df9515770d5d8ec37daeddbbe7a15"
-    String branch = "${ghprbActualCommit}"
-    String url = 'https://github.com/AdoptOpenJDK/openjdk-build'
-
-    checkout([$class: 'GitSCM', branches: [[name: branch]], userRemoteConfigs: [[refspec: " +refs/pull/*/head:refs/remotes/origin/pr/*/head +refs/heads/master:refs/remotes/origin/master +refs/heads/*:refs/remotes/origin/*",
-    url: url]]])
-
-    Closure prTest = load "pipelines/build/prTester/pr_test_pipeline.groovy"
-
-    prTest(
-        branch,
-        currentBuild,
-        this,
-        url
-        ).runTests()
-}
-```
-
-- That groovy script executes our [pr_test_pipeline](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/prTester/pr_test_pipeline.groovy) which is the main base file for this job.
+- **Seen in the PR Status Checks as `pipeline-build-check`, the job is located [here](https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/openjdk-build-pr-tester/)**
+- This job runs the a set of [sandbox pipelines](https://ci.adoptopenjdk.net/job/build-scripts-pr-tester/job/build-test/) to test the changes that you have made to our codebase.
+- It first executes [kick_off_tester.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/prTester/kick_off_tester.groovy) which in turn kicks off our [pr_test_pipeline](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/prTester/pr_test_pipeline.groovy), the main base file for this job.
 - NOTE: This tester is only really worth running if your code changes affect our groovy code OR Jenkins environment. Otherwise, the [#Build](#Build) jobs are sufficient enough to flag any problems with your code.
 
 #### Usage

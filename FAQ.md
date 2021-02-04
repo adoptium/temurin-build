@@ -121,6 +121,10 @@ In order to test whether your changes work use the [test-build-script-pull-reque
 Pass it your fork name (e.g. https://github.com/sxa555/openjdk-build) and the name of the branch and it will run a build using your updated scripts.
 For more information, see the [PR testing documentation](./pipelines/build/prTester/README.md).
 
+## I want to use my own configuration files or scripts on my own Jenkins instance. How do I do it?
+
+Check out [Adopt's guide]((docs/UsingOurScripts.md)) to setting up your own scripts and configurations (while not having to keep up with Adopt's changes)!
+
 ## Which OS levels do we build on?
 
 The operating systems/distributions which we build or are documented in the
@@ -131,4 +135,3 @@ Runtime platforms are in our [supported platforms page](https://adoptopenjdk.net
 
 The following PR: https://github.com/AdoptOpenJDK/openjdk-build/pull/2416
 demonstrates changes required to add a new build pipeline param, and also associated version/platform job configurations for setting the value when needed.
-

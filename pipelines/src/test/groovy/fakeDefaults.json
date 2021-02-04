@@ -1,0 +1,32 @@
+{
+    "repository"             : {
+        "url"                : "1",
+        "branch"             : "2"
+    },
+    "jenkinsDetails"         : {
+        "rootUrl"            : "3",
+        "rootDirectory"      : "4"
+    },
+    "templateDirectories" : {
+        "downstream"         : "5",
+        "upstream"           : "6",
+        "weekly"             : "7"
+    },
+    "configDirectories"      : {
+        "build"              : "8",
+        "nightly"            : "9",
+        "platform"           : "10"
+    },
+    "scriptDirectories"      : {
+        "upstream"           : "11",
+        "downstream"         : "12",
+        "weekly"             : "13",
+        "regeneration"       : "14",
+        "tester"             : "15"
+    },
+    "baseFileDirectories": {
+        "upstream"           : "16",
+        "downstream"         : "17"
+    },
+    "importLibraryScript"    : "18"
+}
