@@ -171,7 +171,7 @@ class Build {
 
         if (buildConfig.SCM_REF) {
             // We need to override the SCM ref on jdk8 arm builds
-            if (buildConfig.JAVA_TO_BUILD == "jdk8u" &&  buildConfig.VARIANT == "hotspot" && (buildConfig.ARCHITECTURE == "aarch64" || (buildConfig.ARCHITECTURE == "arm") {
+            if (buildConfig.JAVA_TO_BUILD == "jdk8u" &&  buildConfig.VARIANT == "hotspot" && (buildConfig.ARCHITECTURE == "aarch64" || (buildConfig.ARCHITECTURE == "arm")) {
                 jdkBranch = buildConfig.OVERRIDE_FILE_NAME_VERSION
             } else {
                 jdkBranch = buildConfig.SCM_REF
