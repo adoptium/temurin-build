@@ -73,10 +73,5 @@ class TestCompilation {
     void openjdk_build_pipelineTest() {
         doCompile('common/openjdk_build_pipeline.groovy', IndividualBuildConfig.class)
     }
-    @Test
-
-    void compile_pr_test_pipelineTest() {
-        doCompile('prTester/pr_test_pipeline.groovy', null)
-    }
 
 }

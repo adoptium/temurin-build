@@ -1,6 +1,8 @@
 @Library('local-lib@master')
 import common.IndividualBuildConfig
+import common.RepoHandler
 import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 import java.util.Base64
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,22 +28,28 @@ class Regeneration implements Serializable {
     private final String javaVersion
     private final Map<String, Map<String, ?>> buildConfigurations
     private final Map<String, ?> targetConfigurations
+    private final Map<String, ?> DEFAULTS_JSON
     private final Map<String, ?> excludedBuilds
+    private final Integer sleepTime
     private final def currentBuild
     private final def context
 
     private final def jobRootDir
-    private final def gitUri
+    private final def gitRemoteConfigs
     private final def gitBranch
 
+    private final def jobTemplatePath
+    private final def libraryPath
+    private final def baseFilePath
+    private final def scriptPath
     private final def jenkinsBuildRoot
-    private final def jenkinsUsername
-    private final def jenkinsToken
+    private final def jenkinsCreds
+    private final def checkoutCreds
 
     private String javaToBuild
     private final List<String> defaultTestList = ['sanity.openjdk', 'sanity.system', 'extended.system', 'sanity.perf', 'sanity.external']
 
-    private final String excludedConst = "EXCLUDED"
+    private final String EXCLUDED_CONST = "EXCLUDED"
 
     /*
     Constructor
@@ -50,28 +58,39 @@ class Regeneration implements Serializable {
         String javaVersion,
         Map<String, Map<String, ?>> buildConfigurations,
         Map<String, ?> targetConfigurations,
+        Map<String, ?> DEFAULTS_JSON,
         Map<String, ?> excludedBuilds,
+        Integer sleepTime,
         currentBuild,
         context,
         String jobRootDir,
-        String gitUri,
+        Map gitRemoteConfigs,
         String gitBranch,
+        String jobTemplatePath,
+        String libraryPath,
+        String baseFilePath,
+        String scriptPath,
         String jenkinsBuildRoot,
-        String jenkinsUsername,
-        String jenkinsToken
+        String jenkinsCreds,
+        String checkoutCreds
     ) {
         this.javaVersion = javaVersion
         this.buildConfigurations = buildConfigurations
         this.targetConfigurations = targetConfigurations
+        this.DEFAULTS_JSON = DEFAULTS_JSON
         this.excludedBuilds = excludedBuilds
         this.currentBuild = currentBuild
         this.context = context
         this.jobRootDir = jobRootDir
-        this.gitUri = gitUri
+        this.gitRemoteConfigs = gitRemoteConfigs
         this.gitBranch = gitBranch
+        this.jobTemplatePath = jobTemplatePath
+        this.libraryPath = libraryPath
+        this.baseFilePath = baseFilePath
+        this.scriptPath = scriptPath
         this.jenkinsBuildRoot = jenkinsBuildRoot
-        this.jenkinsUsername = jenkinsUsername
-        this.jenkinsToken = jenkinsToken
+        this.jenkinsCreds = jenkinsCreds
+        this.checkoutCreds = checkoutCreds
     }
 
     /*
@@ -157,6 +176,25 @@ class Regeneration implements Serializable {
             }
         }
         return dockerNodeValue
+    }
+
+    /*
+    Retrieves the platformSpecificConfigPath from the build configurations.
+    This determines where the location of the operating system setup files are in comparison to the repository root. The param is formatted like this because we need to download and source the file from the bash scripts.
+    */
+    def getPlatformSpecificConfigPath(Map<String, ?> configuration) {
+        def splitUserUrl = ((String)DEFAULTS_JSON['repository']['url']).minus(".git").split('/')
+        // e.g. https://github.com/AdoptOpenJDK/openjdk-build.git will produce AdoptOpenJDK/openjdk-build
+        String userOrgRepo = "${splitUserUrl[splitUserUrl.size() - 2]}/${splitUserUrl[splitUserUrl.size() - 1]}"
+
+        // e.g. AdoptOpenJDK/openjdk-build/master/build-farm/platform-specific-configurations
+        def platformSpecificConfigPath = "${userOrgRepo}/${DEFAULTS_JSON['repository']['branch']}/${DEFAULTS_JSON['configDirectories']['platform']}"
+
+        if (configuration.containsKey("platformSpecificConfigPath")) {
+            // e.g. AdoptOpenJDK/openjdk-build/master/build-farm/platform-specific-configurations.linux.sh
+            platformSpecificConfigPath = "${userOrgRepo}/${DEFAULTS_JSON['repository']['branch']}/${configuration.platformSpecificConfigPath}"
+        }
+        return platformSpecificConfigPath
     }
 
     /**
@@ -290,11 +328,11 @@ class Regeneration implements Serializable {
             // Check if it's in the excludes list
             if (overridePlatform(platformConfig, variant)) {
                 context.println "[INFO] Excluding $platformConfig.os: $variant from $javaToBuild regeneration due to it being in the EXCLUDES_LIST..."
-                return excludedConst
+                return EXCLUDED_CONST
             }
 
             def additionalNodeLabels = formAdditionalBuildNodeLabels(platformConfig, variant)
- 
+
             def additionalTestLabels = formAdditionalTestLabels(platformConfig, variant)
 
             def archLabel = getArchLabel(platformConfig, variant)
@@ -304,6 +342,8 @@ class Regeneration implements Serializable {
             def dockerFile = getDockerFile(platformConfig, variant)
 
             def dockerNode = getDockerNode(platformConfig, variant)
+
+            def platformSpecificConfigPath = getPlatformSpecificConfigPath(platformConfig)
 
             def buildArgs = getBuildArgs(platformConfig, variant)
 
@@ -325,8 +365,10 @@ class Regeneration implements Serializable {
                 DOCKER_IMAGE: dockerImage,
                 DOCKER_FILE: dockerFile,
                 DOCKER_NODE: dockerNode,
+                PLATFORM_CONFIG_LOCATION: platformSpecificConfigPath,
                 CONFIGURE_ARGS: getConfigureArgs(platformConfig, variant),
                 OVERRIDE_FILE_NAME_VERSION: "",
+                USE_ADOPT_SHELL_SCRIPTS: true,
                 ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
                 JDK_BOOT_VERSION: platformConfig.bootJDK as String,
                 RELEASE: false,
@@ -340,9 +382,7 @@ class Regeneration implements Serializable {
                 CLEAN_WORKSPACE_BUILD_OUTPUT_ONLY_AFTER: false
             )
         } catch (Exception e) {
-            // Catch invalid configurations
-            context.println "[ERROR] Failed to create IndividualBuildConfig for platformConfig: ${platformConfig}.\nError: ${e}"
-            currentBuild.result = "FAILURE"
+            throw new Exception("[ERROR] Failed to create IndividualBuildConfig for platformConfig: ${platformConfig}.\n${e}")
         }
     }
 
@@ -364,13 +404,50 @@ class Regeneration implements Serializable {
         Map<String, ?> params = config.toMap().clone() as Map
         params.put("JOB_NAME", jobName)
         params.put("JOB_FOLDER", jobFolder)
+        params.put("SCRIPT_PATH", scriptPath)
 
-        params.put("GIT_URI", gitUri)
+        params.put("GIT_URL", gitRemoteConfigs['url'])
         params.put("GIT_BRANCH", gitBranch)
+
+        // We have to use JsonSlurpers throughout the code for instantiating maps for consistancy and parsing reasons
+        Map userRemoteConfigs = new JsonSlurper().parseText('{"branch" : "", "remotes": ""}') as Map
+        userRemoteConfigs.branch = gitBranch
+        userRemoteConfigs.remotes = gitRemoteConfigs
+        params.put("USER_REMOTE_CONFIGS", JsonOutput.prettyPrint(JsonOutput.toJson(userRemoteConfigs)))
+
+        def repoHandler = new RepoHandler(context, userRemoteConfigs)
+
+        params.put("DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(DEFAULTS_JSON)))
+        Map ADOPT_DEFAULTS_JSON = repoHandler.getAdoptDefaultsJson()
+        params.put("ADOPT_DEFAULTS_JSON", JsonOutput.prettyPrint(JsonOutput.toJson(ADOPT_DEFAULTS_JSON)))
 
         params.put("BUILD_CONFIG", config.toJson())
 
-        def create = context.jobDsl targets: "pipelines/build/common/create_job_from_template.groovy", ignoreExisting: false, additionalParameters: params
+        // If we are not using default lib or script param values, be sure to update the initial downstream job script file
+        if (libraryPath != DEFAULTS_JSON['importLibraryScript']) {
+            params.put("CUSTOM_LIBRARY_LOCATION", libraryPath)
+        }
+        if (baseFilePath != DEFAULTS_JSON["baseFileDirectories"]["downstream"]) {
+            params.put("CUSTOM_BASEFILE_LOCATION", baseFilePath)
+        }
+
+        // Pass in checkout creds if needs be
+        if (checkoutCreds != "") {
+            params.put("CHECKOUT_CREDENTIALS", checkoutCreds)
+        } else {
+            params.put("CHECKOUT_CREDENTIALS", "")
+        }
+
+        // Execute job dsl, using adopt's template if the user doesn't have one
+        def create = null
+        try {
+            create = context.jobDsl targets: jobTemplatePath, ignoreExisting: false, additionalParameters: params
+        } catch (Exception e) {
+            context.println "[WARNING] Something went wrong when creating the job dsl. It may be because we are trying to pull the template inside a user repository. Using Adopt's template instead. Error:\n${e}"
+            repoHandler.checkoutAdopt()
+            create = context.jobDsl targets: ADOPT_DEFAULTS_JSON['templateDirectories']['downstream'], ignoreExisting: false, additionalParameters: params
+            repoHandler.checkoutUser()
+        }
 
         return create
     }
@@ -404,21 +481,19 @@ class Regeneration implements Serializable {
     */
     def queryAPI(String query) {
         try {
-            def parser = new JsonSlurper()
-            def get = new URL(query).openConnection()
+            def getJenkins = new URL(query).openConnection()
 
-            String jenkinsAuth = ""
-            if (jenkinsUsername != "") {
-                jenkinsAuth = "Basic " + new String(Base64.getEncoder().encode("$jenkinsUsername:$jenkinsToken".getBytes()))
+            // Set request credentials if they exist
+            if (jenkinsCreds != "") {
+                def jenkinsAuth = "Basic " + new String(Base64.getEncoder().encode(jenkinsCreds.getBytes()))
+                getJenkins.setRequestProperty ("Authorization", jenkinsAuth)
             }
-            get.setRequestProperty ("Authorization", jenkinsAuth)
 
-            def response = parser.parseText(get.getInputStream().getText())
+            def response = new JsonSlurper().parseText(getJenkins.getInputStream().getText())
             return response
         } catch (Exception e) {
             // Failed to connect to jenkins api or a parsing error occurred
-            context.println "[ERROR] Failure on jenkins api connection or parsing.\nError: ${e}"
-            currentBuild.result = "FAILURE"
+            throw new Exception("[ERROR] Failure on jenkins api connection or parsing.\n${e}")
         }
     }
 
@@ -434,8 +509,9 @@ class Regeneration implements Serializable {
             * Stage: Check that the pipeline isn't in in-progress or queued up. Once clear, run the regeneration job
             */
             context.stage("Check $javaVersion pipeline status") {
+
                 if (jobRootDir.contains("pr-tester")) {
-                    // No need to check if we're going to overwrite anything for the PR tester
+                    // No need to check if we're going to overwrite anything for the PR tester since concurrency isn't enabled -> https://github.com/AdoptOpenJDK/openjdk-build/pull/2155
                     context.println "[SUCCESS] Don't need to check if the pr-tester is running as concurrency is disabled. Running regeneration job..."
                 } else {
                     // Get all pipelines
@@ -444,8 +520,6 @@ class Regeneration implements Serializable {
                     // Parse api response to only extract the relevant pipeline
                     getPipelines.jobs.name.each{ pipeline ->
                         if (pipeline == "openjdk${versionNumbers[0]}-pipeline") {
-                            // TODO: Paramaterise this
-                            Integer sleepTime = 900
 
                             Boolean inProgress = true
                             while (inProgress) {
@@ -490,9 +564,6 @@ class Regeneration implements Serializable {
             * jdk8u-linux-x64-openj9, etc.)
             */
             context.stage("Regenerate $javaVersion pipeline jobs") {
-
-                context.println "[INFO] Jobs to be regenerated (pulled from config file):"
-                targetConfigurations.each { osarch, variants -> context.println "${osarch}: ${variants}\n" }
 
                 // If we're building jdk head, update the javaToBuild
                 context.println "[INFO] Querying adopt api to get the JDK-Head number"
@@ -547,7 +618,7 @@ class Regeneration implements Serializable {
                                 currentBuild.result = "UNSTABLE"
                             } else {
                                 // Skip variant job make if it's marked as excluded
-                                if (jobConfigurations.get(name) == excludedConst) {
+                                if (jobConfigurations.get(name) == EXCLUDED_CONST) {
                                     continue
                                 }
                                 // Make job
@@ -555,8 +626,7 @@ class Regeneration implements Serializable {
                                     makeJob(jobConfigurations, name)
                                 // Unexpected error when building or getting the configuration
                                 } else {
-                                    context.println "[ERROR] IndividualBuildConfig is malformed for key: ${osarch}."
-                                    currentBuild.result = "FAILURE"
+                                    throw new Exception("[ERROR] IndividualBuildConfig is malformed or null for key: ${osarch} : ${variant}.")
                                 }
                             }
 
@@ -576,22 +646,22 @@ return {
     String javaVersion,
     Map<String, Map<String, ?>> buildConfigurations,
     Map<String, ?> targetConfigurations,
+    Map<String, ?> DEFAULTS_JSON,
     String excludes,
+    Integer sleepTime,
     def currentBuild,
     def context,
     String jobRootDir,
-    String gitUri,
+    Map gitRemoteConfigs,
     String gitBranch,
+    String jobTemplatePath,
+    String libraryPath,
+    String baseFilePath,
+    String scriptPath,
     String jenkinsBuildRoot,
-    String jenkinsUsername,
-    String jenkinsToken
+    String jenkinsCreds,
+    String checkoutCreds
         ->
-        if (jobRootDir == null) jobRootDir = "build-scripts";
-        if (gitUri == null) gitUri = "https://github.com/AdoptOpenJDK/openjdk-build.git";
-        if (gitBranch == null) gitBranch = "master";
-        if (jenkinsBuildRoot == null) jenkinsBuildRoot = "https://ci.adoptopenjdk.net/job/build-scripts/";
-        if (jenkinsUsername == null) jenkinsUsername = ""
-        if (jenkinsToken == null) jenkinsToken = ""
 
         def excludedBuilds = [:]
         if (excludes != "" && excludes != null) {
@@ -602,14 +672,20 @@ return {
             javaVersion,
             buildConfigurations,
             targetConfigurations,
+            DEFAULTS_JSON,
             excludedBuilds,
+            sleepTime,
             currentBuild,
             context,
             jobRootDir,
-            gitUri,
+            gitRemoteConfigs,
             gitBranch,
+            jobTemplatePath,
+            libraryPath,
+            baseFilePath,
+            scriptPath,
             jenkinsBuildRoot,
-            jenkinsUsername,
-            jenkinsToken
+            jenkinsCreds,
+            checkoutCreds
         )
 }

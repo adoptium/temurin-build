@@ -46,12 +46,12 @@ then
         # Use Adopt API to get the JDK Head number
         echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
         JAVA_FEATURE_VERSION=$(curl -q https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
-        
+
         # Checks the api request was successful and the return value is a number
         if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
         then
             echo "RETRYWARNING: Query ${retryCount} failed. Retrying in 30 seconds (max retries = ${retryMax})..."
-            retryCount=$((retryCount+1)) 
+            retryCount=$((retryCount+1))
             sleep 30s
         else
             echo "JAVA_FEATURE_VERSION FOUND: ${JAVA_FEATURE_VERSION}" && break

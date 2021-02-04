@@ -10,6 +10,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
                 git {
                     remote {
                         url("${GIT_URL}")
+                        credentials("${CHECKOUT_CREDENTIALS}")
                     }
                     branch("${BRANCH}")
                 }
@@ -19,7 +20,7 @@ pipelineJob("${BUILD_FOLDER}/${JOB_NAME}") {
     }
     disabled(disableJob)
     triggers {
-        cron(triggerSchedule)
+        cron(pipelineSchedule)
     }
     logRotator {
         numToKeep(60)

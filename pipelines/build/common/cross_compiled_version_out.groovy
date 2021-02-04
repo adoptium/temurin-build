@@ -114,8 +114,7 @@ node (nodeLabel) {
                 println "[SUCCESS] ${fileName} archived! Cleaning up..."
             }
         } catch (FlowInterruptedException e) {
-            println "[ERROR] Job timeout (${JOB_TIMEOUT} HOURS) has been reached. Exiting..."
-            throw new Exception()
+            throw new Exception("[ERROR] Job timeout (${JOB_TIMEOUT} HOURS) has been reached. Exiting...")
         } finally {
             // Clean up and return to upstream job
             cleanWs notFailBuild: true, deleteDirs: true
