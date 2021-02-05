@@ -160,7 +160,7 @@ class Builder implements Serializable {
             CONFIGURE_ARGS: getConfigureArgs(platformConfig, additionalConfigureArgs, variant),
             OVERRIDE_FILE_NAME_VERSION: overrideFileNameVersion,
             USE_ADOPT_SHELL_SCRIPTS: useAdoptShellScripts,
-            ADDITIONAL_FILE_NAME_TAG: platformConfig.additionalFileNameTag as String,
+            ADDITIONAL_FILE_NAME_TAG: getAdditionalFileNameTag(platformConfig, variant),
             JDK_BOOT_VERSION: platformConfig.bootJDK as String,
             RELEASE: release,
             PUBLISH_NAME: publishName,
@@ -268,6 +268,7 @@ class Builder implements Serializable {
         String stringOs = configuration.os as String
         String estimatedKey = stringArch + stringOs.capitalize()
 
+        // TODO this needs to be fixed since additionalFileNameTag doesn't always mean XL
         if (configuration.containsKey("additionalFileNameTag")) {
             estimatedKey = estimatedKey + "XL"
         }
@@ -446,6 +447,28 @@ class Builder implements Serializable {
     }
 
     /*
+    Retrieves the additionalFileNameTag attribute from the build configurations.
+    */
+    static String getAdditionalFileNameTag(Map<String, ?> configuration, String variant) {
+        def fileNameTag = ""
+
+        if (configuration.containsKey('additionalFileNameTag')) {
+            def additionalFileNameTag
+            if (isMap(configuration.additionalFileNameTag)) {
+                additionalFileNameTag = (configuration.additionalFileNameTag as Map<String, ?>).get(variant)
+            } else {
+                additionalFileNameTag = configuration.additionalFileNameTag
+            }
+
+            if (additionalFileNameTag != null) {
+                fileNameTag = additionalFileNameTag
+            }
+        }
+
+        return fileNameTag
+    }
+
+    /*
     Imports the build configurations for the target version based off its key and variant.
     E.g. { "x64Linux" : [ "hotspot", "openj9" ] }
     */
@@ -465,7 +488,7 @@ class Builder implements Serializable {
                             String name = "${platformConfig.os}-${platformConfig.arch}-${variant}"
 
                             if (platformConfig.containsKey('additionalFileNameTag')) {
-                                name += "-${platformConfig.additionalFileNameTag}"
+                                name += "-" + getAdditionalFileNameTag(platformConfig, variant)
                             }
 
                             // Fill in the name's value with an IndividualBuildConfig

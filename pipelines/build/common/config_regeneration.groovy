@@ -301,6 +301,7 @@ class Regeneration implements Serializable {
         String stringOs = configuration.os as String
         String estimatedKey = stringArch + stringOs.capitalize()
 
+        // TODO this needs to be fixed since additionalFileNameTag doesn't always mean XL
         if (configuration.containsKey("additionalFileNameTag")) {
             estimatedKey = estimatedKey + "XL"
         }
