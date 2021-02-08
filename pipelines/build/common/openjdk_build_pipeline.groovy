@@ -1088,7 +1088,7 @@ class Build {
         return context.readFile(".git/current-commit").trim()
     }
 
-    def updateGithubCommitStatus(build) {
+    def updateGithubCommitStatus() {
         // workaround https://issues.jenkins-ci.org/browse/JENKINS-38674
         def repoUrl = getRepoURL()
         def commitSha = getCommitSha()
@@ -1101,8 +1101,8 @@ class Build {
             statusResultSource: [
             $class: 'ConditionalStatusResultSource',
             results: [
-                [$class: 'BetterThanOrEqualBuildResult', result: 'SUCCESS', state: 'SUCCESS', message: build.description],
-                [$class: 'BetterThanOrEqualBuildResult', result: 'FAILURE', state: 'FAILURE', message: build.description],
+                [$class: 'BetterThanOrEqualBuildResult', result: 'SUCCESS', state: 'SUCCESS', message: "trying to make this work"],
+                [$class: 'BetterThanOrEqualBuildResult', result: 'FAILURE', state: 'FAILURE', message: "trying to make this work"],
                 [$class: 'AnyBuildResult', state: 'FAILURE', message: 'Loophole']
             ]
             ]
