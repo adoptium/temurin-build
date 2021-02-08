@@ -1092,7 +1092,7 @@ class Build {
         repoUrl = getRepoURL()
         commitSha = getCommitSha()
 
-        step([
+        context.step([
             $class: 'GitHubCommitStatusSetter',
             reposSource: [$class: "ManuallyEnteredRepositorySource", url: repoUrl],
             commitShaSource: [$class: "ManuallyEnteredShaSource", sha: commitSha],
