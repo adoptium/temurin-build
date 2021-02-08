@@ -1164,7 +1164,7 @@ class Build {
 
                     // Set Github Commit Status
                     if (env.JOB_NAME.contains("pr-tester")) {
-                        node('master') {
+                        context.node('master') {
                             updateGithubCommitStatus("PENDING", "Pending")
                         }
                     }
