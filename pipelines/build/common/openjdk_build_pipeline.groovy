@@ -966,7 +966,7 @@ class Build {
                 context.withEnv(envVars) {
                     try {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
-                            updateGithubCommitStatus("PENDING", "Build Started")
+                            updateGithubCommitStatus("PENDING", "Build Started", DOWNSTREAM_JOB_URL)
                             if (useAdoptShellScripts) {
                                 context.println "[CHECKOUT] Checking out to AdoptOpenJDK/openjdk-build to use their bash scripts..."
                                 repoHandler.checkoutAdopt()
@@ -1088,7 +1088,7 @@ class Build {
         return context.readFile(".git/current-commit").trim()
     }
 
-    def updateGithubCommitStatus(STATE, MESSAGE) {
+    def updateGithubCommitStatus(STATE, MESSAGE, URL) {
         // workaround https://issues.jenkins-ci.org/browse/JENKINS-38674
         def repoUrl = getRepoURL()
         def commitSha = getCommitSha()
@@ -1098,6 +1098,7 @@ class Build {
         context.println "COMMIT SHA: ${commitSha}"
         context.println "STATE: ${STATE}"
         context.println "MESSAGE: ${MESSAGE}"
+        context.println "JOB URL: ${URL}"
 
         context.step([
             $class: 'GitHubCommitStatusSetter',
