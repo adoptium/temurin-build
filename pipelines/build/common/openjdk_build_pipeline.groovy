@@ -1118,8 +1118,6 @@ class Build {
                     */
                     context.library(identifier: 'openjdk-jenkins-helper@master')
 
-                    setBuildStatus("Build Started", "PENDING");
-
                     if (buildConfig.DOCKER_IMAGE) {
                         // Docker build environment
                         def label = buildConfig.NODE_LABEL + "&&dockerBuild"
@@ -1133,6 +1131,7 @@ class Build {
 
                         context.println "[NODE SHIFT] MOVING INTO DOCKER NODE MATCHING LABELNAME ${label}..."
                         context.node(label) {
+                            setBuildStatus("Build Started", "PENDING");
                             // Cannot clean workspace from inside docker container
                             if (cleanWorkspace) {
 
