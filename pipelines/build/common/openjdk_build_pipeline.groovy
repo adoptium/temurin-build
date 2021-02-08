@@ -1079,12 +1079,12 @@ class Build {
 
     def getRepoURL() {
         context.sh "git config --get remote.origin.url > .git/remote-url"
-        return readFile(".git/remote-url").trim()
+        return context.readFile(".git/remote-url").trim()
     }
 
     def getCommitSha() {
         context.sh "git rev-parse HEAD > .git/current-commit"
-        return readFile(".git/current-commit").trim()
+        return context.readFile(".git/current-commit").trim()
     }
 
     def updateGithubCommitStatus(build) {
