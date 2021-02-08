@@ -966,6 +966,7 @@ class Build {
                 context.withEnv(envVars) {
                     try {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
+                            updateGithubCommitStatus()
                             if (useAdoptShellScripts) {
                                 context.println "[CHECKOUT] Checking out to AdoptOpenJDK/openjdk-build to use their bash scripts..."
                                 repoHandler.checkoutAdopt()
@@ -1152,7 +1153,6 @@ class Build {
 
                         context.println "[NODE SHIFT] MOVING INTO DOCKER NODE MATCHING LABELNAME ${label}..."
                         context.node(label) {
-                            updateGithubCommitStatus()
                             // Cannot clean workspace from inside docker container
                             if (cleanWorkspace) {
 
