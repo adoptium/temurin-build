@@ -1078,7 +1078,7 @@ class Build {
 
 
     def setBuildStatus(String message, String state) {
-        step([
+        context.step([
             $class: "GitHubCommitStatusSetter",
             reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/adoptopenjdk/openjdk-build"],
             contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
