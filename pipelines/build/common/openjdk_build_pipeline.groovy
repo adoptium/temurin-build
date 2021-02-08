@@ -966,7 +966,10 @@ class Build {
                 context.withEnv(envVars) {
                     try {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
-                            updateGithubCommitStatus("PENDING", "Build Started", "${env.JOB_NAME}", "https://google.com")
+                            // Set Github Commit Status
+                            if (ghprbActualCommit) {
+                                updateGithubCommitStatus("PENDING", "Build Started", "${env.JOB_NAME}")
+                            }
                             if (useAdoptShellScripts) {
                                 context.println "[CHECKOUT] Checking out to AdoptOpenJDK/openjdk-build to use their bash scripts..."
                                 repoHandler.checkoutAdopt()
@@ -979,6 +982,10 @@ class Build {
                             }
                         }
                     } catch (FlowInterruptedException e) {
+                        // Set Github Commit Status
+                        if (ghprbActualCommit) {
+                            updateGithubCommitStatus("FAILED", "Build FAILED", "${env.JOB_NAME}")
+                        }
                         throw new Exception("[ERROR] Build JDK timeout (${buildTimeouts.BUILD_JDK_TIMEOUT} HOURS) has been reached. Exiting...")
                     }
 
@@ -1007,6 +1014,10 @@ class Build {
                         }
                     }
                 } catch (FlowInterruptedException e) {
+                    // Set Github Commit Status
+                    if (ghprbActualCommit) {
+                        updateGithubCommitStatus("FAILED", "Build FAILED", "${env.JOB_NAME}")
+                    }
                     throw new Exception("[ERROR] Build archive timeout (${buildTimeouts.BUILD_ARCHIVE_TIMEOUT} HOURS) has been reached. Exiting...")
                 }
             } finally {
@@ -1031,8 +1042,16 @@ class Build {
                             }
                         }
                     } catch (FlowInterruptedException e) {
+                        // Set Github Commit Status
+                        if (ghprbActualCommit) {
+                            updateGithubCommitStatus("FAILED", "Build FAILED", "${env.JOB_NAME}")
+                        }
                         throw new Exception("[ERROR] AIX clean workspace timeout (${buildTimeouts.AIX_CLEAN_TIMEOUT} HOURS) has been reached. Exiting...")
                     }
+                }
+                // Set Github Commit Status
+                if (ghprbActualCommit) {
+                    updateGithubCommitStatus("SUCCESS", "Build PASSED", "${env.JOB_NAME}")
                 }
             }
         }
@@ -1088,26 +1107,27 @@ class Build {
         return context.readFile(".git/current-commit").trim()
     }
 
-    def updateGithubCommitStatus(STATE, MESSAGE, NAME, URL) {
+    def updateGithubCommitStatus(STATE, MESSAGE, NAME) {
         // workaround https://issues.jenkins-ci.org/browse/JENKINS-38674
         def repoUrl = getRepoURL()
         def commitSha = getCommitSha()
+
+        String[] bits = NAME.split("/");
+        String jobName = bits[bits.length-1];
 
         context.println "Setting GitHub Checks Status:"
         context.println "REPO URL: ${repoUrl}"
         context.println "COMMIT SHA: ${commitSha}"
         context.println "STATE: ${STATE}"
         context.println "MESSAGE: ${MESSAGE}"
-        context.println "JOB NAME: ${NAME}"
-        context.println "JOB URL: ${URL}"
+        context.println "JOB NAME: ${jobName}"
 
         context.step([
             $class: 'GitHubCommitStatusSetter',
             reposSource: [$class: "ManuallyEnteredRepositorySource", url: repoUrl],
             commitShaSource: [$class: "ManuallyEnteredShaSource", sha: commitSha],
-            contextSource: [$class: "ManuallyEnteredCommitContextSource", context: NAME],
+            contextSource: [$class: "ManuallyEnteredCommitContextSource", context: jobName],
             errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
-            // statusBackrefSource: [$class: "ManuallyEnteredBackrefSource", backref: URL],
             statusResultSource: [$class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: MESSAGE, state: STATE]] ]
         ])
     }
