@@ -966,7 +966,7 @@ class Build {
                 context.withEnv(envVars) {
                     try {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
-                            updateGithubCommitStatus("PENDING", "Build Started", DOWNSTREAM_JOB_URL)
+                            updateGithubCommitStatus("PENDING", "Build Started", "https://google.com")
                             if (useAdoptShellScripts) {
                                 context.println "[CHECKOUT] Checking out to AdoptOpenJDK/openjdk-build to use their bash scripts..."
                                 repoHandler.checkoutAdopt()
