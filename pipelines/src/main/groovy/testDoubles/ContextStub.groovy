@@ -75,6 +75,8 @@ class ContextStub {
 
     String checkout(String s) {}
 
+    String step(Map<String, ?> s) {}
+
     String checkout(Map<String, ?> s) {}
 
     String writeFile(Map s) {}

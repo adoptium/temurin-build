@@ -966,6 +966,10 @@ class Build {
                 context.withEnv(envVars) {
                     try {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
+                            // Set Github Commit Status
+                            if (env.JOB_NAME.contains("pr-tester")) {
+                                updateGithubCommitStatus("PENDING", "Build Started")
+                            }
                             if (useAdoptShellScripts) {
                                 context.println "[CHECKOUT] Checking out to AdoptOpenJDK/openjdk-build to use their bash scripts..."
                                 repoHandler.checkoutAdopt()
@@ -978,6 +982,10 @@ class Build {
                             }
                         }
                     } catch (FlowInterruptedException e) {
+                        // Set Github Commit Status
+                        if (env.JOB_NAME.contains("pr-tester")) {
+                            updateGithubCommitStatus("FAILED", "Build FAILED")
+                        }
                         throw new Exception("[ERROR] Build JDK timeout (${buildTimeouts.BUILD_JDK_TIMEOUT} HOURS) has been reached. Exiting...")
                     }
 
@@ -1006,6 +1014,10 @@ class Build {
                         }
                     }
                 } catch (FlowInterruptedException e) {
+                    // Set Github Commit Status
+                    if (env.JOB_NAME.contains("pr-tester")) {
+                        updateGithubCommitStatus("FAILED", "Build FAILED")
+                    }
                     throw new Exception("[ERROR] Build archive timeout (${buildTimeouts.BUILD_ARCHIVE_TIMEOUT} HOURS) has been reached. Exiting...")
                 }
             } finally {
@@ -1030,8 +1042,16 @@ class Build {
                             }
                         }
                     } catch (FlowInterruptedException e) {
+                        // Set Github Commit Status
+                        if (env.JOB_NAME.contains("pr-tester")) {
+                            updateGithubCommitStatus("FAILED", "Build FAILED")
+                        }
                         throw new Exception("[ERROR] AIX clean workspace timeout (${buildTimeouts.AIX_CLEAN_TIMEOUT} HOURS) has been reached. Exiting...")
                     }
+                }
+                // Set Github Commit Status
+                if (env.JOB_NAME.contains("pr-tester")) {
+                    updateGithubCommitStatus("SUCCESS", "Build PASSED")
                 }
             }
         }
@@ -1076,6 +1096,41 @@ class Build {
         }
     }
 
+
+    def getRepoURL() {
+        context.sh "git config --get remote.origin.url > .git/remote-url"
+        return context.readFile(".git/remote-url").trim()
+    }
+
+    def getCommitSha() {
+        context.sh "git rev-parse HEAD > .git/current-commit"
+        return context.readFile(".git/current-commit").trim()
+    }
+
+    def updateGithubCommitStatus(STATE, MESSAGE) {
+        // workaround https://issues.jenkins-ci.org/browse/JENKINS-38674
+        def repoUrl = getRepoURL()
+        def commitSha = getCommitSha()
+
+        String shortJobName = env.JOB_NAME.split('/').last()
+
+        context.println "Setting GitHub Checks Status:"
+        context.println "REPO URL: ${repoUrl}"
+        context.println "COMMIT SHA: ${commitSha}"
+        context.println "STATE: ${STATE}"
+        context.println "MESSAGE: ${MESSAGE}"
+        context.println "JOB NAME: ${shortJobName}"
+
+        context.step([
+            $class: 'GitHubCommitStatusSetter',
+            reposSource: [$class: "ManuallyEnteredRepositorySource", url: repoUrl],
+            commitShaSource: [$class: "ManuallyEnteredShaSource", sha: commitSha],
+            contextSource: [$class: "ManuallyEnteredCommitContextSource", context: shortJobName],
+            errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+            statusResultSource: [$class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: MESSAGE, state: STATE]] ]
+        ])
+    }
+
     /*
     Main function. This is what is executed remotely via the helper file kick_off_build.groovy, which is in turn executed by the downstream jobs.
     */
@@ -1106,6 +1161,13 @@ class Build {
                     method will fail to execute the post-build test jobs for reasons unknown.
                     */
                     context.library(identifier: 'openjdk-jenkins-helper@master')
+
+                    // Set Github Commit Status
+                    if (env.JOB_NAME.contains("pr-tester")) {
+                        context.node('master') {
+                            updateGithubCommitStatus("PENDING", "Pending")
+                        }
+                    }
 
                     if (buildConfig.DOCKER_IMAGE) {
                         // Docker build environment
