@@ -966,7 +966,7 @@ class Build {
                 context.withEnv(envVars) {
                     try {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
-                            updateGithubCommitStatus()
+                            updateGithubCommitStatus("PENDING", "Build Started")
                             if (useAdoptShellScripts) {
                                 context.println "[CHECKOUT] Checking out to AdoptOpenJDK/openjdk-build to use their bash scripts..."
                                 repoHandler.checkoutAdopt()
@@ -1088,24 +1088,25 @@ class Build {
         return context.readFile(".git/current-commit").trim()
     }
 
-    def updateGithubCommitStatus() {
+    def updateGithubCommitStatus(STATE, MESSAGE) {
         // workaround https://issues.jenkins-ci.org/browse/JENKINS-38674
         def repoUrl = getRepoURL()
         def commitSha = getCommitSha()
+
+        context.println "Setting GitHub Checks Status:"
+        context.println "REPO URL: ${repoUrl}"
+        context.println "COMMIT SHA: ${commitSha}"
+        context.println "STATE: ${STATE}"
+        context.println "MESSAGE: ${MESSAGE}"
 
         context.step([
             $class: 'GitHubCommitStatusSetter',
             reposSource: [$class: "ManuallyEnteredRepositorySource", url: repoUrl],
             commitShaSource: [$class: "ManuallyEnteredShaSource", sha: commitSha],
-            errorHandlers: [[$class: 'ShallowAnyErrorHandler']],
-            statusResultSource: [
-            $class: 'ConditionalStatusResultSource',
-            results: [
-                [$class: 'BetterThanOrEqualBuildResult', result: 'SUCCESS', state: 'SUCCESS', message: "trying to make this work"],
-                [$class: 'BetterThanOrEqualBuildResult', result: 'FAILURE', state: 'FAILURE', message: "trying to make this work"],
-                [$class: 'AnyBuildResult', state: 'FAILURE', message: 'Loophole']
-            ]
-            ]
+            contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "Testing"],
+            errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+            statusBackrefSource: [$class: "ManuallyEnteredBackrefSource", backref: URL],
+            statusResultSource: [$class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: MESSAGE, state: STATE]] ]
         ])
     }
 
