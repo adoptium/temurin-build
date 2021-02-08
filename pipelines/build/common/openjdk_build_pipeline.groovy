@@ -1077,14 +1077,35 @@ class Build {
     }
 
 
-    def setBuildStatus(String message, String state) {
-        context.step([
-            $class: "GitHubCommitStatusSetter",
-            reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/adoptopenjdk/openjdk-build"],
-            contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
-            errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
-            statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
-        ]);
+    def getRepoURL() {
+        sh "git config --get remote.origin.url > .git/remote-url"
+        return readFile(".git/remote-url").trim()
+    }
+
+    def getCommitSha() {
+        sh "git rev-parse HEAD > .git/current-commit"
+        return readFile(".git/current-commit").trim()
+    }
+
+    def updateGithubCommitStatus(build) {
+        // workaround https://issues.jenkins-ci.org/browse/JENKINS-38674
+        repoUrl = getRepoURL()
+        commitSha = getCommitSha()
+
+        step([
+            $class: 'GitHubCommitStatusSetter',
+            reposSource: [$class: "ManuallyEnteredRepositorySource", url: repoUrl],
+            commitShaSource: [$class: "ManuallyEnteredShaSource", sha: commitSha],
+            errorHandlers: [[$class: 'ShallowAnyErrorHandler']],
+            statusResultSource: [
+            $class: 'ConditionalStatusResultSource',
+            results: [
+                [$class: 'BetterThanOrEqualBuildResult', result: 'SUCCESS', state: 'SUCCESS', message: build.description],
+                [$class: 'BetterThanOrEqualBuildResult', result: 'FAILURE', state: 'FAILURE', message: build.description],
+                [$class: 'AnyBuildResult', state: 'FAILURE', message: 'Loophole']
+            ]
+            ]
+        ])
     }
 
     /*
@@ -1131,7 +1152,7 @@ class Build {
 
                         context.println "[NODE SHIFT] MOVING INTO DOCKER NODE MATCHING LABELNAME ${label}..."
                         context.node(label) {
-                            setBuildStatus("Build Started", "PENDING");
+                            updateGithubCommitStatus()
                             // Cannot clean workspace from inside docker container
                             if (cleanWorkspace) {
 
