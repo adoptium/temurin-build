@@ -1090,8 +1090,8 @@ class Build {
 
     def updateGithubCommitStatus(build) {
         // workaround https://issues.jenkins-ci.org/browse/JENKINS-38674
-        repoUrl = getRepoURL()
-        commitSha = getCommitSha()
+        def repoUrl = getRepoURL()
+        def commitSha = getCommitSha()
 
         context.step([
             $class: 'GitHubCommitStatusSetter',
