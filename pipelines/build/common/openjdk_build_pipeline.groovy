@@ -968,7 +968,7 @@ class Build {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
                             // Set Github Commit Status
                             if (env.JOB_NAME.contains("pr-tester")) {
-                                updateGithubCommitStatus("PENDING", "Build Started", "${env.JOB_NAME}")
+                                updateGithubCommitStatus("PENDING", "Build Started")
                             }
                             if (useAdoptShellScripts) {
                                 context.println "[CHECKOUT] Checking out to AdoptOpenJDK/openjdk-build to use their bash scripts..."
@@ -984,7 +984,7 @@ class Build {
                     } catch (FlowInterruptedException e) {
                         // Set Github Commit Status
                         if (env.JOB_NAME.contains("pr-tester")) {
-                            updateGithubCommitStatus("FAILED", "Build FAILED", "${env.JOB_NAME}")
+                            updateGithubCommitStatus("FAILED", "Build FAILED")
                         }
                         throw new Exception("[ERROR] Build JDK timeout (${buildTimeouts.BUILD_JDK_TIMEOUT} HOURS) has been reached. Exiting...")
                     }
@@ -1016,7 +1016,7 @@ class Build {
                 } catch (FlowInterruptedException e) {
                     // Set Github Commit Status
                     if (env.JOB_NAME.contains("pr-tester")) {
-                        updateGithubCommitStatus("FAILED", "Build FAILED", "${env.JOB_NAME}")
+                        updateGithubCommitStatus("FAILED", "Build FAILED")
                     }
                     throw new Exception("[ERROR] Build archive timeout (${buildTimeouts.BUILD_ARCHIVE_TIMEOUT} HOURS) has been reached. Exiting...")
                 }
@@ -1044,14 +1044,14 @@ class Build {
                     } catch (FlowInterruptedException e) {
                         // Set Github Commit Status
                         if (env.JOB_NAME.contains("pr-tester")) {
-                            updateGithubCommitStatus("FAILED", "Build FAILED", "${env.JOB_NAME}")
+                            updateGithubCommitStatus("FAILED", "Build FAILED")
                         }
                         throw new Exception("[ERROR] AIX clean workspace timeout (${buildTimeouts.AIX_CLEAN_TIMEOUT} HOURS) has been reached. Exiting...")
                     }
                 }
                 // Set Github Commit Status
                 if (env.JOB_NAME.contains("pr-tester")) {
-                    updateGithubCommitStatus("SUCCESS", "Build PASSED", "${env.JOB_NAME}")
+                    updateGithubCommitStatus("SUCCESS", "Build PASSED")
                 }
             }
         }
@@ -1107,25 +1107,25 @@ class Build {
         return context.readFile(".git/current-commit").trim()
     }
 
-    def updateGithubCommitStatus(STATE, MESSAGE, NAME) {
+    def updateGithubCommitStatus(STATE, MESSAGE) {
         // workaround https://issues.jenkins-ci.org/browse/JENKINS-38674
         def repoUrl = getRepoURL()
         def commitSha = getCommitSha()
 
-        String jobName = env.NAME.split('/').last()
+        String shortJobName = env.JOB_NAME.split('/').last()
 
         context.println "Setting GitHub Checks Status:"
         context.println "REPO URL: ${repoUrl}"
         context.println "COMMIT SHA: ${commitSha}"
         context.println "STATE: ${STATE}"
         context.println "MESSAGE: ${MESSAGE}"
-        context.println "JOB NAME: ${jobName}"
+        context.println "JOB NAME: ${shortJobName}"
 
         context.step([
             $class: 'GitHubCommitStatusSetter',
             reposSource: [$class: "ManuallyEnteredRepositorySource", url: repoUrl],
             commitShaSource: [$class: "ManuallyEnteredShaSource", sha: commitSha],
-            contextSource: [$class: "ManuallyEnteredCommitContextSource", context: jobName],
+            contextSource: [$class: "ManuallyEnteredCommitContextSource", context: shortJobName],
             errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
             statusResultSource: [$class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: MESSAGE, state: STATE]] ]
         ])
