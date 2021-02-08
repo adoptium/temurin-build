@@ -27,7 +27,6 @@ export OPENSSL_VERSION=1.1.1i
 
 TOOLCHAIN_VERSION=""
 
-<<<<<<< HEAD
 # Any version above 8 (11 for now due to openjdk-build#1409
 if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
   if [ "$ARCHITECTURE" == "aarch64" ]; then
@@ -42,19 +41,17 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
     # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
     # instead of BOOT_JDK_VARIABLE (no '$').
     export ${BOOT_JDK_VARIABLE}="$bootDir"
-    if [ ! -x "$bootDir/bin/javac" ]; then
+    if [ ! -x "$bootDir/bin/javac.exe" ]; then
       # Set to a default location as linked in the ansible playbooks
       if [ -x /cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}/bin/javac ]; then
         echo Could not use ${BOOT_JDK_VARIABLE} - using /cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}
         export ${BOOT_JDK_VARIABLE}="/usr/lib/jvm/jdk-${BOOT_JDK_VERSION}"
       else
-        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
-        releaseType="ga"
         # This is needed to convert x86-32 to x32 which is what the API uses
         case "$ARCHITECTURE" in
-          "x86-32") downloadArch="x32";;
+           "x86-32") downloadArch="x32";;
           "aarch64") downloadArch="x64";;
-          *) downloadArch="$ARCHITECTURE";;
+                  *) downloadArch="$ARCHITECTURE";;
         esac
         echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
         releaseType="ga"
@@ -228,6 +225,7 @@ fi
 if [ "${ARCHITECTURE}" == "aarch64" ]; then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --openjdk-target=aarch64-unknown-cygwin --with-build-jdk=$JDK_BOOT_DIR"
 fi
+
 
 if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=${TOOLCHAIN_VERSION}"
