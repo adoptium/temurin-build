@@ -1076,6 +1076,17 @@ class Build {
         }
     }
 
+
+    def setBuildStatus(String message, String state) {
+        step([
+            $class: "GitHubCommitStatusSetter",
+            reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/adoptopenjdk/openjdk-build"],
+            contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
+            errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+            statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
+        ]);
+    }
+
     /*
     Main function. This is what is executed remotely via the helper file kick_off_build.groovy, which is in turn executed by the downstream jobs.
     */
@@ -1107,15 +1118,7 @@ class Build {
                     */
                     context.library(identifier: 'openjdk-jenkins-helper@master')
 
-                    void setBuildStatus(String message, String state) {
-                        step([
-                            $class: "GitHubCommitStatusSetter",
-                            reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/adoptopenjdk/openjdk-build"],
-                            contextSource: [$class: "ManuallyEnteredCommitContextSource", context: "ci/jenkins/build-status"],
-                            errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
-                            statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
-                        ]);
-                    }
+                    setBuildStatus("Build Started", "PENDING");
 
                     if (buildConfig.DOCKER_IMAGE) {
                         // Docker build environment
