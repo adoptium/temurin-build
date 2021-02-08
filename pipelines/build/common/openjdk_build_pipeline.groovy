@@ -1162,6 +1162,13 @@ class Build {
                     */
                     context.library(identifier: 'openjdk-jenkins-helper@master')
 
+                    // Set Github Commit Status
+                    if (env.JOB_NAME.contains("pr-tester")) {
+                        node('master') {
+                            updateGithubCommitStatus("PENDING", "Pending")
+                        }
+                    }
+
                     if (buildConfig.DOCKER_IMAGE) {
                         // Docker build environment
                         def label = buildConfig.NODE_LABEL + "&&dockerBuild"
