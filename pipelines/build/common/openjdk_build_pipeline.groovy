@@ -967,7 +967,7 @@ class Build {
                     try {
                         context.timeout(time: buildTimeouts.BUILD_JDK_TIMEOUT, unit: "HOURS") {
                             // Set Github Commit Status
-                            if (ghprbActualCommit) {
+                            if (env.JOB_NAME.contains("pr-tester")) {
                                 updateGithubCommitStatus("PENDING", "Build Started", "${env.JOB_NAME}")
                             }
                             if (useAdoptShellScripts) {
@@ -983,7 +983,7 @@ class Build {
                         }
                     } catch (FlowInterruptedException e) {
                         // Set Github Commit Status
-                        if (ghprbActualCommit) {
+                        if (env.JOB_NAME.contains("pr-tester")) {
                             updateGithubCommitStatus("FAILED", "Build FAILED", "${env.JOB_NAME}")
                         }
                         throw new Exception("[ERROR] Build JDK timeout (${buildTimeouts.BUILD_JDK_TIMEOUT} HOURS) has been reached. Exiting...")
@@ -1015,7 +1015,7 @@ class Build {
                     }
                 } catch (FlowInterruptedException e) {
                     // Set Github Commit Status
-                    if (ghprbActualCommit) {
+                    if (env.JOB_NAME.contains("pr-tester")) {
                         updateGithubCommitStatus("FAILED", "Build FAILED", "${env.JOB_NAME}")
                     }
                     throw new Exception("[ERROR] Build archive timeout (${buildTimeouts.BUILD_ARCHIVE_TIMEOUT} HOURS) has been reached. Exiting...")
@@ -1043,14 +1043,14 @@ class Build {
                         }
                     } catch (FlowInterruptedException e) {
                         // Set Github Commit Status
-                        if (ghprbActualCommit) {
+                        if (env.JOB_NAME.contains("pr-tester")) {
                             updateGithubCommitStatus("FAILED", "Build FAILED", "${env.JOB_NAME}")
                         }
                         throw new Exception("[ERROR] AIX clean workspace timeout (${buildTimeouts.AIX_CLEAN_TIMEOUT} HOURS) has been reached. Exiting...")
                     }
                 }
                 // Set Github Commit Status
-                if (ghprbActualCommit) {
+                if (env.JOB_NAME.contains("pr-tester")) {
                     updateGithubCommitStatus("SUCCESS", "Build PASSED", "${env.JOB_NAME}")
                 }
             }
@@ -1112,8 +1112,7 @@ class Build {
         def repoUrl = getRepoURL()
         def commitSha = getCommitSha()
 
-        String[] bits = NAME.split("/");
-        String jobName = bits[bits.length-1];
+        String jobName = env.NAME.split('/').last()
 
         context.println "Setting GitHub Checks Status:"
         context.println "REPO URL: ${repoUrl}"
