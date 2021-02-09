@@ -919,13 +919,22 @@ class Build {
 
                     try {
                         context.timeout(time: buildTimeouts.NODE_CLEAN_TIMEOUT, unit: "HOURS") {
+                            // Clean non-hidden files first
                             // Note: Underlying org.apache DirectoryScanner used by cleanWs has a bug scanning where it misses files containing ".." so use rm -rf instead
                             // Issue: https://issues.jenkins.io/browse/JENKINS-64779
                             if (context.WORKSPACE != null && !context.WORKSPACE.isEmpty()) {
-                                context.println "Cleaning workspace files: " + context.WORKSPACE + "/*"
+                                context.println "Cleaning workspace non-hidden files: " + context.WORKSPACE + "/*"
                                 context.sh(script: "rm -rf " + context.WORKSPACE + "/*")
                             } else {
                                 context.println "Warning: Unable to clean workspace as context.WORKSPACE is null/empty"
+                            }
+
+                            // Clean remaining hidden files using cleanWs
+                            try {
+                                context.println "Cleaning workspace hidden files using cleanWs: " + context.WORKSPACE
+                                context.cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
+                            } catch (e) {
+                                context.println "Failed to clean ${e}"
                             }
                         }
                     } catch (FlowInterruptedException e) {
@@ -1029,8 +1038,16 @@ class Build {
                             // Issue: https://issues.jenkins.io/browse/JENKINS-64779
                             if (context.WORKSPACE != null && !context.WORKSPACE.isEmpty()) {
                                 if (cleanWorkspaceAfter) {
-                                    context.println "Cleaning workspace files: " + context.WORKSPACE + "/*"
+                                    context.println "Cleaning workspace non-hidden files: " + context.WORKSPACE + "/*"
                                     context.sh(script: "rm -rf " + context.WORKSPACE + "/*")
+
+                                    // Clean remaining hidden files using cleanWs
+                                    try {
+                                        context.println "Cleaning workspace hidden files using cleanWs: " + context.WORKSPACE
+                                        context.cleanWs notFailBuild: true, disableDeferredWipeout: true, deleteDirs: true
+                                    } catch (e) {
+                                        context.println "Failed to clean ${e}"
+                                    }
                                 } else if (cleanWorkspaceBuildOutputAfter) {
                                     context.println "Cleaning workspace build output files: " + context.WORKSPACE + "/workspace/build/src/build"
                                     context.sh(script: "rm -rf " + context.WORKSPACE + "/workspace/build/src/build")
