@@ -444,11 +444,15 @@ executeTemplatedFile() {
 
   echo "Currently at '${PWD}'"
 
+  # We need the exitcode from the configure-and-build.sh script
+  set +eu
+
   # Execute the build passing the workspace dir and target dir as params for configure.txt
   bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh" ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]}
   exitCode=$?
 
-  if [ "${exitCode}" -eq 1 ]; then
+  if [ "${exitCode}" -eq 3 ]; then
+    createOpenJDKFailureLogsArchive
     echo "Failed to make the JDK, exiting"
     exit 1
   elif [ "${exitCode}" -eq 2 ]; then
@@ -459,6 +463,42 @@ executeTemplatedFile() {
     exit 2
   fi
 
+  # Restore exit behavior
+  set -eu
+}
+
+createOpenJDKFailureLogsArchive() {
+    echo "OpenJDK make failed, archiving make failed logs"
+    cd build/*
+
+    local adoptLogArchiveDir="AdoptOpenJDKLogsArchive"
+
+    # Create new folder for failure logs
+    rm -rf ${adoptLogArchiveDir}
+    mkdir ${adoptLogArchiveDir}
+
+    # Copy build and failure logs
+    if [[ -f "build.log" ]]; then
+      echo "Copying build.log to ${adoptLogArchiveDir}"
+      cp build.log ${adoptLogArchiveDir}
+    fi
+    if [[ -d "make-support/failure-logs" ]]; then
+      echo "Copying make-support/failure-logs to ${adoptLogArchiveDir}"
+      mkdir -p "${adoptLogArchiveDir}/make-support"
+      cp -r "make-support/failure-logs" "${adoptLogArchiveDir}/make-support"
+    fi
+
+    # Find any cores, dumps, ..
+    find . -name 'core.*' -name 'core.*.dmp' -o -name 'javacore.*.txt' -o -name 'Snap.*.trc' -o -name 'jitdump.*.dmp' | sed 's#^./##' | while read -r dump ; do
+      filedir=$(dirname "${dump}")
+      echo "Copying ${dump} to ${adoptLogArchiveDir}/${filedir}"
+      mkdir -p "${adoptLogArchiveDir}/${filedir}"
+      cp "${dump}" "${adoptLogArchiveDir}/${filedir}"
+    done
+
+    # Archive logs
+    local makeFailureLogsName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-makefailurelogs}")
+    createArchive "${adoptLogArchiveDir}" "${makeFailureLogsName}"
 }
 
 getGradleJavaHome() {
