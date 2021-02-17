@@ -46,56 +46,52 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
 fi
 echo LDR_CNTRL=$LDR_CNTRL
 
-# Any version above 8 (11 for now due to openjdk-build#1409
-if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then 
-  BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
-  BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
-  if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-    bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
-    # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
-    # instead of BOOT_JDK_VARIABLE (no '$').
-    export ${BOOT_JDK_VARIABLE}="${bootDir}"
-    if [ ! -x "$bootDir/bin/javac" ]; then
-      # Set to a default location as linked in the ansible playbooks
-      if [ -x /usr/java${BOOT_JDK_VERSION}_64/bin/javac ]; then
-        echo Could not use ${BOOT_JDK_VARIABLE} - using /usr/java${BOOT_JDK_VERSION}_64
-        export ${BOOT_JDK_VARIABLE}="/usr/java${BOOT_JDK_VERSION}_64"
-      else
-        mkdir -p "${bootDir}"
-        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
-        releaseType="ga"
-        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/aix/\${ARCHITECTURE}/jdk/openj9/normal/adoptopenjdk"
+BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
+  bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+  # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
+  # instead of BOOT_JDK_VARIABLE (no '$').
+  export ${BOOT_JDK_VARIABLE}="${bootDir}"
+  if [ ! -x "$bootDir/bin/javac" ]; then
+    # Set to a default location as linked in the ansible playbooks
+    if [ -x /usr/java${BOOT_JDK_VERSION}_64/bin/javac ]; then
+      echo Could not use ${BOOT_JDK_VARIABLE} - using /usr/java${BOOT_JDK_VERSION}_64
+      export ${BOOT_JDK_VARIABLE}="/usr/java${BOOT_JDK_VERSION}_64"
+    elif [ "$BOOT_JDK_VERSION" -ge 8 ]; then # Adopt has no build pre-8
+      mkdir -p "${bootDir}"
+      releaseType="ga"
+      apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/aix/\${ARCHITECTURE}/jdk/openj9/normal/adoptopenjdk"
+      apiURL=$(eval echo ${apiUrlTemplate})
+      echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+      # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
+      # the fallback mechanism, as downloading of the GA binary might fail.
+      set +e
+      wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
+      retVal=$?
+      set -e
+      if [ $retVal -ne 0 ]; then
+        # We must be a JDK HEAD build for which no boot JDK exists other than
+        # nightlies?
+        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+        # shellcheck disable=SC2034
+        releaseType="ea"
         apiURL=$(eval echo ${apiUrlTemplate})
-        # make-adopt-build-farm.sh has 'set -e'. We need to disable that
-        # for the fallback mechanism, as downloading of the GA binary might
-        # fail.
-        set +e
+        echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
         wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
-        retVal=$?
-        set -e
-        if [ $retVal -ne 0 ]; then
-          # We must be a JDK HEAD build for which no boot JDK exists other than
-          # nightlies?
-          echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
-          echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} ..."
-          # shellcheck disable=SC2034
-          releaseType="ea"
-          apiURL=$(eval echo ${apiUrlTemplate})
-          wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
-        fi
       fi
     fi
   fi
-  export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
-  "$JDK_BOOT_DIR/bin/java" -version
-  executedJavaVersion=$?
-  if [ $executedJavaVersion -ne 0 ]; then
-      echo "Failed to obtain or find a valid boot jdk"
-      exit 1
-  fi
-    "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
 
+export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+"$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
+"$JDK_BOOT_DIR/bin/java" -version > /dev/null 2>&1
+executedJavaVersion=$?
+if [ $executedJavaVersion -ne 0 ]; then
+    echo "Failed to obtain or find a valid boot jdk"
+    exit 1
+fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   if [ "$JAVA_FEATURE_VERSION" -ge 11 ]; then
