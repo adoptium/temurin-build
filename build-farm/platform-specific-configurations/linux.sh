@@ -91,15 +91,20 @@ then
 fi
 
 # Any version above 8 (11 for now due to openjdk-build#1409
-if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
-    BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
-    BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
-    if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-      bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
-      # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
-      # instead of BOOT_JDK_VARIABLE (no '$').
-      export ${BOOT_JDK_VARIABLE}="$bootDir"
-      if [ ! -d "$bootDir/bin" ]; then
+if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then 
+  BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+  BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+  if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
+    bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+    # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
+    # instead of BOOT_JDK_VARIABLE (no '$').
+    export ${BOOT_JDK_VARIABLE}="$bootDir"
+    if [ ! -x "$bootDir/bin/javac" ]; then
+      # Set to a default location as linked in the ansible playbooks
+      if [ -x /usr/lib/jvm/jdk-${BOOT_JDK_VERSION}/bin/javac ]; then
+        echo Could not use ${BOOT_JDK_VARIABLE} - using /usr/lib/jvm/jdk-${BOOT_JDK_VERSION}
+        export ${BOOT_JDK_VARIABLE}="/usr/lib/jvm/jdk-${BOOT_JDK_VERSION}"
+      else
         mkdir -p "$bootDir"
         echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
         releaseType="ga"
@@ -124,16 +129,16 @@ if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
         fi
       fi
     fi
-    export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
-    "$JDK_BOOT_DIR/bin/java" -version
-    executedJavaVersion=$?
-    if [ $executedJavaVersion -ne 0 ]; then
-        echo "Failed to obtain or find a valid boot jdk"
-        exit 1
-    fi
-    "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
+  fi
+  export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+  "$JDK_BOOT_DIR/bin/java" -version
+  executedJavaVersion=$?
+  if [ $executedJavaVersion -ne 0 ]; then
+      echo "Failed to obtain or find a valid boot jdk"
+      exit 1
+  fi
+  "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 fi
-
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 11 ] && [ -r /usr/local/gcc9/ ]; then
   export PATH=/usr/local/gcc9/bin:$PATH
