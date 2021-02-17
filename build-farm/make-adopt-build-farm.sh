@@ -18,16 +18,40 @@ set -e
 
 PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-## Sanity check as this script requires various environment variables so fail
-## fast if one or more are not present. MAYBE autodetect defaults in future?
+## autodetect defaults to improve usability when running this for debugging/testing
 
-SANEVARS=0
+if [ -z "$ARCHITECTURE"  ]; then
+   ARCHITECTURE=`uname -p`
+   if [       "$OSTYPE" = "cygwin"  ]; then ARCHITECTURE=`uname -m`; fi
+   if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;        fi
+   if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi
+   echo ARCHITECTURE not defined - assuming $ARCHITECTURE
+   export ARCHITECTURE
+fi
+
+if [ -z "$TARGET_OS" ]; then
+  if [ "$OSTYPE" = "cygwin" ]; then
+    TARGET_OS=windows
+  else
+    TARGET_OS=`uname`
+  fi
+  echo TARGET_OS not defined - assuming you want "$TARGET_OS"
+  export TARGET_OS
+fi
+
+if [ -z "$JAVA_TO_BUILD" ]; then
+  if [ "$1" != "${1##jdk}" ]; then
+    echo Setting JAVA_TO_BUILD to "$1" from the parameter supplied
+    export JAVA_TO_BUILD="$1"
+  else
+    echo JAVA_TO_BUILD not defined - defaulting to jdk11u
+    export JAVA_TO_BUILD=jdk11u
+  fi
+fi
+
 [ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u && SANEVARS=1
-[ -z "$TARGET_OS"     ] && echo TARGET_OS not defined - set to e.g. linux     && SANEVARS=1
-[ -z "$VARIANT"       ] && echo VARIANT not defined - set to e.g. hotspot     && SANEVARS=1
-[ -z "$ARCHITECTURE"  ] && echo ARCHITECTURE not defined - set to e.g. x64    && SANEVARS=1
-[ -z "$FILENAME"      ] && echo FILENAME not defined - set to e.g. jdk.tar.gz && SANEVARS=1
-[ "$SANEVARS" != "0"  ] && echo Please correct the above omissions in the environment then retry && exit 1
+[ -z "$VARIANT"       ] && echo VARIANT not defined - assuming hotspot && export VARIANT=hotspot
+[ -z "$FILENAME"      ] && echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARIANT}.tar.gz"
 
 ## Very very build farm specific configuration
 
