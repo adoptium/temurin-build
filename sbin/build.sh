@@ -489,7 +489,7 @@ createOpenJDKFailureLogsArchive() {
     fi
 
     # Find any cores, dumps, ..
-    find . -name 'core.*' -name 'core.*.dmp' -o -name 'javacore.*.txt' -o -name 'Snap.*.trc' -o -name 'jitdump.*.dmp' | sed 's#^./##' | while read -r dump ; do
+    find . -name 'core.*' -o -name 'core.*.dmp' -o -name 'javacore.*.txt' -o -name 'Snap.*.trc' -o -name 'jitdump.*.dmp' | sed 's#^./##' | while read -r dump ; do
       filedir=$(dirname "${dump}")
       echo "Copying ${dump} to ${adoptLogArchiveDir}/${filedir}"
       mkdir -p "${adoptLogArchiveDir}/${filedir}"
@@ -684,12 +684,12 @@ removingUnnecessaryFiles() {
   if [ ${BUILD_CONFIG[CREATE_DEBUG_IMAGE]} == true ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
     *cygwin*)
-      # on Windows, we want to take .pdb files
-      debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.pdb")
+      # on Windows, we want to take .pdb and .map files
+      debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.pdb" -o -name "*.map")
       ;;
     darwin)
       # on MacOSX, we want to take .dSYM folders
-      debugSymbols=$(find "${jdkTargetPath}" -print -type d -name "*.dSYM")
+      debugSymbols=$(find "${jdkTargetPath}" -type d -name "*.dSYM")
       ;;
     *)
       # on other platforms, we want to take .debuginfo files
@@ -699,6 +699,8 @@ removingUnnecessaryFiles() {
 
     # if debug symbols were found, copy them to a different folder
     if [ -n "${debugSymbols}" ]; then
+      echo "Copying found debug symbols to ${debugImageTargetPath}"
+      mkdir -p "${debugImageTargetPath}"
       echo "${debugSymbols}" | cpio -pdm ${debugImageTargetPath}
     fi
 
