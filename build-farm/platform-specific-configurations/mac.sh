@@ -66,7 +66,7 @@ fi
 
 sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
-if [ "${JAVA_FEATURE_VERSION" = "8" ]; then
+if [ "${JAVA_FEATURE_VERSION}" = "8" ]; then
   BOOT_JDK_VERSION="${JAVA_FEATURE_VERSION}"
 else
   BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
