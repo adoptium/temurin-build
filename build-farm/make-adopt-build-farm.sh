@@ -19,25 +19,33 @@ set -e
 PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ## autodetect defaults to improve usability when running this for debugging/testing
+## On most platforms "uname -p" matches what the OS name used in the adoptopenjdk
+## scripts uses, but not on xLinux, Windows or AIX.
 
 if [ -z "$ARCHITECTURE"  ]; then
    ARCHITECTURE=`uname -p`
-   if [       "$OSTYPE" = "cygwin"  ]; then ARCHITECTURE=`uname -m`; fi
-   if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;        fi
-   if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi
+   if [ "$OSTYPE"       = "cygwin"  ]; then ARCHITECTURE=`uname -m`; fi # Windows
+   if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;        fi # Linux/x64
+   if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64
+   if [ "$ARCHITECTURE" = "sparc"   ]; then ARCHITECTURE=sparcv9;    fi # Solaris/SPARC
+   if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi # AIX
    echo ARCHITECTURE not defined - assuming $ARCHITECTURE
    export ARCHITECTURE
 fi
 
+## AdoptOpenJDK uses "windows" instead of "cygwin" for the OS name on Windows
+## so needs to be special cased - on everthing else "uname" is valid
+
 if [ -z "$TARGET_OS" ]; then
-  if [ "$OSTYPE" = "cygwin" ]; then
-    TARGET_OS=windows
-  else
-    TARGET_OS=`uname`
-  fi
+  TARGET_OS=`uname`
+  if [ "$OSTYPE" = "cygwin" ]; then TARGET_OS=windows ; fi
+  if [ "$OSTYPE" = "SunOS"  ]; then TARGET_OS=solaris ; fi
   echo TARGET_OS not defined - assuming you want "$TARGET_OS"
   export TARGET_OS
 fi
+
+## Allow JAVA_TO_BUILD to be supplied as a parameter to the script
+## and if not there or definied in environment, use latest LTS (jdk11u)
 
 if [ -z "$JAVA_TO_BUILD" ]; then
   if [ "$1" != "${1##jdk}" ]; then
