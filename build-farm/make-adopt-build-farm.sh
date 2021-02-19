@@ -18,19 +18,48 @@ set -e
 
 PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-## Sanity check as this script requires various environment variables so fail
-## fast if one or more are not present. MAYBE autodetect defaults in future?
+## autodetect defaults to improve usability when running this for debugging/testing
+## On most platforms "uname -p" matches what the OS name used in the adoptopenjdk
+## scripts uses, but not on xLinux, Windows or AIX.
 
-SANEVARS=0
+if [ -z "$ARCHITECTURE"  ]; then
+   ARCHITECTURE=`uname -p`
+   if [ "$OSTYPE"       = "cygwin"  ]; then ARCHITECTURE=`uname -m`; fi # Windows
+   if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;        fi # Linux/x64
+   if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64
+   if [ "$ARCHITECTURE" = "sparc"   ]; then ARCHITECTURE=sparcv9;    fi # Solaris/SPARC
+   if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi # AIX
+   echo ARCHITECTURE not defined - assuming $ARCHITECTURE
+   export ARCHITECTURE
+fi
+
+## AdoptOpenJDK uses "windows" instead of "cygwin" for the OS name on Windows
+## so needs to be special cased - on everthing else "uname" is valid
+if [ -z "$TARGET_OS" ]; then
+  TARGET_OS=`uname`
+  if [ "$OSTYPE" = "cygwin" ]; then TARGET_OS=windows ; fi
+  if [ "$OSTYPE" = "SunOS"  ]; then TARGET_OS=solaris ; fi
+  echo TARGET_OS not defined - assuming you want "$TARGET_OS"
+  export TARGET_OS
+fi
+
+## Allow JAVA_TO_BUILD to be supplied as a parameter to the script
+## and if not there or definied in environment, use latest LTS (jdk11u)
+if [ -z "$JAVA_TO_BUILD" ]; then
+  if [ "$1" != "${1##jdk}" ]; then
+    echo Setting JAVA_TO_BUILD to "$1" from the parameter supplied
+    export JAVA_TO_BUILD="$1"
+  else
+    echo JAVA_TO_BUILD not defined - defaulting to jdk11u
+    export JAVA_TO_BUILD=jdk11u
+  fi
+fi
+
 [ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u && SANEVARS=1
-[ -z "$TARGET_OS"     ] && echo TARGET_OS not defined - set to e.g. linux     && SANEVARS=1
-[ -z "$VARIANT"       ] && echo VARIANT not defined - set to e.g. hotspot     && SANEVARS=1
-[ -z "$ARCHITECTURE"  ] && echo ARCHITECTURE not defined - set to e.g. x64    && SANEVARS=1
-[ -z "$FILENAME"      ] && echo FILENAME not defined - set to e.g. jdk.tar.gz && SANEVARS=1
-[ "$SANEVARS" != "0"  ] && echo Please correct the above omissions in the environment then retry && exit 1
+[ -z "$VARIANT"       ] && echo VARIANT not defined - assuming hotspot && export VARIANT=hotspot
+[ -z "$FILENAME"      ] && echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARIANT}.tar.gz"
 
 ## Very very build farm specific configuration
-
 export OPERATING_SYSTEM
 OPERATING_SYSTEM=$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')
 
