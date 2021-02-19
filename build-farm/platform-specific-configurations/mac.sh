@@ -66,7 +66,11 @@ fi
 
 sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
-BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+if [ "${JAVA_FEATURE_VERSION" = "8" ]; then
+  BOOT_JDK_VERSION="${JAVA_FEATURE_VERSION}"
+else
+  BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+fi
 BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
