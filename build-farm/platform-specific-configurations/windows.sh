@@ -43,7 +43,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
     # Set to a default location as linked in the ansible playbooks
     if [ -x /cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}/bin/javac ]; then
       echo Could not use ${BOOT_JDK_VARIABLE} - using /cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}
-      export ${BOOT_JDK_VARIABLE}="/usr/lib/jvm/jdk-${BOOT_JDK_VERSION}"
+      export ${BOOT_JDK_VARIABLE}="/cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}"
     elif [ "$BOOT_JDK_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       # This is needed to convert x86-32 to x32 which is what the API uses
       case "$ARCHITECTURE" in
