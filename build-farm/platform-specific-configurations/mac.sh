@@ -66,6 +66,7 @@ fi
 
 sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
+# Adopt does not have builds of OpenJDK 7, OpenJDK 8 can boot itself just fine.
 if [ "${JAVA_FEATURE_VERSION" = "8" ]; then
   BOOT_JDK_VERSION="${JAVA_FEATURE_VERSION}"
 else
