@@ -35,7 +35,6 @@ fi
 
 ## AdoptOpenJDK uses "windows" instead of "cygwin" for the OS name on Windows
 ## so needs to be special cased - on everthing else "uname" is valid
-
 if [ -z "$TARGET_OS" ]; then
   TARGET_OS=`uname`
   if [ "$OSTYPE" = "cygwin" ]; then TARGET_OS=windows ; fi
@@ -46,7 +45,6 @@ fi
 
 ## Allow JAVA_TO_BUILD to be supplied as a parameter to the script
 ## and if not there or definied in environment, use latest LTS (jdk11u)
-
 if [ -z "$JAVA_TO_BUILD" ]; then
   if [ "$1" != "${1##jdk}" ]; then
     echo Setting JAVA_TO_BUILD to "$1" from the parameter supplied
@@ -62,7 +60,6 @@ fi
 [ -z "$FILENAME"      ] && echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARIANT}.tar.gz"
 
 ## Very very build farm specific configuration
-
 export OPERATING_SYSTEM
 OPERATING_SYSTEM=$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')
 
