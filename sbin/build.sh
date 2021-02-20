@@ -166,6 +166,17 @@ getOpenJdkVersion() {
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
       version=$(echo $version | cut -d'_' -f 2)
     fi
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    local bishengVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
+    if [ -r "${bishengVerFile}" ]; then
+      local minorNum="$(cut -d'.' -f 2 <${bishengVerFile})"
+      local updateNum="$(cut -d'.' -f 3 <${bishengVerFile})"
+      local buildNum="$(cut -d'.' -f 5 <${bishengVerFile})"
+      version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
+    else
+      version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+      version=$(echo $version | cut -d'_' -f 2)
+    fi
   else
     version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
     # TODO remove pending #1016
@@ -208,6 +219,11 @@ configureVersionStringParameter() {
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse/openj9/issues"
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]]; then
+    BUILD_CONFIG[VENDOR]="Huawei"
+    BUILD_CONFIG[VENDOR_VERSION]="Bisheng"
+    BUILD_CONFIG[VENDOR_BUG_URL]="https://gitee.com/openeuler/bishengjdk-11/issues"
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://gitee.com/openeuler/bishengjdk-11/issues"
   fi
 
   addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]:-"AdoptOpenJDK"}"
@@ -851,6 +867,10 @@ getFirstTagFromOpenJDKGitRepo() {
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
     TAG_SEARCH="dragonwell-*_jdk*"
+  fi
+
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    TAG_SEARCH="bisheng-*_jdk*"
   fi
 
   # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon...

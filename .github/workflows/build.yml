@@ -29,6 +29,10 @@ jobs:
             version: jdk11u
             vm: dragonwell
             image: adoptopenjdk/centos7_build_image
+          - os: linux
+            version: jdk11u
+            vm: bisheng
+            image: adoptopenjdk/centos7_build_image
     steps:
     - uses: actions/checkout@v2
 
