@@ -688,8 +688,8 @@ removingUnnecessaryFiles() {
       debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.pdb" -o -name "*.map")
       ;;
     darwin)
-      # on MacOSX, we want to take .dSYM folders
-      debugSymbols=$(find "${jdkTargetPath}" -type d -name "*.dSYM")
+      # on MacOSX, we want to take the files within the .dSYM folders
+      debugSymbols=$(find "${jdkTargetPath}" -type d -name "*.dSYM" | xargs -I {} find "{}" -type f)
       ;;
     *)
       # on other platforms, we want to take .debuginfo files
