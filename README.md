@@ -368,7 +368,8 @@ This tag identifies the architecture the JDK has been built on and it intended t
 - `variant:`
 Example values: [`hotspot`, `openj9`, `corretto`, `dragonwell`, `bisheng`]
 
-This tag identifies the JVM being used by the JDK, "dragonwell" and "bisheng" itself is not a JVM but is currently considered a variant in its own right.
+This tag identifies the JVM being used by the JDK. "dragonwell" and "bisheng" itself are HotSpot based JVMs but are currently considered their own variants for the 
+purposes of build.  WARN: This will be changed at a later date when we split out JVM from vendor.
 
 ----
 
