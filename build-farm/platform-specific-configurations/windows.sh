@@ -27,8 +27,8 @@ export OPENSSL_VERSION=1.1.1j
 
 TOOLCHAIN_VERSION=""
 
-if [ "$ARCHITECTURE" == "aarch64" ]; then
-  # Windows aarch64 cross compiles requires same version boot jdk
+if [ "$ARCHITECTURE" == "aarch64" ] && [ "$JAVA_FEATURE_VERSION" == 16 ]; then
+  # Windows aarch64 jdk16 cross compiles requires same version boot jdk
   BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION))"
 else
   BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
