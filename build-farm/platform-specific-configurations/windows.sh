@@ -29,8 +29,8 @@ TOOLCHAIN_VERSION=""
 
 # Any version above 8 (11 for now due to openjdk-build#1409
 if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
-    if [ "$ARCHITECTURE" == "aarch64" ]; then
-      # Windows aarch64 cross compiles requires same version boot jdk
+    if [ "$ARCHITECTURE" == "aarch64" ] && [ "$JAVA_FEATURE_VERSION" == 16 ]; then
+      # Windows aarch64 jdk16 cross compiles requires same version boot jdk
       BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION))"
     else
       BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
