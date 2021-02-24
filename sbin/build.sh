@@ -166,6 +166,17 @@ getOpenJdkVersion() {
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
       version=$(echo $version | cut -d'_' -f 2)
     fi
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    local bishengVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
+    if [ -r "${bishengVerFile}" ]; then
+      local minorNum="$(cut -d'.' -f 2 <${bishengVerFile})"
+      local updateNum="$(cut -d'.' -f 3 <${bishengVerFile})"
+      local buildNum="$(cut -d'.' -f 5 <${bishengVerFile})"
+      version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
+    else
+      version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+      version=$(echo $version | cut -d'_' -f 2)
+    fi
   else
     version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
     # TODO remove pending #1016
@@ -208,6 +219,11 @@ configureVersionStringParameter() {
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse/openj9/issues"
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]]; then
+    BUILD_CONFIG[VENDOR]="Huawei"
+    BUILD_CONFIG[VENDOR_VERSION]="Bisheng"
+    BUILD_CONFIG[VENDOR_BUG_URL]="https://gitee.com/openeuler/bishengjdk-11/issues"
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://gitee.com/openeuler/bishengjdk-11/issues"
   fi
 
   addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]:-"AdoptOpenJDK"}"
@@ -489,7 +505,7 @@ createOpenJDKFailureLogsArchive() {
     fi
 
     # Find any cores, dumps, ..
-    find . -name 'core.*' -name 'core.*.dmp' -o -name 'javacore.*.txt' -o -name 'Snap.*.trc' -o -name 'jitdump.*.dmp' | sed 's#^./##' | while read -r dump ; do
+    find . -name 'core.*' -o -name 'core.*.dmp' -o -name 'javacore.*.txt' -o -name 'Snap.*.trc' -o -name 'jitdump.*.dmp' | sed 's#^./##' | while read -r dump ; do
       filedir=$(dirname "${dump}")
       echo "Copying ${dump} to ${adoptLogArchiveDir}/${filedir}"
       mkdir -p "${adoptLogArchiveDir}/${filedir}"
@@ -684,12 +700,12 @@ removingUnnecessaryFiles() {
   if [ ${BUILD_CONFIG[CREATE_DEBUG_IMAGE]} == true ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
     *cygwin*)
-      # on Windows, we want to take .pdb files
-      debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.pdb")
+      # on Windows, we want to take .pdb and .map files
+      debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.pdb" -o -name "*.map")
       ;;
     darwin)
-      # on MacOSX, we want to take .dSYM folders
-      debugSymbols=$(find "${jdkTargetPath}" -print -type d -name "*.dSYM")
+      # on MacOSX, we want to take the files within the .dSYM folders
+      debugSymbols=$(find "${jdkTargetPath}" -type d -name "*.dSYM" | xargs -I {} find "{}" -type f)
       ;;
     *)
       # on other platforms, we want to take .debuginfo files
@@ -699,6 +715,8 @@ removingUnnecessaryFiles() {
 
     # if debug symbols were found, copy them to a different folder
     if [ -n "${debugSymbols}" ]; then
+      echo "Copying found debug symbols to ${debugImageTargetPath}"
+      mkdir -p "${debugImageTargetPath}"
       echo "${debugSymbols}" | cpio -pdm ${debugImageTargetPath}
     fi
 
@@ -849,6 +867,10 @@ getFirstTagFromOpenJDKGitRepo() {
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
     TAG_SEARCH="dragonwell-*_jdk*"
+  fi
+
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    TAG_SEARCH="bisheng-*_jdk*"
   fi
 
   # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon...

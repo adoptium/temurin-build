@@ -56,7 +56,8 @@ targetConfigurations = [
                 "openj9"
         ],
         "riscv64Linux": [
-                "openj9"
+                "openj9",
+                "bisheng"
         ]
 ]
 
@@ -70,7 +71,8 @@ weekly_release_scmReferences=[
         "hotspot"        : "",
         "openj9"         : "",
         "corretto"       : "",
-        "dragonwell"     : ""
+        "dragonwell"     : "",
+        "bisheng"        : ""
 ]
 
 return this
