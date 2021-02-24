@@ -170,7 +170,10 @@ class Config11 {
                 arch                 : 'riscv64',
                 crossCompile         : 'x64',
                 buildArgs            : '--cross-compile',
-                configureArgs        : '--disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root'
+                configureArgs        : [
+                        "openj9"       : '--disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root',
+                        "bisheng"      : '--openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root'
+                ]
         ],
   ]
 
