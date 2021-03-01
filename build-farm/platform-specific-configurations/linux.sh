@@ -155,7 +155,7 @@ if which ccache 2> /dev/null; then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
 fi
 
-if [ "${ARCHITECTURE}" == "riscv64" && "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+if [ "${ARCHITECTURE}" == "riscv64" -a "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   echo RISCV cross-compilation ... Downloading latest nightly OpenJ9/x64 as build JDK
   export BUILDJDK=$WORKSPACE/buildjdk
   rm -rf "$BUILDJDK"
@@ -170,7 +170,7 @@ if [ "${ARCHITECTURE}" == "riscv64" && "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}"
   export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
   CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ddr --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK_BOOT_DIR --with-build-jdk=$BUILDJDK"
   BUILD_ARGS="${BUILD_ARGS} -F"
-elif [ "${ARCHITECTURE}" == "riscv64" && "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
+elif [ "${ARCHITECTURE}" == "riscv64" -a "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
   echo Bisheng RISCV cross-compilation ... 
   export RISCV64=/opt/riscv_toolchain_linux
   export LD_LIBRARY_PATH=$RISCV64/lib64
