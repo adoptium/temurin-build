@@ -1,6 +1,5 @@
 .idea/
 .vscode/
-shellcheck-stable
 workspace
 pipelines/.gradle
 pipelines/gradle-cache

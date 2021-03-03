@@ -41,8 +41,8 @@ There is also some documentation in [CHANGELOG.md](CHANGELOG.md)
 
 ## What are the prerequisites for a system used for builds?
 
-- The upstream OpenJDK build requirements are at https://wiki.openjdk.java.net/display/Build/Supported+Build+Platforms
-- The AdoptOpenJDK levels we build on are at https://github.com/AdoptOpenJDK/openjdk-build/wiki/%5BWIP%5D-Minimum-OS-levels although anything with comparable equivalent or later C libraries should work ok (in particular we have built on most current Linux distros without issues)
+- The upstream OpenJDK build requirements are at [Supported Build Platforms](https://wiki.openjdk.java.net/display/Build/Supported+Build+Platforms)
+- The AdoptOpenJDK levels we build on are in [Minimum-OS-levels](https://github.com/AdoptOpenJDK/openjdk-build/wiki/%5BWIP%5D-Minimum-OS-levels) although anything with comparable equivalent or later C libraries should work ok (in particular we have built on most current Linux distros without issues)
 
 In terms of compilers, these are what we currently use for each release:
 
@@ -77,8 +77,7 @@ Since it's quite long, this is covered in a separate [RELEASING.md](RELEASING.md
 ## I've modified the build scripts - how can I test my changes?
 
 If you're making changes ensure you follow the contribution guidelines in
-[CONTRIBUTING.md](CONTRIBUTING.md) including running `./shellcheck.sh` if you're modifying
-the shell scripts.
+[CONTRIBUTING.md](CONTRIBUTING.md) including running [shellcheck](https://github.com/koalaman/shellcheck) if you're modifying the shell scripts.
 
 For more information, see the [PR testing documentation](./pipelines/build/prTester/README.md).
 
@@ -90,5 +89,4 @@ Runtime platforms are in our [supported platforms page](https://adoptopenjdk.net
 
 ## How to add a new build pipeline param and associated job configuration?
 
-The following PR: https://github.com/AdoptOpenJDK/openjdk-build/pull/2416
-demonstrates changes required to add a new build pipeline param, and also associated version/platform job configurations for setting the value when needed.
+[This PR](https://github.com/AdoptOpenJDK/openjdk-build/pull/2416) demonstrates changes required to add a new build pipeline param, and also associated version/platform job configurations for setting the value when needed.
