@@ -156,7 +156,7 @@ if which ccache 2> /dev/null; then
 fi
 
 # If we are in a cross compilation environment for RISC-V
-if [ "${ARCHITECTURE}" == "riscv64" -a "`uname -a`" == "x86_x64" ]; then
+if [ "${ARCHITECTURE}" == "riscv64" -a "`uname -m`" == "x86_64" ]; then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     echo RISCV cross-compilation ... Downloading latest nightly OpenJ9/x64 as build JDK
     export BUILDJDK=$WORKSPACE/buildjdk
