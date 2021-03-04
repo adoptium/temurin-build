@@ -174,6 +174,9 @@ if [ "${ARCHITECTURE}" == "riscv64" -a "`uname -m`" == "x86_64" ]; then
   export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
   CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK_BOOT_DIR"
   BUILD_ARGS="${BUILD_ARGS} -F"
-  [ -x "$CXX" ] || echo "RISC-V cross compiler $CXX does not exist on this system - cannot continue" && exit 1
+  if [ ! -x "$CXX" ]; then
+    echo "RISC-V cross compiler $CXX does not exist on this system - cannot continue"
+    exit 1
+  fi
 fi
 
