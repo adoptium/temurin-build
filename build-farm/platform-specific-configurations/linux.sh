@@ -162,7 +162,7 @@ if [ "${ARCHITECTURE}" == "riscv64" -a "`uname -m`" == "x86_64" ]; then
     echo RISCV cross-compilation for OpenJ9 ... Downloading required nightly OpenJ9/x64 as build JDK to $BUILDJDK
     rm -rf "$BUILDJDK"
     mkdir "$BUILDJDK"
-    wget -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/x64/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
+    wget -q -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/x64/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
     "$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g'
     CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-jdk=$BUILDJDK --disable-ddr"
   fi
