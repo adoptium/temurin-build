@@ -63,12 +63,17 @@ All machines at AdoptOpenJDK are set up using the ansible playbooks from the
 
 ## How do I change the parameters, such as configure flags, for a Jenkins build
 
-Either:
+Where you change them depends on the scope of the parameter or flag:
 
-- Modify the environment files in [platform-specific-configurations](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
-- Modify the [pipeline files](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/build), although this is normally only done for configuration differences such as OpenJ9 Large Heap builds. Please only do this if the changes you wish to make will effect the Jenkins builds.
-
-[Example PR - Adding a new configure flag for OpenJ9](https://github.com/AdoptOpenJDK/openjdk-build/pull/1442/files)
+- *If the parameter will affect all users, regardless of environment or OS/Arch*
+  - [build.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/sbin/build.sh) OR [makejdk-any-platform.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/makejdk-any-platform.sh) depending on how high up in the execution stack it needs to be.
+  - [Example PR - Adding a new archival feature for OpenJ9 memory dumps](https://github.com/AdoptOpenJDK/openjdk-build/pull/2464)
+- *If the parameter will affect all machines of a specific OS OR will affect a jenkins machine style environment at the shell script level*
+  - Modify the relevant environment files in [platform-specific-configurations](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
+  - [Example PR - Adding a new configure flag for OpenJ9 on all AIX machines](https://github.com/AdoptOpenJDK/openjdk-build/pull/1442/files)
+- *If the parameter will affect only our jenkins environment or jenkins machine environment*
+  - Modify the [pipeline files](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/build), although this is normally only done for configuration differences such as OpenJ9 Large Heap builds. See [the configuration file documentation](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines#configuration-files) for more information about adding or altering custom jenkins param.
+  - [Example PR - Adding Jenkins Support for a Cross Compiled Bisheng Binary](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/pull/68)
 
 ## How to do a new release build
 
@@ -91,4 +96,4 @@ Runtime platforms are in our [supported platforms page](https://adoptopenjdk.net
 ## How to add a new build pipeline param and associated job configuration?
 
 The following PR: https://github.com/AdoptOpenJDK/openjdk-build/pull/2416
-demonstrates changes required to add a new build pipeline param, and also associated version/platform job configurations for setting the value when needed.
+demonstrates changes required to add a new build pipeline param, and also associated version/platform job configurations for setting the value when needed (note, the `pipelines/` dir has since been moved to our [jenkins repository](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines)).
