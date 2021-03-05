@@ -55,9 +55,19 @@ if [ -z "$JAVA_TO_BUILD" ]; then
   fi
 fi
 
-[ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u && SANEVARS=1
+[ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u
 [ -z "$VARIANT"       ] && echo VARIANT not defined - assuming hotspot && export VARIANT=hotspot
 [ -z "$FILENAME"      ] && echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARIANT}.tar.gz"
+
+# shellcheck source=sbin/common/constants.sh
+source "$PLATFORM_SCRIPT_DIR/../sbin/common/constants.sh"
+
+# Check that the given variant is in our list of common variants
+# shellcheck disable=SC2086,SC2143
+if [ -z "$(echo ${BUILD_VARIANTS} | grep -w ${VARIANT})" ]; then
+  echo "[ERROR] ${VARIANT} is not a recognised build variant. Valid Variants = ${BUILD_VARIANTS}"
+  exit 1
+fi
 
 ## Very very build farm specific configuration
 export OPERATING_SYSTEM
@@ -105,7 +115,6 @@ echo "OS: ${OPERATING_SYSTEM}"
 echo "SCM_REF: ${SCM_REF}"
 OPTIONS=""
 
-EXTENSION=""
 # shellcheck disable=SC2034
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=""
 CONFIGURE_ARGS=${CONFIGURE_ARGS:-""}
