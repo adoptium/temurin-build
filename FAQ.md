@@ -68,7 +68,7 @@ Where you change them depends on the scope of the parameter or flag:
 - *If the parameter will affect all users, regardless of environment or OS/Arch*
   - [build.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/sbin/build.sh) OR [makejdk-any-platform.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/makejdk-any-platform.sh) depending on how high up in the execution stack it needs to be.
   - [Example PR - Adding a new archival feature for OpenJ9 memory dumps](https://github.com/AdoptOpenJDK/openjdk-build/pull/2464)
-- *If the parameter will affect all machines of a specific OS OR will affect a jenkins machine style environment at the shell script level*
+- *If the parameter will affect all machines of a specific OS OR related to the environment set up by [our ansible scripts](https://github.com/AdoptOpenJDK/openjdk-infrastructure) at the shell script level*
   - Modify the relevant environment files in [platform-specific-configurations](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations)
   - [Example PR - Adding a new configure flag for OpenJ9 on all AIX machines](https://github.com/AdoptOpenJDK/openjdk-build/pull/1442/files)
 - *If the parameter will affect only our jenkins environment or jenkins machine environment*
