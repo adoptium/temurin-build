@@ -75,6 +75,14 @@ Where you change them depends on the scope of the parameter or flag:
   - Modify the [pipeline files](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/build), although this is normally only done for configuration differences such as OpenJ9 Large Heap builds. See [the configuration file documentation](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines#configuration-files) for more information about adding or altering custom jenkins param.
   - [Example PR - Adding Jenkins Support for a Cross Compiled Bisheng Binary](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/pull/68)
 
+### TL;DR (Quick Reference Table)
+
+| Parameter Location | Impact |
+| --- | --- |
+| [build.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/sbin/build.sh) OR [makejdk-any-platform.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/makejdk-any-platform.sh) | Anyone (including end users) who are running [makejdk-any-platform.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/makejdk-any-platform.sh) |
+| [platform-specific-configurations](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/build-farm/platform-specific-configurations) scripts | Those using [build-farm/make-adopt-build-farm.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/build-farm/make-adopt-build-farm.sh) (inc. our pipelines) - should be stuff specific to our machines |
+| Jenkins resources in [ci-jenkins-pipelines](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines) | Only when run through our jenkins pipelines. See the [configuration file documentation](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines#configuration-files) for more information |
+
 ## How to do a new release build
 
 Since it's quite long, this is covered in a separate [RELEASING.md](RELEASING.md) document
