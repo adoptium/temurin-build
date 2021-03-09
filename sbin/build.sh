@@ -175,7 +175,7 @@ getOpenJdkVersion() {
       version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
     else
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
-      version=$(echo $version | cut -d'_' -f 2)
+      version=$(echo $version | cut -d'-' -f 2 | cut -d'_' -f 1)
     fi
   else
     version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
@@ -870,7 +870,7 @@ getFirstTagFromOpenJDKGitRepo() {
   fi
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
-    TAG_SEARCH="bisheng-*_jdk*"
+    TAG_SEARCH="jdk-*+*bisheng_riscv"
   fi
 
   # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon...
