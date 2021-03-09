@@ -52,7 +52,7 @@ Finally, for similar reasons to avoiding individual copyright statements, we don
 
 ### Ensuring high quality
 
-If you're changing a shellscript, please make sure you run `./shellcheck.sh` before submitting your PR. This will also run in a GitHub check titled `Linter / Shellcheck` to ensure you comply to our coding style guidelines.
+If you're changing a shellscript, please make sure you run [shellcheck](https://github.com/koalaman/shellcheck) before submitting your PR. This will also run in a GitHub check titled `Linter` to ensure you comply to our coding style guidelines (alongside a lot of other linters for different formats).
 
 After we receive your pull request our [GitHub Checks](https://github.com/AdoptOpenJDK/openjdk-build/tree/master/.github/workflows) will test your changes.
 If you're making any changes to our groovy files, you'll be more interested in our [pr-tester](https://ci.adoptopenjdk.net/view/build-tester/job/build-scripts-pr-tester/job/openjdk-build-pr-tester/) jenkins job which executes a set of test pipelines in a semi-live environment. Watch for the results posted as a comment to the PR, investigate and fix any failures.

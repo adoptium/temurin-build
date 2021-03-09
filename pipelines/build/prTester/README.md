@@ -71,10 +71,10 @@ cd pipelines/
 
 This group consists of [GitHub Status Checks](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/about-status-checks) run inside GitHub itself. They lint / analyse any changes you make to ensure they conform to our writing standards.
 
-#### Shellcheck
+#### Super Linter
 
-- This job downloads and runs the [Shellcheck script analysis tool](https://www.shellcheck.net/) in order to lint and compile any changes you have made to our bash scripts. It does this via the [shellcheck.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/shellcheck.sh) script.
-- The job will fail and inform the user in the log if there are any violations of our bash scripting standards. If you feel that some of the standards are too strict or irrelevant to your changes, please raise it in [Slack:#testing](https://adoptopenjdk.slack.com/archives/C5219G28G).
+- This job downloads and runs the [Super Linter Tool](https://github.com/github/super-linter) in order to lint and compile any changes you have made to our bash scripts.
+- The job will fail and inform the user in the log if there are any violations of our code or documentation standards. If you feel that some of the standards are too strict or irrelevant to your changes, please raise it in [Slack:#testing](https://adoptopenjdk.slack.com/archives/C5219G28G).
 
 ### Build
 
