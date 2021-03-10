@@ -1,0 +1,21 @@
+###########################
+###########################
+## Markdown Linter rules ##
+###########################
+###########################
+
+# Linter rules doc:
+# - https://github.com/DavidAnson/markdownlint
+#
+# Note:
+# To comment out a single error:
+#   <!-- markdownlint-disable -->
+#   any violations you want
+#   <!-- markdownlint-restore -->
+#
+
+###############
+# Rules by id #
+###############
+MD013: false # Line length is usually not important and the 80 char limit is way too small anyway
+MD033: false # Inline HTML is important for multilines and checkboxes within markdown tables
