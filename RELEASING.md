@@ -113,8 +113,7 @@ lockdown period.
 
 Here are the steps:
 
-1. Disabling nightly testing so the release builds aren't delayed by any nightly test runs (`ENABLE_TESTS: false` in [config_regeneration.groovy](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/build/common/config_regeneration.groovy#L390) and set `runtests` to `false` in
-[pipeline_job_template.groovy](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/jobs/pipeline_job_template.groovy#L5))
+1. Disabling nightly testing so the release builds aren't delayed by any nightly test runs (`enableTests : false` in [defaults.json](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/defaults.json))
 2. If desired, add a banner to the website to indicate that the releases are coming in the near future ([Sample PR](https://github.com/AdoptOpenJDK/openjdk-website/pull/702/files))
 3. Build and Test the OpenJDK for "release" at AdoptOpenJDK using a build pipeline job as follows:
    - Job: https://ci.adoptopenjdk.net/job/build-scripts/job/openjdk8-pipeline/build (Switch `openjdk8` for your version number)
