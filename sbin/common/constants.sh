@@ -22,7 +22,7 @@ export JDK12_VERSION="jdk12u";
 export JDK13_VERSION="jdk13u";
 export JDK14_VERSION="jdk14u";
 export JDK15_VERSION="jdk15u";
-export JDK16_VERSION="jdk16";
+export JDK16_VERSION="jdk16u";
 export JDKHEAD_VERSION="jdk";
 
 export JDK8_CORE_VERSION="jdk8";
