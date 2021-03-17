@@ -14,6 +14,7 @@
 # limitations under the License.
 ################################################################################
 
+# Version Strings
 export JDK8_VERSION="jdk8u";
 export JDK9_VERSION="jdk9u";
 export JDK10_VERSION="jdk10u";
@@ -37,13 +38,17 @@ export JDK16_CORE_VERSION="jdk16";
 export JDKHEAD_CORE_VERSION="${JDKHEAD_VERSION}";
 export AMBER_CORE_VERSION="amber";
 
+# Variants
 export BUILD_VARIANT_HOTSPOT="hotspot"
 export BUILD_VARIANT_OPENJ9="openj9"
 export BUILD_VARIANT_CORRETTO="corretto"
 export BUILD_VARIANT_SAP="SapMachine"
 export BUILD_VARIANT_DRAGONWELL="dragonwell"
 export BUILD_VARIANT_BISHENG="bisheng"
+export BUILD_VARIANTS="${BUILD_VARIANT_HOTSPOT} ${BUILD_VARIANT_OPENJ9} ${BUILD_VARIANT_CORRETTO} ${BUILD_VARIANT_SAP} ${BUILD_VARIANT_DRAGONWELL} ${BUILD_VARIANT_BISHENG}"
 
+# Git Tags to peruse
 export GIT_TAGS_TO_SEARCH=100
 
+# Path of marker file in mirror repos
 export ADOPTOPENJDK_MD_MARKER_FILE="AdoptOpenJDK.md"

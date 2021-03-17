@@ -45,6 +45,13 @@ parseCommandLineArgs() {
   # Defer most of the work to the shared function in common-functions.sh
   parseConfigurationArguments "$@"
 
+  # Check the build variant here as this is earliest point where constants.sh is loaded
+  # shellcheck disable=SC2086,SC2143
+  if [ -z "$(echo ${BUILD_VARIANTS} | grep -w ${BUILD_CONFIG[BUILD_VARIANT]})" ]; then
+    echo "[ERROR] ${BUILD_CONFIG[BUILD_VARIANT]} is not a recognised build variant. Valid Variants = ${BUILD_VARIANTS}"
+    exit 1
+  fi
+
   # this check is to maintain backwards compatibility and allow user to use
   # -v rather than the mandatory argument
   if [[ "${BUILD_CONFIG[OPENJDK_FOREST_NAME]}" == "" ]]; then

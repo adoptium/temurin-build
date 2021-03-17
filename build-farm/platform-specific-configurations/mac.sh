@@ -64,6 +64,7 @@ then
   export BUILD_ARGS="${BUILD_ARGS} --codesign-identity 'Developer ID Application: London Jamocha Community CIC'"
 fi
 
+echo "[WARNING] You may be asked for your su user password, attempting to switch Xcode version to ${XCODE_SWITCH_PATH}"
 sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
 # Adopt does not have builds of OpenJDK 7, OpenJDK 8 can boot itself just fine.
