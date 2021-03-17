@@ -78,7 +78,13 @@ signRelease()
         for SERVER in $TIMESTAMPSERVERS; do
           if [ "$STAMPED" = "false" ]; then
             echo "Signing $f using $SERVER"
-            if "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"; then
+            if [ "$SIGN_TOOL" = "ucl" ]; then
+              ucl sign-code --file "$f" -n WindowsSHA -t "${SERVER}" --hash SHA256
+            else
+              "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"
+            fi
+            RC=$?
+            if [ $RC -eq 0 ]; then
               STAMPED=true
             else
               echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${SERVER} - Trying new server in 5 seconds"

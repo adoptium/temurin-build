@@ -18,6 +18,7 @@
 BUILD_ARGS=${BUILD_ARGS:-""}
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+export SIGN_TOOL
 export OPERATING_SYSTEM
 
 if [ "${OPERATING_SYSTEM}" == "mac" ] ; then
