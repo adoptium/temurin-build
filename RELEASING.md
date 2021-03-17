@@ -105,7 +105,7 @@ This stops last minute changes going in which may destabilise things.
 
 If a change has to go in during this "lockdown" period it should be done by
 posting a comment saying "Requesting approval to merge during the lockdown
-period. Please thumbs up the comment to approve". If two committers into the 
+period. Please thumbs up the comment to approve". If two committers into the
 repository express approval then the change can be merged during the
 lockdown period.
 
@@ -209,30 +209,30 @@ The following examples all use `-m1` as an example - this gets replaced with a l
 
   1. Update the Job Folder - https://ci.adoptopenjdk.net/job/build-scripts/job/utils/: The jobs themselves you are looking for are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD). Firstly, ensure that the job description of each generator (and it's parameter's descriptions) are up to date. Then, follow these steps:
   
-    * If you are ADDING a JDK version:
-      - Ensure that JDK N-1 is available as build JDK on the builders. For example in order to build JDK 15, JDK 14 needs to be installed on the build machines. As a temporary measure, [code](./build-farm/platform-specific-configurations/linux.sh#L110) so as to download the JDK to the builder via the API has been added. NOTE: For the transition period shortly after a new JDK has been branched, there might not yet exist a generally available release of JDK N-1.
-      - Ensure that JDK sources are being mirrored. Example [infrastructure request](https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1096)
-      - Ensure that a repository which contains the binary releases exists. Example [openjdk15-binaries](https://github.com/AdoptOpenJDK/openjdk15-binaries)
-      - Add build scripts for the new JDK release. Example for [JDK 14](https://github.com/AdoptOpenJDK/openjdk-build/commit/808b08fe2aefc005cf53f6cc1deb28a9b323ff)
-      - Regenerate build jobs:
-        - Create a New Item in the folder linked above that copies the `pipeline_jobs_generator_jdk` job. Call it `pipeline_jobs_generator_jdk<new-version-number>`. 
-        - Change the `Script Path` setting of the new job to `pipelines/build/regeneration/jdk<new-version-number>_regeneration_pipeline.groovy`. Don't worry if this currently doesn't exist in this repo, you'll add it in step 3.
-        - Update the `Script Path` setting of the JDK-HEAD job (`pipeline_jobs_generator_jdk`) to whatever the new JDK HEAD is. I.e. if the new head is JDK16, change `Script Path` to `pipelines/build/regeneration/jdk16_regeneration_pipeline.groovy`
-    * If you are REMOVING a JDK version: 
-      - Delete the job `pipeline_jobs_generator_jdk<version-you-want-to-delete>`
-    
-  2. Create the new build configurations for the release - https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations:
+  - If you are ADDING a JDK version:
+    - Ensure that JDK N-1 is available as build JDK on the builders. For example in order to build JDK 15, JDK 14 needs to be installed on the build machines. As a temporary measure, [code](./build-farm/platform-specific-configurations/linux.sh#L110) so as to download the JDK to the builder via the API has been added. NOTE: For the transition period shortly after a new JDK has been branched, there might not yet exist a generally available release of JDK N-1.
+    - Ensure that JDK sources are being mirrored. Example [infrastructure request](https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1096)
+    - Ensure that a repository which contains the binary releases exists. Example [openjdk15-binaries](https://github.com/AdoptOpenJDK/openjdk15-binaries)
+    - Add build scripts for the new JDK release. Example for [JDK 14](https://github.com/AdoptOpenJDK/openjdk-build/commit/808b08fe2aefc005cf53f6cc1deb28a9b323ff)
+    - Regenerate build jobs:
+      - Create a New Item in the folder linked above that copies the `pipeline_jobs_generator_jdk` job. Call it `pipeline_jobs_generator_jdk<new-version-number>`.
+      - Change the `Script Path` setting of the new job to `pipelines/build/regeneration/jdk<new-version-number>_regeneration_pipeline.groovy`. Don't worry if this currently doesn't exist in this repo, you'll add it in step 3.
+      - Update the `Script Path` setting of the JDK-HEAD job (`pipeline_jobs_generator_jdk`) to whatever the new JDK HEAD is. I.e. if the new head is JDK16, change `Script Path` to `pipelines/build/regeneration/jdk16_regeneration_pipeline.groovy`
+  - If you are REMOVING a JDK version:
+    - Delete the job `pipeline_jobs_generator_jdk<version-you-want-to-delete>`
 
-    - Create a new `jdk<new-version-number>_pipeline_config.groovy` file with the desired `buildConfigurations` for the new pipeline. 99% of the time, copy and pasting the configs from the previous version is acceptable. Ensure that the classname and instance of it is changed to `Config<new-version-number>`. Don't remove any old version configs.
-    - Furthermore, you will also need to create another config file to state what jobs will be run with any new versions. If it doesn't currently exist, add a `jdkxx.groovy` file to [configurations/](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations). [Example on how to do this](https://github.com/AdoptOpenJDK/openjdk-build/pull/1815/files). Note, some files will need to be named `jdkxxu.groovy` depending on whether the version is maintained in an update repo or not. These will be the ONLY os/archs/variants that are regenerated using the job regenerators as described in the [regeneration readme](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md).
+  1. Create the new build configurations for the release - https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations:
+
+  - Create a new `jdk<new-version-number>_pipeline_config.groovy` file with the desired `buildConfigurations` for the new pipeline. 99% of the time, copy and pasting the configs from the previous version is acceptable. Ensure that the classname and instance of it is changed to `Config<new-version-number>`. Don't remove any old version configs.
+  - Furthermore, you will also need to create another config file to state what jobs will be run with any new versions. If it doesn't currently exist, add a `jdkxx.groovy` file to [configurations/](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations). [Example on how to do this](https://github.com/AdoptOpenJDK/openjdk-build/pull/1815/files). Note, some files will need to be named `jdkxxu.groovy` depending on whether the version is maintained in an update repo or not. These will be the ONLY os/archs/variants that are regenerated using the job regenerators as described in the [regeneration readme](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md).
   
-  3. Create a new Regeneration Pipeline for the downstream jobs - https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration:
+  1. Create a new Regeneration Pipeline for the downstream jobs - https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration:
   
   Create a new `jdk<new-version-number>_regeneration_pipeline.groovy`. Ensure that the `javaVersion`, `targetConfigurations` and `buildConfigurations` variables are what they should be for the new version. Don't remove any old version configs. While you're here, make sure all of the current releases have a `regeneration_pipeline.groovy` file (including head). If they don't, create one using the same technique as above.
   
-  4. Build the `pipeline_jobs_generator` that you just made. Ensure the equivalent `openjdkxx_pipeline` to the generator exists or this will fail. If the job fails or is unstable, search the console log for `WARNING` or `ERROR` messages for why. Once it has completed successfully, the [pipeline](https://ci.adoptopenjdk.net/job/build-scripts/) is ready to go!
+  1. Build the `pipeline_jobs_generator` that you just made. Ensure the equivalent `openjdkxx_pipeline` to the generator exists or this will fail. If the job fails or is unstable, search the console log for `WARNING` or `ERROR` messages for why. Once it has completed successfully, the [pipeline](https://ci.adoptopenjdk.net/job/build-scripts/) is ready to go!
 
-  5. Update the view for the [build and test pipeline calendar](https://ci.adoptopenjdk.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version 
+  1. Update the view for the [build and test pipeline calendar](https://ci.adoptopenjdk.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version.
 
 ### Update Repository
 
@@ -247,8 +247,7 @@ When the repo has been created, a few changes to the codebase will be necessary 
 *If a product is to be moved to an update repo, follow these steps in chronological order to ensure our builds continue to function:*
 
 1. Update the [configurations](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations)
-
-  - Rename the nightly build targets file (it will be named `jdkxx.groovy`, [example here](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/jobs/configurations/jdk15u.groovy)) to be `jdkxxu.groovy`. Do the same for the pipeline config file (named `jdkxx_pipeline_config.groovy`, [example here](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/jobs/configurations/jdk15u_pipeline_config.groovy)).
+Rename the nightly build targets file (it will be named `jdkxx.groovy`, [example here](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/jobs/configurations/jdk15u.groovy)) to be `jdkxxu.groovy`. Do the same for the pipeline config file (named `jdkxx_pipeline_config.groovy`, [example here](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/jobs/configurations/jdk15u_pipeline_config.groovy)).
 
 2. Update the `javaToBuild` from `jdkxx` to `jdkxxu` inside the [pipeline job](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/build) that is being shifted to an update repository.
 
@@ -258,10 +257,12 @@ When the repo has been created, a few changes to the codebase will be necessary 
 
 5. Finally, update the documentation to account for the changes you have just done. You can do this pretty easily by searching the repo for all occurrences of `jdkxx` using the following URL (replacing `xx` with the version number to change) and updating the locations where it would make sense to do so:
 
-  - https://github.com/AdoptOpenJDK/openjdk-build/search?q=jdkxx
+- https://github.com/AdoptOpenJDK/openjdk-build/search?q=jdkxx
 
 ### Post Release Tasks
+
 Once all the release binaries have been published the following tasks should be completed:
+
 1. Reset the "weekly_release_scmReferences" (change to "") for the weekend release test build so it is using HEAD streams: https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations
 2. Re-enable "Tests" for Nightly pipelines, eg.https://github.com/AdoptOpenJDK/openjdk-build/pull/2401/files . After merging, check the build-pipeline-generator runs successfully: https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator . It's possible the script change may require "Script Approval" by a Jenkins Administrator (https://ci.adoptopenjdk.net/scriptApproval/).
 3. If the latest version just released has come to the end of its non-LTS lifecycle (2 CPU updates, eg.jdk-15.0.2), then disable and retire that version form the Nightly pipeline builds:

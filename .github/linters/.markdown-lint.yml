@@ -18,4 +18,6 @@
 # Rules by id #
 ###############
 MD013: false # Line length is usually not important and the 80 char limit is way too small anyway
+MD026: false # Trailing punctuation in header
 MD033: false # Inline HTML is important for multilines and checkboxes within markdown tables
+MD034: false # no-bare-urls Bare URL used
