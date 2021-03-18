@@ -242,22 +242,40 @@ At some point in a java version's lifecycle, the JDK version will be maintained 
 - [jdk-updates-dev](https://mail.openjdk.java.net/mailman/listinfo/jdk-updates-dev)
 When this occurs, usually a TSC member will create the `jdk<version>u` update repo ([example of the JDK11u one](https://github.com/AdoptOpenJDK/openjdk-jdk11u)) via our Skara mirroring jobs that pull in the commit and tag info from the Mercurial repository. To find out more about Skara and our other mirroring jobs, see https://github.com/AdoptOpenJDK/openjdk-mirror-scripts.
 
+*New Adopt mirror repo creation, by an AdoptOpenJDK github Admin:*
+
+1. Create a new empty repo AdoptOpenJDK/openjdk-jdkNNu
+2. Rename mirror job from https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/git-skara-jdkNN to https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/git-skara-jdkNNu
+3. Update mirror job "Execute shell" to pass jdkNNu as parameter to bash ./skaraMirror.sh jdkNNu
+4. Run the renamed job twice, first one will fail due to empty repo, 2nd run should succeed.
+5. Add the AdoptOpenJDK.md "marker" text file to both branches "dev" and "release".
+
 When the repo has been created, a few changes to the codebase will be necessary where the code references a jdk version but not it's new update version. I.e. `jdk11` became `jdk11u` when it was moved to an update repository.
 
 *If a product is to be moved to an update repo, follow these steps in chronological order to ensure our builds continue to function:*
 
-1. Update the [configurations](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations)
+1. ci-jenkins-pipelines: Update the [configurations](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations)
 Rename the nightly build targets file (it will be named `jdkxx.groovy`, [example here](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/jobs/configurations/jdk15u.groovy)) to be `jdkxxu.groovy`. Do the same for the pipeline config file (named `jdkxx_pipeline_config.groovy`, [example here](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/jobs/configurations/jdk15u_pipeline_config.groovy)).
 
-2. Update the `javaToBuild` from `jdkxx` to `jdkxxu` inside the [pipeline job](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/build) that is being shifted to an update repository.
+2. ci-jenkins-pipelines: Update version from `jdkxx` to `jdkxxu` inside [docs/generateBuildMatrix.sh](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/docs/generateBuildMatrix.sh)
 
-3. Update the `JDKXX_VERSION` from `jdkxx` to `jdkxxu` inside the [build script constants](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/sbin/common/constants.sh) that is being shifted to an update repository.
+3. ci-jenkins-pipelines: Run on "linux" platform your updated docs/generateBuildMatrix.sh script to generate the updated README.md table to be updated at the end of [README.md](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/README.md#build-status)
 
-4. Update the jenkins jobs by renaming the [job regenerator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/) that's version is being moved to an update repository from `pipeline_jobs_generator_jdkxx` to `pipeline_jobs_generator_jdkxxu`.
+4. openjdk-build: Update the `JDKXX_VERSION` from `jdkxx` to `jdkxxu` inside the [build script constants](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/sbin/common/constants.sh) that is being shifted to an update repository.
 
-5. Finally, update the documentation to account for the changes you have just done. You can do this pretty easily by searching the repo for all occurrences of `jdkxx` using the following URL (replacing `xx` with the version number to change) and updating the locations where it would make sense to do so:
+5. openjdk-build: Update the version from `jdkxx` to `jdkxxu` inside [.github/workflows/build.yml](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/.github/workflows/build.yml)
 
-- https://github.com/AdoptOpenJDK/openjdk-build/search?q=jdkxx
+6. Merge both ci-jenkins-pipelines and openjdk-build Pull Requests.
+
+7. Cancel jdkxx job regenerator that will have just been triggered: [job regenerator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/)
+
+8. Rename the jenkins pipeline jobs regenerator [job regenerator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/) from `pipeline_jobs_generator_jdkxx` to `pipeline_jobs_generator_jdkxxu`. Then manually re-build.
+
+9. Check the regenerator has created all the new jdkxxu build jobs successfully: [build jobs](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/)
+
+10. Delete the old jdkxx build jobs folder: https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/jdkxx: [build jobs](https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/)
+
+11. Submit a test [pipeline build](https://ci.adoptopenjdk.net/job/build-scripts/)
 
 ### Post Release Tasks
 
