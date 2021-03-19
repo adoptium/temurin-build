@@ -349,8 +349,10 @@ function setBranch() {
     branch="master";
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
     branch="develop";
-  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
-    branch="risc-v"
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" -a "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ]; then
+      branch="risc-v"
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" -a "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "riscv64" ]; then
+      branch="master"
   fi
 
   BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}

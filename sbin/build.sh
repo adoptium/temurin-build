@@ -888,8 +888,11 @@ getFirstTagFromOpenJDKGitRepo() {
     TAG_SEARCH="dragonwell-*_jdk*"
   fi
 
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" -a "${BUILD_CONFIG[OS_ARCHITECTORE]}" = "riscv64" ]; then
     TAG_SEARCH="jdk-*+*bisheng_riscv"
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" -a "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
+    # Bisheng's JDK8 tags follow the aarch64 convention
+    TAG_SEARCH="aarch64-shenandoah-jdk8u*-b*"
   fi
 
   # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon...
