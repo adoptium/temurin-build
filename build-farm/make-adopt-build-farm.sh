@@ -29,6 +29,7 @@ if [ -z "$ARCHITECTURE"  ]; then
    if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64
    if [ "$ARCHITECTURE" = "sparc"   ]; then ARCHITECTURE=sparcv9;    fi # Solaris/SPARC
    if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi # AIX
+   if [ "$ARCHITECTURE" = "armv7l"  ]; then ARCHITECTURE=arm;        fi # Linux/arm32
    echo ARCHITECTURE not defined - assuming $ARCHITECTURE
    export ARCHITECTURE
 fi
