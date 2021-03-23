@@ -159,6 +159,11 @@ elif [ -r /usr/bin/gcc-7 ]; then
   [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
 fi
 
+# Bisheng on aarch64 has a KAE option which requires openssl 1.1.1 to be used
+if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ] && [ -x /usr/local/openssl-1.1.1/lib/libcrypto.so.1.1 ]; then
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cflags=-I/usr/local/openssl-1.1.1/include  --with-extra-cxxflags=-I/usr/local/openssl-1.1.1/include --with-extra-ldflags=-L/usr/local/openssl-1.1.1/lib"
+fi
+
 if which ccache 2> /dev/null; then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
 fi
