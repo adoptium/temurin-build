@@ -1125,7 +1125,7 @@ addVendorToJson(){
 }
 
 addSourceToJson(){ # Pulls the basename of the origin repo, or uses 'openjdk-build' in rare cases of failure
-  local repoName=$(basename -s .git $(cd ${BUILD_CONFIG[WORKSPACE_DIR]} && git config --get remote.origin.url 2>/dev/null))
+  local repoName=$(basename $(cd ${BUILD_CONFIG[WORKSPACE_DIR]%.git} && git config --get remote.origin.url 2>/dev/null))
   local buildSHA=$(git -C ${BUILD_CONFIG[WORKSPACE_DIR]} rev-parse --short HEAD 2>/dev/null)
   if [[ $buildSHA ]]; then
     echo -n "${repoName:-"openjdk-build"}/$buildSHA" > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt
