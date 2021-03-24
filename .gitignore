@@ -1,8 +1,5 @@
 .idea/
 .vscode/
 workspace
-pipelines/.gradle
-pipelines/gradle-cache
-pipelines/target
 **/.DS_Store
 build-farm/platform-specific-configurations/platformConfigFile.sh

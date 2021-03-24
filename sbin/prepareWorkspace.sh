@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2155,SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,17 +50,18 @@ checkoutAndCloneOpenJDKGitRepo() {
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
-    
+
     # Ensure cached origin fetch remote repo is correct version and repo (eg.jdk11u, or jdk), remember "jdk" sub-string of jdk11u hence grep with "\s"
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk11u (fetch)
     # eg. origin https://github.com/adoptopenjdk/openjdk-jdk (fetch)
     # eg. origin git@github.com:adoptopenjdk/openjdk-jdk.git (fetch)
     # eg. origin https://github.com/alibaba/dragonwell8.git (fetch)
     # eg. origin https://github.com/feilongjiang/bishengjdk-11-mirror.git (fetch)
+    # shellcheck disable=SC2166
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" -o "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | egrep "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep -E "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
     else
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | egrep "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep -E "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
     fi
     local isValidGitRepo=$?
     set -e
@@ -86,10 +88,11 @@ checkoutAndCloneOpenJDKGitRepo() {
   fi
 
   checkoutRequiredCodeToBuild
+  # shellcheck disable=SC2086
   if [ $checkoutRc -ne 0 ]; then
     echo "RETRYWARNING: Checkout required source failed, cleaning workspace and retrying..."
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
-    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     cloneOpenJDKGitRepo
     checkoutRequiredCodeToBuild
     if [ $checkoutRc -ne 0 ]; then
@@ -169,7 +172,7 @@ checkoutRequiredCodeToBuild() {
     else
       git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}" || rc=$?
       if [ $rc -eq 0 ]; then
-        git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} || rc=$?
+        git fetch --all "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}" || rc=$?
         if [ $rc -eq 0 ]; then
           git reset --hard "origin/${BUILD_CONFIG[BRANCH]}" || rc=$?
           if [ $rc -eq 0 ]; then
@@ -204,7 +207,7 @@ checkoutRequiredCodeToBuild() {
         # 160 = NUMBER OF COMMITS ON TOP OF THE ORIGINAL TAGGED OBJECT
         # g824f8474f5 = THE SHORT HASH OF THE MOST RECENT COMMIT
         echo "SUCCESS: TAG FOUND! Exporting to $scmrefPath..."
-        git describe > $scmrefPath
+        git describe > "$scmrefPath"
 
       else
         # No annotated tags can describe the latest commit
@@ -215,7 +218,7 @@ checkoutRequiredCodeToBuild() {
         if [ $describeReturn -eq 0 ]; then
           # Will match commits that are not named
           echo "SUCCESS: TAG FOUND USING --tags! Exporting to $scmrefPath..."
-          git describe --tags > $scmrefPath
+          git describe --tags > "$scmrefPath"
         else
           # Use the shortend commit hash as a scmref if all else fails
           echo "FINAL WARNING: git describe --tags FAILED. There is likely additional error output above (exit code was $describeReturn). Exporting the abbreviated commit hash using git describe --always as a failsafe to $scmrefPath"
@@ -227,7 +230,7 @@ checkoutRequiredCodeToBuild() {
     else
       # SCM_REF is set. Use it over the git describe output
       echo "SUCCESS: BUILD_CONFIG[TAG] is set. Exporting to $scmrefPath..."
-      echo -n ${BUILD_CONFIG[TAG]} | tee "$scmrefPath"
+      echo -n "${BUILD_CONFIG[TAG]}" | tee "$scmrefPath"
     fi
 
   else
@@ -252,7 +255,7 @@ setGitCloneArguments() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   local git_remote_repo_address="${BUILD_CONFIG[REPOSITORY]}.git"
 
-  GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
+  GIT_CLONE_ARGUMENTS=("${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}" "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
 }
 
 updateOpenj9Sources() {
@@ -308,10 +311,10 @@ checkingAndDownloadingAlsa() {
 
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/" || exit
 
-  if [[ ! -z "$FOUND_ALSA" ]]; then
+  if [[ -n "$FOUND_ALSA" ]]; then
     echo "Skipping ALSA download"
   else
-    downloadFile "alsa-lib.tar.bz2" "https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2" ${ALSA_LIB_CHECKSUM}
+    downloadFile "alsa-lib.tar.bz2" "https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2" "${ALSA_LIB_CHECKSUM}"
 
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
       bzip2 -d alsa-lib.tar.bz2
@@ -326,9 +329,9 @@ checkingAndDownloadingAlsa() {
 
 sha256File() {
   if [ -x "$(command -v shasum)" ]; then
-    (shasum -a 256 | cut -f1 -d' ') <$1
+    (shasum -a 256 | cut -f1 -d' ') <"$1"
   else
-    sha256sum $1 | cut -f1 -d' '
+    sha256sum "$1" | cut -f1 -d' '
   fi
 }
 
@@ -341,7 +344,7 @@ checkFingerprint() {
 
   if ! [ -x "$(command -v gpg)" ] || [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
     echo "WARNING: GPG not present, resorting to checksum"
-    local actualChecksum=$(sha256File ${fileName})
+    local actualChecksum=$(sha256File "${fileName}")
 
     if [ "${actualChecksum}" != "${expectedChecksum}" ]; then
       echo "Failed to verify checksum on ${fileName}"
@@ -353,18 +356,18 @@ checkFingerprint() {
     return
   fi
 
-  rm ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/public_key.gpg || true
+  rm "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/public_key.gpg" || true
 
-  gpg --no-options --output ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/public_key.gpg --dearmor "${SCRIPT_DIR}/sig_check/${publicKey}.asc"
+  gpg --no-options --output "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/public_key.gpg" --dearmor "${SCRIPT_DIR}/sig_check/${publicKey}.asc"
 
   # If this dir does not exist, gpg 1.4.20 supplied on Ubuntu16.04 aborts
-  mkdir -p $HOME/.gnupg
-  local verify=$(gpg --no-options -v --no-default-keyring --keyring "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/public_key.gpg" --verify $sigFile $fileName 2>&1)
+  mkdir -p "$HOME/.gnupg"
+  local verify=$(gpg --no-options -v --no-default-keyring --keyring "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/public_key.gpg" --verify "$sigFile" "$fileName" 2>&1)
 
-  echo $verify
+  echo "$verify"
 
   # grep out and trim fingerprint from line of the form "Primary key fingerprint: 58E0 C111 E39F 5408 C5D3  EC76 C1A6 0EAC E707 FDA5"
-  local fingerprint=$(echo $verify | grep "Primary key fingerprint" | egrep -o "([0-9A-F]{4} ? ?){10}" | head -n 1)
+  local fingerprint=$(echo "$verify" | grep "Primary key fingerprint" | grep -E -o "([0-9A-F]{4} ? ?){10}" | head -n 1)
 
   # Remove whitespace from finger print as different versions of gpg may or may not add spaces to the fingerprint
   # specifically gpg on Ubuntu 16.04 produces:
@@ -390,7 +393,7 @@ checkingAndDownloadingFreemarker() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/" || exit
   FOUND_FREEMARKER=$(find "." -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
 
-  if [[ ! -z "$FOUND_FREEMARKER" ]]; then
+  if [[ -n "$FOUND_FREEMARKER" ]]; then
     echo "Skipping FREEMARKER download"
   else
 
@@ -433,7 +436,7 @@ downloadFile() {
   if [ $# -ge 3 ]; then
 
     local expectedChecksum="$3"
-    local actualChecksum=$(sha256File ${targetFileName})
+    local actualChecksum=$(sha256File "${targetFileName}")
 
     if [ "${actualChecksum}" != "${expectedChecksum}" ]; then
       echo "ERROR: Failed to verify checksum on ${targetFileName} ${url}"
@@ -451,7 +454,7 @@ checkingAndDownloadingFreeType() {
 
   FOUND_FREETYPE=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib/" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}" || true)
 
-  if [[ ! -z "$FOUND_FREETYPE" ]]; then
+  if [[ -n "$FOUND_FREETYPE" ]]; then
     echo "Skipping FreeType download"
   else
     downloadFile "freetype.tar.gz" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
@@ -572,7 +575,7 @@ downloadingRequiredDependencies() {
 }
 
 function moveTmpToWorkspaceLocation() {
-  if [ ! -z "${TMP_WORKSPACE}" ]; then
+  if [ -n "${TMP_WORKSPACE}" ]; then
 
     echo "Relocating workspace from ${TMP_WORKSPACE} to ${ORIGINAL_WORKSPACE}"
 
@@ -587,7 +590,7 @@ function moveTmpToWorkspaceLocation() {
 
 relocateToTmpIfNeeded() {
   if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]; then
-    jobName=$(echo "${JOB_NAME:-build-dir}" | egrep -o "[^/]+$")
+    jobName=$(echo "${JOB_NAME:-build-dir}" | grep -E -o "[^/]+$")
     local tmpdir="/tmp/openjdk-${jobName}"
     mkdir -p "$tmpdir"
 
@@ -615,7 +618,7 @@ relocateToTmpIfNeeded() {
 }
 
 applyPatches() {
-  if [ ! -z "${BUILD_CONFIG[PATCHES]}" ]; then
+  if [ -n "${BUILD_CONFIG[PATCHES]}" ]; then
     echo "applying patches from ${BUILD_CONFIG[PATCHES]}"
     git clone "${BUILD_CONFIG[PATCHES]}" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/patches"
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
@@ -631,16 +634,16 @@ applyPatches() {
 createSourceTagFile(){
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
     local OpenJDK_TopDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    local OpenJDK_SHA=$(git -C $OpenJDK_TopDir rev-parse --short HEAD)
+    local OpenJDK_SHA=$(git -C "$OpenJDK_TopDir" rev-parse --short HEAD)
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
       # OpenJ9 list 3 SHA's in their release file: OpenJDK, OpenJ9, and OMR.
       local OpenJ9_TopDir="$OpenJDK_TopDir/openj9"
       local OMR_TopDir="$OpenJDK_TopDir/omr"
-      local OpenJ9_SHA=$(git -C $OpenJ9_TopDir rev-parse --short HEAD)
-      local OMR_SHA=$(git -C $OMR_TopDir rev-parse --short HEAD)
-      (printf "OpenJDK: %s OpenJ9: %s OMR: %s" $OpenJDK_SHA $OpenJ9_SHA $OMR_SHA) > $OpenJDK_TopDir/.hgtip
+      local OpenJ9_SHA=$(git -C "$OpenJ9_TopDir" rev-parse --short HEAD)
+      local OMR_SHA=$(git -C "$OMR_TopDir" rev-parse --short HEAD)
+      (printf "OpenJDK: %s OpenJ9: %s OMR: %s" "$OpenJDK_SHA" "$OpenJ9_SHA" "$OMR_SHA") > "$OpenJDK_TopDir/.hgtip"
     else # Other variants only list the main repo SHA.
-      (printf "OpenJDK: %s" $OpenJDK_SHA) > $OpenJDK_TopDir/.hgtip
+      (printf "OpenJDK: %s" "$OpenJDK_SHA") > "$OpenJDK_TopDir/.hgtip"
     fi
   fi
 }

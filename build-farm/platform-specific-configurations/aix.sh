@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +21,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 if [ -r /ramdisk0/build/tmp ]; then
   echo Using /ramdisk0/build/tmp for temporary files \(Clearing it out first...\)
   export TMPDIR=/ramdisk0/build/tmp
-  echo Found $(find $TMPDIR -type f -print | wc -l) items in it - removing them
+  echo Found "$(find $TMPDIR -type f -print | wc -l)" items in it - removing them
   time rm -rf /ramdisk0/build/tmp/*
 else
   echo Using default /tmp for temporary files as /ramdisk0/build/tmp does not exist
@@ -47,17 +48,19 @@ fi
 echo LDR_CNTRL=$LDR_CNTRL
 
 BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+# shellcheck disable=SC2116
 BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
-  export ${BOOT_JDK_VARIABLE}="${bootDir}"
+  export "${BOOT_JDK_VARIABLE}"="${bootDir}"
   if [ ! -x "$bootDir/bin/javac" ]; then
     # Set to a default location as linked in the ansible playbooks
     if [ -x /usr/java${BOOT_JDK_VERSION}_64/bin/javac ]; then
-      echo Could not use ${BOOT_JDK_VARIABLE} - using /usr/java${BOOT_JDK_VERSION}_64
-      export ${BOOT_JDK_VARIABLE}="/usr/java${BOOT_JDK_VERSION}_64"
+      echo Could not use "${BOOT_JDK_VARIABLE}" - using /usr/java${BOOT_JDK_VERSION}_64
+      # shellcheck disable=SC2140
+      export "${BOOT_JDK_VARIABLE}"="/usr/java${BOOT_JDK_VERSION}_64"
     elif [ "$BOOT_JDK_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       mkdir -p "${bootDir}"
       releaseType="ga"
@@ -84,6 +87,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   fi
 fi
 
+# shellcheck disable=SC2155
 export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 "$JDK_BOOT_DIR/bin/java" -version > /dev/null 2>&1

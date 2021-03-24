@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2153,SC2155
 
 ################################################################################
 #
@@ -126,6 +127,7 @@ while [  $index -lt $numParams ]; do
     eval declare -r -x "$paramName=$index"
     PARAM_LOOKUP[$index]=$paramName
 
+    # shellcheck disable=SC2219
     let index=index+1
 done
 

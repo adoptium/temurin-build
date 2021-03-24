@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +34,7 @@ if [ "$ARCHITECTURE" == "aarch64" ]; then
 else
   BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
 fi
-BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+BOOT_JDK_VARIABLE="JDK${BOOT_JDK_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
@@ -46,6 +47,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       export ${BOOT_JDK_VARIABLE}="/cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}"
     elif [ "$BOOT_JDK_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       # This is needed to convert x86-32 to x32 which is what the API uses
+      export downloadArch
       case "$ARCHITECTURE" in
          "x86-32") downloadArch="x32";;
         "aarch64") downloadArch="x64";;
@@ -72,11 +74,11 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
         wget -q "${apiURL}" -O openjdk.zip
       fi
       unzip -q openjdk.zip
-      mv $(ls -d jdk-${BOOT_JDK_VERSION}*) "$bootDir"
+      mv "$(ls -d jdk-${BOOT_JDK_VERSION}*)" "$bootDir"
     fi
   fi
 fi
-
+# shellcheck disable=SC2155
 export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 "$JDK_BOOT_DIR/bin/java" -version > /dev/null 2>&1
@@ -174,7 +176,7 @@ then
       echo "CUDA_HOME shortened: ${CUDA_HOME}"
       exit 1
     fi
-    if [ -f "$(cygpath -u $CUDA_HOME/include/cuda.h)" ]
+    if [ -f "$(cygpath -u "$CUDA_HOME"/include/cuda.h)" ]
     then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-cuda --with-cuda=$CUDA_HOME"
     else
@@ -225,6 +227,6 @@ if [ "${ARCHITECTURE}" == "aarch64" ]; then
 fi
 
 
-if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
+if [ -n "${TOOLCHAIN_VERSION}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=${TOOLCHAIN_VERSION}"
 fi

@@ -92,7 +92,7 @@ Since it's quite long, this is covered in a separate [RELEASING.md](RELEASING.md
 If you're making changes ensure you follow the contribution guidelines in
 [CONTRIBUTING.md](CONTRIBUTING.md) including running [shellcheck](https://github.com/koalaman/shellcheck) if you're modifying the shell scripts.
 
-For more information, see the [PR testing documentation](./pipelines/build/prTester/README.md).
+For more information, see the [PR testing documentation](Testing.md).
 
 ## Which OS levels do we build on?
 

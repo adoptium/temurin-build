@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,12 +23,13 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
 
 BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+# shellcheck disable=SC2116
 BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
-  export ${BOOT_JDK_VARIABLE}="$bootDir"
+  export "${BOOT_JDK_VARIABLE}"="$bootDir"
   if [ ! -d "$bootDir/bin" ]; then
     mkdir -p "$bootDir"
     releaseType="ga"
@@ -53,6 +55,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   fi
 fi
 
+# shellcheck disable=SC2155
 export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 "$JDK_BOOT_DIR/bin/java" -version > /dev/null 2>&1
