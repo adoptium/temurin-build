@@ -328,7 +328,7 @@ checkingAndDownloadingAlsa() {
 
 sha256File() {
   if [ -x "$(command -v shasum)" ]; then
-    (shasum -a 256 | cut -f1 -d' ') <"$1"
+    (shasum -a 256 "$1" | cut -f1 -d' ')
   else
     sha256sum "$1" | cut -f1 -d' '
   fi
