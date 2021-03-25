@@ -160,7 +160,6 @@ if which ccache 2> /dev/null; then
 fi
 
 # If we are in a cross compilation environment for RISC-V
-# shellcheck disable=SC2166
 if [ "${ARCHITECTURE}" == "riscv64" ] && [ "$(uname -m)" == "x86_64" ]; then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export BUILDJDK=${WORKSPACE:-$PWD}/buildjdk
