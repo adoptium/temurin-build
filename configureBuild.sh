@@ -47,8 +47,8 @@ parseCommandLineArgs() {
   parseConfigurationArguments "$@"
 
   # Check the build variant here as this is earliest point where constants.sh is loaded
-  # shellcheck disable=SC2086,SC2143
-  if [ -z "$(echo ${BUILD_VARIANTS} | grep -w ${BUILD_CONFIG[BUILD_VARIANT]})" ]; then
+  # shellcheck disable=SC2143
+  if [ -z "$(echo "${BUILD_VARIANTS}" | grep -w "${BUILD_CONFIG[BUILD_VARIANT]}")" ]; then
     echo "[ERROR] ${BUILD_CONFIG[BUILD_VARIANT]} is not a recognised build variant. Valid Variants = ${BUILD_VARIANTS}"
     exit 1
   fi
