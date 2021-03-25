@@ -208,7 +208,7 @@ if [ "${OPERATING_SYSTEM}" != "aix" ] ; then
     export BUILD_ARGS="${BUILD_ARGS} --create-debug-image"
 fi
 
-echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" "${TAG_OPTION}" "${OPTIONS}" "${BUILD_ARGS}" "${VARIANT_ARG}" "${JAVA_TO_BUILD}"
+echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-gitrepo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args ${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"
 
 # Convert all speech marks in config args to make them safe to pass in.
 # These will be converted back into speech marks shortly before we use them, in build.sh.
