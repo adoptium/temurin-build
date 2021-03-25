@@ -128,7 +128,7 @@ then
   echo "Detecting boot jdk for: ${JAVA_TO_BUILD}"
   echo "Found build version: ${JAVA_FEATURE_VERSION}"
   # shellcheck disable=SC2004
-  JDK_BOOT_VERSION=$(($JAVA_FEATURE_VERSION-1))
+  JDK_BOOT_VERSION=$(( JAVA_FEATURE_VERSION - 1 ))
 fi
 echo "Required boot JDK version: ${JDK_BOOT_VERSION}"
 
