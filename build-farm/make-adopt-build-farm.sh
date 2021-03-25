@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,8 +24,8 @@ PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ## scripts uses, but not on xLinux, Windows or AIX.
 
 if [ -z "$ARCHITECTURE"  ]; then
-   ARCHITECTURE=`uname -p`
-   if [ "$OSTYPE"       = "cygwin"  ]; then ARCHITECTURE=`uname -m`; fi # Windows
+   ARCHITECTURE=$(uname -p)
+   if [ "$OSTYPE"       = "cygwin"  ]; then ARCHITECTURE=$(uname -m); fi # Windows
    if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;        fi # Linux/x64
    if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64
    if [ "$ARCHITECTURE" = "sparc"   ]; then ARCHITECTURE=sparcv9;    fi # Solaris/SPARC
@@ -37,7 +38,7 @@ fi
 ## AdoptOpenJDK uses "windows" instead of "cygwin" for the OS name on Windows
 ## so needs to be special cased - on everthing else "uname" is valid
 if [ -z "$TARGET_OS" ]; then
-  TARGET_OS=`uname`
+  TARGET_OS=$(uname)
   if [ "$OSTYPE" = "cygwin" ]; then TARGET_OS=windows ; fi
   if [ "$OSTYPE" = "SunOS"  ]; then TARGET_OS=solaris ; fi
   echo TARGET_OS not defined - assuming you want "$TARGET_OS"
@@ -126,7 +127,7 @@ if [ -z "${JDK_BOOT_VERSION}" ]
 then
   echo "Detecting boot jdk for: ${JAVA_TO_BUILD}"
   echo "Found build version: ${JAVA_FEATURE_VERSION}"
-  JDK_BOOT_VERSION=$(($JAVA_FEATURE_VERSION-1))
+  JDK_BOOT_VERSION=$(( JAVA_FEATURE_VERSION - 1 ))
 fi
 echo "Required boot JDK version: ${JDK_BOOT_VERSION}"
 
@@ -165,7 +166,7 @@ then
 fi
 
 echo "Boot jdk directory: ${JDK_BOOT_DIR}:"
-${JDK_BOOT_DIR}/bin/java -version 2>&1 | sed 's/^/BOOT JDK: /'
+"${JDK_BOOT_DIR}/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 java -version 2>&1 | sed 's/^/JDK IN PATH: /g'
 
 if [ "${RELEASE}" == "true" ]; then
@@ -179,11 +180,11 @@ else
 fi
 
 
-if [ ! -z "${TAG}" ]; then
+if [ -n "${TAG}" ]; then
   OPTIONS="${OPTIONS} --tag $TAG"
 fi
 
-if [ ! -z "${BRANCH}" ]
+if [ -n "${BRANCH}" ]
 then
   OPTIONS="${OPTIONS} --disable-shallow-git-clone -b ${BRANCH}"
 fi
@@ -206,7 +207,7 @@ if [ "${OPERATING_SYSTEM}" != "aix" ] ; then
     export BUILD_ARGS="${BUILD_ARGS} --create-debug-image"
 fi
 
-echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
+echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args ${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"
 
 # Convert all speech marks in config args to make them safe to pass in.
 # These will be converted back into speech marks shortly before we use them, in build.sh.

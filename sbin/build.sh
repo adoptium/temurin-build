@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2155,SC2153,SC2038,SC1091,SC2116
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,7 +66,7 @@ addConfigureArg() {
 # Add an argument to the configure call (if it's not empty)
 addConfigureArgIfValueIsNotEmpty() {
   # Only try to add an arg if the second argument is not empty.
-  if [ ! -z "$2" ]; then
+  if [ -n "$2" ]; then
     addConfigureArg "$1" "$2"
   fi
 }
@@ -85,7 +86,7 @@ configureShenandoahBuildParameter() {
 
 # Configure the boot JDK
 configureMacOSCodesignParameter() {
-  if [ ! -z "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
+  if [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
     # This command needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
     addConfigureArg "--with-macosx-codesign-identity=" "\"${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}\""
   fi
@@ -109,7 +110,7 @@ getOpenJDKUpdateAndBuildVersion() {
     echo "Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
     # shellcheck disable=SC2154
     echo "NOTE: This can take quite some time!  Please be patient"
-    git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
+    git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
     local openJdkVersion=$(getOpenJdkVersion)
     if [[ "${openJdkVersion}" == "" ]]; then
       # shellcheck disable=SC2154
@@ -135,47 +136,47 @@ getOpenJdkVersion() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
     local corrVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
 
-    local corrVersion="$(cut -d'.' -f 1 <${corrVerFile})"
+    local corrVersion="$(cut -d'.' -f 1 <"${corrVerFile}")"
 
     if [ "${corrVersion}" == "8" ]; then
-      local updateNum="$(cut -d'.' -f 2 <${corrVerFile})"
-      local buildNum="$(cut -d'.' -f 3 <${corrVerFile})"
-      local fixNum="$(cut -d'.' -f 4 <${corrVerFile})"
+      local updateNum="$(cut -d'.' -f 2 <"${corrVerFile}")"
+      local buildNum="$(cut -d'.' -f 3 <"${corrVerFile}")"
+      local fixNum="$(cut -d'.' -f 4 <"${corrVerFile}")"
       version="jdk8u${updateNum}-b${buildNum}.${fixNum}"
     else
-      local minorNum="$(cut -d'.' -f 2 <${corrVerFile})"
-      local updateNum="$(cut -d'.' -f 3 <${corrVerFile})"
-      local buildNum="$(cut -d'.' -f 4 <${corrVerFile})"
-      local fixNum="$(cut -d'.' -f 5 <${corrVerFile})"
+      local minorNum="$(cut -d'.' -f 2 <"${corrVerFile}")"
+      local updateNum="$(cut -d'.' -f 3 <"${corrVerFile}")"
+      local buildNum="$(cut -d'.' -f 4 <"${corrVerFile}")"
+      local fixNum="$(cut -d'.' -f 5 <"${corrVerFile}")"
       version="jdk-${corrVersion}.${minorNum}.${updateNum}+${buildNum}.${fixNum}"
     fi
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
     local dragonwellVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
     if [ -r "${dragonwellVerFile}" ]; then
       if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-        local updateNum="$(cut -d'.' -f 2 <${dragonwellVerFile})"
-        local buildNum="$(cut -d'.' -f 6 <${dragonwellVerFile})"
+        local updateNum="$(cut -d'.' -f 2 <"${dragonwellVerFile}")"
+        local buildNum="$(cut -d'.' -f 6 <"${dragonwellVerFile}")"
         version="jdk8u${updateNum}-b${buildNum}"
       else
-        local minorNum="$(cut -d'.' -f 2 <${dragonwellVerFile})"
-        local updateNum="$(cut -d'.' -f 3 <${dragonwellVerFile})"
-        local buildNum="$(cut -d'.' -f 5 <${dragonwellVerFile})"
+        local minorNum="$(cut -d'.' -f 2 <"${dragonwellVerFile}")"
+        local updateNum="$(cut -d'.' -f 3 <"${dragonwellVerFile}")"
+        local buildNum="$(cut -d'.' -f 5 <"${dragonwellVerFile}")"
         version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
       fi
     else
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
-      version=$(echo $version | cut -d'_' -f 2)
+      version=$(echo "$version" | cut -d'_' -f 2)
     fi
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
     local bishengVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
     if [ -r "${bishengVerFile}" ]; then
-      local minorNum="$(cut -d'.' -f 2 <${bishengVerFile})"
-      local updateNum="$(cut -d'.' -f 3 <${bishengVerFile})"
-      local buildNum="$(cut -d'.' -f 5 <${bishengVerFile})"
+      local minorNum="$(cut -d'.' -f 2 <"${bishengVerFile}")"
+      local updateNum="$(cut -d'.' -f 3 <"${bishengVerFile}")"
+      local buildNum="$(cut -d'.' -f 5 <"${bishengVerFile}")"
       version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
     else
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
-      version=$(echo $version | cut -d'-' -f 2 | cut -d'_' -f 1)
+      version=$(echo "$version" | cut -d'-' -f 2 | cut -d'_' -f 1)
     fi
   else
     version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
@@ -184,7 +185,7 @@ getOpenJdkVersion() {
     version=${version#aarch64-shenandoah-}
   fi
 
-  echo ${version}
+  echo "${version}"
 }
 
 # Ensure that we produce builds with versions strings something like:
@@ -303,7 +304,7 @@ configureVersionStringParameter() {
 
 # Construct all of the 'configure' parameters
 buildingTheRestOfTheConfigParameters() {
-  if [ ! -z "$(which ccache)" ]; then
+  if [ -n "$(which ccache)" ]; then
     addConfigureArg "--enable-ccache" ""
   fi
 
@@ -349,7 +350,7 @@ configureFreetypeLocation() {
         *) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled} ;;
         esac
       else
-        local freetypeDir=BUILD_CONFIG[FREETYPE_DIRECTORY]
+        local freetypeDir="${BUILD_CONFIG[FREETYPE_DIRECTORY]}"
         case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
         jdk8* | jdk9* | jdk10*) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-"${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype"} ;;
         *) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled} ;;
@@ -377,7 +378,7 @@ configureCommandParameters() {
       local addsDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/adds"
 
       # This is unfortunately required as if the path does not start with "/cygdrive" the make scripts are unable to find the "/closed/adds" directory.
-      if ! echo "$addsDir" | egrep -q "^/cygdrive/"; then
+      if ! echo "$addsDir" | grep -E -q "^/cygdrive/"; then
         # BUILD_CONFIG[WORKSPACE_DIR] does not seem to be an absolute path, prepend /cygdrive/c/cygwin64/"
         echo "Prepending /cygdrive/c/cygwin64/ to BUILD_CONFIG[WORKSPACE_DIR]"
         addsDir="/cygdrive/c/cygwin64/$addsDir"
@@ -434,7 +435,6 @@ buildTemplatedFile() {
 
   # If it's Java 9+ then we also make test-image to build the native test libraries,
   # For openj9 add debug-image
-  JDK_PREFIX="jdk"
   JDK_VERSION_NUMBER="${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
     ADDITIONAL_MAKE_TARGETS=" test-image debug-image"
@@ -538,7 +538,7 @@ getGradleJavaHome() {
     echo "[WARNING] Unable to find java to run gradle with, this build may fail with /bin/java: No such file or directory. Set JAVA_HOME, JDK8_BOOT_DIR or JDK11_BOOT_DIR to squash this warning: $gradleJavaHome" >&2
   fi
 
-  echo $gradleJavaHome
+  echo "$gradleJavaHome"
 }
 
 getGradleUserHome() {
@@ -560,9 +560,9 @@ parseJavaVersionString() {
 
   cd "${LIB_DIR}"
   local gradleJavaHome=$(getGradleJavaHome)
-  local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f openjdk-semver $ADOPT_BUILD_NUMBER | tr -d '\n')
+  local version=$(echo "$javaVersion" | JAVA_HOME="$gradleJavaHome" "$gradleJavaHome"/bin/java -cp "target/libs/adopt-shared-lib.jar" ParseVersion -s -f openjdk-semver "$ADOPT_BUILD_NUMBER" | tr -d '\n')
 
-  echo $version
+  echo "$version"
 }
 
 # Print the version string so we know what we've produced
@@ -589,7 +589,7 @@ printJavaVersionString() {
        ls -alh "$PRODUCT_HOME/bin/"
 
        echo "Error 'java' does not exist in '$PRODUCT_HOME'."
-       exit -1
+       exit 3
      elif [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
        # job is cross compiled, so we cannot run it on the build system
        # So we leave it for now and retrive the version from a downstream job after the build
@@ -605,7 +605,7 @@ printJavaVersionString() {
      fi
   else
     echo "'$PRODUCT_HOME' does not exist, build might have not been successful or not produced the expected JDK image at this location."
-    exit -1
+    exit 3
   fi
 }
 
@@ -667,7 +667,7 @@ removingUnnecessaryFiles() {
 
   # Test image - check if the config is set and directory exists
   local testImagePath="${BUILD_CONFIG[TEST_IMAGE_PATH]}"
-  if [ ! -z "${testImagePath}" ] && [ -d "${testImagePath}" ]; then
+  if [ -n "${testImagePath}" ] && [ -d "${testImagePath}" ]; then
     echo "moving ${testImagePath} to ${testImageTargetPath}"
     rm -rf "${testImageTargetPath}" || true
     mv "${testImagePath}" "${testImageTargetPath}"
@@ -675,7 +675,7 @@ removingUnnecessaryFiles() {
 
   # Debug image - check if the config is set and directory exists
   local debugImagePath="${BUILD_CONFIG[DEBUG_IMAGE_PATH]}"
-  if [ ! -z "${debugImagePath}" ] && [ -d "${debugImagePath}" ]; then
+  if [ -n "${debugImagePath}" ] && [ -d "${debugImagePath}" ]; then
     echo "moving ${debugImagePath} to ${debugImageTargetPath}"
     rm -rf "${debugImageTargetPath}" || true
     mv "${debugImagePath}" "${debugImageTargetPath}"
@@ -717,7 +717,7 @@ removingUnnecessaryFiles() {
     if [ -n "${debugSymbols}" ]; then
       echo "Copying found debug symbols to ${debugImageTargetPath}"
       mkdir -p "${debugImageTargetPath}"
-      echo "${debugSymbols}" | cpio -pdm ${debugImageTargetPath}
+      echo "${debugSymbols}" | cpio -pdm "${debugImageTargetPath}"
     fi
 
     deleteDebugSymbols
@@ -778,7 +778,7 @@ moveFreetypeLib() {
   echo " *** Workaround to fix the MacOSX issue where invocation to ${INVOKED_BY_FONT_MANAGER} fails to find ${TARGET_LIB_NAME} ***"
 
   # codesign freetype before it is bundled
-  if [ ! -z "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
+  if [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
     # test if codesign certificate is usable
     if touch test && codesign --sign "Developer ID Application: London Jamocha Community CIC" test && rm -rf test; then
       ENTITLEMENTS="$WORKSPACE/entitlements.plist"
@@ -918,6 +918,7 @@ createOpenJDKTarArchive() {
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
   if [ -d "${jreTargetPath}" ]; then
+    # shellcheck disable=SC2001
     local jreName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-jre/')
     createArchive "${jreTargetPath}" "${jreName}"
   fi
@@ -967,7 +968,7 @@ fixJavaHomeUnderDocker() {
 addInfoToReleaseFile() {
   # Extra information is added to the release file here
   echo "===GENERATING RELEASE FILE==="
-  cd $PRODUCT_HOME
+  cd "$PRODUCT_HOME"
   JAVA_LOC="$PRODUCT_HOME/bin/java"
   echo "ADDING IMPLEMENTOR"
   addImplementor
@@ -997,6 +998,7 @@ addInfoToReleaseFile() {
   echo "===RELEASE FILE GENERATED==="
 }
 
+# shellcheck disable=SC2143
 addHeapSize() { # Adds an identifier for heap size on OpenJ9 builds
   local heapSize=""
   local architecture=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'os.arch' | sed 's/^.*= //' | tr -d '\r') # Heap size must be standard for x86 builds (openjdk-build/2412)
@@ -1010,27 +1012,32 @@ addHeapSize() { # Adds an identifier for heap size on OpenJ9 builds
 
 addImplementor() {
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+    # shellcheck disable=SC2086
     echo -e IMPLEMENTOR=\"${BUILD_CONFIG[VENDOR]}\" >>release
   fi
 }
 
 addJVMVersion() { # Adds the JVM version i.e. openj9-0.21.0
   local jvmVersion=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.vm.version' | sed 's/^.*= //' | tr -d '\r')
+  # shellcheck disable=SC2086
   echo -e JVM_VERSION=\"$jvmVersion\" >>release
 }
 
 addFullVersion() { # Adds the full version including build number i.e. 11.0.9+5-202009040847
   local fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
+  # shellcheck disable=SC2086
   echo -e FULL_VERSION=\"$fullVer\" >>release
 }
 
 addJVMVariant() {
+  # shellcheck disable=SC2086
   echo -e JVM_VARIANT=\"${BUILD_CONFIG[BUILD_VARIANT]^}\" >>release
 }
 
 addBuildSHA() { # git SHA of the build repository i.e. openjdk-build
-  local buildSHA=$(git -C ${BUILD_CONFIG[WORKSPACE_DIR]} rev-parse --short HEAD 2>/dev/null)
+  local buildSHA=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" rev-parse --short HEAD 2>/dev/null)
   if [[ $buildSHA ]]; then
+    # shellcheck disable=SC2086
     echo -e BUILD_SOURCE=\"git:$buildSHA\" >>release
   else
     echo "Unable to fetch build SHA, does a work tree exist?..."
@@ -1050,7 +1057,7 @@ addBuildOS() {
     buildOS=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'os.name' | sed 's/^.*= //' | tr -d '\r')
     buildVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'os.version' | sed 's/^.*= //' | tr -d '\r')
   fi
-  echo -e BUILD_INFO=\"OS: $buildOS Version: $buildVer\" >>release
+  echo -e BUILD_INFO=\"OS: "$buildOS" Version: "$buildVer"\" >>release
 }
 
 addJ9Tag() {
@@ -1059,6 +1066,7 @@ addJ9Tag() {
   local j9Location="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/openj9"
   # Pull the tag associated with the J9 commit being used
   J9_TAG=$(git -C $j9Location describe --abbrev=0)
+  # shellcheck disable=SC2086
   if [ ${BUILD_CONFIG[RELEASE]} = false ]; then
     echo -e OPENJ9_TAG=\"$J9_TAG\" >> release
   fi
@@ -1072,6 +1080,7 @@ addSemVer() { # Pulls the semantic version from the tag associated with the open
   else
     SEM_VER=$(echo "$SEM_VER" | cut -c5-) # i.e. 11.0.2+12
   fi
+  # shellcheck disable=SC2086
   echo -e SEMANTIC_VERSION=\"$SEM_VER\" >> release
 }
 
@@ -1080,19 +1089,19 @@ mirrorToJRE() {
 
   case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
   "darwin")
-    JRE_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JRE_PATH]}/Contents/Home)
+    JRE_HOME=$(ls -d "${PWD}"/build/*/images/"${BUILD_CONFIG[JRE_PATH]}"/Contents/Home)
     ;;
   *)
-    JRE_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JRE_PATH]})
+    JRE_HOME=$(ls -d "${PWD}"/build/*/images/"${BUILD_CONFIG[JRE_PATH]}")
     ;;
   esac
 
-  cp -f $PRODUCT_HOME/release $JRE_HOME/release
+  cp -f "$PRODUCT_HOME/release" "$JRE_HOME/release"
 }
 
 addImageType() {
-  echo -e IMAGE_TYPE=\"JDK\" >>$PRODUCT_HOME/release
-  echo -e IMAGE_TYPE=\"JRE\" >>$JRE_HOME/release
+  echo -e IMAGE_TYPE=\"JDK\" >>"$PRODUCT_HOME/release"
+  echo -e IMAGE_TYPE=\"JRE\" >>"$JRE_HOME/release"
 }
 
 addInfoToJson(){
@@ -1113,22 +1122,22 @@ addVariantVersionToJson(){
       tags="$minor"
       minor=""
     fi
-    echo -n ${major:-"0"} > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/major.txt
-    echo -n ${minor:-"0"} > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/minor.txt
-    echo -n ${security:-"0"} > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/security.txt
-    echo -n ${tags:-""} > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/tags.txt
+    echo -n "${major:-"0"}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/major.txt"
+    echo -n "${minor:-"0"}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/minor.txt"
+    echo -n "${security:-"0"}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/security.txt"
+    echo -n "${tags:-""}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/variant_version/tags.txt"
   fi
 }
 
 addVendorToJson(){
-  echo -n "${BUILD_CONFIG[VENDOR]}" > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/vendor.txt
+  echo -n "${BUILD_CONFIG[VENDOR]}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/vendor.txt"
 }
 
 addSourceToJson(){ # Pulls the basename of the origin repo, or uses 'openjdk-build' in rare cases of failure
-  local repoName=$(basename $(cd "${BUILD_CONFIG[WORKSPACE_DIR]%.git}" && git config --get remote.origin.url 2>/dev/null))
-  local buildSHA=$(git -C ${BUILD_CONFIG[WORKSPACE_DIR]} rev-parse --short HEAD 2>/dev/null)
+  local repoName=$(basename "$(cd "${BUILD_CONFIG[WORKSPACE_DIR]%.git}" && git config --get remote.origin.url 2>/dev/null)")
+  local buildSHA=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" rev-parse --short HEAD 2>/dev/null)
   if [[ $buildSHA ]]; then
-    echo -n "${repoName:-"openjdk-build"}/$buildSHA" > ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt
+    echo -n "${repoName:-"openjdk-build"}/$buildSHA" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
   else
     echo "Unable to fetch build SHA, does a work tree exist?..."
   fi

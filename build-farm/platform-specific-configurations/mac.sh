@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091,SC2140
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -73,16 +74,16 @@ if [ "${JAVA_FEATURE_VERSION}" = "8" ]; then
 else
   BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
 fi
-BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+BOOT_JDK_VARIABLE="JDK${BOOT_JDK_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
-  export ${BOOT_JDK_VARIABLE}="$bootDir/Contents/Home"
+  export "${BOOT_JDK_VARIABLE}"="$bootDir/Contents/Home"
   if [ ! -x "$bootDir/Contents/Home/bin/javac" ]; then
     if [ -x /Library/Java/JavaVirtualMachines/adoptopenjdk-${BOOT_JDK_VERSION}/Contents/Home/bin/javac ]; then
-      echo Could not use ${BOOT_JDK_VARIABLE} - using /Library/Java/JavaVirtualMachines/adoptopenjdk-${BOOT_JDK_VERSION}/Contents/Home
-      export ${BOOT_JDK_VARIABLE}="/Library/Java/JavaVirtualMachines/adoptopenjdk-${BOOT_JDK_VERSION}/Contents/Home"
+      echo Could not use "${BOOT_JDK_VARIABLE}" - using /Library/Java/JavaVirtualMachines/adoptopenjdk-${BOOT_JDK_VERSION}/Contents/Home
+      export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/adoptopenjdk-${BOOT_JDK_VERSION}/Contents/Home"
     elif [ "$BOOT_JDK_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       mkdir -p "$bootDir"
       releaseType="ga"
@@ -109,6 +110,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   fi
 fi
 
+# shellcheck disable=SC2155
 export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 "$JDK_BOOT_DIR/bin/java" -version > /dev/null 2>&1

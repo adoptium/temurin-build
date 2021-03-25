@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2155
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,7 +80,7 @@ function crossPlatformRealPath() {
     cd "$target"
     local name=""
   elif [[ -f $target ]]; then
-    cd "$(dirname $target)"
+    cd "$(dirname "$target")"
     local name=$(basename "$target")
   fi
 
@@ -134,7 +135,7 @@ createOpenJDKArchive()
 
   local fullPath
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "darwin" ]]; then
-    fullPath=$(crossPlatformRealPath $repoDir)
+    fullPath=$(crossPlatformRealPath "$repoDir")
     if [[ "$fullPath" != "${BUILD_CONFIG[WORKSPACE_DIR]}"* ]]; then
       echo "Requested to archive a dir outside of workspace"
       exit 1
@@ -147,16 +148,16 @@ createOpenJDKArchive()
   else
       # Create archive with UID/GID 0 for root if using GNU tar
       if tar --version 2>&1 | grep GNU > /dev/null; then
-          time tar -cf - --owner=root --group=root "${repoDir}"/ | GZIP=-9 $COMPRESS -c > $fileName.tar.gz
+          time tar -cf - --owner=root --group=root "${repoDir}"/ | GZIP=-9 $COMPRESS -c > "$fileName.tar.gz"
       else
-          time tar -cf - "${repoDir}"/ | GZIP=-9 $COMPRESS -c > $fileName.tar.gz
+          time tar -cf - "${repoDir}"/ | GZIP=-9 $COMPRESS -c > "$fileName.tar.gz"
       fi
   fi
 }
 
 function setBootJdk() {
   # Stops setting the bootJDK on the host machine when running docker-build
-  if [ "${BUILD_CONFIG[DOCKER]}" != "docker" ] || ([ "${BUILD_CONFIG[DOCKER]}" == "docker" ] && [ "${BUILD_CONFIG[DOCKER_FILE_PATH]}" != "" ]) ; then
+  if [ "${BUILD_CONFIG[DOCKER]}" != "docker" ] || { [ "${BUILD_CONFIG[DOCKER]}" == "docker" ] && [ "${BUILD_CONFIG[DOCKER_FILE_PATH]}" != "" ]; } ; then
     if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
       echo "Searching for JDK_BOOT_DIR"
 
@@ -186,9 +187,9 @@ function setBootJdk() {
       fi
 
       # If bootjdk isn't the same version and isn't a n-1 version, crash out with informational message
-      export REQUIRED_BOOT_JDK=$((${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}-1))
+      export REQUIRED_BOOT_JDK=$(( BUILD_CONFIG[OPENJDK_FEATURE_NUMBER] - 1))
 
-      if [ ${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} -ne $BOOT_JDK_VERSION_NUMBER ] && [ $REQUIRED_BOOT_JDK -ne $BOOT_JDK_VERSION_NUMBER ]; then
+      if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ne "$BOOT_JDK_VERSION_NUMBER" ] && [ "$REQUIRED_BOOT_JDK" -ne "$BOOT_JDK_VERSION_NUMBER" ]; then
         echo "[ERROR] A JDK${BOOT_JDK_VERSION_NUMBER} boot jdk cannot build a JDK${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} binary"
         echo "[ERROR] Please download a JDK${REQUIRED_BOOT_JDK} (preferable) OR JDK${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} binary and pass it into this script using -J, --jdk-boot-dir"
         exit 2

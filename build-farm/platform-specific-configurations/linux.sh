@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -84,7 +85,7 @@ then
   if [ "$JAVA_FEATURE_VERSION" -ge 11 ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
   fi
-  if [ ! -z "${NUM_PROCESSORS}" ]
+  if [ -n "${NUM_PROCESSORS}" ]
   then
     export BUILD_ARGS="${BUILD_ARGS} --processors $NUM_PROCESSORS"
   fi
@@ -96,17 +97,18 @@ then
 fi
 
 BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
-BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
+BOOT_JDK_VARIABLE="JDK${BOOT_JDK_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
-  export ${BOOT_JDK_VARIABLE}="$bootDir"
+  export "${BOOT_JDK_VARIABLE}"="$bootDir"
   if [ ! -x "$bootDir/bin/javac" ]; then
     # Set to a default location as linked in the ansible playbooks
     if [ -x /usr/lib/jvm/jdk-${BOOT_JDK_VERSION}/bin/javac ]; then
-      echo Could not use ${BOOT_JDK_VARIABLE} - using /usr/lib/jvm/jdk-${BOOT_JDK_VERSION}
-      export ${BOOT_JDK_VARIABLE}="/usr/lib/jvm/jdk-${BOOT_JDK_VERSION}"
+      echo Could not use "${BOOT_JDK_VARIABLE}" - using /usr/lib/jvm/jdk-${BOOT_JDK_VERSION}
+      # shellcheck disable=SC2140
+      export "${BOOT_JDK_VARIABLE}"="/usr/lib/jvm/jdk-${BOOT_JDK_VERSION}"
     elif [ "$BOOT_JDK_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       mkdir -p "$bootDir"
       releaseType="ga"
@@ -133,6 +135,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   fi
 fi
 
+# shellcheck disable=SC2155
 export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
 "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 "$JDK_BOOT_DIR/bin/java" -version >/dev/null 2>&1
@@ -161,10 +164,10 @@ if which ccache 2> /dev/null; then
 fi
 
 # If we are in a cross compilation environment for RISC-V
-if [ "${ARCHITECTURE}" == "riscv64" -a "`uname -m`" == "x86_64" ]; then
+if [ "${ARCHITECTURE}" == "riscv64" ] && [ "$(uname -m)" == "x86_64" ]; then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export BUILDJDK=${WORKSPACE:-$PWD}/buildjdk
-    echo RISCV cross-compilation for OpenJ9 ... Downloading required nightly OpenJ9/x64 as build JDK to $BUILDJDK
+    echo RISCV cross-compilation for OpenJ9 ... Downloading required nightly OpenJ9/x64 as build JDK to "$BUILDJDK"
     rm -rf "$BUILDJDK"
     mkdir "$BUILDJDK"
     wget -q -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/x64/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"

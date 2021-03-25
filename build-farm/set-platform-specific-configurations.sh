@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1090,SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -63,7 +64,7 @@ then
         curl "${rawGithubSource}/$1/$2" > "${PLATFORM_CONFIG_FILEPATH}"
         ret=$?
         # A download will succeed if location is a directory, so we also check the contents are valid
-        fileContents=$(cat $PLATFORM_CONFIG_FILEPATH)
+        fileContents=$(cat "$PLATFORM_CONFIG_FILEPATH")
         set -e
     }
 
