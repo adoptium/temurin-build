@@ -161,7 +161,7 @@ fi
 
 # If we are in a cross compilation environment for RISC-V
 # shellcheck disable=SC2166
-if [ "${ARCHITECTURE}" == "riscv64" -a "$(uname -m)" == "x86_64" ]; then
+if [ "${ARCHITECTURE}" == "riscv64" ] && [ "$(uname -m)" == "x86_64" ]; then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export BUILDJDK=${WORKSPACE:-$PWD}/buildjdk
     echo RISCV cross-compilation for OpenJ9 ... Downloading required nightly OpenJ9/x64 as build JDK to "$BUILDJDK"
