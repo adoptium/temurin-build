@@ -186,9 +186,8 @@ function setBootJdk() {
         exit 2
       fi
 
-      # shellcheck disable=SC2004
       # If bootjdk isn't the same version and isn't a n-1 version, crash out with informational message
-      export REQUIRED_BOOT_JDK=$((${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}-1))
+      export REQUIRED_BOOT_JDK=$(( BUILD_CONFIG[OPENJDK_FEATURE_NUMBER] - 1))
 
       if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ne "$BOOT_JDK_VERSION_NUMBER" ] && [ "$REQUIRED_BOOT_JDK" -ne "$BOOT_JDK_VERSION_NUMBER" ]; then
         echo "[ERROR] A JDK${BOOT_JDK_VERSION_NUMBER} boot jdk cannot build a JDK${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]} binary"
