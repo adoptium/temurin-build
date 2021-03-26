@@ -1084,19 +1084,22 @@ addSemVer() { # Pulls the semantic version from the tag associated with the open
   echo -e SEMANTIC_VERSION=\"$SEM_VER\" >> release
 }
 
+# Disable shellcheck in here as it causes issues with ls on mac
 mirrorToJRE() {
   stepIntoTheWorkingDirectory
 
+  # shellcheck disable=SC2086
   case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
   "darwin")
-    JRE_HOME=$(ls -d "${PWD}"/build/*/images/"${BUILD_CONFIG[JRE_PATH]}"/Contents/Home)
+    JRE_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JRE_PATH]}/Contents/Home)
     ;;
   *)
-    JRE_HOME=$(ls -d "${PWD}"/build/*/images/"${BUILD_CONFIG[JRE_PATH]}")
+    JRE_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JRE_PATH]})
     ;;
   esac
 
-  cp -f "$PRODUCT_HOME/release" "$JRE_HOME/release"
+  # shellcheck disable=SC2086
+  cp -f $PRODUCT_HOME/release $JRE_HOME/release
 }
 
 addImageType() {
