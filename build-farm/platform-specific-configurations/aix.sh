@@ -20,6 +20,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # AIX default ulimit is frequently less than we need to clone the LTS JDK repositories
 FILESIZELIMIT=$(ulimit)
 if [ "$FILESIZELIMIT" != "unlimited" ]; then
+  # Set to ~2GB as this works for the AIX hosts we have as of April 2021
   if [ "$FILESIZELIMIT" -lt 2097150 ]; then
     echo "WARNING: MAXIMUM USER FILE SIZE (ulimit -n) IS $FILESIZELIMIT (<2097150) - GIT MAY HAVE PROBLEMS CLONING"
     sleep 5
