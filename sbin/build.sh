@@ -231,10 +231,8 @@ configureVersionStringParameter() {
   addConfigureArg "--with-vendor-url=" "${BUILD_CONFIG[VENDOR_URL]:-"https://adoptopenjdk.net/"}"
   addConfigureArg "--with-vendor-bug-url=" "${BUILD_CONFIG[VENDOR_BUG_URL]:-"https://github.com/AdoptOpenJDK/openjdk-support/issues"}"
   addConfigureArg "--with-vendor-vm-bug-url=" "${BUILD_CONFIG[VENDOR_VM_BUG_URL]:-"https://github.com/AdoptOpenJDK/openjdk-support/issues"}"
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
-    addConfigureArg "--with-vendor-version-string=" "${BUILD_CONFIG[VENDOR_VERSION]:-"AdoptOpenJDK"}"
-  fi
 
+  local buildNumber
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
 
     if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
@@ -258,7 +256,7 @@ configureVersionStringParameter() {
     addConfigureArgIfValueIsNotEmpty "--with-update-version=" "${updateNumber}"
 
     # Set the build number (e.g. b04), this gets passed in from the calling script
-    local buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
+    buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
     if [ -z "${buildNumber}" ]; then
       buildNumber=$(echo "${openJdkVersion}" | cut -f2 -d"-")
     fi
@@ -267,7 +265,7 @@ configureVersionStringParameter() {
       addConfigureArgIfValueIsNotEmpty "--with-build-number=" "${buildNumber}"
     fi
   elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK9_CORE_VERSION}" ]; then
-    local buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
+    buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
     if [ -z "${buildNumber}" ]; then
       buildNumber=$(echo "${openJdkVersion}" | cut -f2 -d"+")
     fi
@@ -284,7 +282,7 @@ configureVersionStringParameter() {
     # > JDK 9
 
     # Set the build number (e.g. b04), this gets passed in from the calling script
-    local buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
+    buildNumber=${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}
     if [ -z "${buildNumber}" ]; then
       # Get build number (eg.10) from tag of potential format "jdk-11.0.4+10_adopt"
       buildNumber=$(echo "${openJdkVersion}" | cut -d_ -f1 | cut -f2 -d"+")
@@ -299,6 +297,27 @@ configureVersionStringParameter() {
     addConfigureArg "--without-version-pre" ""
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
   fi
+
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
+    # Derive AdoptOpenJDK metadata "version" string to use as vendor.version string
+    # Take openJdkVersion, remove jdk- prefix and build suffix, replace with specified buildNumber
+    # eg.:
+    #   openJdkVersion = jdk-11.0.7+<build>
+    #   vendor.version = AdoptOpenJDK-11.0.7+<buildNumber>
+    #
+    # Remove "jdk-" prefix from openJdkVersion tag
+    local derivedOpenJdkMetadataVersion=${openJdkVersion#"jdk-"}
+    # Remove "+<build>" suffix
+    derivedOpenJdkMetadataVersion=$(echo "${derivedOpenJdkMetadataVersion}" | cut -f1 -d"+")
+    # Add "+<buildNumber>" being used
+    derivedOpenJdkMetadataVersion="${derivedOpenJdkMetadataVersion}+${buildNumber}"
+    if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
+      # Not a release build so add date suffix
+      derivedOpenJdkMetadataVersion="${derivedOpenJdkMetadataVersion}-${dateSuffix}"
+    fi
+    addConfigureArg "--with-vendor-version-string=" "${BUILD_CONFIG[VENDOR_VERSION]:-"AdoptOpenJDK"}-${derivedOpenJdkMetadataVersion}"
+  fi
+
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
