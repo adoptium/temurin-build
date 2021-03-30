@@ -110,7 +110,8 @@ getOpenJDKUpdateAndBuildVersion() {
     echo "Pulling latest tags and getting the latest update version using git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
     # shellcheck disable=SC2154
     echo "NOTE: This can take quite some time!  Please be patient"
-    git fetch -q --tags "${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
+    # shellcheck disable=SC2086
+    git fetch -q --tags ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}
     local openJdkVersion=$(getOpenJdkVersion)
     if [[ "${openJdkVersion}" == "" ]]; then
       # shellcheck disable=SC2154
