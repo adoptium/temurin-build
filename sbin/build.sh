@@ -171,8 +171,8 @@ getOpenJdkVersion() {
     local bishengVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
     if [ -r "${bishengVerFile}" ]; then
       if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-        local updateNum="$(cut -d'.' -f 2 <${bishengVerFile})"
-        local buildNum="$(cut -d'.' -f 5 <${bishengVerFile})"
+        local updateNum="$(cut -d'.' -f 2 <"${bishengVerFile}")"
+        local buildNum="$(cut -d'.' -f 5 <"${bishengVerFile}")"
         version="jdk8u${updateNum}-b${buildNum}"
       else
       local minorNum="$(cut -d'.' -f 2 <"${bishengVerFile}")"
