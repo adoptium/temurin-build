@@ -175,9 +175,9 @@ getOpenJdkVersion() {
         local buildNum="$(cut -d'.' -f 5 <"${bishengVerFile}")"
         version="jdk8u${updateNum}-b${buildNum}"
       else
-      local minorNum="$(cut -d'.' -f 2 <"${bishengVerFile}")"
-      local updateNum="$(cut -d'.' -f 3 <"${bishengVerFile}")"
-      local buildNum="$(cut -d'.' -f 5 <"${bishengVerFile}")"
+        local minorNum="$(cut -d'.' -f 2 <"${bishengVerFile}")"
+        local updateNum="$(cut -d'.' -f 3 <"${bishengVerFile}")"
+        local buildNum="$(cut -d'.' -f 5 <"${bishengVerFile}")"
         version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
       fi
     else
@@ -894,9 +894,9 @@ getFirstTagFromOpenJDKGitRepo() {
     TAG_SEARCH="dragonwell-*_jdk*"
   fi
 
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" -a "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "riscv64" ]; then
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "riscv64" ]; then
     TAG_SEARCH="jdk-*+*bisheng_riscv"
-  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" -a "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ] && [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
     # Bisheng's JDK8 tags follow the aarch64 convention
     TAG_SEARCH="aarch64-shenandoah-jdk8u*-b*"
   fi
