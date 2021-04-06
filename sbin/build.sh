@@ -894,7 +894,7 @@ getFirstTagFromOpenJDKGitRepo() {
     TAG_SEARCH="dragonwell-*_jdk*"
   fi
 
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "riscv64" ]; then
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ]; then
     TAG_SEARCH="jdk-*+*bisheng_riscv"
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ] && [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
     # Bisheng's JDK8 tags follow the aarch64 convention
