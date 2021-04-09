@@ -31,8 +31,6 @@ function isHotSpot() {
 export MACOSX_DEPLOYMENT_TARGET=10.9
 export BUILD_ARGS="${BUILD_ARGS}"
 
-XCODE_SWITCH_PATH="/";
-
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   XCODE_SWITCH_PATH="/Applications/Xcode.app"
@@ -46,6 +44,13 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
   fi
 else
+  if [[ "$JAVA_FEATURE_VERSION" -ge 17 ]]; then
+    # JDK17 requires metal (included in full xcode)
+    XCODE_SWITCH_PATH="/Applications/Xcode.app"
+  else
+    # Command line tools used from JDK9-JDK16
+    XCODE_SWITCH_PATH="/";
+  fi
   export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
