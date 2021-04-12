@@ -33,6 +33,7 @@
         </impls>
          <vendors>
             <vendor>adoptopenjdk</vendor>
+            <vendor>alibaba</vendor>
         </vendors>
     </test>
     <test>
