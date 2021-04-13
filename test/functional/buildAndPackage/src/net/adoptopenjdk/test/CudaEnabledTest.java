@@ -46,22 +46,18 @@ public class CudaEnabledTest {
         }
         if("Linux".contains(System.getProperty("os.name").split(" ")[0])) {
             if(getJDKVersion() == 8) {
-                prtLibDirectory += jreSubdir + "/lib/amd64/compressedrefs";
+                prtLibDirectory += jreSubdir + "/lib/amd64";
             } else {
-                prtLibDirectory += "/lib/compressedrefs";
+                prtLibDirectory += "/lib/default";
             }
         }
         //windows
         if("Windows".contains(System.getProperty("os.name").split(" ")[0])) {
             if(getJDKVersion() == 8) {
                 //jdk8 32: 
-                prtLibDirectory += jreSubdir + "/bin/compressedrefs";
-                if(!(new File(prtLibDirectory)).exists()) {
-                    //In case of a 32-bit build, or a non-cr build.
-                    prtLibDirectory = System.getProperty("java.home") + jreSubdir + "/bin/default";
-                }
+                prtLibDirectory += jreSubdir + "/bin/default";
             } else {
-                prtLibDirectory += "/bin/compressedrefs";
+                prtLibDirectory += "/bin/default";
             }
         }
 
