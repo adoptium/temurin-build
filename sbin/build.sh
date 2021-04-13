@@ -951,7 +951,7 @@ createOpenJDKTarArchive() {
     local jreName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-jre/')
     # for macOS system, code sign directory before creating tar.gz file
     if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ] && [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
-      ENTITLEMENTS="$jdkTargetPath/Contents/Info.plist"
+      ENTITLEMENTS="$jreTargetPath/Contents/Info.plist"
       codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" "${jdkTargetPath}"
     fi
     createArchive "${jreTargetPath}" "${jreName}"
