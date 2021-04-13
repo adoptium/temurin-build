@@ -70,9 +70,6 @@ then
   # shellcheck disable=SC2046
   # shellcheck disable=SC2006
   security unlock-keychain -p `cat ~/.password` login.keychain-db
-  rm -rf codesign-test && touch codesign-test
-  codesign --sign "Developer ID Application: London Jamocha Community CIC" codesign-test
-  codesign -dvvv codesign-test
   export BUILD_ARGS="${BUILD_ARGS} --codesign-identity 'Developer ID Application: London Jamocha Community CIC'"
 fi
 
