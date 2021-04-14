@@ -30,17 +30,30 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 /**
- * Freetype needs to be bundled on Windows and macOS but should not be present on Linux or AIX.
+ * Freetype needs to be bundled on Windows and macOS
+ * but should not be present on Linux or AIX.
  *
- * @see <a href="https://github.com/AdoptOpenJDK/openjdk-build/issues/2133">AdoptOpenJDK enhancement request</a>
+ * @see <a href="https://github.com/AdoptOpenJDK/openjdk-build/issues/2133">
+ * AdoptOpenJDK enhancement request</a>
  */
 @Test(groups = {"level.extended"})
 public class BundledFreetypeTest {
 
-    private static final Logger LOGGER = Logger.getLogger(BundledFreetypeTest.class.getName());
+    /**
+     * Message logger for test debug output.
+     */
+    private static final Logger LOGGER
+        = Logger.getLogger(BundledFreetypeTest.class.getName());
 
+    /**
+     * This is used to identify the OS we're running on.
+     */
     private final JdkPlatform jdkPlatform = new JdkPlatform();
 
+    /**
+     * Test to ensure freetype is bundled with this build
+     * or not, depending on the platform.
+     */
     @Test
     public void freetypeOnlyBundledOnWindowsAndMacOS() throws IOException {
         String testJdkHome = System.getenv("TEST_JDK_HOME");
@@ -48,17 +61,24 @@ public class BundledFreetypeTest {
             throw new AssertionError("TEST_JDK_HOME is not set");
         }
 
-        Pattern freetypePattern = Pattern.compile("(.*)?libfreetype\\.(dll|dylib|so)$");
+        Pattern freetypePattern
+            = Pattern.compile("(.*)?freetype\\.(dll|dylib|so)$");
         Set<String> freetypeFiles = Files.walk(Paths.get(testJdkHome))
                 .map(Path::toString)
                 .filter(name -> freetypePattern.matcher(name).matches())
                 .collect(Collectors.toSet());
 
-        if (jdkPlatform.runsOn(OperatingSystem.MACOS) || jdkPlatform.runsOn(OperatingSystem.WINDOWS)) {
-            assertTrue(freetypeFiles.size() > 0, "Expected libfreetype to be bundled but is not.");
+        if (jdkPlatform.runsOn(OperatingSystem.MACOS)) {
+            assertTrue(freetypeFiles.size() > 0,
+              "Expected libfreetype.dylib to be bundled but it is not.");
+        } else if (jdkPlatform.runsOn(OperatingSystem.WINDOWS)) {
+            assertTrue(freetypeFiles.size() > 0,
+              "Expected freetype.dll to be bundled, but it is not.");
         } else {
-            LOGGER.info("Found freetype-related files: " + freetypeFiles.toString());
-            assertEquals(freetypeFiles.size(), 0, "Expected libfreetype not to be bundled but it is.");
+            LOGGER.info("Found freetype-related files: "
+                        + freetypeFiles.toString());
+            assertEquals(freetypeFiles.size(), 0,
+              "Expected libfreetype not to be bundled but it is.");
         }
     }
 }
