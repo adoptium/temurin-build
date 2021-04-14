@@ -48,7 +48,7 @@ public class BundledFreetypeTest {
             throw new AssertionError("TEST_JDK_HOME is not set");
         }
 
-        Pattern freetypePattern = Pattern.compile("(.*)?libfreetype\\.(dll|dylib|so)$");
+        Pattern freetypePattern = Pattern.compile("(.*)?freetype\\.(dll|dylib|so)$");
         Set<String> freetypeFiles = Files.walk(Paths.get(testJdkHome))
                 .map(Path::toString)
                 .filter(name -> freetypePattern.matcher(name).matches())
