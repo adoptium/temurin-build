@@ -165,7 +165,7 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVmVendor(String value) {
-            assertEquals(value, "AdoptOpenJDK");
+            assertTrue(value.equals("AdoptOpenJDK") || value.equals("Eclipse OpenJ9"));
         }
 
         @Override
