@@ -1,6 +1,6 @@
 # Repository for code and instructions for building OpenJDK
 
-[![Slack](https://slackin-jmnmplfpdu.now.sh/badge.svg)](https://slackin-jmnmplfpdu.now.sh/)
+[![Slack](https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg)](https://adoptium.slack.com/archives/C09NLQQAV)
 
 AdoptOpenJDK makes use of these scripts to build binaries on the build farm at
 <https://ci.adoptopenjdk.net>, which produces OpenJDK binaries for consumption via
@@ -16,7 +16,7 @@ ansible playbooks from the [openjdk-infrastructure](https://github.com/adoptopen
 You can also look at the [dockerfile generator](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/docker/dockerfile-generator.sh) for a list of required packages for Ubuntu.
 
 Once you've got all of the prerequisites installed, clone this openjdk-build
-repository (`git clone https://github.com/AdoptOpenJDK/openjdk-build` and
+repository (`git clone https://github.com/AdoptOpenJDK/openjdk-build`) and
 kick off a build a follows with this script. The `-J` parameter specifies
 the "boot JDK" which should generally be one major version prior to the one
 you are building (although one of the same major version will also work).
@@ -45,10 +45,6 @@ as we can generate valid dockerfile for it):
 ./makejdk-any-platform.sh --docker --clean-docker-build --build-variant openj9 jdk11u
 ```
 
-We test these dockerfiles on a regular basis in the
-[Dockerfilecheck](https://ci.adoptopenjdk.net/job/DockerfileCheck/) job
-to ensure they continue to work in a stable fashion.
-
 ## Repository contents
 
 This repository contains several useful scripts in order to build OpenJDK
@@ -58,9 +54,9 @@ personally or at build farm scale.
 build jobs used for building Adopt OpenJDK binaries.
 1. The `docker` folder contains tools for generating dockerfiles which can be used as part of building
 OpenJDK inside a Docker container.
-1. The `git-hg` folder has now been moved to it's own seperate repository. See [openjdk-mirror-scripts](https://github.com/AdoptOpenJDK/openjdk-mirror-scripts).
+1. The `git-hg` folder has now been moved to it's own seperate repository. See [openjdk-mirror-scripts](https://github.com/adoptium/mirror-scripts).
 1. The `mercurial-tags/java-tool` folder contains scripts for TODO.
-1. The `pipelines` folder has now been moved to a seperate repo: <https://github.com/AdoptOpenJDK/ci-jenkins-pipelines>.
+1. The `pipelines` folder has now been moved to a seperate repo: <https://github.com/adoptium/ci-jenkins-pipelines>.
 1. The `sbin` folder contains the scripts that actually build (AdoptOpenJDK).
 `build.sh` is the entry point which can be used stand alone but is typically
 called by the `native-build.sh` or `docker-build.sh` scripts (which themselves
@@ -248,7 +244,7 @@ Example usage:
 
 ### Script Relationships
 
-![Build Variant Workflow](docs/images/AdoptOpenJDK_Build_Script_Relationships.png)
+![Build Variant Workflow](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/docs/images/AdoptOpenJDK_Build_Script_Relationships.png)
 
 The main script to build OpenJDK is `makejdk-any-platform.sh`, which itself uses
 and/or calls `configureBuild.sh`, `docker-build.sh` and/or `native-build.sh`.
@@ -296,177 +292,3 @@ to `$HOME/openjdk-jdk11u/src`, configure the build with sensible defaults accord
 to your local platform and then build OpenJDK and place the result in
 `/home/openjdk/target/MyOpenJDK11.tar.gz`.
 
-## Metadata
-
-Alongside the built assets a metadata file will be created with info about the build. This will be a JSON document of the form:
-
-```json
-{
-    "vendor": "AdoptOpenJDK",
-    "os": "mac",
-    "arch": "x64",
-    "variant": "openj9",
-    "variant_version": {
-        "major": "0",
-        "minor": "22",
-        "security": "0",
-        "tags": "m2"
-    },
-    "version": {
-        "minor": 0,
-        "security": 0,
-        "pre": null,
-        "adopt_build_number": 0,
-        "major": 15,
-        "version": "15+29-202007070926",
-        "semver": "15.0.0+29.0.202007070926",
-        "build": 29,
-        "opt": "202007070926"
-    },
-    "scmRef": "<output of git describe OR buildConfig.SCM_REF>",
-    "buildRef": "<build-repo-name/build-commit-sha>",
-    "version_data": "jdk15",
-    "binary_type": "debugimage",
-    "sha256": "<shasum>",
-    "full_version_output": "<output of java --version>",
-    "configure_arguments": "<output of bash configure>"
-}
-```
-
-The Metadata class is contained in the [Metadata.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/library/src/common/MetaData.groovy) file and the Json is constructed and written in the [openjdk_build_pipeline.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy) file.
-
-It is worth noting the additional tags on the semver is the adopt build number.
-
-Below are all of the keys contained in the metadata file and some example values that can be present.
-
-----
-
-- `vendor:`
-Example values: [`AdoptOpenJDK`, `Alibaba`]
-
-This tag is used to identify the vendor of the JDK being built, this value is set in the [build.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/805e76acbb8a994abc1fb4b7d582486d48117ee8/sbin/build.sh#L183) file and defaults to "AdoptOpenJDK".
-
-----
-
-- `os:`
-Example values: [`windows`, `mac`, `linux`, `aix`, `solaris`]
-
-This tag identifies the operating system the JDK has been built on (and should be used on).
-
-----
-
-- `arch:`
-Example values: [`aarch64`, `ppc64`, `s390x`, `x64`, `x86-32`, `arm`]
-
-This tag identifies the architecture the JDK has been built on and it intended to run on.
-
-----
-
-- `variant:`
-Example values: [`hotspot`, `openj9`, `corretto`, `dragonwell`, `bisheng`]
-
-This tag identifies the JVM being used by the JDK. "dragonwell" and "bisheng" itself are HotSpot based JVMs but are currently considered their own variants for the purposes of build.
-WARN: This will be changed at a later date when we split out JVM from vendor.
-
-----
-
-- `variant_version:`
-
-This tag is used to identify a version number of the variant being built, it currently is exclusively used by OpenJ9 and has the following keys:
-
-- `major:`
-Example values: [`0`, `1`]
-
-- `minor:`
-Example values: [`22`, `23`, `24`]
-
-- `security:`
-Example values: [`0`, `1`]  
-
-- `tags:`
-Example values: [`m1`, `m2`]
-
-----
-
-- `version:`
-
-This tag contains the full version information of the JDK built, it uses the [VersionInfo.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/library/src/common/VersionInfo.groovy) class and the [ParseVersion.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/library/src/ParseVersion.groovy) class.
-
-It contains the following keys:
-
-- `minor:`
-Example values: [`0`]
-
-- `security:`
-Example Values: [`0`, `9`, `252` `272`]
-
-- `pre:`
-Example values: [`null`]
-
-- `adopt_build_number:`
-Example values: [`0`]  
-If the `ADOPT_BUILD_NUMBER` parameter is used to build te JDK that value will appear here, otherwise a default value of 0 appears.
-
-- `major:`
-Example values: [`8`, `11`, `15`, `16`]
-
-- `version:`
-Example values: [`1.8.0_272-202010111709-b09`, `11.0.9+10-202010122348`, `14.0.2+11-202007272039`, `16+19-202010120348`]
-
-- `semver:`
-Example values: [`8.0.202+8.0.202008210941`, `11.0.9+10.0.202010122348`, `14.0.2+11.0.202007272039`, `16.0.0+19.0.202010120339`]  
-Formed from the major, minor, security, and build number by the [formSemver()](https://github.com/AdoptOpenJDK/openjdk-build/blob/805e76acbb8a994abc1fb4b7d582486d48117ee8/pipelines/library/src/common/VersionInfo.groovy#L123) function.
-
-- `build:`
-Example values: [`6`, `9`, `18`]  
-The OpenJDK build number for the JDK being built.
-
-- `opt:`
-Example values: [`202008210941`, `202010120348`, `202007272039`]
-
-----
-
-- `scmRef:`
-Example values: [`dragonwell-8.4.4_jdk8u262-b10`, `jdk-16+19_adopt-61198-g59e3baa94ac`, `jdk-11.0.9+10_adopt-197-g11f44f68c5`, `23f997ca1`]  
-
-A reference the the base JDK repository being build, usually including a Github commit reference, i.e. `jdk-16+19_adopt-61198-g59e3baa94ac` links to `https://github.com/AdoptOpenJDK/openjdk-jdk/commit/59e3baa94ac` via the commit SHA **59e3baa94ac**.
-
-Values that only contain a commit reference such as `23f997ca1` are OpenJ9 commits on their respective JDK repositories, for example **23f997ca1** links to the commit `https://github.com/ibmruntimes/openj9-openjdk-jdk14/commit/23f997ca1.`
-
-----
-
-- `buildRef:`
-Example values: [`openjdk-build/fe0f2dba`, `openjdk-build/f412a523`]  
-A reference to the build tools repository used to create the JDK, uses the format **repository-name**/**commit-SHA**.
-
-----
-
-- `version_data:`
-Example values: [`jdk8u`, `jdk11u`, `jdk14u`, `jdk`]
-
-----
-
-- `binary_type:`
-Example values: [`jdk`, `jre`, `debugimage`, `testimage`]
-
-----
-
-- `sha256:`
-Example values: [`20278aa9459e7636f6237e85fcd68deec1f42fa90c6c541a2dfa127f4156d3e2`, `2f9700bd75a807614d6d525fbd8d016c609a9ea71bf1ffd5d4839f3c1c8e4b8e`]  
-A SHA to verify the contents of the JDK.
-
-----
-
-- `full_version_output:`
-Example values:
-
-```java
-openjdk version \"1.8.0_252\"\nOpenJDK Runtime Environment (Alibaba Dragonwell 8.4.4) (build 1.8.0_252-202010111720-b06)\nOpenJDK 64-Bit Server VM (Alibaba Dragonwell 8.4.4) (build 25.252-b06, mixed mode)\n`
-```
-
-The full output of the command `java -version` for the JDK.
-
-----
-
-- `configure_arguments:`
-The full output generated by `configure.sh` for the JDK built.
