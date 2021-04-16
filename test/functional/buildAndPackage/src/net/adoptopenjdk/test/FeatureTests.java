@@ -64,6 +64,7 @@ public class FeatureTests {
                     || jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.X64)
                     || jdkPlatform.runsOn(OperatingSystem.MACOS, Architecture.X64)
                     || jdkPlatform.runsOn(OperatingSystem.MACOS, Architecture.AARCH64)
+                    || jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X86)
                     || jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X64)
                     || jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.AARCH64)
             ) {
