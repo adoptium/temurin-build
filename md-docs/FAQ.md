@@ -9,9 +9,9 @@ repository.
 The GitHub teams relevant to this repository are as follows (Note, you
 won't necessarily have access to see these links):
 
-- [GetOpenJDK](https://github.com/orgs/AdoptOpenJDK/teams/getopenjdk) - `Triage` level of access which lets you assign issues to people
-- [build](https://github.com/orgs/AdoptOpenJDK/teams/build) - `Write` access which lets you approve and merge PRs and run and configure most Jenkins jobs
-- [release](https://github.com/orgs/AdoptOpenJDK/teams/build) - Allows you to run the release jobs in Jenkins
+- GetOpenJDK- `Triage` level of access which lets you assign issues to people
+- build- `Write` access which lets you approve and merge PRs and run and configure most Jenkins jobs
+- release- Allows you to run the release jobs in Jenkins
 
 ## How do I find my way around AdoptOpenJDK's build automation scripts?
 
@@ -41,7 +41,8 @@ There is also some documentation in [CHANGELOG.md](CHANGELOG.md)
 
 ## What are the prerequisites for a system used for builds?
 
-- The upstream OpenJDK build requirements are at [Supported Build Platforms](https://wiki.openjdk.java.net/display/Build/Supported+Build+Platforms)
+- The upstream OpenJDK build requirements are at [Supported Build Platforms](https://wiki.open
+jdk.java.net/display/Build/Supported+Build+Platforms)
 - The AdoptOpenJDK levels we build on are in [Minimum-OS-levels](https://github.com/AdoptOpenJDK/openjdk-build/wiki/%5BWIP%5D-Minimum-OS-levels) although anything with comparable equivalent or later C libraries should work ok (in particular we have built on most current Linux distros without issues)
 
 In terms of compilers, these are what we currently use for each release:
