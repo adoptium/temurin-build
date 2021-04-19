@@ -9,16 +9,15 @@ AdoptOpenJDK makes use of these scripts to build binaries on the build farm at
 ## TL;DR: I want to build a JDK NOW!
 
 ### Build jdk natively on your system
-Have your machine set up with a suitable
-compiler and other tools available.
-We set up our machines using:
+Have your machine set up with a suitable compiler and other tools available.
+We set up our machines using
 ansible playbooks from the [openjdk-infrastructure](https://github.com/adoptopenjdk/openjdk-infrastructure) repository.
 You can also look at the [dockerfile generator](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/docker/dockerfile-generator.sh) for a list of required packages for Ubuntu.
 
 Once all of the prerequisites are installed, clone this openjdk-build
 repository (`git clone https://github.com/AdoptOpenJDK/openjdk-build`) 
 
-kick off a 'build a follows' with this script. 
+Kick off a build as follows with this script. 
 The `-J` parameter specifies the "boot JDK" which should generally be one major version prior to the one you are building. The same major version will also work.
 
 Note that the build variant defaults to HotSpot if omitted.
@@ -35,11 +34,9 @@ e.g.
 
 ## How do I build OpenJDK in a docker image?
 
-If unable to set up your machine with all the prerequisites for
-building OpenJDK, use our docker images under the [docker]
-directory as follows; (first version builds HotSpot, second builds J9 - the
-final parameter can be adjusted to build whichever version you want as long
-as we can generate valid dockerfile for it):
+If you are unwilling to pollute your host machine environment, use our docker images under the [docker] directory as follows;
+(first version builds HotSpot, second builds J9 - the
+final parameter can be adjusted to build whichever version you want as long as we can generate valid dockerfile for it):
 
 ```bash
 ./makejdk-any-platform.sh --docker --clean-docker-build jdk8u
@@ -48,20 +45,19 @@ as we can generate valid dockerfile for it):
 
 ## Repository contents
 
-This repository contains useful scripts used to build OpenJDK
-personally or at build farm scale.
+This repository contains useful scripts used to build OpenJDK personally or at build farm scale.
 
 1. The `build-farm` folder contains shell scripts for multi configuration Jenkins
 build jobs used for building Adopt OpenJDK binaries.
-2. The `docker` folder contains tools for generating dockerfiles which can be used as part of building
+1. The `docker` folder contains tools for generating dockerfiles which can be used as part of building
 OpenJDK inside a Docker container.
-3. The `git-hg` folder has now been moved to it's own seperate repository. See [openjdk-mirror-scripts](https://github.com/adoptium/mirror-scripts).
-4. The `mercurial-tags/java-tool` folder contains scripts for TODO.
-5. The `pipelines` folder has now been moved to a seperate repo: <https://github.com/adoptium/ci-jenkins-pipelines>.
-6. The `sbin` folder contains the scripts that actually build (AdoptOpenJDK).
+1. The `git-hg` folder has now been moved to it's own seperate repository. See [openjdk-mirror-scripts](https://github.com/adoptium/mirror-scripts).
+1. The `mercurial-tags/java-tool` folder contains scripts for TODO.
+1. The `pipelines` folder has now been moved to a seperate repo: <https://github.com/adoptium/ci-jenkins-pipelines>.
+1. The `sbin` folder contains the scripts that actually build (AdoptOpenJDK).
 -`build.sh` is the entry point which can be used as a stand alone but is typically
 called by the `native-build.sh` or `docker-build.sh` scripts (typically called by `makejdk-any-platform.sh`).
-7. The `security` folder contains a script and `cacerts` file that is bundled
+1. The `security` folder contains a script and `cacerts` file that is bundled
 with the JDK and used when building OpenJDK: the `cacerts` file is an important
 file that's used to enable SSL connections.
 
@@ -105,9 +101,8 @@ OPTIONS
 
 -b, --branch <branch>
 specify a custom branch to build from, e.g. dev.
-For reference, AdoptOpenJDK GitHub source repos default to the dev
-branch which may contain a small diff set to the master branch
-(a clone from the OpenJDK mercurial forest).
+For reference, AdoptOpenJDK GitHub source repos default to the dev branch which may contain a 
+small diff set to the master branch (a clone from the OpenJDK mercurial forest).
 
 -B, --build-number <build_number>
 specify the OpenJDK build number to build from, e.g. b12.
@@ -116,7 +111,7 @@ For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 
 --build-variant <variant_name>
 specify a OpenJDK build variant, e.g. openj9.
-For reference, the default variant is hotspot(needs no specification).
+For reference, the default variant is hotspotand does not need to be specified.
 
 -c, --clean-docker-build
 removes the existing docker container and persistent volume before starting
