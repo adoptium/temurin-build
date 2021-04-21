@@ -6,7 +6,7 @@
 
 ## Version 1.0.0 (14th May 2018)
 
-See [Commit History](https://github.com/AdoptOpenJDK/open jdk-build/commits/master) 
+See [Commit History](https://github.com/AdoptOpenJDK/openjdk-build/commits/master) 
 up until May the 14th 2018.
 
 ## Version 2.0.0 (26th Sep 2018)

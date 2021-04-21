@@ -14,9 +14,8 @@ We set up our machines using
 ansible playbooks from the [openjdk-infrastructure](https://github.com/adoptopenjdk/openjdk-infrastructure) repository.
 You can also look at the [dockerfile generator](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/docker/dockerfile-generator.sh) for a list of required packages for Ubuntu.
 
-Once all of the prerequisites are installed, clone this openjdk-build
-repository (`git clone https://github.com/AdoptOpenJDK/openjdk-build`) 
-
+Once all of the prerequisites are installed, clone this openjdk-build 
+repository (`git clone https://github.com/AdoptOpenJDK/openjdk-build`) and
 Kick off a build as follows with this script. 
 The `-J` parameter specifies the "boot JDK" which should generally be one major version prior to the one you are building. The same major version will also work.
 
@@ -34,9 +33,8 @@ e.g.
 
 ## How do I build OpenJDK in a docker image?
 
-If you are unwilling to pollute your host machine environment, use our docker images under the [docker] directory as follows;
-(first version builds HotSpot, second builds J9 - the
-final parameter can be adjusted to build whichever version you want as long as we can generate valid dockerfile for it):
+If you are unwilling to pollute your host machine environment, use our docker images under the [docker] directory as follows
+(first version builds HotSpot, second builds J9 - the final parameter can be adjusted to build whichever version you want as long as we can generate valid dockerfile for it):
 
 ```bash
 ./makejdk-any-platform.sh --docker --clean-docker-build jdk8u
@@ -111,7 +109,7 @@ For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 
 --build-variant <variant_name>
 specify a OpenJDK build variant, e.g. openj9.
-For reference, the default variant is hotspotand does not need to be specified.
+For reference, the default variant is hotspot and does not need to be specified.
 
 -c, --clean-docker-build
 removes the existing docker container and persistent volume before starting
@@ -149,7 +147,7 @@ specify the location of an existing FreeType library.
 This is typically used in conjunction with -F.
 
 --freetype-build-param <parameter>
-specify any special freetype build parameters (required for some "OS's").
+specify any special freetype build parameters (required for some OSs).
 
 --freetype-version <version>
 specify the version of freetype you are building.
@@ -177,7 +175,7 @@ if using docker, keep the container after the build.
 creates an exploded image (useful for codesigning jmods). Use --assemble-exploded-image once you have signed the jmods to complete the packaging steps.
 
 --custom-cacerts <true|false>
-If true (default), a custom cacerts file will be generated based on "Mozilla's list of CA certificates" (see folder security/). If false, the file shipped by OpenJDK will be used. 
+If true (default), a custom cacerts file will be generated based on 'Mozilla`s list of CA certificates' (see folder security/). If false, the file shipped by OpenJDK will be used. 
 
 -n, --no-colour
 disable colour output.
