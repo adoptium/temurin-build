@@ -17,7 +17,7 @@ There are two "groups" of tests that can be run on each PR:
 - [#Build](#Build)
 
 The results of these jobs will appear as [GitHub Status Check Results](https://docs.github.com/en/github/administering-a-repository/about-required-status-checks) at the bottom of the PR being tested:
-![Image of PR Tester Checks](./images/pr_tester_checks.png)
+![Image of PR Tester Checks](/images/pr_tester_checks.png)
 
 ### Linter
 

@@ -9,13 +9,14 @@ AdoptOpenJDK makes use of these scripts to build binaries on the build farm at
 ## TL;DR: I want to build a JDK NOW!
 
 ### Build jdk natively on your system
+
 Have your machine set up with a suitable compiler and other tools available.
 We set up our machines using
 ansible playbooks from the [openjdk-infrastructure](https://github.com/adoptopenjdk/openjdk-infrastructure) repository.
 You can also look at the [dockerfile generator](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/docker/dockerfile-generator.sh) for a list of required packages for Ubuntu.
-
-Once all of the prerequisites are installed, clone this openjdk-build 
-repository (`git clone https://github.com/AdoptOpenJDK/openjdk-build`) and
+  
+Once all of the prerequisites are installed, clone this openjdk-build
+repository (`git clone https://github.com/AdoptOpenJDK/openjdk-build`) and  
 Kick off a build as follows with this script. 
 The `-J` parameter specifies the "boot JDK" which should generally be one major version prior to the one you are building. The same major version will also work.
 
@@ -284,4 +285,3 @@ This would clone OpenJDK source from <https://github.com/AdoptOpenJDK/openjdk-jd
 to `$HOME/openjdk-jdk11u/src`, configure the build with sensible defaults according
 to your local platform and then build OpenJDK and place the result in
 `/home/openjdk/target/MyOpenJDK11.tar.gz`.
-
