@@ -206,7 +206,7 @@ The following examples all use `-m1` as an example - this gets replaced with a l
 - Eventually after rampdown and final phase testing the GA build is tagged and released, e.g. the `jdk-13-ga` code level is tagged along side the actual release build tag.
 - When a new release occurs, we must also update one of our job generators to match the new jdk versions and remove old STR that are no longer needed. The full details on what these are in the [regeneration README.md](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md) but for a quick run down on how to update them when we want to build a new release, follow the steps below:
 
-  1. Update the Job Folder - https://ci.adoptopenjdk.net/job/build-scripts/job/utils/ 
+  1. Update the Job Folder - https://ci.adoptopenjdk.net/job/build-scripts/job/utils/
   The jobs themselves you are looking for are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD). Firstly, ensure that the job description of each generator (and it's parameter's descriptions) are up to date. Then, follow these steps:
   
   - If you are ADDING a JDK version:
@@ -221,7 +221,7 @@ The following examples all use `-m1` as an example - this gets replaced with a l
   - If you are REMOVING a JDK version:
     - Delete the job `pipeline_jobs_generator_jdk<version-you-want-to-delete>`
 
-  1. Create the new build configurations for the release - https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations :
+  1. Create the new build configurations for the release - https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations
 
   - Create a new `jdk<new-version-number>_pipeline_config.groovy` file with the desired `buildConfigurations` for the new pipeline. 99% of the time, copy and pasting the configs from the previous version is acceptable. Ensure that the classname and instance of it is changed to `Config<new-version-number>`. Don't remove any old version configs.
   - Furthermore, you will also need to create another config file to state what jobs will be run with any new versions. If it doesn't currently exist, add a `jdkxx.groovy` file to [configurations/](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations). [Example on how to do this](https://github.com/AdoptOpenJDK/openjdk-build/pull/1815/files). Note, some files will need to be named `jdkxxu.groovy` depending on whether the version is maintained in an update repo or not. These will be the ONLY os/archs/variants that are regenerated using the job regenerators as described in the [regeneration readme](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md).

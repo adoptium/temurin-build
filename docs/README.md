@@ -17,7 +17,7 @@ You can also look at the [dockerfile generator](https://github.com/AdoptOpenJDK/
   
 Once all of the prerequisites are installed, clone this openjdk-build
 repository (`git clone https://github.com/AdoptOpenJDK/openjdk-build`) and  
-Kick off a build as follows with this script. 
+Kick off a build as follows with this script.  
 The `-J` parameter specifies the "boot JDK" which should generally be one major version prior to the one you are building. The same major version will also work.
 
 Note that the build variant defaults to HotSpot if omitted.
