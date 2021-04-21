@@ -9,9 +9,9 @@ repository.
 The GitHub teams relevant to this repository are as follows (Note, you
 won't necessarily have access to see these links):
 
--[GetOpenJDK](https://github.com/orgs/AdoptOpenJDK/teams/getopenjdk) `Triage` level of access which lets you assign issues to people
--[build](https://github.com/orgs/AdoptOpenJDK/teams/build) `Write` access which lets you approve and merge PRs and run and configure most Jenkins jobs
--[release](https://github.com/orgs/AdoptOpenJDK/teams/build)- Allows you to run the release jobs in Jenkins
+- [GetOpenJDK](https://github.com/orgs/AdoptOpenJDK/teams/getopenjdk) `Triage` level of access which lets you assign issues to people
+- [build](https://github.com/orgs/AdoptOpenJDK/teams/build) `Write` access which lets you approve and merge PRs and run and configure most Jenkins jobs
+- [release](https://github.com/orgs/AdoptOpenJDK/teams/build)- Allows you to run the release jobs in Jenkins
 
 ## How do I find my way around AdoptOpenJDK's build automation scripts?
 
