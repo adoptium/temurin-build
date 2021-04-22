@@ -35,63 +35,78 @@ labels:
   - label: "macos"
     matcher:
       title: "mac"
+      body: "mac"
   - label: "aix"
     matcher:
       title: "aix"
+      body: "aix"
   - label: "windows"
     matcher:
       title: "windows"
+      body: "windows"
   - label: "solaris"
     matcher:
       title: "solaris"
+      body: "solaris"
   - label: "x-linux"
     matcher:
       title: "linux"
+      body: "xlinux"
   - label: "alpine-linux"
     matcher:
       title: "alpine"
+      body: "alpine"
   - label: "arm"
     matcher:
       title: "arm"
+      body: "arm"
   - label: "aarch"
     matcher:
       title: "aarch"
+      body: "aarch"
   - label: "p-linux"
     matcher:
       title: "ppc"
+      body: "plinux"
   - label: "z-linux"
     matcher:
       title: "s390"
+      body: "zlinux"
   - label: "cross-compile"
     matcher:
       title: "cross"
+  - label: "infra"
+    matcher:
+      title: "infra"
+  - label: "question"
+    matcher:
+      title: '\?'
 
   - label: "openj9"
     matcher:
-      title: "openj9"
+      body: "openj9"
   - label: "dragonwell/alibaba"
     matcher:
       title: "dragonwell"
       body : "alibaba"
   - label: "bisheng"
     matcher:
-      title: "bisheng"
+      body: "bisheng"
   - label: "docker"
     matcher:
-      title: "docker"
+      body: "docker"
   - label: "ansible"
     matcher:
-      title: "ansible"
+      body: "ansible"
   - label: "installer"
     matcher:
-      title: "install"
+      body: "installer"
   - label: "testing"
     matcher:
-      title: "test"
-
+      body: "test"
   - label: "hacktoberfest"
     matcher:
-      body: "hacktoberfest"
+      body: "hacktober"
   - label: "jenkins"
     matcher:
       body: "jenkins"
