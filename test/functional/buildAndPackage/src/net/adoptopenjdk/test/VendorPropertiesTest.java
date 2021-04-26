@@ -154,7 +154,7 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVendorUrlBug(String value) {
-            assertEquals(value, "https://github.com/AdoptOpenJDK/openjdk-support/issues");
+            assertEquals(value, "https://github.com/adoptium/adoptium-support/issues");
         }
 
         @Override
