@@ -39,9 +39,9 @@ The resulting cacerts file is licensed under the terms of the [source file][mozi
 
 * Create a GitHub bot that checks whether `certdata.txt` needs updating and automatically creates a PR.
 
- [support-issues]: https://github.com/AdoptOpenJDK/openjdk-support/issues/13
+ [support-issues]: https://github.com/adoptium/adoptium-support/issues/13
  [jdk-dev-thread]: https://mail.openjdk.java.net/pipermail/jdk-dev/2020-May/004305.html
- [tsc-decision]: https://github.com/AdoptOpenJDK/openjdk-support/issues/13#issuecomment-635400251
+ [tsc-decision]: https://github.com/adoptium/adoptium-support/issues/13#issuecomment-635400251
  [mozilla-certdata]: https://hg.mozilla.org/releases/mozilla-release/raw-file/default/security/nss/lib/ckfw/builtins/certdata.txt
  [mk-ca-bundle.pl]: https://curl.haxx.se/docs/mk-ca-bundle.html
  [curl-ca-extract]: https://curl.haxx.se/docs/caextract.html

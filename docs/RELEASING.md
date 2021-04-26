@@ -55,10 +55,10 @@ Don't be scared off by this document! If you already understand the stuff in th
 ## Extra OpenJ9 prerequisite steps (skip for a HotSpot release)
 
 1. The extensions release branch (e.g. `openj9-0.17.0`) will exist from doing the milestone builds (OpenJ9 milestone process is covered in a later section).
-2. Ask the extensions team to run their release-specific merge jobs to ensure they are up to date - this is not done by jobs at AdoptOpenJDK.
-3. Having merged to `openj9-staging` successfully then a job hosted by the extensions team (not at AdoptOpenJDK) will have automatically been triggered, which will perform "sanity" testing on all platforms for the new `openj9-staging` branch and, if successful, testing will automatically promote the code to the "openj9" branch, acceptance jobs: https://ci.eclipse.org/openj9/
-4. OpenJ9 leads (currently [Peter Shipton](https://github.com/pshipton) and [Dan Heidinga](https://github.com/danheidinga)) will now verify the Eclipse OpenJ9 and OMR release branch against the newly merged OpenJDK GA level in `openj9-staging`. If they are happy they will tag their release branches with the release tag, eg. `openj9-0.17.0`, you are then ready to build the release.
-5. Get someone in the extensions team to make the following changes in the extensions release branch corresponding to the OpenJ9 version for the release:
+1. Ask the extensions team to run their release-specific merge jobs to ensure they are up to date - this is not done by jobs at AdoptOpenJDK.
+1. Having merged to `openj9-staging` successfully then a job hosted by the extensions team (not at AdoptOpenJDK) will have automatically been triggered, which will perform "sanity" testing on all platforms for the new `openj9-staging` branch and, if successful, testing will automatically promote the code to the "openj9" branch, acceptance jobs: https://ci.eclipse.org/openj9/
+1. OpenJ9 leads (currently [Peter Shipton](https://github.com/pshipton) and [Dan Heidinga](https://github.com/danheidinga)) will now verify the Eclipse OpenJ9 and OMR release branch against the newly merged OpenJDK GA level in `openj9-staging`. If they are happy they will tag their release branches with the release tag, eg. `openj9-0.17.0`, you are then ready to build the release.
+1. Get someone in the extensions team to make the following changes in the extensions release branch corresponding to the OpenJ9 version for the release:
    - Merge into the OpenJ9 extensions release branch (e.g. `openj9-0.17.0`) the latest tag merged from OpenJDK (automated jobs merge the tag into `openj9-staging`, but not the release branch so this has to be done manually). eg.:
      - `git checkout openj9-0.18.0`
      - `git merge -m"Merge jdk-11.0.6+10" jdk-11.0.6+10`
@@ -94,7 +94,7 @@ Don't be scared off by this document! If you already understand the stuff in th
      # J9JDK_EXT_VERSION       := HEAD   <==  !!! Comment out this line
    ```
   
-6. Get permission to submit the release pipeline job from the AdoptOpenJDK TSC members, discussion is via the AdoptOpenJDK #release channel (https://adoptopenjdk.slack.com/messages/CLCFNV2JG).
+1. Get permission to submit the release pipeline job from the AdoptOpenJDK TSC members, discussion is via the AdoptOpenJDK #release channel (https://adoptopenjdk.slack.com/messages/CLCFNV2JG).
 
 ## Lockdown period
 
@@ -206,7 +206,8 @@ The following examples all use `-m1` as an example - this gets replaced with a l
 - Eventually after rampdown and final phase testing the GA build is tagged and released, e.g. the `jdk-13-ga` code level is tagged along side the actual release build tag.
 - When a new release occurs, we must also update one of our job generators to match the new jdk versions and remove old STR that are no longer needed. The full details on what these are in the [regeneration README.md](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md) but for a quick run down on how to update them when we want to build a new release, follow the steps below:
 
-  1. Update the Job Folder - https://ci.adoptopenjdk.net/job/build-scripts/job/utils/: The jobs themselves you are looking for are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD). Firstly, ensure that the job description of each generator (and it's parameter's descriptions) are up to date. Then, follow these steps:
+  1. Update the Job Folder - https://ci.adoptopenjdk.net/job/build-scripts/job/utils/
+  The jobs themselves you are looking for are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD). Firstly, ensure that the job description of each generator (and it's parameter's descriptions) are up to date. Then, follow these steps:
   
   - If you are ADDING a JDK version:
     - Ensure that JDK N-1 is available as build JDK on the builders. For example in order to build JDK 15, JDK 14 needs to be installed on the build machines. As a temporary measure, [code](./build-farm/platform-specific-configurations/linux.sh#L110) so as to download the JDK to the builder via the API has been added. NOTE: For the transition period shortly after a new JDK has been branched, there might not yet exist a generally available release of JDK N-1.
@@ -220,18 +221,18 @@ The following examples all use `-m1` as an example - this gets replaced with a l
   - If you are REMOVING a JDK version:
     - Delete the job `pipeline_jobs_generator_jdk<version-you-want-to-delete>`
 
-  1. Create the new build configurations for the release - https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations:
+  1. Create the new build configurations for the release - https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations
 
   - Create a new `jdk<new-version-number>_pipeline_config.groovy` file with the desired `buildConfigurations` for the new pipeline. 99% of the time, copy and pasting the configs from the previous version is acceptable. Ensure that the classname and instance of it is changed to `Config<new-version-number>`. Don't remove any old version configs.
   - Furthermore, you will also need to create another config file to state what jobs will be run with any new versions. If it doesn't currently exist, add a `jdkxx.groovy` file to [configurations/](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations). [Example on how to do this](https://github.com/AdoptOpenJDK/openjdk-build/pull/1815/files). Note, some files will need to be named `jdkxxu.groovy` depending on whether the version is maintained in an update repo or not. These will be the ONLY os/archs/variants that are regenerated using the job regenerators as described in the [regeneration readme](https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md).
   
-  1. Create a new Regeneration Pipeline for the downstream jobs - https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration:
+  1. Create a new Regeneration Pipeline for the downstream jobs - https://github.com/AdoptOpenJDK/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration
   
   Create a new `jdk<new-version-number>_regeneration_pipeline.groovy`. Ensure that the `javaVersion`, `targetConfigurations` and `buildConfigurations` variables are what they should be for the new version. Don't remove any old version configs. While you're here, make sure all of the current releases have a `regeneration_pipeline.groovy` file (including head). If they don't, create one using the same technique as above.
   
   1. Build the `pipeline_jobs_generator` that you just made. Ensure the equivalent `openjdkxx_pipeline` to the generator exists or this will fail. If the job fails or is unstable, search the console log for `WARNING` or `ERROR` messages for why. Once it has completed successfully, the [pipeline](https://ci.adoptopenjdk.net/job/build-scripts/) is ready to go!
 
-  1. Update the view for the [build and test pipeline calendar](https://ci.adoptopenjdk.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version.
+  2. Update the view for the [build and test pipeline calendar](https://ci.adoptopenjdk.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version.
 
 ### Update Repository
 
@@ -239,7 +240,7 @@ At some point in a java version's lifecycle, the JDK version will be maintained 
 
 - [jdk-dev](https://mail.openjdk.java.net/mailman/listinfo/jdk-dev)
 - [jdk-updates-dev](https://mail.openjdk.java.net/mailman/listinfo/jdk-updates-dev)
-When this occurs, usually a TSC member will create the `jdk<version>u` update repo ([example of the JDK11u one](https://github.com/AdoptOpenJDK/openjdk-jdk11u)) via our Skara mirroring jobs that pull in the commit and tag info from the Mercurial repository. To find out more about Skara and our other mirroring jobs, see https://github.com/AdoptOpenJDK/openjdk-mirror-scripts.
+When this occurs, usually a TSC member will create the `jdk<version>u` update repo ([example of the JDK11u one](https://github.com/AdoptOpenJDK/openjdk-jdk11u) via our Skara mirroring jobs that pull in the commit and tag info from the Mercurial repository. To find out more about Skara and our other mirroring jobs, see https://github.com/AdoptOpenJDK/openjdk-mirror-scripts.
 
 *New Adopt mirror repo creation, by an AdoptOpenJDK github Admin:*
 
