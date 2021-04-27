@@ -20,7 +20,7 @@ set -e
 PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ## autodetect defaults to improve usability when running this for debugging/testing
-## On most platforms "uname -p" matches what the OS name used in the adoptopenjdk
+## On most platforms "uname -p" matches what the OS name used in the temurin
 ## scripts uses, but not on xLinux, Windows or AIX.
 
 if [ -z "$ARCHITECTURE"  ]; then
@@ -35,7 +35,7 @@ if [ -z "$ARCHITECTURE"  ]; then
    export ARCHITECTURE
 fi
 
-## AdoptOpenJDK uses "windows" instead of "cygwin" for the OS name on Windows
+## Temurin uses "windows" instead of "cygwin" for the OS name on Windows
 ## so needs to be special cased - on everthing else "uname" is valid
 if [ -z "$TARGET_OS" ]; then
   TARGET_OS=$(uname)

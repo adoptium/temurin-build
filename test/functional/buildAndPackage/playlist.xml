@@ -42,7 +42,7 @@
             <impl>hotspot</impl>
         </impls>
          <vendors>
-            <vendor>adoptopenjdk</vendor>
+            <vendor>adoptium</vendor>
         </vendors>
     </test>
     <test>
@@ -78,7 +78,7 @@
             <impl>openj9</impl>
         </impls>
         <vendors>
-            <vendor>adoptopenjdk</vendor>
+            <vendor>adoptium</vendor>
         </vendors>
 	</test>
 </playlist>

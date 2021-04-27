@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package net.adoptopenjdk.test;
+package net.adoptium.test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

@@ -1,10 +1,10 @@
-# Repository for code and instructions for building OpenJDK
+# Repository for code and instructions for building Temurin
 
 [![Slack](https://slackin-jmnmplfpdu.now.sh/badge.svg)](https://slackin-jmnmplfpdu.now.sh/)
 
-AdoptOpenJDK makes use of these scripts to build binaries on the build farm at
+Temurin makes use of these scripts to build binaries on the build farm at
 <https://ci.adoptopenjdk.net>, which produces OpenJDK binaries for consumption via
-<https://adoptium.net/> and <https://api.adoptopenjdk.net>.
+<https://adoptium.net> and <https://api.adoptium.net>.
 
 ## TL;DR: I want to build a JDK NOW!
 
@@ -13,10 +13,10 @@ AdoptOpenJDK makes use of these scripts to build binaries on the build farm at
 To do this you will need to have your machine set up with a suitable
 compiler and various other tools available. We set up our machines using
 ansible playbooks from the [openjdk-infrastructure](https://github.com/adoptopenjdk/openjdk-infrastructure) repository.
-You can also look at the [dockerfile generator](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/docker/dockerfile-generator.sh) for a list of required packages for Ubuntu.
+You can also look at the [dockerfile generator](https://github.com/adoptium/temurin-build/blob/master/docker/dockerfile-generator.sh) for a list of required packages for Ubuntu.
 
 Once you've got all of the prerequisites installed, clone this openjdk-build
-repository (`git clone https://github.com/AdoptOpenJDK/openjdk-build` and
+repository (`git clone https://github.com/adoptium/temurin-build` and
 kick off a build a follows with this script. The `-J` parameter specifies
 the "boot JDK" which should generally be one major version prior to the one
 you are building (although one of the same major version will also work).
@@ -58,10 +58,10 @@ personally or at build farm scale.
 build jobs used for building Adopt OpenJDK binaries.
 1. The `docker` folder contains tools for generating dockerfiles which can be used as part of building
 OpenJDK inside a Docker container.
-1. The `git-hg` folder has now been moved to it's own seperate repository. See [openjdk-mirror-scripts](https://github.com/AdoptOpenJDK/openjdk-mirror-scripts).
+1. The `git-hg` folder has now been moved to it's own seperate repository. See [openjdk-mirror-scripts](https://github.com/adoptium/mirror-scripts).
 1. The `mercurial-tags/java-tool` folder contains scripts for TODO.
-1. The `pipelines` folder has now been moved to a seperate repo: <https://github.com/AdoptOpenJDK/ci-jenkins-pipelines>.
-1. The `sbin` folder contains the scripts that actually build (AdoptOpenJDK).
+1. The `pipelines` folder has now been moved to a seperate repo: <https://github.com/adoptium/ci-jenkins-pipelines>.
+1. The `sbin` folder contains the scripts that actually build (Temurin).
 `build.sh` is the entry point which can be used stand alone but is typically
 called by the `native-build.sh` or `docker-build.sh` scripts (which themselves
 are typically called by `makejdk-any-platform.sh`).
@@ -91,25 +91,25 @@ USAGE
 
 ./makejdk-any-platform [options] version
 
-Please visit https://www.adoptopenjdk.net for further support.
+Please visit https://www.adoptium.net for further support.
 
 VERSIONS
 
-jdk8u - Build Java 8, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk8u
-jdk9u - Build Java 9, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk9u
-jdk10u - Build Java 10, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk10u
-jdk11u - Build Java 11, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk11u
-jdk12u - Build Java 12, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk12u
-jdk13u - Build Java 13, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk13u
-jdk - Build Latest Java (Alpha/Beta), defaults to https://github.com/AdoptOpenJDK/openjdk-jdk
-jfx - Build OpenJFX, defaults to https://github.com/AdoptOpenJDK/openjdk-jfx
-amber - Build Project Amber, defaults to https://github.com/AdoptOpenJDK/openjdk-amber
+jdk8u - Build Java 8, defaults to https://github.com/adoptium/openjdk-jdk8u
+jdk9u - Build Java 9, defaults to https://github.com/adoptium/openjdk-jdk9u
+jdk10u - Build Java 10, defaults to https://github.com/adoptium/openjdk-jdk10u
+jdk11u - Build Java 11, defaults to https://github.com/adoptium/openjdk-jdk11u
+jdk12u - Build Java 12, defaults to https://github.com/adoptium/openjdk-jdk12u
+jdk13u - Build Java 13, defaults to https://github.com/adoptium/openjdk-jdk13u
+jdk - Build Latest Java (Alpha/Beta), defaults to https://github.com/adoptium/openjdk-jdk
+jfx - Build OpenJFX, defaults to https://github.com/adoptium/openjdk-jfx
+amber - Build Project Amber, defaults to https://github.com/adoptium/openjdk-amber
 
 OPTIONS
 
 -b, --branch <branch>
 specify a custom branch to build from, e.g. dev.
-For reference, AdoptOpenJDK GitHub source repos default to the dev
+For reference, Adoptium GitHub source repos default to the dev
 branch which may contain a very small diff set to the master branch
 (which is a clone from the OpenJDK mercurial forest).
 
@@ -264,18 +264,18 @@ platform and and optional arguments provided
  1. Invoke OpenJDK build via `make`
  1. Package up built artifacts
 
-- Configuration phase is primarily performed by [configureBuild.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/configureBuild.sh) and [makejdk-any-platform.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/makejdk-any-platform.sh).
-- If a docker container is required it is built by [docker-build.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/docker-build.sh) otherwise [native-build.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/native-build.sh).
-- In the build phase [sbin/build.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/sbin/build.sh) is invoked either natively or inside the docker container.
-`sbin/build.sh` invokes [sbin/prepareWorkspace.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/sbin/prepareWorkspace.sh) to download dependencies, source and perform
+- Configuration phase is primarily performed by [configureBuild.sh](https://github.com/adoptium/temurin-build/blob/master/configureBuild.sh) and [makejdk-any-platform.sh](https://github.com/adoptium/temurin-build/blob/master/makejdk-any-platform.sh).
+- If a docker container is required it is built by [docker-build.sh](https://github.com/adoptium/temurin-build/blob/master/docker-build.sh) otherwise [native-build.sh](https://github.com/adoptium/temurin-build/blob/master/native-build.sh).
+- In the build phase [sbin/build.sh](https://github.com/adoptium/temurin-build/blob/master/sbin/build.sh) is invoked either natively or inside the docker container.
+`sbin/build.sh` invokes [sbin/prepareWorkspace.sh](https://github.com/adoptium/temurin-build/blob/master/sbin/prepareWorkspace.sh) to download dependencies, source and perform
 general preparation.
 - Rest of the build and packaging is then handled from `sbin/build.sh`
 
 ## Building OpenJDK from other locations
 
-### Building OpenJDK from a non-AdoptOpenJDK repository
+### Building OpenJDK from a non-Adoptium repository
 
-These scripts default to using AdoptOpenJDK as the OpenJDK source repo to build
+These scripts default to using Adoptium as the OpenJDK source repo to build
 from, but you can override this with the `-r` flag. If you want to run from a
 non-default branch you can also specify -b e.g.
 
@@ -291,7 +291,7 @@ Example Usage
 ./makejdk-any-platform.sh -J /usr/lib/jvm/jdk-10.0.2 -s $HOME/openjdk-jdk11u/src -d $HOME/openjdk-jdk11u/build -T MyOpenJDK11.tar.gz jdk11u
 ```
 
-This would clone OpenJDK source from <https://github.com/AdoptOpenJDK/openjdk-jdk11u>
+This would clone OpenJDK source from <https://github.com/adoptium/openjdk-jdk11u>
 to `$HOME/openjdk-jdk11u/src`, configure the build with sensible defaults according
 to your local platform and then build OpenJDK and place the result in
 `/home/openjdk/target/MyOpenJDK11.tar.gz`.
@@ -302,7 +302,7 @@ Alongside the built assets a metadata file will be created with info about the b
 
 ```json
 {
-    "vendor": "AdoptOpenJDK",
+    "vendor": "Eclipse Foundation",
     "os": "mac",
     "arch": "x64",
     "variant": "openj9",
@@ -333,7 +333,7 @@ Alongside the built assets a metadata file will be created with info about the b
 }
 ```
 
-The Metadata class is contained in the [Metadata.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/library/src/common/MetaData.groovy) file and the Json is constructed and written in the [openjdk_build_pipeline.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy) file.
+The Metadata class is contained in the [Metadata.groovy](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/library/src/common/MetaData.groovy) file and the Json is constructed and written in the [openjdk_build_pipeline.groovy](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy) file.
 
 It is worth noting the additional tags on the semver is the adopt build number.
 
@@ -342,9 +342,9 @@ Below are all of the keys contained in the metadata file and some example values
 ----
 
 - `vendor:`
-Example values: [`AdoptOpenJDK`, `Alibaba`]
+Example values: [`Eclipse Foundation`, `Alibaba`]
 
-This tag is used to identify the vendor of the JDK being built, this value is set in the [build.sh](https://github.com/AdoptOpenJDK/openjdk-build/blob/805e76acbb8a994abc1fb4b7d582486d48117ee8/sbin/build.sh#L183) file and defaults to "AdoptOpenJDK".
+This tag is used to identify the vendor of the JDK being built, this value is set in the [build.sh](https://github.com/adoptium/temurin-build/blob/805e76acbb8a994abc1fb4b7d582486d48117ee8/sbin/build.sh#L183) file and defaults to "Adoptium".
 
 ----
 
@@ -390,7 +390,7 @@ Example values: [`m1`, `m2`]
 
 - `version:`
 
-This tag contains the full version information of the JDK built, it uses the [VersionInfo.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/library/src/common/VersionInfo.groovy) class and the [ParseVersion.groovy](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/library/src/ParseVersion.groovy) class.
+This tag contains the full version information of the JDK built, it uses the [VersionInfo.groovy](https://github.com/adoptium/temurin-build/blob/master/pipelines/library/src/common/VersionInfo.groovy) class and the [ParseVersion.groovy](https://github.com/adoptium/temurin-build/blob/master/pipelines/library/src/ParseVersion.groovy) class.
 
 It contains the following keys:
 
@@ -415,7 +415,7 @@ Example values: [`1.8.0_272-202010111709-b09`, `11.0.9+10-202010122348`, `14.0.2
 
 - `semver:`
 Example values: [`8.0.202+8.0.202008210941`, `11.0.9+10.0.202010122348`, `14.0.2+11.0.202007272039`, `16.0.0+19.0.202010120339`]  
-Formed from the major, minor, security, and build number by the [formSemver()](https://github.com/AdoptOpenJDK/openjdk-build/blob/805e76acbb8a994abc1fb4b7d582486d48117ee8/pipelines/library/src/common/VersionInfo.groovy#L123) function.
+Formed from the major, minor, security, and build number by the [formSemver()](https://github.com/adoptium/temurin-build/blob/805e76acbb8a994abc1fb4b7d582486d48117ee8/pipelines/library/src/common/VersionInfo.groovy#L123) function.
 
 - `build:`
 Example values: [`6`, `9`, `18`]  
@@ -429,7 +429,7 @@ Example values: [`202008210941`, `202010120348`, `202007272039`]
 - `scmRef:`
 Example values: [`dragonwell-8.4.4_jdk8u262-b10`, `jdk-16+19_adopt-61198-g59e3baa94ac`, `jdk-11.0.9+10_adopt-197-g11f44f68c5`, `23f997ca1`]  
 
-A reference the the base JDK repository being build, usually including a Github commit reference, i.e. `jdk-16+19_adopt-61198-g59e3baa94ac` links to `https://github.com/AdoptOpenJDK/openjdk-jdk/commit/59e3baa94ac` via the commit SHA **59e3baa94ac**.
+A reference the the base JDK repository being build, usually including a Github commit reference, i.e. `jdk-16+19_adopt-61198-g59e3baa94ac` links to `https://github.com/adoptium/openjdk-jdk/commit/59e3baa94ac` via the commit SHA **59e3baa94ac**.
 
 Values that only contain a commit reference such as `23f997ca1` are OpenJ9 commits on their respective JDK repositories, for example **23f997ca1** links to the commit `https://github.com/ibmruntimes/openj9-openjdk-jdk14/commit/23f997ca1.`
 

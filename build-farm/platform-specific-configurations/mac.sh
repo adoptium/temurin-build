@@ -35,7 +35,7 @@ if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   XCODE_SWITCH_PATH="/Applications/Xcode.app"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
-  # See https://github.com/AdoptOpenJDK/openjdk-build/issues/1202
+  # See https://github.com/adoptium/temurin-build/issues/1202
   if isHotSpot; then
     export COMPILER_WARNINGS_FATAL=false
     echo "Compiler Warnings set to: $COMPILER_WARNINGS_FATAL"

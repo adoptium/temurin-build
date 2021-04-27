@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package net.adoptopenjdk.test;
+package net.adoptium.test;
 
 import org.testng.annotations.Test;
 
@@ -49,12 +49,12 @@ public class VendorPropertiesTest {
      */
     public VendorPropertiesTest() {
         Set<VmPropertiesChecks> allPropertiesChecks = new LinkedHashSet<>();
-        allPropertiesChecks.add(new AdoptOpenJDKPropertiesChecks());
+        allPropertiesChecks.add(new AdoptiumPropertiesChecks());
         allPropertiesChecks.add(new CorrettoPropertiesChecks());
 
         // TODO: Somehow obtain the vendor name from the outside. Using any JVM properties is not a solution
         // because that's what we want to test here.
-        String vendor = "AdoptOpenJDK";
+        String vendor = "Adoptium";
         this.vendorChecks = allPropertiesChecks.stream()
                 .filter(checks -> checks.supports(vendor))
                 .findFirst()
@@ -162,21 +162,21 @@ public class VendorPropertiesTest {
         void javaVmVersion(String value);
     }
 
-    private static class AdoptOpenJDKPropertiesChecks implements VmPropertiesChecks {
+    private static class AdoptiumPropertiesChecks implements VmPropertiesChecks {
 
         @Override
         public boolean supports(final String vendor) {
-            return vendor.toLowerCase(Locale.US).equals("adoptopenjdk");
+            return vendor.toLowerCase(Locale.US).equals("eclipse foundation");
         }
 
         @Override
         public void javaVersion(final String value) {
-            assertTrue(value.contains("AdoptOpenJDK"));
+            assertTrue(value.contains("Eclipse Foundation"));
         }
 
         @Override
         public void javaVendor(final String value) {
-            assertEquals(value, "AdoptOpenJDK");
+            assertEquals(value, "Eclipse Foundation");
         }
 
         @Override
@@ -186,7 +186,7 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVendorUrlBug(final String value) {
-            assertEquals(value, "https://github.com/AdoptOpenJDK/openjdk-support/issues");
+            assertEquals(value, "https://github.com/adoptium/adoptium-support/issues");
         }
 
         @Override
@@ -197,7 +197,7 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVmVendor(final String value) {
-            assertTrue(value.equals("AdoptOpenJDK") || value.equals("Eclipse OpenJ9"));
+            assertTrue(value.equals("Adoptium") || value.equals("Eclipse OpenJ9"));
         }
 
         @Override

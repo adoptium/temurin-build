@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package net.adoptopenjdk.test;
+package net.adoptium.test;
 
 import java.util.Collection;
 import java.util.Locale;

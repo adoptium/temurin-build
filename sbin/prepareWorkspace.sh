@@ -52,9 +52,9 @@ checkoutAndCloneOpenJDKGitRepo() {
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
 
     # Ensure cached origin fetch remote repo is correct version and repo (eg.jdk11u, or jdk), remember "jdk" sub-string of jdk11u hence grep with "\s"
-    # eg. origin https://github.com/adoptopenjdk/openjdk-jdk11u (fetch)
-    # eg. origin https://github.com/adoptopenjdk/openjdk-jdk (fetch)
-    # eg. origin git@github.com:adoptopenjdk/openjdk-jdk.git (fetch)
+    # eg. origin https://github.com/adoptium/openjdk-jdk11u (fetch)
+    # eg. origin https://github.com/adoptium/openjdk-jdk (fetch)
+    # eg. origin git@github.com:adoptium/openjdk-jdk.git (fetch)
     # eg. origin https://github.com/alibaba/dragonwell8.git (fetch)
     # eg. origin https://github.com/feilongjiang/bishengjdk-11-mirror.git (fetch)
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ] || [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
@@ -102,8 +102,8 @@ checkoutAndCloneOpenJDKGitRepo() {
 
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 11 ]]; then
     # Verify Adopt patches tag is being built, otherwise we may be accidently just building "raw" OpenJDK
-    if [ ! -f "${ADOPTOPENJDK_MD_MARKER_FILE}" ] && [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "false" ]; then
-      echo "${ADOPTOPENJDK_MD_MARKER_FILE} marker file not found in fetched source to be built, this may mean the wrong SCMReference build parameter has been specified. Ensure the correct AdoptOpenJDK patch release tag is specified, eg.for build jdk-11.0.4+10, it would be jdk-11.0.4+10_adopt"
+    if [ ! -f "${TEMURIN_MD_MARKER_FILE}" ] && [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "false" ]; then
+      echo "${TEMURIN_MD_MARKER_FILE} marker file not found in fetched source to be built, this may mean the wrong SCMReference build parameter has been specified. Ensure the correct Temurin patch release tag is specified, eg.for build jdk-11.0.4+10, it would be jdk-11.0.4+10_adopt"
       exit 1
     fi
   fi

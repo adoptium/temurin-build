@@ -287,7 +287,7 @@ COPY pipelines /openjdk/pipelines" >> "$DOCKERFILE_PATH"
 
 printGitClone(){
   echo "
-RUN git clone https://github.com/adoptopenjdk/openjdk-build /openjdk/build/openjdk-build" >> "$DOCKERFILE_PATH"
+RUN git clone https://github.com/adoptium/temurin-build /openjdk/build/openjdk-build" >> "$DOCKERFILE_PATH"
 }
 
 printUserCreate(){

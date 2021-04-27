@@ -100,7 +100,7 @@ getOpenJDKUpdateAndBuildVersion() {
 
   if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
 
-    # It does exist and it's a repo other than the AdoptOpenJDK one
+    # It does exist and it's a repo other than the Temurin one
     cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
 
     if [ -f ".git/shallow.lock" ]; then
@@ -200,7 +200,7 @@ getOpenJdkVersion() {
 # Ensure that we produce builds with versions strings something like:
 #
 # openjdk version "1.8.0_131"
-# OpenJDK Runtime Environment (build 1.8.0-adoptopenjdk-<user>_2017_04_17_17_21-b00)
+# OpenJDK Runtime Environment (build 1.8.0-temurin-<user>_2017_04_17_17_21-b00)
 # OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
 configureVersionStringParameter() {
   stepIntoTheWorkingDirectory
@@ -216,7 +216,7 @@ configureVersionStringParameter() {
   local dateSuffix=$(date -u +%Y%m%d%H%M)
 
   # Configures "vendor" jdk properties.
-  # AdoptOpenJDK default values are set after this code block
+  # Temurin default values are set after this code block
   # TODO 1. We should probably look at having these values passed through a config
   # file as opposed to hardcoding in shell
   # TODO 2. This highlights us conflating variant with vendor. e.g. OpenJ9 is really
@@ -236,10 +236,10 @@ configureVersionStringParameter() {
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://gitee.com/openeuler/bishengjdk-11/issues"
   fi
 
-  addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]:-"AdoptOpenJDK"}"
+  addConfigureArg "--with-vendor-name=" "\"${BUILD_CONFIG[VENDOR]}\""
   addConfigureArg "--with-vendor-url=" "${BUILD_CONFIG[VENDOR_URL]:-"https://adoptium.net/"}"
-  addConfigureArg "--with-vendor-bug-url=" "${BUILD_CONFIG[VENDOR_BUG_URL]:-"https://github.com/AdoptOpenJDK/openjdk-support/issues"}"
-  addConfigureArg "--with-vendor-vm-bug-url=" "${BUILD_CONFIG[VENDOR_VM_BUG_URL]:-"https://github.com/AdoptOpenJDK/openjdk-support/issues"}"
+  addConfigureArg "--with-vendor-bug-url=" "${BUILD_CONFIG[VENDOR_BUG_URL]:-"https://github.com/adoptium/adoptium-support/issues"}"
+  addConfigureArg "--with-vendor-vm-bug-url=" "${BUILD_CONFIG[VENDOR_VM_BUG_URL]:-"https://github.com/adoptium/adoptium-support/issues"}"
 
   local buildNumber
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
@@ -308,11 +308,11 @@ configureVersionStringParameter() {
   fi
 
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
-    # Derive AdoptOpenJDK metadata "version" string to use as vendor.version string
+    # Derive Adoptium metadata "version" string to use as vendor.version string
     # Take openJdkVersion, remove jdk- prefix and build suffix, replace with specified buildNumber
     # eg.:
     #   openJdkVersion = jdk-11.0.7+<build>
-    #   vendor.version = AdoptOpenJDK-11.0.7+<buildNumber>
+    #   vendor.version = Adoptium-11.0.7+<buildNumber>
     #
     # Remove "jdk-" prefix from openJdkVersion tag
     local derivedOpenJdkMetadataVersion=${openJdkVersion#"jdk-"}
@@ -324,7 +324,7 @@ configureVersionStringParameter() {
       # Not a release build so add date suffix
       derivedOpenJdkMetadataVersion="${derivedOpenJdkMetadataVersion}-${dateSuffix}"
     fi
-    addConfigureArg "--with-vendor-version-string=" "${BUILD_CONFIG[VENDOR_VERSION]:-"AdoptOpenJDK"}-${derivedOpenJdkMetadataVersion}"
+    addConfigureArg "--with-vendor-version-string=" "${BUILD_CONFIG[VENDOR_VERSION]:-"Temurin"}-${derivedOpenJdkMetadataVersion}"
   fi
 
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
@@ -515,7 +515,7 @@ createOpenJDKFailureLogsArchive() {
     echo "OpenJDK make failed, archiving make failed logs"
     cd build/*
 
-    local adoptLogArchiveDir="AdoptOpenJDKLogsArchive"
+    local adoptLogArchiveDir="TemurinLogsArchive"
 
     # Create new folder for failure logs
     rm -rf ${adoptLogArchiveDir}
@@ -638,7 +638,7 @@ printJavaVersionString() {
 }
 
 getJdkArchivePath() {
-  # Todo: Set this to the outcome of https://github.com/AdoptOpenJDK/openjdk-build/issues/1016
+  # Todo: Set this to the outcome of https://github.com/adoptium/temurin-build/issues/1016
   # local version="$(parseJavaVersionString)
   # echo "jdk-${version}"
 
@@ -1226,4 +1226,4 @@ echo "build.sh : $(date +%T) : All done!"
 
 # ccache is not detected properly TODO
 # change grep to something like $GREP -e '^1.*' -e '^2.*' -e '^3\.0.*' -e '^3\.1\.[0123]$'`]
-# See https://github.com/AdoptOpenJDK/openjdk-jdk8u/blob/dev/common/autoconf/build-performance.m4
+# See https://github.com/adoptium/openjdk-jdk8u/blob/dev/common/autoconf/build-performance.m4

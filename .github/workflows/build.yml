@@ -14,7 +14,7 @@ jobs:
       matrix:
         os: [linux]
         version: [jdk8u, jdk11u, jdk16u, jdk]
-        vm: [hotspot, openj9]
+        vm: [hotspot]
         image: [adoptopenjdk/centos7_build_image]
         include:
           - os: alpine-linux

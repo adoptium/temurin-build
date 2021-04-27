@@ -17,7 +17,7 @@
 <project name="Functional Build And Packaging Tests" default="build" basedir=".">
     <taskdef resource="net/sf/antcontrib/antlib.xml"/>
     <description>
-        AdoptOpenJDK Functional tests
+        Temurin Functional tests
     </description>
     <import file="${TEST_ROOT}/functional/build.xml"/>
 

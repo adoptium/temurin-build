@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package net.adoptopenjdk.test;
+package net.adoptium.test;
 
 import org.testng.annotations.Test;
 
@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static net.adoptopenjdk.test.JdkPlatform.Architecture;
-import static net.adoptopenjdk.test.JdkPlatform.OperatingSystem;
+import static net.adoptium.test.JdkPlatform.Architecture;
+import static net.adoptium.test.JdkPlatform.OperatingSystem;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 

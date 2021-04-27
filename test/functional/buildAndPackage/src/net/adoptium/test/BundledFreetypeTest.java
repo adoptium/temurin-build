@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package net.adoptopenjdk.test;
+package net.adoptium.test;
 
 import org.testng.annotations.Test;
 
@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static net.adoptopenjdk.test.JdkPlatform.OperatingSystem;
+import static net.adoptium.test.JdkPlatform.OperatingSystem;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -33,8 +33,8 @@ import static org.testng.Assert.assertTrue;
  * Freetype needs to be bundled on Windows and macOS
  * but should not be present on Linux or AIX.
  *
- * @see <a href="https://github.com/AdoptOpenJDK/openjdk-build/issues/2133">
- * AdoptOpenJDK enhancement request</a>
+ * @see <a href="https://github.com/adoptium/temurin-build/issues/2133">
+ * Adoptium enhancement request</a>
  */
 @Test(groups = {"level.extended"})
 public class BundledFreetypeTest {
