@@ -160,7 +160,9 @@ public class FeatureTests {
         }
         boolean shouldBePresent = false;
         if (jdkVersion.isNewerOrEqual(11) || jdkVersion.isNewerOrEqualSameFeature(8, 0, 262)) {
-            shouldBePresent = true;
+            if (!jdkPlatform.runsOn(OperatingSystem.AIX)) {
+                shouldBePresent = true;
+            }
         }
         LOGGER.info(String.format("Detected %s on %s, expect JFR to be present: %s",
                 jdkVersion, jdkPlatform, shouldBePresent));
