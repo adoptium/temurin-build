@@ -22,6 +22,9 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 # ccache seems flaky on alpine
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
 
+# We don't bundle freetype on alpine anymore, and expect the user to have it.
+export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+
 BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
 BOOT_JDK_VARIABLE="JDK${BOOT_JDK_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
