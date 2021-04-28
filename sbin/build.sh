@@ -769,7 +769,7 @@ deleteDebugSymbols() {
     ;;
   *)
     # on other platforms, we want to remove .debuginfo files
-    find "${jdkTargetPath}" "${jreTargetPath}" -type f -name "*.debuginfo" | xargs rm -f || true
+    find "${jdkTargetPath}" "${jreTargetPath}" -name "*.debuginfo" | xargs rm -f || true
     ;;
   esac
 }
