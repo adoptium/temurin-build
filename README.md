@@ -95,15 +95,10 @@ Please visit https://www.adoptium.net for further support.
 
 VERSIONS
 
-jdk8u - Build Java 8, defaults to https://github.com/adoptium/openjdk-jdk8u
-jdk9u - Build Java 9, defaults to https://github.com/adoptium/openjdk-jdk9u
-jdk10u - Build Java 10, defaults to https://github.com/adoptium/openjdk-jdk10u
-jdk11u - Build Java 11, defaults to https://github.com/adoptium/openjdk-jdk11u
-jdk12u - Build Java 12, defaults to https://github.com/adoptium/openjdk-jdk12u
-jdk13u - Build Java 13, defaults to https://github.com/adoptium/openjdk-jdk13u
-jdk - Build Latest Java (Alpha/Beta), defaults to https://github.com/adoptium/openjdk-jdk
-jfx - Build OpenJFX, defaults to https://github.com/adoptium/openjdk-jfx
-amber - Build Project Amber, defaults to https://github.com/adoptium/openjdk-amber
+jdk8u - Build Java 8, defaults to https://github.com/adoptium/jdk8u
+jdk11u - Build Java 11, defaults to https://github.com/adoptium/jdk11u
+jdk16u - Build Java 16, defaults to https://github.com/adoptium/jdk16u
+jdk - Build Latest Java (Alpha/Beta), defaults to https://github.com/adoptium/jdk
 
 OPTIONS
 

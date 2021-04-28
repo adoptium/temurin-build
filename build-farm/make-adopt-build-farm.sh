@@ -20,7 +20,7 @@ set -e
 PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ## autodetect defaults to improve usability when running this for debugging/testing
-## On most platforms "uname -p" matches what the OS name used in the temurin
+## On most platforms "uname -p" matches what the OS name used in the Temurin
 ## scripts uses, but not on xLinux, Windows or AIX.
 
 if [ -z "$ARCHITECTURE"  ]; then
