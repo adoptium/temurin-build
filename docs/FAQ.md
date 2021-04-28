@@ -98,7 +98,7 @@ For more information, see the [PR testing documentation](Testing.md).
 
 The operating systems/distributions which we build or are documented in the
 [openjdk-build wiki](https://github.com/AdoptOpenJDK/openjdk-build/wiki/%5BWIP%5D-Minimum-OS-levels).
-Runtime platforms are in our [supported platforms page](https://adoptopenjdk.net/supported_platforms.html).
+Runtime platforms are in our [supported platforms page](https://adoptium.net/supported_platforms.html).
 
 ## How to add a new build pipeline param and associated job configuration?
 

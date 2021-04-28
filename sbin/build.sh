@@ -79,8 +79,10 @@ configureBootJDKConfigureParameter() {
 # Shenandaoh was backported to Java 11 as of 11.0.9 but requires this build
 # parameter to ensure its inclusion. For Java 12+ this is automatically set
 configureShenandoahBuildParameter() {
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ]; then
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] || [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
       addConfigureArg "--with-jvm-features=" "shenandoahgc"
+    fi
   fi
 }
 
@@ -235,9 +237,15 @@ configureVersionStringParameter() {
   fi
 
   addConfigureArg "--with-vendor-name=" "${BUILD_CONFIG[VENDOR]:-"AdoptOpenJDK"}"
+<<<<<<< HEAD
   addConfigureArg "--with-vendor-url=" "${BUILD_CONFIG[VENDOR_URL]:-"https://adoptopenjdk.net/"}"
   addConfigureArg "--with-vendor-bug-url=" "${BUILD_CONFIG[VENDOR_BUG_URL]:-"https://github.com/adoptium/adoptium-support"}"
   addConfigureArg "--with-vendor-vm-bug-url=" "${BUILD_CONFIG[VENDOR_VM_BUG_URL]:-"https://github.com/adoptium/adoptium-support"}"
+=======
+  addConfigureArg "--with-vendor-url=" "${BUILD_CONFIG[VENDOR_URL]:-"https://adoptium.net/"}"
+  addConfigureArg "--with-vendor-bug-url=" "${BUILD_CONFIG[VENDOR_BUG_URL]:-"https://github.com/AdoptOpenJDK/openjdk-support/issues"}"
+  addConfigureArg "--with-vendor-vm-bug-url=" "${BUILD_CONFIG[VENDOR_VM_BUG_URL]:-"https://github.com/AdoptOpenJDK/openjdk-support/issues"}"
+>>>>>>> 8c10dcb9a8de183c9ae4599be60a5b0451e0db01
 
   local buildNumber
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
