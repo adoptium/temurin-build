@@ -4,7 +4,7 @@
 
 AdoptOpenJDK makes use of these scripts to build binaries on the build farm at
 <https://ci.adoptopenjdk.net>, which produces OpenJDK binaries for consumption via
-<https://adoptopenjdk.net> and <https://api.adoptopenjdk.net>.
+<https://adoptium.net/> and <https://api.adoptopenjdk.net>.
 
 ## TL;DR: I want to build a JDK NOW!
 

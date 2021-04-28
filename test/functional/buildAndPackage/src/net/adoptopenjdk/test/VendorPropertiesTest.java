@@ -149,7 +149,7 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVendorUrl(String value) {
-            assertEquals(value, "https://adoptopenjdk.net/");
+            assertEquals(value, "https://adoptium.net/");
         }
 
         @Override
