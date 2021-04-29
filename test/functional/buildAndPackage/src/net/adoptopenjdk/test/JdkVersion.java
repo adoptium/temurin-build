@@ -16,6 +16,7 @@ package net.adoptopenjdk.test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,15 +29,37 @@ public class JdkVersion {
             "^(?<version>1\\.(?<major>[0-8]+)\\.0(_(?<update>[0-9]+)))(-(?<additional>.*)?)?$"
     );
 
+    /**
+     * Int representing x.0.0.0 in typical OpenJDK version string.
+     */
     private final int feature;
 
+    /**
+     * Int representing 0.x.0.0 in typical OpenJDK version string.
+     */
     private final int interim;
 
+    /**
+     * Int representing 0.0.x.0 in typical OpenJDK version string.
+     */
     private final int update;
 
+    /**
+     * Int representing 0.0.0.x in typical OpenJDK version string.
+     */
     private final int patch;
 
+    /**
+     * The Virtual Machine type being used.
+     */
+    private final VM vm;
+
+    /**
+     * Constructor.
+     */
     public JdkVersion() {
+        this.vm = detectVM();
+
         String versionString = System.getProperty("java.version");
         if (versionString.isEmpty()) {
             throw new AssertionError("Property java.version is empty");
@@ -90,38 +113,119 @@ public class JdkVersion {
         }
     }
 
+    /**
+     * Retrieve x.0.0.0 from typical OpenJDK version string.
+     * @return int feature number
+     */
     public int getFeature() {
         return feature;
     }
 
+    /**
+     * Retrieve 0.x.0.0 from typical OpenJDK version string.
+     * @return int interim number
+     */
     public int getInterim() {
         return interim;
     }
 
+    /**
+     * Retrieve 0.0.x.0 from typical OpenJDK version string.
+     * @return int update number
+     */
     public int getUpdate() {
         return update;
     }
 
+    /**
+     * Retrieve 0.0.0.x from typical OpenJDK version string.
+     * @return int patch number
+     */
     public int getPatch() {
         return patch;
     }
 
-    public boolean isNewerOrEqual(int feature) {
-        return this.feature >= feature;
+    /**
+     * Are we running on an OpenJDK feature version
+     * that is equal to (or greater than) the
+     * supplied int?
+     * @param  featureParam  supplied int mentioned above
+     * @return boolean       result
+     */
+    public boolean isNewerOrEqual(final int featureParam) {
+        return feature >= featureParam;
     }
 
-    public boolean isNewerOrEqualSameFeature(int feature, int interim, int update) {
-        if (this.feature != feature) {
+    /**
+     * Are we running on an OpenJDK feature version
+     * that is greater than the supplied feature int.
+     * OR
+     * Are we running on the same OpenJDK feature
+     * with a greater/equal interim or update versions?
+     * @param  featureParam as mentioned above
+     * @param  interimParam as mentioned above
+     * @param  updateParam  as mentioned above
+     * @return boolean result
+     */
+    public boolean isNewerOrEqualSameFeature(final int featureParam, final int interimParam, final int updateParam) {
+        if (feature != featureParam) {
             return false;
         }
-        if (this.interim >= interim) {
+        if (interim >= interimParam) {
             return true;
         }
-        return this.update >= update;
+        return update >= updateParam;
     }
 
+    /**
+     * Returns all of the version ints concatenated.
+     * @return String result
+     */
     @Override
     public String toString() {
         return feature + "." + interim + "." + update + "." + patch;
+    }
+
+    private static VM detectVM() {
+        String vmName = Objects.toString(System.getProperty("java.vm.name"), "");
+        if (vmName.matches("^Eclipse OpenJ9 VM$")) {
+            return VM.OPENJ9;
+        }
+
+        String compilerName = Objects.toString(System.getProperty("sun.management.compiler"), "");
+        if (compilerName.matches("^Hotspot(.*)?$")) {
+            return VM.HOTSPOT;
+        }
+
+        return VM.OTHER;
+    }
+
+    /**
+     * Does the supplied VM match the VM we're running on?
+     * @param  vmParam mentioned above
+     * @return boolean result
+     */
+    public boolean usesVM(final VM vmParam) {
+        return vm == vmParam;
+    }
+
+    /**
+     * Enum listing known VM types that we test.
+     */
+    enum VM {
+        /**
+         * OpenJ9 VM from the Eclipse community.
+         */
+        OPENJ9,
+
+        /**
+         * Hotspot VM from the OpenJDK community.
+         */
+        HOTSPOT,
+
+        /**
+         * Unrecognised VM.
+         */
+        OTHER
     }
 }

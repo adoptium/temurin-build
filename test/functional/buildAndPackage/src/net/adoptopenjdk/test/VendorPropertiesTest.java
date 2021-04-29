@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import static net.adoptopenjdk.test.JdkVersion.VM;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
@@ -33,8 +34,19 @@ import static org.testng.Assert.assertTrue;
 @Test(groups = {"level.extended"})
 public class VendorPropertiesTest {
 
+    /**
+     * The checks for a given vendor.
+     */
     private final VmPropertiesChecks vendorChecks;
 
+    /**
+     * Class tells us what the jdk version and vm type is.
+     */
+    private final JdkVersion jdkVersion = new JdkVersion();
+
+    /**
+     * Constructor method.
+     */
     public VendorPropertiesTest() {
         Set<VmPropertiesChecks> allPropertiesChecks = new LinkedHashSet<>();
         allPropertiesChecks.add(new AdoptOpenJDKPropertiesChecks());
@@ -49,8 +61,17 @@ public class VendorPropertiesTest {
                 .orElseThrow(() -> new AssertionError("No checks found for vendor: " + vendor));
     }
 
+    /**
+     * Verifies that the vendor name is displayed within
+     * the java -version output, where applicable.
+     */
     @Test
     public void javaVersionPrintsVendor() {
+        // Skip test on JDK8 for non-Hotspot JDKs.
+        if (!jdkVersion.isNewerOrEqual(9) && !jdkVersion.usesVM(VM.HOTSPOT)) {
+            return;
+        }
+
         String testJdkHome = System.getenv("TEST_JDK_HOME");
         if (testJdkHome == null) {
             throw new AssertionError("TEST_JDK_HOME is not set");
@@ -76,6 +97,10 @@ public class VendorPropertiesTest {
         }
     }
 
+    /**
+     * Test method that calls a number of other test methods
+     * themed around vendor-related property checks.
+     */
     @Test
     public void vmPropertiesPointToVendor() {
         this.vendorChecks.javaVendor(System.getProperty("java.vendor"));
@@ -89,43 +114,50 @@ public class VendorPropertiesTest {
     private interface VmPropertiesChecks {
         /**
          * Tests whether the implementation of {@linkplain VmPropertiesChecks} is suitable to verify a JDK.
-         *
-         * @param vendor Name identifying the vendor.
+         * @param  vendor  Name identifying the vendor.
+         * @return boolean result
          */
         boolean supports(String vendor);
 
         /**
          * Checks whether the output of {@code java -version} is acceptable.
+         * @param value the value to be validated.
          */
         void javaVersion(String value);
 
         /**
          * Checks the value of {@code java.vendor}.
+         * @param value the value to be validated.
          */
         void javaVendor(String value);
 
         /**
          * Checks the value of {@code java.vendor.url}.
+         * @param value the value to be validated.
          */
         void javaVendorUrl(String value);
 
         /**
          * Checks the value of {@code java.vendor.url.bug}.
+         * @param value the value to be validated.
          */
         void javaVendorUrlBug(String value);
 
         /**
          * Checks the value of {@code java.vendor.version}.
+         * @param value the value to be validated.
          */
         void javaVendorVersion(String value);
 
         /**
          * Checks the value of {@code java.vm.vendor}.
+         * @param value the value to be validated.
          */
         void javaVmVendor(String value);
 
         /**
          * Checks the value of {@code java.vm.version}.
+         * @param value the value to be validated.
          */
         void javaVmVersion(String value);
     }
@@ -133,43 +165,43 @@ public class VendorPropertiesTest {
     private static class AdoptOpenJDKPropertiesChecks implements VmPropertiesChecks {
 
         @Override
-        public boolean supports(String vendor) {
+        public boolean supports(final String vendor) {
             return vendor.toLowerCase(Locale.US).equals("adoptopenjdk");
         }
 
         @Override
-        public void javaVersion(String value) {
+        public void javaVersion(final String value) {
             assertTrue(value.contains("AdoptOpenJDK"));
         }
 
         @Override
-        public void javaVendor(String value) {
+        public void javaVendor(final String value) {
             assertEquals(value, "AdoptOpenJDK");
         }
 
         @Override
-        public void javaVendorUrl(String value) {
+        public void javaVendorUrl(final String value) {
             assertEquals(value, "https://adoptium.net/");
         }
 
         @Override
-        public void javaVendorUrlBug(String value) {
+        public void javaVendorUrlBug(final String value) {
             assertEquals(value, "https://github.com/AdoptOpenJDK/openjdk-support/issues");
         }
 
         @Override
-        public void javaVendorVersion(String value) {
+        public void javaVendorVersion(final String value) {
             assertNotEquals(value.replaceAll("[^0-9]", "").length(), 0,
                     "java.vendor.version contains no numbers: " + value);
         }
 
         @Override
-        public void javaVmVendor(String value) {
+        public void javaVmVendor(final String value) {
             assertTrue(value.equals("AdoptOpenJDK") || value.equals("Eclipse OpenJ9"));
         }
 
         @Override
-        public void javaVmVersion(String value) {
+        public void javaVmVersion(final String value) {
             assertNotEquals(value.replaceAll("[^0-9]", "").length(), 0,
                     "java.vm.version contains no numbers: " + value);
         }
@@ -178,44 +210,44 @@ public class VendorPropertiesTest {
     private static class CorrettoPropertiesChecks implements VmPropertiesChecks {
 
         @Override
-        public boolean supports(String vendor) {
+        public boolean supports(final String vendor) {
             return vendor.toLowerCase(Locale.US).startsWith("amazon");
         }
 
         @Override
-        public void javaVersion(String value) {
+        public void javaVersion(final String value) {
             assertTrue(value.contains("Corretto"));
         }
 
         @Override
-        public void javaVendor(String value) {
+        public void javaVendor(final String value) {
             assertEquals(value, "Amazon.com Inc.");
         }
 
         @Override
-        public void javaVendorUrl(String value) {
+        public void javaVendorUrl(final String value) {
             assertEquals(value, "https://aws.amazon.com/corretto/");
         }
 
         @Override
-        public void javaVendorUrlBug(String value) {
+        public void javaVendorUrlBug(final String value) {
             assertTrue(value.startsWith("https://github.com/corretto/corretto"));
         }
 
         @Override
-        public void javaVendorVersion(String value) {
+        public void javaVendorVersion(final String value) {
             assertTrue(value.startsWith("Corretto"));
             assertNotEquals(value.replaceAll("[^0-9]", "").length(), 0,
                     "java.vendor.version contains no numbers: " + value);
         }
 
         @Override
-        public void javaVmVendor(String value) {
+        public void javaVmVendor(final String value) {
             assertEquals(value, "Amazon.com Inc.");
         }
 
         @Override
-        public void javaVmVersion(String value) {
+        public void javaVmVersion(final String value) {
             assertNotEquals(value.replaceAll("[^0-9]", "").length(), 0,
                     "java.vm.version contains no numbers: " + value);
         }
