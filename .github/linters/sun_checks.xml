@@ -179,14 +179,9 @@
       <property name="optional" value="true"/>
     </module>
 
-    <!-- SUPPRESSED CHECKS -->
-    <module name="SuppressionSingleFilter">
-      <property name="checks" value="MagicNumber" /> <!-- Disabled because magic numbers are not generally abused and are more useful being allowed -->
-      <property name="checks" value="TodoComment" /> <!-- We shouldn't have to be reminded about todo's on every linter iteration, we have IDE"s that do that! -->
-      <property name="checks" value="JavadocVariable" /> <!-- Disabled as we don't need comments on every single new variable -->
-      <property name="checks" value="FileLength" /> <!-- These two are disabled as we don't care if line or file size is too big -->
-      <property name="checks" value="LineLength" />
-      <property name="checks" value="Header" /> <!-- Disabled as we don't use headers in our project for the test files -->
+    <!-- Suppress checks with config file -->
+    <module name="SuppressionFilter">
+      <property name="file" value=".github/linters/suppressed-java.xml"/>
     </module>
 
   </module>
