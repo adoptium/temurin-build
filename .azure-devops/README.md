@@ -74,7 +74,7 @@ This may add a maintenance cost over time as upstream changes may conflicts with
 
 Second, you can create another YAML step template and save it to `build/shared/set_filename.yml` and add it to the `build.yml` file.
 
-```
+```yml
 steps:
     - template: ./steps/shared/before.yml
     - template: ./steps/shared/set_filename.yml
