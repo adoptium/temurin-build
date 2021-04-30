@@ -50,4 +50,4 @@ jobs:
           VALIDATE_ALL_CODEBASE: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Markdown lint complains about the issue templates
-          FILTER_REGEX_EXCLUDE: .github/workflows/ISSUE_TEMPLATE/*
+          FILTER_REGEX_EXCLUDE: .github/ISSUE_TEMPLATE/*
