@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1009,SC1056,SC1072,SC1073,SC1054,SC1083,SC2181
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,12 +27,10 @@ set +e
 
 alreadyConfigured=$(/usr/bin/find . -name "config.status")
 
-# shellcheck disable=SC1009,SC1056,SC1072
 if [[ ! -z "$alreadyConfigured" ]]; then
   echo "Not reconfiguring due to the presence of config.status"
 else
   #Templated var that, gets replaced by build.sh
-  # shellcheck disable=SC1073,SC1054,SC1083
   {configureArg} | tee "$1/$2/configure.txt"
 
   exitCode=$?
@@ -44,7 +43,6 @@ fi
 {makeCommandArg}
 
 exitCode=$?
-# shellcheck disable=SC2181
 if [ "${exitCode}" -ne 0 ]; then
    exit 3;
 fi
