@@ -6,10 +6,10 @@
 >
 
 <suppressions>
-    <suppress checks="MagicNumber" /> <!-- Disabled because magic numbers are not generally abused and are more useful being allowed -->
-    <suppress checks="TodoComment" /> <!-- We shouldn't have to be reminded about todo's on every linter iteration, we have IDE"s that do that! -->
-    <suppress checks="JavadocVariable" /> <!-- Disabled as we don't need comments on every single new variable -->
-    <suppress checks="FileLength" /> <!-- These two are disabled as we don't care if line or file size is too big -->
-    <suppress checks="LineLength" />
-    <suppress checks="Header" /> <!-- Disabled as we don't use headers in our project for the test files -->
+    <suppress files="." checks="MagicNumber" /> <!-- Disabled because magic numbers are not generally abused and are more useful being allowed -->
+    <suppress files="." checks="TodoComment" /> <!-- We shouldn't have to be reminded about todo's on every linter iteration, we have IDE"s that do that! -->
+    <suppress files="." checks="JavadocVariable" /> <!-- Disabled as we don't need comments on every single new variable -->
+    <suppress files="." checks="FileLength" /> <!-- These two are disabled as we don't care if line or file size is too big -->
+    <suppress files="." checks="LineLength" />
+    <suppress files="." checks="Header" /> <!-- Disabled as we don't use headers in our project for the test files -->
 </suppressions>
