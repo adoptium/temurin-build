@@ -26,7 +26,8 @@ set +e
 
 alreadyConfigured=$(/usr/bin/find . -name "config.status")
 
-if [[ ! -z "$alreadyConfigured" ]] ; then
+# shellcheck disable=SC1009,SC1056,SC1072
+if [[ ! -z "$alreadyConfigured" ]]; then
   echo "Not reconfiguring due to the presence of config.status"
 else
   #Templated var that, gets replaced by build.sh
