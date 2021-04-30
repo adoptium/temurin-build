@@ -47,7 +47,7 @@ jobs:
       - name: Lint Code Base
         uses: github/super-linter@v3
         env:
-          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_ALL_CODEBASE: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Markdown lint complains about the issue templates
           FILTER_REGEX_EXCLUDE: .github/workflows/ISSUE_TEMPLATE/*
