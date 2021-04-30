@@ -5,7 +5,7 @@
     ],
     "ignore": [
         "**/__snapshots__/**",
-        "test/**"
+        "**/test/**"
     ],
     "absolute": true
 }
