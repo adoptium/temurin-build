@@ -80,24 +80,6 @@
     <property name="message" value="Line has trailing spaces."/>
   </module>
 
-  <!-- Disabled as we don't use headers in our project for the test files -->
-
-  <!-- Checks for Headers                                -->
-  <!-- See https://checkstyle.org/config_header.html   -->
-  <!-- <module name="Header"> -->
-  <!--   <property name="headerFile" value="${checkstyle.header.file}"/> -->
-  <!--   <property name="fileExtensions" value="java"/> -->
-  <!-- </module> -->
-
-  <!-- Disabled as we don't care if line or file size is too big -->
-
-  <!-- Checks for Size Violations.                    -->
-  <!-- See https://checkstyle.org/config_sizes.html   -->
-  <!-- <module name="FileLength"/> -->
-  <!-- <module name="LineLength"> -->
-    <!-- <property name="fileExtensions" value="java"/> -->
-  <!-- </module> -->
-
   <!-- Enables @SuppressWarnings Support                -->
   <module name="SuppressWarningsFilter"/>
   <module name="TreeWalker">
@@ -107,7 +89,6 @@
     <module name="InvalidJavadocPosition"/>
     <module name="JavadocMethod"/>
     <module name="JavadocType"/>
-    <!-- <module name="JavadocVariable"/> Disabled as we don't need comments on every single new variable -->
     <module name="JavadocStyle"/>
     <module name="MissingJavadocMethod"/>
     <!-- Enables @SuppressWarnings Support                -->
@@ -173,7 +154,6 @@
     <module name="HiddenField"/>
     <module name="IllegalInstantiation"/>
     <module name="InnerAssignment"/>
-    <!-- <module name="MagicNumber"/> Disabled because magic numbers are not generally abused and are more useful being allowed -->
     <module name="MissingSwitchDefault"/>
     <module name="MultipleVariableDeclarations"/>
     <module name="SimplifyBooleanExpression"/>
@@ -191,13 +171,22 @@
     <!-- See https://checkstyle.org/config_misc.html -->
     <module name="ArrayTypeStyle"/>
     <module name="FinalParameters"/>
-    <!-- <module name="TodoComment"/> We shouldn't have to be reminded about todo's on every linter iteration, we have IDE"s that do that! -->
     <module name="UpperEll"/>
 
     <!-- https://checkstyle.org/config_filters.html#SuppressionXpathFilter -->
     <module name="SuppressionXpathFilter">
       <property name="file" value="${org.checkstyle.sun.suppressionxpathfilter.config}" default="checkstyle-xpath-suppressions.xml" />
       <property name="optional" value="true"/>
+    </module>
+
+    <!-- SUPPRESSED CHECKS -->
+    <module name="SuppressionSingleFilter">
+      <property name="checks" value="MagicNumber" /> <!-- Disabled because magic numbers are not generally abused and are more useful being allowed -->
+      <property name="checks" value="TodoComment" /> <!-- We shouldn't have to be reminded about todo's on every linter iteration, we have IDE"s that do that! -->
+      <property name="checks" value="JavadocVariable" /> <!-- Disabled as we don't need comments on every single new variable -->
+      <property name="checks" value="FileLength" /> <!-- These two are disabled as we don't care if line or file size is too big -->
+      <property name="checks" value="LineLength" />
+      <property name="checks" value="Header" /> <!-- Disabled as we don't use headers in our project for the test files -->
     </module>
 
   </module>
