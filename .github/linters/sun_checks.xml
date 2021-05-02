@@ -82,6 +82,12 @@
 
   <!-- Enables @SuppressWarnings Support                -->
   <module name="SuppressWarningsFilter"/>
+
+  <!-- Suppress checks with config file -->
+  <module name="SuppressionFilter">
+    <property name="file" value=".github/linters/suppressed-java.xml"/>
+  </module>
+
   <module name="TreeWalker">
 
     <!-- Checks for Javadoc comments.                     -->
@@ -177,11 +183,6 @@
     <module name="SuppressionXpathFilter">
       <property name="file" value="${org.checkstyle.sun.suppressionxpathfilter.config}" default="checkstyle-xpath-suppressions.xml" />
       <property name="optional" value="true"/>
-    </module>
-
-    <!-- Suppress checks with config file -->
-    <module name="SuppressionFilter">
-      <property name="file" value=".github/linters/suppressed-java.xml"/>
     </module>
 
   </module>
