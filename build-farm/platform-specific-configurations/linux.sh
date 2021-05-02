@@ -89,11 +89,11 @@ then
   then
     export BUILD_ARGS="${BUILD_ARGS} --processors $NUM_PROCESSORS"
   fi
-  echo === START OF ARM32 STATUS CHECK
+  echo "=== START OF ARM32 STATUS CHECK ==="
   uptime
   free
   ps -fu jenkins
-  echo === END OF ARM32 STATUS CHECK
+  echo "=== END OF ARM32 STATUS CHECK ==="
 fi
 
 BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
