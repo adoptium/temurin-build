@@ -11,13 +11,9 @@ jobs:
 
     steps:
       - name: Create comment
-        uses: peter-evans/create-or-update-comment@v1
+        uses: JJ/pr-greeting-action@releases/v1
         with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            # Thank you for creating a pull request!
-            Please check out the information below if you have not made a pull request here before (or if you need a reminder how things work).
-            ## Code Quality and Contributing Guidelines
-            If you have not done so already, please familiarise yourself with our [Contributing Guidelines](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/CONTRIBUTING.md) and [FAQ](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/FAQ.md), even if you have contributed before.
-            ## Tests
-            Github actions will run a set of jobs against your PR that will lint and unit test your changes. Keep an eye out for the results from these on the latest commit you submitted. For more information, please see our [testing documentation](https://github.com/AdoptOpenJDK/openjdk-build/blob/master/Testing.md).
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          greeting: |
+            **Thank you for creating a pull request!**
+            If you have not done so already, please familiarise yourself with our [Contributing Guidelines](https://github.com/adoptium/temurin-build/blob/master/CONTRIBUTING.md) and [FAQ](https://github.com/adoptium/temurin-build/blob/master/FAQ.md), even if you have contributed to the Adoptium project before. GitHub actions will now run a set of jobs against your PR that will lint and unit test your changes. Keep an eye out for the results from these on the latest commit you submitted. For more information, please see our [testing documentation](https://github.com/adoptium/temurin-build/blob/master/Testing.md).
