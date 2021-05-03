@@ -18,7 +18,7 @@ public class CudaEnabledTest {
     private static Logger logger = Logger.getLogger(CudaEnabledTest.class);
 
     /**
-     * Retrieves the JDK Version Number from system property java.version
+     * Retrieves the JDK Version Number from system property java.version.
      * @return Integer JDK Version Number
      */
     public static int getJDKVersion() {
@@ -37,7 +37,7 @@ public class CudaEnabledTest {
     }
 
     /**
-     * Test that will check if the CUDA Compiler is enabled in the build
+     * Test that will check if the CUDA Compiler is enabled in the build.
      */
     @Test
     public void testIfCudaIsEnabled() {
