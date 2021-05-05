@@ -17,42 +17,80 @@ package net.adoptopenjdk.test;
 import java.util.Collection;
 import java.util.Locale;
 
-public class JdkPlatform {
+public final class JdkPlatform {
 
     private final Architecture architecture;
 
     private final OperatingSystem operatingSystem;
 
+    /**
+     * Constructor that detects the system architecture and os the test is running on.
+     */
     public JdkPlatform() {
         this.architecture = detectArchitecture();
         this.operatingSystem = detectOperatingSystem();
     }
 
-    public boolean runsOn(Architecture architecture) {
-        return architecture == this.architecture;
+    /**
+     * Checks if the given parameter <code>arch</code> can run on the system architecture that the test is running on.
+     * @param arch The param architecture to check the system arch against
+     * @return True if the param arch matches the system arch, false otherwise
+     */
+    public boolean runsOn(final Architecture arch) {
+        return arch == this.architecture;
     }
 
-    public boolean runsOnAnyArchitecture(Collection<Architecture> architectures) {
+    /**
+     * Checks if the system architecture is in the collection of architectures given as a parameter.
+     * @param architectures Collection of architectures
+     * @return True if the system arch is in the collection, false otherwise
+     */
+    public boolean runsOnAnyArchitecture(final Collection<Architecture> architectures) {
         return architectures.contains(this.architecture);
     }
 
-    public boolean runsOn(OperatingSystem operatingSystem) {
-        return operatingSystem == this.operatingSystem;
+    /**
+     * Checks if the given parameter <code>os</code> can run on the system operating system that the test is running on.
+     * @param os The param operating system to check the system operating system against
+     * @return True if the param os matches the system os, false otherwise
+     */
+    public boolean runsOn(final OperatingSystem os) {
+        return os == this.operatingSystem;
     }
 
-    public boolean runsOn(OperatingSystem operatingSystem, Architecture architecture) {
-        return this.runsOn(operatingSystem) && this.runsOn(architecture);
+    /**
+     * Checks if the given operating system and architecture (as parameters) match the system operating system and architecture.
+     * @param os Operating System to check if the system architecture is the same one
+     * @param arch Architecture to check if the system architecture is the same one
+     * @return True if both the system arch and os match, false otherwise
+     */
+    public boolean runsOn(final OperatingSystem os, final Architecture arch) {
+        return this.runsOn(os) && this.runsOn(arch);
     }
 
-    public boolean runsOnAnyOperatingSystem(Collection<OperatingSystem> operatingSystems) {
+    /**
+     * Checks if the system operating system is in the collection of operating systems given as a parameter.
+     * @param operatingSystems Collection of operating systems
+     * @return True if the system os is in the collection, false otherwise
+     */
+    public boolean runsOnAnyOperatingSystem(final Collection<OperatingSystem> operatingSystems) {
         return operatingSystems.contains(this.operatingSystem);
     }
 
+    /**
+     * Converts the system operating system and architecture string names to a custom string value.
+     * @return Operating system and architecture names divided by a <code>/</code>
+     */
     @Override
     public String toString() {
         return this.operatingSystem.name() + "/" + this.architecture.name();
     }
 
+    /**
+     * Will use the System Property <code>os.arch</code> to determine what system architecture it is running on.
+     * @return Instance of the Architecture class that it is running on
+     * @throws AssertionError If an unrecognised architecture is given
+     */
     private static Architecture detectArchitecture() {
         String arch = normalize(System.getProperty("os.arch"));
 
@@ -93,6 +131,11 @@ public class JdkPlatform {
         throw new AssertionError("Unrecognized architecture: " + arch);
     }
 
+    /**
+     * Will use the System Property <code>os.name</code> to determine what the system's operating system is.
+     * @return Instance of the Operating System class that it is running on
+     * @throws AssertionError If an unrecognised os is given
+     */
     private static OperatingSystem detectOperatingSystem() {
         String osName = normalize(System.getProperty("os.name"));
 
@@ -118,7 +161,12 @@ public class JdkPlatform {
         throw new AssertionError("Unrecognized operating system: " + osName);
     }
 
-    private static String normalize(String str) {
+    /**
+     * Trims and converts the given string to a lowercase value (or to an empty string if it is null).
+     * @param str String to be converted
+     * @return Lowercase representation of the given string with whitespaces and newlines removed
+     */
+    private static String normalize(final String str) {
         if (str == null) {
             return "";
         }

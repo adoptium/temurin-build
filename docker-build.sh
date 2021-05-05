@@ -78,13 +78,13 @@ buildOpenJDKViaDocker()
   local container_architecture="x86_64/ubuntu"
   local build_variant_flag=""
   BUILD_CONFIG[DOCKER_FILE_PATH]="docker/${BUILD_CONFIG[OPENJDK_CORE_VERSION]}/$container_architecture"
-  
+
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
     build_variant_flag="--openj9"
   fi
   docker/dockerfile-generator.sh --version "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" "$build_variant_flag"
 
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1090,SC1091
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
 
     local openjdk_core_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
@@ -205,7 +205,7 @@ buildOpenJDKViaDocker()
 
   # If we didn't specify to keep the container then remove it
   if [[ "${BUILD_CONFIG[KEEP_CONTAINER]}" == "false" ]] ; then
-	  echo "Removing container ${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}"
-	  ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$(NF) }' | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm {}
+      echo "Removing container ${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}"
+      ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$(NF) }' | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm {}
   fi
 }

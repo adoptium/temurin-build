@@ -28,9 +28,11 @@ public final class StreamUtils {
     /**
      * Reads the entire {@link InputStream} into a string.
      *
+     * @param inputStream Input stream to be converted into a string
      * @throws IOException If an I/O error occurs
+     * @return String that has been read from the input stream
      */
-    public static String consumeStream(InputStream inputStream) throws IOException {
+    public static String consumeStream(final InputStream inputStream) throws IOException {
         String lineSeparator = System.getProperty("line.separator");
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             StringBuilder builder = new StringBuilder();

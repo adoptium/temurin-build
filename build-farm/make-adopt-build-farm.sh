@@ -192,7 +192,7 @@ fi
 echo "BRANCH: ${BRANCH} (For release either BRANCH or TAG should be set)"
 echo "TAG: ${TAG}"
 
-
+# shellcheck disable=SC2268
 if [ "x${FILENAME}" = "x" ] ; then
     echo "FILENAME must be set in the environment"
     exit 1
