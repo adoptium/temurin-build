@@ -41,9 +41,6 @@
         <impls>
             <impl>hotspot</impl>
         </impls>
-         <vendors>
-            <vendor>adoptopenjdk</vendor>
-        </vendors>
     </test>
     <test>
         <testCaseName>Adopt_J9_FeatureTests</testCaseName>
@@ -77,8 +74,5 @@
         <impls>
             <impl>openj9</impl>
         </impls>
-        <vendors>
-            <vendor>adoptopenjdk</vendor>
-        </vendors>
 	</test>
 </playlist>
