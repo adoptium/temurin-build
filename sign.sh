@@ -82,9 +82,11 @@ signRelease()
             if [ "$SIGN_TOOL" = "ucl" ]; then
               ucl sign-code --file "$f" -n WindowsSHA -t "${SERVER}" --hash SHA256
             elif [ "$SIGN_TOOL" = "eclipse" ]; then
-              mv "$f" "unsigned-$f"
-              curl -o "$f" -F file="unsigned-$f" https://cbi.eclipse.org/authenticode/sign
-              rm -rf "unsigned-$f"
+              dir=$(dirname "$f")
+              file=$(basename "$f")
+              mv "$f" "${dir}/unsigned_${file}"
+              curl -o "$f" -F file="${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
+              rm -rf "${dir}/unsigned_${file}"
             else
               "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"
             fi
