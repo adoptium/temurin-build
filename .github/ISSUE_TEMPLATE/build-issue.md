@@ -1,6 +1,6 @@
 ---
 name: 🐛 Bug Report
-about: For problems related to how the adoptopenjdk binaries are created or published
+about: For problems related to how the Temurin binaries are created or published
 
 ---
 

@@ -19,7 +19,7 @@
 
 ################################################################################
 #
-# This shell script deals with writing the AdoptOpenJDK build configuration to
+# This shell script deals with writing the Temurin build configuration to
 # the file system so it can be picked up by further build steps, Docker
 # containers etc
 #
@@ -299,7 +299,7 @@ function parseConfigurationArguments() {
         "--ssh" | "-S" )
         BUILD_CONFIG[USE_SSH]=true;;
 
-        # Signing is a separate step on the AdoptOpenJDK build farm itself
+        # Signing is a separate step on the Temurin build farm itself
         # JIC you're wondering why you don't see this get set there.
         "--sign" )
         BUILD_CONFIG[SIGN]=true; BUILD_CONFIG[CERTIFICATE]="$1"; shift;;
@@ -387,17 +387,17 @@ function configDefaults() {
   # The abridged openjdk core version name, e.g. jdk8, jdk9, etc.
   BUILD_CONFIG[OPENJDK_CORE_VERSION]=""
 
-  # The OpenJDK source code repository to build from, e.g. an AdoptOpenJDK repo
+  # The OpenJDK source code repository to build from, e.g. an Temurin repo
   BUILD_CONFIG[REPOSITORY]=""
 
   BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]:-"false"}
   BUILD_CONFIG[MAKE_EXPLODED]=${BUILD_CONFIG[MAKE_EXPLODED]:-"false"}
 
-  # The default AdoptOpenJDK/openjdk-build repo branch
+  # The default adoptium/temurin-build repo branch
   BUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]="master"
 
-  # The default AdoptOpenJDK/openjdk-build repo uri
-  BUILD_CONFIG[OPENJDK_BUILD_REPO_URI]="https://github.com/AdoptOpenJDK/openjdk-build.git"
+  # The default adoptium/temurin-build repo uri
+  BUILD_CONFIG[OPENJDK_BUILD_REPO_URI]="https://github.com/adoptium/temurin-build.git"
 
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false"
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="false"
@@ -495,7 +495,7 @@ function configDefaults() {
   BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""}
   BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]=${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]:-""}
 
-  # Whether to use AdoptOpenJDK's cacerts file (true) or use the file provided by OpenJDK (false)
+  # Whether to use Temurin's cacerts file (true) or use the file provided by OpenJDK (false)
   BUILD_CONFIG[CUSTOM_CACERTS]=${BUILD_CONFIG[CUSTOM_CACERTS]:-"true"}
 
   BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-"docker"}
@@ -520,7 +520,7 @@ function configDefaults() {
   BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false
 
   # Used in 'release' file for jdk8u
-  BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"AdoptOpenJDK"}
+  BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"Eclipse Foundation"}
 }
 
 # Declare the map of build configuration that we're going to use

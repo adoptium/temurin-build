@@ -48,7 +48,7 @@ steps:
   - checkout: self
 
   # set the FILENAME environment varialbe
-  # based on https://github.com/AdoptOpenJDK/openjdk-build/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy#L374
+  # based on https://github.com/adoptium/temurin-build/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy#L374
   # TODO: support more options
   - bash: |
       # convert JAVA_TO_BUILD to upper case

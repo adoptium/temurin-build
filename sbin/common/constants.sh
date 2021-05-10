@@ -51,4 +51,4 @@ export BUILD_VARIANTS="${BUILD_VARIANT_HOTSPOT} ${BUILD_VARIANT_OPENJ9} ${BUILD_
 export GIT_TAGS_TO_SEARCH=100
 
 # Path of marker file in mirror repos
-export ADOPTOPENJDK_MD_MARKER_FILE="AdoptOpenJDK.md"
+export TEMURIN_MD_MARKER_FILE="Temurin.md"

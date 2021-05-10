@@ -17,20 +17,20 @@
 
     <test name="CommonFeatureTests">
         <classes>
-            <class name="net.adoptopenjdk.test.VendorPropertiesTest"/>
-            <class name="net.adoptopenjdk.test.BundledFreetypeTest"/>
+            <class name="net.adoptium.test.VendorPropertiesTest"/>
+            <class name="net.adoptium.test.BundledFreetypeTest"/>
         </classes>
     </test>
 
     <test name="HotspotFeatureTests">
         <classes>
-            <class name="net.adoptopenjdk.test.FeatureTests"/>
+            <class name="net.adoptium.test.FeatureTests"/>
         </classes>
     </test>
 
     <test name="CudaEnabledTest">
 		<classes>
-			<class name="net.adoptopenjdk.test.CudaEnabledTest"/>
+			<class name="net.adoptium.test.CudaEnabledTest"/>
 		</classes>
 	</test>
 </suite>

@@ -149,7 +149,7 @@ setVariablesForConfigure() {
   BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
 }
 
-# Set the repository to build from, defaults to AdoptOpenJDK if not set by the user
+# Set the repository to build from, defaults to adoptium if not set by the user
 # shellcheck disable=SC2153
 setRepository() {
 
@@ -170,11 +170,11 @@ setRepository() {
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]]; then
     suffix="openeuler-mirror/bishengjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]:3}"
   elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
-    suffix="adoptopenjdk/openjdk-aarch32-jdk8u";
+    suffix="adoptium/aarch32-jdk8u";
   elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "aarch64" ]; then
-    suffix="adoptopenjdk/openjdk-aarch64-jdk8u";
+    suffix="adoptium/aarch64-jdk8u";
   else
-    suffix="adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
+    suffix="adoptium/${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
   fi
 
   local repository

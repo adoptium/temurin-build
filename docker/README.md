@@ -9,7 +9,7 @@ the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 ## Steps to build
 
-1. **Checkout the OpenJDK source code** - e.g. `git clone git@github.com:AdoptOpenJDK/openjdk-jdk8u.git ~/AdoptOpenJDK/openjdk-jdk8u`
+1. **Checkout the OpenJDK source code** - e.g. `git clone git@github.com:adoptium/openjdk-jdk8u.git ~/adoptium/openjdk-jdk8u`
 1. **Run the dockerfile_generator.sh script with the --build flag** - e.g. `./dockerfile_generator.sh --jdk 8 --build`
 1. **Run the command printed on screen within the container** - e.g. `/openjdk/build/openjdk-build/makejdk-any-platform.sh -v jdk8`
 1. **See the results** - Take a look at the results in the build directory

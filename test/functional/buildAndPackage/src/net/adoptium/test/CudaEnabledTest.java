@@ -1,4 +1,4 @@
-package net.adoptopenjdk.test;
+package net.adoptium.test;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -17,4 +17,4 @@
  * to verify various vendor-specific aspects of an openjdk build.
  */
 
-package net.adoptopenjdk.test;
+package net.adoptium.test;

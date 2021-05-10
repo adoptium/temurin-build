@@ -1,6 +1,6 @@
 ---
 name: 📚 Documentation update
-about: Request for updates to the documentation about building AdoptOpenJDK
+about: Request for updates to the documentation about building Temurin
 labels: 'documentation'
 ---
 

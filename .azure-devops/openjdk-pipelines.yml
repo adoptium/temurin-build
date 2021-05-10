@@ -1,4 +1,4 @@
-name: "AdoptOpenJDK-$(JAVA_TO_BUILD)-$(Date:yyyy-MM-dd)"
+name: "Adoptium-$(JAVA_TO_BUILD)-$(Date:yyyy-MM-dd)"
 
 trigger: none
 
