@@ -81,6 +81,10 @@ signRelease()
             echo "Signing $f using $SERVER"
             if [ "$SIGN_TOOL" = "ucl" ]; then
               ucl sign-code --file "$f" -n WindowsSHA -t "${SERVER}" --hash SHA256
+            elif [ "$SIGN_TOOL" = "eclipse" ]; then
+              mv "$f" "unsigned-$f"
+              curl -o "$f" -F file="unsigned-$f" https://cbi.eclipse.org/authenticode/sign
+              rm -rf "unsigned-$f"
             else
               "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"
             fi
@@ -104,16 +108,23 @@ signRelease()
       # TODO: Remove this completly once https://github.com/adoptium/openjdk-jdk11u/commit/b3250adefed0c1778f38a7e221109ae12e7c421e has been backported to JDK8u
       echo "Signing OSX release"
 
-      # Login to KeyChain
-      # shellcheck disable=SC2046
-      # shellcheck disable=SC2006
-      security unlock-keychain -p `cat ~/.password` login.keychain-db
-
       ENTITLEMENTS="$WORKSPACE/entitlements.plist"
       xattr -cr .
-      # Sign all files with the executable permission bit set.
-      FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
-      echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
+
+      if [ "$SIGN_TOOL" = "eclipse" ]; then
+        zip -r unsigned.zip "${TMP_DIR}"
+        rm -rf "${TMP_DIR}"
+        curl -o signed.zip -F file=unsigned.zip -F entitlements="$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
+        unzip -d "${TMP_DIR}" signed.zip
+      else
+        # Login to KeyChain
+        # shellcheck disable=SC2046
+        # shellcheck disable=SC2006
+        security unlock-keychain -p `cat ~/.password` login.keychain-db
+        # Sign all files with the executable permission bit set.
+        FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
+        echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
+      fi
       ;;
     *)
       echo "Skipping code signing as it's not supported on $OPERATING_SYSTEM"
