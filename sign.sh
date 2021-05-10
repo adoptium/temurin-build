@@ -80,7 +80,7 @@ signRelease()
           dir=$(dirname "$f")
           file=$(basename "$f")
           mv "$f" "${dir}/unsigned_${file}"
-          curl -o "$f" -F file="${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
+          curl -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
           rm -rf "${dir}/unsigned_${file}"
         else
           STAMPED=false
@@ -114,20 +114,25 @@ signRelease()
       echo "Signing OSX release"
 
       ENTITLEMENTS="$WORKSPACE/entitlements.plist"
-      xattr -cr .
+      # Sign all files with the executable permission bit set.
+      FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
 
       if [ "$SIGN_TOOL" = "eclipse" ]; then
-        zip -r unsigned.zip "${TMP_DIR}"
-        rm -rf "${TMP_DIR}"
-        curl -o signed.zip -F file=unsigned.zip -F entitlements="$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
-        unzip -d "${TMP_DIR}" signed.zip
+        for f in $FILES
+        do
+          echo "Signing $f using Eclipse Foundation codesign service"
+          dir=$(dirname "$f")
+          file=$(basename "$f")
+          mv "$f" "${dir}/unsigned_${file}"
+          curl -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi-staging.eclipse.org/macos/codesign/sign
+          rm -rf "${dir}/unsigned_${file}"
+        done
       else
         # Login to KeyChain
         # shellcheck disable=SC2046
         # shellcheck disable=SC2006
         security unlock-keychain -p `cat ~/.password` login.keychain-db
-        # Sign all files with the executable permission bit set.
-        FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
+        xattr -cr .
         echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
       fi
       ;;
@@ -169,6 +174,10 @@ fi
 configDefaults
 parseArguments "$@"
 extractArchive
+
+if [ "${OPERATING_SYSTEM}" == "windows" ]; then
+  BUILD_CONFIG[OS_KERNEL_NAME]="cygwin"
+fi
 
 # Set jdkDir to the top level directory from the tarball/zipball
 # shellcheck disable=SC2012
