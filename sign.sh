@@ -75,33 +75,36 @@ signRelease()
       for f in $FILES
       do
         echo "Signing ${f}"
-        STAMPED=false
-        for SERVER in $TIMESTAMPSERVERS; do
+        if [ "$SIGN_TOOL" = "eclipse" ]; then
+          echo "Signing $f using Eclipse Foundation codesign service"
+          dir=$(dirname "$f")
+          file=$(basename "$f")
+          mv "$f" "${dir}/unsigned_${file}"
+          curl -o "$f" -F file="${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
+          rm -rf "${dir}/unsigned_${file}"
+        else
+          STAMPED=false
+          for SERVER in $TIMESTAMPSERVERS; do
+            if [ "$STAMPED" = "false" ]; then
+              echo "Signing $f using $SERVER"
+              if [ "$SIGN_TOOL" = "ucl" ]; then
+                ucl sign-code --file "$f" -n WindowsSHA -t "${SERVER}" --hash SHA256
+              else
+                "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"
+              fi
+              RC=$?
+              if [ $RC -eq 0 ]; then
+                STAMPED=true
+              else
+                echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${SERVER} - Trying new server in 5 seconds"
+                sleep 2
+              fi
+            fi
+          done
           if [ "$STAMPED" = "false" ]; then
-            echo "Signing $f using $SERVER"
-            if [ "$SIGN_TOOL" = "ucl" ]; then
-              ucl sign-code --file "$f" -n WindowsSHA -t "${SERVER}" --hash SHA256
-            elif [ "$SIGN_TOOL" = "eclipse" ]; then
-              dir=$(dirname "$f")
-              file=$(basename "$f")
-              mv "$f" "${dir}/unsigned_${file}"
-              curl -o "$f" -F file="${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
-              rm -rf "${dir}/unsigned_${file}"
-            else
-              "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"
-            fi
-            RC=$?
-            if [ $RC -eq 0 ]; then
-              STAMPED=true
-            else
-              echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${SERVER} - Trying new server in 5 seconds"
-              sleep 2
-            fi
+            echo "Failed to sign ${f} using any time server - aborting"
+            exit 1
           fi
-        done
-        if [ "$STAMPED" = "false" ]; then
-          echo "Failed to sign ${f} using any time server - aborting"
-          exit 1
         fi
       done
     ;;
