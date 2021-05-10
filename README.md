@@ -59,7 +59,6 @@ build jobs used for building Adopt OpenJDK binaries.
 1. The `docker` folder contains tools for generating dockerfiles which can be used as part of building
 OpenJDK inside a Docker container.
 1. The `git-hg` folder has now been moved to it's own seperate repository. See [openjdk-mirror-scripts](https://github.com/adoptium/mirror-scripts).
-1. The `mercurial-tags/java-tool` folder contains scripts for TODO.
 1. The `pipelines` folder has now been moved to a seperate repo: <https://github.com/adoptium/ci-jenkins-pipelines>.
 1. The `sbin` folder contains the scripts that actually build (Temurin).
 `build.sh` is the entry point which can be used stand alone but is typically
