@@ -178,14 +178,31 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "$(uname -m)" == "x86_64" ]; then
     wget -q -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/x64/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
     "$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g'
     CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-jdk=$BUILDJDK --disable-ddr"
+  elif [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    if [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
+      BUILD_CC=/usr/local/gcc/bin/gcc-7.5
+      BUILD_CXX=/usr/local/gcc/bin/g++-7.5
+      BUILD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
+    fi
+    # Check if BUILD_CXX/BUILD_CC for Bisheng RISC-V exists
+    if [ ! -x "$BUILD_CXX" ]; then
+      echo "Bisheng RISC-V host compiler BUILD_CXX=$BUILD_CXX does not exist on this system - cannot continue"
+      exit 1
+    fi
   fi
   echo RISC-V cross-compilation setup ...  Setting RISCV64, LD_LIBRARY_PATH, PATH, CC, CXX
   export RISCV64=/opt/riscv_toolchain_linux
   export LD_LIBRARY_PATH=$RISCV64/lib64
+  if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_LIBRARY_PATH
+  fi
   export PATH="$RISCV64/bin:$PATH"
   export CC=$RISCV64/bin/riscv64-unknown-linux-gnu-gcc
   export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
   CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK_BOOT_DIR"
+  if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jvm-features=shenandoahgc BUILD_CC=$BUILD_CC BUILD_CXX=$BUILD_CXX"
+  fi
   BUILD_ARGS="${BUILD_ARGS} --cross-compile -F"
   if [ ! -x "$CXX" ]; then
     echo "RISC-V cross compiler CXX=$CXX does not exist on this system - cannot continue"
