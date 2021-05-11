@@ -29,14 +29,14 @@ jobs:
       uses: srggrs/assign-one-project-github-action@1.2.1
       if: github.event.action == 'opened'
       with:
-        project: 'https://github.com/AdoptOpenJDK/openjdk-build/projects/1'
+        project: 'https://github.com/adoptium/temurin-build/projects/1'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Assign issues and pull requests with `good first issue` label
       uses: srggrs/assign-one-project-github-action@1.2.1
       if: contains(github.event.issue.labels.*.name, 'good first issue')
       with:
-        project: 'https://github.com/orgs/AdoptOpenJDK/projects/2'
+        project: 'https://github.com/orgs/adoptium/projects/1'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
