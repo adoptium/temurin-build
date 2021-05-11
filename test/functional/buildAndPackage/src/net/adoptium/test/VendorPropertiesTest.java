@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import static net.adoptopenjdk.test.JdkVersion.VM;
+import static net.adoptium.test.JdkVersion.VM;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
