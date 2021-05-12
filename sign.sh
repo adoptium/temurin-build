@@ -75,27 +75,36 @@ signRelease()
       for f in $FILES
       do
         echo "Signing ${f}"
-        STAMPED=false
-        for SERVER in $TIMESTAMPSERVERS; do
+        if [ "$SIGN_TOOL" = "eclipse" ]; then
+          echo "Signing $f using Eclipse Foundation codesign service"
+          dir=$(dirname "$f")
+          file=$(basename "$f")
+          mv "$f" "${dir}/unsigned_${file}"
+          curl -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
+          rm -rf "${dir}/unsigned_${file}"
+        else
+          STAMPED=false
+          for SERVER in $TIMESTAMPSERVERS; do
+            if [ "$STAMPED" = "false" ]; then
+              echo "Signing $f using $SERVER"
+              if [ "$SIGN_TOOL" = "ucl" ]; then
+                ucl sign-code --file "$f" -n WindowsSHA -t "${SERVER}" --hash SHA256
+              else
+                "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"
+              fi
+              RC=$?
+              if [ $RC -eq 0 ]; then
+                STAMPED=true
+              else
+                echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${SERVER} - Trying new server in 5 seconds"
+                sleep 2
+              fi
+            fi
+          done
           if [ "$STAMPED" = "false" ]; then
-            echo "Signing $f using $SERVER"
-            if [ "$SIGN_TOOL" = "ucl" ]; then
-              ucl sign-code --file "$f" -n WindowsSHA -t "${SERVER}" --hash SHA256
-            else
-              "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"
-            fi
-            RC=$?
-            if [ $RC -eq 0 ]; then
-              STAMPED=true
-            else
-              echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${SERVER} - Trying new server in 5 seconds"
-              sleep 2
-            fi
+            echo "Failed to sign ${f} using any time server - aborting"
+            exit 1
           fi
-        done
-        if [ "$STAMPED" = "false" ]; then
-          echo "Failed to sign ${f} using any time server - aborting"
-          exit 1
         fi
       done
     ;;
@@ -104,16 +113,31 @@ signRelease()
       # TODO: Remove this completly once https://github.com/adoptium/openjdk-jdk11u/commit/b3250adefed0c1778f38a7e221109ae12e7c421e has been backported to JDK8u
       echo "Signing OSX release"
 
-      # Login to KeyChain
-      # shellcheck disable=SC2046
-      # shellcheck disable=SC2006
-      security unlock-keychain -p `cat ~/.password` login.keychain-db
-
       ENTITLEMENTS="$WORKSPACE/entitlements.plist"
-      xattr -cr .
       # Sign all files with the executable permission bit set.
       FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
-      echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
+
+      if [ "$SIGN_TOOL" = "eclipse" ]; then
+        for f in $FILES
+        do
+          echo "Signing $f using Eclipse Foundation codesign service"
+          dir=$(dirname "$f")
+          file=$(basename "$f")
+          permissions=$(stat -c "%a %n" "$f" | awk '{split($0,a); print a[1]}')
+          mv "$f" "${dir}/unsigned_${file}"
+          curl -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
+          chmod "$permissions" "$f"
+          rm -rf "${dir}/unsigned_${file}"
+        done
+      else
+        # Login to KeyChain
+        # shellcheck disable=SC2046
+        # shellcheck disable=SC2006
+        security unlock-keychain -p `cat ~/.password` login.keychain-db
+        xattr -cr .
+        # If you're using this script, make sure to update the certificate with your developer application ID
+        echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: XXX" "$f"; done
+      fi
       ;;
     *)
       echo "Skipping code signing as it's not supported on $OPERATING_SYSTEM"
@@ -153,6 +177,11 @@ fi
 configDefaults
 parseArguments "$@"
 extractArchive
+
+if [ "${OPERATING_SYSTEM}" = "windows" ]; then
+  # this is because the windows signing is performed by a Linux machine now. It needs this variable set to know to create a zipfile instead of a tarball
+  BUILD_CONFIG[OS_KERNEL_NAME]="cygwin"
+fi
 
 # Set jdkDir to the top level directory from the tarball/zipball
 # shellcheck disable=SC2012
