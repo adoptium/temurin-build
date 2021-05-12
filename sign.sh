@@ -135,7 +135,8 @@ signRelease()
         # shellcheck disable=SC2006
         security unlock-keychain -p `cat ~/.password` login.keychain-db
         xattr -cr .
-        echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: London Jamocha Community CIC" "$f"; done
+        # If you're using this script, make sure to update the certificate with your developer application ID
+        echo "$FILES" | while read -r f; do codesign --entitlements "$ENTITLEMENTS" --options runtime --timestamp --sign "Developer ID Application: XXX" "$f"; done
       fi
       ;;
     *)
