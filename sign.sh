@@ -177,7 +177,7 @@ configDefaults
 parseArguments "$@"
 extractArchive
 
-if [ "${OPERATING_SYSTEM}" == "windows" ]; then
+if [ "${OPERATING_SYSTEM}" = "windows" ]; then
   BUILD_CONFIG[OS_KERNEL_NAME]="cygwin"
 fi
 
