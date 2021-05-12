@@ -30,6 +30,7 @@ jobs:
       if: github.event.action == 'opened'
       with:
         project: 'https://github.com/adoptium/temurin-build/projects/1'
+        column_name: 'TODO'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Assign issues and pull requests with `good first issue` label
