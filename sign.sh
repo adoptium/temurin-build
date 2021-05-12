@@ -179,6 +179,7 @@ parseArguments "$@"
 extractArchive
 
 if [ "${OPERATING_SYSTEM}" = "windows" ]; then
+  # this is because the windows signing is performed by a Linux machine now. It needs this variable set to know to create a zipfile instead of a tarball
   BUILD_CONFIG[OS_KERNEL_NAME]="cygwin"
 fi
 
