@@ -79,10 +79,9 @@ signRelease()
           echo "Signing $f using Eclipse Foundation codesign service"
           dir=$(dirname "$f")
           file=$(basename "$f")
-          permissions=$(stat -c "%a %n" "$f" | awk '{split($0,a); print a[1]}')
           mv "$f" "${dir}/unsigned_${file}"
           curl -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
-          chmod "$permissions" "$f"
+          chmod --reference="@${dir}/unsigned_${file}" "$f"
           rm -rf "${dir}/unsigned_${file}"
         else
           STAMPED=false
@@ -125,10 +124,9 @@ signRelease()
           echo "Signing $f using Eclipse Foundation codesign service"
           dir=$(dirname "$f")
           file=$(basename "$f")
-          permissions=$(stat -c "%a %n" "$f" | awk '{split($0,a); print a[1]}')
           mv "$f" "${dir}/unsigned_${file}"
           curl -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
-          chmod "$permissions" "$f"
+          chmod --reference="@${dir}/unsigned_${file}" "$f"
           rm -rf "${dir}/unsigned_${file}"
         done
       else
