@@ -81,7 +81,7 @@ signRelease()
           file=$(basename "$f")
           mv "$f" "${dir}/unsigned_${file}"
           curl -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
-          chmod --reference="@${dir}/unsigned_${file}" "$f"
+          chmod --reference="${dir}/unsigned_${file}" "$f"
           rm -rf "${dir}/unsigned_${file}"
         else
           STAMPED=false
@@ -126,7 +126,7 @@ signRelease()
           file=$(basename "$f")
           mv "$f" "${dir}/unsigned_${file}"
           curl -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
-          chmod --reference="@${dir}/unsigned_${file}" "$f"
+          chmod --reference="${dir}/unsigned_${file}" "$f"
           rm -rf "${dir}/unsigned_${file}"
         done
       else
