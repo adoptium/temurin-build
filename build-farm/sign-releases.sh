@@ -37,8 +37,14 @@ echo "OpenJDK*.${EXTENSION}"
 
 find workspace/target/ -name "OpenJDK*.${EXTENSION}" | while read -r file;
 do
-  echo "signing ${file}"
+  case "${file}" in
+    *debugimage*) echo "Skipping ${file} because it's a debug image" ;;
+    *testimage*) echo "Skipping ${file} because it's a test image" ;;
+    *)
+      echo "signing ${file}"
 
-  # shellcheck disable=SC2086
-  bash "${SCRIPT_DIR}/../sign.sh" ${CERTIFICATE} "${file}"
+      # shellcheck disable=SC2086
+      bash "${SCRIPT_DIR}/../sign.sh" ${CERTIFICATE} "${file}"
+    ;;
+  esac
 done
