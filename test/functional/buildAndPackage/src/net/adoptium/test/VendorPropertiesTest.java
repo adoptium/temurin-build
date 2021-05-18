@@ -106,7 +106,9 @@ public class VendorPropertiesTest {
         this.vendorChecks.javaVendor(System.getProperty("java.vendor"));
         this.vendorChecks.javaVendorUrl(System.getProperty("java.vendor.url"));
         this.vendorChecks.javaVendorUrlBug(System.getProperty("java.vendor.url.bug"));
-        this.vendorChecks.javaVendorVersion(System.getProperty("java.vendor.version"));
+        if (jdkVersion.isNewerOrEqual(10)) {
+            this.vendorChecks.javaVendorVersion(System.getProperty("java.vendor.version"));
+        }
         this.vendorChecks.javaVmVendor(System.getProperty("java.vm.vendor"));
         this.vendorChecks.javaVmVersion(System.getProperty("java.vm.version"));
     }
