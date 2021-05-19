@@ -129,10 +129,11 @@ signRelease()
           chmod --reference="${dir}/unsigned_${file}" "$f"
           rm -rf "${dir}/unsigned_${file}"
         done
+        JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
         ENTITLEMENTS="${JDK_DIR}/Contents/Info.plist"
         zip -r "${TMP_DIR}/unsigned.zip" "${TMP_DIR}"
         curl -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" -F entitlements="@$ENTITLEMENTS" https://cbi-staging.eclipse.org/macos/codesign/sign
-        rm -rf "${TMP_DIR}"
+        rm -rf "${JDK_DIR}"
         unzip -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
       else
         # Login to KeyChain
