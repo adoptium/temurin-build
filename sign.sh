@@ -131,7 +131,7 @@ signRelease()
         done
         JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
         ENTITLEMENTS="${JDK_DIR}/Contents/Info.plist"
-        zip -r "${TMP_DIR}/unsigned.zip" "${TMP_DIR}"
+        zip -r "${TMP_DIR}/unsigned.zip" "${JDK_DIR}"
         curl -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" -F entitlements="@$ENTITLEMENTS" https://cbi-staging.eclipse.org/macos/codesign/sign
         rm -rf "${JDK_DIR}"
         unzip -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
