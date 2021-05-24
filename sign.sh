@@ -133,11 +133,11 @@ signRelease()
         JDK=$(basename "${JDK_DIR}")
         ENTITLEMENTS="${JDK_DIR}/Contents/Info.plist"
         cd ${TMP_DIR}
-        zip -r "${TMP_DIR}/unsigned.zip" "${JDK}"
+        zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
         curl -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" -F entitlements="@$ENTITLEMENTS" https://cbi-staging.eclipse.org/macos/codesign/sign
         rm -rf "${JDK_DIR}"
-        unzip -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
+        unzip -q -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
       else
         # Login to KeyChain
         # shellcheck disable=SC2046
