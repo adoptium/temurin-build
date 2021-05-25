@@ -140,7 +140,7 @@ signRelease()
           cp "${JDK_DIR}/Contents/Home/jre/lib/server/libjvm.dylib" "${JDK_DIR}/Contents/Home/bundle/Libraries/libserver.dylib"
         fi
         
-        cd ${TMP_DIR}
+        cd "${TMP_DIR}"
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
         curl -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
