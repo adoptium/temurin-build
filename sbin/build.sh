@@ -879,6 +879,13 @@ setPlistValueForMacOS() {
           esac
           ;;
       esac
+      
+      mkdir -p "${DIRECTORY}/Contents/Home/bundle/Libraries"
+      if [ -f "${DIRECTORY}/Contents/Home/lib/server/libjvm.dylib" ]; then
+        cp "${DIRECTORY}/Contents/Home/lib/server/libjvm.dylib" "${DIRECTORY}/Contents/Home/bundle/Libraries/libserver.dylib"
+      else
+        cp "${DIRECTORY}/Contents/Home/jre/lib/server/libjvm.dylib" "${DIRECTORY}/Contents/Home/bundle/Libraries/libserver.dylib"
+      fi
 
       if [ $TYPE == "jre" ]; then
         /usr/libexec/PlistBuddy -c "Add :JavaVM:JVMCapabilities array" "${DIRECTORY}/Contents/Info.plist"
