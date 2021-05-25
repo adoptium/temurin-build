@@ -829,7 +829,7 @@ moveFreetypeLib() {
   echo "Finished copying ${SOURCE_LIB_NAME} to ${TARGET_LIB_NAME}"
 }
 
-# If on a Mac, mac a copy of the font lib as required
+# If on a Mac, make a copy of the font lib as required
 makeACopyOfLibFreeFontForMacOSX() {
   local DIRECTORY="${1}"
   local PERFORM_COPYING=$2
@@ -843,6 +843,65 @@ makeACopyOfLibFreeFontForMacOSX() {
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
     moveFreetypeLib "${DIRECTORY}/Contents/Home/lib"
     moveFreetypeLib "${DIRECTORY}/Contents/Home/jre/lib"
+  fi
+}
+
+# If on a Mac, we need to modify the plist values
+setPlistValueForMacOS() {
+  local DIRECTORY="${1}"
+  local TYPE="${2}"
+
+  # Only perform these steps for EF builds
+  if [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Foundation" ]]; then
+    VENDOR="temurin"
+    PACKAGE_NAME="Eclipse Temurin"
+    MAJOR_VERSION="${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
+
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+
+      local JAVA_LOC="${DIRECTORY}/Contents/home/bin/java"
+      local FULL_VERSION=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
+
+      case "${BUILD_CONFIG[BUILD_VARIANT]}" in
+        openj9)
+          IDENTIFIER="net.${VENDOR}.${MAJOR_VERSION}-openj9.${TYPE}"
+          BUNDLE="${PACKAGE_NAME} (OpenJ9)"
+          case $TYPE in
+            jre) BUNDLE="${PACKAGE_NAME} (OpenJ9, JRE)" ;;
+            jdk) BUNDLE="${PACKAGE_NAME} (OpenJ9)" ;;
+          esac
+          ;;
+        *)
+          IDENTIFIER="net.${VENDOR}.${MAJOR_VERSION}.${TYPE}"
+          case $TYPE in
+            jre) BUNDLE="${PACKAGE_NAME} (JRE)" ;;
+            jdk) BUNDLE="${PACKAGE_NAME}" ;;
+          esac
+          ;;
+      esac
+      
+      mkdir -p "${DIRECTORY}/Contents/Home/bundle/Libraries"
+      if [ -f "${DIRECTORY}/Contents/Home/lib/server/libjvm.dylib" ]; then
+        cp "${DIRECTORY}/Contents/Home/lib/server/libjvm.dylib" "${DIRECTORY}/Contents/Home/bundle/Libraries/libserver.dylib"
+      else
+        cp "${DIRECTORY}/Contents/Home/jre/lib/server/libjvm.dylib" "${DIRECTORY}/Contents/Home/bundle/Libraries/libserver.dylib"
+      fi
+
+      if [ "$TYPE" == "jre" ]; then
+        /usr/libexec/PlistBuddy -c "Add :JavaVM:JVMCapabilities array" "${DIRECTORY}/Contents/Info.plist"
+        /usr/libexec/PlistBuddy -c "Add :JavaVM:JVMCapabilities:0 string CommandLine" "${DIRECTORY}/Contents/Info.plist"
+      fi
+
+      /usr/libexec/PlistBuddy -c "Set :CFBundleGetInfoString ${BUNDLE} ${FULL_VERSION}" "${DIRECTORY}/Contents/Info.plist"
+      /usr/libexec/PlistBuddy -c "Set :CFBundleName ${BUNDLE} ${MAJOR_VERSION}" "${DIRECTORY}/Contents/Info.plist"
+      /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier ${IDENTIFIER}" "${DIRECTORY}/Contents/Info.plist"
+      /usr/libexec/PlistBuddy -c "Set :JavaVM:JVMPlatformVersion ${FULL_VERSION}" "${DIRECTORY}/Contents/Info.plist"
+      /usr/libexec/PlistBuddy -c "Set :JavaVM:JVMVendor ${PACKAGE_NAME}" "${DIRECTORY}/Contents/Info.plist"
+
+      # Fix comes from https://apple.stackexchange.com/a/211033 to associate JAR files
+      /usr/libexec/PlistBuddy -c "Add :JavaVM:JVMCapabilities:1 string JNI" "${DIRECTORY}/Contents/Info.plist"
+      /usr/libexec/PlistBuddy -c "Add :JavaVM:JVMCapabilities:2 string BundledApp" "${DIRECTORY}/Contents/Info.plist"
+    fi
   fi
 }
 
@@ -972,6 +1031,14 @@ copyFreeFontForMacOS() {
 
   makeACopyOfLibFreeFontForMacOSX "${jdkTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
   makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
+}
+
+setPlistForMacOS() {
+  local jdkTargetPath=$(getJdkArchivePath)
+  local jreTargetPath=$(getJreArchivePath)
+
+  setPlistValueForMacOS "${jdkTargetPath}" "jdk"
+  setPlistValueForMacOS "${jreTargetPath}" "jre"
 }
 
 wipeOutOldTargetDir() {
@@ -1193,6 +1260,7 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   executeTemplatedFile
   removingUnnecessaryFiles
   copyFreeFontForMacOS
+  setPlistForMacOS
   createOpenJDKTarArchive
   showCompletionMessage
   exit 0
@@ -1219,6 +1287,7 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   addInfoToJson
   removingUnnecessaryFiles
   copyFreeFontForMacOS
+  setPlistForMacOS
   createOpenJDKTarArchive
 fi
 
