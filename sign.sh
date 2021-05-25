@@ -131,15 +131,7 @@ signRelease()
         done
         JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
         JDK=$(basename "${JDK_DIR}")
-        ENTITLEMENTS="${JDK_DIR}/Contents/Info.plist"
-        
-        mkdir -p "${JDK_DIR}/Contents/Home/bundle/Libraries"
-        if [ -f "${JDK_DIR}/Contents/Home/lib/server/libjvm.dylib" ]; then
-          cp "${JDK_DIR}/Contents/Home/lib/server/libjvm.dylib" "${JDK_DIR}/Contents/Home/bundle/Libraries/libserver.dylib"
-        else
-          cp "${JDK_DIR}/Contents/Home/jre/lib/server/libjvm.dylib" "${JDK_DIR}/Contents/Home/bundle/Libraries/libserver.dylib"
-        fi
-        
+        ENTITLEMENTS="${JDK_DIR}/Contents/Info.plist"   
         cd "${TMP_DIR}"
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
