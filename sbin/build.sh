@@ -853,7 +853,7 @@ setPlistValueForMacOS() {
 
   # Only perform these steps for EF builds
   if [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Foundation" ]]; then
-    VENDOR="temurin"
+    VENDOR_NAME="temurin"
     PACKAGE_NAME="Eclipse Temurin"
     MAJOR_VERSION="${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
 
@@ -864,7 +864,7 @@ setPlistValueForMacOS() {
 
       case "${BUILD_CONFIG[BUILD_VARIANT]}" in
         openj9)
-          IDENTIFIER="net.${VENDOR}.${MAJOR_VERSION}-openj9.${TYPE}"
+          IDENTIFIER="net.${VENDOR_NAME}.${MAJOR_VERSION}-openj9.${TYPE}"
           BUNDLE="${PACKAGE_NAME} (OpenJ9)"
           case $TYPE in
             jre) BUNDLE="${PACKAGE_NAME} (OpenJ9, JRE)" ;;
@@ -872,7 +872,7 @@ setPlistValueForMacOS() {
           esac
           ;;
         *)
-          IDENTIFIER="net.${VENDOR}.${MAJOR_VERSION}.${TYPE}"
+          IDENTIFIER="net.${VENDOR_NAME}.${MAJOR_VERSION}.${TYPE}"
           case $TYPE in
             jre) BUNDLE="${PACKAGE_NAME} (JRE)" ;;
             jdk) BUNDLE="${PACKAGE_NAME}" ;;
