@@ -887,7 +887,7 @@ setPlistValueForMacOS() {
         cp "${DIRECTORY}/Contents/Home/jre/lib/server/libjvm.dylib" "${DIRECTORY}/Contents/Home/bundle/Libraries/libserver.dylib"
       fi
 
-      if [ $TYPE == "jre" ]; then
+      if [ "$TYPE" == "jre" ]; then
         /usr/libexec/PlistBuddy -c "Add :JavaVM:JVMCapabilities array" "${DIRECTORY}/Contents/Info.plist"
         /usr/libexec/PlistBuddy -c "Add :JavaVM:JVMCapabilities:0 string CommandLine" "${DIRECTORY}/Contents/Info.plist"
       fi
