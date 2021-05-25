@@ -143,7 +143,7 @@ signRelease()
         cd ${TMP_DIR}
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
-        curl -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" -F entitlements="@$ENTITLEMENTS" https://cbi-staging.eclipse.org/macos/codesign/sign
+        curl -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
         rm -rf "${JDK_DIR}"
         unzip -q -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
       else
