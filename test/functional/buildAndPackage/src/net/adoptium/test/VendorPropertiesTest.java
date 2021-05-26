@@ -67,11 +67,6 @@ public class VendorPropertiesTest {
      */
     @Test
     public void javaVersionPrintsVendor() {
-        // Skip test on JDK8 for non-Hotspot JDKs.
-        if (!jdkVersion.isNewerOrEqual(9) && !jdkVersion.usesVM(VM.HOTSPOT)) {
-            return;
-        }
-
         String testJdkHome = System.getenv("TEST_JDK_HOME");
         if (testJdkHome == null) {
             throw new AssertionError("TEST_JDK_HOME is not set");
@@ -173,7 +168,13 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVersion(final String value) {
-            assertTrue(value.contains("Eclipse Foundation"));
+            if (jdkVersion.usesVM(VM.OPENJ9) && jdkVersion.isOlderThan(9)) {
+                // For JDK8 on OpenJ9, the vendor name SHOULD NOT be present in the version output.
+                assertFalse(value.contains("Eclipse Foundation"));
+            } else {
+                // For all other JDKs, the vendor name SHOULD be present in the version output.
+                assertTrue(value.contains("Eclipse Foundation"));
+            }
         }
 
         @Override

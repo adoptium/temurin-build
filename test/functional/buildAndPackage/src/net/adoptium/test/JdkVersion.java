@@ -158,6 +158,16 @@ public class JdkVersion {
 
     /**
      * Are we running on an OpenJDK feature version
+     * that is older than the supplied int?
+     * @param  featureParam  supplied int mentioned above
+     * @return boolean       result
+     */
+    public boolean isOlderThan(final int featureParam) {
+        return feature < featureParam;
+    }
+
+    /**
+     * Are we running on an OpenJDK feature version
      * that is greater than the supplied feature int.
      * OR
      * Are we running on the same OpenJDK feature
