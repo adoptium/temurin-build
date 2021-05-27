@@ -31,6 +31,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common/constants.sh"
 
 # Set default versions for 3 libraries that OpenJDK relies on to build
+
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
 ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f08783329157e8dd68b3de0c096de6d724}
 FREEMARKER_LIB_CHECKSUM=${FREEMARKER_LIB_CHECKSUM:-8723ec9ffe006e8d376b6c7dbe7950db34ad1fa163aef4026e6477151a1a0deb}
@@ -311,10 +312,12 @@ checkingAndDownloadingAlsa() {
 
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/" || exit
 
+  ALSA_BUILD_INFO="Unknown"
   if [[ -n "$FOUND_ALSA" ]]; then
     echo "Skipping ALSA download"
   else
     downloadFile "alsa-lib.tar.bz2" "https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2" "${ALSA_LIB_CHECKSUM}"
+    ALSA_BUILD_INFO="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2"
 
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
       bzip2 -d alsa-lib.tar.bz2
@@ -325,6 +328,9 @@ checkingAndDownloadingAlsa() {
       rm alsa-lib.tar.bz2
     fi
   fi
+
+  # Record buildinfo version
+  echo "${ALSA_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt"
 }
 
 sha256File() {
@@ -393,6 +399,7 @@ checkingAndDownloadingFreemarker() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/" || exit
   FOUND_FREEMARKER=$(find "." -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
 
+  FREEMARKER_BUILD_INFO="Unknown"
   if [[ -n "$FOUND_FREEMARKER" ]]; then
     echo "Skipping FREEMARKER download"
   else
@@ -407,12 +414,17 @@ checkingAndDownloadingFreemarker() {
     wget "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" ||
       curl -o "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc"
 
+    FREEMARKER_BUILD_INFO="https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
+
     checkFingerprint "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" "freemarker" "13AC 2213 964A BE1D 1C14 7C0E 1939 A252 0BAB 1D90" "${FREEMARKER_LIB_CHECKSUM}"
 
     mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/" || exit
     tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/"
     rm "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
   fi
+
+  # Record buildinfo version
+  echo "${FREEMARKER_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt"
 }
 
 # Utility function
@@ -454,6 +466,7 @@ checkingAndDownloadingFreeType() {
 
   FOUND_FREETYPE=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib/" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}" || true)
 
+  FREETYPE_BUILD_INFO="Unknown"
   if [[ -n "$FOUND_FREETYPE" ]]; then
     echo "Skipping FreeType download"
   else
@@ -461,12 +474,16 @@ checkingAndDownloadingFreeType() {
     downloadFile "freetype.tar.gz.sig" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz.sig"
     checkFingerprint "freetype.tar.gz.sig" "freetype.tar.gz" "freetype" "58E0 C111 E39F 5408 C5D3 EC76 C1A6 0EAC E707 FDA5" "${FREETYPE_LIB_CHECKSUM}"
 
+    FREETYPE_BUILD_INFO="https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
+
     rm -rf "./freetype" || true
     mkdir -p "freetype" || true
     tar xpzf freetype.tar.gz --strip-components=1 -C "freetype"
     rm freetype.tar.gz
 
     if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+      # Record buildinfo version
+      echo "${FREETYPE_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
       return
     fi
 
@@ -523,6 +540,9 @@ checkingAndDownloadingFreeType() {
       fi
     fi
   fi
+
+  # Record buildinfo version
+  echo "${FREETYPE_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
 }
 
 # Generates cacerts file

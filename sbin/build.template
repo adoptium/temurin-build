@@ -40,6 +40,7 @@ else
 fi
 
 #Templated var that, gets replaced by build.sh
+echo "{makeCommandArg}" > "$1/$2/makeCommandArg.txt"
 {makeCommandArg}
 
 exitCode=$?
