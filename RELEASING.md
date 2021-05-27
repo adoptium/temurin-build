@@ -25,14 +25,14 @@ Don't be scared off by this document! If you already understand the stuff in th
 ### Eclipse OpenJ9/OMR releases
 
 - The OpenJ9 releases are based on three codebases
-  - https://github.com/eclipse/openj9-omr (a platform abstraction layer which OpenJ9 builds use, based on https://github.com/eclipse/omr)
-  - https://github.com/eclipse/openj9 (The JVM code)
+  - https://github.com/eclipse-openj9/openj9-omr (a platform abstraction layer which OpenJ9 builds use, based on https://github.com/eclipse/omr)
+  - https://github.com/eclipse-openj9/openj9 (The JVM code)
   - The "extensions" repository for each release (see the next section of the glossary for more details) which contains a modified version of the OpenJDK codebase (OpenJDK updates are merged by the IBM team who owns the extensions repository, not the Adoptium project)
 - Unlike the HotSpot versions, the Eclipse OpenJ9 and OMR projects do not have separate versions for each major OpenJDK release, but the extensions repository does (conditional compilation is used in OpenJ9 for any release differences). Each new OpenJ9 version goes into every JDK release.
 - In the run up to a new JDK release or quarterly update the OpenJ9 and OMR `master` is branched to create a release branch named according to the OpenJ9 version for that release, e.g. `v0.17.0-release`.  In general each quarterly update will have a new OpenJ9 version included.
 - Before a new release there will typically be two milestone builds which get their own Git tag from a commit in that branch e.g. `openj9-0.17.0-m1`
 - This milestone tag is then pulled in by an OpenJDK "extensions" release branch to build an actual JDK binary.
-- When it comes to a GA release day, the release branch will be built with the GA OpenJDK source from the extensions repository, and then tested. If this looks good a tag to indicate the GA level is created in the OpenJ9 repository e.g. `openj9-0.17.0`. This tag is picked up by the OpenJDK extensions release branch to build the GA JDK binary. You can see the tags at https://github.com/eclipse/openj9/tags
+- When it comes to a GA release day, the release branch will be built with the GA OpenJDK source from the extensions repository, and then tested. If this looks good a tag to indicate the GA level is created in the OpenJ9 repository e.g. `openj9-0.17.0`. This tag is picked up by the OpenJDK extensions release branch to build the GA JDK binary. You can see the tags at https://github.com/eclipse-openj9/openj9/tags
 
 ### OpenJDK "extensions" repository for OpenJ9 releases
 
@@ -137,7 +137,7 @@ Here are the steps:
    - Raise issues either at:
      - [temurin-build](https://github.com/adoptium/temurin-build) or [openjdk-tests](https://github.com/AdoptOpenJDK/openjdk-tests) (for Adopt build or test issues)
      - [ci-jenkins-pipelines](https://github.com/adoptium/ci-jenkins-pipelines) (for jenkins pipelines specific issues)
-     - [eclipse/openj9](https://github.com/eclipse/openj9) (for OpenJ9 issues)
+     - [eclipse/openj9](https://github.com/eclipse-openj9/openj9) (for OpenJ9 issues)
 5. Discuss failing tests with [Shelley Lambert](https://github.com/smlambert)
 6. If "good to publish", then get permission to publish the release from the Adoptium PMC members, discussion is via the Adoptium [#release](https://adoptium.slack.com/messages/CLCFNV2JG) Slack channel and create a Promotion TSC item [here](https://github.com/AdoptOpenJDK/TSC/issues/new?assignees=&labels=&template=promote-release.md&title=Promote+AdoptOpenJDK+Version+%3Cx%3E).
 7. Once permission has been obtained, run the [Adoptium "Publish" job](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) (restricted access - if you can't see this link, you don't have access)

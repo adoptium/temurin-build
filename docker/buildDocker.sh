@@ -100,7 +100,7 @@ useEclipseOpenJ9DockerFiles()
 
     mkdir -p "$dockerfileDir"
     cd "$dockerfileDir" || { echo "Dockerfile directory ($dockerfileDir) was not found"; exit 3; }
-    wget https://raw.githubusercontent.com/eclipse/openj9/master/buildenv/docker/mkdocker.sh
+    wget https://raw.githubusercontent.com/eclipse-openj9/openj9/master/buildenv/docker/mkdocker.sh
     chmod +x mkdocker.sh
     # Generate an Ubuntu1804 Dockerfile using mkdocker.sh
     "$dockerfileDir/mkdocker.sh" --dist=ubuntu --version=18 --print >> "$dockerfileDir/Dockerfile"

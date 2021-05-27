@@ -228,7 +228,7 @@ configureVersionStringParameter() {
     BUILD_CONFIG[VENDOR_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
-    BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse/openj9/issues"
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse-openj9/openj9/issues"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]]; then
     BUILD_CONFIG[VENDOR]="Huawei"
     BUILD_CONFIG[VENDOR_VERSION]="Bisheng"
@@ -879,7 +879,7 @@ setPlistValueForMacOS() {
           esac
           ;;
       esac
-      
+
       mkdir -p "${DIRECTORY}/Contents/Home/bundle/Libraries"
       if [ -f "${DIRECTORY}/Contents/Home/lib/server/libjvm.dylib" ]; then
         cp "${DIRECTORY}/Contents/Home/lib/server/libjvm.dylib" "${DIRECTORY}/Contents/Home/bundle/Libraries/libserver.dylib"
@@ -1216,7 +1216,7 @@ addInfoToJson(){
 }
 
 addVariantVersionToJson(){
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then  
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     local variantJson=$(echo "$J9_TAG" | cut -c8- | tr "-" ".") # i.e. 0.22.0.m2
     local major=$(echo "$variantJson" | awk -F[.] '{print $1}')
     local minor=$(echo "$variantJson" | awk -F[.] '{print $2}')
