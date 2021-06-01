@@ -846,6 +846,22 @@ makeACopyOfLibFreeFontForMacOSX() {
   fi
 }
 
+# Creates the notice file to be shipped with all binary distributions. See https://github.com/adoptium/adoptium/issues/20
+createNoticeFile() {
+  local DIRECTORY="${1}"
+  local TYPE="${2}"
+
+  # Only perform these steps for EF builds
+  if [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Foundation" ]]; then
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+      HOME_DIR="${DIRECTORY}/Contents/home/"
+    else
+      HOME_DIR="${DIRECTORY}"
+    fi
+    cp "${SCRIPT_DIR}/NOTICE.template" "${HOME_DIR}/NOTICE"
+  fi
+}
+
 # If on a Mac, we need to modify the plist values
 setPlistValueForMacOS() {
   local DIRECTORY="${1}"
@@ -1039,6 +1055,14 @@ setPlistForMacOS() {
 
   setPlistValueForMacOS "${jdkTargetPath}" "jdk"
   setPlistValueForMacOS "${jreTargetPath}" "jre"
+}
+
+addNoticeFile() {
+  local jdkTargetPath=$(getJdkArchivePath)
+  local jreTargetPath=$(getJreArchivePath)
+
+  createNoticeFile "${jdkTargetPath}" "jdk"
+  createNoticeFile "${jreTargetPath}" "jre"
 }
 
 wipeOutOldTargetDir() {
@@ -1261,6 +1285,7 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   removingUnnecessaryFiles
   copyFreeFontForMacOS
   setPlistForMacOS
+  addNoticeFile
   createOpenJDKTarArchive
   showCompletionMessage
   exit 0
@@ -1288,6 +1313,7 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   removingUnnecessaryFiles
   copyFreeFontForMacOS
   setPlistForMacOS
+  addNoticeFile
   createOpenJDKTarArchive
 fi
 
