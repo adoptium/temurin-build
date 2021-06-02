@@ -1287,7 +1287,6 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   setPlistForMacOS
   addNoticeFile
   createOpenJDKTarArchive
-  showCompletionMessage
   exit 0
 fi
 
