@@ -477,6 +477,11 @@ buildTemplatedFile() {
 
   FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]} ${ADDITIONAL_MAKE_TARGETS}"
 
+  if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
+    # This is required so that make will only touch the jmods and not re-compile them after signing
+    FULL_MAKE_COMMAND="make -t \&\& ${FULL_MAKE_COMMAND}"
+  fi
+
   # shellcheck disable=SC2002
   cat "$SCRIPT_DIR/build.template" |
     sed -e "s|{configureArg}|${FULL_CONFIGURE}|" \
