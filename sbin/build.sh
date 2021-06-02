@@ -1287,6 +1287,9 @@ parseArguments "$@"
 if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   buildTemplatedFile
   executeTemplatedFile
+  printJavaVersionString
+  addInfoToReleaseFile
+  addInfoToJson
   removingUnnecessaryFiles
   copyFreeFontForMacOS
   setPlistForMacOS
