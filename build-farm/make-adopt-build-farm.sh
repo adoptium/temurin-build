@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,19 +19,59 @@ set -e
 
 PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-## Sanity check as this script requires various environment variables so fail
-## fast if one or more are not present. MAYBE autodetect defaults in future?
+## autodetect defaults to improve usability when running this for debugging/testing
+## On most platforms "uname -p" matches what the OS name used in the Temurin
+## scripts uses, but not on xLinux, Windows or AIX.
 
-SANEVARS=0
-[ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u && SANEVARS=1
-[ -z "$TARGET_OS"     ] && echo TARGET_OS not defined - set to e.g. linux     && SANEVARS=1
-[ -z "$VARIANT"       ] && echo VARIANT not defined - set to e.g. hotspot     && SANEVARS=1
-[ -z "$ARCHITECTURE"  ] && echo ARCHITECTURE not defined - set to e.g. x64    && SANEVARS=1
-[ -z "$FILENAME"      ] && echo FILENAME not defined - set to e.g. jdk.tar.gz && SANEVARS=1
-[ "$SANEVARS" != "0"  ] && echo Please correct the above omissions in the environment then retry && exit 1
+if [ -z "$ARCHITECTURE"  ]; then
+   ARCHITECTURE=$(uname -p)
+   if [ "$OSTYPE"       = "cygwin"  ]; then ARCHITECTURE=$(uname -m); fi # Windows
+   if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;        fi # Linux/x64
+   if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64
+   if [ "$ARCHITECTURE" = "sparc"   ]; then ARCHITECTURE=sparcv9;    fi # Solaris/SPARC
+   if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi # AIX
+   if [ "$ARCHITECTURE" = "armv7l"  ]; then ARCHITECTURE=arm;        fi # Linux/arm32
+   echo ARCHITECTURE not defined - assuming $ARCHITECTURE
+   export ARCHITECTURE
+fi
+
+## Temurin uses "windows" instead of "cygwin" for the OS name on Windows
+## so needs to be special cased - on everthing else "uname" is valid
+if [ -z "$TARGET_OS" ]; then
+  TARGET_OS=$(uname)
+  if [ "$OSTYPE" = "cygwin" ]; then TARGET_OS=windows ; fi
+  if [ "$OSTYPE" = "SunOS"  ]; then TARGET_OS=solaris ; fi
+  echo TARGET_OS not defined - assuming you want "$TARGET_OS"
+  export TARGET_OS
+fi
+
+## Allow JAVA_TO_BUILD to be supplied as a parameter to the script
+## and if not there or definied in environment, use latest LTS (jdk11u)
+if [ -z "$JAVA_TO_BUILD" ]; then
+  if [ "$1" != "${1##jdk}" ]; then
+    echo Setting JAVA_TO_BUILD to "$1" from the parameter supplied
+    export JAVA_TO_BUILD="$1"
+  else
+    echo JAVA_TO_BUILD not defined - defaulting to jdk11u
+    export JAVA_TO_BUILD=jdk11u
+  fi
+fi
+
+[ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u
+[ -z "$VARIANT"       ] && echo VARIANT not defined - assuming hotspot && export VARIANT=hotspot
+[ -z "$FILENAME"      ] && echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARIANT}.tar.gz"
+
+# shellcheck source=sbin/common/constants.sh
+source "$PLATFORM_SCRIPT_DIR/../sbin/common/constants.sh"
+
+# Check that the given variant is in our list of common variants
+# shellcheck disable=SC2086,SC2143
+if [ -z "$(echo ${BUILD_VARIANTS} | grep -w ${VARIANT})" ]; then
+  echo "[ERROR] ${VARIANT} is not a recognised build variant. Valid Variants = ${BUILD_VARIANTS}"
+  exit 1
+fi
 
 ## Very very build farm specific configuration
-
 export OPERATING_SYSTEM
 OPERATING_SYSTEM=$(echo "${TARGET_OS}" | tr '[:upper:]' '[:lower:]')
 
@@ -46,12 +87,12 @@ then
         # Use Adopt API to get the JDK Head number
         echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
         JAVA_FEATURE_VERSION=$(curl -q https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
-        
+
         # Checks the api request was successful and the return value is a number
         if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
         then
             echo "RETRYWARNING: Query ${retryCount} failed. Retrying in 30 seconds (max retries = ${retryMax})..."
-            retryCount=$((retryCount+1)) 
+            retryCount=$((retryCount+1))
             sleep 30s
         else
             echo "JAVA_FEATURE_VERSION FOUND: ${JAVA_FEATURE_VERSION}" && break
@@ -76,7 +117,6 @@ echo "OS: ${OPERATING_SYSTEM}"
 echo "SCM_REF: ${SCM_REF}"
 OPTIONS=""
 
-EXTENSION=""
 # shellcheck disable=SC2034
 CONFIGURE_ARGS_FOR_ANY_PLATFORM=""
 CONFIGURE_ARGS=${CONFIGURE_ARGS:-""}
@@ -87,7 +127,7 @@ if [ -z "${JDK_BOOT_VERSION}" ]
 then
   echo "Detecting boot jdk for: ${JAVA_TO_BUILD}"
   echo "Found build version: ${JAVA_FEATURE_VERSION}"
-  JDK_BOOT_VERSION=$(($JAVA_FEATURE_VERSION-1))
+  JDK_BOOT_VERSION=$(( JAVA_FEATURE_VERSION - 1 ))
 fi
 echo "Required boot JDK version: ${JDK_BOOT_VERSION}"
 
@@ -126,7 +166,7 @@ then
 fi
 
 echo "Boot jdk directory: ${JDK_BOOT_DIR}:"
-${JDK_BOOT_DIR}/bin/java -version 2>&1 | sed 's/^/BOOT JDK: /'
+"${JDK_BOOT_DIR}/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 java -version 2>&1 | sed 's/^/JDK IN PATH: /g'
 
 if [ "${RELEASE}" == "true" ]; then
@@ -140,11 +180,11 @@ else
 fi
 
 
-if [ ! -z "${TAG}" ]; then
+if [ -n "${TAG}" ]; then
   OPTIONS="${OPTIONS} --tag $TAG"
 fi
 
-if [ ! -z "${BRANCH}" ]
+if [ -n "${BRANCH}" ]
 then
   OPTIONS="${OPTIONS} --disable-shallow-git-clone -b ${BRANCH}"
 fi
@@ -152,7 +192,7 @@ fi
 echo "BRANCH: ${BRANCH} (For release either BRANCH or TAG should be set)"
 echo "TAG: ${TAG}"
 
-
+# shellcheck disable=SC2268
 if [ "x${FILENAME}" = "x" ] ; then
     echo "FILENAME must be set in the environment"
     exit 1
@@ -162,7 +202,12 @@ echo "Filename will be: $FILENAME"
 
 export BUILD_ARGS="${BUILD_ARGS} --use-jep319-certs"
 
-echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh" --clean-git-repo --jdk-boot-dir "${JDK_BOOT_DIR}" --configure-args "${CONFIGURE_ARGS_FOR_ANY_PLATFORM}" --target-file-name "${FILENAME}" ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} "${JAVA_TO_BUILD}"
+# Enable debug images for all platforms except AIX until upstream openjdk supports "external" native debug symbols
+if [ "${OPERATING_SYSTEM}" != "aix" ] ; then
+    export BUILD_ARGS="${BUILD_ARGS} --create-debug-image"
+fi
+
+echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args ${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"
 
 # Convert all speech marks in config args to make them safe to pass in.
 # These will be converted back into speech marks shortly before we use them, in build.sh.

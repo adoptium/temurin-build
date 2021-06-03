@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,6 +45,13 @@ sourceSignalHandler() {
 parseCommandLineArgs() {
   # Defer most of the work to the shared function in common-functions.sh
   parseConfigurationArguments "$@"
+
+  # Check the build variant here as this is earliest point where constants.sh is loaded
+  # shellcheck disable=SC2143
+  if [ -z "$(echo "${BUILD_VARIANTS}" | grep -w "${BUILD_CONFIG[BUILD_VARIANT]}")" ]; then
+    echo "[ERROR] ${BUILD_CONFIG[BUILD_VARIANT]} is not a recognised build variant. Valid Variants = ${BUILD_VARIANTS}"
+    exit 1
+  fi
 
   # this check is to maintain backwards compatibility and allow user to use
   # -v rather than the mandatory argument
@@ -141,7 +149,7 @@ setVariablesForConfigure() {
   BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
 }
 
-# Set the repository to build from, defaults to AdoptOpenJDK if not set by the user
+# Set the repository to build from, defaults to adoptium if not set by the user
 # shellcheck disable=SC2153
 setRepository() {
 
@@ -159,12 +167,12 @@ setRepository() {
     suffix="corretto/corretto-${BUILD_CONFIG[OPENJDK_CORE_VERSION]:3}"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]]; then
     suffix="alibaba/dragonwell${BUILD_CONFIG[OPENJDK_CORE_VERSION]/jdk/}"
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]]; then
+    suffix="openeuler-mirror/bishengjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]:3}"
   elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
-    suffix="adoptopenjdk/openjdk-aarch32-jdk8u";
-  elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "aarch64" ]; then
-    suffix="adoptopenjdk/openjdk-aarch64-jdk8u";
+    suffix="adoptium/aarch32-jdk8u";
   else
-    suffix="adoptopenjdk/openjdk-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
+    suffix="adoptium/${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
   fi
 
   local repository
@@ -237,7 +245,7 @@ processArgumentsforSpecificArchitectures() {
       make_args_for_any_platform="DEBUG_BINARIES=true images legacy-jre-image"
     fi
     if [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""} != *"--with-jobs"* ]]; then
-      BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="--with-jobs=${BUILD_CONFIG[NUM_PROCESSORS]} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS:-''}"
+      BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="--with-jobs=${BUILD_CONFIG[NUM_PROCESSORS]} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-''}"
     fi
     ;;
 

@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE suppressions PUBLIC
+  "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+  "https://checkstyle.org/dtds/suppressions_1_2.dtd"
+>
+
+<suppressions>
+    <suppress files="." checks="MagicNumber" /> <!-- Disabled because magic numbers are not generally abused and are more useful being allowed -->
+    <suppress files="." checks="TodoComment" /> <!-- We shouldn't have to be reminded about todo's on every linter iteration, we have IDE"s that do that! -->
+    <suppress files="." checks="JavadocVariable" /> <!-- Disabled as we don't need comments on every single new variable -->
+    <suppress files="." checks="FileLength" /> <!-- These two are disabled as we don't care if line or file size is too big -->
+    <suppress files="." checks="LineLength" />
+    <suppress files="." checks="Header" /> <!-- Disabled as we don't use headers in our project for the test files -->
+    <suppress files="." checks="FileTabCharacter" /> <!-- Disabled as it generally doesn't matter if tabs are disabled or not -->
+</suppressions>

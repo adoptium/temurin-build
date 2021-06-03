@@ -12,7 +12,6 @@ Supported Versions/Platforms:
 | jdk15 hotspot  | ✔️        | ✔️          | ❌            |
 | jdk-tip hotspot| ✔️        | ✔️          | ❌            |
 
-
 ## Requirements
 
 1. Azure DevOps Account
@@ -22,11 +21,11 @@ If you don't have an Azure DevOps organization, you can start from
 
 2. Required Pipeline Variables:
 
-    1. `JAVA_TO_BUILD`: jdk8u | jdk11u | jdk14u | jdk15u | jdk
+    - `JAVA_TO_BUILD`: jdk8u | jdk11u | jdk14u | jdk15u | jdk
 
 3. Optional Pipeline Variables:
 
-    1. `EXTRA_MAKEJDK_ANY_PLATFORM_OPTIONS`: other options in makejdk-any-platform.sh
+    - `EXTRA_MAKEJDK_ANY_PLATFORM_OPTIONS`: other options in makejdk-any-platform.sh
 
 ## Quick Start
 
@@ -36,7 +35,7 @@ If you don't have an Azure DevOps organization, you can start from
 
 2. Create a new Pipeline by using an **Existing Azure Pipeline YAML file**
    and choose `.azure-devops/pipelines.yml` file.
-   
+
    Plase set the `JAVA_TO_BUILD` variable in the review step.
 
 3. Start the pipeline and you can download the artifacts once the jobs complete.
@@ -75,7 +74,7 @@ This may add a maintenance cost over time as upstream changes may conflicts with
 
 Second, you can create another YAML step template and save it to `build/shared/set_filename.yml` and add it to the `build.yml` file.
 
-```
+```yml
 steps:
     - template: ./steps/shared/before.yml
     - template: ./steps/shared/set_filename.yml
@@ -86,7 +85,7 @@ steps:
 
 By doing this you will not get any merge conflicts when you pull the changes from upstream.
 
-<!--- 
+<!---
 Links.
 --->
 [azdo_main]: https://azure.microsoft.com/en-ca/services/devops/

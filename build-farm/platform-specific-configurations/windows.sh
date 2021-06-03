@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,65 +24,70 @@ export DRAGONWELL8_BOOTSTRAP=/cygdrive/C/openjdk/dragonwell-bootstrap/jdk8u272-g
 export ALLOW_DOWNLOADS=true
 export LANG=C
 export OPENJ9_NASM_VERSION=2.13.03
-export OPENSSL_VERSION=1.1.1i
+export OPENSSL_VERSION=1.1.1k
 
 TOOLCHAIN_VERSION=""
 
-# Any version above 8 (11 for now due to openjdk-build#1409
-if [ "$JAVA_FEATURE_VERSION" -gt 11 ]; then
-    if [ "$ARCHITECTURE" == "aarch64" ]; then
-      # Windows aarch64 cross compiles requires same version boot jdk
-      BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION))"
-    else
-      BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
-    fi
-    BOOT_JDK_VARIABLE="JDK$(echo $BOOT_JDK_VERSION)_BOOT_DIR"
-    if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-      bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
-      # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
-      # instead of BOOT_JDK_VARIABLE (no '$').
-      export ${BOOT_JDK_VARIABLE}="$bootDir"
-      if [ ! -d "$bootDir/bin" ]; then
-        # This is needed to convert x86-32 to x32 which is what the API uses
-        case "$ARCHITECTURE" in
-          "x86-32") downloadArch="x32";;
-          "aarch64") downloadArch="x64";;
-          *) downloadArch="$ARCHITECTURE";;
-        esac
-        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION}..."
-        releaseType="ga"
-        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/\${VARIANT}/normal/adoptopenjdk"
-        apiURL=$(eval echo ${apiUrlTemplate})
-        # make-adopt-build-farm.sh has 'set -e'. We need to disable that
-        # for the fallback mechanism, as downloading of the GA binary might
-        # fail.
-        set +e
-        wget -q "${apiURL}" -O openjdk.zip
-        retVal=$?
-        set -e
-        if [ $retVal -ne 0 ]; then
-          # We must be a JDK HEAD build for which no boot JDK exists other than
-          # nightlies?
-          echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
-          echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} ..."
-          # shellcheck disable=SC2034
-          releaseType="ea"
-          apiURL=$(eval echo ${apiUrlTemplate})
-          wget -q "${apiURL}" -O openjdk.zip
-        fi
-        unzip -q openjdk.zip
-        mv $(ls -d jdk-${BOOT_JDK_VERSION}*) "$bootDir"
-      fi
-    fi
-    export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
-    "$JDK_BOOT_DIR/bin/java" -version
-    executedJavaVersion=$?
-    if [ $executedJavaVersion -ne 0 ]; then
-        echo "Failed to obtain or find a valid boot jdk"
-        exit 1
-    fi
-    "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
+if [ "$ARCHITECTURE" == "aarch64" ]; then
+  # Windows aarch64 cross compiles requires same version boot jdk
+  BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION))"
+else
+  BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
 fi
+BOOT_JDK_VARIABLE="JDK${BOOT_JDK_VERSION}_BOOT_DIR"
+if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
+  bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+  # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
+  # instead of BOOT_JDK_VARIABLE (no '$').
+  export ${BOOT_JDK_VARIABLE}="$bootDir"
+  if [ ! -x "$bootDir/bin/javac.exe" ]; then
+    # Set to a default location as linked in the ansible playbooks
+    if [ -x /cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}/bin/javac ]; then
+      echo Could not use ${BOOT_JDK_VARIABLE} - using /cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}
+      export ${BOOT_JDK_VARIABLE}="/cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}"
+    elif [ "$BOOT_JDK_VERSION" -ge 8 ]; then # Adopt has no build pre-8
+      # This is needed to convert x86-32 to x32 which is what the API uses
+      export downloadArch
+      case "$ARCHITECTURE" in
+         "x86-32") downloadArch="x32";;
+        "aarch64") downloadArch="x64";;
+                *) downloadArch="$ARCHITECTURE";;
+      esac
+      releaseType="ga"
+      apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/\${VARIANT}/normal/adoptopenjdk"
+      apiURL=$(eval echo ${apiUrlTemplate})
+      echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+      # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
+      # the fallback mechanism, as downloading of the GA binary might fail
+      set +e
+      wget -q "${apiURL}" -O openjdk.zip
+      retVal=$?
+      set -e
+      if [ $retVal -ne 0 ]; then
+        # We must be a JDK HEAD build for which no boot JDK exists other than
+        # nightlies?
+        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+        # shellcheck disable=SC2034
+        releaseType="ea"
+        apiURL=$(eval echo ${apiUrlTemplate})
+        echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+        wget -q "${apiURL}" -O openjdk.zip
+      fi
+      unzip -q openjdk.zip
+      mv "$(ls -d jdk-${BOOT_JDK_VERSION}*)" "$bootDir"
+    fi
+  fi
+fi
+# shellcheck disable=SC2155
+export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+"$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
+"$JDK_BOOT_DIR/bin/java" -version > /dev/null 2>&1
+executedJavaVersion=$?
+if [ $executedJavaVersion -ne 0 ]; then
+    echo "Failed to obtain or find a valid boot jdk"
+    exit 1
+fi
+"$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 
 if [ "${ARCHITECTURE}" == "x86-32" ]
 then
@@ -94,7 +100,7 @@ then
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
-      # https://github.com/AdoptOpenJDK/openjdk-build/issues/243
+      # https://github.com/adoptium/temurin-build/issues/243
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="/c/cygwin64/bin:/usr/bin:$PATH"
       TOOLCHAIN_VERSION="2013"
@@ -102,7 +108,7 @@ then
     then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
 
-      # Next line a potentially tactical fix for https://github.com/AdoptOpenJDK/openjdk-build/issues/267
+      # Next line a potentially tactical fix for https://github.com/adoptium/temurin-build/issues/267
       export PATH="/usr/bin:$PATH"
     fi
     # LLVM needs to be before cygwin as at least one machine has 64-bit clang in cygwin #813
@@ -116,11 +122,11 @@ then
       export PATH="/cygdrive/c/openjdk/make-3.82/:$PATH"
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
-      TOOLCHAIN_VERSION="2013"
+      TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     elif [ "$JAVA_FEATURE_VERSION" -gt 11 ]
     then
-      TOOLCHAIN_VERSION="2017"
+      TOOLCHAIN_VERSION="2019"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     fi
   fi
@@ -170,7 +176,7 @@ then
       echo "CUDA_HOME shortened: ${CUDA_HOME}"
       exit 1
     fi
-    if [ -f "$(cygpath -u $CUDA_HOME/include/cuda.h)" ]
+    if [ -f "$(cygpath -u "$CUDA_HOME"/include/cuda.h)" ]
     then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-cuda --with-cuda=$CUDA_HOME"
     else
@@ -197,9 +203,13 @@ then
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
-    elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
+    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
       TOOLCHAIN_VERSION="2017"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
+    elif [ "$JAVA_FEATURE_VERSION" -gt 11 ]
+    then
+      TOOLCHAIN_VERSION="2019"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     fi
   fi
@@ -216,6 +226,7 @@ if [ "${ARCHITECTURE}" == "aarch64" ]; then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --openjdk-target=aarch64-unknown-cygwin --with-build-jdk=$JDK_BOOT_DIR"
 fi
 
-if [ ! -z "${TOOLCHAIN_VERSION}" ]; then
+
+if [ -n "${TOOLCHAIN_VERSION}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-version=${TOOLCHAIN_VERSION}"
 fi

@@ -18,6 +18,7 @@
 BUILD_ARGS=${BUILD_ARGS:-""}
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+export SIGN_TOOL
 export OPERATING_SYSTEM
 
 if [ "${OPERATING_SYSTEM}" == "mac" ] ; then
@@ -36,8 +37,14 @@ echo "OpenJDK*.${EXTENSION}"
 
 find workspace/target/ -name "OpenJDK*.${EXTENSION}" | while read -r file;
 do
-  echo "signing ${file}"
+  case "${file}" in
+    *debugimage*) echo "Skipping ${file} because it's a debug image" ;;
+    *testimage*) echo "Skipping ${file} because it's a test image" ;;
+    *)
+      echo "signing ${file}"
 
-  # shellcheck disable=SC2086
-  bash "${SCRIPT_DIR}/../sign.sh" ${CERTIFICATE} "${file}"
+      # shellcheck disable=SC2086
+      bash "${SCRIPT_DIR}/../sign.sh" ${CERTIFICATE} "${file}"
+    ;;
+  esac
 done

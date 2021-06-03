@@ -1,0 +1,115 @@
+# Config file used by .github/workflows/labeler.yml
+
+# This file matches issue/pr contents using regex to labels. See Multi Labeller https://github.com/marketplace/actions/multi-labeler for more information.
+
+# e.g to add the windows label to any issue/pr with a title containing the word windows:
+
+#   - label: "windows"
+#     matcher:
+#       title: "windows"
+
+# You can also regex match body, comments, commits, authors etc:
+
+#   - label: "feat"
+#     sync: true # remove label if match failed, default: false (pull_request/issue only)
+#     matcher:
+#       # Matcher will match on any 7 matcher
+#       title: "^feat:.*"
+#       body: "/feat"
+#       comment: "/feat"
+#       branch: "^feat/.*"
+#       commits: "^feat:.*"
+#       author:
+#         - github-actions
+#         - fuxingloh
+#       files:
+#         any: [ "app/*" ]
+#         all: [ "!app/config/**" ]
+#         count:
+#           gte: 1
+#           lte: 1000
+
+version: v1
+
+labels:
+  - label: "macos"
+    matcher:
+      title: "mac"
+      body: "mac"
+  - label: "aix"
+    matcher:
+      title: "aix"
+      body: "aix"
+  - label: "windows"
+    matcher:
+      title: "windows"
+      body: "windows"
+  - label: "solaris"
+    matcher:
+      title: "solaris"
+      body: "solaris"
+  - label: "x-linux"
+    matcher:
+      title: "linux"
+      body: "xlinux"
+  - label: "alpine-linux"
+    matcher:
+      title: "alpine"
+      body: "alpine"
+  - label: "arm"
+    matcher:
+      title: "arm"
+      body: "arm"
+  - label: "aarch"
+    matcher:
+      title: "aarch"
+      body: "aarch"
+  - label: "p-linux"
+    matcher:
+      title: "ppc"
+      body: "plinux"
+  - label: "z-linux"
+    matcher:
+      title: "s390"
+      body: "zlinux"
+  - label: "cross-compile"
+    matcher:
+      title: "cross"
+  - label: "infra"
+    matcher:
+      title: "infra"
+  - label: "question"
+    matcher:
+      title: '\?'
+
+  - label: "openj9"
+    matcher:
+      body: "openj9"
+  - label: "dragonwell/alibaba"
+    matcher:
+      title: "dragonwell"
+      body : "alibaba"
+  - label: "bisheng"
+    matcher:
+      body: "bisheng"
+  - label: "docker"
+    matcher:
+      body: "docker"
+  - label: "ansible"
+    matcher:
+      body: "ansible"
+  - label: "installer"
+    matcher:
+      body: "installer"
+  - label: "testing"
+    matcher:
+      body: "test"
+  - label: "hacktoberfest"
+    matcher:
+      body: "hacktober"
+  - label: "jenkins"
+    matcher:
+      body: "jenkins"
+  - label: "compatibility"
+    matcher:
+      body: "compatib"

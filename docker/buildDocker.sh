@@ -12,58 +12,59 @@ JDK_GA=
 
 # shellcheck disable=SC2002 # Disable UUOC error
 setJDKVars() {
-	wget -q https://api.adoptopenjdk.net/v3/info/available_releases
-	JDK_MAX=$(awk -F: '/tip_version/{gsub("[, ]","",$2); print$2}' < available_releases)
-	JDK_GA=$(awk -F: '/most_recent_feature_release/{gsub("[, ]","",$2); print$2}' < available_releases)
-	rm available_releases
+    wget -q https://api.adoptopenjdk.net/v3/info/available_releases
+    JDK_MAX=$(awk -F: '/tip_version/{gsub("[, ]","",$2); print$2}' < available_releases)
+    JDK_GA=$(awk -F: '/most_recent_feature_release/{gsub("[, ]","",$2); print$2}' < available_releases)
+    rm available_releases
 }
 
 # Takes in all arguments to determine script options
 parseCommandLineArgs()
 {
-	if [ $# -lt 1 ]; then
-		echo "Script takes at least one argument"
-		usage;
-		exit 1;
-	else
-		while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
-			local opt="$1";
-			shift;
-			case "$opt" in
-				"--clean" | "-c" )
-					CLEAN=true;;
-				"--version" | "-v" )
-					if [ $1 == "jdk" ]; then
-	  					JDK_VERSION=$JDK_MAX
-					else
-	  					JDK_VERSION=$(echo $1 | tr -d [:alpha:])
-        				fi
-					checkJDK
-					shift;;
-				"--jdk-boot-dir" | "-J")
-					BOOTDIR="$1"; shift;;
-				"--openj9" | "-j9")
-					VARIANT="openj9";;
-				"--use-eclipse-docker-files" | "-e" )
-					useEclipseOpenJ9DockerFiles=true; VARIANT="eclipsei_openj9";;
-				"--help" | "-h" )
-					usage; exit 0;;
-				*) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised."; usage; exit 1;;
-			esac
-		done
-		checkArgs
-	fi
+    if [ $# -lt 1 ]; then
+        echo "Script takes at least one argument"
+        usage;
+        exit 1;
+    else
+        while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
+            local opt="$1";
+            shift;
+            case "$opt" in
+                "--clean" | "-c" )
+                    CLEAN=true;;
+                "--version" | "-v" )
+                    if [ "$1" == "jdk" ]; then
+                          JDK_VERSION=$JDK_MAX
+                    else
+                          # shellcheck disable=SC2060
+                          JDK_VERSION=$(echo "$1" | tr -d [:alpha:])
+                        fi
+                    checkJDK
+                    shift;;
+                "--jdk-boot-dir" | "-J")
+                    BOOTDIR="$1"; shift;;
+                "--openj9" | "-j9")
+                    VARIANT="openj9";;
+                "--use-eclipse-docker-files" | "-e" )
+                    useEclipseOpenJ9DockerFiles=true; VARIANT="eclipsei_openj9";;
+                "--help" | "-h" )
+                    usage; exit 0;;
+                *) echo >&2 "Invalid option: ${opt}"; echo "This option was unrecognised."; usage; exit 1;;
+            esac
+        done
+        checkArgs
+    fi
 }
 
 usage()
 {
-	echo
-	echo "Usage: ./buildDocker.sh	 --version|-v                            Build the specified JDK version"
-	echo "			--clean | -c				Clean old generated dockerfiles and the old workspace"
-	echo "			--jdk-boot-dir|-J			Specify the boot JDK directory"
-	echo "			--openj9|-j9				Builds using OpenJ9 instead of Hotspot"
-	echo "			--use-eclipse-docker-files|-e		Builds the specified jdk using the Eclipse Openj9 dockerfiles"
-	echo
+    echo
+    echo "Usage: ./buildDocker.sh     --version|-v                            Build the specified JDK version"
+    echo "            --clean | -c                Clean old generated dockerfiles and the old workspace"
+    echo "            --jdk-boot-dir|-J            Specify the boot JDK directory"
+    echo "            --openj9|-j9                Builds using OpenJ9 instead of Hotspot"
+    echo "            --use-eclipse-docker-files|-e        Builds the specified jdk using the Eclipse Openj9 dockerfiles"
+    echo
 }
 
 checkJDK() {
@@ -76,85 +77,85 @@ checkJDK() {
 
 checkArgs()
 {
-	# ${WORKSPACE##*/} returns the name of the current dir
-	if [ ${WORKSPACE##*/} != "docker" ]; then
-		echo "Unable to run script from : $WORKSPACE"
-		echo "The script must be run from openjdk-build/docker/"
-		exit 1
-	fi
-	if [ "$CLEAN" == true ]; then
-		echo "Removing all jdkXX folders"
-		rm -rf $WORKSPACE/jdk*
-		echo "Removing old workspace folder"
-		rm -rf $WORKSPACE/workspace
-		echo "Removing old EclipseDockerfiles folder"
-		rm -rf $WORKSPACE/EclipseDockerfiles
-	fi
+    # ${WORKSPACE##*/} returns the name of the current dir
+    if [ "${WORKSPACE##*/}" != "docker" ]; then
+        echo "Unable to run script from : $WORKSPACE"
+        echo "The script must be run from openjdk-build/docker/"
+        exit 1
+    fi
+    if [ "$CLEAN" == true ]; then
+        echo "Removing all jdkXX folders"
+        rm -rf "$WORKSPACE/jdk*"
+        echo "Removing old workspace folder"
+        rm -rf "$WORKSPACE/workspace"
+        echo "Removing old EclipseDockerfiles folder"
+        rm -rf "$WORKSPACE/EclipseDockerfiles"
+    fi
 }
 
 useEclipseOpenJ9DockerFiles()
 {
-	local dockerfileDir="$WORKSPACE/EclipseDockerfiles"
-	local jdk="jdk"
+    local dockerfileDir="$WORKSPACE/EclipseDockerfiles"
+    local jdk="jdk"
 
-	mkdir -p $dockerfileDir
-	cd $dockerfileDir
-	wget https://raw.githubusercontent.com/eclipse/openj9/master/buildenv/docker/mkdocker.sh
-	chmod +x mkdocker.sh
-	# Generate an Ubuntu1804 Dockerfile using mkdocker.sh
-	$dockerfileDir/mkdocker.sh --dist=ubuntu --version=18 --print >> $dockerfileDir/Dockerfile
-	
-	# This Dockerfile requires an ssh key, authorized_key and known_hosts file to build
-	ssh-keygen -q -f $dockerfileDir/id_rsa -t rsa -N ''
-	cat id_rsa.pub >> $dockerfileDir/authorized_keys
-	ssh-keyscan github.com >> $dockerfileDir/known_hosts
+    mkdir -p "$dockerfileDir"
+    cd "$dockerfileDir" || { echo "Dockerfile directory ($dockerfileDir) was not found"; exit 3; }
+    wget https://raw.githubusercontent.com/eclipse-openj9/openj9/master/buildenv/docker/mkdocker.sh
+    chmod +x mkdocker.sh
+    # Generate an Ubuntu1804 Dockerfile using mkdocker.sh
+    "$dockerfileDir/mkdocker.sh" --dist=ubuntu --version=18 --print >> "$dockerfileDir/Dockerfile"
 
-	if [ $JDK_VERSION != $JDK_MAX ]; then
-        	jdk="jdk${JDK_VERSION}"
-	fi
-	eclipseDockerCommands ${jdk}
+    # This Dockerfile requires an ssh key, authorized_key and known_hosts file to build
+    ssh-keygen -q -f "$dockerfileDir/id_rsa" -t rsa -N ''
+    cat id_rsa.pub >> "$dockerfileDir/authorized_keys"
+    ssh-keyscan github.com >> "$dockerfileDir/known_hosts"
+
+    if [ "$JDK_VERSION" != "$JDK_MAX" ]; then
+            jdk="jdk${JDK_VERSION}"
+    fi
+    eclipseDockerCommands "${jdk}"
 }
 
 eclipseDockerCommands()
 {
-	local jdk=$1
-	local dockerImage="${jdk}-${VARIANT}-dfc"
-	local dockerContainer="${jdk}-${VARIANT}"
+    local jdk=$1
+    local dockerImage="${jdk}-${VARIANT}-dfc"
+    local dockerContainer="${jdk}-${VARIANT}"
 
-	docker build -t ${dockerImage} -f Dockerfile .
-	docker run -it -u root -d --name=${dockerContainer} ${dockerImage}
-	docker exec -u root -i ${dockerContainer} sh -c "git clone https://github.com/ibmruntimes/openj9-openjdk-${jdk}"
-	docker exec -u root -i ${dockerContainer} sh -c "cd openj9-openjdk-${jdk} && bash ./get_source.sh && bash ./configure --with-freemarker-jar=/root/freemarker.jar && make all"
-	docker stop ${dockerContainer}
-	docker rm ${dockerContainer}
-	docker rmi ${dockerImage}
+    docker build -t "${dockerImage}" -f Dockerfile .
+    docker run -it -u root -d --name="${dockerContainer}" "${dockerImage}"
+    docker exec -u root -i "${dockerContainer}" sh -c "git clone https://github.com/ibmruntimes/openj9-openjdk-${jdk}"
+    docker exec -u root -i "${dockerContainer}" sh -c "cd openj9-openjdk-${jdk} && bash ./get_source.sh && bash ./configure --with-freemarker-jar=/root/freemarker.jar && make all"
+    docker stop "${dockerContainer}"
+    docker rm "${dockerContainer}"
+    docker rmi "${dockerImage}"
 }
 
 buildDocker()
 {
-	local commandString="./makejdk-any-platform.sh --docker --clean-docker-build"
-	local jdk="jdk"
+    local commandString="./makejdk-any-platform.sh --docker --clean-docker-build"
+    local jdk="jdk"
 
-	# Pass jdkXXu to makejdk-any-platform.sh where possible
-	if ((JDK_VERSION != JDK_MAX && JDK_VERSION <= JDK_GA )); then
-		jdk="jdk${JDK_VERSION}u"
-	elif ((JDK_VERSION != JDK_MAX && JDK_VERSION > JDK_GA )); then
-		jdk="jdk${JDK_VERSION}"
-	fi
-	if [ -n "$BOOTDIR" ]; then
-		commandString="$commandString -J $BOOTDIR"
-	fi
-	if [[ "$VARIANT" == "openj9" ]]; then
-		commandString="$commandString --build-variant openj9"
-	fi
-	echo "$commandString $jdk being executed"
-	cd "$WORKSPACE/.." && $commandString $jdk
+    # Pass jdkXXu to makejdk-any-platform.sh where possible
+    if ((JDK_VERSION != JDK_MAX && JDK_VERSION <= JDK_GA )); then
+        jdk="jdk${JDK_VERSION}u"
+    elif ((JDK_VERSION != JDK_MAX && JDK_VERSION > JDK_GA )); then
+        jdk="jdk${JDK_VERSION}"
+    fi
+    if [ -n "$BOOTDIR" ]; then
+        commandString="$commandString -J $BOOTDIR"
+    fi
+    if [[ "$VARIANT" == "openj9" ]]; then
+        commandString="$commandString --build-variant openj9"
+    fi
+    echo "$commandString $jdk being executed"
+    cd "$WORKSPACE/.." && $commandString "$jdk"
 }
 
 setJDKVars
-parseCommandLineArgs $@
+parseCommandLineArgs "$@"
 if [[ "$useEclipseOpenJ9DockerFiles" == "true" ]]; then
-	useEclipseOpenJ9DockerFiles
+    useEclipseOpenJ9DockerFiles
 else
-	buildDocker
+    buildDocker
 fi

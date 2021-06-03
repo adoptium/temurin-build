@@ -1,0 +1,19 @@
+name: "Comment Bot"
+
+on:
+  pull_request_target:
+    types: [ opened ]
+
+jobs:
+  Comment:
+    name: Add Comment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create comment
+        uses: JJ/pr-greeting-action@releases/v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          greeting: |
+            **Thank you for creating a pull request!**
+            If you have not done so already, please familiarise yourself with our [Contributing Guidelines](https://github.com/adoptium/temurin-build/blob/master/CONTRIBUTING.md) and [FAQ](https://github.com/adoptium/temurin-build/blob/master/FAQ.md), even if you have contributed to the Adoptium project before. GitHub actions will now run a set of jobs against your PR that will lint and unit test your changes. Keep an eye out for the results from these on the latest commit you submitted. For more information, please see our [testing documentation](https://github.com/adoptium/temurin-build/blob/master/Testing.md).

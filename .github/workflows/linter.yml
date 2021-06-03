@@ -1,16 +1,55 @@
+---
+###########################
+###########################
+## Linter GitHub Actions ##
+###########################
+###########################
 name: Linter
 
+#
+# Documentation:
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions
+#
+
+#############################
+# Start the job on all push #
+#############################
 on:
   pull_request:
     branches: [ master ]
 
+###############
+# Set the Job #
+###############
 jobs:
-  shellcheck:
-    name: Shellcheck
+  linter:
+    # Name the Job
+    name: Lint Code Base
+    # Set the agent to run on
     runs-on: ubuntu-latest
 
+    ##################
+    # Load all steps #
+    ##################
     steps:
-    - uses: actions/checkout@v2
-        
-    - name: run tests
-      run: ./shellcheck.sh
+      ##########################
+      # Checkout the code base #
+      ##########################
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          # Full git history is needed to get a proper list of changed files within `super-linter`
+          fetch-depth: 0
+
+      ################################
+      # Run Linter against code base #
+      ################################
+      - name: Lint Code Base
+        uses: github/super-linter@v3
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Markdown lint complains about the issue templates
+          FILTER_REGEX_EXCLUDE: .github/ISSUE_TEMPLATE/*
+          # TODO: Disable the perl linter as there are lots of errors that are not really understood, see https://github.com/adoptium/temurin-build/issues/2612
+          VALIDATE_PERL: false

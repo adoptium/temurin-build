@@ -1,18 +1,20 @@
 # OpenJDK and Docker
+
 Scripts to build dockerfiles and generate various Docker images building OpenJDK
 
-# License
+## License
+
 The Dockerfiles generated and associated scripts found in this project are licensed under
 the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 
-# Steps to build
+## Steps to build
 
-1. **Checkout the OpenJDK source code** - e.g. `git clone git@github.com:AdoptOpenJDK/openjdk-jdk8u.git ~/AdoptOpenJDK/openjdk-jdk8u`
+1. **Checkout the OpenJDK source code** - e.g. `git clone git@github.com:adoptium/openjdk-jdk8u.git ~/adoptium/openjdk-jdk8u`
 1. **Run the dockerfile_generator.sh script with the --build flag** - e.g. `./dockerfile_generator.sh --jdk 8 --build`
 1. **Run the command printed on screen within the container** - e.g. `/openjdk/build/openjdk-build/makejdk-any-platform.sh -v jdk8`
 1. **See the results** - Take a look at the results in the build directory
 
-# Generating Dockerfiles
+## Generating Dockerfiles
 
 This script generates dockerfiles that are able to build each specific JDK.
 The script takes several options :
@@ -30,7 +32,7 @@ The script takes several options :
 
 By default, the script will generate a Dockerfile to create an image able to build JDK with Hotspot, in the current directory.
 
-# Building a JDK, using Docker containers with buildDocker.sh
+## Building a JDK, using Docker containers with buildDocker.sh
 
 This script will automatically build a JDK inside a docker container.
 There are several options that the script can take :

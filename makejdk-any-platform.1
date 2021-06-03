@@ -24,36 +24,30 @@ that you are building for further details.
 
 "./makejdk-any-platform.sh --docker jdk8u"
 
-This will start a Docker container and build you the latest Java 8 AdoptOpenJDK
-binary from the source at https://github.com/AdoptOpenJDK/openjdk-jdk8u
+This will start a Docker container and build you the latest Java 8 Temurin
+binary from the source at https://github.com/adoptium/openjdk-jdk8u
 
-Please visit https://www.adoptopenjdk.net for further support
+Please visit https://www.adoptium.net for further support
 
 .SH VERSIONS
 .TP
 .BR jdk8u
-Build Java 8, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk8u
-.TP
-.BR jdk9u
-Build Java 9, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk9u
-.TP
-.BR jdk10u
-Build Java 10, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk10u
+Build Java 8, defaults to https://github.com/adoptium/jdk8u
 .TP
 .BR jdk11u
-Build Java 11, defaults to https://github.com/AdoptOpenJDK/openjdk-jdk11u
+Build Java 11, defaults to https://github.com/adoptium/jdk11u
 .TP
-.BR jfx
-Build OpenJFX, defaults to https://github.com/AdoptOpenJDK/openjdk-jfx
+.BR jdk16u
+Build Java 16, defaults to https://github.com/adoptium/jdk16u
 .TP
-.BR amber
-Build Project Amber, defaults to https://github.com/AdoptOpenJDK/openjdk-amber
+.BR jdk
+Build JDK (tip), defaults to https://github.com/adoptium/jdk
 
 .SH OPTIONS
 .TP
 .BR \-b ", " \-\-branch " " \fI<branch>\fR
 specify a custom branch to build from, e.g. dev.
-For reference, AdoptOpenJDK GitHub source repos default to the \fI<dev>\fR
+For reference, Adoptium GitHub source repos default to the \fI<dev>\fR
 branch which may contain a very small diff set to the \fI<master>\fR branch
 (which is a clone from the OpenJDK mercurial forest).
 .TP
@@ -123,7 +117,7 @@ if using docker, keep the container after the build.
 specify any custom user make arguments.
 .TP
 .BR \-\-no\-adopt\-patches
-This indicates to the build script that the build does not have AdoptOpenJDKs additional patches applied.
+This indicates to the build script that the build does not have Temurin's additional patches applied.
 .TP
 .BR \-p ", " \-\-processors " " \fI<args>\fR
 specify the number of processors to use for the docker build.

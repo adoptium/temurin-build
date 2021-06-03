@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2129
+
 set -eu
 
 OPENJ9=false
@@ -12,13 +14,13 @@ JDK_VERSION=8
 JDK_MAX=
 JDK_GA=
 
-setJDKVars() {
 # shellcheck disable=SC2002 # Disable UUOC error
+setJDKVars() {
   wget -q https://api.adoptopenjdk.net/v3/info/available_releases
   JDK_MAX=$(cat available_releases \
-	  | grep 'tip_version' \
-	  | cut -d':' -f 2 \
-	  | sed 's/,//g; s/ //g')
+      | grep 'tip_version' \
+      | cut -d':' -f 2 \
+      | sed 's/,//g; s/ //g')
   JDK_GA=$(cat available_releases \
           | grep 'most_recent_feature_release' \
           | cut -d':' -f 2 \
@@ -30,10 +32,10 @@ processArgs() {
   local arg
   local cleanRepo=false
   while [[ $# -gt 0 ]]
-  do	
+  do
     arg="$1"
     # Stop the script failing when passed an empty variable
-    if [ -z $arg ]; then
+    if [ -z "$arg" ]; then
       shift
       continue
     fi
@@ -68,12 +70,13 @@ processArgs() {
         shift
         ;;
       -v | --version)
-	if [ $2 == "jdk" ]; then
-	  JDK_VERSION=$JDK_MAX
-	else
-	  JDK_VERSION=$(echo $2 | tr -d [:alpha:])
+    if [ "$2" == "jdk" ]; then
+      JDK_VERSION=$JDK_MAX
+    else
+      # shellcheck disable=SC2060
+      JDK_VERSION=$(echo "$2" | tr -d [:alpha:])
         fi
-	checkJDK
+    checkJDK
         shift
         shift
         ;;
@@ -83,13 +86,13 @@ processArgs() {
         ;;
     esac
   done
- 
+
   if [ -z "$DOCKERFILE_DIR" ]; then
     DOCKERFILE_DIR=$PWD
   fi
 
   if [ ${cleanRepo} ]; then
-    echo "Removing Dockerfile* from $DOCKERFILE_DIR" && rm -rf $DOCKERFILE_DIR/Dockerfile*
+    echo "Removing Dockerfile* from $DOCKERFILE_DIR" && rm -rf "$DOCKERFILE_DIR"/Dockerfile*
   fi
 
   DOCKERFILE_PATH="$DOCKERFILE_DIR/Dockerfile"
@@ -101,14 +104,14 @@ processArgs() {
 usage() {
   echo" Usage: ./dockerfile_generator.sh [OPTIONS]
   Options:
-	  --help | -h		Print this message and exit
-	  --build		Build the docker image after generation and create interactive container
-	  --clean		Remove all dockerfiles (Dockerfile*) from '--path'
-	  --comments		Prints comments into the dockerfile
-	  --path <FILEPATH>	Specify where to save the dockerfile (Default: $PWD)
-	  --print		Print the Dockerfile to screen after generation
-	  --openj9		Make the Dockerfile able to build w/OpenJ9 JIT
-	  --version | -v <JDK>	Specify which JDK the docker image will be able to build (Default: jdk8)"
+      --help | -h        Print this message and exit
+      --build        Build the docker image after generation and create interactive container
+      --clean        Remove all dockerfiles (Dockerfile*) from '--path'
+      --comments        Prints comments into the dockerfile
+      --path <FILEPATH>    Specify where to save the dockerfile (Default: $PWD)
+      --print        Print the Dockerfile to screen after generation
+      --openj9        Make the Dockerfile able to build w/OpenJ9 JIT
+      --version | -v <JDK>    Specify which JDK the docker image will be able to build (Default: jdk8)"
 }
 
 # Checks to ensure the input JDK is valid
@@ -138,7 +141,7 @@ printPreamble() {
 FROM ubuntu:18.04
 
 LABEL maintainer=\"AdoptOpenJDK <adoption-discuss@openjdk.java.net>\"
-  " >> $DOCKERFILE_PATH
+  " >> "$DOCKERFILE_PATH"
 }
 
 # Put in apt packages required for building a JDK
@@ -146,7 +149,7 @@ printAptPackages() {
   if [ ${COMMENTS} == true ]; then
     echo "
 # Install required OS tools
-# dirmngr, gpg-agent & coreutils are all required for the apt-add repository command" >> $DOCKERFILE_PATH
+# dirmngr, gpg-agent & coreutils are all required for the apt-add repository command" >> "$DOCKERFILE_PATH"
   fi
 
   echo " 
@@ -188,7 +191,7 @@ RUN apt-get update \\
     systemtap-sdt-dev \\
     unzip \\
     wget \\
-    zip \\" >> $DOCKERFILE_PATH
+    zip \\" >> "$DOCKERFILE_PATH"
 
   if [ ${OPENJ9} = true ]; then
     echo "    gcc-7 \\
@@ -202,66 +205,67 @@ RUN apt-get update \\
     nasm \\
     pkg-config \\
     xvfb \\
-    zlib1g-dev \\" >> $DOCKERFILE_PATH
-  else 
+    zlib1g-dev \\" >> "$DOCKERFILE_PATH"
+  else
     echo "    ccache \\
     g++ \\
-    gcc \\" >> $DOCKERFILE_PATH
-  fi
-  
-  # JDK8 uses zulu-7 as it's bootJDK
-  if [ ${JDK_VERSION} == 8 ]; then 
-    echo "    zulu-7 \\" >> $DOCKERFILE_PATH
+    gcc \\" >> "$DOCKERFILE_PATH"
   fi
 
-  echo "  && rm -rf /var/lib/apt/lists/*" >> $DOCKERFILE_PATH
+  # JDK8 uses zulu-7 as it's bootJDK
+  if [ "${JDK_VERSION}" == 8 ]; then
+    echo "    zulu-7 \\" >> "$DOCKERFILE_PATH"
+  fi
+
+  echo "  && rm -rf /var/lib/apt/lists/*" >> "$DOCKERFILE_PATH"
 }
 
 printCreateFolder() {
   echo "
 RUN mkdir -p /openjdk/target
-RUN mkdir -p /openjdk/build" >> $DOCKERFILE_PATH
+RUN mkdir -p /openjdk/build" >> "$DOCKERFILE_PATH"
 }
 
 printgcc() {
   if [ ${COMMENTS} == true ]; then
     echo "
-# Make sure build uses GCC 7" >> $DOCKERFILE_PATH
+# Make sure build uses GCC 7" >> "$DOCKERFILE_PATH"
   fi
 
   echo "
-ENV CC=gcc-7 CXX=g++-7" >> $DOCKERFILE_PATH
+ENV CC=gcc-7 CXX=g++-7" >> "$DOCKERFILE_PATH"
 }
 
 printDockerJDKs() {
   # JDK8 uses zulu-7 to as it's bootjdk
-  if [ ${JDK_VERSION} != 8 ] && [ ${JDK_VERSION} != ${JDK_MAX} ]; then
+  if [ "${JDK_VERSION}" != 8 ] && [ "${JDK_VERSION}" != "${JDK_MAX}" ]; then
     if [ ${COMMENTS} == true ]; then
       echo "
-    # Extract JDK$((JDK_VERSION-1)) to use as a boot jdk" >> $DOCKERFILE_PATH
+    # Extract JDK$((JDK_VERSION-1)) to use as a boot jdk" >> "$DOCKERFILE_PATH"
     fi
     printJDK $((JDK_VERSION-1))
-    echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/java /usr/bin/java" >> $DOCKERFILE_PATH
-    echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/javac /usr/bin/javac" >> $DOCKERFILE_PATH
-    echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/keytool /usr/bin/keytool" >> $DOCKERFILE_PATH
+    echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/java /usr/bin/java" >> "$DOCKERFILE_PATH"
+    echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/javac /usr/bin/javac" >> "$DOCKERFILE_PATH"
+    echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/keytool /usr/bin/keytool" >> "$DOCKERFILE_PATH"
   fi
 
   # Build 'jdk' with the most recent GA release
-  if [ ${JDK_VERSION} == ${JDK_MAX} ]; then
+  if [ "${JDK_VERSION}" == "${JDK_MAX}" ]; then
     if [ ${COMMENTS} == true ]; then
       echo "
-    # Extract JDK${JDK_GA} to use as a boot jdk" >> $DOCKERFILE_PATH
+    # Extract JDK${JDK_GA} to use as a boot jdk" >> "$DOCKERFILE_PATH"
     fi
-    printJDK ${JDK_GA}
-    echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/java /usr/bin/java" >> $DOCKERFILE_PATH
-    echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/javac /usr/bin/javac" >> $DOCKERFILE_PATH
-    echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/keytool /usr/bin/keytool" >> $DOCKERFILE_PATH
+    printJDK "${JDK_GA}"
+    echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/java /usr/bin/java" >> "$DOCKERFILE_PATH"
+    echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/javac /usr/bin/javac" >> "$DOCKERFILE_PATH"
+    echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/keytool /usr/bin/keytool" >> "$DOCKERFILE_PATH"
   fi
- 
+
+  # shellcheck disable=SC2086
   # if JDK_VERSION is 9, another jdk8 doesn't need to be extracted
   if [ ${JDK_VERSION} != 9 ]; then
     if [ ${COMMENTS} == true ]; then
-      echo "# Extract JDK8 to run Gradle" >> $DOCKERFILE_PATH
+      echo "# Extract JDK8 to run Gradle" >> "$DOCKERFILE_PATH"
     fi
     printJDK 8
   fi
@@ -270,7 +274,7 @@ printDockerJDKs() {
 printJDK() {
   local JDKVersion=$1
   echo "
-RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptopenjdk.net/v3/binary/latest/$JDKVersion/ga/linux/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk' -O - | tar xzf - -C /usr/lib/jvm/jdk$JDKVersion --strip-components=1\"" >> $DOCKERFILE_PATH
+RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptopenjdk.net/v3/binary/latest/$JDKVersion/ga/linux/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk' -O - | tar xzf - -C /usr/lib/jvm/jdk$JDKVersion --strip-components=1\"" >> "$DOCKERFILE_PATH"
 }
 
 printCopyFolders(){
@@ -278,12 +282,12 @@ printCopyFolders(){
 COPY sbin /openjdk/sbin
 COPY security /openjdk/security
 COPY workspace/config /openjdk/config
-COPY pipelines /openjdk/pipelines" >> $DOCKERFILE_PATH
+COPY pipelines /openjdk/pipelines" >> "$DOCKERFILE_PATH"
 }
 
 printGitClone(){
   echo "
-RUN git clone https://github.com/adoptopenjdk/openjdk-build /openjdk/build/openjdk-build" >> $DOCKERFILE_PATH
+RUN git clone https://github.com/adoptium/temurin-build /openjdk/build/openjdk-build" >> "$DOCKERFILE_PATH"
 }
 
 printUserCreate(){
@@ -293,7 +297,7 @@ ENV HostUID=\$HostUID
 RUN useradd -u \$HostUID -ms /bin/bash build
 WORKDIR /openjdk/build
 RUN chown -R build /openjdk/
-USER build" >> $DOCKERFILE_PATH
+USER build" >> "$DOCKERFILE_PATH"
 }
 
 printContainerVars(){
@@ -302,21 +306,21 @@ ARG OPENJDK_CORE_VERSION
 ENV OPENJDK_CORE_VERSION=\$OPENJDK_CORE_VERSION
 ENV ARCHITECTURE=x64
 ENV JDK_PATH=jdk
-ENV JDK8_BOOT_DIR=/usr/lib/jvm/jdk8" >> $DOCKERFILE_PATH
+ENV JDK8_BOOT_DIR=/usr/lib/jvm/jdk8" >> "$DOCKERFILE_PATH"
 }
 
 generateFile() {
-  mkdir -p $DOCKERFILE_DIR
-  if [ -f $DOCKERFILE_PATH ]; then
+  mkdir -p "$DOCKERFILE_DIR"
+  if [ -f "$DOCKERFILE_PATH" ]; then
     echo "Dockerfile already found"
     exit 1
   fi
-  touch $DOCKERFILE_PATH
+  touch "$DOCKERFILE_PATH"
 }
 
 generateConfig() {
-  if [ ! -f $DOCKERFILE_DIR/dockerConfiguration.sh ]; then
-    touch $DOCKERFILE_DIR/dockerConfiguration.sh
+  if [ ! -f "$DOCKERFILE_DIR/dockerConfiguration.sh" ]; then
+    touch "$DOCKERFILE_DIR/dockerConfiguration.sh"
     echo "
 #!/bin/bash
 # shellcheck disable=SC2034
@@ -325,7 +329,7 @@ generateConfig() {
 # This config is read in by configureBuild
 BUILD_CONFIG[OS_KERNEL_NAME]=\"linux\"
 BUILD_CONFIG[OS_ARCHITECTURE]=\"x86_64\"
-BUILD_CONFIG[BUILD_FULL_NAME]=\"linux-x86_64-normal-server-release\"" >> $DOCKERFILE_DIR/dockerConfiguration.sh
+BUILD_CONFIG[BUILD_FULL_NAME]=\"linux-x86_64-normal-server-release\"" >> "$DOCKERFILE_DIR/dockerConfiguration.sh"
 fi
 }
 
@@ -355,12 +359,12 @@ printContainerVars
 
 echo "Dockerfile created at $DOCKERFILE_PATH"
 if [ "${PRINT}" == true ]; then
-  cat $DOCKERFILE_PATH
+  cat "$DOCKERFILE_PATH"
 fi
 if [ "${BUILD}" == true ]; then
   commandString="/openjdk/build/openjdk-build/makejdk-any-platform.sh -v jdk"
 
-  if [ ${JDK_VERSION} != ${JDK_MAX} ]; then
+  if [ "${JDK_VERSION}" != "${JDK_MAX}" ]; then
     commandString="${commandString}${JDK_VERSION}"
   fi
 
@@ -368,7 +372,7 @@ if [ "${BUILD}" == true ]; then
     commandString="${commandString} --build-variant openj9"
   fi
 
-  docker build -t jdk${JDK_VERSION}_build_image -f $DOCKERFILE_PATH . --build-arg "OPENJDK_CORE_VERSION=${JDK_VERSION}" --build-arg "HostUID=${UID}"
+  docker build -t "jdk${JDK_VERSION}_build_image" -f "$DOCKERFILE_PATH" . --build-arg "OPENJDK_CORE_VERSION=${JDK_VERSION}" --build-arg "HostUID=${UID}"
   echo "To start a build run ${commandString}"
-  docker run -it jdk${JDK_VERSION}_build_image bash
+  docker run -it "jdk${JDK_VERSION}_build_image" bash
 fi
