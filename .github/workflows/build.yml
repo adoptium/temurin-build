@@ -58,6 +58,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
+        os: [macOS]
         version: [jdk8u, jdk11u]
         vm: [hotspot]
 
