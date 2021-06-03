@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [linux]
-        version: [jdk11u, jdk16u, jdk]
+        version: [jdk8u, jdk11u, jdk16u, jdk]
         vm: [hotspot]
         image: [adoptopenjdk/centos7_build_image]
         include:
@@ -59,7 +59,7 @@ jobs:
      strategy:
        matrix:
          os: [windows-2016]
-         version: [jdk8u, jdk11u, jdk16, jdk]
+         version: [jdk11u, jdk16, jdk]
          vm: [hotspot]
 
      steps:
