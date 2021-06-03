@@ -59,7 +59,7 @@ jobs:
      strategy:
        matrix:
          os: [windows-2019]
-         version: [jdk16, jdk]
+         version: [jdk]
          vm: [hotspot]
          include:
           - os: windows-2016
