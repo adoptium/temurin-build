@@ -462,6 +462,7 @@ buildTemplatedFile() {
     FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS}"
     echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
   else
+    FULL_CONFIGURE="echo \"Skipping configure because we're assembling an exploded image\""
     echo "Skipping configure because we're assembling an exploded image"
   fi
 
