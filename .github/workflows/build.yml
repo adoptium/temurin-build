@@ -47,18 +47,8 @@ jobs:
      strategy:
        matrix:
          os: [windows-2016]
-         version: [jdk11u, jdk16, jdk]
+         version: [jdk8u, jdk11u, jdk16, jdk]
          vm: [hotspot]
-         include:
-          - os: windows-2016
-            version: jdk11u
-            vm: openj9
-          - os: windows-2019
-            version: jdk16
-            vm: openj9
-          - os: windows-2019
-            version: jdk
-            vm: openj9
 
      steps:
      - name: Restore cygwin packages from cache
@@ -97,94 +87,6 @@ jobs:
        run: |
          choco install visualstudiocommunity2013
        if: matrix.version == 'jdk8u'
-
-     - name: Install Cuda
-       run: |
-         Invoke-WebRequest -UseBasicParsing 'https://developer.nvidia.com/compute/cuda/9.0/Prod/network_installers/cuda_9.0.176_win10_network-exe' -OutFile 'C:\temp\cuda_9.0.176_win10_network-exe.exe'
-         Start-Process -Wait -FilePath 'C:\temp\cuda_9.0.176_win10_network-exe.exe' -ArgumentList '-s compiler_9.0 nvml_dev_9.0'
-       if: matrix.vm == 'openj9'
-
-     - name: Install Freemarker
-       run: |
-         Invoke-WebRequest 'https://repo.maven.apache.org/maven2/freemarker/freemarker/2.3.8/freemarker-2.3.8.jar' -OutFile 'C:\openjdk\freemarker.jar'
-       if: matrix.vm == 'openj9'
-
-     - name: Install Clang
-       run: |
-         choco install llvm --version=7.0.0
-         mklink /D "C:\openjdk\LLVM64" "C:\Program Files\LLVM"
-       shell: cmd
-       if: matrix.vm == 'openj9'
-
-     - name: Install NASM
-       run: |
-         Invoke-WebRequest 'https://www.nasm.us/pub/nasm/releasebuilds/2.13.03/win64/nasm-2.13.03-win64.zip' -OutFile 'C:\temp\nasm-2.13.03.zip'
-         Expand-Archive -LiteralPath 'C:\temp\nasm-2.13.03.zip' -DestinationPath 'C:\openjdk'
-       if: matrix.vm == 'openj9'
-
-     - name: Restore OpenSSL VS2013 from cache
-       id: openssl-2013
-       uses: actions/cache@v2
-       with:
-        path: C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2013
-        key: OpenSSL-1.1.1i-2013-${{ runner.os }}-v1
-       if: matrix.vm == 'openj9' && matrix.version == 'jdk8u'
-
-     - name: Restore OpenSSL VS2017 from cache
-       id: openssl-2017
-       uses: actions/cache@v2
-       with:
-        path: C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2017
-        key: OpenSSL-1.1.1i-2017-${{ runner.os }}-v1
-       if: matrix.vm == 'openj9' && matrix.version == 'jdk11u'
-
-     - name: Restore OpenSSL VS2019 from cache
-       id: openssl-2019
-       uses: actions/cache@v2
-       with:
-        path: C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2019
-        key: OpenSSL-1.1.1i-2019-${{ runner.os }}-v1
-       if: matrix.vm == 'openj9' && matrix.version != 'jdk8u' && matrix.version != 'jdk11u'
-
-     - name: Download OpenSSL
-       run: |
-         Invoke-WebRequest -UseBasicParsing 'https://www.openssl.org/source/openssl-1.1.1i.tar.gz' -OutFile 'C:\temp\OpenSSL-1.1.1i.tar.gz'
-         cd C:\temp
-         tar -xf C:/temp/OpenSSL-1.1.1i.tar.gz --force-local -C C:/temp
-       if: matrix.vm == 'openj9'
-
-     - name: Install OpenSSL VS2013
-       run: |
-         set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
-         call vcvarsall.bat AMD64
-         cd C:\temp\OpenSSL-1.1.1i
-         perl C:\temp\OpenSSL-1.1.1i\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2013
-         nmake install && nmake -f makefile clean
-       working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC'
-       shell: cmd
-       if: matrix.vm == 'openj9' && matrix.version == 'jdk8u' && steps.openssl-2013.outputs.cache-hit != 'true'
-
-     - name: Install OpenSSL VS2017
-       run: |
-         set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
-         call vcvarsall.bat AMD64
-         cd C:\temp\OpenSSL-1.1.1i
-         perl C:\temp\OpenSSL-1.1.1i\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2017
-         nmake install && nmake -f makefile clean
-       working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build'
-       shell: cmd
-       if: matrix.vm == 'openj9' && matrix.version == 'jdk11u' && steps.openssl-2017.outputs.cache-hit != 'true'
-
-     - name: Install OpenSSL VS2019
-       run: |
-         set PATH=C:\Strawberry\perl\bin;C:\openjdk\nasm-2.13.03;%PATH%
-         call vcvarsall.bat AMD64
-         cd C:\temp\OpenSSL-1.1.1i
-         perl C:\temp\OpenSSL-1.1.1i\Configure VC-WIN64A --prefix=C:\openjdk\OpenSSL-1.1.1i-x86_64-VS2019
-         nmake install && nmake -f makefile clean
-       working-directory: 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build'
-       shell: cmd
-       if: matrix.vm == 'openj9' && matrix.version != 'jdk8u' && matrix.version != 'jdk11u' && steps.openssl-2019.outputs.cache-hit != 'true'
 
      - name: Cygwin git configuration
        shell: bash
