@@ -50,5 +50,5 @@ export BUILD_VARIANTS="${BUILD_VARIANT_HOTSPOT} ${BUILD_VARIANT_OPENJ9} ${BUILD_
 # Git Tags to peruse
 export GIT_TAGS_TO_SEARCH=100
 
-# Path of marker file in mirror repos
-export TEMURIN_MD_MARKER_FILE="Temurin.md"
+# Path of marker file in mirror repos containing required text
+export TEMURIN_MARKER_FILE="README.JAVASE"
