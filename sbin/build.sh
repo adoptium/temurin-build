@@ -458,8 +458,12 @@ buildTemplatedFile() {
 
   echo "Currently at '${PWD}'"
 
-  FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS}"
-  echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
+  if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" != "true" ]]; then
+    FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS}"
+    echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
+  else
+    echo "Skipping configure because we're assembling an exploded image"
+  fi
 
   # If it's Java 9+ then we also make test-image to build the native test libraries,
   # For openj9 add debug-image
