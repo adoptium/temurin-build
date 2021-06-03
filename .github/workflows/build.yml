@@ -58,9 +58,13 @@ jobs:
      runs-on: ${{ matrix.os }}
      strategy:
        matrix:
-         os: [windows-2016]
-         version: [jdk11u, jdk16, jdk]
+         os: [windows-2019]
+         version: [jdk16, jdk]
          vm: [hotspot]
+         include:
+          - os: windows-2016
+            version: jdk11u
+            vm: hotspot
 
      steps:
      - name: Restore cygwin packages from cache
