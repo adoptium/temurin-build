@@ -74,7 +74,7 @@ jobs:
       if: matrix.version == 'jdk8u'
       
     - name: Select correct Xcode
-      run: xcode-select -s /Applications/Xcode_11.7.app
+      run: sudo xcode-select -s /Applications/Xcode_11.7.app
 
     - name: Build macOS
       run: |
