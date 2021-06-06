@@ -1106,6 +1106,10 @@ addInfoToReleaseFile() {
   addImplementor
   echo "ADDING BUILD SHA"
   addBuildSHA
+  echo "ADDING BUILD SOURCE REPO"
+  addBuildSourceRepo
+  echo "ADDING OPENJDK SOURCE REPO"
+  addOpenJDKSourceRepo
   echo "ADDING FULL VER"
   addFullVersion
   echo "ADDING SEM VER"
@@ -1173,6 +1177,26 @@ addBuildSHA() { # git SHA of the build repository i.e. openjdk-build
     echo -e BUILD_SOURCE=\"git:$buildSHA\" >>release
   else
     echo "Unable to fetch build SHA, does a work tree exist?..."
+  fi
+}
+
+addBuildSourceRepo() { # name of git repo for which BUILD_SOURCE sha is from
+  local buildSourceRepo=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" config --get remote.origin.url 2>/dev/null)
+  if [[ $buildSourceRepo ]]; then
+    # shellcheck disable=SC2086
+    echo -e BUILD_SOURCE_REPO=\"$buildSourceRepo\" >>release
+  else
+    echo "Unable to fetch Build Source Repo, does a work tree exist?..."
+  fi
+}
+
+addOpenJDKSourceRepo() { # name of git repo for which SOURCE sha is from
+  local openjdkSourceRepo=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" config --get remote.origin.url 2>/dev/null)
+  if [[ $openjdkSourceRepo ]]; then
+    # shellcheck disable=SC2086
+    echo -e SOURCE_REPO=\"$openjdkSourceRepo\" >>release
+  else
+    echo "Unable to fetch OpenJDK Source Repo, does a work tree exist?..."
   fi
 }
 
@@ -1244,9 +1268,11 @@ addImageType() {
 
 addInfoToJson(){
   mv "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/configure.txt" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/"
+  mv "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/makeCommandArg.txt" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/"
   addVariantVersionToJson
   addVendorToJson
-  addSourceToJson # Build repository commit SHA
+  addSourceToJson # Build repository and commit SHA
+  addOpenJDKSourceToJson # OpenJDK repository and commit SHA
 }
 
 addVariantVersionToJson(){
@@ -1271,13 +1297,24 @@ addVendorToJson(){
   echo -n "${BUILD_CONFIG[VENDOR]}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/vendor.txt"
 }
 
-addSourceToJson(){ # Pulls the basename of the origin repo, or uses 'openjdk-build' in rare cases of failure
-  local repoName=$(basename "$(cd "${BUILD_CONFIG[WORKSPACE_DIR]%.git}" && git config --get remote.origin.url 2>/dev/null)")
+addSourceToJson(){ # Pulls the origin repo, or uses 'openjdk-build' in rare cases of failure
+  local repoName=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" config --get remote.origin.url 2>/dev/null)
+  local repoNameStr="${repoName:-"ErrorUnknown"}"
   local buildSHA=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" rev-parse --short HEAD 2>/dev/null)
   if [[ $buildSHA ]]; then
-    echo -n "${repoName:-"openjdk-build"}/$buildSHA" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
+    echo -n "${repoNameStr%%.git}/commit/$buildSHA" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
   else
     echo "Unable to fetch build SHA, does a work tree exist?..."
+  fi
+}
+
+addOpenJDKSourceToJson() { # name of git repo for which SOURCE sha is from
+  local openjdkSourceRepo=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" config --get remote.origin.url 2>/dev/null)
+  local openjdkSHA=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" rev-parse --short HEAD 2>/dev/null)
+  if [[ $openjdkSHA ]]; then
+    echo -n "${openjdkSourceRepo%%.git}/commit/${openjdkSHA}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
+  else
+    echo "Unable to fetch OpenJDK Source SHA, does a work tree exist?..."
   fi
 }
 
