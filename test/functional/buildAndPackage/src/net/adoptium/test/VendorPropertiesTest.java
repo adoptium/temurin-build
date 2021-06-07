@@ -27,6 +27,7 @@ import static net.adoptium.test.JdkVersion.VM;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertFalse;
 
 /**
  * Tests whether vendor names and correct URLs appear in all the places they are supposed to.
@@ -42,7 +43,7 @@ public class VendorPropertiesTest {
     /**
      * Class tells us what the jdk version and vm type is.
      */
-    private final JdkVersion jdkVersion = new JdkVersion();
+    private static final JdkVersion JDK_VERSION = new JdkVersion();
 
     /**
      * Constructor method.
@@ -101,7 +102,7 @@ public class VendorPropertiesTest {
         this.vendorChecks.javaVendor(System.getProperty("java.vendor"));
         this.vendorChecks.javaVendorUrl(System.getProperty("java.vendor.url"));
         this.vendorChecks.javaVendorUrlBug(System.getProperty("java.vendor.url.bug"));
-        if (jdkVersion.isNewerOrEqual(10)) {
+        if (JDK_VERSION.isNewerOrEqual(10)) {
             this.vendorChecks.javaVendorVersion(System.getProperty("java.vendor.version"));
         }
         this.vendorChecks.javaVmVendor(System.getProperty("java.vm.vendor"));
@@ -163,17 +164,17 @@ public class VendorPropertiesTest {
 
         @Override
         public boolean supports(final String vendor) {
-            return vendor.toLowerCase(Locale.US).equals("eclipse foundation");
+            return vendor.toLowerCase(Locale.US).equals("adoptium");
         }
 
         @Override
         public void javaVersion(final String value) {
-            if (jdkVersion.usesVM(VM.OPENJ9) && jdkVersion.isOlderThan(9)) {
+            if (JDK_VERSION.usesVM(VM.OPENJ9) && JDK_VERSION.isOlderThan(9)) {
                 // For JDK8 on OpenJ9, the vendor name SHOULD NOT be present in the version output.
-                assertFalse(value.contains("Eclipse Foundation"));
+                assertFalse(value.contains("Temurin"));
             } else {
                 // For all other JDKs, the vendor name SHOULD be present in the version output.
-                assertTrue(value.contains("Eclipse Foundation"));
+                assertTrue(value.contains("Temurin"));
             }
         }
 
