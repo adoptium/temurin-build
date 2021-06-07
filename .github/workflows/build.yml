@@ -46,7 +46,59 @@ jobs:
         FILENAME: OpenJDK.tar.gz
         # Don't set the OS as we use both linux and alpine-linux
         PLATFORM_CONFIG_LOCATION: AdoptOpenJDK/openjdk-build/master/build-farm/platform-specific-configurations
-        
+
+    - uses: actions/upload-artifact@v2
+      name: Collect and Archive Artifacts
+      with:
+        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+        path: workspace/target/*
+
+  build_macos:
+    name: macOS
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [macOS]
+        version: [jdk8u, jdk11u]
+        vm: [hotspot]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Dependencies
+      run: |
+        brew install bash binutils freetype gnu-sed nasm
+    - uses: actions/setup-java@v1
+      id: setup-java
+      with:
+        java-version: 7
+      if: matrix.version == 'jdk8u'
+      
+    - name: Select correct Xcode
+      run: |
+        rm -rf /Applications/Xcode.app
+        ln -s /Applications/Xcode_11.7.app /Applications/Xcode.app
+
+    - name: Build macOS
+      run: |
+        export JAVA_HOME=$JAVA_HOME_11_X64
+        # Skip freetype build on jdk11+
+        if [ ${{ matrix.version }} != "jdk8u" ]; then
+          export BUILD_ARGS="--skip-freetype --make-exploded-image"
+          ./build-farm/make-adopt-build-farm.sh
+          export BUILD_ARGS="--assemble-exploded-image"
+          ./build-farm/make-adopt-build-farm.sh
+        else
+          ./build-farm/make-adopt-build-farm.sh
+        fi
+      env:
+        JAVA_TO_BUILD: ${{ matrix.version }}
+        ARCHITECTURE: x64
+        VARIANT: ${{ matrix.vm }}
+        TARGET_OS: mac
+        FILENAME: OpenJDK.tar.gz
+        JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
+      
     - uses: actions/upload-artifact@v2
       name: Collect and Archive Artifacts
       with:
