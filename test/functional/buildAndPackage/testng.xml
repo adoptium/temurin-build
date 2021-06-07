@@ -28,9 +28,9 @@
         </classes>
     </test>
 
-    <test name="CudaEnabledTest">
-		<classes>
-			<class name="net.adoptium.test.CudaEnabledTest"/>
-		</classes>
-	</test>
+    <test name="OpenJ9FeatureTests">
+        <classes>
+            <class name="net.adoptium.test.CudaEnabledTest"/>
+        </classes>
+    </test>
 </suite>

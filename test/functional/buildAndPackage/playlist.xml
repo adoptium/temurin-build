@@ -29,8 +29,8 @@
         <command>
             $(JAVA_COMMAND) $(JVM_OPTIONS) -cp \
             $(Q)$(RESOURCES_DIR)$(P)$(TESTNG)$(P)$(TEST_RESROOT)$(D)BuildAndPackagingTests.jar$(Q) org.testng.TestNG \
-            $(Q)$(TEST_RESROOT)$(D)testng.xml$(Q) -d $(REPORTDIR) -testnames CommonFeatureTests,HotspotFeatureTests -groups $(TEST_GROUP) \
-            -excludegroups $(DEFAULT_EXCLUDE); $(TEST_STATUS)
+            $(Q)$(TEST_RESROOT)$(D)testng.xml$(Q) -d $(REPORTDIR) -testnames CommonFeatureTests,HotspotFeatureTests \
+            -groups $(TEST_GROUP) -excludegroups $(DEFAULT_EXCLUDE); $(TEST_STATUS)
         </command>
         <levels>
             <level>extended</level>
@@ -50,8 +50,8 @@
         <command>
             $(JAVA_COMMAND) $(JVM_OPTIONS) -cp \
             $(Q)$(RESOURCES_DIR)$(P)$(TESTNG)$(P)$(TEST_RESROOT)$(D)BuildAndPackagingTests.jar$(Q) org.testng.TestNG \
-            $(Q)$(TEST_RESROOT)$(D)testng.xml$(Q) -d $(REPORTDIR) -testnames CommonFeatureTests -groups $(TEST_GROUP) \
-            -excludegroups $(DEFAULT_EXCLUDE); $(TEST_STATUS)
+            $(Q)$(TEST_RESROOT)$(D)testng.xml$(Q) -d $(REPORTDIR) -testnames CommonFeatureTests,OpenJ9FeatureTests \
+            -groups $(TEST_GROUP) -excludegroups $(DEFAULT_EXCLUDE); $(TEST_STATUS)
         </command>
         <levels>
             <level>extended</level>
@@ -63,22 +63,4 @@
             <impl>openj9</impl>
         </impls>
     </test>
-    <test>
-		<testCaseName>CudaEnabledTest</testCaseName>
-		<command>$(JAVA_COMMAND) $(JVM_OPTIONS) -cp $(Q)$(RESOURCES_DIR)$(P)$(TESTNG)$(P)$(TEST_RESROOT)$(D)BuildAndPackagingTests.jar$(Q) org.testng.TestNG $(Q)$(TEST_RESROOT)$(D)testng.xml$(Q) -d $(REPORTDIR) -testnames CudaEnabledTest -groups $(TEST_GROUP) -excludegroups $(DEFAULT_EXCLUDE); \
-		$(TEST_STATUS)</command>
-		<levels>
-			<level>extended</level>
-		</levels>
-		<groups>
-			<group>functional</group>
-		</groups>
-        <platformRequirements>os.linux</platformRequirements>
-        <impls>
-            <impl>openj9</impl>
-        </impls>
-        <vendors>
-            <vendor>adoptium</vendor>
-        </vendors>
-	</test>
 </playlist>

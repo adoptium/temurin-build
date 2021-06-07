@@ -4,102 +4,158 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.log4testng.Logger;
 
+import static net.adoptium.test.JdkPlatform.OperatingSystem;
+import static net.adoptium.test.JdkPlatform.Architecture;
+
 /*
- * Tests if the Cuda functionality is enabled in this build.
+ * Tests if the CUDA functionality is enabled in this build.
  * Fit for OpenJ9 builds on Windows, xLinux and pLinux.
  */
 @Test(groups = { "level.extended" })
 public class CudaEnabledTest {
-
+    /**
+     * Message logger for test debug output.
+     */
     private static Logger logger = Logger.getLogger(CudaEnabledTest.class);
 
     /**
-     * Retrieves the JDK Version Number from system property java.version.
-     * @return Integer JDK Version Number
+     * This is used to identify the OS we're running on.
      */
-    public static int getJDKVersion() {
-        String javaVersion = System.getProperty("java.version");
-        if (javaVersion.startsWith("1.")) {
-            javaVersion = javaVersion.substring(2);
-        }
-        int dotIndex = javaVersion.indexOf('.');
-        int dashIndex = javaVersion.indexOf('-');
-        try {
-            return Integer.parseInt(javaVersion.substring(0, dotIndex > -1 ? dotIndex : dashIndex > -1 ? dashIndex : javaVersion.length()));
-        } catch (NumberFormatException e) {
-            System.out.println("Cannot determine System.getProperty('java.version')=" + javaVersion + "\n");
-            return -1;
-        }
-    }
+    private final JdkPlatform jdkPlatform = new JdkPlatform();
 
     /**
-     * Test that will check if the CUDA Compiler is enabled in the build.
+     * Main test method.
      */
     @Test
-    public void testIfCudaIsEnabled() {
+    public void testIfCudaIsEnabled() throws IOException {
 
         logger.info("Starting test to see if CUDA functionality is enabled in this build.");
 
-        //Stage 1: Find the location of the j9prt lib file.
-        String prtLibDirectory = System.getProperty("java.home");
-        String jreSubdir = "";
-        if ((new File(prtLibDirectory + "/jre")).exists()) {
-            jreSubdir = "/jre";
-        }
-        if ("Linux".contains(System.getProperty("os.name").split(" ")[0])) {
-            if (getJDKVersion() == 8) {
-                prtLibDirectory += jreSubdir + "/lib/amd64";
-            } else {
-                prtLibDirectory += "/lib/default";
-            }
-        }
-        //windows
-        if ("Windows".contains(System.getProperty("os.name").split(" ")[0])) {
-            if (getJDKVersion() == 8) {
-                //jdk8 32:
-                prtLibDirectory += jreSubdir + "/bin/default";
-            } else {
-                prtLibDirectory += "/bin/default";
-            }
-        }
+        logger.info("Finding a list of all j9prt files in this build.");
+        Set<String> j9prtFiles = findAllPrtFiles();
 
-        File prtDirObject = new File(prtLibDirectory);
-        Assert.assertTrue(prtDirObject.exists(), "Can't find the predicted location of the j9prt lib file. Expected location: " + prtLibDirectory);
+        logger.info("Scanning each j9prt file found to see if it indicates CUDA enablement.");
+        int successes = searchPrtFilesForCudart(j9prtFiles);
 
-        String[] prtLibDirectoryFiles = prtDirObject.list();
-        String prtFile = null;
-        for (int x = 0; x < prtLibDirectoryFiles.length; x++) {
-            if (prtLibDirectoryFiles[x].contains("j9prt")) {
-                prtFile = prtLibDirectory + "/" + prtLibDirectoryFiles[x];
-                break;
-            }
-        }
-        Assert.assertNotNull(prtFile, "Can't find the j9prt lib file in " + prtLibDirectory);
-        Assert.assertTrue((new File(prtFile)).exists(), "Found the prt file, but it doesn't exist. Tautology bug.");
-        Assert.assertTrue((new File(prtFile)).canRead(), "Found the prt file, but it can't be read. Likely a permissions bug.");
+        logger.info("j9prt file scanning complete. Assessing results.");
+        assessPrtFileSearchResults(successes, j9prtFiles);
 
-        //Stage 2: Iterate through the j9prt lib file to find "cudart".
-        //If we find it, then cuda functionality is enabled on this build.
-        try {
-            BufferedReader prtFileReader = new BufferedReader(new FileReader(prtFile));
-            String oneLine = "";
-            while ((oneLine = prtFileReader.readLine()) != null) {
-                if (oneLine.contains("cudart")) {
-                    logger.info("Test completed successfully.");
-                    return; //Success!
-                }
-            }
-            prtFileReader.close();
-        } catch (FileNotFoundException e) {
-            Assert.fail("A file that exists could not be found. This should never happen.");
-        } catch (Exception e) {
-            throw new Error(e);
-        }
-        Assert.fail("Cuda should be enabled on this build, but we found no evidence that this was the case.");
+        logger.info("Test complete.");
     }
 
+    /**
+     * Identifies all j9prt files associated with the JDK we're testing.
+     * @return Set<String> The number of prt files found.
+     */
+    private Set<String> findAllPrtFiles() throws IOException {
+        //Stage 1: Find the location of any/all j9prt lib files.
+        String testJdkHome = System.getenv("TEST_JDK_HOME");
+        if (testJdkHome == null) {
+            throw new AssertionError("TEST_JDK_HOME is not set");
+        }
+
+        Pattern j9prtPattern;
+        if (jdkPlatform.runsOn(OperatingSystem.WINDOWS)) {
+            j9prtPattern = Pattern.compile("(.*)\\\\j9prt[0-9][0-9]\\.dll$");
+        } else if (jdkPlatform.runsOn(OperatingSystem.MACOS)) {
+            j9prtPattern = Pattern.compile("(.*)/libj9prt[0-9][0-9]\\.dylib$");
+        } else {
+            // If not windows or mac, assume linux file formats.
+            j9prtPattern = Pattern.compile("(.*)/libj9prt[0-9][0-9]\\.so$");
+        }
+
+        Set<String> j9prtFiles = Files.walk(Paths.get(testJdkHome))
+                                      .map(Path::toString)
+                                      .filter(name -> j9prtPattern.matcher(name).matches())
+                                      .collect(Collectors.toSet());
+
+        Assert.assertFalse(j9prtFiles.isEmpty(), "Can't find a j9prt file anywhere in " + testJdkHome);
+
+        for (String prtFile : j9prtFiles) {
+            Assert.assertTrue((new File(prtFile)).exists(),
+                "Found the prt file, but it doesn't exist. Tautology bug.");
+            Assert.assertTrue((new File(prtFile)).canRead(),
+                "Found the prt file, but it can't be read. Likely a permissions bug.");
+            logger.info("j9prt file identified: " + prtFile);
+        }
+
+        return j9prtFiles;
+    }
+
+    /**
+     * Takes a list of prt files, and returns the number of files that have CUDA enabled.
+     * @param  j9prtFiles The full list of j9prt files found.
+     * @return int        The number of prt files with CUDA enabled.
+     */
+    private int searchPrtFilesForCudart(final Set<String> j9prtFiles) {
+        //Stage 2: Iterate through the j9prt files to find "cudart".
+        //If we find it in every j9prt file, then CUDA functionality is enabled on every j9 vm in this build.
+        int successes = 0;
+        for (String prtFile : j9prtFiles) {
+            try {
+                BufferedReader prtFileReader = new BufferedReader(new FileReader(prtFile));
+                String oneLine = "";
+                boolean foundCudart = false;
+                while ((oneLine = prtFileReader.readLine()) != null) {
+                    if (oneLine.contains("cudart")) {
+                        logger.info("CUDA-enabled indicator string \'cudart\' was found "
+                            + "within this j9prt file: " + prtFile);
+                        foundCudart = true;
+                        break;
+                    }
+                }
+                prtFileReader.close();
+                if (foundCudart) {
+                    successes++;
+                    continue;
+                }
+            } catch (FileNotFoundException e) {
+                Assert.fail("A file that exists could not be found. This should never happen.");
+            } catch (Exception e) {
+                throw new Error(e);
+            }
+
+            logger.info("CUDA-enabled indicator string \'cudart\' was not found within this j9prt file: " + prtFile);
+        }
+
+        return successes;
+    }
+
+    /**
+     * Takes the list of prt files, and the number of these files that contain "cudart",
+     * indicating CUDA enablement. We then assess these results for correctness based on platform.
+     * @param  successes  The number of j9prt files with CUDA enabled.
+     * @param  j9prtFiles The full list of j9prt files found.
+     */
+    private void assessPrtFileSearchResults(final int successes, final Set<String> j9prtFiles) {
+        if (jdkPlatform.runsOn(OperatingSystem.WINDOWS)) {
+            if (jdkPlatform.runsOn(Architecture.X64)) {
+                Assert.assertEquals(successes, j9prtFiles.size(),
+                    "One or more of the j9prt files in this build is not CUDA-enabled.");
+            } else {
+                Assert.assertEquals(successes, 0,
+                    "This build is CUDA-enabled, but non-x64 Windows builds are not expected to be.");
+            }
+        } else if (jdkPlatform.runsOn(OperatingSystem.LINUX)) {
+            if (jdkPlatform.runsOn(Architecture.X64) || jdkPlatform.runsOn(Architecture.PPC64LE)) {
+                Assert.assertEquals(successes, j9prtFiles.size(),
+                    "One or more of the j9prt files in this build is not CUDA-enabled.");
+            } else {
+                Assert.assertEquals(successes, 0, "This build is CUDA-enabled, but was not expected to be.");
+            }
+        } else {
+            Assert.assertEquals(successes, 0, "This build is CUDA-enabled, but was not expected to be.");
+        }
+    }
 }
