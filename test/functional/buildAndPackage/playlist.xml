@@ -42,7 +42,7 @@
             <impl>hotspot</impl>
         </impls>
          <vendors>
-            <vendor>adoptium</vendor>
+            <vendor>eclipse</vendor>
         </vendors>
     </test>
     <test>
