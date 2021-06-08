@@ -201,7 +201,7 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVmVendor(final String value) {
-            assertTrue(value.equals("Adoptium") || value.equals("Eclipse OpenJ9"));
+            assertTrue(value.equals("Eclipse Foundation") || value.equals("Eclipse OpenJ9"));
         }
 
         @Override
