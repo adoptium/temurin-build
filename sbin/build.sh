@@ -383,10 +383,10 @@ configureFreetypeLocation() {
         jdk8* | jdk9* | jdk10*) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-"${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype"} ;;
         *) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled} ;;
         esac
-
-        echo "setting freetype dir to ${freetypeDir}"
-        addConfigureArg "--with-freetype=" "${freetypeDir}"
       fi
+
+      echo "setting freetype dir to ${freetypeDir}"
+      addConfigureArg "--with-freetype=" "${freetypeDir}"
     fi
   fi
 }
