@@ -51,11 +51,16 @@ public class BundledFreetypeTest {
     private final JdkPlatform jdkPlatform = new JdkPlatform();
 
     /**
+     * This is used to identify the JDK version we're using.
+     */
+    private final JdkVersion jdkVersion = new JdkVersion();
+
+    /**
      * Test to ensure freetype is bundled with this build
-     * or not, depending on the platform.
+     * or not, depending on the platform & JDK version.
      */
     @Test
-    public void freetypeOnlyBundledOnWindowsAndMacOS() throws IOException {
+    public void freetypeOnlyBundledOnCertainPlatforms() throws IOException {
         String testJdkHome = System.getenv("TEST_JDK_HOME");
         if (testJdkHome == null) {
             throw new AssertionError("TEST_JDK_HOME is not set");
@@ -74,6 +79,10 @@ public class BundledFreetypeTest {
         } else if (jdkPlatform.runsOn(OperatingSystem.WINDOWS)) {
             assertTrue(freetypeFiles.size() > 0,
               "Expected freetype.dll to be bundled, but it is not.");
+        } else if (jdkPlatform.runsOn(OperatingSystem.AIX)
+                && jdkVersion.isNewerOrEqual(13)) {
+            assertTrue(freetypeFiles.size() > 0,
+              "Expected libfreetype.so to be bundled, but it is not.");
         } else {
             LOGGER.info("Found freetype-related files: "
                         + freetypeFiles.toString());
