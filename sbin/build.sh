@@ -211,6 +211,8 @@ configureVersionStringParameter() {
   # --with-milestone=fcs deprecated at jdk12+ and not used for jdk11- (we use --without-version-pre/opt)
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == 8 ] && [ "${BUILD_CONFIG[RELEASE]}" == "true" ]; then
     addConfigureArg "--with-milestone=" "fcs"
+  elif [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == 8 ] && [ "${BUILD_CONFIG[RELEASE]}" != "true" ]; then
+    addConfigureArg "--with-milestone=" "beta"
   fi
 
   local dateSuffix=$(date -u +%Y%m%d%H%M)
@@ -281,11 +283,12 @@ configureVersionStringParameter() {
 
     if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
       addConfigureArg "--with-version-opt=" "${dateSuffix}"
+      addConfigureArg "--with-version-pre=" "beta"
     else
       addConfigureArg "--without-version-opt" ""
+      addConfigureArg "--without-version-pre" ""
     fi
 
-    addConfigureArg "--without-version-pre" ""
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
   else
     # > JDK 9
