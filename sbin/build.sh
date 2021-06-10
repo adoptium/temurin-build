@@ -1128,8 +1128,6 @@ addInfoToReleaseFile() {
   addJVMVersion
   # OpenJ9 specific options
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
-    echo "ADDING HEAP SIZE"
-    addHeapSize
     echo "ADDING J9 TAG"
     addJ9Tag
   fi
@@ -1138,18 +1136,6 @@ addInfoToReleaseFile() {
   echo "ADDING IMAGE TYPE"
   addImageType
   echo "===RELEASE FILE GENERATED==="
-}
-
-# shellcheck disable=SC2143
-addHeapSize() { # Adds an identifier for heap size on OpenJ9 builds
-  local heapSize=""
-  local architecture=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'os.arch' | sed 's/^.*= //' | tr -d '\r') # Heap size must be standard for x86 builds (openjdk-build/2412)
-  if [[ $($JAVA_LOC -version 2>&1 | grep 'Compressed References') ]] || [[ "$architecture" == "x86" ]]; then
-    heapSize="Standard"
-  else
-    heapSize="Large"
-  fi
-  echo -e HEAP_SIZE=\"$heapSize\" >>release
 }
 
 addImplementor() {
@@ -1223,7 +1209,7 @@ addBuildOS() {
 }
 
 addJ9Tag() {
-  # java.vm.version varies or for OpenJ9 depending on if it is a release build i.e. master-*gitSha* or 0.21.0
+  # java.vm.version varies for OpenJ9 depending on if it is a release build i.e. master-*gitSha* or 0.21.0
   # This code makes sure that a version number is always present in the release file i.e. openj9-0.21.0
   local j9Location="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/openj9"
   # Pull the tag associated with the J9 commit being used
