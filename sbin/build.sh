@@ -211,6 +211,8 @@ configureVersionStringParameter() {
   # --with-milestone=fcs deprecated at jdk12+ and not used for jdk11- (we use --without-version-pre/opt)
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == 8 ] && [ "${BUILD_CONFIG[RELEASE]}" == "true" ]; then
     addConfigureArg "--with-milestone=" "fcs"
+  elif [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == 8 ] && [ "${BUILD_CONFIG[RELEASE]}" != "true" ]; then
+    addConfigureArg "--with-milestone=" "beta"
   fi
 
   local dateSuffix=$(date -u +%Y%m%d%H%M)
@@ -250,6 +252,8 @@ configureVersionStringParameter() {
 
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
 
+      addConfigureArg "--with-company-name=" "Temurin"
+
       # No JFR support in AIX or zero builds (s390 or armv7l)
       if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "s390x" ] && [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "aix" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "armv7l" ]; then
         addConfigureArg "--enable-jfr" ""
@@ -281,11 +285,12 @@ configureVersionStringParameter() {
 
     if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
       addConfigureArg "--with-version-opt=" "${dateSuffix}"
+      addConfigureArg "--with-version-pre=" "beta"
     else
       addConfigureArg "--without-version-opt" ""
+      addConfigureArg "--without-version-pre" ""
     fi
 
-    addConfigureArg "--without-version-pre" ""
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
   else
     # > JDK 9
@@ -299,11 +304,12 @@ configureVersionStringParameter() {
 
     if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
       addConfigureArg "--with-version-opt=" "${dateSuffix}"
+      addConfigureArg "--with-version-pre=" "beta"
     else
       addConfigureArg "--without-version-opt" ""
+      addConfigureArg "--without-version-pre" ""
     fi
 
-    addConfigureArg "--without-version-pre" ""
     addConfigureArgIfValueIsNotEmpty "--with-version-build=" "${buildNumber}"
   fi
 
