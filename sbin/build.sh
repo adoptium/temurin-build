@@ -237,8 +237,9 @@ configureVersionStringParameter() {
     BUILD_CONFIG[VENDOR_BUG_URL]="https://gitee.com/openeuler/bishengjdk-11/issues"
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://gitee.com/openeuler/bishengjdk-11/issues"
   fi
-
-  addConfigureArg "--with-vendor-name=" "\"${BUILD_CONFIG[VENDOR]}\""
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != 8 ]; then
+    addConfigureArg "--with-vendor-name=" "\"${BUILD_CONFIG[VENDOR]}\""
+  fi
   addConfigureArg "--with-vendor-url=" "${BUILD_CONFIG[VENDOR_URL]:-"https://adoptium.net/"}"
   addConfigureArg "--with-vendor-bug-url=" "${BUILD_CONFIG[VENDOR_BUG_URL]:-"https://github.com/adoptium/adoptium-support/issues"}"
   addConfigureArg "--with-vendor-vm-bug-url=" "${BUILD_CONFIG[VENDOR_VM_BUG_URL]:-"https://github.com/adoptium/adoptium-support/issues"}"
