@@ -13,12 +13,16 @@ jobs:
     strategy:
       matrix:
         os: [linux]
-        version: [jdk8u, jdk11u, jdk16u, jdk]
+        version: [jdk8u, jdk11u, jdk16u, jdk17, jdk]
         vm: [hotspot]
         image: [adoptopenjdk/centos7_build_image]
         include:
           - os: alpine-linux
             version: jdk16u
+            vm: hotspot
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk17
             vm: hotspot
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
