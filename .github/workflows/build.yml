@@ -5,6 +5,19 @@ on:
     branches: [ master ]
 
 jobs:
+  cancel-previous-workflow-runs:
+    name: "Cancel previous workflow runs"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: potiuk/cancel-workflow-runs@master
+        name: "Cancel duplicate workflow runs"
+        with:
+          cancelMode: duplicates
+          cancelFutureDuplicates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          sourceRunId: ${{ github.event.workflow_run.id }}
+          notifyPRCancel: true
+
   build_linux:
     name: Linux
     runs-on: ubuntu-latest
