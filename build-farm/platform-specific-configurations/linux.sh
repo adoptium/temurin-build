@@ -78,15 +78,16 @@ fi
 
 if [ "${ARCHITECTURE}" == "arm" ]
 then
-  if [ "$(uname -m)" == "aarch64" ]; then
+  if lscpu | grep aarch64; then
      echo Validating 32-bit environment on 64-bit host - perhaps it is a docker container ...
-     if ! file /bin/ls | grep 32-bit.*ARM; then
+     if ! file /bin/ls | grep "32-bit.*ARM"; then
        echo /bin/ls is not a 32-bit system. This configuration is invalid without extra work
        exit 1
      fi
      echo Looks reasonable - configuring to allow building that way ...
      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --target=armv7l-unknown-linux-gnueabihf --host=armv7l-unknown-linux-gnueabihf"
-  else
+  fi
+  if [ "$(lscpu|awk '/^CPU\(s\)/{print$2}')" = "4" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=4 --with-memory-size=2000"
   fi
   if [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
