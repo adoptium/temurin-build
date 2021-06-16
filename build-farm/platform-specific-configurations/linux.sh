@@ -154,7 +154,8 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION
   export PATH=/usr/local/gcc9/bin:$PATH
   export CC=/usr/local/gcc9/bin/gcc-9.3
   export CXX=/usr/local/gcc9/bin/g++-9.3
-elif [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
+  # arm32 exclusion is due to https://github.com/adoptium/adoptium-support/issues/319
+elif [ -r /usr/local/gcc/bin/gcc-7.5 ] && ! ( [ "$ARCHITECTURE" == "arm" ] && [ "$JAVA_FEATURE_VERSION" -gt 8 ] ); then
   export PATH=/usr/local/gcc/bin:$PATH
   [ -r /usr/local/gcc/bin/gcc-7.5 ] && export CC=/usr/local/gcc/bin/gcc-7.5
   [ -r /usr/local/gcc/bin/g++-7.5 ] && export CXX=/usr/local/gcc/bin/g++-7.5
