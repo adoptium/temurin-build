@@ -185,7 +185,7 @@ jobs:
          ARCHITECTURE: x64
          VARIANT: ${{ matrix.vm }}
          TARGET_OS: windows
-         FILENAME: OpenJDK.tar.gz
+         FILENAME: OpenJDK.zip
 
      - uses: actions/upload-artifact@v2
        name: Collect and Archive Artifacts
