@@ -940,51 +940,121 @@ setPlistValueForMacOS() {
   fi
 }
 
-# Get the tags from the git repo and choose the latest chronologically ordered tag for the given JDK version.
+# JDK8 tag selection
+# Version tags are expected to follow this pattern:
+#   jdk8uV-bB
+# where V and B are numeric.
+# - answer the largest matching tag based on the version ordering of V.B
 #
-# Note, we have to chronologically order, as with a Shallow cloned (depth=1) git repo there is no "topo-order"
-# for tags, also commit date order cannot be used either as the commit dates do not necessarily follow chronologically.
+getLatestTagJDK8() {
+  local max_tag=
+  local max_v=
+  local max_b=
+
+  while read -r tag ; do
+    if [[ "$tag" =~ ^jdk8u([0-9]+)-b([0-9]+)$ ]] ; then
+      local better=0
+      local cur_v=${BASH_REMATCH[1]}
+      local cur_b=${BASH_REMATCH[2]}
+
+      if [ -z "$max_tag" ] ; then
+        better=1
+      elif [ "$cur_v" -gt "$max_v" ] ; then
+        better=1
+      elif [ "$cur_v" -eq "$max_v" ] && [ "$cur_b" -gt "$max_b" ] ; then
+        better=1
+      fi
+
+      if [ "$better" -ne 0 ] ; then
+        max_tag="$tag"
+        max_v="$cur_v"
+        max_b="$cur_b"
+      fi
+    fi
+  done
+
+  if [ -n "$max_tag" ] ; then
+    echo "$max_tag"
+  fi
+}
+
+# JDK11+ tag selection
+# Version tags are expected to follow this pattern:
+#   jdk-V[.W[.X[.P]]]+B
+# where V, W, X, P and B are numeric (missing components are considered to be 0).
+# - answer the largest matching tag based on the version ordering of V.W.X.P+B
 #
-# Excluding "openj9" tag names as they have other ones for milestones etc. that get in the way
+getLatestTagJDK11plus() {
+  local max_tag=
+  local max_v=
+  local max_w=
+  local max_x=
+  local max_p=
+  local max_b=
+
+  while read -r tag ; do
+    if [[ "$tag" =~ ^jdk-([0-9]+)(\.([0-9]+))?(\.([0-9]+))?(\.([0-9]+))?\+([0-9]+)$ ]] ; then
+      local better=0
+      local cur_v=${BASH_REMATCH[1]}
+      local cur_w=${BASH_REMATCH[3]:-0}
+      local cur_x=${BASH_REMATCH[5]:-0}
+      local cur_p=${BASH_REMATCH[7]:-0}
+      local cur_b=${BASH_REMATCH[8]:-0}
+
+      if [ -z "$max_tag" ] ; then
+        better=1
+      elif [ "$cur_v" -gt "$max_v" ] ; then
+        better=1
+      elif [ "$cur_v" -eq "$max_v" ] ; then
+        if [ "$cur_w" -gt "$max_w" ] ; then
+          better=1
+        elif [ "$cur_w" -eq "$max_w" ] ; then
+          if [ "$cur_x" -gt "$max_x" ] ; then
+            better=1
+          elif [ "$cur_x" -eq "$max_x" ] ; then
+            if [ "$cur_p" -gt "$max_p" ] ; then
+              better=1
+            elif [ "$cur_p" -eq "$max_p" ] && [ "$cur_b" -gt "$max_b" ] ; then
+              better=1
+            fi
+          fi
+        fi
+      fi
+
+      if [ "$better" -ne 0 ] ; then
+        max_tag="$tag"
+        max_v="$cur_v"
+        max_w="$cur_w"
+        max_x="$cur_x"
+        max_p="$cur_p"
+        max_b="$cur_b"
+      fi
+    fi
+  done
+
+  if [ -n "$max_tag" ] ; then
+    echo "$max_tag"
+  fi
+}
+
+# Get the tags from the git repo and choose the latest numerically ordered tag for the given JDK version.
+#
 getFirstTagFromOpenJDKGitRepo() {
 
-  # Save current directory of caller so we can return to that directory at the end of this function
-  # Some caller's are not in the git repo root, but instead build/*/images directory like the archive functions
-  # and any function called after removingUnnecessaryFiles()
+  # Save current directory of caller so we can return to that directory at the end of this function.
+  # Some callers are not in the git repo root, but instead build/*/images directory like the archive functions
+  # and any function called after removingUnnecessaryFiles().
   local savePwd="${PWD}"
 
-  # Change to openjdk git repo root to find build tag
+  # Change to openjdk git repo root to find build tag.
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
-  # JDK8 tag sorting:
-  # Tag Format "jdk8uLLL-bBB"
-  # cut chars 1-5 => LLL-bBB
-  # awk "-b" separator into a single "-" => LLL-BB
-  # prefix "-" to allow line numbering stable sorting using nl => -LLL-BB
-  # Sort by build level BB first
-  # Then do "stable" sort (keeping BB order) by build level LLL
-  local jdk8_tag_sort1="sort -t- -k3,3n"
-  local jdk8_tag_sort2="sort -t- -k2,2n"
-  local jdk8_get_tag_cmd="grep -v _openj9 | grep -v _adopt | cut -c6- | awk -F'[\-b]+' '{print \$1\"-\"\$2}' | sed 's/^/-/' | $jdk8_tag_sort1 | nl | $jdk8_tag_sort2 | cut -f2- | sed 's/^-/jdk8u/' | sed 's/-/-b/' | tail -1"
-
-  # JDK11+ tag sorting:
-  # We use sort and tail to choose the latest tag in case more than one refers the same commit.
-  # Versions tags are formatted: jdk-V[.W[.X[.P]]]+B; with V, W, X, P, B being numeric.
-  # Transform "-" to "." in tag so we can sort as: "jdk.V[.W[.X[.P]]]+B"
-  # Transform "+" to ".0.+" during the sort so that .P (patch) is defaulted to "0" for those
-  # that don't have one, and the trailing "." to terminate the 5th field from the +
-  # First, sort on build number (B):
-  local jdk11plus_tag_sort1="sort -t+ -k2,2n"
-  # Second, (stable) sort on (V), (W), (X), (P): P(Patch) is optional and defaulted to "0"
-  local jdk11plus_tag_sort2="sort -t. -k2,2n -k3,3n -k4,4n -k5,5n"
-  jdk11plus_get_tag_cmd="grep -v _openj9 | grep -v _adopt | sed 's/jdk-/jdk./g' | sed 's/+/.0.0+/g' | $jdk11plus_tag_sort1 | nl | $jdk11plus_tag_sort2 | sed 's/\.0\.0+/+/g' | cut -f2- | sed 's/jdk./jdk-/g' | tail -1"
-
-  # Choose tag search keyword and get cmd based on version
+  # Choose tag search keyword and get cmd based on version.
   local TAG_SEARCH="jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}*+*"
-  local get_tag_cmd=$jdk11plus_get_tag_cmd
+  local get_tag_cmd=getLatestTagJDK11plus
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
     TAG_SEARCH="jdk8u*-b*"
-    get_tag_cmd=$jdk8_get_tag_cmd
+    get_tag_cmd=getLatestTagJDK8
   fi
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
@@ -998,14 +1068,14 @@ getFirstTagFromOpenJDKGitRepo() {
     TAG_SEARCH="aarch64-shenandoah-jdk8u*-b*"
   fi
 
-  # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon...
-  # Read OPENJDK_TAG value from that file..
+  # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon,
+  # read OPENJDK_TAG value from that file.
   local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] && [[ -f "${openj9_openjdk_tag_file}" ]]; then
     firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
   else
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    firstMatchingNameFromRepo=$(eval "git tag -l $TAG_SEARCH | $get_tag_cmd")
+    firstMatchingNameFromRepo=$(git tag --list "$TAG_SEARCH" | "$get_tag_cmd")
   fi
 
   if [ -z "$firstMatchingNameFromRepo" ]; then
@@ -1014,7 +1084,7 @@ getFirstTagFromOpenJDKGitRepo() {
     echo "$firstMatchingNameFromRepo"
   fi
 
-  # Restore pwd
+  # Restore current directory.
   cd "$savePwd"
 }
 
