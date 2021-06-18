@@ -78,7 +78,21 @@ fi
 
 if [ "${ARCHITECTURE}" == "arm" ]
 then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=4 --with-memory-size=2000"
+  if lscpu | grep aarch64; then
+     echo Validating 32-bit environment on 64-bit host - perhaps it is a docker container ...
+     if ! file /bin/ls | grep "32-bit.*ARM"; then
+       echo /bin/ls is not a 32-bit binary but ARCHITECTURE=arm. Non-32-bit userland is invalid without extra work
+       exit 1
+     fi
+     echo Looks reasonable - configuring to allow building that way ...
+     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --target=armv7l-unknown-linux-gnueabihf --host=armv7l-unknown-linux-gnueabihf"
+  fi
+  # "4" is a temporary override which allows us to utilise all build
+  # cores on our scaleway systems while they are still in use but still
+  # allow more on larger machines. Can be revisited post-Scaleway
+  if [ "$(lscpu|awk '/^CPU\(s\)/{print$2}')" = "4" ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=4 --with-memory-size=2000"
+  fi
   if [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-latomic"
   fi
