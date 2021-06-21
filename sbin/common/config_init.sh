@@ -79,6 +79,7 @@ OPENJDK_FOREST_NAME
 OPENJDK_SOURCE_DIR
 OPENJDK_UPDATE_VERSION
 OS_KERNEL_NAME
+OS_FULL_VERSION
 OS_ARCHITECTURE
 PATCHES
 RELEASE
@@ -365,6 +366,24 @@ function configDefaults() {
 
   # The OS kernel name, e.g. 'darwin' for Mac OS X
   BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
+
+  # Determine OS full system version
+  local unameSys=$(uname -s)
+  local unameOSSysVer=$(uname -sr)
+  if [ "${unameSys}" == "Linux" ]; then
+    # Linux distribs add more useful distrib in the single line file /etc/system-release
+    if [ -f "/etc/system-release" ]; then
+      local linuxName=$(tr -d '"' < /etc/system-release)
+      unameOSSysVer="${unameOSSysVer} : ${linuxName}"
+    fi
+  elif [ "${unameSys}" == "AIX" ]; then
+    # AIX provides full version info using oslevel
+    aixVer=$(oslevel -r)
+    unameOSSysVer="${unameSys} ${aixVer}"
+  fi
+
+  # Store the OS full version name, eg.Darwin 20.4.0
+  BUILD_CONFIG[OS_FULL_VERSION]="${unameOSSysVer}"
 
   local arch=$(uname -m)
 
