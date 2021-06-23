@@ -371,10 +371,20 @@ function configDefaults() {
   local unameSys=$(uname -s)
   local unameOSSysVer=$(uname -sr)
   if [ "${unameSys}" == "Linux" ]; then
-    # Linux distribs add more useful distrib in the single line file /etc/system-release
+    # Linux distribs add more useful distrib in the single line file /etc/system-release,
+    # or property file /etc/os-release
     if [ -f "/etc/system-release" ]; then
       local linuxName=$(tr -d '"' < /etc/system-release)
       unameOSSysVer="${unameOSSysVer} : ${linuxName}"
+    elif [ -f "/etc/os-release" ]; then
+      if grep "^NAME=" /etc/os-release; then
+        local osName=$(grep "^NAME=" /etc/os-release | cut -d= -f2 | tr -d '"')
+        unameOSSysVer="${unameOSSysVer} : ${osName}"
+      fi
+      if grep "^VERSION=" /etc/os-release; then
+        local osVersion=$(grep "^VERSION=" /etc/os-release | cut -d= -f2 | tr -d '"')
+        unameOSSysVer="${unameOSSysVer} ${osVersion}"
+      fi
     fi
   elif [ "${unameSys}" == "AIX" ]; then
     # AIX provides full version info using oslevel
