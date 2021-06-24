@@ -30,22 +30,22 @@ TOOLCHAIN_VERSION=""
 
 if [ "$ARCHITECTURE" == "aarch64" ]; then
   # Windows aarch64 cross compiles requires same version boot jdk
-  BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION))"
-else
-  BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+  echo "Cross compile of aarch64 on Windows uses same boot jdk as build version, using: ${JAVA_FEATURE_VERSION}"
+  JDK_BOOT_VERSION="$((JAVA_FEATURE_VERSION))"
 fi
-BOOT_JDK_VARIABLE="JDK${BOOT_JDK_VERSION}_BOOT_DIR"
+BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-  bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+  bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
-  export ${BOOT_JDK_VARIABLE}="$bootDir"
+  export "${BOOT_JDK_VARIABLE}"="$bootDir"
   if [ ! -x "$bootDir/bin/javac.exe" ]; then
     # Set to a default location as linked in the ansible playbooks
-    if [ -x /cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}/bin/javac ]; then
-      echo Could not use ${BOOT_JDK_VARIABLE} - using /cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}
-      export ${BOOT_JDK_VARIABLE}="/cygdrive/c/openjdk/jdk-${BOOT_JDK_VERSION}"
-    elif [ "$BOOT_JDK_VERSION" -ge 8 ]; then # Adopt has no build pre-8
+    if [ -x "/cygdrive/c/openjdk/jdk-${JDK_BOOT_VERSION}/bin/javac" ]; then
+      echo "Could not use ${BOOT_JDK_VARIABLE} - using /cygdrive/c/openjdk/jdk-${JDK_BOOT_VERSION}"
+      # shellcheck disable=SC2140
+      export "${BOOT_JDK_VARIABLE}"="/cygdrive/c/openjdk/jdk-${JDK_BOOT_VERSION}"
+    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       # This is needed to convert x86-32 to x32 which is what the API uses
       export downloadArch
       case "$ARCHITECTURE" in
@@ -54,9 +54,9 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
                 *) downloadArch="$ARCHITECTURE";;
       esac
       releaseType="ga"
-      apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/\${VARIANT}/normal/adoptopenjdk"
+      apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/\${VARIANT}/normal/adoptopenjdk"
       apiURL=$(eval echo ${apiUrlTemplate})
-      echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+      echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
       # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
       # the fallback mechanism, as downloading of the GA binary might fail
       set +e
@@ -66,15 +66,15 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       if [ $retVal -ne 0 ]; then
         # We must be a JDK HEAD build for which no boot JDK exists other than
         # nightlies?
-        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+        echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} failed."
         # shellcheck disable=SC2034
         releaseType="ea"
         apiURL=$(eval echo ${apiUrlTemplate})
-        echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+        echo "Attempting to download EA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
         wget -q "${apiURL}" -O openjdk.zip
       fi
       unzip -q openjdk.zip
-      mv "$(ls -d jdk-${BOOT_JDK_VERSION}*)" "$bootDir"
+      mv "$(ls -d jdk-"${JDK_BOOT_VERSION}"*)" "$bootDir"
     fi
   fi
 fi

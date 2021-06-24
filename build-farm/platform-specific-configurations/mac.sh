@@ -81,42 +81,41 @@ fi
 echo "[WARNING] You may be asked for your su user password, attempting to switch Xcode version to ${XCODE_SWITCH_PATH}"
 sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
-# Adopt does not have builds of OpenJDK 7, OpenJDK 8 can boot itself just fine.
-if [ "${JAVA_FEATURE_VERSION}" = "8" ]; then
-  BOOT_JDK_VERSION="${JAVA_FEATURE_VERSION}"
-else
-  BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
+# No MacOS builds available of OpenJDK 7, OpenJDK 8 can boot itself just fine.
+if [ "${JDK_BOOT_VERSION}" == "7" ]; then
+  echo "No jdk7 boot JDK available on MacOS using jdk8"
+  JDK_BOOT_VERSION="8"
 fi
-BOOT_JDK_VARIABLE="JDK${BOOT_JDK_VERSION}_BOOT_DIR"
+BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-  bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+  bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
   export "${BOOT_JDK_VARIABLE}"="$bootDir/Contents/Home"
   if [ ! -x "$bootDir/Contents/Home/bin/javac" ]; then
-    if [ -x /Library/Java/JavaVirtualMachines/adoptopenjdk-${BOOT_JDK_VERSION}/Contents/Home/bin/javac ]; then
-      echo Could not use "${BOOT_JDK_VARIABLE}" - using /Library/Java/JavaVirtualMachines/adoptopenjdk-${BOOT_JDK_VERSION}/Contents/Home
-      export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/adoptopenjdk-${BOOT_JDK_VERSION}/Contents/Home"
-    elif [ "$BOOT_JDK_VERSION" -ge 8 ]; then # Adopt has no build pre-8
+    if [ -x "/Library/Java/JavaVirtualMachines/adoptopenjdk-${JDK_BOOT_VERSION}/Contents/Home/bin/javac" ]; then
+      echo "Could not use ${BOOT_JDK_VARIABLE} - using /Library/Java/JavaVirtualMachines/adoptopenjdk-${JDK_BOOT_VERSION}/Contents/Home"
+      export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/adoptopenjdk-${JDK_BOOT_VERSION}/Contents/Home"
+    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       mkdir -p "$bootDir"
       releaseType="ga"
-      apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/mac/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptopenjdk"
+      apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/mac/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptopenjdk"
       apiURL=$(eval echo ${apiUrlTemplate})
-      echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+      echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
       # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
       # the fallback mechanism, as downloading of the GA binary might fail.
       set +e
-      wget -q -O "${BOOT_JDK_VERSION}.tgz" "${apiURL}" && tar xpzf "${BOOT_JDK_VERSION}.tgz" --strip-components=1 -C "$bootDir" && rm "${BOOT_JDK_VERSION}.tgz"
+      wget -q -O "${JDK_BOOT_VERSION}.tgz" "${apiURL}" && tar xpzf "${JDK_BOOT_VERSION}.tgz" --strip-components=1 -C "$bootDir" && rm "${JDK_BOOT_VERSION}.tgz"
       retVal=$?
       set -e
       if [ $retVal -ne 0 ]; then
         # We must be a JDK HEAD build for which no boot JDK exists other than
         # nightlies?
-        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+        echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} failed."
         # shellcheck disable=SC2034
         releaseType="ea"
         apiURL=$(eval echo ${apiUrlTemplate})
-        echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+        echo "Attempting to download EA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
         wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
       fi
     fi
