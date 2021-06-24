@@ -58,25 +58,24 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
 fi
 echo LDR_CNTRL=$LDR_CNTRL
 
-BOOT_JDK_VERSION="$((JAVA_FEATURE_VERSION-1))"
-BOOT_JDK_VARIABLE="JDK${BOOT_JDK_VERSION}_BOOT_DIR"
+BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-  bootDir="$PWD/jdk-$BOOT_JDK_VERSION"
+  bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
   export "${BOOT_JDK_VARIABLE}"="${bootDir}"
   if [ ! -x "$bootDir/bin/javac" ]; then
     # Set to a default location as linked in the ansible playbooks
-    if [ -x /usr/java${BOOT_JDK_VERSION}_64/bin/javac ]; then
-      echo Could not use "${BOOT_JDK_VARIABLE}" - using /usr/java${BOOT_JDK_VERSION}_64
+    if [ -x "/usr/java${JDK_BOOT_VERSION}_64/bin/javac" ]; then
+      echo "Could not use ${BOOT_JDK_VARIABLE} - using /usr/java${JDK_BOOT_VERSION}_64"
       # shellcheck disable=SC2140
-      export "${BOOT_JDK_VARIABLE}"="/usr/java${BOOT_JDK_VERSION}_64"
-    elif [ "$BOOT_JDK_VERSION" -ge 8 ]; then # Adopt has no build pre-8
+      export "${BOOT_JDK_VARIABLE}"="/usr/java${JDK_BOOT_VERSION}_64"
+    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       mkdir -p "${bootDir}"
       releaseType="ga"
-      apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${BOOT_JDK_VERSION}/\${releaseType}/aix/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
+      apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/aix/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
       apiURL=$(eval echo ${apiUrlTemplate})
-      echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+      echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
       # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
       # the fallback mechanism, as downloading of the GA binary might fail.
       set +e
@@ -86,11 +85,11 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       if [ $retVal -ne 0 ]; then
         # We must be a JDK HEAD build for which no boot JDK exists other than
         # nightlies?
-        echo "Downloading GA release of boot JDK version ${BOOT_JDK_VERSION} failed."
+        echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} failed."
         # shellcheck disable=SC2034
         releaseType="ea"
         apiURL=$(eval echo ${apiUrlTemplate})
-        echo "Attempting to download EA release of boot JDK version ${BOOT_JDK_VERSION} from ${apiURL}"
+        echo "Attempting to download EA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
         wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
       fi
     fi

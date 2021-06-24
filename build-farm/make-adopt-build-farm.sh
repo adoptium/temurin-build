@@ -128,8 +128,15 @@ then
   echo "Detecting boot jdk for: ${JAVA_TO_BUILD}"
   echo "Found build version: ${JAVA_FEATURE_VERSION}"
   JDK_BOOT_VERSION=$(( JAVA_FEATURE_VERSION - 1 ))
+  if [ "${JAVA_FEATURE_VERSION}" == "11" ] && [ "${VARIANT}" == "openj9" ]; then
+    # OpenJ9 only supports building jdk-11 with jdk-11
+    JDK_BOOT_VERSION="11"
+  fi
 fi
 echo "Required boot JDK version: ${JDK_BOOT_VERSION}"
+
+# export for platform specific scripts
+export JDK_BOOT_VERSION
 
 # shellcheck source=build-farm/set-platform-specific-configurations.sh
 source "${PLATFORM_SCRIPT_DIR}/set-platform-specific-configurations.sh"
