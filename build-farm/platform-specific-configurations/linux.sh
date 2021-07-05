@@ -179,13 +179,14 @@ fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
   # BUILD_C/CXX required for native (non-cross) RISC-V builds of Bisheng
-  if [ ! -z "$CXX" ]; then
+  if [ -n "$CXX" ]; then
     export BUILD_CC="$CC"
     export BUILD_CXX="$CXX"
   fi
   # Bisheng on aarch64 has a KAE option which requires openssl 1.1.1 to be used
-  if [ -x /usr/local/openssl-1.1.1/lib/libcrypto.so.1.1 ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cflags=-I/usr/local/openssl-1.1.1/include  --with-extra-cxxflags=-I/usr/local/openssl-1.1.1/include --with-extra-ldflags=-L/usr/local/openssl-1.1.1/lib"
+  BISHENG_OPENSSL_111_LOCATION=${BISHENG_OPENSSL_111_LOCATION:-/usr/local/openssl-1.1.1}
+  if [ -x "${BISHENG_OPENSSL_111_LOCATION}/lib/libcrypto.so.1.1" ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cflags=-I${BISHENG_OPENSSL_111_LOCATION}/include  --with-extra-cxxflags=-I${BISHENG_OPENSSL_111_LOCATION}/include --with-extra-ldflags=-L${BISHENG_OPENSSL_111_LOCATION}/lib"
   fi
 fi
 
@@ -196,7 +197,7 @@ fi
 # Handle cross compilation environment for RISC-V
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
-if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_ARCH=arm; fi
+if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
 if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export BUILDJDK=${WORKSPACE:-$PWD}/buildjdk
@@ -242,8 +243,9 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; 
     export RISCV_TOOLCHAIN_TYPE=install
   fi
   RISCV_SYSROOT=${RISCV_SYSROOT:-/opt/fedora28_riscv_root}
-  if [ ! -d "${RISCV_SYSROOT}"]; then
+  if [ ! -d "${RISCV_SYSROOT}" ]; then
      echo "RISCV_SYSROOT=${RISCV_SYSROOT} is undefined or does not exist - cannot proceed"
+     exit 1
   fi
   CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=${RISCV_SYSROOT} -with-boot-jdk=$JDK_BOOT_DIR"
 
