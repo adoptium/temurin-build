@@ -1080,6 +1080,20 @@ getFirstTagFromOpenJDKGitRepo() {
 
   if [ -z "$firstMatchingNameFromRepo" ]; then
     echo "WARNING: Failed to identify latest tag in the repository" 1>&2
+    # If the ADOPT_BRANCH_SAFETY flag is set, we may be building from an alternate
+    # repository that doesn't have the same tags, so allow defaults. For a better 
+    # options see https://github.com/adoptium/temurin-build/issues/2671
+    if [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "true" ]; then
+      if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
+         echo "WARNING: Could not identify latest tag but the ADOPT_BRANCH_SAFETY flag is off so defaulting to 8u000-b00" 1>&2
+         echo "8u000-b00"
+      else
+         echo "WARNING: Could not identify latest tag but the ADOPT_BRANCH_SAFETY flag is off so defaulting to jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0" 1>&2
+         echo "jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0"
+      fi
+    else
+      echo "WARNING: Failed to identify latest tag in the repository" 1>&2
+    fi
   else
     echo "$firstMatchingNameFromRepo"
   fi

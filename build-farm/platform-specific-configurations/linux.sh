@@ -177,25 +177,39 @@ elif [ -r /usr/bin/gcc-7 ]; then
   [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
 fi
 
-# Bisheng on aarch64 has a KAE option which requires openssl 1.1.1 to be used
-if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ] && [ -x /usr/local/openssl-1.1.1/lib/libcrypto.so.1.1 ]; then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cflags=-I/usr/local/openssl-1.1.1/include  --with-extra-cxxflags=-I/usr/local/openssl-1.1.1/include --with-extra-ldflags=-L/usr/local/openssl-1.1.1/lib"
+if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
+  # BUILD_C/CXX required for native (non-cross) RISC-V builds of Bisheng
+  if [ -n "$CXX" ]; then
+    export BUILD_CC="$CC"
+    export BUILD_CXX="$CXX"
+  fi
+  # Bisheng on aarch64 has a KAE option which requires openssl 1.1.1 to be used
+  BISHENG_OPENSSL_111_LOCATION=${BISHENG_OPENSSL_111_LOCATION:-/usr/local/openssl-1.1.1}
+  if [ -x "${BISHENG_OPENSSL_111_LOCATION}/lib/libcrypto.so.1.1" ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cflags=-I${BISHENG_OPENSSL_111_LOCATION}/include  --with-extra-cxxflags=-I${BISHENG_OPENSSL_111_LOCATION}/include --with-extra-ldflags=-L${BISHENG_OPENSSL_111_LOCATION}/lib"
+  fi
 fi
 
 if which ccache 2> /dev/null; then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
 fi
 
-# If we are in a cross compilation environment for RISC-V
-if [ "${ARCHITECTURE}" == "riscv64" ] && [ "$(uname -m)" == "x86_64" ]; then
+# Handle cross compilation environment for RISC-V
+NATIVE_API_ARCH=$(uname -m)
+if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
+if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
+if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export BUILDJDK=${WORKSPACE:-$PWD}/buildjdk
-    echo RISCV cross-compilation for OpenJ9 ... Downloading required nightly OpenJ9/x64 as build JDK to "$BUILDJDK"
+    echo "RISCV cross-compilation for OpenJ9 ... Downloading required nightly OpenJ9/${NATIVE_API_ARCH} as build JDK to $BUILDJDK"
     rm -rf "$BUILDJDK"
     mkdir "$BUILDJDK"
-    wget -q -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/x64/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
-    "$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g'
+    wget -q -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/${NATIVE_API_ARCH}/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
+    "$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g' || exit 1
     CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-jdk=$BUILDJDK --disable-ddr"
+    if [ -d /usr/local/openssl102 ]; then
+      CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=/usr/local/openssl102"
+    fi
   elif [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
     if [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
       BUILD_CC=/usr/local/gcc/bin/gcc-7.5
@@ -208,16 +222,33 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "$(uname -m)" == "x86_64" ]; then
       exit 1
     fi
   fi
+
+  # RISC-V cross compile settings for all VARIANT values
   echo RISC-V cross-compilation setup ...  Setting RISCV64, LD_LIBRARY_PATH, PATH, CC, CXX
   export RISCV64=/opt/riscv_toolchain_linux
   export LD_LIBRARY_PATH=$RISCV64/lib64
   if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_LIBRARY_PATH
   fi
-  export PATH="$RISCV64/bin:$PATH"
-  export CC=$RISCV64/bin/riscv64-unknown-linux-gnu-gcc
-  export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
-  CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=/opt/fedora28_riscv_root --with-boot-jdk=$JDK_BOOT_DIR"
+
+  if [ -r "$RISCV64/bin/riscv64-unknown-linux-gnu-g++" ]; then
+    export CC=$RISCV64/bin/riscv64-unknown-linux-gnu-gcc
+    export CXX=$RISCV64/bin/riscv64-unknown-linux-gnu-g++
+    export PATH="$RISCV64/bin:$PATH"
+  elif [ -r /usr/bin/riscv64-linux-gnu-g++ ]; then
+    export CC=/usr/bin/riscv64-linux-gnu-gcc
+    export CXX=/usr/bin/riscv64-linux-gnu-g++
+    # This is required for OpenJ9 if not using "riscv64-unknown-linux-gnu-*"
+    # i.e. if using the default cross compiler supplied with Debian/Ubuntu
+    export RISCV_TOOLCHAIN_TYPE=install
+  fi
+  RISCV_SYSROOT=${RISCV_SYSROOT:-/opt/fedora28_riscv_root}
+  if [ ! -d "${RISCV_SYSROOT}" ]; then
+     echo "RISCV_SYSROOT=${RISCV_SYSROOT} is undefined or does not exist - cannot proceed"
+     exit 1
+  fi
+  CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=${RISCV_SYSROOT} -with-boot-jdk=$JDK_BOOT_DIR"
+
   if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
     CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jvm-features=shenandoahgc BUILD_CC=$BUILD_CC BUILD_CXX=$BUILD_CXX"
   fi
