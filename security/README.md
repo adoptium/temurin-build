@@ -38,6 +38,7 @@ The updated list will be picked up during the next build.
 The resulting cacerts file is licensed under the terms of the [source file][mozilla-certdata], the Mozilla Public License, v.2.0.
 
 ## Updater
+
 The `certdata.txt` is automatically updated as part of a GitHub actions workflow. See the [workflow file](./github/workflows/ca-cert-updater.yml).
 
  [support-issues]: https://github.com/AdoptOpenJDK/openjdk-support/issues/13
