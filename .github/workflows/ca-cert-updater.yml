@@ -1,5 +1,6 @@
 name: CA Certs Update
 on:
+  workflow_dispatch:
   schedule:
     # https://crontab.guru/every-night-at-midnight
     - cron: "0 0 * * *"
@@ -18,7 +19,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-        title: "Update CA Certs"
-        path: "security/"
-        commit-message: "cacerts: pull in updated certs from Mozilla"
-        author: "eclipse-temurin-bot <temurin-bot@eclipse.org>"
+          title: "Update CA Certs"
+          path: "security/"
+          commit-message: "cacerts: pull in updated certs from Mozilla"
+          author: "eclipse-temurin-bot <temurin-bot@eclipse.org>"
