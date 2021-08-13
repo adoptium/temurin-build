@@ -1,0 +1,27 @@
+name: CA Certs Update
+on:
+  workflow_dispatch:
+  schedule:
+    # https://crontab.guru/every-night-at-midnight
+    - cron: "0 0 * * *"
+
+jobs:
+  update_ca_certs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Run updater
+        working-directory: ./security
+        run: "./mk-ca-bundle.pl"
+
+      - uses: gr2m/create-or-update-pull-request-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          title: "Update CA Certs"
+          path: "security/"
+          commit-message: "cacerts: pull in updated certs from Mozilla"
+          author: "eclipse-temurin-bot <temurin-bot@eclipse.org>"
