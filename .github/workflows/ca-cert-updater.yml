@@ -9,7 +9,9 @@ jobs:
   update_ca_certs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
 
       - name: Run updater
         working-directory: ./security
