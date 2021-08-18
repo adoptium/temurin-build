@@ -19,7 +19,7 @@ jobs:
 
       - uses: gr2m/create-or-update-pull-request-action@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
         with:
           title: "Update CA Certs"
           path: "security/"
