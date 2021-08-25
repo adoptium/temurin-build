@@ -24,7 +24,7 @@ export DRAGONWELL8_BOOTSTRAP=/cygdrive/C/openjdk/dragonwell-bootstrap/jdk8u272-g
 export ALLOW_DOWNLOADS=true
 export LANG=C
 export OPENJ9_NASM_VERSION=2.13.03
-export OPENSSL_VERSION=1.1.1k
+export OPENSSL_VERSION=1.1.1l
 
 TOOLCHAIN_VERSION=""
 
