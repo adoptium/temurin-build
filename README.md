@@ -8,7 +8,7 @@ These scripts can be used to build OpenJDK anywhere but are primarily used by Ec
 
 ## Where can I find the release status of Eclipse Temurin binaries?
 
-You want to go to The [Eclipse Adoptium Top Level Project Repo](https://www.github.com/adoptium/adoptium/issues) for release tracking.
+Go to the [Eclipse Adoptium Top Level Project Repo](https://www.github.com/adoptium/adoptium/issues) for release tracking.
 
 ## TL;DR: I want to build a JDK NOW
 
