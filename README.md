@@ -6,7 +6,7 @@ These scripts can be used to build OpenJDK anywhere but are primarily used by Ec
 
 **NOTE** In the future, adoptium.net will transition to being a marketplace for other qualifying vendors as well Eclipse Temurin.
 
-## Looking for the release status of Eclipse Temurin binaries?
+## Where can I find the release status of Eclipse Temurin binaries?
 
 You want to go to The [Eclipse Adoptium Top Level Project Repo](https://www.github.com/adoptium/adoptium/issues) for release tracking.
 
