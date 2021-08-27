@@ -24,7 +24,7 @@ repository (`git clone https://github.com/adoptium/temurin-build` and
 kick off a build a follows with this script. The `-J` parameter specifies
 the "boot JDK" which should generally be one major version prior to the one
 you are building (although one of the same major version will also work).
-Note that the build variant defaults to HotSpot if omitted.
+Note that the build variant defaults to HotSpot if omitted which builds from the same repositories as Temurin.
 
 ```bash
 ./makejdk-any-platform.sh (-J /usr/lib/jvm/jdk-xx) (--build-variant <hotspot|openj9|corretto|SapMachine|dragonwell|bisheng>) <jdk8u|jdk11u|jdk16u|jdk>
