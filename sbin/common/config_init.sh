@@ -453,7 +453,7 @@ function configDefaults() {
   BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]=${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]:-""}
 
   BUILD_CONFIG[NUM_PROCESSORS]="1"
-  BUILD_CONFIG[TARGET_FILE_NAME]="OpenJDK.tar.gz"
+  BUILD_CONFIG[TARGET_FILE_NAME]="OpenJDK-jdk.tar.gz"
 
   # Dir where we clone the OpenJDK source code for building, defaults to 'src'
   BUILD_CONFIG[OPENJDK_SOURCE_DIR]="src"
