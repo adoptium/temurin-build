@@ -180,7 +180,7 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVendor(final String value) {
-            assertEquals(value, "Eclipse Foundation");
+            assertEquals(value, "Eclipse Adoptium");
         }
 
         @Override
@@ -201,7 +201,7 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVmVendor(final String value) {
-            assertTrue(value.equals("Eclipse Foundation") || value.equals("Eclipse OpenJ9"));
+            assertTrue(value.equals("Eclipse Adoptium") || value.equals("Eclipse OpenJ9"));
         }
 
         @Override
