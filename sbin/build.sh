@@ -201,7 +201,7 @@ getOpenJdkVersion() {
 #
 # openjdk 11.0.12 2021-07-20
 # OpenJDK Runtime Environment Temurin-11.0.12+7 (build 11.0.12+7)
-# OpenJDK 64-Bit Server VM Temurin-11.0.12+7 (build 11.0.12+7, mixed mode)configureVersionStringParameter() {
+# OpenJDK 64-Bit Server VM Temurin-11.0.12+7 (build 11.0.12+7, mixed mode)
 
 configureVersionStringParameter() {
   stepIntoTheWorkingDirectory
@@ -254,7 +254,7 @@ configureVersionStringParameter() {
 
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
 
-      addConfigureArg "--with-company-name=" "Eclipse\\ Adoptium"
+      addConfigureArg "--with-company-name=" "\"Eclipse Adoptium\""
 
       # No JFR support in AIX or zero builds (s390 or armv7l)
       if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "s390x" ] && [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "aix" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "armv7l" ]; then
