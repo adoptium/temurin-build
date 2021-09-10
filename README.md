@@ -1,12 +1,16 @@
-# Repository for code and instructions for building Temurin
+# Repository for code and instructions for building OpenJDK binaries, defaulting to Eclipse Temurin
 
 [![Slack](https://slackin-jmnmplfpdu.now.sh/badge.svg)](https://slackin-jmnmplfpdu.now.sh/)
 
-Temurin makes use of these scripts to build binaries on the build farm at
-<https://ci.adoptopenjdk.net>, which produces OpenJDK binaries for consumption via
-<https://adoptium.net> and <https://api.adoptium.net>.
+These scripts can be used to build OpenJDK anywhere but are primarily used by Eclipse Adoptium members (vendors) to build binaries. The scripts default to the use case of building Eclipse Temurin binaries which occurs on the build farm at <https://ci.adoptopenjdk.net>. Those binaries are then made available for consumption at <https://adoptium.net> and via the API <https://api.adoptium.net>.
 
-## TL;DR: I want to build a JDK NOW!
+**NOTE** In the future, adoptium.net will transition to being a marketplace for other qualifying vendors as well Eclipse Temurin.
+
+## Where can I find the release status of Eclipse Temurin binaries?
+
+Go to the [Eclipse Adoptium Top Level Project Repo](https://www.github.com/adoptium/adoptium/issues) for release tracking.
+
+## TL;DR: I want to build a JDK NOW
 
 ### Build jdk natively on your system
 
@@ -20,10 +24,10 @@ repository (`git clone https://github.com/adoptium/temurin-build` and
 kick off a build a follows with this script. The `-J` parameter specifies
 the "boot JDK" which should generally be one major version prior to the one
 you are building (although one of the same major version will also work).
-Note that the build variant defaults to HotSpot if omitted.
+Note that the build variant defaults to HotSpot if omitted which builds from the same repositories as Temurin.
 
 ```bash
-./makejdk-any-platform.sh (-J /usr/lib/jvm/jdk-xx) (--build-variant <hotspot|openj9|corretto|SapMachine|dragonwell|bisheng>) <jdk8u|jdk11u|jdk15u|jdk>
+./makejdk-any-platform.sh (-J /usr/lib/jvm/jdk-xx) (--build-variant <hotspot|openj9|corretto|SapMachine|dragonwell|bisheng>) <jdk8u|jdk11u|jdk16u|jdk>
 ```
 
 e.g.
@@ -58,8 +62,8 @@ personally or at build farm scale.
 build jobs used for building Adopt OpenJDK binaries.
 1. The `docker` folder contains tools for generating dockerfiles which can be used as part of building
 OpenJDK inside a Docker container.
-1. The `git-hg` folder has now been moved to it's own seperate repository. See [openjdk-mirror-scripts](https://github.com/adoptium/mirror-scripts).
-1. The `pipelines` folder has now been moved to a seperate repo: <https://github.com/adoptium/ci-jenkins-pipelines>.
+1. The `git-hg` folder has now been moved to it's own separate repository. See [openjdk-mirror-scripts](https://github.com/adoptium/mirror-scripts).
+1. The `pipelines` folder has now been moved to a separate repo: <https://github.com/adoptium/ci-jenkins-pipelines>.
 1. The `sbin` folder contains the scripts that actually build (Temurin).
 `build.sh` is the entry point which can be used stand alone but is typically
 called by the `native-build.sh` or `docker-build.sh` scripts (which themselves
@@ -103,7 +107,7 @@ OPTIONS
 
 -b, --branch <branch>
 specify a custom branch to build from, e.g. dev.
-For reference, Adoptium GitHub source repos default to the dev
+For reference, Adoptium GitHub source repositories default to the dev
 branch which may contain a very small diff set to the master branch
 (which is a clone from the OpenJDK mercurial forest).
 
@@ -152,7 +156,7 @@ specify the location of an existing FreeType library.
 This is typically used in conjunction with -F.
 
 --freetype-build-param <parameter>
-specify any special freetype build parameters (required for some OS's).
+specify any special freetype build parameters (required for some Operating Systems).
 
 --freetype-version <version>
 specify the version of freetype you are building.
@@ -180,7 +184,7 @@ if using docker, keep the container after the build.
 creates an exploded image (useful for codesigning jmods). Use --assemble-exploded-image once you have signed the jmods to complete the packaging steps.
 
 --custom-cacerts <true|false>
-If true (default), a custom cacerts file will be generated based on Mozilla's list of CA certificates (see folder security/). If false, the file shipped by OpenJDK will be used. 
+If true (default), a custom cacerts file will be generated based on the Mozilla list of CA certificates (see folder security/). If false, the file shipped by OpenJDK will be used. 
 
 -n, --no-colour
 disable colour output.
