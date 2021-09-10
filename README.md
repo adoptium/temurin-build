@@ -300,7 +300,7 @@ Alongside the built assets a metadata file will be created with info about the b
 
 ```json
 {
-    "vendor": "Eclipse Foundation",
+    "vendor": "Eclipse Adoptium",
     "os": "mac",
     "arch": "x64",
     "variant": "openj9",
@@ -340,7 +340,7 @@ Below are all of the keys contained in the metadata file and some example values
 ----
 
 - `vendor:`
-Example values: [`Eclipse Foundation`, `Alibaba`]
+Example values: [`Eclipse Adoptium`, `Alibaba`]
 
 This tag is used to identify the vendor of the JDK being built, this value is set in the [build.sh](https://github.com/adoptium/temurin-build/blob/805e76acbb8a994abc1fb4b7d582486d48117ee8/sbin/build.sh#L183) file and defaults to "Adoptium".
 

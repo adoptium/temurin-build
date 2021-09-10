@@ -199,9 +199,10 @@ getOpenJdkVersion() {
 
 # Ensure that we produce builds with versions strings something like:
 #
-# openjdk version "1.8.0_131"
-# OpenJDK Runtime Environment (build 1.8.0-temurin-<user>_2017_04_17_17_21-b00)
-# OpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)
+# openjdk 11.0.12 2021-07-20
+# OpenJDK Runtime Environment Temurin-11.0.12+7 (build 11.0.12+7)
+# OpenJDK 64-Bit Server VM Temurin-11.0.12+7 (build 11.0.12+7, mixed mode)
+
 configureVersionStringParameter() {
   stepIntoTheWorkingDirectory
 
@@ -253,7 +254,7 @@ configureVersionStringParameter() {
 
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
 
-      addConfigureArg "--with-company-name=" "Temurin"
+      addConfigureArg "--with-company-name=" "\"Eclipse Adoptium\""
 
       # No JFR support in AIX or zero builds (s390 or armv7l)
       if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "s390x" ] && [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "aix" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "armv7l" ]; then
@@ -909,7 +910,7 @@ createNoticeFile() {
   local TYPE="${2}"
 
   # Only perform these steps for EF builds
-  if [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Foundation" ]]; then
+  if [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Adoptium" ]]; then
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
       HOME_DIR="${DIRECTORY}/Contents/home/"
     else
@@ -925,7 +926,9 @@ setPlistValueForMacOS() {
   local TYPE="${2}"
 
   # Only perform these steps for EF builds
-  if [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Foundation" ]]; then
+  if [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Adoptium" ]]; then
+    # SXA: Not changing these now as it may cause side effects
+    # May relate to signing. Also cannot contain spaces
     VENDOR_NAME="temurin"
     PACKAGE_NAME="Eclipse Temurin"
     MAJOR_VERSION="${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
