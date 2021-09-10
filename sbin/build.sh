@@ -502,7 +502,40 @@ buildTemplatedFile() {
       -e "s|{makeCommandArg}|${FULL_MAKE_COMMAND}|" >"${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
 }
 
+createSourceArchive() {
+  local sourceDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  local sourceArchiveTargetPath="$(getSourceArchivePath)"
+  local tmpSourceVCS="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/tmp-openjdk-git"
+  local srcArchiveName
+  if echo ${BUILD_CONFIG[TARGET_FILE_NAME]} | grep -q hotspot; then
+    # Transform 'OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.12_7.tar.gz' to 'OpenJDK11U-sources_11.0.12_7.tar.gz'
+    srcArchiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk_*(?)_hotspot_/-sources_}")
+  else
+    srcArchiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sources}")
+  fi
+
+  local oldPwd="${PWD}"
+  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
+  echo "Temporarily moving VCS source dir to ${tmpSourceVCS}"
+  mv "${sourceDir}/.git" "${tmpSourceVCS}"
+  echo "Temporarily moving source dir to ${sourceArchiveTargetPath}"
+  mv "${sourceDir}" "${sourceArchiveTargetPath}"
+
+  echo "OpenJDK source archive path will be ${sourceArchiveTargetPath}."
+  createArchive "${sourceArchiveTargetPath}" "${srcArchiveName}"
+
+  echo "Restoring source dir from ${sourceArchiveTargetPath} to ${sourceDir}"
+  mv "${sourceArchiveTargetPath}" "${sourceDir}"
+  echo "Restoring VCS source dir from ${tmpSourceVCS} to ${sourceDir}/.git"
+  mv "${tmpSourceVCS}" "${sourceDir}/.git"
+  cd "${oldPwd}"
+}
+
 executeTemplatedFile() {
+
+  if [ "${BUILD_CONFIG[CREATE_SOURCE_ARCHIVE]}" == "true" ]; then
+    createSourceArchive
+  fi
   stepIntoTheWorkingDirectory
 
   echo "Currently at '${PWD}'"
@@ -673,6 +706,11 @@ getJreArchivePath() {
 getTestImageArchivePath() {
   local jdkArchivePath=$(getJdkArchivePath)
   echo "${jdkArchivePath}-test-image"
+}
+
+getSourceArchivePath() {
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-src"
 }
 
 getDebugImageArchivePath() {
