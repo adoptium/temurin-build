@@ -16,7 +16,7 @@ JDK_GA=
 
 # shellcheck disable=SC2002 # Disable UUOC error
 setJDKVars() {
-  wget -q https://api.adoptopenjdk.net/v3/info/available_releases
+  wget -q https://api.adoptium.net/v3/info/available_releases
   JDK_MAX=$(cat available_releases \
       | grep 'tip_version' \
       | cut -d':' -f 2 \
@@ -274,7 +274,7 @@ printDockerJDKs() {
 printJDK() {
   local JDKVersion=$1
   echo "
-RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptopenjdk.net/v3/binary/latest/$JDKVersion/ga/linux/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk' -O - | tar xzf - -C /usr/lib/jvm/jdk$JDKVersion --strip-components=1\"" >> "$DOCKERFILE_PATH"
+RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptium.net/v3/binary/latest/$JDKVersion/ga/linux/x64/jdk/hotspot/normal/adoptium?project=jdk' -O - | tar xzf - -C /usr/lib/jvm/jdk$JDKVersion --strip-components=1\"" >> "$DOCKERFILE_PATH"
 }
 
 printCopyFolders(){

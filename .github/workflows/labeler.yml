@@ -20,24 +20,3 @@ jobs:
       with:
         github-token: "${{secrets.GITHUB_TOKEN}}"
         config-path: .github/regex_labeler.yml
-
-  Project:
-    runs-on: ubuntu-latest
-    name: Assign to Project
-    steps:
-    - name: Assign NEW issues and NEW pull requests
-      uses: srggrs/assign-one-project-github-action@1.2.1
-      if: github.event.action == 'opened'
-      with:
-        project: 'https://github.com/adoptium/temurin-build/projects/1'
-        column_name: 'TODO'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Assign issues and pull requests with `good first issue` label
-      uses: srggrs/assign-one-project-github-action@1.2.1
-      if: contains(github.event.issue.labels.*.name, 'good first issue')
-      with:
-        project: 'https://github.com/orgs/adoptium/projects/1'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

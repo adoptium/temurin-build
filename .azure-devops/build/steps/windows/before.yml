@@ -20,13 +20,13 @@ steps:
   # download jdk8u, bootjdk
   - powershell: |
       $ProgressPreference = 'SilentlyContinue';
-      Invoke-WebRequest -UseBasicParsing 'https://api.adoptopenjdk.net/v3/binary/latest/8/ga/windows/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk' -OutFile '${{ parameters.dependenciesDir }}\jdk8.zip';
+      Invoke-WebRequest -UseBasicParsing 'https://api.adoptium.net/v3/binary/latest/8/ga/windows/x64/jdk/hotspot/normal/adoptium?project=jdk' -OutFile '${{ parameters.dependenciesDir }}\jdk8.zip';
       if ('$(BOOTJDK_VERSION)' -eq '7') {
         Invoke-WebRequest -UseBasicParsing "https://cdn.azul.com/zulu/bin/zulu7.38.0.11-ca-jdk7.0.262-win_x64.zip" -OutFile '${{ parameters.dependenciesDir }}\jdk.zip';
       } elseif ('$(BOOTJDK_VERSION)' -eq '15'){
-        Invoke-WebRequest -UseBasicParsing "https://api.adoptopenjdk.net/v3/binary/latest/$(BOOTJDK_VERSION)/ea/windows/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk" -OutFile '${{ parameters.dependenciesDir }}\jdk.zip';
+        Invoke-WebRequest -UseBasicParsing "https://api.adoptium.net/v3/binary/latest/$(BOOTJDK_VERSION)/ea/windows/x64/jdk/hotspot/normal/adoptium?project=jdk" -OutFile '${{ parameters.dependenciesDir }}\jdk.zip';
       } else {
-        Invoke-WebRequest -UseBasicParsing "https://api.adoptopenjdk.net/v3/binary/latest/$(BOOTJDK_VERSION)/ga/windows/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk" -OutFile '${{ parameters.dependenciesDir }}\jdk.zip';
+        Invoke-WebRequest -UseBasicParsing "https://api.adoptium.net/v3/binary/latest/$(BOOTJDK_VERSION)/ga/windows/x64/jdk/hotspot/normal/adoptium?project=jdk" -OutFile '${{ parameters.dependenciesDir }}\jdk.zip';
       }
     displayName: "[Windows Before] download JDKs from AdoptOpenJDK & Azul"
 

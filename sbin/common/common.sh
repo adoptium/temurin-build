@@ -42,8 +42,8 @@ function setOpenJdkVersion() {
     until [ "$retryCount" -ge "$retryMax" ]
     do
         # Use Adopt API to get the JDK Head number
-        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptopenjdk.net/v3/info/available_releases)..."
-        local featureNumber=$(curl -q https://api.adoptopenjdk.net/v3/info/available_releases | awk '/tip_version/{print$2}')
+        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptium.net/v3/info/available_releases)..."
+        local featureNumber=$(curl -q https://api.adoptium.net/v3/info/available_releases | awk '/tip_version/{print$2}')
         
         # Checks the api request was successful and the return value is a number
         if [ -z "${featureNumber}" ] || ! [[ "${featureNumber}" -gt 0 ]]
@@ -59,8 +59,8 @@ function setOpenJdkVersion() {
     # Fail build if we still can't find the head number
     if [ -z "${featureNumber}" ] || ! [[ "${featureNumber}" -gt 0 ]]
     then
-        echo "Failed ${retryCount} times to query or parse the adopt api. Dumping headers via curl -v https://api.adoptopenjdk.net/v3/info/available_releases and exiting..."
-        curl -v https://api.adoptopenjdk.net/v3/info/available_releases
+        echo "Failed ${retryCount} times to query or parse the adopt api. Dumping headers via curl -v https://api.adoptium.net/v3/info/available_releases and exiting..."
+        curl -v https://api.adoptium.net/v3/info/available_releases
         echo curl returned RC $? in common.sh
         exit 1
     fi

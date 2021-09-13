@@ -38,12 +38,12 @@ steps:
 
   # download JDKs from AdoptOpenJDK
   - bash: |
-      wget -O "${{ parameters.dependenciesDir }}/openjdk8.tar.gz" "https://api.adoptopenjdk.net/v3/binary/latest/8/ga/mac/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk"
+      wget -O "${{ parameters.dependenciesDir }}/openjdk8.tar.gz" "https://api.adoptium.net/v3/binary/latest/8/ga/mac/x64/jdk/hotspot/normal/adoptium?project=jdk"
       if [ "${BOOTJDK_VERSION}" == "15" ]
       then
-          wget -O "${{ parameters.dependenciesDir }}/openjdk.tar.gz" "https://api.adoptopenjdk.net/v3/binary/latest/${BOOTJDK_VERSION}/ea/mac/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk"
+          wget -O "${{ parameters.dependenciesDir }}/openjdk.tar.gz" "https://api.adoptium.net/v3/binary/latest/${BOOTJDK_VERSION}/ea/mac/x64/jdk/hotspot/normal/adoptium?project=jdk"
       else
-          wget -O "${{ parameters.dependenciesDir }}/openjdk.tar.gz" "https://api.adoptopenjdk.net/v3/binary/latest/${BOOTJDK_VERSION}/ga/mac/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk"
+          wget -O "${{ parameters.dependenciesDir }}/openjdk.tar.gz" "https://api.adoptium.net/v3/binary/latest/${BOOTJDK_VERSION}/ga/mac/x64/jdk/hotspot/normal/adoptium?project=jdk"
       fi
     displayName: "[macOS Before] download JDKs from AdoptOpenJDK"
 
