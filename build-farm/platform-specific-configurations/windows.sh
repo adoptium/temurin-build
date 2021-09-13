@@ -54,7 +54,8 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
                 *) downloadArch="$ARCHITECTURE";;
       esac
       releaseType="ga"
-      apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/\${VARIANT}/normal/adoptopenjdk"
+      vendor="adoptium"
+      apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/\${VARIANT}/normal/\${vendor}"
       apiURL=$(eval echo ${apiUrlTemplate})
       echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
       # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
@@ -69,9 +70,25 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
         echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} failed."
         # shellcheck disable=SC2034
         releaseType="ea"
+        # shellcheck disable=SC2034
+        vendor="adoptium"
         apiURL=$(eval echo ${apiUrlTemplate})
         echo "Attempting to download EA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
+        set +e
         wget -q "${apiURL}" -O openjdk.zip
+        retVal=$?
+        set -e
+        if [ $retVal -ne 0 ]; then
+          # If no binaries are available then try from adoptopenjdk
+          echo "Downloading Temurin release of boot JDK version ${JDK_BOOT_VERSION} failed."
+          # shellcheck disable=SC2034
+          releaseType="ga"
+          # shellcheck disable=SC2034
+          vendor="adoptopenjdk"
+          apiURL=$(eval echo ${apiUrlTemplate})
+          echo "Attempting to download GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
+          wget -q "${apiURL}" -O openjdk.zip
+        fi
       fi
       unzip -q openjdk.zip
       mv "$(ls -d jdk-"${JDK_BOOT_VERSION}"*)" "$bootDir"

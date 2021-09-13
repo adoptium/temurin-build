@@ -125,11 +125,12 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
     elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       mkdir -p "$bootDir"
       releaseType="ga"
+      vendor="adoptium"
       # TODO: Temporary change until https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/2145 is resolved
       if [ "$JDK_BOOT_VERSION" -ge 15 ] && [ "$VARIANT" = "openj9" ] && [ "$ARCHITECTURE" = "aarch64" ]; then
-        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
+        apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/hotspot/normal/\${vendor}"
       else
-        apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/adoptopenjdk"
+        apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/\${vendor}"
       fi
       apiURL=$(eval echo ${apiUrlTemplate})
       echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
@@ -145,9 +146,25 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
         echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} failed."
         # shellcheck disable=SC2034
         releaseType="ea"
+        # shellcheck disable=SC2034
+        vendor="adoptium"
         apiURL=$(eval echo ${apiUrlTemplate})
         echo "Attempting to download EA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
+        set +e
         wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
+        retVal=$?
+        set -e
+        if [ $retVal -ne 0 ]; then
+          # If no binaries are available then try from adoptopenjdk
+          echo "Downloading Temurin release of boot JDK version ${JDK_BOOT_VERSION} failed."
+          # shellcheck disable=SC2034
+          releaseType="ga"
+          # shellcheck disable=SC2034
+          vendor="adoptopenjdk"
+          apiURL=$(eval echo ${apiUrlTemplate})
+          echo "Attempting to download GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
+          wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
+        fi
       fi
     fi
   fi
@@ -204,7 +221,7 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; 
     echo "RISCV cross-compilation for OpenJ9 ... Downloading required nightly OpenJ9/${NATIVE_API_ARCH} as build JDK to $BUILDJDK"
     rm -rf "$BUILDJDK"
     mkdir "$BUILDJDK"
-    wget -q -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/${NATIVE_API_ARCH}/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
+    wget -q -O - "https://api.adoptium.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/${NATIVE_API_ARCH}/jdk/openj9/normal/adoptium" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
     "$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g' || exit 1
     CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-jdk=$BUILDJDK --disable-ddr"
     if [ -d /usr/local/openssl102 ]; then

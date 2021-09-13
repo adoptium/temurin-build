@@ -73,7 +73,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
     elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       mkdir -p "${bootDir}"
       releaseType="ga"
-      apiUrlTemplate="https://api.adoptopenjdk.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/aix/\${ARCHITECTURE}/jdk/hotspot/normal/adoptopenjdk"
+      apiUrlTemplate="https://api.adoptium.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/aix/\${ARCHITECTURE}/jdk/hotspot/normal/adoptium"
       apiURL=$(eval echo ${apiUrlTemplate})
       echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
       # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
