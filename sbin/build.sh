@@ -254,6 +254,7 @@ configureVersionStringParameter() {
 
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
 
+      # NOTE: There maybe a behavioural difference with this config depending on the jdk8u source branch you're working with.
       addConfigureArg "--with-company-name=" "\"Temurin\""
 
       # No JFR support in AIX or zero builds (s390 or armv7l)
