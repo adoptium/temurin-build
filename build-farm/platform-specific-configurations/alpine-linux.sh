@@ -20,7 +20,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
 # ccache seems flaky on alpine
-export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --enable-headless-only=yes"
 
 # We don't bundle freetype on alpine anymore, and expect the user to have it.
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
