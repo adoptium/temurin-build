@@ -80,7 +80,7 @@ signRelease()
           dir=$(dirname "$f")
           file=$(basename "$f")
           mv "$f" "${dir}/unsigned_${file}"
-          curl -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
+          curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
           chmod --reference="${dir}/unsigned_${file}" "$f"
           rm -rf "${dir}/unsigned_${file}"
         else
