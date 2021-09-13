@@ -70,6 +70,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
         echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} failed."
         # shellcheck disable=SC2034
         releaseType="ea"
+        # shellcheck disable=SC2034
         vendor="adoptium"
         apiURL=$(eval echo ${apiUrlTemplate})
         echo "Attempting to download EA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
@@ -82,6 +83,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
           echo "Downloading Temurin release of boot JDK version ${JDK_BOOT_VERSION} failed."
           # shellcheck disable=SC2034
           releaseType="ga"
+          # shellcheck disable=SC2034
           vendor="adoptopenjdk"
           apiURL=$(eval echo ${apiUrlTemplate})
           echo "Attempting to download GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
