@@ -80,7 +80,7 @@ signRelease()
           dir=$(dirname "$f")
           file=$(basename "$f")
           mv "$f" "${dir}/unsigned_${file}"
-          curl -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
+          curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
           chmod --reference="${dir}/unsigned_${file}" "$f"
           rm -rf "${dir}/unsigned_${file}"
         else
@@ -125,17 +125,16 @@ signRelease()
           dir=$(dirname "$f")
           file=$(basename "$f")
           mv "$f" "${dir}/unsigned_${file}"
-          curl -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
+          curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
           chmod --reference="${dir}/unsigned_${file}" "$f"
           rm -rf "${dir}/unsigned_${file}"
         done
         JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
-        JDK=$(basename "${JDK_DIR}")
-        ENTITLEMENTS="${JDK_DIR}/Contents/Info.plist"   
+        JDK=$(basename "${JDK_DIR}") 
         cd "${TMP_DIR}"
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
-        curl -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
+        curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
         rm -rf "${JDK_DIR}"
         unzip -q -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
       else
