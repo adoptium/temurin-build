@@ -213,7 +213,7 @@ processArgumentsforSpecificArchitectures() {
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
       make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true images"
     # Don't produce a JRE for JDK16 and above
-    else if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 16 ]; then
+    elif [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 16 ]; then
       make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true product-images"
     else
       make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true product-images legacy-jre-image"
@@ -243,7 +243,7 @@ processArgumentsforSpecificArchitectures() {
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && isHotSpot; then
       jvm_variant=client
       make_args_for_any_platform="DEBUG_BINARIES=true images"
-    else if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 16 ]; then
+    elif [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 16 ]; then
       # Don't produce a JRE for JDK16 and above
       jvm_variant=server,client
       make_args_for_any_platform="DEBUG_BINARIES=true images"
