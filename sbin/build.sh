@@ -1259,8 +1259,11 @@ addInfoToReleaseFile() {
     echo "ADDING J9 TAG"
     addJ9Tag
   fi
-  echo "MIRRORING TO JRE"
-  mirrorToJRE
+   # Don't produce a JRE for JDK16 and above
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+    echo "MIRRORING TO JRE"
+    mirrorToJRE
+  fi
   echo "ADDING IMAGE TYPE"
   addImageType
   echo "===RELEASE FILE GENERATED==="
