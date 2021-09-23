@@ -6,7 +6,7 @@
     "ignore": [
         "**/__snapshots__/**",
         "**/test/**",
-        ".github/workflows/**"
+        "**/.github/workflows/**"
     ],
     "absolute": true
 }
