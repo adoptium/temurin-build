@@ -88,9 +88,10 @@ buildOpenJDKViaDocker()
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
 
     local openjdk_core_version=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}
-    # test-image and debug-image targets are optional - build scripts check whether the directories exist
+    # test-image, debug-image and static-libs-image targets are optional - build scripts check whether the directories exist
     local openjdk_test_image_path="test"
     local openjdk_debug_image_path="debug-image"
+    local openjdk_static_libs_image_path="static-libs"
     local jdk_directory=""
     local jre_directory=""
 
@@ -122,6 +123,7 @@ buildOpenJDKViaDocker()
     BUILD_CONFIG[JRE_PATH]=$jre_directory
     BUILD_CONFIG[TEST_IMAGE_PATH]=$openjdk_test_image_path
     BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
+    BUILD_CONFIG[STATIC_LIBS_IMAGE_PATH]=$openjdk_static_libs_image_path
 
   if [ -z "$(command -v docker)" ]; then
      # shellcheck disable=SC2154
