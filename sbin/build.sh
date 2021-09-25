@@ -1325,7 +1325,7 @@ addBuildOS() {
   local buildVer="Unknown"
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]; then
     buildOS=$(sw_vers | sed -n 's/^ProductName:[[:blank:]]*//p')
-    buildVer=$(sw_vers | tail -n 2 | awk '{print $2}')
+    buildVer=$(sw_vers | tail -n 2 | awk '{print $2}' | tr '\n' '\0' | xargs -0)
   elif [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
     buildOS=$(uname -s)
     buildVer=$(uname -r)
