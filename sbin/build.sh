@@ -1386,7 +1386,10 @@ mirrorToJRE() {
 
 addImageType() {
   echo -e IMAGE_TYPE=\"JDK\" >>"$PRODUCT_HOME/release"
-  echo -e IMAGE_TYPE=\"JRE\" >>"$JRE_HOME/release"
+  # Don't produce a JRE for JDK16 and above
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+    echo -e IMAGE_TYPE=\"JRE\" >>"$JRE_HOME/release"
+  fi
 }
 
 addInfoToJson(){
