@@ -508,14 +508,21 @@ createSourceArchive() {
   local sourceArchiveTargetPath="$(getSourceArchivePath)"
   local tmpSourceVCS="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/tmp-openjdk-git"
   local srcArchiveName
-  if echo ${BUILD_CONFIG[TARGET_FILE_NAME]} | grep -q hotspot; then
+  if echo ${BUILD_CONFIG[TARGET_FILE_NAME]} | grep -q hotspot -; then
     # Transform 'OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.12_7.tar.gz' to 'OpenJDK11U-sources_11.0.12_7.tar.gz'
-    srcArchiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk_*(?)_hotspot_/-sources_}")
+    # shellcheck disable=SC2001
+    srcArchiveName="$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk_.*_hotspot_/-sources_/g')"
   else
     srcArchiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sources}")
   fi
 
   local oldPwd="${PWD}"
+  echo "Source archive name is going to be: ${srcArchiveName}"
+  if ! echo "${srcArchiveName}" | grep -q '-sources' -; then
+     echo "Error: Unexpected source archive name! Expected '-sources' in name."
+     echo "       Source archive name was: ${srcArchiveName}"
+     exit 1
+  fi
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
   echo "Temporarily moving VCS source dir to ${tmpSourceVCS}"
   mv "${sourceDir}/.git" "${tmpSourceVCS}"
