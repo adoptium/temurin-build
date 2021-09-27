@@ -739,16 +739,19 @@ removingUnnecessaryFiles() {
   rm -rf "${jdkTargetPath}" || true
   mv "${jdkPath}" "${jdkTargetPath}"
 
-  if [ -d "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" ]; then
-    echo "moving $(ls -d ${BUILD_CONFIG[JRE_PATH]}) to ${jreTargetPath}"
-    rm -rf "${jreTargetPath}" || true
-    mv "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" "${jreTargetPath}"
+# Don't produce a JRE for JDK16 and above
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+    if [ -d "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" ]; then
+      echo "moving $(ls -d ${BUILD_CONFIG[JRE_PATH]}) to ${jreTargetPath}"
+      rm -rf "${jreTargetPath}" || true
+      mv "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" "${jreTargetPath}"
 
-    case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
-    "darwin") dirToRemove="${jreTargetPath}/Contents/Home" ;;
-    *) dirToRemove="${jreTargetPath}" ;;
-    esac
-    rm -rf "${dirToRemove}"/demo || true
+      case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+      "darwin") dirToRemove="${jreTargetPath}/Contents/Home" ;;
+      *) dirToRemove="${jreTargetPath}" ;;
+      esac
+      rm -rf "${dirToRemove}"/demo || true
+    fi
   fi
 
   # Test image - check if the config is set and directory exists
@@ -1187,26 +1190,35 @@ createOpenJDKTarArchive() {
 
 copyFreeFontForMacOS() {
   local jdkTargetPath=$(getJdkArchivePath)
-  local jreTargetPath=$(getJreArchivePath)
-
   makeACopyOfLibFreeFontForMacOSX "${jdkTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
-  makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
+
+  # Don't produce a JRE for JDK16 and above
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+    local jreTargetPath=$(getJreArchivePath)
+    makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
+  fi
 }
 
 setPlistForMacOS() {
   local jdkTargetPath=$(getJdkArchivePath)
-  local jreTargetPath=$(getJreArchivePath)
-
   setPlistValueForMacOS "${jdkTargetPath}" "jdk"
-  setPlistValueForMacOS "${jreTargetPath}" "jre"
+
+  # Don't produce a JRE for JDK16 and above
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+    local jreTargetPath=$(getJreArchivePath)
+    setPlistValueForMacOS "${jreTargetPath}" "jre"
+  fi
 }
 
 addNoticeFile() {
   local jdkTargetPath=$(getJdkArchivePath)
-  local jreTargetPath=$(getJreArchivePath)
-
   createNoticeFile "${jdkTargetPath}" "jdk"
-  createNoticeFile "${jreTargetPath}" "jre"
+
+  # Don't produce a JRE for JDK16 and above
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+    local jreTargetPath=$(getJreArchivePath)
+    createNoticeFile "${jreTargetPath}" "jre"
+  fi
 }
 
 wipeOutOldTargetDir() {
