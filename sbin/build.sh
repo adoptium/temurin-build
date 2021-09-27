@@ -482,7 +482,7 @@ buildTemplatedFile() {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
     ADDITIONAL_MAKE_TARGETS=" test-image debug-image"
   elif [ "$JDK_VERSION_NUMBER" -gt 8 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
-    ADDITIONAL_MAKE_TARGETS=" test-image"
+    ADDITIONAL_MAKE_TARGETS=" test-image static-libs-image"
   fi
 
   if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" == "true" ]]; then
@@ -726,12 +726,18 @@ getDebugImageArchivePath() {
   echo "${jdkArchivePath}-debug-image"
 }
 
+getStaticLibsArchivePath() {
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-static-libs"
+}
+
 # Clean up
 removingUnnecessaryFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
+  local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
 
   echo "Removing unnecessary files now..."
 
@@ -761,12 +767,63 @@ removingUnnecessaryFiles() {
     fi
   fi
 
-  # Test image - check if the config is set and directory exists
+  # Test image - check if the directory exists
   local testImagePath="${BUILD_CONFIG[TEST_IMAGE_PATH]}"
   if [ -n "${testImagePath}" ] && [ -d "${testImagePath}" ]; then
     echo "moving ${testImagePath} to ${testImageTargetPath}"
     rm -rf "${testImageTargetPath}" || true
     mv "${testImagePath}" "${testImageTargetPath}"
+  fi
+
+  # Static libs image - check if the directory exists
+  local staticLibsImagePath="${BUILD_CONFIG[STATIC_LIBS_IMAGE_PATH]}"
+  local osArch
+  local staticLibsDir
+  if [ -n "${staticLibsImagePath}" ] && [ -d "${staticLibsImagePath}" ]; then
+    # Create a directory structure recognized by the GraalVM build
+    # For example:
+    #   Linux: lib/static/linux-amd64/glibc/
+    #   Darwin: Contents/Home/lib/static/darwin-amd64/
+    #   Windows: lib/static/windows-amd64/
+    #
+    osArch="${BUILD_CONFIG[OS_ARCHITECTURE]}"
+    if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "x86_64" ]; then
+      osArch="amd64"
+    fi
+    pushd ${staticLibsImagePath}
+      case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+      *cygwin*)
+        # on Windows the expected layout is: lib/static/windows-amd64/
+        staticLibsDir="lib/static/windows-${osArch}"
+        ;;
+      darwin)
+        # on MacOSX the layout is: Contents/Home/lib/static/darwin-amd64/
+        staticLibsDir="Contents/Home/lib/static/darwin-${osArch}"
+        ;;
+      linux)
+        # on Linux the layout is: lib/static/linux-amd64/glibc
+        local cLib="glibc"
+        # shellcheck disable=SC2001
+        local libcVendor=$(ldd --version 2>&1 | sed -n '1s/.*\(musl\).*/\1/p')
+        if [ "${libcVendor}" = "musl" ]; then
+          cLib="musl"
+        fi
+        staticLibsDir="lib/static/linux-${osArch}/${cLib}"
+        ;;
+      *)
+        # on other platforms default to lib/static/<os>-<arch>
+        staticLibsDir="lib/static/${BUILD_CONFIG[OS_KERNEL_NAME]}-${osArch}"
+        ;;
+      esac
+      echo "Creating directory structure for static libs '${staticLibsDir}'"
+      mv "$(ls -d -- *)" "static-libs-dir-tmp"
+      mkdir -p "${staticLibsDir}"
+      mv static-libs-dir-tmp/* "${staticLibsDir}"
+      rm -rf "static-libs-dir-tmp"
+    popd
+    echo "moving ${staticLibsImagePath} to ${staticLibsImageTargetPath}"
+    rm -rf "${staticLibsImageTargetPath}" || true
+    mv "${staticLibsImagePath}" "${staticLibsImageTargetPath}"
   fi
 
   # Debug image - check if the config is set and directory exists
@@ -1174,6 +1231,7 @@ createOpenJDKTarArchive() {
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
+  local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
@@ -1195,6 +1253,24 @@ createOpenJDKTarArchive() {
     echo "OpenJDK debug image path will be ${debugImageTargetPath}."
     local debugImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debugimage}")
     createArchive "${debugImageTargetPath}" "${debugImageName}"
+  fi
+  if [ -d "${staticLibsImageTargetPath}" ]; then
+    echo "OpenJDK static libs path will be ${staticLibsImageTargetPath}."
+    local staticLibsTag="-static-libs"
+    if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = "linux" ]; then
+      # on Linux there might be glibc and musl variants of this
+      local cLib="glibc"
+      # shellcheck disable=SC2001
+      local libcVendor=$(ldd --version 2>&1 | sed -n '1s/.*\(musl\).*/\1/p')
+      if [ "${libcVendor}" = "musl" ]; then
+        cLib="musl"
+      fi
+      staticLibsTag="${staticLibsTag}-${cLib}"
+    fi
+    # shellcheck disable=SC2001
+    local staticLibsImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed "s/-jdk/${staticLibsTag}/g")
+    echo "OpenJDK static libs archive file name will be ${staticLibsImageName}."
+    createArchive "${staticLibsImageTargetPath}" "${staticLibsImageName}"
   fi
   # for macOS system, code sign directory before creating tar.gz file
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ] && [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
