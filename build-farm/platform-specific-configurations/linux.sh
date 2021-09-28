@@ -221,7 +221,8 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; 
     echo "RISCV cross-compilation for OpenJ9 ... Downloading required nightly OpenJ9/${NATIVE_API_ARCH} as build JDK to $BUILDJDK"
     rm -rf "$BUILDJDK"
     mkdir "$BUILDJDK"
-    wget -q -O - "https://api.adoptium.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ea/linux/${NATIVE_API_ARCH}/jdk/openj9/normal/adoptium" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
+    # TOFIX: Switch this back once Semeru has an API to pull the nightly builds.
+    wget -q -O - "https://api.adoptopenjdk.net/v3/binary/latest/${JAVA_FEATURE_VERSION}/ga/linux/${NATIVE_API_ARCH}/jdk/openj9/normal/adoptopenjdk" | tar xpzf - --strip-components=1 -C "$BUILDJDK"
     "$BUILDJDK/bin/java" -version 2>&1 | sed 's/^/CROSSBUILD JDK > /g' || exit 1
     CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-jdk=$BUILDJDK --disable-ddr"
     if [ -d /usr/local/openssl102 ]; then
