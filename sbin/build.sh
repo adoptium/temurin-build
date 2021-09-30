@@ -254,7 +254,8 @@ configureVersionStringParameter() {
 
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ]; then
 
-      addConfigureArg "--with-company-name=" "\"Eclipse Adoptium\""
+      # NOTE: There maybe a behavioural difference with this config depending on the jdk8u source branch you're working with.
+      addConfigureArg "--with-company-name=" "\"Temurin\""
 
       # No JFR support in AIX or zero builds (s390 or armv7l)
       if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "s390x" ] && [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "aix" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "armv7l" ]; then
