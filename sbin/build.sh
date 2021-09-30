@@ -988,6 +988,28 @@ createNoticeFile() {
   fi
 }
 
+# Adds a script for easy JRE generation using jlink
+addCreateJREScript() {
+  local DIRECTORY="${1}"
+  local TYPE="${2}"
+
+  # Only perform these steps for EF builds
+  if [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Adoptium" ]]; then
+    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 16 ]; then
+      if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+        HOME_DIR="${DIRECTORY}/Contents/home/"
+      else
+        HOME_DIR="${DIRECTORY}"
+      fi
+      if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+        cp "${SCRIPT_DIR}/createJRE.ps1" "${HOME_DIR}/createJRE.ps1"
+      else
+        cp "${SCRIPT_DIR}/createJRE.sh" "${HOME_DIR}/createJRE.sh"
+      fi
+    fi
+  fi
+}
+
 # If on a Mac, we need to modify the plist values
 setPlistValueForMacOS() {
   local DIRECTORY="${1}"
@@ -1566,6 +1588,7 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   copyFreeFontForMacOS
   setPlistForMacOS
   addNoticeFile
+  addCreateJREScript
   createOpenJDKTarArchive
   exit 0
 fi
@@ -1593,6 +1616,7 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   copyFreeFontForMacOS
   setPlistForMacOS
   addNoticeFile
+  addCreateJREScript
   createOpenJDKTarArchive
 fi
 
