@@ -25,8 +25,9 @@
 $jdkDirectory = [System.IO.Path]::GetDirectoryName($myInvocation.MyCommand.Path)
 
 if ([string]::IsNullOrEmpty($args[0])) {
-    Write-Host "Please specify the path for the generated JRE"
-    Write-Host "e.g ./makeJRE.ps1 C:/Users/jreruntime"
+    # Throw error if output directory is not defined
+    Write-Output "Please specify the path for the generated JRE"
+    Write-Output "e.g ./makeJRE.ps1 C:/Users/jreruntime"
     exit 1
 }
 
@@ -40,8 +41,8 @@ Start-Process -Wait "$binPath/jlink" -ArgumentList '--add-modules ALL-MODULE-PAT
     '--compress=2',`
     "--output $jreDirectory"
 
-Write-Host "Testing generated JRE"
+Write-Output "Testing generated JRE"
 Start-Process -Wait "$jreDirectory/bin/java" -ArgumentList '--version'
-Write-Host "Java Version test passed ✅`r`n"
-    
-Write-Host "Success: Your JRE runtime is available at $jreDirectory"
+Write-Output "Java Version test passed ✅`r`n"
+
+Write-Output "Success: Your JRE runtime is available at $jreDirectory"

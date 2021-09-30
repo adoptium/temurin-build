@@ -991,7 +991,6 @@ createNoticeFile() {
 # Adds a script for easy JRE generation using jlink
 addCreateJREScript() {
   local DIRECTORY="${1}"
-  local TYPE="${2}"
 
   # Only perform these steps for EF builds
   if [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Adoptium" ]]; then
@@ -1335,6 +1334,11 @@ addNoticeFile() {
   fi
 }
 
+addJREScript() {
+  local jdkTargetPath=$(getJdkArchivePath)
+  addCreateJREScript "${jdkTargetPath}"
+}
+
 wipeOutOldTargetDir() {
   rm -r "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[TARGET_DIR]}" || true
 }
@@ -1588,7 +1592,7 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   copyFreeFontForMacOS
   setPlistForMacOS
   addNoticeFile
-  addCreateJREScript
+  addJREScript
   createOpenJDKTarArchive
   exit 0
 fi
