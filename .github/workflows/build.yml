@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [ master ]
 
-# Cancel existing runs if user makes another push
+# Cancel existing runs if user makes another push.
 concurrency:
   group: "${{ github.ref }}"
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
