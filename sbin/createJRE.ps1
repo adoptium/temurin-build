@@ -34,15 +34,26 @@ if ([string]::IsNullOrEmpty($args[0])) {
 $jreDirectory=$args[0]
 $binPath="$jdkDirectory/bin"
 
-Start-Process -Wait "$binPath/jlink" -ArgumentList '--add-modules ALL-MODULE-PATH',`
+$jlink = Start-Process -PassThru -Wait "$binPath/jlink" -ArgumentList '--add-modules ALL-MODULE-PATH',`
     '--strip-debug',`
     '--no-man-pages',`
     '--no-header-files',`
     '--compress=2',`
     "--output $jreDirectory"
 
-Write-Output "Testing generated JRE"
-Start-Process -Wait "$jreDirectory/bin/java" -ArgumentList '--version'
-Write-Output "Java Version test passed ✅`r`n"
+if ($jlink.ExitCode -eq 0) {
+    Write-Output "Testing generated JRE"
+} else {
+    Write-Error "Error generating runtime with jlink"
+    exit 1
+}
 
+$versionTest = Start-Process -PassThru -Wait "$jreDirectory/bin/java" -ArgumentList '--version'
+if ($versionTest.ExitCode -eq 0) {
+    Write-Output "Java Version test passed ✅`r`n"
+} else {
+    Write-Error "Java Version test failed ❌`r`n"
+    exit 1
+}
+    
 Write-Output "Success: Your JRE runtime is available at $jreDirectory"

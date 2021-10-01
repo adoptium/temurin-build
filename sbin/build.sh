@@ -1620,7 +1620,7 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   copyFreeFontForMacOS
   setPlistForMacOS
   addNoticeFile
-  addCreateJREScript
+  addJREScript
   createOpenJDKTarArchive
 fi
 

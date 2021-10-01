@@ -38,14 +38,24 @@ binPath="$jdkDirectory/bin"
 
 "$binPath/jlink" --add-modules ALL-MODULE-PATH \
     --strip-debug \
-    --strip-debug \
     --no-man-pages \
     --no-header-files \
     --compress=2 \
     --output "$jreDirectory"
 
-echo "Testing generated JRE"
-"$jreDirectory/bin/java" --version
-echo -e "Java Version test passed ✅\n"
+if [ $? -eq 0 ]; then
+    echo "Testing generated JRE"
+else
+    echo "Error generating runtime with jlink"
+    exit 1
+fi
 
-echo "Success: You're JRE runtime is available at $jreDirectory"
+"$jreDirectory/bin/java" --version
+if [ $? -eq 0 ]; then
+    echo -e "Java Version test passed ✅\n"
+else
+    echo -e "Java Version test failed ❌\n"
+    exit 1
+fi
+
+echo "Success: Your JRE runtime is available at $jreDirectory"
