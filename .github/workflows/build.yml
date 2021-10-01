@@ -14,14 +14,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [linux]
-        version: [jdk8u, jdk11u, jdk16u, jdk17u, jdk]
+        version: [jdk8u, jdk11u, jdk17u, jdk]
         vm: [hotspot]
         image: [adoptopenjdk/centos7_build_image]
         include:
-          - os: alpine-linux
-            version: jdk16u
-            vm: hotspot
-            image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk17u
             vm: hotspot
@@ -62,10 +58,16 @@ jobs:
       run: |
         mkdir -p "${HOME}/JDK"
         tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
+
     - name: Set root of jdk image dir
       run: |
         imageroot=`find ${HOME}/JDK -name release -type f`
         echo "TEST_JDK_HOME=`dirname ${imageroot}`" >> $GITHUB_ENV
+
+    - name: Run createJRE.sh 
+      run: "$TEST_JDK_HOME/createJRE.sh" /tmp/generatedjre
+      if: matrix.version != 'jdk8u' && matrix.version != 'jdk11u'
+
     - name: Smoke test
       uses: adoptium/run-aqa@v1
       with:
@@ -74,6 +76,7 @@ jobs:
         vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
         vendor_testBranches: "${{ github.head_ref }}"
         vendor_testDirs: "/test/functional"
+
     - uses: actions/upload-artifact@v2
       name: Collect and Archive SmokeTest Results
       if: failure()
@@ -143,6 +146,11 @@ jobs:
       run: |
         imageroot=`find ${HOME}/JDK -name release -type f`
         echo "TEST_JDK_HOME=`dirname ${imageroot}`" >> $GITHUB_ENV
+
+    - name: Run createJRE.sh 
+      run: "$TEST_JDK_HOME/createJRE.sh" /tmp/generatedjre
+      if: matrix.version != 'jdk8u' && matrix.version != 'jdk11u'
+
     - name: Smoke test
       uses: adoptium/run-aqa@v1
       with:
@@ -151,6 +159,7 @@ jobs:
         vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
         vendor_testBranches: "${{ github.head_ref }}"
         vendor_testDirs: "/test/functional"
+
     - uses: actions/upload-artifact@v2
       name: Collect and Archive SmokeTest Results
       if: failure()
@@ -248,6 +257,7 @@ jobs:
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
          path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+
      - name: Unpack jdk
        run: |
          unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}"
@@ -256,6 +266,11 @@ jobs:
        run: |
          $imageroot = find ${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}} -name release -type f
          echo "TEST_JDK_HOME=$(dirname ${imageroot})" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+     - name: Run createJRE.ps1
+       run: "$TEST_JDK_HOME/createJRE.ps1" 'C:\Users\runneradmin\generatedjre'
+       if: matrix.version != 'jdk8u' && matrix.version != 'jdk11u'
+
      - name: Smoke test
        uses: adoptium/run-aqa@v1
        with:
@@ -264,6 +279,7 @@ jobs:
          vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
          vendor_testBranches: "${{ github.head_ref }}"
          vendor_testDirs: "/test/functional"
+
      - uses: actions/upload-artifact@v2
        name: Collect and Archive SmokeTest Results
        if: failure()

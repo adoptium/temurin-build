@@ -27,7 +27,7 @@ $jdkDirectory = [System.IO.Path]::GetDirectoryName($myInvocation.MyCommand.Path)
 if ([string]::IsNullOrEmpty($args[0])) {
     # Throw error if output directory is not defined
     Write-Output "Please specify the path for the generated JRE"
-    Write-Output "e.g ./makeJRE.ps1 C:/Users/jreruntime"
+    Write-Output "e.g ./makeJRE.ps1 C:\Users\jreruntime"
     exit 1
 }
 
@@ -55,5 +55,5 @@ if ($versionTest.ExitCode -eq 0) {
     Write-Error "Java Version test failed ❌`r`n"
     exit 1
 }
-    
+
 Write-Output "Success: Your JRE runtime is available at $jreDirectory"
