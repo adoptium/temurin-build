@@ -96,6 +96,8 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
     if [ -x "/Library/Java/JavaVirtualMachines/adoptopenjdk-${JDK_BOOT_VERSION}/Contents/Home/bin/javac" ]; then
       echo "Could not use ${BOOT_JDK_VARIABLE} - using /Library/Java/JavaVirtualMachines/adoptopenjdk-${JDK_BOOT_VERSION}/Contents/Home"
       export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/adoptopenjdk-${JDK_BOOT_VERSION}/Contents/Home"
+    elif [[ ("$JDK_BOOT_VERSION" -ge 17) && ( -x "/Library/Java/JavaVirtualMachines/temurin-${JDK_BOOT_VERSION}.jdk/Contents/Home/bin/javac") ]]; then
+        export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/temurin-${JDK_BOOT_VERSION}.jdk/Contents/Home"
     elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       mkdir -p "$bootDir"
       releaseType="ga"
