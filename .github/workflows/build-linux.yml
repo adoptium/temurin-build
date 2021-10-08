@@ -1,0 +1,84 @@
+name: Build workflow for Linux CI testing
+
+on:
+  workflow_call:
+
+jobs:
+  build_linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [linux]
+        version: [jdk8u, jdk11u, jdk17u, jdk]
+        vm: [hotspot]
+        image: [adoptopenjdk/centos7_build_image]
+        include:
+          - os: alpine-linux
+            version: jdk11u
+            vm: hotspot
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk17u
+            vm: hotspot
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk
+            vm: hotspot
+            image: adoptopenjdk/alpine3_build_image
+          - os: linux
+            version: jdk11u
+            vm: dragonwell
+            image: adoptopenjdk/centos7_build_image
+          - os: linux
+            version: jdk11u
+            vm: bisheng
+            image: adoptopenjdk/centos7_build_image
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build Linux
+      run: ./build-farm/make-adopt-build-farm.sh
+      env:
+        JAVA_TO_BUILD: ${{ matrix.version }}
+        ARCHITECTURE: x64
+        VARIANT: ${{ matrix.vm }}
+        TARGET_OS: ${{ matrix.os }}
+        FILENAME: OpenJDK.tar.gz
+        # Don't set the OS as we use both linux and alpine-linux
+        PLATFORM_CONFIG_LOCATION: AdoptOpenJDK/openjdk-build/master/build-farm/platform-specific-configurations
+
+    - uses: actions/upload-artifact@v2
+      name: Collect and Archive Artifacts
+      with:
+        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+        path: workspace/target/*
+
+    - name: Unpack jdk
+      run: |
+        mkdir -p "${HOME}/JDK"
+        tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
+
+    - name: Set root of jdk image dir
+      run: |
+        imageroot=`find ${HOME}/JDK -name release -type f`
+        echo "TEST_JDK_HOME=`dirname ${imageroot}`" >> $GITHUB_ENV
+
+    - name: Smoke test
+      uses: adoptium/run-aqa@v1
+      with:
+        build_list: 'functional/buildAndPackage'
+        target: '_extended.functional'
+        vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
+        vendor_testBranches: "${{ github.head_ref }}"
+        vendor_testDirs: "/test/functional"
+
+    - uses: actions/upload-artifact@v2
+      name: Collect and Archive SmokeTest Results
+      if: failure()
+      with:
+        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}_test_output"
+        path: ./**/output_*/
