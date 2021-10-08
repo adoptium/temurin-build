@@ -267,6 +267,13 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; 
   fi
   CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=riscv64-unknown-linux-gnu --with-sysroot=${RISCV_SYSROOT} -with-boot-jdk=$JDK_BOOT_DIR"
 
+  # RISC-V cross compilation does not work with OpenJ9's option: --with-openssl=fetched
+  # TODO: This file needs an overhaul as it's getting too long and hard to maintain ...
+  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    # shellcheck disable=SC2001
+    CONFIGURE_ARGS_FOR_ANY_PLATFORM=$(echo "$CONFIGURE_ARGS_FOR_ANY_PLATFORM" | sed "s,with-openssl=[^ ]*,with-openssl=${RISCV_SYSROOT}/usr,g")
+  fi
+
   if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
     CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jvm-features=shenandoahgc BUILD_CC=$BUILD_CC BUILD_CXX=$BUILD_CXX"
   fi
