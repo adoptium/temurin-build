@@ -11,10 +11,11 @@ concurrency:
 
 jobs:
   build_linux:
-    uses: "adoptium/temurin-build/.github/workflows/build-linux.yml@$GITHUB_HEAD_REF"
+    uses: "adoptium/temurin-build/.github/workflows/build-linux.yml@${{ GITHUB_HEAD_REF }}"
 
   build_macos:
-    uses: "adoptium/temurin-build/.github/workflows/build-mac.yml@$GITHUB_HEAD_REF"
+    uses: "adoptium/temurin-build/.github/workflows/build-mac.yml@${{ GITHUB_HEAD_REF }}"
 
   build_windows:
-    uses: "adoptium/temurin-build/.github/workflows/build-windows.yml@$GITHUB_HEAD_REF"
+    uses: "adoptium/temurin-build/.github/workflows/build-windows.yml@${{ GITHUB_HEAD_REF }}"
+    
