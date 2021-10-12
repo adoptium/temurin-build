@@ -4,6 +4,9 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  GITHUB_SHA: ${{ github.sha }}
+
 # Cancel existing runs if user makes another push.
 concurrency:
   group: "${{ github.ref }}"
@@ -11,11 +14,11 @@ concurrency:
 
 jobs:
   build_linux:
-    uses: "adoptium/temurin-build/.github/workflows/build-linux.yml@${{ GITHUB_HEAD_REF }}"
+    uses: "adoptium/temurin-build/.github/workflows/build-linux.yml@${{ GITHUB_SHA }}"
 
   build_macos:
-    uses: "adoptium/temurin-build/.github/workflows/build-mac.yml@${{ GITHUB_HEAD_REF }}"
+    uses: "adoptium/temurin-build/.github/workflows/build-mac.yml@${{ GITHUB_SHA }}"
 
   build_windows:
-    uses: "adoptium/temurin-build/.github/workflows/build-windows.yml@${{ GITHUB_HEAD_REF }}"
+    uses: "adoptium/temurin-build/.github/workflows/build-windows.yml@${{ GITHUB_SHA }}"
     
