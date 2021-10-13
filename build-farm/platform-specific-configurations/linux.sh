@@ -25,6 +25,9 @@ export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 if [ "${ARCHITECTURE}" == "x64" ]
 then
   export PATH=/opt/rh/devtoolset-2/root/usr/bin:$PATH
+  # Compile using Centos 6 compaitible libraries
+  COMPAT_CENTOS6_LIBS="-fgnu89-inline -I /usr/lib/x86_64-redhat-linux6E/include"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cflags=${COMPAT_CENTOS6_LIBS} --with-extra-cxxflags=${COMPAT_CENTOS6_LIBS} --with-extra-ldflags=${COMPAT_CENTOS6_LIBS}"
 fi
 
 if [ "${ARCHITECTURE}" == "s390x" ]
