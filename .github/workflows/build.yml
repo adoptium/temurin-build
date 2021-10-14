@@ -18,23 +18,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [linux]
+        os: [linux, alpine-linux]
         version: [jdk8u, jdk11u, jdk16u, jdk17u, jdk]
         vm: [hotspot]
-        image: [adoptopenjdk/centos7_build_image]
+        image: [adoptopenjdk/centos7_build_image, adoptopenjdk/alpine3_build_image]
         include:
-          - os: alpine-linux
-            version: jdk16u
-            vm: hotspot
-            image: adoptopenjdk/alpine3_build_image
-          - os: alpine-linux
-            version: jdk17u
-            vm: hotspot
-            image: adoptopenjdk/alpine3_build_image
-          - os: alpine-linux
-            version: jdk
-            vm: hotspot
-            image: adoptopenjdk/alpine3_build_image
           - os: linux
             version: jdk11u
             vm: dragonwell
@@ -42,6 +30,11 @@ jobs:
           - os: linux
             version: jdk11u
             vm: bisheng
+            image: adoptopenjdk/centos7_build_image
+        exclude:
+          - os: linux
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
             image: adoptopenjdk/centos7_build_image
     steps:
     - uses: actions/checkout@v2
