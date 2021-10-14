@@ -26,8 +26,7 @@ export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --dis
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]; then
-  export COMPILER_WARNINGS_FATAL=false
-  echo "Compiler Warnings set to: $COMPILER_WARNINGS_FATAL"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cflags=-Wno-error"
   # Temporary change while patches aren't merged
   export BUILD_ARGS="${BUILD_ARGS} --branch release --repository https://github.com/calderast/jdk8u"
 fi
