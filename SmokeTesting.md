@@ -2,7 +2,7 @@
 
 These are the general steps to produce Smoke Test on your local machine. TestKitGen, a thin veneer used to standardize the diverse set of test frameworks employed by the underlying tests.
 
-1. Ensure test machine is set up with test [prereqs](https://github.com/eclipse-openj9/openj9/blob/master/test/docs/Prerequisites.md)
+1. Ensure test machine is set up with test [prereqs](https://github.com/adoptium/aqa-tests/blob/master/doc/Prerequisites.md)
 2. Build or download/unpack the SDK you want to test to /someLocation
 3. export TEST_JDK_HOME=/someLocation // set test JDK home. On windows, the windows path format is expected. (i.e., TEST_JDK_HOME=C:\someLocation )
 4. git clone [https://github.com/adoptium/aqa-tests.git](https://github.com/adoptium/aqa-tests) to /testLocation
