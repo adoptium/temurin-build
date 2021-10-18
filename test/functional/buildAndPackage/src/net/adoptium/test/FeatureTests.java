@@ -115,7 +115,8 @@ public class FeatureTests {
             if (jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.AARCH64)
                     || jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.X64)
                     || jdkPlatform.runsOn(OperatingSystem.MACOS, Architecture.X64)
-                    || jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X64)
+                    // TODO Windows is disabled until we can get supporting 2019 VS and O/S levels in Adoptium infrastructure
+                    // || jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X64)
             ) {
                 shouldBePresent = true;
             }
