@@ -115,8 +115,8 @@ public class FeatureTests {
             if (jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.AARCH64)
                     || jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.X64)
                     || jdkPlatform.runsOn(OperatingSystem.MACOS, Architecture.X64)
-                    /* 
-                     * Windows is disabled until we can get 2019 Visual Studio 
+                    /*
+                     * Windows is disabled until we can get 2019 Visual Studio
                      * and O/S levels in Adoptium infrastructure
                      * TODO revert https://github.com/adoptium/temurin-build/pull/2767
                      */
