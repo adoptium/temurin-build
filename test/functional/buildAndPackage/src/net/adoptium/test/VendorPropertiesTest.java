@@ -51,11 +51,12 @@ public class VendorPropertiesTest {
     public VendorPropertiesTest() {
         Set<VmPropertiesChecks> allPropertiesChecks = new LinkedHashSet<>();
         allPropertiesChecks.add(new AdoptiumPropertiesChecks());
+        allPropertiesChecks.add(new SemeruPropertiesChecks());
         allPropertiesChecks.add(new CorrettoPropertiesChecks());
 
         // TODO: Somehow obtain the vendor name from the outside. Using any JVM properties is not a solution
         // because that's what we want to test here.
-        String vendor = "Adoptium";
+        String vendor = System.getProperty("java.vendor");
         this.vendorChecks = allPropertiesChecks.stream()
                 .filter(checks -> checks.supports(vendor))
                 .findFirst()
@@ -164,7 +165,7 @@ public class VendorPropertiesTest {
 
         @Override
         public boolean supports(final String vendor) {
-            return vendor.toLowerCase(Locale.US).equals("adoptium");
+            return vendor.toLowerCase(Locale.US).contains("adoptium");
         }
 
         @Override
@@ -202,6 +203,51 @@ public class VendorPropertiesTest {
         @Override
         public void javaVmVendor(final String value) {
             assertTrue(value.equals("Eclipse Adoptium") || value.equals("Eclipse OpenJ9"));
+        }
+
+        @Override
+        public void javaVmVersion(final String value) {
+            assertNotEquals(value.replaceAll("[^0-9]", "").length(), 0,
+                    "java.vm.version contains no numbers: " + value);
+        }
+    }
+
+    private static class SemeruPropertiesChecks implements VmPropertiesChecks {
+
+        @Override
+        public boolean supports(final String vendor) {
+            return vendor.toLowerCase(Locale.US).equals("international business machines corporation");
+        }
+
+        @Override
+        public void javaVersion(final String value) {
+            assertTrue(value.contains("openj9"));
+        }
+
+        @Override
+        public void javaVendor(final String value) {
+            assertEquals(value, "International Business Machines Corporation");
+        }
+
+        @Override
+        public void javaVendorUrl(final String value) {
+            assertEquals(value, "https://www.ibm.com/semeru-runtimes");
+        }
+
+        @Override
+        public void javaVendorUrlBug(final String value) {
+            assertEquals(value, "https://github.com/ibmruntimes/Semeru-Runtimes/issues");
+        }
+
+        @Override
+        public void javaVendorVersion(final String value) {
+            assertNotEquals(value.replaceAll("[^0-9]", "").length(), 0,
+                    "java.vendor.version contains no numbers: " + value);
+        }
+
+        @Override
+        public void javaVmVendor(final String value) {
+            assertTrue(value.equals("Eclipse OpenJ9"));
         }
 
         @Override
