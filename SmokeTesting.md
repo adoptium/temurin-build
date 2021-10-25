@@ -1,6 +1,7 @@
 # General steps to follow for producing Smoke Tests
 
 These are the general steps to execute the Smoke Tests found in[/test/functional/buildAndPackage](https://github.com/adoptium/temurin-build/tree/master/test/functional/buildAndPackage) on your local machine. They are run using the same mechanisms as the AQA test suite, with the TestKitGen ([TKG](https://github.com/adoptium/TKG)) harness that provides a standardized way to deal with these tests under automation.
+
 1. Ensure test machine is set up with test [prereqs](https://github.com/adoptium/aqa-tests/blob/master/doc/Prerequisites.md)
 2. Build or download/unpack the SDK you want to test to /someLocation
 3. export TEST_JDK_HOME=/someLocation // set test JDK home. On windows, the windows path format is expected. (i.e., TEST_JDK_HOME=C:\someLocation )
