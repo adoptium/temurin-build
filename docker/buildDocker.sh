@@ -16,9 +16,9 @@ getFile() {
     echo 'Usage: getFile https://example.com file_name'
     exit 1;
   elif command -v wget &> /dev/null; then
-    wget -q $1 -O $2
+    wget -q "$1" -O "$2"
   elif command -v curl &> /dev/null; then
-    curl -s $1 -o $2
+    curl -s "$1" -o "$2"
   else
     echo 'Please install wget or curl to continue'
     exit 1;
