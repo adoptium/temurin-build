@@ -277,12 +277,16 @@ printJDK() {
 RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptium.net/v3/binary/latest/$JDKVersion/ga/linux/x64/jdk/hotspot/normal/adoptium?project=jdk' -O - | tar xzf - -C /usr/lib/jvm/jdk$JDKVersion --strip-components=1\"" >> "$DOCKERFILE_PATH"
 }
 
+printGitCloneJenkinsPipelines(){
+  echo "
+RUN git clone https://github.com/adoptium/temurin-build /openjdk/pipelines" >> "$DOCKERFILE_PATH"
+}
+
 printCopyFolders(){
   echo "
 COPY sbin /openjdk/sbin
 COPY security /openjdk/security
-COPY workspace/config /openjdk/config
-COPY pipelines /openjdk/pipelines" >> "$DOCKERFILE_PATH"
+COPY workspace/config /openjdk/config" >> "$DOCKERFILE_PATH"
 }
 
 printGitClone(){
@@ -345,6 +349,7 @@ if [ ${OPENJ9} == true ]; then
 fi
 
 printDockerJDKs
+printGitCloneJenkinsPipelines
 
 # If building the image straight away, it can't be assumed the folders to be copied are in place
 # Therefore create an image that instead git clones openjdk-build and a build can be started there
