@@ -101,7 +101,7 @@ They use the same mechanisms and automation used by the AQA test suite.  This me
 
 They are also run as part of the Jenkins build pipelines (see the [runSmokeTests()](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy#L264-L301) method in the openjdk_build_pipeline groovy script), triggered after the build is complete and before any AQA tests get run against the build.  If smoke tests fail, it likely indicates we built the 'wrong thing' and there is no point running further testing until we resolve the build issues.
 
-To run them on the command-line, one can follow the same general instructions for running any AQA test on the command line.   See: [SmokeTesting.md](https://github.com/SehrishHussain/temurin-build/blob/master/SmokeTesting.md)
+To run them on the command-line, one can follow the same general instructions for running any AQA test on the command line, with the additional step of exporting variables to indicate where to find test material (VENDOR_TEST_REPOS, VENDOR_TEST_BRANCHES, VENDOR_TEST_DIRS).   See: [SmokeTesting.md](https://github.com/adoptium/temurin-build/blob/master/SmokeTesting.md)
 
 ## Which OS levels do we build on?
 
