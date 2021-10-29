@@ -290,7 +290,7 @@ RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptium.n
 
 printGitCloneJenkinsPipelines(){
   echo "
-RUN git clone https://github.com/adoptium/temurin-build /openjdk/pipelines" >> "$DOCKERFILE_PATH"
+RUN git clone https://github.com/adoptium/ci-jenkins-pipelines /openjdk/pipelines" >> "$DOCKERFILE_PATH"
 }
 
 printCopyFolders(){
