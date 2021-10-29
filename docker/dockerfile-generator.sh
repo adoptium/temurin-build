@@ -241,8 +241,8 @@ printDockerJDKs() {
   if [ "${JDK_VERSION}" != 8 ] && [ "${JDK_VERSION}" != "${JDK_MAX}" ]; then
     if [ "${JDK_VERSION}" == 11 ]; then
       if [ ${COMMENTS} == true ]; then
-      echo "
-      # JDK 10 is not available on the adoptium API, extract JDK 11 to use as a boot jdk" >> "$DOCKERFILE_PATH"
+        echo "
+        # JDK 10 is not available on the adoptium API, extract JDK 11 to use as a boot jdk" >> "$DOCKERFILE_PATH"
       fi
       printJDK $((JDK_VERSION))
       echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION))/bin/java /usr/bin/java" >> "$DOCKERFILE_PATH"
@@ -250,13 +250,14 @@ printDockerJDKs() {
       echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION))/bin/keytool /usr/bin/keytool" >> "$DOCKERFILE_PATH"
     else
       if [ ${COMMENTS} == true ]; then
-      echo "
-      # Extract JDK$((JDK_VERSION-1)) to use as a boot jdk" >> "$DOCKERFILE_PATH"
+        echo "
+        # Extract JDK$((JDK_VERSION-1)) to use as a boot jdk" >> "$DOCKERFILE_PATH"
       fi
       printJDK $((JDK_VERSION-1))
       echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/java /usr/bin/java" >> "$DOCKERFILE_PATH"
       echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/javac /usr/bin/javac" >> "$DOCKERFILE_PATH"
       echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/keytool /usr/bin/keytool" >> "$DOCKERFILE_PATH"
+    fi
   fi
 
   # Build 'jdk' with the most recent GA release
@@ -270,7 +271,6 @@ printDockerJDKs() {
     echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/javac /usr/bin/javac" >> "$DOCKERFILE_PATH"
     echo "RUN ln -sf /usr/lib/jvm/jdk${JDK_GA}/bin/keytool /usr/bin/keytool" >> "$DOCKERFILE_PATH"
   fi
-fi
 
   # shellcheck disable=SC2086
   # if JDK_VERSION is 9, another jdk8 doesn't need to be extracted
