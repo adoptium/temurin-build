@@ -249,7 +249,7 @@ printDockerJDKs() {
       echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION))/bin/javac /usr/bin/javac" >> "$DOCKERFILE_PATH"
       echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION))/bin/keytool /usr/bin/keytool" >> "$DOCKERFILE_PATH"
     else
-      if [ ${COMMENTS} == true]; then
+      if [ ${COMMENTS} == true ]; then
       echo "
       # Extract JDK$((JDK_VERSION-1)) to use as a boot jdk" >> "$DOCKERFILE_PATH"
       fi
