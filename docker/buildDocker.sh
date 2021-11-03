@@ -10,9 +10,24 @@ JDK_VERSION=
 JDK_MAX=
 JDK_GA=
 
+getFile() {
+  if [ $# -ne 2 ]; then
+    echo "getFile takes 2 arguments, $# argument(s) given"
+    echo 'Usage: getFile https://example.com file_name'
+    exit 1;
+  elif command -v wget &> /dev/null; then
+    wget -q "$1" -O "$2"
+  elif command -v curl &> /dev/null; then
+    curl -s "$1" -o "$2"
+  else
+    echo 'Please install wget or curl to continue'
+    exit 1;
+  fi
+}
+
 # shellcheck disable=SC2002 # Disable UUOC error
 setJDKVars() {
-    wget -q https://api.adoptium.net/v3/info/available_releases
+    getFile https://api.adoptium.net/v3/info/available_releases available_releases
     JDK_MAX=$(awk -F: '/tip_version/{gsub("[, ]","",$2); print$2}' < available_releases)
     JDK_GA=$(awk -F: '/most_recent_feature_release/{gsub("[, ]","",$2); print$2}' < available_releases)
     rm available_releases
@@ -100,7 +115,7 @@ useEclipseOpenJ9DockerFiles()
 
     mkdir -p "$dockerfileDir"
     cd "$dockerfileDir" || { echo "Dockerfile directory ($dockerfileDir) was not found"; exit 3; }
-    wget https://raw.githubusercontent.com/eclipse-openj9/openj9/master/buildenv/docker/mkdocker.sh
+    getFile https://raw.githubusercontent.com/eclipse-openj9/openj9/master/buildenv/docker/mkdocker.sh mkdocker.sh
     chmod +x mkdocker.sh
     # Generate an Ubuntu1804 Dockerfile using mkdocker.sh
     "$dockerfileDir/mkdocker.sh" --dist=ubuntu --version=18 --print >> "$dockerfileDir/Dockerfile"
