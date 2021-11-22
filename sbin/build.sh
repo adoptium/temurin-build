@@ -753,8 +753,8 @@ removingUnnecessaryFiles() {
   rm -rf "${jdkTargetPath}" || true
   mv "${jdkPath}" "${jdkTargetPath}"
 
-# Don't produce a JRE for JDK16 and above
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
+    # Produce a JRE
     if [ -d "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" ]; then
       echo "moving $(ls -d ${BUILD_CONFIG[JRE_PATH]}) to ${jreTargetPath}"
       rm -rf "${jreTargetPath}" || true
@@ -1284,8 +1284,7 @@ copyFreeFontForMacOS() {
   local jdkTargetPath=$(getJdkArchivePath)
   makeACopyOfLibFreeFontForMacOSX "${jdkTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
 
-  # Don't produce a JRE for JDK16 and above
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
     local jreTargetPath=$(getJreArchivePath)
     makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
   fi
@@ -1295,8 +1294,7 @@ setPlistForMacOS() {
   local jdkTargetPath=$(getJdkArchivePath)
   setPlistValueForMacOS "${jdkTargetPath}" "jdk"
 
-  # Don't produce a JRE for JDK16 and above
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
     local jreTargetPath=$(getJreArchivePath)
     setPlistValueForMacOS "${jreTargetPath}" "jre"
   fi
@@ -1306,8 +1304,7 @@ addNoticeFile() {
   local jdkTargetPath=$(getJdkArchivePath)
   createNoticeFile "${jdkTargetPath}" "jdk"
 
-  # Don't produce a JRE for JDK16 and above
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
     local jreTargetPath=$(getJreArchivePath)
     createNoticeFile "${jreTargetPath}" "jre"
   fi
@@ -1363,8 +1360,8 @@ addInfoToReleaseFile() {
     echo "ADDING J9 TAG"
     addJ9Tag
   fi
-   # Don't produce a JRE for JDK16 and above
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+
+  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
     echo "MIRRORING TO JRE"
     mirrorToJRE
   fi
@@ -1490,8 +1487,8 @@ mirrorToJRE() {
 
 addImageType() {
   echo -e IMAGE_TYPE=\"JDK\" >>"$PRODUCT_HOME/release"
-  # Don't produce a JRE for JDK16 and above
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 16 ]; then
+
+  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
     echo -e IMAGE_TYPE=\"JRE\" >>"$JRE_HOME/release"
   fi
 }

@@ -134,6 +134,9 @@ clean out any 'bad' local git repo you already have.
 --create-debug-image
 create a debug-image archive with the debug symbols.
 
+--create-jre-image
+create the legacy JRE image in addition to the JDK image.
+
 -d, --destination <path>
 specify the location for the built binary, e.g. /path/.
 This is typically used in conjunction with -T to create a custom path

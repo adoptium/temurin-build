@@ -214,8 +214,8 @@ processArgumentsforSpecificArchitectures() {
     # This is to ensure consistency with the defaults defined in setMakeArgs()
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
       make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true images"
-    # Don't produce a JRE for JDK16 and above
-    elif [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 16 ]; then
+    # Don't produce a JRE
+    elif [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "false" ]; then
       make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true product-images"
     else
       make_args_for_any_platform="CONF=${build_full_name} DEBUG_BINARIES=true product-images legacy-jre-image"
@@ -245,8 +245,8 @@ processArgumentsforSpecificArchitectures() {
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && isHotSpot; then
       jvm_variant=client
       make_args_for_any_platform="DEBUG_BINARIES=true images"
-    elif [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 16 ]; then
-      # Don't produce a JRE for JDK16 and above
+    elif [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "false" ]; then
+      # Don't produce a JRE
       jvm_variant=server,client
       make_args_for_any_platform="DEBUG_BINARIES=true images"
     else
@@ -299,15 +299,15 @@ function setMakeArgs() {
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
     "darwin")
-      if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 16 ]; then
-        # Skip JRE on JDK16+
+      if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "false" ]; then
+        # Skip JRE
         BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images"}
       else
         BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images mac-legacy-jre-bundle"}
       fi
       ;;
     *)
-      if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 16 ]; then
+      if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "false" ]; then
         # Skip JRE on JDK16+
         BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]:-"product-images"}
       else
