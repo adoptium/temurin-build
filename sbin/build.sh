@@ -753,19 +753,16 @@ removingUnnecessaryFiles() {
   rm -rf "${jdkTargetPath}" || true
   mv "${jdkPath}" "${jdkTargetPath}"
 
-  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
-    # Produce a JRE
-    if [ -d "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" ]; then
-      echo "moving $(ls -d ${BUILD_CONFIG[JRE_PATH]}) to ${jreTargetPath}"
-      rm -rf "${jreTargetPath}" || true
-      mv "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" "${jreTargetPath}"
+  if [ -d "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" ]; then
+    echo "moving $(ls -d ${BUILD_CONFIG[JRE_PATH]}) to ${jreTargetPath}"
+    rm -rf "${jreTargetPath}" || true
+    mv "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" "${jreTargetPath}"
 
-      case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
-      "darwin") dirToRemove="${jreTargetPath}/Contents/Home" ;;
-      *) dirToRemove="${jreTargetPath}" ;;
-      esac
-      rm -rf "${dirToRemove}"/demo || true
-    fi
+    case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    "darwin") dirToRemove="${jreTargetPath}/Contents/Home" ;;
+    *) dirToRemove="${jreTargetPath}" ;;
+    esac
+    rm -rf "${dirToRemove}"/demo || true
   fi
 
   # Test image - check if the directory exists
@@ -1282,32 +1279,26 @@ createOpenJDKTarArchive() {
 
 copyFreeFontForMacOS() {
   local jdkTargetPath=$(getJdkArchivePath)
-  makeACopyOfLibFreeFontForMacOSX "${jdkTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
+  local jreTargetPath=$(getJreArchivePath)
 
-  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
-    local jreTargetPath=$(getJreArchivePath)
-    makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
-  fi
+  makeACopyOfLibFreeFontForMacOSX "${jdkTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]}"
+  makeACopyOfLibFreeFontForMacOSX "${jreTargetPath}" "${BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]}"
 }
 
 setPlistForMacOS() {
   local jdkTargetPath=$(getJdkArchivePath)
-  setPlistValueForMacOS "${jdkTargetPath}" "jdk"
+  local jreTargetPath=$(getJreArchivePath)
 
-  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
-    local jreTargetPath=$(getJreArchivePath)
-    setPlistValueForMacOS "${jreTargetPath}" "jre"
-  fi
+  setPlistValueForMacOS "${jdkTargetPath}" "jdk"
+  setPlistValueForMacOS "${jreTargetPath}" "jre"
 }
 
 addNoticeFile() {
   local jdkTargetPath=$(getJdkArchivePath)
-  createNoticeFile "${jdkTargetPath}" "jdk"
+  local jreTargetPath=$(getJreArchivePath)
 
-  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
-    local jreTargetPath=$(getJreArchivePath)
-    createNoticeFile "${jreTargetPath}" "jre"
-  fi
+  createNoticeFile "${jdkTargetPath}" "jdk"
+  createNoticeFile "${jreTargetPath}" "jre"
 }
 
 wipeOutOldTargetDir() {
@@ -1360,11 +1351,8 @@ addInfoToReleaseFile() {
     echo "ADDING J9 TAG"
     addJ9Tag
   fi
-
-  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
-    echo "MIRRORING TO JRE"
-    mirrorToJRE
-  fi
+  echo "MIRRORING TO JRE"
+  mirrorToJRE
   echo "ADDING IMAGE TYPE"
   addImageType
   echo "===RELEASE FILE GENERATED==="
@@ -1487,10 +1475,7 @@ mirrorToJRE() {
 
 addImageType() {
   echo -e IMAGE_TYPE=\"JDK\" >>"$PRODUCT_HOME/release"
-
-  if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
-    echo -e IMAGE_TYPE=\"JRE\" >>"$JRE_HOME/release"
-  fi
+  echo -e IMAGE_TYPE=\"JRE\" >>"$JRE_HOME/release"
 }
 
 addInfoToJson(){
