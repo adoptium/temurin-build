@@ -14,35 +14,33 @@ jobs:
     name: Linux
     runs-on: ubuntu-latest
     container:
-      image: ${{ matrix.image }}
+      image: ${{ matrix.os.image }}
     strategy:
       fail-fast: false
       matrix:
-        os: [linux]
-        version: [jdk8u, jdk11u, jdk16u, jdk17u, jdk]
+        os: [
+          { name: linux, image: adoptopenjdk/centos7_build_image },
+          { name: alpine-linux, image: adoptopenjdk/alpine3_build_image }
+        ]
+        version: [jdk8u, jdk11u, jdk17u, jdk]
         vm: [hotspot]
-        image: [adoptopenjdk/centos7_build_image]
         include:
-          - os: alpine-linux
-            version: jdk16u
-            vm: hotspot
-            image: adoptopenjdk/alpine3_build_image
-          - os: alpine-linux
-            version: jdk17u
-            vm: hotspot
-            image: adoptopenjdk/alpine3_build_image
-          - os: alpine-linux
-            version: jdk
-            vm: hotspot
-            image: adoptopenjdk/alpine3_build_image
-          - os: linux
+          - os: [
+              { name: linux, image: adoptopenjdk/centos7_build_image }
+            ]
             version: jdk11u
             vm: dragonwell
-            image: adoptopenjdk/centos7_build_image
-          - os: linux
+          - os: [
+              { name: linux, image: adoptopenjdk/centos7_build_image }
+            ]
             version: jdk11u
             vm: bisheng
-            image: adoptopenjdk/centos7_build_image
+        exlude:
+          # JDK8 Alpine patches are not complete yet
+          - os.name: alpine-linux
+            os.image: adoptopenjdk/alpine3_build_image
+            version: jdk8u
+            vm: hotspot
     steps:
     - uses: actions/checkout@v2
 
@@ -52,7 +50,7 @@ jobs:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
         VARIANT: ${{ matrix.vm }}
-        TARGET_OS: ${{ matrix.os }}
+        TARGET_OS: ${{ matrix.os.name }}
         FILENAME: OpenJDK.tar.gz
         # Don't set the OS as we use both linux and alpine-linux
         PLATFORM_CONFIG_LOCATION: AdoptOpenJDK/openjdk-build/master/build-farm/platform-specific-configurations
@@ -60,7 +58,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       name: Collect and Archive Artifacts
       with:
-        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+        name: ${{matrix.version}}-${{matrix.os.name}}-${{matrix.vm}}
         path: workspace/target/*
 
     - name: Unpack jdk
