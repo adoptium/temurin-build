@@ -278,6 +278,8 @@ updateDragonwellSources() {
     else
       target_scm="${BUILD_CONFIG[BRANCH]}"
     fi
+    # Download directly from github and not the proxy for Adoptium machine performance
+    perl -p -i -e 's/github.com.cnpmjs.org/github.com/g' get_source_dragonwell.sh
     if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
       bash get_source_dragonwell.sh --site github --branch "${target_scm}"
     else
