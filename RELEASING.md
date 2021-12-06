@@ -126,7 +126,7 @@ Here are the steps:
    - `scmReference`: One of the following:
      - For HotSpot, it's the same tag suffixed with `_adopt` e.g. `jdk-13.0.1+9_adopt`
      - For HotSpot (arm32), the tag usually takes the form `jdk8u322-b04-aarch32-xxxxxxxx`
-      - NOTE you need to set `overridePublishName` for arm32 to the actual OpenJDK tag (`jdk8u322-b04`)
+     - NOTE you need to set `overridePublishName` for arm32 to the actual OpenJDK tag (`jdk8u322-b04`)
      - For OpenJ9 (all versions) use the OpenJ9 branch e.g. `openj9-0.15.1`
    - `enableTests`: tick
    - SUBMIT!!
