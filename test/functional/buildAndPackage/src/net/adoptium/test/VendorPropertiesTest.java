@@ -216,7 +216,8 @@ public class VendorPropertiesTest {
 
         @Override
         public boolean supports(final String vendor) {
-            return vendor.toLowerCase(Locale.US).equals("international business machines corporation");
+            String vendorLowerCase = vendor.toLowerCase(Locale.US);
+            return vendorLowerCase.contains("international business machines corporation") || vendorLowerCase.contains("ibm corporation");
         }
 
         @Override
@@ -226,7 +227,11 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVendor(final String value) {
-            assertEquals(value, "International Business Machines Corporation");
+            if (value.toLowerCase(Locale.US).contains("ibm")) {
+                assertEquals(value, "IBM Corporation");
+            } else {
+                assertEquals(value, "International Business Machines Corporation");
+            }
         }
 
         @Override
