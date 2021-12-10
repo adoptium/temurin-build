@@ -124,8 +124,9 @@ Here are the steps:
    - [OpenJ9 only] `scmReference`: extensions release branch: e.g. `openj9-0.14.0`
    - `additionalConfigureArgs`: JDK8 automatically adds`--with-milestone=fcs` in `build.sh` so there's no need to provide it here. For JDK11+ use `--without-version-pre --without-version-opt` (for EA releases use: `--with-version-pre=ea --without-version-opt`)
    - `scmReference`: One of the following:
-     - For HotSpot JDK8, use the openjdk tag as-is e.g. `jdk8u232-b09`
-     - For HotSpot JDK11+, it's the same tag suffixed with `_adopt` e.g. `jdk-13.0.1+9_adopt`
+     - For HotSpot, it's the same tag suffixed with `_adopt` e.g. `jdk-13.0.1+9_adopt`
+     - For HotSpot (arm32), the tag usually takes the form `jdk8u322-b04-aarch32-xxxxxxxx`
+     - NOTE you need to set `overridePublishName` for arm32 to the actual OpenJDK tag (`jdk8u322-b04`)
      - For OpenJ9 (all versions) use the OpenJ9 branch e.g. `openj9-0.15.1`
    - `enableTests`: tick
    - SUBMIT!!
