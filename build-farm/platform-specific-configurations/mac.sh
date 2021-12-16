@@ -19,15 +19,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
-# A function that returns true if the variant is based on Hotspot and should
-# be treated as such by this build script. There is a similar function in
-# sbin/common.sh but we didn't want to refactor all of this on release day.
-function isHotSpot() {
-  [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ] ||
-  [ "${VARIANT}" == "${BUILD_VARIANT_SAP}" ] ||
-  [ "${VARIANT}" == "${BUILD_VARIANT_CORRETTO}" ]
-}
-
 export MACOSX_DEPLOYMENT_TARGET=10.9
 export BUILD_ARGS="${BUILD_ARGS}"
 
@@ -35,11 +26,6 @@ if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   XCODE_SWITCH_PATH="/Applications/Xcode.app"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
-  # See https://github.com/adoptium/temurin-build/issues/1202
-  if isHotSpot; then
-    export COMPILER_WARNINGS_FATAL=false
-    echo "Compiler Warnings set to: $COMPILER_WARNINGS_FATAL"
-  fi
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
   fi
