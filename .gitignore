@@ -2,5 +2,6 @@
 *.iml
 .vscode/
 workspace
+cyclonedx-lib/build
 **/.DS_Store
 build-farm/platform-specific-configurations/platformConfigFile.sh
