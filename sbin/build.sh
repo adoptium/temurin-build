@@ -621,19 +621,8 @@ buildCyclonedxLib() {
     exit 2
   fi
 
-  # We need the exitcode from ant
-  set +eu
-
-  ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" -Djava.home="${javaHome}" clean
-  ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" -Djava.home="${javaHome}" build
-  exitCode=$?
-
-  set -eu
-
-  if [ "${exitCode}" -ne 0 ]; then
-    echo "Failed to build the cyclonedx-lib, exiting"
-    exit ${exitCode}
-  fi
+  JAVA_HOME=${javaHome} ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" clean
+  JAVA_HOME=${javaHome} ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" build
 }
 
 # Generate the SBoM
@@ -653,6 +642,10 @@ generateSBoM() {
 
   # classpath to run CycloneDX java app TemurinGenSBOM
   classpath="${WORKSPACE}/cyclonedx-lib/build/jar/temurin-gen-sbom.jar:${WORKSPACE}/cyclonedx-lib/build/jar/cyclonedx-core-java.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-core.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-dataformat-xml.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-databind.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-annotations.jar:${WORKSPACE}/cyclonedx-lib/build/jar/json-schema.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-codec.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-io.jar:${WORKSPACE}/cyclonedx-lib/build/jar/github-package-url.jar"
+
+  if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" =~ .*cygwin.* ]]; then
+    classpath="${classpath//jar:/jar;}"
+  fi
 
   # Run app to generate SBoM
 
