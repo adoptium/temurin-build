@@ -651,29 +651,15 @@ generateSBoM() {
     exit 2
   fi
 
-  # We need the exitcode from the app 
-  set +eu
-
   # classpath to run CycloneDX java app TemurinGenSBOM
   classpath="${WORKSPACE}/cyclonedx-lib/build/jar/temurin-gen-sbom.jar:${WORKSPACE}/cyclonedx-lib/build/jar/cyclonedx-core-java.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-core.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-dataformat-xml.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-databind.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-annotations.jar:${WORKSPACE}/cyclonedx-lib/build/jar/json-schema.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-codec.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-io.jar:${WORKSPACE}/cyclonedx-lib/build/jar/github-package-url.jar"
 
   # Run app to generate SBoM
-  # List of commands
-  declare -a cmds=('--create temurin_sbom.json --name "Temurin SBOM" --version "1.2.3" --type "application" --author "Adoptium"'
-                   '--add_component temurin_sbom.json --name "openjdk" --version "jdk-19+12"'
-                  )
-  for cmd in "${cmds[@]}"
-  do
-    "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM "${cmd}"
-    exitCode=$?
-    if [ "${exitCode}" -ne 0 ]; then
-      echo "Failed to generate SBOM rc=${exitCode}, exiting"
-      set -eu
-      exit ${exitCode}
-    fi
-  done
 
-  set -eu
+  # Examples.. 
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --create         temurin_sbom.json --name "Temurin SBOM" --version "1.2.3" --type "application" --author "Adoptium"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --add_component  temurin_sbom.json --name "openjdk" --version "1.0.0" --hash "abcdefg123456"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --add_dependency temurin_sbom.json --name "gcc" --version "8.5.0"
 }
 
 getGradleJavaHome() {
