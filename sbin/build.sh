@@ -606,6 +606,62 @@ createOpenJDKFailureLogsArchive() {
     createArchive "${adoptLogArchiveDir}" "${makeFailureLogsName}"
 }
 
+# Build the CycloneDX Java library and app used for SBoM generation
+buildCyclonedxLib() {
+  local javaHome=""
+
+  if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
+    javaHome=${JAVA_HOME}
+  elif [ ${JDK8_BOOT_DIR+x} ] && [ -d "${JDK8_BOOT_DIR}" ]; then
+    javaHome=${JDK8_BOOT_DIR}
+  elif [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ]; then
+    javaHome=${JDK11_BOOT_DIR}
+  else
+    echo "Unable to find a suitable JAVA_HOME to build the cyclonedx-lib"
+    exit 2
+  fi
+
+  # We need the exitcode from ant
+  set +eu
+
+  ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" -Djava.home="${javaHome}" clean
+  ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" -Djava.home="${javaHome}" build
+  exitCode=$?
+
+  set -eu
+
+  if [ "${exitCode}" -ne 0 ]; then
+    echo "Failed to build the cyclonedx-lib, exiting"
+    exit ${exitCode}
+  fi
+}
+
+# Generate the SBoM
+generateSBoM() {
+  local javaHome=""
+
+  if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
+    javaHome=${JAVA_HOME}
+  elif [ ${JDK8_BOOT_DIR+x} ] && [ -d "${JDK8_BOOT_DIR}" ]; then
+    javaHome=${JDK8_BOOT_DIR}
+  elif [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ]; then
+    javaHome=${JDK11_BOOT_DIR}
+  else
+    echo "Unable to find a suitable JAVA_HOME to run the TemurinGenSBOM app"
+    exit 2
+  fi
+
+  # classpath to run CycloneDX java app TemurinGenSBOM
+  classpath="${WORKSPACE}/cyclonedx-lib/build/jar/temurin-gen-sbom.jar:${WORKSPACE}/cyclonedx-lib/build/jar/cyclonedx-core-java.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-core.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-dataformat-xml.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-databind.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-annotations.jar:${WORKSPACE}/cyclonedx-lib/build/jar/json-schema.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-codec.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-io.jar:${WORKSPACE}/cyclonedx-lib/build/jar/github-package-url.jar"
+
+  # Run app to generate SBoM
+
+  # Examples.. 
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --create         temurin_sbom.json --name "Temurin SBOM" --version "1.2.3" --type "application" --author "Adoptium"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --add_component  temurin_sbom.json --name "openjdk" --version "1.0.0" --hash "abcdefg123456"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --add_dependency temurin_sbom.json --name "gcc" --version "8.5.0"
+}
+
 getGradleJavaHome() {
   local gradleJavaHome=""
 
@@ -1591,6 +1647,11 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   setPlistForMacOS
   addNoticeFile
   createOpenJDKTarArchive
+fi
+
+if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
+  buildCyclonedxLib
+  generateSBoM
 fi
 
 echo "build.sh : $(date +%T) : All done!"

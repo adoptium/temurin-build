@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+
+<!--
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+-->
+
+<project name="cyclonedx-lib build" default="build" basedir=".">
+        <taskdef resource="net/sf/antcontrib/antlib.xml" />
+
+        <!-- Dependency versions -->
+        <property name="cyclonedx-core-java-version" value="5.0.4"/>
+        <property name="jackson-version" value="2.12.4"/>
+        <property name="json-schema-version" value="1.0.58"/>
+        <property name="commons-codec-version" value="1.15"/>
+        <property name="commons-io-version" value="2.11.0"/>
+        <property name="github-package-url-version" value="1.4.0"/>
+
+        <!-- classpath for running application -->
+        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar"/>
+
+        <target name="dep-checks">
+                <available file="build/jar/cyclonedx-core-java.jar" property="cyclonedx_available"/>
+                <available file="build/jar/jackson-core.jar" property="jackson-core_available"/>
+                <available file="build/jar/jackson-dataformat-xml.jar" property="jackson-core_available"/>
+                <available file="build/jar/jackson-databind.jar" property="jackson-databind_available"/>
+                <available file="build/jar/jackson-annotations.jar" property="jackson-annotations_available"/>
+                <available file="build/jar/json-schema.jar" property="json-schema_available"/>
+                <available file="build/jar/commons-codec.jar" property="commons-codec_available"/>
+                <available file="build/jar/commons-io.jar" property="commons-io_available"/>
+                <available file="build/jar/github-package-url.jar" property="github-package-url_available"/>
+        </target>
+
+        <target name="download-cyclonedx" unless="cyclonedx_available">
+                <echo message="Downloading cyclonedx-core-java version ${cyclonedx-core-java-version}"/>
+                <download-file destdir="build/jar" destfile="cyclonedx-core-java.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=org/cyclonedx/cyclonedx-core-java/${cyclonedx-core-java-version}/cyclonedx-core-java-${cyclonedx-core-java-version}.jar"/>
+	</target>
+
+        <target name="download-jackson-core" unless="jackson-core_available">
+                <echo message="Downloading jackson-core version ${jackson-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-core.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-version}/jackson-core-${jackson-version}.jar"/>
+        </target>
+
+        <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
+                <echo message="Downloading jackson-dataformat-xml version ${jackson-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-dataformat-xml.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/dataformat/jackson-dataformat-xml/${jackson-version}/jackson-dataformat-xml-${jackson-version}.jar"/>
+        </target>
+
+        <target name="download-jackson-databind" unless="jackson-databind_available">
+                <echo message="Downloading jackson-databind version ${jackson-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-databind.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/${jackson-version}/jackson-databind-${jackson-version}.jar"/>
+        </target>
+
+        <target name="download-jackson-annotations" unless="jackson-annotations_available">
+                <echo message="Downloading jackson-annotations version ${jackson-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-annotations.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/${jackson-version}/jackson-annotations-${jackson-version}.jar"/>
+        </target>
+
+        <target name="download-json-schema" unless="json-schema_available">
+                <echo message="Downloading json-schema version ${json-schema-version}"/>
+                <download-file destdir="build/jar" destfile="json-schema.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/networknt/json-schema-validator/${json-schema-version}/json-schema-validator-${json-schema-version}.jar"/>
+        </target>
+
+        <target name="download-commons-codec" unless="commons-codec_available">
+                <echo message="Downloading commons-codec version ${commons-codec-version}"/>
+                <download-file destdir="build/jar" destfile="commons-codec.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=commons-codec/commons-codec/${commons-codec-version}/commons-codec-${commons-codec-version}.jar"/>
+        </target>
+
+        <target name="download-commons-io" unless="commons-io_available">
+                <echo message="Downloading commons-io version ${commons-io-version}"/>
+                <download-file destdir="build/jar" destfile="commons-io.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=commons-io/commons-io/${commons-io-version}/commons-io-${commons-io-version}.jar"/>
+        </target>
+
+        <target name="download-github-package-url" unless="github-package-url_available">
+                <echo message="Downloading github-package-url version ${github-package-url-version}"/>
+                <download-file destdir="build/jar" destfile="github-package-url.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
+        </target>
+
+        <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
+                <echo message="Building cyclonedx-lib"/>
+        </target>
+
+        <target name="clean">
+                <delete dir="build"/>
+        </target>
+
+        <target name="compile">
+                <mkdir dir="build/classes"/>
+                <javac srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar"/>
+        </target>
+
+        <target name="jar">
+                <mkdir dir="build/jar"/>
+                <jar destfile="build/jar/temurin-gen-sbom.jar" basedir="build/classes">
+                        <manifest>
+                                <attribute name="Main-Class" value="temurin.sbom.TemurinGenSBOM"/>
+                        </manifest>
+                </jar>
+        </target>
+
+        <target name="run">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM"/>
+        </target>
+
+	<macrodef name="download-file" description="Use curl to download a file">
+		<attribute name="srcurl" description="URL of file to download"/>
+		<attribute name="destdir" description="Directory in which to place the downloaded file"/>
+		<attribute name="destfile" description="File name of the downloaded file"/>
+		<sequential>
+			<echo message="Executing macro download-file"/>
+			<echo message="File to download: @{srcurl}"/>
+			<echo message="Destination: @{destdir}/@{destfile}"/>
+			<echo message="Download tool: curl"/>
+			<mkdir dir="@{destdir}"/>
+			<exec executable="curl">
+				<arg value="-L"/>
+				<arg value="-o"/>
+				<arg value="@{destdir}/@{destfile}"/>
+				<arg value="@{srcurl}"/>
+			</exec>
+		</sequential>
+	</macrodef>
+</project>
+
