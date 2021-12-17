@@ -2,6 +2,6 @@
 
 ## Reporting a Vulnerability
 
-Please report vulnerabilities to [security@adoptopenjdk.net](security@adoptopenjdk.net).
+Please report undisclosed vulnerabilities in Eclipse Temurin™ to [security@eclipse.org](security@eclipse.org).
 
-A member of the security team will respond within 48 hours with details on how to proceed including whether or not the vulnerability was accepted, declined or requires further investigation.
+A member of the security team will respond in accordance with the regular [Eclipse Foundation security procedures](https://www.eclipse.org/security/).
