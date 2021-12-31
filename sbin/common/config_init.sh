@@ -573,7 +573,7 @@ function configDefaults() {
   BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false
 
   # Used in 'release' file for jdk8u
-  BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"Eclipse Adoptium"}
+  BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"Undefined Vendor"}
 }
 
 # Declare the map of build configuration that we're going to use
