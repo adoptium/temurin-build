@@ -91,7 +91,7 @@ then
   # cores on our scaleway systems while they are still in use but still
   # allow more on larger machines. Can be revisited post-Scaleway
   if [ "$(lscpu|awk '/^CPU\(s\)/{print$2}')" = "4" ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=4 --with-memory-size=2000"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=5 --with-memory-size=2000"
   fi
   if [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-latomic"
@@ -110,6 +110,7 @@ then
   echo "=== END OF ARM32 STATUS CHECK ==="
 fi
 
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=8 --with-memory-size=13000"
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
@@ -283,3 +284,5 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; 
     exit 1
   fi
 fi
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --without-version-pre --without-version-opt"
+

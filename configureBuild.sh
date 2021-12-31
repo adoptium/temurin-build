@@ -173,8 +173,10 @@ setRepository() {
     suffix="openeuler-mirror/bishengjdk-${BUILD_CONFIG[OPENJDK_CORE_VERSION]:3}"
   elif [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
     suffix="adoptium/aarch32-jdk8u";
-  else
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]]; then
     suffix="adoptium/${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
+  else
+    suffix="openjdk/${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
   fi
 
   local repository
@@ -255,6 +257,7 @@ processArgumentsforSpecificArchitectures() {
     fi
     if [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""} != *"--with-jobs"* ]]; then
       BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="--with-jobs=${BUILD_CONFIG[NUM_PROCESSORS]} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-''}"
+      BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="--with-jobs=8 ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-''}"
     fi
     ;;
 
