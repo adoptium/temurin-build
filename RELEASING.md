@@ -114,8 +114,8 @@ lockdown period.
 Here are the steps:
 
 1. Disabling nightly testing so the release builds aren't delayed by any nightly test runs (`enableTests : false` in [defaults.json](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/defaults.json)). Ensure the build pipeline generator job runs successfully (https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator/), and that the flag is disabled by bringing up the Build pipeline job and check the "enableTests" flag is disabled.
-2. If desired, add a banner to the website to indicate that the releases are coming in the near future ([Sample PR](https://github.com/adoptium/adoptium.net/pull/702/files))
-3. Build and Test the OpenJDK for "release" at Adoptium using a build pipeline job as follows:
+1. If desired, add a banner to the website to indicate that the releases are coming in the near future ([Sample PR](https://github.com/adoptium/adoptium.net/pull/702/files))
+1. Build and Test the OpenJDK for "release" at Adoptium using a build pipeline job as follows:
    - Job: https://ci.adoptopenjdk.net/job/build-scripts/job/openjdk8-pipeline/build (Switch `openjdk8` for your version number)
    - `targetConfigurations`: remove all the entries for the variants you don't want to build (e.g. remove the openj9 ones for hotspot releases) or any platforms you don't want to release (Currently that would include OpenJ9 aarch64)
    - `releaseType: Release`
@@ -130,7 +130,7 @@ Here are the steps:
      - For OpenJ9 (all versions) use the OpenJ9 branch e.g. `openj9-0.15.1`
    - `enableTests`: tick
    - SUBMIT!!
-4. Once the Build and Test pipeline has completed,
+1. Once the Build and Test pipeline has completed,
    [triage the results](https://github.com/AdoptOpenJDK/openjdk-tests/blob/master/doc/Triage.md)
    ([TRSS](https://trss.adoptopenjdk.net/tests/Test) will probably help!)
    - Find the milestone build row, and click the "Grid" link
@@ -139,10 +139,10 @@ Here are the steps:
      - [temurin-build](https://github.com/adoptium/temurin-build) or [openjdk-tests](https://github.com/AdoptOpenJDK/openjdk-tests) (for Adopt build or test issues)
      - [ci-jenkins-pipelines](https://github.com/adoptium/ci-jenkins-pipelines) (for jenkins pipelines specific issues)
      - [eclipse/openj9](https://github.com/eclipse-openj9/openj9) (for OpenJ9 issues)
-5. Discuss failing tests with [Shelley Lambert](https://github.com/smlambert)
-6. Once all AQA tests on all platforms have been signed off, then nightly tests can be re-enabled. See the notes on checking the regeneration job worked in step 1.
-7. If "good to publish", then get permission to publish the release from the Adoptium PMC members, discussion is via the Adoptium [#release](https://adoptium.slack.com/messages/CLCFNV2JG) Slack channel.
-8. Once permission has been obtained, run the [Adoptium "Publish" job](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) (restricted access - if you can't see this link, you don't have access). it is *strongly recommended* that you run first with the `DRY_RUN` checkbox enabled and check the output to verify that the correct list of files you expected are picked up.
+1. Discuss failing tests with [Shelley Lambert](https://github.com/smlambert)
+1. Once all AQA tests on all platforms have been signed off, then nightly tests can be re-enabled. See the notes on checking the regeneration job worked in step 1.
+1. If "good to publish", then get permission to publish the release from the Adoptium PMC members, discussion is via the Adoptium [#release](https://adoptium.slack.com/messages/CLCFNV2JG) Slack channel.
+1. Once permission has been obtained, run the [Adoptium "Publish" job](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) (restricted access - if you can't see this link, you don't have access). it is *strongly recommended* that you run first with the `DRY_RUN` checkbox enabled and check the output to verify that the correct list of files you expected are picked up.
    - `TAG`: (github binaries published name)  e.g. `jdk-11.0.5+9` or `jdk-11.0.5+9_openj9-0.nn.0` for OpenJ9 releases. If doing a point release, add that into the name e.g. for a `.3` release use something like these (NOTE that for OpenJ9 the point number goes before the openj9 version): `jdk8u232-b09.3` or `jdk-11.0.4+11.3_openj9-0.15.1`
    - `VERSION`: (select version e.g. `jdk11`)
    - `UPSTREAM_JOB_NAME`: (build-scripts/openjdkNN-pipeline)
@@ -150,12 +150,16 @@ Here are the steps:
    - `RELEASE`: "ticked"
    - If you need to restrict the platforms or only ship jdks or jres, either use `ARTIFACTS_TO_COPY` e.g. `**/*jdk*mac*` or add an explicit exclusion in `ARTIFACTS_TO_SKIP` e.g. `**/*mac*`. These may be required if you had to re-run some of the platforms under a different pipeline earlier in the process
    - SUBMIT!!
-9. Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08
-10. Within 15 minutes the binaries should be available on the website too at e.g. https://adoptium.net/?variant=openjdk11&jvmVariant=hotspot (NOTE: If it doesn't show up, check whether the API is returning the right thing (e.g. with a link such as [this](https://api.adoptium.net/v3/assets/feature_releases/17/ga?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&page=0&page_size=10&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse), and that the `.json` metadata files are uploaded correctly)
-11. Since you have 15 minutes free, use that time to update https://github.com/adoptium/adoptium.net/blob/master/src/handlebars/support.handlebars which is the source of  https://adoptium.net/support.html and (if required) the supported platforms table at https://github.com/adoptium/adoptium.net/blob/master/src/handlebars/supported_platforms.handlebars which is the source of https://adoptium.net/supported_platforms.html, and also update https://adoptium.net/release_notes.html ([Sample change](https://github.com/adoptium/adoptium.net/pull/675/commits/563d8e2f0d9d26500a7e8d9eca61b491f73f1f37)
-12. [Mac only] Once the binaries are available on the website you need to run the [homebrew cask updater](https://github.com/AdoptOpenJDK/homebrew-openjdk/wiki/Running-the-cask-updater) which will create a pull request [here](https://github.com/AdoptOpenJDK/homebrew-openjdk/pulls). Normally George approves these but in principle as long as the CI passes, they should be good to approve. You don't need to wait around and merge the PR's because the Mergify bot will automatically do this for you as long as somebody has approved it.
-13. Publicise the Temurin release via slack on Adoptium #release
-14. If desired, find someone with the appropriate authority (George, Martijn, Shelley, Stewart) to post a tweet about the new release from the Adoptium twitter account
+1. Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08
+1. Within 15 minutes the binaries should be available on the website too at e.g. https://adoptium.net/?variant=openjdk11&jvmVariant=hotspot (NOTE: If it doesn't show up, check whether the API is returning the right thing (e.g. with a link such as [this](https://api.adoptium.net/v3/assets/feature_releases/17/ga?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&page=0&page_size=10&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse), and that the `.json` metadata files are uploaded correctly)
+1. Since you have 15 minutes free, use that time to update https://github.com/adoptium/adoptium.net/blob/master/src/handlebars/support.handlebars which is the source of  https://adoptium.net/support.html and (if required) the supported platforms table at https://github.com/adoptium/adoptium.net/blob/master/src/handlebars/supported_platforms.handlebars which is the source of https://adoptium.net/supported_platforms.html, and also update https://adoptium.net/release_notes.html ([Sample change](https://github.com/adoptium/adoptium.net/pull/675/commits/563d8e2f0d9d26500a7e8d9eca61b491f73f1f37)
+1. [Mac only] Once the binaries are available on the website you need to update the Homebrew casks. There are 3 casks in total ([`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/temurin.rb) which always serves the latest version, [`temurin8`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin8.rb) and [`temurin11`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin11.rb)). An example PR can be found [here](https://github.com/Homebrew/homebrew-cask/pull/113581). If in doubt reach out to George (gdams) as he's a maintainer.
+1. [Linux only] Once the binaries are available on the website you can begin updating the specfiles for the RPM/DEB files. There are 3 different type of linux installer ([debian](https://github.com/adoptium/installer/tree/master/linuxNew/jdk/debian/src/main/packaging/temurin), [redhat](https://github.com/adoptium/installer/tree/master/linuxNew/jdk/redhat/src/main/packaging/temurin) and [suse](https://github.com/adoptium/installer/tree/master/linuxNew/jdk/suse/src/main/packaging/temurin)) and all 3 need updating. Once these files have been updated the [adoptium-packages-linux-pipeline](https://ci.adoptopenjdk.net/job/adoptium-packages-linux-pipeline/) job needs to be kicked off making sure to tick the `UPLOAD` parameter.
+  - **Debian** you need to locate the `rules` file for each version. This file contains the URLs and Checksums for each package ([example](https://github.com/adoptium/installer/blob/master/linuxNew/jdk/debian/src/main/packaging/temurin/11/debian/rules#L6-L15)).
+  - **RedHat/Suse** you need to modify the `temurin-<version>-jdk.spec` file for each version. The links/checksum links are all defined as `Source<number>` variables ([example](https://github.com/adoptium/installer/blob/master/linuxNew/jdk/redhat/src/main/packaging/temurin/11/temurin-11-jdk.spec#L128-L142)).
+1. [Docker] please see https://github.com/adoptium/containers#maintenance-of-dockerfiles
+1. Publicise the Temurin release via slack on Adoptium #release
+1. If desired, find someone with the appropriate authority (George, Martijn, Shelley, Stewart) to post a tweet about the new release from the Adoptium twitter account
 
 ## [OpenJ9 Only] Milestone Process
 
