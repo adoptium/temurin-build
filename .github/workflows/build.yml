@@ -24,10 +24,6 @@ jobs:
         image: [adoptopenjdk/centos7_build_image]
         include:
           - os: alpine-linux
-            version: jdk16u
-            vm: hotspot
-            image: adoptopenjdk/alpine3_build_image
-          - os: alpine-linux
             version: jdk17u
             vm: hotspot
             image: adoptopenjdk/alpine3_build_image
@@ -37,6 +33,10 @@ jobs:
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk
+            vm: hotspot
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk8u
             vm: hotspot
             image: adoptopenjdk/alpine3_build_image
           - os: linux
