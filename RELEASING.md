@@ -148,7 +148,7 @@ Here are the steps:
    - `UPSTREAM_JOB_NAME`: (build-scripts/openjdkNN-pipeline)
    - `UPSTREAM_JOB_NUMBER`: (the job number of the build pipeline under build-scripts/openjdkNN-pipeline) e.g. 86
    - `RELEASE`: "ticked"
-   - `aqaReference` : The correct AQA quality suite branch for this release e.g. `v0.8.0-release`
+   - `aqaReference` : The correct [aqa-tests release branch name](https://github.com/adoptium/aqa-tests/branches) to use for this release e.g. `v0.8.0-release`
    - If you need to restrict the platforms or only ship jdks or jres, either use `ARTIFACTS_TO_COPY` e.g. `**/*jdk*mac*` or add an explicit exclusion in `ARTIFACTS_TO_SKIP` e.g. `**/*mac*`. These may be required if you had to re-run some of the platforms under a different pipeline earlier in the process
    - SUBMIT!!
 9. Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08
