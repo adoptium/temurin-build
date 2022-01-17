@@ -124,7 +124,7 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION
     elif [ $(uname -m) = "aarch64" ]; then
       curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.8.9_jdk8u302-ga/Alibaba_Dragonwell_8.8.9_aarch64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
     else
-      echo Unknown architecture $(uname -m) for building Dragonwell - cannot download boot JDK
+      echo "Unknown architecture $(uname -m) for building Dragonwell - cannot download boot JDK"
       exit 1
     fi
     export "${BOOT_JDK_VARIABLE}"="$PWD/jdk-8"
