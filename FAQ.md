@@ -85,6 +85,24 @@ If you're making changes ensure you follow the contribution guidelines in
 
 For more information, see the [PR testing documentation](Testing.md).
 
+## What are smoke tests?
+
+Smoke tests are quick and simple tests to verify that we 'built the right thing'.  They can be found in the [buildAndPackage directory](https://github.com/adoptium/temurin-build/tree/master/test/functional/buildAndPackage)
+Smoke tests verify things like:
+
+- the java -version output is correct
+- certain features are available in certain builds (checks for shenandoah GC or xxx)
+- the right set of modules are included
+etc
+
+## How and where are smoke tests run?
+
+They use the same mechanisms and automation used by the AQA test suite.  This means they can be run on the commandline, or as part of a Jenkins job or in a Github workflow.  For this repository, they are part of PR testing via the [build.yml](https://github.com/adoptium/temurin-build/blob/master/.github/workflows/build.yml#L151) workflow using the [run-aqa](https://github.com/adoptium/run-aqa) action.
+
+They are also run as part of the Jenkins build pipelines (see the [runSmokeTests()](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy#L264-L301) method in the openjdk_build_pipeline groovy script), triggered after the build is complete and before any AQA tests get run against the build.  If smoke tests fail, it likely indicates we built the 'wrong thing' and there is no point running further testing until we resolve the build issues.
+
+To run them on the command-line, one can follow the same general instructions for running any AQA test on the command line, with the additional step of exporting variables to indicate where to find test material (VENDOR_TEST_REPOS, VENDOR_TEST_BRANCHES, VENDOR_TEST_DIRS).   See: [SmokeTesting.md](https://github.com/adoptium/temurin-build/blob/master/SmokeTesting.md)
+
 ## Which OS levels do we build on?
 
 The operating systems/distributions which we build or are documented in the

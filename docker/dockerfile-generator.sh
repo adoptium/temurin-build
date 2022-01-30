@@ -14,9 +14,24 @@ JDK_VERSION=8
 JDK_MAX=
 JDK_GA=
 
+getFile() {
+  if [ $# -ne 2 ]; then
+    echo "getFile takes 2 arguments, $# argument(s) given"
+    echo 'Usage: getFile https://example.com file_name'
+    exit 1;
+  elif command -v wget &> /dev/null; then
+    wget -q "$1" -O "$2"
+  elif command -v curl &> /dev/null; then
+    curl -s "$1" -o "$2"
+  else
+    echo 'Please install wget or curl to continue'
+    exit 1;
+  fi
+}
+
 # shellcheck disable=SC2002 # Disable UUOC error
 setJDKVars() {
-  wget -q https://api.adoptium.net/v3/info/available_releases
+  getFile https://api.adoptium.net/v3/info/available_releases available_releases
   JDK_MAX=$(cat available_releases \
       | grep 'tip_version' \
       | cut -d':' -f 2 \
@@ -239,14 +254,25 @@ ENV CC=gcc-7 CXX=g++-7" >> "$DOCKERFILE_PATH"
 printDockerJDKs() {
   # JDK8 uses zulu-7 to as it's bootjdk
   if [ "${JDK_VERSION}" != 8 ] && [ "${JDK_VERSION}" != "${JDK_MAX}" ]; then
-    if [ ${COMMENTS} == true ]; then
-      echo "
-    # Extract JDK$((JDK_VERSION-1)) to use as a boot jdk" >> "$DOCKERFILE_PATH"
+    if [ "${JDK_VERSION}" == 11 ]; then
+      if [ ${COMMENTS} == true ]; then
+        echo "
+        # JDK 10 is not available on the adoptium API, extract JDK 11 to use as a boot jdk" >> "$DOCKERFILE_PATH"
+      fi
+      printJDK $((JDK_VERSION))
+      echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION))/bin/java /usr/bin/java" >> "$DOCKERFILE_PATH"
+      echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION))/bin/javac /usr/bin/javac" >> "$DOCKERFILE_PATH"
+      echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION))/bin/keytool /usr/bin/keytool" >> "$DOCKERFILE_PATH"
+    else
+      if [ ${COMMENTS} == true ]; then
+        echo "
+        # Extract JDK$((JDK_VERSION-1)) to use as a boot jdk" >> "$DOCKERFILE_PATH"
+      fi
+      printJDK $((JDK_VERSION-1))
+      echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/java /usr/bin/java" >> "$DOCKERFILE_PATH"
+      echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/javac /usr/bin/javac" >> "$DOCKERFILE_PATH"
+      echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/keytool /usr/bin/keytool" >> "$DOCKERFILE_PATH"
     fi
-    printJDK $((JDK_VERSION-1))
-    echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/java /usr/bin/java" >> "$DOCKERFILE_PATH"
-    echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/javac /usr/bin/javac" >> "$DOCKERFILE_PATH"
-    echo "RUN ln -sf /usr/lib/jvm/jdk$((JDK_VERSION-1))/bin/keytool /usr/bin/keytool" >> "$DOCKERFILE_PATH"
   fi
 
   # Build 'jdk' with the most recent GA release
@@ -277,12 +303,16 @@ printJDK() {
 RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptium.net/v3/binary/latest/$JDKVersion/ga/linux/x64/jdk/hotspot/normal/adoptium?project=jdk' -O - | tar xzf - -C /usr/lib/jvm/jdk$JDKVersion --strip-components=1\"" >> "$DOCKERFILE_PATH"
 }
 
+printGitCloneJenkinsPipelines(){
+  echo "
+RUN git clone https://github.com/adoptium/ci-jenkins-pipelines /openjdk/pipelines" >> "$DOCKERFILE_PATH"
+}
+
 printCopyFolders(){
   echo "
 COPY sbin /openjdk/sbin
 COPY security /openjdk/security
-COPY workspace/config /openjdk/config
-COPY pipelines /openjdk/pipelines" >> "$DOCKERFILE_PATH"
+COPY workspace/config /openjdk/config" >> "$DOCKERFILE_PATH"
 }
 
 printGitClone(){
@@ -345,6 +375,7 @@ if [ ${OPENJ9} == true ]; then
 fi
 
 printDockerJDKs
+printGitCloneJenkinsPipelines
 
 # If building the image straight away, it can't be assumed the folders to be copied are in place
 # Therefore create an image that instead git clones openjdk-build and a build can be started there

@@ -156,7 +156,8 @@ case "${JDK_BOOT_VERSION}" in
       "15")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK15_BOOT_DIR}";;
       "16")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK16_BOOT_DIR}";;
       "17")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK17_BOOT_DIR}";;
-      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK18_BOOT_DIR}";;
+      "18")   export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK18_BOOT_DIR}";;
+      *)      export JDK_BOOT_DIR="${JDK_BOOT_DIR:-$JDK19_BOOT_DIR}";;
 esac
 
 
@@ -212,6 +213,13 @@ export BUILD_ARGS="${BUILD_ARGS} --use-jep319-certs"
 
 # Enable debug images for all platforms
 export BUILD_ARGS="${BUILD_ARGS} --create-debug-image"
+
+# JRE images are not produced for JDK16 and above
+# as per https://github.com/adoptium/adoptium-support/issues/333
+# Enable legacy JRE images for all platforms and versions older than 16
+if [ "${JAVA_FEATURE_VERSION}" -lt 16 ]; then
+  export BUILD_ARGS="${BUILD_ARGS} --create-jre-image"
+fi
 
 echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args ${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"
 

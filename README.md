@@ -1,12 +1,10 @@
-# Repository for code and instructions for building OpenJDK binaries, defaulting to Eclipse Temurin
-
-[![Slack](https://slackin-jmnmplfpdu.now.sh/badge.svg)](https://slackin-jmnmplfpdu.now.sh/)
+# Repository for code and instructions for building OpenJDK binaries, defaulting to Eclipse Temurin™
 
 These scripts can be used to build OpenJDK anywhere but are primarily used by Eclipse Adoptium members (vendors) to build binaries. The scripts default to the use case of building Eclipse Temurin binaries which occurs on the build farm at <https://ci.adoptopenjdk.net>. Those binaries are then made available for consumption at <https://adoptium.net> and via the API <https://api.adoptium.net>.
 
 **NOTE** In the future, adoptium.net will transition to being a marketplace for other qualifying vendors as well Eclipse Temurin.
 
-## Where can I find the release status of Eclipse Temurin binaries?
+## Where can I find the release status of Eclipse Temurin™ binaries?
 
 Go to the [Eclipse Adoptium Top Level Project Repo](https://www.github.com/adoptium/adoptium/issues) for release tracking.
 
@@ -133,6 +131,9 @@ clean out any 'bad' local git repo you already have.
 
 --create-debug-image
 create a debug-image archive with the debug symbols.
+
+--create-jre-image
+create the legacy JRE image in addition to the JDK image.
 
 -d, --destination <path>
 specify the location for the built binary, e.g. /path/.

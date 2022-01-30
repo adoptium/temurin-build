@@ -113,7 +113,7 @@ lockdown period.
 
 Here are the steps:
 
-1. Disabling nightly testing so the release builds aren't delayed by any nightly test runs (`enableTests : false` in [defaults.json](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/defaults.json))
+1. Disabling nightly testing so the release builds aren't delayed by any nightly test runs (`enableTests : false` in [defaults.json](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/defaults.json)). Ensure the build pipeline generator job runs successfully (https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator/), and that the flag is disabled by bringing up the Build pipeline job and check the "enableTests" flag is disabled.
 2. If desired, add a banner to the website to indicate that the releases are coming in the near future ([Sample PR](https://github.com/adoptium/adoptium.net/pull/702/files))
 3. Build and Test the OpenJDK for "release" at Adoptium using a build pipeline job as follows:
    - Job: https://ci.adoptopenjdk.net/job/build-scripts/job/openjdk8-pipeline/build (Switch `openjdk8` for your version number)
@@ -124,8 +124,9 @@ Here are the steps:
    - [OpenJ9 only] `scmReference`: extensions release branch: e.g. `openj9-0.14.0`
    - `additionalConfigureArgs`: JDK8 automatically adds`--with-milestone=fcs` in `build.sh` so there's no need to provide it here. For JDK11+ use `--without-version-pre --without-version-opt` (for EA releases use: `--with-version-pre=ea --without-version-opt`)
    - `scmReference`: One of the following:
-     - For HotSpot JDK8, use the openjdk tag as-is e.g. `jdk8u232-b09`
-     - For HotSpot JDK11+, it's the same tag suffixed with `_adopt` e.g. `jdk-13.0.1+9_adopt`
+     - For HotSpot, it's the same tag suffixed with `_adopt` e.g. `jdk-13.0.1+9_adopt`
+     - For HotSpot (arm32), the tag usually takes the form `jdk8u322-b04-aarch32-xxxxxxxx`
+     - NOTE you need to set `overridePublishName` for arm32 to the actual OpenJDK tag (`jdk8u322-b04`)
      - For OpenJ9 (all versions) use the OpenJ9 branch e.g. `openj9-0.15.1`
    - `enableTests`: tick
    - SUBMIT!!
@@ -139,21 +140,23 @@ Here are the steps:
      - [ci-jenkins-pipelines](https://github.com/adoptium/ci-jenkins-pipelines) (for jenkins pipelines specific issues)
      - [eclipse/openj9](https://github.com/eclipse-openj9/openj9) (for OpenJ9 issues)
 5. Discuss failing tests with [Shelley Lambert](https://github.com/smlambert)
-6. If "good to publish", then get permission to publish the release from the Adoptium PMC members, discussion is via the Adoptium [#release](https://adoptium.slack.com/messages/CLCFNV2JG) Slack channel and create a Promotion TSC item [here](https://github.com/AdoptOpenJDK/TSC/issues/new?assignees=&labels=&template=promote-release.md&title=Promote+AdoptOpenJDK+Version+%3Cx%3E).
-7. Once permission has been obtained, run the [Adoptium "Publish" job](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) (restricted access - if you can't see this link, you don't have access)
+6. Once all AQA tests on all platforms have been signed off, then nightly tests can be re-enabled. See the notes on checking the regeneration job worked in step 1.
+7. If "good to publish", then get permission to publish the release from the Adoptium PMC members, discussion is via the Adoptium [#release](https://adoptium.slack.com/messages/CLCFNV2JG) Slack channel.
+8. Once permission has been obtained, run the [Adoptium "Publish" job](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) (restricted access - if you can't see this link, you don't have access). it is *strongly recommended* that you run first with the `DRY_RUN` checkbox enabled and check the output to verify that the correct list of files you expected are picked up.
    - `TAG`: (github binaries published name)  e.g. `jdk-11.0.5+9` or `jdk-11.0.5+9_openj9-0.nn.0` for OpenJ9 releases. If doing a point release, add that into the name e.g. for a `.3` release use something like these (NOTE that for OpenJ9 the point number goes before the openj9 version): `jdk8u232-b09.3` or `jdk-11.0.4+11.3_openj9-0.15.1`
-   - `VERSION`: (select version)
+   - `VERSION`: (select version e.g. `jdk11`)
    - `UPSTREAM_JOB_NAME`: (build-scripts/openjdkNN-pipeline)
-   - `UPSTREAM_JOB_NUMBER`: (the job number of the build pipeline under build-scripts/openjdkNN-pipeline) eg.86
+   - `UPSTREAM_JOB_NUMBER`: (the job number of the build pipeline under build-scripts/openjdkNN-pipeline) e.g. 86
    - `RELEASE`: "ticked"
+   - `aqaReference` : The correct [aqa-tests release branch name](https://github.com/adoptium/aqa-tests/branches) to use for this release e.g. `v0.8.0-release`
+   - If you need to restrict the platforms or only ship jdks or jres, either use `ARTIFACTS_TO_COPY` e.g. `**/*jdk*mac*` or add an explicit exclusion in `ARTIFACTS_TO_SKIP` e.g. `**/*mac*`. These may be required if you had to re-run some of the platforms under a different pipeline earlier in the process
    - SUBMIT!!
-8. Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08
-9. Within 15 minutes the binaries should be available on the website too at e.g. https://adoptium.net/?variant=openjdk11&jvmVariant=hotspot
-10. Since you have 15 minutes free, use that time to update https://github.com/adoptium/adoptium.net/blob/master/src/handlebars/support.handlebars which is the source of  https://adoptium.net/support.html and (if required) the supported platforms table at https://github.com/adoptium/adoptium.net/blob/master/src/handlebars/supported_platforms.handlebars which is the source of https://adoptium.net/supported_platforms.html, and also update https://adoptium.net/release_notes.html ([Sample change](https://github.com/adoptium/adoptium.net/pull/675/commits/563d8e2f0d9d26500a7e8d9eca61b491f73f1f37)
-11. [Mac only] Once the binaries are available on the website you need to run the [homebrew cask updater](https://github.com/AdoptOpenJDK/homebrew-openjdk/wiki/Running-the-cask-updater) which will create a pull request [here](https://github.com/AdoptOpenJDK/homebrew-openjdk/pulls). Normally George approves these but in principle as long as the CI passes, they should be good to approve. You don't need to wait around and merge the PR's because the Mergify bot will automatically do this for you as long as somebody has approved it.
-12. Publicise the Temurin release via slack on Adoptium #release
-13. If desired, find someone with the appropriate authority (George, Martijn, Shelley, Stewart) to post a tweet about the new release from the Adoptium twitter account
-14. If all releases are complete, re-enable the full nightly runs
+9. Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08
+10. Within 15 minutes the binaries should be available on the website too at e.g. https://adoptium.net/?variant=openjdk11&jvmVariant=hotspot (NOTE: If it doesn't show up, check whether the API is returning the right thing (e.g. with a link such as [this](https://api.adoptium.net/v3/assets/feature_releases/17/ga?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&page=0&page_size=10&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse), and that the `.json` metadata files are uploaded correctly)
+11. Since you have 15 minutes free, use that time to update https://github.com/adoptium/adoptium.net/blob/master/src/handlebars/support.handlebars which is the source of  https://adoptium.net/support.html and (if required) the supported platforms table at https://github.com/adoptium/adoptium.net/blob/master/src/handlebars/supported_platforms.handlebars which is the source of https://adoptium.net/supported_platforms.html, and also update https://adoptium.net/release_notes.html ([Sample change](https://github.com/adoptium/adoptium.net/pull/675/commits/563d8e2f0d9d26500a7e8d9eca61b491f73f1f37)
+12. [Mac only] Once the binaries are available on the website you need to run the [homebrew cask updater](https://github.com/AdoptOpenJDK/homebrew-openjdk/wiki/Running-the-cask-updater) which will create a pull request [here](https://github.com/AdoptOpenJDK/homebrew-openjdk/pulls). Normally George approves these but in principle as long as the CI passes, they should be good to approve. You don't need to wait around and merge the PR's because the Mergify bot will automatically do this for you as long as somebody has approved it.
+13. Publicise the Temurin release via slack on Adoptium #release
+14. If desired, find someone with the appropriate authority (George, Martijn, Shelley, Stewart) to post a tweet about the new release from the Adoptium twitter account
 
 ## [OpenJ9 Only] Milestone Process
 

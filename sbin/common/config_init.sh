@@ -48,6 +48,8 @@ COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
 CREATE_DEBUG_IMAGE
+CREATE_JRE_IMAGE
+CREATE_SBOM
 CREATE_SOURCE_ARCHIVE
 CUSTOM_CACERTS
 CROSSCOMPILE
@@ -235,6 +237,12 @@ function parseConfigurationArguments() {
 
         "--create-debug-image" )
         BUILD_CONFIG[CREATE_DEBUG_IMAGE]="true";;
+
+        "--create-jre-image" )
+        BUILD_CONFIG[CREATE_JRE_IMAGE]=true;;
+
+        "--create-sbom" )
+        BUILD_CONFIG[CREATE_SBOM]=true;;
 
         "--create-source-archive" )
         BUILD_CONFIG[CREATE_SOURCE_ARCHIVE]=true;;
@@ -451,6 +459,12 @@ function configDefaults() {
 
   # The default behavior of whether we want to create a separate debug symbols archive
   BUILD_CONFIG[CREATE_DEBUG_IMAGE]="false"
+
+  # The default behavior of whether we want to create the legacy JRE
+  BUILD_CONFIG[CREATE_JRE_IMAGE]="false"
+
+  # Do not create an SBOM by default
+  BUILD_CONFIG[CREATE_SBOM]="false"
 
   # The default behavior of whether we want to create a separate source archive
   BUILD_CONFIG[CREATE_SOURCE_ARCHIVE]="false"
