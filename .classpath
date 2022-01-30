@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="cyclonedx-lib/src"/>
+	<classpathentry kind="src" path="test/functional/buildAndPackage/src"/>
+	<classpathentry kind="lib" path="cyclonedx-lib/build/jar/commons-codec.jar"/>
+	<classpathentry kind="lib" path="cyclonedx-lib/build/jar/commons-io.jar"/>
+	<classpathentry kind="lib" path="cyclonedx-lib/build/jar/cyclonedx-core-java.jar"/>
+	<classpathentry kind="lib" path="cyclonedx-lib/build/jar/github-package-url.jar"/>
+	<classpathentry kind="lib" path="cyclonedx-lib/build/jar/jackson-annotations.jar"/>
+	<classpathentry kind="lib" path="cyclonedx-lib/build/jar/jackson-core.jar"/>
+	<classpathentry kind="lib" path="cyclonedx-lib/build/jar/jackson-databind.jar"/>
+	<classpathentry kind="lib" path="cyclonedx-lib/build/jar/jackson-dataformat-xml.jar"/>
+	<classpathentry kind="lib" path="cyclonedx-lib/build/jar/json-schema.jar"/>
+	<classpathentry kind="lib" path="cyclonedx-lib/build/jar/temurin-gen-sbom.jar"/>
+	<classpathentry kind="output" path="cyclonedx-lib/build/classes"/>
+</classpath>
