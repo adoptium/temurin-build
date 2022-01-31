@@ -182,7 +182,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
     static Bom addMetadataProperty(String name, String value) { // Method to store metadata --> Properties List --> name-values
-        bom = parseJSONfile();git
+        bom = parseJSONfile();
 
         meta = bom.getMetadata();
         prop1.setName(name);
