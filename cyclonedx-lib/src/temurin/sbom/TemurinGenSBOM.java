@@ -87,14 +87,14 @@ public final class TemurinGenSBOM {
         }
         switch (cmd) {
             case "createNewSBOM": {                           //Creates JSON file
-                Bom bom = createBom(name, version);
+                bom = createBom(name, version);
                 String json = generateBomJson(bom);
                 writeJSONfile(json, fileName);
                 System.out.println("SBOM: " + json);
             } break;
 
             case "addMetadata": {                             //This is Metadata Component --> name
-                Bom bom = readJSONfile();
+                bom = readJSONfile();
                 bom = addMetadata(bom, name);
                 String json = generateBomJson(bom);
                 writeJSONfile(json, fileName);
@@ -102,7 +102,7 @@ public final class TemurinGenSBOM {
             } break;
 
             case "addMetadataProperty": {                     //This is MetaData--> Component --> Property -> name-value:
-                Bom bom = readJSONfile();
+                bom = readJSONfile();
                 bom = addMetadataProperty(bom, name, value);
                 String json = generateBomJson(bom);
                 writeJSONfile(json, fileName);
@@ -110,7 +110,7 @@ public final class TemurinGenSBOM {
             } break;
 
             case "addComponent": {                              //This adds Component with component name
-                Bom bom = readJSONfile();
+                bom = readJSONfile();
                 bom = addComponent(bom, name);
                 String json = generateBomJson(bom);
                 writeJSONfile(json, fileName);
@@ -118,7 +118,7 @@ public final class TemurinGenSBOM {
             } break;
 
             case "addComponentProp": {                             //This adds Components with name-value pairs to List
-                Bom bom = readJSONfile();
+                bom = readJSONfile();
                 bom = addComponentProperty(bom, name, value);
                 String json = generateBomJson(bom);
                 writeJSONfile(json, fileName);
@@ -126,7 +126,7 @@ public final class TemurinGenSBOM {
             } break;
 
             case "addExtRef": {                                    //This adds external Reference
-                Bom bom = readJSONfile();
+                bom = readJSONfile();
                 bom = addExternalReference(bom, url, comment);
                 String json = generateBomJson(bom);
                 writeJSONfile(json, fileName);
@@ -134,7 +134,7 @@ public final class TemurinGenSBOM {
             } break;
 
             case "addComponentExtRef": {                                 //This adds external Reference to Component
-                Bom bom = readJSONfile();
+                bom = readJSONfile();
                 bom = addComponentExternalReference(bom, url, hashes, comment);
                 String json = generateBomJson(bom);
                 writeJSONfile(json, fileName);
@@ -147,7 +147,7 @@ public final class TemurinGenSBOM {
     }
 
     static Bom createBom(String name, String version) {        //Create SBOM, test.JSON file
-        Bom bom = new Bom();
+        bom = new Bom();
         System.out.println(bom.getBomFormat());
         Component comp = new Component();
         comp.setName(name);
