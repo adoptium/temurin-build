@@ -68,8 +68,6 @@ public final class TemurinGenSBOM {
                 value = args[++i];
             } else if (args[i].equals("--url")) {
                 url = args[++i];
-            } else if (args[i].equals("--hashes")) {
-                hashes = args[++i];
             } else if (args[i].equals("--comment")) {
                 comment = args[++i];
             } else if (args[i].equals("--createNewSBOM")) {
@@ -130,7 +128,7 @@ public final class TemurinGenSBOM {
 
             case "addExtRef": {                                    //This adds extRef to main SBOM
                 Bom bom = readJSONfile();
-                bom = addExternalReference(bom, url, hashes, comment);
+                bom = addExternalReference(bom, url, comment);
                 String json = generateBomJson(bom);
                 writeJSONfile(json, fileName);
                 System.out.println("SBOM: " + json);
@@ -195,10 +193,9 @@ public final class TemurinGenSBOM {
         bom.addProperty(prop1);
         return bom;
     }
-    static Bom addExternalReference(Bom bom, String url, String hashes, String comment) {   //Method to store externalReferences: dependency_version_alsa
+    static Bom addExternalReference(Bom bom, String url, String comment) {   //Method to store externalReferences: dependency_version_alsa
         hash.add(hash1);
-        extRef.setHashes(hash);
-        extRef.addHash(hash1);
+        extRef.add(hash1);
         extRef.setUrl(url);
         extRef.setComment(comment);
         extRef.setType(ExternalReference.Type.BUILD_SYSTEM);
