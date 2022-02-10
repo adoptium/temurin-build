@@ -146,10 +146,9 @@ public final class TemurinGenSBOM {
         }
     }
 
-    static Bom createBom(String name, String version) {        //Create SBOM, test.JSON file
+    static Bom createBom(final String name, final String version) {        //Create SBOM, test.JSON file
         bom = new Bom();
         System.out.println(bom.getBomFormat());
-        Component comp = new Component();
         comp.setName(name);
         comp.setVersion(version);
         comp.setType(Component.Type.APPLICATION);
@@ -158,7 +157,7 @@ public final class TemurinGenSBOM {
         bom.addComponent(comp);
         return bom;
     }
-    static Bom addMetadata(Bom bom, String name) {               //Method to store metadata -->  name
+    static Bom addMetadata(final Bom bom, final String name) {               //Method to store metadata -->  name
         comp.setName(name);
         comp.setType(Component.Type.APPLICATION);
         OrganizationalEntity org = new OrganizationalEntity();
@@ -169,7 +168,7 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
-    static Bom addMetadataProperty(Bom bom, String name, String value) {     //Method to store metadata --> Properties List --> name-values
+    static Bom addMetadataProperty(final Bom bom, final String name, final String value) {     //Method to store metadata --> Properties List --> name-values
         meta = bom.getMetadata();
         prop1.setName(name);
         prop1.setValue(value);
@@ -178,13 +177,13 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addComponent (Bom bom, String name) {                    //Method to store Component -> name
+    static Bom addComponent (final Bom bom, final String name) {                    //Method to store Component -> name
         comp.setType(Component.Type.APPLICATION);
         comp.setName(name);
         bom.addComponent(comp);
         return bom;
     }
-    static Bom addComponentProperty(Bom bom, String name, String value) {     //Method to store Component-> Property-> name-value pairs
+    static Bom addComponentProperty(final Bom bom, final String name, final String value) {     //Method to store Component-> Property-> name-value pairs
         prop1.setName(name);
         prop1.setValue(value);
         prop.add(prop1);
@@ -192,7 +191,7 @@ public final class TemurinGenSBOM {
         bom.addProperty(prop1);
         return bom;
     }
-    static Bom addExternalReference(Bom bom, String url, String comment) {   //Method to store externalReferences: dependency_version_alsa
+    static Bom addExternalReference(final Bom bom, final String url, final String comment) {   //Method to store externalReferences: dependency_version_alsa
         hash.add(hash1);
         extRef.add(hash1);
         extRef.setUrl(url);
@@ -202,7 +201,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addComExternalReference(Bom bom, String url, String hashes, String comment) {  //Method to store externalReferences to store: openjdk_source
+    static Bom addComExternalReference(final Bom bom, final String url, final String comment) {  //Method to store externalReferences to store: openjdk_source
         hash.add(hash1);
         extRef.setHashes(hash);
         extRef.addHash(hash1);
