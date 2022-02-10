@@ -40,7 +40,6 @@ public final class TemurinGenSBOM {
     private static  String cmd;
     private static String comment;
     private static Metadata meta = new Metadata();
-    private static Property prop1 = new Property();
     private static Property prop2 = new Property();
     private static Component comp = new Component();
     private List<Component> comp1 = new ArrayList<>();
@@ -110,7 +109,7 @@ public final class TemurinGenSBOM {
                 System.out.println("SBOM: " + json);
             } break;
 
-            case "addComponent": {                              //This is Components adds name-value pairs to List
+            case "addComponent": {                              //This adds Component with component name
                 Bom bom = readJSONfile();
                 bom = addComponent(bom, name);
                 String json = generateBomJson(bom);
@@ -118,7 +117,7 @@ public final class TemurinGenSBOM {
                 System.out.println("SBOM: " + json);
             } break;
 
-            case "addComponentProp": {                             //This is Components adds name-value pairs to List
+            case "addComponentProp": {                             //This adds Components with name-value pairs to List
                 Bom bom = readJSONfile();
                 bom = addComponentProperty(bom, name, value);
                 String json = generateBomJson(bom);
@@ -126,7 +125,7 @@ public final class TemurinGenSBOM {
                 System.out.println("SBOM: " + json);
             } break;
 
-            case "addExtRef": {                                    //This adds extRef to main SBOM
+            case "addExtRef": {                                    //This adds external Reference
                 Bom bom = readJSONfile();
                 bom = addExternalReference(bom, url, comment);
                 String json = generateBomJson(bom);
@@ -134,9 +133,9 @@ public final class TemurinGenSBOM {
                 System.out.println("SBOM: " + json);
             } break;
 
-            case "addComExtRef": {                                 //This adds extRef to Comp --> extRef
+            case "addComponentExtRef": {                                 //This adds external Reference to Component
                 Bom bom = readJSONfile();
-                bom = addComExternalReference(bom, url, hashes, comment);
+                bom = addComponentExternalReference(bom, url, hashes, comment);
                 String json = generateBomJson(bom);
                 writeJSONfile(json, fileName);
                 System.out.println("SBOM: " + json);
@@ -179,13 +178,13 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addComponent (Bom bom, String name) {                    //Method to store Component ->name
+    static Bom addComponent (Bom bom, String name) {                    //Method to store Component -> name
         comp.setType(Component.Type.APPLICATION);
         comp.setName(name);
         bom.addComponent(comp);
         return bom;
     }
-    static Bom addComponentProperty(Bom bom, String name, String value) {     //Method to store Component->Property->name-value pairs
+    static Bom addComponentProperty(Bom bom, String name, String value) {     //Method to store Component-> Property-> name-value pairs
         prop1.setName(name);
         prop1.setValue(value);
         prop.add(prop1);
