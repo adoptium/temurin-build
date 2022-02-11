@@ -40,9 +40,9 @@ public final class TemurinGenSBOM {
         String cmd = null;
         String comment = null;
         String fileName = null; 
+        String hashes = null;
 
         for (int i = 0; i < args.length; i++) {
-
             if (args[i].equals("--jsonFile")) {
                 fileName = args[++i];
             } else if (args[i].equals("--version")) {
@@ -55,6 +55,8 @@ public final class TemurinGenSBOM {
                 url = args[++i];
             } else if (args[i].equals("--comment")) {
                 comment = args[++i];
+            } else if (args[i].equals("--hashes")) {
+                hashes = arg[++i];
             } else if (args[i].equals("--createNewSBOM")) {
                 cmd = "createNewSBOM";
             } else if (args[i].equals("--addMetadata")) {        //This is Metadata Component. We can set "name" for Metadata->Component.
@@ -113,7 +115,7 @@ public final class TemurinGenSBOM {
 
             case "addExtRef": {                                    //This adds external Reference
                 Bom bom = readJSONfile(fileName);
-                bom = addExternalReference(bom, url, comment);
+                bom = addExternalReference(bom, url, hashes, comment);
                 String json = generateBomJson(bom);
                 writeJSONfile(json, fileName);
                 System.out.println("SBOM: " + json);
@@ -121,7 +123,7 @@ public final class TemurinGenSBOM {
 
             case "addComponentExtRef": {                                 //This adds external Reference to Component
                 Bom bom = readJSONfile(fileName);
-                bom = addComponentExternalReference(bom, url, comment);
+                bom = addComponentExternalReference(bom, hashes, url, comment);
                 String json = generateBomJson(bom);
                 writeJSONfile(json, fileName);
                 System.out.println("SBOM: " + json);
@@ -168,7 +170,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addComponent (final Bom bom, final String name) {                    //Method to store Component -> name
+    static Bom addComponent(final Bom bom, final String name) {                    //Method to store Component -> name
         Component comp = new Component();
         comp.setType(Component.Type.APPLICATION);
         comp.setName(name);
@@ -186,8 +188,7 @@ public final class TemurinGenSBOM {
         bom.addProperty(prop1);
         return bom;
     }
-    static Bom addExternalReference(final Bom bom, final String url, final String comment) {   //Method to store externalReferences: dependency_version_alsa
-        String hashes = null;
+    static Bom addExternalReference(final Bom bom, final hashes, final String url, final String comment) {   //Method to store externalReferences: dependency_version_alsa
         ExternalReference extRef = new ExternalReference();
         Hash hash1 = new Hash(Hash.Algorithm.SHA3_256, hashes);
         hash.add(hash1);
@@ -199,8 +200,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addComExternalReference(final Bom bom, final String url, final String comment) {  //Method to store externalReferences to store: openjdk_source
-        String hashes = null;
+    static Bom addComExternalReference(final Bom bom, final hashes, final String url, final String comment) {  //Method to store externalReferences to store: openjdk_source
         ExternalReference extRef = new ExternalReference();
         Hash hash1 = new Hash(Hash.Algorithm.SHA3_256, hashes);
         Component comp = new Component();
@@ -221,7 +221,7 @@ public final class TemurinGenSBOM {
         return json;
     }
 
-    static void writeJSONfile(String json, String fileName) {          //Creates testJson.json file
+    static void writeJSONfile(final String json, final String fileName) {          //Creates testJson.json file
         FileWriter file;
         try {
             file = new FileWriter(fileName);
@@ -232,14 +232,13 @@ public final class TemurinGenSBOM {
         }
     }
 
-    static Bom readJSONfile(String fileName) { 	                               //Returns parse bom
+    static Bom readJSONfile(final String fileName) { 	                               //Returns parse bom
         Bom bom = null;
         try {
             FileReader reader = new FileReader(fileName);
             JsonParser parser = new JsonParser();
             bom = parser.parse(reader);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return bom;
