@@ -56,7 +56,7 @@ public final class TemurinGenSBOM {
             } else if (args[i].equals("--comment")) {
                 comment = args[++i];
             } else if (args[i].equals("--hashes")) {
-                hashes = arg[++i];
+                hashes = args[++i];
             } else if (args[i].equals("--createNewSBOM")) {
                 cmd = "createNewSBOM";
             } else if (args[i].equals("--addMetadata")) {        //This is Metadata Component. We can set "name" for Metadata->Component.
@@ -69,8 +69,8 @@ public final class TemurinGenSBOM {
                 cmd = "addComponentProp";
             } else if (args[i].equals("--addExternalRef")) {
                 cmd = "addExtRef";
-            } else if (args[i].equals("--addComExtRef")) {
-                cmd = "addComExtRef";
+            } else if (args[i].equals("--addComponentExtRef")) {
+                cmd = "addComponentExtRef";
             }
         }
         switch (cmd) {
@@ -135,7 +135,6 @@ public final class TemurinGenSBOM {
     }
 
     static Bom createBom(final String name, final String version) {        //Create SBOM, test.JSON file
-        System.out.println(bom.getBomFormat());
         Bom bom = new Bom();
         Component comp = new Component();
         comp.setName(name);
@@ -192,7 +191,7 @@ public final class TemurinGenSBOM {
         ExternalReference extRef = new ExternalReference();
         Hash hash1 = new Hash(Hash.Algorithm.SHA3_256, hashes);
         hash.add(hash1);
-        extRef.add(hash1);
+        extRef.addHash(hash1);
         extRef.setUrl(url);
         extRef.setComment(comment);
         extRef.setType(ExternalReference.Type.BUILD_SYSTEM);
@@ -204,8 +203,6 @@ public final class TemurinGenSBOM {
         ExternalReference extRef = new ExternalReference();
         Hash hash1 = new Hash(Hash.Algorithm.SHA3_256, hashes);
         Component comp = new Component();
-        hash.add(hash1);
-        extRef.setHashes(hash);
         extRef.addHash(hash1);
         extRef.setUrl(url);
         extRef.setComment(comment); //"openjdk_source"
