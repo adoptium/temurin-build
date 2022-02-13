@@ -190,7 +190,6 @@ public final class TemurinGenSBOM {
     static Bom addExternalReference(final Bom bom, final String hashes, final String url, final String comment) {   //Method to store externalReferences: dependency_version_alsa
         ExternalReference extRef = new ExternalReference();
         Hash hash1 = new Hash(Hash.Algorithm.SHA3_256, hashes);
-        hash.add(hash1);
         extRef.addHash(hash1);
         extRef.setUrl(url);
         extRef.setComment(comment);
