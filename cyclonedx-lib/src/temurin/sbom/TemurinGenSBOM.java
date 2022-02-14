@@ -198,7 +198,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addComExternalReference(final Bom bom, final String hashes, final String url, final String comment) {  //Method to store externalReferences to store: openjdk_source
+    static Bom addComponentExternalReference(final Bom bom, final String hashes, final String url, final String comment) {  //Method to store externalReferences to store: openjdk_source
         ExternalReference extRef = new ExternalReference();
         Hash hash1 = new Hash(Hash.Algorithm.SHA3_256, hashes);
         Component comp = new Component();
