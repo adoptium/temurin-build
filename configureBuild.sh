@@ -259,7 +259,6 @@ processArgumentsforSpecificArchitectures() {
     fi
     if [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-""} != *"--with-jobs"* ]]; then
       BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="--with-jobs=${BUILD_CONFIG[NUM_PROCESSORS]} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-''}"
-      BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="--with-jobs=8 ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-''}"
     fi
     ;;
 

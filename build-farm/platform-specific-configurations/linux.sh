@@ -91,7 +91,7 @@ then
   # cores on our scaleway systems while they are still in use but still
   # allow more on larger machines. Can be revisited post-Scaleway
   if [ "$(lscpu|awk '/^CPU\(s\)/{print$2}')" = "4" ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=5 --with-memory-size=2000"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-jobs=4 --with-memory-size=2000"
   fi
   if [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-latomic"
