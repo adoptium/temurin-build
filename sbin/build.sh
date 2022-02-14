@@ -435,8 +435,13 @@ configureCommandParameters() {
   addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
 
   if [ "${BUILD_CONFIG[CUSTOM_CACERTS]}" = "true" ] ; then
-    echo "Configure custom cacerts file security/cacerts"
-    addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "$SCRIPT_DIR/../security/cacerts"
+    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge "19" ]]; then
+      echo "Configure custom cacerts src security/certs"
+      addConfigureArgIfValueIsNotEmpty "--with-cacerts-src=" "$SCRIPT_DIR/../security/certs"
+    else
+      echo "Configure custom cacerts file security/cacerts"
+      addConfigureArgIfValueIsNotEmpty "--with-cacerts-file=" "$SCRIPT_DIR/../security/cacerts"
+    fi
   fi
 
   # Finally, we add any configure arguments the user has specified on the command line.
