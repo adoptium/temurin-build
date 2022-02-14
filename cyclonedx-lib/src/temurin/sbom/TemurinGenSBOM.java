@@ -15,7 +15,13 @@ package temurin.sbom;
 
 import org.cyclonedx.BomGeneratorFactory;
 import org.cyclonedx.CycloneDxSchema.Version;
-import org.cyclonedx.model.*;
+import org.cyclonedx.model.Bom;
+import org.cyclonedx.model.Metadata;
+import org.cyclonedx.model.Property;
+import org.cyclonedx.model.Component;
+import org.cyclonedx.model.ExternalReference;
+import org.cyclonedx.model.Hash;
+import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.parsers.JsonParser;
 import org.cyclonedx.generators.json.BomJsonGenerator;
 import java.io.FileReader;
@@ -39,7 +45,7 @@ public final class TemurinGenSBOM {
         String version = null;
         String cmd = null;
         String comment = null;
-        String fileName = null; 
+        String fileName = null;
         String hashes = null;
 
         for (int i = 0; i < args.length; i++) {
