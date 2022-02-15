@@ -105,7 +105,7 @@ public final class TemurinGenSBOM {
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addExternalReference":                                     // Adds external Reference 
+            case "addExternalReference":                                     // Adds external Reference
                 bom = addExternalReference(url, hashes, comment, fileName);
                 writeJSONfile(bom, fileName);
                 break;
@@ -114,8 +114,8 @@ public final class TemurinGenSBOM {
                 bom = addComponentExternalReference(url, hashes, comment,  fileName);
                 writeJSONfile(bom, fileName);
                 break;
-            default: 
-                System.out.println("Please enter a command.");      
+            default:
+                System.out.println("Please enter a command.");    
         }
     }
 
