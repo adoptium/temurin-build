@@ -207,8 +207,11 @@ function setBootJdk() {
 
 # A function that returns true if the variant is based on HotSpot and should
 # be treated as such by the build scripts
+# This is possibly only used in configureBuild.sh for arm32
+# But should perhaps just be "if not openj9" to include Dragonwell/Bisheng
 function isHotSpot() {
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] ||
+  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ] ||
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ] ||
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]
 }
