@@ -144,7 +144,7 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
-    static Bom addMetadataProperty(final Bom bom, final String name, final String value, final String fileName) {     // Method to store metadata --> Properties List --> name-values
+    static Bom addMetadataProperty(final String name, final String value, final String fileName) {     // Method to store metadata --> Properties List --> name-values
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
         Property prop1 = new Property();
@@ -156,7 +156,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addComponent(final Bom bom, final String name, final String fileName) {                    // Method to store Component --> name
+    static Bom addComponent(final String name, final String fileName) {                    // Method to store Component --> name
         Bom bom = readJSONfile(fileName);
         Component comp = new Component();
         comp.setType(Component.Type.APPLICATION);
@@ -164,7 +164,7 @@ public final class TemurinGenSBOM {
         bom.addComponent(comp);
         return bom;
     }
-    static Bom addComponentProperty(final Bom bom, final String name, final String value, final String fileName) {     // Method to store Component --> Property --> name-value pairs
+    static Bom addComponentProperty(final String name, final String value, final String fileName) {     // Method to store Component --> Property --> name-value pairs
         Bom bom = readJSONfile(fileName);
         Property prop1 = new Property();
         List<Property> prop = new ArrayList<>();
@@ -176,7 +176,7 @@ public final class TemurinGenSBOM {
         bom.addProperty(prop1);
         return bom;
     }
-    static Bom addExternalReference(final Bom bom, final String hashes, final String url, final String comment, final String fileName) {   // Method to store externalReferences: dependency_version_alsa
+    static Bom addExternalReference(final String hashes, final String url, final String comment, final String fileName) {   // Method to store externalReferences: dependency_version_alsa
         Bom bom = readJSONfile(fileName);
         ExternalReference extRef = new ExternalReference();
         Hash hash1 = new Hash(Hash.Algorithm.SHA3_256, hashes);
@@ -188,7 +188,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addComponentExternalReference(final Bom bom, final String hashes, final String url, final String comment, final String fileName) {  // Method to store externalReferences to store: openjdk_source
+    static Bom addComponentExternalReference(final String hashes, final String url, final String comment, final String fileName) {  // Method to store externalReferences to store: openjdk_source
         Bom bom = readJSONfile(fileName);
         ExternalReference extRef = new ExternalReference();
         Hash hash1 = new Hash(Hash.Algorithm.SHA3_256, hashes);
