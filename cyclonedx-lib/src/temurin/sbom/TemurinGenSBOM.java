@@ -38,7 +38,10 @@ public final class TemurinGenSBOM {
 
     private TemurinGenSBOM() {
     }
-
+    /**
+     * Main entry.
+     * @param args Arguments for sbom operation.
+     */
     public static void main(final String[] args) {
         String name = null;
         String value = null;
