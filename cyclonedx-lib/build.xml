@@ -107,8 +107,16 @@
                 </jar>
         </target>
 
-        <target name="run">
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM"/>
+           <target name="run">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--createNewSBOM"/>
+                  <arg value="--name"/>
+                  <arg value="Temurin"/>
+                  <arg value="--version"/>
+                  <arg value="jdk11+35"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
         </target>
 
 	<macrodef name="download-file" description="Use curl to download a file">
