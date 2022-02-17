@@ -24,7 +24,7 @@ export DRAGONWELL8_BOOTSTRAP=/cygdrive/C/openjdk/dragonwell-bootstrap/jdk8u272-g
 export ALLOW_DOWNLOADS=true
 export LANG=C
 export OPENJ9_NASM_VERSION=2.13.03
-export OPENSSL_VERSION=1.1.1l
+export OPENSSL_VERSION=1.1.1m
 
 TOOLCHAIN_VERSION=""
 
@@ -55,7 +55,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       esac
       releaseType="ga"
       vendor="adoptium"
-      apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/\${VARIANT}/normal/\${vendor}"
+      apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/hotspot/normal/\${vendor}"
       apiURL=$(eval echo ${apiUrlTemplate})
       echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
       # make-adopt-build-farm.sh has 'set -e'. We need to disable that for

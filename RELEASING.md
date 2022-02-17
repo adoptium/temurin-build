@@ -114,7 +114,8 @@ lockdown period.
 Here are the steps:
 
 1. Disabling nightly testing so the release builds aren't delayed by any nightly test runs (`enableTests : false` in [defaults.json](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/defaults.json)). Ensure the build pipeline generator job runs successfully (https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator/), and that the flag is disabled by bringing up the Build pipeline job and check the "enableTests" flag is disabled.
-1. If desired, add a banner to the website to indicate that the releases are coming in the near future ([Sample PR](https://github.com/adoptium/adoptium.net/pull/702/files))
+1. Ensure that the [appropriate mirror job](https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/adoptium/) has completed and that the corresponding repository at https://github.com/adoptium/jdkXX has successfully received the tag for the level you are about to build. If there are any conflicts the can be resolved on the machine where it failed if you have access to the private `adoptium_temurin_bot_ssh_key.gpg` key, or ask someone with push access to the repositories to manually run the mirror job and aresolve the conflicts.
+1. If desired, add a banner to the website to indicate that the releases are coming in the near future ([Sample PR](https://github.com/adoptium/adoptium.net/pull/266/files))
 1. Build and Test the OpenJDK for "release" at Adoptium using a build pipeline job as follows:
    - Job: https://ci.adoptopenjdk.net/job/build-scripts/job/openjdk8-pipeline/build (Switch `openjdk8` for your version number)
    - `targetConfigurations`: remove all the entries for the variants you don't want to build (e.g. remove the openj9 ones for hotspot releases) or any platforms you don't want to release (Currently that would include OpenJ9 aarch64)
@@ -128,6 +129,7 @@ Here are the steps:
      - For HotSpot (arm32), the tag usually takes the form `jdk8u322-b04-aarch32-xxxxxxxx`
      - NOTE you need to set `overridePublishName` for arm32 to the actual OpenJDK tag (`jdk8u322-b04`)
      - For OpenJ9 (all versions) use the OpenJ9 branch e.g. `openj9-0.15.1`
+   - `aqaReference` should be set to the appropriate branch of the `aqa-tests` repository which is appropriate for this release. Generally of the form `vX.Y.Z-release`
    - `enableTests`: tick
    - SUBMIT!!
 1. Once the Build and Test pipeline has completed,
@@ -146,8 +148,9 @@ Here are the steps:
    - `TAG`: (github binaries published name)  e.g. `jdk-11.0.5+9` or `jdk-11.0.5+9_openj9-0.nn.0` for OpenJ9 releases. If doing a point release, add that into the name e.g. for a `.3` release use something like these (NOTE that for OpenJ9 the point number goes before the openj9 version): `jdk8u232-b09.3` or `jdk-11.0.4+11.3_openj9-0.15.1`
    - `VERSION`: (select version e.g. `jdk11`)
    - `UPSTREAM_JOB_NAME`: (build-scripts/openjdkNN-pipeline)
-   - `UPSTREAM_JOB_NUMBER`: (the job number of the build pipeline under build-scripts/openjdkNN-pipeline) eg.86
+   - `UPSTREAM_JOB_NUMBER`: (the job number of the build pipeline under build-scripts/openjdkNN-pipeline) e.g. 86
    - `RELEASE`: "ticked"
+   - `aqaReference` : The correct [aqa-tests release branch name](https://github.com/adoptium/aqa-tests/branches) to use for this release e.g. `v0.8.0-release`
    - If you need to restrict the platforms or only ship jdks or jres, either use `ARTIFACTS_TO_COPY` e.g. `**/*jdk*mac*` or add an explicit exclusion in `ARTIFACTS_TO_SKIP` e.g. `**/*mac*`. These may be required if you had to re-run some of the platforms under a different pipeline earlier in the process
    - SUBMIT!!
 1. Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08
