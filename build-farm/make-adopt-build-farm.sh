@@ -59,7 +59,14 @@ fi
 
 [ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u
 [ -z "$VARIANT"       ] && echo VARIANT not defined - assuming hotspot && export VARIANT=hotspot
-[ -z "$FILENAME"      ] && echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARIANT}.tar.gz"
+if [ -z "$FILENAME"   ]; then
+  if [ "${VARIANT}" = "temurin" ]; then
+     # I don't like this - perhaps we should override elsewhere to keep consistency with existing release names
+     echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-hotspot.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-hotspot.tar.gz"
+  else
+     echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARAINT}.tar.gz"
+  fi
+fi
 
 # shellcheck source=sbin/common/constants.sh
 source "$PLATFORM_SCRIPT_DIR/../sbin/common/constants.sh"
@@ -131,6 +138,11 @@ then
   if [ "${JAVA_FEATURE_VERSION}" == "11" ] && [ "${VARIANT}" == "openj9" ]; then
     # OpenJ9 only supports building jdk-11 with jdk-11
     JDK_BOOT_VERSION="11"
+  fi
+  if [ "${JAVA_FEATURE_VERSION}" == "19" ]; then
+    # To support reproducible-builds the jar/jmod --date option is required
+    # which is only available from jdk-19 so we cannot bootstrap with JDK18
+    JDK_BOOT_VERSION="19"
   fi
 fi
 echo "Required boot JDK version: ${JDK_BOOT_VERSION}"

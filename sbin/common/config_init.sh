@@ -355,9 +355,11 @@ function parseConfigurationArguments() {
 
 function setBranch() {
 
-  # Which repo branch to build, e.g. dev by default for hotspot, "openj9" for openj9
-  local branch="dev"
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+  # Which repo branch to build, e.g. dev by default for temurin, "openj9" for openj9
+  local branch="master"
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]; then
+    branch="dev"
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     branch="openj9";
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
     branch="master";
@@ -571,7 +573,7 @@ function configDefaults() {
   BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false
 
   # Used in 'release' file for jdk8u
-  BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"Eclipse Adoptium"}
+  BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"Undefined Vendor"}
 }
 
 # Declare the map of build configuration that we're going to use
