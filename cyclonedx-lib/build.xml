@@ -257,7 +257,8 @@
 				<arg value="@{destdir}/@{destfile}"/>
 				<arg value="@{srcurl}"/>
 			</exec>
-			<!-- jscpd:ignore-end -->
+			
 		</sequential>
 	</macrodef>
 </project>
+<!-- jscpd:ignore-end -->
