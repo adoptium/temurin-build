@@ -51,7 +51,7 @@ public final class TemurinGenSBOM {
         String comment = null;
         String fileName = null;
         String hashes = null;
-        String compName = null; 
+        String compName = null;
         String description = null;
 
         for (int i = 0; i < args.length; i++) {
