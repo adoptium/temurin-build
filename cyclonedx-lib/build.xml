@@ -260,5 +260,6 @@
 			
 		</sequential>
 	</macrodef>
+	<!-- jscpd:ignore-end -->
 </project>
-<!-- jscpd:ignore-end -->
+
