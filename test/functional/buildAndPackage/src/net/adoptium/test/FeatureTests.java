@@ -71,6 +71,9 @@ public class FeatureTests {
                 shouldBePresent = true;
             }
         }
+        if (jdkVersion.isNewerOrEqual(17) && jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.PPC64LE)) {
+        	shouldBePresent = true;
+        }
 
         LOGGER.info(String.format("Detected %s on %s, expect Shenandoah to be present: %s",
                 jdkVersion, jdkPlatform, shouldBePresent));
@@ -115,6 +118,8 @@ public class FeatureTests {
             if (jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.AARCH64)
                     || jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.X64)
                     || jdkPlatform.runsOn(OperatingSystem.MACOS, Architecture.X64)
+                    || jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.PPC64LE)
+                    || jdkPlatform.runsOn(OperatingSystem.MACOS, Architecture.AARCH64)
                     /*
                      * Windows is disabled until we can get 2019 Visual Studio
                      * and O/S levels in Adoptium infrastructure
