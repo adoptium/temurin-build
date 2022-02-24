@@ -16,7 +16,9 @@
 
 <project name="cyclonedx-lib build" default="build" basedir=".">
         <taskdef resource="net/sf/antcontrib/antlib.xml" />
-        <!-- jscpd:ignore-start -->
+        <!--
+// jscpd:ignore-start
+-->
 
         <!-- Dependency versions -->
         <property name="cyclonedx-core-java-version" value="5.0.5"/>
@@ -260,6 +262,7 @@
 			
 		</sequential>
 	</macrodef>
-	<!-- jscpd:ignore-end -->
 </project>
-
+<!--
+// jscpd:ignore-end
+-->
