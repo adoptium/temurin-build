@@ -51,6 +51,8 @@ public final class TemurinGenSBOM {
         String comment = null;
         String fileName = null;
         String hashes = null;
+        String compName = null; 
+        String description = null;
 
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--jsonFile")) {
@@ -67,6 +69,10 @@ public final class TemurinGenSBOM {
                 comment = args[++i];
             } else if (args[i].equals("--hashes")) {
                 hashes = args[++i];
+            } else if (args[i].equals("--compName")) {
+                compName = args[++i];
+            } else if (args[i].equals("--description")) {
+                description = args[++i];
             } else if (args[i].equals("--createNewSBOM")) {
                 cmd = "createNewSBOM";
             } else if (args[i].equals("--addMetadata")) {        // Metadata Component. We can set "name" for Metadata->Component.
@@ -100,7 +106,7 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addComponent":                            // Adds Component
-                bom = addComponent(name, fileName);
+                bom = addComponent(compName, name, value, description, fileName);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -110,12 +116,12 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addExternalReference":                                     // Adds external Reference
-                bom = addExternalReference(url, hashes, comment, fileName);
+                bom = addExternalReference(hashes, url, comment, fileName);
                 writeJSONfile(bom, fileName);
                 break;
 
             case "addComponentExternalReference":                                  // Adds external Reference to component
-                bom = addComponentExternalReference(url, hashes, comment,  fileName);
+                bom = addComponentExternalReference(hashes, url, comment,  fileName);
                 writeJSONfile(bom, fileName);
                 break;
             default:
@@ -160,11 +166,15 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addComponent(final String name, final String fileName) {                    // Method to store Component --> name
+    static Bom addComponent(final String compName, final String name, final String value, final String description, final String fileName) {                    // Method to store Component --> name
         Bom bom = readJSONfile(fileName);
-        Component comp = new Component();
-        comp.setType(Component.Type.APPLICATION);
-        comp.setName(name);
+    	Component comp = new Component();
+        comp.setName(compName);
+        comp.setDescription(description);
+        Property prop2 = new Property();
+        prop2.setName(name);
+        prop2.setValue(value);
+        comp.addProperty(prop2);
         bom.addComponent(comp);
         return bom;
     }
