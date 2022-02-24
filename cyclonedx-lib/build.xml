@@ -16,6 +16,7 @@
 
 <project name="cyclonedx-lib build" default="build" basedir=".">
         <taskdef resource="net/sf/antcontrib/antlib.xml" />
+        <!-- jscpd:ignore-start -->
 
         <!-- Dependency versions -->
         <property name="cyclonedx-core-java-version" value="5.0.5"/>
@@ -126,7 +127,7 @@
                   <arg value="--name"/>
                   <arg value="scmRef"/>
                   <arg value="--value"/>
-                  <arg value="dk-17+35_adopt"/>
+                  <arg value="jdk-17+35_adopt"/>
                   <arg value="--description"/>
                   <arg value="Adoptium openjdk mirror git tag"/>
                   <arg value="--jsonFile"/>
@@ -256,6 +257,7 @@
 				<arg value="@{destdir}/@{destfile}"/>
 				<arg value="@{srcurl}"/>
 			</exec>
+			<!-- jscpd:ignore-end -->
 		</sequential>
 	</macrodef>
 </project>
