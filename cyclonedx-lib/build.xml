@@ -16,9 +16,12 @@
 
 <project name="cyclonedx-lib build" default="build" basedir=".">
         <taskdef resource="net/sf/antcontrib/antlib.xml" />
+        <!--
+// jscpd:ignore-start
+-->
 
         <!-- Dependency versions -->
-        <property name="cyclonedx-core-java-version" value="5.0.4"/>
+        <property name="cyclonedx-core-java-version" value="5.0.5"/>
         <property name="jackson-version" value="2.12.4"/>
         <property name="json-schema-version" value="1.0.58"/>
         <property name="commons-codec-version" value="1.15"/>
@@ -96,6 +99,7 @@
         <target name="compile">
                 <mkdir dir="build/classes"/>
                 <javac srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar"/>
+                <javac debug="true" debuglevel="lines,vars,source" srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar"/>
         </target>
 
         <target name="jar">
@@ -107,8 +111,136 @@
                 </jar>
         </target>
 
-        <target name="run">
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM"/>
+          <target name="run">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--createNewSBOM"/>
+                  <arg value="--name"/>
+                  <arg value="Temurin"/>
+                  <arg value="--version"/>
+                  <arg value="jdk17+35"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+              
+               <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="ScmRef"/>
+                  <arg value="--name"/>
+                  <arg value="scmRef"/>
+                  <arg value="--value"/>
+                  <arg value="jdk-17+35_adopt"/>
+                  <arg value="--description"/>
+                  <arg value="Adoptium openjdk mirror git tag"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="buildRef"/>
+                  <arg value="--name"/>
+                  <arg value="buildRef"/>
+                  <arg value="--value"/>
+                  <arg value="https://github.com/adoptium/temurin-build/commit/c3a40"/>
+                  <arg value="--description"/>
+                  <arg value="git commit of temurin-build script"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="full_version_output"/>
+                  <arg value="--name"/>
+                  <arg value="full_version_output"/>
+                  <arg value="--value"/>
+                  <arg value="openjdk version: 17 2021-09-14\nOpenJDK Runtime Environment Temurin-17+35 (build 17+35)\nOpenJDK 64-Bit Server VM Temurin-17+35 (build 17+35, mixed mode, sharing)\n"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="makejdk_any_platform"/>
+                  <arg value="--name"/>
+                  <arg value="makejdk_any_platform_args"/>
+                  <arg value="--value"/>
+                  <arg value="--clean-git-repo --jdk-boot-dir /usr/lib/jvm/jdk-16 --configure-args  --disable-warnings-as-errors --enable-ccache --enable-dtrace --target-file-name OpenJDK17-jdk_x64_linux_hotspot_17_35.tar.gz --release --clean-libs --tag jdk-17+35_adopt --skip-freetype --use-jep319-certs --create-debug-image --build-variant hotspot jdk17"/>
+                  <arg value="--description"/>
+                  <arg value="temurin build make arguments"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                
+                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="make_command_args"/>
+                  <arg value="--name"/>
+                  <arg value="make_command_args"/>
+                  <arg value="--value"/>
+                  <arg value="make product-images legacy-jre-image   test-image"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addExternalReference"/>
+                  <arg value="--url"/>
+                  <arg value="https://github.com/adoptium/jdk17/commit/a5afad28437"/>
+                  <arg value="--hashes"/>
+                  <arg value="HASHES"/>
+                  <arg value="--comment"/>
+                  <arg value="openjdk_source"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addExternalReference"/>
+                  <arg value="--url"/>
+                  <arg value="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-1.1.6.tar.bz2"/>
+                  <arg value="--hashes"/>
+                  <arg value="HASHES"/>
+                  <arg value="--comment"/>
+                  <arg value="dependency_version_alsa"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+               <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addMetadata"/>
+                  <arg value="--metadataName"/>
+                  <arg value="Eclipse Adoptium"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addMetadataProp"/>
+                  <arg value="--name"/>
+                  <arg value="OS"/>
+                 <arg value="--value"/>
+                  <arg value="Linux"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                  </java> 
+                   <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addMetadataProp"/>
+                  <arg value="--name"/>
+                  <arg value="arch"/>
+                 <arg value="--value"/>
+                  <arg value="x64"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                  </java>
+                  <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addMetadataProp"/>
+                  <arg value="--name"/>
+                  <arg value="variant"/>
+                 <arg value="--value"/>
+                  <arg value="hotspot"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                  </java>
         </target>
 
 	<macrodef name="download-file" description="Use curl to download a file">
@@ -127,7 +259,10 @@
 				<arg value="@{destdir}/@{destfile}"/>
 				<arg value="@{srcurl}"/>
 			</exec>
+			
 		</sequential>
 	</macrodef>
 </project>
-
+<!--
+// jscpd:ignore-end
+-->
