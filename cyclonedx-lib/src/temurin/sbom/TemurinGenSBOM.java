@@ -15,6 +15,7 @@
 package temurin.sbom;
 
 import org.cyclonedx.BomGeneratorFactory;
+import org.cyclonedx.CycloneDxSchema;
 import org.cyclonedx.CycloneDxSchema.Version;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Metadata;
@@ -30,6 +31,7 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Command line tool to construct a CycloneDX SBOM.
@@ -42,6 +44,7 @@ public final class TemurinGenSBOM {
      * Main entry.
      * @param args Arguments for sbom operation.
      */
+
     public static void main(final String[] args) {
         String name = null;
         String value = null;
@@ -111,7 +114,7 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addComponentProp":                       // Adds Components --> name-value pairs
-                bom = addComponentProperty(name, value, fileName);
+                bom = addComponentProperty(compName, name, value, fileName);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -166,9 +169,9 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addComponent(final String compName, final String name, final String value, final String description, final String fileName) {                    // Method to store Component --> name
+    static Bom addComponent(final String compName, final String name, final String value, final String description, final String fileName) {      // Method to store Component --> name & single name-value pair
         Bom bom = readJSONfile(fileName);
-    	Component comp = new Component();
+        Component comp = new Component();
         comp.setName(compName);
         comp.setDescription(description);
         Property prop2 = new Property();
@@ -178,16 +181,20 @@ public final class TemurinGenSBOM {
         bom.addComponent(comp);
         return bom;
     }
-    static Bom addComponentProperty(final String name, final String value, final String fileName) {     // Method to store Component --> Property --> name-value pairs
+    static Bom addComponentProperty(final String compName, final String name, final String value, final String fileName) {     // Method to add Component --> Property --> name-value pairs
         Bom bom = readJSONfile(fileName);
-        Property prop1 = new Property();
-        List<Property> prop = new ArrayList<>();
-        Component comp = new Component();
-        prop1.setName(name);
-        prop1.setValue(value);
-        prop.add(prop1);
-        comp.setProperties(prop);
-        bom.addProperty(prop1);
+        List<Component> componentArrayList = bom.getComponents();
+        for (Component item : componentArrayList) {
+            if (Objects.equals(item.getName(), compName)) {
+                    List<Property> propertiesList = item.getProperties();
+                    ArrayList<Property> newPropertyList = new ArrayList<>(propertiesList);
+                    Property prop1 = new Property();
+                    prop1.setName(name);
+                    prop1.setValue(value);
+                    newPropertyList.add(prop1);
+                    item.setProperties(newPropertyList);
+            }
+        }
         return bom;
     }
     static Bom addExternalReference(final String hashes, final String url, final String comment, final String fileName) {   // Method to store externalReferences: dependency_version_alsa
@@ -217,7 +224,7 @@ public final class TemurinGenSBOM {
     }
 
     static String generateBomJson(final Bom bom) {
-        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(Version.VERSION_13, bom);
+        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_13, bom);
         String json = bomGen.toJsonString();
         return json;
     }
@@ -234,7 +241,7 @@ public final class TemurinGenSBOM {
             e.printStackTrace();
         }
     }
-
+    
     static Bom readJSONfile(final String fileName) { 	                               // Returns parse bom
         Bom bom = null;
         try {
