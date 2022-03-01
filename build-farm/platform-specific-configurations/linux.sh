@@ -181,9 +181,9 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION
   export PATH=/usr/local/gcc9/bin:$PATH
   export CC=/usr/local/gcc9/bin/gcc-9.3
   export CXX=/usr/local/gcc9/bin/g++-9.3
-  # Enable GCC 10 for Java 18+ for repeatable builds, but not for our supported releases
+  # Enable GCC 10 for Java 17+ for repeatable builds, but not for our supported releases
   # Ref https://github.com/adoptium/temurin-build/issues/2787
-elif [ "$JAVA_FEATURE_VERSION" -gt 17 ] && [ "${VARIANT}" != "${BUILD_VARIANT_OPENJ9}" ] && [ -r /usr/local/gcc10/bin/gcc-10.3 ]; then
+elif [ "$JAVA_FEATURE_VERSION" -ge 17 ] && [ "${VARIANT}" != "${BUILD_VARIANT_OPENJ9}" ] && [ -r /usr/local/gcc10/bin/gcc-10.3 ]; then
   export PATH=/usr/local/gcc10/bin:$PATH
   [ -r /usr/local/gcc10/bin/gcc-10.3 ] && export  CC=/usr/local/gcc10/bin/gcc-10.3
   [ -r /usr/local/gcc10/bin/g++-10.3 ] && export CXX=/usr/local/gcc10/bin/g++-10.3
