@@ -235,6 +235,11 @@ configureVersionStringParameter() {
     BUILD_CONFIG[VENDOR_URL]="http://www.alibabagroup.com"
     BUILD_CONFIG[VENDOR_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="mailto:dragonwell_use@googlegroups.com"
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_FAST_STARTUP}" ]]; then
+    BUILD_CONFIG[VENDOR]="Adoptium"
+    BUILD_CONFIG[VENDOR_VERSION]="Fast-Startup"
+    BUILD_CONFIG[VENDOR_BUG_URL]="https://github.com/adoptium/jdk11u-fast-startup-incubator/issues"
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/adoptium/jdk11u-fast-startup-incubator/issues"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/eclipse-openj9/openj9/issues"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]]; then
@@ -1233,6 +1238,10 @@ getFirstTagFromOpenJDKGitRepo() {
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
     TAG_SEARCH="dragonwell-*_jdk*"
+  fi
+
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_FAST_STARTUP}" ]; then
+    TAG_SEARCH="fast_startup-*_jdk*"
   fi
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ]; then

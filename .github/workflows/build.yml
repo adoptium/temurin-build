@@ -45,6 +45,10 @@ jobs:
             image: adoptopenjdk/centos7_build_image
           - os: linux
             version: jdk11u
+            vm: adoptium
+            image: adoptopenjdk/centos7_build_image
+          - os: linux
+            version: jdk11u
             vm: bisheng
             image: adoptopenjdk/centos7_build_image
     steps:
