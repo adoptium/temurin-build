@@ -1240,10 +1240,6 @@ getFirstTagFromOpenJDKGitRepo() {
     TAG_SEARCH="dragonwell-*_jdk*"
   fi
 
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_FAST_STARTUP}" ]; then
-    TAG_SEARCH="fast_startup-*_jdk*"
-  fi
-
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ]; then
     TAG_SEARCH="jdk-*+*bisheng_riscv"
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ] && [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
