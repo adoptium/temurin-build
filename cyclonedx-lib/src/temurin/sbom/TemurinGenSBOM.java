@@ -16,7 +16,6 @@ package temurin.sbom;
 
 import org.cyclonedx.BomGeneratorFactory;
 import org.cyclonedx.CycloneDxSchema;
-import org.cyclonedx.CycloneDxSchema.Version;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.Property;
@@ -32,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 /**
  * Command line tool to construct a CycloneDX SBOM.
  */
@@ -44,7 +42,6 @@ public final class TemurinGenSBOM {
      * Main entry.
      * @param args Arguments for sbom operation.
      */
-
     public static void main(final String[] args) {
         String name = null;
         String value = null;
