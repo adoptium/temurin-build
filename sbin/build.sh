@@ -240,8 +240,8 @@ configureVersionStringParameter() {
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]]; then
     BUILD_CONFIG[VENDOR]="Huawei"
     BUILD_CONFIG[VENDOR_VERSION]="Bisheng"
-    BUILD_CONFIG[VENDOR_BUG_URL]="https://gitee.com/openeuler/bishengjdk-11/issues"
-    BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://gitee.com/openeuler/bishengjdk-11/issues"
+    BUILD_CONFIG[VENDOR_BUG_URL]="https://gitee.com/openeuler/bishengjdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}/issues"
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://gitee.com/openeuler/bishengjdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}/issues"
   fi
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != 8 ]; then
     addConfigureArg "--with-vendor-name=" "\"${BUILD_CONFIG[VENDOR]}\""
@@ -1456,7 +1456,11 @@ addFullVersion() { # Adds the full version including build number i.e. 11.0.9+5-
 
 addJVMVariant() {
   # shellcheck disable=SC2086
-  echo -e JVM_VARIANT=\"${BUILD_CONFIG[BUILD_VARIANT]^}\" >>release
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ] || [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
+    echo -e JVM_VARIANT=\"Hotspot\" >>release
+  else
+    echo -e JVM_VARIANT=\"${BUILD_CONFIG[BUILD_VARIANT]^}\" >>release
+  fi
 }
 
 addBuildSHA() { # git SHA of the build repository i.e. openjdk-build

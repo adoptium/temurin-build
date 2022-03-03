@@ -181,9 +181,9 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION
   export PATH=/usr/local/gcc9/bin:$PATH
   export CC=/usr/local/gcc9/bin/gcc-9.3
   export CXX=/usr/local/gcc9/bin/g++-9.3
-  # Enable GCC 10 for Java 18+ for repeatable builds, but not for our supported releases
+  # Enable GCC 10 for Java 17+ for repeatable builds, but not for our supported releases
   # Ref https://github.com/adoptium/temurin-build/issues/2787
-elif [ "$JAVA_FEATURE_VERSION" -gt 17 ] && [ "${VARIANT}" != "${BUILD_VARIANT_OPENJ9}" ] && [ -r /usr/local/gcc10/bin/gcc-10.3 ]; then
+elif [ "$JAVA_FEATURE_VERSION" -ge 17 ] && [ "${VARIANT}" != "${BUILD_VARIANT_OPENJ9}" ] && [ -r /usr/local/gcc10/bin/gcc-10.3 ]; then
   export PATH=/usr/local/gcc10/bin:$PATH
   [ -r /usr/local/gcc10/bin/gcc-10.3 ] && export  CC=/usr/local/gcc10/bin/gcc-10.3
   [ -r /usr/local/gcc10/bin/g++-10.3 ] && export CXX=/usr/local/gcc10/bin/g++-10.3
@@ -280,6 +280,16 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; 
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     # shellcheck disable=SC2001
     CONFIGURE_ARGS_FOR_ANY_PLATFORM=$(echo "$CONFIGURE_ARGS_FOR_ANY_PLATFORM" | sed "s,with-openssl=[^ ]*,with-openssl=${RISCV_SYSROOT}/usr,g")
+    if ! which qemu-riscv64-static; then
+      # don't download it if we already have it from a previous build
+      if [ ! -x "$WORKSPACE/qemu-riscv64-static" ]; then
+        echo Download qemu-riscv64-static as it is required for the OpenJ9 cross build ...
+        curl https://ci.adoptopenjdk.net/userContent/riscv/qemu-riscv64-static.xz | xz -d > "$WORKSPACE/qemu-riscv64-static" && \
+        chmod 755 "$WORKSPACE/qemu-riscv64-static"
+      fi
+      export PATH="$PATH:$WORKSPACE" && \
+      qemu-riscv64-static --version
+    fi
   fi
 
   if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
