@@ -125,29 +125,32 @@
                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
-                  <arg value="ScmRef"/>
-                  <arg value="--name"/>
-                  <arg value="scmRef"/>
-                  <arg value="--value"/>
-                  <arg value="jdk-17+35_adopt"/>
-                  <arg value="--description"/>
-                  <arg value="Adoptium openjdk mirror git tag"/>
+                  <arg value="Temurin Build"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
-                  <arg value="--addComponent"/>
+                  <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
-                  <arg value="buildRef"/>
+                  <arg value="Temurin Build"/>
                   <arg value="--name"/>
                   <arg value="buildRef"/>
                   <arg value="--value"/>
                   <arg value="https://github.com/adoptium/temurin-build/commit/c3a40"/>
-                  <arg value="--description"/>
-                  <arg value="git commit of temurin-build script"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
                 </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="Temurin Build"/>
+                  <arg value="--name"/>
+                  <arg value="ScmRef"/>
+                  <arg value="--value"/>
+                  <arg value="jdk-17+35_adopt"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
