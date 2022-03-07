@@ -27,10 +27,8 @@ import org.cyclonedx.parsers.JsonParser;
 import org.cyclonedx.generators.json.BomJsonGenerator;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Command line tool to construct a CycloneDX SBOM.
