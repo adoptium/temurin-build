@@ -184,14 +184,11 @@ public final class TemurinGenSBOM {
         Bom bom = readJSONfile(fileName);
         List<Component> componentArrayList = bom.getComponents();
         for (Component item : componentArrayList) {
-            if (Objects.equals(item.getName(), compName)) {
-                    List<Property> propertiesList = item.getProperties();
-                    ArrayList<Property> newPropertyList = new ArrayList<>(propertiesList);
+            if (item.getName().equals(compName)) {
                     Property prop1 = new Property();
                     prop1.setName(name);
                     prop1.setValue(value);
-                    newPropertyList.add(prop1);
-                    item.setProperties(newPropertyList);
+                    item.addProperty(prop1);
             }
         }
         return bom;

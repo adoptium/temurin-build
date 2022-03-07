@@ -21,7 +21,7 @@
 -->
 
         <!-- Dependency versions -->
-        <property name="cyclonedx-core-java-version" value="5.0.5"/>
+        <property name="cyclonedx-core-java-version" value="7.1.0"/>
         <property name="jackson-version" value="2.12.4"/>
         <property name="json-schema-version" value="1.0.58"/>
         <property name="commons-codec-version" value="1.15"/>
