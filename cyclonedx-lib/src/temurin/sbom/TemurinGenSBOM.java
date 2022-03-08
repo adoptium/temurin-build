@@ -154,6 +154,17 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
+    static Bom addMetadataProperty(final String name, final String value, final String fileName) {     // Method to store metadata --> Properties List --> name-values
+        Bom bom = readJSONfile(fileName);
+        Metadata meta = new Metadata();
+        Property prop1 = new Property();
+        meta = bom.getMetadata();
+        prop1.setName(name);
+        prop1.setValue(value);
+        meta.addProperty(prop1);
+        bom.setMetadata(meta);
+        return bom;
+    }
     static Bom addComponent(final String compName, final String name, final String value, final String description, final String fileName) {      // Method to store Component --> name & single name-value pair
         Bom bom = readJSONfile(fileName);
         Component comp = new Component();
