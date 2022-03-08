@@ -111,8 +111,9 @@
                 </jar>
         </target>
 
-          <target name="run">
+        <target name="run">
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--createNewSBOM"/>
                   <arg value="--name"/>
                   <arg value="Temurin"/>
@@ -123,6 +124,7 @@
                 </java> 
                 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="JDK-info"/>
@@ -130,6 +132,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="JDK-info"/>
@@ -141,6 +144,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                   <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="JDK-info"/>
@@ -152,6 +156,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                   <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="JDK-info"/>
@@ -163,6 +168,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="JDK-info"/>
@@ -174,6 +180,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="Temurin Build"/>
@@ -181,6 +188,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="Temurin Build"/>
@@ -192,6 +200,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="Temurin Build"/>
@@ -203,6 +212,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="make-arguments"/>
@@ -212,6 +222,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="make-arguments"/>
@@ -223,6 +234,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="make-arguments"/>
@@ -234,6 +246,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="configure_arguments"/>
@@ -243,6 +256,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="configure_arguments"/>
@@ -254,6 +268,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="Temurin build scripts/source"/>
@@ -261,6 +276,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="Temurin build scripts/source"/>
@@ -272,6 +288,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="Temurin build scripts/source"/>
@@ -283,6 +300,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="docker container built"/>
@@ -292,6 +310,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="docker container built"/>
@@ -303,6 +322,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="Built binary java-version string"/>
@@ -310,6 +330,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="Built binary java-version string"/>
@@ -321,6 +342,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addExternalReference"/>
                   <arg value="--url"/>
                   <arg value="https://github.com/adoptium/jdk17/commit/a5afad28437"/>
@@ -332,6 +354,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addExternalReference"/>
                   <arg value="--url"/>
                   <arg value="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-1.1.6.tar.bz2"/>
@@ -342,7 +365,8 @@
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
                 </java> 
-               <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addMetadata"/>
                   <arg value="--metadataName"/>
                   <arg value="Eclipse Adoptium"/>

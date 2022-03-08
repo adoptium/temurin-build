@@ -35,6 +35,8 @@ import java.util.List;
  */
 public final class TemurinGenSBOM {
 
+    private static boolean verbose = false;
+
     private TemurinGenSBOM() {
     }
     /**
@@ -87,6 +89,8 @@ public final class TemurinGenSBOM {
                 cmd = "addExternalReference";
             } else if (args[i].equals("--addComponentExtRef")) {
                 cmd = "addComponentExternalReference";
+            } else if (args[i].equals("--verbose")) {
+                verbose = true;
             }
         }
         switch (cmd) {
@@ -221,7 +225,11 @@ public final class TemurinGenSBOM {
     static void writeJSONfile(final Bom bom, final String fileName) {          // Creates testJson.json file
         FileWriter file;
         String json = generateBomJson(bom);
-        System.out.println("SBOM: " + json);
+
+        if (verbose) {
+            System.out.println("SBOM: " + json);
+        }
+
         try {
             file = new FileWriter(fileName);
             file.write(json);
