@@ -79,6 +79,9 @@ awk '
 # for import into the keystore by the openjdk make file.
 #
 # The full subject needs to be used to prevent alias collisions.
+
+IMPORTED=('null')
+
 for FILE in certs/*.crt; do
     SUBJECT=$(openssl x509 -subject -noout -in "$FILE")
     TRIMMED_SUBJECT="${SUBJECT#*subject= /}"
@@ -92,14 +95,20 @@ for FILE in certs/*.crt; do
     fi
 
     if [ "$NO_KEYSTORE" = false ] ; then
-        echo "Processing certificate with alias: $ALIAS"
-        "$KEYTOOL" -noprompt \
-         -import \
-         -storetype JKS \
-         -alias "$ALIAS" \
-         -file "$FILE" \
-         -keystore "cacerts" \
-         -storepass "changeit"
+         if printf '%s\n' "${IMPORTED[@]}" | grep "${ALIAS}"; then
+            echo "Skipping certificate with alias: $ALIAS as it already exists"
+        else
+            echo "Processing certificate with alias: $ALIAS"
+            "$KEYTOOL" -noprompt \
+            -import \
+            -storetype JKS \
+            -alias "$ALIAS" \
+            -file "$FILE" \
+            -keystore "cacerts" \
+            -storepass "changeit"
+
+            IMPORTED+=("${ALIAS}")
+        fi
     else
          echo "Renaming $FILE to certs/$ALIAS"
          mv "$FILE" "certs/$ALIAS"
