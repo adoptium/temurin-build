@@ -33,8 +33,6 @@ function setArch() {
             current_arch="x64"
 	    ;;
     esac
-    
-    echo "arch is $current_arch"
 }
 
 getFile() {
