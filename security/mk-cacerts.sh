@@ -69,18 +69,29 @@ awk '
 # We chop of `subject= /` and replace the forward slashes with commas, so it
 # becomes `OU=GlobalSign Root CA - R2,O=GlobalSign,CN=GlobalSign`. The full
 # subject needs to be used to prevent alias collisions.
+
+IMPORTED=('null')
+
 for FILE in certs/*.crt; do
     SUBJECT=$(openssl x509 -subject -noout -in "$FILE")
     TRIMMED_SUBJECT="${SUBJECT#*subject= /}"
     ALIAS="${TRIMMED_SUBJECT//\//,}"
 
-    echo "Processing certificate with alias: $ALIAS" 
+    printf '%s\n' "${IMPORTED[@]}"
 
-    "$KEYTOOL" -noprompt \
-      -import \
-      -storetype JKS \
-      -alias "$ALIAS" \
-      -file "$FILE" \
-      -keystore "cacerts" \
-      -storepass "changeit"
+    if printf '%s\n' "${IMPORTED[@]}" | grep "${ALIAS}"; then
+        echo "Skipping certificate with alias: $ALIAS as it already exists"
+    else
+        echo "Processing certificate with alias: $ALIAS" 
+
+        "$KEYTOOL" -noprompt \
+        -import \
+        -storetype JKS \
+        -alias "$ALIAS" \
+        -file "$FILE" \
+        -keystore "cacerts" \
+        -storepass "changeit"
+        
+        IMPORTED+=("${ALIAS}")
+    fi
 done
