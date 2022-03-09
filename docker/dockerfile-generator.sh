@@ -253,7 +253,7 @@ RUN apt-get update \\
     gcc \\" >> "$DOCKERFILE_PATH"
   fi
 
-  # JDK8 uses zulu-7 as it's bootJDK
+  # JDK8 uses zulu-7 as it's bootJDK, but it's not available for arm32hf
   if [ "${JDK_VERSION}" == 8 ]; then
       if [ "${current_arch}" != "arm" ]; then
 	  echo "    zulu8-jdk \\" >> "$DOCKERFILE_PATH"
@@ -265,6 +265,9 @@ RUN apt-get update \\
   && rm -fr zulu8.60.0.21-ca-jdk8.0.322-linux_aarch32hf/ \\
   && export PATH=/usr/lib/jvm/jdk8/bin:$PATH \\
   && java -XshowSettings:properties -version 2>&1 | grep 'java.specification.version' \\
+  && add-apt-repository ppa:openjdk-r/ppa \\
+  && apt update \\
+  && apt-cache search jdk | grep open \
   && which javac \\ " >> "$DOCKERFILE_PATH"
       fi
   fi
@@ -403,9 +406,9 @@ fi
 setJDKVars
 processArgs "$@"
 generateFile
+setArch
 generateConfig
 printPreamble
-setArch
 printAptPackages
 # OpenJ9 MUST use gcc7, HS doesn't have to
 if [ ${OPENJ9} == true ]; then
