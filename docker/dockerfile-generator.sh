@@ -14,6 +14,29 @@ JDK_VERSION=8
 JDK_MAX=
 JDK_GA=
 
+function setArch() {
+    machine=$(uname -m)
+    case ${machine} in
+	armv7l|linux/arm/v7)
+	    current_arch="arm"
+	    ;;
+	aarch64)
+	    current_arch="aarch64"
+	    ;;
+	ppc64el|ppc64le)
+	    current_arch="ppc64le"
+	    ;;
+	s390x)
+	    current_arch="s390x"
+	    ;;
+	amd64|x86_64)
+            current_arch="x64"
+	    ;;
+    esac
+    
+    echo "arch is $current_arch"
+}
+
 getFile() {
   if [ $# -ne 2 ]; then
     echo "getFile takes 2 arguments, $# argument(s) given"
@@ -174,8 +197,11 @@ RUN apt-get update \\
     dirmngr \\
     gpg-agent \\
     coreutils \\
-  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \\
-  && add-apt-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \\
+    curl \\
+  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0xB1998361219BD9C9 \\
+  && curl -O https://cdn.azul.com/zulu/bin/zulu-repo_1.0.0-3_all.deb \\
+  && apt-get install ./zulu-repo_1.0.0-3_all.deb \\
+  && rm zulu-repo_1.0.0-3_all.deb \\
   && apt-get update \\
   && apt-get -y upgrade \\
   && apt-get install -qq -y --no-install-recommends \\
@@ -229,7 +255,18 @@ RUN apt-get update \\
 
   # JDK8 uses zulu-7 as it's bootJDK
   if [ "${JDK_VERSION}" == 8 ]; then
-    echo "    zulu-7 \\" >> "$DOCKERFILE_PATH"
+      if [ "${current_arch}" != "arm" ]; then
+	  echo "    zulu8-jdk \\" >> "$DOCKERFILE_PATH"
+      else
+	  echo "  && curl -O https://cdn.azul.com/zulu-embedded/bin/zulu8.60.0.21-ca-jdk8.0.322-linux_aarch32hf.tar.gz \\
+  && tar -xvzf zulu8.60.0.21-ca-jdk8.0.322-linux_aarch32hf.tar.gz \\
+  && mkdir -p /usr/lib/jvm/jdk8 \\
+  && mv zulu8.60.0.21-ca-jdk8.0.322-linux_aarch32hf/* /usr/lib/jvm/jdk8 \\
+  && rm -fr zulu8.60.0.21-ca-jdk8.0.322-linux_aarch32hf/ \\
+  && export PATH=/usr/lib/jvm/jdk8/bin:$PATH \\
+  && java -XshowSettings:properties -version 2>&1 | grep 'java.specification.version' \\
+  && which javac \\ " >> "$DOCKERFILE_PATH"
+      fi
   fi
 
   echo "  && rm -rf /var/lib/apt/lists/*" >> "$DOCKERFILE_PATH"
@@ -300,7 +337,7 @@ printDockerJDKs() {
 printJDK() {
   local JDKVersion=$1
   echo "
-RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptium.net/v3/binary/latest/$JDKVersion/ga/linux/x64/jdk/hotspot/normal/adoptium?project=jdk' -O - | tar xzf - -C /usr/lib/jvm/jdk$JDKVersion --strip-components=1\"" >> "$DOCKERFILE_PATH"
+RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptium.net/v3/binary/latest/$JDKVersion/ga/linux/$current_arch/jdk/hotspot/normal/adoptium?project=jdk' -O - | tar xzf - -C /usr/lib/jvm/jdk$JDKVersion --strip-components=1\"" >> "$DOCKERFILE_PATH"
 }
 
 printGitCloneJenkinsPipelines(){
@@ -334,7 +371,7 @@ printContainerVars(){
   echo "
 ARG OPENJDK_CORE_VERSION
 ENV OPENJDK_CORE_VERSION=\$OPENJDK_CORE_VERSION
-ENV ARCHITECTURE=x64
+ENV ARCHITECTURE=$current_arch
 ENV JDK_PATH=jdk
 ENV JDK8_BOOT_DIR=/usr/lib/jvm/jdk8" >> "$DOCKERFILE_PATH"
 }
@@ -358,8 +395,8 @@ generateConfig() {
 
 # This config is read in by configureBuild
 BUILD_CONFIG[OS_KERNEL_NAME]=\"linux\"
-BUILD_CONFIG[OS_ARCHITECTURE]=\"x86_64\"
-BUILD_CONFIG[BUILD_FULL_NAME]=\"linux-x86_64-normal-server-release\"" >> "$DOCKERFILE_DIR/dockerConfiguration.sh"
+BUILD_CONFIG[OS_ARCHITECTURE]=\"${machine}\"
+BUILD_CONFIG[BUILD_FULL_NAME]=\"linux-${machine}-normal-server-release\"" >> "$DOCKERFILE_DIR/dockerConfiguration.sh"
 fi
 }
 
@@ -368,6 +405,7 @@ processArgs "$@"
 generateFile
 generateConfig
 printPreamble
+setArch
 printAptPackages
 # OpenJ9 MUST use gcc7, HS doesn't have to
 if [ ${OPENJ9} == true ]; then
