@@ -14,27 +14,25 @@ JDK_VERSION=8
 JDK_MAX=
 JDK_GA=
 
-function setArch() {
+setArch() {
     machine=$(uname -m)
     case ${machine} in
-	armv7l|linux/arm/v7)
-	    current_arch="arm"
-	    ;;
-	aarch64)
-	    current_arch="aarch64"
-	    ;;
-	ppc64el|ppc64le)
-	    current_arch="ppc64le"
-	    ;;
-	s390x)
-	    current_arch="s390x"
-	    ;;
-	amd64|x86_64)
-            current_arch="x64"
-	    ;;
+	    armv7l|linux/arm/v7)
+	      current_arch="arm"
+	      ;;
+	    aarch64)
+	      current_arch="aarch64"
+	      ;;
+	    ppc64el|ppc64le)
+	      current_arch="ppc64le"
+	      ;;
+	    s390x)
+	      current_arch="s390x"
+	      ;;
+	    amd64|x86_64)
+        current_arch="x64"
+	      ;;
     esac
-    
-    echo "arch is $current_arch"
 }
 
 getFile() {
