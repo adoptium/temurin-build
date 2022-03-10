@@ -72,7 +72,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       name: Collect and Archive Artifacts
       with:
-        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
         path: workspace/target/*
 
     - name: Unpack jdk
@@ -95,7 +95,7 @@ jobs:
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
-        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}_test_output"
+        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}_test_output"
         path: ./**/output_*/
 
   build_macos:
@@ -148,7 +148,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       name: Collect and Archive Artifacts
       with:
-        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
         path: workspace/target/*
 
     - name: Unpack jdk
@@ -172,7 +172,7 @@ jobs:
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
-        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}_test_output"
+        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}_test_output"
         path: ./**/output_*/
 
   build_windows:
@@ -257,17 +257,17 @@ jobs:
      - uses: actions/upload-artifact@v2
        name: Collect and Archive Artifacts
        with:
-         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
          path: workspace/target/*
 
      - name: Restore build artifacts
        uses: actions/download-artifact@v2
        with:
-         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
-         path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
+         path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
      - name: Unpack jdk
        run: |
-         unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}"
+         unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}"
 
      - name: Set root of jdk image dir
        run: |
