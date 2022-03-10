@@ -39,8 +39,9 @@ fi
 ## so needs to be special cased - on everthing else "uname" is valid
 if [ -z "$TARGET_OS" ]; then
   TARGET_OS=$(uname)
-  if [ "$OSTYPE" = "cygwin" ]; then TARGET_OS=windows ; fi
-  if [ "$OSTYPE" = "SunOS"  ]; then TARGET_OS=solaris ; fi
+  if [ "$OSTYPE"    = "cygwin" ]; then TARGET_OS=windows ; fi
+  if [ "$TARGET_OS" = "SunOS"  ]; then TARGET_OS=solaris ; fi
+  if [ "$TARGET_OS" = "Darwin" ]; then TARGET_OS=mac     ; fi
   echo TARGET_OS not defined - assuming you want "$TARGET_OS"
   export TARGET_OS
 fi
