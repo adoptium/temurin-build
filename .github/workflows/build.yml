@@ -20,40 +20,40 @@ jobs:
       matrix:
         os: [linux]
         version: [jdk8u, jdk11u, jdk17u, jdk18, jdk]
-        vm: [hotspot]
+        variant: [temurin]
         image: [adoptopenjdk/centos7_build_image]
         include:
           - os: alpine-linux
             version: jdk8u
-            vm: hotspot
+            variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk11u
-            vm: hotspot
+            variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk17u
-            vm: hotspot
+            variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk18
-            vm: hotspot
+            variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk
-            vm: hotspot
+            variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: linux
             version: jdk11u
-            vm: dragonwell
+            variant: dragonwell
             image: adoptopenjdk/centos7_build_image
           - os: linux
             version: jdk11u
-            vm: fast_startup
+            variant: fast_startup
             image: adoptopenjdk/centos7_build_image
           - os: linux
             version: jdk11u
-            vm: bisheng
+            variant: bisheng
             image: adoptopenjdk/centos7_build_image
     steps:
     - uses: actions/checkout@v2
@@ -63,7 +63,7 @@ jobs:
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
-        VARIANT: ${{ matrix.vm }}
+        VARIANT: ${{ matrix.variant }}
         TARGET_OS: ${{ matrix.os }}
         FILENAME: OpenJDK.tar.gz
         # Don't set the OS as we use both linux and alpine-linux
@@ -106,7 +106,7 @@ jobs:
       matrix:
         os: [macOS]
         version: [jdk8u, jdk11u]
-        vm: [hotspot]
+        variant: [temurin]
 
     steps:
     - uses: actions/checkout@v2
@@ -140,7 +140,7 @@ jobs:
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
-        VARIANT: ${{ matrix.vm }}
+        VARIANT: ${{ matrix.variant }}
         TARGET_OS: mac
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
@@ -183,11 +183,11 @@ jobs:
        matrix:
          os: [windows-2019]
          version: [jdk]
-         vm: [hotspot]
+         variant: [temurin]
          include:
           - os: windows-2016
             version: jdk11u
-            vm: hotspot
+            variant: temurin
 
      steps:
      - name: Restore cygwin packages from cache
@@ -250,7 +250,7 @@ jobs:
        env:
          JAVA_TO_BUILD: ${{ matrix.version }}
          ARCHITECTURE: x64
-         VARIANT: ${{ matrix.vm }}
+         VARIANT: ${{ matrix.variant }}
          TARGET_OS: windows
          FILENAME: OpenJDK.zip
 
