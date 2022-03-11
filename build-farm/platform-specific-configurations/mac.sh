@@ -33,7 +33,6 @@ export BUILD_ARGS="${BUILD_ARGS}"
 
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
-  XCODE_SWITCH_PATH="/Applications/Xcode.app"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
   # See https://github.com/adoptium/temurin-build/issues/1202
   if isHotSpot; then
@@ -44,13 +43,6 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
   fi
 else
-  if [[ "$JAVA_FEATURE_VERSION" -ge 17 ]]; then
-    # JDK17 requires metal (included in full xcode)
-    XCODE_SWITCH_PATH="/Applications/Xcode.app"
-  else
-    # Command line tools used from JDK9-JDK16
-    XCODE_SWITCH_PATH="/";
-  fi
   export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
@@ -77,9 +69,6 @@ then
   #codesign -dvvv codesign-test
   #export BUILD_ARGS="${BUILD_ARGS} --codesign-identity 'Developer ID Application: London Jamocha Community CIC'"
 fi
-
-echo "[WARNING] You may be asked for your su user password, attempting to switch Xcode version to ${XCODE_SWITCH_PATH}"
-sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
 # No MacOS builds available of OpenJDK 7, OpenJDK 8 can boot itself just fine.
 if [ "${JDK_BOOT_VERSION}" == "7" ]; then
