@@ -113,7 +113,7 @@ jobs:
       if: matrix.version == 'jdk8u'
       
     - name: Select correct Xcode (11.7)
-      run: sudo sudo xcode-select --switch /Applications/Xcode_11.7.app
+      run: sudo xcode-select --switch /Applications/Xcode_11.7.app
 
     - name: Build macOS
       run: |
