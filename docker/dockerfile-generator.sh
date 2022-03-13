@@ -138,7 +138,7 @@ processArgs() {
 }
 
 usage() {
-  echo" Usage: ./dockerfile_generator.sh [OPTIONS]
+  usageText=" Usage: ./dockerfile_generator.sh [OPTIONS]
   Options:
       --help | -h        Print this message and exit
       --build        Build the docker image after generation and create interactive container
@@ -148,6 +148,7 @@ usage() {
       --print        Print the Dockerfile to screen after generation
       --openj9        Make the Dockerfile able to build w/OpenJ9 JIT
       --version | -v <JDK>    Specify which JDK the docker image will be able to build (Default: jdk8)"
+  echo "$usageText"
 }
 
 # Checks to ensure the input JDK is valid
