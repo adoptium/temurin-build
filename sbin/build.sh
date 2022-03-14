@@ -689,8 +689,14 @@ generateSBoM() {
   # Add scmRef JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "scmRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
 
+  # Add OpenJDK source ref commit JDK Component Property
+  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "openjdkSourceCommit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
+
   # Add buildRef JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "buildRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
+
+  # Add builtConfig JDK Component Property
+  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "builtConfig" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/built_config.cfg"
 
   # Add full_version_output JDK Component Property
   addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "full_version_output" "${fullVerOutput}"
@@ -712,6 +718,12 @@ generateSBoM() {
 
   # Add ALSA 3rd party component
   addSBOMComponentFromFile "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "dependency_version_alsa" "url" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt"
+
+  # Add FreeType 3rd party component
+  addSBOMComponentFromFile "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "dependency_version_freetype" "url" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
+
+  # Add FreeMarker 3rd party component
+  addSBOMComponentFromFile "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "dependency_version_freemarker" "url" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt"
 
   # Print SBOM json
   echo "CycloneDX SBOM:"
