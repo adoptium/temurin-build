@@ -64,7 +64,7 @@ if [ -z "$FILENAME"   ]; then
      # I don't like this - perhaps we should override elsewhere to keep consistency with existing release names
      echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-hotspot.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-hotspot.tar.gz"
   else
-     echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARAINT}.tar.gz"
+     echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARIANT}.tar.gz"
   fi
 fi
 
