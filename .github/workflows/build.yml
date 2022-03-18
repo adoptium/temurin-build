@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [linux]
-        version: [jdk8u, jdk11u, jdk17u, jdk18, jdk]
+        version: [jdk8u, jdk11u, jdk17u, jdk18u, jdk]
         vm: [hotspot]
         image: [adoptopenjdk/centos7_build_image]
         include:
@@ -32,7 +32,7 @@ jobs:
             vm: hotspot
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
-            version: jdk18
+            version: jdk18u
             vm: hotspot
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
