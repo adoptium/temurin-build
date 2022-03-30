@@ -144,14 +144,22 @@ Here are the steps:
 1. Discuss failing tests with [Shelley Lambert](https://github.com/smlambert)
 1. Once all AQA tests on all platforms have been signed off, then nightly tests can be re-enabled. See the notes on checking the regeneration job worked in step 1.
 1. If "good to publish", then get permission to publish the release from the Adoptium PMC members, discussion is via the Adoptium [#release](https://adoptium.slack.com/messages/CLCFNV2JG) Slack channel.
-1. Once permission has been obtained, run the [Adoptium "Publish" job](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) (restricted access - if you can't see this link, you don't have access). it is *strongly recommended* that you run first with the `DRY_RUN` checkbox enabled and check the output to verify that the correct list of files you expected are picked up.
+1. Once permission has been obtained, run the [openjdk_release_tool](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) to publish the releases to github (restricted access - if you can't see this link, you don't have access). It is *strongly recommended* that you run first with the `DRY_RUN` checkbox enabled and check the output to verify that the correct list of files you expected are picked up.
    - `TAG`: (github binaries published name)  e.g. `jdk-11.0.5+9` or `jdk-11.0.5+9_openj9-0.nn.0` for OpenJ9 releases. If doing a point release, add that into the name e.g. for a `.3` release use something like these (NOTE that for OpenJ9 the point number goes before the openj9 version): `jdk8u232-b09.3` or `jdk-11.0.4+11.3_openj9-0.15.1`
    - `VERSION`: (select version e.g. `jdk11`)
    - `UPSTREAM_JOB_NAME`: (build-scripts/openjdkNN-pipeline)
    - `UPSTREAM_JOB_NUMBER`: (the job number of the build pipeline under build-scripts/openjdkNN-pipeline) e.g. 86
    - `RELEASE`: "ticked"
    - `aqaReference` : The correct [aqa-tests release branch name](https://github.com/adoptium/aqa-tests/branches) to use for this release e.g. `v0.8.0-release`
-   - If you need to restrict the platforms or only ship jdks or jres, either use `ARTIFACTS_TO_COPY` e.g. `**/*jdk*mac*` or add an explicit exclusion in `ARTIFACTS_TO_SKIP` e.g. `**/*mac*`. These may be required if you had to re-run some of the platforms under a different pipeline earlier in the process
+   - If you need to restrict the platforms or only ship jdks or jres, either use `ARTIFACTS_TO_COPY` e.g. `**/*jdk*mac*` or add an explicit exclusion in `ARTIFACTS_TO_SKIP` e.g. `**/*mac*`. These may be required if you had to re-run some of the platforms under a different pipeline earlier in the process. If you're unsure what the possible names are, look at the artifacts of the appropriate `openjdkNN-pipeline` job.
+   - `ARTIFACTS_TO_SKIP`: `**/*testimage*`
+   - If you need to restrict the platforms, fill in `ARTIFACTS_TO_COPY` and if needed att to `ARTIFACTS_TO_SKIP`. This may also be required if you had to re-run some of the platforms under a different pipeline earlier in the process. I personally tend to find it cleaner to release Linux in one pipeline, Windows+Mac in another, then the others together to keep the patterns simpler. Sample values for `ARTIFACTS_TO_COPY` are as follows (use e.g. `_x64_linux_` to restrict by architecture if required):
+     - `**/*_linux_*.tar.gz,**/*_linux_*.sha256.txt,**/*_linux_*.json` (Exclude `**/*alpine_linux*` if you don't really want that to be picked up too)
+     - Alternative that wouldn't pick up Alpine: `target/linux/x64/hotspot/**.tar.gz,target/linux/x64/hotspot/target/linux/x64/hotspot/*.sha256.txt`
+     - `**/*_mac_*.tar.gz,**/*_mac_*.sha256.txt,**/*_mac_*.json,**/*_mac_*.pkg`
+     - `**/*_windows_*.zip,**/*_windows_*.sha256.txt,**/*_windows_*.json,**/*_windows_*.msi`
+     - `**/*_aix_*.tar.gz,**/*_aix_*.sha256.txt,**/*_aix_*.json`
+     - `**/*_solaris_*.tar.gz,**/*_solaris_*.sha256.txt,**/*_solaris_*.json`
    - SUBMIT!!
 1. Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08
 1. Within 15 minutes the binaries should be available on the website too at e.g. https://adoptium.net/?variant=openjdk11&jvmVariant=hotspot (NOTE: If it doesn't show up, check whether the API is returning the right thing (e.g. with a link such as [this](https://api.adoptium.net/v3/assets/feature_releases/17/ga?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&page=0&page_size=10&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse), and that the `.json` metadata files are uploaded correctly)
