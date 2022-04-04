@@ -1409,10 +1409,19 @@ createArchive() {
   createOpenJDKArchive "${repoLocation}" "OpenJDK"
   archive="${PWD}/OpenJDK${archiveExtension}"
 
+  archiveTarget=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${targetName}
+
   echo "Your final archive was created at ${archive}"
 
   echo "Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}"
-  mv "${archive}" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${targetName}"
+  mv "${archive}" "${archiveTarget}"
+
+  if [ -f "$archiveTarget" ] && [ -s "$archiveTarget" ] ; then
+    echo "archive done."
+  else
+    echo "[ERROR] ${targetName} failed to be archived"
+    exit 1
+  fi
 }
 
 # Create a Tar ball
