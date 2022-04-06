@@ -30,8 +30,8 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
   fi
 else
-  if [[ "$JAVA_FEATURE_VERSION" -ge 17 ]]; then
-    # JDK17 requires metal (included in full xcode)
+  if [[ "$JAVA_FEATURE_VERSION" -ge 17 ]] || [[ "${ARCHITECTURE}" == "aarch64" ]]; then
+    # JDK17 requires metal (included in full xcode) as does JDK11 on aarch64
     XCODE_SWITCH_PATH="/Applications/Xcode.app"
   else
     # Command line tools used from JDK9-JDK16
