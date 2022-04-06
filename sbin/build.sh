@@ -163,7 +163,8 @@ getOpenJdkVersion() {
       else
         local minorNum="$(cut -d'.' -f 2 <"${dragonwellVerFile}")"
         local updateNum="$(cut -d'.' -f 3 <"${dragonwellVerFile}")"
-        local buildNum="$(cut -d'.' -f 5 <"${dragonwellVerFile}")"
+        # special handling for dragonwell version
+        local buildNum="$(cut -d'.' -f 5 <"${dragonwellVerFile}" | cut -d'-' -f 1)"
         version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
       fi
     else
