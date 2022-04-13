@@ -27,9 +27,10 @@ if [ -z "$ARCHITECTURE"  ]; then
    ARCHITECTURE=$(uname -p)
    if [ "$OSTYPE"       = "cygwin"  ]; then ARCHITECTURE=$(uname -m); fi # Windows
    if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;        fi # Linux/x64
-   if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64
+   if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64 and mac/x64
    if [ "$ARCHITECTURE" = "sparc"   ]; then ARCHITECTURE=sparcv9;    fi # Solaris/SPARC
    if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi # AIX
+   if [ "$ARCHITECTURE" = "arm"     ]; then ARCHITECTURE=aarch64;    fi # mac/aarch64
    if [ "$ARCHITECTURE" = "armv7l"  ]; then ARCHITECTURE=arm;        fi # Linux/arm32
    echo ARCHITECTURE not defined - assuming $ARCHITECTURE
    export ARCHITECTURE
@@ -39,8 +40,9 @@ fi
 ## so needs to be special cased - on everthing else "uname" is valid
 if [ -z "$TARGET_OS" ]; then
   TARGET_OS=$(uname)
-  if [ "$OSTYPE" = "cygwin" ]; then TARGET_OS=windows ; fi
-  if [ "$OSTYPE" = "SunOS"  ]; then TARGET_OS=solaris ; fi
+  if [ "$OSTYPE"    = "cygwin" ]; then TARGET_OS=windows ; fi
+  if [ "$TARGET_OS" = "SunOS"  ]; then TARGET_OS=solaris ; fi
+  if [ "$TARGET_OS" = "Darwin" ]; then TARGET_OS=mac     ; fi
   echo TARGET_OS not defined - assuming you want "$TARGET_OS"
   export TARGET_OS
 fi
