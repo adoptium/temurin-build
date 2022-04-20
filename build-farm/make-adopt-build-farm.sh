@@ -25,7 +25,7 @@ PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [ -z "$ARCHITECTURE"  ]; then
    ARCHITECTURE=$(uname -p)
-   if [ "$OSTYPE"       = "cygwin"  ]; then ARCHITECTURE=$(uname -m); fi # Windows
+   if [ "$OSTYPE" = "cygwin"  ] || [ "${ARCHITECTURE}" = "unknown" ]; then ARCHITECTURE=$(uname -m); fi # Windows / Alpine
    if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;        fi # Linux/x64
    if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64 and mac/x64
    if [ "$ARCHITECTURE" = "sparc"   ]; then ARCHITECTURE=sparcv9;    fi # Solaris/SPARC
@@ -40,9 +40,10 @@ fi
 ## so needs to be special cased - on everthing else "uname" is valid
 if [ -z "$TARGET_OS" ]; then
   TARGET_OS=$(uname)
-  if [ "$OSTYPE"    = "cygwin" ]; then TARGET_OS=windows ; fi
-  if [ "$TARGET_OS" = "SunOS"  ]; then TARGET_OS=solaris ; fi
-  if [ "$TARGET_OS" = "Darwin" ]; then TARGET_OS=mac     ; fi
+  if [ "$OSTYPE"    = "cygwin" ]; then TARGET_OS=windows     ; fi
+  if [ "$TARGET_OS" = "SunOS"  ]; then TARGET_OS=solaris     ; fi
+  if [ "$TARGET_OS" = "Darwin" ]; then TARGET_OS=mac         ; fi
+  if [ -r /etc/alpine-release  ]; then TARGET_OS=alpine-linux; fi
   echo TARGET_OS not defined - assuming you want "$TARGET_OS"
   export TARGET_OS
 fi
