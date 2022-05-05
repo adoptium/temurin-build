@@ -112,7 +112,6 @@ checkoutAndCloneOpenJDKGitRepo() {
   git clean -ffdx
 
   updateOpenj9Sources
-  updateDragonwellSources
 
   createSourceTagFile
 
@@ -265,26 +264,6 @@ updateOpenj9Sources() {
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     # NOTE: fetched openssl will NOT be used in the RISC-V cross-compile situation
     bash get_source.sh --openssl-version=1.1.1o
-    cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
-  fi
-}
-
-updateDragonwellSources() {
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
-    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    local target_scm
-    if [ -n "${BUILD_CONFIG[TAG]}" ]; then
-      target_scm="${BUILD_CONFIG[TAG]}"
-    else
-      target_scm="${BUILD_CONFIG[BRANCH]}"
-    fi
-    # Download directly from github and not the proxy for Adoptium machine performance
-    perl -p -i -e 's/github.com.cnpmjs.org/github.com/g' get_source_dragonwell.sh
-    if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
-      bash get_source_dragonwell.sh --site github --branch "${target_scm}"
-    else
-      bash get_source_dragonwell.sh --site github --branch "${target_scm}" -r
-    fi
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
