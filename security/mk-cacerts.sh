@@ -90,8 +90,7 @@ for FILE in certs/*.crt; do
     else
         # Remove/translate characters not valid in a filename
         ALIAS_NO_INVALID="${TRIMMED_SUBJECT//[ :()]/_}"
-        ALIAS_NO_SPECIAL=$(echo "${ALIAS_NO_INVALID}" | tr -cd 'a-zA-Z,_')
-        ALIAS="${ALIAS_NO_SPECIAL,,}"
+        ALIAS=$(echo "${ALIAS_NO_INVALID}" | tr -cd 'a-zA-Z,_' | tr A-Z a-z)
     fi
 
     if [ "$NO_KEYSTORE" = false ] ; then

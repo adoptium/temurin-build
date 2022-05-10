@@ -19,7 +19,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
-export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+export BUILD_ARGS="${BUILD_ARGS} --skip-freetype --make-args SHELL=/bin/bash"
 
 if [ "${ARCHITECTURE}" == "x64" ]; then
   export CUPS="--with-cups=/opt/sfw/cups"
