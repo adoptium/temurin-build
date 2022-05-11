@@ -129,7 +129,7 @@ createOpenJDKArchive()
   if which pigz > /dev/null 2>&1; then
     COMPRESS=pigz
   fi
-  echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
+  echo "Archiving and compressing with $COMPRESS"
 
   EXT=$(getArchiveExtension)
 
