@@ -31,6 +31,7 @@ set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+
 # shellcheck source=sbin/prepareWorkspace.sh
 source "$SCRIPT_DIR/prepareWorkspace.sh"
 
@@ -643,8 +644,8 @@ buildCyclonedxLib() {
     exit 2
   fi
 
-  JAVA_HOME=${javaHome} ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" clean
-  JAVA_HOME=${javaHome} ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" build
+  JAVA_HOME=${javaHome} ant -f "${SCRIPT_DIR}/cyclonedx-lib/build.xml" clean
+  JAVA_HOME=${javaHome} ant -f "${SCRIPT_DIR}/cyclonedx-lib/build.xml" build
 }
 
 # Generate the SBoM
@@ -663,7 +664,7 @@ generateSBoM() {
   fi
 
   # classpath to run CycloneDX java app TemurinGenSBOM
-  classpath="${WORKSPACE}/cyclonedx-lib/build/jar/temurin-gen-sbom.jar:${WORKSPACE}/cyclonedx-lib/build/jar/cyclonedx-core-java.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-core.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-dataformat-xml.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-databind.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-annotations.jar:${WORKSPACE}/cyclonedx-lib/build/jar/json-schema.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-codec.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-io.jar:${WORKSPACE}/cyclonedx-lib/build/jar/github-package-url.jar"
+  classpath="${SCRIPT_DIR}/cyclonedx-lib/build/jar/temurin-gen-sbom.jar:${SCRIPT_DIR}/cyclonedx-lib/build/jar/cyclonedx-core-java.jar:${SCRIPT_DIR}/cyclonedx-lib/build/jar/jackson-core.jar:${SCRIPT_DIR}/cyclonedx-lib/build/jar/jackson-dataformat-xml.jar:${SCRIPT_DIR}/cyclonedx-lib/build/jar/jackson-databind.jar:${SCRIPT_DIR}/cyclonedx-lib/build/jar/jackson-annotations.jar:${SCRIPT_DIR}/cyclonedx-lib/build/jar/json-schema.jar:${SCRIPT_DIR}/cyclonedx-lib/build/jar/commons-codec.jar:${SCRIPT_DIR}/cyclonedx-lib/build/jar/commons-io.jar:${SCRIPT_DIR}/cyclonedx-lib/build/jar/github-package-url.jar"
 
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" =~ .*cygwin.* ]]; then
     classpath="${classpath//jar:/jar;}"
