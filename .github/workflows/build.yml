@@ -180,10 +180,6 @@ jobs:
          os: [windows-2019]
          version: [jdk]
          vm: [hotspot]
-         include:
-          - os: windows-2016
-            version: jdk11u
-            vm: hotspot
 
      steps:
      - name: Restore cygwin packages from cache
