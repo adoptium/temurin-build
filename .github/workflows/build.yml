@@ -77,7 +77,7 @@ jobs:
         tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
     - name: Set root of jdk image dir
       run: |
-        imageroot=`find ${HOME}/JDK -name release -type f`
+        imageroot=$(find "${HOME}/JDK" -name release -type f)
         echo "TEST_JDK_HOME=`dirname ${imageroot}`" >> $GITHUB_ENV
     - name: Smoke test
       uses: adoptium/run-aqa@v1
@@ -154,7 +154,7 @@ jobs:
 
     - name: Set root of jdk image dir
       run: |
-        imageroot=`find ${HOME}/JDK -name release -type f`
+        imageroot=$(find "${HOME}/JDK" -name release -type f)
         echo "TEST_JDK_HOME=`dirname ${imageroot}`" >> $GITHUB_ENV
     - name: Smoke test
       uses: adoptium/run-aqa@v1
@@ -216,7 +216,7 @@ jobs:
          Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
 
      - name: Set PATH
-       run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+       run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
 
      - name: Install Visual Studio 2013
        run: |
