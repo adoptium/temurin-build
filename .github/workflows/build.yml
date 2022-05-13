@@ -226,7 +226,7 @@ jobs:
      - name: Cygwin git configuration
        shell: bash
        # workaround for https://github.com/actions/checkout/issues/760
-       run: mkdir "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+       run: mkdir "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory "/cygdrive/d/a/temurin-build/temurin-build"
 
      - uses: actions/checkout@v2
 
