@@ -1,3 +1,4 @@
+# shellcheck disable=SC2006,SC2086
 name: Build
 
 on:
