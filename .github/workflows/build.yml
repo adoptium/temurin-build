@@ -44,6 +44,10 @@ jobs:
             vm: dragonwell
             image: adoptopenjdk/centos7_build_image
           - os: linux
+            version: jdk8u
+            vm: dragonwell
+            image: adoptopenjdk/centos7_build_image
+          - os: linux
             version: jdk11u
             vm: fast_startup
             image: adoptopenjdk/centos7_build_image
