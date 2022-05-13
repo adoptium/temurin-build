@@ -111,6 +111,26 @@ then
 fi
 
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
+if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
+  if [ -d /opt/dragonwell8 ]; then
+    export "${BOOT_JDK_VARIABLE}"=/opt/dragonwell8
+  elif [ -d /usr/lib/jvm/dragonwell8 ]; then
+    export "${BOOT_JDK_VARIABLE}"=/usr/lib/jvm/dragonwell8
+  else
+    echo Dragonwell 8 requires a Dragonwell boot JDK - downloading one ...
+    mkdir -p "$PWD/jdk-8"
+    if [ "$(uname -m)" = "x86_64" ]; then
+      curl -L "https://github.com/alibaba/dragonwell8/releases/download/v8.0.0-GA/Alibaba_Dragonwell_8.0.0-GA_Linux_x64.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+    elif [ "$(uname -m)" = "aarch64" ]; then
+      curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.8.9_jdk8u302-ga/Alibaba_Dragonwell_8.8.9_aarch64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+    else
+      echo "Unknown architecture $(uname -m) for building Dragonwell - cannot download boot JDK"
+      exit 1
+    fi
+    export "${BOOT_JDK_VARIABLE}"="$PWD/jdk-8"
+  fi
+fi
+
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
