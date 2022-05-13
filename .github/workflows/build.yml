@@ -1,3 +1,4 @@
+# shellcheck disable=SC2006,SC2086
 name: Build
 
 on:
@@ -221,7 +222,8 @@ jobs:
 
      - name: Cygwin git configuration
        shell: bash
-       run: mkdir $HOME && git config --system core.autocrlf false
+       # workaround for https://github.com/actions/checkout/issues/760
+       run: mkdir $HOME && git config --system core.autocrlf false && git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
      - uses: actions/checkout@v2
 
