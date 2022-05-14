@@ -265,6 +265,7 @@ jobs:
          unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}"
 
      - name: Set root of jdk image dir
+       shell: pwsh
        run: |
          $imageroot=$(find "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}" -name release -type f)
          echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
