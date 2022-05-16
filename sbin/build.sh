@@ -677,6 +677,10 @@ generateSBoM() {
     classpath="${classpath//jar:/jar;}"
   fi
 
+  echo "DEBUG START:"
+  echo $classpath
+  echo "DEBUG DONE!"
+
   # Run a series of SBOM API commands to generate the required SBOM
   local sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/sbom.json"
   # Clean any old json
