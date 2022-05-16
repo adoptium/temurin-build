@@ -81,8 +81,8 @@ jobs:
         tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
     - name: Set root of jdk image dir
       run: |
-        imageroot=`find ${HOME}/JDK -name release -type f`
-        echo "TEST_JDK_HOME=`dirname ${imageroot}`" >> $GITHUB_ENV
+        imageroot=$(find "${HOME}/JDK" -name release -type f)
+        echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
     - name: Smoke test
       uses: adoptium/run-aqa@v1
       with:
@@ -158,8 +158,8 @@ jobs:
 
     - name: Set root of jdk image dir
       run: |
-        imageroot=`find ${HOME}/JDK -name release -type f`
-        echo "TEST_JDK_HOME=`dirname ${imageroot}`" >> $GITHUB_ENV
+        imageroot=$(find "${HOME}/JDK" -name release -type f)
+        echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
     - name: Smoke test
       uses: adoptium/run-aqa@v1
       with:
@@ -216,7 +216,7 @@ jobs:
          Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
 
      - name: Set PATH
-       run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+       run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
 
      - name: Install Visual Studio 2013
        run: |
@@ -225,18 +225,20 @@ jobs:
 
      - name: Cygwin git configuration
        shell: bash
-       run: mkdir $HOME && git config --system core.autocrlf false
+       run: mkdir "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
 
-     - uses: actions/checkout@v2
+     - uses: actions/checkout@v3.0.2
+       with:
+         set-safe-directory: false
 
      - name: Setup 8dot3name
        run: fsutil behavior set disable8dot3 0
 
      - name: Set JAVA_HOME
-       run: echo "JAVA_HOME=$(cygpath ${{ steps.setup-java11.outputs.path }})" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+       run: echo "JAVA_HOME=$(cygpath "${{ steps.setup-java11.outputs.path }}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
 
      - name: Set JDK7_BOOT_DIR
-       run: echo "JDK7_BOOT_DIR=$(cygpath ${{ steps.setup-java7.outputs.path }})" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+       run: echo "JDK7_BOOT_DIR=$(cygpath "${{ steps.setup-java7.outputs.path }}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
        if: matrix.version == 'jdk8u'
 
      - name: Build Windows
@@ -261,14 +263,16 @@ jobs:
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
          path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+
      - name: Unpack jdk
        run: |
          unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}"
 
      - name: Set root of jdk image dir
+       shell: pwsh
        run: |
-         $imageroot = find ${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}} -name release -type f
-         echo "TEST_JDK_HOME=$(dirname ${imageroot})" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+         $imageroot=$(find "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}" -name release -type f)
+         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
      - name: Smoke test
        uses: adoptium/run-aqa@v1
        with:
