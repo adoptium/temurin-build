@@ -684,21 +684,24 @@ generateSBoM() {
     done
   fi
 
-  echo "DEBUG START:"
-  echo $classpath
-  echo "DEBUG DONE!"
-
   # Run a series of SBOM API commands to generate the required SBOM
   local sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/sbom.json"
   # Clean any old json
   rm -f $sbomJson
+
+  echo "DEBUG START:"
+  echo $sbomJson
+  echo "DEBUG DONE!"
 
   JAVA_LOC="$PRODUCT_HOME/bin/java"
   local fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
   local fullVerOutput=$($JAVA_LOC -version 2>&1)
 
   # Create initial SBOM json
+  echo "DEBUG START:"
+  echo "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
+  echo "DEBUG DONE!"
 
   # Add Metadata object
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
