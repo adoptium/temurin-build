@@ -647,7 +647,7 @@ buildCyclonedxLib() {
 
   # Make Ant aware of cygwin path
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    ANTBUILDFILE=$(cygpath -m ${CYCLONEDB_DIR}/build.xml)
+    ANTBUILDFILE=$(cygpath -m "${CYCLONEDB_DIR}/build.xml")
   else
     ANTBUILDFILE="${CYCLONEDB_DIR}/build.xml"
   fi
