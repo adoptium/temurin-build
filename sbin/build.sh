@@ -678,14 +678,14 @@ generateSBoM() {
     classpath=$(cygpath -w "${classpath}")
     sbomJson=$(cygpath -w "${sbomJson}")
   fi
-  
+
   # Clean any old json
-  rm -f $sbomJson
+  rm -f "${sbomJson}"
   
   # Run a series of SBOM API commands to generate the required SBOM
 
   echo "DEBUG START:"
-  echo $sbomJson
+  echo "${sbomJson}"
   echo "DEBUG DONE!"
 
   JAVA_LOC="$PRODUCT_HOME/bin/java"
