@@ -645,8 +645,14 @@ buildCyclonedxLib() {
     exit 2
   fi
 
-  JAVA_HOME=${javaHome} ant -f "${CYCLONEDB_DIR}/build.xml" clean
-  JAVA_HOME=${javaHome} ant -f "${CYCLONEDB_DIR}/build.xml" build
+  # Make Ant aware of cygwin path
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    ANTBUILDFILE=$(cygpath -m ${CYCLONEDB_DIR}/build.xml)
+  else
+    ANTBUILDFILE="${CYCLONEDB_DIR}/build.xml"
+  fi
+  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" clean
+  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build
 }
 
 # Generate the SBoM
