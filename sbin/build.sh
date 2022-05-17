@@ -689,11 +689,6 @@ generateSBoM() {
   rm -f "${sbomJson}"
   
   # Run a series of SBOM API commands to generate the required SBOM
-
-  echo "DEBUG START:"
-  echo "${sbomJson}"
-  echo "DEBUG DONE!"
-
   JAVA_LOC="$PRODUCT_HOME/bin/java"
   local fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
   local fullVerOutput=$($JAVA_LOC -version 2>&1)
@@ -702,10 +697,14 @@ generateSBoM() {
   echo "DEBUG START:"
   echo "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
-  echo "DEBUG DONE!"
+
+  local cont=$(cat "${sbomJson}")
+  echo "Content of ${sbomJson}:\n${cont}"
 
   # Add Metadata object
+  echo "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
+  echo "DEBUG DONE!"
 
   # Add JDK Component
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "$sbomJson" --compName "JDK" --description "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
