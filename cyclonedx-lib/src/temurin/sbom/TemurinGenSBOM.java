@@ -237,6 +237,20 @@ public final class TemurinGenSBOM {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        if (verbose) {
+            System.out.println("DEBUG sbom.json START: ");
+            FileReader reader = new FileReader(fileName);
+            try {
+                int i;
+                while((i = reader.read()) != -1) {
+                    System.out.print((char)i);
+                }
+           } finally {
+                reader.close();
+                System.out.println("DEBUG sbom.json DONE");
+           }
+        }
     }
 
     static Bom readJSONfile(final String fileName) { 	                               // Returns parse bom

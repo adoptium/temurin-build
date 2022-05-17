@@ -696,15 +696,15 @@ generateSBoM() {
 
   # Create initial SBOM json
   echo "DEBUG START:"
-  echo "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
+  echo "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --verbose --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --verbose --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
 
   local cont=$(cat "${sbomJson}")
   echo "Content of ${sbomJson}:\n${cont}"
 
   # Add Metadata object
-  echo "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
+  echo "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --verbose --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --verbose --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
   echo "DEBUG DONE!"
 
   # Add JDK Component
