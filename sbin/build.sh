@@ -683,6 +683,7 @@ generateSBoM() {
       classpath+=$(cygpath -w "${jarfile}")";"
     done
     sbomJson=$(cygpath -w "${sbomJson}")
+    javaHome=$(cygpath -w "${javaHome}")
   fi
 
   # Clean any old json
