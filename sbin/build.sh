@@ -31,6 +31,7 @@ set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+
 # shellcheck source=sbin/prepareWorkspace.sh
 source "$SCRIPT_DIR/prepareWorkspace.sh"
 
@@ -44,6 +45,7 @@ source "$SCRIPT_DIR/common/constants.sh"
 source "$SCRIPT_DIR/common/common.sh"
 
 export LIB_DIR=$(crossPlatformRealPath "${SCRIPT_DIR}/../pipelines/")
+export CYCLONEDB_DIR="${SCRIPT_DIR}/../cyclonedx-lib"
 
 export jreTargetPath
 export CONFIGURE_ARGS=""
@@ -643,8 +645,8 @@ buildCyclonedxLib() {
     exit 2
   fi
 
-  JAVA_HOME=${javaHome} ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" clean
-  JAVA_HOME=${javaHome} ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" build
+  JAVA_HOME=${javaHome} ant -f "${CYCLONEDB_DIR}/build.xml" clean
+  JAVA_HOME=${javaHome} ant -f "${CYCLONEDB_DIR}/build.xml" build
 }
 
 # Generate the SBoM
@@ -663,7 +665,7 @@ generateSBoM() {
   fi
 
   # classpath to run CycloneDX java app TemurinGenSBOM
-  classpath="${WORKSPACE}/cyclonedx-lib/build/jar/temurin-gen-sbom.jar:${WORKSPACE}/cyclonedx-lib/build/jar/cyclonedx-core-java.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-core.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-dataformat-xml.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-databind.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-annotations.jar:${WORKSPACE}/cyclonedx-lib/build/jar/json-schema.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-codec.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-io.jar:${WORKSPACE}/cyclonedx-lib/build/jar/github-package-url.jar"
+  classpath="${CYCLONEDB_DIR}/build/jar/temurin-gen-sbom.jar:${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar:${CYCLONEDB_DIR}/build/jar/jackson-core.jar:${CYCLONEDB_DIR}/build/jar/jackson-dataformat-xml.jar:${CYCLONEDB_DIR}/build/jar/jackson-databind.jar:${CYCLONEDB_DIR}/build/jar/jackson-annotations.jar:${CYCLONEDB_DIR}/build/jar/json-schema.jar:${CYCLONEDB_DIR}/build/jar/commons-codec.jar:${CYCLONEDB_DIR}/build/jar/commons-io.jar:${CYCLONEDB_DIR}/build/jar/github-package-url.jar"
 
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" =~ .*cygwin.* ]]; then
     classpath="${classpath//jar:/jar;}"
