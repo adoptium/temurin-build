@@ -673,7 +673,6 @@ generateSBoM() {
   # classpath to run CycloneDX java app TemurinGenSBOM
   classpath="${CYCLONEDB_DIR}/build/jar/temurin-gen-sbom.jar:${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar:${CYCLONEDB_DIR}/build/jar/jackson-core.jar:${CYCLONEDB_DIR}/build/jar/jackson-dataformat-xml.jar:${CYCLONEDB_DIR}/build/jar/jackson-databind.jar:${CYCLONEDB_DIR}/build/jar/jackson-annotations.jar:${CYCLONEDB_DIR}/build/jar/json-schema.jar:${CYCLONEDB_DIR}/build/jar/commons-codec.jar:${CYCLONEDB_DIR}/build/jar/commons-io.jar:${CYCLONEDB_DIR}/build/jar/github-package-url.jar"
   sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/sbom.json"
-  local java="${javaHome}/bin/java"
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     classpath=""
     for jarfile in "${CYCLONEDB_DIR}/build/jar/temurin-gen-sbom.jar" "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" \
@@ -684,8 +683,7 @@ generateSBoM() {
       classpath+=$(cygpath -w "${jarfile}")";"
     done
     sbomJson=$(cygpath -w "${sbomJson}")
-    java="${javaHome}\bin\java"
-  fi 
+  fi
 
   # Clean any old json
   rm -f "${sbomJson}"
@@ -695,23 +693,21 @@ generateSBoM() {
   local fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
   local fullVerOutput=$($JAVA_LOC -version 2>&1)
 
-
-
   # Create initial SBOM json
   echo "DEBUG START:"
-  echo "${java}" -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
-  "${java}" -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
+  echo "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
 
   local cont=$(cat "${sbomJson}")
   echo "Content of ${sbomJson}:\n${cont}"
 
   # Add Metadata object
-  echo "${java}" -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
-  "${java}" -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
+  echo "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
   echo "DEBUG DONE!"
 
   # Add JDK Component
-  "${java}" -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "$sbomJson" --compName "JDK" --description "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "$sbomJson" --compName "JDK" --description "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
 
   # Add scmRef JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "scmRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
