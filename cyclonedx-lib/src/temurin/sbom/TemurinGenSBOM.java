@@ -101,7 +101,7 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addMetadata":                              // Adds Metadata Component --> name
-                bom = addMetadata(name, fileName);
+                bom = addMetadata(name, version, fileName);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -145,10 +145,19 @@ public final class TemurinGenSBOM {
         bom.addComponent(comp);
         return bom;
     }
-    static Bom addMetadata(final String name, final String fileName) {          // Method to store metadata -->  name
-        Bom bom = readJSONfile(fileName);
+    static Bom addMetadata(final String name, final String version, final String fileName) {          // Method to store metadata -->  name
+        Bom bom = new Bom(); // readJSONfile(fileName);
         Metadata meta = new Metadata();
         Component comp = new Component();
+        if (bom == null){
+
+            comp.setName(name);
+            comp.setVersion(version);
+            comp.setType(Component.Type.FRAMEWORK);
+            comp.setGroup("Eclipse Temurin");
+            comp.setAuthor("Vendor: Eclipse");
+            bom.addComponent(comp);
+        }
         comp.setName(name);
         comp.setType(Component.Type.FRAMEWORK);
         OrganizationalEntity org = new OrganizationalEntity();
