@@ -218,6 +218,14 @@ public final class TemurinGenSBOM {
 
     static String generateBomJson(final Bom bom) {
         BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_13, bom);
+        if(verbose) {
+            if(bom == null){
+                System.out.println("bom is Null");
+            }
+            if(bomGen == null) {
+                System.out.println("bomGen is Null");
+            }
+        }
         String json = bomGen.toJsonString();
         return json;
     }
