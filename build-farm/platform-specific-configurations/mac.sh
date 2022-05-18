@@ -86,7 +86,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
     elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8
       mkdir -p "$bootDir"
       releaseType="ga"
-      vendor="adoptium"
+      vendor="eclipse"
       apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/mac/\${ARCHITECTURE}/jdk/hotspot/normal/\${vendor}"
       apiURL=$(eval echo ${apiUrlTemplate})
       echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
