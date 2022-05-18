@@ -240,14 +240,17 @@ public final class TemurinGenSBOM {
 
         if (verbose) {
             System.out.println("DEBUG sbom.json START: ");
-            FileReader reader = new FileReader(fileName);
+            FileReader reader = null;
             try {
+                reader = new FileReader(fileName);
                 int i;
                 while((i = reader.read()) != -1) {
                     System.out.print((char)i);
                 }
-           } finally {
                 reader.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
                 System.out.println("DEBUG sbom.json DONE");
            }
         }
