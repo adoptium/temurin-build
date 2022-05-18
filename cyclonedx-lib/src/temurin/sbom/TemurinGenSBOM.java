@@ -16,6 +16,7 @@ package temurin.sbom;
 
 import org.cyclonedx.BomGeneratorFactory;
 import org.cyclonedx.CycloneDxSchema;
+// import org.cyclonedx.exception.GeneratorException;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.Property;
@@ -138,9 +139,9 @@ public final class TemurinGenSBOM {
         Component comp = new Component();
         comp.setName(name);
         comp.setVersion(version);
-        comp.setType(Component.Type.APPLICATION);
+        comp.setType(Component.Type.FRAMEWORK);
         comp.setGroup("Eclipse Temurin");
-        comp.setAuthor("Vendor: Adoptium");
+        comp.setAuthor("Vendor: Eclipse");
         bom.addComponent(comp);
         return bom;
     }
@@ -149,7 +150,7 @@ public final class TemurinGenSBOM {
         Metadata meta = new Metadata();
         Component comp = new Component();
         comp.setName(name);
-        comp.setType(Component.Type.APPLICATION);
+        comp.setType(Component.Type.FRAMEWORK);
         OrganizationalEntity org = new OrganizationalEntity();
         org.setName("Eclipse Foundation");
         org.setUrls(Collections.singletonList("https://www.eclipse.org/"));
@@ -217,7 +218,7 @@ public final class TemurinGenSBOM {
     }
 
     static String generateBomJson(final Bom bom) {
-        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_13, bom);
+        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_14, bom);
         if(verbose) {
             if(bom == null){
                 System.out.println("bom is Null");
@@ -272,7 +273,8 @@ public final class TemurinGenSBOM {
             bom = parser.parse(reader);
         } catch (Exception e) {
             e.printStackTrace();
+        } finally{
+           return bom;
         }
-        return bom;
     }
 }
