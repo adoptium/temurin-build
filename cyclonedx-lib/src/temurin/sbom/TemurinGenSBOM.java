@@ -228,6 +228,15 @@ public final class TemurinGenSBOM {
             }
         }
         String json = bomGen.toJsonString();
+        if(verbose) {
+            if (json != "") {
+                System.out.println("SBOM0: " + json);
+            } else if (json == null) {
+                System.out.println("SBOM0 is null");
+            } else {
+                System.out.println("SBOM0 is emtpy string");
+            }
+        }                     
         return json;
     }
 
