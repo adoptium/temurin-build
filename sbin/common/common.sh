@@ -129,6 +129,7 @@ createOpenJDKArchive()
   if which pigz > /dev/null 2>&1; then
     COMPRESS=pigz
   fi
+
   echo "Archiving and compressing with $COMPRESS"
 
   EXT=$(getArchiveExtension)
