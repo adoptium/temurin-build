@@ -16,7 +16,6 @@ package temurin.sbom;
 
 import org.cyclonedx.BomGeneratorFactory;
 import org.cyclonedx.CycloneDxSchema;
-// import org.cyclonedx.exception.GeneratorException;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.Property;
@@ -101,7 +100,7 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addMetadata":                              // Adds Metadata Component --> name
-                bom = addMetadata(name, version, fileName);
+                bom = addMetadata(name, fileName);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -145,21 +144,10 @@ public final class TemurinGenSBOM {
         bom.addComponent(comp);
         return bom;
     }
-    static Bom addMetadata(final String name, final String version, final String fileName) {          // Method to store metadata -->  name
-        Bom bom = new Bom(); // readJSONfile(fileName);
+    static Bom addMetadata(final String name, final String fileName) {          // Method to store metadata -->  name
+        Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
         Component comp = new Component();
-        if (bom == null){
-
-            comp.setName(name);
-            comp.setVersion(version);
-            comp.setType(Component.Type.FRAMEWORK);
-            comp.setGroup("Eclipse Temurin");
-            comp.setAuthor("Vendor: Eclipse");
-            bom.addComponent(comp);
-        }
-        comp.setName(name);
-        comp.setType(Component.Type.FRAMEWORK);
         OrganizationalEntity org = new OrganizationalEntity();
         org.setName("Eclipse Foundation");
         org.setUrls(Collections.singletonList("https://www.eclipse.org/"));
@@ -227,59 +215,21 @@ public final class TemurinGenSBOM {
     }
 
     static String generateBomJson(final Bom bom) {
+        // Use schema v14: https://cyclonedx.org/schema/bom-1.4.schema.json
         BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_14, bom);
-        if(verbose) {
-            if(bom == null){
-                System.out.println("bom is Null");
-            }
-            if(bomGen == null) {
-                System.out.println("bomGen is Null");
-            }
-        }
         String json = bomGen.toJsonString();
-        if(verbose) {
-            if (json != "") {
-                System.out.println("SBOM0: " + json);
-            } else if (json == null) {
-                System.out.println("SBOM0 is null");
-            } else {
-                System.out.println("SBOM0 is emtpy string");
-            }
-        }                     
         return json;
     }
 
     static void writeJSONfile(final Bom bom, final String fileName) {          // Creates testJson.json file
         FileWriter file;
         String json = generateBomJson(bom);
-
-        if (verbose) {
-            System.out.println("SBOM: " + json);
-        }
-
         try {
             file = new FileWriter(fileName);
             file.write(json);
             file.close();
         } catch (Exception e) {
             e.printStackTrace();
-        }
-
-        if (verbose) {
-            System.out.println("DEBUG sbom.json START: ");
-            FileReader reader = null;
-            try {
-                reader = new FileReader(fileName);
-                int i;
-                while((i = reader.read()) != -1) {
-                    System.out.print((char)i);
-                }
-                reader.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                System.out.println("DEBUG sbom.json DONE");
-           }
         }
     }
 
@@ -291,7 +241,7 @@ public final class TemurinGenSBOM {
             bom = parser.parse(reader);
         } catch (Exception e) {
             e.printStackTrace();
-        } finally{
+        } finally {
            return bom;
         }
     }
