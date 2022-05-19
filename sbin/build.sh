@@ -678,7 +678,8 @@ generateSBoM() {
     for jarfile in "${CYCLONEDB_DIR}/build/jar/temurin-gen-sbom.jar" "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" \
       "${CYCLONEDB_DIR}/build/jar/jackson-core.jar" "${CYCLONEDB_DIR}/build/jar/jackson-dataformat-xml.jar" \
       "${CYCLONEDB_DIR}/build/jar/jackson-databind.jar" "${CYCLONEDB_DIR}/build/jar/jackson-annotations.jar" \
-      "${CYCLONEDB_DIR}/build/jar/json-schema.jar" "${CYCLONEDB_DIR}/build/jar/commons-codec.jar" "${CYCLONEDB_DIR}/build/jar/commons-io.jar";
+      "${CYCLONEDB_DIR}/build/jar/json-schema.jar" "${CYCLONEDB_DIR}/build/jar/commons-codec.jar" "${CYCLONEDB_DIR}/build/jar/commons-io.jar" \
+      "${CYCLONEDB_DIR}/build/jar/github-package-url.jar" ;
     do
       classpath+=$(cygpath -w "${jarfile}")";"
     done
