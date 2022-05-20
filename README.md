@@ -1,3 +1,4 @@
+<!-- textlint-disable terminology -->
 # Repository for code and instructions for building OpenJDK binaries, defaulting to Eclipse Temurin™
 
 These scripts can be used to build OpenJDK anywhere but are primarily used by Eclipse Adoptium members (vendors) to build binaries. The scripts default to the use case of building Eclipse Temurin binaries which occurs on the build farm at <https://ci.adoptopenjdk.net>. Those binaries are then made available for consumption at <https://adoptium.net> and via the API <https://api.adoptium.net>.
@@ -274,7 +275,7 @@ general preparation.
 
 ### Building OpenJDK from a non-Adoptium repository
 
-These scripts default to using Adoptium as the OpenJDK source repo to build
+These scripts default to using Adoptium as the OpenJDK source repository to build
 from, but you can override this with the `-r` flag. If you want to run from a
 non-default branch you can also specify -b e.g.
 

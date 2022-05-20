@@ -1,3 +1,4 @@
+<!-- textlint-disable terminology -->
 # Temurin Release Guide
 
 Don't be scared off by this document! If you already understand the stuff in the glossary section and are only working on a HotSpot release, then skip to [Steps for every version](#steps-for-every-version) later on.
@@ -110,7 +111,6 @@ During the week before release we lock down the `openjdk-build` and `ci-jenkins-
 only include "critical" fixes (i.e. those which will otherwise cause a build
 break or other problem which will prevent shipping the release builds.
 This stops last minute changes going in which may destabilise things.
-e
 If a change has to go in during this "lockdown" period it should be done by
 posting a comment saying "Requesting approval to merge during the lockdown
 period. Please thumbs up the comment to approve". If two committers into the

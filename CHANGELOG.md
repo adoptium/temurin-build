@@ -1,3 +1,4 @@
+<!-- textlint-disable terminology -->
 # Changelog for openjdk-build scripts (DEPRECATED)
 
 ## DEPRECATION NOTES
