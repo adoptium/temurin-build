@@ -569,7 +569,7 @@ function configDefaults() {
 
   BUILD_CONFIG[CROSSCOMPILE]=false
 
-  # By default assume we have adopt patches applied to the repo
+  # By default assume we have Adoptium patches applied to the repo
   BUILD_CONFIG[ADOPT_PATCHES]=true
 
   BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false

@@ -144,7 +144,7 @@ Here are the steps:
    - Find the milestone build row, and click the "Grid" link
    - Check all tests are "Green", and if not "hover" over the icon and follow the Jenkins link to triage the errors...
    - Raise issues either at:
-     - [temurin-build](https://github.com/adoptium/temurin-build) or [openjdk-tests](https://github.com/AdoptOpenJDK/openjdk-tests) (for Adopt build or test issues)
+     - [temurin-build](https://github.com/adoptium/temurin-build) or [openjdk-tests](https://github.com/AdoptOpenJDK/openjdk-tests) (for Adoptium build or test issues)
      - [ci-jenkins-pipelines](https://github.com/adoptium/ci-jenkins-pipelines) (for jenkins pipelines specific issues)
      - [eclipse/openj9](https://github.com/eclipse-openj9/openj9) (for OpenJ9 issues)
 1. Discuss failing tests with [Shelley Lambert](https://github.com/smlambert)
@@ -269,7 +269,7 @@ At some point in a java version's lifecycle, the JDK version will be maintained 
 - [jdk-updates-dev](https://mail.openjdk.java.net/mailman/listinfo/jdk-updates-dev)
 When this occurs, usually a TSC member will create the `jdk<version>u` update repo ([example of the JDK11u one](https://github.com/adopium/openjdk-jdk11u)) via our Skara mirroring jobs that pull in the commit and tag info from the Mercurial repository. To find out more about Skara and our other mirroring jobs, see https://github.com/adoptium/mirror-scripts.
 
-*New Adopt mirror repo creation, by an Adoptium github Admin:*
+*New Adoptium mirror repo creation, by an Adoptium github Admin:*
 
 1. Create a new empty repo adoptium/openjdk-jdkNNu
 2. Rename mirror job from https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/git-skara-jdkNN to https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/git-skara-jdkNNu

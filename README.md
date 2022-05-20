@@ -57,7 +57,7 @@ This repository contains several useful scripts in order to build OpenJDK
 personally or at build farm scale.
 
 1. The `build-farm` folder contains shell scripts for multi configuration Jenkins
-build jobs used for building Adopt OpenJDK binaries.
+build jobs used for building Adoptium OpenJDK binaries.
 1. The `docker` folder contains tools for generating dockerfiles which can be used as part of building
 OpenJDK inside a Docker container.
 1. The `git-hg` folder has now been moved to it's own separate repository. See [openjdk-mirror-scripts](https://github.com/adoptium/mirror-scripts).
@@ -72,7 +72,7 @@ file that's used to enable SSL connections.
 
 ## The makejdk-any-platform.sh script
 
-`makejdk-any-platform.sh` is the entry point for building (Adopt) OpenJDK binaries.
+`makejdk-any-platform.sh` is the entry point for building (Adoptium) OpenJDK binaries.
 Building natively or in a docker container are both supported. This script (and
 its supporting scripts) have defaults, but you can override these as needed.
 The scripts will auto detect the platform and architecture it is running on and
@@ -334,7 +334,7 @@ Alongside the built assets a metadata file will be created with info about the b
 
 The Metadata class is contained in the [Metadata.groovy](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/library/src/common/MetaData.groovy) file and the Json is constructed and written in the [openjdk_build_pipeline.groovy](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy) file.
 
-It is worth noting the additional tags on the semver is the adopt build number.
+It is worth noting the additional tags on the semver is the build number.
 
 Below are all of the keys contained in the metadata file and some example values that can be present.
 

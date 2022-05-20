@@ -44,7 +44,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       echo "Could not use ${BOOT_JDK_VARIABLE} - using /cygdrive/c/openjdk/jdk-${JDK_BOOT_VERSION}"
       # shellcheck disable=SC2140
       export "${BOOT_JDK_VARIABLE}"="/cygdrive/c/openjdk/jdk-${JDK_BOOT_VERSION}"
-    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
+    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8
       # This is needed to convert x86-32 to x32 which is what the API uses
       export downloadArch
       case "$ARCHITECTURE" in

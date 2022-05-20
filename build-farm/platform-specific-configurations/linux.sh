@@ -142,7 +142,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       echo "Could not use ${BOOT_JDK_VARIABLE} - using /usr/lib/jvm/jdk-${JDK_BOOT_VERSION}"
       # shellcheck disable=SC2140
       export "${BOOT_JDK_VARIABLE}"="/usr/lib/jvm/jdk-${JDK_BOOT_VERSION}"
-    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
+    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8
       mkdir -p "$bootDir"
       releaseType="ga"
       vendor="adoptium"
