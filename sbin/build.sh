@@ -939,6 +939,11 @@ getStaticLibsArchivePath() {
   echo "${jdkArchivePath}-static-libs"
 }
 
+getSbomArchivePath(){
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}/metadata/sbom.json"
+}
+
 # Clean up
 removingUnnecessaryFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
@@ -1449,6 +1454,7 @@ createOpenJDKTarArchive() {
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
   local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
+  local sbomTargetPath=${getSbomArchivePath}
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
@@ -1488,6 +1494,11 @@ createOpenJDKTarArchive() {
     local staticLibsImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed "s/-jdk/${staticLibsTag}/g")
     echo "OpenJDK static libs archive file name will be ${staticLibsImageName}."
     createArchive "${staticLibsImageTargetPath}" "${staticLibsImageName}"
+  fi
+  if [ -d "${sbomTargetPath}" ]; then
+    echo "OpenJDK SBOM path will be ${sbomTargetPath}."
+    local sbomName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}")
+    createArchive "${sbomTargetPath}" "${sbomName}"
   fi
   # for macOS system, code sign directory before creating tar.gz file
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ] && [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
