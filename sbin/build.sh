@@ -1434,10 +1434,10 @@ createArchive() {
 
   archiveTarget=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${targetName}
 
-  echo "Your final archive was created at ${archive}"
+  echo "Your archive was created as ${archive}"
 
-  echo "Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}"
-  mv "${archive}" "${archiveTarget}"
+  echo "Moving the artifact to location ${archiveTarget}"
+  mv "${archive}" "${archiveTarget}"  # moving compressed file into a folder
 
   if [ -f "$archiveTarget" ] && [ -s "$archiveTarget" ] ; then
     echo "archive done."
@@ -1454,7 +1454,7 @@ createOpenJDKTarArchive() {
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
   local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
-  local sbomTargetPath=${getSbomArchivePath}
+  local sbomTargetPath=$(getSbomArchivePath)
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
