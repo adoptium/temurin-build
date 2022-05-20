@@ -6,7 +6,7 @@ These scripts can be used to build OpenJDK anywhere but are primarily used by Ec
 
 ## Where can I find the release status of Eclipse Temurin™ binaries?
 
-Go to the [Eclipse Adoptium Top Level Project Repo](https://www.github.com/adoptium/adoptium/issues) for release tracking.
+Go to the [Eclipse Adoptium Top Level Project repository](https://www.github.com/adoptium/adoptium/issues) for release tracking.
 
 ## TL;DR: I want to build a JDK NOW
 
@@ -127,7 +127,7 @@ specify any custom user configuration arguments, using
 temporary_speech_mark_placeholder in the place of any speech marks.
 
 --clean-git-repo
-clean out any 'bad' local git repo you already have.
+clean out any 'bad' local git repository you already have.
 
 --create-debug-image
 create a debug-image archive with the debug symbols.
@@ -334,7 +334,7 @@ Alongside the built assets a metadata file will be created with info about the b
 
 The Metadata class is contained in the [Metadata.groovy](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/library/src/common/MetaData.groovy) file and the Json is constructed and written in the [openjdk_build_pipeline.groovy](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy) file.
 
-It is worth noting the additional tags on the semver is the build number.
+It is worth noting the additional tags on the SemVer is the build number.
 
 Below are all of the keys contained in the metadata file and some example values that can be present.
 
@@ -428,7 +428,7 @@ Example values: [`202008210941`, `202010120348`, `202007272039`]
 - `scmRef:`
 Example values: [`dragonwell-8.4.4_jdk8u262-b10`, `jdk-16+19_adopt-61198-g59e3baa94ac`, `jdk-11.0.9+10_adopt-197-g11f44f68c5`, `23f997ca1`]  
 
-A reference the the base JDK repository being build, usually including a Github commit reference, i.e. `jdk-16+19_adopt-61198-g59e3baa94ac` links to `https://github.com/adoptium/openjdk-jdk/commit/59e3baa94ac` via the commit SHA **59e3baa94ac**.
+A reference the the base JDK repository being build, usually including a GitHub commit reference, i.e. `jdk-16+19_adopt-61198-g59e3baa94ac` links to `https://github.com/adoptium/openjdk-jdk/commit/59e3baa94ac` via the commit SHA **59e3baa94ac**.
 
 Values that only contain a commit reference such as `23f997ca1` are OpenJ9 commits on their respective JDK repositories, for example **23f997ca1** links to the commit `https://github.com/ibmruntimes/openj9-openjdk-jdk14/commit/23f997ca1.`
 

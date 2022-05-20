@@ -44,7 +44,7 @@ can be generated manually as well.
 1. `-bv` is removed, (long form `--variant` changes to `--build-variant`).
 1. `-c` (long form `--clean-docker-build`) added to build from a clean docker container.
 1. `-ca` changes to `-C`, (long form `--configure-args` stays the same).
-1. `--clean-git-repos`, added to clean out any 'bad' local git repo you already have.
+1. `--clean-git-repos`, added to clean out any 'bad' local git repository you already have.
 1. `-D` (long form `--docker`) added for building in a docker container.
 1. `-dsgc` is removed, (long form `--disable-shallow-git-clone` stays the same).
 1. `-ftd` changes to `-f`, (long form `--freetype-dir` stays the same).
@@ -52,7 +52,7 @@ can be generated manually as well.
 1. `--freetype-version`, specify the version of freetype you are building.
 1. `-h` (long form `--help`) added.
 1. `-i` (long form `--ignore-container`) added to ignore existing docker container.
-1. `-j, --jtreg` and `-js, --jtreg-subsets` are removed as tests should be run via the openjdk-tests repo / project.
+1. `-j, --jtreg` and `-js, --jtreg-subsets` are removed as tests should be run via the openjdk-tests repository / project.
 1. `-J` (long form `--jdk-boot-dir` added to set JDK boot dir.
 1. `-nc` (long form `--no-colour`) is removed.
 1. `-p` (long form `--processors`) added to set number of processors in docker build.
@@ -82,7 +82,7 @@ container.
 1. `--sudo` added to run the docker container as root.
 1. _docker-build.sh_ added.  This script is invoked for building (Adopt) OpenJDK
 binaries in a Docker container.
-1. _docker/jdk<X>/x86_64/ubuntu/Dockerfile_ updated for various bug fixes.
+1. _docker/jdk<X>/x86_64/ubuntu/Dockerfile_ updated for various bugfixes.
 1. _docker/jdk<X>/x86_64/ubuntu/dockerConfiguration.sh_ files added.  These
 contain Docker specific environment variables that the build scripts need (as
 opposed to falsely picking up the underlying native env).
