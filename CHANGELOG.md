@@ -53,7 +53,7 @@ can be generated manually as well.
 1. `--freetype-version`, specify the version of freetype you are building.
 1. `-h` (long form `--help`) added.
 1. `-i` (long form `--ignore-container`) added to ignore existing docker container.
-1. `-j, --jtreg` and `-js, --jtreg-subsets` are removed as tests should be run via the openjdk-tests repository / project.
+1. `-j, --jtreg` and `-js, --jtreg-subsets` are removed as tests should be run via the aqa-tests repository / project.
 1. `-J` (long form `--jdk-boot-dir` added to set JDK boot dir.
 1. `-nc` (long form `--no-colour`) is removed.
 1. `-p` (long form `--processors`) added to set number of processors in docker build.
