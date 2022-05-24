@@ -431,20 +431,6 @@ configureCommandParameters() {
 
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
-
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-      local addsDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/adds"
-
-      # This is unfortunately required as if the path does not start with "/cygdrive" the make scripts are unable to find the "/closed/adds" directory.
-      if ! echo "$addsDir" | grep -E -q "^/cygdrive/"; then
-        # BUILD_CONFIG[WORKSPACE_DIR] does not seem to be an absolute path, prepend /cygdrive/c/cygwin64/"
-        echo "Prepending /cygdrive/c/cygwin64/ to BUILD_CONFIG[WORKSPACE_DIR]"
-        addsDir="/cygdrive/c/cygwin64/$addsDir"
-      fi
-
-      echo "adding source route -with-add-source-root=${addsDir}"
-      addConfigureArg "--with-add-source-root=" "${addsDir}"
-    fi
   else
     echo "Building up the configure command..."
     buildingTheRestOfTheConfigParameters
