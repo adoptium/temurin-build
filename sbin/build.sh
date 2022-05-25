@@ -616,8 +616,10 @@ createOpenJDKFailureLogsArchive() {
     createArchive "${adoptLogArchiveDir}" "${makeFailureLogsName}"
 }
 
-# Build the CycloneDX Java library and app used for SBoM generation
-buildCyclonedxLib() {
+# Setup JAVA env to run "ant task"
+# cannot use ${BUILD_CONFIG[JDK_BOOT_DIR]} becuase for jdk8 build, it set to jdk7 which wont work with "ant" version
+# cannot use ${JDK_BOOT_DIR} because it overwritten to BUILD_CONFIG index, e.g 33
+setupAntEnv() {
   local javaHome=""
 
   if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
@@ -626,48 +628,48 @@ buildCyclonedxLib() {
     javaHome=${JDK8_BOOT_DIR}
   elif [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ]; then
     javaHome=${JDK11_BOOT_DIR}
-  elif [ ${JDK_BOOT_DIR+x} ] && [ -d "${JDK_BOOT_DIR}" ]; then # fall back to use JDK_BOOT_DIR which is set in make-adopt-build-farm.sh
-    javaHome=${JDK_BOOT_DIR}
   else
-    echo "Unable to find a suitable JAVA_HOME to build the cyclonedx-lib"
+    echo "Unable to find a suitable JAVA_HOME to build the cyclonedx-lib, see debug below:"
+    echo "JAVA_HOME: ${JAVA_HOME}"
+    ls -lat "${JAVA_HOME}"
+    echo "JDK8_BOOT_DIR: ${JDK8_BOOT_DIR}"
+    ls -lat "${JDK8_BOOT_DIR}"
+    echo "JDK11_BOOT_DIR: ${JDK11_BOOT_DIR}"
+    ls -lat "${JDK11_BOOT_DIR}"
+    echo "JAVA_HOME: ${JAVA_HOME}"
     exit 2
   fi
+  echo "${javaHome}"
+}
 
+# Build the CycloneDX Java library and app used for SBoM generation
+buildCyclonedxLib() {
+  local javaHome="${1}"
   # Make Ant aware of cygwin path
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     ANTBUILDFILE=$(cygpath -m "${CYCLONEDB_DIR}/build.xml")
   else
     ANTBUILDFILE="${CYCLONEDB_DIR}/build.xml"
   fi
+  echo "JAVA_HOME=${javaHome} ant -f ${ANTBUILDFILE} clean build"
   JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" clean
   JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build
 }
 
 # Generate the SBoM
 generateSBoM() {
-  local javaHome=""
-
-  if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
-    javaHome=${JAVA_HOME}
-  elif [ ${JDK8_BOOT_DIR+x} ] && [ -d "${JDK8_BOOT_DIR}" ]; then
-    javaHome=${JDK8_BOOT_DIR}
-  elif [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ]; then
-    javaHome=${JDK11_BOOT_DIR}
-  else
-    echo "Unable to find a suitable JAVA_HOME to run the TemurinGenSBOM app"
-    exit 2
-  fi
-
+  local javaHome="${1}"
   # classpath to run CycloneDX java app TemurinGenSBOM
-  classpath="${CYCLONEDB_DIR}/build/jar/temurin-gen-sbom.jar:${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar:${CYCLONEDB_DIR}/build/jar/jackson-core.jar:${CYCLONEDB_DIR}/build/jar/jackson-dataformat-xml.jar:${CYCLONEDB_DIR}/build/jar/jackson-databind.jar:${CYCLONEDB_DIR}/build/jar/jackson-annotations.jar:${CYCLONEDB_DIR}/build/jar/json-schema.jar:${CYCLONEDB_DIR}/build/jar/commons-codec.jar:${CYCLONEDB_DIR}/build/jar/commons-io.jar:${CYCLONEDB_DIR}/build/jar/github-package-url.jar"
+  CYCLONEDB_JAR_DIR="${CYCLONEDB_DIR}/build/jar"
+  classpath="${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar:${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar:${CYCLONEDB_JAR_DIR}/jackson-core.jar:${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar:${CYCLONEDB_JAR_DIR}/jackson-databind.jar:${CYCLONEDB_JAR_DIR}/jackson-annotations.jar:${CYCLONEDB_JAR_DIR}/json-schema.jar:${CYCLONEDB_JAR_DIR}/commons-codec.jar:${CYCLONEDB_JAR_DIR}/commons-io.jar:${CYCLONEDB_JAR_DIR}/github-package-url.jar"
   sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/sbom.json"
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     classpath=""
-    for jarfile in "${CYCLONEDB_DIR}/build/jar/temurin-gen-sbom.jar" "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" \
-      "${CYCLONEDB_DIR}/build/jar/jackson-core.jar" "${CYCLONEDB_DIR}/build/jar/jackson-dataformat-xml.jar" \
-      "${CYCLONEDB_DIR}/build/jar/jackson-databind.jar" "${CYCLONEDB_DIR}/build/jar/jackson-annotations.jar" \
-      "${CYCLONEDB_DIR}/build/jar/json-schema.jar" "${CYCLONEDB_DIR}/build/jar/commons-codec.jar" "${CYCLONEDB_DIR}/build/jar/commons-io.jar" \
-      "${CYCLONEDB_DIR}/build/jar/github-package-url.jar" ;
+    for jarfile in "${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar" "${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar" \
+      "${CYCLONEDB_JAR_DIR}/jackson-core.jar" "${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar" \
+      "${CYCLONEDB_JAR_DIR}/jackson-databind.jar" "${CYCLONEDB_JAR_DIR}/jackson-annotations.jar" \
+      "${CYCLONEDB_JAR_DIR}/json-schema.jar" "${CYCLONEDB_JAR_DIR}/commons-codec.jar" "${CYCLONEDB_JAR_DIR}/commons-io.jar" \
+      "${CYCLONEDB_JAR_DIR}/github-package-url.jar" ;
     do
       classpath+=$(cygpath -w "${jarfile}")";"
     done
@@ -1770,7 +1772,6 @@ fixJavaHomeUnderDocker
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
 parseArguments "$@"
-
 if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   buildTemplatedFile
   executeTemplatedFile
@@ -1778,8 +1779,11 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   addInfoToReleaseFile
   addInfoToJson
   if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
-    buildCyclonedxLib
-    generateSBoM
+    javaHome="$(setupAntEnv)"
+    echo "javaHome: ${javaHome}"
+    buildCyclonedxLib "${javaHome}"
+    generateSBoM "${javaHome}"
+    unset javaHome
   fi
   removingUnnecessaryFiles
   copyFreeFontForMacOS
@@ -1809,8 +1813,11 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   addInfoToReleaseFile
   addInfoToJson
   if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
-    buildCyclonedxLib
-    generateSBoM
+    javaHome="$(setupAntEnv)"
+    echo "javaHome: ${javaHome}"
+    buildCyclonedxLib "${javaHome}"
+    generateSBoM "${javaHome}"
+    unset javaHome
   fi
   removingUnnecessaryFiles
   copyFreeFontForMacOS
