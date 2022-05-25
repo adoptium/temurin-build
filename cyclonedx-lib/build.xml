@@ -21,8 +21,10 @@
 -->
 
         <!-- Dependency versions -->
-        <property name="cyclonedx-core-java-version" value="7.1.0"/>
-        <property name="jackson-version" value="2.12.4"/>
+        <property name="cyclonedx-core-java-version" value="7.1.4"/>
+        <property name="jackson-core-version" value="2.13.3"/>
+        <property name="jackson-annotations-version" value="2.13.3"/>
+        <property name="jackson-databind-version" value="2.13.3"/>
         <property name="json-schema-version" value="1.0.58"/>
         <property name="commons-codec-version" value="1.15"/>
         <property name="commons-io-version" value="2.11.0"/>
@@ -49,23 +51,23 @@
 	</target>
 
         <target name="download-jackson-core" unless="jackson-core_available">
-                <echo message="Downloading jackson-core version ${jackson-version}"/>
-                <download-file destdir="build/jar" destfile="jackson-core.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-version}/jackson-core-${jackson-version}.jar"/>
+                <echo message="Downloading jackson-core version ${jackson-core-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-core.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"/>
         </target>
 
         <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
-                <echo message="Downloading jackson-dataformat-xml version ${jackson-version}"/>
-                <download-file destdir="build/jar" destfile="jackson-dataformat-xml.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/dataformat/jackson-dataformat-xml/${jackson-version}/jackson-dataformat-xml-${jackson-version}.jar"/>
+                <echo message="Downloading jackson-dataformat-xml version ${jackson-databind-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-dataformat-xml.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/dataformat/jackson-dataformat-xml/${jackson-databind-version}/jackson-dataformat-xml-${jackson-databind-version}.jar"/>
         </target>
 
         <target name="download-jackson-databind" unless="jackson-databind_available">
-                <echo message="Downloading jackson-databind version ${jackson-version}"/>
-                <download-file destdir="build/jar" destfile="jackson-databind.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/${jackson-version}/jackson-databind-${jackson-version}.jar"/>
+                <echo message="Downloading jackson-databind version ${jackson-databind-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-databind.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/${jackson-databind-version}/jackson-databind-${jackson-databind-version}.jar"/>
         </target>
 
         <target name="download-jackson-annotations" unless="jackson-annotations_available">
-                <echo message="Downloading jackson-annotations version ${jackson-version}"/>
-                <download-file destdir="build/jar" destfile="jackson-annotations.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/${jackson-version}/jackson-annotations-${jackson-version}.jar"/>
+                <echo message="Downloading jackson-annotations version ${jackson-annotations-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-annotations.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/${jackson-annotations-version}/jackson-annotations-${jackson-annotations-version}.jar"/>
         </target>
 
         <target name="download-json-schema" unless="json-schema_available">
@@ -98,8 +100,8 @@
 
         <target name="compile">
                 <mkdir dir="build/classes"/>
-                <javac srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar"/>
-                <javac debug="true" debuglevel="lines,vars,source" srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar"/>
+                <javac srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar" includeantruntime="false"/>
+                <javac debug="true" debuglevel="lines,vars,source" srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar" includeantruntime="false"/>
         </target>
 
         <target name="jar">
@@ -111,8 +113,9 @@
                 </jar>
         </target>
 
-          <target name="run">
+        <target name="run">
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--createNewSBOM"/>
                   <arg value="--name"/>
                   <arg value="Temurin"/>
@@ -123,6 +126,7 @@
                 </java> 
                 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="JDK-info"/>
@@ -130,6 +134,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="JDK-info"/>
@@ -141,6 +146,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                   <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="JDK-info"/>
@@ -152,6 +158,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                   <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="JDK-info"/>
@@ -163,6 +170,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="JDK-info"/>
@@ -174,6 +182,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="Temurin Build"/>
@@ -181,6 +190,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="Temurin Build"/>
@@ -192,6 +202,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="Temurin Build"/>
@@ -203,6 +214,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="make-arguments"/>
@@ -212,6 +224,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="make-arguments"/>
@@ -223,6 +236,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="make-arguments"/>
@@ -234,6 +248,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="configure_arguments"/>
@@ -243,6 +258,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="configure_arguments"/>
@@ -254,6 +270,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="Temurin build scripts/source"/>
@@ -261,6 +278,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="Temurin build scripts/source"/>
@@ -272,6 +290,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="Temurin build scripts/source"/>
@@ -283,6 +302,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="docker container built"/>
@@ -292,6 +312,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="docker container built"/>
@@ -303,6 +324,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
                   <arg value="Built binary java-version string"/>
@@ -310,6 +332,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
                   <arg value="Built binary java-version string"/>
@@ -321,6 +344,7 @@
                   <arg value="testSBOM.json"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addExternalReference"/>
                   <arg value="--url"/>
                   <arg value="https://github.com/adoptium/jdk17/commit/a5afad28437"/>
@@ -332,6 +356,7 @@
                   <arg value="testSBOM.json"/>
                 </java> 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addExternalReference"/>
                   <arg value="--url"/>
                   <arg value="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-1.1.6.tar.bz2"/>
@@ -342,7 +367,8 @@
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
                 </java> 
-               <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
                   <arg value="--addMetadata"/>
                   <arg value="--metadataName"/>
                   <arg value="Eclipse Adoptium"/>

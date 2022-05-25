@@ -30,8 +30,8 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
   fi
 else
-  if [[ "$JAVA_FEATURE_VERSION" -ge 17 ]]; then
-    # JDK17 requires metal (included in full xcode)
+  if [[ "$JAVA_FEATURE_VERSION" -ge 17 ]] || [[ "${ARCHITECTURE}" == "aarch64" ]]; then
+    # JDK17 requires metal (included in full xcode) as does JDK11 on aarch64
     XCODE_SWITCH_PATH="/Applications/Xcode.app"
   else
     # Command line tools used from JDK9-JDK16
@@ -79,11 +79,10 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   # instead of BOOT_JDK_VARIABLE (no '$').
   export "${BOOT_JDK_VARIABLE}"="$bootDir/Contents/Home"
   if [ ! -x "$bootDir/Contents/Home/bin/javac" ]; then
-    if [ -x "/Library/Java/JavaVirtualMachines/adoptopenjdk-${JDK_BOOT_VERSION}/Contents/Home/bin/javac" ]; then
-      echo "Could not use ${BOOT_JDK_VARIABLE} - using /Library/Java/JavaVirtualMachines/adoptopenjdk-${JDK_BOOT_VERSION}/Contents/Home"
-      export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/adoptopenjdk-${JDK_BOOT_VERSION}/Contents/Home"
-    elif [[ ("$JDK_BOOT_VERSION" -ge 17) && ( -x "/Library/Java/JavaVirtualMachines/temurin-${JDK_BOOT_VERSION}.jdk/Contents/Home/bin/javac") ]]; then
-        export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/temurin-${JDK_BOOT_VERSION}.jdk/Contents/Home"
+    # To support multiple vendor names we set a jdk-* symlink pointing to the actual boot JDK
+    if [ -x "/Library/Java/JavaVirtualMachines/jdk-${JDK_BOOT_VERSION}/Contents/Home/bin/javac" ]; then
+      echo "Could not use ${BOOT_JDK_VARIABLE} - using /Library/Java/JavaVirtualMachines/jdk-${JDK_BOOT_VERSION}/Contents/Home"
+      export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/jdk-${JDK_BOOT_VERSION}/Contents/Home"
     elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
       mkdir -p "$bootDir"
       releaseType="ga"

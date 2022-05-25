@@ -111,6 +111,26 @@ then
 fi
 
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
+if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
+  if [ -d /opt/dragonwell8 ]; then
+    export "${BOOT_JDK_VARIABLE}"=/opt/dragonwell8
+  elif [ -d /usr/lib/jvm/dragonwell8 ]; then
+    export "${BOOT_JDK_VARIABLE}"=/usr/lib/jvm/dragonwell8
+  else
+    echo Dragonwell 8 requires a Dragonwell boot JDK - downloading one ...
+    mkdir -p "$PWD/jdk-8"
+    if [ "$(uname -m)" = "x86_64" ]; then
+      curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.11.12_jdk8u332-ga/Alibaba_Dragonwell_8.11.12_x64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+    elif [ "$(uname -m)" = "aarch64" ]; then
+      curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.8.9_jdk8u302-ga/Alibaba_Dragonwell_8.8.9_aarch64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+    else
+      echo "Unknown architecture $(uname -m) for building Dragonwell - cannot download boot JDK"
+      exit 1
+    fi
+    export "${BOOT_JDK_VARIABLE}"="$PWD/jdk-8"
+  fi
+fi
+
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
@@ -183,12 +203,12 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION
   export CXX=/usr/local/gcc9/bin/g++-9.3
   # Enable GCC 10 for Java 17+ for repeatable builds, but not for our supported releases
   # Ref https://github.com/adoptium/temurin-build/issues/2787
-elif [ "$JAVA_FEATURE_VERSION" -ge 17 ] && [ "${VARIANT}" != "${BUILD_VARIANT_OPENJ9}" ] && [ -r /usr/local/gcc10/bin/gcc-10.3 ]; then
+elif [ "$JAVA_FEATURE_VERSION" -ge 17 ] && [ -r /usr/local/gcc10/bin/gcc-10.3 ]; then
   export PATH=/usr/local/gcc10/bin:$PATH
   [ -r /usr/local/gcc10/bin/gcc-10.3 ] && export  CC=/usr/local/gcc10/bin/gcc-10.3
   [ -r /usr/local/gcc10/bin/g++-10.3 ] && export CXX=/usr/local/gcc10/bin/g++-10.3
   export LD_LIBRARY_PATH=/usr/local/gcc10/lib64:/usr/local/gcc10/lib
-elif [ "$JAVA_FEATURE_VERSION" -gt 17 ] && [ "${VARIANT}" != "${BUILD_VARIANT_OPENJ9}" ] && [ -r /usr/bin/gcc-10 ]; then
+elif [ "$JAVA_FEATURE_VERSION" -gt 17 ] && [ -r /usr/bin/gcc-10 ]; then
   [ -r /usr/bin/gcc-10 ] && export  CC=/usr/bin/gcc-10
   [ -r /usr/bin/g++-10 ] && export CXX=/usr/bin/g++-10
 # Continue to use GCC 7 if present for JDK<=17 and where 10 does not exist
