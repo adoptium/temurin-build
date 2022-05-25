@@ -37,3 +37,7 @@ export PATH=/opt/solarisstudio12.3/bin/:/opt/csw/bin/:/usr/ccs/bin:$PATH:/usr/sf
 export LC_ALL=C
 export HOTSPOT_DISABLE_DTRACE_PROBES=true
 export ENFORCE_CC_COMPILER_REV=5.12
+
+# sepcial handling for jdk8 build "ant" which must use jdk8+
+# to match the version we installed by ansible
+export JDK8_BOOT_DIR=/usr
