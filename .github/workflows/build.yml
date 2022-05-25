@@ -20,28 +20,32 @@ jobs:
       matrix:
         os: [linux]
         version: [jdk8u, jdk11u, jdk17u, jdk18u, jdk]
-        vm: [hotspot]
+        variant: [temurin]
         image: [adoptopenjdk/centos7_build_image]
         include:
           - os: alpine-linux
-            version: jdk16u
-            vm: hotspot
+            version: jdk8u
+            variant: temurin
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk11u
+            variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk17u
-            vm: hotspot
+            variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk18u
-            vm: hotspot
+            vm: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk
-            vm: hotspot
+            variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: linux
             version: jdk11u
-            vm: dragonwell
+            variant: dragonwell
             image: adoptopenjdk/centos7_build_image
           - os: linux
             version: jdk8u
@@ -49,11 +53,11 @@ jobs:
             image: adoptopenjdk/centos7_build_image
           - os: linux
             version: jdk11u
-            vm: fast_startup
+            variant: fast_startup
             image: adoptopenjdk/centos7_build_image
           - os: linux
             version: jdk11u
-            vm: bisheng
+            variant: bisheng
             image: adoptopenjdk/centos7_build_image
     steps:
     - uses: actions/checkout@v2
@@ -63,7 +67,7 @@ jobs:
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
-        VARIANT: ${{ matrix.vm }}
+        VARIANT: ${{ matrix.variant }}
         TARGET_OS: ${{ matrix.os }}
         FILENAME: OpenJDK.tar.gz
         # Don't set the OS as we use both linux and alpine-linux
@@ -72,7 +76,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       name: Collect and Archive Artifacts
       with:
-        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
         path: workspace/target/*
 
     - name: Unpack jdk
@@ -95,7 +99,7 @@ jobs:
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
-        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}_test_output"
+        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}_test_output"
         path: ./**/output_*/
 
   build_macos:
@@ -106,7 +110,7 @@ jobs:
       matrix:
         os: [macOS]
         version: [jdk8u, jdk11u]
-        vm: [hotspot]
+        variant: [temurin]
 
     steps:
     - uses: actions/checkout@v2
@@ -140,7 +144,7 @@ jobs:
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
-        VARIANT: ${{ matrix.vm }}
+        VARIANT: ${{ matrix.variant }}
         TARGET_OS: mac
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
@@ -148,7 +152,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       name: Collect and Archive Artifacts
       with:
-        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
         path: workspace/target/*
 
     - name: Unpack jdk
@@ -172,7 +176,7 @@ jobs:
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
-        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}_test_output"
+        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}_test_output"
         path: ./**/output_*/
 
   build_windows:
@@ -183,7 +187,7 @@ jobs:
        matrix:
          os: [windows-2019]
          version: [jdk]
-         vm: [hotspot]
+         variant: [temurin]
 
      steps:
      - name: Restore cygwin packages from cache
@@ -248,30 +252,30 @@ jobs:
        env:
          JAVA_TO_BUILD: ${{ matrix.version }}
          ARCHITECTURE: x64
-         VARIANT: ${{ matrix.vm }}
+         VARIANT: ${{ matrix.variant }}
          TARGET_OS: windows
          FILENAME: OpenJDK.zip
 
      - uses: actions/upload-artifact@v2
        name: Collect and Archive Artifacts
        with:
-         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
          path: workspace/target/*
 
      - name: Restore build artifacts
        uses: actions/download-artifact@v2
        with:
-         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
-         path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
+         path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
 
      - name: Unpack jdk
        run: |
-         unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}"
+         unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}"
 
      - name: Set root of jdk image dir
        shell: pwsh
        run: |
-         $imageroot=$(find "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}" -name release -type f)
+         $imageroot=$(find "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}" -name release -type f)
          echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
      - name: Smoke test
        uses: adoptium/run-aqa@v1
@@ -285,5 +289,5 @@ jobs:
        name: Collect and Archive SmokeTest Results
        if: failure()
        with:
-         name: "${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}_test_output"
+         name: "${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}_test_output"
          path: ./**/output_*/
