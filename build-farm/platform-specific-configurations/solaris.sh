@@ -28,6 +28,22 @@ elif [ "${ARCHITECTURE}" == "sparcv9" ]; then
   export CUPS="--with-cups=/opt/csw/lib/ --with-cups-include=/usr/local/cups-1.5.4-src"
   export FREETYPE="--with-freetype=/usr/local/"
   export MEMORY=16000
+  ####sepcial handling for jdk8 build "ant" which must use jdk8+
+  ######overwrite JDK${JDK_BOOT_VERSION}_BOOT_DIR where was set in make-adopt-build-farm.sh
+  ######to always use /usr/bin/java
+  BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
+  export "${BOOT_JDK_VARIABLE}"="/usr" # set to the value where in ansible we config as java 8 default path
+  # shellcheck disable=SC2155
+  export JDK_BOOT_DIR="$(eval echo "\$$BOOT_JDK_VARIABLE")"
+  "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
+  "$JDK_BOOT_DIR/bin/java" -version > /dev/null 2>&1
+  executedJavaVersion=$?
+  if [ $executedJavaVersion -ne 0 ]; then
+      echo "Failed to obtain or find a valid boot jdk"
+      exit 1
+  fi
+  "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
+  echo "Reset Boot jdk directory: ${JDK_BOOT_DIR}:"
 fi
 
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} ${CUPS} ${FREETYPE} --with-memory-size=${MEMORY}"
@@ -37,3 +53,4 @@ export PATH=/opt/solarisstudio12.3/bin/:/opt/csw/bin/:/usr/ccs/bin:$PATH:/usr/sf
 export LC_ALL=C
 export HOTSPOT_DISABLE_DTRACE_PROBES=true
 export ENFORCE_CC_COMPILER_REV=5.12
+
