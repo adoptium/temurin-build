@@ -1494,8 +1494,9 @@ createOpenJDKTarArchive() {
     createArchive "${staticLibsImageTargetPath}" "${staticLibsImageName}"
   fi
   if [ -d "${sbomTargetPath}" ]; then
-    # SBOM archive artifact as json file
+    # SBOM archive artifact as a .json file
     local sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}.json")
+    sbomTargetName="${sbomTargetName//\.tar\.gz/}"
     local sbomArchiveTarget=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${sbomTargetName}
     echo "OpenJDK SBOM will be ${sbomTargetName}."
     cp "${sbomTargetPath}/sbom.json" "${sbomArchiveTarget}"
