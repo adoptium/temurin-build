@@ -1207,8 +1207,8 @@ setPlistValueForMacOS() {
   local DIRECTORY="${1}"
   local TYPE="${2}"
 
-  # Only perform these steps for EF builds
-  if [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Adoptium" ]]; then
+  # Only perform these steps for Eclipse Adoptium jdk8 builds
+  if [["${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}"]] && [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Adoptium" ]]; then
     # SXA: Not changing these now as it may cause side effects
     # May relate to signing. Also cannot contain spaces
     VENDOR_NAME="temurin"
@@ -1787,6 +1787,7 @@ cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 parseArguments "$@"
 
 if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
+  configureCommandParameters
   buildTemplatedFile
   executeTemplatedFile
   printJavaVersionString
