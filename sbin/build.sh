@@ -1494,9 +1494,11 @@ createOpenJDKTarArchive() {
     createArchive "${staticLibsImageTargetPath}" "${staticLibsImageName}"
   fi
   if [ -d "${sbomTargetPath}" ]; then
-    echo "OpenJDK SBOM path will be ${sbomTargetPath}."
-    local sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}")
-    createArchive "${sbomTargetPath}" "${sbomTargetName}"
+    # SBOM archive artifact as json file
+    local sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}.json")
+    local sbomArchiveTarget=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${sbomTargetName}
+    echo "OpenJDK SBOM will be ${sbomTargetName}."
+    cp "${sbomTargetPath}/sbom.json" "${sbomArchiveTarget}"
   fi
   # for macOS system, code sign directory before creating tar.gz file
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ] && [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
