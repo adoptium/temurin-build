@@ -639,6 +639,8 @@ buildCyclonedxLib() {
   else
     ANTBUILDFILE="${CYCLONEDB_DIR}/build.xml"
   fi
+  echo "DEBUG ANT_HOME ${ANT_HOME}"
+  env
   JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" clean
   JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build
 }
