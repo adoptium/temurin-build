@@ -1088,7 +1088,7 @@ cleanAndMoveArchiveFiles() {
     deleteDebugSymbols
   fi
 
-  echo "Finished removing unnecessary files from ${jdkTargetPath}"
+  echo "Finished cleaning and moving archive files from ${jdkTargetPath}"
 }
 
 deleteDebugSymbols() {
