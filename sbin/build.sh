@@ -928,19 +928,21 @@ getStaticLibsArchivePath() {
 }
 
 getSbomArchivePath(){
-  # cannot use absolute path because the check in createOpenJDKArchive()
-  echo "../../../../../target/metadata/sbom.json"
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-sbom"
 }
 
-# Clean up
-removingUnnecessaryFiles() {
+# This function moves the archive files to their intended archive paths
+# and cleans unneeded files
+cleanAndMoveArchiveFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
   local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
+  local sbomTargetPath=$(getSbomArchivePath)
 
-  echo "Removing unnecessary files now..."
+  echo "Moving archive content to target archive paths and cleaning unnecessary files..."
 
   stepIntoTheWorkingDirectory
 
@@ -974,6 +976,15 @@ removingUnnecessaryFiles() {
     echo "moving ${testImagePath} to ${testImageTargetPath}"
     rm -rf "${testImageTargetPath}" || true
     mv "${testImagePath}" "${testImageTargetPath}"
+  fi
+
+  # If creating SBOM, move it to the target Sbom archive path
+  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
+    local sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/sbom.json"
+    echo "moving ${sbomJson} to ${sbomTargetPath}/sbom.json"
+    rm -rf "${sbomTargetPath}" || true
+    mkdir "${sbomTargetPath}"
+    mv "${sbomJson}" "${sbomTargetPath}"
   fi
 
   # Static libs image - check if the directory exists
@@ -1077,7 +1088,7 @@ removingUnnecessaryFiles() {
     deleteDebugSymbols
   fi
 
-  echo "Finished removing unnecessary files from ${jdkTargetPath}"
+  echo "Finished cleaning and moving archive files from ${jdkTargetPath}"
 }
 
 deleteDebugSymbols() {
@@ -1352,7 +1363,7 @@ getFirstTagFromOpenJDKGitRepo() {
 
   # Save current directory of caller so we can return to that directory at the end of this function.
   # Some callers are not in the git repo root, but instead build/*/images directory like the archive functions
-  # and any function called after removingUnnecessaryFiles().
+  # and any function called after cleanAndMoveArchiveFiles().
   local savePwd="${PWD}"
 
   # Change to openjdk git repo root to find build tag.
@@ -1441,7 +1452,7 @@ createOpenJDKTarArchive() {
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
   local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
-  local sbomFilePath=$(getSbomArchivePath)
+  local sbomTargetPath=$(getSbomArchivePath)
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
@@ -1482,10 +1493,13 @@ createOpenJDKTarArchive() {
     echo "OpenJDK static libs archive file name will be ${staticLibsImageName}."
     createArchive "${staticLibsImageTargetPath}" "${staticLibsImageName}"
   fi
-  echo "OpenJDK SBOM file is ${sbomFilePath}."
-  if [ -f "${sbomFilePath}" ]; then
-    local sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}")
-    createArchive "${sbomFilePath}" "${sbomTargetName}"
+  if [ -d "${sbomTargetPath}" ]; then
+    # SBOM archive artifact as a .json file
+    local sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}.json")
+    sbomTargetName="${sbomTargetName//\.tar\.gz/}"
+    local sbomArchiveTarget=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${sbomTargetName}
+    echo "OpenJDK SBOM will be ${sbomTargetName}."
+    cp "${sbomTargetPath}/sbom.json" "${sbomArchiveTarget}"
   fi
   # for macOS system, code sign directory before creating tar.gz file
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ] && [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
@@ -1781,7 +1795,7 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
     buildCyclonedxLib
     generateSBoM
   fi
-  removingUnnecessaryFiles
+  cleanAndMoveArchiveFiles
   copyFreeFontForMacOS
   setPlistForMacOS
   addNoticeFile
@@ -1812,7 +1826,7 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
     buildCyclonedxLib
     generateSBoM
   fi
-  removingUnnecessaryFiles
+  cleanAndMoveArchiveFiles
   copyFreeFontForMacOS
   setPlistForMacOS
   addNoticeFile
