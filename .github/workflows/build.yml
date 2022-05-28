@@ -245,6 +245,17 @@ jobs:
        run: echo "JDK7_BOOT_DIR=$(cygpath "${{ steps.setup-java7.outputs.path }}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
        if: matrix.version == 'jdk8u'
 
+     - name: Hold ANT_HOME value (from GH) to ANT_HOME2
+       run: echo "ANT_HOME_ORIGIN=${env:ANT_HOME}" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
+
+     - name: Export ANT to PATH(GITHUB_ENV)
+       run: echo "ANT_HOME=$(cygpath "${env:ANT_HOME}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
+
+     - name: Append ANT_HOME to PATH
+       run: |
+        "${env:ANT_HOME}/bin" >> ${env:GITHUB_PATH}
+       shell: pwsh
+
      - name: Build Windows
        run: |
          bash build-farm/make-adopt-build-farm.sh
@@ -277,6 +288,10 @@ jobs:
        run: |
          $imageroot=$(find "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}" -name release -type f)
          echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
+
+     - name: Reset ANT_HOME from ANT_HOME_ORIGIN for smoke test
+       run: echo "ANT_HOME=${env:ANT_HOME_ORIGIN}" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
+
      - name: Smoke test
        uses: adoptium/run-aqa@v1
        with:
