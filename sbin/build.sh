@@ -942,7 +942,7 @@ cleanAndMoveArchiveFiles() {
   local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
   local sbomTargetPath=$(getSbomArchivePath)
 
-  echo "Moving archive content to target archive paths and cleaning unecessary files..."
+  echo "Moving archive content to target archive paths and cleaning unnecessary files..."
 
   stepIntoTheWorkingDirectory
 
