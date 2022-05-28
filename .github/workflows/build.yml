@@ -287,7 +287,7 @@ jobs:
          echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
 
      - name: Unset ANT_HOME for smoke test
-       run: echo "ANT_HOME=''" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
+       run: echo "ANT_HOME=" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
 
      - name: Smoke test
        uses: adoptium/run-aqa@v1
