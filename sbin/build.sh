@@ -616,8 +616,8 @@ createOpenJDKFailureLogsArchive() {
     createArchive "${adoptLogArchiveDir}" "${makeFailureLogsName}"
 }
 
-# Build the CycloneDX Java library and app used for SBoM generation
-buildCyclonedxLib() {
+# Setup JAVA env to run "ant task"
+setupAntEnv() {
   local javaHome=""
 
   if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
@@ -626,12 +626,19 @@ buildCyclonedxLib() {
     javaHome=${JDK8_BOOT_DIR}
   elif [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ]; then
     javaHome=${JDK11_BOOT_DIR}
-  elif [ ${BUILD_CONFIG[JDK_BOOT_DIR]+x} ] && [ -d "${BUILD_CONFIG[JDK_BOOT_DIR]}" ]; then # fall back to use JDK_BOOT_DIR which is set in make-adopt-build-farm.sh
+  elif [ ${BUILD_CONFIG[JDK_BOOT_DIR]+x} ] && [ -d "${BUILD_CONFIG[JDK_BOOT_DIR]}" ]; then
+  # fall back to use JDK_BOOT_DIR which is set in make-adopt-build-farm.sh
     javaHome="${BUILD_CONFIG[JDK_BOOT_DIR]}"
   else
     echo "Unable to find a suitable JAVA_HOME to build the cyclonedx-lib"
     exit 2
   fi
+  echo "${javaHome}"
+}
+
+# Build the CycloneDX Java library and app used for SBoM generation
+buildCyclonedxLib() {
+  local javaHome="${1}"
 
   # Make Ant aware of cygwin path
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
@@ -645,31 +652,19 @@ buildCyclonedxLib() {
 
 # Generate the SBoM
 generateSBoM() {
-  local javaHome=""
-
-  if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
-    javaHome=${JAVA_HOME}
-  elif [ ${JDK8_BOOT_DIR+x} ] && [ -d "${JDK8_BOOT_DIR}" ]; then
-    javaHome=${JDK8_BOOT_DIR}
-  elif [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ]; then
-    javaHome=${JDK11_BOOT_DIR}
-  elif [ ${BUILD_CONFIG[JDK_BOOT_DIR]+x} ] && [ -d "${BUILD_CONFIG[JDK_BOOT_DIR]}" ]; then # fall back to use JDK_BOOT_DIR which is set in make-adopt-build-farm.sh
-    javaHome="${BUILD_CONFIG[JDK_BOOT_DIR]}"
-  else
-    echo "Unable to find a suitable JAVA_HOME to run the TemurinGenSBOM app"
-    exit 2
-  fi
+  local javaHome="${1}"
 
   # classpath to run CycloneDX java app TemurinGenSBOM
-  classpath="${CYCLONEDB_DIR}/build/jar/temurin-gen-sbom.jar:${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar:${CYCLONEDB_DIR}/build/jar/jackson-core.jar:${CYCLONEDB_DIR}/build/jar/jackson-dataformat-xml.jar:${CYCLONEDB_DIR}/build/jar/jackson-databind.jar:${CYCLONEDB_DIR}/build/jar/jackson-annotations.jar:${CYCLONEDB_DIR}/build/jar/json-schema.jar:${CYCLONEDB_DIR}/build/jar/commons-codec.jar:${CYCLONEDB_DIR}/build/jar/commons-io.jar:${CYCLONEDB_DIR}/build/jar/github-package-url.jar"
+  CYCLONEDB_JAR_DIR="${CYCLONEDB_DIR}/build/jar"
+  classpath="${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar:${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar:${CYCLONEDB_JAR_DIR}/jackson-core.jar:${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar:${CYCLONEDB_JAR_DIR}/jackson-databind.jar:${CYCLONEDB_JAR_DIR}/jackson-annotations.jar:${CYCLONEDB_JAR_DIR}/json-schema.jar:${CYCLONEDB_JAR_DIR}/commons-codec.jar:${CYCLONEDB_JAR_DIR}/commons-io.jar:${CYCLONEDB_JAR_DIR}/github-package-url.jar"
   sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/sbom.json"
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     classpath=""
-    for jarfile in "${CYCLONEDB_DIR}/build/jar/temurin-gen-sbom.jar" "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" \
-      "${CYCLONEDB_DIR}/build/jar/jackson-core.jar" "${CYCLONEDB_DIR}/build/jar/jackson-dataformat-xml.jar" \
-      "${CYCLONEDB_DIR}/build/jar/jackson-databind.jar" "${CYCLONEDB_DIR}/build/jar/jackson-annotations.jar" \
-      "${CYCLONEDB_DIR}/build/jar/json-schema.jar" "${CYCLONEDB_DIR}/build/jar/commons-codec.jar" "${CYCLONEDB_DIR}/build/jar/commons-io.jar" \
-      "${CYCLONEDB_DIR}/build/jar/github-package-url.jar" ;
+    for jarfile in "${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar" "${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar" \
+      "${CYCLONEDB_JAR_DIR}/jackson-core.jar" "${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar" \
+      "${CYCLONEDB_JAR_DIR}/jackson-databind.jar" "${CYCLONEDB_JAR_DIR}/jackson-annotations.jar" \
+      "${CYCLONEDB_JAR_DIR}/json-schema.jar" "${CYCLONEDB_JAR_DIR}/commons-codec.jar" "${CYCLONEDB_JAR_DIR}/commons-io.jar" \
+      "${CYCLONEDB_JAR_DIR}/github-package-url.jar" ;
     do
       classpath+=$(cygpath -w "${jarfile}")";"
     done
@@ -1794,8 +1789,10 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   addInfoToReleaseFile
   addInfoToJson
   if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
-    buildCyclonedxLib
-    generateSBoM
+    javaHome="$(setupAntEnv)"
+    buildCyclonedxLib "${javaHome}"
+    generateSBoM "${javaHome}"
+    unset javaHome
   fi
   cleanAndMoveArchiveFiles
   copyFreeFontForMacOS
@@ -1825,8 +1822,10 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   addInfoToReleaseFile
   addInfoToJson
   if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
-    buildCyclonedxLib
-    generateSBoM
+    javaHome="$(setupAntEnv)"
+    buildCyclonedxLib "${javaHome}"
+    generateSBoM "${javaHome}"
+    unset javaHome
   fi
   cleanAndMoveArchiveFiles
   copyFreeFontForMacOS
