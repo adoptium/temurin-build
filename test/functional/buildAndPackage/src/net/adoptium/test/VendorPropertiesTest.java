@@ -222,7 +222,7 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVersion(final String value) {
-            assertTrue(value.contains("openj9"));
+            assertTrue(value.toLowerCase().contains("openj9"));
         }
 
         @Override
@@ -241,7 +241,11 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVendorUrlBug(final String value) {
-            assertEquals(value, "https://github.com/ibmruntimes/Semeru-Runtimes/issues");
+            if (JDK_VERSION.isNewerOrEqual(11)) {
+                assertEquals(value, "https://github.com/ibmruntimes/Semeru-Runtimes/issues");
+            } else {
+                assertEquals(value, null);
+            }
         }
 
         @Override

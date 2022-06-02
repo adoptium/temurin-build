@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static net.adoptium.test.JdkPlatform.OperatingSystem;
+import static net.adoptium.test.JdkVersion.VM;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -67,7 +68,7 @@ public class BundledFreetypeTest {
         }
 
         Pattern freetypePattern
-            = Pattern.compile("(.*)?freetype\\.(dll|dylib|so)$");
+            = Pattern.compile("(.*)?freetype(\\.(\\d)+)?\\.(dll|dylib|so)$");
         Set<String> freetypeFiles = Files.walk(Paths.get(testJdkHome))
                 .map(Path::toString)
                 .filter(name -> freetypePattern.matcher(name).matches())
@@ -80,7 +81,7 @@ public class BundledFreetypeTest {
             assertTrue(freetypeFiles.size() > 0,
               "Expected freetype.dll to be bundled, but it is not.");
         } else if (jdkPlatform.runsOn(OperatingSystem.AIX)
-                && jdkVersion.isNewerOrEqual(13)) {
+                && (jdkVersion.isNewerOrEqual(13) || (jdkVersion.usesVM(VM.OPENJ9) && jdkVersion.isNewerOrEqual(11)))) {
             assertTrue(freetypeFiles.size() > 0,
               "Expected libfreetype.so to be bundled, but it is not.");
         } else {
