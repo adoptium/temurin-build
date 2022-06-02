@@ -98,13 +98,13 @@ then
 
         if [ $ret -ne 0 ] || [[ ! $fileContents =~ $contentsErrorRegex ]]
         then
-            # If there is no user platform config, use adopt's as a default instead
-            echo "[WARNING] Failed to download a user platform configuration file. Downloading Adopt's ${OPERATING_SYSTEM}.sh configuration file instead."
+            # If there is no user platform config, use Adoptium's as a default instead
+            echo "[WARNING] Failed to download a user platform configuration file. Downloading Adoptium's ${OPERATING_SYSTEM}.sh configuration file instead."
             downloadPlatformConfigFile "${ADOPT_PLATFORM_CONFIG_LOCATION}" "${OPERATING_SYSTEM}.sh"
 
             if [ $ret -ne 0 ] || [[ ! $fileContents =~ $contentsErrorRegex ]]
             then
-                echo "[ERROR] Failed to download a platform configuration file from User and Adopt's repositories"
+                echo "[ERROR] Failed to download a platform configuration file from User and Adoptium's repositories"
                 exit 2
             fi
         fi

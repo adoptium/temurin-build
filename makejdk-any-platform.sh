@@ -19,7 +19,7 @@
 
 ################################################################################
 #
-# Entry point to build (Adopt) OpenJDK binaries for any platform.
+# Entry point to build (Adoptium) OpenJDK binaries for any platform.
 #
 # 1. Source scripts to support configuration, docker builds and native builds.
 # 2. Parse the Command Line Args
@@ -47,7 +47,7 @@ source "${SCRIPT_DIR}/native-build.sh"
 # shellcheck source=configureBuild.sh
 source "${SCRIPT_DIR}/configureBuild.sh"
 
-echo "Starting $0 to configure, build (Adopt)OpenJDK binary"
+echo "Starting $0 to configure, build (Adoptium)OpenJDK binary"
 
 # Configure the build, display the parameters and write the config to disk
 # see ${SCRIPT_DIR}/sbin/common/config_init.sh for details
@@ -57,7 +57,7 @@ writeConfigToFile
 # Store params to this script as "buildinfo"
 echo "$@" > ./workspace/config/makejdk-any-platform.args
 
-# Let's build and test the (Adopt) OpenJDK binary in Docker or natively
+# Let's build and test the (Adoptium) OpenJDK binary in Docker or natively
 if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
   buildOpenJDKViaDocker
 else
