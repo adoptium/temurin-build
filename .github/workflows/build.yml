@@ -1,8 +1,8 @@
 name: Build
 
 on:
-  pull_request:
-    branches: [ master ]
+  push:
+    branches-ignore: [ master ]
 
 # Cancel existing runs if user makes another push.
 concurrency:
