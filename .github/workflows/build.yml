@@ -186,7 +186,7 @@ jobs:
        fail-fast: false
        matrix:
          os: [windows-2019]
-         version: [jdk]
+         version: [jdk8u, jdk11u, jdk17u]
          variant: [temurin]
 
      steps:
@@ -203,15 +203,17 @@ jobs:
          Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
          Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages autoconf,automake,bsdtar,cpio,curl,gcc-core,git,gnupg,grep,libtool,make,mingw64-x86_64-gcc-core,perl,rsync,unzip,wget,zip --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
 
-     - uses: actions/setup-java@v1
+     - uses: actions/setup-java@v3
        id: setup-java7
        with:
+         distribution: 'zulu'
          java-version: 7
        if: matrix.version == 'jdk8u'
 
-     - uses: actions/setup-java@v1
+     - uses: actions/setup-java@v3
        id: setup-java11
        with:
+         distribution: 'temurin'
          java-version: 11
 
      - name: Install Git
@@ -221,11 +223,6 @@ jobs:
 
      - name: Set PATH
        run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
-
-     - name: Install Visual Studio 2013
-       run: |
-         choco install visualstudiocommunity2013
-       if: matrix.version == 'jdk8u'
 
      - name: Cygwin git configuration
        shell: bash
