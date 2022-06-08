@@ -189,6 +189,9 @@ jobs:
          version: [jdk8u, jdk11u, jdk17u]
          variant: [temurin]
 
+     env:
+      VS2017_URL: "https://github.com/akashche/msvs_2017_installer_bootstrap/raw/master/vs_community__7955ddbf8a9b49dda0f8d18876e93bd2.exe"
+
      steps:
      - name: Restore cygwin packages from cache
        id: cygwin
@@ -215,6 +218,37 @@ jobs:
        with:
          distribution: 'temurin'
          java-version: 11
+
+     - name: Restore Visual Studio 2017 from cache
+       id: vs2017
+       uses: actions/cache@v2
+       with:
+         path: ~/vs2017.exe
+         key: vs2017
+
+     - name: Uninstall WinSDKs
+       run: >
+         Start-Process -FilePath 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe' -Wait -NoNewWindow -ArgumentList
+         'modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.18362
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.19041
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.20348
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.22000
+         --quiet'
+
+     - name: Download Visual Studio 2017
+       run: |
+         curl -L "$env:VS2017_URL" -o "$HOME/$env:VS2017_FILENAME"
+       if: steps.vs2017.outputs.cache-hit != 'true'
+
+     - name: Install Visual Studio 2017
+       run: >
+         Start-Process -FilePath "$HOME\$env:VS2017_FILENAME" -Wait -NoNewWindow -ArgumentList
+         'install --productId Microsoft.VisualStudio.Product.Community --channelId VisualStudio.15.Release
+         --add Microsoft.VisualStudio.Workload.NativeDesktop
+         --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
+         --add Microsoft.VisualStudio.Component.Windows10SDK.17763
+         --quiet --wait'
 
      - name: Install Git
        run: |
