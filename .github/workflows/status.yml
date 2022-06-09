@@ -1,0 +1,24 @@
+name: Status Checker
+on:
+  pull_request_target:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Check CI
+        id: check-ci
+        uses: LASER-Yi/workflow-status@v0.0.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: build.yml
+          repo: ${{ github.repository }}
+          branch: ${{ github.ref }}
+          event: push
+          
+      - name: Release
+        if: ${{ steps.check-ci.outputs.conclusion == 'success' }}
+        run: echo ${{ steps.check-ci.outputs.status }}
