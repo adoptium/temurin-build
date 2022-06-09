@@ -189,7 +189,7 @@ then
   fi
 fi
 
-echo "Boot jdk directory: ${JDK_BOOT_DIR}:"
+echo "Boot jdk directory: ${JDK_BOOT_DIR}"
 "${JDK_BOOT_DIR}/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 java -version 2>&1 | sed 's/^/JDK IN PATH: /g'
 
