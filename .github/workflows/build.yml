@@ -186,7 +186,7 @@ jobs:
        fail-fast: false
        matrix:
          os: [windows-2019]
-         version: [jdk8u, jdk11u, jdk17u]
+         version: [jdk8u, jdk11u, jdk17u, jdk]
          variant: [temurin]
 
      env:
