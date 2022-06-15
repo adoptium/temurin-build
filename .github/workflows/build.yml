@@ -186,8 +186,11 @@ jobs:
        fail-fast: false
        matrix:
          os: [windows-2019]
-         version: [jdk]
+         version: [jdk8u, jdk11u, jdk17u, jdk]
          variant: [temurin]
+
+     env:
+      VS2017_URL: "https://github.com/akashche/msvs_2017_installer_bootstrap/raw/master/vs_community__7955ddbf8a9b49dda0f8d18876e93bd2.exe"
 
      steps:
      - name: Restore cygwin packages from cache
@@ -203,16 +206,52 @@ jobs:
          Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
          Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages autoconf,automake,bsdtar,cpio,curl,gcc-core,git,gnupg,grep,libtool,make,mingw64-x86_64-gcc-core,perl,rsync,unzip,wget,zip --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
 
-     - uses: actions/setup-java@v1
+     - uses: actions/setup-java@v3
        id: setup-java7
        with:
+         distribution: 'zulu'
          java-version: 7
        if: matrix.version == 'jdk8u'
 
-     - uses: actions/setup-java@v1
+     - uses: actions/setup-java@v3
        id: setup-java11
        with:
+         distribution: 'temurin'
          java-version: 11
+
+     - name: Restore Visual Studio 2017 from cache
+       id: vs2017
+       if: matrix.version == 'jdk8u' || matrix.version == 'jdk11u'
+       uses: actions/cache@v2
+       with:
+         path: ~/vs2017.exe
+         key: vs2017
+
+     - name: Uninstall WinSDKs
+       if: matrix.version == 'jdk8u' || matrix.version == 'jdk11u'
+       run: >
+         Start-Process -FilePath 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe' -Wait -NoNewWindow -ArgumentList
+         'modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.18362
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.19041
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.20348
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.22000
+         --quiet'
+
+     - name: Download Visual Studio 2017
+       run: |
+         curl -L "$env:VS2017_URL" -o "$HOME/vs2017.exe"
+       if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u' || matrix.version == 'jdk11u'
+
+     - name: Install Visual Studio 2017
+       if: matrix.version == 'jdk8u' || matrix.version == 'jdk11u'
+       run: >
+         Start-Process -FilePath "$HOME\vs2017.exe" -Wait -NoNewWindow -ArgumentList
+         'install --productId Microsoft.VisualStudio.Product.Community --channelId VisualStudio.15.Release
+         --add Microsoft.VisualStudio.Workload.NativeDesktop
+         --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
+         --add Microsoft.VisualStudio.Component.Windows10SDK.17763
+         --quiet --wait'
 
      - name: Install Git
        run: |
@@ -221,11 +260,6 @@ jobs:
 
      - name: Set PATH
        run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
-
-     - name: Install Visual Studio 2013
-       run: |
-         choco install visualstudiocommunity2013
-       if: matrix.version == 'jdk8u'
 
      - name: Cygwin git configuration
        shell: bash

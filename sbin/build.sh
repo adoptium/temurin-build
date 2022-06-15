@@ -135,6 +135,15 @@ getOpenJDKUpdateAndBuildVersion() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
 
+patchFreetypeWindows() {
+  # Allows freetype to be built for JDK8u (see https://github.com/openjdk/jdk8u-dev/pull/3#issuecomment-1087677766)
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+    rm "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
+    # Copy the replacement freetype.vcxproj file from the .github directory
+    cp "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.github/workflows/freetype.vcxproj" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
+  fi
+}
+
 getOpenJdkVersion() {
   local version
 
@@ -1812,6 +1821,9 @@ configureWorkspace
 
 echo "build.sh : $(date +%T) : Initiating build ..."
 getOpenJDKUpdateAndBuildVersion
+if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+  patchFreetypeWindows
+fi
 configureCommandParameters
 buildTemplatedFile
 executeTemplatedFile
