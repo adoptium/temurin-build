@@ -101,7 +101,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
             retVal=$?
             set -e
             if [ $retVal -eq 0 ]; then
-              break
+              break 3
             fi
           done
         done
