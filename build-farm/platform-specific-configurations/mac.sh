@@ -88,10 +88,10 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       for releaseType in "ga" "ea"
       do
         # shellcheck disable=SC2034
-        for vendor1 in "adiptium" "adoptopenjdk"
+        for vendor1 in "adoptium" "adoptopenjdk"
         do
           # shellcheck disable=SC2034
-          for vendor2 in "eclipe" "adiptium" "adoptopenjdk"
+          for vendor2 in "eclipse" "adoptium" "adoptopenjdk"
           do
             apiUrlTemplate="https://api.\${vendor1}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/mac/\${ARCHITECTURE}/jdk/hotspot/normal/\${vendor2}"
             apiURL=$(eval echo ${apiUrlTemplate})
