@@ -85,43 +85,27 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/jdk-${JDK_BOOT_VERSION}/Contents/Home"
     elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8
       mkdir -p "$bootDir"
-      releaseType="ga"
-      vendor="adoptium"
-      apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/mac/\${ARCHITECTURE}/jdk/hotspot/normal/\${vendor}"
-      apiURL=$(eval echo ${apiUrlTemplate})
-      echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
-      # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
-      # the fallback mechanism, as downloading of the GA binary might fail.
-      set +e
-      wget -q -O "${JDK_BOOT_VERSION}.tgz" "${apiURL}" && tar xpzf "${JDK_BOOT_VERSION}.tgz" --strip-components=1 -C "$bootDir" && rm "${JDK_BOOT_VERSION}.tgz"
-      retVal=$?
-      set -e
-      if [ $retVal -ne 0 ]; then
-        # We must be a JDK HEAD build for which no boot JDK exists other than
-        # nightlies?
-        echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} failed."
+      for releaseType in "ga" "ea"
+      do
         # shellcheck disable=SC2034
-        releaseType="ea"
-        # shellcheck disable=SC2034
-        vendor="adoptium"
-        apiURL=$(eval echo ${apiUrlTemplate})
-        echo "Attempting to download EA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
-        set +e
-        wget -q -O "${JDK_BOOT_VERSION}.tgz" "${apiURL}" && tar xpzf "${JDK_BOOT_VERSION}.tgz" --strip-components=1 -C "$bootDir" && rm "${JDK_BOOT_VERSION}.tgz"
-        retVal=$?
-        set -e
-        if [ $retVal -ne 0 ]; then
-          # If no binaries are available then try from adoptopenjdk
-          echo "Downloading Temurin release of boot JDK version ${JDK_BOOT_VERSION} failed."
+        for vendor1 in "adoptium" "adoptopenjdk"
+        do
           # shellcheck disable=SC2034
-          releaseType="ga"
-          # shellcheck disable=SC2034
-          vendor="adoptopenjdk"
-          apiURL=$(eval echo ${apiUrlTemplate})
-          echo "Attempting to download GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
-          wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
-        fi
-      fi
+          for vendor2 in "eclipse" "adoptium" "adoptopenjdk"
+          do
+            apiUrlTemplate="https://api.\${vendor1}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/mac/\${ARCHITECTURE}/jdk/hotspot/normal/\${vendor2}"
+            apiURL=$(eval echo ${apiUrlTemplate})
+            echo "Downloading ${releaseType} release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
+            set +e
+            wget -q -O "${JDK_BOOT_VERSION}.tgz" "${apiURL}" && tar xpzf "${JDK_BOOT_VERSION}.tgz" --strip-components=1 -C "$bootDir" && rm "${JDK_BOOT_VERSION}.tgz"
+            retVal=$?
+            set -e
+            if [ $retVal -eq 0 ]; then
+              break 3
+            fi
+          done
+        done
+      done
     fi
   fi
 fi
