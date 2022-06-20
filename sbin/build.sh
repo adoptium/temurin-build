@@ -775,12 +775,15 @@ generateSBoM() {
   # Below add build tools into metadata tools
   # Add ALSA 3rd party
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt)"
-  # Add FreeType 3rd party
+  # Add FreeType 3rd party (windows + macOS)
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt)"
-  # Add FreeMarker 3rd party
+  # Add FreeMarker 3rd party (openj9)
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt)"
   # Add Build Docker image SHA1
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "Docker image SHA1" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)"
+  # Add Tool Summary section from configure.txt
+  checkingGCC
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "Tool Summary" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_gcc_info.txt)"
 
   # Print SBOM json
   echo "CycloneDX SBOM:"
@@ -788,6 +791,14 @@ generateSBoM() {
   echo ""
 }
 
+
+# Generate build tools info into dependency file
+checkingGCC() {
+   echo "Checking and getting Tool Summary info:"
+   inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+   outputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_gcc_info.txt"
+   sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" > "${outputConfigFile}"
+}
 
 getGradleJavaHome() {
   local gradleJavaHome=""

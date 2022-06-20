@@ -205,7 +205,7 @@ checkoutRequiredCodeToBuild() {
         # Tag will be something similar to jdk-11.0.8+8_adopt-160-g824f8474f5
         # jdk-11.0.8+8_adopt = TAGNAME
         # 160 = NUMBER OF COMMITS ON TOP OF THE ORIGINAL TAGGED OBJECT
-        # g824f8474f5 = THE SHORT HASH OF THE MOST RECENT COMMIT
+        # g824f8474f5 = "g" + THE SHORT HASH OF THE MOST RECENT COMMIT
         echo "SUCCESS: TAG FOUND! Exporting to $scmrefPath..."
         git describe > "$scmrefPath"
 
@@ -539,7 +539,7 @@ prepareMozillaCacerts() {
     fi
 }
 
-# Download all of the dependencies for OpenJDK (Alsa, FreeType, etc.)
+# Download all of the dependencies for OpenJDK (Alsa, FreeType, FreeMarker etc.)
 downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
