@@ -719,8 +719,8 @@ generateSBoM() {
   # Add make_command_args JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
-  # Add OS
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_KERNEL" "${BUILD_CONFIG[OS_KERNEL_NAME]^}"
+  # Add OS full version (Kernel is covered in the first field)
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_FULL_VERSION" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
 
   # Add ARCHITECTURE
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_ARCHITECTURE" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
