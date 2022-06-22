@@ -777,7 +777,7 @@ addSBOMComponentFromFile() {
   local propFile="${7}"
   # always create component in sbom
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent     --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
-  value = "N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
+  value="N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
   if [ -e "${propFile}" ]; then
       value=$(cat "${propFile}")
   fi
