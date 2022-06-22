@@ -54,7 +54,8 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       esac
       releaseType="ga"
       vendor="eclipse"
-      apiUrlTemplate="https://api.adoptium.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/hotspot/normal/\${vendor}"
+      api="adoptium"
+      apiUrlTemplate="https://api.\${api}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/hotspot/normal/\${vendor}"
       apiURL=$(eval echo ${apiUrlTemplate})
       echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
       # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
@@ -84,6 +85,8 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
           releaseType="ga"
           # shellcheck disable=SC2034
           vendor="adoptopenjdk"
+          # shellcheck disable=SC2034
+          api="adoptopenjdk"
           apiURL=$(eval echo ${apiUrlTemplate})
           echo "Attempting to download GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
           wget -q "${apiURL}" -O openjdk.zip
@@ -136,11 +139,7 @@ then
       TOOLCHAIN_VERSION="2013"
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export PATH="/cygdrive/c/openjdk/make-3.82/:$PATH"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
-    then
-      TOOLCHAIN_VERSION="2017"
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
-    elif [ "$JAVA_FEATURE_VERSION" -gt 11 ]
+    elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
     then
       TOOLCHAIN_VERSION="2019"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
@@ -208,7 +207,7 @@ then
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.8.1"
       export PATH="/cygdrive/c/openjdk/make-3.82/:$PATH"
-    elif [ "$JAVA_FEATURE_VERSION" -gt 11 ]
+    elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
     then
       TOOLCHAIN_VERSION="2019"
     fi

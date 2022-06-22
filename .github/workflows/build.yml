@@ -221,14 +221,14 @@ jobs:
 
      - name: Restore Visual Studio 2017 from cache
        id: vs2017
-       if: matrix.version == 'jdk8u' || matrix.version == 'jdk11u'
+       if: matrix.version == 'jdk8u'
        uses: actions/cache@v2
        with:
          path: ~/vs2017.exe
          key: vs2017
 
      - name: Uninstall WinSDKs
-       if: matrix.version == 'jdk8u' || matrix.version == 'jdk11u'
+       if: matrix.version == 'jdk8u'
        run: >
          Start-Process -FilePath 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe' -Wait -NoNewWindow -ArgumentList
          'modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"
@@ -241,10 +241,10 @@ jobs:
      - name: Download Visual Studio 2017
        run: |
          curl -L "$env:VS2017_URL" -o "$HOME/vs2017.exe"
-       if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u' || matrix.version == 'jdk11u'
+       if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
 
      - name: Install Visual Studio 2017
-       if: matrix.version == 'jdk8u' || matrix.version == 'jdk11u'
+       if: matrix.version == 'jdk8u'
        run: >
          Start-Process -FilePath "$HOME\vs2017.exe" -Wait -NoNewWindow -ArgumentList
          'install --productId Microsoft.VisualStudio.Product.Community --channelId VisualStudio.15.Release
