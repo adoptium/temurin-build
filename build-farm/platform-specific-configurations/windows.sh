@@ -85,6 +85,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
           releaseType="ga"
           # shellcheck disable=SC2034
           vendor="adoptopenjdk"
+          # shellcheck disable=SC2034
           api="adoptopenjdk"
           apiURL=$(eval echo ${apiUrlTemplate})
           echo "Attempting to download GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
