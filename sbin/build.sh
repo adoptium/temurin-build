@@ -1293,7 +1293,8 @@ getLatestTagJDK8() {
         better=1
       fi
 
-      if [ "$better" -ne 0 ] ; then
+      # Ignore "jdk8uV-b00" tags which are new version branching tags
+      if [ "$better" -ne 0 ] && [ "$cur_b" != "00" ] ; then
         max_tag="$tag"
         max_v="$cur_v"
         max_b="$cur_b"
@@ -1328,6 +1329,7 @@ getLatestTagJDK11plus() {
       local cur_x=${BASH_REMATCH[5]:-0}
       local cur_p=${BASH_REMATCH[7]:-0}
       local cur_b=${BASH_REMATCH[8]:-0}
+      local cur_actual_b=${BASH_REMATCH[8]}
 
       if [ -z "$max_tag" ] ; then
         better=1
@@ -1349,7 +1351,8 @@ getLatestTagJDK11plus() {
         fi
       fi
 
-      if [ "$better" -ne 0 ] ; then
+      # Ignore "jdk-V.W.X.P+0" tags which are new version branching tags
+      if [ "$better" -ne 0 ] && [ "$cur_actual_b" != "0" ] ; then
         max_tag="$tag"
         max_v="$cur_v"
         max_w="$cur_w"
