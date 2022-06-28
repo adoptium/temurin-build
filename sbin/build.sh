@@ -707,8 +707,9 @@ generateSBoM() {
   # Add buildRef JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "buildRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
 
-  # Add builtConfig JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "builtConfig" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/built_config.cfg"
+  # Add builtConfig JDK Component Property, load as Json string
+  built_config=createConfigToJsonString
+  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "builtConfig" "${built_config}"
 
   # Add full_version_output JDK Component Property
   addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "full_version_output" "${fullVerOutput}"
@@ -727,6 +728,10 @@ generateSBoM() {
 
   # Add VARIANT
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "VARIANT" "${BUILD_CONFIG[BUILD_VARIANT]^}"
+
+  # Add build host docker info
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "USE_DOCKER" "${BUILD_CONFIG[USE_DOCKER]^}"
+  addSBOMMetadataPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "DOCKER_SHA1" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt"
 
   # Add ALSA 3rd party component
   addSBOMComponentFromFile "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "dependency_version_alsa" "url" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt"
@@ -750,6 +755,9 @@ addSBOMMetadataProperty() {
   local jsonFile="${3}"
   local name="${4}"
   local value="${5}"
+  if [ -z "${propFile}" ]; then
+    value="N.A"
+  fi
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
 
@@ -760,10 +768,11 @@ addSBOMMetadataPropertyFromFile() {
   local jsonFile="${3}"
   local name="${4}"
   local propFile="${5}"
+  value="N.A"
   if [ -e "${propFile}" ]; then
-      local value=$(cat "${propFile}")
-      "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
+      value=$(cat "${propFile}")
   fi
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
 
 # If the given property file exists, then add the given Component and Property with the given file contents value

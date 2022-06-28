@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2153,SC2155
+# shellcheck disable=SC2153,SC2155,SC2030,SC2031
 
 ################################################################################
 #
@@ -152,6 +152,16 @@ function writeConfigToFile() {
     mkdir -p "workspace/config"
   fi
   displayParams | sed 's/\r$//' > ./workspace/config/built_config.cfg
+}
+
+function createConfigToJsonString() {
+  jsonString="{ "
+  for K in "${!BUILD_CONFIG[@]}";
+  do
+    jsonString+="\"$K\" : \"${BUILD_CONFIG[$K]}\", "
+  done
+  jsonString+=" \"Data Source\" : \"BUILD_CONFIG hashmap\"}"
+  echo "${jsonString}"
 }
 
 function loadConfigFromFile() {
