@@ -39,6 +39,9 @@ then
 
     # Ensure reproducible binary with a unique build user identifier
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-user=adoptium"
+
+    # Disable CCache with --disable-ccache
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
 fi
 
 export VARIANT_ARG="--build-variant ${VARIANT}"
