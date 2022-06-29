@@ -761,16 +761,18 @@ addSBOMMetadataProperty() {
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
 
-# If the given property file exists, then add the given Property name with the given file contents value to the SBOM Metadata
+# If the given property file exists and size over 2bytes, then add the given Property name with the given file contents value to the SBOM Metadata
 addSBOMMetadataPropertyFromFile() {
   local javaHome="${1}"
   local classpath="${2}"
   local jsonFile="${3}"
   local name="${4}"
   local propFile="${5}"
-  value="N.A"
-  if [ -e "${propFile}" ]; then
-      value=$(cat "${propFile}")
+  local value="N.A"
+  if [ -f "${propFile}" ]; then
+      if [ "$(stat --print=%s "${propFile}")" -ge 2 ]; then
+        value=$(cat "${propFile}")
+      fi
   fi
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
@@ -785,8 +787,8 @@ addSBOMComponentFromFile() {
   local name="${6}"
   local propFile="${7}"
   # always create component in sbom
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent     --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
-  value="N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
+  local value="N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
   if [ -e "${propFile}" ]; then
       value=$(cat "${propFile}")
   fi
