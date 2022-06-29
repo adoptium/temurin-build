@@ -24,8 +24,8 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
 fi
 
-# jdk-19 and above support reproducible builds
-if [[ "${JAVA_FEATURE_VERSION}" -ge 19 ]]
+# jdk-17 and jdk-19+ support reproducible builds
+if [[ "${JAVA_FEATURE_VERSION}" -ge 19 || "${JAVA_FEATURE_VERSION}" -eq 17 ]]
 then
     # Enable reproducible builds implicitly with --with-source-date
     if [ "${RELEASE}" == "true" ]
