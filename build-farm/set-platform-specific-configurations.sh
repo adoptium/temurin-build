@@ -25,7 +25,7 @@ then
 fi
 
 # jdk-17 and above support reproducible builds
-if [[ "${JAVA_FEATURE_VERSION}" -ge 17 ]]
+if [[ "${JAVA_FEATURE_VERSION}" -ge 19 ] || [ "${JAVA_FEATURE_VERSION}" -eq 17 ]]
 then
     # Enable reproducible builds implicitly with --with-source-date
     if [ "${RELEASE}" == "true" ]
