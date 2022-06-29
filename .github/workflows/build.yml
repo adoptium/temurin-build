@@ -132,6 +132,7 @@ jobs:
       run: |
         rm -rf /Applications/Xcode.app
         ln -s /Applications/Xcode_11.7.app /Applications/Xcode.app
+
     - name: Build macOS
       run: |
         export JAVA_HOME=$JAVA_HOME_11_X64
@@ -162,6 +163,7 @@ jobs:
       run: |
         mkdir -p "${HOME}/JDK"
         tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
+
     - name: Set root of jdk image dir
       run: |
         imageroot=$(find "${HOME}/JDK" -name release -type f)
@@ -207,6 +209,7 @@ jobs:
          New-Item -Path C:\ -Name 'openjdk' -ItemType 'directory'
          Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
          Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages autoconf,automake,bsdtar,cpio,curl,gcc-core,git,gnupg,grep,libtool,make,mingw64-x86_64-gcc-core,perl,rsync,unzip,wget,zip --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
+
      - uses: actions/setup-java@v3
        id: setup-java7
        with:
@@ -229,7 +232,7 @@ jobs:
          key: vs2017
 
      - name: Uninstall WinSDKs
-       if: matrix.version == 'jdk8u' 
+       if: matrix.version == 'jdk8u'
        run: >
          Start-Process -FilePath 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe' -Wait -NoNewWindow -ArgumentList
          'modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"
@@ -238,10 +241,11 @@ jobs:
          --remove Microsoft.VisualStudio.Component.Windows10SDK.20348
          --remove Microsoft.VisualStudio.Component.Windows10SDK.22000
          --quiet'
+
      - name: Download Visual Studio 2017
        run: |
          curl -L "$env:VS2017_URL" -o "$HOME/vs2017.exe"
-       if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
+       if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u' || matrix.version == 'jdk11u'
 
      - name: Install Visual Studio 2017
        if: matrix.version == 'jdk8u'
@@ -252,10 +256,12 @@ jobs:
          --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
          --add Microsoft.VisualStudio.Component.Windows10SDK.17763
          --quiet --wait'
+
      - name: Install Git
        run: |
          Invoke-WebRequest 'https://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile 'C:\temp\git.exe'
          Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
+
      - name: Set PATH
        run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
 
@@ -314,11 +320,13 @@ jobs:
      - name: Unpack jdk
        run: |
          unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}"
+
      - name: Set root of jdk image dir
        shell: pwsh
        run: |
          $imageroot=$(find "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}" -name release -type f)
          echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
+
      - name: Reset ANT_HOME from ANT_HOME_ORIGIN for smoke test
        run: echo "ANT_HOME=${env:ANT_HOME_ORIGIN}" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
 
