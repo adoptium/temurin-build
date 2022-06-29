@@ -138,9 +138,9 @@ public final class TemurinGenSBOM {
         Component comp = new Component();
         comp.setName(name);
         comp.setVersion(version);
-        comp.setType(Component.Type.APPLICATION);
+        comp.setType(Component.Type.FRAMEWORK);
         comp.setGroup("Eclipse Temurin");
-        comp.setAuthor("Vendor: Adoptium");
+        comp.setAuthor("Vendor: Eclipse");
         bom.addComponent(comp);
         return bom;
     }
@@ -148,8 +148,6 @@ public final class TemurinGenSBOM {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
         Component comp = new Component();
-        comp.setName(name);
-        comp.setType(Component.Type.APPLICATION);
         OrganizationalEntity org = new OrganizationalEntity();
         org.setName("Eclipse Foundation");
         org.setUrls(Collections.singletonList("https://www.eclipse.org/"));
@@ -217,7 +215,8 @@ public final class TemurinGenSBOM {
     }
 
     static String generateBomJson(final Bom bom) {
-        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_13, bom);
+        // Use schema v14: https://cyclonedx.org/schema/bom-1.4.schema.json
+        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_14, bom);
         String json = bomGen.toJsonString();
         return json;
     }
@@ -225,11 +224,6 @@ public final class TemurinGenSBOM {
     static void writeJSONfile(final Bom bom, final String fileName) {          // Creates testJson.json file
         FileWriter file;
         String json = generateBomJson(bom);
-
-        if (verbose) {
-            System.out.println("SBOM: " + json);
-        }
-
         try {
             file = new FileWriter(fileName);
             file.write(json);
@@ -247,7 +241,8 @@ public final class TemurinGenSBOM {
             bom = parser.parse(reader);
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+           return bom;
         }
-        return bom;
     }
 }

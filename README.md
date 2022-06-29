@@ -1,3 +1,4 @@
+<!-- textlint-disable terminology -->
 # Repository for code and instructions for building OpenJDK binaries, defaulting to Eclipse Temurin™
 
 These scripts can be used to build OpenJDK anywhere but are primarily used by Eclipse Adoptium members (vendors) to build binaries. The scripts default to the use case of building Eclipse Temurin binaries which occurs on the build farm at <https://ci.adoptopenjdk.net>. Those binaries are then made available for consumption at <https://adoptium.net> and via the API <https://api.adoptium.net>.
@@ -6,7 +7,7 @@ These scripts can be used to build OpenJDK anywhere but are primarily used by Ec
 
 ## Where can I find the release status of Eclipse Temurin™ binaries?
 
-Go to the [Eclipse Adoptium Top Level Project Repo](https://www.github.com/adoptium/adoptium/issues) for release tracking.
+Go to the [Eclipse Adoptium Top Level Project repository](https://www.github.com/adoptium/adoptium/issues) for release tracking.
 
 ## TL;DR: I want to build a JDK NOW
 
@@ -57,7 +58,7 @@ This repository contains several useful scripts in order to build OpenJDK
 personally or at build farm scale.
 
 1. The `build-farm` folder contains shell scripts for multi configuration Jenkins
-build jobs used for building Adopt OpenJDK binaries.
+build jobs used for building Adoptium OpenJDK binaries.
 1. The `docker` folder contains tools for generating dockerfiles which can be used as part of building
 OpenJDK inside a Docker container.
 1. The `git-hg` folder has now been moved to it's own separate repository. See [openjdk-mirror-scripts](https://github.com/adoptium/mirror-scripts).
@@ -72,7 +73,7 @@ file that's used to enable SSL connections.
 
 ## The makejdk-any-platform.sh script
 
-`makejdk-any-platform.sh` is the entry point for building (Adopt) OpenJDK binaries.
+`makejdk-any-platform.sh` is the entry point for building (Adoptium) OpenJDK binaries.
 Building natively or in a docker container are both supported. This script (and
 its supporting scripts) have defaults, but you can override these as needed.
 The scripts will auto detect the platform and architecture it is running on and
@@ -127,7 +128,7 @@ specify any custom user configuration arguments, using
 temporary_speech_mark_placeholder in the place of any speech marks.
 
 --clean-git-repo
-clean out any 'bad' local git repo you already have.
+clean out any 'bad' local git repository you already have.
 
 --create-debug-image
 create a debug-image archive with the debug symbols.
@@ -274,7 +275,7 @@ general preparation.
 
 ### Building OpenJDK from a non-Adoptium repository
 
-These scripts default to using Adoptium as the OpenJDK source repo to build
+These scripts default to using Adoptium as the OpenJDK source repository to build
 from, but you can override this with the `-r` flag. If you want to run from a
 non-default branch you can also specify -b e.g.
 
@@ -334,7 +335,7 @@ Alongside the built assets a metadata file will be created with info about the b
 
 The Metadata class is contained in the [Metadata.groovy](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/library/src/common/MetaData.groovy) file and the Json is constructed and written in the [openjdk_build_pipeline.groovy](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy) file.
 
-It is worth noting the additional tags on the semver is the adopt build number.
+It is worth noting the additional tags on the SemVer is the build number.
 
 Below are all of the keys contained in the metadata file and some example values that can be present.
 
@@ -428,7 +429,7 @@ Example values: [`202008210941`, `202010120348`, `202007272039`]
 - `scmRef:`
 Example values: [`dragonwell-8.4.4_jdk8u262-b10`, `jdk-16+19_adopt-61198-g59e3baa94ac`, `jdk-11.0.9+10_adopt-197-g11f44f68c5`, `23f997ca1`]  
 
-A reference the the base JDK repository being build, usually including a Github commit reference, i.e. `jdk-16+19_adopt-61198-g59e3baa94ac` links to `https://github.com/adoptium/openjdk-jdk/commit/59e3baa94ac` via the commit SHA **59e3baa94ac**.
+A reference the the base JDK repository being build, usually including a GitHub commit reference, i.e. `jdk-16+19_adopt-61198-g59e3baa94ac` links to `https://github.com/adoptium/openjdk-jdk/commit/59e3baa94ac` via the commit SHA **59e3baa94ac**.
 
 Values that only contain a commit reference such as `23f997ca1` are OpenJ9 commits on their respective JDK repositories, for example **23f997ca1** links to the commit `https://github.com/ibmruntimes/openj9-openjdk-jdk14/commit/23f997ca1.`
 

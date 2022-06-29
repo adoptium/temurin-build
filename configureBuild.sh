@@ -18,7 +18,7 @@
 
 ################################################################################
 #
-# This script sets up the initial configuration for an (Adopt) OpenJDK Build.
+# This script sets up the initial configuration for an Adoptium OpenJDK Build.
 # See the configure_build function and its child functions for details.
 # It's sourced by the makejdk-any-platform.sh script.
 #

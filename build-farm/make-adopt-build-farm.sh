@@ -94,8 +94,8 @@ then
     retryMax=5
     until [ "$retryCount" -ge "$retryMax" ]
     do
-        # Use Adopt API to get the JDK Head number
-        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptium.net/v3/info/available_releases)..."
+        # Use Adoptium API to get the JDK Head number
+        echo "This appears to be JDK Head. Querying the Adoptium API to get the JDK HEAD Number (https://api.adoptium.net/v3/info/available_releases)..."
         JAVA_FEATURE_VERSION=$(curl -q https://api.adoptium.net/v3/info/available_releases | awk '/tip_version/{print$2}')
 
         # Checks the api request was successful and the return value is a number
@@ -112,7 +112,7 @@ then
     # Fail build if we still can't find the head number
     if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
     then
-        echo "Failed ${retryCount} times to query or parse the adopt api. Dumping headers via curl -v https://api.adoptium.net/v3/info/available_releases and exiting..."
+        echo "Failed ${retryCount} times to query or parse the Adoptium api. Dumping headers via curl -v https://api.adoptium.net/v3/info/available_releases and exiting..."
         curl -v https://api.adoptium.net/v3/info/available_releases
         echo curl returned RC $? in make_adopt_build_farm.sh
         exit 1
@@ -189,7 +189,7 @@ then
   fi
 fi
 
-echo "Boot jdk directory: ${JDK_BOOT_DIR}:"
+echo "Boot jdk directory: ${JDK_BOOT_DIR}"
 "${JDK_BOOT_DIR}/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 java -version 2>&1 | sed 's/^/JDK IN PATH: /g'
 

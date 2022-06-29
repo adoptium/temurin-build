@@ -72,42 +72,46 @@ signRelease()
 
       # Sign .exe files
       FILES=$(find . -type f -name '*.exe' -o -name '*.dll')
-      for f in $FILES
-      do
-        echo "Signing ${f}"
-        if [ "$SIGN_TOOL" = "eclipse" ]; then
-          echo "Signing $f using Eclipse Foundation codesign service"
-          dir=$(dirname "$f")
-          file=$(basename "$f")
-          mv "$f" "${dir}/unsigned_${file}"
-          curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
-          chmod --reference="${dir}/unsigned_${file}" "$f"
-          rm -rf "${dir}/unsigned_${file}"
-        else
-          STAMPED=false
-          for SERVER in $TIMESTAMPSERVERS; do
+      if [ "$FILES" == "" ]; then
+        echo "No files to sign"
+      else
+        for f in $FILES
+        do
+          echo "Signing ${f}"
+          if [ "$SIGN_TOOL" = "eclipse" ]; then
+            echo "Signing $f using Eclipse Foundation codesign service"
+            dir=$(dirname "$f")
+            file=$(basename "$f")
+            mv "$f" "${dir}/unsigned_${file}"
+            curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
+            chmod --reference="${dir}/unsigned_${file}" "$f"
+            rm -rf "${dir}/unsigned_${file}"
+          else
+            STAMPED=false
+            for SERVER in $TIMESTAMPSERVERS; do
+              if [ "$STAMPED" = "false" ]; then
+                echo "Signing $f using $SERVER"
+                if [ "$SIGN_TOOL" = "ucl" ]; then
+                  ucl sign-code --file "$f" -n WindowsSHA -t "${SERVER}" --hash SHA256
+                else
+                  "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"
+                fi
+                RC=$?
+                if [ $RC -eq 0 ]; then
+                  STAMPED=true
+                else
+                  echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${SERVER} - Trying new server in 5 seconds"
+                  sleep 2
+                fi
+              fi
+            done
             if [ "$STAMPED" = "false" ]; then
-              echo "Signing $f using $SERVER"
-              if [ "$SIGN_TOOL" = "ucl" ]; then
-                ucl sign-code --file "$f" -n WindowsSHA -t "${SERVER}" --hash SHA256
-              else
-                "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"
-              fi
-              RC=$?
-              if [ $RC -eq 0 ]; then
-                STAMPED=true
-              else
-                echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${SERVER} - Trying new server in 5 seconds"
-                sleep 2
-              fi
+              echo "Failed to sign ${f} using any time server - aborting"
+              exit 1
             fi
-          done
-          if [ "$STAMPED" = "false" ]; then
-            echo "Failed to sign ${f} using any time server - aborting"
-            exit 1
           fi
-        fi
-      done
+        done
+      fi
     ;;
 
     "mac"*)
@@ -118,7 +122,9 @@ signRelease()
       # Sign all files with the executable permission bit set.
       FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
 
-      if [ "$SIGN_TOOL" = "eclipse" ]; then
+      if [ "$FILES" == "" ]; then
+        echo "No files to sign"
+      elif [ "$SIGN_TOOL" = "eclipse" ]; then
         for f in $FILES
         do
           echo "Signing $f using Eclipse Foundation codesign service"

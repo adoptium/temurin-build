@@ -16,7 +16,7 @@
 
 ################################################################################
 #
-# This script deals with the configuration to build (Adopt) OpenJDK natively.
+# This script deals with the configuration to build (Adoptium) OpenJDK natively.
 # It's sourced by the makejdk-any-platform.sh script.
 #
 ################################################################################

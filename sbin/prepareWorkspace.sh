@@ -17,7 +17,7 @@
 
 ################################################################################
 #
-# This script prepares the workspace to build (Adopt) OpenJDK.
+# This script prepares the workspace to build (Adoptium) OpenJDK.
 # See the configureWorkspace function for details
 # It is sourced by build.sh
 #
@@ -102,7 +102,7 @@ checkoutAndCloneOpenJDKGitRepo() {
   fi
 
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]]; then
-    # Verify Adopt patches tag is being built, otherwise we may be accidently just building "raw" OpenJDK
+    # Verify Adoptium patches tag is being built, otherwise we may be accidently just building "raw" OpenJDK
     if [ ! -f "${TEMURIN_MARKER_FILE}" ] && [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "false" ]; then
       echo "${TEMURIN_MARKER_FILE} marker file not found in fetched source to be built, this may mean the wrong SCMReference build parameter has been specified. Ensure the correct Temurin patch release tag is specified, eg.for build jdk-11.0.4+10, it would be jdk-11.0.4+10_adopt"
       exit 1
@@ -112,7 +112,6 @@ checkoutAndCloneOpenJDKGitRepo() {
   git clean -ffdx
 
   updateOpenj9Sources
-  updateDragonwellSources
 
   createSourceTagFile
 
@@ -264,27 +263,7 @@ updateOpenj9Sources() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     # NOTE: fetched openssl will NOT be used in the RISC-V cross-compile situation
-    bash get_source.sh --openssl-version=1.1.1m
-    cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
-  fi
-}
-
-updateDragonwellSources() {
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]] && [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]]; then
-    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
-    local target_scm
-    if [ -n "${BUILD_CONFIG[TAG]}" ]; then
-      target_scm="${BUILD_CONFIG[TAG]}"
-    else
-      target_scm="${BUILD_CONFIG[BRANCH]}"
-    fi
-    # Download directly from github and not the proxy for Adoptium machine performance
-    perl -p -i -e 's/github.com.cnpmjs.org/github.com/g' get_source_dragonwell.sh
-    if [ "${BUILD_CONFIG[RELEASE]}" == "false" ]; then
-      bash get_source_dragonwell.sh --site github --branch "${target_scm}"
-    else
-      bash get_source_dragonwell.sh --site github --branch "${target_scm}" -r
-    fi
+    bash get_source.sh --openssl-version=1.1.1p
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }

@@ -31,6 +31,7 @@ set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+
 # shellcheck source=sbin/prepareWorkspace.sh
 source "$SCRIPT_DIR/prepareWorkspace.sh"
 
@@ -44,6 +45,7 @@ source "$SCRIPT_DIR/common/constants.sh"
 source "$SCRIPT_DIR/common/common.sh"
 
 export LIB_DIR=$(crossPlatformRealPath "${SCRIPT_DIR}/../pipelines/")
+export CYCLONEDB_DIR="${SCRIPT_DIR}/../cyclonedx-lib"
 
 export jreTargetPath
 export CONFIGURE_ARGS=""
@@ -131,6 +133,15 @@ getOpenJDKUpdateAndBuildVersion() {
   fi
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
+}
+
+patchFreetypeWindows() {
+  # Allows freetype to be built for JDK8u with Visual Studio 2017 (see https://github.com/openjdk/jdk8u-dev/pull/3#issuecomment-1087677766)
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ] && [ "${ARCHITECTURE}" = "x64" ]; then
+    rm "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
+    # Copy the replacement freetype.vcxproj file from the .github directory
+    cp "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.github/workflows/freetype.vcxproj" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
+  fi
 }
 
 getOpenJdkVersion() {
@@ -429,20 +440,6 @@ configureCommandParameters() {
 
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     echo "Windows or Windows-like environment detected, skipping configuring environment for custom Boot JDK and other 'configure' settings."
-
-    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] && [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-      local addsDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/adds"
-
-      # This is unfortunately required as if the path does not start with "/cygdrive" the make scripts are unable to find the "/closed/adds" directory.
-      if ! echo "$addsDir" | grep -E -q "^/cygdrive/"; then
-        # BUILD_CONFIG[WORKSPACE_DIR] does not seem to be an absolute path, prepend /cygdrive/c/cygwin64/"
-        echo "Prepending /cygdrive/c/cygwin64/ to BUILD_CONFIG[WORKSPACE_DIR]"
-        addsDir="/cygdrive/c/cygwin64/$addsDir"
-      fi
-
-      echo "adding source route -with-add-source-root=${addsDir}"
-      addConfigureArg "--with-add-source-root=" "${addsDir}"
-    fi
   else
     echo "Building up the configure command..."
     buildingTheRestOfTheConfigParameters
@@ -531,10 +528,10 @@ createSourceArchive() {
   local sourceArchiveTargetPath="$(getSourceArchivePath)"
   local tmpSourceVCS="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/tmp-openjdk-git"
   local srcArchiveName
-  if echo ${BUILD_CONFIG[TARGET_FILE_NAME]} | grep -q temurin -; then
+  if echo ${BUILD_CONFIG[TARGET_FILE_NAME]} | grep -q x64_linux_hotspot -; then
     # Transform 'OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.12_7.tar.gz' to 'OpenJDK11U-sources_11.0.12_7.tar.gz'
     # shellcheck disable=SC2001
-    srcArchiveName="$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk_.*_temurin_/-sources_/g')"
+    srcArchiveName="$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/_x64_linux_hotspot_/-sources_/g')"
   else
     srcArchiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sources}")
   fi
@@ -628,8 +625,8 @@ createOpenJDKFailureLogsArchive() {
     createArchive "${adoptLogArchiveDir}" "${makeFailureLogsName}"
 }
 
-# Build the CycloneDX Java library and app used for SBoM generation
-buildCyclonedxLib() {
+# Setup JAVA env to run "ant task"
+setupAntEnv() {
   local javaHome=""
 
   if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
@@ -638,51 +635,65 @@ buildCyclonedxLib() {
     javaHome=${JDK8_BOOT_DIR}
   elif [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ]; then
     javaHome=${JDK11_BOOT_DIR}
+  elif [ ${BUILD_CONFIG[JDK_BOOT_DIR]+x} ] && [ -d "${BUILD_CONFIG[JDK_BOOT_DIR]}" ]; then
+  # fall back to use JDK_BOOT_DIR which is set in make-adopt-build-farm.sh
+    javaHome="${BUILD_CONFIG[JDK_BOOT_DIR]}"
   else
     echo "Unable to find a suitable JAVA_HOME to build the cyclonedx-lib"
     exit 2
   fi
+  echo "${javaHome}"
+}
 
-  JAVA_HOME=${javaHome} ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" clean
-  JAVA_HOME=${javaHome} ant -f "${WORKSPACE}/cyclonedx-lib/build.xml" build
+# Build the CycloneDX Java library and app used for SBoM generation
+buildCyclonedxLib() {
+  local javaHome="${1}"
+
+  # Make Ant aware of cygwin path
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    ANTBUILDFILE=$(cygpath -m "${CYCLONEDB_DIR}/build.xml")
+  else
+    ANTBUILDFILE="${CYCLONEDB_DIR}/build.xml"
+  fi
+  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" clean
+  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build
 }
 
 # Generate the SBoM
 generateSBoM() {
-  local javaHome=""
-
-  if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
-    javaHome=${JAVA_HOME}
-  elif [ ${JDK8_BOOT_DIR+x} ] && [ -d "${JDK8_BOOT_DIR}" ]; then
-    javaHome=${JDK8_BOOT_DIR}
-  elif [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ]; then
-    javaHome=${JDK11_BOOT_DIR}
-  else
-    echo "Unable to find a suitable JAVA_HOME to run the TemurinGenSBOM app"
-    exit 2
-  fi
+  local javaHome="${1}"
 
   # classpath to run CycloneDX java app TemurinGenSBOM
-  classpath="${WORKSPACE}/cyclonedx-lib/build/jar/temurin-gen-sbom.jar:${WORKSPACE}/cyclonedx-lib/build/jar/cyclonedx-core-java.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-core.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-dataformat-xml.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-databind.jar:${WORKSPACE}/cyclonedx-lib/build/jar/jackson-annotations.jar:${WORKSPACE}/cyclonedx-lib/build/jar/json-schema.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-codec.jar:${WORKSPACE}/cyclonedx-lib/build/jar/commons-io.jar:${WORKSPACE}/cyclonedx-lib/build/jar/github-package-url.jar"
-
-  if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" =~ .*cygwin.* ]]; then
-    classpath="${classpath//jar:/jar;}"
+  CYCLONEDB_JAR_DIR="${CYCLONEDB_DIR}/build/jar"
+  classpath="${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar:${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar:${CYCLONEDB_JAR_DIR}/jackson-core.jar:${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar:${CYCLONEDB_JAR_DIR}/jackson-databind.jar:${CYCLONEDB_JAR_DIR}/jackson-annotations.jar:${CYCLONEDB_JAR_DIR}/json-schema.jar:${CYCLONEDB_JAR_DIR}/commons-codec.jar:${CYCLONEDB_JAR_DIR}/commons-io.jar:${CYCLONEDB_JAR_DIR}/github-package-url.jar"
+  sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/sbom.json"
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    classpath=""
+    for jarfile in "${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar" "${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar" \
+      "${CYCLONEDB_JAR_DIR}/jackson-core.jar" "${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar" \
+      "${CYCLONEDB_JAR_DIR}/jackson-databind.jar" "${CYCLONEDB_JAR_DIR}/jackson-annotations.jar" \
+      "${CYCLONEDB_JAR_DIR}/json-schema.jar" "${CYCLONEDB_JAR_DIR}/commons-codec.jar" "${CYCLONEDB_JAR_DIR}/commons-io.jar" \
+      "${CYCLONEDB_JAR_DIR}/github-package-url.jar" ;
+    do
+      classpath+=$(cygpath -w "${jarfile}")";"
+    done
+    sbomJson=$(cygpath -w "${sbomJson}")
+    javaHome=$(cygpath -w "${javaHome}")
   fi
 
-  # Run a series of SBOM API commands to generate the required SBOM
-  local sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/sbom.json"
   # Clean any old json
-  rm -f $sbomJson
+  rm -f "${sbomJson}"
 
+  # Run a series of SBOM API commands to generate the required SBOM
   JAVA_LOC="$PRODUCT_HOME/bin/java"
   local fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
   local fullVerOutput=$($JAVA_LOC -version 2>&1)
 
   # Create initial SBOM json
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --verbose --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
 
   # Add Metadata object
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --verbose --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
 
   # Add JDK Component
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "$sbomJson" --compName "JDK" --description "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
@@ -708,8 +719,8 @@ generateSBoM() {
   # Add make_command_args JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
-  # Add OS
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_KERNEL" "${BUILD_CONFIG[OS_KERNEL_NAME]^}"
+  # Add OS full version (Kernel is covered in the first field)
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_FULL_VERSION" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
 
   # Add ARCHITECTURE
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_ARCHITECTURE" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
@@ -764,11 +775,13 @@ addSBOMComponentFromFile() {
   local description="${5}"
   local name="${6}"
   local propFile="${7}"
+  # always create component in sbom
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent     --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
+  value="N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
   if [ -e "${propFile}" ]; then
-      local value=$(cat "${propFile}")
-      "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent     --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
-      "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
+      value=$(cat "${propFile}")
   fi
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
 }
 
 # Add the given Property name & value to the given SBOM Component
@@ -922,15 +935,22 @@ getStaticLibsArchivePath() {
   echo "${jdkArchivePath}-static-libs"
 }
 
-# Clean up
-removingUnnecessaryFiles() {
+getSbomArchivePath(){
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-sbom"
+}
+
+# This function moves the archive files to their intended archive paths
+# and cleans unneeded files
+cleanAndMoveArchiveFiles() {
   local jdkTargetPath=$(getJdkArchivePath)
   local jreTargetPath=$(getJreArchivePath)
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
   local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
+  local sbomTargetPath=$(getSbomArchivePath)
 
-  echo "Removing unnecessary files now..."
+  echo "Moving archive content to target archive paths and cleaning unnecessary files..."
 
   stepIntoTheWorkingDirectory
 
@@ -964,6 +984,15 @@ removingUnnecessaryFiles() {
     echo "moving ${testImagePath} to ${testImageTargetPath}"
     rm -rf "${testImageTargetPath}" || true
     mv "${testImagePath}" "${testImageTargetPath}"
+  fi
+
+  # If creating SBOM, move it to the target Sbom archive path
+  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
+    local sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/sbom.json"
+    echo "moving ${sbomJson} to ${sbomTargetPath}/sbom.json"
+    rm -rf "${sbomTargetPath}" || true
+    mkdir "${sbomTargetPath}"
+    mv "${sbomJson}" "${sbomTargetPath}"
   fi
 
   # Static libs image - check if the directory exists
@@ -1067,7 +1096,7 @@ removingUnnecessaryFiles() {
     deleteDebugSymbols
   fi
 
-  echo "Finished removing unnecessary files from ${jdkTargetPath}"
+  echo "Finished cleaning and moving archive files from ${jdkTargetPath}"
 }
 
 deleteDebugSymbols() {
@@ -1183,8 +1212,8 @@ setPlistValueForMacOS() {
   local DIRECTORY="${1}"
   local TYPE="${2}"
 
-  # Only perform these steps for EF builds
-  if [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Adoptium" ]]; then
+  # Only perform these steps for Eclipse Adoptium jdk8 builds
+  if [[ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]] && [[ "${BUILD_CONFIG[VENDOR]}" == "Eclipse Adoptium" ]]; then
     # SXA: Not changing these now as it may cause side effects
     # May relate to signing. Also cannot contain spaces
     VENDOR_NAME="temurin"
@@ -1264,7 +1293,8 @@ getLatestTagJDK8() {
         better=1
       fi
 
-      if [ "$better" -ne 0 ] ; then
+      # Ignore "jdk8uV-b00" tags which are new version branching tags
+      if [ "$better" -ne 0 ] && [ "$cur_b" != "00" ] ; then
         max_tag="$tag"
         max_v="$cur_v"
         max_b="$cur_b"
@@ -1299,6 +1329,7 @@ getLatestTagJDK11plus() {
       local cur_x=${BASH_REMATCH[5]:-0}
       local cur_p=${BASH_REMATCH[7]:-0}
       local cur_b=${BASH_REMATCH[8]:-0}
+      local cur_actual_b=${BASH_REMATCH[8]}
 
       if [ -z "$max_tag" ] ; then
         better=1
@@ -1320,7 +1351,8 @@ getLatestTagJDK11plus() {
         fi
       fi
 
-      if [ "$better" -ne 0 ] ; then
+      # Ignore "jdk-V.W.X.P+0" tags which are new version branching tags
+      if [ "$better" -ne 0 ] && [ "$cur_actual_b" != "0" ] ; then
         max_tag="$tag"
         max_v="$cur_v"
         max_w="$cur_w"
@@ -1342,7 +1374,7 @@ getFirstTagFromOpenJDKGitRepo() {
 
   # Save current directory of caller so we can return to that directory at the end of this function.
   # Some callers are not in the git repo root, but instead build/*/images directory like the archive functions
-  # and any function called after removingUnnecessaryFiles().
+  # and any function called after cleanAndMoveArchiveFiles().
   local savePwd="${PWD}"
 
   # Change to openjdk git repo root to find build tag.
@@ -1406,16 +1438,15 @@ createArchive() {
   targetName=$2
 
   archiveExtension=$(getArchiveExtension)
-
   createOpenJDKArchive "${repoLocation}" "OpenJDK"
   archive="${PWD}/OpenJDK${archiveExtension}"
 
   archiveTarget=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${targetName}
 
-  echo "Your final archive was created at ${archive}"
+  echo "Your archive was created as ${archive}"
 
-  echo "Moving the artifact to ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}"
-  mv "${archive}" "${archiveTarget}"
+  echo "Moving the artifact to location ${archiveTarget}"
+  mv "${archive}" "${archiveTarget}"  # moving compressed file into a folder
 
   if [ -f "$archiveTarget" ] && [ -s "$archiveTarget" ] ; then
     echo "archive done."
@@ -1432,6 +1463,7 @@ createOpenJDKTarArchive() {
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
   local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
+  local sbomTargetPath=$(getSbomArchivePath)
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
@@ -1471,6 +1503,14 @@ createOpenJDKTarArchive() {
     local staticLibsImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed "s/-jdk/${staticLibsTag}/g")
     echo "OpenJDK static libs archive file name will be ${staticLibsImageName}."
     createArchive "${staticLibsImageTargetPath}" "${staticLibsImageName}"
+  fi
+  if [ -d "${sbomTargetPath}" ]; then
+    # SBOM archive artifact as a .json file
+    local sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}.json")
+    sbomTargetName="${sbomTargetName//\.tar\.gz/}"
+    local sbomArchiveTarget=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${sbomTargetName}
+    echo "OpenJDK SBOM will be ${sbomTargetName}."
+    cp "${sbomTargetPath}/sbom.json" "${sbomArchiveTarget}"
   fi
   # for macOS system, code sign directory before creating tar.gz file
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ] && [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
@@ -1757,16 +1797,19 @@ cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 parseArguments "$@"
 
 if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
+  configureCommandParameters
   buildTemplatedFile
   executeTemplatedFile
   printJavaVersionString
   addInfoToReleaseFile
   addInfoToJson
   if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
-    buildCyclonedxLib
-    generateSBoM
+    javaHome="$(setupAntEnv)"
+    buildCyclonedxLib "${javaHome}"
+    generateSBoM "${javaHome}"
+    unset javaHome
   fi
-  removingUnnecessaryFiles
+  cleanAndMoveArchiveFiles
   copyFreeFontForMacOS
   setPlistForMacOS
   addNoticeFile
@@ -1783,6 +1826,9 @@ configureWorkspace
 
 echo "build.sh : $(date +%T) : Initiating build ..."
 getOpenJDKUpdateAndBuildVersion
+if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+  patchFreetypeWindows
+fi
 configureCommandParameters
 buildTemplatedFile
 executeTemplatedFile
@@ -1794,10 +1840,12 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   addInfoToReleaseFile
   addInfoToJson
   if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
-    buildCyclonedxLib
-    generateSBoM
+    javaHome="$(setupAntEnv)"
+    buildCyclonedxLib "${javaHome}"
+    generateSBoM "${javaHome}"
+    unset javaHome
   fi
-  removingUnnecessaryFiles
+  cleanAndMoveArchiveFiles
   copyFreeFontForMacOS
   setPlistForMacOS
   addNoticeFile

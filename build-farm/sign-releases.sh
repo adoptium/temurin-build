@@ -14,6 +14,7 @@
 # limitations under the License.
 ################################################################################
 
+set -eu
 
 BUILD_ARGS=${BUILD_ARGS:-""}
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -40,6 +41,7 @@ do
   case "${file}" in
     *debugimage*) echo "Skipping ${file} because it's a debug image" ;;
     *testimage*) echo "Skipping ${file} because it's a test image" ;;
+    *sbom*) echo "Skipping ${file} because it's an sbom archive" ;; 
     *)
       echo "signing ${file}"
 

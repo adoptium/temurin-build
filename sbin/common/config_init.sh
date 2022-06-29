@@ -467,8 +467,8 @@ function configDefaults() {
   # The default behavior of whether we want to create the legacy JRE
   BUILD_CONFIG[CREATE_JRE_IMAGE]="false"
 
-  # Do not create an SBOM by default
-  BUILD_CONFIG[CREATE_SBOM]="false"
+  # Set default value to "true. If we do not want this behavior, we can update buildArg per each config file instead
+  BUILD_CONFIG[CREATE_SBOM]="true"
 
   # The default behavior of whether we want to create a separate source archive
   BUILD_CONFIG[CREATE_SOURCE_ARCHIVE]="false"
@@ -569,7 +569,7 @@ function configDefaults() {
 
   BUILD_CONFIG[CROSSCOMPILE]=false
 
-  # By default assume we have adopt patches applied to the repo
+  # By default assume we have Adoptium patches applied to the repo
   BUILD_CONFIG[ADOPT_PATCHES]=true
 
   BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false
