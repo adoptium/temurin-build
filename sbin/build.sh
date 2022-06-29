@@ -755,7 +755,7 @@ addSBOMMetadataProperty() {
   local jsonFile="${3}"
   local name="${4}"
   local value="${5}"
-  if [ -z "${propFile}" ]; then
+  if [ -z "${value}" ]; then
     value="N.A"
   fi
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
