@@ -154,6 +154,16 @@ function writeConfigToFile() {
   displayParams | sed 's/\r$//' > ./workspace/config/built_config.cfg
 }
 
+function createConfigToJsonString() {
+  jsonString="{ "
+  for K in "${!BUILD_CONFIG[@]}";
+  do
+    jsonString+="\"$K\" : \"${BUILD_CONFIG[$K]}\", "
+  done
+  jsonString+=" \"Data Source\" : \"BUILD_CONFIG hashmap\"}"
+  echo "${jsonString}"
+}
+
 function loadConfigFromFile() {
   if [ -f "$SCRIPT_DIR/../config/built_config.cfg" ]
   then

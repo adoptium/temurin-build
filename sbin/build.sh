@@ -707,8 +707,9 @@ generateSBoM() {
   # Add buildRef JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "buildRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
 
-  # Add builtConfig JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "builtConfig" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/built_config.cfg"
+  # Add builtConfig JDK Component Property, load as Json string
+  built_config=createConfigToJsonString
+  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "builtConfig" "${built_config}"
 
   # Add full_version_output JDK Component Property
   addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "full_version_output" "${fullVerOutput}"
@@ -727,6 +728,10 @@ generateSBoM() {
 
   # Add VARIANT
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "VARIANT" "${BUILD_CONFIG[BUILD_VARIANT]^}"
+
+  # Add build host docker info
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "USE_DOCKER" "${BUILD_CONFIG[USE_DOCKER]^}"
+  addSBOMMetadataPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "DOCKER_SHA1" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt"
 
   # Add ALSA 3rd party component
   addSBOMComponentFromFile "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "dependency_version_alsa" "url" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt"
@@ -750,20 +755,26 @@ addSBOMMetadataProperty() {
   local jsonFile="${3}"
   local name="${4}"
   local value="${5}"
+  if [ -z "${value}" ]; then
+    value="N.A"
+  fi
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
 
-# If the given property file exists, then add the given Property name with the given file contents value to the SBOM Metadata
+# If the given property file exists and size over 2bytes, then add the given Property name with the given file contents value to the SBOM Metadata
 addSBOMMetadataPropertyFromFile() {
   local javaHome="${1}"
   local classpath="${2}"
   local jsonFile="${3}"
   local name="${4}"
   local propFile="${5}"
-  if [ -e "${propFile}" ]; then
-      local value=$(cat "${propFile}")
-      "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
+  local value="N.A"
+  if [ -f "${propFile}" ]; then
+      if [ "$(stat --print=%s "${propFile}")" -ge 2 ]; then
+        value=$(cat "${propFile}")
+      fi
   fi
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
 
 # If the given property file exists, then add the given Component and Property with the given file contents value
@@ -776,8 +787,8 @@ addSBOMComponentFromFile() {
   local name="${6}"
   local propFile="${7}"
   # always create component in sbom
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent     --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
-  value="N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
+  local value="N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
   if [ -e "${propFile}" ]; then
       value=$(cat "${propFile}")
   fi
