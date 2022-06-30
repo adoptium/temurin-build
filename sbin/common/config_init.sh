@@ -412,6 +412,11 @@ function configDefaults() {
         local osVersion=$(grep "^VERSION=" /etc/os-release | cut -d= -f2 | tr -d '"')
         unameOSSysVer="${unameOSSysVer} ${osVersion}"
       fi
+      # Improve Version Reporting For Alpine Linux ( Issue #2997 )
+      if [ "${osName}" == "Alpine Linux" ]; then
+        osName=$(grep "^PRETTY_NAME=" /etc/os-release | cut -d= -f2 | tr -d '"')
+        unameOSSysVer="${osName}"
+      fi
     fi
   elif [ "${unameSys}" == "AIX" ]; then
     # AIX provides full version info using oslevel
