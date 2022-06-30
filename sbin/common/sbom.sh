@@ -1,6 +1,9 @@
-# Create a default SBOM json file: ${sbomJson}
+# Create a default SBOM json file: sbomJson
 createSBOMFile() {
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson"
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "${jsonFile}"
 }
 
 # Set basic SBMO metadata with timestamp, authors, manufacture to ${sbomJson}
@@ -64,13 +67,13 @@ addSBOMMetadataComponent() {
   local name="${4}"
   local type="${5}"
   local version="${6}}"
-  local desc="${7}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataComponent --jsonFile "${jsonFile}" --name "${name}"  --type "${type}" --version "${version}" --description "${dsc}"
+  local description="${7}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataComponent --jsonFile "${jsonFile}" --name "${name}"  --type "${type}" --version "${version}" --description "${description}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components
 # To add new component into 'components' list
-addSBOMComponent(){ # done
+addSBOMComponent(){
   local javaHome="${1}"
   local classpath="${2}"
   local jsonFile="${3}"
@@ -114,15 +117,16 @@ addSBOMComponentProperty() {
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components_items_properties
 # If the given property file exists, then add the given Property name with the given file contents value to the given SBOM Component
-addSBOMComponentPropertyFromFile() { # done
+addSBOMComponentPropertyFromFile() {
   local javaHome="${1}"
   local classpath="${2}"
   local jsonFile="${3}"
   local compName="${4}"
   local name="${5}"
   local propFile="${6}"
+  local value="N.A"
   if [ -e "${propFile}" ]; then
-      local value=$(cat "${propFile}")
+      value=$(cat "${propFile}")
       "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
   fi
 }

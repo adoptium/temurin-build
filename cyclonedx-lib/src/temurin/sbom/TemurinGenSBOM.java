@@ -171,12 +171,12 @@ public final class TemurinGenSBOM {
         org.setUrls(Collections.singletonList("https://www.eclipse.org/"));
         meta.setManufacture(org);
         OrganizationalContact auth = new OrganizationalContact();
-        auth.setName("Adoptium Temurin");// "email", "phone");
+        auth.setName("Adoptium Temurin");
         meta.addAuthor(auth);
         bom.setMetadata(meta);
         return bom;
     }
-    static Bom addMetadataComponent(final String fileName, final String name, final String type, final String version, String description ) {
+    static Bom addMetadataComponent(final String fileName, final String name, final String type, final String version, final String description) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
         Component comp = new Component();
@@ -226,7 +226,7 @@ public final class TemurinGenSBOM {
         comp.setType(Component.Type.FRAMEWORK);
         comp.setDescription(description);
         comp.setGroup("adoptium.net");
-        comp.setAuthor("Adoptium Temurin");        
+        comp.setAuthor("Adoptium Temurin");
         comp.setPublisher("Eclipse Temurin");
         bom.addComponent(comp);
         return bom;
