@@ -110,7 +110,7 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addComponent":                            // Adds Component
-                bom = addComponent(compName, name, value, description, fileName);
+                bom = addComponent(compName, name, description, fileName);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -133,15 +133,12 @@ public final class TemurinGenSBOM {
         }
     }
 
-    static Bom createBom(final String name, final String version) {        // Create SBOM, test.JSON file
+    /*
+     * Create SBOM file in json format with default "bomFormat" "specVersion" and "version"
+     * Add default compo
+     */
+    static Bom createBom(final String name, final String version) {
         Bom bom = new Bom();
-        Component comp = new Component();
-        comp.setName(name);
-        comp.setVersion(version);
-        comp.setType(Component.Type.FRAMEWORK);
-        comp.setGroup("Eclipse Temurin");
-        comp.setAuthor("Vendor: Eclipse");
-        bom.addComponent(comp);
         return bom;
     }
     static Bom addMetadata(final String name, final String fileName) {          // Method to store metadata -->  name
@@ -167,11 +164,16 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
-    static Bom addComponent(final String compName, final String name, final String value, final String description, final String fileName) {      // Method to store Component --> name & single name-value pair
+    static Bom addComponent(final String compName, final String version, final String description, final String fileName) {      // Method to store Component --> name & single name-value pair
         Bom bom = readJSONfile(fileName);
         Component comp = new Component();
         comp.setName(compName);
+        comp.setVersion(version);
+        comp.setType(Component.Type.FRAMEWORK);
         comp.setDescription(description);
+        comp.setGroup("adoptium.net");
+        comp.setAuthor("Adoptium Temurin");        
+        comp.setPublisher("Eclipse Temurin");
         bom.addComponent(comp);
         return bom;
     }
