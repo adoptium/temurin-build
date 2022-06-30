@@ -44,6 +44,8 @@ source "$SCRIPT_DIR/common/constants.sh"
 # shellcheck source=sbin/common/common.sh
 source "$SCRIPT_DIR/common/common.sh"
 
+source "$SCRIPT_DIR/common/sbom.sh"
+
 export LIB_DIR=$(crossPlatformRealPath "${SCRIPT_DIR}/../pipelines/")
 export CYCLONEDB_DIR="${SCRIPT_DIR}/../cyclonedx-lib"
 
@@ -690,21 +692,21 @@ generateSBoM() {
   local fullVerOutput=$($JAVA_LOC -version 2>&1)
 
   # Create initial SBOM json
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --verbose --createNewSBOM --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}" --version "$fullVer"
-
-  # Add Metadata object
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --verbose --addMetadata --jsonFile "$sbomJson" --name "${BUILD_CONFIG[BUILD_VARIANT]^}"
+  createSBOMFile "${javaHome}" "${classpath}" "${sbomJson}"
 
   # Add JDK Component
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "$sbomJson" --compName "JDK" --description "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
+  addSBOMComponent "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
 
-  # Add scmRef JDK Component Property
+  # Add variant as JDK Component Property
+  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "variant" "${BUILD_CONFIG[BUILD_VARIANT]^}"
+
+  # Add scmRef as JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "scmRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
 
-  # Add OpenJDK source ref commit JDK Component Property
+  # Add OpenJDK source ref commit as JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "openjdkSourceCommit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
 
-  # Add buildRef JDK Component Property
+  # Add buildRef as JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "buildRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
 
   # Add builtConfig JDK Component Property, load as Json string
@@ -727,20 +729,23 @@ generateSBoM() {
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_ARCHITECTURE" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
 
   # Add VARIANT
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "VARIANT" "${BUILD_CONFIG[BUILD_VARIANT]^}"
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK_VARIANT" "${BUILD_CONFIG[BUILD_VARIANT]^}"
 
   # Add build host docker info
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "USE_DOCKER" "${BUILD_CONFIG[USE_DOCKER]^}"
-  addSBOMMetadataPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "DOCKER_SHA1" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt"
 
-  # Add ALSA 3rd party component
-  addSBOMComponentFromFile "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "dependency_version_alsa" "url" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt"
 
-  # Add FreeType 3rd party component
-  addSBOMComponentFromFile "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "dependency_version_freetype" "url" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
+  # Add ALSA 3rd party as externalReferences
+  addComponentExternalReference "${javaHome}" "${classpath}" "${sbomJson}" "ALSA version" "build-meta" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt)"
 
-  # Add FreeMarker 3rd party component
-  addSBOMComponentFromFile "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "dependency_version_freemarker" "url" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt"
+  # Add FreeType 3rd party as externalReferences
+  addComponentExternalReference "${javaHome}" "${classpath}" "${sbomJson}" "FreeType version" "buid-meta" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt)"
+
+  # Add FreeMarker 3rd party as externalReferences
+  addComponentExternalReference "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker version" "build-meta" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt)"
+
+  # Add Build Docker image SHA1 as externalReferneces
+  addComponentExternalReference "${javaHome}" "${classpath}" "${sbomJson}" "Build Docker image SHA1" "build-meta" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)"
 
   # Print SBOM json
   echo "CycloneDX SBOM:"
@@ -748,77 +753,6 @@ generateSBoM() {
   echo ""
 }
 
-# Add the given Property name & value to the SBOM Metadata
-addSBOMMetadataProperty() {
-  local javaHome="${1}"
-  local classpath="${2}"
-  local jsonFile="${3}"
-  local name="${4}"
-  local value="${5}"
-  if [ -z "${value}" ]; then
-    value="N.A"
-  fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
-}
-
-# If the given property file exists and size over 2bytes, then add the given Property name with the given file contents value to the SBOM Metadata
-addSBOMMetadataPropertyFromFile() {
-  local javaHome="${1}"
-  local classpath="${2}"
-  local jsonFile="${3}"
-  local name="${4}"
-  local propFile="${5}"
-  local value="N.A"
-  if [ -f "${propFile}" ]; then
-      if [ "$(stat --print=%s "${propFile}")" -ge 2 ]; then
-        value=$(cat "${propFile}")
-      fi
-  fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
-}
-
-# If the given property file exists, then add the given Component and Property with the given file contents value
-addSBOMComponentFromFile() {
-  local javaHome="${1}"
-  local classpath="${2}"
-  local jsonFile="${3}"
-  local compName="${4}"
-  local description="${5}"
-  local name="${6}"
-  local propFile="${7}"
-  # always create component in sbom
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
-  local value="N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
-  if [ -e "${propFile}" ]; then
-      value=$(cat "${propFile}")
-  fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
-}
-
-# Add the given Property name & value to the given SBOM Component
-addSBOMComponentProperty() {
-  local javaHome="${1}"
-  local classpath="${2}"
-  local jsonFile="${3}"
-  local compName="${4}"
-  local name="${5}"
-  local value="${6}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
-}
-
-# If the given property file exists, then add the given Property name with the given file contents value to the given SBOM Component
-addSBOMComponentPropertyFromFile() {
-  local javaHome="${1}"
-  local classpath="${2}"
-  local jsonFile="${3}"
-  local compName="${4}"
-  local name="${5}"
-  local propFile="${6}"
-  if [ -e "${propFile}" ]; then
-      local value=$(cat "${propFile}")
-      "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
-  fi
-}
 
 getGradleJavaHome() {
   local gradleJavaHome=""
