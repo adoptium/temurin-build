@@ -708,7 +708,7 @@ generateSBoM() {
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "buildRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
 
   # Add builtConfig JDK Component Property, load as Json string
-  built_config=createConfigToJsonString
+  built_config=$(createConfigToJsonString)
   addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "builtConfig" "${built_config}"
 
   # Add full_version_output JDK Component Property
