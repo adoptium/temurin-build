@@ -696,64 +696,46 @@ generateSBoM() {
   # Set default SBOM metadata
   addSBOMMetadata "${javaHome}" "${classpath}" "${sbomJson}"
 
-  # Add JDK Component
+  # Create component to metadata in SBOM
+  addSBOMMetadataComponent "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "framework" "${fullVer}" "Temurin JDK"
+
+  # Below add property to metadata
+  # Add OS full version (Kernel is covered in the first field)
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS VERSION" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS ARCHITECTURE" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "${BUILD_CONFIG[USE_DOCKER]^}"
+
+  # Create JDK Component
   addSBOMComponent "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
 
-  # Below add different metadata to SBOM
-  
-  # Add 
-
-  # Below add component to metadata in SBOM
-  # Add OS full version (Kernel is covered in the first field)
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_FULL_VERSION" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
-  # Add ARCHITECTURE
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_ARCHITECTURE" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
-  # Add VARIANT
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK_VARIANT" "${BUILD_CONFIG[BUILD_VARIANT]^}"
-  # Add build host docker info
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "USE_DOCKER" "${BUILD_CONFIG[USE_DOCKER]^}"
-
   # Below add different properties to JDK component
-
   # Add variant as JDK Component Property
   addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "variant" "${BUILD_CONFIG[BUILD_VARIANT]^}"
-
   # Add scmRef as JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "scmRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
-
   # Add OpenJDK source ref commit as JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "openjdkSourceCommit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
-
   # Add buildRef as JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "buildRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
-
   # Add builtConfig JDK Component Property, load as Json string
   built_config=$(createConfigToJsonString)
   addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "builtConfig" "${built_config}"
-
   # Add full_version_output JDK Component Property
   addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "full_version_output" "${fullVerOutput}"
-
   # Add makejdk_any_platform_args JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "makejdk_any_platform_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
-
   # Add make_command_args JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
-  
-
-
-  # Add ALSA 3rd party as externalReferences
-  addComponentExternalReference "${javaHome}" "${classpath}" "${sbomJson}" "ALSA version" "build-meta" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt)"
-
-  # Add FreeType 3rd party as externalReferences
-  addComponentExternalReference "${javaHome}" "${classpath}" "${sbomJson}" "FreeType version" "buid-meta" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt)"
-
-  # Add FreeMarker 3rd party as externalReferences
-  addComponentExternalReference "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker version" "build-meta" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt)"
-
-  # Add Build Docker image SHA1 as externalReferneces
-  addComponentExternalReference "${javaHome}" "${classpath}" "${sbomJson}" "Build Docker image SHA1" "build-meta" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)"
+  # Below add build tools into metadata tools
+  # Add ALSA 3rd party
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt)"
+  # Add FreeType 3rd party
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt)"
+  # Add FreeMarker 3rd party
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt)"
+  # Add Build Docker image SHA1
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "Docker image SHA1" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)"
 
   # Print SBOM json
   echo "CycloneDX SBOM:"

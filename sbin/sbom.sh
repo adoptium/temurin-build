@@ -3,7 +3,7 @@ createSBOMFile() {
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson"
 }
 
-# Set simbe SBMO metadata with timestamp, authors, manufacture to ${sbomJson}
+# Set basic SBMO metadata with timestamp, authors, manufacture to ${sbomJson}
 addSBOMMetadata() {
   local javaHome="${1}"
   local classpath="${2}"
@@ -24,7 +24,6 @@ addSBOMMetadataProperty() {
   fi
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
-
 # Ref: https://cyclonedx.org/docs/1.4/json/#metadata
 # If the given property file exists and size over 2bytes, then add the given Property name with the given file contents value to the SBOM Metadata
 addSBOMMetadataPropertyFromFile() {
@@ -42,10 +41,36 @@ addSBOMMetadataPropertyFromFile() {
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
 
+# Ref: https://cyclonedx.org/docs/1.4/json/#metadata_tools
+# Add tool and version, e.g: alsa freemarker dockerimage
+addSBOMMetadataTools() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local tool="${4}"
+  local version="${5}"
+  if [ -z "${version}" ]; then
+    version="N.A"
+  fi
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataTools --jsonFile "${jsonFile}" --tool "${tool}" --version "${version}"
+}
+
+# Ref: https://cyclonedx.org/docs/1.4/json/#metadata_component
+# Add JDK as component into metadata, this is not a list, i.e cannot be called multiple times for the same ${sbomJson}
+addSBOMMetadataComponent() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local name="${4}"
+  local type="${5}"
+  local version="${6}}"
+  local desc="${7}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataComponent --jsonFile "${jsonFile}" --name "${name}"  --type "${type}" --version "${version}" --description "${dsc}"
+}
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components
-# To add new component into 'components'
-addaddSBOMComponent(){
+# To add new component into 'components' list
+addSBOMComponent(){ # done
   local javaHome="${1}"
   local classpath="${2}"
   local jsonFile="${3}"
@@ -57,22 +82,23 @@ addaddSBOMComponent(){
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components
 # If the given property file exists, then add the given Component and Property with the given file contents value
-# addSBOMComponentFromFile() {
-#   local javaHome="${1}"
-#   local classpath="${2}"
-#   local jsonFile="${3}"
-#   local compName="${4}"
-#   local description="${5}"
-#   local name="${6}"
-#   local propFile="${7}"
-#   # always create component in sbom
-#   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
-#   local value="N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
-#   if [ -e "${propFile}" ]; then
-#       value=$(cat "${propFile}")
-#   fi
-#   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
-# }
+# Function not in use
+addSBOMComponentFromFile() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local compName="${4}"
+  local description="${5}"
+  local name="${6}"
+  local propFile="${7}"
+  # always create component in sbom
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
+  local value="N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
+  if [ -e "${propFile}" ]; then
+      value=$(cat "${propFile}")
+  fi
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
+}
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components_items_properties
 # Add the given Property name & value to the given SBOM Component
@@ -83,15 +109,12 @@ addSBOMComponentProperty() {
   local compName="${4}"
   local name="${5}"
   local value="${6}"
-  if [ "${isFromFile}" == "true"]; then
-   local value=$(cat "${value}")
-    "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
-  fi
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
 }
 
-Ref: https://cyclonedx.org/docs/1.4/json/#components_items_properties
-If the given property file exists, then add the given Property name with the given file contents value to the given SBOM Component
-addSBOMComponentPropertyFromFile() {
+# Ref: https://cyclonedx.org/docs/1.4/json/#components_items_properties
+# If the given property file exists, then add the given Property name with the given file contents value to the given SBOM Component
+addSBOMComponentPropertyFromFile() { # done
   local javaHome="${1}"
   local classpath="${2}"
   local jsonFile="${3}"
@@ -104,13 +127,18 @@ addSBOMComponentPropertyFromFile() {
   fi
 }
 
+# Function not in use
 # Ref: https://cyclonedx.org/docs/1.4/json/#externalReferences
-addComponentExternalReference() {
+addExternalReference() {
   local javaHome="${1}"
   local classpath="${2}"
   local jsonFile="${3}"
-  local comment="${4}"
-  local type="${5}"
-  local url="${6}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addExternalReference --jsonFile "${jsonFile}" --url "${url}" --type "${type}" --comment "${comment}"
+  local url="${4}" # required
+  local comment="${5}"
+  local hash="${6}"
+  if [ -z "${hash}" ]; then
+    "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addExternalReference --jsonFile "${jsonFile}" --url "${url}" --comment "${comment}" --hash "${hash}"
+  else
+    "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addExternalReference --jsonFile "${jsonFile}" --url "${url}" --comment "${comment}"
+  fi
 }
