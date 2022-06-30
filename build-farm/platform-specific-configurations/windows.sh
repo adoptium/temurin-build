@@ -139,7 +139,11 @@ then
       TOOLCHAIN_VERSION="2013"
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export PATH="/cygdrive/c/openjdk/make-3.82/:$PATH"
-    elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
+    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
+    then 
+      export TOOLCHAIN_VERSION="2017"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
+    elif [ "$JAVA_FEATURE_VERSION" -gt 11 ]
     then
       TOOLCHAIN_VERSION="2019"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
