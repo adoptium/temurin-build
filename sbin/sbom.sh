@@ -3,6 +3,14 @@ createSBOMFile() {
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "$sbomJson"
 }
 
+# Set simbe SBMO metadata with timestamp, authors, manufacture to ${sbomJson}
+addSBOMMetadata() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "${jsonFile}"
+}
+
 # Ref: https://cyclonedx.org/docs/1.4/json/#metadata
 # Add the given Property name & value to the SBOM Metadata
 addSBOMMetadataProperty() {

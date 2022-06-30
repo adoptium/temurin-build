@@ -693,9 +693,27 @@ generateSBoM() {
 
   # Create initial SBOM json
   createSBOMFile "${javaHome}" "${classpath}" "${sbomJson}"
+  # Set default SBOM metadata
+  addSBOMMetadata "${javaHome}" "${classpath}" "${sbomJson}"
 
   # Add JDK Component
   addSBOMComponent "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
+
+  # Below add different metadata to SBOM
+  
+  # Add 
+
+  # Below add component to metadata in SBOM
+  # Add OS full version (Kernel is covered in the first field)
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_FULL_VERSION" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
+  # Add ARCHITECTURE
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_ARCHITECTURE" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
+  # Add VARIANT
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK_VARIANT" "${BUILD_CONFIG[BUILD_VARIANT]^}"
+  # Add build host docker info
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "USE_DOCKER" "${BUILD_CONFIG[USE_DOCKER]^}"
+
+  # Below add different properties to JDK component
 
   # Add variant as JDK Component Property
   addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "variant" "${BUILD_CONFIG[BUILD_VARIANT]^}"
@@ -722,17 +740,7 @@ generateSBoM() {
   # Add make_command_args JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
-  # Add OS full version (Kernel is covered in the first field)
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_FULL_VERSION" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
-
-  # Add ARCHITECTURE
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS_ARCHITECTURE" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
-
-  # Add VARIANT
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK_VARIANT" "${BUILD_CONFIG[BUILD_VARIANT]^}"
-
-  # Add build host docker info
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "USE_DOCKER" "${BUILD_CONFIG[USE_DOCKER]^}"
+  
 
 
   # Add ALSA 3rd party as externalReferences

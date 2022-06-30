@@ -23,6 +23,7 @@ import org.cyclonedx.model.Component;
 import org.cyclonedx.model.ExternalReference;
 import org.cyclonedx.model.Hash;
 import org.cyclonedx.model.OrganizationalEntity;
+import org.cyclonedx.model.OrganizationalContact;
 import org.cyclonedx.parsers.JsonParser;
 import org.cyclonedx.generators.json.BomJsonGenerator;
 import java.io.FileReader;
@@ -100,7 +101,7 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addMetadata":                              // Adds Metadata Component --> name
-                bom = addMetadata(name, fileName);
+                bom = addMetadata(fileName);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -110,7 +111,7 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addComponent":                            // Adds Component
-                bom = addComponent(compName, name, description, fileName);
+                bom = addComponent(compName, version, description, fileName);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -141,7 +142,7 @@ public final class TemurinGenSBOM {
         Bom bom = new Bom();
         return bom;
     }
-    static Bom addMetadata(final String name, final String fileName) {          // Method to store metadata -->  name
+    static Bom addMetadata(final String fileName) {          // Method to store metadata -->  name
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
         Component comp = new Component();
@@ -149,7 +150,9 @@ public final class TemurinGenSBOM {
         org.setName("Eclipse Foundation");
         org.setUrls(Collections.singletonList("https://www.eclipse.org/"));
         meta.setManufacture(org);
-        meta.setComponent(comp);
+        OrganizationalContact auth = new OrganizationalContact();
+        auth.setName("Adoptium Temurin");// "email", "phone");
+        meta.addAuthor(auth);
         bom.setMetadata(meta);
         return bom;
     }
