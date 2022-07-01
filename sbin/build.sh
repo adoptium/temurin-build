@@ -697,35 +697,35 @@ generateSBoM() {
   addSBOMMetadata "${javaHome}" "${classpath}" "${sbomJson}"
 
   # Create component to metadata in SBOM
-  addSBOMMetadataComponent "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "framework" "${fullVer}" "Temurin JDK"
+  addSBOMMetadataComponent "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "framework" "${fullVer}" "Temurin JDK Component"
 
   # Below add property to metadata
   # Add OS full version (Kernel is covered in the first field)
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS VERSION" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS ARCHITECTURE" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS version" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "${BUILD_CONFIG[USE_DOCKER]^}"
 
   # Create JDK Component
-  addSBOMComponent "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
+  addSBOMComponent "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
 
   # Below add different properties to JDK component
   # Add variant as JDK Component Property
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "variant" "${BUILD_CONFIG[BUILD_VARIANT]^}"
+  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "JDK Variant" "${BUILD_CONFIG[BUILD_VARIANT]^}"
   # Add scmRef as JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "scmRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
+  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "SCM Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
   # Add OpenJDK source ref commit as JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "openjdkSourceCommit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
+  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "OpenJDK Source Commit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
   # Add buildRef as JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "buildRef" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
+  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Temurin Build Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
   # Add builtConfig JDK Component Property, load as Json string
   built_config=$(createConfigToJsonString)
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "builtConfig" "${built_config}"
+  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Build Config" "${built_config}"
   # Add full_version_output JDK Component Property
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "full_version_output" "${fullVerOutput}"
+  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "full_version_output" "${fullVerOutput}"
   # Add makejdk_any_platform_args JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "makejdk_any_platform_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
+  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "makejdk_any_platform_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
   # Add make_command_args JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "JDK" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
+  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
   # Below add build tools into metadata tools
   # Add ALSA 3rd party
