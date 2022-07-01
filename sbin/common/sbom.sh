@@ -67,7 +67,7 @@ addSBOMMetadataComponent() {
   local jsonFile="${3}"
   local name="${4}"
   local type="${5}"
-  local version="${6}}"
+  local version="${6}"
   local description="${7}"
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataComponent --jsonFile "${jsonFile}" --name "${name}"  --type "${type}" --version "${version}" --description "${description}"
 }
