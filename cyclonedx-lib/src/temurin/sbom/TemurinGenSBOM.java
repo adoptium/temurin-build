@@ -122,7 +122,7 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addMetadataProperty":                     // Adds MetaData--> Property --> name-value:
-                bom = addMetadataProperty(name, value, fileName);
+                bom = addMetadataProperty(fileName, name, value);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -132,22 +132,22 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addComponent":                            // Adds Component
-                bom = addComponent(compName, version, description, fileName);
+                bom = addComponent(fileName, compName, version, description);
                 writeJSONfile(bom, fileName);
                 break;
 
             case "addComponentProp":                       // Adds Components --> name-value pairs
-                bom = addComponentProperty(compName, name, value, fileName);
+                bom = addComponentProperty(fileName, compName, name, value);
                 writeJSONfile(bom, fileName);
                 break;
 
             case "addExternalReference":                                     // Adds external Reference
-                bom = addExternalReference(hashes, url, comment, fileName);
+                bom = addExternalReference(fileName, hashes, url, comment);
                 writeJSONfile(bom, fileName);
                 break;
 
             case "addComponentExternalReference":                                  // Adds external Reference to component
-                bom = addComponentExternalReference(hashes, url, comment,  fileName);
+                bom = addComponentExternalReference(fileName, hashes, url, comment);
                 writeJSONfile(bom, fileName);
                 break;
             default:
