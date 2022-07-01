@@ -1,3 +1,4 @@
+#!/bin/bash
 # Create a default SBOM json file: sbomJson
 createSBOMFile() {
   local javaHome="${1}"
