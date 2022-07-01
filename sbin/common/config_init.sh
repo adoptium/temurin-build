@@ -158,7 +158,7 @@ function createConfigToJsonString() {
   jsonString="{ "
   for K in "${!BUILD_CONFIG[@]}";
   do
-    jsonString+="\"$K\" : \"${BUILD_CONFIG[$K]}\", "
+    jsonString+="\"${PARAM_LOOKUP[$K]}\" : \"${BUILD_CONFIG[$K]}\", "
   done
   jsonString+=" \"Data Source\" : \"BUILD_CONFIG hashmap\"}"
   echo "${jsonString}"
