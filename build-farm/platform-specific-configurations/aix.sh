@@ -15,8 +15,16 @@
 # limitations under the License.
 ################################################################################
 
-
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Clear out /tmp/sh-np files if we're running in jenkins to avoid
+# "ambiguous redirect" pipe failures. This will be ok with only one executor
+# See https://github.com/adoptium/infrastructure/issues/929
+if [ "$(whoami)" = "jenkins" ] && [ -n "$WORKSPACE" ]; then
+   echo "There are $(/usr/bin/find /tmp \( -user jenkins -a -name sh-np.\* \) | wc -l) sh-np files owned by jenkins in /tmp that I am going to remove..."
+   /usr/bin/find /tmp \( -user jenkins -a -name sh-np.\* \) | xargs rm -f
+fi
+
 
 # AIX default ulimit is frequently less than we need to clone the LTS JDK repositories
 FILESIZELIMIT=$(ulimit)
