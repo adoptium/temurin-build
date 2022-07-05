@@ -372,7 +372,10 @@ configureVersionStringParameter() {
 # Construct all of the 'configure' parameters
 buildingTheRestOfTheConfigParameters() {
   if [ -n "$(which ccache)" ]; then
-    addConfigureArg "--enable-ccache" ""
+    # enabled reproducible build with --disable-ccache, should not set --enable-ccache
+    if [[ "${JAVA_FEATURE_VERSION}" -lt 17 || "${JAVA_FEATURE_VERSION}" -eq 18 ]]; then
+      addConfigureArg "--enable-ccache" ""
+    fi
   fi
 
   # Point-in-time dependency for openj9 only

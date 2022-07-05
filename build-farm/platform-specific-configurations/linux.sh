@@ -240,8 +240,11 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
   fi
 fi
 
-if which ccache 2> /dev/null; then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
+if [ "$(which ccache 2> /dev/null)" ]; then
+  # enabled reproducible build with --disable-ccache, should not set --enable-ccache
+  if [[ "${JAVA_FEATURE_VERSION}" -lt 17 || "${JAVA_FEATURE_VERSION}" -eq 18 ]]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
+  fi
 fi
 
 # Handle cross compilation environment for RISC-V
