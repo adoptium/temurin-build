@@ -19,33 +19,49 @@ jobs:
       fail-fast: false
       matrix:
         os: [linux]
-        version: [jdk8u, jdk11u, jdk17u, jdk18, jdk]
-        vm: [hotspot]
+        version: [jdk8u, jdk11u, jdk17u, jdk18u, jdk19, jdk] #jdk head == jdk20
+        variant: [temurin]
         image: [adoptopenjdk/centos7_build_image]
         include:
           - os: alpine-linux
-            version: jdk16u
-            vm: hotspot
+            version: jdk8u
+            variant: temurin
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk11u
+            variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk17u
-            vm: hotspot
+            variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
-            version: jdk18
-            vm: hotspot
+            version: jdk18u
+            vm: temurin
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk19
+            vm: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk
-            vm: hotspot
+            variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: linux
             version: jdk11u
+            variant: dragonwell
+            image: adoptopenjdk/centos7_build_image
+          - os: linux
+            version: jdk8u
             vm: dragonwell
             image: adoptopenjdk/centos7_build_image
           - os: linux
             version: jdk11u
-            vm: bisheng
+            variant: fast_startup
+            image: adoptopenjdk/centos7_build_image
+          - os: linux
+            version: jdk11u
+            variant: bisheng
             image: adoptopenjdk/centos7_build_image
     steps:
     - uses: actions/checkout@v2
@@ -55,7 +71,7 @@ jobs:
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
-        VARIANT: ${{ matrix.vm }}
+        VARIANT: ${{ matrix.variant }}
         TARGET_OS: ${{ matrix.os }}
         FILENAME: OpenJDK.tar.gz
         # Don't set the OS as we use both linux and alpine-linux
@@ -64,7 +80,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       name: Collect and Archive Artifacts
       with:
-        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
         path: workspace/target/*
 
     - name: Unpack jdk
@@ -73,8 +89,8 @@ jobs:
         tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
     - name: Set root of jdk image dir
       run: |
-        imageroot=`find ${HOME}/JDK -name release -type f`
-        echo "TEST_JDK_HOME=`dirname ${imageroot}`" >> $GITHUB_ENV
+        imageroot=$(find "${HOME}/JDK" -name release -type f)
+        echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
     - name: Smoke test
       uses: adoptium/run-aqa@v1
       with:
@@ -87,7 +103,7 @@ jobs:
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
-        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}_test_output"
+        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}_test_output"
         path: ./**/output_*/
 
   build_macos:
@@ -98,7 +114,7 @@ jobs:
       matrix:
         os: [macOS]
         version: [jdk8u, jdk11u]
-        vm: [hotspot]
+        variant: [temurin]
 
     steps:
     - uses: actions/checkout@v2
@@ -130,7 +146,7 @@ jobs:
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
         ARCHITECTURE: x64
-        VARIANT: ${{ matrix.vm }}
+        VARIANT: ${{ matrix.variant }}
         TARGET_OS: mac
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
@@ -138,7 +154,7 @@ jobs:
     - uses: actions/upload-artifact@v2
       name: Collect and Archive Artifacts
       with:
-        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+        name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
         path: workspace/target/*
 
     - name: Unpack jdk
@@ -148,8 +164,8 @@ jobs:
 
     - name: Set root of jdk image dir
       run: |
-        imageroot=`find ${HOME}/JDK -name release -type f`
-        echo "TEST_JDK_HOME=`dirname ${imageroot}`" >> $GITHUB_ENV
+        imageroot=$(find "${HOME}/JDK" -name release -type f)
+        echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
     - name: Smoke test
       uses: adoptium/run-aqa@v1
       with:
@@ -162,7 +178,7 @@ jobs:
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
-        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}_test_output"
+        name: "${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}_test_output"
         path: ./**/output_*/
 
   build_windows:
@@ -172,12 +188,11 @@ jobs:
        fail-fast: false
        matrix:
          os: [windows-2019]
-         version: [jdk]
-         vm: [hotspot]
-         include:
-          - os: windows-2016
-            version: jdk11u
-            vm: hotspot
+         version: [jdk8u, jdk11u, jdk17u, jdk]
+         variant: [temurin]
+
+     env:
+      VS2017_URL: "https://github.com/akashche/msvs_2017_installer_bootstrap/raw/master/vs_community__7955ddbf8a9b49dda0f8d18876e93bd2.exe"
 
      steps:
      - name: Restore cygwin packages from cache
@@ -193,16 +208,52 @@ jobs:
          Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
          Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages autoconf,automake,bsdtar,cpio,curl,gcc-core,git,gnupg,grep,libtool,make,mingw64-x86_64-gcc-core,perl,rsync,unzip,wget,zip --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
 
-     - uses: actions/setup-java@v1
+     - uses: actions/setup-java@v3
        id: setup-java7
        with:
+         distribution: 'zulu'
          java-version: 7
        if: matrix.version == 'jdk8u'
 
-     - uses: actions/setup-java@v1
+     - uses: actions/setup-java@v3
        id: setup-java11
        with:
+         distribution: 'temurin'
          java-version: 11
+
+     - name: Restore Visual Studio 2017 from cache
+       id: vs2017
+       if: matrix.version == 'jdk8u'
+       uses: actions/cache@v2
+       with:
+         path: ~/vs2017.exe
+         key: vs2017
+
+     - name: Uninstall WinSDKs
+       if: matrix.version == 'jdk8u'
+       run: >
+         Start-Process -FilePath 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe' -Wait -NoNewWindow -ArgumentList
+         'modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.18362
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.19041
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.20348
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.22000
+         --quiet'
+
+     - name: Download Visual Studio 2017
+       run: |
+         curl -L "$env:VS2017_URL" -o "$HOME/vs2017.exe"
+       if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
+
+     - name: Install Visual Studio 2017
+       if: matrix.version == 'jdk8u'
+       run: >
+         Start-Process -FilePath "$HOME\vs2017.exe" -Wait -NoNewWindow -ArgumentList
+         'install --productId Microsoft.VisualStudio.Product.Community --channelId VisualStudio.15.Release
+         --add Microsoft.VisualStudio.Workload.NativeDesktop
+         --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
+         --add Microsoft.VisualStudio.Component.Windows10SDK.17763
+         --quiet --wait'
 
      - name: Install Git
        run: |
@@ -210,28 +261,36 @@ jobs:
          Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
 
      - name: Set PATH
-       run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-     - name: Install Visual Studio 2013
-       run: |
-         choco install visualstudiocommunity2013
-       if: matrix.version == 'jdk8u'
+       run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
 
      - name: Cygwin git configuration
        shell: bash
-       run: mkdir $HOME && git config --system core.autocrlf false
+       run: mkdir "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
 
-     - uses: actions/checkout@v2
+     - uses: actions/checkout@v3.0.2
+       with:
+         set-safe-directory: false
 
      - name: Setup 8dot3name
        run: fsutil behavior set disable8dot3 0
 
      - name: Set JAVA_HOME
-       run: echo "JAVA_HOME=$(cygpath ${{ steps.setup-java11.outputs.path }})" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+       run: echo "JAVA_HOME=$(cygpath "${{ steps.setup-java11.outputs.path }}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
 
      - name: Set JDK7_BOOT_DIR
-       run: echo "JDK7_BOOT_DIR=$(cygpath ${{ steps.setup-java7.outputs.path }})" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+       run: echo "JDK7_BOOT_DIR=$(cygpath "${{ steps.setup-java7.outputs.path }}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
        if: matrix.version == 'jdk8u'
+
+     - name: Hold ANT_HOME value (from GH) to ANT_HOME2
+       run: echo "ANT_HOME_ORIGIN=${env:ANT_HOME}" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
+
+     - name: Export ANT to PATH(GITHUB_ENV)
+       run: echo "ANT_HOME=$(cygpath "${env:ANT_HOME}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
+
+     - name: Append ANT_HOME to PATH
+       run: |
+        "${env:ANT_HOME}/bin" >> ${env:GITHUB_PATH}
+       shell: pwsh
 
      - name: Build Windows
        run: |
@@ -240,29 +299,35 @@ jobs:
        env:
          JAVA_TO_BUILD: ${{ matrix.version }}
          ARCHITECTURE: x64
-         VARIANT: ${{ matrix.vm }}
+         VARIANT: ${{ matrix.variant }}
          TARGET_OS: windows
          FILENAME: OpenJDK.zip
 
      - uses: actions/upload-artifact@v2
        name: Collect and Archive Artifacts
        with:
-         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
          path: workspace/target/*
 
      - name: Restore build artifacts
        uses: actions/download-artifact@v2
        with:
-         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
-         path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}
+         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
+         path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
+
      - name: Unpack jdk
        run: |
-         unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}"
+         unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}"
 
      - name: Set root of jdk image dir
+       shell: pwsh
        run: |
-         $imageroot = find ${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.vm}} -name release -type f
-         echo "TEST_JDK_HOME=$(dirname ${imageroot})" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+         $imageroot=$(find "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}" -name release -type f)
+         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
+
+     - name: Reset ANT_HOME from ANT_HOME_ORIGIN for smoke test
+       run: echo "ANT_HOME=${env:ANT_HOME_ORIGIN}" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
+
      - name: Smoke test
        uses: adoptium/run-aqa@v1
        with:
@@ -275,5 +340,5 @@ jobs:
        name: Collect and Archive SmokeTest Results
        if: failure()
        with:
-         name: "${{matrix.version}}-${{matrix.os}}-${{matrix.vm}}_test_output"
+         name: "${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}_test_output"
          path: ./**/output_*/

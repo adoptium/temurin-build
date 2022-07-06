@@ -16,7 +16,7 @@
 
 ################################################################################
 #
-# This script deals with the configuration to build (Adopt) OpenJDK in a docker
+# This script deals with the configuration to build (Adoptium) OpenJDK in a docker
 # container.
 # It's sourced by the makejdk-any-platform.sh script.
 #
@@ -69,7 +69,7 @@ buildDockerContainer()
   ${BUILD_CONFIG[DOCKER]} build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" --build-arg "HostUID=${UID}"
 }
 
-# Execute the (Adopt) OpenJDK build inside the Docker Container
+# Execute the (Adoptium) OpenJDK build inside the Docker Container
 buildOpenJDKViaDocker()
 {
 

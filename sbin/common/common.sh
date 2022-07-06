@@ -41,8 +41,8 @@ function setOpenJdkVersion() {
     retryMax=5
     until [ "$retryCount" -ge "$retryMax" ]
     do
-        # Use Adopt API to get the JDK Head number
-        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptium.net/v3/info/available_releases)..."
+        # Use Adoptium API to get the JDK Head number
+        echo "This appears to be JDK Head. Querying the Adoptium API to get the JDK HEAD Number (https://api.adoptium.net/v3/info/available_releases)..."
         local featureNumber=$(curl -q https://api.adoptium.net/v3/info/available_releases | awk '/tip_version/{print$2}')
         
         # Checks the api request was successful and the return value is a number
@@ -129,7 +129,8 @@ createOpenJDKArchive()
   if which pigz > /dev/null 2>&1; then
     COMPRESS=pigz
   fi
-  echo "Archiving the build OpenJDK image and compressing with $COMPRESS"
+
+  echo "Archiving and compressing with $COMPRESS"
 
   EXT=$(getArchiveExtension)
 
@@ -207,8 +208,11 @@ function setBootJdk() {
 
 # A function that returns true if the variant is based on HotSpot and should
 # be treated as such by the build scripts
+# This is possibly only used in configureBuild.sh for arm32
+# But should perhaps just be "if not openj9" to include Dragonwell/Bisheng
 function isHotSpot() {
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_HOTSPOT}" ] ||
+  [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ] ||
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ] ||
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]
 }

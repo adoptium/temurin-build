@@ -1,5 +1,4 @@
-#!/bin/bash
-
+/*
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,21 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ################################################################################
+*/
+/**
+  * Temurin SBOM package.
+  */
+package temurin.sbom;
 
-################################################################################
-#
-# This script deals with the configuration to build (Adoptium) OpenJDK natively.
-# It's sourced by the makejdk-any-platform.sh script.
-#
-################################################################################
-
-set -eu
-
-# i.e. Where we are
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-buildOpenJDKInNativeEnvironment()
-{
-    displayParams
-    bash "${SCRIPT_DIR}"/sbin/build.sh
-}

@@ -81,13 +81,13 @@ then
 
         if [ $ret -ne 0 ] || [[ ! $fileContents =~ $contentsErrorRegex ]]
         then
-            # If there is no user platform config, use adopt's as a default instead
-            echo "[WARNING] Failed to download a user platform configuration file. Downloading Adopt's ${OPERATING_SYSTEM}.sh configuration file instead."
+            # If there is no user platform config, use Adoptium's as a default instead
+            echo "[WARNING] Failed to download a user platform configuration file. Downloading Adoptium's ${OPERATING_SYSTEM}.sh configuration file instead."
             downloadPlatformConfigFile "${ADOPT_PLATFORM_CONFIG_LOCATION}" "${OPERATING_SYSTEM}.sh"
 
             if [ $ret -ne 0 ] || [[ ! $fileContents =~ $contentsErrorRegex ]]
             then
-                echo "[ERROR] Failed to download a platform configuration file from User and Adopt's repositories"
+                echo "[ERROR] Failed to download a platform configuration file from User and Adoptium's repositories"
                 exit 2
             fi
         fi
@@ -98,3 +98,20 @@ else
     echo "[SUCCESS] Executing local file at ${PLATFORM_CONFIG_FILEPATH}"
 fi
 source "${PLATFORM_CONFIG_FILEPATH}"
+
+# jdk-17 and jdk-19+ support reproducible builds
+if [[ "${JAVA_FEATURE_VERSION}" -ge 19 || "${JAVA_FEATURE_VERSION}" -eq 17 ]]
+then
+    # Enable reproducible builds implicitly with --with-source-date
+    if [ "${RELEASE}" == "true" ]
+    then
+        # Use release date and disable CCache( remove --enable-ccache if exist)
+        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM//--enable-ccache/} --with-source-date=version --disable-ccache"
+    else
+        # Use build date
+        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-source-date=updated"
+    fi
+
+    # Ensure reproducible binary with a unique build user identifier
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-user=adoptium"
+fi

@@ -111,6 +111,26 @@ then
 fi
 
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
+if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
+  if [ -d /opt/dragonwell8 ]; then
+    export "${BOOT_JDK_VARIABLE}"=/opt/dragonwell8
+  elif [ -d /usr/lib/jvm/dragonwell8 ]; then
+    export "${BOOT_JDK_VARIABLE}"=/usr/lib/jvm/dragonwell8
+  else
+    echo Dragonwell 8 requires a Dragonwell boot JDK - downloading one ...
+    mkdir -p "$PWD/jdk-8"
+    if [ "$(uname -m)" = "x86_64" ]; then
+      curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.11.12_jdk8u332-ga/Alibaba_Dragonwell_8.11.12_x64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+    elif [ "$(uname -m)" = "aarch64" ]; then
+      curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.8.9_jdk8u302-ga/Alibaba_Dragonwell_8.8.9_aarch64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+    else
+      echo "Unknown architecture $(uname -m) for building Dragonwell - cannot download boot JDK"
+      exit 1
+    fi
+    export "${BOOT_JDK_VARIABLE}"="$PWD/jdk-8"
+  fi
+fi
+
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
@@ -122,16 +142,11 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       echo "Could not use ${BOOT_JDK_VARIABLE} - using /usr/lib/jvm/jdk-${JDK_BOOT_VERSION}"
       # shellcheck disable=SC2140
       export "${BOOT_JDK_VARIABLE}"="/usr/lib/jvm/jdk-${JDK_BOOT_VERSION}"
-    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
+    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8
       mkdir -p "$bootDir"
       releaseType="ga"
-      vendor="adoptium"
-      # TODO: Temporary change until https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/2145 is resolved
-      if [ "$JDK_BOOT_VERSION" -ge 15 ] && [ "$VARIANT" = "openj9" ] && [ "$ARCHITECTURE" = "aarch64" ]; then
-        apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/hotspot/normal/\${vendor}"
-      else
-        apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/\${VARIANT}/normal/\${vendor}"
-      fi
+      vendor="eclipse"
+      apiUrlTemplate="https://api.adoptium.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/linux/\${ARCHITECTURE}/jdk/hotspot/normal/\${vendor}"
       apiURL=$(eval echo ${apiUrlTemplate})
       echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
       # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
@@ -160,7 +175,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
           # shellcheck disable=SC2034
           releaseType="ga"
           # shellcheck disable=SC2034
-          vendor="adoptopenjdk"
+          vendor="adoptium"
           apiURL=$(eval echo ${apiUrlTemplate})
           echo "Attempting to download GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
           curl -L "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
@@ -181,16 +196,34 @@ if [ $executedJavaVersion -ne 0 ]; then
 fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 11 ] && [ -r /usr/local/gcc9/ ] && [ "${ARCHITECTURE}" == "aarch64" ]; then
+  # GCC9 rather than 10 requested by Alibaba for now
+  # Ref https://github.com/adoptium/temurin-build/issues/2250#issuecomment-732958466
   export PATH=/usr/local/gcc9/bin:$PATH
   export CC=/usr/local/gcc9/bin/gcc-9.3
   export CXX=/usr/local/gcc9/bin/g++-9.3
+  # Enable GCC 10 for Java 17+ for repeatable builds, but not for our supported releases
+  # Ref https://github.com/adoptium/temurin-build/issues/2787
+elif [ "$JAVA_FEATURE_VERSION" -ge 19 ] && [ -r /usr/local/gcc11/bin/gcc-11.2 ]; then
+  export PATH=/usr/local/gcc11/bin:$PATH
+  [ -r /usr/local/gcc11/bin/gcc-11.2 ] && export  CC=/usr/local/gcc11/bin/gcc-11.2
+  [ -r /usr/local/gcc11/bin/g++-11.2 ] && export CXX=/usr/local/gcc11/bin/g++-11.2
+  export LD_LIBRARY_PATH=/usr/local/gcc11/lib64:/usr/local/gcc11/lib
+elif [ "$JAVA_FEATURE_VERSION" -ge 17 ] && [ -r /usr/local/gcc10/bin/gcc-10.3 ]; then
+  export PATH=/usr/local/gcc10/bin:$PATH
+  [ -r /usr/local/gcc10/bin/gcc-10.3 ] && export  CC=/usr/local/gcc10/bin/gcc-10.3
+  [ -r /usr/local/gcc10/bin/g++-10.3 ] && export CXX=/usr/local/gcc10/bin/g++-10.3
+  export LD_LIBRARY_PATH=/usr/local/gcc10/lib64:/usr/local/gcc10/lib
+elif [ "$JAVA_FEATURE_VERSION" -gt 17 ] && [ -r /usr/bin/gcc-10 ]; then
+  [ -r /usr/bin/gcc-10 ] && export  CC=/usr/bin/gcc-10
+  [ -r /usr/bin/g++-10 ] && export CXX=/usr/bin/g++-10
+# Continue to use GCC 7 if present for JDK<=17 and where 10 does not exist
 elif [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
   export PATH=/usr/local/gcc/bin:$PATH
-  [ -r /usr/local/gcc/bin/gcc-7.5 ] && export CC=/usr/local/gcc/bin/gcc-7.5
+  [ -r /usr/local/gcc/bin/gcc-7.5 ] && export  CC=/usr/local/gcc/bin/gcc-7.5
   [ -r /usr/local/gcc/bin/g++-7.5 ] && export CXX=/usr/local/gcc/bin/g++-7.5
   export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
 elif [ -r /usr/bin/gcc-7 ]; then
-  [ -r /usr/bin/gcc-7 ] && export CC=/usr/bin/gcc-7
+  [ -r /usr/bin/gcc-7 ] && export  CC=/usr/bin/gcc-7
   [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
 fi
 
@@ -207,7 +240,7 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
   fi
 fi
 
-if which ccache 2> /dev/null; then
+if [ "$(which ccache 2> /dev/null)" ]; then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
 fi
 
@@ -272,6 +305,16 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; 
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     # shellcheck disable=SC2001
     CONFIGURE_ARGS_FOR_ANY_PLATFORM=$(echo "$CONFIGURE_ARGS_FOR_ANY_PLATFORM" | sed "s,with-openssl=[^ ]*,with-openssl=${RISCV_SYSROOT}/usr,g")
+    if ! which qemu-riscv64-static; then
+      # don't download it if we already have it from a previous build
+      if [ ! -x "$WORKSPACE/qemu-riscv64-static" ]; then
+        echo Download qemu-riscv64-static as it is required for the OpenJ9 cross build ...
+        curl https://ci.adoptopenjdk.net/userContent/riscv/qemu-riscv64-static.xz | xz -d > "$WORKSPACE/qemu-riscv64-static" && \
+        chmod 755 "$WORKSPACE/qemu-riscv64-static"
+      fi
+      export PATH="$PATH:$WORKSPACE" && \
+      qemu-riscv64-static --version
+    fi
   fi
 
   if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then

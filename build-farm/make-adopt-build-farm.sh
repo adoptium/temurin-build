@@ -25,11 +25,12 @@ PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [ -z "$ARCHITECTURE"  ]; then
    ARCHITECTURE=$(uname -p)
-   if [ "$OSTYPE"       = "cygwin"  ]; then ARCHITECTURE=$(uname -m); fi # Windows
+   if [ "$OSTYPE" = "cygwin"  ] || [ "${ARCHITECTURE}" = "unknown" ]; then ARCHITECTURE=$(uname -m); fi # Windows / Alpine
    if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;        fi # Linux/x64
-   if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64
+   if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64 and mac/x64
    if [ "$ARCHITECTURE" = "sparc"   ]; then ARCHITECTURE=sparcv9;    fi # Solaris/SPARC
    if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi # AIX
+   if [ "$ARCHITECTURE" = "arm"     ]; then ARCHITECTURE=aarch64;    fi # mac/aarch64
    if [ "$ARCHITECTURE" = "armv7l"  ]; then ARCHITECTURE=arm;        fi # Linux/arm32
    echo ARCHITECTURE not defined - assuming $ARCHITECTURE
    export ARCHITECTURE
@@ -39,8 +40,10 @@ fi
 ## so needs to be special cased - on everthing else "uname" is valid
 if [ -z "$TARGET_OS" ]; then
   TARGET_OS=$(uname)
-  if [ "$OSTYPE" = "cygwin" ]; then TARGET_OS=windows ; fi
-  if [ "$OSTYPE" = "SunOS"  ]; then TARGET_OS=solaris ; fi
+  if [ "$OSTYPE"    = "cygwin" ]; then TARGET_OS=windows     ; fi
+  if [ "$TARGET_OS" = "SunOS"  ]; then TARGET_OS=solaris     ; fi
+  if [ "$TARGET_OS" = "Darwin" ]; then TARGET_OS=mac         ; fi
+  if [ -r /etc/alpine-release  ]; then TARGET_OS=alpine-linux; fi
   echo TARGET_OS not defined - assuming you want "$TARGET_OS"
   export TARGET_OS
 fi
@@ -59,7 +62,14 @@ fi
 
 [ -z "$JAVA_TO_BUILD" ] && echo JAVA_TO_BUILD not defined - set to e.g. jdk8u
 [ -z "$VARIANT"       ] && echo VARIANT not defined - assuming hotspot && export VARIANT=hotspot
-[ -z "$FILENAME"      ] && echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARIANT}.tar.gz"
+if [ -z "$FILENAME"   ]; then
+  if [ "${VARIANT}" = "temurin" ]; then
+     # I don't like this - perhaps we should override elsewhere to keep consistency with existing release names
+     echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-hotspot.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-hotspot.tar.gz"
+  else
+     echo FILENAME not defined - assuming "${JAVA_TO_BUILD}-${VARIANT}.tar.gz" && export FILENAME="${JAVA_TO_BUILD}-${VARIANT}.tar.gz"
+  fi
+fi
 
 # shellcheck source=sbin/common/constants.sh
 source "$PLATFORM_SCRIPT_DIR/../sbin/common/constants.sh"
@@ -84,8 +94,8 @@ then
     retryMax=5
     until [ "$retryCount" -ge "$retryMax" ]
     do
-        # Use Adopt API to get the JDK Head number
-        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptium.net/v3/info/available_releases)..."
+        # Use Adoptium API to get the JDK Head number
+        echo "This appears to be JDK Head. Querying the Adoptium API to get the JDK HEAD Number (https://api.adoptium.net/v3/info/available_releases)..."
         JAVA_FEATURE_VERSION=$(curl -q https://api.adoptium.net/v3/info/available_releases | awk '/tip_version/{print$2}')
 
         # Checks the api request was successful and the return value is a number
@@ -102,7 +112,7 @@ then
     # Fail build if we still can't find the head number
     if [ -z "${JAVA_FEATURE_VERSION}" ] || ! [[ "${JAVA_FEATURE_VERSION}" -gt 0 ]]
     then
-        echo "Failed ${retryCount} times to query or parse the adopt api. Dumping headers via curl -v https://api.adoptium.net/v3/info/available_releases and exiting..."
+        echo "Failed ${retryCount} times to query or parse the Adoptium api. Dumping headers via curl -v https://api.adoptium.net/v3/info/available_releases and exiting..."
         curl -v https://api.adoptium.net/v3/info/available_releases
         echo curl returned RC $? in make_adopt_build_farm.sh
         exit 1
@@ -131,6 +141,11 @@ then
   if [ "${JAVA_FEATURE_VERSION}" == "11" ] && [ "${VARIANT}" == "openj9" ]; then
     # OpenJ9 only supports building jdk-11 with jdk-11
     JDK_BOOT_VERSION="11"
+  fi
+  if [ "${JAVA_FEATURE_VERSION}" == "19" ]; then
+    # To support reproducible-builds the jar/jmod --date option is required
+    # which is only available from jdk-19 so we cannot bootstrap with JDK18
+    JDK_BOOT_VERSION="19"
   fi
 fi
 echo "Required boot JDK version: ${JDK_BOOT_VERSION}"
@@ -174,7 +189,7 @@ then
   fi
 fi
 
-echo "Boot jdk directory: ${JDK_BOOT_DIR}:"
+echo "Boot jdk directory: ${JDK_BOOT_DIR}"
 "${JDK_BOOT_DIR}/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 java -version 2>&1 | sed 's/^/JDK IN PATH: /g'
 

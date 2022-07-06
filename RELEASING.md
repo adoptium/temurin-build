@@ -1,3 +1,4 @@
+<!-- textlint-disable terminology -->
 # Temurin Release Guide
 
 Don't be scared off by this document! If you already understand the stuff in the glossary section and are only working on a HotSpot release, then skip to [Steps for every version](#steps-for-every-version) later on.
@@ -22,7 +23,10 @@ Don't be scared off by this document! If you already understand the stuff in th
 - On GA day, Oracle merges the internal branch and Vulnerability Group fixes to produce the final GA build, and this is tagged, e.g. `jdk-13.0.1+9`, `jdk-13.0.1-ga`
 - If the release is a short term support release there are no more releases after the two Oracle-led updates, but if it is a long term support (LTS) release the OpenJDK community picks up subsequent release maintenance, and all work continues in public as described above.
 
-### Eclipse OpenJ9/OMR releases
+<details>
+<summary>Eclipse OpenJ9/OMR releases</summary>
+
+### NOTE1: Temurin does not ship OpenJ9 releases so this section has been collapsed as it it not required by anyone performing the Temurin release process
 
 - The OpenJ9 releases are based on three codebases
   - https://github.com/eclipse-openj9/openj9-omr (a platform abstraction layer which OpenJ9 builds use, based on https://github.com/eclipse/omr)
@@ -42,6 +46,8 @@ Don't be scared off by this document! If you already understand the stuff in th
 - When it comes to the GA date, the auto-merged GA jdk "tag" needs to be merged into the `openj9-0.nn.0` release branch by the extensions team.
 - The release branch is also updated to pull in the GA Eclipse OpenJ9 & OMR release tags, and then the GA JDK binary is built.
 
+</details>
+
 ## OpenJDK Quarterly/New Release Process
 
 1. Wait for Red Hat/Oracle to push the GA code to mercurial and announce availability:
@@ -52,7 +58,10 @@ Don't be scared off by this document! If you already understand the stuff in th
    - jdkNN: https://hg.openjdk.java.net/jdk/jdkNN/
      - Announce: https://mail.openjdk.java.net/pipermail/jdk-dev/
 
-## Extra OpenJ9 prerequisite steps (skip for a HotSpot release)
+<details>
+<summary>Extra OpenJ9 prerequisite steps (skip for a Temurin HotSpot release)</summary>
+
+### NOTE2: Temurin does not ship OpenJ9 releases so this section has been collapsed as it it not required by anyone performing the Temurin release process
 
 1. The extensions release branch (e.g. `openj9-0.17.0`) will exist from doing the milestone builds (OpenJ9 milestone process is covered in a later section).
 2. Ask the extensions team to run their release-specific merge jobs to ensure they are up to date - this is not done by jobs at Adoptium.
@@ -93,16 +102,15 @@ Don't be scared off by this document! If you already understand the stuff in th
      J9JDK_EXT_VERSION       := 11.0.5.0
      # J9JDK_EXT_VERSION       := HEAD   <==  !!! Comment out this line
    ```
-  
-6. Get permission to submit the release pipeline job from the Adoptium PMC members, discussion is via the Adoptium #release channel (https://adoptium.slack.com/messages/CLCFNV2JG).
 
+</details>
+  
 ## Lockdown period
 
 During the week before release we lock down the `openjdk-build` and `ci-jenkins-pipeline` repositories to
 only include "critical" fixes (i.e. those which will otherwise cause a build
 break or other problem which will prevent shipping the release builds.
 This stops last minute changes going in which may destabilise things.
-
 If a change has to go in during this "lockdown" period it should be done by
 posting a comment saying "Requesting approval to merge during the lockdown
 period. Please thumbs up the comment to approve". If two committers into the
@@ -114,49 +122,69 @@ lockdown period.
 Here are the steps:
 
 1. Disabling nightly testing so the release builds aren't delayed by any nightly test runs (`enableTests : false` in [defaults.json](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/defaults.json)). Ensure the build pipeline generator job runs successfully (https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator/), and that the flag is disabled by bringing up the Build pipeline job and check the "enableTests" flag is disabled.
-2. If desired, add a banner to the website to indicate that the releases are coming in the near future ([Sample PR](https://github.com/adoptium/adoptium.net/pull/702/files))
-3. Build and Test the OpenJDK for "release" at Adoptium using a build pipeline job as follows:
+1. Ensure that the [appropriate mirror job](https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/adoptium/) has completed and that the corresponding repository at https://github.com/adoptium/jdkXX has successfully received the tag for the level you are about to build. If there are any conflicts the can be resolved on the machine where it failed if you have access to the private `adoptium_temurin_bot_ssh_key.gpg` key, or ask someone with push access to the repositories to manually run the mirror job and aresolve the conflicts.
+1. If desired, add a banner to the website to indicate that the releases are coming in the near future ([Sample PR](https://github.com/adoptium/website-v2/pull/408/files))
+1. Build and Test the OpenJDK for "release" at Adoptium using a build pipeline job as follows:
    - Job: https://ci.adoptopenjdk.net/job/build-scripts/job/openjdk8-pipeline/build (Switch `openjdk8` for your version number)
    - `targetConfigurations`: remove all the entries for the variants you don't want to build (e.g. remove the openj9 ones for hotspot releases) or any platforms you don't want to release (Currently that would include OpenJ9 aarch64)
    - `releaseType: Release`
-   - [OpenJ9 ONLY] `overridePublishName`: github binaries publish name (NOTE: If you are doing a point release, do NOT adjust this as we don't want the filenames to include the `.x` part), e.g. `jdk8u232-b09_openj9-0.14.0` or `jdk-11.0.5+10_openj9-0.14.0`
+   - <details><summary>Extra steps for OpenJ9 ONLY</summary>
+     For OpenJ9 releases, `overridePublishName` should be set to the GitHub binaries publish name (NOTE: If you are doing a point release, do NOT adjust this as we don't want the filenames to include the `.x` part), e.g. `jdk8u232-b09_openj9-0.14.0` or `jdk-11.0.5+10_openj9-0.14.0`. Similarly, `scmReference` for OpenJ9 releases should be the name of the  extensions release branch: e.g. `openj9-0.14.0`</details>
    - `adoptBuildNumber`: Leave blank unless you are doing a point release in which case it should be a number starting at `1` for the first point release.
-   - [OpenJ9 only] `scmReference`: extensions release branch: e.g. `openj9-0.14.0`
    - `additionalConfigureArgs`: JDK8 automatically adds`--with-milestone=fcs` in `build.sh` so there's no need to provide it here. For JDK11+ use `--without-version-pre --without-version-opt` (for EA releases use: `--with-version-pre=ea --without-version-opt`)
    - `scmReference`: One of the following:
-     - For HotSpot, it's the same tag suffixed with `_adopt` e.g. `jdk-13.0.1+9_adopt`
+     - For HotSpot, it's the same tag suffixed with `_adoptium` or `_adopt`(for old builds) e.g. `jdk-17.0.2+9_adoptium`
      - For HotSpot (arm32), the tag usually takes the form `jdk8u322-b04-aarch32-xxxxxxxx`
      - NOTE you need to set `overridePublishName` for arm32 to the actual OpenJDK tag (`jdk8u322-b04`)
      - For OpenJ9 (all versions) use the OpenJ9 branch e.g. `openj9-0.15.1`
+   - `aqaReference` should be set to the appropriate branch of the `aqa-tests` repository which is appropriate for this release. Generally of the form `vX.Y.Z-release`
    - `enableTests`: tick
    - SUBMIT!!
-4. Once the Build and Test pipeline has completed,
+1. Once the Build and Test pipeline has completed,
    [triage the results](https://github.com/AdoptOpenJDK/openjdk-tests/blob/master/doc/Triage.md)
    ([TRSS](https://trss.adoptopenjdk.net/tests/Test) will probably help!)
    - Find the milestone build row, and click the "Grid" link
    - Check all tests are "Green", and if not "hover" over the icon and follow the Jenkins link to triage the errors...
    - Raise issues either at:
-     - [temurin-build](https://github.com/adoptium/temurin-build) or [openjdk-tests](https://github.com/AdoptOpenJDK/openjdk-tests) (for Adopt build or test issues)
+     - [temurin-build](https://github.com/adoptium/temurin-build) or [openjdk-tests](https://github.com/AdoptOpenJDK/openjdk-tests) (for Adoptium build or test issues)
      - [ci-jenkins-pipelines](https://github.com/adoptium/ci-jenkins-pipelines) (for jenkins pipelines specific issues)
      - [eclipse/openj9](https://github.com/eclipse-openj9/openj9) (for OpenJ9 issues)
-5. Discuss failing tests with [Shelley Lambert](https://github.com/smlambert)
-6. Once all AQA tests on all platforms have been signed off, then nightly tests can be re-enabled. See the notes on checking the regeneration job worked in step 1.
-7. If "good to publish", then get permission to publish the release from the Adoptium PMC members, discussion is via the Adoptium [#release](https://adoptium.slack.com/messages/CLCFNV2JG) Slack channel.
-8. Once permission has been obtained, run the [Adoptium "Publish" job](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) (restricted access - if you can't see this link, you don't have access)
-   - `TAG`: (github binaries published name)  e.g. `jdk-11.0.5+9` or `jdk-11.0.5+9_openj9-0.nn.0` for OpenJ9 releases. If doing a point release, add that into the name e.g. for a `.3` release use something like these (NOTE that for OpenJ9 the point number goes before the openj9 version): `jdk8u232-b09.3` or `jdk-11.0.4+11.3_openj9-0.15.1`
-   - `VERSION`: (select version)
+1. Discuss failing tests with [Shelley Lambert](https://github.com/smlambert)
+1. Once all AQA tests on all platforms have been signed off, then nightly tests can be re-enabled. See the notes on checking the regeneration job worked in step 1.
+1. If "good to publish", then get permission to publish the release from the Adoptium PMC members, discussion is via the Adoptium [#release](https://adoptium.slack.com/messages/CLCFNV2JG) Slack channel.
+1. Once permission has been obtained, run the [openjdk_release_tool](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) to publish the releases to GitHub (restricted access - if you can't see this link, you don't have access). It is *strongly recommended* that you run first with the `DRY_RUN` checkbox enabled and check the output to verify that the correct list of files you expected are picked up.
+   - `TAG`: (GitHub binaries published name)  e.g. `jdk-11.0.5+9` or `jdk-11.0.5+9_openj9-0.nn.0` for OpenJ9 releases. If doing a point release, add that into the name e.g. for a `.3` release use something like these (NOTE that for OpenJ9 the point number goes before the openj9 version): `jdk8u232-b09.3` or `jdk-11.0.4+11.3_openj9-0.15.1`
+   - `VERSION`: (select version e.g. `jdk11`)
    - `UPSTREAM_JOB_NAME`: (build-scripts/openjdkNN-pipeline)
-   - `UPSTREAM_JOB_NUMBER`: (the job number of the build pipeline under build-scripts/openjdkNN-pipeline) eg.86
+   - `UPSTREAM_JOB_NUMBER`: (the job number of the build pipeline under build-scripts/openjdkNN-pipeline) e.g. 86
    - `RELEASE`: "ticked"
+   - `aqaReference` : The correct [aqa-tests release branch name](https://github.com/adoptium/aqa-tests/branches) to use for this release e.g. `v0.8.0-release`
+   - If you need to restrict the platforms or only ship jdks or jres, either use `ARTIFACTS_TO_COPY` e.g. `**/*jdk*mac*` or add an explicit exclusion in `ARTIFACTS_TO_SKIP` e.g. `**/*mac*`. These may be required if you had to re-run some of the platforms under a different pipeline earlier in the process. If you're unsure what the possible names are, look at the artifacts of the appropriate `openjdkNN-pipeline` job. If you are shipping x64_linux ensure that you include the `sources` tar.gz files with the corresponding checksum and json file.
+   - `ARTIFACTS_TO_SKIP`: `**/*testimage*`
+   - If you need to restrict the platforms, fill in `ARTIFACTS_TO_COPY` and if needed att to `ARTIFACTS_TO_SKIP`. This may also be required if you had to re-run some of the platforms under a different pipeline earlier in the process. I personally tend to find it cleaner to release Linux in one pipeline, Windows+Mac in another, then the others together to keep the patterns simpler. Sample values for `ARTIFACTS_TO_COPY` are as follows (use e.g. `_x64_linux_` to restrict by architecture if required):
+     - `**/*_linux_*.tar.gz,**/*_linux_*.sha256.txt,**/*_linux_*.json` (Exclude `**/*alpine_linux*` if you don't really want that to be picked up too)
+     - Alternative that wouldn't pick up Alpine: `target/linux/x64/hotspot/**.tar.gz,target/linux/x64/hotspot/target/linux/x64/hotspot/*.sha256.txt`
+     - `**/*_mac_*.tar.gz,**/*_mac_*.sha256.txt,**/*_mac_*.json,**/*_mac_*.pkg`
+     - `**/*_windows_*.zip,**/*_windows_*.sha256.txt,**/*_windows_*.json,**/*_windows_*.msi`
+     - `**/*_aix_*.tar.gz,**/*_aix_*.sha256.txt,**/*_aix_*.json`
+     - `**/*_solaris_*.tar.gz,**/*_solaris_*.sha256.txt,**/*_solaris_*.json`
    - SUBMIT!!
-9. Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08
-10. Within 15 minutes the binaries should be available on the website too at e.g. https://adoptium.net/?variant=openjdk11&jvmVariant=hotspot
-11. Since you have 15 minutes free, use that time to update https://github.com/adoptium/adoptium.net/blob/master/src/handlebars/support.handlebars which is the source of  https://adoptium.net/support.html and (if required) the supported platforms table at https://github.com/adoptium/adoptium.net/blob/master/src/handlebars/supported_platforms.handlebars which is the source of https://adoptium.net/supported_platforms.html, and also update https://adoptium.net/release_notes.html ([Sample change](https://github.com/adoptium/adoptium.net/pull/675/commits/563d8e2f0d9d26500a7e8d9eca61b491f73f1f37)
-12. [Mac only] Once the binaries are available on the website you need to run the [homebrew cask updater](https://github.com/AdoptOpenJDK/homebrew-openjdk/wiki/Running-the-cask-updater) which will create a pull request [here](https://github.com/AdoptOpenJDK/homebrew-openjdk/pulls). Normally George approves these but in principle as long as the CI passes, they should be good to approve. You don't need to wait around and merge the PR's because the Mergify bot will automatically do this for you as long as somebody has approved it.
-13. Publicise the Temurin release via slack on Adoptium #release
-14. If desired, find someone with the appropriate authority (George, Martijn, Shelley, Stewart) to post a tweet about the new release from the Adoptium twitter account
+1. Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08
+1. Within 15 minutes the binaries should be available on the website too at e.g. https://adoptium.net/?variant=openjdk11&jvmVariant=hotspot (NOTE: If it doesn't show up, check whether the API is returning the right thing (e.g. with a link such as [this](https://api.adoptium.net/v3/assets/feature_releases/17/ga?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&page=0&page_size=10&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse), and that the `.json` metadata files are uploaded correctly)
+1. Since you have 15 minutes free, use that time to update https://github.com/adoptium/website-v2/blob/main/src/asciidoc-pages/support.adoc which is the source of  https://adoptium.net/support and (if required) the supported platforms table at https://github.com/adoptium/website-v2/edit/main/src/asciidoc-pages/supported-platforms.adoc which is the source of https://adoptium.net/supported-platforms, and also update https://adoptium.net/release_notes.html ([Sample change](https://github.com/adoptium/adoptium.net/pull/675/commits/563d8e2f0d9d26500a7e8d9eca61b491f73f1f37)
+1. **[Mac only]** Once the binaries are available on the website you need to update the Homebrew casks. There are 4 casks in total ([`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/temurin.rb) which always serves the latest version, [`temurin8`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin8.rb), [`temurin11`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin11.rb) and [`temurin17`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin17.rb)). An example PR can be found [here](https://github.com/Homebrew/homebrew-cask/commit/4565865e9d7c3d3018ee8aa67803ea68c54dde86). The required SHA sums can be easily copied from the website. The separate pull request is required for each version you update. If in doubt reach out to George (gdams) as he's a maintainer.
+1. **[Linux only]** Once the binaries are available on the website you can begin updating the specfiles for the RPM/DEB files. There are 3 different type of linux installer ([debian](https://github.com/adoptium/installer/tree/master/linux/jdk/debian/src/main/packaging/temurin), [Red Hat](https://github.com/adoptium/installer/tree/master/linux/jdk/redhat/src/main/packaging/temurin) and [SuSE](https://github.com/adoptium/installer/tree/master/linux/jdk/suse/src/main/packaging/temurin)) and all 3 need to be updated:
+    - **Debian** you need to locate the `rules` file for each version. This file contains the URLs and Checksums for each package ([example](https://github.com/adoptium/installer/blob/master/linux/jdk/debian/src/main/packaging/temurin/11/debian/rules#L6-L15)). The `changelog` file should also be updated for the new version.
+    - **Red Hat/SuSE** you need to modify the `temurin-<version>-jdk.spec` file for each version. The links/checksum links are all defined as `Source<number>` variables ([example](https://github.com/adoptium/installer/blob/master/linux/jdk/redhat/src/main/packaging/temurin/11/temurin-11-jdk.spec#L128-L142)).
+    - Once the PRs to change those files have been merged, the [adoptium-packages-linux-pipeline](https://ci.adoptopenjdk.net/job/adoptium-packages-linux-pipeline/) job needs to be kicked off. It is recommended to run it without the UPLOAD checkbox to begin with as a 'dry-run' before re-running with the `UPLOAD` checkbox ticked to publish to our JFrog artifactory instance. At present you need to wait for all architectures to be available before you can run these changes
+1. **[Docker Hub]** The information on updating the Adoptium official dockerhub repository is at https://github.com/adoptium/containers#maintenance-of-dockerfiles - at the moment you cannot do this until all Linux architectures are published for the appropriate version
+1. Publicise the Temurin release via slack on the Adoptium #release channel
+1. If desired, find someone with the appropriate authority (George, Martijn, Shelley, Stewart) to post a tweet about the new release from the Adoptium twitter account
 
-## [OpenJ9 Only] Milestone Process
+<details>
+<summary> [OpenJ9 Only] Milestone Process </summary>
+
+### NOTE: Temurin does not ship OpenJ9 releases so this section has been collapsed as it it not required by anyone performing the Temurin release process
 
 The following examples all use `-m1` as an example - this gets replaced with a later number for the second and subsequent milestones as required.
 
@@ -190,7 +218,7 @@ The following examples all use `-m1` as an example - this gets replaced with a l
 5. Build and Test the OpenJDK for OpenJ9 "release" at Adoptium using a "Weekly" releaseType so it runs the extended tests. Submit the Build pipeline job as follows https://ci.adoptopenjdk.net/job/build-scripts/job/openjdkNN-pipeline/build?delay=0sec
    - `targetConfigurations`: remove all "hotspot" entries
    - `releaseType`: `Weekly`
-   - `overridePublishName`: github binaries publish name, e.g. `jdk8u232-b09_openj9-0.17.0-m1` or `jdk-11.0.5+10_openj9-0.17.0-m1`
+   - `overridePublishName`: GitHub binaries publish name, e.g. `jdk8u232-b09_openj9-0.17.0-m1` or `jdk-11.0.5+10_openj9-0.17.0-m1`
    (Note: Everything before the underscore should be copied from the OPENJDK_TAG value inside <extensions_repo_url>/closed/openjdk-tag.gmk)
    - `scmReference`: extensions release branch: e.g. `openj9-0.17.0`
    - `additionalConfigureArgs`: JDK8 automatically adds`--with-milestone=fcs` in `build.sh` so there's no need to provide it here. JDK11+: `--without-version-pre --without-version-opt` (for EA releases use: `--with-version-pre=ea --without-version-opt`)
@@ -198,7 +226,9 @@ The following examples all use `-m1` as an example - this gets replaced with a l
    - SUBMIT!!
 6. Triage the results and publish as required with using the publish name from `overridePublishName` in the previous step but with `RELEASE` UNCHECKED as this is not a full release build.
 
-### OpenJDK "New" Release
+</details>
+
+### OpenJDK "New" Major Release process
 
 - The refers to a "new" major (Short or Long Term) OpenJDK Release (e.g. jdk13, jdk14, jdk15, ...)
 - Oracle and contributors work on releases in the "head" OpenJDK stream: https://hg.openjdk.java.net/jdk/jdk
@@ -216,7 +246,7 @@ The following examples all use `-m1` as an example - this gets replaced with a l
     - Add build scripts for the new JDK release. Example for [JDK 14](https://github.com/adoptium/temurin-build/commit/808b08fe2aefc005cf53f6cc1deb28a9b323ff)
     - Regenerate build jobs:
       - Create a New Item in the folder linked above that copies the `pipeline_jobs_generator_jdk` job. Call it `pipeline_jobs_generator_jdk<new-version-number>`.
-      - Change the `Script Path` setting of the new job to `pipelines/build/regeneration/jdk<new-version-number>_regeneration_pipeline.groovy`. Don't worry if this currently doesn't exist in this repo, you'll add it in step 3.
+      - Change the `Script Path` setting of the new job to `pipelines/build/regeneration/jdk<new-version-number>_regeneration_pipeline.groovy`. Don't worry if this currently doesn't exist in this repository, you'll add it in step 3.
       - Update the `Script Path` setting of the JDK-HEAD job (`pipeline_jobs_generator_jdk`) to whatever the new JDK HEAD is. I.e. if the new head is JDK16, change `Script Path` to `pipelines/build/regeneration/jdk16_regeneration_pipeline.groovy`
   - If you are REMOVING a JDK version:
     - Delete the job `pipeline_jobs_generator_jdk<version-you-want-to-delete>`
@@ -224,7 +254,7 @@ The following examples all use `-m1` as an example - this gets replaced with a l
   1. Create the new build configurations for the release - https://github.com/adoptium/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations:
 
   - Create a new `jdk<new-version-number>_pipeline_config.groovy` file with the desired `buildConfigurations` for the new pipeline. 99% of the time, copy and pasting the configs from the previous version is acceptable. Ensure that the classname and instance of it is changed to `Config<new-version-number>`. Don't remove any old version configs.
-  - Furthermore, you will also need to create another config file to state what jobs will be run with any new versions. If it doesn't currently exist, add a `jdkxx.groovy` file to [configurations/](https://github.com/adoptium/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations). [Example on how to do this](https://github.com/adoptium/temurin-build/pull/1815/files). Note, some files will need to be named `jdkxxu.groovy` depending on whether the version is maintained in an update repo or not. These will be the ONLY os/archs/variants that are regenerated using the job regenerators as described in the [regeneration readme](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md).
+  - Furthermore, you will also need to create another config file to state what jobs will be run with any new versions. If it doesn't currently exist, add a `jdkxx.groovy` file to [configurations/](https://github.com/adoptium/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations). [Example on how to do this](https://github.com/adoptium/temurin-build/pull/1815/files). Note, some files will need to be named `jdkxxu.groovy` depending on whether the version is maintained in an update repository or not. These will be the ONLY os/archs/variants that are regenerated using the job regenerators as described in the [regeneration readme](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md).
   
   1. Create a new Regeneration Pipeline for the downstream jobs - https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration:
   
@@ -234,25 +264,25 @@ The following examples all use `-m1` as an example - this gets replaced with a l
 
   1. Update the view for the [build and test pipeline calendar](https://ci.adoptopenjdk.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version.
 
-### Update Repository
+### Update Repository (jdkXXu)
 
 At some point in a java version's lifecycle, the JDK version will be maintained in an update repository. The first notification of this will be via mail list in one of two places:
 
 - [jdk-dev](https://mail.openjdk.java.net/mailman/listinfo/jdk-dev)
 - [jdk-updates-dev](https://mail.openjdk.java.net/mailman/listinfo/jdk-updates-dev)
-When this occurs, usually a TSC member will create the `jdk<version>u` update repo ([example of the JDK11u one](https://github.com/adopium/openjdk-jdk11u)) via our Skara mirroring jobs that pull in the commit and tag info from the Mercurial repository. To find out more about Skara and our other mirroring jobs, see https://github.com/adoptium/mirror-scripts.
+When this occurs, usually a TSC member will create the `jdk<version>u` update repository ([example of the JDK11u one](https://github.com/adopium/openjdk-jdk11u)) via our Skara mirroring jobs that pull in the commit and tag info from the Mercurial repository. To find out more about Skara and our other mirroring jobs, see https://github.com/adoptium/mirror-scripts.
 
-*New Adopt mirror repo creation, by an Adoptium github Admin:*
+*New Adoptium mirror repository creation, by an Adoptium GitHub Admin:*
 
-1. Create a new empty repo adoptium/openjdk-jdkNNu
+1. Create a new empty repository adoptium/openjdk-jdkNNu
 2. Rename mirror job from https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/git-skara-jdkNN to https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/git-skara-jdkNNu
 3. Update mirror job "Execute shell" to pass jdkNNu as parameter to bash ./skaraMirror.sh jdkNNu
-4. Run the renamed job twice, first one will fail due to empty repo, 2nd run should succeed.
+4. Run the renamed job twice, first one will fail due to empty repository, 2nd run should succeed.
 5. Add the Adoptium.md "marker" text file to both branches "dev" and "release".
 
-When the repo has been created, a few changes to the codebase will be necessary where the code references a jdk version but not it's new update version. I.e. `jdk11` became `jdk11u` when it was moved to an update repository.
+When the repository has been created, a few changes to the codebase will be necessary where the code references a jdk version but not it's new update version. I.e. `jdk11` became `jdk11u` when it was moved to an update repository.
 
-*If a product is to be moved to an update repo, follow these steps in chronological order to ensure our builds continue to function:*
+*If a product is to be moved to an update repository, follow these steps in chronological order to ensure our builds continue to function:*
 
 1. ci-jenkins-pipelines: Update the [configurations](https://github.com/adoptium/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations)
 Rename the nightly build targets file (it will be named `jdkxx.groovy`, [example here](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/jobs/configurations/jdk15u.groovy)) to be `jdkxxu.groovy`. Do the same for the pipeline config file (named `jdkxx_pipeline_config.groovy`, [example here](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/jobs/configurations/jdk15u_pipeline_config.groovy)).

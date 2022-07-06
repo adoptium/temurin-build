@@ -1,0 +1,402 @@
+<?xml version="1.0"?>
+
+<!--
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+-->
+
+<project name="cyclonedx-lib build" default="build" basedir=".">
+        <taskdef resource="net/sf/antcontrib/antlib.xml" />
+        <!--
+// jscpd:ignore-start
+-->
+
+        <!-- Dependency versions -->
+        <property name="cyclonedx-core-java-version" value="7.1.4"/>
+        <property name="jackson-core-version" value="2.13.3"/>
+        <property name="jackson-annotations-version" value="2.13.3"/>
+        <property name="jackson-databind-version" value="2.13.3"/>
+        <property name="json-schema-version" value="1.0.58"/>
+        <property name="commons-codec-version" value="1.15"/>
+        <property name="commons-io-version" value="2.11.0"/>
+        <property name="github-package-url-version" value="1.4.0"/>
+
+        <!-- classpath for running application -->
+        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar"/>
+
+        <target name="dep-checks">
+                <available file="build/jar/cyclonedx-core-java.jar" property="cyclonedx_available"/>
+                <available file="build/jar/jackson-core.jar" property="jackson-core_available"/>
+                <available file="build/jar/jackson-dataformat-xml.jar" property="jackson-core_available"/>
+                <available file="build/jar/jackson-databind.jar" property="jackson-databind_available"/>
+                <available file="build/jar/jackson-annotations.jar" property="jackson-annotations_available"/>
+                <available file="build/jar/json-schema.jar" property="json-schema_available"/>
+                <available file="build/jar/commons-codec.jar" property="commons-codec_available"/>
+                <available file="build/jar/commons-io.jar" property="commons-io_available"/>
+                <available file="build/jar/github-package-url.jar" property="github-package-url_available"/>
+        </target>
+
+        <target name="download-cyclonedx" unless="cyclonedx_available">
+                <echo message="Downloading cyclonedx-core-java version ${cyclonedx-core-java-version}"/>
+                <download-file destdir="build/jar" destfile="cyclonedx-core-java.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=org/cyclonedx/cyclonedx-core-java/${cyclonedx-core-java-version}/cyclonedx-core-java-${cyclonedx-core-java-version}.jar"/>
+	</target>
+
+        <target name="download-jackson-core" unless="jackson-core_available">
+                <echo message="Downloading jackson-core version ${jackson-core-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-core.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"/>
+        </target>
+
+        <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
+                <echo message="Downloading jackson-dataformat-xml version ${jackson-databind-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-dataformat-xml.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/dataformat/jackson-dataformat-xml/${jackson-databind-version}/jackson-dataformat-xml-${jackson-databind-version}.jar"/>
+        </target>
+
+        <target name="download-jackson-databind" unless="jackson-databind_available">
+                <echo message="Downloading jackson-databind version ${jackson-databind-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-databind.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/${jackson-databind-version}/jackson-databind-${jackson-databind-version}.jar"/>
+        </target>
+
+        <target name="download-jackson-annotations" unless="jackson-annotations_available">
+                <echo message="Downloading jackson-annotations version ${jackson-annotations-version}"/>
+                <download-file destdir="build/jar" destfile="jackson-annotations.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/${jackson-annotations-version}/jackson-annotations-${jackson-annotations-version}.jar"/>
+        </target>
+
+        <target name="download-json-schema" unless="json-schema_available">
+                <echo message="Downloading json-schema version ${json-schema-version}"/>
+                <download-file destdir="build/jar" destfile="json-schema.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/networknt/json-schema-validator/${json-schema-version}/json-schema-validator-${json-schema-version}.jar"/>
+        </target>
+
+        <target name="download-commons-codec" unless="commons-codec_available">
+                <echo message="Downloading commons-codec version ${commons-codec-version}"/>
+                <download-file destdir="build/jar" destfile="commons-codec.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=commons-codec/commons-codec/${commons-codec-version}/commons-codec-${commons-codec-version}.jar"/>
+        </target>
+
+        <target name="download-commons-io" unless="commons-io_available">
+                <echo message="Downloading commons-io version ${commons-io-version}"/>
+                <download-file destdir="build/jar" destfile="commons-io.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=commons-io/commons-io/${commons-io-version}/commons-io-${commons-io-version}.jar"/>
+        </target>
+
+        <target name="download-github-package-url" unless="github-package-url_available">
+                <echo message="Downloading github-package-url version ${github-package-url-version}"/>
+                <download-file destdir="build/jar" destfile="github-package-url.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
+        </target>
+
+        <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
+                <echo message="Building cyclonedx-lib"/>
+        </target>
+
+        <target name="clean">
+                <delete dir="build"/>
+        </target>
+
+        <target name="compile">
+                <mkdir dir="build/classes"/>
+                <javac srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar" includeantruntime="false"/>
+                <javac debug="true" debuglevel="lines,vars,source" srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar" includeantruntime="false"/>
+        </target>
+
+        <target name="jar">
+                <mkdir dir="build/jar"/>
+                <jar destfile="build/jar/temurin-gen-sbom.jar" basedir="build/classes">
+                        <manifest>
+                                <attribute name="Main-Class" value="temurin.sbom.TemurinGenSBOM"/>
+                        </manifest>
+                </jar>
+        </target>
+
+        <target name="run">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--createNewSBOM"/>
+                  <arg value="--name"/>
+                  <arg value="Temurin"/>
+                  <arg value="--version"/>
+                  <arg value="jdk17+35"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="JDK-info"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="JDK-info"/>
+                  <arg value="--name"/>
+                  <arg value="OS"/>
+                  <arg value="--value"/>
+                  <arg value="Linux"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                  <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="JDK-info"/>
+                  <arg value="--name"/>
+                  <arg value="arch"/>
+                  <arg value="--value"/>
+                  <arg value="x64"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                  <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="JDK-info"/>
+                  <arg value="--name"/>
+                  <arg value="variant"/>
+                  <arg value="--value"/>
+                  <arg value="hotspot"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="JDK-info"/>
+                  <arg value="--name"/>
+                  <arg value="binary-type"/>
+                  <arg value="--value"/>
+                  <arg value="jdk"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+               <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="Temurin Build"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="Temurin Build"/>
+                  <arg value="--name"/>
+                  <arg value="buildRef"/>
+                  <arg value="--value"/>
+                  <arg value="https://github.com/adoptium/temurin-build/commit/c3a40"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="Temurin Build"/>
+                  <arg value="--name"/>
+                  <arg value="ScmRef"/>
+                  <arg value="--value"/>
+                  <arg value="jdk-17+35_adopt"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="make-arguments"/>
+                  <arg value="--description"/>
+                  <arg value="temurin build make arguments"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="make-arguments"/>
+                  <arg value="--name"/>
+                  <arg value="makejdk_any_platform_args"/>
+                  <arg value="--value"/>
+                  <arg value="--clean-git-repo --jdk-boot-dir /usr/lib/jvm/jdk-16 --configure-args  --disable-warnings-as-errors --enable-ccache --enable-dtrace --target-file-name OpenJDK17-jdk_x64_linux_hotspot_17_35.tar.gz --release --clean-libs --tag jdk-17+35_adopt --skip-freetype --use-jep319-certs --create-debug-image --build-variant hotspot jdk17"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="make-arguments"/>
+                  <arg value="--name"/>
+                  <arg value="make_command_args"/>
+                  <arg value="--value"/>
+                  <arg value="make product-images legacy-jre-image   test-image"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="configure_arguments"/>
+                  <arg value="--description"/>
+                  <arg value="temurin build configure arguments"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="configure_arguments"/>
+                  <arg value="--name"/>
+                  <arg value="configure_arguments"/>
+                  <arg value="--value"/>
+                  <arg value="Runnable configure script is not present\nGenerating runnable configure script at /home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/build/.configure-support/generated-configure.sh\nUsing autoconf at /usr/local/bin/autoconf [autoconf (GNU Autoconf) 2.69]\nconfigure: Configuration created at Tue Sep 14 22:13:19 UTC 2021.\nchecking for basename... /bin/basename\nchecking for dirname... /usr/bin/dirname\nchecking for file... /usr/bin/file\nchecking for ldd... /usr/bin/ldd\nchecking for bash... /bin/bash\nchecking for cat... /bin/cat\nchecking for chmod... /bin/chmod\nchecking for cp... /bin/cp\nchecking for cut... /usr/bin/cut\nchecking for date... /bin/date\nchecking for gdiff... [not found]\nchecking for diff... /usr/bin/diff\nchecking for echo... echo [builtin]\nchecking for expr... /usr/bin/expr\nchecking for find... /usr/bin/find\nchecking for gunzip... /usr/bin/gunzip\nchecking for pigz... /usr/bin/pigz\nchecking for head... /usr/bin/head\nchecking for ln... /bin/ln\nchecking for ls... /bin/ls\nchecking for gmkdir... [not found]\nchecking for mkdir... /bin/mkdir\nchecking for mktemp... /bin/mktemp\nchecking for mv... /bin/mv\nchecking for gawk... /usr/bin/gawk\nchecking for printf... printf [builtin]\nchecking for rm... /bin/rm\nchecking for rmdir... /bin/rmdir\nchecking for sh... /bin/sh\nchecking for sort... /bin/sort\nchecking for tail... /usr/bin/tail\nchecking for gtar... /bin/gtar\nchecking for tee... /usr/bin/tee\nchecking for touch... /bin/touch\nchecking for tr... /usr/bin/tr\nchecking for uname... /bin/uname\nchecking for wc... /usr/bin/wc\nchecking for xargs... /usr/bin/xargs\nchecking for grep that handles long lines and -e... /bin/grep\nchecking for egrep... /bin/grep -E\nchecking for fgrep... /bin/grep -F\nchecking for a sed that does not truncate output... /bin/sed\nchecking for df... /bin/df\nchecking for nice... /bin/nice\nchecking for greadlink... [not found]\nchecking for readlink... /usr/bin/readlink\nchecking for cygpath... [not found]\nchecking for wslpath... [not found]\nchecking for lsb_release... [not found]\nchecking for cmd.exe... [not found]\nchecking for cmp... /usr/bin/cmp\nchecking for uniq... /usr/bin/uniq\nchecking build system type... x86_64-unknown-linux-gnu\nchecking host system type... x86_64-unknown-linux-gnu\nchecking target system type... x86_64-unknown-linux-gnu\nchecking openjdk-build os-cpu... linux-x86_64\nchecking openjdk-build C library... gnu\nchecking openjdk-target os-cpu... linux-x86_64\nchecking openjdk-target C library... gnu\nchecking compilation type... native\nchecking for top-level directory... /home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src\nchecking if custom source is suppressed (openjdk-only)... disabled, default\nchecking for --enable-debug... disabled, default\nchecking which debug level to use... release\nchecking which variants of the JVM to build... server\nchecking if absolute paths should be allowed in the build output... no, release build\nchecking for sysroot... \nchecking for toolchain path... \nchecking for extra path... \nchecking where to store configuration... in default location\nchecking what configuration name to use... linux-x86_64-server-release\nchecking for zypper... [not found]\nchecking for apt-get... [not found]\nchecking for yum... /usr/bin/yum\nchecking for pandoc... [not found]\nchecking for gmake... /usr/local/bin/gmake\nconfigure: Testing potential make at /usr/local/bin/gmake, found using gmake in PATH\nconfigure: Using GNU make at /usr/local/bin/gmake (version: GNU Make 4.1)\nchecking if make --output-sync is supported... yes\nchecking for output-sync value... none\nchecking if find supports -delete... yes\nchecking what type of tar was found... gnu\nchecking that grep (/bin/grep) -Fx handles empty lines in the pattern list correctly... yes\nchecking for unzip... /usr/bin/unzip\nchecking for zip... /usr/bin/zip\nchecking for greadelf... [not found]\nchecking for readelf... /usr/local/gcc/bin/readelf\nchecking for dot... [not found]\nchecking for hg... /usr/bin/hg\nchecking for git... /usr/local/bin/git\nchecking for stat... /usr/bin/stat\nchecking for time... time [builtin]\nchecking for flock... /usr/bin/flock\nchecking for dtrace... /usr/bin/dtrace\nchecking for gpatch... [not found]\nchecking for patch... [not found]\nchecking for ulimit... ulimit [builtin]\nchecking bash version... 4.1.2\nchecking if bash supports pipefail... yes\nchecking if bash supports errexit (-e)... yes\nchecking for pkg-config... /usr/bin/pkg-config\nchecking pkg-config is at least version 0.9.0... yes\nchecking for default LOG value... \nchecking if packaged modules are kept... enabled, default\nchecking for version string... 17+35\nconfigure: Found potential Boot JDK using configure arguments\nchecking for Boot JDK... /usr/lib/jvm/jdk-16\nchecking Boot JDK version... openjdk version \16.0.2\ 2021-07-20 OpenJDK Runtime Environment Temurin-16.0.2+7 (build 16.0.2+7) OpenJDK 64-Bit Server VM Temurin-16.0.2+7 (build 16.0.2+7, mixed mode, sharing)\nchecking for java [Boot JDK]... $BOOT_JDK/bin/java\nchecking for javac [Boot JDK]... $BOOT_JDK/bin/javac\nchecking for javadoc [Boot JDK]... $BOOT_JDK/bin/javadoc\nchecking for jar [Boot JDK]... $BOOT_JDK/bin/jar\nchecking if Boot JDK is 32 or 64 bits... 64\nchecking for local Boot JDK Class Data Sharing (CDS)... yes, created\nchecking for Build JDK... yes, will use output dir\nchecking for docs-reference JDK... no, using interim javadoc for the docs-reference targets\nchecking if we should build headless-only (no GUI)... disabled, default\nchecking if linker should clean out unused code (linktime-gc)... disabled, default\nchecking for graphviz dot... no, cannot generate full docs\nchecking for pandoc... no, cannot generate full docs\nchecking for --enable-full-docs... disabled, from default 'auto'\nchecking for cacerts file... /home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/sbin/../security/cacerts\nchecking for --enable-unlimited-crypto... enabled, default\nchecking for jni library path... default\nchecking if static build is available... no\nchecking if static build is enabled... disabled, default\nconfigure: Using default toolchain gcc (GNU Compiler Collection)\nconfigure: Will use user supplied compiler CC=/usr/local/gcc/bin/gcc-7.5\nchecking resolved symbolic links for CC... no symlink\nconfigure: Using gcc C compiler version 7.5.0 [gcc-7.5 (GCC) 7.5.0]\nchecking whether the C compiler works... yes\nchecking for C compiler default output file name... a.out\nchecking for suffix of executables... \nchecking whether we are cross compiling... no\nchecking for suffix of object files... o\nchecking whether we are using the GNU C compiler... yes\nchecking whether /usr/local/gcc/bin/gcc-7.5 accepts -g... yes\nchecking for /usr/local/gcc/bin/gcc-7.5 option to accept ISO C89... none needed\nconfigure: Will use user supplied compiler CXX=/usr/local/gcc/bin/g++-7.5\nchecking resolved symbolic links for CXX... no symlink\nconfigure: Using gcc C++ compiler version 7.5.0 [g++-7.5 (GCC) 7.5.0]\nchecking whether we are using the GNU C++ compiler... yes\nchecking whether /usr/local/gcc/bin/g++-7.5 accepts -g... yes\nchecking how to run the C preprocessor... /usr/local/gcc/bin/gcc-7.5 -E\nchecking how to run the C++ preprocessor... /usr/local/gcc/bin/g++-7.5 -E\nconfigure: Using gcc linker version 2.28 [GNU ld (GNU Binutils) 2.28]\nchecking for ar... /usr/local/gcc/bin/ar\nchecking for strip... /usr/local/gcc/bin/strip\nchecking for nm... /usr/local/gcc/bin/nm\nchecking for gobjcopy... [not found]\nchecking for objcopy... /usr/local/gcc/bin/objcopy\nchecking for gobjdump... [not found]\nchecking for objdump... /usr/local/gcc/bin/objdump\nchecking for c++filt... /usr/local/gcc/bin/c++filt\nchecking for jtreg... [not found]\nchecking for jtreg test harness... no, not found\nchecking for jmh (Java Microbenchmark Harness)... no, disabled\nchecking for jib... no\nchecking if @file is supported by gcc... yes\nchecking if CC supports \-m64\... yes\nchecking if CXX supports \-m64\... yes\nchecking if both CC and CXX support \-m64\... yes\nchecking for ANSI C header files... yes\nchecking for sys/types.h... yes\nchecking for sys/stat.h... yes\nchecking for stdlib.h... yes\nchecking for string.h... yes\nchecking for memory.h... yes\nchecking for strings.h... yes\nchecking for inttypes.h... yes\nchecking for stdint.h... yes\nchecking for unistd.h... yes\nchecking stdio.h usability... yes\nchecking stdio.h presence... yes\nchecking for stdio.h... yes\nchecking size of int *... 8\nchecking for target address size... 64 bits\nchecking whether byte ordering is bigendian... no\nchecking what source date to use... determined at build time, from 'updated'\nchecking for --enable-reproducible-build... disabled, default\nchecking for --enable-warnings-as-errors... disabled, from command line\nchecking if CC supports \-Xassembler -mrelax-relocations=no\... yes\nchecking if CXX supports \-Xassembler -mrelax-relocations=no\... yes\nchecking if both CC and CXX support \-Xassembler -mrelax-relocations=no\... yes\nchecking if TARGET is x86... no\nchecking if CC supports \-fno-delete-null-pointer-checks\... yes\nchecking if CXX supports \-fno-delete-null-pointer-checks\... yes\nchecking if both CC and CXX support \-fno-delete-null-pointer-checks\.. yes\nchecking if CC supports \-fno-lifetime-dse\.. yes\nchecking if CXX supports \-fno-lifetime-dse\... yes\nchecking if both CC and CXX support \-fno-lifetime-dse\... yes\nchecking if CC supports \-fmacro-prefix-map=/home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/=... no\nchecking if CXX supports \-fmacro-prefix-map=/home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/=\... no\nchecking if both CC and CXX support \-fmacro-prefix-map=/home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/=\... no\nchecking how to prevent absolute paths in output... using relative paths\nchecking if CC supports \-ffp-contract=off\... yes\nchecking if CXX supports \-ffp-contract=off\.. yes\nchecking if both CC and CXX support \-ffp-contract=off\... yes\nchecking if BUILD is x86... no\nchecking if BUILD_CC supports \-fno-delete-null-pointer-checks\... yes\nchecking if BUILD_CXX supports -fno-delete-null-pointer-checks\... yes\nchecking if both BUILD_CC and BUILD_CXX support -fno-delete-null-pointer-checks\... yes\nchecking if BUILD_CC supports \-fno-lifetime-dse\... yes\nchecking if BUILD_CXX supports \-fno-lifetime-dse\... yes\nchecking if both BUILD_CC and BUILD_CXX support \-fno-lifetime-dse\... yes\nchecking if BUILD_CC supports \-fmacro-prefix-map=/home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/=\... no\nchecking if BUILD_CXX supports \-fmacro-prefix-map=/home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/=\... no\nchecking if both BUILD_CC and BUILD_CXX support \-fmacro-prefix-map=/home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/=\... no\nchecking how to prevent absolute paths in output... using relative paths\nchecking if BUILD_CC supports \-ffp-contract=off\... yes\nchecking if BUILD_CXX supports \-ffp-contract=off\... yes\nchecking if both BUILD_CC and BUILD_CXX support \-ffp-contract=off\... yes\nchecking what type of native debug symbols to use... external\nchecking if we should add external native debug symbols to the shipped bundles... no\nchecking if native coverage is available... yes\nchecking for --enable-native-coverage... disabled, default\nchecking if AddressSanitizer (asan) is available... yes\nchecking for --enable-asan... disabled, default\nchecking if static link of stdc++ is possible... yes\nchecking how to link with libstdc++... static\nchecking for X... libraries , headers \nchecking for gethostbyname... yes\nchecking for connect... yes\nchecking for remove... yes\nchecking for shmat... yes\nchecking for IceConnectionNumber in -lICE... yes\nchecking for X11/extensions/shape.h... yes\nchecking for X11/extensions/Xrender.h... yes\nchecking for X11/extensions/XTest.h... yes\nchecking for X11/Intrinsic.h... yes\nchecking for X11/extensions/Xrandr.h... yes\nchecking cups/cups.h usability... yes\nchecking cups/cups.h presence... yes\nchecking for cups/cups.h... yes\nchecking cups/ppd.h usability... yes\nchecking cups/ppd.h presence... yes\nchecking for cups/ppd.h... yes\nchecking fontconfig/fontconfig.h usability... yes\nchecking fontconfig/fontconfig.h presence... yes\nchecking for fontconfig/fontconfig.h... yes\nchecking for FREETYPE... yes\nchecking for freetype... yes (using pkg-config)\nUsing freetype: system\nchecking for ALSA... yes\nchecking for --enable-libffi-bundling... disabled, default\nchecking for which libjpeg to use... bundled\nchecking for which giflib to use... bundled\nchecking for PNG... yes\nchecking for which libpng to use... bundled\nchecking for compress in -lz... yes\nchecking for which zlib to use... system\nchecking for system zlib functionality... ok\nchecking for which lcms to use... bundled\nchecking for which harfbuzz to use... bundled\nchecking for cos in -lm... yes\nchecking for dlopen in -ldl... yes\nchecking for JVM features enabled by the user... 'dtrace'\nchecking for JVM features disabled by the user... none\nchecking if platform is supported by CDS... yes\nchecking if JVM feature 'cds' is available... yes\nchecking for dtrace tool... /usr/bin/dtrace\nchecking sys/sdt.h usability... yes\nchecking sys/sdt.h presence... yes\nchecking for sys/sdt.h... yes\nchecking if JVM feature 'dtrace' is available... yes\nchecking if platform is supported by JFR... yes\nchecking if JVM feature 'jfr' is available... yes\nchecking if platform is supported by JVMCI... yes\nchecking if JVM feature 'jvmci' is available... yes\nchecking if platform is supported by Shenandoah... yes\nchecking if JVM feature 'shenandoahgc' is available... yes\nchecking if static-build is enabled in configure... no, use --enable-static-build to enable static build.\nchecking if JVM feature 'static-build' is available... no\nchecking if platform is supported by ZGC... yes\nchecking if JVM feature 'zgc' is available... yes\nconfigure: Default JVM features explicitly enabled for 'server': 'dtrace'\nchecking JVM features to use for variant 'server'... 'cds compiler1 compiler2 dtrace epsilongc g1gc jfr jni-check jvmci jvmti management nmt parallelgc serialgc services shenandoahgc vm-structs zgc'\nchecking if the jtreg failure handler is available... no (jtreg not present)\nchecking if the jtreg failure handler should be built... disabled, from default 'auto'\nchecking if the CDS classlist generation should be enabled... enabled, from default 'auto'\nchecking if any translations should be excluded... no\nchecking if static man pages should be copied... enabled, default\nchecking if CDS archive is available... yes\nchecking if a default CDS archive should be generated... enabled, from default 'auto'\nchecking if CDS archive is available... yes\nchecking if compatible cds region alignment enabled... disabled, default\nchecking for number of cores... 48\nchecking for memory size... 63980 MB\nchecking for appropriate number of jobs to run in parallel... 48\nchecking whether to use javac server... enabled, default\nchecking flags for boot jdk java command ...  -Duser.language=en -Duser.country=US  -XX:+UnlockDiagnosticVMOptions -XX:-VerifySharedSpaces -XX:SharedArchiveFile=/home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/build/linux-x86_64-server-release/configure-support/classes.jsa -Xshare:auto \nchecking flags for boot jdk java command for big workloads...  -Xms64M -Xmx1600M\nchecking flags for bootcycle boot jdk java command for big workloads... -Xms64M -Xmx1600M\nchecking flags for boot jdk java command for small workloads...  -XX:+UseSerialGC -Xms32M -Xmx512M -XX:TieredStopAtLevel=1\nchecking for --enable-icecc... disabled, default\nchecking if precompiled headers are available... yes\nchecking for --enable-precompiled-headers... enabled, from default 'auto'\nchecking for ccache... /usr/local/gcc/bin/ccache\nchecking if ccache is available... yes\nchecking if ccache is enabled... enabled, from command line\nchecking if C-compiler supports ccache precompiled headers... yes\nchecking if build directory is on local disk... yes\nconfigure: creating /home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/build/linux-x86_64-server-release/configure-support/config.status\nconfig.status: creating /home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/build/linux-x86_64-server-release/spec.gmk\nconfig.status: creating /home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/build/linux-x86_64-server-release/bootcycle-spec.gmk\nconfig.status: creating /home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/build/linux-x86_64-server-release/buildjdk-spec.gmk\nconfig.status: creating /home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/build/linux-x86_64-server-release/compare.sh\nconfig.status: creating /home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/build/linux-x86_64-server-release/Makefile\n\n====================================================\nA new configuration has been successfully created in\n/home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace/build/src/build/linux-x86_64-server-release\nusing configure arguments '--verbose --with-vendor-name='Eclipse Adoptium' --with-vendor-url=https://adoptium.net/ --with-vendor-bug-url=https://github.com/adoptium/adoptium-support/issues --with-vendor-vm-bug-url=https://github.com/adoptium/adoptium-support/issues --without-version-opt --without-version-pre --with-version-build=35 --with-vendor-version-string=Temurin-17+35 --with-boot-jdk=/usr/lib/jvm/jdk-16 --with-debug-level=release --with-native-debug-symbols=external --with-jvm-variants=server --with-cacerts-file=/home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/sbin/../security/cacerts --disable-warnings-as-errors --enable-ccache --enable-dtrace'.\n\nConfiguration summary:\n* Name:           linux-x86_64-server-release\n* Debug level:    release\n* HS debug level: product\n* JVM variants:   server\n* JVM features:   server: 'cds compiler1 compiler2 dtrace epsilongc g1gc jfr jni-check jvmci jvmti management nmt parallelgc serialgc services shenandoahgc vm-structs zgc' \n* OpenJDK target: OS: linux, CPU architecture: x86, address length: 64\n* Version string: 17+35 (17)\n\nTools summary:\n* Boot JDK:       openjdk version \16.0.2\ 2021-07-20 OpenJDK Runtime Environment Temurin-16.0.2+7 (build 16.0.2+7) OpenJDK 64-Bit Server VM Temurin-16.0.2+7 (build 16.0.2+7, mixed mode, sharing) (at /usr/lib/jvm/jdk-16)\n* Toolchain:      gcc (GNU Compiler Collection)\n* C Compiler:     Version 7.5.0 (at /usr/local/gcc/bin/gcc-7.5)\n* C++ Compiler:   Version 7.5.0 (at /usr/local/gcc/bin/g++-7.5)\n\nBuild performance summary:\n* Cores to use:   48\n* Memory limit:   63980 MB\n* ccache status:  Active (ccache version 3.4.2)\n\n"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="Temurin build scripts/source"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="Temurin build scripts/source"/>
+                  <arg value="--name"/>
+                  <arg value="openjdk_built_config"/>
+                  <arg value="--value"/>
+                  <arg value="# ============================\n# OPENJDK BUILD CONFIGURATION:\n# ============================\nBUILD_CONFIG[ADOPT_PATCHES]=\true\\nBUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=\false\\nBUILD_CONFIG[BRANCH]=\dev\\nBUILD_CONFIG[BUILD_FULL_NAME]=\linux-x86_64--server-release\\nBUILD_CONFIG[BUILD_VARIANT]=\hotspot\\nBUILD_CONFIG[CLEAN_DOCKER_BUILD]=\false\/>\nBUILD_CONFIG[CLEAN_GIT_REPO]=\true\nBUILD_CONFIG[CLEAN_LIBS]=\false\\nBUILD_CONFIG[CONTAINER_NAME]=\openjdk_container\\nBUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]=\false\\nBUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]=\false\\nBUILD_CONFIG[CREATE_DEBUG_IMAGE]=\true\\nBUILD_CONFIG[CREATE_SOURCE_ARCHIVE]=\false\\nBUILD_CONFIG[CROSSCOMPILE]=\false\\nBUILD_CONFIG[CUSTOM_CACERTS]=\true\\nBUILD_CONFIG[DEBUG_DOCKER]=\false\\nBUILD_CONFIG[DEBUG_IMAGE_PATH]=\debug-image\\nBUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=\false\\nBUILD_CONFIG[DOCKER]=\docker\\nBUILD_CONFIG[DOCKER_FILE_PATH]=\\nBUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]=\openjdk-source-volume-jdk17-hotspot\\nBUILD_CONFIG[FREETYPE]=\false\\nBUILD_CONFIG[FREETYPE_DIRECTORY]=\\nBUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=\\nBUILD_CONFIG[FREETYPE_FONT_VERSION]=\2.9.1\\nBUILD_CONFIG[GRADLE_USER_HOME_DIR]=\\nBUILD_CONFIG[JDK_BOOT_DIR]=\/usr/lib/jvm/jdk-16\              \nBUILD_CONFIG[JDK_PATH]=\jdk\\nBUILD_CONFIG[JRE_PATH]=\jre\\nBUILD_CONFIG[JVM_VARIANT]=\server\\nBUILD_CONFIG[KEEP_CONTAINER]=\false\\nBUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]=\\nBUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]=\product-images legacy-jre-image\\nBUILD_CONFIG[MAKE_COMMAND_NAME]=\make\\nBUILD_CONFIG[MAKE_EXPLODED]=\false\\nBUILD_CONFIG[NUM_PROCESSORS]=\1\\nBUILD_CONFIG[OPENJDK_BUILD_NUMBER]=\\nBUILD_CONFIG[OPENJDK_BUILD_REPO_BRANCH]=\master\\nBUILD_CONFIG[OPENJDK_BUILD_REPO_URI]=\https://github.com/adoptium/temurin-build.git\\nBUILD_CONFIG[OPENJDK_CORE_VERSION]=\jdk17\\nBUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=\17\\nBUILD_CONFIG[OPENJDK_FOREST_NAME]=\jdk17\\nBUILD_CONFIG[OPENJDK_SOURCE_DIR]=\src\nBUILD_CONFIG[OPENJDK_UPDATE_VERSION]=\\nBUILD_CONFIG[OS_ARCHITECTURE]=\x86_64\\nBUILD_CONFIG[OS_FULL_VERSION]=\Linux 5.8.0-34-generic : CentOS release 6.10 (Final)\\nBUILD_CONFIG[OS_KERNEL_NAME]=\linux\\nBUILD_CONFIG[PATCHES]=\\nBUILD_CONFIG[RELEASE]=\true\\nBUILD_CONFIG[REPOSITORY]=\https://github.com/adoptium/jdk17\\nBUILD_CONFIG[REUSE_CONTAINER]=\true\\nBUILD_CONFIG[SHALLOW_CLONE_OPTION]=\\nBUILD_CONFIG[SIGN]=\false\\nBUILD_CONFIG[TAG]=\jdk-17+35_adopt\\nBUILD_CONFIG[TARGET_DIR]=\target/\\nBUILD_CONFIG[TARGET_FILE_NAME]=\OpenJDK17-jdk_x64_linux_hotspot_17_35.tar.gz\\nBUILD_CONFIG[TEST_IMAGE_PATH]=\test\\nBUILD_CONFIG[TMP_CONTAINER_NAME]=\openjdk-copy-src\\nBUILD_CONFIG[TMP_SPACE_BUILD]=\false\\nBUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]=\ --disable-warnings-as-errors --enable-ccache --enable-dtrace\\nBUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]=\\nBUILD_CONFIG[USE_DOCKER]=\false\\nBUILD_CONFIG[USE_JEP319_CERTS]=\true\\nBUILD_CONFIG[USE_SSH]=\false\\nBUILD_CONFIG[VENDOR]=\Eclipse Adoptium\\nBUILD_CONFIG[WORKING_DIR]=\./build/\\nBUILD_CONFIG[WORKSPACE_DIR]=\/home/jenkins/workspace/build-scripts/jobs/jdk17/jdk17-linux-x64-hotspot/workspace\"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="Temurin build scripts/source"/>
+                  <arg value="--name"/>
+                  <arg value="openjdk-source"/>
+                  <arg value="--value"/>
+                  <arg value="https://github.com/adoptium/jdk17/commit/a5afad28437"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="docker container built"/>
+                  <arg value="--description"/>
+                  <arg value="If built within a docker container, SHA digest of the image it was built from"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="docker container built"/>
+                  <arg value="--name"/>
+                  <arg value="build_env_docker_image_digest"/>
+                  <arg value="--value"/>
+                  <arg value="[adoptopenjdk/centos6_build_image@sha256:e9fa19de1a830399a91044a277a6cca7bbd915322187825bfd4cfa752917adab]\n"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponent"/>
+                  <arg value="--compName"/>
+                  <arg value="Built binary java-version string"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addComponentProp"/>
+                  <arg value="--compName"/>
+                  <arg value="Built binary java-version string"/>
+                  <arg value="--name"/>
+                  <arg value="full_version_output"/>
+                  <arg value="--value"/>
+                  <arg value="openjdk version: 17 2021-09-14\nOpenJDK Runtime Environment Temurin-17+35 (build 17+35)\nOpenJDK 64-Bit Server VM Temurin-17+35 (build 17+35, mixed mode, sharing)\n"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addExternalReference"/>
+                  <arg value="--url"/>
+                  <arg value="https://github.com/adoptium/jdk17/commit/a5afad28437"/>
+                  <arg value="--hashes"/>
+                  <arg value="HASHES"/>
+                  <arg value="--comment"/>
+                  <arg value="openjdk_source"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addExternalReference"/>
+                  <arg value="--url"/>
+                  <arg value="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-1.1.6.tar.bz2"/>
+                  <arg value="--hashes"/>
+                  <arg value="HASHES"/>
+                  <arg value="--comment"/>
+                  <arg value="dependency_version_alsa"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java> 
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addMetadata"/>
+                  <arg value="--metadataName"/>
+                  <arg value="Eclipse Adoptium"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                </java>
+        </target>
+
+	<macrodef name="download-file" description="Use curl to download a file">
+		<attribute name="srcurl" description="URL of file to download"/>
+		<attribute name="destdir" description="Directory in which to place the downloaded file"/>
+		<attribute name="destfile" description="File name of the downloaded file"/>
+		<sequential>
+			<echo message="Executing macro download-file"/>
+			<echo message="File to download: @{srcurl}"/>
+			<echo message="Destination: @{destdir}/@{destfile}"/>
+			<echo message="Download tool: curl"/>
+			<mkdir dir="@{destdir}"/>
+			<exec executable="curl">
+				<arg value="-L"/>
+				<arg value="-o"/>
+				<arg value="@{destdir}/@{destfile}"/>
+				<arg value="@{srcurl}"/>
+			</exec>
+			
+		</sequential>
+	</macrodef>
+</project>
+<!--
+// jscpd:ignore-end
+-->
