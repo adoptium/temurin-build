@@ -7,6 +7,7 @@ on:
 
 jobs:
   update_ca_certs:
+    if: startsWith(github.repository, 'adoptium/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
