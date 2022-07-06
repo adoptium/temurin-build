@@ -76,6 +76,12 @@ then
   export LANG=C
 fi
 
+# Solves issues seen on 4GB HC4 systems with two large ld processes
+if [ "$(awk '/^MemTotal:/{print$2}' < /proc/meminfo)" -lt "5000000" ]
+then
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-Wl,--no-keep-memory"
+fi
+
 if [ "${ARCHITECTURE}" == "arm" ]
 then
   if lscpu | grep aarch64; then
