@@ -24,26 +24,6 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
 fi
 
-# jdk-17 and jdk-19+ support reproducible builds
-if [[ "${JAVA_FEATURE_VERSION}" -ge 19 || "${JAVA_FEATURE_VERSION}" -eq 17 ]]
-then
-    # Enable reproducible builds implicitly with --with-source-date
-    if [ "${RELEASE}" == "true" ]
-    then
-        # Use release date
-        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-source-date=version"
-    else
-        # Use build date
-        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-source-date=updated"
-    fi
-
-    # Ensure reproducible binary with a unique build user identifier
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-user=adoptium"
-
-    # Disable CCache with --disable-ccache
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
-fi
-
 export VARIANT_ARG="--build-variant ${VARIANT}"
 
 # If a user file doesn't exist, pull from an online source. To always pull from an online source, ensure platform config files have been deleted from your local clone.
@@ -118,3 +98,20 @@ else
     echo "[SUCCESS] Executing local file at ${PLATFORM_CONFIG_FILEPATH}"
 fi
 source "${PLATFORM_CONFIG_FILEPATH}"
+
+# jdk-17 and jdk-19+ support reproducible builds
+if [[ "${JAVA_FEATURE_VERSION}" -ge 19 || "${JAVA_FEATURE_VERSION}" -eq 17 ]]
+then
+    # Enable reproducible builds implicitly with --with-source-date
+    if [ "${RELEASE}" == "true" ]
+    then
+        # Use release date and disable CCache( remove --enable-ccache if exist)
+        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM//--enable-ccache/} --with-source-date=version --disable-ccache"
+    else
+        # Use build date
+        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-source-date=updated"
+    fi
+
+    # Ensure reproducible binary with a unique build user identifier
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-user=adoptium"
+fi

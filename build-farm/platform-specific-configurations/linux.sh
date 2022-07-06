@@ -240,7 +240,7 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
   fi
 fi
 
-if which ccache 2> /dev/null; then
+if [ "$(which ccache 2> /dev/null)" ]; then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
 fi
 
