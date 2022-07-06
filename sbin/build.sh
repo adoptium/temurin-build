@@ -90,7 +90,27 @@ configureShenandoahBuildParameter() {
   fi
 }
 
-# Configure the boot JDK
+# Configure reproducible build
+# jdk-17 and jdk-19+ support reproducible builds
+configureReproducibleBuildParameter() {
+  if [[ "${JAVA_FEATURE_VERSION}" -ge 19 || "${JAVA_FEATURE_VERSION}" -eq 17 ]]
+  then
+      # Enable reproducible builds implicitly with --with-source-date
+      if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]
+      then
+          # Use release date and disable CCache( remove --enable-ccache if exist)
+          addConfigureArg "--with-source-date=version --disable-ccache"
+          CONFIGURE_ARGS="${CONFIGURE_ARGS} ${CONFIGURE_ARGS//--enable-ccache/}"
+      else
+          # Use build date
+          addConfigureArg "--with-source-date=updated"
+      fi
+      # Ensure reproducible binary with a unique build user identifier
+      addConfigureArg "--with-build-user=adoptium"
+  fi
+}
+
+# Configure for MacOS Codesign
 configureMacOSCodesignParameter() {
   if [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
     # This command needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
@@ -446,6 +466,9 @@ configureCommandParameters() {
     echo "Building up the configure command..."
     buildingTheRestOfTheConfigParameters
   fi
+
+  echo "Adjust configure for reproducible build"
+  configureReproducibleBuildParameter
 
   echo "Configuring jvm variants if provided"
   addConfigureArgIfValueIsNotEmpty "--with-jvm-variants=" "${BUILD_CONFIG[JVM_VARIANT]}"
