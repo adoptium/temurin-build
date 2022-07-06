@@ -38,6 +38,9 @@ else
     XCODE_SWITCH_PATH="/";
   fi
   export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
+  if [ -n "$(which ccache)" ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
+  fi
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
   else

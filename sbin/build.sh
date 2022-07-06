@@ -371,10 +371,6 @@ configureVersionStringParameter() {
 
 # Construct all of the 'configure' parameters
 buildingTheRestOfTheConfigParameters() {
-  if [ -n "$(which ccache)" ]; then
-    addConfigureArg "--enable-ccache" ""
-  fi
-
   # Point-in-time dependency for openj9 only
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
     addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/freemarker.jar"
