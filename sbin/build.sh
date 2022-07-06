@@ -99,14 +99,14 @@ configureReproducibleBuildParameter() {
       if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]
       then
           # Use release date and disable CCache( remove --enable-ccache if exist)
-          addConfigureArg "--with-source-date=version --disable-ccache"
+          addConfigureArg "--with-source-date=version"  " --disable-ccache"
           CONFIGURE_ARGS="${CONFIGURE_ARGS} ${CONFIGURE_ARGS//--enable-ccache/}"
       else
           # Use build date
-          addConfigureArg "--with-source-date=updated"
+          addConfigureArg "--with-source-date=" "updated"
       fi
       # Ensure reproducible binary with a unique build user identifier
-      addConfigureArg "--with-build-user=adoptium"
+      addConfigureArg "--with-build-user=" "adoptium"
   fi
 }
 
