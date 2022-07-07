@@ -100,7 +100,7 @@ configureReproducibleBuildParameter() {
       then
           # Use release date and disable CCache( remove --enable-ccache if exist)
           addConfigureArg "--with-source-date=version"  " --disable-ccache"
-          CONFIGURE_ARGS="${CONFIGURE_ARGS} ${CONFIGURE_ARGS//--enable-ccache/}"
+          CONFIGURE_ARGS="${CONFIGURE_ARGS//--enable-ccache/}"
       else
           # Use build date
           addConfigureArg "--with-source-date=" "updated"
