@@ -133,7 +133,7 @@ Here are the steps:
    - `adoptBuildNumber`: Leave blank unless you are doing a point release in which case it should be a number starting at `1` for the first point release.
    - `additionalConfigureArgs`: JDK8 automatically adds`--with-milestone=fcs` in `build.sh` so there's no need to provide it here. For JDK11+ use `--without-version-pre --without-version-opt` (for EA releases use: `--with-version-pre=ea --without-version-opt`)
    - `scmReference`: One of the following:
-     - For HotSpot, it's the same tag suffixed with `_adoptium` or `_adopt`(for old builds) e.g. `jdk-17.0.2+9_adoptium`
+     - For HotSpot, it's the same tag suffixed with `_adopt` e.g. `jdk-17.0.2+9_adopt`
      - For HotSpot (arm32), the tag usually takes the form `jdk8u322-b04-aarch32-xxxxxxxx`
      - NOTE you need to set `overridePublishName` for arm32 to the actual OpenJDK tag (`jdk8u322-b04`)
      - For OpenJ9 (all versions) use the OpenJ9 branch e.g. `openj9-0.15.1`
