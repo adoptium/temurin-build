@@ -246,10 +246,6 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
   fi
 fi
 
-if [ "$(which ccache 2> /dev/null)" ]; then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-ccache"
-fi
-
 # Handle cross compilation environment for RISC-V
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
