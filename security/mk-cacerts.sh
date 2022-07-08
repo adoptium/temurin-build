@@ -121,8 +121,8 @@ for FILE in certs/*.crt; do
 done
 
 if [ "$NO_KEYSTORE" = false ] ; then
-    num_certs=$("$KEYTOOL" -v -list -storepass changeit -keystore cacerts | grep "Alias name:" | wc -l)
+    num_certs=$("$KEYTOOL" -v -list -storepass changeit -keystore cacerts | grep -c "Alias name:")
 else
-    num_certs=$(ls certs | wc -l)
+    num_certs=$(find certs/* | wc -l)
 fi
 echo "Number of certs processed: $num_certs"
