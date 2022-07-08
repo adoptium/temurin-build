@@ -91,7 +91,7 @@ for FILE in certs/*.crt; do
         echo "Skipping certificate file $FILE with alias: $ALIAS as it already exists"
         if [ "$NO_KEYSTORE" = true ] ; then
             # Remove duplicate $FILE so it is not imported using OpenJDK GenerateCacerts
-            rm $FILE
+            rm "$FILE"
         fi
     else
         if [ "$NO_KEYSTORE" = false ] ; then
@@ -106,7 +106,7 @@ for FILE in certs/*.crt; do
         else
             # Importing using OpenJDK GenerateCacerts, so must ensure alias is a valid filename
             ALIAS_NO_INVALID="${ALIAS//[ :()]/_}"
-            ALIAS_FILENAME=$(echo "${ALIAS_NO_INVALID}" | tr -cd '0-9a-zA-Z,_' | tr A-Z a-z)
+            ALIAS_FILENAME=$(echo "${ALIAS_NO_INVALID}" | tr -cd '0-9a-zA-Z,_' | tr '[:upper:]' '[:lower:]')
             echo "Renaming $FILE to certs/$ALIAS_FILENAME"
             if test -f "certs/$ALIAS_FILENAME"; then
                 echo "ERROR: Certificate alias file already exists certs/$ALIAS_FILENAME"
