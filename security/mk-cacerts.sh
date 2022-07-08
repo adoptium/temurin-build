@@ -87,7 +87,7 @@ for FILE in certs/*.crt; do
     TRIMMED_SUBJECT="${SUBJECT#*subject= /}"
     ALIAS="${TRIMMED_SUBJECT//\//,}"
 
-    if printf '%s\n' "${IMPORTED[@]}" | grep "${ALIAS}"; then
+    if printf '%s\n' "${IMPORTED[@]}" | grep "temurin_${ALIAS}_temurin"; then
         echo "Skipping certificate file $FILE with alias: $ALIAS as it already exists"
         if [ "$NO_KEYSTORE" = true ] ; then
             # Remove duplicate $FILE so it is not imported using OpenJDK GenerateCacerts
@@ -116,6 +116,6 @@ for FILE in certs/*.crt; do
             mv "$FILE" "certs/$ALIAS_FILENAME"
         fi
 
-        IMPORTED+=("${ALIAS}")
+        IMPORTED+=("temurin_${ALIAS}_temurin")
     fi
 done
