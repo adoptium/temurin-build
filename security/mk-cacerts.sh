@@ -119,3 +119,10 @@ for FILE in certs/*.crt; do
         IMPORTED+=("temurin_${ALIAS}_temurin")
     fi
 done
+
+if [ "$NO_KEYSTORE" = false ] ; then
+    num_certs=$("$KEYTOOL" -v -list -storepass changeit -keystore cacerts | grep "Alias name:" | wc -l)
+else
+    num_certs=$(ls certs | wc -l)
+fi
+echo "Number of certs processed: $num_certs"
