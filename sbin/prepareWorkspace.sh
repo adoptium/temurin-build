@@ -531,8 +531,8 @@ checkingAndDownloadingFreeType() {
 prepareMozillaCacerts() {
     echo "Generating cacerts from Mozilla's bundle"
     cd "$SCRIPT_DIR/../security"
-    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge "19" ]]; then
-      # jdk-19+ build uses JDK make tool to load keystore for reproducible builds
+    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge "17" ]]; then
+      # jdk-17+ build uses JDK make tool GenerateCacerts to load keystore for reproducible builds
       time ./mk-cacerts.sh --nokeystore
     else
       time ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
