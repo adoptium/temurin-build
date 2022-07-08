@@ -400,7 +400,7 @@ local unameOSSysVer=$(uname -sr)
 local unameKernel=$(uname -r)
 if [ "${unameSys}" == "Linux" ]; then
   if [ -f "/etc/os-release" ]; then
-     local unameFullOSVer="echo $(awk -F= '/^NAME=/{OS=$2}/^VERSION_ID=/{VER=$2}END{print OS " " VER}' /etc/os-release  | tr -d '"') "(Kernel: $(uname -r))""
+     local unameFullOSVer=$(awk -F= '/^NAME=/{OS=$2}/^VERSION_ID=/{VER=$2}END{print OS " " VER}' /etc/os-release  | tr -d '"') "(Kernel: $(uname -r))"
       unameOSSysVer="${unameFullOSVer}"
   elif [ -f "/etc/system-release" ]; then
     local linuxName=$(tr -d '"' < /etc/system-release)
