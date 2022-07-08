@@ -394,25 +394,25 @@ function configDefaults() {
 # The OS kernel name, e.g. 'darwin' for Mac OS X
 BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
 
-# Determine OS full system version
-local unameSys=$(uname -s)
-local unameOSSysVer=$(uname -sr)
-local unameKernel=$(uname -r)
-if [ "${unameSys}" == "Linux" ]; then
-  if [ -f "/etc/os-release" ]; then
-    local unameFullOSVer=$(awk -F= '/^NAME=/{OS=$2}/^VERSION_ID=/{VER=$2}END{print OS " " VER}' /etc/os-release  | tr -d '"')
-    unameOSSysVer="${unameFullOSVer} (Kernel: ${unameKernel})"
-  elif [ -f "/etc/system-release" ]; then
-    local linuxName=$(tr -d '"' < /etc/system-release)
-    unameOSSysVer="${unameOSSysVer} : ${linuxName} (Kernel: ${unameKernel} )"
-  else
-    unameOSSysVer="${unameSys} : unameOSSysVer (Kernel: ${unameKernel} )"
+  # Determine OS full system version
+  local unameSys=$(uname -s)
+  local unameOSSysVer=$(uname -sr)
+  local unameKernel=$(uname -r)
+  if [ "${unameSys}" == "Linux" ]; then
+    if [ -f "/etc/os-release" ]; then
+      local unameFullOSVer=$(awk -F= '/^NAME=/{OS=$2}/^VERSION_ID=/{VER=$2}END{print OS " " VER}' /etc/os-release  | tr -d '"')
+      unameOSSysVer="${unameFullOSVer} (Kernel: ${unameKernel})"
+    elif [ -f "/etc/system-release" ]; then
+      local linuxName=$(tr -d '"' < /etc/system-release)
+      unameOSSysVer="${unameOSSysVer} : ${linuxName} (Kernel: ${unameKernel} )"
+    else
+      unameOSSysVer="${unameSys} : unameOSSysVer (Kernel: ${unameKernel} )"
+    fi
+  elif [ "${unameSys}" == "AIX" ]; then
+    # AIX provides full version info using oslevel
+    aixVer=$(oslevel -r)
+    unameOSSysVer="${unameSys} ${aixVer}"
   fi
-elif [ "${unameSys}" == "AIX" ]; then
-  # AIX provides full version info using oslevel
-  aixVer=$(oslevel -r)
-  unameOSSysVer="${unameSys} ${aixVer}"
-fi
 
   # Store the OS full version name, eg.Darwin 20.4.0
   BUILD_CONFIG[OS_FULL_VERSION]="${unameOSSysVer}"
