@@ -100,8 +100,7 @@ jobs:
       shell: pwsh
 
     - name: Build Windows
-      run: |
-        bash build-farm/make-adopt-build-farm.sh
+      run: bash build-farm/make-adopt-build-farm.sh
       shell: cmd
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
