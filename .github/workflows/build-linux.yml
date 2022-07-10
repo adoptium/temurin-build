@@ -73,6 +73,10 @@ jobs:
 
     - name: Upload bundles
       uses: ./.github/actions/upload-bundles
+      with:
+        os: ${{matrix.os}}
+        version: ${{ matrix.version }}
+        variant: ${{ matrix.variant }}
 
     - name: Smoke Test
       uses: ./.github/actions/smoke-test
