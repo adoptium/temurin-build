@@ -20,3 +20,22 @@ runs:
         Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
         Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages autoconf,automake,bsdtar,cpio,curl,gcc-core,git,gnupg,grep,libtool,make,mingw64-x86_64-gcc-core,perl,rsync,unzip,wget,zip --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
       shell: pwsh
+
+    - name: Install Git
+      run: |
+        Invoke-WebRequest 'https://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile 'C:\temp\git.exe'
+        Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
+      shell: pwsh
+
+    - name: Set PATH
+      run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
+      shell: pwsh
+
+    - name: Cygwin git configuration
+      shell: bash
+      run: mkdir "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
+
+    - uses: actions/checkout@v3
+      if: matrix.version != 'jdk'
+      with:
+        set-safe-directory: false

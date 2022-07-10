@@ -18,7 +18,7 @@ jobs:
       VS2017_URL: "https://github.com/akashche/msvs_2017_installer_bootstrap/raw/master/vs_community__7955ddbf8a9b49dda0f8d18876e93bd2.exe"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         set-safe-directory: false
 
@@ -77,26 +77,6 @@ jobs:
         --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
         --add Microsoft.VisualStudio.Component.Windows10SDK.17763
         --quiet --wait'
-
-    - name: Install Git
-      if: matrix.version != 'jdk'
-      run: |
-        Invoke-WebRequest 'https://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile 'C:\temp\git.exe'
-        Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
-
-    - name: Set PATH
-      if: matrix.version != 'jdk'
-      run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
-
-    - name: Cygwin git configuration
-      if: matrix.version != 'jdk'
-      shell: bash
-      run: mkdir "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
-
-    - uses: actions/checkout@v2
-      if: matrix.version != 'jdk'
-      with:
-        set-safe-directory: false
 
     - name: Setup 8dot3name
       run: fsutil behavior set disable8dot3 0
