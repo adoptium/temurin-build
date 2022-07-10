@@ -1,0 +1,19 @@
+name: 'Get Cygwin'
+description: 'Download Cygwin and prepare a Windows host'
+
+runs:
+  using: composite
+  steps:
+    - name: Restore cygwin packages from cache
+      id: cygwin
+      uses: actions/cache@v2
+      with:
+        path: C:\cygwin_packages
+        key: cygwin-packages-${{ runner.os }}-v1
+
+    - name: Install Cygwin
+      run: |
+        New-Item -Path C:\ -Name 'openjdk' -ItemType 'directory'
+        Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
+        Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages autoconf,automake,bsdtar,cpio,curl,gcc-core,git,gnupg,grep,libtool,make,mingw64-x86_64-gcc-core,perl,rsync,unzip,wget,zip --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
+      shell: pwsh

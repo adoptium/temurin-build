@@ -1,0 +1,23 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [ master ]
+
+# Cancel existing runs if user makes another push.
+concurrency:
+  group: "${{ github.ref }}"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-linux:
+    name: linux
+    uses: ./.github/workflows/build-linux.yml
+
+  build-macos:
+    name: macOS
+    uses: ./.github/workflows/build-macos.yml
+
+  build-windows:
+    name: macOS
+    uses: ./.github/workflows/build-windows.yml

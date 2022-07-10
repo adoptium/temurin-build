@@ -1,0 +1,66 @@
+name: 'Build (macos)'
+
+on:
+  workflow_call:
+
+jobs:
+  build_macos:
+    name: build
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macOS]
+        version: [jdk8u, jdk11u]
+        variant: [temurin]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Dependencies
+      run: |
+        brew install bash binutils freetype gnu-sed nasm
+    - uses: actions/setup-java@v1
+      id: setup-java
+      with:
+        java-version: 7
+      if: matrix.version == 'jdk8u'
+      
+    - name: Select correct Xcode
+      run: |
+        rm -rf /Applications/Xcode.app
+        ln -s /Applications/Xcode_11.7.app /Applications/Xcode.app
+
+    - name: Build macOS
+      run: |
+        export JAVA_HOME=$JAVA_HOME_11_X64
+        # Skip freetype build on jdk11+
+        if [ ${{ matrix.version }} != "jdk8u" ]; then
+          export BUILD_ARGS="--skip-freetype --make-exploded-image"
+          ./build-farm/make-adopt-build-farm.sh
+          export BUILD_ARGS="--assemble-exploded-image"
+          ./build-farm/make-adopt-build-farm.sh
+        else
+          ./build-farm/make-adopt-build-farm.sh
+        fi
+      env:
+        JAVA_TO_BUILD: ${{ matrix.version }}
+        ARCHITECTURE: x64
+        VARIANT: ${{ matrix.variant }}
+        TARGET_OS: mac
+        FILENAME: OpenJDK.tar.gz
+        JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
+
+    - name: 'Upload bundles'
+      uses: ./.github/actions/upload-bundles
+      with:
+        os: ${{matrix.os}}
+        version: ${{ matrix.version }}
+        variant: ${{ matrix.variant }}
+
+    - name: Smoke Test
+      uses: ./.github/actions/smoke-test
+      with:
+        os: ${{matrix.os}}
+        version: ${{ matrix.version }}
+        variant: ${{ matrix.variant }}

@@ -1,0 +1,82 @@
+name: 'Build (linux)'
+
+on:
+  workflow_call:
+
+jobs:
+  build_linux:
+    name: build
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [linux]
+        version: [jdk8u, jdk11u, jdk17u, jdk18u, jdk19, jdk] #jdk head == jdk20
+        variant: [temurin]
+        image: [adoptopenjdk/centos7_build_image]
+        include:
+          - os: alpine-linux
+            version: jdk8u
+            variant: temurin
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk11u
+            variant: temurin
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk17u
+            variant: temurin
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk18u
+            vm: temurin
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk19
+            vm: temurin
+            image: adoptopenjdk/alpine3_build_image
+          - os: alpine-linux
+            version: jdk
+            variant: temurin
+            image: adoptopenjdk/alpine3_build_image
+          - os: linux
+            version: jdk11u
+            variant: dragonwell
+            image: adoptopenjdk/centos7_build_image
+          - os: linux
+            version: jdk8u
+            vm: dragonwell
+            image: adoptopenjdk/centos7_build_image
+          - os: linux
+            version: jdk11u
+            variant: fast_startup
+            image: adoptopenjdk/centos7_build_image
+          - os: linux
+            version: jdk11u
+            variant: bisheng
+            image: adoptopenjdk/centos7_build_image
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build Linux
+      run: ./build-farm/make-adopt-build-farm.sh
+      env:
+        JAVA_TO_BUILD: ${{ matrix.version }}
+        ARCHITECTURE: x64
+        VARIANT: ${{ matrix.variant }}
+        TARGET_OS: ${{ matrix.os }}
+        FILENAME: OpenJDK.tar.gz
+        # Don't set the OS as we use both linux and alpine-linux
+        PLATFORM_CONFIG_LOCATION: AdoptOpenJDK/openjdk-build/master/build-farm/platform-specific-configurations
+
+    - name: Upload bundles
+      uses: ./.github/actions/upload-bundles
+
+    - name: Smoke Test
+      uses: ./.github/actions/smoke-test
+      with:
+        os: ${{matrix.os}}
+        version: ${{ matrix.version }}
+        variant: ${{ matrix.variant }}

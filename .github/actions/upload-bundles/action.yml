@@ -1,0 +1,21 @@
+name: 'Upload bundles'
+description: 'Upload resulting JDK bundles'
+inputs:
+  os:
+    description: 'OS to test'
+    required: true
+  version:
+    description: 'Version to test'
+    required: true
+  variant:
+    description: 'Variant to test'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/upload-artifact@v2
+      name: Collect and Archive Artifacts
+      with:
+        name: ${{inputs.version}}-${{inputs.os}}-${{inputs.variant}}
+        path: workspace/target/*
