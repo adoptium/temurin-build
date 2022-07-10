@@ -15,34 +15,34 @@ runs:
   using: composite
   steps:
     - name: Unpack jdk
-      if: inputs.os != 'windows'
+      if: inputs.os != 'windows-2019'
       run: |
         mkdir -p "${HOME}/JDK"
         tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
       shell: bash
 
     - name: Unpack jdk
-      if: inputs.os == 'windows'
+      if: inputs.os == 'windows-2019'
       run: |
         unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}"
       shell: pwsh
 
     - name: Set root of jdk image dir
-      if: inputs.os != 'windows'
+      if: inputs.os != 'windows-2019'
       run: |
         imageroot=$(find "${HOME}/JDK" -name release -type f)
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
       shell: bash
 
     - name: Set root of jdk image dir
-      if: inputs.os == 'windows'
+      if: inputs.os == 'windows-2019'
       run: |
         $imageroot=$(find "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}" -name release -type f)
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
       shell: pwsh
 
     - name: Reset ANT_HOME from ANT_HOME_ORIGIN for smoke test
-      if: inputs.os == 'windows'
+      if: inputs.os == 'windows-2019'
       run: echo "ANT_HOME=${env:ANT_HOME_ORIGIN}" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
       shell: pwsh
 
