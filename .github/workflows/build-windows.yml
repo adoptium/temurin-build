@@ -18,6 +18,10 @@ jobs:
       VS2017_URL: "https://github.com/akashche/msvs_2017_installer_bootstrap/raw/master/vs_community__7955ddbf8a9b49dda0f8d18876e93bd2.exe"
 
     steps:
+    - uses: actions/checkout@v2
+      with:
+        set-safe-directory: false
+
     - name: Get Cygwin
       if: matrix.version != 'jdk'
       uses: ./.github/actions/get-cygwin
@@ -87,10 +91,6 @@ jobs:
       if: matrix.version != 'jdk'
       shell: bash
       run: mkdir "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
-
-    - uses: actions/checkout@v3.0.2
-      with:
-        set-safe-directory: false
 
     - name: Setup 8dot3name
       run: fsutil behavior set disable8dot3 0
