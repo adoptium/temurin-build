@@ -79,6 +79,7 @@ jobs:
         --quiet --wait'
 
     - name: Install Git
+      if: matrix.version != 'jdk'
       run: |
         Invoke-WebRequest 'https://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile 'C:\temp\git.exe'
         Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
@@ -91,6 +92,11 @@ jobs:
       if: matrix.version != 'jdk'
       shell: bash
       run: mkdir "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
+
+    - uses: actions/checkout@v2
+      if: matrix.version != 'jdk'
+      with:
+        set-safe-directory: false
 
     - name: Setup 8dot3name
       run: fsutil behavior set disable8dot3 0

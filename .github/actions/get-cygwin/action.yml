@@ -4,6 +4,9 @@ description: 'Download Cygwin and prepare a Windows host'
 runs:
   using: composite
   steps:
+    - name: Clean Workspace
+      uses: AutoModality/action-clean@v1
+
     - name: Restore cygwin packages from cache
       id: cygwin
       uses: actions/cache@v2
