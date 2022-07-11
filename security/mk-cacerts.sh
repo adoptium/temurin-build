@@ -85,18 +85,16 @@ IMPORTED=('null')
 for FILE in certs/*.crt; do
     SUBJECT=$(openssl x509 -subject -noout -in "$FILE")
     TRIMMED_SUBJECT="${SUBJECT#*subject= /}"
-    if [ "$NO_KEYSTORE" = false ] ; then
-        ALIAS="${TRIMMED_SUBJECT//\//,}"
-    else
-        # Remove/translate characters not valid in a filename
-        ALIAS_NO_INVALID="${TRIMMED_SUBJECT//[ :()]/_}"
-        ALIAS=$(echo "${ALIAS_NO_INVALID}" | tr -cd 'a-zA-Z,_' | tr A-Z a-z)
-    fi
+    ALIAS="${TRIMMED_SUBJECT//\//,}"
 
-    if [ "$NO_KEYSTORE" = false ] ; then
-         if printf '%s\n' "${IMPORTED[@]}" | grep "${ALIAS}"; then
-            echo "Skipping certificate with alias: $ALIAS as it already exists"
-        else
+    if printf '%s\n' "${IMPORTED[@]}" | grep "temurin_${ALIAS}_temurin"; then
+        echo "Skipping certificate file $FILE with alias: $ALIAS as it already exists"
+        if [ "$NO_KEYSTORE" = true ] ; then
+            # Remove duplicate $FILE so it is not imported using OpenJDK GenerateCacerts
+            rm "$FILE"
+        fi
+    else
+        if [ "$NO_KEYSTORE" = false ] ; then
             echo "Processing certificate with alias: $ALIAS"
             "$KEYTOOL" -noprompt \
             -import \
@@ -105,11 +103,26 @@ for FILE in certs/*.crt; do
             -file "$FILE" \
             -keystore "cacerts" \
             -storepass "changeit"
-
-            IMPORTED+=("${ALIAS}")
+        else
+            # Importing using OpenJDK GenerateCacerts, so must ensure alias is a valid filename
+            ALIAS_NO_INVALID="${ALIAS//[ :()]/_}"
+            ALIAS_FILENAME=$(echo "${ALIAS_NO_INVALID}" | tr -cd '0-9a-zA-Z,_' | tr '[:upper:]' '[:lower:]')
+            echo "Renaming $FILE to certs/$ALIAS_FILENAME"
+            if test -f "certs/$ALIAS_FILENAME"; then
+                echo "ERROR: Certificate alias file already exists certs/$ALIAS_FILENAME"
+                echo "security/mk-cacerts.sh needs ALIAS_FILENAME filter updating to make unique"
+                exit 1
+            fi
+            mv "$FILE" "certs/$ALIAS_FILENAME"
         fi
-    else
-         echo "Renaming $FILE to certs/$ALIAS"
-         mv "$FILE" "certs/$ALIAS"
+
+        IMPORTED+=("temurin_${ALIAS}_temurin")
     fi
 done
+
+if [ "$NO_KEYSTORE" = false ] ; then
+    num_certs=$("$KEYTOOL" -v -list -storepass changeit -keystore cacerts | grep -c "Alias name:")
+else
+    num_certs=$(find certs/* | wc -l)
+fi
+echo "Number of certs processed: $num_certs"
