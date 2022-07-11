@@ -391,7 +391,7 @@ function setBranch() {
 # Set the config defaults
 function configDefaults() {
 
-# The OS kernel name, e.g. 'darwin' for Mac OS X
+  # The OS kernel name, e.g. 'darwin' for Mac OS X
 BUILD_CONFIG[OS_KERNEL_NAME]=$(uname | awk '{print tolower($0)}')
 
   # Determine OS full system version
