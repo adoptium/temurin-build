@@ -7,6 +7,9 @@ jobs:
   build_windows:
     name: Windows
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: bld
     strategy:
       fail-fast: false
       matrix:
@@ -18,9 +21,6 @@ jobs:
       VS2017_URL: "https://github.com/akashche/msvs_2017_installer_bootstrap/raw/master/vs_community__7955ddbf8a9b49dda0f8d18876e93bd2.exe"
 
     steps:
-    - name: Enable Git Long Paths
-      run: git config --global core.longpaths true
-
     - uses: actions/checkout@v3
       with:
         set-safe-directory: false
