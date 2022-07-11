@@ -81,6 +81,11 @@ jobs:
     - name: Setup 8dot3name
       run: fsutil behavior set disable8dot3 0
 
+    - name: Remove File Length Restrictions
+      run: |
+        New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" ` -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+        git config --global core.longpaths true
+
     - name: Set JAVA_HOME
       run: echo "JAVA_HOME=$(cygpath "${{ steps.setup-java11.outputs.path }}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
 
