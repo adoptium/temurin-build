@@ -58,7 +58,7 @@ jobs:
             variant: bisheng
             image: adoptopenjdk/centos7_build_image
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Build Linux
       run: ./build-farm/make-adopt-build-farm.sh

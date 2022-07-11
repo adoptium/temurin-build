@@ -18,7 +18,7 @@ jobs:
       VS2017_URL: "https://github.com/akashche/msvs_2017_installer_bootstrap/raw/master/vs_community__7955ddbf8a9b49dda0f8d18876e93bd2.exe"
 
     steps:
-    - uses: eternalapprentice2000/checkout@v2
+    - uses: actions/checkout@v3
       with:
         set-safe-directory: false
 
@@ -95,8 +95,15 @@ jobs:
         "${env:ANT_HOME}/bin" >> ${env:GITHUB_PATH}
       shell: pwsh
 
+    - name: Symlink temurin-build to C:\bld
+      run: |
+        New-Item -Path C:\ -Name 'bld' -ItemType 'directory'
+        New-Item -ItemType SymbolicLink -Path "C:\bld" -Target "D:\a\temurin-build\temurin-build"
+      shell: pwsh
+
     - name: Build Windows
       run: bash build-farm/make-adopt-build-farm.sh
+      working-directory: C:\bld
       shell: cmd
       env:
         JAVA_TO_BUILD: ${{ matrix.version }}
