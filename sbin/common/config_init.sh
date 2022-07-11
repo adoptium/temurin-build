@@ -397,26 +397,16 @@ function configDefaults() {
   # Determine OS full system version
   local unameSys=$(uname -s)
   local unameOSSysVer=$(uname -sr)
+  local unameKernel=$(uname -r)
   if [ "${unameSys}" == "Linux" ]; then
-    # Linux distribs add more useful distrib in the single line file /etc/system-release,
-    # or property file /etc/os-release
-    if [ -f "/etc/system-release" ]; then
+    if [ -f "/etc/os-release" ]; then
+      local unameFullOSVer=$(awk -F= '/^NAME=/{OS=$2}/^VERSION_ID=/{VER=$2}END{print OS " " VER}' /etc/os-release  | tr -d '"')
+      unameOSSysVer="${unameFullOSVer} (Kernel: ${unameKernel})"
+    elif [ -f "/etc/system-release" ]; then
       local linuxName=$(tr -d '"' < /etc/system-release)
-      unameOSSysVer="${unameOSSysVer} : ${linuxName}"
-    elif [ -f "/etc/os-release" ]; then
-      if grep "^NAME=" /etc/os-release; then
-        local osName=$(grep "^NAME=" /etc/os-release | cut -d= -f2 | tr -d '"')
-        unameOSSysVer="${unameOSSysVer} : ${osName}"
-      fi
-      if grep "^VERSION=" /etc/os-release; then
-        local osVersion=$(grep "^VERSION=" /etc/os-release | cut -d= -f2 | tr -d '"')
-        unameOSSysVer="${unameOSSysVer} ${osVersion}"
-      fi
-      # Improve Version Reporting For Alpine Linux ( Issue #2997 )
-      if [ "${osName}" == "Alpine Linux" ]; then
-        osName=$(grep "^PRETTY_NAME=" /etc/os-release | cut -d= -f2 | tr -d '"')
-        unameOSSysVer="${osName}"
-      fi
+      unameOSSysVer="${unameOSSysVer} : ${linuxName} (Kernel: ${unameKernel} )"
+    else
+      unameOSSysVer="${unameSys} : unameOSSysVer (Kernel: ${unameKernel} )"
     fi
   elif [ "${unameSys}" == "AIX" ]; then
     # AIX provides full version info using oslevel
