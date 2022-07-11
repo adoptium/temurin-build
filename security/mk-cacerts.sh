@@ -83,9 +83,7 @@ awk '
 IMPORTED=('null')
 
 for FILE in certs/*.crt; do
-    SUBJECT=$(openssl x509 -subject -noout -in "$FILE")
-    TRIMMED_SUBJECT="${SUBJECT#*subject= /}"
-    ALIAS="${TRIMMED_SUBJECT//\//,}"
+    ALIAS=$(openssl x509 -subject -noout -in "$FILE" | sed 's/^subject=//' | tr '/' ',')
 
     if printf '%s\n' "${IMPORTED[@]}" | grep "temurin_${ALIAS}_temurin"; then
         echo "Skipping certificate file $FILE with alias: $ALIAS as it already exists"
@@ -105,10 +103,9 @@ for FILE in certs/*.crt; do
             -storepass "changeit"
         else
             # Importing using OpenJDK GenerateCacerts, so must ensure alias is a valid filename
-            ALIAS_NO_INVALID="${ALIAS//[ :()]/_}"
-            ALIAS_FILENAME=$(echo "${ALIAS_NO_INVALID}" | tr -cd '0-9a-zA-Z,_' | tr '[:upper:]' '[:lower:]')
+            ALIAS_FILENAME=$(echo "${ALIAS}" | tr ' :()' '____' | tr '[:upper:]' '[:lower:]' | tr -cd '0-9a-z,_' )
             echo "Renaming $FILE to certs/$ALIAS_FILENAME"
-            if test -f "certs/$ALIAS_FILENAME"; then
+            if [ -f "certs/$ALIAS_FILENAME" ]; then
                 echo "ERROR: Certificate alias file already exists certs/$ALIAS_FILENAME"
                 echo "security/mk-cacerts.sh needs ALIAS_FILENAME filter updating to make unique"
                 exit 1
