@@ -118,7 +118,7 @@ for FILE in certs/*.crt; do
     fi
 done
 
-if [ "$NO_KEYSTORE" = false ] ; then # for jdk8,11
+if [ "$NO_KEYSTORE" = false ] ; then # for jdk8, jdk11
     num_certs=$("$KEYTOOL" -v -list -storepass changeit -keystore cacerts | grep -c "Alias name:")
 else
     num_certs=$(find certs/* | wc -l)
