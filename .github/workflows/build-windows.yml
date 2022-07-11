@@ -18,6 +18,9 @@ jobs:
       VS2017_URL: "https://github.com/akashche/msvs_2017_installer_bootstrap/raw/master/vs_community__7955ddbf8a9b49dda0f8d18876e93bd2.exe"
 
     steps:
+    - name: Enable Git Long Paths
+      run: git config --global core.longpaths true
+
     - uses: actions/checkout@v3
       with:
         set-safe-directory: false
@@ -64,8 +67,7 @@ jobs:
         --quiet'
 
     - name: Download Visual Studio 2017
-      run: |
-        curl -L "$env:VS2017_URL" -o "$HOME/vs2017.exe"
+      run: curl -L "$env:VS2017_URL" -o "$HOME/vs2017.exe"
       if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
 
     - name: Install Visual Studio 2017
@@ -80,11 +82,6 @@ jobs:
 
     - name: Setup 8dot3name
       run: fsutil behavior set disable8dot3 0
-
-    - name: Remove File Length Restrictions
-      run: |
-        New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" ` -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
-        git config --global core.longpaths true
 
     - name: Set JAVA_HOME
       run: echo "JAVA_HOME=$(cygpath "${{ steps.setup-java11.outputs.path }}")" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
