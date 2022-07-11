@@ -46,19 +46,18 @@ rm -f ca-bundle.crt cacerts
 rm -rf certs && mkdir certs
 
 # Abort if certdata.txt is not present because we do not want mk-ca-bundle.pl
-# to download it. Otherwise we might have inconsistent certificate stores
-# between builds.
+# to download it. Otherwise we might have inconsistent certificate stores between builds.
 if ! [ -f "certdata.txt" ] ; then
     echo "Local certdata.txt missing, aborting." >&2
     exit 1
 fi
 
-# Convert Mozilla's list of certificates into a PEM file. The -n switch makes
+# Convert Mozilla's list of certificates into a PEM file. The -n switch makes
 # it use the local certdata.txt in this folder.
-./mk-ca-bundle.pl -v -n ca-bundle.crt
+certNum=$(./mk-ca-bundle.pl -v -n ca-bundle.crt)
+echo "mk-ca-bundle.pl generates $certNum certificates"
 
-# Split them PEM file into individual files because keytool cannot do it on its
-# own.
+# Split the PEM file into individual files because keytool cannot do it on its own.
 awk '
   split_after == 1 {close("certs/cert" n ".crt");n++;split_after=0}
   /-----END CERTIFICATE-----/ {split_after=1}
@@ -81,18 +80,20 @@ awk '
 # The full subject needs to be used to prevent alias collisions.
 
 IMPORTED=('null')
+alreadyExistsCounter=0 # counter for duplicated file
 
 for FILE in certs/*.crt; do
     ALIAS=$(openssl x509 -subject -noout -in "$FILE" | sed 's/^subject=//' | tr '/' ',')
 
     if printf '%s\n' "${IMPORTED[@]}" | grep "temurin_${ALIAS}_temurin"; then
         echo "Skipping certificate file $FILE with alias: $ALIAS as it already exists"
-        if [ "$NO_KEYSTORE" = true ] ; then
+        if [ "$NO_KEYSTORE" = true ] ; then # for jdk17+
             # Remove duplicate $FILE so it is not imported using OpenJDK GenerateCacerts
             rm "$FILE"
         fi
+        (("alreadyExistsCounter=alreadyExistsCounter+1"))
     else
-        if [ "$NO_KEYSTORE" = false ] ; then
+        if [ "$NO_KEYSTORE" = false ] ; then # for jdk8, jdk11
             echo "Processing certificate with alias: $ALIAS"
             "$KEYTOOL" -noprompt \
             -import \
@@ -117,9 +118,17 @@ for FILE in certs/*.crt; do
     fi
 done
 
-if [ "$NO_KEYSTORE" = false ] ; then
+if [ "$NO_KEYSTORE" = false ] ; then # for jdk8, jdk11
     num_certs=$("$KEYTOOL" -v -list -storepass changeit -keystore cacerts | grep -c "Alias name:")
 else
     num_certs=$(find certs/* | wc -l)
 fi
 echo "Number of certs processed: $num_certs"
+
+# post verification: (nr.(mk-ca-bundle.pl) - nr.(already imported file) == (nr. (current files in certs folder)) || (nr. (alias in cacerts))
+certNum="$((certNum-alreadyExistsCounter))"
+if [ "$certNum" != "$num_certs" ]; then
+    echo "Number of cert from mk-ca-bundle.pl: $certNum"
+    echo "Number imported to $KEYTOOL: $num_certs"
+    exit 1
+fi
