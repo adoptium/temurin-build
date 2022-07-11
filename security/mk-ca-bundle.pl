@@ -607,3 +607,4 @@ if($opt_u && -e $txt && !unlink($txt)) {
   report "Failed to remove $txt: $!\n";
 }
 report "Done ($certnum CA certs processed, $skipnum skipped).";
+print $certnum;
