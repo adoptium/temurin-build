@@ -55,7 +55,7 @@ fi
 # Convert Mozilla's list of certificates into a PEM file. The -n switch makes
 # it use the local certdata.txt in this folder.
 certNum=$(./mk-ca-bundle.pl -v -n ca-bundle.crt)
-echo "mk-ca-bundle.pl generates "$certNum "cerificates"
+echo "mk-ca-bundle.pl generates $certNum cerificates"
 
 # Split the PEM file into individual files because keytool cannot do it on its own.
 awk '
@@ -91,7 +91,7 @@ for FILE in certs/*.crt; do
             # Remove duplicate $FILE so it is not imported using OpenJDK GenerateCacerts
             rm "$FILE"
         fi
-        let "alreadyExistsCounter=alreadyExistsCounter+1"
+        (("alreadyExistsCounter=alreadyExistsCounter+1"))
     else
         if [ "$NO_KEYSTORE" = false ] ; then # for jdk8, jdk11
             echo "Processing certificate with alias: $ALIAS"
@@ -127,7 +127,7 @@ echo "Number of certs processed: $num_certs"
 
 # post verification: (nr.(mk-ca-bundle.pl) - nr.(already imported file) == (nr. (current files in certs folder)) || (nr. (alias in cacerts))
 certNum="$((certNum-alreadyExistsCounter))"
-if [ $certNum != $num_certs ]; then
+if [ "$certNum" != "$num_certs" ]; then
     echo "Number of cert from mk-ca-bundle.pl: $certNum"
     echo "Number imported to $KEYTOOL: $num_certs"
     exit 1
