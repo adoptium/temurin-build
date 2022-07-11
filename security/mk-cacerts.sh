@@ -126,7 +126,7 @@ fi
 echo "Number of certs processed: $num_certs"
 
 # post verification: (nr.(mk-ca-bundle.pl) - nr.(already imported file) == (nr. (currnent files in certs folder)) || (nr. (alias in cacerts))
-certNum="$((certNum-existCounter))"
+certNum="$((certNum-alreadyExistsCounter))"
 if [ $certNum != $num_certs ]; then
     echo "Number of cert from mk-ca-bundle.pl: $certNum"
     echo "Number imported to $KEYTOOL: $num_certs"
