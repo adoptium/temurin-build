@@ -91,7 +91,7 @@ for FILE in certs/*.crt; do
             # Remove duplicate $FILE so it is not imported using OpenJDK GenerateCacerts
             rm "$FILE"
         fi
-        let "existCounter=existCounter+1"
+        let "alreadyExistsCounter=alreadyExistsCounter+1"
     else
         if [ "$NO_KEYSTORE" = false ] ; then # for jdk8, jdk11
             echo "Processing certificate with alias: $ALIAS"
