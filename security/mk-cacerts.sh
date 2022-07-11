@@ -55,7 +55,7 @@ fi
 # Convert Mozilla's list of certificates into a PEM file. The -n switch makes
 # it use the local certdata.txt in this folder.
 certNum=$(./mk-ca-bundle.pl -v -n ca-bundle.crt)
-echo "mk-ca-bundle.pl generates $certNum cerificates"
+echo "mk-ca-bundle.pl generates $certNum certificates"
 
 # Split the PEM file into individual files because keytool cannot do it on its own.
 awk '
