@@ -97,7 +97,6 @@ jobs:
 
     - name: Symlink temurin-build to C:\bld
       run: |
-        New-Item -Path C:\ -Name 'bld' -ItemType 'directory'
         New-Item -ItemType SymbolicLink -Path "C:\bld" -Target "D:\a\temurin-build\temurin-build"
       shell: pwsh
 
