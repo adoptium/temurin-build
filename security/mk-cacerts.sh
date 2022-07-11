@@ -93,7 +93,7 @@ for FILE in certs/*.crt; do
         fi
         let "existCounter=existCounter+1"
     else
-        if [ "$NO_KEYSTORE" = false ] ; then # for jdk8,jdk11
+        if [ "$NO_KEYSTORE" = false ] ; then # for jdk8, jdk11
             echo "Processing certificate with alias: $ALIAS"
             "$KEYTOOL" -noprompt \
             -import \
