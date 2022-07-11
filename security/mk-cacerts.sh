@@ -80,7 +80,7 @@ awk '
 # The full subject needs to be used to prevent alias collisions.
 
 IMPORTED=('null')
-existCounter=0 # counter for duplicated file
+alreadyExistsCounter=0 # counter for duplicated file
 
 for FILE in certs/*.crt; do
     ALIAS=$(openssl x509 -subject -noout -in "$FILE" | sed 's/^subject=//' | tr '/' ',')
