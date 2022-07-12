@@ -146,6 +146,14 @@ public class JdkVersion {
     }
 
     /**
+     * Retrieve value of JAVA_HOME.
+     * @return String - value of environment variable JAVA_HOME
+     */
+    public static String getJavaHome() {
+        return System.getProperty("java.home");
+    }
+
+    /**
      * Are we running on an OpenJDK feature version
      * that is equal to (or greater than) the
      * supplied int?
