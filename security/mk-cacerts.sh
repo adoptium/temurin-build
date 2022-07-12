@@ -127,8 +127,10 @@ echo "Number of certs processed: $num_certs"
 
 # post verification: (nr.(mk-ca-bundle.pl) - nr.(already imported file) == (nr. (current files in certs folder)) || (nr. (alias in cacerts))
 certNum="$((certNum-alreadyExistsCounter))"
+num_certs="$(echo -e "${num_certs}" | tr -d '[:space:]')"
 if [ "$certNum" != "$num_certs" ]; then
     echo "Number of cert from mk-ca-bundle.pl: $certNum"
     echo "Number imported to $KEYTOOL: $num_certs"
+    echo "Mismatch number of certificates"
     exit 1
 fi
