@@ -39,7 +39,7 @@ public class VerifyCACertsTest {
     private static final JdkVersion JDK_VERSION = new JdkVersion();
 
     // Expect matching certs number
-    private static final int EXPCOUNT = 135;
+    private static final int EXPECTED_COUNT = 135;
     /* TODO: add up to 135 certs
     private static final Map<String, String> EXPFP_MAP = new HashMap<>() {
         put("amazonrootca1 [jdk]",          "8E:CD:E6:88:4F:3D:87:B1:12:5B:A3:1A:C3:FC:B1:3D:70:16:DE:7F:57:CC:90:4F:E1:CB:97:C6:AE:98:19:6E");
@@ -60,9 +60,9 @@ public class VerifyCACertsTest {
 
     private static final HexFormat HEX = HexFormat.ofDelimiter(":").withUpperCase();
     */
-    private static final String JHOME = getJavaHome();
+    private static final String JAVA_HOME = getJavaHome();
     // concat absolute path regardless OS
-    private static final String CACERTS = JHOME + File.separator + "lib" + File.separator + "security" + File.separator + "cacerts";
+    private static final String CACERTS = JAVA_HOME + File.separator + "lib" + File.separator + "security" + File.separator + "cacerts";
 
     /**
      * Verifies the number of certs matching EXPCOUNT.
@@ -75,7 +75,7 @@ public class VerifyCACertsTest {
 
             KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType()); // fallback to JKS if not set defaulttype
             ks.load(new ByteArrayInputStream(data), "changeit".toCharArray());
-            assertEquals(ks.size(), EXPCOUNT, "Failed to match CA certs number.");
+            assertEquals(ks.size(), EXPECTED_COUNT, "Failed to match CA certs number.");
         } catch (Exception e) {
             throw new Exception("Failed to test certs number", e);
         }

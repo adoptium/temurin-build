@@ -147,7 +147,7 @@ public class JdkVersion {
 
     /**
      * Retrieve value of JAVA_HOME.
-     * @return String   JAVA_HOME
+     * @return String - value of environment variable JAVA_HOME
      */
     public static String getJavaHome() {
         return System.getProperty("java.home");
