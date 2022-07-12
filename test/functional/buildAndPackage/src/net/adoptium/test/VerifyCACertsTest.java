@@ -19,7 +19,7 @@ import org.testng.annotations.Test;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.util.logging.Logger;
 import static net.adoptium.test.JdkVersion.getJavaHome;
@@ -35,6 +35,9 @@ public class VerifyCACertsTest {
 
     // config logger
     private static final Logger LOGGER = Logger.getLogger(VerifyCACertsTest.class.getName());
+
+    private static final JdkVersion JDK_VERSION = new JdkVersion();
+
     // Expect matching certs number
     private static final int EXPCOUNT = 135;
     /* TODO: add up to 135 certs
@@ -68,9 +71,9 @@ public class VerifyCACertsTest {
     public void isCertNrMatch() throws Exception {
         LOGGER.info("cacerts file: " + CACERTS);
         try {
-            byte[] data = Files.readAllBytes(Path.of(CACERTS));
+            byte[] data = Files.readAllBytes(Paths.get(CACERTS));  //Path.of introduced after jdk8
 
-            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType()); // fallback to JSK if not set defaulttype
+            KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType()); // fallback to JKS if not set defaulttype
             ks.load(new ByteArrayInputStream(data), "changeit".toCharArray());
             assertEquals(ks.size(), EXPCOUNT, "Failed to match CA certs number.");
         } catch (Exception e) {
