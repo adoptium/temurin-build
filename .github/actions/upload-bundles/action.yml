@@ -10,12 +10,16 @@ inputs:
   variant:
     description: 'Variant to test'
     required: true
+  directory:
+    description: 'Directory to upload'
+    default: '.'
+    required: false
 
 runs:
   using: composite
   steps:
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       name: Collect and Archive Artifacts
       with:
         name: ${{inputs.version}}-${{inputs.os}}-${{inputs.variant}}
-        path: workspace/target/*
+        path: ${{inputs.directory}}/workspace/target/*

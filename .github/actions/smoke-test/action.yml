@@ -30,8 +30,7 @@ runs:
 
     - name: Unpack jdk
       if: startsWith(inputs.os, 'windows')
-      run: |
-        unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}"
+      run: unzip "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}/OpenJDK.zip" -d "${HOME}/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}"
       shell: pwsh
 
     - name: Set root of jdk image dir

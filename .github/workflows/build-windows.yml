@@ -96,8 +96,7 @@ jobs:
       shell: pwsh
 
     - name: Symlink temurin-build to C:\bld
-      run: |
-        New-Item -ItemType SymbolicLink -Path "C:\bld" -Target "D:\a\temurin-build\temurin-build"
+      run: New-Item -ItemType SymbolicLink -Path "C:\bld" -Target "D:\a\temurin-build\temurin-build"
       shell: pwsh
 
     - name: Build Windows
@@ -117,6 +116,7 @@ jobs:
         os: ${{matrix.os}}
         version: ${{ matrix.version }}
         variant: ${{ matrix.variant }}
+        directory: C:\bld
 
     - name: Smoke Test
       uses: ./.github/actions/smoke-test
