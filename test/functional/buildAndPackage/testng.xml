@@ -19,6 +19,7 @@
         <classes>
             <class name="net.adoptium.test.VendorPropertiesTest"/>
             <class name="net.adoptium.test.BundledFreetypeTest"/>
+            <class name="net.adoptium.test.VerifyCACertsTest"/>
         </classes>
     </test>
 
