@@ -107,7 +107,7 @@ configureReproducibleBuildParameter() {
 
           # Specify --with-hotspot-build-time to ensure dual pass builds like MacOS use same time
           # Get current ISO-8601 datetime
-          isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox")
+          isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox" || true)
           if [ "x${isGnuCompatDate}" != "x" ]
           then
               hotspotBuildTime=$(date --utc +"%Y-%m-%dT%H:%M:%SZ")
