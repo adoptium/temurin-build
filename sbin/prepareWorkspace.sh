@@ -538,9 +538,7 @@ checkingAndDownloadingFreeType() {
 
 # Recording Build image SHA into docker.txt
 writeDockerImageSHA(){
-  if [ -n "${BUILDIMAGESHA}" ]; then
-    echo "${BUILDIMAGESHA}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt"
-  fi
+  echo "${BUILDIMAGESHA-N.A}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt"
 }
 
 # Generates cacerts file
