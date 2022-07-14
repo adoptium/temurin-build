@@ -793,9 +793,11 @@ generateSBoM() {
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt)"
   # Add FreeMarker 3rd party (openj9)
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt)"
+  
   # Add Build Docker image SHA1
   buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
-  if [ -z "${buildimagesha}" ]; then # ${BUILD_CONFIG[USE_DOCKER]^} always set to false cannot rely on it.
+  # ${BUILD_CONFIG[USE_DOCKER]^} always set to false cannot rely on it.
+  if [ -n "${buildimagesha}" ] && [ "${buildimagesha}" != "N.A" ]; then
     addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "true"
     addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "Docker image SHA1" "${buildimagesha}"
   else
