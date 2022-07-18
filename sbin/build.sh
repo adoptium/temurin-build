@@ -106,7 +106,7 @@ configureReproducibleBuildParameter() {
           addConfigureArg "--with-source-date=" "updated"
       fi
       # Ensure reproducible binary with a unique build user identifier
-      addConfigureArg "--with-build-user=" "adoptium"
+      addConfigureArg "--with-build-user=" "${BUILD_CONFIG[BUILD_VARIANT]}"
   fi
 }
 
