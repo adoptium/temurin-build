@@ -91,9 +91,18 @@ configureShenandoahBuildParameter() {
 }
 
 # Configure reproducible build
-# jdk-17 and jdk-19+ support reproducible builds
+# jdk-17 and jdk-19+ support reproducible builds, no others do
 configureReproducibleBuildParameter() {
-  if [[ "${JAVA_FEATURE_VERSION}" -ge 19 || "${JAVA_FEATURE_VERSION}" -eq 17 ]]
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}"  ] && \
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK9_CORE_VERSION}"  ] && \
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK10_CORE_VERSION}" ] && \
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK11_CORE_VERSION}" ] && \
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK12_CORE_VERSION}" ] && \
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK13_CORE_VERSION}" ] && \
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK14_CORE_VERSION}" ] && \
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK15_CORE_VERSION}" ] && \
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK16_CORE_VERSION}" ] && \
+     [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK18_CORE_VERSION}" ]
   then
       # Enable reproducible builds implicitly with --with-source-date
       if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]
