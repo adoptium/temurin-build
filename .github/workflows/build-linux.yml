@@ -1,7 +1,8 @@
 name: 'Build (linux)'
 
 on:
-  workflow_call:
+  repository_dispatch:
+    types: [build-linux-command]
 
 jobs:
   build_linux:

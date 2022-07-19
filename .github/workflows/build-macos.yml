@@ -1,7 +1,8 @@
 name: 'Build (macos)'
 
 on:
-  workflow_call:
+  repository_dispatch:
+    types: [build-macos-command]
 
 jobs:
   build_macos:

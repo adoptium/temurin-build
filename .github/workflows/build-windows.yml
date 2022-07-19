@@ -1,7 +1,8 @@
 name: 'Build (windows)'
 
 on:
-  workflow_call:
+  repository_dispatch:
+    types: [build-windows-command]
 
 jobs:
   build_windows:
