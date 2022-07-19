@@ -472,8 +472,8 @@ function configDefaults() {
   # The default behavior of whether we want to create the legacy JRE
   BUILD_CONFIG[CREATE_JRE_IMAGE]="false"
 
-  # Set default value to "true. If we do not want this behavior, we can update buildArg per each config file instead
-  BUILD_CONFIG[CREATE_SBOM]="true"
+  # Set default value to "false". We config buildArg per each config file to have it enabled by our pipeline
+  BUILD_CONFIG[CREATE_SBOM]="false"
 
   # The default behavior of whether we want to create a separate source archive
   BUILD_CONFIG[CREATE_SOURCE_ARCHIVE]="false"
