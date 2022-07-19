@@ -193,9 +193,6 @@ jobs:
          version: [jdk8u, jdk11u, jdk17u, jdk]
          variant: [temurin]
 
-     env:
-      VS2017_URL: "https://github.com/akashche/msvs_2017_installer_bootstrap/raw/master/vs_community__7955ddbf8a9b49dda0f8d18876e93bd2.exe"
-
      steps:
      - name: Restore cygwin packages from cache
        id: cygwin
