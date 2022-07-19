@@ -1810,7 +1810,7 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   printJavaVersionString
   addInfoToReleaseFile
   addInfoToJson
-  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
+  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]] && [[ -d "${CYCLONEDB_DIR}" ]]; then
     javaHome="$(setupAntEnv)"
     buildCyclonedxLib "${javaHome}"
     generateSBoM "${javaHome}"
@@ -1846,7 +1846,7 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   printJavaVersionString
   addInfoToReleaseFile
   addInfoToJson
-  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
+  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]] && [[ -d "${CYCLONEDB_DIR}" ]]; then
     javaHome="$(setupAntEnv)"
     buildCyclonedxLib "${javaHome}"
     generateSBoM "${javaHome}"
