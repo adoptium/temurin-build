@@ -39,8 +39,8 @@ public class VerifyCACertsTest {
     private static final JdkVersion JDK_VERSION = new JdkVersion();
 
     // Expect matching certs number
-    private static final int EXPECTED_COUNT = 135;
-    /* TODO: add up to 135 certs
+    private static final int EXPECTED_COUNT = 140;
+    /* TODO: add up to 140 certs
     private static final Map<String, String> EXPFP_MAP = new HashMap<>() {
         put("amazonrootca1 [jdk]",          "8E:CD:E6:88:4F:3D:87:B1:12:5B:A3:1A:C3:FC:B1:3D:70:16:DE:7F:57:CC:90:4F:E1:CB:97:C6:AE:98:19:6E");
         put("amazonrootca2 [jdk]",          "1B:A5:B2:AA:8C:65:40:1A:82:96:01:18:F8:0B:EC:4F:62:30:4D:83:CE:C4:71:3A:19:C3:9C:01:1E:A4:6D:B4");
