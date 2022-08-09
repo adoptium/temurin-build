@@ -136,6 +136,9 @@ create a debug-image archive with the debug symbols.
 --create-jre-image
 create the legacy JRE image in addition to the JDK image.
 
+--create-sbom
+create the CycloneDX System Bill of Materials (JSON artifact).
+
 -d, --destination <path>
 specify the location for the built binary, e.g. /path/.
 This is typically used in conjunction with -T to create a custom path
