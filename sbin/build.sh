@@ -104,6 +104,17 @@ configureReproducibleBuildParameter() {
       else
           # Use build date
           addConfigureArg "--with-source-date=" "updated"
+
+          # Specify --with-hotspot-build-time to ensure dual pass builds like MacOS use same time
+          # Get current ISO-8601 datetime
+          isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox" || true)
+          if [ "x${isGnuCompatDate}" != "x" ]
+          then
+              hotspotBuildTime=$(date --utc +"%Y-%m-%dT%H:%M:%SZ")
+          else
+              hotspotBuildTime=$(date -u -j +"%Y-%m-%dT%H:%M:%SZ")
+          fi
+          addConfigureArg "--with-hotspot-build-time=" "${hotspotBuildTime}"
       fi
       # Ensure reproducible binary with a unique build user identifier
       addConfigureArg "--with-build-user=" "${BUILD_CONFIG[BUILD_VARIANT]}"
