@@ -42,7 +42,6 @@ In terms of compilers, these are what we currently use for each release:
 | JDK8/11 | Linux   | GCC 7.5                                           |
 | JDK17/18| Linux   | GCC 10.3                                          |
 | JDK19+  | Linux   | GCC 11.2                                          |
-| JDK17   | Linux   | GCC 10.3                                          |
 | All     | Alpine  | GCC 10.3.1                                        |
 | JDK8    | Solaris | Sun Studio 12.3                                   |
 | JDK8    | Windows | VS2017 (19) (Win64) or VS2013 (12) (Win32 and J9) |
