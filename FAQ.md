@@ -39,12 +39,16 @@ In terms of compilers, these are what we currently use for each release:
 
 | Version | OS      | Compiler |
 |---------|---------|----------|
-| JDK8    | Linux   | GCC 4.8 (HotSpot) GCC 7.6 (OpenJ9)                |
-| JDK11+  | Linux   | GCC 7.5                                           |
-| JDK8    | Windows | VS2013 (12.0) (HotSpot) or VS2010 (10.0) (OpenJ9) |
-| JDK11+  | Windows | VS2017                                            |
-| JDK8/11 | AIX     | xlC/C++ 13.1.3                                    |
-| JDK13+  | AIX     | xlC/C++ 16.1.0                                    |
+| JDK8/11 | Linux   | GCC 7.5                                           |
+| JDK17/18| Linux   | GCC 10.3                                          |
+| JDK19+  | Linux   | GCC 11.2                                          |
+| JDK17   | Linux   | GCC 10.3                                          |
+| All     | Alpine  | GCC 10.3.1                                        |
+| JDK8    | Solaris | Sun Studio 12.3                                   |
+| JDK8    | Windows | VS2017 (19) (Win64) or VS2013 (12) (Win32 and J9) |
+| JDK11+  | Windows | VS2019 (10) (Win64) or VS2017 (19) (Win32)        |
+| JDK8    | AIX     | xlC/C++ 13.1.3                                    |
+| JDK11+  | AIX     | xlC/C++ 16.1.0                                    |
 | JDK8    | macos   | GCC 4.2.1 (LLVM 2336.11.00                        |
 | JDK11   | macos   | clang-700.1.81                                    |
 | JDK13+  | macos   | clang-900.0.39.2                                  |
