@@ -33,7 +33,7 @@ There is also some documentation in [CHANGELOG.md](CHANGELOG.md)
 ## What are the prerequisites for a system used for builds?
 
 - The upstream OpenJDK build requirements are at [Supported Build Platforms](https://wiki.openjdk.java.net/display/Build/Supported+Build+Platforms)
-- The Temurin levels we build on are in [Minimum-OS-levels](https://github.com/adoptium/temurin-build/wiki/%5BWIP%5D-Minimum-OS-levels) although anything with comparable equivalent or later C libraries should work ok (in particular we have built on most current Linux distros without issues)
+- The Temurin levels we build on are in [Minimum-OS-levels](https://github.com/adoptium/temurin-build/wiki/%5BWIP%5D-Minimum-OS-levels) although anything with comparable equivalent or later C libraries should work OK (in particular we have built on most current Linux distros without issues)
 
 In terms of compilers, these are what we currently use for each release:
 
@@ -49,9 +49,9 @@ In terms of compilers, these are what we currently use for each release:
 | JDK11+  | Windows | VS2019 (10) (Win64) or VS2017 (19) (Win32)        |
 | JDK8    | AIX     | xlC/C++ 13.1.3                                    |
 | JDK11+  | AIX     | xlC/C++ 16.1.0                                    |
-| JDK8    | macos   | GCC 4.2.1 (LLVM 2336.11.00                        |
-| JDK11   | macos   | clang-700.1.81                                    |
-| JDK13+  | macos   | clang-900.0.39.2                                  |
+| JDK8    | macOS   | GCC 4.2.1 (LLVM 2336.11.00                        |
+| JDK11   | macOS   | clang-700.1.81                                    |
+| JDK13+  | macOS   | clang-900.0.39.2                                  |
 
 All machines at Temurin are set up using the ansible playbooks from the
 [infrastructure](https://github.com/adoptopenjdk/openjdk-infrastructure) repository.
@@ -101,7 +101,7 @@ etc
 
 ## How and where are smoke tests run?
 
-They use the same mechanisms and automation used by the AQA test suite.  This means they can be run on the commandline, or as part of a Jenkins job or in a Github workflow.  For this repository, they are part of PR testing via the [build.yml](https://github.com/adoptium/temurin-build/blob/master/.github/workflows/build.yml#L151) workflow using the [run-aqa](https://github.com/adoptium/run-aqa) action.
+They use the same mechanisms and automation used by the AQA test suite.  This means they can be run on the commandline, or as part of a Jenkins job or in a GitHub workflow.  For this repository, they are part of PR testing via the [build.yml](https://github.com/adoptium/temurin-build/blob/master/.github/workflows/build.yml#L151) workflow using the [run-aqa](https://github.com/adoptium/run-aqa) action.
 
 They are also run as part of the Jenkins build pipelines (see the [runSmokeTests()](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy#L264-L301) method in the openjdk_build_pipeline groovy script), triggered after the build is complete and before any AQA tests get run against the build.  If smoke tests fail, it likely indicates we built the 'wrong thing' and there is no point running further testing until we resolve the build issues.
 
