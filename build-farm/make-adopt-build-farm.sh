@@ -142,9 +142,11 @@ then
     # OpenJ9 only supports building jdk-11 with jdk-11
     JDK_BOOT_VERSION="11"
   fi
-  if [ "${JAVA_FEATURE_VERSION}" == "19" ]; then
+  if [ "${JAVA_FEATURE_VERSION}" == "17" ]; then
     # To support reproducible-builds the jar/jmod --date option is required
-    # which is only available from jdk-19 so we cannot bootstrap with JDK18
+    # which is only available in jdk-17 and from jdk-19 so we cannot bootstrap with JDK16
+    JDK_BOOT_VERSION="17"
+  elif [ "${JAVA_FEATURE_VERSION}" == "19" ]; then
     JDK_BOOT_VERSION="19"
   fi
 fi
