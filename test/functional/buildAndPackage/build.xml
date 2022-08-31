@@ -55,17 +55,17 @@
             <fileset dir="${src}/../" includes="*.properties,*.xml"/>
         </jar>
         <echo message="doing copy from src set to ${src}.."/>
-        <fail message="File xml are missing.">
-            <condition>
-                <not>
-                    <available file="${src}/../*.xml" type="file"/>
-                </not>
-            </condition>
-        </fail>
-        <fail message="File mk are missing.">
+         <fail message="File mk are missing.">
             <condition>
                 <not>
                     <available file="${src}/../*.mk" type="file"/>
+                </not>
+            </condition>
+        </fail>
+        <fail message="File xml are missing.">
+            <condition>
+                <not>
+                    <available file="${src}/../testng.xml" type="file"/>
                 </not>
             </condition>
         </fail>
