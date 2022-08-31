@@ -54,9 +54,6 @@
             <fileset dir="${build}"/>
             <fileset dir="${src}/../" includes="*.properties,*.xml"/>
         </jar>
-    </target>
-
-    <target name="test-copy" depends="dist" description="test if files are in place to be copied">
         <echo message="doing copy from src set to ${src}.."/>
         <fail message="File xml are missing.">
             <condition>
