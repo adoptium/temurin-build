@@ -54,7 +54,7 @@
             <fileset dir="${build}"/>
             <fileset dir="${src}/../" includes="*.properties,*.xml"/>
         </jar>
-        <echo message="doing copy from src set to ${src}.."/>
+        <echo message="doing copy from src set to ${src}.. to ${DEST}"/>
          <!-- <fail message="File mk are missing.">
             <condition>
                 <not>
@@ -69,12 +69,9 @@
                 </not>
             </condition>
         </fail>
-        <copy todir="${DEST}">
-            <fileset dir="${src}/../" includes="testng.xml"/>
-            <fileset dir="${src}/../" includes="playlist.xml"/>
-            <fileset dir="${src}/../" includes="build.xml"/>
-            <!-- <fileset dir="${src}/../" includes="*.mk"/> -->
-        </copy>
+        <copy file="${src}/../testng.xml" todir="${DEST}"/>
+        <copy file="${src}/../playlist.xml" todir="${DEST}"/>
+        <copy file="${src}/../build.xml" todir="${DEST}"/>
     </target>
 
 
