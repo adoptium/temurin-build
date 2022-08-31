@@ -62,16 +62,22 @@
                 </not>
             </condition>
         </fail> -->
-        <fail message="File xml are missing.">
+        <fail message="File testng.xml is missing.">
             <condition>
                 <not>
                     <available file="${src}/../testng.xml" type="file"/>
                 </not>
             </condition>
         </fail>
-        <copy file="${src}/../testng.xml" todir="${DEST}"/>
-        <copy file="${src}/../playlist.xml" todir="${DEST}"/>
-        <copy file="${src}/../build.xml" todir="${DEST}"/>
+        <copy file="${src}/../testng.xml" tofile="${DEST}/testng.xml"/>
+        <fail message="File playlist.xml is missing.">
+            <condition>
+                <not>
+                    <available file="${src}/../playlist.xml" type="file"/>
+                </not>
+            </condition>
+        </fail>
+        <copy file="${src}/../playlist.xml" tofile="${DEST}/playlist.xml"/>
     </target>
 
 
