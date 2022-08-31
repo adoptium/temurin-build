@@ -54,32 +54,17 @@
             <fileset dir="${build}"/>
             <fileset dir="${src}/../" includes="*.properties,*.xml"/>
         </jar>
-        <echo message="doing copy from src set to ${src}.. to ${DEST}"/>
-         <!-- <fail message="File mk are missing.">
-            <condition>
-                <not>
-                    <available file="${src}/../*.mk" type="file"/>
-                </not>
-            </condition>
-        </fail> -->
-        <fail message="File testng.xml is missing.">
+        <fail message="testng.xml is missing.">
             <condition>
                 <not>
                     <available file="${src}/../testng.xml" type="file"/>
                 </not>
             </condition>
         </fail>
-        <copy file="${src}/../testng.xml" tofile="${DEST}/testng.xml"/>
-        <fail message="File playlist.xml is missing.">
-            <condition>
-                <not>
-                    <available file="${src}/../playlist.xml" type="file"/>
-                </not>
-            </condition>
-        </fail>
-        <copy file="${src}/../playlist.xml" tofile="${DEST}/playlist.xml"/>
+        <exec executable="cp" failonerror="true"> 
+            <arg line="${src}/../testng.xml ${DEST}"/> 
+        </exec> 
     </target>
-
 
     <target name="clean" depends="dist" description="clean up">
         <!-- Delete the ${build} directory trees -->
