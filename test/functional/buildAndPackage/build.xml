@@ -54,10 +54,10 @@
             <fileset dir="${build}"/>
             <fileset dir="${src}/../" includes="*.properties,*.xml"/>
         </jar>
-        <copy todir="${DEST}">
+        <!-- <copy todir="${DEST}">
             <fileset dir="${src}/../" includes="*.xml"/>
             <fileset dir="${src}/../" includes="*.mk"/>
-        </copy>
+        </copy> -->
     </target>
 
     <target name="clean" depends="dist" description="clean up">
