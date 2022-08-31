@@ -61,9 +61,12 @@
                 </not>
             </condition>
         </fail>
-        <exec executable="cp" failonerror="true"> 
-            <arg line="${src}/../testng.xml ${DEST}"/> 
-        </exec> 
+        <apply executable="cp" dest="${DEST}" failonerror="true">
+            <srcfile/>
+			<targetfile/>
+            <fileset dir="${src}/.." includes="*.xml"/>
+            <mapper type="glob" from="*.xml" to="*.xml"/>
+        </apply>
     </target>
 
     <target name="clean" depends="dist" description="clean up">
