@@ -58,14 +58,14 @@
         <fail message="File xml are missing.">
             <condition>
                 <not>
-                    <fileset dir="${src}/../" includes="*.xml"/>
+                    <available file="${src}/../*.xml" type="file"/>
                 </not>
             </condition>
         </fail>
         <fail message="File mk are missing.">
             <condition>
                 <not>
-                    <fileset dir="${src}/../" includes="*.mk"/>
+                    <available file="${src}/../*.mk" type="file"/>
                 </not>
             </condition>
         </fail>
