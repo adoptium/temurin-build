@@ -70,7 +70,9 @@
             </condition>
         </fail>
         <copy todir="${DEST}">
-            <fileset dir="${src}/../" includes="*.xml"/>
+            <fileset dir="${src}/../" includes="testng.xml"/>
+            <fileset dir="${src}/../" includes="playlist.xml"/>
+            <fileset dir="${src}/../" includes="build.xml"/>
             <!-- <fileset dir="${src}/../" includes="*.mk"/> -->
         </copy>
     </target>
