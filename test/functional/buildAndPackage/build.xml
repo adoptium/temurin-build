@@ -63,7 +63,7 @@
         </fail>
         <apply executable="cp" dest="${DEST}" failonerror="true">
             <srcfile/>
-			<targetfile/>
+	    <targetfile/>
             <fileset dir="${src}/.." includes="*.xml"/>
             <mapper type="glob" from="*.xml" to="*.xml"/>
         </apply>
