@@ -93,7 +93,7 @@ configureShenandoahBuildParameter() {
 # Configure reproducible build
 # jdk-17 and jdk-19+ support reproducible builds
 configureReproducibleBuildParameter() {
-  if [[ "${JAVA_FEATURE_VERSION}" -ge 19 || "${JAVA_FEATURE_VERSION}" -eq 17 ]]
+  if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 19 || "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 17 ]]
   then
       # Enable reproducible builds implicitly with --with-source-date
       if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]
