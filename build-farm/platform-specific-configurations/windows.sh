@@ -173,11 +173,7 @@ then
     elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
-    then
-      TOOLCHAIN_VERSION="2017"
-      export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
-    elif [ "$JAVA_FEATURE_VERSION" -gt 11 ]
+    elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
     then
       TOOLCHAIN_VERSION="2019"
       export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
