@@ -107,7 +107,7 @@ Don't be scared off by this document! If you already understand the stuff in th
   
 ## Lockdown period
 
-During the week before release we lock down the `openjdk-build` and `ci-jenkins-pipeline` repositories to
+During the week before release we lock down the `temurin-build` and `ci-jenkins-pipeline` repositories to
 only include "critical" fixes (i.e. those which will otherwise cause a build
 break or other problem which will prevent shipping the release builds.
 This stops last minute changes going in which may destabilise things.
