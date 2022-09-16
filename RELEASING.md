@@ -50,12 +50,12 @@ Don't be scared off by this document! If you already understand the stuff in th
 
 ## OpenJDK Quarterly/New Release Process
 
-1. Wait for Red Hat/Oracle to push the GA code to mercurial and announce availability:
-   - jdk8u : https://hg.openjdk.java.net/jdk8u/jdk8u/jdk/
+1. Wait for Red Hat/Oracle to push the GA code to GitHub and announce availability:
+   - jdk8u : https://github.com/openjdk/jdk8u
      - Announce: https://mail.openjdk.java.net/pipermail/jdk8u-dev/
-   - jdk11u:  https://hg.openjdk.java.net/jdk-updates/jdk11u/
+   - jdk11u:  https://github.com/openjdk/jdk11u
      - Announce: https://mail.openjdk.java.net/pipermail/jdk-updates-dev/
-   - jdkNN: https://hg.openjdk.java.net/jdk/jdkNN/
+   - jdkNN: https://github.com/openjdk/jdkNN/
      - Announce: https://mail.openjdk.java.net/pipermail/jdk-dev/
 
 <details>
@@ -107,7 +107,7 @@ Don't be scared off by this document! If you already understand the stuff in th
   
 ## Lockdown period
 
-During the week before release we lock down the `openjdk-build` and `ci-jenkins-pipeline` repositories to
+During the week before release we lock down the `temurin-build` and `ci-jenkins-pipeline` repositories to
 only include "critical" fixes (i.e. those which will otherwise cause a build
 break or other problem which will prevent shipping the release builds.
 This stops last minute changes going in which may destabilise things.
