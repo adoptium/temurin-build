@@ -115,3 +115,37 @@ Runtime platforms are in our [supported platforms page](https://adoptium.net/sup
 ## How to add a new build pipeline param and associated job configuration?
 
 [This PR](https://github.com/adoptium/temurin-build/pull/2416) demonstrates changes required to add a new build pipeline param and the associated version/platform job configurations for setting the value when needed  (note, the `pipelines/` dir has since been moved to our [jenkins repository](https://github.com/adoptium/ci-jenkins-pipelines)).
+
+## How do I build from a tag(without docker)
+
+The following are the pre-requisites for the the build to be successful
+
+| Dependency            | Install command                         | 
+|-----------------------|-----------------------------------------|
+| libfontconfig1-dev    | sudo apt-get install libfontconfig1-dev |
+| libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev   | sudo apt-get install libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev                |
+| libasound2-dev     | sudo apt-get install libasound2-dev                | 
+| libcups2-dev     | sudo apt-get install libcups2-dev                |
+
+After installing the above dependencies, run the following commands from the terminal
+
+ 
+ git clone https://github.com/adoptium/temurin-build.git```
+
+ `cd temurin-build`
+
+ `export VARIANT=temurin`
+
+ `export JAVA_TO_BUILD=jdk`
+
+ `export SCM_REF=jdk-20+2_adopt` (The Adoptium build tag you want to build, don't set to build HEAD)
+
+ `export RELEASE=true`
+
+ `export CONFIGURE_ARGS=--disable-ccache`
+
+ `build-farm/make-adopt-build-farm.sh`
+#  Build output:
+Once the build has successfully completed the built JDK archive artifact will be available in directory:
+
+JDK Archive: `workspace/target/jdk-hotspot.tar.gz`
