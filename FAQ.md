@@ -118,21 +118,28 @@ Runtime platforms are in our [supported platforms page](https://adoptium.net/sup
 
 ## How do I build from a tag(without docker)
 
-The following are the pre-requisites for the the build to be successful
+The following are the pre-requisites for the the build to be successful(Linux)
 
-| Dependency            | Install command(Linux)                         | 
-|-----------------------|-----------------------------------------|
-| libfontconfig1-dev    | sudo apt-get install libfontconfig1-dev |
-| libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev   | sudo apt-get install libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev                |
-| libasound2-dev     | sudo apt-get install libasound2-dev                | 
-| libcups2-dev     | sudo apt-get install libcups2-dev                |
+libfontconfig1-dev
+
+`sudo apt-get install libfontconfig1-dev`
+
+libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev
+
+`sudo apt-get install libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev`
+
+libasound2-dev
+
+`sudo apt-get install libasound2-dev`
+
+libcups2-dev
+
+`sudo apt-get install libcups2-dev`              |
 
 After installing the above dependencies, run the following commands from the terminal
 
+`git clone https://github.com/adoptium/temurin-build.git`(Clone temurin-build repository)
 
- `git clone https://github.com/adoptium/temurin-build.git`(Clone temurin-build repository)
-
- 
  `cd temurin-build`(Navigate to the root directory of the project)
 
  `export VARIANT=temurin`(Sets the variant to temurin)
@@ -146,7 +153,9 @@ After installing the above dependencies, run the following commands from the ter
  `export CONFIGURE_ARGS=--disable-ccache` (then ccache will just call the real   compiler, bypassing the cache completely.)
 
  `build-farm/make-adopt-build-farm.sh` (this triggers the build)
+
 #  Build output:
+
 Once the build has successfully completed the built JDK archive artifact will be available in directory:
 
 JDK Archive: `workspace/target/jdk-hotspot.tar.gz`
