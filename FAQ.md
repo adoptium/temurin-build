@@ -130,26 +130,33 @@ The following are the pre-requisites for the the build to be successful
 After installing the above dependencies, run the following commands from the terminal
 
  Clone temurin-build repository
+ 
  `git clone https://github.com/adoptium/temurin-build.git`
 
  Navigate to the root directory of the project
+
  `cd temurin-build`
 
  Set the variant to temurin
+
  `export VARIANT=temurin`
 
  `export JAVA_TO_BUILD=jdk`
 
  The Adoptium build tag you want to build, don't set to build HEAD
+
  `export SCM_REF=jdk-20+2_adopt` 
 
  Set the build to spin on release
+
  `export RELEASE=true` 
 
  Bypass the cache completely by calling the real compiler using ccache
+
  `export CONFIGURE_ARGS=--disable-ccache` 
 
  Trigger the build
+
  `build-farm/make-adopt-build-farm.sh`
 
 #  Build output:
