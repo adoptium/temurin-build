@@ -120,7 +120,7 @@ Runtime platforms are in our [supported platforms page](https://adoptium.net/sup
 
 The following are the pre-requisites for the the build to be successful
 
-| Dependency            | Install command                         | 
+| Dependency            | Install command(Linux)                         | 
 |-----------------------|-----------------------------------------|
 | libfontconfig1-dev    | sudo apt-get install libfontconfig1-dev |
 | libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev   | sudo apt-get install libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev                |
@@ -129,22 +129,23 @@ The following are the pre-requisites for the the build to be successful
 
 After installing the above dependencies, run the following commands from the terminal
 
+
+ `git clone https://github.com/adoptium/temurin-build.git`(Clone temurin-build repository)
+
  
- git clone https://github.com/adoptium/temurin-build.git```
+ `cd temurin-build`(Navigate to the root directory of the project)
 
- `cd temurin-build`
-
- `export VARIANT=temurin`
+ `export VARIANT=temurin`(Sets the variant to temurin)
 
  `export JAVA_TO_BUILD=jdk`
 
  `export SCM_REF=jdk-20+2_adopt` (The Adoptium build tag you want to build, don't set to build HEAD)
 
- `export RELEASE=true`
+ `export RELEASE=true` (Sets the build to spin on release)
 
- `export CONFIGURE_ARGS=--disable-ccache`
+ `export CONFIGURE_ARGS=--disable-ccache` (then ccache will just call the real   compiler, bypassing the cache completely.)
 
- `build-farm/make-adopt-build-farm.sh`
+ `build-farm/make-adopt-build-farm.sh` (this triggers the build)
 #  Build output:
 Once the build has successfully completed the built JDK archive artifact will be available in directory:
 
