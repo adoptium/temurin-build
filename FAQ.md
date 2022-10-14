@@ -7,7 +7,7 @@ repository.
 ## How do I find my way around Temurin's build automation scripts?
 
 I wrote this diagram partially for my own benefit in [issue 957](https://github.com/adoptium/temurin-build/issues/957) that lists the shell scripts (`S`) and environment scripts (`E`). I think it would be useful to incorporate this into the documentation (potentially annotated with a bit more info) so people can find their way around the myriad of script levels that we now have.
-Note that the "end-user" scripts start at `makejdk-any-platform.sh` and a
+Note that the "end user" scripts start at `makejdk-any-platform.sh` and a
 diagram of those relationships can be seen [here](https://github.com/adoptium/temurin-build/blob/master/docs/images/AdoptOpenJDK_Build_Script_Relationships.png)
 
 *See the [ci-jenkins-pipelines FAQ.md](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/FAQ.md#how-do-i-find-my-way-around-adoptopenjdks-build-automation-scripts) for the Jenkins side of the pipeline*
@@ -100,11 +100,11 @@ etc
 
 ## How and where are smoke tests run?
 
-They use the same mechanisms and automation used by the AQA test suite.  This means they can be run on the commandline, or as part of a Jenkins job or in a GitHub workflow.  For this repository, they are part of PR testing via the [build.yml](https://github.com/adoptium/temurin-build/blob/master/.github/workflows/build.yml#L151) workflow using the [run-aqa](https://github.com/adoptium/run-aqa) action.
+They use the same mechanisms and automation used by the AQA test suite.  This means they can be run on the command-line, or as part of a Jenkins job or in a GitHub workflow.  For this repository, they are part of PR testing via the [build.yml](https://github.com/adoptium/temurin-build/blob/master/.github/workflows/build.yml#L151) workflow using the [run-aqa](https://github.com/adoptium/run-aqa) action.
 
 They are also run as part of the Jenkins build pipelines (see the [runSmokeTests()](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy#L264-L301) method in the openjdk_build_pipeline groovy script), triggered after the build is complete and before any AQA tests get run against the build.  If smoke tests fail, it likely indicates we built the 'wrong thing' and there is no point running further testing until we resolve the build issues.
 
-To run them on the command-line, one can follow the same general instructions for running any AQA test on the command line, with the additional step of exporting variables to indicate where to find test material (VENDOR_TEST_REPOS, VENDOR_TEST_BRANCHES, VENDOR_TEST_DIRS).   See: [SmokeTesting.md](https://github.com/adoptium/temurin-build/blob/master/SmokeTesting.md)
+To run them on the command-line, one can follow the same general instructions for running any AQA test on the command-line, with the additional step of exporting variables to indicate where to find test material (VENDOR_TEST_REPOS, VENDOR_TEST_BRANCHES, VENDOR_TEST_DIRS).   See: [SmokeTesting.md](https://github.com/adoptium/temurin-build/blob/master/SmokeTesting.md)
 
 ## Which OS levels do we build on?
 
