@@ -159,7 +159,7 @@ After installing the above dependencies, run the following commands from the ter
 
  `build-farm/make-adopt-build-farm.sh`
 
-#  Build output:
+## Build output:
 
 Once the build has successfully completed the built JDK archive artifact will be available in directory:
 
