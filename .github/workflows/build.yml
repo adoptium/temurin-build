@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [linux]
-        version: [jdk8u, jdk11u, jdk17u, jdk18u, jdk19, jdk] #jdk head == jdk20
+        version: [jdk8u, jdk11u, jdk17u, jdk19, jdk] #jdk head == jdk20
         variant: [temurin]
         image: [adoptopenjdk/centos7_build_image]
         include:
@@ -34,10 +34,6 @@ jobs:
           - os: alpine-linux
             version: jdk17u
             variant: temurin
-            image: adoptopenjdk/alpine3_build_image
-          - os: alpine-linux
-            version: jdk18u
-            vm: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk19
