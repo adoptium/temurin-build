@@ -1,0 +1,25 @@
+name: Build
+
+on:
+  issue_comment:
+    types: [created]
+
+# Cancel existing runs if user makes another push.
+concurrency:
+  group: "${{ github.ref }}"
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  slashCommandDispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Slash Command Dispatch
+        uses: peter-evans/slash-command-dispatch@v3
+        with:
+          token: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
+          issue-type: pull-request
+          commands: |
+            build-linux
+            build-windows
+            build-macos
+
