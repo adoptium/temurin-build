@@ -120,12 +120,12 @@ Runtime platforms are in our [supported platforms page](https://adoptium.net/sup
 
 The following are the pre-requisites for the the build to be successful
 
-| Dependency            | Install command(Linux)                         | 
+| Dependency            | Install command(Linux)| 
 |-----------------------|-----------------------------------------|
 | libfontconfig1-dev    | `sudo apt-get install libfontconfig1-dev` |
-| libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev   | `sudo apt-get install libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev`                |
-| libasound2-dev     | `sudo apt-get install libasound2-dev`                | 
-| libcups2-dev     | `sudo apt-get install libcups2-dev`                |
+| libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev   | `sudo apt-get install libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev`|
+| libasound2-dev     | `sudo apt-get install libasound2-dev`|
+| libcups2-dev     | `sudo apt-get install libcups2-dev` |
 
 After installing the above dependencies, run the following commands from the terminal
 
@@ -145,15 +145,15 @@ After installing the above dependencies, run the following commands from the ter
 
  The Adoptium build tag you want to build, don't set to build HEAD
 
- `export SCM_REF=jdk-20+2_adopt` 
+ `export SCM_REF=jdk-20+2_adopt`
 
  Set the build to spin on release
 
- `export RELEASE=true` 
+ `export RELEASE=true`
 
  Bypass the cache completely by calling the real compiler using ccache
 
- `export CONFIGURE_ARGS=--disable-ccache` 
+ `export CONFIGURE_ARGS=--disable-ccache`
 
  Trigger the build
 
