@@ -120,12 +120,12 @@ Runtime platforms are in our [supported platforms page](https://adoptium.net/sup
 
 The following are the pre-requisites for the the build to be successful
 
-| Dependency            | Install command(Linux)| 
+| Dependency            | Install command(Linux)|
 |-----------------------|-----------------------------------------|
-| libfontconfig1-dev    | `sudo apt-get install libfontconfig1-dev` |
+| libfontconfig1-dev    | `sudo apt-get install libfontconfig1-dev`|
 | libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev   | `sudo apt-get install libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst-dev libxt-dev`|
 | libasound2-dev     | `sudo apt-get install libasound2-dev`|
-| libcups2-dev     | `sudo apt-get install libcups2-dev` |
+| libcups2-dev     | `sudo apt-get install libcups2-dev`|
 
 After installing the above dependencies, run the following commands from the terminal
 
