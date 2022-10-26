@@ -112,6 +112,9 @@ public final class JdkPlatform {
         if (arch.equals("riscv64")) {
             return Architecture.RISCV64;
         }
+        if (arch.equals("loongarch64")) {
+            return Architecture.LOONGARCH64;
+        }
         if (arch.matches("^(sparc|sparc32)$")) {
             return Architecture.SPARC32;
         }
@@ -174,7 +177,7 @@ public final class JdkPlatform {
     }
 
     enum Architecture {
-        ARM, AARCH64, PPC64, PPC64LE, RISCV, RISCV64, SPARC32, SPARC64, S390X, X64, X86
+        ARM, AARCH64, PPC64, PPC64LE, RISCV, RISCV64, LOONGARCH64, SPARC32, SPARC64, S390X, X64, X86
     }
 
     enum OperatingSystem {

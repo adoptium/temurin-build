@@ -383,6 +383,8 @@ function setBranch() {
     else
       branch="master"
     fi
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_LOONGSON}" ]; then
+    branch="master-ls";
   fi
 
   BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}

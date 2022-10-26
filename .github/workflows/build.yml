@@ -59,6 +59,10 @@ jobs:
             version: jdk11u
             variant: bisheng
             image: adoptopenjdk/centos7_build_image
+          - os: linux
+            version: jdk8u
+            variant: loongson
+            image: adoptopenjdk/centos7_build_image
     steps:
     - uses: actions/checkout@v3
 

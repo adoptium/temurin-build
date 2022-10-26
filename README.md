@@ -26,7 +26,7 @@ you are building (although one of the same major version will also work).
 Note that the build variant defaults to HotSpot if omitted which builds from the same repositories as Temurin.
 
 ```bash
-./makejdk-any-platform.sh (-J /usr/lib/jvm/jdk-xx) (--build-variant <hotspot|openj9|corretto|SapMachine|dragonwell|bisheng>) <jdk8u|jdk11u|jdk16u|jdk>
+./makejdk-any-platform.sh (-J /usr/lib/jvm/jdk-xx) (--build-variant <hotspot|openj9|corretto|SapMachine|dragonwell|bisheng|loongson>) <jdk8u|jdk11u|jdk16u|jdk>
 ```
 
 e.g.
@@ -366,9 +366,9 @@ This tag identifies the architecture the JDK has been built on and it intended t
 ----
 
 - `variant:`
-Example values: [`hotspot`, `openj9`, `corretto`, `dragonwell`, `bisheng`]
+Example values: [`hotspot`, `openj9`, `corretto`, `dragonwell`, `bisheng`, `loongson`]
 
-This tag identifies the JVM being used by the JDK. "dragonwell" and "bisheng" itself are HotSpot based JVMs but are currently considered their own variants for the purposes of build.
+This tag identifies the JVM being used by the JDK. "dragonwell", "bisheng" and "loongson" itself are HotSpot based JVMs but are currently considered their own variants for the purposes of build.
 WARN: This will be changed at a later date when we split out JVM from vendor.
 
 ----

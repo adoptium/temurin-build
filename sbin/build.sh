@@ -243,6 +243,20 @@ getOpenJdkVersion() {
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
       version=$(echo "$version" | cut -d'-' -f 2 | cut -d'_' -f 1)
     fi
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_LOONGSON}" ]; then
+    local loongsonVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
+    if [ -r "${loongsonVerFile}" ]; then
+      if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+        local updateNum="$(cut -d'.' -f 2 <"${loongsonVerFile}")"
+        local buildNum="$(cut -d'.' -f 5 <"${loongsonVerFile}")"
+        version="jdk8u${updateNum}-b${buildNum}"
+      else
+        echo "not support jdk version!"
+      fi
+    else
+      version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+      version=$(echo "$version" | cut -d'-' -f 2 | cut -d'_' -f 1)
+    fi
   else
     version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
     # TODO remove pending #1016
@@ -303,6 +317,11 @@ configureVersionStringParameter() {
     BUILD_CONFIG[VENDOR_VERSION]="Bisheng"
     BUILD_CONFIG[VENDOR_BUG_URL]="https://gitee.com/openeuler/bishengjdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}/issues"
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://gitee.com/openeuler/bishengjdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}/issues"
+  elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_LOONGSON}" ]]; then
+    BUILD_CONFIG[VENDOR]="Loongson"
+    BUILD_CONFIG[VENDOR_VERSION]="loongson"
+    BUILD_CONFIG[VENDOR_BUG_URL]=""
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]=""
   fi
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != 8 ]; then
     addConfigureArg "--with-vendor-name=" "\"${BUILD_CONFIG[VENDOR]}\""
@@ -1377,6 +1396,10 @@ getFirstTagFromOpenJDKGitRepo() {
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ] && [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
     # Bisheng's JDK8 tags follow the aarch64 convention
     TAG_SEARCH="aarch64-shenandoah-jdk8u*-b*"
+  fi
+
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_LOONGSON}" ]; then
+    TAG_SEARCH="ls-loongson-jdk8u-init"
   fi
 
   # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon,
