@@ -73,7 +73,7 @@ jobs:
         # Don't set the OS as we use both linux and alpine-linux
         PLATFORM_CONFIG_LOCATION: AdoptOpenJDK/openjdk-build/master/build-farm/platform-specific-configurations
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       name: Collect and Archive Artifacts
       with:
         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -95,7 +95,7 @@ jobs:
         vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
         vendor_testBranches: "${{ github.head_ref }}"
         vendor_testDirs: "/test/functional"
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
@@ -149,7 +149,7 @@ jobs:
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
       
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       name: Collect and Archive Artifacts
       with:
         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -172,7 +172,7 @@ jobs:
         vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
         vendor_testBranches: "${{ github.head_ref }}"
         vendor_testDirs: "/test/functional"
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
@@ -301,7 +301,7 @@ jobs:
          TARGET_OS: windows
          FILENAME: OpenJDK.zip
 
-     - uses: actions/upload-artifact@v2
+     - uses: actions/upload-artifact@v3
        name: Collect and Archive Artifacts
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -334,7 +334,7 @@ jobs:
          vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
          vendor_testBranches: "${{ github.head_ref }}"
          vendor_testDirs: "/test/functional"
-     - uses: actions/upload-artifact@v2
+     - uses: actions/upload-artifact@v3
        name: Collect and Archive SmokeTest Results
        if: failure()
        with:
