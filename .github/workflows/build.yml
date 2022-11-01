@@ -88,7 +88,7 @@ jobs:
         imageroot=$(find "${HOME}/JDK" -name release -type f)
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
     - name: Smoke test
-      uses: adoptium/run-aqa@v1
+      uses: adoptium/run-aqa@v2
       with:
         build_list: 'functional/buildAndPackage'
         target: '_extended.functional'
@@ -165,7 +165,7 @@ jobs:
         imageroot=$(find "${HOME}/JDK" -name release -type f)
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
     - name: Smoke test
-      uses: adoptium/run-aqa@v1
+      uses: adoptium/run-aqa@v2
       with:
         build_list: 'functional/buildAndPackage'
         target: '_extended.functional'
@@ -327,7 +327,7 @@ jobs:
        run: echo "ANT_HOME=${env:ANT_HOME_ORIGIN}" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
 
      - name: Smoke test
-       uses: adoptium/run-aqa@v1
+       uses: adoptium/run-aqa@v2
        with:
          build_list: 'functional/buildAndPackage'
          target: '_extended.functional'
