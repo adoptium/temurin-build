@@ -26,7 +26,7 @@ you are building (although one of the same major version will also work).
 Note that the build variant defaults to HotSpot if omitted which builds from the same repositories as Temurin.
 
 ```bash
-./makejdk-any-platform.sh (-J /usr/lib/jvm/jdk-xx) (--build-variant <hotspot|openj9|corretto|SapMachine|dragonwell|bisheng|loongson>) <jdk8u|jdk11u|jdk16u|jdk>
+./makejdk-any-platform.sh (-J /usr/lib/jvm/jdk-xx) (--build-variant <hotspot|openj9|corretto|SapMachine|dragonwell|bisheng|loongson>) <jdk8u|jdk11u|jdk17u|jdk>
 ```
 
 e.g.
