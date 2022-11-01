@@ -251,7 +251,7 @@ getOpenJdkVersion() {
         local buildNum="$(cut -d'.' -f 5 <"${loongsonVerFile}")"
         version="jdk8u${updateNum}-b${buildNum}"
       else
-        echo "not support jdk version!"
+        echo "Only Java 8 is supported for now"
       fi
     else
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
