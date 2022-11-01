@@ -122,6 +122,7 @@ jobs:
       id: setup-java
       with:
         java-version: 7
+        distribution: 'zulu'
       if: matrix.version == 'jdk8u'
       
     - name: Select correct Xcode
