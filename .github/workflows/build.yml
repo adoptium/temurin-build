@@ -60,7 +60,7 @@ jobs:
             variant: bisheng
             image: adoptopenjdk/centos7_build_image
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Build Linux
       run: ./build-farm/make-adopt-build-farm.sh
@@ -113,7 +113,7 @@ jobs:
         variant: [temurin]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Install Dependencies
       run: |
@@ -265,7 +265,7 @@ jobs:
        shell: bash
        run: mkdir "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
 
-     - uses: actions/checkout@v3.0.2
+     - uses: actions/checkout@v3
        with:
          set-safe-directory: false
 
