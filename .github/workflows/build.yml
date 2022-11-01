@@ -308,7 +308,7 @@ jobs:
          path: workspace/target/*
 
      - name: Restore build artifacts
-       uses: actions/download-artifact@v2
+       uses: actions/download-artifact@v3
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
          path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
