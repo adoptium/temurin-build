@@ -21,9 +21,15 @@ on:
 ###############
 # Set the Job #
 ###############
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
+
 jobs:
   linter:
     # Name the Job
+    permissions:
+      contents: read  # for actions/checkout to fetch code
+      statuses: write  # for github/super-linter to mark status of each linter run
     name: Lint Code Base
     # Set the agent to run on
     runs-on: ubuntu-latest
@@ -36,7 +42,7 @@ jobs:
       # Checkout the code base #
       ##########################
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
         with:
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
@@ -45,7 +51,7 @@ jobs:
       # Run Linter against code base #
       ################################
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: github/super-linter@bb2d833b08b6c288608686672b93a8a4589cdc49
         env:
           VALIDATE_ALL_CODEBASE: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

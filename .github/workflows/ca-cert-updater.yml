@@ -5,12 +5,15 @@ on:
     # https://crontab.guru/every-night-at-midnight
     - cron: "0 0 * * *"
 
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
+
 jobs:
   update_ca_certs:
     if: startsWith(github.repository, 'adoptium/')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791
         with:
           persist-credentials: false
 
@@ -18,7 +21,7 @@ jobs:
         working-directory: ./security
         run: "./mk-ca-bundle.pl"
 
-      - uses: gr2m/create-or-update-pull-request-action@v1
+      - uses: gr2m/create-or-update-pull-request-action@dc1726cbf4dd3ce766af4ec29cfb660e0125e8ee
         env:
           GITHUB_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
         with:
