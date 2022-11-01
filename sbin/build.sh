@@ -320,8 +320,8 @@ configureVersionStringParameter() {
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_LOONGSON}" ]]; then
     BUILD_CONFIG[VENDOR]="Loongson"
     BUILD_CONFIG[VENDOR_VERSION]="loongson"
-    BUILD_CONFIG[VENDOR_BUG_URL]=""
-    BUILD_CONFIG[VENDOR_VM_BUG_URL]=""
+    BUILD_CONFIG[VENDOR_BUG_URL]="https://github.com/loongson/jdk8u/issues"
+    BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/loongson/jdk8u/issues"
   fi
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != 8 ]; then
     addConfigureArg "--with-vendor-name=" "\"${BUILD_CONFIG[VENDOR]}\""

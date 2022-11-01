@@ -26,13 +26,13 @@ PLATFORM_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 if [ -z "$ARCHITECTURE"  ]; then
    ARCHITECTURE=$(uname -p)
    if [ "$OSTYPE" = "cygwin"  ] || [ "${ARCHITECTURE}" = "unknown" ]; then ARCHITECTURE=$(uname -m); fi # Windows / Alpine
-   if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;        fi # Linux/x64
-   if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;        fi # Solaris/x64 and mac/x64
-   if [ "$ARCHITECTURE" = "sparc"   ]; then ARCHITECTURE=sparcv9;    fi # Solaris/SPARC
-   if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi # AIX
-   if [ "$ARCHITECTURE" = "arm"     ]; then ARCHITECTURE=aarch64;    fi # mac/aarch64
-   if [ "$ARCHITECTURE" = "loongarch64" ]; then ARCHITECTURE=loongarch64;    fi # loongarch64
-   if [ "$ARCHITECTURE" = "armv7l"  ]; then ARCHITECTURE=arm;        fi # Linux/arm32
+   if [ "$ARCHITECTURE" = "x86_64"  ]; then ARCHITECTURE=x64;             fi # Linux/x64
+   if [ "$ARCHITECTURE" = "i386"    ]; then ARCHITECTURE=x64;             fi # Solaris/x64 and mac/x64
+   if [ "$ARCHITECTURE" = "sparc"   ]; then ARCHITECTURE=sparcv9;         fi # Solaris/SPARC
+   if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;           fi # AIX
+   if [ "$ARCHITECTURE" = "arm"     ]; then ARCHITECTURE=aarch64;         fi # mac/aarch64
+   if [ "$ARCHITECTURE" = "loongarch64" ]; then ARCHITECTURE=loongarch64; fi # loongarch64
+   if [ "$ARCHITECTURE" = "armv7l"  ]; then ARCHITECTURE=arm;             fi # Linux/arm32
    echo ARCHITECTURE not defined - assuming $ARCHITECTURE
    export ARCHITECTURE
 fi
