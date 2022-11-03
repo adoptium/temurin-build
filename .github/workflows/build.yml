@@ -118,10 +118,11 @@ jobs:
     - name: Install Dependencies
       run: |
         brew install bash binutils freetype gnu-sed nasm
-    - uses: actions/setup-java@v1
+    - uses: actions/setup-java@v3
       id: setup-java
       with:
         java-version: 7
+        distribution: 'zulu'
       if: matrix.version == 'jdk8u'
       
     - name: Select correct Xcode
