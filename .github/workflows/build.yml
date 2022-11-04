@@ -104,12 +104,12 @@ jobs:
 
   build_macos:
     name: macOS
-    runs-on: macos-latest
+    runs-on: macos-11
     strategy:
       fail-fast: false
       matrix:
         os: [macOS]
-        version: [jdk8u, jdk11u]
+        version: [jdk8u, jdk11u, jdk17u]
         variant: [temurin]
 
     steps:
@@ -118,6 +118,7 @@ jobs:
     - name: Install Dependencies
       run: |
         brew install bash binutils freetype gnu-sed nasm
+
     - uses: actions/setup-java@v3
       id: setup-java
       with:
