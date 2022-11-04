@@ -127,7 +127,7 @@ Here are the steps:
 1. Build and Test the OpenJDK for "release" at Adoptium using a build pipeline job as follows:
    - Job: https://ci.adoptopenjdk.net/job/build-scripts/job/openjdk8-pipeline/build (Switch `openjdk8` for your version number)
    - `targetConfigurations`:
-    1. only keep termurin variants
+    1. only keep temurin variants
     2. make sure windows aarch64 is removed (as this is written, it is not officially supported yet)
    - `releaseType: Release`
    - <details><summary>Extra steps for OpenJ9 ONLY</summary>
