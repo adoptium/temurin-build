@@ -244,14 +244,15 @@ getOpenJdkVersion() {
       version=$(echo "$version" | cut -d'-' -f 2 | cut -d'_' -f 1)
     fi
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_LOONGSON}" ]; then
-    local loongsonVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
+    local loongsonVerFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
     if [ -r "${loongsonVerFile}" ]; then
       if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-        local updateNum="$(cut -d'.' -f 2 <"${loongsonVerFile}")"
-        local buildNum="$(cut -d'.' -f 5 <"${loongsonVerFile}")"
-        version="jdk8u${updateNum}-b${buildNum}"
+        local updateNum="$(cat "$loongsonVerFile" | awk -F - '{print $1}' | awk -F u '{print $2}')"
+        local buildNum="$(cat "$loongsonVerFile" | awk -F - '{print $2}')"
+        version="jdk8u${updateNum}-${buildNum}"
       else
         echo "Only Java 8 is supported for now"
+        exit 1
       fi
     else
       version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
@@ -319,7 +320,7 @@ configureVersionStringParameter() {
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://gitee.com/openeuler/bishengjdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}/issues"
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_LOONGSON}" ]]; then
     BUILD_CONFIG[VENDOR]="Loongson"
-    BUILD_CONFIG[VENDOR_VERSION]="loongson"
+    BUILD_CONFIG[VENDOR_VERSION]="Loongson"
     BUILD_CONFIG[VENDOR_BUG_URL]="https://github.com/loongson/jdk8u/issues"
     BUILD_CONFIG[VENDOR_VM_BUG_URL]="https://github.com/loongson/jdk8u/issues"
   fi
@@ -1399,7 +1400,7 @@ getFirstTagFromOpenJDKGitRepo() {
   fi
 
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_LOONGSON}" ]; then
-    TAG_SEARCH="ls-loongson-jdk8u-init"
+    TAG_SEARCH="jdk8u*ls-*"
   fi
 
   # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon,
