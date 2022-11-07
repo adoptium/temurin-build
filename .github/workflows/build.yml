@@ -104,7 +104,7 @@ jobs:
 
   build_macos:
     name: macOS
-    runs-on: macos-latest
+    runs-on: macos-11
     strategy:
       fail-fast: false
       matrix:
@@ -118,6 +118,7 @@ jobs:
     - name: Install Dependencies
       run: |
         brew install bash binutils freetype gnu-sed nasm
+
     - uses: actions/setup-java@v3
       id: setup-java
       with:
