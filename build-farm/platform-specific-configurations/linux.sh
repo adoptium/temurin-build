@@ -22,6 +22,10 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 # Bundling our own freetype can cause problems, so we skip that on linux.
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 
+NATIVE_API_ARCH=$(uname -m)
+if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
+if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
+
 if [ "${ARCHITECTURE}" == "x64" ]
 then
   export PATH=/opt/rh/devtoolset-2/root/usr/bin:$PATH
@@ -152,7 +156,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       mkdir -p "$bootDir"
       export downloadArch
       case "$ARCHITECTURE" in
-         "riscv64") downloadArch="x64";;
+         "riscv64") downloadArch="$NATIVE_API_ARCH";;
                  *) downloadArch="$ARCHITECTURE";;
       esac
       releaseType="ga"
@@ -252,9 +256,6 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
 fi
 
 # Handle cross compilation environment for RISC-V
-NATIVE_API_ARCH=$(uname -m)
-if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
-if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
 if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export BUILDJDK=${WORKSPACE:-$PWD}/buildjdk
