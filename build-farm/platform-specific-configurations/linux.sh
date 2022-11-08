@@ -141,7 +141,7 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_LOONGSON}" ] && [ "$JAVA_FEATURE_VERSION" 
   if [ "${ARCHITECTURE}" == "loongarch64" ]; then
       echo Loongson jdk8 requires a Loongson boot JDK - downloading one ...
       mkdir -p "$PWD/jdk-8"
-      curl -L "http://ftp.loongnix.cn/Java/openjdk8/loongson8.1.11-jdk8u332b09-linux-loongarch64.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+      curl -L "https://github.com/loongson/build-tools/releases/download/2022.09.06/loongson8.1.11-jdk8u332b09-linux-loongarch64-clfs-6.3-0.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
       export "${BOOT_JDK_VARIABLE}"="$PWD/jdk-8"
   fi
 else
