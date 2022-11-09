@@ -26,25 +26,26 @@ Don't be scared off by this document! If you already understand the stuff in th
 ## OpenJDK Quarterly/New Release Process
 
 - Wait for Red Hat/Oracle to push the GA code to GitHub and announce availability:
-   - jdk8u : https://github.com/openjdk/jdk8u
-     - Announce: https://mail.openjdk.java.net/pipermail/jdk8u-dev/
-   - jdk11u:  https://github.com/openjdk/jdk11u
-     - Announce: https://mail.openjdk.java.net/pipermail/jdk-updates-dev/
-   - jdk17u:  https://github.com/openjdk/jdk17u
-     - Announce: https://mail.openjdk.java.net/pipermail/jdk-updates-dev/
-   - jdkX: https://github.com/openjdk/jdkX/
-     - Announce: https://mail.openjdk.java.net/pipermail/jdk-dev/
- 
+  - jdk8u : https://github.com/openjdk/jdk8u
+    - Announce: https://mail.openjdk.java.net/pipermail/jdk8u-dev/
+  - jdk11u:  https://github.com/openjdk/jdk11u
+    - Announce: https://mail.openjdk.java.net/pipermail/jdk-updates-dev/
+  - jdk17u:  https://github.com/openjdk/jdk17u
+    - Announce: https://mail.openjdk.java.net/pipermail/jdk-updates-dev/
+  - jdkX: https://github.com/openjdk/jdkX/
+    - Announce: https://mail.openjdk.java.net/pipermail/jdk-dev/
+
 ## Lockdown period
 
 During the week before release we lock down below repositories
-  - temurin-build
-  - ci-jenkins-pipelines
-  - github-release-scripts
-  - containers
-  - installer
-  - jenkins-helper
- 
+
+- temurin-build
+- ci-jenkins-pipelines
+- github-release-scripts
+- containers
+- installer
+- jenkins-helper
+
 Only include "critical" fixes (i.e. those which will otherwise cause a build break or other problem which will prevent shipping the release builds).
 This stops last minute changes going in which may destabilise things.
 If a change has to go in during this "lockdown" period it should be done by posting a comment saying "Requesting approval to merge during the lockdown
@@ -105,28 +106,36 @@ Here are the steps:
    - Click "Build" button !!!
 10. Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08
 11. Within 15 minutes the binaries should be available on the website too. e.g. https://adoptium.net/?variant=openjdk11&jvmVariant=hotspot (NOTE: If it doesn't show up, check whether the API is returning the right thing (e.g. with a link such as [this](https://api.adoptium.net/v3/assets/feature_releases/17/ga?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&page=0&page_size=10&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse), and that the `.json` metadata files are uploaded correctly)
-12. Since you have 15 minutes free, use that time to update 
-  - https://github.com/adoptium/website-v2/blob/main/src/asciidoc-pages/support.adoc which is the source of https://adoptium.net/support ([Sample change](https://github.com/adoptium/website-v2/pull/1105)
-  - (if required) the supported platforms table at https://github.com/adoptium/website-v2/edit/main/src/asciidoc-pages/supported-platforms.adoc which is the source of https://adoptium.net/supported-platforms
-13. **[Mac only]** Once the binaries are available on the website you need to update the Homebrew casks. There are 4 casks in total 
-  - [`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/temurin.rb) which always serves the latest version
-  - [`temurin8`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin8.rb)
-  - [`temurin11`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin11.rb)
-  - [`temurin17`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin17.rb)
+12. Since you have 15 minutes free, use that time to update
 
-  An example PR can be found [here](https://github.com/Homebrew/homebrew-cask/commit/4565865e9d7c3d3018ee8aa67803ea68c54dde86). The required SHA sums can be easily updated by `brew bump-cask-pr` command . The separate pull request is required for each version you update. If in doubt reach out to @gdams as he's a maintainer.
-14. **[Linux only]** Once the binaries are available on the website you can begin updating the specfiles for the RPM/DEB/APK files. There are 4 different type of linux installer 
-  - [debian](https://github.com/adoptium/installer/tree/master/linux/jdk/debian/src/main/packaging/temurin)
-  - [Red Hat](https://github.com/adoptium/installer/tree/master/linux/jdk/redhat/src/main/packaging/temurin)
-  - [SuSE](https://github.com/adoptium/installer/tree/master/linux/jdk/suse/src/main/packaging/temurin)
-  - [Alpine](https://github.com/adoptium/installer/tree/master/linux/jdk/alpine/src/main/packaging/temurin)
+- https://github.com/adoptium/website-v2/blob/main/src/asciidoc-pages/support.adoc which is the source of https://adoptium.net/support ([Sample change](https://github.com/adoptium/website-v2/pull/1105)
+- (if required) the supported platforms table at https://github.com/adoptium/website-v2/edit/main/src/asciidoc-pages/supported-platforms.adoc which is the source of https://adoptium.net/supported-platforms
+
+13. **[Mac only]** Once the binaries are available on the website you need to update the Homebrew casks. There are 4 casks in total
+
+- [`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/temurin.rb) which always serves the latest version
+- [`temurin8`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin8.rb)
+- [`temurin11`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin11.rb)
+- [`temurin17`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin17.rb)
+
+An example PR can be found [here](https://github.com/Homebrew/homebrew-cask/commit/4565865e9d7c3d3018ee8aa67803ea68c54dde86). The required SHA sums can be easily updated by `brew bump-cask-pr` command . The separate pull request is required for each version you update. If in doubt reach out to @gdams as he's a maintainer.
+14. **[Linux only]** Once the binaries are available on the website you can begin updating the specfiles for the RPM/DEB/APK files. There are 4 different type of linux installer
+
+- [debian](https://github.com/adoptium/installer/tree/master/linux/jdk/debian/src/main/packaging/temurin)
+- [Red Hat](https://github.com/adoptium/installer/tree/master/linux/jdk/redhat/src/main/packaging/temurin)
+- [SuSE](https://github.com/adoptium/installer/tree/master/linux/jdk/suse/src/main/packaging/temurin)
+- [Alpine](https://github.com/adoptium/installer/tree/master/linux/jdk/alpine/src/main/packaging/temurin)
   
   All need to be updated:
-    - **Debian** you need to locate the `rules` file for each version. This file contains the URLs and Checksums for each package ([example](https://github.com/adoptium/installer/blob/master/linux/jdk/debian/src/main/packaging/temurin/11/debian/rules#L6-L15)). The `changelog` file should also be updated for the new version.
-    - **Red Hat/SuSE** you need to modify the `temurin-<version>-jdk.spec` file for each version. The links/checksum links are all defined as `Source<number>` variables ([example](https://github.com/adoptium/installer/blob/master/linux/jdk/redhat/src/main/packaging/temurin/11/temurin-11-jdk.spec#L128-L142)).
-    - **Alpine** you need to modify [pkgver](https://github.com/adoptium/installer/blob/master/linux/jdk/alpine/src/main/packaging/temurin/11/APKBUILD#L3) and [checksum](https://github.com/adoptium/installer/blob/master/linux/jdk/alpine/src/main/packaging/temurin/11/APKBUILD#L92)
-    - Once the PRs to change those files have been merged, the [adoptium-packages-linux-pipeline](https://ci.adoptopenjdk.net/job/adoptium-packages-linux-pipeline_new/) job needs to be kicked off. It is recommended to run it without the UPLOAD checkbox to begin with as a 'dry-run' before re-running with the `UPLOAD` checkbox ticked to publish to our JFrog artifactory instance.
-15. **[Docker Hub]** The information on updating the Adoptium official dockerhub repository is at https://github.com/adoptium/containers#maintenance-of-dockerfiles - at the moment you cannot do this until all Linux architectures and windows64 are published for the appropriate version
+
+  - **Debian** you need to locate the `rules` file for each version. This file contains the URLs and Checksums for each package ([example](https://github.com/adoptium/installer/blob/master/linux/jdk/debian/src/main/packaging/temurin/11/debian/rules#L6-L15)). The `changelog` file should also be updated for the new version.
+  - **Red Hat/SuSE** you need to modify the `temurin-<version>-jdk.spec` file for each version. The links/checksum links are all defined as `Source<number>` variables ([example](https://github.com/adoptium/installer/blob/master/linux/jdk/redhat/src/main/packaging/temurin/11/temurin-11-jdk.spec#L128-L142)).
+  - **Alpine** you need to modify [pkgver](https://github.com/adoptium/installer/blob/master/linux/jdk/alpine/src/main/packaging/temurin/11/APKBUILD#L3) and [checksum](https://github.com/adoptium/installer/blob/master/linux/jdk/alpine/src/main/packaging/temurin/11/APKBUILD#L92)
+
+Once the PRs to change those files have been merged, the [adoptium-packages-linux-pipeline](https://ci.adoptopenjdk.net/job/adoptium-packages-linux-pipeline_new/) job needs to be kicked off. It is recommended to run it without the UPLOAD checkbox to begin with as a 'dry-run' before re-running with the `UPLOAD` checkbox ticked to publish to our JFrog artifactory instance.
+
+15. **[Docker Hub]** The information on updating the Adoptium official dockerhub repository is at https://github.com/adoptium/containers#maintenance-of-dockerfiles at the moment you cannot do this until all Linux architectures and windows64 are published for the appropriate version
+
 16. Publicise the Temurin release via slack on the Adoptium #release channel
 17. If desired, find someone with the appropriate authority (George, Martijn, Shelley, Stewart) to post a tweet about the new release from the Adoptium twitter account
 
@@ -212,11 +221,11 @@ Rename the nightly build targets file (it will be named `jdkxx.groovy`, [example
 ### Post Release Tasks
 
 Once all the release binaries have been published the following tasks should be completed:
+If the latest version just released has come to the end of its non-LTS lifecycle (2 CPU updates, eg.jdk-15.0.2)
 
-3. If the latest version just released has come to the end of its non-LTS lifecycle (2 CPU updates, eg.jdk-15.0.2), 
-   - disable and retire that version form the Nightly pipeline builds: e.g https://github.com/adoptium/temurin-build/pull/2403/files
-   - delete pipeline and jobs in Jenkins
-   - update pr-test job to not include this version
+- disable and retire that version form the Nightly pipeline builds: e.g https://github.com/adoptium/temurin-build/pull/2403/files
+- delete pipeline and jobs in Jenkins
+- update pr-test job to not include this version
 
 ## Summary on point releases
 
