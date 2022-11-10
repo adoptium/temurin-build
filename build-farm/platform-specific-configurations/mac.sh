@@ -28,6 +28,7 @@ then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
+    export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
   fi
 else
   if [[ "$JAVA_FEATURE_VERSION" -ge 17 ]] || [[ "${ARCHITECTURE}" == "aarch64" ]]; then
