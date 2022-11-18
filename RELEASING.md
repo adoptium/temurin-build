@@ -39,12 +39,14 @@ Don't be scared off by this document! If you already understand the stuff in th
 
 During the week before release we lock down below repositories
 
-- temurin-build
-- ci-jenkins-pipelines
-- github-release-scripts
-- containers
-- installer
-- jenkins-helper
+- temurin-build https://github.com/adoptium/temurin-build
+- ci-jenkins-pipelines https://github.com/adoptium/ci-jenkins-pipelines
+- github-release-scripts https://github.com/adoptium/github-release-scripts
+- containers https://github.com/adoptium/containers
+- installer https://github.com/adoptium/installer
+- jenkins-helper https://github.com/adoptium/jenkins-helper
+
+New tag is created on temurin-build, ci-jenkins-pipeline and jenkins-helper for release build.
 
 Only include "critical" fixes (i.e. those which will otherwise cause a build break or other problem which will prevent shipping the release builds).
 This stops last minute changes going in which may destabilise things.
@@ -72,6 +74,9 @@ Here are the steps:
     - `scmReference`: One of the following:
       - For JDK8 arm32 linux, the tag usually takes the form `jdk8u322-b04-aarch32-xxxxxxxx`
       - For the rest, it's the same tag suffixed with `_adopt` e.g. `jdk-17.0.2+9_adopt`
+    - `buildReference`:  tag or the ongoing release on temurin-build repo
+    - `ciReference`: tag or the ongoing release on ci-jenkins-pipeline repo
+    - `helperReference`: tag for the ongoing release on jenkins-helper repo
     - `overridePublishName`: only for JDK8 arm32 linux, to set to the actual OpenJDK tag (`jdk8u322-b04`)
     - `aqaReference` should be set to the appropriate branch of the `aqa-tests` repository which is appropriate for this release. Generally of the form `vX.Y.Z-release`
     - `enableTests`: tick
