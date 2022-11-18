@@ -5,12 +5,15 @@ on:
     # https://crontab.guru/every-night-at-midnight
     - cron: "0 0 * * *"
 
+permissions:
+  contents: read
+
 jobs:
   update_ca_certs:
     if: startsWith(github.repository, 'adoptium/')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
         with:
           persist-credentials: false
 
@@ -18,7 +21,7 @@ jobs:
         working-directory: ./security
         run: "./mk-ca-bundle.pl"
 
-      - uses: gr2m/create-or-update-pull-request-action@v1
+      - uses: gr2m/create-or-update-pull-request-action@cb63b1c12a6c32d49cc613469950581413b29245 # v1.9.1
         env:
           GITHUB_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
         with:

@@ -21,8 +21,14 @@ on:
 ###############
 # Set the Job #
 ###############
+permissions:
+  contents: read
+
 jobs:
   linter:
+    permissions:
+      contents: read  # for actions/checkout to fetch code
+      statuses: write  # for github/super-linter to mark status of each linter run
     # Name the Job
     name: Lint Code Base
     # Set the agent to run on
@@ -36,7 +42,7 @@ jobs:
       # Checkout the code base #
       ##########################
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
         with:
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
@@ -45,7 +51,7 @@ jobs:
       # Run Linter against code base #
       ################################
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: github/super-linter@bb2d833b08b6c288608686672b93a8a4589cdc49 # v4.9.7
         env:
           VALIDATE_ALL_CODEBASE: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

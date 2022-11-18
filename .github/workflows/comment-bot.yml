@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Create comment
-        uses: JJ/pr-greeting-action@releases/v1
+        uses: JJ/pr-greeting-action@01953a8c191056b059c8dbc667d833aa082fd865 # releases/v1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           greeting: |
