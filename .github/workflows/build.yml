@@ -60,7 +60,7 @@ jobs:
             variant: bisheng
             image: adoptopenjdk/centos7_build_image
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
 
     - name: Build Linux
       run: ./build-farm/make-adopt-build-farm.sh
@@ -73,7 +73,7 @@ jobs:
         # Don't set the OS as we use both linux and alpine-linux
         PLATFORM_CONFIG_LOCATION: AdoptOpenJDK/openjdk-build/master/build-farm/platform-specific-configurations
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       name: Collect and Archive Artifacts
       with:
         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -88,14 +88,14 @@ jobs:
         imageroot=$(find "${HOME}/JDK" -name release -type f)
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
     - name: Smoke test
-      uses: adoptium/run-aqa@v2
+      uses: adoptium/run-aqa@6bacb4e732ad546eda1b09665b9067cdc87651f4 # v2
       with:
         build_list: 'functional/buildAndPackage'
         target: '_extended.functional'
         vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
         vendor_testBranches: "${{ github.head_ref }}"
         vendor_testDirs: "/test/functional"
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
@@ -113,13 +113,13 @@ jobs:
         variant: [temurin]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
 
     - name: Install Dependencies
       run: |
         brew install bash binutils freetype gnu-sed nasm
 
-    - uses: actions/setup-java@v3
+    - uses: actions/setup-java@de1bb2b0c5634f0fc4438d7aa9944e68f9bf86cc # v3.6.0
       id: setup-java
       with:
         java-version: 7
@@ -151,7 +151,7 @@ jobs:
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
       
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       name: Collect and Archive Artifacts
       with:
         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -167,14 +167,14 @@ jobs:
         imageroot=$(find "${HOME}/JDK" -name release -type f)
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
     - name: Smoke test
-      uses: adoptium/run-aqa@v2
+      uses: adoptium/run-aqa@6bacb4e732ad546eda1b09665b9067cdc87651f4 # v2
       with:
         build_list: 'functional/buildAndPackage'
         target: '_extended.functional'
         vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
         vendor_testBranches: "${{ github.head_ref }}"
         vendor_testDirs: "/test/functional"
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
@@ -197,7 +197,7 @@ jobs:
      steps:
      - name: Restore cygwin packages from cache
        id: cygwin
-       uses: actions/cache@v3
+       uses: actions/cache@9b0c1fce7a93df8e3bb8926b0d6e9d89e92f20a7 # v3.0.11
        with:
         path: C:\cygwin_packages
         key: cygwin-packages-${{ runner.os }}-v1
@@ -208,14 +208,14 @@ jobs:
          Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
          Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages autoconf,automake,bsdtar,cpio,curl,gcc-core,git,gnupg,grep,libtool,make,mingw64-x86_64-gcc-core,perl,rsync,unzip,wget,zip --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
 
-     - uses: actions/setup-java@v3
+     - uses: actions/setup-java@de1bb2b0c5634f0fc4438d7aa9944e68f9bf86cc # v3.6.0
        id: setup-java7
        with:
          distribution: 'zulu'
          java-version: 7
        if: matrix.version == 'jdk8u'
 
-     - uses: actions/setup-java@v3
+     - uses: actions/setup-java@de1bb2b0c5634f0fc4438d7aa9944e68f9bf86cc # v3.6.0
        id: setup-java11
        with:
          distribution: 'temurin'
@@ -224,7 +224,7 @@ jobs:
      - name: Restore Visual Studio 2017 from cache
        id: vs2017
        if: matrix.version == 'jdk8u'
-       uses: actions/cache@v3
+       uses: actions/cache@9b0c1fce7a93df8e3bb8926b0d6e9d89e92f20a7 # v3.0.11
        with:
          path: ~/vs2017.exe
          key: vs2017
@@ -267,7 +267,7 @@ jobs:
        shell: bash
        run: mkdir "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
 
-     - uses: actions/checkout@v3
+     - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
        with:
          set-safe-directory: false
 
@@ -303,14 +303,14 @@ jobs:
          TARGET_OS: windows
          FILENAME: OpenJDK.zip
 
-     - uses: actions/upload-artifact@v3
+     - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
        name: Collect and Archive Artifacts
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
          path: workspace/target/*
 
      - name: Restore build artifacts
-       uses: actions/download-artifact@v3
+       uses: actions/download-artifact@9782bd6a9848b53b110e712e20e42d89988822b7 # v3.0.1
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
          path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -329,14 +329,14 @@ jobs:
        run: echo "ANT_HOME=${env:ANT_HOME_ORIGIN}" | Out-File -FilePath "$env:GITHUB_ENV" -Encoding utf8 -Append
 
      - name: Smoke test
-       uses: adoptium/run-aqa@v2
+       uses: adoptium/run-aqa@6bacb4e732ad546eda1b09665b9067cdc87651f4 # v2
        with:
          build_list: 'functional/buildAndPackage'
          target: '_extended.functional'
          vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
          vendor_testBranches: "${{ github.head_ref }}"
          vendor_testDirs: "/test/functional"
-     - uses: actions/upload-artifact@v3
+     - uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb # v3.1.1
        name: Collect and Archive SmokeTest Results
        if: failure()
        with:
