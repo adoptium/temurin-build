@@ -38,6 +38,7 @@ OPENJDK_BUILD_REPO_BRANCH
 OPENJDK_BUILD_REPO_URI
 BRANCH
 BUILD_FULL_NAME
+BUILD_REPRODUCIBLE_DATE
 BUILD_VARIANT
 CERTIFICATE
 CLEAN_DOCKER_BUILD
@@ -211,6 +212,9 @@ function parseConfigurationArguments() {
 
         "--build-variant" )
         BUILD_CONFIG[BUILD_VARIANT]="$1"; shift;;
+
+        "--build-reproducible-date" )
+        BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]="$1"; shift;;
 
         "--branch" | "-b" )
         BUILD_CONFIG[BRANCH]="$1"; shift;;
@@ -465,6 +469,9 @@ function configDefaults() {
       BUILD_CONFIG[MAKE_COMMAND_NAME]="make"
       ;;
   esac
+
+  # Default to no supplied reproducible build date, uses current date
+  BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]=""
 
   # The default behavior of whether we want to create a separate debug symbols archive
   BUILD_CONFIG[CREATE_DEBUG_IMAGE]="false"
