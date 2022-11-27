@@ -104,19 +104,28 @@ configureReproducibleBuildParameter() {
           addConfigureArg "--with-source-date=version"  " --disable-ccache"
           CONFIGURE_ARGS="${CONFIGURE_ARGS//--enable-ccache/}"
       else
-          # Use build date
-          addConfigureArg "--with-source-date=" "updated"
+          if [[ -n "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}" ]]; then
+              # Use supplied date
+              addConfigureArg "--with-source-date=" "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}"
 
-          # Specify --with-hotspot-build-time to ensure dual pass builds like MacOS use same time
-          # Get current ISO-8601 datetime
-          isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox" || true)
-          if [ "x${isGnuCompatDate}" != "x" ]
-          then
-              hotspotBuildTime=$(date --utc +"%Y-%m-%dT%H:%M:%SZ")
+              # Specify --with-hotspot-build-time to ensure dual pass builds like MacOS use same time
+              # Use supplied date
+              addConfigureArg "--with-hotspot-build-time=" "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}"
           else
-              hotspotBuildTime=$(date -u -j +"%Y-%m-%dT%H:%M:%SZ")
+              # Use build date
+              addConfigureArg "--with-source-date=" "updated"
+
+              # Specify --with-hotspot-build-time to ensure dual pass builds like MacOS use same time
+              # Get current ISO-8601 datetime
+              isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox" || true)
+              if [ "x${isGnuCompatDate}" != "x" ]
+              then
+                  hotspotBuildTime=$(date --utc +"%Y-%m-%dT%H:%M:%SZ")
+              else
+                  hotspotBuildTime=$(date -u -j +"%Y-%m-%dT%H:%M:%SZ")
+              fi
+              addConfigureArg "--with-hotspot-build-time=" "${hotspotBuildTime}"
           fi
-          addConfigureArg "--with-hotspot-build-time=" "${hotspotBuildTime}"
       fi
       # Ensure reproducible binary with a unique build user identifier
       addConfigureArg "--with-build-user=" "${BUILD_CONFIG[BUILD_VARIANT]}"
@@ -273,6 +282,17 @@ configureVersionStringParameter() {
   fi
 
   local dateSuffix=$(date -u +%Y%m%d%H%M)
+  if [[ -n "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}" ]]; then
+    # Use input reproducible build date supplied in ISO8601 format
+    # Convert input ISO8601 date to dateSuffix %Y%m%d%H%M format
+    isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox" || true)
+    if [ "x${isGnuCompatDate}" != "x" ]
+    then
+        dateSuffix=$(date --utc --date="${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}" +"%Y%m%d%H%M")
+    else
+        dateSuffix=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}" +"%Y%m%d%H%M")
+    fi
+  fi
 
   # Configures "vendor" jdk properties.
   # Temurin default values are set after this code block
