@@ -247,8 +247,8 @@ getOpenJdkVersion() {
     local loongsonVerFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
     if [ -r "${loongsonVerFile}" ]; then
       if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-        local updateNum="$(cat "$loongsonVerFile" | awk -F - '{print $1}' | awk -F u '{print $2}')"
-        local buildNum="$(cat "$loongsonVerFile" | awk -F - '{print $2}')"
+        local updateNum="$(cut -d'-' -f 1 <"${loongsonVerFile}" | cut -d'u' -f 2)"
+        local buildNum="$(cut -d'-' -f 2 <"${loongsonVerFile}")"
         version="jdk8u${updateNum}-${buildNum}"
       else
         echo "Only Java 8 is supported for now"
