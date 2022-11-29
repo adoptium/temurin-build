@@ -47,6 +47,11 @@ During the week before release we lock down below repositories
 - jenkins-helper https://github.com/adoptium/jenkins-helper
 
 New tag is created on temurin-build, ci-jenkins-pipeline and jenkins-helper for release build.
+Release pipeline and jobs need to be re-generated with this new tag:
+
+- run [release-build-pipeline-generator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/release-build-pipeline-generator) with correct tag(s)
+- ensure release-openjdkXX-pipeline in https://ci.adoptopenjdk.net/job/build-scripts/job are properly updated
+- ensure downstream jobs in https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/release/job/jobs/job/jdkXXu/ are updated
 
 Only include "critical" fixes (i.e. those which will otherwise cause a build break or other problem which will prevent shipping the release builds).
 This stops last minute changes going in which may destabilise things.
