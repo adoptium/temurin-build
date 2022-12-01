@@ -179,14 +179,6 @@ getOpenJDKUpdateAndBuildVersion() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 }
 
-addFixpathPatch() {
-  # Fixpath patch required for JDK11u Windows aarch64 builds
-  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" = "${JDK11_CORE_VERSION}" ] && [ "${ARCHITECTURE}" = "aarch64" ]; then
-    wget https://github.com/microsoft/openjdk-aarch64/releases/download/fp-1.0/fixpath.exe --output-document "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/fixpath.exe"
-  fi
-}
-
-
 patchFreetypeWindows() {
   # Allow freetype 2.8.1 to be built for JDK8u with Visual Studio 2017 (see https://github.com/openjdk/jdk8u-dev/pull/3#issuecomment-1087677766).
   # Don't apply the patch for OpenJ9 (OpenJ9 doesn't need the patch and, technically, it should only be applied for version 2.8.1).
@@ -1835,7 +1827,6 @@ configureWorkspace
 echo "build.sh : $(date +%T) : Initiating build ..."
 getOpenJDKUpdateAndBuildVersion
 if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-  addFixpathPatch
   patchFreetypeWindows
 fi
 configureCommandParameters

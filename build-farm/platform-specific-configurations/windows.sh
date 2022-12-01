@@ -223,7 +223,7 @@ then
 fi
 
 if [ "${ARCHITECTURE}" == "aarch64" ]; then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --openjdk-target=aarch64-unknown-cygwin --with-build-jdk=$JDK_BOOT_DIR"
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --openjdk-target=aarch64-unknown-cygwin"
 fi
 
 
