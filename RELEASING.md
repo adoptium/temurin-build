@@ -51,6 +51,8 @@ Release pipeline and jobs need to be re-generated with this new tag:
 
 - run [release-build-pipeline-generator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/release-build-pipeline-generator) with correct tag(s)
 - ensure release-openjdkXX-pipeline in https://ci.adoptopenjdk.net/job/build-scripts/job are properly updated
+  1. additionalConfigureArgs with correct value, esp. in release-openjdk8-pipeline
+  2. jdk8 aarch32 shares the same pipeline with other jdk8 targets: release-openjdk8-pipeline.
 - ensure downstream jobs in https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/release/job/jobs/job/jdkXXu/ are updated
 
 Only include "critical" fixes (i.e. those which will otherwise cause a build break or other problem which will prevent shipping the release builds).
