@@ -38,6 +38,7 @@ Don't be scared off by this document! If you already understand the stuff in th
 ## Lockdown period
 
 During the week before release, Release Champion make changes for preparation:
+
 - Check [releaseVersions](https://github.com/zdtsw/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/release_pipeline_generator.groovy#L6) with correct incoming release versions.
 - Update https://github.com/adoptium/mirror-scripts/blob/master/releasePlan.cfg with expected `scmReference` tag
 
@@ -124,38 +125,41 @@ We are in the process of automation release build. Here are the new steps (Switc
 1. Jenkins "release trigger" job (e.g <https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/releaseTrigger_jdk19u/>) runs every hour in the release week to check if new GA tag has been detected in the source code repo (e.g <https://github.com/adoptium/jdk19u> but not https://github.com/adoptium/aarch32-jdk8u)
 2. if it find new GA tag matches expected tag set in mirror-script repo , job triggers release-openjdk19-pipeline (e.g https://ci.adoptopenjdk.net/job/build-scripts/job/release-openjdk19-pipeline/) with parameters.
 3. if it could not find new GA tag but the tag has been applied in the source code repo. Might be several things to check:
-  - if the appropriate [mirror job](https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/adoptium/) has successfully received the tag.
-  - if the expected tag set in mirror-script is wrong
-  - release-openjdkXX-pipeline can be manually force triggered by Release Champion: set `scmReference` and adjust `additionalConfigureArgs`
-3. For jdk8 aarch32Linux, Release Champione need manual trigger https://ci.adoptopenjdk.net/job/build-scripts/job/release-openjdk8-pipeline/ after the auto trigger build is done with success 
-  - different `scmReference` tag from https://github.com/adoptium/aarch32-jdk8u
-  - customized `targetConfigurations` value
-  - customized `overridePublishName` value
+
+- if the appropriate [mirror job](https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/adoptium/) has successfully received the tag.
+- if the expected tag set in mirror-script is wrong
+- release-openjdkXX-pipeline can be manually force triggered by Release Champion: set `scmReference` and adjust `additionalConfigureArgs`
+
+4. For jdk8 aarch32Linux, Release Champione need manual trigger https://ci.adoptopenjdk.net/job/build-scripts/job/release-openjdk8-pipeline/ after the auto trigger build is done with success
+
+- different `scmReference` tag from https://github.com/adoptium/aarch32-jdk8u
+- customized `targetConfigurations` value
+- customized `overridePublishName` value
 
 For the records, here are the old manual steps which are still useful for jdk8 aarch32Linux:
 
 1. Ensure that the [appropriate mirror job](https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/adoptium/) has completed and that the corresponding repository at <https://github.com/adoptium/jdkXX> has successfully received the tag for the level you are about to build. If there are any conflicts they can be resolved on the machine where it failed if you have access to the private `adoptium_temurin_bot_ssh_key.gpg` key, or ask someone( e.g @gdams or @andrew-m-leonard) with push access to the repositories to manually run the mirror job and resolve the conflicts.
 2. Run OpenJDK pipeline build and test release:
-  - Job: <https://ci.adoptopenjdk.net/job/build-scripts/job/openjdk8-pipeline/build> (Switch `openjdk8` for your version number)
-  - `targetConfigurations`:
-    - only keep temurin variants
-    - make sure windows aarch64 is not presented (as this is written, it is not officially supported yet)
-  - `releaseType: Release`
-  - `adoptBuildNumber`: Leave blank unless you are doing a point release in which case it should be a number starting at `1` for the first point release.
-  - `additionalConfigureArgs`:
-    - For JDK8, no need change default value. It automatically adds`--with-milestone=fcs` in `build.sh`.
-    - For JDK11+ use `--without-version-pre --without-version-opt` (for EA releases use: `--with-version-pre=ea --without-version-opt`)
-  - `scmReference`: One of the following:
-    - For jdk8 aarch32Linux, the tag usually takes the form `jdk8u322-b04-aarch32-xxxxxxxx`
-    - For the rest, it's the same tag suffixed with `_adopt` e.g. `jdk-17.0.2+9_adopt`
-  - `buildReference`:  tag or the ongoing release on temurin-build repo
-  - `ciReference`: tag or the ongoing release on ci-jenkins-pipeline repo
-  - `helperReference`: tag for the ongoing release on jenkins-helper repo
-  - `overridePublishName`: only for jdk8 aarch32Linux, to set to the actual OpenJDK tag (`jdk8u322-b04`)
-  - `aqaReference` should be set to the appropriate branch of the `aqa-tests` repository which is appropriate for this release. Generally of the form `vX.Y.Z-release`
-  - `enableTests`: tick
-  - Click "Build" button !!!
 
+- Job: <https://ci.adoptopenjdk.net/job/build-scripts/job/openjdk8-pipeline/build> (Switch `openjdk8` for your version number)
+- `targetConfigurations`:
+  - only keep temurin variants
+  - make sure windows aarch64 is not presented (as this is written, it is not officially supported yet)
+- `releaseType: Release`
+- `adoptBuildNumber`: Leave blank unless you are doing a point release in which case it should be a number starting at `1` for the first point release.
+- `additionalConfigureArgs`:
+  - For JDK8, no need change default value. It automatically adds`--with-milestone=fcs` in `build.sh`.
+  - For JDK11+ use `--without-version-pre --without-version-opt` (for EA releases use: `--with-version-pre=ea --without-version-opt`)
+- `scmReference`: One of the following:
+  - For jdk8 aarch32Linux, the tag usually takes the form `jdk8u322-b04-aarch32-xxxxxxxx`
+  - For the rest, it's the same tag suffixed with `_adopt` e.g. `jdk-17.0.2+9_adopt`
+- `buildReference`:  tag or the ongoing release on temurin-build repo
+- `ciReference`: tag or the ongoing release on ci-jenkins-pipeline repo
+- `helperReference`: tag for the ongoing release on jenkins-helper repo
+- `overridePublishName`: only for jdk8 aarch32Linux, to set to the actual OpenJDK tag (`jdk8u322-b04`)
+- `aqaReference` should be set to the appropriate branch of the `aqa-tests` repository which is appropriate for this release. Generally of the form `vX.Y.Z-release`
+- `enableTests`: tick
+- Click "Build" button !!!
 
 Once the openjdk pipeline has completed:
 
