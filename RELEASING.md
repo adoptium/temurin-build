@@ -80,6 +80,39 @@ Release pipelines and jobs need to be re-generated with new tags by Release Cham
   1. `USER_REMOTE_CONFIGS.branch` should use correct release tag name
   2. `BUILD_CONFIGURATION.USE_ADOPT_SHELL_SCRIPTS` set to `true`
 
+```mermaid
+
+flowchart TD
+
+1["ReleaseChampion"] -- manual run --> 2["release-build-pipeline-generator"] 
+
+2 --generate--> 3.1["release-openjdk8-pipeline"]
+2 --call--> 3.2["release_pipeline_jobs_generator_jdk8u"]
+2 --generate--> 3.3["release-openjdk11-pipeline"]
+2 --call--> 3.4["release_pipeline_jobs_generator_jdk11u"]
+2 --generate--> 3.5["release-openjdk17-pipeline"]
+2 --call--> 3.6["release_pipeline_jobs_generator_jdk17u"]
+2 --generate--> 3.7["release-openjdkXX-pipeline"]
+2 --call--> 3.8["release_pipeline_jobs_generator_jdkXXu"]
+
+3.2-- create --> 3.2.1["jdk8u-release-mac-x64-temurin"]
+3.2-- create --> 3.2.2["jdk8u-release-linux-x64-temurin"]
+3.2-- create --> 3.2.3["jdk8u-release-etc-etc"]
+
+3.4-- create --> 3.4.1["jdk11u-release-mac-x64-temurin"]
+3.4-- create --> 3.4.2["jdk11u-release-linux-x64-temurin"]
+3.4-- create --> 3.4.3["jdk11u-release-etc-etc"]
+
+3.6-- create --> 3.6.1["jdk17u-release-mac-x64-temurin"]
+3.6-- create --> 3.6.2["jdk17u-release-linux-x64-temurin"]
+3.6-- create --> 3.6.3["jdk17u-release-etc-etc"]
+
+3.8-- create --> 3.8.1["jdkXXu-release-mac-x64-temurin"]
+3.8-- create --> 3.8.2["jdkXXu-release-linux-x64-temurin"]
+3.8-- create --> 3.8.3["jdkXXu-release-etc-etc"]
+
+```
+
 Disable nightly testing so the release builds aren't delayed by any nightly test runs (set `enableTests : false` in [defaults.json](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/defaults.json)). Ensure the build pipeline generator job runs successfully (<https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/build-pipeline-generator/>), and the flag is disabled by bringing up the Build pipeline job and check the  `enableTests` checkbox is unticked.
 
 Add a banner to the website to indicate that the releases are coming in the near future ([Example Changes](https://github.com/adoptium/adoptium.net/blob/main/src/components/Banner.tsx)).
