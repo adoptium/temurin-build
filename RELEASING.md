@@ -137,6 +137,13 @@ We are in the process of automation release build. Here are the new steps (Switc
 - customized `targetConfigurations` value
 - customized `overridePublishName` value
 
+```mermaid
+
+flowchart TD
+
+start["every hour"] --start--> step0["releaseTrigger job"] --> step1["check GA tag available"] --> step2["check _adopt tag available"] --> step3["auto trigger release-openjdkXX-pipeline"] --> step4["auto trigger all jdkXXu-release-OS-ARCH-temurin job\nExcept jdk8u-release-linux-arm-temurin when XX is 8"] --> post["Next day: ReleaseChampion disable releaseTrigger job\nand release-openjdkXX-pipeline\nto prevent misuse"]
+
+```
 For the records, here are the old manual steps which are still useful for jdk8 aarch32Linux:
 
 1. Ensure that the [appropriate mirror job](https://ci.adoptopenjdk.net/view/git-mirrors/job/git-mirrors/job/adoptium/) has completed and that the corresponding repository at <https://github.com/adoptium/jdkXX> has successfully received the tag for the level you are about to build. If there are any conflicts they can be resolved on the machine where it failed if you have access to the private `adoptium_temurin_bot_ssh_key.gpg` key, or ask someone( e.g @gdams or @andrew-m-leonard) with push access to the repositories to manually run the mirror job and resolve the conflicts.
