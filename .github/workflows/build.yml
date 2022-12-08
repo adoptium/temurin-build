@@ -3,6 +3,10 @@ name: Build
 on:
   pull_request:
     branches: [ master ]
+    paths:
+      - "build-farm/**"
+      - "sbin/**"
+      - "**.sh"
 
 # Cancel existing runs if user makes another push.
 concurrency:
