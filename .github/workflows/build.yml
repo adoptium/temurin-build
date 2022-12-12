@@ -3,6 +3,11 @@ name: Build
 on:
   pull_request:
     branches: [ master ]
+    paths:
+      - "build-farm/**"
+      - "sbin/**"
+      - "**.sh"
+      - ".github/workflows/build.yml"
 
 # Cancel existing runs if user makes another push.
 concurrency:
