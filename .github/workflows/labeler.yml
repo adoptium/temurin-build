@@ -16,7 +16,7 @@ jobs:
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
 
-    - uses: fuxingloh/multi-labeler@f5bd7323b53b0833c1e4ed8d7b797ae995ef75b4 # v2.0.1
+    - uses: fuxingloh/multi-labeler@9ff8bd61ce7cea197e913f5449016105eeb6b24d # v2.0.2
       with:
         github-token: "${{secrets.GITHUB_TOKEN}}"
         config-path: .github/regex_labeler.yml
