@@ -131,7 +131,7 @@ We are in the process of automation release build. Here are the new steps (Switc
 
 "release-openjdkXX-pipeline" can be manually run by Release Champion: set `scmReference` with correct "_adopt" tag.
 
-4. For jdk8 aarch32Linux, Release Champione need manually trigger https://ci.adoptopenjdk.net/job/build-scripts/job/release-openjdk8-pipeline/
+4. For jdk8 aarch32Linux, the Release Champion needs to manually trigger https://ci.adoptopenjdk.net/job/build-scripts/job/release-openjdk8-pipeline/
 
 - different `scmReference` tag from https://github.com/adoptium/aarch32-jdk8u than in https://github.com/adoptium/jdk8u
 - customized `targetConfigurations` value: should only contain one target
