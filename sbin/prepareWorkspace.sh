@@ -458,7 +458,7 @@ checkingAndDownloadingFreeType() {
   
     # Fetch the sha for the commit we just cloned
     cd freetype || exit
-    FREETYPE_SHA=$(git rev-parse HEAD)
+    FREETYPE_SHA=$(git rev-parse HEAD) || exit
     FREETYPE_BUILD_INFO="https://github.com/freetype/freetype/commit/${FREETYPE_SHA}"
 
     if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
@@ -466,8 +466,6 @@ checkingAndDownloadingFreeType() {
       echo "${FREETYPE_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
       return
     fi
-
-    cd freetype || exit
 
     local pngArg=""
     if ./configure --help | grep "with-png"; then
