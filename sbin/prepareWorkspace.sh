@@ -454,7 +454,7 @@ checkingAndDownloadingFreeType() {
   else
     # Replace . with - in version number e.g 2.8.1 -> 2-8-1
     FREETYPE_BRANCH="VER-${BUILD_CONFIG[FREETYPE_FONT_VERSION]//./-}"
-    git clone https://github.com/freetype/freetype.git -b $FREETYPE_BRANCH freetype || exit
+    git clone https://github.com/freetype/freetype.git -b "${FREETYPE_BRANCH}" freetype || exit
   
     # Fetch the sha for the commit we just cloned
     cd freetype || exit
@@ -479,7 +479,7 @@ checkingAndDownloadingFreeType() {
 
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if ! (eval "${freetypeEnv}" && bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${pngArg}" "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+    if ! (eval "${freetypeEnv}" && bash ./autogen.sh && bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${pngArg}" "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
       echo "Failed to configure and build libfreetype, exiting"
       exit
