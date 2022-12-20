@@ -441,7 +441,7 @@ downloadFile() {
   fi
 }
 
-# Get Freetype
+# Clone Freetype from GitHub
 checkingAndDownloadingFreeType() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   echo "Checking for freetype at ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
@@ -452,16 +452,14 @@ checkingAndDownloadingFreeType() {
   if [[ -n "$FOUND_FREETYPE" ]]; then
     echo "Skipping FreeType download"
   else
-    downloadFile "freetype.tar.gz" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
-    downloadFile "freetype.tar.gz.sig" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz.sig"
-    checkFingerprint "freetype.tar.gz.sig" "freetype.tar.gz" "freetype" "58E0 C111 E39F 5408 C5D3 EC76 C1A6 0EAC E707 FDA5" "${FREETYPE_LIB_CHECKSUM}"
-
-    FREETYPE_BUILD_INFO="https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
-
-    rm -rf "./freetype" || true
-    mkdir -p "freetype" || true
-    tar xpzf freetype.tar.gz --strip-components=1 -C "freetype"
-    rm freetype.tar.gz
+    # Replace . with - in version number e.g 2.8.1 -> 2-8-1
+    FREETYPE_BRANCH="VER-${BUILD_CONFIG[FREETYPE_FONT_VERSION]//./-}"
+    git clone https://github.com/freetype/freetype.git -b $FREETYPE_BRANCH freetype || exit
+  
+    # Fetch the sha for the commit we just cloned
+    cd freetype || exit
+    FREETYPE_SHA=$(git rev-parse HEAD)
+    FREETYPE_BUILD_INFO="https://github.com/freetype/freetype/commit/${FREETYPE_SHA}"
 
     if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
       # Record buildinfo version
