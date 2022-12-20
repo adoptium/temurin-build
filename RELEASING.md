@@ -58,7 +58,7 @@ Finally lockdown below repositories
 - mirror-script <https://github.com/adoptium/mirror-scripts>
 
 Only include "critical" fixes (i.e. those which will otherwise cause a build break or other problem which will prevent shipping the release builds).
-This stops last minute changes going in which may destabilise things. "installer" repo might have exception due to the fact it requires new version of build.
+This stops last minute changes going in, which may destabilise things. "installer" repo might have exception due to the fact it requires new version of build.
 If a change has to go in during this "lockdown" period it should be done by posting a comment saying "Requesting approval to merge during the lockdown period. Please thumbs up the comment to approve" in Slack release channel.
 If two committers into the repository express approval then the change can be merged during the lockdown period.
 
