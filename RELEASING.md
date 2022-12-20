@@ -67,7 +67,7 @@ Release pipelines and jobs need to be re-generated with new tags by Release Cham
 - run [release-build-pipeline-generator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/release-build-pipeline-generator) with correct value:
   1. `releaseTag` is the tag on `ci-jenkins-pipeline` and `temurin-build` git repo.
   2. `helperTag` is the tag on `jenkins-helper` repo.
-  3. `aqaTag` is the tag on `aqaTest` repo, usually in form of `vX.Y.Z-release`
+  3. `aqaTag` is the tag on `aqa-tests` repo, in form of `vX.Y.Z-release` and usually the [latest stable release](https://github.com/adoptium/aqa-tests/releases)
 - ensure release-openjdkXX-pipeline in <https://ci.adoptopenjdk.net/job/build-scripts> are properly generated for the first time or updated:
   1. jdk8 aarch32Linux shares the same pipeline `release-openjdk8-pipeline` with other jdk8 targets, therefore, only one release pipeline for jdk8
   2. `targetConfigurations` should only include what we officially release for temurin.
