@@ -249,7 +249,7 @@ Once the PRs to change those files have been merged, the [adoptium-packages-linu
 5. Publicise the Temurin release
 
 - Via slack on the Adoptium #release channel
-- Find someone with the appropriate authority (Carmen, George, Martijn, Shelley, Stewart) to post a tweet about the new release from the Adoptium twitter account
+- Find someone with the appropriate authority (Carmen, George, Martijn, Shelley, Stewart, Tim) to post a tweet about the new release from the Adoptium twitter account
 
 ### Post Release Tasks
 
