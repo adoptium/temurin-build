@@ -302,7 +302,7 @@ At some point in a java version's lifecycle, the JDK version will be maintained 
 
 - [jdk-dev](https://mail.openjdk.java.net/mailman/listinfo/jdk-dev)
 - [jdk-updates-dev](https://mail.openjdk.java.net/mailman/listinfo/jdk-updates-dev)
-When this occurs, usually a TSC member will create the `jdk<version>u` update repository ([example of the JDK11u one](https://github.com/adopium/openjdk-jdk11u)) via our Skara mirroring jobs that pull in the commit and tag info from the Mercurial repository. To find out more about Skara and our other mirroring jobs, see <https://github.com/adoptium/mirror-scripts>.
+When this occurs, usually a Temurin committer will create the `jdk<version>u` update repository ([example of the JDK11u one](https://github.com/adopium/openjdk-jdk11u)) via our Skara mirroring jobs that pull in the commit and tag info from the Mercurial repository. To find out more about Skara and our other mirroring jobs, see <https://github.com/adoptium/mirror-scripts>.
 
 *New Adoptium mirror repository creation, by an Adoptium GitHub Admin:*
 
