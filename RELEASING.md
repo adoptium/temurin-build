@@ -39,7 +39,7 @@ Don't be scared off by this document! If you already understand the stuff in th
 
 During the week before release, the Release Champion makes changes in preparation for the release:
 
-- Update [releaseVersions](https://github.com/zdtsw/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/release_pipeline_generator.groovy#L6) with correct incoming release versions.
+- Update [releaseVersions](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/release_pipeline_generator.groovy#L6) with correct incoming release versions.
 - Update https://github.com/adoptium/mirror-scripts/blob/master/releasePlan.cfg with expected tag, detail see https://github.com/zdtsw/mirror-scripts/tree/issue/3167#skara-repos-and-processes
 
 Create release tag on below repositories:
