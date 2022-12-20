@@ -229,7 +229,7 @@ Once the openjdk pipeline has completed:
 - [`temurin17`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin17.rb)
 
 An example PR can be found [here](https://github.com/Homebrew/homebrew-cask/commit/4565865e9d7c3d3018ee8aa67803ea68c54dde86). The required SHA sums can be easily updated by `brew bump-cask-pr` command . The separate pull request is required for each version you update. If in doubt reach out to @gdams as he's a maintainer.
-  3.2. **[Linux only]** Once the binaries are available on the website you can begin updating the specfiles for the RPM/DEB/APK files. There are 4 different type of linux installer
+  3.2. **[Linux only]** Once the binaries are available on the website you can begin updating the specfiles for the RPM/DEB/APK files. There are 4 different types of linux installer
 
 - [debian](https://github.com/adoptium/installer/tree/master/linux/jdk/debian/src/main/packaging/temurin)
 - [Red Hat](https://github.com/adoptium/installer/tree/master/linux/jdk/redhat/src/main/packaging/temurin)
