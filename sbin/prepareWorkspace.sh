@@ -454,9 +454,20 @@ checkingAndDownloadingFreeType() {
     # Delete existing freetype folder if it exists
     rm -rf "./freetype" || true
 
-    # Replace . with - in version number e.g 2.8.1 -> 2-8-1
-    FREETYPE_BRANCH="VER-${BUILD_CONFIG[FREETYPE_FONT_VERSION]//./-}"
-    git clone https://github.com/freetype/freetype.git -b "${FREETYPE_BRANCH}" freetype || exit
+    case ${BUILD_CONFIG[FREETYPE_FONT_VERSION]} in
+    *.*)
+      # Replace . with - in version number e.g 2.8.1 -> 2-8-1
+      FREETYPE_BRANCH="VER-${BUILD_CONFIG[FREETYPE_FONT_VERSION]//./-}"
+      git clone https://github.com/freetype/freetype.git -b "${FREETYPE_BRANCH}" freetype || exit
+      ;;
+    *)
+      # Use specific git hash
+      git clone https://github.com/freetype/freetype.git freetype || exit
+      cd freetype || exit
+      git checkout "${BUILD_CONFIG[FREETYPE_FONT_VERSION]}" || exit
+      cd .. || exit
+      ;;
+    esac
   
     # Fetch the sha for the commit we just cloned
     cd freetype || exit
