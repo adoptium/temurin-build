@@ -21,7 +21,7 @@ jobs:
         working-directory: ./security
         run: "./mk-ca-bundle.pl"
 
-      - uses: gr2m/create-or-update-pull-request-action@df20b2c073090271599a08c55ae26e0c3522b329 # v1.9.2
+      - uses: gr2m/create-or-update-pull-request-action@dc1726cbf4dd3ce766af4ec29cfb660e0125e8ee # v1
         env:
           GITHUB_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
         with:
