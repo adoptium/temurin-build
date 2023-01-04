@@ -144,7 +144,7 @@ flowchart TD
 start["Every hour"] --trigger--> step0["releaseTrigger job"] --> step1["Check GA tag available\nCheck _adopt tag available"] ----> |yes| step2["Trigger release-openjdkXX-pipeline\nwith scmReference"] --> step3["Trigger all jdkXXu-release-OS-ARCH-temurin job\nExcept jdk8u-release-linux-arm-temurin when XX is 8"] --> step4["Trigger remote Temurin compliance CI jck test jobs: jck.sanity,jck.extended,jck.special"]
 step1 ---->|No| step1.1["sleep 10 minutes"] -->step1
 
-jdk8armStep1["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] -->jdk8armStep2["Get _adopt tag on jdk8 aarch32Linux"] -->jsk8armStep3["Manual run release-openjdk8u-pipeline with\n1: scmReference\n2: targetConfiguration\n3: overridePublishName"]
+jdk8armStep1["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] -->jdk8armStep2["Get _adopt tag on jdk8 aarch32Linux"] -->jdk8armStep3["Manual run release-openjdk8u-pipeline with\n1: scmReference\n2: targetConfiguration\n3: overridePublishName"]
 
 ```
 
