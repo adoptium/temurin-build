@@ -148,7 +148,7 @@ jdk8armStep1["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] 
 
 ```
 
-### Auto Way - Pre-release week auto test
+### Auto Way - Before-release week auto test
 
 In the 2 weeks prior to the release week a auto trigger test will be performed on a chosen version to validate the trigger and build processes:
 
