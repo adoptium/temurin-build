@@ -150,7 +150,7 @@ jdk8armStep1["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] 
 
 ### Auto Way - Before-release week auto test
 
-In the 2 weeks prior to the release week a auto trigger test will be performed on a chosen version to validate the trigger and build processes:
+In the 2 weeks prior to the release week an auto trigger test will be performed on a chosen version to validate the trigger and build processes:
 
 1. Ensure the expected release tag configuration is as expected for the upcoming release: https://github.com/adoptium/mirror-scripts/blob/master/releasePlan.cfg
 2. For the chosen jdk version to perform the test run on (eg.jdk17u), choose the 2nd latest build tag commit (ensure latest tags are not on the same commit). So for example if the latest tag is jdk-17.0.6+9, choose jdk-17.0.6+8 (unless it is the same commit in which case keep going backwards..)
