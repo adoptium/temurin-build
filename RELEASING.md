@@ -141,12 +141,20 @@ We are in the process of automation release build. Here are the new steps (Switc
 
 flowchart TD
 
-start["Every hour"] --trigger--> step0["releaseTrigger job"] --> step1["Check GA tag available\nCheck _adopt tag available"] ----> |yes| step2["Trigger release-openjdkXX-pipeline\nwith scmReference"] --> step3["Trigger all jdkXXu-release-OS-ARCH-temurin job\nExcept jdk8u-release-linux-arm-temurin when XX is 8"]
+start["Every hour"] --trigger--> step0["releaseTrigger job"] --> step1["Check GA tag available\nCheck _adopt tag available"] ----> |yes| step2["Trigger release-openjdkXX-pipeline\nwith scmReference"] --> step3["Trigger all jdkXXu-release-OS-ARCH-temurin job\nExcept jdk8u-release-linux-arm-temurin when XX is 8"] --> step4["Trigger remote Temurin compliance CI jck test jobs: jck.sanity,jck.extended,jck.special"]
 step1 ---->|No| step1.1["sleep 10 minutes"] -->step1
 
-step4["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] -->step5["Get _adopt tag on jdk8 aarch32Linux"] -->step6["Manual run release-openjdk8u-pipeline with\n1: scmReference\n2: targetConfiguration\n3: overridePublishName"]
+jdk8armStep1["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] -->jdk8armStep2["Get _adopt tag on jdk8 aarch32Linux"] -->jdk8armStep3["Manual run release-openjdk8u-pipeline with\n1: scmReference\n2: targetConfiguration\n3: overridePublishName"]
 
 ```
+
+### Auto Way - Before-release week auto test
+
+In the 2 weeks prior to the release week an auto trigger test will be performed on a chosen version to validate the trigger and build processes:
+
+1. Ensure the expected release tag configuration is as expected for the upcoming release: https://github.com/adoptium/mirror-scripts/blob/master/releasePlan.cfg
+2. For the chosen jdk version to perform the test run on (eg.jdk17u), choose the 2nd latest build tag commit (ensure latest tags are not on the same commit). So for example if the latest tag is jdk-17.0.6+9, choose jdk-17.0.6+8 (unless it is the same commit in which case keep going backwards..)
+3. Get an Adoptium Admin with write access to the mirror repository to tag the chosen tag with: jdk-\<version\>-beforereleasetest-ga, eg:"jdk-17.0.6-beforereleasetest-ga" **IMPORTANT:** the "-beforereleasetest-ga" naming is important to ensure sort order is before the "-ga" real tag.
 
 ### Manual Way
 
