@@ -51,7 +51,7 @@ jobs:
       # Run Linter against code base #
       ################################
       - name: Lint Code Base
-        uses: github/super-linter@bb2d833b08b6c288608686672b93a8a4589cdc49 # v4.9.7
+        uses: github/super-linter@985ef206aaca4d560cb9ee2af2b42ba44adc1d55 # v4.10.0
         env:
           VALIDATE_ALL_CODEBASE: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
