@@ -4,10 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.adoptium.test</groupId>
-    <artifactId>java-project</artifactId>
+    <artifactId>temurin-build</artifactId>
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>java-project</name>
+    <name>temurin-build</name>
     <url>http://maven.apache.org</url>
 
     <properties>
@@ -75,7 +75,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.mkyong.hashing.App</mainClass>
+                                    <mainClass>net.adoptium.test.App</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
