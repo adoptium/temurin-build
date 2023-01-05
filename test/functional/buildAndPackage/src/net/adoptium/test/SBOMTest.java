@@ -36,6 +36,11 @@ public class SBOMTest {
     public GenericContainer<?> cyclonedxCli = new GenericContainer<>(CYCLONEDX_CLI_IMAGE)
             .withClasspathResourceMapping("./", "/app/sboms", BindMode.READ_ONLY);
 
+    /**
+     * Tests the validation of SBOM files.
+     * @throws Exception if there is an error during the test
+     */
+
     @Test
     public void testSBOMValidation() throws Exception {
         // Start the container
