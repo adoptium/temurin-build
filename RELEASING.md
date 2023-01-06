@@ -157,6 +157,7 @@ In the 2 weeks prior to the release week an auto trigger test will be performed 
 3. Update JDKnn_BRANCH property in the aqa-tests testenv.properties for the **aqa release** branch, eg: https://github.com/adoptium/aqa-tests/blob/v0.9.6-release/testenv/testenv.properties
 4. Get an Adoptium Admin to tag the trial tag to build in the adoptium mirror, as in the following example:
 
+<!-- shellcheck disable=MD036 -->
 **IMPORTANT: trial tag MUST be "-beforereleastest-ga"**
 
 `git clone git@github.com:adoptium/jdk17u.git`
