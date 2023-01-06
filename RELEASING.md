@@ -148,13 +148,27 @@ jdk8armStep1["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] 
 
 ```
 
-### Auto Way - Before-release week auto test
+### Auto Way - Before release week trial release test
 
-In the 2 weeks prior to the release week an auto trigger test will be performed on a chosen version to validate the trigger and build processes:
+In the 2 weeks prior to the release week an auto trigger test will be performed on a chosen version (suggest jdk8 and one other) to validate the trigger and build processes and the release pipeline. jdk-17 example:
 
 1. Ensure the expected release tag configuration is as expected for the upcoming release: https://github.com/adoptium/mirror-scripts/blob/master/releasePlan.cfg
-2. For the chosen jdk version to perform the test run on (eg.jdk17u), choose the 2nd latest build tag commit (ensure latest tags are not on the same commit). So for example if the latest tag is jdk-17.0.6+9, choose jdk-17.0.6+8 (unless it is the same commit in which case keep going backwards..)
-3. Get an Adoptium Admin with write access to the mirror repository to tag the chosen tag with: jdk-\<version\>-beforereleasetest-ga, eg:"jdk-17.0.6-beforereleasetest-ga" **IMPORTANT:** the "-beforereleasetest-ga" naming is important to ensure sort order is before the "-ga" real tag.
+2. Determine adoptium/jdkNNu mirror openjdk tag to be built for the trial release pipeline (eg.jdk-17.0.6+8), note the openjdk tag NOT the _adopt tag. Choose the 2nd latest build tag commit (ensure latest tags are not on the same commit). So for example if the latest tag is jdk-17.0.6+9, choose jdk-17.0.6+8 (unless it is the same commit in which case keep going backwards..)
+3. Update JDKnn_BRANCH property in the aqa-tests testenv.properties for the **aqa release** branch, eg: https://github.com/adoptium/aqa-tests/blob/v0.9.6-release/testenv/testenv.properties
+4. Get an Adoptium Admin to tag the trial tag to build in the adoptium mirror, as in the following example:
+
+**IMPORTANT: trial tag MUST be "-beforereleastest-ga"**
+
+`git clone git@github.com:adoptium/jdk17u.git`
+
+`cd jdk17u`
+
+`git tag -a "jdk-17.0.6-beforereleastest-ga" jdk-17.0.6+8^{} -m"Before YYYY.MM release trial test"`
+
+`git push --tags origin master`
+
+6. Wait release trigger job to detect the tag (wait up to 10mins), eg: https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/releaseTrigger_jdk17u/ (if before the 13th day of the month then you will need to manually run the job as it will be outside its cron schedule)
+7. The trial release pipeline job should now be running, eg: https://ci.adoptopenjdk.net/job/build-scripts/job/release-openjdk17-pipeline/
 
 ### Manual Way
 
