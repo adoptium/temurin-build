@@ -48,7 +48,7 @@
         <target name="download-cyclonedx" unless="cyclonedx_available">
                 <echo message="Downloading cyclonedx-core-java version ${cyclonedx-core-java-version}"/>
                 <download-file destdir="build/jar" destfile="cyclonedx-core-java.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=org/cyclonedx/cyclonedx-core-java/${cyclonedx-core-java-version}/cyclonedx-core-java-${cyclonedx-core-java-version}.jar"/>
-	      </target>
+	  </target>
 
         <target name="download-jackson-core" unless="jackson-core_available">
                 <echo message="Downloading jackson-core version ${jackson-core-version}"/>
