@@ -48,11 +48,21 @@
         <target name="download-cyclonedx" unless="cyclonedx_available">
                 <echo message="Downloading cyclonedx-core-java version ${cyclonedx-core-java-version}"/>
                 <download-file destdir="build/jar" destfile="cyclonedx-core-java.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=org/cyclonedx/cyclonedx-core-java/${cyclonedx-core-java-version}/cyclonedx-core-java-${cyclonedx-core-java-version}.jar"/>
-	</target>
+	      </target>
 
         <target name="download-jackson-core" unless="jackson-core_available">
                 <echo message="Downloading jackson-core version ${jackson-core-version}"/>
                 <download-file destdir="build/jar" destfile="jackson-core.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"/>
+        </target>
+
+        <target name="clone-openkeystore" unless="openkeystore_available">
+                <echo message="Cloning openkeystore repository from https://github.com/cyberphone/openkeystore.git"/>
+                <exec executable="git" dir="build" outputproperty="git.output">
+                <arg value="clone"/>
+                <arg value="https://github.com/cyberphone/openkeystore.git"/>
+                </exec>
+                <echo message="Git output: ${git.output}"/>
+                <property name="openkeystore_available" value="true"/>
         </target>
 
         <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
