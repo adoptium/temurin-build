@@ -1,4 +1,18 @@
 #!/bin/bash
+# Build the CycloneDX Java library and app used for SBoM generation
+buildCyclonedxLib() {
+  local javaHome="${1}"
+
+  # Make Ant aware of cygwin path
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    ANTBUILDFILE=$(cygpath -m "${CYCLONEDB_DIR}/build.xml")
+  else
+    ANTBUILDFILE="${CYCLONEDB_DIR}/build.xml"
+  fi
+  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" clean
+  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build
+}
+
 # Create a default SBOM json file: sbomJson
 createSBOMFile() {
   local javaHome="${1}"
