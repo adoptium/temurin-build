@@ -202,7 +202,7 @@ jobs:
      steps:
      - name: Restore cygwin packages from cache
        id: cygwin
-       uses: actions/cache@4723a57e26efda3a62cbde1812113b730952852d # v3.2.2
+       uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3.2.3
        with:
         path: C:\cygwin_packages
         key: cygwin-packages-${{ runner.os }}-v1
@@ -229,7 +229,7 @@ jobs:
      - name: Restore Visual Studio 2017 from cache
        id: vs2017
        if: matrix.version == 'jdk8u'
-       uses: actions/cache@4723a57e26efda3a62cbde1812113b730952852d # v3.2.2
+       uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3.2.3
        with:
          path: ~/vs2017.exe
          key: vs2017
@@ -266,7 +266,7 @@ jobs:
          Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
 
      - name: Set PATH
-       run: echo "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
+       run: printf "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
 
      - name: Cygwin git configuration
        shell: bash
