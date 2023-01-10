@@ -83,6 +83,8 @@ public final class TemurinGenSBOM {
                 type = args[++i];
             } else if (args[i].equals("--tool")) {
                 tool =  args[++i];
+            } else if (args[i].equals("--signSBOM")) {
+                cmd = args[++i];
             } else if (args[i].equals("--createNewSBOM")) {
                 cmd = "createNewSBOM";
             } else if (args[i].equals("--addMetadata")) {        // Metadata Component. We can set "name" for Metadata.
@@ -108,6 +110,11 @@ public final class TemurinGenSBOM {
         switch (cmd) {
             case "createNewSBOM":                            // Creates JSON file
                 Bom bom = createBom();
+                writeJSONfile(bom, fileName);
+                break;
+
+            case "signSBOM":                              // Signs JSON file
+                bom = signBom();
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -163,6 +170,12 @@ public final class TemurinGenSBOM {
         Bom bom = new Bom();
         return bom;
     }
+    
+    static Bom signBom() {
+        Bom bom = new Bom();
+        return bom;
+    }
+
     static Bom addMetadata(final String fileName) {          // Method to store metadata -->  name
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();

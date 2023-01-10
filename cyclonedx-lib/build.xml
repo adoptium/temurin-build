@@ -85,6 +85,17 @@
                 <download-file destdir="build/jar" destfile="commons-io.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=commons-io/commons-io/${commons-io-version}/commons-io-${commons-io-version}.jar"/>
         </target>
 
+        <target name="clone-openkeystore" unless="openkeystore_available">
+                <echo message="Cloning openkeystore repository from https://github.com/cyberphone/openkeystore.git"/>
+                <exec executable="git" dir="build" outputproperty="git.output">
+                <arg value="clone"/>
+                <arg value="https://github.com/cyberphone/openkeystore.git"/>
+                </exec>
+                <echo message="Git output: ${git.output}"/>
+                <property name="openkeystore_available" value="true"/>
+        </target>
+
+
         <target name="download-github-package-url" unless="github-package-url_available">
                 <echo message="Downloading github-package-url version ${github-package-url-version}"/>
                 <download-file destdir="build/jar" destfile="github-package-url.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
