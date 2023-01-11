@@ -1,8 +1,9 @@
+---
 name: Build
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [master]
     paths:
       - "build-farm/**"
       - "sbin/**"
@@ -24,7 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [linux]
-        version: [jdk8u, jdk11u, jdk17u, jdk19, jdk] #jdk head == jdk20
+        version: [jdk8u, jdk11u, jdk17u, jdk19u, jdk] #jdk head == jdk20
         variant: [temurin]
         image: [adoptopenjdk/centos7_build_image]
         include:
@@ -41,7 +42,7 @@ jobs:
             variant: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
-            version: jdk19
+            version: jdk19u
             vm: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
@@ -204,14 +205,31 @@ jobs:
        id: cygwin
        uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12 # v3.2.3
        with:
-        path: C:\cygwin_packages
+        path: C:\cygwin64
         key: cygwin-packages-${{ runner.os }}-v1
 
-     - name: Install Cygwin
-       run: |
-         New-Item -Path C:\ -Name 'openjdk' -ItemType 'directory'
-         Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile 'C:\temp\cygwin.exe'
-         Start-Process -Wait -FilePath 'C:\temp\cygwin.exe' -ArgumentList '--packages autoconf,automake,bsdtar,cpio,curl,gcc-core,git,gnupg,grep,libtool,make,mingw64-x86_64-gcc-core,perl,rsync,unzip,wget,zip --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir C:\cygwin_packages --root C:\cygwin64'
+     - name: Install Cygwin and packages
+       uses: cygwin/cygwin-install-action@f5e0f048310c425e84bc789f493a828c6dc80a25
+       with:
+         install-dir: C:\cygwin64
+         packages: >-
+           autoconf,
+           automake,
+           bsdtar,
+           cpio,
+           curl,
+           gcc-core,
+           git,
+           gnupg,
+           grep,
+           libtool,
+           make,
+           mingw64-x86_64-gcc-core,
+           perl,
+           rsync,
+           unzip,
+           wget,
+           zip
 
      - uses: actions/setup-java@1df8dbefe2a8cbc99770194893dd902763bee34b # v3.9.0
        id: setup-java7
@@ -266,11 +284,11 @@ jobs:
          Start-Process -Wait -FilePath 'C:\temp\git.exe' -ArgumentList '/SILENT /ALLOWDOWNGRADE=1** /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"'
 
      - name: Set PATH
-       run: printf "C:\cygwin64\bin;C:\Program Files\Git\bin;" | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
+       run: (printf "C:\cygwin64\bin;C:\Program Files\Git\bin;") | Out-File -FilePath "$env:GITHUB_PATH" -Encoding utf8 -Append
 
      - name: Cygwin git configuration
        shell: bash
-       run: mkdir "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
+       run: mkdir -p "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
 
      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # v3.2.0
        with:
