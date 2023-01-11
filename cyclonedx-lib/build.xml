@@ -55,14 +55,14 @@
                 <download-file destdir="build/jar" destfile="jackson-core.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"/>
         </target>
 
-        <target name="clone-openkeystore" unless="openkeystore_available">
-                <echo message="Cloning openkeystore repository from https://github.com/cyberphone/openkeystore.git"/>
-                <exec executable="git" dir="build" outputproperty="git.output">
-                <arg value="clone"/>
-                <arg value="https://github.com/cyberphone/openkeystore.git"/>
+        <target name="clone-and-build-openkeystore">
+                <exec dir="./" executable="git">
+                <arg value="clone" />
+                <arg value="https://github.com/cyberphone/openkeystore.git" />
                 </exec>
-                <echo message="Git output: ${git.output}"/>
-                <property name="openkeystore_available" value="true"/>
+                <exec dir="./openkeystore/library" executable="ant">
+                <arg value="build" />
+                </exec>
         </target>
 
         <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
@@ -100,8 +100,8 @@
                 <download-file destdir="build/jar" destfile="github-package-url.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
         </target>
 
-        <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
-                <echo message="Building cyclonedx-lib"/>
+        <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, clone-and-build-openkeystore">
+        <!-- Build task -->
         </target>
 
         <target name="clean">
