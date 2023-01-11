@@ -9,6 +9,7 @@ on:
       - "sbin/**"
       - "**.sh"
       - ".github/workflows/build.yml"
+      - "security/**"
 
 # Cancel existing runs if user makes another push.
 concurrency:
