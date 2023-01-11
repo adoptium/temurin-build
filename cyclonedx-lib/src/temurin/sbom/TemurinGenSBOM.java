@@ -84,7 +84,7 @@ public final class TemurinGenSBOM {
             } else if (args[i].equals("--tool")) {
                 tool =  args[++i];
             } else if (args[i].equals("--signSBOM")) {
-                cmd = args[++i];
+                cmd = "signSBOM";
             } else if (args[i].equals("--createNewSBOM")) {
                 cmd = "createNewSBOM";
             } else if (args[i].equals("--addMetadata")) {        // Metadata Component. We can set "name" for Metadata.
@@ -113,9 +113,9 @@ public final class TemurinGenSBOM {
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "signSBOM":                              // Signs JSON file
+            case "signSBOM":
                 bom = signBom();
-                writeJSONfile(bom, fileName);
+                new JSONObjectWriter().setSignature(new JSONAsymKeySigner(privateKey, publicKey, null));
                 break;
 
             case "addMetadata":                              // Adds Metadata --> name
@@ -167,11 +167,6 @@ public final class TemurinGenSBOM {
      * Add default compo
      */
     static Bom createBom() {
-        Bom bom = new Bom();
-        return bom;
-    }
-    
-    static Bom signBom() {
         Bom bom = new Bom();
         return bom;
     }
