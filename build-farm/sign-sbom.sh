@@ -27,4 +27,4 @@ outputSignedSbom=$4
 buildCyclonedxLib
 
 # Sign SBOM
-signSBOM "$privateKey" "$publicKey" "$inputSbom" "$outputSignedSbom"
+signSBOMFile "$privateKey" "$publicKey" "$inputSbom" "$outputSignedSbom"
