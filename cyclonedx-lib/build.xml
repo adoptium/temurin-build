@@ -63,7 +63,11 @@
                 <exec dir="./openkeystore/library" executable="ant">
                 <arg value="build" />
                 </exec>
+                <copy todir="build/jar">
+                <fileset dir="openkeystore/library/build/jar" includes="*.jar" />
+                </copy>
         </target>
+
 
         <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
                 <echo message="Downloading jackson-dataformat-xml version ${jackson-databind-version}"/>
