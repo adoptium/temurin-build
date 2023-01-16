@@ -42,13 +42,14 @@ During the week before release, the Release Champion makes changes in preparatio
 - Update [releaseVersions](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/release_pipeline_generator.groovy#L6) with correct incoming release versions.
 - Update https://github.com/adoptium/mirror-scripts/blob/master/releasePlan.cfg with expected tag, detail see https://github.com/zdtsw/mirror-scripts/tree/issue/3167#skara-repos-and-processes
 
-Create release tag on below repositories:
+Create release branch on below repositories:
 
 - temurin-build <https://github.com/adoptium/temurin-build>
 - ci-jenkins-pipelines <https://github.com/adoptium/ci-jenkins-pipelines>
 - jenkins-helper <https://github.com/adoptium/jenkins-helper>
 
-`temurin-build` and `ci-jenkins-pipeline` share the same tag name,`jenkins-helper` might have a different tag name.
+`temurin-build` and `ci-jenkins-pipeline` share the same branch name,`jenkins-helper` might have a different branch name.
+These branches will require at least one approval to push commit to.
 
 Finally lockdown below repositories
 
@@ -65,9 +66,9 @@ If two committers into the repository express approval then the change can be me
 Release pipelines and jobs need to be re-generated with new tags by Release Champion:
 
 - run [release-build-pipeline-generator](https://ci.adoptopenjdk.net/job/build-scripts/job/utils/job/release-build-pipeline-generator) with correct value:
-  1. `releaseTag` is the tag on `ci-jenkins-pipeline` and `temurin-build` git repo.
-  2. `helperTag` is the tag on `jenkins-helper` repo.
-  3. `aqaTag` is the tag on `aqa-tests` repo, in form of `vX.Y.Z-release` and usually the [latest stable release](https://github.com/adoptium/aqa-tests/releases)
+  1. `releaseTag` is the branch on `ci-jenkins-pipeline` and `temurin-build` git repo.
+  2. `helperTag` is the branch on `jenkins-helper` repo.
+  3. `aqaTag` is the branch on `aqa-tests` repo, in form of `vX.Y.Z-release` and usually the [latest stable release](https://github.com/adoptium/aqa-tests/releases)
 - ensure release-openjdkXX-pipeline in <https://ci.adoptopenjdk.net/job/build-scripts> are properly generated for the first time or updated:
   1. jdk8 aarch32Linux shares the same pipeline `release-openjdk8-pipeline` with other jdk8 targets, therefore, only one release pipeline for jdk8
   2. `targetConfigurations` should only include what we officially release for temurin.
@@ -75,8 +76,9 @@ Release pipelines and jobs need to be re-generated with new tags by Release Cham
   4. `helperReference` should have the same value of `helperTag` used when we generate pipeline.
   5. `additionalConfigureArgs` has correct value, especially in `release-openjdk8-pipeline` it is different than other jdk versions. This requires certain modification manually
 - ensure downstream build jobs in <https://ci.adoptopenjdk.net/job/build-scripts/job/jobs/job/release/job/jobs/jdkXXu/> are created or updated
-  1. `USER_REMOTE_CONFIGS.branch` should get correct release tag name as `releaseTag`
-  2. `BUILD_CONFIGURATION.USE_ADOPT_SHELL_SCRIPTS` is set to `true`
+  1. `BUILD_CONFIGURATION.USE_ADOPT_SHELL_SCRIPTS` is set to `true`
+  2. `DEFAULTS_JSON.repository.build_branch`, `ADOPT_DEFAULTS_JSON.repository.build_branch`, `DEFAULTS_JSON.repository.pipeline_branch` and `ADOPT_DEFAULTS_JSON.repository.pipeline_branch` should get correct release branch name as `releaseTag`
+  3. `DEFAULTS_JSON.repository.helper_ref` and `ADOPT_DEFAULTS_JSON.repository.helpe_ref` should get correct release branch name as `helperTag`
 
 ```mermaid
 
