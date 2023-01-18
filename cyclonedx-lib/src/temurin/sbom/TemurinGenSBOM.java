@@ -27,6 +27,8 @@ import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Property;
 import org.cyclonedx.model.Tool;
 import org.cyclonedx.parsers.JsonParser;
+import org.webpki.json.JSONAsymKeySigner;
+import org.webpki.json.JSONObjectWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Collections;
@@ -115,8 +117,11 @@ public final class TemurinGenSBOM {
 
             case "signSBOM":
                 bom = signBom();
-                new JSONObjectWriter().setSignature(new JSONAsymKeySigner(privateKey, publicKey, null));
+                JSONObjectWriter writer = new JSONObjectWriter();
+                JSONAsymKeySigner signer = new JSONAsymKeySigner(privateKey, publicKey);
+                writer.setSignature(signer.sign(bom));
                 break;
+
 
             case "addMetadata":                              // Adds Metadata --> name
                 bom = addMetadata(fileName);
@@ -171,6 +176,39 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
+    static void signSBOM(String keystoreFile, String keystorePassword, String privateKey, String publicKey) {
+        try {
+            // Load the keystore
+            JSONAsymKeySigner signer = new JSONAsymKeySigner(new FileInputStream(keystoreFile), keystorePassword.toCharArray(), privateKey, publicKey);
+            System.out.println("Keystore loaded successfully.");
+
+            File homeDir = new File(System.getProperty("user.home"));
+            File[] directoryListing = homeDir.listFiles();
+            if (directoryListing != null) {
+                for (File sbomFile : directoryListing) {
+                    if (sbomFile.getName().endsWith(".json")) {
+                        // read the sbom file as a json object writer
+                        JSONObjectWriter sbom = new JSONObjectWriter(new FileInputStream(sbomFile));
+                        // sign the sbom
+                        byte[] signedSbom = signer.signData(sbom.getEncoded());
+                        // Write the signed SBOM to a new file
+                        FileOutputStream signedSbomStream = new FileOutputStream("signed_" + sbomFile.getName());
+                        signedSbomStream.write(signedSbom);
+                        signedSbomStream.close();
+                        System.out.println("SBOM " + sbomFile.getName() + " signed and saved as signed_" + sbomFile.getName());
+                    }
+                }
+            } else {
+                System.out.println("Error: the home directory is empty or does not exist.");
+                System.exit(1);
+            }
+            // Print the certificate information
+            System.out.println("SBOMs signed with certificate: " + signer.getCertificate().toString());
+        } catch (Exception e) {
+            System.out.println("Error signing SBOM: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
     static Bom addMetadata(final String fileName) {          // Method to store metadata -->  name
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
