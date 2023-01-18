@@ -209,6 +209,7 @@ public final class TemurinGenSBOM {
             e.printStackTrace();
         }
     }
+
     static Bom addMetadata(final String fileName) {          // Method to store metadata -->  name
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -222,6 +223,7 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
+    
     static Bom addMetadataComponent(final String fileName, final String name, final String type, final String version, final String description) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -234,6 +236,7 @@ public final class TemurinGenSBOM {
             default:
                 break;
         }
+
         comp.setType(compType); // required e.g Component.Type.FRAMEWORK
         comp.setName(name); // required
         comp.setVersion(version);
@@ -242,6 +245,7 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
+
     static Bom addMetadataProperty(final String fileName, final String name, final String value) {     // Method to store metadata --> Properties List --> name-values
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -253,6 +257,7 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
+
     static Bom addMetadataTools(final String fileName, final String toolName, final String version) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -264,6 +269,7 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
+
     static Bom addComponent(final String fileName, final String compName, final String version, final String description) {      // Method to store Component --> name & single name-value pair
         Bom bom = readJSONfile(fileName);
         Component comp = new Component();
@@ -277,6 +283,7 @@ public final class TemurinGenSBOM {
         bom.addComponent(comp);
         return bom;
     }
+
     static Bom addComponentProperty(final String fileName, final String compName, final String name, final String value) {     // Method to add Component --> Property --> name-value pairs
         Bom bom = readJSONfile(fileName);
         List<Component> componentArrayList = bom.getComponents();
@@ -290,6 +297,7 @@ public final class TemurinGenSBOM {
         }
         return bom;
     }
+
     static Bom addExternalReference(final String fileName, final String hashes, final String url, final String comment) {   // Method to store externalReferences: dependency_version_alsa
         Bom bom = readJSONfile(fileName);
         ExternalReference extRef = new ExternalReference();
@@ -301,6 +309,7 @@ public final class TemurinGenSBOM {
         bom.addExternalReference(extRef);
         return bom;
     }
+    
     static Bom addComponentExternalReference(final String fileName, final String hashes, final String url, final String comment) {  // Method to store externalReferences to store: openjdk_source
         Bom bom = readJSONfile(fileName);
         ExternalReference extRef = new ExternalReference();
