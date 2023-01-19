@@ -223,7 +223,7 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
-    
+
     static Bom addMetadataComponent(final String fileName, final String name, final String type, final String version, final String description) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
