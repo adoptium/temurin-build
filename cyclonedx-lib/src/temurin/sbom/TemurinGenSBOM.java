@@ -176,7 +176,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static void signSBOM(String keystoreFile, String keystorePassword, String privateKey, String publicKey) {
+    static void signSBOM(final String keystoreFile, final String keystorePassword, final String privateKey, final String publicKey) {
         try {
             // Load the keystore
             JSONAsymKeySigner signer = new JSONAsymKeySigner(new FileInputStream(keystoreFile), keystorePassword.toCharArray(), privateKey, publicKey);
@@ -309,7 +309,7 @@ public final class TemurinGenSBOM {
         bom.addExternalReference(extRef);
         return bom;
     }
-    
+
     static Bom addComponentExternalReference(final String fileName, final String hashes, final String url, final String comment) {  // Method to store externalReferences to store: openjdk_source
         Bom bom = readJSONfile(fileName);
         ExternalReference extRef = new ExternalReference();
