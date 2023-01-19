@@ -12,7 +12,7 @@ signSBOMFile() {
   local javaHome="${1}"
   local classpath="${2}"
   local jsonFile="${3}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --sign <sbom.jsons>
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --signSBOM --jsonFile "${jsonFile}"
 }
 
 # Set basic SBOM metadata with timestamp, authors, manufacture to ${sbomJson}
