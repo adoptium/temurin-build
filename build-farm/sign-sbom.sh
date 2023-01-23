@@ -15,7 +15,7 @@
 ################################################################################
 
 # Import common SBOM functions
-source ../sbin/common/sbom.sh
+source ./sbin/common/sbom.sh
 
 # Get Jenkins job parameters
 privateKey=$1
