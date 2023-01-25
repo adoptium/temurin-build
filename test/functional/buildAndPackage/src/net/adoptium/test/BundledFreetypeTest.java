@@ -81,7 +81,7 @@ public class BundledFreetypeTest {
             assertTrue(freetypeFiles.size() > 0,
               "Expected freetype.dll to be bundled, but it is not.");
         } else if (jdkPlatform.runsOn(OperatingSystem.AIX)
-                && (jdkVersion.isNewerOrEqual(13) || (jdkVersion.usesVM(VM.OPENJ9) && jdkVersion.isNewerOrEqual(11)))) {
+                && (jdkVersion.isNewerOrEqual(13) || (jdkVersion.usesVM(VM.OPENJ9) && jdkVersion.isNewerOrEqual(8)))) {
             assertTrue(freetypeFiles.size() > 0,
               "Expected libfreetype.so to be bundled, but it is not.");
         } else {
