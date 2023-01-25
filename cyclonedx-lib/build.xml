@@ -31,7 +31,7 @@
         <property name="github-package-url-version" value="1.4.0"/>
 
         <!-- classpath for running application -->
-        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar"/>
+        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar"/>
 
         <target name="dep-checks">
                 <available file="build/jar/cyclonedx-core-java.jar" property="cyclonedx_available"/>
@@ -64,7 +64,7 @@
                 <arg value="build" />
                 </exec>
                 <copy todir="build/jar">
-                <fileset dir="openkeystore/library/build/jar" includes="*.jar" />
+                <fileset dir="openkeystore/library/dist" includes="*.jar" />
                 </copy>
         </target>
 
@@ -104,8 +104,7 @@
                 <download-file destdir="build/jar" destfile="github-package-url.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
         </target>
 
-        <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, clone-and-build-openkeystore">
-        <!-- Build task -->
+	<target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, clone-and-build-openkeystore, compile, jar">
         </target>
 
         <target name="clean">
