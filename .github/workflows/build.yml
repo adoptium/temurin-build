@@ -10,6 +10,7 @@ on:
       - "**.sh"
       - ".github/workflows/build.yml"
       - "security/**"
+      - "cyclonedx-lib/**"
 
 # Cancel existing runs if user makes another push.
 concurrency:
