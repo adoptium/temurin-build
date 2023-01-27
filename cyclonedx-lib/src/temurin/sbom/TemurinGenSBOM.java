@@ -29,10 +29,19 @@ import org.cyclonedx.model.Tool;
 import org.cyclonedx.parsers.JsonParser;
 import org.webpki.json.JSONAsymKeySigner;
 import org.webpki.json.JSONObjectWriter;
+import org.webpki.json.JSONOutputFormats;
+import org.webpki.json.JSONParser;
+import org.webpki.util.PEMDecoder;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Collections;
 import java.util.List;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+
 
 /**
  * Command line tool to construct a CycloneDX SBOM.
@@ -176,36 +185,52 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static void signSBOM(final String keystoreFile, final String keystorePassword, final String privateKey, final String publicKey) {
+    static void signBOM() {
         try {
-            // Load the keystore
-            JSONAsymKeySigner signer = new JSONAsymKeySigner(new FileInputStream(keystoreFile), keystorePassword.toCharArray(), privateKey, publicKey);
-            System.out.println("Keystore loaded successfully.");
+            // Read multiple JSON files to be signed
+            File[] jsonFiles = new File[n]; // where n is the number of files to be read
+            byte[][] jsonData = new byte[n][];
+            String[] sbomDataToSign = new String[n];
+            for (int i = 0; i < n; i++) {
+            FileInputStream jsonFileInputStream = new FileInputStream(jsonFiles[i]);
+            jsonData[i] = new byte[(int) jsonFiles[i].length()];
+            jsonFileInputStream.read(jsonData[i]);
+            jsonFileInputStream.close();
+            sbomDataToSign[i] = new String(jsonData[i], "UTF-8");
+        }
 
-            File homeDir = new File(System.getProperty("user.home"));
-            File[] directoryListing = homeDir.listFiles();
-            if (directoryListing != null) {
-                for (File sbomFile : directoryListing) {
-                    if (sbomFile.getName().endsWith(".json")) {
-                        // read the sbom file as a json object writer
-                        JSONObjectWriter sbom = new JSONObjectWriter(new FileInputStream(sbomFile));
-                        // sign the sbom
-                        byte[] signedSbom = signer.signData(sbom.getEncoded());
-                        // Write the signed SBOM to a new file
-                        FileOutputStream signedSbomStream = new FileOutputStream("signed_" + sbomFile.getName());
-                        signedSbomStream.write(signedSbom);
-                        signedSbomStream.close();
-                        System.out.println("SBOM " + sbomFile.getName() + " signed and saved as signed_" + sbomFile.getName());
-                    }
-                }
-            } else {
-                System.out.println("Error: the home directory is empty or does not exist.");
-                System.exit(1);
-            }
-            // Print the certificate information
-            System.out.println("SBOMs signed with certificate: " + signer.getCertificate().toString());
-        } catch (Exception e) {
-            System.out.println("Error signing SBOM: " + e.getMessage());
+            // Read the private key
+            File privateKeyFile = new File("RSAPrivate.pem");
+            byte[] privateKeyData = new byte[(int) privateKeyFile.length()];
+            FileInputStream privateKeyFileInputStream = new FileInputStream(privateKeyFile);
+            privateKeyFileInputStream.read(privateKeyData);
+            privateKeyFileInputStream.close();
+            String privateKeyString = new String(privateKeyData, "UTF-8");
+            KeyPair sampleKey = PEMDecoder.getKeyPair(privateKeyData);
+
+
+            // Sign the JSON data
+            String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSign))
+                    .setSignature(new JSONAsymKeySigner(sampleKey.getPrivate()))
+                    .serializeToString(JSONOutputFormats.PRETTY_PRINT);
+
+            // Append the signature to the original JSON data
+            sbomDataToSign = sbomDataToSign.substring(0, sbomDataToSign.lastIndexOf('}')) +
+                    "," +
+                    signedData.substring(signedData.indexOf("\n  \"signature"));
+
+            // Read the public key
+            File publicKeyFile = new File("RSAPrivate.pem");
+            byte[] publicKeyData = new byte[(int) publicKeyFile.length()];
+            FileInputStream publicKeyFileInputStream = new FileInputStream(publicKeyFile);
+            publicKeyFileInputStream.read(publicKeyData);
+            publicKeyFileInputStream.close();
+            String samplePublicKey = new String(publicKeyData, "UTF-8").trim();
+
+            // Print the signed JSON data and the public key
+            System.out.println("Signed JSON Data: " + sbomDataToSign);
+            System.out.println("Public Key: " + samplePublicKey);
+        } catch (IOException | GeneralSecurityException e) {
             e.printStackTrace();
         }
     }
