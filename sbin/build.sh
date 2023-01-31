@@ -779,10 +779,9 @@ generateSBoM() {
   # Add FreeType 3rd party (windows + macOS)
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}"/metadata/dependency_version_freetype.txt)"
   # Add FreeMarker 3rd party (openj9)
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}"/metadata/dependency_version_freemarker.txt)"
-  # Add Build Docker image SHA1
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt)"  # Add Build Docker image SHA1
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "Docker image SHA1" "$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}"/metadata/docker.txt)"
-  
+
   # Print SBOM json
   echo "CycloneDX SBOM:"
   cat  "${sbomJson}"
