@@ -536,6 +536,11 @@ checkingAndDownloadingFreeType() {
   echo "${FREETYPE_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
 }
 
+# Recording Build image SHA into docker.txt
+writeDockerImageSHA(){
+  echo "${BUILDIMAGESHA-N.A}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt"
+}
+
 # Generates cacerts file
 prepareMozillaCacerts() {
     echo "Generating cacerts from Mozilla's bundle"
@@ -682,4 +687,5 @@ function configureWorkspace() {
       prepareMozillaCacerts
     fi
   fi
+  writeDockerImageSHA
 }
