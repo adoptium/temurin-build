@@ -32,15 +32,17 @@ import org.webpki.json.JSONObjectWriter;
 import org.webpki.json.JSONOutputFormats;
 import org.webpki.json.JSONParser;
 import org.webpki.util.PEMDecoder;
-import java.io.FileReader;
-import java.io.FileWriter;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
+
+import java.io.*;
 import java.util.Collections;
 import java.util.List;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+
+import static org.webpki.util.ArrayUtil.readFile;
 
 
 /**
@@ -125,7 +127,7 @@ public final class TemurinGenSBOM {
                 break;
 
             case "signSBOM":
-                bom = signBom();
+                bom = signSBom();
                 JSONObjectWriter writer = new JSONObjectWriter();
                 JSONAsymKeySigner signer = new JSONAsymKeySigner(privateKey, publicKey);
                 writer.setSignature(signer.sign(bom));
@@ -185,54 +187,38 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static void signBOM() {
+    static JsonElement signSBOM(String jsonFile, String pemFile) {
         try {
-            // Read multiple JSON files to be signed
-            File[] jsonFiles = new File[n]; // where n is the number of files to be read
-            byte[][] jsonData = new byte[n][];
-            String[] sbomDataToSign = new String[n];
-            for (int i = 0; i < n; i++) {
-            FileInputStream jsonFileInputStream = new FileInputStream(jsonFiles[i]);
-            jsonData[i] = new byte[(int) jsonFiles[i].length()];
-            jsonFileInputStream.read(jsonData[i]);
-            jsonFileInputStream.close();
-            sbomDataToSign[i] = new String(jsonData[i], "UTF-8");
-        }
+            // Read the JSON file to be signed
+            byte[] jsonData = readFile(jsonFile);
+            String sbomDataToSign = new String(jsonData, "UTF-8");
+            Bom bom = parseJSON(sbomDataToSign);
+            String sbomDataToSignUpdated = generateBomJson(bom);
 
             // Read the private key
-            File privateKeyFile = new File("RSAPrivate.pem");
+            File privateKeyFile = new File(pemFile);
             byte[] privateKeyData = new byte[(int) privateKeyFile.length()];
             FileInputStream privateKeyFileInputStream = new FileInputStream(privateKeyFile);
-            privateKeyFileInputStream.read(privateKeyData);
-            privateKeyFileInputStream.close();
+            try {
+                privateKeyFileInputStream.read(privateKeyData);
+            } finally {
+                privateKeyFileInputStream.close();
+            }
             String privateKeyString = new String(privateKeyData, "UTF-8");
             KeyPair sampleKey = PEMDecoder.getKeyPair(privateKeyData);
 
-
             // Sign the JSON data
-            String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSign))
+            String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSignUpdated))
                     .setSignature(new JSONAsymKeySigner(sampleKey.getPrivate()))
                     .serializeToString(JSONOutputFormats.PRETTY_PRINT);
 
-            // Append the signature to the original JSON data
-            sbomDataToSign = sbomDataToSign.substring(0, sbomDataToSign.lastIndexOf('}')) +
-                    "," +
-                    signedData.substring(signedData.indexOf("\n  \"signature"));
-
-            // Read the public key
-            File publicKeyFile = new File("RSAPrivate.pem");
-            byte[] publicKeyData = new byte[(int) publicKeyFile.length()];
-            FileInputStream publicKeyFileInputStream = new FileInputStream(publicKeyFile);
-            publicKeyFileInputStream.read(publicKeyData);
-            publicKeyFileInputStream.close();
-            String samplePublicKey = new String(publicKeyData, "UTF-8").trim();
-
-            // Print the signed JSON data and the public key
-            System.out.println("Signed JSON Data: " + sbomDataToSign);
-            System.out.println("Public Key: " + samplePublicKey);
+            JsonParser parser = new JsonParser();
+            JsonElement signedBom = parser.parse(new StringReader(signedData));
+            return signedBom;
         } catch (IOException | GeneralSecurityException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     static Bom addMetadata(final String fileName) {          // Method to store metadata -->  name
