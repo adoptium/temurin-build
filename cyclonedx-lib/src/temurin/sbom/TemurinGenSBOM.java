@@ -27,6 +27,7 @@ import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Property;
 import org.cyclonedx.model.Tool;
 import org.cyclonedx.parsers.JsonParser;
+import org.cyclonedx.exception.ParseException;
 import org.webpki.json.JSONAsymKeySigner;
 import org.webpki.json.JSONObjectWriter;
 import org.webpki.json.JSONOutputFormats;
@@ -72,6 +73,7 @@ public final class TemurinGenSBOM {
         String url = null;
         String value = null;
         String version = null;
+        String pemFile = null;
 
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--jsonFile")) {
@@ -98,6 +100,7 @@ public final class TemurinGenSBOM {
                 tool =  args[++i];
             } else if (args[i].equals("--signSBOM")) {
                 cmd = "signSBOM";
+                pemFile = args[++i];
             } else if (args[i].equals("--createNewSBOM")) {
                 cmd = "createNewSBOM";
             } else if (args[i].equals("--addMetadata")) {        // Metadata Component. We can set "name" for Metadata.
@@ -127,12 +130,9 @@ public final class TemurinGenSBOM {
                 break;
 
             case "signSBOM":
-                bom = signSBom();
-                JSONObjectWriter writer = new JSONObjectWriter();
-                JSONAsymKeySigner signer = new JSONAsymKeySigner(privateKey, publicKey);
-                writer.setSignature(signer.sign(bom));
+                bom = signSBOM(fileName, pemFile);
+                writeJSONfile(bom, fileName);
                 break;
-
 
             case "addMetadata":                              // Adds Metadata --> name
                 bom = addMetadata(fileName);
@@ -187,13 +187,11 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static JsonElement signSBOM(String jsonFile, String pemFile) {
+    static Bom signSBOM(String jsonFile, String pemFile) {
         try {
             // Read the JSON file to be signed
-            byte[] jsonData = readFile(jsonFile);
-            String sbomDataToSign = new String(jsonData, "UTF-8");
-            Bom bom = parseJSON(sbomDataToSign);
-            String sbomDataToSignUpdated = generateBomJson(bom);
+            Bom bom = readJSONfile(jsonFile);
+            String sbomDataToSign = generateBomJson(bom);
 
             // Read the private key
             File privateKeyFile = new File(pemFile);
@@ -208,14 +206,14 @@ public final class TemurinGenSBOM {
             KeyPair sampleKey = PEMDecoder.getKeyPair(privateKeyData);
 
             // Sign the JSON data
-            String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSignUpdated))
+            String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSign))
                     .setSignature(new JSONAsymKeySigner(sampleKey.getPrivate()))
                     .serializeToString(JSONOutputFormats.PRETTY_PRINT);
 
             JsonParser parser = new JsonParser();
-            JsonElement signedBom = parser.parse(new StringReader(signedData));
+            Bom signedBom = parser.parse(new StringReader(signedData));
             return signedBom;
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException | GeneralSecurityException | ParseException e) {
             e.printStackTrace();
         }
         return null;
