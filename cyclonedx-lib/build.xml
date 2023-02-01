@@ -31,7 +31,7 @@
         <property name="github-package-url-version" value="1.4.0"/>
 
         <!-- classpath for running application -->
-        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar"/>
+        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar"/>
 
         <target name="dep-checks">
                 <available file="build/jar/cyclonedx-core-java.jar" property="cyclonedx_available"/>
@@ -43,6 +43,7 @@
                 <available file="build/jar/commons-codec.jar" property="commons-codec_available"/>
                 <available file="build/jar/commons-io.jar" property="commons-io_available"/>
                 <available file="build/jar/github-package-url.jar" property="github-package-url_available"/>
+                <available file="build/openkeystore/library/dist/webpki.org-libext-1.00.jar" property="openkeystore_available"/>
         </target>
 
         <target name="download-cyclonedx" unless="cyclonedx_available">
@@ -104,7 +105,16 @@
                 <download-file destdir="build/jar" destfile="github-package-url.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
         </target>
 
-	<target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, clone-and-build-openkeystore, compile, jar">
+        <target name="build-openkeystore" unless="openkeystore_available">
++		            <mkdir dir="build"/>
++		            <exec executable="git" dir="build">
++			          <arg line="clone https://github.com/cyberphone/openkeystore" />
++		            </exec>
++		            <ant dir="build/openkeystore/library" target="build"/>
++        </target>
+
+	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, build-openkeystore, compile, jar">
+                <echo message="Building cyclonedx-lib"/>
         </target>
 
         <target name="clean">
@@ -113,8 +123,8 @@
 
         <target name="compile">
                 <mkdir dir="build/classes"/>
-                <javac srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar" includeantruntime="false"/>
-                <javac debug="true" debuglevel="lines,vars,source" srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar" includeantruntime="false"/>
+                <javac srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar" includeantruntime="false"/>
+                <javac debug="true" debuglevel="lines,vars,source" srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar" includeantruntime="false"/>
         </target>
 
         <target name="jar">
@@ -136,8 +146,8 @@
                   <arg value="jdk17+35"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
-                </java> 
-                
+                </java>
+
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
@@ -145,7 +155,7 @@
                   <arg value="JDK-info"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
-                </java> 
+                </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
@@ -157,7 +167,7 @@
                   <arg value="Linux"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
-                </java> 
+                </java>
                   <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
@@ -169,7 +179,7 @@
                   <arg value="x64"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
-                </java> 
+                </java>
                   <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
@@ -181,7 +191,7 @@
                   <arg value="hotspot"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
-                </java> 
+                </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
@@ -201,7 +211,7 @@
                   <arg value="Temurin Build"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
-                </java> 
+                </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
@@ -213,7 +223,7 @@
                   <arg value="https://github.com/adoptium/temurin-build/commit/c3a40"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
-                </java> 
+                </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
@@ -235,7 +245,7 @@
                   <arg value="temurin build make arguments"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
-                </java> 
+                </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
@@ -269,7 +279,7 @@
                   <arg value="temurin build configure arguments"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
-                </java> 
+                </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
@@ -367,7 +377,7 @@
                   <arg value="openjdk_source"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
-                </java> 
+                </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addExternalReference"/>
@@ -379,7 +389,7 @@
                   <arg value="dependency_version_alsa"/>
                   <arg value="--jsonFile"/>
                   <arg value="testSBOM.json"/>
-                </java> 
+                </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addMetadata"/>
@@ -406,7 +416,7 @@
 				<arg value="@{destdir}/@{destfile}"/>
 				<arg value="@{srcurl}"/>
 			</exec>
-			
+
 		</sequential>
 	</macrodef>
 </project>
