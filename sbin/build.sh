@@ -446,7 +446,7 @@ configureDebugParameters() {
   addConfigureArg "--with-debug-level=" "release"
 
   # If debug symbols package is requested, generate them separately
-  if [ "${BUILD_CONFIG[CREATE_DEBUG_IMAGE]}" == true ]; then
+  if [ ${BUILD_CONFIG[CREATE_DEBUG_IMAGE]} == true ]; then
     addConfigureArg "--with-native-debug-symbols=" "external"
   else
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
@@ -587,7 +587,7 @@ createSourceArchive() {
   local sourceArchiveTargetPath="$(getSourceArchivePath)"
   local tmpSourceVCS="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/tmp-openjdk-git"
   local srcArchiveName
-  if echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | grep -q x64_linux_hotspot -; then
+  if echo ${BUILD_CONFIG[TARGET_FILE_NAME]} | grep -q x64_linux_hotspot -; then
     # Transform 'OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.12_7.tar.gz' to 'OpenJDK11U-sources_11.0.12_7.tar.gz'
     # shellcheck disable=SC2001
     srcArchiveName="$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/_x64_linux_hotspot_/-sources_/g')"
@@ -631,7 +631,7 @@ executeTemplatedFile() {
   set +eu
 
   # Execute the build passing the workspace dir and target dir as params for configure.txt
-  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}" "${BUILD_CONFIG[TARGET_DIR]}"
+  bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh" ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]}
   exitCode=$?
 
   if [ "${exitCode}" -eq 3 ]; then
@@ -772,15 +772,23 @@ generateSBoM() {
   # Add make_command_args JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
-  # Add build tools into metadata tools
+  # Below add build tools into metadata tools
   # Add ALSA 3rd party
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}"/metadata/dependency_version_alsa.txt)"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt)"
   # Add FreeType 3rd party (windows + macOS)
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}"/metadata/dependency_version_freetype.txt)"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt)"
   # Add FreeMarker 3rd party (openj9)
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}"/metadata/dependency_version_freemarker.txt)"
-  # Add Docker image SHA1
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "Docker image SHA1" "$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}"/metadata/docker.txt)"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt)"
+
+  # Add Build Docker image SHA1
+  buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
+  # ${BUILD_CONFIG[USE_DOCKER]^} always set to false cannot rely on it.
+  if [ -n "${buildimagesha}" ] && [ "${buildimagesha}" != "N.A" ]; then
+    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "true"
+    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "Docker image SHA1" "${buildimagesha}"
+  else
+    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "false"
+  fi
 
   # Print SBOM json
   echo "CycloneDX SBOM:"
@@ -830,7 +838,7 @@ getGradleUserHome() {
     gradleUserHome="${BUILD_CONFIG[WORKSPACE_DIR]}/.gradle"
   fi
 
-  echo "$gradleUserHome"
+  echo $gradleUserHome
 }
 
 parseJavaVersionString() {
@@ -946,17 +954,17 @@ cleanAndMoveArchiveFiles() {
 
   echo "Currently at '${PWD}'"
 
-  local jdkPath=$(ls -d "${BUILD_CONFIG[JDK_PATH]}")
+  local jdkPath=$(ls -d ${BUILD_CONFIG[JDK_PATH]})
   echo "moving ${jdkPath} to ${jdkTargetPath}"
   rm -rf "${jdkTargetPath}" || true
   mv "${jdkPath}" "${jdkTargetPath}"
 
   if [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "true" ]; then
     # Produce a JRE
-    if [ -d "$(ls -d "${BUILD_CONFIG[JRE_PATH]}")" ]; then
-      echo "moving $(ls -d "${BUILD_CONFIG[JRE_PATH]}") to ${jreTargetPath}"
+    if [ -d "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" ]; then
+      echo "moving $(ls -d ${BUILD_CONFIG[JRE_PATH]}) to ${jreTargetPath}"
       rm -rf "${jreTargetPath}" || true
-      mv "$(ls -d "${BUILD_CONFIG[JRE_PATH]}")" "${jreTargetPath}"
+      mv "$(ls -d ${BUILD_CONFIG[JRE_PATH]})" "${jreTargetPath}"
 
       case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
       "darwin") dirToRemove="${jreTargetPath}/Contents/Home" ;;
@@ -998,7 +1006,7 @@ cleanAndMoveArchiveFiles() {
     if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "x86_64" ]; then
       osArch="amd64"
     fi
-    pushd "${staticLibsImagePath}"
+    pushd ${staticLibsImagePath}
       case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
       *cygwin*)
         # on Windows the expected layout is: lib/static/windows-amd64/
@@ -1058,7 +1066,7 @@ cleanAndMoveArchiveFiles() {
     deleteDebugSymbols
   fi
 
-  if [ "${BUILD_CONFIG[CREATE_DEBUG_IMAGE]}" == true ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
+  if [ ${BUILD_CONFIG[CREATE_DEBUG_IMAGE]} == true ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
     *cygwin*)
       # on Windows, we want to take .pdb and .map files
@@ -1391,7 +1399,7 @@ getFirstTagFromOpenJDKGitRepo() {
   # read OPENJDK_TAG value from that file.
   local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] && [[ -f "${openj9_openjdk_tag_file}" ]]; then
-    firstMatchingNameFromRepo=$(grep OPENJDK_TAG "${openj9_openjdk_tag_file}" | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
+    firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
   else
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     firstMatchingNameFromRepo=$(git tag --list "$TAG_SEARCH" | "$get_tag_cmd")
@@ -1676,7 +1684,7 @@ addJ9Tag() {
   # This code makes sure that a version number is always present in the release file i.e. openj9-0.21.0
   local j9Location="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/openj9"
   # Pull the tag associated with the J9 commit being used
-  J9_TAG=$(git -C "$j9Location" describe --abbrev=0)
+  J9_TAG=$(git -C $j9Location describe --abbrev=0)
   # shellcheck disable=SC2086
   if [ ${BUILD_CONFIG[RELEASE]} = false ]; then
     echo -e OPENJ9_TAG=\"$J9_TAG\" >> release
