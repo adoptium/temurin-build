@@ -2,6 +2,9 @@
 # Build the CycloneDX Java library and app used for SBoM generation
 buildCyclonedxLib() {
   local javaHome="${1}"
+  # Download jdk-19 if JAVA_HOME is not set or is older than jdk-19
+  if [[ -z "${JAVA_HOME}" ]] || [[ "$(${JAVA_HOME}/bin/java -version 2>&1 | awk -F '"' '/version/ {print $2}')" < "1.9" ]]; then
+  fi
 
   # Make Ant aware of cygwin path
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
