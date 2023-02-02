@@ -37,6 +37,7 @@ import java.util.List;
  */
 public final class TemurinGenSBOM {
 
+// test
     private static boolean verbose = false;
 
     private TemurinGenSBOM() {
