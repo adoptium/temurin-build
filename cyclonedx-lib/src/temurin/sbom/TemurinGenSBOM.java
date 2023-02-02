@@ -184,7 +184,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom signSBOM(final String jsonFile, final String pemFile) {
+    static Bom signSBOM(String jsonFile, String pemFile) {
         try {
             // Read the JSON file to be signed
             Bom bom = readJSONfile(jsonFile);
