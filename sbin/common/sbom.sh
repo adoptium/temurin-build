@@ -2,8 +2,18 @@
 # Build the CycloneDX Java library and app used for SBoM generation
 buildCyclonedxLib() {
   local javaHome="${1}"
-  # Download jdk-19 if JAVA_HOME is not set or is older than jdk-19
-  if [[ -z "${JAVA_HOME}" ]] || [[ "$(${JAVA_HOME}/bin/java -version 2>&1 | awk -F '"' '/version/ {print $2}')" < "1.9" ]]; then
+
+  # Check if JDK-17 is available, download it if it isn't
+  if [ ! -d "${javaHome}" ]; then
+    # Download JDK-17
+    apiUrlTemplate="https://api.adoptium.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/linux/\${downloadArch}/jdk/hotspot/normal/\${vendor}"
+    apiURL=$(eval echo ${apiUrlTemplate})
+    JDK_BOOT_VERSION="17"
+    releaseType="ga"
+    downloadArch="x64"
+    vendor="adoptium"
+    apiURL="https://api.adoptium.net/v3/binary/latest/${JDK_BOOT_VERSION}/${releaseType}/linux/${downloadArch}/jdk/hotspot/normal/${vendor}"
+    echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
   fi
 
   # Make Ant aware of cygwin path
@@ -12,8 +22,9 @@ buildCyclonedxLib() {
   else
     ANTBUILDFILE="${CYCLONEDB_DIR}/build.xml"
   fi
-  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" clean
-  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build
+
+  JAVA_HOME="${javaHome}" ant -f "${ANTBUILDFILE}" clean
+  JAVA_HOME="${javaHome}" ant -f "${ANTBUILDFILE}" build
 }
 
 # Create a default SBOM json file: sbomJson
