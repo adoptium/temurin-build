@@ -33,18 +33,15 @@ import org.webpki.json.JSONObjectWriter;
 import org.webpki.json.JSONOutputFormats;
 import org.webpki.json.JSONParser;
 import org.webpki.util.PEMDecoder;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 
-import java.io.*;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.Collections;
 import java.util.List;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-
-import static org.webpki.util.ArrayUtil.readFile;
-
 
 /**
  * Command line tool to construct a CycloneDX SBOM.
@@ -187,7 +184,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom signSBOM(String jsonFile, String pemFile) {
+    static Bom signSBOM(final String jsonFile, final String pemFile) {
         try {
             // Read the JSON file to be signed
             Bom bom = readJSONfile(jsonFile);
