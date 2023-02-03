@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2155,SC2153,SC2038,SC1091,SC2116
+# shellcheck disable=SC2155,SC2153,SC2038,SC1091,SC2116,SC2086
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -695,7 +695,7 @@ setupAntEnv() {
     javaHome="${BUILD_CONFIG[JDK_BOOT_DIR]}"
   fi
 
-  if [ ! -z "$javaHome" ]; then
+  if [ -n "$javaHome" ]; then
     javaVer=$("${javaHome}/bin/java -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r' | tr '+' '.' | cut -d'.' -f1")
   fi
 
