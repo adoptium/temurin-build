@@ -4,6 +4,8 @@
 buildCyclonedxLib() {
   local javaHome="${1}"
 
+  echo "Building CycloneDX Java library using JAVA_HOME=${javaHome}"
+
   # Make Ant aware of cygwin path
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     ANTBUILDFILE=$(cygpath -m "${CYCLONEDB_DIR}/build.xml")
