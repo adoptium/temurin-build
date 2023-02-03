@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Build the CycloneDX Java library and app used for SBoM generation
+# Build the CycloneDX Java library and app used for SBOM generation
 buildCyclonedxLib() {
   local javaHome="${1}"
 
