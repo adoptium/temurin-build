@@ -696,7 +696,7 @@ setupAntEnv() {
   fi
 
   if [ ! -z "$javaHome" ]; then
-    javaVer=$("$javaHome}/bin/java -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r' | tr '+' '.' | cut -d'.' -f1")
+    javaVer=$("${javaHome}/bin/java -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r' | tr '+' '.' | cut -d'.' -f1")
   fi
 
   if [[ -z "$javaVer" ]] || [[ "$javaVer" -lt "17" ]]; then 
