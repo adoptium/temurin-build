@@ -684,29 +684,17 @@ createOpenJDKFailureLogsArchive() {
     createArchive "${adoptLogArchiveDir}" "${makeFailureLogsName}"
 }
 
-# Setup JAVA env to run "ant task"
+# Setup JAVA env to run "ant task" for CycloneDX build
 setupAntEnv() {
   local javaHome=""
 
-  if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
-    javaHome=${JAVA_HOME}
-  elif [ ${BUILD_CONFIG[JDK_BOOT_DIR]+x} ] && [ -d "${BUILD_CONFIG[JDK_BOOT_DIR]}" ]; then
-    # fall back to use JDK_BOOT_DIR which is set in make-adopt-build-farm.sh
-    javaHome="${BUILD_CONFIG[JDK_BOOT_DIR]}"
-  fi
+  # TemurinGenSBOM.java requires jdk-17+ to build openkeystore
+  apiURL="https://api.adoptium.net/v3/binary/latest/17/ga/${OPERATING_SYSTEM}/${BUILD_CONFIG[OS_ARCHITECTURE]}/jdk/hotspot/normal/eclipse"
+  rm -rf ${CYCLONEDB_DIR}/jdk
+  mkdir -p ${CYCLONEDB_DIR}/jdk
+  curl -sL "${apiURL}" | tar xpzf - --strip-components=1 -C "${CYCLONEDB_DIR}/jdk"
+  javaHome="${CYCLONEDB_DIR}/jdk"
 
-  if [ -n "$javaHome" ]; then
-    javaVer=$("${javaHome}/bin/java -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r' | tr '+' '.' | cut -d'.' -f1")
-  fi
-
-  if [[ -z "$javaVer" ]] || [[ "$javaVer" -lt "17" ]]; then 
-    # TemurinGenSBOM.java requires jdk-17+ to build openkeystore
-    apiURL="https://api.adoptium.net/v3/binary/latest/17/ga/${OPERATING_SYSTEM}/${BUILD_CONFIG[OS_ARCHITECTURE]}/jdk/hotspot/normal/eclipse"
-    rm -rf ${CYCLONEDB_DIR}/jdk
-    mkdir -p ${CYCLONEDB_DIR}/jdk
-    curl -sL "${apiURL}" | tar xpzf - --strip-components=1 -C "${CYCLONEDB_DIR}/jdk"
-    javaHome="${CYCLONEDB_DIR}/jdk"
-  fi
   echo "${javaHome}"
 }
 
