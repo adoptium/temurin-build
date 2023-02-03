@@ -106,12 +106,12 @@
         </target>
 
         <target name="build-openkeystore" unless="openkeystore_available">
-+		            <mkdir dir="build"/>
-+		            <exec executable="git" dir="build">
-+			          <arg line="clone https://github.com/cyberphone/openkeystore" />
-+		            </exec>
-+		            <ant dir="build/openkeystore/library" target="build"/>
-+        </target>
+		            <mkdir dir="build"/>
+		            <exec executable="git" dir="build">
+			          <arg line="clone https://github.com/cyberphone/openkeystore" />
+		            </exec>
+		            <ant dir="build/openkeystore/library" target="build"/>
+        </target>
 
 	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, build-openkeystore, compile, jar">
                 <echo message="Building cyclonedx-lib"/>
