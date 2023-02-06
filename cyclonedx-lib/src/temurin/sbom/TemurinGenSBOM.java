@@ -27,21 +27,10 @@ import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Property;
 import org.cyclonedx.model.Tool;
 import org.cyclonedx.parsers.JsonParser;
-import org.cyclonedx.exception.ParseException;
-import org.webpki.json.JSONAsymKeySigner;
-import org.webpki.json.JSONObjectWriter;
-import org.webpki.json.JSONOutputFormats;
-import org.webpki.json.JSONParser;
-import org.webpki.util.PEMDecoder;
-import com.google.gson.JsonParser;
-
-
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Collections;
 import java.util.List;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
 
 /**
  * Command line tool to construct a CycloneDX SBOM.
@@ -70,7 +59,6 @@ public final class TemurinGenSBOM {
         String url = null;
         String value = null;
         String version = null;
-        String pemFile = null;
 
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--jsonFile")) {
@@ -95,9 +83,6 @@ public final class TemurinGenSBOM {
                 type = args[++i];
             } else if (args[i].equals("--tool")) {
                 tool =  args[++i];
-            } else if (args[i].equals("--signSBOM")) {
-                cmd = "signSBOM";
-                pemFile = args[++i];
             } else if (args[i].equals("--createNewSBOM")) {
                 cmd = "createNewSBOM";
             } else if (args[i].equals("--addMetadata")) {        // Metadata Component. We can set "name" for Metadata.
@@ -123,11 +108,6 @@ public final class TemurinGenSBOM {
         switch (cmd) {
             case "createNewSBOM":                            // Creates JSON file
                 Bom bom = createBom();
-                writeJSONfile(bom, fileName);
-                break;
-
-            case "signSBOM":
-                bom = signSBOM(fileName, pemFile);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -183,39 +163,6 @@ public final class TemurinGenSBOM {
         Bom bom = new Bom();
         return bom;
     }
-
-    static Bom signSBOM(String jsonFile, String pemFile) {
-        try {
-            // Read the JSON file to be signed
-            Bom bom = readJSONfile(jsonFile);
-            String sbomDataToSign = generateBomJson(bom);
-
-            // Read the private key
-            File privateKeyFile = new File(pemFile);
-            byte[] privateKeyData = new byte[(int) privateKeyFile.length()];
-            FileInputStream privateKeyFileInputStream = new FileInputStream(privateKeyFile);
-            try {
-                privateKeyFileInputStream.read(privateKeyData);
-            } finally {
-                privateKeyFileInputStream.close();
-            }
-            String privateKeyString = new String(privateKeyData, "UTF-8");
-            KeyPair sampleKey = PEMDecoder.getKeyPair(privateKeyData);
-
-            // Sign the JSON data
-            String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSign))
-                    .setSignature(new JSONAsymKeySigner(sampleKey.getPrivate()))
-                    .serializeToString(JSONOutputFormats.PRETTY_PRINT);
-
-            JsonParser parser = new JsonParser();
-            Bom signedBom = parser.parse(new StringReader(signedData));
-            return signedBom;
-        } catch (IOException | GeneralSecurityException | ParseException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     static Bom addMetadata(final String fileName) {          // Method to store metadata -->  name
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -229,7 +176,6 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
-
     static Bom addMetadataComponent(final String fileName, final String name, final String type, final String version, final String description) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -242,7 +188,6 @@ public final class TemurinGenSBOM {
             default:
                 break;
         }
-
         comp.setType(compType); // required e.g Component.Type.FRAMEWORK
         comp.setName(name); // required
         comp.setVersion(version);
@@ -251,7 +196,6 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
-
     static Bom addMetadataProperty(final String fileName, final String name, final String value) {     // Method to store metadata --> Properties List --> name-values
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -263,7 +207,6 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
-
     static Bom addMetadataTools(final String fileName, final String toolName, final String version) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -275,7 +218,6 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
-
     static Bom addComponent(final String fileName, final String compName, final String version, final String description) {      // Method to store Component --> name & single name-value pair
         Bom bom = readJSONfile(fileName);
         Component comp = new Component();
@@ -289,7 +231,6 @@ public final class TemurinGenSBOM {
         bom.addComponent(comp);
         return bom;
     }
-
     static Bom addComponentProperty(final String fileName, final String compName, final String name, final String value) {     // Method to add Component --> Property --> name-value pairs
         Bom bom = readJSONfile(fileName);
         List<Component> componentArrayList = bom.getComponents();
@@ -303,7 +244,6 @@ public final class TemurinGenSBOM {
         }
         return bom;
     }
-
     static Bom addExternalReference(final String fileName, final String hashes, final String url, final String comment) {   // Method to store externalReferences: dependency_version_alsa
         Bom bom = readJSONfile(fileName);
         ExternalReference extRef = new ExternalReference();
@@ -315,7 +255,6 @@ public final class TemurinGenSBOM {
         bom.addExternalReference(extRef);
         return bom;
     }
-
     static Bom addComponentExternalReference(final String fileName, final String hashes, final String url, final String comment) {  // Method to store externalReferences to store: openjdk_source
         Bom bom = readJSONfile(fileName);
         ExternalReference extRef = new ExternalReference();
