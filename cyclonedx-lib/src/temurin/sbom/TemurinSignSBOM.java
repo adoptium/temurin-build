@@ -31,7 +31,39 @@ import java.util.List;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 
-public class TemurinSignSBOM {
+public final class TemurinSignSBOM {
+
+    private static boolean verbose = false;
+
+    private TemurinSignSBOM() {
+    }
+    /**
+     * Main entry.
+     * @param args Arguments for sbom operation.
+     */
+    public static void main(final String[] args) {
+        String cmd = null;
+        String pemFile = null;
+        String keyFile = null;
+
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].equals("--jsonFile")) {
+                fileName = args[++i];
+            } else if (args[i].equals("--keyFile")) {
+                keyFile = args[++i];
+            } else if (args[i].equals("--signSBOM")) {
+                cmd = "signSBOM";
+                pemFile = args[++i];
+            } else if (args[i].equals("--verbose")) {
+                verbose = true;
+            }
+        }
+
+        if (cmd === "signSBOM") {
+            bom = signSBOM(fileName, pemFile);
+            writeJSONfile(bom, fileName);
+            }
+    }
 
   static Bom signSBOM(String jsonFile, String pemFile) {
     try {
