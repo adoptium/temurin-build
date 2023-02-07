@@ -48,7 +48,7 @@
         <target name="download-cyclonedx" unless="cyclonedx_available">
                 <echo message="Downloading cyclonedx-core-java version ${cyclonedx-core-java-version}"/>
                 <download-file destdir="build/jar" destfile="cyclonedx-core-java.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=org/cyclonedx/cyclonedx-core-java/${cyclonedx-core-java-version}/cyclonedx-core-java-${cyclonedx-core-java-version}.jar"/>
-	</target>
+	      </target>
 
         <target name="download-jackson-core" unless="jackson-core_available">
                 <echo message="Downloading jackson-core version ${jackson-core-version}"/>
@@ -90,7 +90,7 @@
                 <download-file destdir="build/jar" destfile="github-package-url.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
         </target>
 
-        <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
+        <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, buildSignSBOM, runSignSBOM, compile, jar">
                 <echo message="Building cyclonedx-lib"/>
         </target>
 
