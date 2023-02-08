@@ -72,7 +72,6 @@
         <target name="buildSignSBOM">
                 <mkdir dir="build/sign_classes"/>
                 <javac srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar" includeantruntime="false"/>
-                <javac debug="true" debuglevel="lines,vars,source" srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar" includeantruntime="false"/>
         </target>
 
         <target name="runSignAndVerifySBOM">
