@@ -275,6 +275,7 @@ Once the PRs to change those files have been merged, the [adoptium-packages-linu
 
 - Via slack on the Adoptium #release channel
 - Find someone with the appropriate authority (Carmen, George, Martijn, Shelley, Stewart, Tim) to post a tweet about the new release from the Adoptium twitter account
+- Also run the EclipseMirror job in the Eclipse jenkins instance to create a backup of the release from GitHub onto the Eclipse servers.
 
 ### Post Release Tasks
 
