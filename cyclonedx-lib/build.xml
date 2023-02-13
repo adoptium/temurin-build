@@ -69,7 +69,7 @@
                 </copy>
         </target>
 
-        <target name="build-sign-sbom" depends="dep-checks, build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
+        <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
                 <echo message="Building cyclonedx-lib TemurinSignSBOM"/>
         </target>
 
@@ -87,35 +87,6 @@
                         </manifest>
                 </jar>
         </target>
-
-        <property name="testSBOMFile" location="build/testSBOM.json"/>
-                  <delete file="${testSBOMFile}"/>
-                  <property name="privatePemFile" location="build/RSAPrivate.pem"/>
-                  <delete file="${privatePemFile}"/>
-        <property name="publicPemFile" location="build/RSAPublic.pub"/>
-                  <delete file="${publicPemFile}"/>
-
-        <target name="runSignAndVerifySBOM">
-                <exec command="openssl genrsa -des3 -passout pass:test -out ${privatePemFile} 2048"/>
-                <exec command="openssl rsa -in ${privatePemFile} -passin pass:test -pubout -out ${publicPemFile}"/>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM">
-                  <arg value="--verbose"/>
-                  <arg value="--signSBOM"/>
-                  <arg value="--jsonFile"/>
-                  <arg value="${testSBOMFile}"/>
-                  <arg value="--privateKeyFile"/>
-                  <arg value="${privatePemFile}"/>
-                </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM">
-                  <arg value="--verbose"/>
-                  <arg value="--verifySignature"/>
-                  <arg value="--jsonFile"/>
-                  <arg value="${testSBOMFile}"/>
-                  <arg value="--publicKeyFile"/>
-                  <arg value="${publicPemFile}"/>
-                </java>
-        </target>
-
 
         <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
                 <echo message="Downloading jackson-dataformat-xml version ${jackson-databind-version}"/>
@@ -152,16 +123,8 @@
                 <download-file destdir="build/jar" destfile="github-package-url.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
         </target>
 
-        <target name="build-openkeystore" unless="openkeystore_available">
-		            <mkdir dir="build"/>
-		            <exec executable="git" dir="build">
-			          <arg line="clone https://github.com/cyberphone/openkeystore" />
-		            </exec>
-		            <ant dir="build/openkeystore/library" target="build"/>
-        </target>
-
-	      <target name="build-sign-sbom" depends="dep-checks, build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
-                <echo message="Building cyclonedx-lib TemurinSignSBOM"/>
+	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
+                <echo message="Building cyclonedx-lib"/>
         </target>
 
         <target name="clean">
