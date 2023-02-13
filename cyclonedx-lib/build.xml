@@ -78,20 +78,20 @@
                 <exec command="openssl genrsa -des3 -passout pass:test -out RSAPrivate.pem 2048"/>
                 <exec command="openssl rsa -in RSAPrivate.pem -passin pass:test -pubout -out RSAPublic.pub"/>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM">
-                <arg value="--verbose"/>
-                <arg value="--signSBOM"/>
-                <arg value="--jsonFile"/>
-                <arg value="testSBOM.json"/>
-                <arg value="--privateKeyFile"/>
-                <arg value="RSAPrivate.pem"/>
+                  <arg value="--verbose"/>
+                  <arg value="--signSBOM"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                  <arg value="--privateKeyFile"/>
+                  <arg value="RSAPrivate.pem"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM">
-                <arg value="--verbose"/>
-                <arg value="--verifySignature"/>
-                <arg value="--jsonFile"/>
-                <arg value="testSBOM.json"/>
-                <arg value="--publicKeyFile"/>
-                <arg value="RSAPublic.pub"/>
+                  <arg value="--verbose"/>
+                  <arg value="--verifySignature"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="testSBOM.json"/>
+                  <arg value="--publicKeyFile"/>
+                  <arg value="RSAPublic.pub"/>
                 </java>
         </target>
 

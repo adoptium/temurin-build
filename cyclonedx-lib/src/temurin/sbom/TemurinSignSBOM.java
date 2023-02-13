@@ -30,10 +30,14 @@ import java.io.StringReader;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.logging.Logger;
 
 public final class TemurinSignSBOM {
 
     private static boolean verbose = false;
+
+    // Create a logger for the class
+    private static final Logger logger = Logger.getLogger(TemurinSignSBOM.class.getName());
 
     private TemurinSignSBOM() {
     }
@@ -103,6 +107,8 @@ public final class TemurinSignSBOM {
       Bom signedBom = parser.parse(new StringReader(signedData));
       return signedBom;
     } catch (IOException | GeneralSecurityException | ParseException e) {
+      // Log the exception with the logger
+      logger.severe("An error occurred while signing the SBOM: " + e.getMessage());
       e.printStackTrace();
     }
     return null;

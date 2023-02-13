@@ -25,7 +25,7 @@ jobs:
     steps:
     - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
 
-    # Build with jdk8 to ensure TemurinGenSBOM meets min compatibility
+    # Build with jdk17 to ensure TemurinSignSBOM meets min compatibility
     - uses: actions/setup-java@1df8dbefe2a8cbc99770194893dd902763bee34b # v3.9.0
       id: setup-java
       with:
