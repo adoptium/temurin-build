@@ -69,6 +69,10 @@
                 </copy>
         </target>
 
+        <target name="build-sign-sbom" depends="dep-checks, build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
+                <echo message="Building cyclonedx-lib TemurinSignSBOM"/>
+        </target>
+
         <target name="compile-sign-sbom">
                 <mkdir dir="build/sign_classes"/>
                 <javac srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar" includeantruntime="false"/>
