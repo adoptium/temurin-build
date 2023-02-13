@@ -14,6 +14,24 @@
 */
 package temurin.sbom;
 
+import org.cyclonedx.BomGeneratorFactory;
+import org.cyclonedx.CycloneDxSchema;
+import org.cyclonedx.generators.json.BomJsonGenerator;
+import org.cyclonedx.model.Bom;
+import org.cyclonedx.model.Component;
+import org.cyclonedx.model.ExternalReference;
+import org.cyclonedx.model.Hash;
+import org.cyclonedx.model.Metadata;
+import org.cyclonedx.model.OrganizationalContact;
+import org.cyclonedx.model.OrganizationalEntity;
+import org.cyclonedx.model.Property;
+import org.cyclonedx.model.Tool;
+import org.cyclonedx.parsers.JsonParser;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 import org.webpki.json.JSONAsymKeySigner;
 import org.webpki.json.JSONObjectReader;
 import org.webpki.json.JSONSignatureDecoder;
@@ -113,6 +131,17 @@ public final class TemurinSignSBOM {
     }
     return null;
   }
+
+  static Bom readJSONfile(String jsonFile) throws IOException {
+      String jsonData = new String(Files.readAllBytes(Paths.get(jsonFile)), StandardCharsets.UTF_8);
+      JsonParser parser = new JsonParser();
+      return parser.parse(new StringReader(jsonData));
+}
+
+static void writeJSONfile(Bom bom, String jsonFile) throws IOException {
+      JSONObjectWriter writer = new JSONObjectWriter(bom.toJson());
+      Files.write(Paths.get(jsonFile), writer.serializeToBytes(JSONOutputFormats.PRETTY_PRINT));
+}
 
   static void verifySignature(String jsonFile, String publicKeyFile) {
     try {

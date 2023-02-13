@@ -35,11 +35,11 @@ jobs:
     - name: Build TemurinSignSBOM.java
       run: |
         ant -noinput -buildfile cyclonedx-lib/build.xml clean
-        ant -noinput -buildfile cyclonedx-lib/build.xml build
+        ant -noinput -buildfile cyclonedx-lib/build.xml build-sign-sbom
 
     - name: Run TemurinSignSBOM Unit test
       run: |
-        ant -noinput -buildfile cyclonedx-lib/build.xml run
+        ant -noinput -buildfile cyclonedx-lib/build.xml runSignAndVerifySBOM
 
     - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
       name: Collect and Archive TemurinSignSBOM Artifacts

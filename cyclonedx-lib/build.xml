@@ -69,31 +69,49 @@
                 </copy>
         </target>
 
-        <target name="buildSignSBOM">
+        <target name="compile-sign-sbom">
                 <mkdir dir="build/sign_classes"/>
-                <javac srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar" includeantruntime="false"/>
+                <javac srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar" includeantruntime="false"/>
+                <javac debug="true" debuglevel="lines,vars,source" srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar" includeantruntime="false"/>
         </target>
 
+        <target name="jar-sign-sbom">
+                <mkdir dir="build/sign_jar"/>
+                <jar destfile="build/sign_jar/temurin-sign-sbom.jar" basedir="build/sign_classes">
+                        <manifest>
+                                <attribute name="Main-Class" value="temurin.sbom.TemurinSignSBOM"/>
+                        </manifest>
+                </jar>
+        </target>
+
+        <property name="testSBOMFile" location="build/testSBOM.json"/>
+                  <delete file="${testSBOMFile}"/>
+                  <property name="privatePemFile" location="build/RSAPrivate.pem"/>
+                  <delete file="${privatePemFile}"/>
+        <property name="publicPemFile" location="build/RSAPublic.pub"/>
+                  <delete file="${publicPemFile}"/>
+
         <target name="runSignAndVerifySBOM">
-                <exec command="openssl genrsa -des3 -passout pass:test -out RSAPrivate.pem 2048"/>
-                <exec command="openssl rsa -in RSAPrivate.pem -passin pass:test -pubout -out RSAPublic.pub"/>
+                <exec command="openssl genrsa -des3 -passout pass:test -out ${privatePemFile} 2048"/>
+                <exec command="openssl rsa -in ${privatePemFile} -passin pass:test -pubout -out ${publicPemFile}"/>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM">
                   <arg value="--verbose"/>
                   <arg value="--signSBOM"/>
                   <arg value="--jsonFile"/>
-                  <arg value="testSBOM.json"/>
+                  <arg value="${testSBOMFile}"/>
                   <arg value="--privateKeyFile"/>
-                  <arg value="RSAPrivate.pem"/>
+                  <arg value="${privatePemFile}"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM">
                   <arg value="--verbose"/>
                   <arg value="--verifySignature"/>
                   <arg value="--jsonFile"/>
-                  <arg value="testSBOM.json"/>
+                  <arg value="${testSBOMFile}"/>
                   <arg value="--publicKeyFile"/>
-                  <arg value="RSAPublic.pub"/>
+                  <arg value="${publicPemFile}"/>
                 </java>
         </target>
+
 
         <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
                 <echo message="Downloading jackson-dataformat-xml version ${jackson-databind-version}"/>
@@ -138,8 +156,8 @@
 		            <ant dir="build/openkeystore/library" target="build"/>
         </target>
 
-	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
-                <echo message="Building cyclonedx-lib"/>
+	      <target name="build-sign-sbom" depends="dep-checks, build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
+                <echo message="Building cyclonedx-lib TemurinSignSBOM"/>
         </target>
 
         <target name="clean">
