@@ -146,6 +146,34 @@
                 </jar>
         </target>
 
+        <property name="testSBOMFile" location="build/testSBOM.json"/>
+                  <delete file="${testSBOMFile}"/>
+                  <property name="privatePemFile" location="build/RSAPrivate.pem"/>
+                  <delete file="${privatePemFile}"/>
+        <property name="publicPemFile" location="build/RSAPublic.pub"/>
+                  <delete file="${publicPemFile}"/>
+
+        <target name="runSignAndVerifySBOM">
+                <exec command="openssl genrsa -des3 -passout pass:test -out ${privatePemFile} 2048"/>
+                <exec command="openssl rsa -in ${privatePemFile} -passin pass:test -pubout -out ${publicPemFile}"/>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--signSBOM"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                  <arg value="--privateKeyFile"/>
+                  <arg value="${privatePemFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--verifySignature"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                  <arg value="--publicKeyFile"/>
+                  <arg value="${publicPemFile}"/>
+                </java>
+        </target>
+
         <target name="run">
                 <property name="testSBOMFile" location="build/testSBOM.json"/>
                 <delete file="${testSBOMFile}"/>
