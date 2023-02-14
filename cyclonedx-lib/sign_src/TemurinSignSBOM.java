@@ -162,6 +162,19 @@ public final class TemurinSignSBOM {
     }
   }
 
+  static Bom readJSONfile(final String fileName) { 	                               // Returns parse bom
+    Bom bom = null;
+    try {
+        FileReader reader = new FileReader(fileName);
+        JsonParser parser = new JsonParser();
+        bom = parser.parse(reader);
+    } catch (Exception e) {
+        e.printStackTrace();
+    } finally {
+       return bom;
+    }
+  }
+
   static void verifySignature(String jsonFile, String publicKeyFile) {
     try {
       // Read the JSON file to be verified
