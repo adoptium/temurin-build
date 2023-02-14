@@ -136,12 +136,31 @@ public final class TemurinSignSBOM {
       String jsonData = new String(Files.readAllBytes(Paths.get(jsonFile)), StandardCharsets.UTF_8);
       JsonParser parser = new JsonParser();
       return parser.parse(new StringReader(jsonData));
-}
+  }
 
-static void writeJSONfile(Bom bom, String jsonFile) throws IOException {
+  static void writeJSONfile(Bom bom, String jsonFile) throws IOException {
       JSONObjectWriter writer = new JSONObjectWriter(bom.toJson());
       Files.write(Paths.get(jsonFile), writer.serializeToBytes(JSONOutputFormats.PRETTY_PRINT));
-}
+  }
+
+  static String generateBomJson(final Bom bom) {
+      // Use schema v14: https://cyclonedx.org/schema/bom-1.4.schema.json
+      BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_14, bom);
+      String json = bomGen.toJsonString();
+      return json;
+  }
+
+  static void writeJSONfile(final Bom bom, final String fileName) {          // Creates testJson.json file
+      FileWriter file;
+      String json = generateBomJson(bom);
+    try {
+      file = new FileWriter(fileName);
+      file.write(json);
+      file.close();
+  } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 
   static void verifySignature(String jsonFile, String publicKeyFile) {
     try {
