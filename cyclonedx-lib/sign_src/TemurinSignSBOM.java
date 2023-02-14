@@ -17,21 +17,8 @@ package temurin.sbom;
 import org.cyclonedx.BomGeneratorFactory;
 import org.cyclonedx.CycloneDxSchema;
 import org.cyclonedx.generators.json.BomJsonGenerator;
-import org.cyclonedx.model.Bom;
-import org.cyclonedx.model.Component;
-import org.cyclonedx.model.ExternalReference;
-import org.cyclonedx.model.Hash;
-import org.cyclonedx.model.Metadata;
-import org.cyclonedx.model.OrganizationalContact;
-import org.cyclonedx.model.OrganizationalEntity;
-import org.cyclonedx.model.Property;
-import org.cyclonedx.model.Tool;
 import org.cyclonedx.parsers.JsonParser;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
 import org.webpki.json.JSONAsymKeySigner;
 import org.webpki.json.JSONObjectReader;
 import org.webpki.json.JSONSignatureDecoder;
@@ -55,7 +42,7 @@ public final class TemurinSignSBOM {
     private static boolean verbose = false;
 
     // Create a logger for the class
-    private static final Logger logger = Logger.getLogger(TemurinSignSBOM.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(TemurinSignSBOM.class.getName());
 
     private TemurinSignSBOM() {
     }
