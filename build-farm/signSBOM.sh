@@ -21,10 +21,11 @@ if ! java -version 2>&1 | grep -q '"17.'; then
 fi
 
 # Set the SCRIPT_DIR variable
-SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
+SCRIPT_DIR=$(cd "$(dirname "$0")" || exit; pwd)
 
 # Run the ant build command to build the org.webpki.json openkeystore code and call the signSBOMFile() function in sbom.sh
-ant -buildfile ${SCRIPT_DIR}/../cyclonedx-lib/build.xml buildSignSBOM && ${SCRIPT_DIR}/../sbom.sh signSBOMFile
+ant -buildfile "${SCRIPT_DIR}"/../cyclonedx-lib/build.xml buildSignSBOM
+"${SCRIPT_DIR}"/../sbom.sh signSBOMFile
 
 # Check the exit status of the ant build command
 if [ $? -ne 0 ]; then
@@ -33,6 +34,6 @@ if [ $? -ne 0 ]; then
 fi
 
 # Call the verifySBOMSignature() function in sbom.sh
-${SCRIPT_DIR}/../sbom.sh verifySBOMSignature
+"${SCRIPT_DIR}"/../sbom.sh verifySBOMSignature
 
 echo "Success: The org.webpki.json openkeystore code was built and signed successfully using JDK-17."
