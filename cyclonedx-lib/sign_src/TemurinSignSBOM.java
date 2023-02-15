@@ -85,7 +85,7 @@ public final class TemurinSignSBOM {
       }
     }
 
-  static Bom signSBOM(String jsonFile, String pemFile) {
+  static Bom signSBOM(final String jsonFile, final String pemFile) {
     try {
       // Read the JSON file to be signed
       Bom bom = readJSONfile(jsonFile);
@@ -119,13 +119,13 @@ public final class TemurinSignSBOM {
     return null;
   }
 
-  static Bom readJSONfile(String jsonFile) throws IOException {
+  static Bom readJSONfile(final String jsonFile) throws IOException {
       String jsonData = new String(Files.readAllBytes(Paths.get(jsonFile)), StandardCharsets.UTF_8);
       JsonParser parser = new JsonParser();
       return parser.parse(new StringReader(jsonData));
   }
 
-  static void writeJSONfile(Bom bom, String jsonFile) throws IOException {
+  static void writeJSONfile(final Bom bom, final String jsonFile) throws IOException {
       JSONObjectWriter writer = new JSONObjectWriter(bom.toJson());
       Files.write(Paths.get(jsonFile), writer.serializeToBytes(JSONOutputFormats.PRETTY_PRINT));
   }
