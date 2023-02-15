@@ -162,7 +162,7 @@ public final class TemurinSignSBOM {
     }
   }
 
-  static void verifySignature(String jsonFile, String publicKeyFile) {
+  static void verifySignature(final String jsonFile, final String publicKeyFile) {
     try {
       // Read the JSON file to be verified
       Bom bom = readJSONfile(jsonFile);
