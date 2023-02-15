@@ -51,12 +51,12 @@ public final class TemurinSignSBOM {
      * @param args Arguments for sbom operation.
      */
     public static void main(final String[] args) {
-        String cmd = null;
-        String pemFile = null;
-        String keyFile = null;
-        String privateKeyFile = null;
-        String publicKeyFile = null;
-        String fileName = null;
+        final String cmd = null;
+        final String pemFile = null;
+        final String keyFile = null;
+        final String privateKeyFile = null;
+        final String publicKeyFile = null;
+        final String fileName = null;
 
         for (int i = 0; i < args.length; i++) {
           if (args[i].equals("--jsonFile")) {
