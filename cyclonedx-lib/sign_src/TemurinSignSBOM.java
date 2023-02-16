@@ -38,7 +38,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.text.ParseException;
 import java.util.logging.Logger;
 
 public final class TemurinSignSBOM {
