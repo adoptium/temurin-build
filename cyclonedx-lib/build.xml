@@ -56,17 +56,12 @@
                 <download-file destdir="build/jar" destfile="jackson-core.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"/>
         </target>
 
-        <target name="clone-and-build-openkeystore">
-                <exec dir="./" executable="git">
-                <arg value="clone" />
-                <arg value="https://github.com/cyberphone/openkeystore.git" />
-                </exec>
-                <exec dir="./openkeystore/library" executable="ant">
-                <arg value="build" />
-                </exec>
-                <copy todir="build/jar">
-                <fileset dir="openkeystore/library/dist" includes="*.jar" />
-                </copy>
+        <target name="clone-and-build-openkeystore" unless="openkeystore_available">
+		            <mkdir dir="build"/>
+		            <exec executable="git" dir="build">
+			          <arg line="clone https://github.com/cyberphone/openkeystore" />
+		            </exec>
+		            <ant dir="build/openkeystore/library" target="build"/>
         </target>
 
         <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
@@ -75,9 +70,10 @@
 
         <target name="compile-sign-sbom">
                 <mkdir dir="build/sign_classes"/>
-                <javac srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar" includeantruntime="false"/>
-                <javac debug="true" debuglevel="lines,vars,source" srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar" includeantruntime="false"/>
+                <javac srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar:build/openkeystore/library/dist/webpki.org-webutil-1.00.jar" includeantruntime="false"/>
+                <javac debug="true" debuglevel="lines,vars,source" srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar:build/openkeystore/library/dist/webpki.org-webutil-1.00.jar" includeantruntime="false"/>
         </target>
+
 
         <target name="jar-sign-sbom">
                 <mkdir dir="build/sign_jar"/>
