@@ -24,14 +24,12 @@ fi
 SCRIPT_DIR=$(cd "$(dirname "$0")" || exit; pwd)
 
 # Run the ant build command to build the org.webpki.json openkeystore code and call the signSBOMFile() function in sbom.sh
-ant -buildfile "${SCRIPT_DIR}"/../cyclonedx-lib/build.xml buildSignSBOM
-"${SCRIPT_DIR}"/../sbom.sh signSBOMFile
-
-# Check the exit status of the ant build command
-if [ $? -ne 0 ]; then
+if ! ant -buildfile "${SCRIPT_DIR}"/../cyclonedx-lib/build.xml buildSignSBOM; then
   echo "Error: The ant build command to build the org.webpki.json openkeystore code failed."
   exit 1
 fi
+
+"${SCRIPT_DIR}"/../sbom.sh signSBOMFile
 
 # Call the verifySBOMSignature() function in sbom.sh
 "${SCRIPT_DIR}"/../sbom.sh verifySBOMSignature
