@@ -24,17 +24,17 @@ fi
 SCRIPT_DIR=$(cd "$(dirname "$0")" || exit; pwd)
 
 # Make the signSBOM.sh file executable
-chmod +x "${SCRIPT_DIR}"/../build-farm/signSBOM.sh
+chmod +x "${SCRIPT_DIR}/../build-farm/signSBOM.sh"
 
 # Run the ant build command to build the org.webpki.json openkeystore code and call the signSBOMFile() function in sbom.sh
-if ! ant -buildfile "${SCRIPT_DIR}"/../cyclonedx-lib/build.xml buildSignSBOM; then
+if ! ant -buildfile "${SCRIPT_DIR}/../cyclonedx-lib/build.xml" buildSignSBOM; then
   echo "Error: The ant build command to build the org.webpki.json openkeystore code failed."
   exit 1
 fi
 
-"${SCRIPT_DIR}"/../sbom.sh signSBOMFile
+"${SCRIPT_DIR}/../sbom.sh" signSBOMFile
 
 # Call the verifySBOMSignature() function in sbom.sh
-"${SCRIPT_DIR}"/../sbom.sh verifySBOMSignature
+"${SCRIPT_DIR}/../sbom.sh" verifySBOMSignature
 
 echo "Success: The org.webpki.json openkeystore code was built and signed successfully using JDK-17."
