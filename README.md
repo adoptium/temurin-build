@@ -1,7 +1,7 @@
 <!-- textlint-disable terminology -->
 # Repository for code and instructions for building OpenJDK binaries, defaulting to Eclipse Temurin™
 
-These scripts can be used to build OpenJDK anywhere but are primarily used by Eclipse Adoptium members (vendors) to build binaries. The scripts default to the use case of building Eclipse Temurin binaries which occurs on the build farm at <https://ci.adoptopenjdk.net>. Those binaries are then made available for consumption at <https://adoptium.net> and via the API <https://api.adoptium.net>.
+These scripts can be used to build OpenJDK anywhere but are primarily used by Eclipse Adoptium members (vendors) to build binaries. The scripts default to the use case of building Eclipse Temurin binaries which occurs on the build farm at <https://ci.adoptium.net>. Those binaries are then made available for consumption at <https://adoptium.net> and via the API <https://api.adoptium.net>.
 
 **NOTE** In the future, adoptium.net will transition to being a marketplace for other qualifying vendors as well Eclipse Temurin.
 
@@ -49,7 +49,7 @@ as we can generate valid dockerfile for it):
 ```
 
 We test these dockerfiles on a regular basis in the
-[Dockerfilecheck](https://ci.adoptopenjdk.net/job/DockerfileCheck/) job
+[Dockerfilecheck](https://ci.adoptium.net/job/DockerfileCheck/) job
 to ensure they continue to work in a stable fashion.
 
 ## Repository contents
