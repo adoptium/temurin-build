@@ -23,10 +23,15 @@ fi
 # Set the SCRIPT_DIR variable
 SCRIPT_DIR=$(cd "$(dirname "$0")" || exit; pwd)
 
-# Add executable permission to signSBOM.sh and run it
-"${SCRIPT_DIR}"/../sbom.sh signSBOMFile
-chmod +x "${SCRIPT_DIR}"/../sbom.sh
-"${SCRIPT_DIR}"/../sbom.sh verifySBOMSignature
+# Add executable permission to signSBOM.sh and sbom.sh scripts
+chmod +x "${SCRIPT_DIR}"/../build-farm/signSBOM.sh
+chmod +x "${SCRIPT_DIR}"/../sbin/common/sbom.sh
+
+# Call signSBOMFile function in sbom.sh
+"${SCRIPT_DIR}"/../sbin/common/sbom.sh signSBOMFile
+
+# Call verifySBOMSignature function in sbom.sh
+"${SCRIPT_DIR}"/../sbin/common/sbom.sh verifySBOMSignature
 
 # Run the ant build command to build the org.webpki.json openkeystore code and call the signSBOMFile() function in sbom.sh
 if ! ant -buildfile "${SCRIPT_DIR}"/../cyclonedx-lib/build.xml buildSignSBOM; then
