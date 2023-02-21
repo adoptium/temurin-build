@@ -61,12 +61,9 @@ public final class TemurinSignSBOM {
      */
     public static void main(final String[] args) {
         String cmd = null;
-        String pemFile = null;
-        String keyFile = null;
         String privateKeyFile = null;
-        String publicKeyFile = null;
+        final String publicKeyFile = null;
         String fileName = null;
-        PublicKey publicKey = null;
 
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--jsonFile")) {
