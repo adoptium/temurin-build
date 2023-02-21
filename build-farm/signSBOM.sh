@@ -23,7 +23,7 @@ fi
 # Set the SCRIPT_DIR variable
 SCRIPT_DIR=$(cd "$(dirname "$0")" || exit; pwd)
 
-# Add executable permission to signSBOM.sh and sbom.sh scripts
+# Grant executable permission to signSBOM.sh and sbom.sh scripts
 chmod +x /github/workspace/build-farm/signSBOM.sh
 chmod +x /github/workspace/sbin/common/sbom.sh
 
