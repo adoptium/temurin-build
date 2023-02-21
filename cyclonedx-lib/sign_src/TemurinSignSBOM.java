@@ -36,8 +36,13 @@ import java.io.StringReader;
 import java.io.IOException;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.logging.Logger;
 
 public final class TemurinSignSBOM {
@@ -61,6 +66,7 @@ public final class TemurinSignSBOM {
         String privateKeyFile = null;
         String publicKeyFile = null;
         String fileName = null;
+        PublicKey publicKey = null;
 
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--jsonFile")) {
@@ -164,12 +170,24 @@ public final class TemurinSignSBOM {
             // Parse JSON
             JSONObjectReader reader = JSONParser.parse(signedSbomData);
 
-            // Verify signature
+            // Load public key from file
+            PublicKey publicKey = loadPublicKeyFromFile(publicKeyFile);
+
+            // Verify signature using the loaded public key
             JSONSignatureDecoder signature = reader.getSignature(new JSONCryptoHelper.Options());
             signature.verify(new JSONAsymKeyVerifier(publicKey));
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    // Utility method to load public key from file
+    static PublicKey loadPublicKeyFromFile(String publicKeyFile) throws Exception {
+        byte[] publicKeyBytes = Files.readAllBytes(Paths.get(publicKeyFile));
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKeyBytes);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePublic(spec);
     }
 }
