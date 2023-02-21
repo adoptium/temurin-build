@@ -62,7 +62,7 @@ public final class TemurinSignSBOM {
     public static void main(final String[] args) {
         String cmd = null;
         String privateKeyFile = null;
-        final String publicKeyFile = null;
+        String publicKeyFile = null;
         String fileName = null;
 
         for (int i = 0; i < args.length; i++) {
@@ -181,7 +181,7 @@ public final class TemurinSignSBOM {
     }
 
     // Utility method to load public key from file
-    static PublicKey loadPublicKeyFromFile(String publicKeyFile) throws Exception {
+    static PublicKey loadPublicKeyFromFile(final String publicKeyFile) throws Exception {
         byte[] publicKeyBytes = Files.readAllBytes(Paths.get(publicKeyFile));
         X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKeyBytes);
         KeyFactory kf = KeyFactory.getInstance("RSA");
