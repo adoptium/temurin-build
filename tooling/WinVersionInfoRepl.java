@@ -53,7 +53,7 @@ class WinVersionInfoRepl {
             }
         }
 
-        if (blockHeader == null || companyName == null || fileDesc == null || fileVersion == null || fullVersion == null|| internalName == null || legalCopyright == null || originalFilename == null || productName == null || productVersion == null) {
+        if (inFile == null || outFile == null || blockHeader == null || companyName == null || fileDesc == null || fileVersion == null || fullVersion == null|| internalName == null || legalCopyright == null || originalFilename == null || productName == null || productVersion == null) {
             System.out.println("Missing option, syntax:");
             System.out.println("WinVersionInfoRepl --inFile path --outFile path --blockHeader a --companyName a:b --fileDesc a:b --fileVersion a:b --fullVersion a:b --internalName a:b --legalCopyright a:b --originalFilename a:b --productName a:b --productVersion a:b");
             System.exit(1);
@@ -62,20 +62,20 @@ class WinVersionInfoRepl {
         byte[] verInfoA = constructVersionInfo(blockHeader, companyName[0], fileDesc[0], fileVersion[0], fullVersion[0], internalName[0], legalCopyright[0], originalFilename[0], productName[0], productVersion[0]);
         byte[] verInfoB = constructVersionInfo(blockHeader, companyName[1], fileDesc[1], fileVersion[1], fullVersion[1], internalName[1], legalCopyright[1], originalFilename[1], productName[1], productVersion[1]);
 
-        /*HexFormat formatFingerprint = HexFormat.ofDelimiter(":").withUpperCase();
+        HexFormat hex = HexFormat.ofDelimiter(":").withUpperCase();
         int i=0;
         for(; i<verInfoA.length/16; i++) {
             byte[] b = new byte[16];
             System.arraycopy(verInfoA, (i*16), b, 0, 16);
-            String str = formatFingerprint.formatHex(b);
+            String str = hex.formatHex(b);
             System.out.println(str); 
         }
         if ((verInfoA.length % 16) > 0) {
             byte[] b = new byte[verInfoA.length % 16];
             System.arraycopy(verInfoA, (i*16), b, 0, (verInfoA.length % 16));
-            String str = formatFingerprint.formatHex(b);
+            String str = hex.formatHex(b);
             System.out.println(str);
-        }*/
+        }
 
         byte[] inBytes = Files.readAllBytes(Paths.get(inFile));
 
