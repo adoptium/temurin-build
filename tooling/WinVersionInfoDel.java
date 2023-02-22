@@ -19,6 +19,13 @@ import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.io.FileOutputStream;
 
+
+/**
+ * This class searches for and deletes the VS_VERSION_INFO structure from a
+ * Windows EXE/DLL.
+ *
+ * See: https://learn.microsoft.com/en-us/windows/win32/menurc/vs-versioninfo?source=recommendations
+ */
 class WinVersionInfoDel {
 
     public static void main(String[] args) throws Exception {

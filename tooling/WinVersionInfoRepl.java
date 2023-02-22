@@ -19,6 +19,12 @@ import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.io.FileOutputStream;
 
+/**
+ * This class searches for and replaces the VS_VERSION_INFO structure in a
+ * Windows EXE/DLL, with a new set of property values.
+ *
+ * See: https://learn.microsoft.com/en-us/windows/win32/menurc/vs-versioninfo?source=recommendations
+ */
 class WinVersionInfoRepl {
 
     public static void main(String[] args) throws Exception {
