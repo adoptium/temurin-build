@@ -164,6 +164,7 @@
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM" fork="yes" failonerror="yes">
                     <arg value="--verbose"/>
+                    <arg value="--signSBOM"/>
                     <arg value="--verifySignature"/>
                     <arg value="--jsonFile"/>
                     <arg value="${testSBOMFile}"/>
