@@ -35,6 +35,7 @@ jobs:
         run: |
           ant -noinput -buildfile cyclonedx-lib/build.xml clean
           ant -noinput -buildfile cyclonedx-lib/build.xml build-sign-sbom
+          ant -noinput -buildfile cyclonedx-lib/build.xml build
 
       - name: Run TemurinSignSBOM Unit test
         run: |
