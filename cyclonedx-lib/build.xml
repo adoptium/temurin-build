@@ -152,14 +152,15 @@
                 <delete file="${publicPemFile}"/>
                 <exec command="openssl genrsa -des3 -passout pass:test -out ${privatePemFile} 2048"/>
                 <exec command="openssl rsa -in ${privatePemFile} -passin pass:test -pubout -out ${publicPemFile}"/>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM" fork="yes" failonerror="yes">
-                    <arg value="--verbose"/>
-                    <arg value="--createNewSBOM"/>
-                    <arg value="--signSBOM"/>
-                    <arg value="--jsonFile"/>
-                    <arg value="${testSBOMFile}"/>
-                    <arg value="--privateKeyFile"/>
-                    <arg value="${privatePemFile}"/>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--createNewSBOM"/>
+                  <arg value="--name"/>
+                  <arg value="Temurin"/>
+                  <arg value="--version"/>
+                  <arg value="jdk17+35"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM" fork="yes" failonerror="yes">
                     <arg value="--verbose"/>
