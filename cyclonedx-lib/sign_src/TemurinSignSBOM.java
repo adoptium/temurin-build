@@ -182,7 +182,8 @@ public final class TemurinSignSBOM {
     // Utility method to load public key from file
     static PublicKey loadPublicKeyFromFile(final String publicKeyFile) throws Exception {
         byte[] publicKeyBytes = Files.readAllBytes(Paths.get(publicKeyFile));
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(publicKeyBytes);
+        byte[] encoded = Base64.decodeBase64(publicKeyBytes);
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded);
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return kf.generatePublic(spec);
     }
