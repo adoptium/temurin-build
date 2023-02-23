@@ -150,7 +150,7 @@
                 <delete file="${testSBOMFile}"/>
                 <delete file="${privatePemFile}"/>
                 <delete file="${publicPemFile}"/>
-                <exec command="openssl genrsa -des3 -passout pass:test -out ${privatePemFile} 2048"/>
+                <exec command="openssl genpkey -algorithm RSA -pass pass:test -outform PEM -out ${privatePemFile} -pkeyopt rsa_keygen_bits:2048"/>
                 <exec command="openssl rsa -in ${privatePemFile} -passin pass:test -pubout -out ${publicPemFile}"/>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
