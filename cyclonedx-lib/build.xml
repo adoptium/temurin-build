@@ -163,13 +163,20 @@
                   <arg value="${testSBOMFile}"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM" fork="yes" failonerror="yes">
-                    <arg value="--verbose"/>
-                    <arg value="--signSBOM"/>
-                    <arg value="--verifySignature"/>
-                    <arg value="--jsonFile"/>
-                    <arg value="${testSBOMFile}"/>
-                    <arg value="--publicKeyFile"/>
-                    <arg value="${publicPemFile}"/>
+                  <arg value="--verbose"/>
+                  <arg value="--signSBOM"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                  <arg value="--privateKeyFile"/>
+                  <arg value="${privatePemFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--verifySignature"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                  <arg value="--publicKeyFile"/>
+                  <arg value="${publicPemFile}"/>
                 </java>
         </target>
 

@@ -74,7 +74,6 @@ public final class TemurinSignSBOM {
                 publicKeyFile = args[++i];
             } else if (args[i].equals("--signSBOM")) {
                 cmd = "signSBOM";
-                privateKeyFile = args[++i];
             } else if (args[i].equals("--verifySignature")) {
                 cmd = "verifySignature";
             } else if (args[i].equals("--verbose")) {
