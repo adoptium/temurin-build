@@ -44,6 +44,7 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.logging.Logger;
+import java.util.Base64;
 
 public final class TemurinSignSBOM {
 
@@ -182,7 +183,7 @@ public final class TemurinSignSBOM {
     // Utility method to load public key from file
     static PublicKey loadPublicKeyFromFile(final String publicKeyFile) throws Exception {
         byte[] publicKeyBytes = Files.readAllBytes(Paths.get(publicKeyFile));
-        byte[] encoded = Base64.decodeBase64(publicKeyBytes);
+        byte[] encoded = Base64.getDecoder().decode(publicKeyBytes);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded);
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return kf.generatePublic(spec);
