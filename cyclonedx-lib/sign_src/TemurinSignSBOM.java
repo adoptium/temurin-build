@@ -60,7 +60,7 @@ public final class TemurinSignSBOM {
      * Main entry.
      * @param args Arguments for sbom operation.
      */
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws Exception {
         String cmd = null;
         String privateKeyFile = null;
         String publicKeyFile = null;
@@ -89,30 +89,24 @@ public final class TemurinSignSBOM {
         } else if (cmd.equals("verifySignature")) {
             boolean isValid = verifySignature(fileName, publicKeyFile);
             System.out.println("Signature verification result: " + (isValid ? "Valid" : "Invalid"));
+            if (!isValid) {
+                System.exit(1);
+            }
         }
     }
 
-    static Bom signSBOM(final String jsonFile, final String pemFile) {
+    static Bom signSBOM(final String jsonFile, final String pemFile) throws IOException, GeneralSecurityException, ParseException {
         try {
             // Read the JSON file to be signed
             Bom bom = readJSONfile(jsonFile);
             String sbomDataToSign = generateBomJson(bom);
 
             // Read the private key
-            File privateKeyFile = new File(pemFile);
-            byte[] privateKeyData = new byte[(int) privateKeyFile.length()];
-            FileInputStream privateKeyFileInputStream = new FileInputStream(privateKeyFile);
-            try {
-                privateKeyFileInputStream.read(privateKeyData);
-            } finally {
-                privateKeyFileInputStream.close();
-            }
-            String privateKeyString = new String(privateKeyData, "UTF-8");
-            KeyPair sampleKey = PEMDecoder.getKeyPair(privateKeyData);
+            KeyPair signingKey = PEMDecoder.getKeyPair(Files.readAllBytes(Paths.get(pemFile)));
 
             // Sign the JSON data
             String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSign))
-                    .setSignature(new JSONAsymKeySigner(sampleKey.getPrivate()))
+                    .setSignature(new JSONAsymKeySigner(signingKey.getPrivate()))
                     .serializeToString(JSONOutputFormats.PRETTY_PRINT);
 
             JsonParser parser = new JsonParser();
@@ -168,24 +162,15 @@ public final class TemurinSignSBOM {
             JSONObjectReader reader = JSONParser.parse(signedSbomData);
 
             // Load public key from file
-            PublicKey publicKey = loadPublicKeyFromFile(publicKeyFile);
+            PublicKey publicKey = PEMDecoder.getPublicKey(Files.readAllBytes(Paths.get(publicKeyFile)));
 
             // Verify signature using the loaded public key
             JSONSignatureDecoder signature = reader.getSignature(new JSONCryptoHelper.Options());
             signature.verify(new JSONAsymKeyVerifier(publicKey));
             return true;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException | GeneralSecurityException e) {
+            System.out.println("Exception verifying json signature: " + e);
         }
         return false;
-    }
-
-    // Utility method to load public key from file
-    static PublicKey loadPublicKeyFromFile(final String publicKeyFile) throws Exception {
-        byte[] publicKeyBytes = Files.readAllBytes(Paths.get(publicKeyFile));
-        byte[] encoded = Base64.getDecoder().decode(publicKeyBytes);
-        X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded);
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return kf.generatePublic(spec);
     }
 }
