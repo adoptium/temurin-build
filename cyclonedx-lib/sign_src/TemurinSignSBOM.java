@@ -30,8 +30,6 @@ import org.webpki.json.JSONOutputFormats;
 import org.webpki.json.JSONParser;
 import org.webpki.util.PEMDecoder;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.StringReader;
 import java.io.IOException;
 import java.io.FileReader;
@@ -39,12 +37,10 @@ import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
+import java.text.ParseException;
 import java.util.logging.Logger;
-import java.util.Base64;
 
 public final class TemurinSignSBOM {
 
