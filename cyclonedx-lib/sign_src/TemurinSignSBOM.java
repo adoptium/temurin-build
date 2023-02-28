@@ -96,28 +96,21 @@ public final class TemurinSignSBOM {
     }
 
     static Bom signSBOM(final String jsonFile, final String pemFile) throws IOException, GeneralSecurityException, ParseException {
-        try {
-            // Read the JSON file to be signed
-            Bom bom = readJSONfile(jsonFile);
-            String sbomDataToSign = generateBomJson(bom);
+        // Read the JSON file to be signed
+        Bom bom = readJSONfile(jsonFile);
+        String sbomDataToSign = generateBomJson(bom);
 
-            // Read the private key
-            KeyPair signingKey = PEMDecoder.getKeyPair(Files.readAllBytes(Paths.get(pemFile)));
+        // Read the private key
+        KeyPair signingKey = PEMDecoder.getKeyPair(Files.readAllBytes(Paths.get(pemFile)));
 
-            // Sign the JSON data
-            String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSign))
-                    .setSignature(new JSONAsymKeySigner(signingKey.getPrivate()))
-                    .serializeToString(JSONOutputFormats.PRETTY_PRINT);
+        // Sign the JSON data
+        String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSign))
+                .setSignature(new JSONAsymKeySigner(signingKey.getPrivate()))
+                .serializeToString(JSONOutputFormats.PRETTY_PRINT);
 
-            JsonParser parser = new JsonParser();
-            Bom signedBom = parser.parse(new StringReader(signedData));
-            return signedBom;
-        } catch (IOException | GeneralSecurityException | org.cyclonedx.exception.ParseException e) {
-            // Log the exception with the logger
-            LOGGER.severe("An error occurred while signing the SBOM: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return null;
+        JsonParser parser = new JsonParser();
+        Bom signedBom = parser.parse(new StringReader(signedData));
+        return signedBom;
     }
 
     static String generateBomJson(final Bom bom) {
