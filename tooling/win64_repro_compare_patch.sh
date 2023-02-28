@@ -1,10 +1,23 @@
 #!/bin/bash
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+################################################################################
 
 set -e
 
 JDK_DIR="$1"
 SELF_CERT_FILE="$2"
 SELF_CERT_PASS="$3"
+VERSION_REPL="$4"
 
 if [ ! -d "${JDK_DIR}" ]; then
   echo "$JDK_DIR does not exist"
@@ -128,7 +141,11 @@ for f in $FILES
     fi
 
     # Remove version suffix, eg:17.0.6+10-LTS, this might not be present in the exe/dll
-    java BinRepl --inFile "$f" --outFile "$f" --string "17.0.6+10-LTS=17.0.6+10" --pad "00"
+    if [ ! -z "$VERSION_REPL" ]; then
+        if ! java BinRepl --inFile "$f" --outFile "$f" --string "$VERSION_REPL" --pad "00"; then
+            echo "  $VERSION_REPL not found in $f"
+        fi
+    fi
   done
 
 echo "Successfully removed all EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
@@ -145,6 +162,36 @@ for f in $FILES
   done
 
 echo "Successfully removed all EXE/DLL VS_VERSION_INFO from ${JDK_DIR}"
+
+echo "Removing all version.class from ${JDK_DIR}"
+FILES=$(find "${JDK_DIR}" -type f -path 'version.class')
+for f in $FILES
+  do
+    echo "Removing $f"
+    rm "$f"
+  done
+
+echo "Successfully removed all version.class from ${JDK_DIR}"
+
+echo "Replacing all version suffixes from ${JDK_DIR}"
+FILES=$(find "${JDK_DIR}" -type f -path 'version.*' && find "${JDK_DIR}" -type f -path 'sa.properties')
+for f in $FILES
+  do
+    echo "Removing version string suffix from $f"
+    if [ ! -z "$VERSION_REPL" ]; then
+        if ! java BinRepl --inFile "$f" --outFile "$f" --string "$VERSION_REPL"; then
+            echo "  $VERSION_REPL not found in $f"
+        fi
+    fi
+  done
+
+echo "Successfully removed all version string suffixes from ${JDK_DIR}"
+
+echo "Removing "${JDK_DIR}/lib/src_zip_expanded/java.base/java/lang/VersionProps.java"
+rm "${JDK_DIR}/lib/src_zip_expanded/java.base/java/lang/VersionProps.java"
+
+echo "Removing Vendor strings last 3 lines from ${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF "
+cat "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"  | head -n -3 > "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
 
 echo "***********"
 echo "SUCCESS :-)"
