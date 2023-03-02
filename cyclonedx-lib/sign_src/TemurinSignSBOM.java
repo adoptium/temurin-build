@@ -124,7 +124,6 @@ public final class TemurinSignSBOM {
             LOGGER.log(Level.SEVERE, "Error writing JSON file " + fileName, e);
         }
     }
-}
 
     static Bom readJSONfile(final String fileName) {
         try (FileReader reader = new FileReader(fileName)) {
