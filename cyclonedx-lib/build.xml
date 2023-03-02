@@ -22,7 +22,7 @@
 
         <!-- Dependency versions -->
         <property name="cyclonedx-core-java-version" value="7.3.2"/>
-        <property name="jackson-core-version" value="2.13.3"/>
+        <property name="jackson-core-version" value="2.14.2"/>
         <property name="jackson-annotations-version" value="2.13.3"/>
         <property name="jackson-databind-version" value="2.13.3"/>
         <property name="json-schema-version" value="1.0.58"/>

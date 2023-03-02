@@ -117,28 +117,23 @@ public final class TemurinSignSBOM {
 
     static void writeJSONfile(final Bom bom, final String fileName) {
         // Creates testJson.json file
-        FileWriter file;
         String json = generateBomJson(bom);
-        try {
-            file = new FileWriter(fileName);
+        try (FileWriter file = new FileWriter(fileName)) {
             file.write(json);
-            file.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error writing JSON file " + fileName, e);
         }
     }
+}
 
-    static Bom readJSONfile(final String fileName) {                                 // Returns parse bom
-        Bom bom = null;
-        try {
-            FileReader reader = new FileReader(fileName);
+    static Bom readJSONfile(final String fileName) {
+        try (FileReader reader = new FileReader(fileName)) {
             JsonParser parser = new JsonParser();
-            bom = parser.parse(reader);
+            return parser.parse(reader);
         } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            return bom;
+            LOGGER.log(Level.SEVERE, "Error reading JSON file " + fileName, e);
         }
+        return null;
     }
 
     static boolean verifySignature(final String jsonFile, final String publicKeyFile) {
@@ -158,7 +153,7 @@ public final class TemurinSignSBOM {
             signature.verify(new JSONAsymKeyVerifier(publicKey));
             return true;
         } catch (IOException | GeneralSecurityException e) {
-            System.out.println("Exception verifying json signature: " + e);
+            LOGGER.log(Level.SEVERE, "Exception verifying json signature", e);
         }
         return false;
     }
