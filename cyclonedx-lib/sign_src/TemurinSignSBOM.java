@@ -40,6 +40,8 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import org.cyclonedx.exception.ParseException;
+
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class TemurinSignSBOM {
