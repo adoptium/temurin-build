@@ -100,8 +100,7 @@ public final class TemurinSignSBOM {
         } else {
             System.exit(1);
         }
-    }
-    else if (cmd.equals("verifySignature")) {
+    } else if (cmd.equals("verifySignature")) {
         success = verifySignature(fileName, publicKeyFile); // set success to the result of verifySignature
         boolean isValid = success;
         System.out.println("Signature verification result: " + (isValid ? "Valid" : "Invalid"));
