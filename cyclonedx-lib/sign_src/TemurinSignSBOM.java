@@ -60,42 +60,65 @@ public final class TemurinSignSBOM {
      */
     public static void main(final String[] args) throws Exception {
         String cmd = null;
-        String privateKeyFile = null;
-        String publicKeyFile = null;
-        String fileName = null;
+String privateKeyFile = null;
+String publicKeyFile = null;
+String fileName = null;
+boolean success = false; // add a new boolean success, default to false
 
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("--jsonFile")) {
-                fileName = args[++i];
-            } else if (args[i].equals("--privateKeyFile")) {
-                privateKeyFile = args[++i];
-            } else if (args[i].equals("--publicKeyFile")) {
-                publicKeyFile = args[++i];
-            } else if (args[i].equals("--signSBOM")) {
-                cmd = "signSBOM";
-            } else if (args[i].equals("--verifySignature")) {
-                cmd = "verifySignature";
-            } else if (args[i].equals("--verbose")) {
-                verbose = true;
-            }
+for (int i = 0; i < args.length; i++) {
+    if (args[i].equals("--jsonFile")) {
+        fileName = args[++i];
+        success = true; // set success to true
+    } else if (args[i].equals("--privateKeyFile")) {
+        privateKeyFile = args[++i];
+        success = true; // set success to true
+    } else if (args[i].equals("--publicKeyFile")) {
+        publicKeyFile = args[++i];
+        success = true; // set success to true
+    } else if (args[i].equals("--signSBOM")) {
+        cmd = "signSBOM";
+        success = true; // set success to true
+    } else if (args[i].equals("--verifySignature")) {
+        cmd = "verifySignature";
+        success = true; // set success to true
+    } else if (args[i].equals("--verbose")) {
+        verbose = true;
+        success = true; // set success to true
+    }
+}
+
+if (!success) {
+    System.exit(1); // add this at the end to exit the program if success is false
+}
+
+
+
+if (cmd.equals("signSBOM")) {
+    Bom bom = signSBOM(fileName, privateKeyFile);
+    if (bom != null) {
+        if (!writeJSONfile(bom, fileName)) {
+            System.exit(1);
         }
-
-
-        if (cmd.equals("signSBOM")) {
-            Bom bom = signSBOM(fileName, privateKeyFile);
-            writeJSONfile(bom, fileName);
-        } else if (cmd.equals("verifySignature")) {
-            boolean isValid = verifySignature(fileName, publicKeyFile);
-            System.out.println("Signature verification result: " + (isValid ? "Valid" : "Invalid"));
-            if (!isValid) {
-                System.exit(1);
-            }
+    } else {
+        System.exit(1);
+    }
+}
+    else if (cmd.equals("verifySignature")) {
+        success = verifySignature(fileName, publicKeyFile); // set success to the result of verifySignature
+        boolean isValid = success;
+        System.out.println("Signature verification result: " + (isValid ? "Valid" : "Invalid"));
+        if (!isValid) {
+            System.exit(1);
         }
     }
+}
 
     static Bom signSBOM(final String jsonFile, final String pemFile) throws IOException, GeneralSecurityException, ParseException {
         // Read the JSON file to be signed
         Bom bom = readJSONfile(jsonFile);
+        if (bom == null) {
+            return null;
+        }
         String sbomDataToSign = generateBomJson(bom);
 
         // Read the private key
@@ -117,13 +140,15 @@ public final class TemurinSignSBOM {
         return json;
     }
 
-    static void writeJSONfile(final Bom bom, final String fileName) {
+    static boolean writeJSONfile(final Bom bom, final String fileName) {
         // Creates testJson.json file
         String json = generateBomJson(bom);
         try (FileWriter file = new FileWriter(fileName)) {
             file.write(json);
+            return true;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error writing JSON file " + fileName, e);
+            return false;
         }
     }
 
