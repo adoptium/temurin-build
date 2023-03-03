@@ -88,7 +88,7 @@ public final class TemurinSignSBOM {
     }
 
     if (!success) {
-        System.exit(1); // add this at the end to exit the program if success is false
+        System.exit(1);
     }
 
     if (cmd.equals("signSBOM")) {
