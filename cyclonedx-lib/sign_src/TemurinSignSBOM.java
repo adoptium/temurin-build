@@ -91,8 +91,6 @@ if (!success) {
     System.exit(1); // add this at the end to exit the program if success is false
 }
 
-
-
 if (cmd.equals("signSBOM")) {
     Bom bom = signSBOM(fileName, privateKeyFile);
     if (bom != null) {
@@ -107,11 +105,11 @@ if (cmd.equals("signSBOM")) {
         success = verifySignature(fileName, publicKeyFile); // set success to the result of verifySignature
         boolean isValid = success;
         System.out.println("Signature verification result: " + (isValid ? "Valid" : "Invalid"));
-        if (!isValid) {
-            System.exit(1);
+            if (!isValid) {
+                System.exit(1);
+            }
         }
     }
-}
 
     static Bom signSBOM(final String jsonFile, final String pemFile) throws IOException, GeneralSecurityException, ParseException {
         // Read the JSON file to be signed
