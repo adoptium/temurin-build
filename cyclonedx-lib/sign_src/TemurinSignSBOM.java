@@ -60,47 +60,47 @@ public final class TemurinSignSBOM {
      */
     public static void main(final String[] args) throws Exception {
         String cmd = null;
-String privateKeyFile = null;
-String publicKeyFile = null;
-String fileName = null;
-boolean success = false; // add a new boolean success, default to false
+        String privateKeyFile = null;
+        String publicKeyFile = null;
+        String fileName = null;
+        boolean success = false; // add a new boolean success, default to false
 
-for (int i = 0; i < args.length; i++) {
-    if (args[i].equals("--jsonFile")) {
-        fileName = args[++i];
-        success = true; // set success to true
-    } else if (args[i].equals("--privateKeyFile")) {
-        privateKeyFile = args[++i];
-        success = true; // set success to true
-    } else if (args[i].equals("--publicKeyFile")) {
-        publicKeyFile = args[++i];
-        success = true; // set success to true
-    } else if (args[i].equals("--signSBOM")) {
-        cmd = "signSBOM";
-        success = true; // set success to true
-    } else if (args[i].equals("--verifySignature")) {
-        cmd = "verifySignature";
-        success = true; // set success to true
-    } else if (args[i].equals("--verbose")) {
-        verbose = true;
-        success = true; // set success to true
+    for (int i = 0; i < args.length; i++) {
+        if (args[i].equals("--jsonFile")) {
+            fileName = args[++i];
+            success = true; // set success to true
+        } else if (args[i].equals("--privateKeyFile")) {
+            privateKeyFile = args[++i];
+            success = true; // set success to true
+        } else if (args[i].equals("--publicKeyFile")) {
+            publicKeyFile = args[++i];
+            success = true; // set success to true
+        } else if (args[i].equals("--signSBOM")) {
+            cmd = "signSBOM";
+            success = true; // set success to true
+        } else if (args[i].equals("--verifySignature")) {
+            cmd = "verifySignature";
+            success = true; // set success to true
+        } else if (args[i].equals("--verbose")) {
+            verbose = true;
+            success = true; // set success to true
+        }
     }
-}
 
-if (!success) {
-    System.exit(1); // add this at the end to exit the program if success is false
-}
+    if (!success) {
+        System.exit(1); // add this at the end to exit the program if success is false
+    }
 
-if (cmd.equals("signSBOM")) {
-    Bom bom = signSBOM(fileName, privateKeyFile);
-    if (bom != null) {
-        if (!writeJSONfile(bom, fileName)) {
+    if (cmd.equals("signSBOM")) {
+        Bom bom = signSBOM(fileName, privateKeyFile);
+        if (bom != null) {
+            if (!writeJSONfile(bom, fileName)) {
+                System.exit(1);
+            }
+        } else {
             System.exit(1);
         }
-    } else {
-        System.exit(1);
     }
-}
     else if (cmd.equals("verifySignature")) {
         success = verifySignature(fileName, publicKeyFile); // set success to the result of verifySignature
         boolean isValid = success;
