@@ -158,7 +158,7 @@
                   <arg value="--name"/>
                   <arg value="Temurin"/>
                   <arg value="--version"/>
-                  <arg value="jdk17+35"/>
+                  <arg value="jdk17.0.6"/>
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
