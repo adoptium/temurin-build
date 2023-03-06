@@ -58,7 +58,7 @@ public final class TemurinSignSBOM {
      * Main entry.
      * @param args Arguments for sbom operation.
      */
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws ParseException {
         String cmd = null;
         String privateKeyFile = null;
         String publicKeyFile = null;
