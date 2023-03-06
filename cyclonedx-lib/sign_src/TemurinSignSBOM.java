@@ -68,24 +68,32 @@ public final class TemurinSignSBOM {
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--jsonFile")) {
                 fileName = args[++i];
-                success = true; // set success to true
             } else if (args[i].equals("--privateKeyFile")) {
                 privateKeyFile = args[++i];
-                success = true; // set success to true
             } else if (args[i].equals("--publicKeyFile")) {
                 publicKeyFile = args[++i];
-                success = true; // set success to true
             } else if (args[i].equals("--signSBOM")) {
                 cmd = "signSBOM";
-                success = true; // set success to true
             } else if (args[i].equals("--verifySignature")) {
                 cmd = "verifySignature";
-                success = true; // set success to true
             } else if (args[i].equals("--verbose")) {
                 verbose = true;
-                success = true; // set success to true
             }
         }
+
+        // Set success to true only when the operation is completed successfully.
+        if (cmd.equals("signSBOM")) {
+            success = performSignOperation(fileName, privateKeyFile);
+        } else if (cmd.equals("verifySignature")) {
+            success = performVerifyOperation(fileName, publicKeyFile);
+        }
+
+        if (success) {
+            System.out.println("Operation completed successfully.");
+        } else {
+            System.out.println("Operation failed.");
+        }
+
 
         if (cmd.equals("signSBOM")) {
             Bom bom = signSBOM(fileName, privateKeyFile);
