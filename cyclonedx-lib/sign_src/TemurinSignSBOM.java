@@ -100,7 +100,7 @@ public final class TemurinSignSBOM {
                     success = false;
                 }
                 success = true; // set success to true only if signSBOM and writeJSONfile succeed
-            } catch (IOException e) {
+            } catch (IOException | GeneralSecurityException e) {
                 System.err.println("Error: " + e.getMessage());
                 success = false;
             }
