@@ -106,7 +106,6 @@ public final class TemurinSignSBOM {
         }
     }
 
-
     static Bom signSBOM(final String jsonFile, final String pemFile) throws IOException, GeneralSecurityException, ParseException {
         // Read the JSON file to be signed
         Bom bom = readJSONfile(jsonFile);
