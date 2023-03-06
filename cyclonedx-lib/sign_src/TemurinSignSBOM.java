@@ -90,21 +90,23 @@ public final class TemurinSignSBOM {
 
 
         if (cmd.equals("signSBOM")) {
-            Bom bom = signSBOM(fileName, privateKeyFile);
-            if (bom != null) {
-                if (!writeJSONfile(bom, fileName)) {
+            try {
+                Bom bom = signSBOM(fileName, privateKeyFile);
+                if (bom != null) {
+                    if (!writeJSONfile(bom, fileName)) {
+                        success = false;
+                    }
+                } else {
                     success = false;
                 }
-            } else {
+                success = true; // set success to true only if signSBOM and writeJSONfile succeed
+            } catch (IOException e) {
+                System.err.println("Error: " + e.getMessage());
                 success = false;
             }
         } else if (cmd.equals("verifySignature")) {
             success = verifySignature(fileName, publicKeyFile); // set success to the result of verifySignature
             System.out.println("Signature verification result: " + (success ? "Valid" : "Invalid"));
-        }
-
-        if (!success) {
-            System.exit(1);
         }
     }
 
