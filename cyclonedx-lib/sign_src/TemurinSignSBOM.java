@@ -58,7 +58,7 @@ public final class TemurinSignSBOM {
      * Main entry.
      * @param args Arguments for sbom operation.
      */
-    public static void main(final String[] args) throws ParseException {
+    public static void main(final String[] args) {
         String cmd = null;
         String privateKeyFile = null;
         String publicKeyFile = null;
@@ -110,25 +110,30 @@ public final class TemurinSignSBOM {
         }
     }
 
-    static Bom signSBOM(final String jsonFile, final String pemFile) throws IOException, GeneralSecurityException, ParseException {
-        // Read the JSON file to be signed
-        Bom bom = readJSONfile(jsonFile);
-        if (bom == null) {
+    static Bom signSBOM(final String jsonFile, final String pemFile) {
+        try {
+            // Read the JSON file to be signed
+            Bom bom = readJSONfile(jsonFile);
+            if (bom == null) {
+                return null;
+            }
+            String sbomDataToSign = generateBomJson(bom);
+
+            // Read the private key
+            KeyPair signingKey = PEMDecoder.getKeyPair(Files.readAllBytes(Paths.get(pemFile)));
+
+            // Sign the JSON data
+            String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSign))
+                    .setSignature(new JSONAsymKeySigner(signingKey.getPrivate()))
+                    .serializeToString(JSONOutputFormats.PRETTY_PRINT);
+
+            JsonParser parser = new JsonParser();
+            Bom signedBom = parser.parse(new StringReader(signedData));
+            return signedBom;
+        } catch (IOException | GeneralSecurityException | ParseException e) {
+            LOGGER.log(Level.SEVERE, "Error signing SBOM", e);
             return null;
         }
-        String sbomDataToSign = generateBomJson(bom);
-
-        // Read the private key
-        KeyPair signingKey = PEMDecoder.getKeyPair(Files.readAllBytes(Paths.get(pemFile)));
-
-        // Sign the JSON data
-        String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSign))
-                .setSignature(new JSONAsymKeySigner(signingKey.getPrivate()))
-                .serializeToString(JSONOutputFormats.PRETTY_PRINT);
-
-        JsonParser parser = new JsonParser();
-        Bom signedBom = parser.parse(new StringReader(signedData));
-        return signedBom;
     }
 
     static String generateBomJson(final Bom bom) {
@@ -143,7 +148,7 @@ public final class TemurinSignSBOM {
         try (FileWriter file = new FileWriter(fileName)) {
             file.write(json);
             return true;
-        } catch (Exception e) {
+        } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error writing JSON file " + fileName, e);
             return false;
         }
