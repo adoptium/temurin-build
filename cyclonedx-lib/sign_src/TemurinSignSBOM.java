@@ -90,26 +90,25 @@ public final class TemurinSignSBOM {
 
 
         if (cmd.equals("signSBOM")) {
-            try {
-                Bom bom = signSBOM(fileName, privateKeyFile);
-                if (bom != null) {
-                    if (!writeJSONfile(bom, fileName)) {
-                        success = false;
-                    }
-                } else {
+            Bom bom = signSBOM(fileName, privateKeyFile);
+            if (bom != null) {
+                if (!writeJSONfile(bom, fileName)) {
                     success = false;
                 }
-                success = true; // set success to true only if signSBOM and writeJSONfile succeed
-            } catch (IOException e) {
-                System.err.println("IO Error: " + e.getMessage());
-                success = false;
-            } catch (GeneralSecurityException e) {
-                System.err.println("Security Error: " + e.getMessage());
+            } else {
                 success = false;
             }
+            success = true; // set success to true only if signSBOM and writeJSONfile succeed
         } else if (cmd.equals("verifySignature")) {
             success = verifySignature(fileName, publicKeyFile); // set success to the result of verifySignature
             System.out.println("Signature verification result: " + (success ? "Valid" : "Invalid"));
+        }
+
+        // Set success to true only when the operation is completed successfully.
+        if (success) {
+            System.out.println("Operation completed successfully.");
+        } else {
+            System.out.println("Operation failed.");
         }
     }
 
