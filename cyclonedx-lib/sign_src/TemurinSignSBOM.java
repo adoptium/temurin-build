@@ -100,8 +100,11 @@ public final class TemurinSignSBOM {
                     success = false;
                 }
                 success = true; // set success to true only if signSBOM and writeJSONfile succeed
-            } catch (IOException | GeneralSecurityException e) {
-                System.err.println("Error: " + e.getMessage());
+            } catch (IOException e) {
+                System.err.println("IO Error: " + e.getMessage());
+                success = false;
+            } catch (GeneralSecurityException e) {
+                System.err.println("Security Error: " + e.getMessage());
                 success = false;
             }
         } else if (cmd.equals("verifySignature")) {
