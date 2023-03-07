@@ -21,14 +21,14 @@
 -->
 
         <!-- Dependency versions -->
-        <property name="cyclonedx-core-java-version" value="7.1.4"/>
-        <property name="jackson-core-version" value="2.13.3"/>
-        <property name="jackson-annotations-version" value="2.13.3"/>
-        <property name="jackson-databind-version" value="2.13.3"/>
-        <property name="json-schema-version" value="1.0.58"/>
+        <property name="cyclonedx-core-java-version" value="7.3.2"/>
+        <property name="jackson-core-version" value="2.14.2"/>
+        <property name="jackson-annotations-version" value="2.14.2"/>
+        <property name="jackson-databind-version" value="2.14.2"/>
+        <property name="json-schema-version" value="1.0.77"/>
         <property name="commons-codec-version" value="1.15"/>
         <property name="commons-io-version" value="2.11.0"/>
-        <property name="github-package-url-version" value="1.4.0"/>
+        <property name="github-package-url-version" value="1.4.1"/>
 
         <!-- classpath for running application -->
         <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar"/>
