@@ -81,14 +81,6 @@ public final class TemurinSignSBOM {
             }
         }
 
-        // Set success to true only when the operation is completed successfully.
-        if (success) {
-            System.out.println("Operation completed successfully.");
-        } else {
-            System.out.println("Operation failed.");
-        }
-
-
         if (cmd.equals("signSBOM")) {
             Bom bom = signSBOM(fileName, privateKeyFile);
             if (bom != null) {
