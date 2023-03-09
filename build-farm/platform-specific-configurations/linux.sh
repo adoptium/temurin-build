@@ -130,6 +130,20 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION
   fi
 fi
 
+if [ "${VARIANT}" == "${BUILD_VARIANT_LOONGSON}" ]; then
+  if [ "$JAVA_FEATURE_VERSION" -ne 8 ]; then
+    echo "Only Java 8 is supported for now"
+    exit 1
+  fi
+  if [ "${ARCHITECTURE}" == "loongarch64" ]; then
+    export LANG=C
+    echo Loongson jdk8 requires a Loongson boot JDK - downloading one ...
+    mkdir -p "$PWD/jdk-8"
+    curl -L "https://github.com/loongson/build-tools/releases/download/2022.09.06/loongson8.1.11-jdk8u332b09-linux-loongarch64-clfs-6.3-0.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+    export "${BOOT_JDK_VARIABLE}"="$PWD/jdk-8"
+  fi
+fi
+
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
   bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
