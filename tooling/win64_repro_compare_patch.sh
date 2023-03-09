@@ -14,15 +14,18 @@
 
 set -e
 
-JDK_DIR="$1"
-SELF_CERT_FILE="$2"
-SELF_CERT_PASS="$3"
-VERSION_REPL="$4"
+DEL_CERT="$1"
+JDK_DIR="$2"
+SELF_CERT_FILE="$3"
+SELF_CERT_PASS="$4"
+VERSION_REPL="$5"
 
 if [ ! -d "${JDK_DIR}" ]; then
   echo "$JDK_DIR does not exist"
   exit 1
 fi
+
+if [ "$DEL_CERT" == "yes" ]; then
 
 echo "Expanding the 'modules' Image to remove signatures from within.."
 jimage extract --dir "${JDK_DIR}/lib/modules_extracted" "${JDK_DIR}/lib/modules"
@@ -93,9 +96,24 @@ for f in $FILES
 
 echo "Successfully removed all SELF_CERT Signatures from ${JDK_DIR}"
 
+exit
+fi
+
 echo "Removing lib/security/cacerts as different ones are used by vendors"
 rm ${JDK_DIR}/lib/security/cacerts
 
+echo "Updating EXE/DLL VS_VERSION_INFO from ${JDK_DIR}"
+FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+for f in $FILES
+  do
+    echo "Removing EXE/DLL VS_VERSION_INFO from $f"
+    if ! UpdateVsVersionInfo "$f" "CompanyName=AAAAAA"; then
+        echo "  FAILED ==> UpdateVsVersionInfo \"$f\" \"CompanyName=AAAAAA\""
+	exit 1
+    fi
+  done
+
+echo "Successfully updated all EXE/DLL VS_VERSION_INFO from ${JDK_DIR}"
 
 echo "Removing EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
 FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
@@ -150,21 +168,8 @@ for f in $FILES
 
 echo "Successfully removed all EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
 
-echo "Removing EXE/DLL VS_VERSION_INFO from ${JDK_DIR}"
-FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
-for f in $FILES
-  do
-    echo "Removing EXE/DLL VS_VERSION_INFO from $f"
-    if ! java WinVersionInfoDel --inFile "$f" --outFile "$f"; then
-        echo "  FAILED ==> java WinVersionInfoDel --inFile \"$f\" --outFile \"$f\""
-	exit 1
-    fi
-  done
-
-echo "Successfully removed all EXE/DLL VS_VERSION_INFO from ${JDK_DIR}"
-
 echo "Removing all version.class from ${JDK_DIR}"
-FILES=$(find "${JDK_DIR}" -type f -path 'version.class')
+FILES=$(find "${JDK_DIR}" -type f -name 'version.class')
 for f in $FILES
   do
     echo "Removing $f"
@@ -174,7 +179,7 @@ for f in $FILES
 echo "Successfully removed all version.class from ${JDK_DIR}"
 
 echo "Replacing all version suffixes from ${JDK_DIR}"
-FILES=$(find "${JDK_DIR}" -type f -path 'version.*' && find "${JDK_DIR}" -type f -path 'sa.properties')
+FILES=$(find "${JDK_DIR}" -type f -name 'version.*' && find "${JDK_DIR}" -type f -name 'sa.properties')
 for f in $FILES
   do
     echo "Removing version string suffix from $f"
@@ -187,10 +192,10 @@ for f in $FILES
 
 echo "Successfully removed all version string suffixes from ${JDK_DIR}"
 
-echo "Removing "${JDK_DIR}/lib/src_zip_expanded/java.base/java/lang/VersionProps.java"
+echo "Removing ${JDK_DIR}/lib/src_zip_expanded/java.base/java/lang/VersionProps.java"
 rm "${JDK_DIR}/lib/src_zip_expanded/java.base/java/lang/VersionProps.java"
 
-echo "Removing Vendor strings last 3 lines from ${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF "
+echo "Removing Vendor strings last 3 lines from ${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
 cat "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"  | head -n -3 > "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
 
 echo "***********"
