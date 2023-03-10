@@ -71,10 +71,29 @@ class BinRepl {
 
         byte[] outBytes;
 	if (hex != null) {
-            byte[] binA = hexformat.parseHex(hex[0].replaceAll(" ",":"));
+            // Check for fuzzy bytes
+            String[] aTmp = hex[0].replaceAll(" ",":").trim().split(":");
+            boolean[] fuzzyBytes = new boolean[aTmp.length];
+            int i = 0;
+            String hexA = "";
+            for(String aHex : aTmp) {
+                if (aHex.equals("?")) {
+                    fuzzyBytes[i] = true;
+                    hexA += "00";
+                } else {
+                    fuzzyBytes[i] = false;
+                    hexA += aHex;
+                }
+                i++;
+                if (i < aTmp.length) {
+                    hexA += ":";
+                }
+            }
+
+            byte[] binA = hexformat.parseHex(hexA);
             byte[] binB = hexformat.parseHex(hex[1].replaceAll(" ",":"));
 
-            outBytes = bin_replace(inBytes, binA, binB, firstOnly, boundary32bitOnly);
+            outBytes = bin_replace(inBytes, binA, binB, fuzzyBytes, firstOnly, boundary32bitOnly);
 
             if (outBytes == null) {
                 System.out.println("replacement hex not found in: "+inFile);
@@ -101,7 +120,10 @@ class BinRepl {
                 }
             }
 
-   	    outBytes = bin_replace(inBytes, binA, binB, firstOnly, boundary32bitOnly);
+            boolean[] fuzzyBytes = new boolean[binA.length];
+            for(int i=0; i<fuzzyBytes.length; i++) fuzzyBytes[i] = false;
+
+   	    outBytes = bin_replace(inBytes, binA, binB, fuzzyBytes, firstOnly, boundary32bitOnly);
 
             if (outBytes == null) {
                 System.out.println("replacement string not found in: "+inFile);
@@ -117,7 +139,8 @@ class BinRepl {
     }
 
     // Replace byte[] x with y in b1 and return new array b2
-    static byte[] bin_replace(byte[] b1, byte[] x, byte[] y, boolean firstOnly, boolean boundary32bitOnly) {
+    // Any fuzzyByte matches any value
+    static byte[] bin_replace(byte[] b1, byte[] x, byte[] y, boolean[] fuzzyByte, boolean firstOnly, boolean boundary32bitOnly) {
         byte[] b2 = new byte[b1.length+4096]; // 4096 extra should be plenty!
         boolean found = false; // A match was found to replace
 
@@ -133,7 +156,7 @@ class BinRepl {
                 match = false;
             } else {
                 for(int j=0; j<buf; j++) {
-                    if (b1[i1+j] != x[j]) {
+                    if (b1[i1+j] != x[j] && !fuzzyByte[j]) {
                         match = false;
                         break;
                     }
