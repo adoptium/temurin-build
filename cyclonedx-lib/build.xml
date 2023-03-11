@@ -23,15 +23,17 @@
         <!-- Dependency versions -->
         <property name="cyclonedx-core-java-version" value="7.3.2"/>
         <property name="jackson-core-version" value="2.14.2"/>
+
         <property name="jackson-annotations-version" value="2.14.2"/>
         <property name="jackson-databind-version" value="2.14.2"/>
         <property name="json-schema-version" value="1.0.77"/>
+
         <property name="commons-codec-version" value="1.15"/>
         <property name="commons-io-version" value="2.11.0"/>
         <property name="github-package-url-version" value="1.4.1"/>
 
         <!-- classpath for running application -->
-        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar"/>
+        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar:build/sign_jar/temurin-sign-sbom.jar"/>
 
         <target name="dep-checks">
                 <available file="build/jar/cyclonedx-core-java.jar" property="cyclonedx_available"/>
@@ -49,26 +51,40 @@
         <target name="download-cyclonedx" unless="cyclonedx_available">
                 <echo message="Downloading cyclonedx-core-java version ${cyclonedx-core-java-version}"/>
                 <download-file destdir="build/jar" destfile="cyclonedx-core-java.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=org/cyclonedx/cyclonedx-core-java/${cyclonedx-core-java-version}/cyclonedx-core-java-${cyclonedx-core-java-version}.jar"/>
-	</target>
+	      </target>
 
         <target name="download-jackson-core" unless="jackson-core_available">
                 <echo message="Downloading jackson-core version ${jackson-core-version}"/>
                 <download-file destdir="build/jar" destfile="jackson-core.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"/>
         </target>
 
-        <target name="clone-and-build-openkeystore">
-                <exec dir="./" executable="git">
-                <arg value="clone" />
-                <arg value="https://github.com/cyberphone/openkeystore.git" />
-                </exec>
-                <exec dir="./openkeystore/library" executable="ant">
-                <arg value="build" />
-                </exec>
-                <copy todir="build/jar">
-                <fileset dir="openkeystore/library/dist" includes="*.jar" />
-                </copy>
+        <target name="clone-and-build-openkeystore" unless="openkeystore_available">
+		            <mkdir dir="build"/>
+		            <exec executable="git" dir="build">
+			          <arg line="clone https://github.com/cyberphone/openkeystore" />
+		            </exec>
+		            <ant dir="build/openkeystore/library" target="build"/>
         </target>
 
+        <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
+                <echo message="Building cyclonedx-lib TemurinSignSBOM"/>
+        </target>
+
+        <target name="compile-sign-sbom">
+                <mkdir dir="build/sign_classes"/>
+                <javac srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar:build/openkeystore/library/dist/webpki.org-webutil-1.00.jar" includeantruntime="false"/>
+                <javac debug="true" debuglevel="lines,vars,source" srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar:build/openkeystore/library/dist/webpki.org-webutil-1.00.jar" includeantruntime="false"/>
+        </target>
+
+
+        <target name="jar-sign-sbom">
+                <mkdir dir="build/sign_jar"/>
+                <jar destfile="build/sign_jar/temurin-sign-sbom.jar" basedir="build/sign_classes">
+                        <manifest>
+                                <attribute name="Main-Class" value="temurin.sbom.TemurinSignSBOM"/>
+                        </manifest>
+                </jar>
+        </target>
 
         <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
                 <echo message="Downloading jackson-dataformat-xml version ${jackson-databind-version}"/>
@@ -105,14 +121,6 @@
                 <download-file destdir="build/jar" destfile="github-package-url.jar" srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
         </target>
 
-        <target name="build-openkeystore" unless="openkeystore_available">
-		            <mkdir dir="build"/>
-		            <exec executable="git" dir="build">
-			          <arg line="clone https://github.com/cyberphone/openkeystore" />
-		            </exec>
-		            <ant dir="build/openkeystore/library" target="build"/>
-        </target>
-
 	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
                 <echo message="Building cyclonedx-lib"/>
         </target>
@@ -134,6 +142,44 @@
                                 <attribute name="Main-Class" value="temurin.sbom.TemurinGenSBOM"/>
                         </manifest>
                 </jar>
+        </target>
+
+        <property name="testSBOMFile" location="build/testSBOM.json"/>
+        <property name="privatePemFile" location="build/RSAPrivate.pem"/>
+        <property name="publicPemFile" location="build/RSAPublic.pub"/>
+
+        <target name="runSignAndVerifySBOM">
+                <delete file="${testSBOMFile}"/>
+                <delete file="${privatePemFile}"/>
+                <delete file="${publicPemFile}"/>
+                <exec command="openssl genpkey -algorithm RSA -pass pass:test -outform PEM -out ${privatePemFile} -pkeyopt rsa_keygen_bits:2048"/>
+                <exec command="openssl rsa -in ${privatePemFile} -passin pass:test -pubout -out ${publicPemFile}"/>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--createNewSBOM"/>
+                  <arg value="--name"/>
+                  <arg value="Temurin"/>
+                  <arg value="--version"/>
+                  <arg value="jdk17.0.6"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--signSBOM"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                  <arg value="--privateKeyFile"/>
+                  <arg value="${privatePemFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinSignSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--verifySignature"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                  <arg value="--publicKeyFile"/>
+                  <arg value="${publicPemFile}"/>
+                </java>
         </target>
 
         <target name="run">

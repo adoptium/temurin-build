@@ -7,6 +7,22 @@ createSBOMFile() {
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "${jsonFile}"
 }
 
+signSBOMFile() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local privateKeyFile="${4}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinSignSBOM --signSBOM --jsonFile "${jsonFile}" --privateKeyFile "${privateKeyFile}"
+}
+
+verifySBOMSignature() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local publicKeyFile="${4}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinSignSBOM --verifySBOMSignature --jsonFile "${jsonFile}" --publicKeyFile "${publicKeyFile}"
+}
+
 # Set basic SBMO metadata with timestamp, authors, manufacture to ${sbomJson}
 addSBOMMetadata() {
   local javaHome="${1}"
