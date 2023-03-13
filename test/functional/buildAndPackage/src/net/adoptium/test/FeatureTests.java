@@ -145,7 +145,7 @@ public class FeatureTests {
 
             int retCode = processBuilder.start().waitFor();
             if (!jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X64)
-                || !jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.AARCH64)
+                && !jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.AARCH64)
             ) {
                 if (shouldBePresent) {
                     assertEquals(retCode, 0, "Expected ZGC to be present but it is absent.");
