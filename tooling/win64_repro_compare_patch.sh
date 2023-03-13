@@ -31,11 +31,6 @@ echo "Expanding the 'modules' Image to remove signatures from within.."
 jimage extract --dir "${JDK_DIR}/lib/modules_extracted" "${JDK_DIR}/lib/modules"
 rm ${JDK_DIR}/lib/modules
 
-echo "Expanding the 'lib/jrt-fs.jar' to remove signatures from within.."
-mkdir ${JDK_DIR}/lib/jrt-fs-expanded
-unzip -d ${JDK_DIR}/lib/jrt-fs-expanded ${JDK_DIR}/lib/jrt-fs.jar
-rm ${JDK_DIR}/lib/jrt-fs.jar
-
 echo "Expanding the 'src.zip' to normalize file permissions"
 unzip ${JDK_DIR}/lib/src.zip -d ${JDK_DIR}/lib/src_zip_expanded
 rm ${JDK_DIR}/lib/src.zip
@@ -52,6 +47,15 @@ for f in $FILES
     jmod extract --dir "${expand_dir}" "$f"
     rm "$f"
   done
+
+echo "Expanding the 'jrt-fs.jar' to remove signatures from within.."
+mkdir ${JDK_DIR}/lib/jrt-fs-expanded
+unzip -d ${JDK_DIR}/lib/jrt-fs-expanded ${JDK_DIR}/lib/jrt-fs.jar
+rm ${JDK_DIR}/lib/jrt-fs.jar
+
+mkdir ${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded
+unzip -d ${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded ${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar
+rm ${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar
 
 echo "Removing all Signatures from ${JDK_DIR}"
 FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
@@ -102,18 +106,22 @@ fi
 echo "Removing lib/security/cacerts as different ones are used by vendors"
 rm ${JDK_DIR}/lib/security/cacerts
 
-echo "Updating EXE/DLL VS_VERSION_INFO from ${JDK_DIR}"
+echo "Updating EXE/DLL VS_VERSION_INFO in ${JDK_DIR}"
 FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
 for f in $FILES
   do
     echo "Removing EXE/DLL VS_VERSION_INFO from $f"
-    if ! UpdateVsVersionInfo "$f" "CompanyName=AAAAAA"; then
-        echo "  FAILED ==> UpdateVsVersionInfo \"$f\" \"CompanyName=AAAAAA\""
-	exit 1
+    # Neutralize CompanyName
+    oldVSInfoLen=$(UpdateVsVersionInfo "$f" "CompanyName=AAAAAA" | grep "OldLen" | tr -d ' ' | cut -d'=' -f2)
+    # Replace rdata section reference to .rsrc$ string with a neutral value
+    # ???? is a length of the referenced rsrc resource section. Differing Version Info resource length means this length differs
+    # fuzzy search: "????\.rsrc\$" in hex:
+    if ! java BinRepl --inFile "$f" --outFile "$f" --hex "?:?:?:?:2e:72:73:72:63:24-AA:AA:AA:AA:2e:72:73:72:63:24"; then
+        echo "  No .rsrc$ rdata reference found in $f"
     fi
   done
 
-echo "Successfully updated all EXE/DLL VS_VERSION_INFO from ${JDK_DIR}"
+echo "Successfully updated all EXE/DLL VS_VERSION_INFO in ${JDK_DIR}"
 
 echo "Removing EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
 FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
@@ -192,8 +200,10 @@ for f in $FILES
 
 echo "Successfully removed all version string suffixes from ${JDK_DIR}"
 
-echo "Removing ${JDK_DIR}/lib/src_zip_expanded/java.base/java/lang/VersionProps.java"
+echo "Removing ${JDK_DIR}/**/VersionProps.java & .class"
 rm "${JDK_DIR}/lib/src_zip_expanded/java.base/java/lang/VersionProps.java"
+rm "${JDK_DIR}/jmods/expanded_java.base.jmod/classes/java/lang/VersionProps.class"
+rm "${JDK_DIR}/lib/modules_extracted/java.base/java/lang/VersionProps.class"
 
 echo "Removing Vendor strings last 3 lines from ${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
 cat "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"  | head -n -3 > "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"

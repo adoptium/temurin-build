@@ -133,8 +133,8 @@ int main(int argc, char** argv) {
 		return 1;
             }
 
-	    printf("OldLen = %d\n", oldLen);
-	    printf("NewLen = %d\n", newLen);
+	    printf("OldLen = %08x\n", oldLen);
+	    printf("NewLen = %08x\n", newLen);
 
             if (UpdateResource(hResource,
                                RT_VERSION,
