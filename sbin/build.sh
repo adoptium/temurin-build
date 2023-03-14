@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2155,SC2153,SC2038,SC1091,SC2116
+# shellcheck disable=SC2155,SC2153,SC2038,SC1091,SC2116,SC2086
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
