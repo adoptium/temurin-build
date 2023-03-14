@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2155,SC2153,SC2038,SC1091,SC2116
+# shellcheck disable=SC2155,SC2153,SC2038,SC1091,SC2116,SC2086
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -319,11 +319,11 @@ configureVersionStringParameter() {
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != 8 ]; then
     addConfigureArg "--with-vendor-name=" "\"${BUILD_CONFIG[VENDOR]}\""
   fi
-  addConfigureArg "--with-vendor-url=" "${BUILD_CONFIG[VENDOR_URL]:-""}"
 
   # This looks silly, but in the case where someone is building a plain hotspot
   # This makes it a bit easier to find the code that sets it to override
   # Replace file:///dev/null with a URL similar to the vendor ones in the section above
+  addConfigureArg "--with-vendor-url=" "${BUILD_CONFIG[VENDOR_URL]:-"file:///dev/null"}"
   addConfigureArg "--with-vendor-bug-url=" "${BUILD_CONFIG[VENDOR_BUG_URL]:-"file:///dev/null"}"
   addConfigureArg "--with-vendor-vm-bug-url=" "${BUILD_CONFIG[VENDOR_VM_BUG_URL]:-"file:///dev/null"}"
 
