@@ -52,7 +52,7 @@
                 <echo message="Downloading cyclonedx-core-java version ${cyclonedx-core-java-version}"/>
                 <download-file 
                   destfile="cyclonedx-core-java.jar"
-                  checksum="311ef7d1d2802ab0f0d3babc4345117153599061716692fe61d736b659a00c48"
+                  checksum="2a454fbde41c35b9c613b9d5060c1e2c7bf277fd"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=org/cyclonedx/cyclonedx-core-java/${cyclonedx-core-java-version}/cyclonedx-core-java-${cyclonedx-core-java-version}.jar"
                   />
 	      </target>
@@ -60,7 +60,7 @@
         <target name="download-jackson-core" unless="jackson-core_available">
                 <echo message="Downloading jackson-core version ${jackson-core-version}"/>
                 <download-file
-                  checksum="256ff34118ab292d1b4f3ee4d2c3e5e5f0f609d8e07c57e8ad1f51c46d4fbb46" 
+                  checksum="f804090e6399ce0cf78242db086017512dd71fcc"
                   destfile="jackson-core.jar" 
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"
                   />
@@ -97,7 +97,7 @@
         <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
                 <echo message="Downloading jackson-dataformat-xml version ${jackson-databind-version}"/>
                 <download-file
-                  checksum="f0c2074cf7e3bf0d48e2554fac2c4955361ffa3bce470c3434e52cb41c01982a"
+                  checksum="01e71fddbc80bb86f71a6345ac1e8ab8a00e7134"
                   destfile="jackson-dataformat-xml.jar"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/dataformat/jackson-dataformat-xml/${jackson-databind-version}/jackson-dataformat-xml-${jackson-databind-version}.jar"/>
         </target>
@@ -105,7 +105,7 @@
         <target name="download-jackson-databind" unless="jackson-databind_available">
                 <echo message="Downloading jackson-databind version ${jackson-databind-version}"/>
                 <download-file
-                  checksum="4f74337b6d18664be0f5b15c6664b17aa3972c9c175092328b139b894ff66f19"
+                  checksum="a7aae9525864930723e3453ab799521fdfd9d873"
                   destfile="jackson-databind.jar"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/${jackson-databind-version}/jackson-databind-${jackson-databind-version}.jar"/>
         </target>
@@ -121,7 +121,7 @@
         <target name="download-json-schema" unless="json-schema_available">
                 <echo message="Downloading json-schema version ${json-schema-version}"/>
                 <download-file
-                  checksum="0f80033c38f6ffe9c5781ae7cbe596407975f0d59128461e4b48e20731a2be07"
+                  checksum="29d953a66be49e6aeb8dac1310818b8e037e237b"
                   destfile="json-schema.jar"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=com/networknt/json-schema-validator/${json-schema-version}/json-schema-validator-${json-schema-version}.jar"/>
         </target>
