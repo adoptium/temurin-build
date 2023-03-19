@@ -50,9 +50,9 @@
 
         <target name="download-cyclonedx" unless="cyclonedx_available">
                 <echo message="Downloading cyclonedx-core-java version ${cyclonedx-core-java-version}"/>
-                <download-file 
+                <download-file
                   destfile="cyclonedx-core-java.jar"
-                  checksum="2a454fbde41c35b9c613b9d5060c1e2c7bf277fd"
+                  checksum="88193228f85a955127dc73e1c72efc9e08e18a01d227df47d0865dc20eceffd1"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=org/cyclonedx/cyclonedx-core-java/${cyclonedx-core-java-version}/cyclonedx-core-java-${cyclonedx-core-java-version}.jar"
                   />
 	      </target>
@@ -61,7 +61,7 @@
                 <echo message="Downloading jackson-core version ${jackson-core-version}"/>
                 <download-file
                   checksum="f804090e6399ce0cf78242db086017512dd71fcc"
-                  destfile="jackson-core.jar" 
+                  destfile="jackson-core.jar"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"
                   />
         </target>
