@@ -481,8 +481,8 @@
 		<attribute name="srcurl" description="URL of file to download"/>
 		<attribute name="destdir" default="build/jar" description="Directory in which to place the downloaded file"/>
 		<attribute name="destfile" description="File name of the downloaded file"/>
-    <attribute name="checksum" description="Expected checksum value of the downloaded file"/>
-    <attribute name="algorithm" default="SHA-256" description="Algorithm for checksum"/>
+		<attribute name="checksum" description="Expected checksum value of the downloaded file"/>
+		<attribute name="algorithm" default="SHA-256" description="Algorithm for checksum"/>
 		<sequential>
 			<echo message="Executing macro download-file"/>
 			<echo message="File to download: @{srcurl}"/>
