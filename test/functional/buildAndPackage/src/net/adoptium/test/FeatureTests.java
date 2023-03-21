@@ -181,6 +181,11 @@ public class FeatureTests {
                 shouldBePresent = true;
             }
         }
+        if (jdkVersion.isNewerOrEqual(20)) {
+            if (jdkPlatform.runsOn(OperatingSystem.AIX)) {
+                shouldBePresent = true;
+            }
+        }
         LOGGER.info(String.format("Detected %s on %s, expect JFR to be present: %s",
                 jdkVersion, jdkPlatform, shouldBePresent));
         List<String> command = new ArrayList<>();
