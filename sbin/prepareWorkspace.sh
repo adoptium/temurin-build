@@ -138,10 +138,12 @@ checkoutRequiredCodeToBuild() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
     git fetch --tags || rc=$?
     if [ $rc -eq 0 ]; then
-      if git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
-        echo "looks like the scm ref given is a valid tag, so treat it as a tag"
+      git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}" || rc=$?
+      if [ $rc -ne 0 ]; then
+        echo "looks like the scm ref given is a commitID, so treat it as a tag"
         tag="${BUILD_CONFIG[BRANCH]}"
         BUILD_CONFIG[TAG]="${tag}"
+        rc=0
       fi
     else
       echo "Failed cmd: git fetch --tags"
@@ -165,7 +167,20 @@ checkoutRequiredCodeToBuild() {
           echo "Failed cmd: git checkout \"${tag}\""
         fi
       else
-        echo "Failed cmd: git fetch origin \"refs/tags/${tag}:refs/tags/${tag}\""
+        echo "Checking out commit id ${tag}"
+        rc=0
+        git checkout $tag || rc=$?
+        if [ $rc -eq 0 ]; then
+          git reset --hard || rc=$?
+          if [ $rc -eq 0 ]; then
+            echo "Checked out tag ${tag}"
+          else
+            echo "Failed cmd: git reset --hard"
+          fi
+        else
+          echo "Failed cmd: git checkout \"${tag}\""
+        fi
+        echo "Error Failed cmd: git checkout \"${tag}\""
       fi
     else
       git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}" || rc=$?
@@ -179,8 +194,6 @@ checkoutRequiredCodeToBuild() {
           else
             echo "Failed cmd: git reset --hard \"origin/${BUILD_CONFIG[BRANCH]}\""
           fi
-        else
-          echo "Failed cmd: git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]}"
         fi
       else
         echo "Failed cmd: git remote set-branches --add origin \"${BUILD_CONFIG[BRANCH]}\""
