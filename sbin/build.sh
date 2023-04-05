@@ -105,11 +105,22 @@ configureReproducibleBuildParameter() {
           CONFIGURE_ARGS="${CONFIGURE_ARGS//--enable-ccache/}"
       else
           # Use BUILD_TIMESTAMP date
-          addConfigureArg "--with-source-date=" "\"${BUILD_CONFIG[BUILD_TIMESTAMP]}\""
+
+          # Convert BUILD_TIMESTAMP to seconds since Epoch
+          local buildTimestampSeconds
+          local isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox" || true)
+          if [ "x${isGnuCompatDate}" != "x" ]
+          then
+              buildTimestampSeconds=$(date --utc --date="${BUILD_CONFIG[BUILD_TIMESTAMP]}" +"%s")
+          else
+              buildTimestampSeconds=$(date -u -j -f "%Y-%m-%d %H:%M:%S" "${BUILD_CONFIG[BUILD_TIMESTAMP]}" +"%s")
+          fi
+
+          addConfigureArg "--with-source-date=" "${buildTimestampSeconds}"
 
           # Specify --with-hotspot-build-time to ensure dual pass builds like MacOS use same time
           # Use supplied date
-          addConfigureArg "--with-hotspot-build-time=" "\"${BUILD_CONFIG[BUILD_TIMESTAMP]}\""
+          addConfigureArg "--with-hotspot-build-time=" "'${BUILD_CONFIG[BUILD_TIMESTAMP]}'"
       fi
       # Ensure reproducible binary with a unique build user identifier
       addConfigureArg "--with-build-user=" "${BUILD_CONFIG[BUILD_VARIANT]}"
@@ -650,7 +661,11 @@ executeTemplatedFile() {
   if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 19 || "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 17 ]]; then
     if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]; then
       # For "release" reproducible builds get openjdk timestamp used
-      BUILD_CONFIG[BUILD_TIMESTAMP]=$(grep SOURCE_DATE_ISO_8601 build/*/spec.gmk | tr -s ' ' | cut -d' ' -f4)
+      local buildTimestamp=$(grep SOURCE_DATE_ISO_8601 build/*/spec.gmk | tr -s ' ' | cut -d' ' -f4)
+      # BusyBox doesn't use T Z iso8601 format
+      buildTimestamp="${buildTimestamp//T/ }"
+      buildTimestamp="${buildTimestamp//Z/}"
+      BUILD_CONFIG[BUILD_TIMESTAMP]="${buildTimestamp}"
     fi
   fi
 
