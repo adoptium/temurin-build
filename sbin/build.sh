@@ -644,8 +644,8 @@ executeTemplatedFile() {
     exit 2
   fi
 
-  if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 19 || "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 17 ]]
-    if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]
+  if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 19 || "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 17 ]]; then
+    if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]; then
       # For "release" reproducible builds get openjdk timestamp used
       BUILD_CONFIG[BUILD_TIMESTAMP]=$(grep SOURCE_DATE_ISO_8601 build/*/spec.gmk | tr -s ' ' | cut -d' ' -f4)
     fi
