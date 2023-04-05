@@ -278,7 +278,7 @@ configureVersionStringParameter() {
   # Convert ISO-8601 buildTimestamp string to dateSuffix format: %Y%m%d%H%M
   local dateSuffix
   if [ "x${isGnuCompatDate}" != "x" ]
-  then"${message//[0-9]/X}"
+  then
     # BusyBox doesn't use T Z iso8601 format
     local dateTmp="${buildTimestamp//T/ }"
     dateTmp="${dateTmp//Z/}"
