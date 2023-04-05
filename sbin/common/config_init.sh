@@ -132,7 +132,7 @@ index=0
 while [  $index -lt $numParams ]; do
     paramName=${CONFIG_PARAMS[$index]};
     eval declare -r -x "$paramName=$index"
-    PARAM_LOOKUP[$index]=$paramName
+    PARAM_LOOKUP[index]=$paramName
 
     # shellcheck disable=SC2219
     let index=index+1
