@@ -262,15 +262,18 @@ configureVersionStringParameter() {
   local isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox" || true)
 
   if [[ -n "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}" ]]; then
-    # Use input reproducible build date supplied in ISO8601 format
+    # Use input reproducible build date supplied in ISO8601 format UTC time
     buildTimestamp="${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}"
+    # BusyBox doesn't use T Z iso8601 format
+    buildTimestamp="${buildTimestamp//T/ }"
+    buildTimestamp="${buildTimestamp//Z/}"
   else
     # Get current ISO-8601 datetime
     if [ "x${isGnuCompatDate}" != "x" ]
     then
-      buildTimestamp=$(date --utc +"%Y-%m-%dT%H:%M:%SZ")
+      buildTimestamp=$(date --utc +"%Y-%m-%d %H:%M:%S")
     else
-      buildTimestamp=$(date -u -j +"%Y-%m-%dT%H:%M:%SZ") 
+      buildTimestamp=$(date -u -j +"%Y-%m-%d %H:%M:%S") 
     fi
   fi
   BUILD_CONFIG[BUILD_TIMESTAMP]="${buildTimestamp}"
@@ -279,12 +282,9 @@ configureVersionStringParameter() {
   local dateSuffix
   if [ "x${isGnuCompatDate}" != "x" ]
   then
-    # BusyBox doesn't use T Z iso8601 format
-    local dateTmp="${buildTimestamp//T/ }"
-    dateTmp="${dateTmp//Z/}"
-    dateSuffix=$(date --utc --date="${dateTmp}" +"%Y%m%d%H%M")
+    dateSuffix=$(date --utc --date="${buildTimestamp}" +"%Y%m%d%H%M")
   else
-    dateSuffix=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "${buildTimestamp}" +"%Y%m%d%H%M")
+    dateSuffix=$(date -u -j -f "%Y-%m-%d %H:%M:%S" "${buildTimestamp}" +"%Y%m%d%H%M")
   fi
 
   # Configures "vendor" jdk properties.
