@@ -105,11 +105,11 @@ configureReproducibleBuildParameter() {
           CONFIGURE_ARGS="${CONFIGURE_ARGS//--enable-ccache/}"
       else
           # Use BUILD_TIMESTAMP date
-          addConfigureArg "--with-source-date=" "'${BUILD_CONFIG[BUILD_TIMESTAMP]}'"
+          addConfigureArg "--with-source-date=" "\"${BUILD_CONFIG[BUILD_TIMESTAMP]}\""
 
           # Specify --with-hotspot-build-time to ensure dual pass builds like MacOS use same time
           # Use supplied date
-          addConfigureArg "--with-hotspot-build-time=" "'${BUILD_CONFIG[BUILD_TIMESTAMP]}'"
+          addConfigureArg "--with-hotspot-build-time=" "\"${BUILD_CONFIG[BUILD_TIMESTAMP]}\""
       fi
       # Ensure reproducible binary with a unique build user identifier
       addConfigureArg "--with-build-user=" "${BUILD_CONFIG[BUILD_VARIANT]}"
