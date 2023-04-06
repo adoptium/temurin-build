@@ -108,7 +108,7 @@ configureReproducibleBuildParameter() {
 
           # Convert BUILD_TIMESTAMP to seconds since Epoch
           local buildTimestampSeconds
-          if isGnuCompatDate(); then
+          if isGnuCompatDate; then
               buildTimestampSeconds=$(date --utc --date="${BUILD_CONFIG[BUILD_TIMESTAMP]}" +"%s")
           else
               buildTimestampSeconds=$(date -u -j -f "%Y-%m-%d %H:%M:%S" "${BUILD_CONFIG[BUILD_TIMESTAMP]}" +"%s")
@@ -276,7 +276,7 @@ configureVersionStringParameter() {
     buildTimestamp="${buildTimestamp//Z/}"
   else
     # Get current ISO-8601 datetime
-    if isGnuCompatDate(); then
+    if isGnuCompatDate; then
       buildTimestamp=$(date --utc +"%Y-%m-%d %H:%M:%S")
     else
       buildTimestamp=$(date -u -j +"%Y-%m-%d %H:%M:%S") 
@@ -286,7 +286,7 @@ configureVersionStringParameter() {
 
   # Convert ISO-8601 buildTimestamp string to dateSuffix format: %Y%m%d%H%M
   local dateSuffix
-  if isGnuCompatDate(); then
+  if isGnuCompatDate; then
     dateSuffix=$(date --utc --date="${buildTimestamp}" +"%Y%m%d%H%M")
   else
     dateSuffix=$(date -u -j -f "%Y-%m-%d %H:%M:%S" "${buildTimestamp}" +"%Y%m%d%H%M")
