@@ -139,6 +139,7 @@ if diff -r "jdk-${TEMURIN_VERSION}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "re
     echo "Compare identical !"
     exit 0
 else
+    cat "reprotest.$(uname).$TEMURIN_VERSION.diff"
     echo "Differences found..., logged in: reprotest.$(uname).$TEMURIN_VERSION.diff"
     exit 1
 fi
