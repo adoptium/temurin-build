@@ -135,12 +135,11 @@ tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare.$$
 
 cleanBuildInfo
 
-diff -r "jdk-${TEMURIN_VERSION}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 | tee "reprotest.$(uname).$TEMURIN_VERSION.diff"
-if [ "$(wc -l < "reprotest.$(uname).$TEMURIN_VERSION.diff")" -gt 0 ]; then
-    echo "Differences found..., logged in: reprotest.$(uname).$TEMURIN_VERSION.diff"
-    exit 1
-else
+if diff -r "jdk-${TEMURIN_VERSION}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.$(uname).$TEMURIN_VERSION.diff"; then
     echo "Compare identical !"
     exit 0
+else
+    echo "Differences found..., logged in: reprotest.$(uname).$TEMURIN_VERSION.diff"
+    exit 1
 fi
 
