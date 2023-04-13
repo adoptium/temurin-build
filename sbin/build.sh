@@ -276,11 +276,7 @@ configureVersionStringParameter() {
     buildTimestamp="${buildTimestamp//Z/}"
   else
     # Get current ISO-8601 datetime
-    if isGnuCompatDate; then
-      buildTimestamp=$(date --utc +"%Y-%m-%d %H:%M:%S")
-    else
-      buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S") 
-    fi
+    buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S") 
   fi
   BUILD_CONFIG[BUILD_TIMESTAMP]="${buildTimestamp}"
 
