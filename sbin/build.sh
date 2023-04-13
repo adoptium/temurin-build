@@ -282,7 +282,7 @@ configureVersionStringParameter() {
 
   # Convert ISO-8601 buildTimestamp string to dateSuffix format: %Y%m%d%H%M
   # "%Y-%m-%d %H:%M:%S" to "%Y%m%d%H%M"
-  local dateSuffix=$(echo "${buildTimestamp}" | cut -d":" -f1-2 | tr -d "\-: ")
+  local dateSuffix=$(echo "${buildTimestamp}" | cut -d":" -f1-2 | tr -d ":- ")
 
   # Configures "vendor" jdk properties.
   # Temurin default values are set after this code block
