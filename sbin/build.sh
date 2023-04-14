@@ -276,21 +276,13 @@ configureVersionStringParameter() {
     buildTimestamp="${buildTimestamp//Z/}"
   else
     # Get current ISO-8601 datetime
-    if isGnuCompatDate; then
-      buildTimestamp=$(date --utc +"%Y-%m-%d %H:%M:%S")
-    else
-      buildTimestamp=$(date -u -j +"%Y-%m-%d %H:%M:%S") 
-    fi
+    buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S") 
   fi
   BUILD_CONFIG[BUILD_TIMESTAMP]="${buildTimestamp}"
 
   # Convert ISO-8601 buildTimestamp string to dateSuffix format: %Y%m%d%H%M
-  local dateSuffix
-  if isGnuCompatDate; then
-    dateSuffix=$(date --utc --date="${buildTimestamp}" +"%Y%m%d%H%M")
-  else
-    dateSuffix=$(date -u -j -f "%Y-%m-%d %H:%M:%S" "${buildTimestamp}" +"%Y%m%d%H%M")
-  fi
+  # "%Y-%m-%d %H:%M:%S" to "%Y%m%d%H%M"
+  local dateSuffix=$(echo "${buildTimestamp}" | cut -d":" -f1-2 | tr -d ": -")
 
   # Configures "vendor" jdk properties.
   # Temurin default values are set after this code block
