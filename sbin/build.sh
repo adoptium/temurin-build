@@ -389,7 +389,12 @@ configureVersionStringParameter() {
       addConfigureArg "--with-version-opt=" "${dateSuffix}"
       addConfigureArg "--with-version-pre=" "beta"
     else
-      addConfigureArg "--without-version-opt" ""
+      # "LTS" builds from jdk-21 will use "LTS" version opt
+      if isFromJdk21LTS; then
+          addConfigureArg "--with-version-opt=" "LTS"
+      else
+          addConfigureArg "--without-version-opt" ""
+      fi
       addConfigureArg "--without-version-pre" ""
     fi
 

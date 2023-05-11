@@ -224,4 +224,9 @@ function isGnuCompatDate() {
   [ "x${isGnuCompatDate}" != "x" ]
 }
 
+# Returns true if the OPENJDK_FEATURE_NUMBER is an LTS version (every 2 years)
+# from jdk-21 onwards
+function isFromJdk21LTS() {
+  [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 21 ]] && [[ $(((BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]-21) % 4)) == 0 ]]
+}
 
