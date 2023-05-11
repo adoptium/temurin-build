@@ -389,8 +389,8 @@ configureVersionStringParameter() {
       addConfigureArg "--with-version-opt=" "${dateSuffix}"
       addConfigureArg "--with-version-pre=" "beta"
     else
-      # "LTS" builds (every 2 years) from jdk-21 will use "LTS" version opt
-      if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 21 ]] && [[ $(((BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]-21) % 4)) == 0 ]]; then
+      # "LTS" builds from jdk-21 will use "LTS" version opt
+      if isFromJdk21LTS; then
           addConfigureArg "--with-version-opt=" "LTS"
       else
           addConfigureArg "--without-version-opt" ""
