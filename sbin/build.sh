@@ -120,8 +120,8 @@ configureReproducibleBuildParameter() {
           # Use supplied date
           addConfigureArg "--with-hotspot-build-time=" "'${BUILD_CONFIG[BUILD_TIMESTAMP]}'"
       fi
-      # Ensure reproducible binary with a unique build user identifier
-      addConfigureArg "--with-build-user=" "${BUILD_CONFIG[BUILD_VARIANT]}"
+      # Ensure reproducible and comparable binary with a unique build user identifier
+      addConfigureArg "--with-build-user=" "admin"
   fi
 }
 
