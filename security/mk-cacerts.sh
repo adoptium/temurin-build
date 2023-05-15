@@ -52,6 +52,11 @@ if ! [ -f "certdata.txt" ] ; then
     exit 1
 fi
 
+# The line below is necessary to make the final check within this script pass.
+# Without this line, 'mk-ca-bundle.pl' will return nothing.
+# This fix is fragile, please check this line and the curl'project's 'mk-ca-bundle.pl' if this script breaks again
+echo 'print $certnum' >> mk-ca-bundle.pl
+
 # Convert Mozilla's list of certificates into a PEM file. The -n switch makes
 # it use the local certdata.txt in this folder.
 certNum=$(./mk-ca-bundle.pl -v -n ca-bundle.crt)
