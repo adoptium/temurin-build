@@ -14,6 +14,7 @@
 */
 // clang-format off
 // NOLINT
+/* jscpd:ignore-start */
 
 #include <stdio.h>
 #include <windows.h>
