@@ -137,7 +137,7 @@ tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare.$$
 
 cleanBuildInfo
 
-# shellcheck SC2069
+# shellcheck disable=SC2069
 if diff -r "jdk-${TEMURIN_VERSION}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.$(uname).$TEMURIN_VERSION.diff"; then
     echo "Compare identical !"
     exit 0
