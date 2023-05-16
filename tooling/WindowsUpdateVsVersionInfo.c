@@ -591,4 +591,4 @@ short createVSVersionInfo(VERSION_INFO *info, unsigned char * vsBuf, int bufLen)
 
     return *versionInfoLen;
 }
-
+/* jscpd:ignore-end */
