@@ -94,7 +94,7 @@ downloadTooling() {
 }
 
 checkAllVariablesSet() {
-  if [[ -z "$SBOM" ]] || [[ -z "${BOOTJDK_VERSION}" ]] || [[ -z "${TEMURIN_BUILD_SHA}" ]] || [[ -z "${TEMURIN_BUILD_ARGS}" ]] || [[ -z "${TEMURIN_VERSION}" ]]; then
+  if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${TEMURIN_BUILD_SHA}" ] || [ -z "${TEMURIN_BUILD_ARGS}" ] || [ -z "${TEMURIN_VERSION}" ]; then
       echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
   fi
 }
