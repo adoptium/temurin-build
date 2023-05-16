@@ -18,6 +18,20 @@
 #include <assert.h>
 #include <string.h>
 
+/**
+ * WindowsUpdateVsVersionInfo
+ *
+ * Native C app to modify the Windows RC VS_VERSION_INFO of an EXE/DLL
+ * Params:
+ *   WindowsUpdateVsVersionInfo <file.exe/dll> <key>=<value>
+ *     file.exe/dll : Program to be updated
+ *     key          : VS_VERSION_INFO String key to be updated
+ *     value        : New key value
+ *
+ * Notes: VStudio API needs to be used so that EXE/DLL object sections get
+ * updated correctly resulting in identical length and padding, when necessary.
+ */
+
 // Structures for saving existing VS_VERSION_INFO
 // Assumes:
 //   - Up to 32 String key/values
@@ -63,7 +77,7 @@ int main(int argc, char** argv) {
         key = strtok(argv[2],"=");
         value = strtok(NULL,"=");
     } else {
-        printf("Syntax: UpdateVsVersionInfo <file> <key>=<value>\n");
+        printf("Syntax: WindowsUpdateVsVersionInfo <file> <key>=<value>\n");
         return 1;
     }
 
