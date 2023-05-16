@@ -12,6 +12,7 @@
 # limitations under the License.
 ################################################################################
 */
+// clang-format off
 
 #include <stdio.h>
 #include <windows.h>
@@ -588,4 +589,5 @@ short createVSVersionInfo(VERSION_INFO *info, unsigned char * vsBuf, int bufLen)
 
     return *versionInfoLen;
 }
+// clang-format on
 
