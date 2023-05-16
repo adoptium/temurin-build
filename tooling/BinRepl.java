@@ -33,7 +33,7 @@ class BinRepl {
   // A simple static counter
   private static int replCounter = 0;
 
-  public static void main(String[] final args) throws Exception {
+  public static void main(final String[] args) throws Exception {
     String inFile = null;
     String outFile = null;
     boolean firstOnly = false;
@@ -100,7 +100,7 @@ class BinRepl {
       byte[] binA = hexformat.parseHex(hexA);
       byte[] binB = hexformat.parseHex(hex[1].replaceAll(" ", ":"));
 
-      outBytes = bin_replace(inBytes, binA, binB, fuzzyBytes, firstOnly, boundary32bitOnly);
+      outBytes = binReplace(inBytes, binA, binB, fuzzyBytes, firstOnly, boundary32bitOnly);
 
       if (outBytes == null) {
         System.out.println("replacement hex not found in: " + inFile);
