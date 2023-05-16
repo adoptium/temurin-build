@@ -30,7 +30,7 @@ import java.util.HexFormat;
  */
 class BinRepl {
 
-  protected BinRepl() {}
+  protected BinRepl() { }
 
   // A simple static counter
   private static int replCounter = 0;
