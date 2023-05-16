@@ -54,7 +54,7 @@ fi
 
 echo "Expanding the 'modules' Image to remove signatures from within.."
 jimage extract --dir "${JDK_DIR}/lib/modules_extracted" "${JDK_DIR}/lib/modules"
-rm ${JDK_DIR}/lib/modules
+rm "${JDK_DIR}/lib/modules"
 
 echo "Expanding the 'src.zip' to normalize file permissions"
 unzip "${JDK_DIR}/lib/src.zip" -d "${JDK_DIR}/lib/src_zip_expanded"
@@ -100,7 +100,7 @@ if [[ "$OS" =~ CYGWIN* ]]; then
   for f in $FILES
    do
     echo "Signing $f"
-    if signtool sign /f $SELF_CERT_FILE /p $SELF_CERT_PASS "$f" ; then
+    if signtool sign /f "$SELF_CERT_FILE" /p "$SELF_CERT_PASS" "$f" ; then
         echo "  ==> Successfully signed $f"
     else
         echo "  ==> $f failed to be signed!!"
@@ -134,7 +134,7 @@ for exclude in $excluded
     for f in $FILES
       do
         echo "Removing $f"
-	rm $f
+	rm "$f"
       done
   done
 
@@ -180,7 +180,7 @@ if [[ "$OS" =~ CYGWIN* ]]; then
     checksum=$(grep "checksum" dumpbin.tmp | head -1 | tr -s ' ' | cut -d' ' -f2)
     reprohex=$(grep "${timestamp} repro" dumpbin.tmp | head -1 | tr -s ' ' | cut -d' ' -f7-38 | tr ' ' ':' | tr -d '\r')
     reprohexhalf=$(grep "${timestamp} repro" dumpbin.tmp | head -1 | tr -s ' ' | cut -d' ' -f7-22 | tr ' ' ':' | tr -d '\r')
-    if [ ! -z "$reprohex" ]; then
+    if [ -n  "$reprohex" ]; then
       if ! java BinRepl --inFile "$f" --outFile "$f" --hex "${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA"; then
 	echo "  FAILED ==> java BinRepl --inFile \"$f\" --outFile \"$f\" --hex \"${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\""
 	exit 1
@@ -193,7 +193,7 @@ if [[ "$OS" =~ CYGWIN* ]]; then
         echo "  FAILED ==> java BinRepl --inFile \"$f\" --outFile \"$f\" --hex \"${timestamphexLE}-AA:AA:AA:AA\""
 	exit 1
     fi
-    if [ ! -z "$reprohexhalf" ]; then
+    if [ -n "$reprohexhalf" ]; then
       if ! java BinRepl --inFile "$f" --outFile "$f" --hex "${reprohexhalf}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA"; then
         echo "  FAILED ==> java BinRepl --inFile \"$f\" --outFile \"$f\" --hex \"${reprohexhalf}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\""
 	exit 1
@@ -234,10 +234,10 @@ FILES=$(find "${JDK_DIR}" -type f -name 'VersionProps.class')
 for f in $FILES
   do
     echo "javap and remove vendor string lines from $f"
-    javap -v -sysinfo -l -p -c -s -constants $f > $f.javap.tmp
-    rm $f
-    grep -v "Last modified\|$VERSION_REPL\|$VENDOR_NAME\|$VENDOR_URL\|$VENDOR_BUG_URL\|$VENDOR_VM_BUG_URL\|Classfile\|SHA-256" $f.javap.tmp > $f.javap
-    rm $f.javap.tmp
+    javap -v -sysinfo -l -p -c -s -constants "$f" > "$f.javap.tmp"
+    rm "$f"
+    grep -v "Last modified\|$VERSION_REPL\|$VENDOR_NAME\|$VENDOR_URL\|$VENDOR_BUG_URL\|$VENDOR_VM_BUG_URL\|Classfile\|SHA-256" "$f.javap.tmp" > "$f.javap"
+    rm "$f.javap.tmp"
   done
 
 echo "Successfully removed all VersionProps.class vendor strings from ${JDK_DIR}"
@@ -247,9 +247,9 @@ FILES=$(find "${JDK_DIR}" -type f -name 'VersionProps.java')
 for f in $FILES
   do
     echo "Removing version and vendor string lines from $f"
-    grep -v "$VERSION_REPL\|$VENDOR_NAME\|$VENDOR_URL\|$VENDOR_BUG_URL\|$VENDOR_VM_BUG_URL" $f > $f.tmp
-    rm $f
-    mv $f.tmp $f
+    grep -v "$VERSION_REPL\|$VENDOR_NAME\|$VENDOR_URL\|$VENDOR_BUG_URL\|$VENDOR_VM_BUG_URL" "$f" > "$f.tmp"
+    rm "$f"
+    mv "$f.tmp" "$f"
   done
 
 echo "Successfully removed all VersionProps.java vendor strings from ${JDK_DIR}"
