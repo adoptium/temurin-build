@@ -132,7 +132,7 @@ function downloadBootJDK()
   ARCH=$1
   VER=$2
   export GNUPGHOME=$PWD/.gnupg-temp
-  mkdir -m 700 -p "$GNUPGHOME"
+  mkdir -m 700 "$GNUPGHOME"
   export downloadArch
   case "$ARCH" in
      "riscv64") downloadArch="$NATIVE_API_ARCH";;
@@ -141,16 +141,15 @@ function downloadBootJDK()
   releaseType="ga"
   vendor="eclipse"
   apiUrlTemplate="https://api.adoptium.net/v3/binary/latest/\${VER}/\${releaseType}/linux/\${downloadArch}/jdk/hotspot/normal/\${vendor}"
-  apiURL=$(eval echo ${apiUrlTemplate})
+  apiURL=$(eval echo "${apiUrlTemplate}")
   apiSigUrlTemplate="https://api.adoptium.net/v3/assets/feature_releases/\${VER}/\${releaseType}?architecture=\$ARCH&heap_size=normal&image_type=jdk&jvm_impl=hotspot&os=linux&page=0&page_size=1&project=jdk&vendor=eclipse"
   apiSigURL=$(eval echo "${apiSigUrlTemplate}")
   echo "Downloading GA release of boot JDK version ${VER} from ${apiURL}"
   # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
   # the fallback mechanism, as downloading of the GA binary might fail.
   set +e
-  curl -L -o bootjdk.tar.gz "${apiURL}"
-  if [ $? -eq 0 ]; then
-    curl -L -o bootjdk.tar.gz.sig $(curl -s "${apiSigURL}" | grep signature_link.*-jdk_ | awk '{split($0,a,"\""); print a[4]}' | head -1)
+  if curl -L -o bootjdk.tar.gz "${apiURL}"; then
+    curl -L -o bootjdk.tar.gz.sig "$(curl -s "${apiSigURL}" | grep "signature_link.*-jdk_" | awk '{split($0,a,"\""); print a[4]}' | head -1)"
     gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
     gpg --verify bootjdk.tar.gz.sig bootjdk.tar.gz || exit 1
@@ -166,12 +165,11 @@ function downloadBootJDK()
     # shellcheck disable=SC2034
     vendor="adoptium"
     apiURL=$(eval echo ${apiUrlTemplate})
-    apiSigURL=$(eval echo ${apiSigUrlTemplate})
+    apiSigURL=$(eval echo "${apiSigUrlTemplate}")
     echo "Attempting to download EA release of boot JDK version ${VER} from ${apiURL}"
     set +e
-    curl -L -o bootjdk.tar.gz "${apiURL}"
-    if [ $? -eq 0 ]; then
-      curl -o bootjdk.tar.gz.sig $(curl -s "${apiSigURL}" | grep signature_link | awk '{split($0,a,"\""); print a[4]}')
+    if curl -L -o bootjdk.tar.gz "${apiURL}"; then
+      curl -o bootjdk.tar.gz.sig "$(curl -s "${apiSigURL}" | grep "signature_link.*-jdk_" | awk '{split($0,a,"\""); print a[4]}')"
       gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
       echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
       gpg --verify bootjdk.tar.gz.sig bootjdk.tar.gz || exit 1
