@@ -57,16 +57,16 @@ jimage extract --dir "${JDK_DIR}/lib/modules_extracted" "${JDK_DIR}/lib/modules"
 rm ${JDK_DIR}/lib/modules
 
 echo "Expanding the 'src.zip' to normalize file permissions"
-unzip ${JDK_DIR}/lib/src.zip -d ${JDK_DIR}/lib/src_zip_expanded
-rm ${JDK_DIR}/lib/src.zip
+unzip "${JDK_DIR}/lib/src.zip" -d "${JDK_DIR}/lib/src_zip_expanded"
+rm "${JDK_DIR}/lib/src.zip"
 
 echo "Expanding jmods to process binaries within"
 FILES=$(find "${JDK_DIR}" -type f -path '*.jmod')
 for f in $FILES
   do
     echo "Unzipping $f"
-    base=$(basename $f)
-    dir=$(dirname $f)
+    base=$(basename "$f")
+    dir=$(dirname "$f")
     expand_dir="${dir}/expanded_${base}"
     mkdir -p "${expand_dir}"
     jmod extract --dir "${expand_dir}" "$f"
@@ -74,13 +74,13 @@ for f in $FILES
   done
 
 echo "Expanding the 'jrt-fs.jar' to remove signatures from within.."
-mkdir ${JDK_DIR}/lib/jrt-fs-expanded
-unzip -d ${JDK_DIR}/lib/jrt-fs-expanded ${JDK_DIR}/lib/jrt-fs.jar
-rm ${JDK_DIR}/lib/jrt-fs.jar
+mkdir "${JDK_DIR}/lib/jrt-fs-expanded"
+unzip -d "${JDK_DIR}/lib/jrt-fs-expanded" "${JDK_DIR}/lib/jrt-fs.jar"
+rm "${JDK_DIR}/lib/jrt-fs.jar"
 
-mkdir ${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded
-unzip -d ${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded ${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar
-rm ${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar
+mkdir "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded"
+unzip -d "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded" "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
+rm "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
 
 echo "Removing all Signatures from ${JDK_DIR}"
 if [[ "$OS" =~ CYGWIN* ]]; then
@@ -88,7 +88,7 @@ if [[ "$OS" =~ CYGWIN* ]]; then
   for f in $FILES
    do
     echo "Removing signature from $f"
-    if signtool remove /s $f ; then
+    if signtool remove /s "$f" ; then
 	echo "  ==> Successfully removed signature from $f"
     else
 	echo "  ==> $f contains no signature"
@@ -100,7 +100,7 @@ if [[ "$OS" =~ CYGWIN* ]]; then
   for f in $FILES
    do
     echo "Signing $f"
-    if signtool sign /f $SELF_CERT_FILE /p $SELF_CERT_PASS $f ; then
+    if signtool sign /f $SELF_CERT_FILE /p $SELF_CERT_PASS "$f" ; then
         echo "  ==> Successfully signed $f"
     else
         echo "  ==> $f failed to be signed!!"
@@ -113,7 +113,7 @@ if [[ "$OS" =~ CYGWIN* ]]; then
   for f in $FILES
    do
     echo "Removing signature from $f"
-    if signtool remove /s $f ; then
+    if signtool remove /s "$f"; then
 	echo "  ==> Successfully removed signature from $f"
     else
 	echo "  ==> $f contains no signature"
