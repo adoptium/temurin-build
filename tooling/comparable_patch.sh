@@ -14,6 +14,15 @@
 
 set -e
 
+#
+# Script to remove "vendor" specific strings and Signatures, as well as neutralizing
+# differing build timestamps, and other non-identical Vendor binary content.
+#
+# Upon successful completion of processing a jdk folder for a jdk-21+ openjdk build
+# of the identical source, built reproducibly (same --with-source-date), a diff
+# of two processed jdk folders should be identical.
+#
+
 JDK_DIR="$1"
 SELF_CERT_FILE="$2"
 SELF_CERT_PASS="$3"
