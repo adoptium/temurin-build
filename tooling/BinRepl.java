@@ -1,4 +1,3 @@
-//CHECKSTYLE:OFF
 /**
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +31,9 @@ import java.util.HexFormat;
 class BinRepl {
 
   // A simple static counter
-  static int replCounter = 0;
+  private static int replCounter = 0;
 
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] final args) throws Exception {
     String inFile = null;
     String outFile = null;
     boolean firstOnly = false;
@@ -140,9 +139,11 @@ class BinRepl {
       }
 
       boolean[] fuzzyBytes = new boolean[binA.length];
-      for (int i = 0; i < fuzzyBytes.length; i++) fuzzyBytes[i] = false;
+      for (int i = 0; i < fuzzyBytes.length; i++) {
+        fuzzyBytes[i] = false;
+      }
 
-      outBytes = bin_replace(inBytes, binA, binB, fuzzyBytes, firstOnly, boundary32bitOnly);
+      outBytes = binReplace(inBytes, binA, binB, fuzzyBytes, firstOnly, boundary32bitOnly);
 
       if (outBytes == null) {
         System.out.println("replacement string not found in: " + inFile);
@@ -170,13 +171,13 @@ class BinRepl {
 
   // Replace byte[] x with y in b1 and return new array b2
   // Any fuzzyByte matches any value
-  static byte[] bin_replace(
-      byte[] b1,
-      byte[] x,
-      byte[] y,
-      boolean[] fuzzyByte,
-      boolean firstOnly,
-      boolean boundary32bitOnly) {
+  static byte[] binReplace(
+      final byte[] b1,
+      final byte[] x,
+      final byte[] y,
+      final boolean[] fuzzyByte,
+      final boolean firstOnly,
+      final boolean boundary32bitOnly) {
     byte[] b2 = new byte[b1.length + 4096]; // 4096 extra should be plenty!
     boolean found = false; // A match was found to replace
 
