@@ -354,6 +354,15 @@ function parseConfigurationArguments() {
         "--vendor" | "-ve" )
         BUILD_CONFIG[VENDOR]="$1"; shift;;
 
+        "--vendor-url")
+        BUILD_CONFIG[VENDOR_URL]="$1"; shift;;
+
+        "--vendor-bug-url")
+        BUILD_CONFIG[VENDOR_BUG_URL]="$1"; shift;;
+
+        "--vendor-vm-bug-url")
+        BUILD_CONFIG[VENDOR_VM_BUG_URL]="$1"; shift;;
+
         "--version"  | "-v" )
         setOpenJdkVersion "$1"
         setDockerVolumeSuffix "$1"; shift;;
