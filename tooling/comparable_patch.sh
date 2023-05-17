@@ -141,21 +141,21 @@ function removeWindowsNonComparableData() {
     reprohex=$(grep "${timestamp} repro" dumpbin.tmp | head -1 | tr -s ' ' | cut -d' ' -f7-38 | tr ' ' ':' | tr -d '\r')
     reprohexhalf=$(grep "${timestamp} repro" dumpbin.tmp | head -1 | tr -s ' ' | cut -d' ' -f7-22 | tr ' ' ':' | tr -d '\r')
     if [ -n  "$reprohex" ]; then
-      if ! java TEMURIN_TOOLS_BINREPL --inFile "$f" --outFile "$f" --hex "${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA"; then
-        echo "  FAILED ==> java TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --hex \"${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\""
+      if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA"; then
+        echo "  FAILED ==> java "$TEMURIN_TOOLS_BINREPL" --inFile \"$f\" --outFile \"$f\" --hex \"${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\""
         exit 1
       fi
     fi
     hexstr="00000000"
     timestamphex=${hexstr:0:-${#timestamp}}$timestamp
     timestamphexLE="${timestamphex:6:2}:${timestamphex:4:2}:${timestamphex:2:2}:${timestamphex:0:2}"
-    if ! java TEMURIN_TOOLS_BINREPL --inFile "$f" --outFile "$f" --hex "${timestamphexLE}-AA:AA:AA:AA"; then
-        echo "  FAILED ==> java TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --hex \"${timestamphexLE}-AA:AA:AA:AA\""
+    if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${timestamphexLE}-AA:AA:AA:AA"; then
+        echo "  FAILED ==> java "$TEMURIN_TOOLS_BINREPL" --inFile \"$f\" --outFile \"$f\" --hex \"${timestamphexLE}-AA:AA:AA:AA\""
         exit 1
     fi
     if [ -n "$reprohexhalf" ]; then
-      if ! java TEMURIN_TOOLS_BINREPL --inFile "$f" --outFile "$f" --hex "${reprohexhalf}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA"; then
-        echo "  FAILED ==> java TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --hex \"${reprohexhalf}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\""
+      if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${reprohexhalf}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA"; then
+        echo "  FAILED ==> java "$TEMURIN_TOOLS_BINREPL" --inFile \"$f\" --outFile \"$f\" --hex \"${reprohexhalf}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\""
         exit 1
       fi
     fi
@@ -164,8 +164,8 @@ function removeWindowsNonComparableData() {
     hexstr="00000000"
     checksumhex=${hexstr:0:-${#checksum}}$checksum
     checksumhexLE="${checksumhex:6:2}:${checksumhex:4:2}:${checksumhex:2:2}:${checksumhex:0:2}"
-    if ! java TEMURIN_TOOLS_BINREPL --inFile "$f" --outFile "$f" --hex "${checksumhexLE}-AA:AA:AA:AA" --firstOnly --32bitBoundaryOnly; then
-        echo "  FAILED ==> java TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --hex \"${checksumhexLE}-AA:AA:AA:AA\" --firstOnly --32bitBoundaryOnly"
+    if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${checksumhexLE}-AA:AA:AA:AA" --firstOnly --32bitBoundaryOnly; then
+        echo "  FAILED ==> java "$TEMURIN_TOOLS_BINREPL" --inFile \"$f\" --outFile \"$f\" --hex \"${checksumhexLE}-AA:AA:AA:AA\" --firstOnly --32bitBoundaryOnly"
         exit 1
     fi
   done
@@ -186,7 +186,7 @@ function neutraliseVsVersionInfo() {
       # Replace rdata section reference to .rsrc$ string with a neutral value
       # ???? is a length of the referenced rsrc resource section. Differing Version Info resource length means this length differs
       # fuzzy search: "????\.rsrc\$" in hex:
-      if ! java TEMURIN_TOOLS_BINREPL --inFile "$f" --outFile "$f" --hex "?:?:?:?:2e:72:73:72:63:24-AA:AA:AA:AA:2e:72:73:72:63:24"; then
+      if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "?:?:?:?:2e:72:73:72:63:24-AA:AA:AA:AA:2e:72:73:72:63:24"; then
           echo "  No .rsrc$ rdata reference found in $f"
       fi
     done
@@ -206,8 +206,8 @@ function removeVendorName() {
     do
       # Neutralize vendor string with 0x00 to same length
       echo "Neutralizing $VENDOR_NAME in $f"
-      if ! java TEMURIN_TOOLS_BINREPL --inFile "$f" --outFile "$f" --string "${VENDOR_NAME}=" --pad 00; then
-          echo "  Not found ==> java TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --string \"${VENDOR_NAME}=\" --pad 00"
+      if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --string "${VENDOR_NAME}=" --pad 00; then
+          echo "  Not found ==> java "$TEMURIN_TOOLS_BINREPL" --inFile \"$f\" --outFile \"$f\" --string \"${VENDOR_NAME}=\" --pad 00"
       fi
     done
 
