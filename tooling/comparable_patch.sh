@@ -260,8 +260,13 @@ function neutraliseReleaseFile() {
 
   sed -i "s=$VERSION_REPL==g" "${JDK_DIR}/release"
   sed -i "s=$VENDOR_NAME==g" "${JDK_DIR}/release"
+
   # BUILD_INFO likely different since built on different machines
   sed -i "s=^BUILD_INFO.*$==g" "${JDK_DIR}/release"
+
+  # BUILD_SOURCE possibly built not using temurin build scripts
+  sed -i "s=^BUILD_SOURCE.*$==g" "${JDK_DIR}/release"
+  sed -i "s=^BUILD_SOURCE_REPO.*$==g" "${JDK_DIR}/release"
 }
 
 if [ "$#" -ne 8 ]; then
