@@ -14,7 +14,7 @@
 ################################################################################
 */
 /**
-  * Temurin tools package.
+  * Default package.
   */
-package temurin.tools;
+package;
 
