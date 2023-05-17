@@ -393,7 +393,7 @@ short readVSVersionInfo(VERSION_INFO *info, unsigned char *vsBuf) {
     return (short)(ptr - vsBuf);
 }
 
-// Create a new VS_VERSION_INFO in vsBufi from info
+// Create a new VS_VERSION_INFO in vsBuf from info
 short createVSVersionInfo(VERSION_INFO *info, unsigned char * vsBuf, int bufLen) {
 
     // Analyse VS_VERSION_INFO
