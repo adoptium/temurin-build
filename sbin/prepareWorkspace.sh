@@ -299,10 +299,13 @@ checkingAndDownloadingAlsa() {
     curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
     curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
     export GNUPGHOME="$PWD/.gpg-temp"
+    # Should we clear this directory up after checking?
+    # Would this risk removing anyone's existing dir with that name?
+    # Erring on the side of caution for now
+    mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
     gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
     gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
-
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
       bzip2 -d alsa-lib.tar.bz2
       tar -xf alsa-lib.tar --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
