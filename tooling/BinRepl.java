@@ -74,6 +74,12 @@ class BinRepl {
       System.exit(1);
     }
 
+    // Patch the inFile, writing result to outFile
+    patchFile(inFile, outFile, hex, str, strPad, firstOnly, boundary32bitOnly);
+  }
+
+  // Patch the given input file, writing result to outFile
+  static void patchFile(String inFile, String outFile, String[] hex, String[] str, String strPad, boolean firstOnly, boolean boundary32bitOnly) throws Exception {
     byte[] inBytes = Files.readAllBytes(Paths.get(inFile));
 
     HexFormat hexformat = HexFormat.ofDelimiter(":");
