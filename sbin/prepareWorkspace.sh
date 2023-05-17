@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2155,SC1091
+# shellcheck disable=SC2155,SC1091,SC2196
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,10 +34,7 @@ source "$SCRIPT_DIR/common/constants.sh"
 
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
 ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f08783329157e8dd68b3de0c096de6d724}
-FREEMARKER_LIB_CHECKSUM=${FREEMARKER_LIB_CHECKSUM:-8723ec9ffe006e8d376b6c7dbe7950db34ad1fa163aef4026e6477151a1a0deb}
-
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
-FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.31}
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for Single Responsibility Principle (SRP)
@@ -58,9 +55,9 @@ checkoutAndCloneOpenJDKGitRepo() {
     # eg. origin https://github.com/alibaba/dragonwell8.git (fetch)
     # eg. origin https://github.com/feilongjiang/bishengjdk-11-mirror.git (fetch)
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ] || [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep -E "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | egrep "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
     else
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep -E "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | egrep "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
     fi
     local isValidGitRepo=$?
     set -e
@@ -354,7 +351,7 @@ checkFingerprint() {
   echo "$verify"
 
   # grep out and trim fingerprint from line of the form "Primary key fingerprint: 58E0 C111 E39F 5408 C5D3  EC76 C1A6 0EAC E707 FDA5"
-  local fingerprint=$(echo "$verify" | grep "Primary key fingerprint" | grep -E -o "([0-9A-F]{4} ? ?){10}" | head -n 1)
+  local fingerprint=$(echo "$verify" | grep "Primary key fingerprint" | egrep -o "([0-9A-F]{4} ? ?){10}" | head -n 1)
 
   # Remove whitespace from finger print as different versions of gpg may or may not add spaces to the fingerprint
   # specifically gpg on Ubuntu 16.04 produces:
@@ -371,41 +368,6 @@ checkFingerprint() {
     echo "expected \"$expectedFingerprint\" got \"$fingerprint\""
     exit 1
   fi
-}
-
-# Freemarker for OpenJ9
-checkingAndDownloadingFreemarker() {
-  echo "Checking for FREEMARKER"
-
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/" || exit
-  FOUND_FREEMARKER=$(find "." -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
-
-  FREEMARKER_BUILD_INFO="Unknown"
-  if [[ -n "$FOUND_FREEMARKER" ]]; then
-    echo "Skipping FREEMARKER download"
-  else
-
-    # www.mirrorservice.org unavailable - issue #1867
-    #wget -nc --no-check-certificate "https://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
-
-    wget "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" ||
-      curl -L -o "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
-
-    # Allow fallback to curl since wget fails cert check on macos - issue #1194
-    wget "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" ||
-      curl -L -o "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc"
-
-    FREEMARKER_BUILD_INFO="https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
-
-    checkFingerprint "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" "freemarker" "13AC 2213 964A BE1D 1C14 7C0E 1939 A252 0BAB 1D90" "${FREEMARKER_LIB_CHECKSUM}"
-
-    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/" || exit
-    tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/"
-    rm "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
-  fi
-
-  # Record buildinfo version
-  echo "${FREEMARKER_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt"
 }
 
 # Utility function
@@ -553,7 +515,7 @@ prepareMozillaCacerts() {
     fi
 }
 
-# Download all of the dependencies for OpenJDK (Alsa, FreeType, FreeMarker etc.)
+# Download all of the dependencies for OpenJDK (Alsa, FreeType etc.)
 downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
@@ -570,15 +532,6 @@ downloadingRequiredDependencies() {
   else
     echo "Checking and downloading Alsa dependency"
     checkingAndDownloadingAlsa
-  fi
-
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
-    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-      echo "Windows or Windows-like environment detected, skipping download of dependency Freemarker."
-    else
-      echo "Checking and downloading Freemarker dependency"
-      checkingAndDownloadingFreemarker
-    fi
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
@@ -616,7 +569,7 @@ function moveTmpToWorkspaceLocation() {
 
 relocateToTmpIfNeeded() {
   if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]; then
-    jobName=$(echo "${JOB_NAME:-build-dir}" | grep -E -o "[^/]+$")
+    jobName=$(echo "${JOB_NAME:-build-dir}" | egrep -o "[^/]+$")
     local tmpdir="/tmp/openjdk-${jobName}"
     mkdir -p "$tmpdir"
 

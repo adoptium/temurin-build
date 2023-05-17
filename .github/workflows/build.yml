@@ -68,7 +68,7 @@ jobs:
             variant: bisheng
             image: adoptopenjdk/centos7_build_image
     steps:
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
     - name: Build Linux
       run: ./build-farm/make-adopt-build-farm.sh
@@ -122,13 +122,13 @@ jobs:
         variant: [temurin]
 
     steps:
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+    - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
     - name: Install Dependencies
       run: |
         brew install automake bash binutils freetype gnu-sed nasm
 
-    - uses: actions/setup-java@3f07048e3d294f56e9b90ac5ea2c6f74e9ad0f98 # v3.10.0
+    - uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v3.11.0
       id: setup-java
       with:
         java-version: 7
@@ -207,13 +207,13 @@ jobs:
      steps:
      - name: Restore cygwin packages from cache
        id: cygwin
-       uses: actions/cache@6998d139ddd3e68c71e9e398d8e40b71a2f39812 # v3.2.5
+       uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
        with:
         path: C:\cygwin64
         key: cygwin-packages-${{ runner.os }}-v1
 
      - name: Install Cygwin and packages
-       uses: cygwin/cygwin-install-action@f5e0f048310c425e84bc789f493a828c6dc80a25
+       uses: cygwin/cygwin-install-action@006ad0b0946ca6d0a3ea2d4437677fa767392401
        with:
          install-dir: C:\cygwin64
          packages: >-
@@ -235,14 +235,14 @@ jobs:
            wget,
            zip
 
-     - uses: actions/setup-java@3f07048e3d294f56e9b90ac5ea2c6f74e9ad0f98 # v3.10.0
+     - uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v3.11.0
        id: setup-java7
        with:
          distribution: 'zulu'
          java-version: 7
        if: matrix.version == 'jdk8u'
 
-     - uses: actions/setup-java@3f07048e3d294f56e9b90ac5ea2c6f74e9ad0f98 # v3.10.0
+     - uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v3.11.0
        id: setup-java11
        with:
          distribution: 'temurin'
@@ -251,7 +251,7 @@ jobs:
      - name: Restore Visual Studio 2017 from cache
        id: vs2017
        if: matrix.version == 'jdk8u'
-       uses: actions/cache@6998d139ddd3e68c71e9e398d8e40b71a2f39812 # v3.2.5
+       uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
        with:
          path: ~/vs2017.exe
          key: vs2017
@@ -294,7 +294,7 @@ jobs:
        shell: bash
        run: mkdir -p "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
 
-     - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+     - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
        with:
          set-safe-directory: false
 

@@ -216,3 +216,17 @@ function isHotSpot() {
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ] ||
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]
 }
+
+# A function that determines if the local date implementation is a GNU or BusyBox
+# as opposed to BSD, so that the correct date syntax can be used
+function isGnuCompatDate() {
+  local isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox" || true)
+  [ "x${isGnuCompatDate}" != "x" ]
+}
+
+# Returns true if the OPENJDK_FEATURE_NUMBER is an LTS version (every 2 years)
+# from jdk-21 onwards
+function isFromJdk21LTS() {
+  [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 21 ]] && [[ $(((BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]-21) % 4)) == 0 ]]
+}
+

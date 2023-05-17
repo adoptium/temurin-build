@@ -39,6 +39,7 @@ OPENJDK_BUILD_REPO_URI
 BRANCH
 BUILD_FULL_NAME
 BUILD_REPRODUCIBLE_DATE
+BUILD_TIMESTAMP
 BUILD_VARIANT
 CERTIFICATE
 CLEAN_DOCKER_BUILD
@@ -131,7 +132,7 @@ index=0
 while [  $index -lt $numParams ]; do
     paramName=${CONFIG_PARAMS[$index]};
     eval declare -r -x "$paramName=$index"
-    PARAM_LOOKUP[$index]=$paramName
+    PARAM_LOOKUP[index]=$paramName
 
     # shellcheck disable=SC2219
     let index=index+1
@@ -352,6 +353,15 @@ function parseConfigurationArguments() {
 
         "--vendor" | "-ve" )
         BUILD_CONFIG[VENDOR]="$1"; shift;;
+
+        "--vendor-url")
+        BUILD_CONFIG[VENDOR_URL]="$1"; shift;;
+
+        "--vendor-bug-url")
+        BUILD_CONFIG[VENDOR_BUG_URL]="$1"; shift;;
+
+        "--vendor-vm-bug-url")
+        BUILD_CONFIG[VENDOR_VM_BUG_URL]="$1"; shift;;
 
         "--version"  | "-v" )
         setOpenJdkVersion "$1"

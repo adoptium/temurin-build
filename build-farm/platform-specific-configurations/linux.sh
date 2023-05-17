@@ -306,7 +306,7 @@ if [ "${ARCHITECTURE}" == "riscv64" ] && [ "${NATIVE_API_ARCH}" != "riscv64" ]; 
       # don't download it if we already have it from a previous build
       if [ ! -x "$WORKSPACE/qemu-riscv64-static" ]; then
         echo Download qemu-riscv64-static as it is required for the OpenJ9 cross build ...
-        curl https://ci.adoptopenjdk.net/userContent/riscv/qemu-riscv64-static.xz | xz -d > "$WORKSPACE/qemu-riscv64-static" && \
+        curl https://ci.adoptium.net/userContent/riscv/qemu-riscv64-static.xz | xz -d > "$WORKSPACE/qemu-riscv64-static" && \
         chmod 755 "$WORKSPACE/qemu-riscv64-static"
       fi
       export PATH="$PATH:$WORKSPACE" && \

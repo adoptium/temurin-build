@@ -1,11 +1,11 @@
 ---
-name: TestSBOM
+name: SignSBOM
 
 on:
   pull_request:
     branches: [master]
     paths:
-      - ".github/workflows/testsbom.yml"
+      - ".github/workflows/signsbom.yml"
       - "cyclonedx-lib/**"
 
 # Cancel existing runs if user makes another push.
@@ -14,33 +14,35 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  test_sbom_gen:
-    name: gen_sbom
+  test_sbom_sign:
+    name: sign_sbom
     runs-on: ubuntu-latest
     container:
       image: adoptopenjdk/centos7_build_image
     strategy:
       fail-fast: false
-
     steps:
       - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
-      # Build with jdk8 to ensure TemurinGenSBOM meets min compatibility
+      # Build with jdk17 to ensure TemurinSignSBOM meets min compatibility
       - uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v3.11.0
         id: setup-java
         with:
-          java-version: 8
+          java-version: 17
           distribution: 'temurin'
 
-      - name: Build TemurinGenSBOM.java
+      - name: Build TemurinSignSBOM.java
         run: |
           ant -noinput -buildfile cyclonedx-lib/build.xml clean
+          ant -noinput -buildfile cyclonedx-lib/build.xml build-sign-sbom
           ant -noinput -buildfile cyclonedx-lib/build.xml build
-      - name: Run TemurinGenSBOM Unit test
+
+      - name: Run TemurinSignSBOM Unit test
         run: |
-          ant -noinput -buildfile cyclonedx-lib/build.xml run
+          ant -noinput -buildfile cyclonedx-lib/build.xml runSignAndVerifySBOM
+
       - uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-        name: Collect and Archive TemurinGenSBOM Artifacts
+        name: Collect and Archive TemurinSignSBOM Artifacts
         with:
           name: testSBOM
           path: cyclonedx-lib/build/testSBOM.json

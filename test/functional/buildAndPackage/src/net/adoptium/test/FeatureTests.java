@@ -144,7 +144,9 @@ public class FeatureTests {
             processBuilder.inheritIO();
 
             int retCode = processBuilder.start().waitFor();
-            if (!jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X64)) {
+            if (!jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X64)
+                && !jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.AARCH64)
+            ) {
                 if (shouldBePresent) {
                     assertEquals(retCode, 0, "Expected ZGC to be present but it is absent.");
                 } else {
@@ -175,7 +177,7 @@ public class FeatureTests {
         }
         boolean shouldBePresent = false;
         if (jdkVersion.isNewerOrEqual(11) || jdkVersion.isNewerOrEqualSameFeature(8, 0, 262)) {
-            if (!jdkPlatform.runsOn(OperatingSystem.AIX)) {
+            if (!jdkPlatform.runsOn(OperatingSystem.AIX) || jdkVersion.isNewerOrEqual(20)) {
                 shouldBePresent = true;
             }
         }
