@@ -13,7 +13,6 @@
 ################################################################################
 */
 // clang-format off
-// NOLINT
 /* jscpd:ignore-start */
 
 #include <stdio.h>
@@ -33,6 +32,9 @@
  *
  * Notes: VStudio API needs to be used so that EXE/DLL object sections get
  * updated correctly resulting in identical length and padding, when necessary.
+ *
+ * Compile using:
+ *   cl WindowsUpdateVsVersionInfo.c version.lib
  */
 
 // Structures for saving existing VS_VERSION_INFO
