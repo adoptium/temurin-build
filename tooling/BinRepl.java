@@ -78,8 +78,15 @@ class BinRepl {
     patchFile(inFile, outFile, hex, str, strPad, firstOnly, boundary32bitOnly);
   }
 
-  // Patch the given input file, writing result to outFile
-  static void patchFile(String inFile, String outFile, String[] hex, String[] str, String strPad, boolean firstOnly, boolean boundary32bitOnly) throws Exception {
+  // Patch the given inFile, writing result to outFile
+  static void patchFile(final String inFile,
+                        final String outFile,
+                        final String[] hex,
+                        final String[] str,
+                        final String strPad,
+                        final boolean firstOnly,
+                        final boolean boundary32bitOnly) throws Exception {
+
     byte[] inBytes = Files.readAllBytes(Paths.get(inFile));
 
     HexFormat hexformat = HexFormat.ofDelimiter(":");
