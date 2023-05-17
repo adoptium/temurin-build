@@ -32,6 +32,35 @@ VENDOR_URL="$6"
 VENDOR_BUG_URL="$7"
 VENDOR_VM_BUG_URL="$8"
 
+function removeSignatures() {
+  echo "Removing all SELF_CERT Signatures from ${JDK_DIR}"
+  FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+  for f in $FILES
+   do
+    echo "Removing signature from $f"
+    if signtool remove /s "$f"; then
+        echo "  ==> Successfully removed signature from $f"
+    else
+        echo "  ==> $f contains no signature"
+    fi
+   done
+}
+
+function tempSign() {
+  echo "Adding SELF_SIGN Signatures for ${JDK_DIR}"
+  FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+  for f in $FILES
+   do
+    echo "Signing $f"
+    if signtool sign /f "$SELF_CERT_FILE" /p "$SELF_CERT_PASS" "$f" ; then
+        echo "  ==> Successfully signed $f"
+    else
+        echo "  ==> $f failed to be signed!!"
+        exit 1
+    fi
+   done
+}
+
 if [ "$#" -ne 8 ]; then
   echo "Syntax: cmd <jdk_dir> <cert_file> <cert_pass> <version_str> <vendor_name> <vendor_url> <vendor_bug_url> <vendor_vm_bug_url>"
   exit 1
@@ -84,41 +113,11 @@ rm "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
 
 echo "Removing all Signatures from ${JDK_DIR}"
 if [[ "$OS" =~ CYGWIN* ]]; then
-  FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
-  for f in $FILES
-   do
-    echo "Removing signature from $f"
-    if signtool remove /s "$f" ; then
-	echo "  ==> Successfully removed signature from $f"
-    else
-	echo "  ==> $f contains no signature"
-    fi
-   done
+  removeSignatures
 
-  echo "Adding SELF_SIGN Signatures for ${JDK_DIR}"
-  FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
-  for f in $FILES
-   do
-    echo "Signing $f"
-    if signtool sign /f "$SELF_CERT_FILE" /p "$SELF_CERT_PASS" "$f" ; then
-        echo "  ==> Successfully signed $f"
-    else
-        echo "  ==> $f failed to be signed!!"
-        exit 1
-    fi
-   done
+  tempSign
 
-  echo "Removing all SELF_CERT Signatures from ${JDK_DIR}"
-  FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
-  for f in $FILES
-   do
-    echo "Removing signature from $f"
-    if signtool remove /s "$f"; then
-	echo "  ==> Successfully removed signature from $f"
-    else
-	echo "  ==> $f contains no signature"
-    fi
-   done
+  removeSignatures
 fi
 echo "Successfully removed all SELF_CERT Signatures from ${JDK_DIR}"
 
