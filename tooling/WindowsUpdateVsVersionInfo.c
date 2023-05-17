@@ -67,6 +67,7 @@ typedef struct {
 } VERSION_INFO;
 
 // Declarations
+int   updateVSVersionInfo(char *file, WCHAR *wKey, WCHAR *wValue);
 short readVSVersionInfo(VERSION_INFO *info, unsigned char * vsBuf);
 short createVSVersionInfo(VERSION_INFO *info, unsigned char * vsBuf, int bufLen);
 
@@ -89,6 +90,16 @@ int main(int argc, char** argv) {
     size_t cc = 0;
     mbstowcs_s(&cc, wKey, strlen(key)+1, key, _TRUNCATE);
     mbstowcs_s(&cc, wValue, strlen(value)+1, value, _TRUNCATE);
+
+    // Update the VS_VERSION_INFO wKey value with wValue
+    int rc = updateVSVersionInfo(file, wKey, wValue);
+
+    return rc;
+}
+
+// Update the VS_VERSION_INFO of the input file
+// Changing the WCHAR String value of wKey to the new wValue
+int updateVSVersionInfo(char *file, WCHAR *wKey, WCHAR *wValue) {
 
     printf("Replacing %S key value with %S, in file %s\n", wKey, wValue, file);
 
