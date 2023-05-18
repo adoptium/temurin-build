@@ -82,7 +82,7 @@ cleanBuildInfo() {
 
 downloadTooling() {
   if [ ! -r "/usr/lib/jvm/jdk-${BOOTJDK_VERSION}/bin/javac" ]; then
-    echo "Retrieving boot JDK $BOOTJDK_VERSION" && mkdir -p /usr/lib/jvm && curl -L "https://api.adoptopenjdk.net/v3/binary/version/jdk-${BOOTJDK_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/adoptopenjdk?project=jdk" | (cd /usr/lib/jvm && tar xpzf -)
+    echo "Retrieving boot JDK $BOOTJDK_VERSION" && mkdir -p /usr/lib/jvm && curl -L "https://api.adoptium.net/v3/binary/version/jdk-${BOOTJDK_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" | (cd /usr/lib/jvm && tar xpzf -)
   fi
   if [ ! -r "${LOCALGCCDIR}/bin/g++-${GCCVERSION}" ]; then
     echo "Retrieving gcc $GCCVERSION" && curl "https://ci.adoptium.net/userContent/gcc/gcc$(echo "$GCCVERSION" | tr -d .).$(uname -m).tar.xz" | (cd /usr/local && tar xJpf -) || exit 1
@@ -94,7 +94,9 @@ downloadTooling() {
 }
 
 checkAllVariablesSet() {
-    [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${TEMURIN_BUILD_SHA}" ] || [ -z "${TEMURIN_BUILD_ARGS}" ] || [ -z "${TEMURIN_VERSION}" ] && echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
+  if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${TEMURIN_BUILD_SHA}" ] || [ -z "${TEMURIN_BUILD_ARGS}" ] || [ -z "${TEMURIN_VERSION}" ]; then
+      echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
+  fi
 }
 
 installPrereqs
@@ -103,7 +105,7 @@ downloadAnt
 echo "Retrieving and parsing SBOM from $SBOM_URL"
 curl -LO "$SBOM_URL"
 SBOM=$(basename "$SBOM_URL")
-BOOTJDK_VERSION=$(grep configure_arguments "$SBOM" | tr ' ' \\n | grep ^Temurin- | uniq | cut -d- -f2)
+BOOTJDK_VERSION=$(grep configure_arguments "$SBOM" | tr ' ' \\n | grep ^Temurin- | tail -1 | cut -d- -f2)
 GCCVERSION=$(tr ' ' \\n < "$SBOM" | grep CC= | cut -d- -f2 | cut -d\\ -f1)
 LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
 TEMURIN_BUILD_SHA=$(awk -F'"' '/buildRef/{print$4}' "$SBOM"  | cut -d/ -f7)
@@ -122,7 +124,7 @@ setEnvironment
 
 if [ ! -d "jdk-${TEMURIN_VERSION}" ]; then
    if [ -z "$TARBALL_URL" ]; then
-       TARBALL_URL="https://api.adoptopenjdk.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/adoptopenjdk?project=jdk"
+       TARBALL_URL="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
    fi
    echo Retrieving original tarball from adoptium.net && curl -L "$TARBALL_URL" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
 fi
@@ -135,6 +137,7 @@ tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare.$$
 
 cleanBuildInfo
 
+# shellcheck disable=SC2069
 if diff -r "jdk-${TEMURIN_VERSION}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.$(uname).$TEMURIN_VERSION.diff"; then
     echo "Compare identical !"
     exit 0
