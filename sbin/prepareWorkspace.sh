@@ -298,7 +298,8 @@ checkingAndDownloadingAlsa() {
     ALSA_BUILD_URL="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2"
     curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
     curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
-    export GNUPGHOME="$PWD/.gpg-temp"
+    # WORKSPACE in preference as Alpine fails gpg operation if PWD > 83 characters
+    export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
     # Should we clear this directory up after checking?
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now
