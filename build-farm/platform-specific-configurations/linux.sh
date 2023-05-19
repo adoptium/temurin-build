@@ -18,7 +18,6 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
-
 # Bundling our own freetype can cause problems, so we skip that on linux.
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 
@@ -132,7 +131,9 @@ function downloadBootJDK()
   ARCH=$1
   VER=$2
   export GNUPGHOME=$PWD/.gnupg-temp
-  mkdir -m 700 "$GNUPGHOME"
+  if [ ! -d "$GNUPGHOME" ]; then
+    mkdir -m 700 "$GNUPGHOME"
+  fi
   export downloadArch
   case "$ARCH" in
      "riscv64") downloadArch="$NATIVE_API_ARCH";;
@@ -148,7 +149,8 @@ function downloadBootJDK()
   # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
   # the fallback mechanism, as downloading of the GA binary might fail.
   set +e
-  if curl -L -o bootjdk.tar.gz "${apiURL}"; then
+  curl -L -o bootjdk.tar.gz "${apiURL}"
+  if ! grep "No releases match the request" bootjdk.tar.gz; then
     curl -L -o bootjdk.tar.gz.sig "$(curl -s "${apiSigURL}" | grep "signature_link.*-jdk_" | awk '{split($0,a,"\""); print a[4]}' | head -1)"
     gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
@@ -168,8 +170,9 @@ function downloadBootJDK()
     apiSigURL=$(eval echo "${apiSigUrlTemplate}")
     echo "Attempting to download EA release of boot JDK version ${VER} from ${apiURL}"
     set +e
-    if curl -L -o bootjdk.tar.gz "${apiURL}"; then
-      curl -o bootjdk.tar.gz.sig "$(curl -s "${apiSigURL}" | grep "signature_link.*-jdk_" | awk '{split($0,a,"\""); print a[4]}')"
+    curl -L -o bootjdk.tar.gz "${apiURL}"
+    if ! grep "No releases match the request" bootjdk.tar.gz; then
+      curl -L -o bootjdk.tar.gz.sig "$(curl -s "${apiSigURL}" | grep "signature_link.*-jdk_" | awk '{split($0,a,"\""); print a[4]}' | head -1)"
       gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
       echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
       gpg --verify bootjdk.tar.gz.sig bootjdk.tar.gz || exit 1
