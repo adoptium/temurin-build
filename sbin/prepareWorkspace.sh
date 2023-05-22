@@ -537,10 +537,10 @@ downloadingRequiredDependencies() {
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
 
-  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
-    echo "macOS, Windows or Windows-like environment detected, skipping download of dependency Alsa."
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]] ||  [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ||  [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]] ; then
+    echo "Non-Linux-based environment detected, skipping download of dependency Alsa."
   else
-    echo "Checking and downloading Alsa dependency"
+    echo "Checking and downloading Alsa dependency because OSTYPE=${OSTYPE}"
     checkingAndDownloadingAlsa
   fi
 
