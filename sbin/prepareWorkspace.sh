@@ -302,15 +302,15 @@ checkingAndDownloadingAlsa() {
 
     ## Add Special Rules For Alpine Linx As This Doesnt Work In docker
 
-    if echo ${BUILD_CONFIG[OS_FULL_VERSION]} | grep -qi "alpine" ; then
+    if echo "${BUILD_CONFIG[OS_FULL_VERSION]}" | grep -qi "alpine" ; then
       # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
       # Alpine also cannot create ~/.gpg-temp within a docker context
       export GNUPGHOME="/tmp/.gpg-temp.$$"
     else
       export GNUPGHOME="$HOME/.gpg-temp.$$"
     fi
-    
-    echo GNUPGHOME=$GNUPGHOME
+
+    echo "GNUPGHOME=$GNUPGHOME"
     mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
     gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
     # Should we clear this directory up after checking?
