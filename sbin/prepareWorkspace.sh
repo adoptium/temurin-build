@@ -305,6 +305,7 @@ checkingAndDownloadingAlsa() {
     if echo ${BUILD_CONFIG[OS_FULL_VERSION]} | grep -qi "alpine" ; then
       export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
       echo GNUPGHOME=$GNUPGHOME
+      gpg-agent --homedir=$GNUPGHOME --daemon
       # Should we clear this directory up after checking?
       # Would this risk removing anyone's existing dir with that name?
       # Erring on the side of caution for now
