@@ -305,7 +305,9 @@ checkingAndDownloadingAlsa() {
     if echo ${BUILD_CONFIG[OS_FULL_VERSION]} | grep -qi "alpine" ; then
       export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
       echo GNUPGHOME=$GNUPGHOME
+      mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
       gpg-agent --homedir=$GNUPGHOME --daemon
+      gpg --homedir $GNUPGHOME --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
       # Should we clear this directory up after checking?
       # Would this risk removing anyone's existing dir with that name?
       # Erring on the side of caution for now
