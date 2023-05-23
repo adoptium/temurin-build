@@ -300,10 +300,11 @@ checkingAndDownloadingAlsa() {
     curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
     curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
 
-    ## Add Exclusion For Alpine Linx As This Doesnt Work In docker
+    ## Add Special Rules For Alpine Linx As This Doesnt Work In docker
 
     if echo ${BUILD_CONFIG[OS_FULL_VERSION]} | grep -qi "alpine" ; then
-      export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+      #export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+      export GNUPGHOME="/tmp/.gpg-temp"
       echo GNUPGHOME=$GNUPGHOME
       mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
       gpg-agent --homedir=$GNUPGHOME --daemon
