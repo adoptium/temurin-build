@@ -26,7 +26,7 @@ set -eu
 TEMURIN_TOOLS_BINREPL="temurin.tools.BinRepl"
 
 JDK_DIR="$1"
-SELF_CERT_FILE="$2"
+SELF_CERT="$2"
 SELF_CERT_PASS="$3"
 VERSION_REPL="$4"
 VENDOR_NAME="$5"
@@ -69,7 +69,7 @@ function expandJDK() {
 
 # Remove excluded files known to differ
 function removeExcludedFiles() {
-  if [[ "$OS" =~ CYGWIN* ]]; then
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
     excluded="NOTICE cacerts classes.jsa classes_nocoops.jsa SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class"
   else
     excluded="NOTICE cacerts classes.jsa classes_nocoops.jsa"
@@ -85,7 +85,7 @@ function removeExcludedFiles() {
         done
     done
 
-  if [[ "$OS" =~ CYGWIN* ]]; then
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
     echo "Removing java.base module-info.class, known to differ by jdk.jpackage module hash"
     rm "${JDK_DIR}/jmods/expanded_java.base.jmod/classes/module-info.class"
     rm "${JDK_DIR}/lib/modules_extracted/java.base/module-info.class"
@@ -95,33 +95,66 @@ function removeExcludedFiles() {
 
 # Remove all Signatures
 function removeSignatures() {
-  echo "Removing all SELF_CERT Signatures from ${JDK_DIR}"
-  FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
-  for f in $FILES
-   do
-    echo "Removing signature from $f"
-    if signtool remove /s "$f"; then
-        echo "  ==> Successfully removed signature from $f"
-    else
-        echo "  ==> $f contains no signature"
+  if [[ "$OS" =~ CYGWIN* ]]; then
+    echo "Removing all Signatures from ${JDK_DIR}"
+    FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+    for f in $FILES
+     do
+      echo "Removing signature from $f"
+      if signtool remove /s "$f"; then
+          echo "  ==> Successfully removed signature from $f"
+      else
+          echo "  ==> $f contains no signature"
+      fi
+     done
+  elif [[ "$OS" =~ Darwin* ]]; then
+    MAC_JDK_ROOT="${JDK_DIR}/../.."
+    echo "Removing all Signatures from ${MAC_JDK_ROOT}"
+
+    if [ ! -d "${MAC_JDK_ROOT}/Contents" ]; then
+        echo "Error: ${MAC_JDK_ROOT} does not contain the MacOS JDK Contents directory"
+        exit 1
     fi
-   done
+
+    # Remove any extended app attr
+    xattr -c "${MAC_JDK_ROOT}"
+      
+    FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
+    for f in $FILES
+    do
+        echo "Removing signature from $f"
+        codesign --remove-signature "$f"
+    done
+  fi
 }
 
 # Sign with temporary Signature, which when removed results in determinisitic binary length
 function tempSign() {
-  echo "Adding SELF_SIGN Signatures for ${JDK_DIR}"
-  FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
-  for f in $FILES
-   do
-    echo "Signing $f"
-    if signtool sign /f "$SELF_CERT_FILE" /p "$SELF_CERT_PASS" "$f" ; then
-        echo "  ==> Successfully signed $f"
-    else
-        echo "  ==> $f failed to be signed!!"
-        exit 1
-    fi
-   done
+  if [[ "$OS" =~ CYGWIN* ]]; then
+    echo "Adding temp Signatures for ${JDK_DIR}"
+    FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+    for f in $FILES
+     do
+      echo "Signing $f"
+      if signtool sign /f "$SELF_CERT" /p "$SELF_CERT_PASS" "$f" ; then
+          echo "  ==> Successfully signed $f"
+      else
+          echo "  ==> $f failed to be signed!!"
+          exit 1
+      fi
+     done
+  elif [[ "$OS" =~ Darwin* ]]; then
+    MAC_JDK_ROOT="${JDK_DIR}/../../Contents"
+    echo "Adding temp Signatures for ${MAC_JDK_ROOT}"
+
+    FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
+    for f in $FILES
+    do
+        echo "Signing $f with a local certificate"
+        # Sign both with same local Certificate, this adjusts __LINKEDIT vmsize identically
+        codesign -s "$SELF_CERT" --options runtime -f --timestamp "$f"
+    done
+  fi
 }
 
 # Remove the Windows EXE/DLL timestamps and internal VS CRC and debug repro hex values
@@ -172,6 +205,33 @@ function removeWindowsNonComparableData() {
  echo "Successfully removed all EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
 }
 
+# Remove the MACOS dylib non-comparable data
+#   MacOS Mach-O format stores a uuid value that consists of a "hash" of the code and
+#   the some length part of the user's build folder.
+# See https://github.com/adoptium/temurin-build/issues/2899#issuecomment-1153757419
+function removeMacOSNonComparableData() {
+  echo "Removing MacOS dylib non-comparable UUID from ${JDK_DIR}"
+
+  FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
+  for f in $FILES
+  do
+    uuid=$(otool -l "$f" | grep "uuid" | tr -s " " | tr -d "-" | cut -d" " -f3)
+    if [ -z "$uuid" ]; then
+      echo "  FAILED ==> otool -l \"$f\" | grep \"uuid\" | tr -s \" \" | tr -d \"-\" | cut -d\" \" -f3"
+      exit 1
+    else
+      # Format uuid for BINREPL
+      uuidhex="${uuid:0:2}:${uuid:2:2}:${uuid:4:2}:${uuid:6:2}:${uuid:8:2}:${uuid:10:2}:${uuid:12:2}:${uuid:14:2}:${uuid:16:2}:${uuid:18:2}:${uuid:20:2}:${uuid:22:2}:${uuid:24:2}:${uuid:26:2}:${uuid:28:2}:${uuid:30:2}"
+      if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${uuidhex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA" --firstOnly; then
+        echo "  FAILED ==> java \"$TEMURIN_TOOLS_BINREPL\" --inFile \"$f\" --outFile \"$f\" --hex \"${uuidhex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\" --firstOnly"
+        exit 1
+      fi
+    fi      
+  done
+
+  echo "Successfully removed all MacOS dylib non-comparable UUID from ${JDK_DIR}"
+}
+
 # Neutralize Windows VS_VERSION_INFO CompanyName
 function neutraliseVsVersionInfo() {
   echo "Updating EXE/DLL VS_VERSION_INFO in ${JDK_DIR}"
@@ -199,6 +259,8 @@ function removeVendorName() {
   echo "Removing Vendor name: $VENDOR_NAME from binaries from ${JDK_DIR}"
   if [[ "$OS" =~ CYGWIN* ]]; then
    FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+  elif [[ "$OS" =~ Darwin* ]]; then
+   FILES=$(find "${JDK_DIR}" -type f -path '*.dylib')
   else
    FILES=$(find "${JDK_DIR}" -type f -path '*.so')
   fi
@@ -210,6 +272,12 @@ function removeVendorName() {
           echo "  Not found ==> java $TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --string \"${VENDOR_NAME}=\" --pad 00"
       fi
     done
+
+  if [[ "$OS" =~ Darwin* ]]; then
+    plist="${JDK_DIR}/../Info.plist"
+    echo "Removing vendor string from ${plist}"
+    sed -i "" "s=${VENDOR_NAME}=AAAAAA=g" "${plist}"
+  fi
 
   echo "Successfully removed all Vendor name: $VENDOR_NAME from binaries from ${JDK_DIR}"
 }
@@ -258,15 +326,33 @@ function neutraliseManifests() {
 function neutraliseReleaseFile() {
   echo "Removing Vendor strings from release file ${JDK_DIR}/release"
 
-  sed -i "s=$VERSION_REPL==g" "${JDK_DIR}/release"
-  sed -i "s=$VENDOR_NAME==g" "${JDK_DIR}/release"
+  if [[ "$OS" =~ Darwin* ]]; then
+    sed -i "" "s=$VERSION_REPL==g" "${JDK_DIR}/release"
+    sed -i "" "s=$VENDOR_NAME==g" "${JDK_DIR}/release"
 
-  # BUILD_INFO likely different since built on different machines
-  sed -i "s=^BUILD_INFO.*$==g" "${JDK_DIR}/release"
+    # BUILD_INFO likely different since built on different machines
+    sed -i "" "s=^BUILD_INFO.*$==g" "${JDK_DIR}/release"
 
-  # BUILD_SOURCE possibly built not using temurin build scripts
-  sed -i "s=^BUILD_SOURCE.*$==g" "${JDK_DIR}/release"
-  sed -i "s=^BUILD_SOURCE_REPO.*$==g" "${JDK_DIR}/release"
+    # BUILD_SOURCE possibly built not using temurin build scripts
+    sed -i "" "s=^BUILD_SOURCE.*$==g" "${JDK_DIR}/release"
+    sed -i "" "s=^BUILD_SOURCE_REPO.*$==g" "${JDK_DIR}/release"
+
+    # Temurin JVM_VARIANT has capital "Hotspot"
+    sed -i "" "s,^JVM_VARIANT=\"Hotspot\",JVM_VARIANT=\"hotspot\",g" "${JDK_DIR}/release"
+  else
+    sed -i "s=$VERSION_REPL==g" "${JDK_DIR}/release"
+    sed -i "s=$VENDOR_NAME==g" "${JDK_DIR}/release"
+
+    # BUILD_INFO likely different since built on different machines
+    sed -i "s=^BUILD_INFO.*$==g" "${JDK_DIR}/release"
+
+    # BUILD_SOURCE possibly built not using temurin build scripts
+    sed -i "s=^BUILD_SOURCE.*$==g" "${JDK_DIR}/release"
+    sed -i "s=^BUILD_SOURCE_REPO.*$==g" "${JDK_DIR}/release"
+
+    # Temurin JVM_VARIANT has capital "Hotspot"
+    sed -i "s,^JVM_VARIANT=\"Hotspot\",JVM_VARIANT=\"hotspot\",g" "${JDK_DIR}/release"
+  fi
 }
 
 if [ "$#" -ne 8 ]; then
@@ -284,6 +370,9 @@ if [[ "$OS" =~ CYGWIN* ]]; then
   echo "On Windows"
 elif [[ "$OS" =~ Linux* ]]; then
   echo "On Linux"
+elif [[ "$OS" =~ Darwin* ]]; then
+  echo "On MacOS"
+  JDK_DIR="${JDK_DIR}/Contents/Home"
 else
   echo "Do not recognise OS: $OS"
   exit 1
@@ -292,16 +381,14 @@ fi
 expandJDK
 
 echo "Removing all Signatures from ${JDK_DIR} in a deterministic way"
-if [[ "$OS" =~ CYGWIN* ]]; then
-  # Remove original certs
-  removeSignatures
+# Remove original certs
+removeSignatures
 
-  # Sign with temporary cert, so we can remove it and end up with a deterministic result
-  tempSign
+# Sign with temporary cert, so we can remove it and end up with a deterministic result
+tempSign
 
-  # Remove temporary cert
-  removeSignatures
-fi
+# Remove temporary cert
+removeSignatures
 echo "Successfully removed all Signatures from ${JDK_DIR}"
 
 removeExcludedFiles
@@ -312,6 +399,10 @@ fi
 
 if [[ "$OS" =~ CYGWIN* ]]; then
  removeWindowsNonComparableData
+fi
+
+if [[ "$OS" =~ Darwin* ]]; then
+  removeMacOSNonComparableData
 fi
 
 removeVendorName
