@@ -307,7 +307,7 @@ checkingAndDownloadingAlsa() {
       # Alpine also cannot create ~/.gpg-temp within a docker context
       export GNUPGHOME="/tmp/.gpg-temp.$$"
     else
-      export GNUPGHOME="$HOME/.gpg-temp.$$"
+      export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
     fi
 
     echo "GNUPGHOME=$GNUPGHOME"
@@ -316,7 +316,6 @@ checkingAndDownloadingAlsa() {
     # Should we clear this directory up after checking?
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now
-    ## gpg --homedir $GNUPGHOME --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
     gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
     gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
