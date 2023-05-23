@@ -304,7 +304,8 @@ checkingAndDownloadingAlsa() {
 
     if echo ${BUILD_CONFIG[OS_FULL_VERSION]} | grep -qi "alpine" ; then
       #export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
-      export GNUPGHOME="/tmp/.gpg-temp"
+      #export GNUPGHOME="/tmp/.gpg-temp"
+      export GNUPGHOME="$HOME/.gpg-temp.$$"
       echo GNUPGHOME=$GNUPGHOME
       mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
       ## gpg-agent --homedir=$GNUPGHOME --daemon
