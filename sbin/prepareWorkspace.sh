@@ -303,12 +303,13 @@ checkingAndDownloadingAlsa() {
     ## Add Special Rules For Alpine Linx As This Doesnt Work In docker
 
     if echo ${BUILD_CONFIG[OS_FULL_VERSION]} | grep -qi "alpine" ; then
-      #export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+      # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
+      # Alpine also cannot create ~/.gpg-temp within a docker context
       export GNUPGHOME="/tmp/.gpg-temp.$$"
     else
       export GNUPGHOME="$HOME/.gpg-temp.$$"
     fi
-
+    
     echo GNUPGHOME=$GNUPGHOME
     mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
     gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
@@ -316,15 +317,6 @@ checkingAndDownloadingAlsa() {
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now
     ## gpg --homedir $GNUPGHOME --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
-    gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
-    echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
-    gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
-    # WORKSPACE in preference as Alpine fails gpg operation if PWD > 83 characters
-    export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
-    # Should we clear this directory up after checking?
-    # Would this risk removing anyone's existing dir with that name?
-    # Erring on the side of caution for now
-    mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
     gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
     gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
