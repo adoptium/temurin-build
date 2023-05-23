@@ -303,12 +303,12 @@ checkingAndDownloadingAlsa() {
     ## Add Exclusion For Alpine Linx As This Doesnt Work In docker
 
     if echo ${BUILD_CONFIG[OS_FULL_VERSION]} | grep -qi "alpine" ; then
-      # export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+      export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
       # Should we clear this directory up after checking?
       # Would this risk removing anyone's existing dir with that name?
       # Erring on the side of caution for now
-      sudo mkdir -p "~/.gnupg" && chmod og-rwx "~/.gnupg"
-      gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
+      mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
+      gpg --homedir $GNUPGHOME --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
       echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
       gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
     else
