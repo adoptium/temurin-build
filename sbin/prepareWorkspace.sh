@@ -303,8 +303,14 @@ checkingAndDownloadingAlsa() {
     ## Add Exclusion For Alpine Linx As This Doesnt Work In docker
 
     if echo ${BUILD_CONFIG[OS_FULL_VERSION]} | grep -qi "alpine" ; then
-      downloadFile "alsa-lib.tar.bz2" "https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2" "${ALSA_LIB_CHECKSUM}"
-      ALSA_BUILD_INFO="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2"
+      # export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+      # Should we clear this directory up after checking?
+      # Would this risk removing anyone's existing dir with that name?
+      # Erring on the side of caution for now
+      # mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
+      gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
+      echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
+      gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
     else
       # WORKSPACE in preference as Alpine fails gpg operation if PWD > 83 characters
       export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
