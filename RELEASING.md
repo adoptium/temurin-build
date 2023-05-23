@@ -286,6 +286,11 @@ If the latest version just released has come to the end of its non-LTS lifecycle
 - delete pipeline and jobs in Jenkins (only Jenkins admin has permission)
 - update pr-test job to not include this version
 
+For the api.adoptium.net repository:
+
+- Update the LATEST_JAVA_VERSION_PROPERTY in [Versions.kt](https://github.com/adoptium/api.adoptium.net/blob/main/adoptium-models-parent/adoptium-api-v3-models/src/main/kotlin/net/adoptium/api/v3/models/Versions.kt) to be n+1, where n is the highest major version you've just released.
+- Ensure that LATEST_JAVA_VERSION is not set on the api.adoptium.net server, as it will override the LATEST_JAVA_VERSION_PROPERTY.
+
 ## OpenJDK "New" Major Release process
 
 - The refers to a "new" major (Short or Long Term) OpenJDK Release (e.g. jdk13, jdk14, ...)
