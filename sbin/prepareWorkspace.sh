@@ -303,7 +303,7 @@ checkingAndDownloadingAlsa() {
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now
     mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
-    gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}" 2>/dev/null
+    gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}" || true
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
     gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
