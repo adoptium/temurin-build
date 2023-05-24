@@ -36,7 +36,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import org.cyclonedx.exception.ParseException;
