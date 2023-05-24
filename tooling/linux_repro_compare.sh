@@ -49,6 +49,10 @@ if [ "$BLD_TYPE1" != "$BLD_TYPE2" ]; then
   cleanTemurinFiles "${JDK_DIR2}"
 fi
 
+# release file build machine OS level and builds-scripts SHA can/will be different
+cleanTemurinBuildInfo "${JDK_DIR1}"
+cleanTemurinBuildInfo "${JDK_DIR2}"
+
 files1=$(find "${JDK_DIR1}" -type f | wc -l)
 
 output="repro_diff.out"
