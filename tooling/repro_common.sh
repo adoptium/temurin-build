@@ -130,7 +130,7 @@ cleanTemurinFiles() {
   echo "Removing Temurin NOTICE file from $DIR"
   rm "${DIR}"/NOTICE
 
-  if [[ `uname` =~ Darwin* ]]; then
+  if [[ $(uname) =~ Darwin* ]]; then
     echo "Removing Temurin specific lines from release file in $DIR"
     sed -i "" '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
     sed -i "" '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
@@ -175,7 +175,7 @@ cleanTemurinBuildInfo() {
   
   echo "Cleaning any Temurin build-scripts release file BUILD_INFO from ${DIR}"
 
-  if [[ `uname` =~ Darwin* ]]; then
+  if [[ $(uname) =~ Darwin* ]]; then
     sed -i "" '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
     sed -i "" '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
     sed -i "" '/^BUILD_INFO=.*$/d' "${DIR}/release"

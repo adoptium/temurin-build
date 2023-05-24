@@ -49,4 +49,3 @@ The patching process involves:
 - Remove Vendor strings embedded in executables, classes and text files.
 - Remove any non-deterministic build process artifact strings, like Manifest Created-By stamps.
 
-- 

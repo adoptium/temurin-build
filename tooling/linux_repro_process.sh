@@ -26,7 +26,7 @@ fi
 
 expandJDK "$JDK_DIR"
 
-if [[ `uname` =~ Darwin* ]]; then
+if [[ $(uname) =~ Darwin* ]]; then
   echo "Removing jrt-fs.jar MANIFEST.MF BootJDK vendor string lines"
   sed -i "" '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
   sed -i "" '/^Created-By:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
