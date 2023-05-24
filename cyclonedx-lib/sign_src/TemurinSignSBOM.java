@@ -124,7 +124,7 @@ public final class TemurinSignSBOM {
             JsonParser parser = new JsonParser();
             Bom signedBom = parser.parse(new StringReader(signedData));
             return signedBom;
-        } catch (IOException | GeneralSecurityException | ParseException e) {
+        } catch (IOException | ParseException e) {
             LOGGER.log(Level.SEVERE, "Error signing SBOM", e);
             return null;
         }
@@ -174,7 +174,7 @@ public final class TemurinSignSBOM {
             JSONSignatureDecoder signature = reader.getSignature(new JSONCryptoHelper.Options());
             signature.verify(new JSONAsymKeyVerifier(publicKey));
             return true;
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Exception verifying json signature", e);
         }
         return false;
