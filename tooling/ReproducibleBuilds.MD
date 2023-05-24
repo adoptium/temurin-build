@@ -31,6 +31,12 @@ It will then:
 - Calls windows_repro_process.sh to pre-process the folder before comparison. This expands zips and jmods, then deterministically
 remove any Signatures from the executeables.
 
+4. mac_repro_compare.sh : Compares two mac JDK folders:
+
+- mac_repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 temp_selfcert temp selfcert_pwd
+- Calls mac_repro_process.sh to pre-process the folder before comparison. This expands zips and jmods, then deterministically
+remove any Signatures from the executeables.
+
 ## Comparable Build Tools
 
 1. comparable_patch.sh : Patches a JDK folder to enable "Comparable" comparison of two different Vendor JDK builds.
