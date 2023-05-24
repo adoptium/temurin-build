@@ -36,6 +36,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import org.cyclonedx.exception.ParseException;
@@ -123,7 +124,7 @@ public final class TemurinSignSBOM {
             JsonParser parser = new JsonParser();
             Bom signedBom = parser.parse(new StringReader(signedData));
             return signedBom;
-        } catch (IOException | ParseException e) {
+        } catch (IOException | GeneralSecurityException | ParseException e) {
             LOGGER.log(Level.SEVERE, "Error signing SBOM", e);
             return null;
         }
@@ -173,7 +174,7 @@ public final class TemurinSignSBOM {
             JSONSignatureDecoder signature = reader.getSignature(new JSONCryptoHelper.Options());
             signature.verify(new JSONAsymKeyVerifier(publicKey));
             return true;
-        } catch (IOException e) {
+        } catch (IOException | GeneralSecurityException e) {
             LOGGER.log(Level.SEVERE, "Exception verifying json signature", e);
         }
         return false;
