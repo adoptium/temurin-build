@@ -12,33 +12,12 @@
 # limitations under the License.
 ################################################################################
 
+source repro_common.sh
+
 BLD_TYPE1="$1"
 JDK_DIR1="$2"
 BLD_TYPE2="$3"
 JDK_DIR2="$4"
-
-cleanTemurinFiles() {
-  DIR=$1
-
-  echo "Removing Temurin NOTICE file from $DIR"
-  rm "${DIR}"/NOTICE
-
-  echo "Removing Temurin specific lines from release file in $DIR"
-  sed -i '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
-  sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
-  sed -i '/^SOURCE_REPO=.*$/d' "${DIR}/release"
-  sed -i '/^FULL_VERSION=.*$/d' "${DIR}/release"
-  sed -i '/^SEMANTIC_VERSION=.*$/d' "${DIR}/release"
-  sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
-  sed -i '/^JVM_VARIANT=.*$/d' "${DIR}/release"
-  sed -i '/^JVM_VERSION=.*$/d' "${DIR}/release"
-  sed -i '/^IMAGE_TYPE=.*$/d' "${DIR}/release"
-
-  echo "Removing JDK image files not shipped by Temurin(*.pdb, *.pdb, demo) in $DIR"
-  find "${DIR}" -type f -name "*.pdb" -delete
-  find "${DIR}" -type f -name "*.map" -delete
-  rm -rf "${DIR}/demo"
-}
 
 if [ ! -d "${JDK_DIR1}" ]; then
   echo "$JDK_DIR1 does not exist"

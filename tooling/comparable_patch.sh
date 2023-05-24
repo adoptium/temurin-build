@@ -12,6 +12,8 @@
 # limitations under the License.
 ##############################################################################
 
+source repro_common.sh
+
 set -eu
 
 #
@@ -33,39 +35,6 @@ VENDOR_NAME="$5"
 VENDOR_URL="$6"
 VENDOR_BUG_URL="$7"
 VENDOR_VM_BUG_URL="$8"
-
-# Expand JDK jmods & zips to process binaries within
-function expandJDK() {
-  echo "Expanding the 'modules' Image to remove signatures from within.."
-  jimage extract --dir "${JDK_DIR}/lib/modules_extracted" "${JDK_DIR}/lib/modules"
-  rm "${JDK_DIR}/lib/modules"
-
-  echo "Expanding the 'src.zip' to normalize file permissions"
-  unzip "${JDK_DIR}/lib/src.zip" -d "${JDK_DIR}/lib/src_zip_expanded"
-  rm "${JDK_DIR}/lib/src.zip"
-
-  echo "Expanding jmods to process binaries within"
-  FILES=$(find "${JDK_DIR}" -type f -path '*.jmod')
-  for f in $FILES
-    do
-      echo "Unzipping $f"
-      base=$(basename "$f")
-      dir=$(dirname "$f")
-      expand_dir="${dir}/expanded_${base}"
-      mkdir -p "${expand_dir}"
-      jmod extract --dir "${expand_dir}" "$f"
-      rm "$f"
-    done
-
-  echo "Expanding the 'jrt-fs.jar' to remove signatures from within.."
-  mkdir "${JDK_DIR}/lib/jrt-fs-expanded"
-  unzip -d "${JDK_DIR}/lib/jrt-fs-expanded" "${JDK_DIR}/lib/jrt-fs.jar"
-  rm "${JDK_DIR}/lib/jrt-fs.jar"
-
-  mkdir "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded"
-  unzip -d "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded" "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
-  rm "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
-}
 
 # Remove excluded files known to differ
 function removeExcludedFiles() {
@@ -91,70 +60,6 @@ function removeExcludedFiles() {
     rm "${JDK_DIR}/lib/modules_extracted/java.base/module-info.class"
   fi
   echo "Successfully removed all excluded files from ${JDK_DIR}"
-}
-
-# Remove all Signatures
-function removeSignatures() {
-  if [[ "$OS" =~ CYGWIN* ]]; then
-    echo "Removing all Signatures from ${JDK_DIR}"
-    FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
-    for f in $FILES
-     do
-      echo "Removing signature from $f"
-      if signtool remove /s "$f"; then
-          echo "  ==> Successfully removed signature from $f"
-      else
-          echo "  ==> $f contains no signature"
-      fi
-     done
-  elif [[ "$OS" =~ Darwin* ]]; then
-    MAC_JDK_ROOT="${JDK_DIR}/../.."
-    echo "Removing all Signatures from ${MAC_JDK_ROOT}"
-
-    if [ ! -d "${MAC_JDK_ROOT}/Contents" ]; then
-        echo "Error: ${MAC_JDK_ROOT} does not contain the MacOS JDK Contents directory"
-        exit 1
-    fi
-
-    # Remove any extended app attr
-    xattr -c "${MAC_JDK_ROOT}"
-      
-    FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
-    for f in $FILES
-    do
-        echo "Removing signature from $f"
-        codesign --remove-signature "$f"
-    done
-  fi
-}
-
-# Sign with temporary Signature, which when removed results in determinisitic binary length
-function tempSign() {
-  if [[ "$OS" =~ CYGWIN* ]]; then
-    echo "Adding temp Signatures for ${JDK_DIR}"
-    FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
-    for f in $FILES
-     do
-      echo "Signing $f"
-      if signtool sign /f "$SELF_CERT" /p "$SELF_CERT_PASS" "$f" ; then
-          echo "  ==> Successfully signed $f"
-      else
-          echo "  ==> $f failed to be signed!!"
-          exit 1
-      fi
-     done
-  elif [[ "$OS" =~ Darwin* ]]; then
-    MAC_JDK_ROOT="${JDK_DIR}/../../Contents"
-    echo "Adding temp Signatures for ${MAC_JDK_ROOT}"
-
-    FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
-    for f in $FILES
-    do
-        echo "Signing $f with a local certificate"
-        # Sign both with same local Certificate, this adjusts __LINKEDIT vmsize identically
-        codesign -s "$SELF_CERT" --options runtime -f --timestamp "$f"
-    done
-  fi
 }
 
 # Remove the Windows EXE/DLL timestamps and internal VS CRC and debug repro hex values
@@ -378,17 +283,19 @@ else
   exit 1
 fi
 
-expandJDK
+expandJDK "$JDK_DIR"
 
 echo "Removing all Signatures from ${JDK_DIR} in a deterministic way"
+
 # Remove original certs
-removeSignatures
+removeSignatures "$JDK_DIR" "$OS"
 
 # Sign with temporary cert, so we can remove it and end up with a deterministic result
-tempSign
+tempSign "$JDK_DIR" "$OS" "$SELF_CERT" "$SELF_CERT_PASS" 
 
 # Remove temporary cert
-removeSignatures
+removeSignatures "$JDK_DIR" "$OS"
+
 echo "Successfully removed all Signatures from ${JDK_DIR}"
 
 removeExcludedFiles
