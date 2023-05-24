@@ -295,18 +295,31 @@ checkingAndDownloadingAlsa() {
   if [[ -n "$FOUND_ALSA" ]]; then
     echo "Skipping ALSA download"
   else
+
     ALSA_BUILD_URL="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2"
     curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
     curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
-    # WORKSPACE in preference as Alpine fails gpg operation if PWD > 83 characters
-    export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+
+    ## Add Special Rules For Alpine Linux as this doesn't work In docker
+
+    if echo "${BUILD_CONFIG[OS_FULL_VERSION]}" | grep -qi "alpine" ; then
+      # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
+      # Alpine also cannot create ~/.gpg-temp within a docker context
+      export GNUPGHOME="/tmp/.gpg-temp.$$"
+    else
+      export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+    fi
+
+    echo "GNUPGHOME=$GNUPGHOME"
+    mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
+    gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
     # Should we clear this directory up after checking?
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now
-    mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
     gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
     gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
+
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
       bzip2 -d alsa-lib.tar.bz2
       tar -xf alsa-lib.tar --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
@@ -440,7 +453,7 @@ checkingAndDownloadingFreeType() {
       cd .. || exit
       ;;
     esac
-  
+
     # Fetch the sha for the commit we just cloned
     cd freetype || exit
     FREETYPE_SHA=$(git rev-parse HEAD) || exit
