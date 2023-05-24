@@ -104,31 +104,24 @@ configureReproducibleBuildParameter() {
           addConfigureArg "--with-source-date=version"  " --disable-ccache"
           CONFIGURE_ARGS="${CONFIGURE_ARGS//--enable-ccache/}"
       else
-          if [[ -n "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}" ]]; then
-              # Use supplied date
-              addConfigureArg "--with-source-date=" "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}"
+          # Use BUILD_TIMESTAMP date
 
-              # Specify --with-hotspot-build-time to ensure dual pass builds like MacOS use same time
-              # Use supplied date
-              addConfigureArg "--with-hotspot-build-time=" "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}"
+          # Convert BUILD_TIMESTAMP to seconds since Epoch
+          local buildTimestampSeconds
+          if isGnuCompatDate; then
+              buildTimestampSeconds=$(date --utc --date="${BUILD_CONFIG[BUILD_TIMESTAMP]}" +"%s")
           else
-              # Use build date
-              addConfigureArg "--with-source-date=" "updated"
-
-              # Specify --with-hotspot-build-time to ensure dual pass builds like MacOS use same time
-              # Get current ISO-8601 datetime
-              isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox" || true)
-              if [ "x${isGnuCompatDate}" != "x" ]
-              then
-                  hotspotBuildTime=$(date --utc +"%Y-%m-%dT%H:%M:%SZ")
-              else
-                  hotspotBuildTime=$(date -u -j +"%Y-%m-%dT%H:%M:%SZ")
-              fi
-              addConfigureArg "--with-hotspot-build-time=" "${hotspotBuildTime}"
+              buildTimestampSeconds=$(date -u -j -f "%Y-%m-%d %H:%M:%S" "${BUILD_CONFIG[BUILD_TIMESTAMP]}" +"%s")
           fi
+
+          addConfigureArg "--with-source-date=" "${buildTimestampSeconds}"
+
+          # Specify --with-hotspot-build-time to ensure dual pass builds like MacOS use same time
+          # Use supplied date
+          addConfigureArg "--with-hotspot-build-time=" "'${BUILD_CONFIG[BUILD_TIMESTAMP]}'"
       fi
-      # Ensure reproducible binary with a unique build user identifier
-      addConfigureArg "--with-build-user=" "${BUILD_CONFIG[BUILD_VARIANT]}"
+      # Ensure reproducible and comparable binary with a unique build user identifier
+      addConfigureArg "--with-build-user=" "admin"
   fi
 }
 
@@ -273,18 +266,23 @@ configureVersionStringParameter() {
     addConfigureArg "--with-milestone=" "beta"
   fi
 
-  local dateSuffix=$(date -u +%Y%m%d%H%M)
+  # Determine build date timestamp to use
+  local buildTimestamp
   if [[ -n "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}" ]]; then
-    # Use input reproducible build date supplied in ISO8601 format
-    # Convert input ISO8601 date to dateSuffix %Y%m%d%H%M format
-    isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox" || true)
-    if [ "x${isGnuCompatDate}" != "x" ]
-    then
-        dateSuffix=$(date --utc --date="${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}" +"%Y%m%d%H%M")
-    else
-        dateSuffix=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}" +"%Y%m%d%H%M")
-    fi
+    # Use input reproducible build date supplied in ISO8601 format UTC time
+    buildTimestamp="${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}"
+    # BusyBox doesn't use T Z iso8601 format
+    buildTimestamp="${buildTimestamp//T/ }"
+    buildTimestamp="${buildTimestamp//Z/}"
+  else
+    # Get current ISO-8601 datetime
+    buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S") 
   fi
+  BUILD_CONFIG[BUILD_TIMESTAMP]="${buildTimestamp}"
+
+  # Convert ISO-8601 buildTimestamp string to dateSuffix format: %Y%m%d%H%M
+  # "%Y-%m-%d %H:%M:%S" to "%Y%m%d%H%M"
+  local dateSuffix=$(echo "${buildTimestamp}" | cut -d":" -f1-2 | tr -d ": -")
 
   # Configures "vendor" jdk properties.
   # Temurin default values are set after this code block
@@ -391,7 +389,12 @@ configureVersionStringParameter() {
       addConfigureArg "--with-version-opt=" "${dateSuffix}"
       addConfigureArg "--with-version-pre=" "beta"
     else
-      addConfigureArg "--without-version-opt" ""
+      # "LTS" builds from jdk-21 will use "LTS" version opt
+      if isFromJdk21LTS; then
+          addConfigureArg "--with-version-opt=" "LTS"
+      else
+          addConfigureArg "--without-version-opt" ""
+      fi
       addConfigureArg "--without-version-pre" ""
     fi
 
@@ -427,11 +430,6 @@ configureVersionStringParameter() {
 buildingTheRestOfTheConfigParameters() {
   if [ -n "$(which ccache)" ]; then
     addConfigureArg "--enable-ccache" ""
-  fi
-
-  # Point-in-time dependency for openj9 only
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
-    addConfigureArg "--with-freemarker-jar=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/freemarker.jar"
   fi
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
@@ -646,6 +644,17 @@ executeTemplatedFile() {
     exit 2
   fi
 
+  if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 19 || "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 17 ]]; then
+    if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]; then
+      # For "release" reproducible builds get openjdk timestamp used
+      local buildTimestamp=$(grep SOURCE_DATE_ISO_8601 build/*/spec.gmk | tr -s ' ' | cut -d' ' -f4)
+      # BusyBox doesn't use T Z iso8601 format
+      buildTimestamp="${buildTimestamp//T/ }"
+      buildTimestamp="${buildTimestamp//Z/}"
+      BUILD_CONFIG[BUILD_TIMESTAMP]="${buildTimestamp}"
+    fi
+  fi
+
   # Restore exit behavior
   set -eu
 }
@@ -773,6 +782,10 @@ generateSBoM() {
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "OpenJDK Source Commit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
   # Add buildRef as JDK Component Property
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Temurin Build Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
+
+  # Add build timestamp
+  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Build Timestamp" "${BUILD_CONFIG[BUILD_TIMESTAMP]}"
+
   # Add Tool Summary section from configure.txt
   checkingToolSummary
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Build Tools Summary" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"

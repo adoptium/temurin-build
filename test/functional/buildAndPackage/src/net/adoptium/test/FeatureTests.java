@@ -177,7 +177,7 @@ public class FeatureTests {
         }
         boolean shouldBePresent = false;
         if (jdkVersion.isNewerOrEqual(11) || jdkVersion.isNewerOrEqualSameFeature(8, 0, 262)) {
-            if (!jdkPlatform.runsOn(OperatingSystem.AIX)) {
+            if (!jdkPlatform.runsOn(OperatingSystem.AIX) || jdkVersion.isNewerOrEqual(20)) {
                 shouldBePresent = true;
             }
         }
