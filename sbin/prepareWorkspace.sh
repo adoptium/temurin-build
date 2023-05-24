@@ -540,7 +540,7 @@ downloadingRequiredDependencies() {
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]] ||  [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ||  [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]] ; then
     echo "Non-Linux-based environment detected, skipping download of dependency Alsa."
   else
-    echo "Checking and downloading Alsa dependency because OSTYPE=${OSTYPE}"
+    echo "Checking and downloading Alsa dependency because OSTYPE=\"${OSTYPE}\""
     checkingAndDownloadingAlsa
   fi
 
