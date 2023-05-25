@@ -1,5 +1,5 @@
-#!/bin/bash
-# shellcheck disable=SC1091
+/*
+################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,23 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ################################################################################
-
-source repro_common.sh
-
-set -e
-
-JDK_DIR="$1"
-
-if [ ! -d "${JDK_DIR}" ]; then
-  echo "$JDK_DIR does not exist"
-  exit 1
-fi
-
-expandJDK "$JDK_DIR"
-
-patchManifests "${JDK_DIR}"
-
-echo "***********"
-echo "SUCCESS :-)"
-echo "***********"
+*/
+/**
+  * temurin.tools package.
+  */
+package temurin.tools;
 

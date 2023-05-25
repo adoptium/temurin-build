@@ -61,4 +61,6 @@ jobs:
           VALIDATE_PERL: false
           # Disable google-java-format linter as it produces no useful error messages: see: https://github.com/adoptium/temurin-build/issues/3259
           VALIDATE_GOOGLE_JAVA_FORMAT: false
+          # Disable cpplint, as not useful formatting
+          VALIDATE_CPP: false
 

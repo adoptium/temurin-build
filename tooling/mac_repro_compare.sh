@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+###############################################################################
 
 source repro_common.sh
 
@@ -19,29 +19,29 @@ BLD_TYPE1="$1"
 JDK_DIR1="$2"
 BLD_TYPE2="$3"
 JDK_DIR2="$4"
-SELF_CERT_FILE="$5"
+SELF_CERT="$5"
 SELF_CERT_PASS="$6"
 
 if [ ! -d "${JDK_DIR1}" ]; then
   echo "$JDK_DIR1 does not exist"
-  echo "windows_repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 self_cert_file self_cert_passwd"
+  echo "mac_repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 self_cert self_cert_passwd"
   exit 1
 fi
 
 if [ ! -d "${JDK_DIR2}" ]; then
   echo "$JDK_DIR2 does not exist"
-  echo "windows_repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 self_cert_file self_cert_passwd"
+  echo "mac_repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 self_cert self_cert_passwd"
   exit 1
 fi
 
 echo "Pre-processing ${JDK_DIR1}"
-if ! windows_repro_process.sh "${JDK_DIR1}" "${SELF_CERT_FILE}" "${SELF_CERT_PASS}"; then
+if ! mac_repro_process.sh "${JDK_DIR1}" "${SELF_CERT}" "${SELF_CERT_PASS}"; then
   echo "Pre-process of ${JDK_DIR1} failed"
   exit 1
 fi
 
 echo "Pre-processing ${JDK_DIR2}"
-if ! windows_repro_process.sh "${JDK_DIR2}" "${SELF_CERT_FILE}" "${SELF_CERT_PASS}"; then
+if ! mac_repro_process.sh "${JDK_DIR2}" "${SELF_CERT}" "${SELF_CERT_PASS}"; then
   echo "Pre-process of ${JDK_DIR2} failed"
   exit 1
 fi

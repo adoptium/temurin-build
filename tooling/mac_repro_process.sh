@@ -11,18 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-################################################################################
+###############################################################################
 
 source repro_common.sh
 
 set -e
 
 JDK_DIR="$1"
-SELF_CERT_FILE="$2"
+SELF_CERT="$2"
 SELF_CERT_PASS="$3"
-
-# Type of JDK
-OS="CYGWIN"
 
 # This script unpacks the JDK_DIR and removes windows signing Signatures in a neutral way
 # ensuring identical output once Signature is removed.
@@ -32,13 +29,15 @@ if [[ ! -d "${JDK_DIR}" ]] || [[ ! -d "${JDK_DIR}/bin"  ]]; then
   exit 1
 fi
 
+OS=$("uname")
+
 expandJDK "$JDK_DIR"
 
 # Remove existing signature
 removeSignatures "$JDK_DIR" "$OS"
 
-# Sign with temporary Signature, which then is subsequently removed so we get a determinisitic binary length
-tempSign "$JDK_DIR" "$OS" "$SELF_CERT_FILE" "$SELF_CERT_PASS"
+# Add the SELF_SIGN temporary signature
+tempSign "$JDK_DIR" "$OS" "$SELF_CERT" "$SELF_CERT_PASS"
 
 # Remove temporary SELF_SIGN signature, which will then normalize binary length
 removeSignatures "$JDK_DIR" "$OS"
