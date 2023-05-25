@@ -21,6 +21,7 @@
 -->
 
         <!-- Dependency versions -->
+        <property name="openkeystore-version" value="1.0.0"/>
         <property name="cyclonedx-core-java-version" value="7.3.2"/>
         <property name="jackson-core-version" value="2.14.2"/>
 
@@ -61,7 +62,7 @@
         <target name="clone-and-build-openkeystore" unless="openkeystore_available">
 		            <mkdir dir="build"/>
 		            <exec executable="git" dir="build">
-			          <arg line="clone https://github.com/cyberphone/openkeystore" />
+			          <arg line="clone --branch ${openkeystore-version} https://github.com/cyberphone/openkeystore" />
 		            </exec>
 		            <ant dir="build/openkeystore/library" target="build"/>
         </target>
