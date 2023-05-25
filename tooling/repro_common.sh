@@ -122,8 +122,8 @@ function tempSign() {
 
 # If performing a reproducible compare to a non temurin build-scripts built JDK
 # then remove certain Temurin build-script added metadata or different files
-cleanTemurinFiles() {
-  local DIR=$1
+function cleanTemurinFiles() {
+  local DIR="$1"
 
   echo "Cleaning Temurin build-scripts specific files and metadata from ${DIR}"
 
@@ -170,8 +170,8 @@ cleanTemurinFiles() {
 }
 
 # Temurin release file metadata BUILD_INFO/SOURCE can/will be different
-cleanTemurinBuildInfo() {
-  local DIR=$1
+function cleanTemurinBuildInfo() {
+  local DIR="$1"
   
   echo "Cleaning any Temurin build-scripts release file BUILD_INFO from ${DIR}"
 
@@ -183,6 +183,25 @@ cleanTemurinBuildInfo() {
     sed -i '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
     sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release" 
     sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
+  fi
+}
+
+# Patch the Vendor strings from the BootJDK in jrt-fs/jar MANIFEST
+function patchManifests() {
+  local JDK_DIR="$1"
+
+  if [[ $(uname) =~ Darwin* ]]; then
+    echo "Removing jrt-fs.jar MANIFEST.MF BootJDK vendor string lines"
+    sed -i "" '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i "" '/^Created-By:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i "" '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i "" '/^Created-By:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+  else
+    echo "Removing jrt-fs.jar MANIFEST.MF BootJDK vendor string lines"
+    sed -i '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i '/^Created-By:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i '/^Created-By:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
   fi
 }
 

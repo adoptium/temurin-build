@@ -57,7 +57,6 @@ cleanTemurinBuildInfo "${JDK_DIR1}"
 cleanTemurinBuildInfo "${JDK_DIR2}"
 
 files1=$(find "${JDK_DIR1}" -type f | wc -l)
-files2=$(find "${JDK_DIR2}" -type f | wc -l)
 
 output="repro_diff.out"
 echo "Comparing ${JDK_DIR1} with ${JDK_DIR2} ... output to file: ${output}"

@@ -37,25 +37,13 @@ expandJDK "$JDK_DIR"
 # Remove existing signature
 removeSignatures "$JDK_DIR" "$OS"
 
-# Sign with temporary Signature, which when removed results in determinisitic binary length
+# Sign with temporary Signature, which then is subsequently removed so we get a determinisitic binary length
 tempSign "$JDK_DIR" "$OS" "$SELF_CERT_FILE" "$SELF_CERT_PASS"
 
 # Remove temporary SELF_SIGN signature, which will then normalize binary length
 removeSignatures "$JDK_DIR" "$OS"
 
-if [[ $(uname) =~ Darwin* ]]; then
-  echo "Removing jrt-fs.jar MANIFEST.MF BootJDK vendor string lines"
-  sed -i "" '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-  sed -i "" '/^Created-By:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-  sed -i "" '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-  sed -i "" '/^Created-By:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-else
-  echo "Removing jrt-fs.jar MANIFEST.MF BootJDK vendor string lines"
-  sed -i '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-  sed -i '/^Created-By:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-  sed -i '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-  sed -i '/^Created-By:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-fi
+patchManifests "${JDK_DIR}"
 
 echo "***********"
 echo "SUCCESS :-)"
