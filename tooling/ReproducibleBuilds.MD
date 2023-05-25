@@ -48,4 +48,3 @@ The patching process involves:
 - Remove non-comparable CRC generated uuid values, which are binary values based on the hash of the content (Windows & MacOS).
 - Remove Vendor strings embedded in executables, classes and text files.
 - Remove any non-deterministic build process artifact strings, like Manifest Created-By stamps.
-
