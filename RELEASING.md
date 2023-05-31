@@ -282,7 +282,7 @@ Once the PRs to change those files have been merged, the [adoptium-packages-linu
 Once all the release binaries have been published the following tasks should be completed:
 If the latest version just released has come to the end of its non-LTS lifecycle (2 CPU updates, eg.jdk-15.0.2)
 
-- disable and retire that version form the Nightly and Evaluation pipeline builds: e.g <https://github.com/adoptium/ci-jenkins-pipelines/pull/628/files>
+- disable and retire that version from the Nightly and Evaluation pipeline builds: e.g <https://github.com/adoptium/ci-jenkins-pipelines/pull/628/files>
 - delete pipeline and jobs in Jenkins (only Jenkins admin has permission)
 - update pr-test job to not include this version
 
