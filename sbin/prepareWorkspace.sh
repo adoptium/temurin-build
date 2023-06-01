@@ -300,9 +300,8 @@ checkingAndDownloadingAlsa() {
     curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
     curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
 
-    ## Add Special Rules For Alpine Linux as this doesn't work In docker
-
-    if echo "${BUILD_CONFIG[OS_FULL_VERSION]}" | grep -qi "alpine" ; then
+    ## This affects Alpine docker images and also evaluation pipelines
+    if [ "$(pwd | wc -c)" -gt 83 ]; then
       # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
       # Alpine also cannot create ~/.gpg-temp within a docker context
       export GNUPGHOME="/tmp/.gpg-temp.$$"
