@@ -123,8 +123,8 @@ configureReproducibleBuildParameter() {
       # Ensure reproducible and comparable binary with a unique build user identifier
       addConfigureArg "--with-build-user=" "admin"
       if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]; then
-         addConfigureArg "--with-extra-cflags" "-qnotimestamp"
-         addConfigureArg "--with-extra-cxxflags" "-qnotimestamp"
+         addConfigureArg "--with-extra-cflags=" "-qnotimestamps"
+         addConfigureArg "--with-extra-cxxflags=" "-qnotimestamps"
       fi
   fi
 }
