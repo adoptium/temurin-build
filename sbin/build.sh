@@ -804,6 +804,10 @@ generateSBoM() {
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
   # Below add build tools into metadata tools
+  # Add GCC version
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/gcc_version.txt)"
+  # Add GLIBC version
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GLIBC" "rpm -q glibc"
   # Add ALSA 3rd party
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt)"
   # Add FreeType 3rd party (windows + macOS)
