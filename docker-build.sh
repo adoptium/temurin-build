@@ -95,7 +95,7 @@ buildOpenJDKViaDocker()
     local jre_directory=""
     # JDK 22+ uses static-libs-graal-image target, using static-libs-graal
     # folder.
-    if [ "$openjdk_core_version" == "${JDKHEAD_CORE_VERSION}" ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 22 ]; then
       local static_libs_dir="static-libs-graal"
     else
       local static_libs_dir="static-libs"
