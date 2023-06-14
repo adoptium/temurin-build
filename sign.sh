@@ -63,7 +63,7 @@ checkSignConfiguration() {
 # Sign the built binary
 signRelease()
 {
-  TIMESTAMPSERVERS=$(cut -d= -f2 < "$WORKSPACE/$TIMESTAMP_SERVER_CONFIG" | tr -d \\\\r)
+  TIMESTAMPSERVERS=$(cut -d= -f2 < "$WORKSPACE/$TIMESTAMP_SERVER_CONFIG" )
 
   case "$OPERATING_SYSTEM" in
     "windows")
