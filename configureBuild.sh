@@ -129,8 +129,14 @@ setVariablesForConfigure() {
   # test-image, debug-image and static-libs-image targets are optional - build scripts check whether the directories exist
   local openjdk_test_image_path="test"
   local openjdk_debug_image_path="debug-image"
-  local openjdk_static_libs_image_path="static-libs"
 
+  # JDK 22+ uses static-libs-graal-image target, using static-libs-graal
+  # folder.
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 22 ]; then
+    local static_libs_path="static-libs-graal"
+  else
+    local static_libs_path="static-libs"
+  fi
   if [ "$openjdk_core_version" == "${JDK8_CORE_VERSION}" ]; then
     local jdk_path="j2sdk-image"
     local jre_path="j2re-image"
@@ -155,7 +161,7 @@ setVariablesForConfigure() {
   BUILD_CONFIG[JRE_PATH]=$jre_path
   BUILD_CONFIG[TEST_IMAGE_PATH]=$openjdk_test_image_path
   BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
-  BUILD_CONFIG[STATIC_LIBS_IMAGE_PATH]=$openjdk_static_libs_image_path
+  BUILD_CONFIG[STATIC_LIBS_IMAGE_PATH]=$static_libs_path
 }
 
 # Set the repository to build from, defaults to adoptium if not set by the user

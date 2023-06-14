@@ -133,6 +133,7 @@ checkoutRequiredCodeToBuild() {
   local rc=0
 
   local tag="${BUILD_CONFIG[TAG]}"
+  local sha=""
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
     git fetch --tags || rc=$?
     if [ $rc -eq 0 ]; then
@@ -140,6 +141,11 @@ checkoutRequiredCodeToBuild() {
         echo "looks like the scm ref given is a valid tag, so treat it as a tag"
         tag="${BUILD_CONFIG[BRANCH]}"
         BUILD_CONFIG[TAG]="${tag}"
+        BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""
+      elif git cat-file commit "${BUILD_CONFIG[BRANCH]}"; then
+        echo "look like the scm ref given is a valid sha, so treat it as a sha"
+        sha="${BUILD_CONFIG[BRANCH]}"
+        BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""
       fi
     else
       echo "Failed cmd: git fetch --tags"
@@ -164,6 +170,19 @@ checkoutRequiredCodeToBuild() {
         fi
       else
         echo "Failed cmd: git fetch origin \"refs/tags/${tag}:refs/tags/${tag}\""
+      fi
+    elif [ "$sha" ]; then
+      echo "Checking out sha ${sha}"
+      git checkout "${sha}" || rc=$?
+      if [ $rc -eq 0 ]; then
+        git reset --hard || rc=$?
+        if [ $rc -eq 0 ]; then
+          echo "Checked out sha ${sha}"
+        else
+          echo "Failed cmd reset sha: git reset --hard"
+        fi
+      else
+        echo "Failed cmd: git checkout \"${sha}\""
       fi
     else
       git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}" || rc=$?
