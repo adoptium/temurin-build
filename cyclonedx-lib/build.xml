@@ -34,7 +34,7 @@
         <property name="github-package-url-version" value="1.4.1"/>
 
         <!-- classpath for running application -->
-        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar:build/sign_jar/temurin-sign-sbom.jar"/>
+        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/temurin-sign-sbom.jar"/>
 
         <target name="dep-checks">
                 <available file="build/jar/cyclonedx-core-java.jar" property="cyclonedx_available"/>
@@ -46,7 +46,7 @@
                 <available file="build/jar/commons-codec.jar" property="commons-codec_available"/>
                 <available file="build/jar/commons-io.jar" property="commons-io_available"/>
                 <available file="build/jar/github-package-url.jar" property="github-package-url_available"/>
-                <available file="build/openkeystore/library/dist/webpki.org-libext-1.00.jar" property="openkeystore_available"/>
+                <available file="build/webpki.org-libext-1.00.jar" property="openkeystore_available"/>
         </target>
 
         <target name="download-cyclonedx" unless="cyclonedx_available">
@@ -73,6 +73,11 @@
 			          <arg line="clone --branch ${openkeystore-version} https://github.com/cyberphone/openkeystore" />
 		            </exec>
 		            <ant dir="build/openkeystore/library" target="build"/>
+                <move todir="build/jar" >
+                        <fileset dir="build/openkeystore/library/dist" >
+                                <include name="*.jar" />
+                        </fileset>
+                </move>
         </target>
 
         <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
@@ -81,14 +86,13 @@
 
         <target name="compile-sign-sbom">
                 <mkdir dir="build/sign_classes"/>
-                <javac srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar:build/openkeystore/library/dist/webpki.org-webutil-1.00.jar" includeantruntime="false"/>
-                <javac debug="true" debuglevel="lines,vars,source" srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar:build/openkeystore/library/dist/webpki.org-webutil-1.00.jar" includeantruntime="false"/>
+                <javac srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/webpki.org-webutil-1.00.jar" includeantruntime="false"/>
+                <javac debug="true" debuglevel="lines,vars,source" srcdir="sign_src" destdir="build/sign_classes" classpath="build/jar/cyclonedx-core-java.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/webpki.org-webutil-1.00.jar" includeantruntime="false"/>
         </target>
 
-
         <target name="jar-sign-sbom">
-                <mkdir dir="build/sign_jar"/>
-                <jar destfile="build/sign_jar/temurin-sign-sbom.jar" basedir="build/sign_classes">
+                <mkdir dir="build/jar"/>
+                <jar destfile="build/jar/temurin-sign-sbom.jar" basedir="build/sign_classes">
                         <manifest>
                                 <attribute name="Main-Class" value="temurin.sbom.TemurinSignSBOM"/>
                         </manifest>
@@ -161,8 +165,8 @@
 
         <target name="compile">
                 <mkdir dir="build/classes"/>
-                <javac srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar" includeantruntime="false"/>
-                <javac debug="true" debuglevel="lines,vars,source" srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar:build/openkeystore/library/dist/webpki.org-libext-1.00.jar" includeantruntime="false"/>
+                <javac srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar:build/jar/webpki.org-libext-1.00.jar" includeantruntime="false"/>
+                <javac debug="true" debuglevel="lines,vars,source" srcdir="src" destdir="build/classes" classpath="build/jar/cyclonedx-core-java.jar:build/jar/webpki.org-libext-1.00.jar" includeantruntime="false"/>
         </target>
 
         <target name="jar">
