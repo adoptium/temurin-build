@@ -33,13 +33,16 @@ if [ ! -d "${JDK_DIR2}" ]; then
 fi
 
 echo "Pre-processing ${JDK_DIR1}"
-if ! linux_repro_process.sh "${JDK_DIR1}"; then
+rc=0
+source ./linux_repro_process.sh "${JDK_DIR1}" || rc=$?
+if [ $rc != 0 ]; then
   echo "Pre-process of ${JDK_DIR1} failed"
   exit 1
 fi
 
 echo "Pre-processing ${JDK_DIR2}"
-if ! linux_repro_process.sh "${JDK_DIR2}"; then
+source ./linux_repro_process.sh "${JDK_DIR2}" || rc=$?
+if [ $rc != 0 ]; then
   echo "Pre-process of ${JDK_DIR2} failed"
   exit 1
 fi
