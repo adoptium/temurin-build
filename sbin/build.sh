@@ -804,8 +804,6 @@ generateSBoM() {
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
   # Below add build tools into metadata tools
-  # Add GCC version
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/gcc_version.txt)"
   # Add GLIBC version
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GLIBC" "rpm -q glibc"
   # Add ALSA 3rd party
@@ -838,6 +836,20 @@ checkingToolSummary() {
    inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
    outputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
    sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" > "${outputConfigFile}"
+}
+
+# Below add versions to sbom | Facilitate reproducible builds
+
+checkingGCCforLinux() {
+   echo "Checking and getting GCC Version:"
+   inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "${sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "C Compiler:" | tr -s " " | cut -d " " -f5}"
+}
+
+checkingBootJDKforLinux() {
+   echo "Checking and getting BootJDK Version:"
+   inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "${sed -n '/^Tools summary:$/,$p'  build-farm/workspace/target/metadata/configure.txt  | grep "Boot JDK:" | tr -s " " | cut -d " " -f 6}"
 }
 
 getGradleJavaHome() {
