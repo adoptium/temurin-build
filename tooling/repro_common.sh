@@ -16,35 +16,35 @@
 # Expand JDK jmods & zips to process binaries within
 function expandJDK() {
   local JDK_DIR="$1"
-
+  mkdir "${JDK_DIR}_CP"
+  cp -R ${JDK_DIR}/* ${JDK_DIR}_CP
   echo "Expanding the 'modules' Image to remove signatures from within.."
-  jimage extract --dir "${JDK_DIR}/lib/modules_extracted" "${JDK_DIR}/lib/modules"
+  "${JDK_DIR}_CP/bin/jimage" extract --dir "${JDK_DIR}/lib/modules_extracted" "${JDK_DIR}/lib/modules"
   rm "${JDK_DIR}/lib/modules"
 
   echo "Expanding the 'src.zip' to normalize file permissions"
-  unzip "${JDK_DIR}/lib/src.zip" -d "${JDK_DIR}/lib/src_zip_expanded"
+  unzip "${JDK_DIR}/lib/src.zip" -d "${JDK_DIR}/lib/src_zip_expanded" 1> /dev/null
   rm "${JDK_DIR}/lib/src.zip"
 
   echo "Expanding jmods to process binaries within"
   FILES=$(find "${JDK_DIR}" -type f -path '*.jmod')
   for f in $FILES
     do
-      echo "Unzipping $f"
       base=$(basename "$f")
       dir=$(dirname "$f")
       expand_dir="${dir}/expanded_${base}"
       mkdir -p "${expand_dir}"
-      jmod extract --dir "${expand_dir}" "$f"
+      "${JDK_DIR}_CP/bin/jmod" extract --dir "${expand_dir}" "$f"
       rm "$f"
     done
 
   echo "Expanding the 'jrt-fs.jar' to remove signatures from within.."
   mkdir "${JDK_DIR}/lib/jrt-fs-expanded"
-  unzip -d "${JDK_DIR}/lib/jrt-fs-expanded" "${JDK_DIR}/lib/jrt-fs.jar"
+  unzip -d "${JDK_DIR}/lib/jrt-fs-expanded" "${JDK_DIR}/lib/jrt-fs.jar" 1> /dev/null
   rm "${JDK_DIR}/lib/jrt-fs.jar"
 
-  mkdir "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded"
-  unzip -d "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded" "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
+  mkdir -p "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded"
+  unzip -d "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded" "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar" 1> /dev/null
   rm "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
 }
 
