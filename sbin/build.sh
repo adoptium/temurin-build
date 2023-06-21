@@ -150,9 +150,9 @@ configureReproducibleBuildDebugMapping() {
 
     # Add debug prefix map for gcc include, allowing for SYSROOT
     if [ "x$CC" != "x" ]; then
-      gcc_include=$(dirname $(echo "#include <stddef.h>" | $CC $gcc_sysroot -v -E - 2>&1 | grep stddef | tail -1 | tr -s " " | cut -d'"' -f2))
+      gcc_include="$(dirname $(echo "#include <stddef.h>" | $CC $gcc_sysroot -v -E - 2>&1 | grep stddef | tail -1 | tr -s " " | cut -d'"' -f2))"
     elif [ "$(which gcc)" != "" ]; then
-      gcc_include=$(dirname $(echo "#include <stddef.h>" | gcc $gcc_sysroot -v -E - 2>&1 | grep stddef | tail -1 | tr -s " " | cut -d'"' -f2))
+      gcc_include="$(dirname $(echo "#include <stddef.h>" | gcc $gcc_sysroot -v -E - 2>&1 | grep stddef | tail -1 | tr -s " " | cut -d'"' -f2))"
     else
       # Can't find gcc..
       gcc_include=""
