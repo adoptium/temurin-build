@@ -149,7 +149,7 @@ configureReproducibleBuildDebugMapping() {
     fdebug_flags="-fdebug-prefix-map=${root_include}/="
 
     # Add debug prefix map for gcc include, allowing for SYSROOT
-    if [ "x$CC" != "x" ]; then
+    if [ -n "$CC" ]; then
       gcc_include="$(dirname $(echo "#include <stddef.h>" | $CC $gcc_sysroot -v -E - 2>&1 | grep stddef | tail -1 | tr -s " " | cut -d'"' -f2))"
     elif [ "$(which gcc)" != "" ]; then
       gcc_include="$(dirname $(echo "#include <stddef.h>" | gcc $gcc_sysroot -v -E - 2>&1 | grep stddef | tail -1 | tr -s " " | cut -d'"' -f2))"
@@ -160,6 +160,20 @@ configureReproducibleBuildDebugMapping() {
     if [ "x$gcc_include" != "x" ]; then
       echo "Adding -fdebug-prefix-map for gcc include: ${gcc_include}"
       fdebug_flags+=" -fdebug-prefix-map=${gcc_include}/="
+    fi
+
+    # Add debug prefix map for g++ include, allowing for SYSROOT
+    if [ -n "$CXX" ]; then
+      gxx_include="$(dirname $(echo "#include <cstddef>" | $CXX $gcc_sysroot -v -E -x c++ - 2>&1 | grep cstddef | tail -1 | tr -s " " | cut -d'"' -f2))"
+    elif [ "$(which g++)" != "" ]; then
+      gxx_include="$(dirname $(echo "#include <cstddef>" | g++ $gcc_sysroot -v -E -x c++ - 2>&1 | grep cstddef | tail -1 | tr -s " " | cut -d'"' -f2))"
+    else
+      # Can't find g++..
+      gxx_include=""
+    fi
+    if [ "x$gxx_include" != "x" ]; then
+      echo "Adding -fdebug-prefix-map for g++ include: ${gxx_include}"
+      fdebug_flags+=" -fdebug-prefix-map=${gxx_include}/="
     fi
 
     addConfigureArg "--with-extra-cflags=" "'${fdebug_flags}'"
