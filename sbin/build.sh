@@ -126,6 +126,44 @@ configureReproducibleBuildParameter() {
          addConfigureArg "--with-extra-cflags=" "-qnotimestamps"
          addConfigureArg "--with-extra-cxxflags=" "-qnotimestamps"
       fi
+
+      configureReproducibleBuildDebugMapping
+  fi
+}
+
+# For reproducible builds  we need to add debug mappings for the system header paths,
+# so that debug symbol files (and thus libraries) are deterministic
+configureReproducibleBuildDebugMapping() {
+  # For Linux add -fdebug-prefix-map'ings for root and gcc include paths
+  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
+    # Add debug prefix map for root /usr/include, allowing for a SYSROOT
+    sysroot="$(echo "${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}" | sed -nE 's/.*\-\-with\-sysroot=([^[:space:]]+).*/\1/p')"
+    if [ "x$sysroot" != "x" ]; then
+       root_include=${sysroot%/}"/usr/include"
+       gcc_sysroot="--sysroot=${sysroot%/}"
+    else
+       root_include="/usr/include"
+       gcc_sysroot=""
+    fi
+    echo "Adding -fdebug-prefix-map for root include: ${root_include}"
+    fdebug_flags="-fdebug-prefix-map=${root_include}/="
+
+    # Add debug prefix map for gcc include, allowing for SYSROOT
+    if [ "x$CC" != "x" ]; then
+      gcc_include=$(dirname $(echo "#include <stddef.h>" | $CC $gcc_sysroot -v -E - 2>&1 | grep stddef | tail -1 | tr -s " " | cut -d'"' -f2))
+    elif [ "$(which gcc)" != "" ]; then
+      gcc_include=$(dirname $(echo "#include <stddef.h>" | gcc $gcc_sysroot -v -E - 2>&1 | grep stddef | tail -1 | tr -s " " | cut -d'"' -f2))
+    else
+      # Can't find gcc..
+      gcc_include=""
+    fi
+    if [ "x$gcc_include" != "x" ]; then
+      echo "Adding -fdebug-prefix-map for gcc include: ${gcc_include}"
+      fdebug_flags+=" -fdebug-prefix-map=${gcc_include}/="
+    fi
+
+    addConfigureArg "--with-extra-cflags=" "${fdebug_flags}"
+    addConfigureArg "--with-extra-cxxflags=" "${fdebug_flags}"
   fi
 }
 
