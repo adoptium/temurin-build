@@ -162,8 +162,8 @@ configureReproducibleBuildDebugMapping() {
       fdebug_flags+=" -fdebug-prefix-map=${gcc_include}/="
     fi
 
-    addConfigureArg "--with-extra-cflags=" "${fdebug_flags}"
-    addConfigureArg "--with-extra-cxxflags=" "${fdebug_flags}"
+    addConfigureArg "--with-extra-cflags=" "'${fdebug_flags}'"
+    addConfigureArg "--with-extra-cxxflags=" "'${fdebug_flags}'"
   fi
 }
 
