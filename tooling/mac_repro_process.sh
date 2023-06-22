@@ -29,7 +29,7 @@ if [[ ! -d "${JDK_DIR}" ]] || [[ ! -d "${JDK_DIR}/bin"  ]]; then
   exit 1
 fi
 
-OS=$("uname")
+OS="Darwin"
 
 expandJDK "$JDK_DIR"
 
