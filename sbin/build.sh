@@ -488,6 +488,14 @@ configureFreetypeLocation() {
   fi
 }
 
+configureZlibLocation() {
+  if [[ ! "${CONFIGURE_ARGS}" =~ "--with-zlib" ]]; then
+    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 21 ]]; then
+        addConfigureArg "--with-zlib=" "bundled"
+    fi
+  fi
+}
+
 # Configure the command parameters
 configureCommandParameters() {
   configureVersionStringParameter
@@ -526,6 +534,7 @@ configureCommandParameters() {
   CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]//temporary_speech_mark_placeholder/\"}"
 
   configureFreetypeLocation
+  configureZlibLocation
 
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
