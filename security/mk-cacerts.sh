@@ -83,7 +83,7 @@ IMPORTED=('null')
 alreadyExistsCounter=0 # counter for duplicated file
 
 for FILE in certs/*.crt; do
-    ALIAS=$(openssl x509 -subject -noout -nameopt compat -in "$FILE" | sed 's/^subject=[[:space:]]*//' | tr '/' ',')
+    ALIAS=$(openssl x509 -subject -noout -nameopt compat -in "$FILE" | tr '/' ' ' | sed 's/^subject=[[:space:]]*//' | tr -d ',')
 
     if printf '%s\n' "${IMPORTED[@]}" | grep "temurin_${ALIAS}_temurin"; then
         echo "Skipping certificate file $FILE with alias: $ALIAS as it already exists"
