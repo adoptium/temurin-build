@@ -90,8 +90,6 @@ function removeSignatures() {
 function tempSign() {
   local JDK_DIR="$1"
   local OS="$2"
-  local SELF_CERT="$3"
-  local SELF_CERT_PASS="$4"
 
   if [[ "$OS" =~ CYGWIN* ]]; then
     echo "Adding temp Signatures for ${JDK_DIR}"
@@ -109,13 +107,15 @@ function tempSign() {
   elif [[ "$OS" =~ Darwin* ]]; then
     MAC_JDK_ROOT="${JDK_DIR}/../../Contents"
     echo "Adding temp Signatures for ${MAC_JDK_ROOT}"
-
+    openssl genpkey -algorithm RSA -pass pass:test -outform PEM -out privatePemFile -pkeyopt rsa_keygen_bits:2048
+    echo "public key"
+    openssl rsa -in ${privatePemFile} -passin pass:test -pubout -out publicPemFile
     FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
     for f in $FILES
     do
         echo "Signing $f with a local certificate"
         # Sign both with same local Certificate, this adjusts __LINKEDIT vmsize identically
-        codesign -s "$SELF_CERT" --options runtime -f --timestamp "$f"
+        codesign -s "$privatePemFile" --options runtime -f --timestamp "$f"
     done
   fi
 }
