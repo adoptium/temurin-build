@@ -134,7 +134,13 @@ configureReproducibleBuildParameter() {
 # For reproducible builds  we need to add debug mappings for the system header paths,
 # so that debug symbol files (and thus libraries) are deterministic
 configureReproducibleBuildDebugMapping() {
-  # For Linux add -fdebug-prefix-map'ings for root and gcc include paths
+  # For Linux add -fdebug-prefix-map'ings for root and gcc include paths,
+  # pointing to a common set of folders so that the debug binaries are deterministic:
+  # 
+  #  root include : /usr/include
+  #  gcc include  : /usr/local/gcc_include
+  #  g++ include  : /usr/local/gxx_include
+  #
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
     # Add debug prefix map for root /usr/include, allowing for a SYSROOT
     sysroot="$(echo "${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}" | sed -nE 's/.*\-\-with\-sysroot=([^[:space:]]+).*/\1/p')"
@@ -145,8 +151,8 @@ configureReproducibleBuildDebugMapping() {
        root_include="/usr/include"
        gcc_sysroot=""
     fi
-    echo "Adding -fdebug-prefix-map for root include: ${root_include}"
-    fdebug_flags="-fdebug-prefix-map=${root_include}/="
+    echo "Adding -fdebug-prefix-map for root include: ${root_include}=/usr/include"
+    fdebug_flags="-fdebug-prefix-map=${root_include}/=/usr/include/"
 
     # Add debug prefix map for gcc include, allowing for SYSROOT
     if [ -n "${CC-}" ]; then
@@ -158,8 +164,8 @@ configureReproducibleBuildDebugMapping() {
       gcc_include=""
     fi
     if [ "x$gcc_include" != "x" ]; then
-      echo "Adding -fdebug-prefix-map for gcc include: ${gcc_include}"
-      fdebug_flags+=" -fdebug-prefix-map=${gcc_include}/="
+      echo "Adding -fdebug-prefix-map for gcc include: ${gcc_include}=/usr/local/gcc_include"
+      fdebug_flags+=" -fdebug-prefix-map=${gcc_include}/=/usr/local/gcc_include/"
     fi
 
     # Add debug prefix map for g++ include, allowing for SYSROOT
@@ -172,8 +178,8 @@ configureReproducibleBuildDebugMapping() {
       gxx_include=""
     fi
     if [ "x$gxx_include" != "x" ]; then
-      echo "Adding -fdebug-prefix-map for g++ include: ${gxx_include}"
-      fdebug_flags+=" -fdebug-prefix-map=${gxx_include}/="
+      echo "Adding -fdebug-prefix-map for g++ include: ${gxx_include}=/usr/local/gxx_include"
+      fdebug_flags+=" -fdebug-prefix-map=${gxx_include}/=/usr/local/gxx_include/"
     fi
 
     addConfigureArg "--with-extra-cflags=" "'${fdebug_flags}'"
