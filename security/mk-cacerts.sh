@@ -86,6 +86,7 @@ for FILE in certs/*.crt; do
     #ALIAS=$(openssl x509 -subject -noout -nameopt compat -in "$FILE" | tr '/' ' ' | sed 's/^subject=[[:space:]]*//' | tr -d ',')
     # Use rfc2253 standard format, so output format is deterministic
     ALIAS_FROM_SUBJECT=$(openssl x509 -subject -noout -nameopt rfc2253 -in "$FILE" | tr '/' ' ' | sed 's/^subject=[[:space:]]*//' | tr -d ',')
+    echo "Subject: ${ALIAS_FROM_SUBJECT}" 
 
     # Create ALIAS from widely recognised standard DN's
     arrALIAS=(${ALIAS_FROM_SUBJECT//,/ })
