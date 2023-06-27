@@ -83,7 +83,6 @@ IMPORTED=('null')
 alreadyExistsCounter=0 # counter for duplicated file
 
 for FILE in certs/*.crt; do
-    #ALIAS=$(openssl x509 -subject -noout -nameopt compat -in "$FILE" | tr '/' ' ' | sed 's/^subject=[[:space:]]*//' | tr -d ',')
     # Use rfc2253 standard format, so output format is deterministic
     ALIAS_FROM_SUBJECT=$(openssl x509 -subject -noout -nameopt rfc2253 -in "$FILE" | sed 's/^subject=[[:space:]]*//' | tr ' ' '_')
     echo "Subject: ${ALIAS_FROM_SUBJECT}" 
