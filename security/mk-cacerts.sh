@@ -84,9 +84,11 @@ alreadyExistsCounter=0 # counter for duplicated file
 
 for FILE in certs/*.crt; do
     # Use rfc2253 standard format, so output format is deterministic
-    ALIAS_FROM_SUBJECT=$(openssl x509 -subject -noout -nameopt rfc2253 -in "$FILE" | tr '/' ' ' | sed 's/^subject=[[:space:]]*//' | tr -d ',')
+    ALIAS_FROM_SUBJECT=$(openssl x509 -subject -noout -nameopt rfc2253 -in "$FILE" | sed 's/^subject=[[:space:]]*//' | tr ' ' '_')
+    echo "Subject: ${ALIAS_FROM_SUBJECT}"
 
     # Create ALIAS from widely recognised standard DN's
+    # shellcheck disable=SC2206
     arrALIAS=(${ALIAS_FROM_SUBJECT//,/ })
     ALIAS=""
     for dn in "${arrALIAS[@]}"; do
@@ -101,6 +103,7 @@ for FILE in certs/*.crt; do
     done
     # Remove leading ","
     ALIAS=${ALIAS#,}
+    echo "Generated alias: ${ALIAS}"
 
     if printf '%s\n' "${IMPORTED[@]}" | grep "temurin_${ALIAS}_temurin"; then
         echo "Skipping certificate file $FILE with alias: $ALIAS as it already exists"
