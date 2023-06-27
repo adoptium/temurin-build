@@ -89,6 +89,7 @@ for FILE in certs/*.crt; do
     echo "Subject: ${ALIAS_FROM_SUBJECT}" 
 
     # Create ALIAS from widely recognised standard DN's
+    # shellcheck disable=SC2206
     arrALIAS=(${ALIAS_FROM_SUBJECT//,/ })
     ALIAS=""
     for dn in "${arrALIAS[@]}"; do
@@ -103,6 +104,7 @@ for FILE in certs/*.crt; do
     done
     # Remove leading ","
     ALIAS=${ALIAS#,}
+    echo "Generated alias: ${ALIAS}"
 
     if printf '%s\n' "${IMPORTED[@]}" | grep "temurin_${ALIAS}_temurin"; then
         echo "Skipping certificate file $FILE with alias: $ALIAS as it already exists"
