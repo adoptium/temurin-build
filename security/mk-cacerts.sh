@@ -89,7 +89,7 @@ for FILE in certs/*.crt; do
     echo "Subject: ${ALIAS_FROM_SUBJECT}" 
 
     # Create ALIAS from widely recognised standard DN's
-    arrALIAS=("${ALIAS_FROM_SUBJECT//,/ }")
+    arrALIAS=(${ALIAS_FROM_SUBJECT//,/ })
     ALIAS=""
     for dn in "${arrALIAS[@]}"; do
         case "$dn" in
