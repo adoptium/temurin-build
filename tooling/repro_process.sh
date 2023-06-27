@@ -20,7 +20,8 @@ OS="$2"
 # This script unpacks the JDK_DIR and removes windows signing Signatures in a neutral way
 # ensuring identical output once Signature is removed.
 
-expandJDK "$JDK_DIR"
+expandJDK "$JDK_DIR" "$OS"
+
 
 if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
   # Remove existing signature
@@ -30,7 +31,7 @@ if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
   tempSign "$JDK_DIR" "$OS"
 
   # Remove temporary SELF_SIGN signature, which will then normalize binary length
- # removeSignatures "$JDK_DIR" "$OS"
+  removeSignatures "$JDK_DIR" "$OS"
 fi
 
 patchManifests "${JDK_DIR}"

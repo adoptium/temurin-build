@@ -16,12 +16,20 @@
 # Expand JDK jmods & zips to process binaries within
 function expandJDK() {
   local JDK_DIR="$1"
-  mkdir "${JDK_DIR}_CP"
-  cp -R ${JDK_DIR}/* ${JDK_DIR}_CP
-  echo "Expanding the 'modules' Image to remove signatures from within.."
-  "${JDK_DIR}_CP/bin/jimage" extract --dir "${JDK_DIR}/lib/modules_extracted" "${JDK_DIR}/lib/modules"
-  rm "${JDK_DIR}/lib/modules"
+  local OS="$2"
+  local JDK_ROOT="$1"
+  local JDK_BIN_DIR="${JDK_ROOT}_CP/bin"
+  if [[ "$OS" =~ Darwin* ]]; then
+    JDK_ROOT=$(realpath ${JDK_DIR}/../../)
+    JDK_BIN_DIR="${JDK_ROOT}_CP/Contents/Home/bin"
+  fi
 
+  sleep 200
+  mkdir "${JDK_ROOT}_CP"
+  cp -R ${JDK_ROOT}/* ${JDK_ROOT}_CP
+  echo "Expanding the 'modules' Image to remove signatures from within.."
+  "${JDK_BIN_DIR}/jimage" extract --dir "${JDK_DIR}/lib/modules_extracted" "${JDK_DIR}/lib/modules"
+  rm "${JDK_DIR}/lib/modules"
   echo "Expanding the 'src.zip' to normalize file permissions"
   unzip "${JDK_DIR}/lib/src.zip" -d "${JDK_DIR}/lib/src_zip_expanded" 1> /dev/null
   rm "${JDK_DIR}/lib/src.zip"
@@ -34,8 +42,7 @@ function expandJDK() {
       dir=$(dirname "$f")
       expand_dir="${dir}/expanded_${base}"
       mkdir -p "${expand_dir}"
-      "${JDK_DIR}_CP/bin/jmod" extract --dir "${expand_dir}" "$f"
-      rm "$f"
+      "${JDK_BIN_DIR}/jmod" extract --dir "${expand_dir}" "$f"
     done
 
   echo "Expanding the 'jrt-fs.jar' to remove signatures from within.."
@@ -81,7 +88,7 @@ function removeSignatures() {
     for f in $FILES
     do
         echo "Removing signature from $f"
-        codesign --remove-signature "$f"
+        codesign --remove-signature "$f" 1> /dev/null
     done
   fi
 }
@@ -93,11 +100,13 @@ function tempSign() {
 
   if [[ "$OS" =~ CYGWIN* ]]; then
     echo "Adding temp Signatures for ${JDK_DIR}"
+    openssl genpkey -algorithm RSA -pass pass:test -outform PEM -out SELF_CERT.key -pkeyopt rsa_keygen_bits:2048
+    openssl rsa -in SELF_CERT.key -passin pass:test -pubout -out SELF_CERT_PUBLIC.key
     FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
     for f in $FILES
      do
       echo "Signing $f"
-      if signtool sign /f "$SELF_CERT" /p "$SELF_CERT_PASS" "$f" ; then
+      if signtool sign /f SELF_CERT.key /p SELF_CERT_PPUBLIC.key "$f" ; then
           echo "  ==> Successfully signed $f"
       else
           echo "  ==> $f failed to be signed!!"
@@ -107,15 +116,14 @@ function tempSign() {
   elif [[ "$OS" =~ Darwin* ]]; then
     MAC_JDK_ROOT="${JDK_DIR}/../../Contents"
     echo "Adding temp Signatures for ${MAC_JDK_ROOT}"
-    openssl genpkey -algorithm RSA -pass pass:test -outform PEM -out privatePemFile -pkeyopt rsa_keygen_bits:2048
-    echo "public key"
-    openssl rsa -in ${privatePemFile} -passin pass:test -pubout -out publicPemFile
+    #TODO Generate locally certificate SELF_CERT
+
     FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
     for f in $FILES
     do
         echo "Signing $f with a local certificate"
         # Sign both with same local Certificate, this adjusts __LINKEDIT vmsize identically
-        codesign -s "$privatePemFile" --options runtime -f --timestamp "$f"
+        codesign -s "$SELF_CERT" --options runtime -f --timestamp "$f"
     done
   fi
 }
