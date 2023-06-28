@@ -804,8 +804,9 @@ generateSBoM() {
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
   # Below add build tools into metadata tools
-  # Add GLIBC version
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GLIBC" "rpm -q glibc"
+  addGLIBCversionforLinux
+  addGCC
+  addBootJDK
   # Add ALSA 3rd party
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt)"
   # Add FreeType 3rd party (windows + macOS)
@@ -840,7 +841,7 @@ checkingToolSummary() {
 
 # Below add versions to sbom | Facilitate reproducible builds
 
-checkingGLIBCforLinux() {
+addGLIBCforLinux() {
    export CC=${grep "^CC :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk}
    export SYSROOT_CFLAGS=${grep "^SYSROOT_CFLAGS :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk}
    export GLIBC_MAJOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)"
@@ -849,16 +850,16 @@ checkingGLIBCforLinux() {
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GLIBC" "${GLIBC_VERSION}"
 }
 
-checkingGCCforLinux() {
+addGCC() {
    echo "Checking and getting GCC Version:"
    inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "C Compiler:" | tr -s " " | cut -d " " -f5)"
 }
 
-checkingBootJDKforLinux() {
+addBootJDK() {
    echo "Checking and getting BootJDK Version:"
    inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
-   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "BOOTJDK" "$(sed -n '/^Tools summary:$/,$p'  build-farm/workspace/target/metadata/configure.txt  | grep "Boot JDK:" | tr -s " " | cut -d " " -f 6)"
+   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "BOOTJDK" "$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | tr -s " " | cut -d " " -f 6)"
 }
 
 getGradleJavaHome() {
