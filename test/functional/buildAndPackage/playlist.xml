@@ -15,8 +15,18 @@
 
 <playlist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../TKG/playlist.xsd">
 	<test>
-		<testCaseName>Java_Version</testCaseName>
+		<testCaseName>Jdk_Java_Version</testCaseName>
 		<command>$(JAVA_COMMAND) -version; $(TEST_STATUS)</command>
+		<levels>
+			<level>extended</level>
+		</levels>
+		<groups>
+			<group>functional</group>
+		</groups>
+	</test>
+	<test>
+		<testCaseName>Jre_Java_Version</testCaseName>
+		<command>$(JRE_COMMAND) -version; $(TEST_STATUS)</command>
 		<levels>
 			<level>extended</level>
 		</levels>
