@@ -124,7 +124,7 @@ for FILE in certs/*.crt; do
             -storepass "changeit"
         else
             # Importing using OpenJDK GenerateCacerts, so must ensure alias is a valid filename
-            ALIAS_FILENAME=$(echo "${ALIAS}" | tr ' :()' '____' | tr '[:upper:]' '[:lower:]' | tr -cd '0-9a-z,_' )
+            ALIAS_FILENAME=$(echo "${ALIAS}" | tr ' :()=' '_____' | tr '[:upper:]' '[:lower:]' | tr -cd '0-9a-z,_' )
             echo "Renaming $FILE to certs/$ALIAS_FILENAME"
             if [ -f "certs/$ALIAS_FILENAME" ]; then
                 echo "ERROR: Certificate alias file already exists certs/$ALIAS_FILENAME"
