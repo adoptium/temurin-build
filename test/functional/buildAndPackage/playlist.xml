@@ -24,6 +24,22 @@
 			<group>functional</group>
 		</groups>
 	</test>
+	<test>
+		<testCaseName>Jdk_Jre_Version</testCaseName>
+		<command>$(TEST_JDK_HOME)$(D)jre$(D)bin$(D)java -version; $(TEST_STATUS)</command>
+		<levels>
+			<level>extended</level>
+		</levels>
+		<groups>
+			<group>functional</group>
+		</groups>
+		<impls>
+			<impl>openj9</impl>
+		</impls>
+		<versions>
+			<version>8</version>
+		</versions>
+	</test>
     <test>
         <testCaseName>Adopt_HS_FeatureTests</testCaseName>
         <command>
