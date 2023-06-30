@@ -64,7 +64,7 @@ These branches should be named according to the following format (vYYYY.MM+NN) ,
 
 Paste the below message into the #release channel in Slack:
 
-With under a week to go until releases, we are entering a lockdown period for the following repositories: <a href='https://github.com/adoptium/temurin-build/pulls'>temurin-build</a>, <a href='https://github.com/adoptium/ci-jenkins-pipelines/pulls'>ci-jenkins-pipelines</a>, <a href='https://github.com/adoptium/github-release-scripts/pulls'>github-release-scripts</a>, <a href='https://github.com/adoptium/containers/pulls'>containers</a>, <a href='https://github.com/adoptium/installer/pulls'>installer</a>, <a href='https://github.com/adoptium/mirror-scripts'>mirror-scripts</a>.
+With under a week to go until releases, we are entering a lockdown period for the following repositories: temurin-build, ci-jenkins-pipelines, github-release-scripts, containers, installer, and mirror-scripts.
 If you need to submit a pr for any of these repos during this period, you should:
  - Add a comment saying “Approval to merge during the lockdown cycle please” and post in the appropriate slack channel for awareness. This can be done before the PR is finalised
  - Add a note into this channel saying you are requesting the approval with a link to the comment in the first bullet point
