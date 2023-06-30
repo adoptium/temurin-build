@@ -44,7 +44,7 @@ During the week before release, the Release Champion makes changes in preparatio
 
 #### Branching message for build related repositories
 
-Post the below  message to the #build & #release channels in Slack:
+Post the below message to the #build & #release channels in Slack:
 
 In Preparation for next weeks release, I'm proposing to branch the
 following repositories, in order that this branch becomes the baseline
