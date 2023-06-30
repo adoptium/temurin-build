@@ -58,7 +58,7 @@ as today is the last day, the following repositories will be branched:
 - ci-jenkins-pipelines <https://github.com/adoptium/ci-jenkins-pipelines>
 - jenkins-helper <https://github.com/adoptium/jenkins-helper>
 
-These branches should be named according to the following format (vYYYY.MM.NN) ,e.g v2023.03.01 , whereby the final element is an incremental counter appended to the year and month of the release.
+These branches should be named according to the following format (vYYYY.MM+NN) ,e.g v2023.03+01 , whereby the final element is an incremental counter appended to the year and month of the release.
 
 #### Code Freeze message
 
