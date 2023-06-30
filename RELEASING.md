@@ -42,7 +42,7 @@ During the week before release, the Release Champion makes changes in preparatio
 - Update [releaseVersions](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/release_pipeline_generator.groovy#L6) with correct incoming release versions.
 - Update https://github.com/adoptium/mirror-scripts/blob/master/releasePlan.cfg with expected tag, detail see https://github.com/zdtsw/mirror-scripts/tree/issue/3167#skara-repos-and-processes
 
-Branching message for build related repositories
+#### Branching message for build related repositories
 
 Post the below  message to the #build & #release channels in Slack:
 
@@ -52,7 +52,7 @@ for the release. Shout now if you need to get any PRs merged for the release,
 as today is the last day, the following repositories will be branched:
   ( temurin-build, ci-jenkins-pipelines, jenkins-helper).
 
-Create release branch on below repositories:
+#### Create release branch on below repositories:
  
 - temurin-build <https://github.com/adoptium/temurin-build>
 - ci-jenkins-pipelines <https://github.com/adoptium/ci-jenkins-pipelines>
@@ -60,7 +60,7 @@ Create release branch on below repositories:
 
 These branches should be named according to the following format (vYYYY.MM.NN) ,e.g v2023.03.01 , whereby the final element is an incremental counter appended to the year and month of the release.
 
-Code Freeze message
+#### Code Freeze message
 
 Paste the below message into the #release channel in Slack:
 
@@ -76,7 +76,7 @@ This stops last minute changes going in, which may destabilise things. "installe
 If a change has to go in during this "lockdown" period it should be done by posting a comment saying "Requesting approval to merge during the lockdown period. Please thumbs up the comment to approve" in Slack release channel.
 If two committers into the repository express approval then the change can be merged during the lockdown period.
 
-Finally lockdown main branches of below repositories
+#### Finally lockdown main branches of below repositories
 
 - temurin-build <https://github.com/adoptium/temurin-build>
 - ci-jenkins-pipelines <https://github.com/adoptium/ci-jenkins-pipelines>
@@ -86,7 +86,7 @@ Finally lockdown main branches of below repositories
 - installer <https://github.com/adoptium/installer>
 - mirror-script <https://github.com/adoptium/mirror-scripts>
 
-Release pipelines and jobs need to be re-generated with new tags by Release Champion:
+#### Release pipelines and jobs need to be re-generated with new tags by Release Champion:
 
 - run [release-build-pipeline-generator](https://ci.adoptium.net/job/build-scripts/job/utils/job/release-build-pipeline-generator) with correct value:
   1. `releaseTag` is the branch on `ci-jenkins-pipeline` and `temurin-build` git repo.
