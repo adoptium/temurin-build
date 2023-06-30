@@ -49,7 +49,7 @@ Post the below message to the #build & #release channels in Slack:
 `In Preparation for next weeks release, I'm proposing to branch the following repositories, in order that this branch becomes the baseline for the release. Shout now if you need to get any PRs merged for the release, as today is the last day, the following repositories will be branched: ( temurin-build, ci-jenkins-pipelines, jenkins-helper).`
 
 #### Create release branch on below repositories:
- 
+
 - temurin-build <https://github.com/adoptium/temurin-build>
 - ci-jenkins-pipelines <https://github.com/adoptium/ci-jenkins-pipelines>
 - jenkins-helper <https://github.com/adoptium/jenkins-helper>
@@ -62,10 +62,10 @@ Paste the below message into the #release channel in Slack:
 
 With under a week to go until releases, we are entering a lockdown period for the following repositories: temurin-build, ci-jenkins-pipelines, github-release-scripts, containers, installer, and mirror-scripts.
 If you need to submit a pr for any of these repos during this period, you should:
- - Add a comment saying “Approval to merge during the lockdown cycle please” and post in the appropriate slack channel for awareness. This can be done before the PR is finalised.
- - Add a note into this channel saying you are requesting the approval with a link to the comment in the first bullet point.
- - The comment should have approval from at least one build committer and one PMC member to indicate that they agree it is critical that it goes in.
- - The PR can be merged after 2 hours of the post going into the build channel (to give people time to object). This delay may be skipped in cases where the delay will result in something breaking within that time.
+- Add a comment saying “Approval to merge during the lockdown cycle please” and post in the appropriate slack channel for awareness. This can be done before the PR is finalised.
+- Add a note into this channel saying you are requesting the approval with a link to the comment in the first bullet point.
+- The comment should have approval from at least one build committer and one PMC member to indicate that they agree it is critical that it goes in.
+- The PR can be merged after 2 hours of the post going into the build channel (to give people time to object). This delay may be skipped in cases where the delay will result in something breaking within that time.
 
 Only include "critical" fixes (i.e. those which will otherwise cause a build break or other problem which will prevent shipping the release builds).
 This stops last minute changes going in, which may destabilise things. "installer" repo might have exception due to the fact it requires new version of build.
