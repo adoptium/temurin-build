@@ -804,7 +804,7 @@ generateSBoM() {
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
   # Below add build tools into metadata tools
-  addGLIBCversionforLinux
+  addGLIBCforLinux
   addGCC
   addBootJDK
   # Add ALSA 3rd party
