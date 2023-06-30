@@ -338,6 +338,12 @@ elif [ -r /usr/bin/gcc-7 ]; then
   [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
 fi
 
+if [ "$JAVA_FEATURE_VERSION" -ge 20 ]; then
+  if [ -r /usr/local/lib/libcapstone.so.4 ]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-capstone=/usr/local"
+  fi
+fi
+
 if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
   # BUILD_C/CXX required for native (non-cross) RISC-V builds of Bisheng
   if [ -n "$CXX" ]; then
