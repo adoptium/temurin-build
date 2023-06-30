@@ -46,11 +46,7 @@ During the week before release, the Release Champion makes changes in preparatio
 
 Post the below message to the #build & #release channels in Slack:
 
-In Preparation for next weeks release, I'm proposing to branch the
-following repositories, in order that this branch becomes the baseline
-for the release. Shout now if you need to get any PRs merged for the release,
-as today is the last day, the following repositories will be branched:
-  ( temurin-build, ci-jenkins-pipelines, jenkins-helper).
+`In Preparation for next weeks release, I'm proposing to branch the following repositories, in order that this branch becomes the baseline for the release. Shout now if you need to get any PRs merged for the release, as today is the last day, the following repositories will be branched: ( temurin-build, ci-jenkins-pipelines, jenkins-helper).`
 
 #### Create release branch on below repositories:
  
@@ -76,7 +72,11 @@ This stops last minute changes going in, which may destabilise things. "installe
 If a change has to go in during this "lockdown" period it should be done by posting a comment saying "Requesting approval to merge during the lockdown period. Please thumbs up the comment to approve" in Slack release channel.
 If two committers into the repository express approval then the change can be merged during the lockdown period.
 
-#### Finally lockdown main branches of below repositories
+#### Enable code-freeze on  main branches of below repositories
+
+In order to enable the code freeze GitHub you need to change the line `if: github.repository_owner == 'adoptium' && false` to be `if: github.repository_owner == 'adoptium' && true` in the [code-freeze.yml](https://github.com/adoptium/.github/blob/main/.github/workflows/code-freeze.yml#L21) GitHub workflow. Please contact the PMC if you need help merging this change.
+
+Affected repositories:
 
 - temurin-build <https://github.com/adoptium/temurin-build>
 - ci-jenkins-pipelines <https://github.com/adoptium/ci-jenkins-pipelines>
