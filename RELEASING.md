@@ -86,7 +86,7 @@ If two committers into the repository express approval then the change can be me
 - installer <https://github.com/adoptium/installer>
 - mirror-script <https://github.com/adoptium/mirror-scripts>
 
-#### Release pipelines and jobs need to be re-generated with new tags by Release Champion:
+#### Release pipelines and jobs need to be re-generated with new tags by the Release Champion:
 
 - run [release-build-pipeline-generator](https://ci.adoptium.net/job/build-scripts/job/utils/job/release-build-pipeline-generator) with correct value:
   1. `releaseTag` is the branch on `ci-jenkins-pipeline` and `temurin-build` git repo.
