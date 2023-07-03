@@ -101,6 +101,7 @@ public final class TemurinSignSBOM {
             System.out.println("Operation completed successfully.");
         } else {
             System.out.println("Operation failed.");
+            System.exit(1);
         }
     }
 
@@ -176,7 +177,7 @@ public final class TemurinSignSBOM {
             return true;
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.log(Level.SEVERE, "Exception verifying json signature", e);
+            return false;
         }
-        return false;
     }
 }

@@ -40,28 +40,55 @@ During the week before release, the Release Champion makes changes in preparatio
 - Update [releaseVersions](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/release_pipeline_generator.groovy#L6) with correct incoming release versions.
 - Update https://github.com/adoptium/mirror-scripts/blob/master/releasePlan.cfg with expected tag, detail see https://github.com/zdtsw/mirror-scripts/tree/issue/3167#skara-repos-and-processes
 
+#### Branching message for build related repositories
+
+Post the below message to the #build & #release channels in Slack:
+
+`In Preparation for next weeks release, I'm proposing to branch the following repositories, in order that this branch becomes the baseline for the release. Shout now if you need to get any PRs merged for the release, as today is the last day, the following repositories will be branched: ( temurin-build, ci-jenkins-pipelines, jenkins-helper).`
+
+#### Create release branch on below repositories:
+
 Create release branch in the format `vYYYY.MM.NN` on each of the following repositories:
 
 - temurin-build <https://github.com/adoptium/temurin-build>
 - ci-jenkins-pipelines <https://github.com/adoptium/ci-jenkins-pipelines>
 - jenkins-helper <https://github.com/adoptium/jenkins-helper>
 
-`temurin-build` and `ci-jenkins-pipeline` share the same branch name,`jenkins-helper` might have a different branch name.
-These branches will require at least one approval to push commit to.
+These branches should be named according to the following format (vYYYY.MM+NN) ,e.g v2023.03+01 , whereby the final element is an incremental counter appended to the year and month of the release.
 
-Finally lockdown below repositories
+#### Code Freeze message
 
-- github-release-scripts <https://github.com/adoptium/github-release-scripts>
-- containers <https://github.com/adoptium/containers>
-- installer <https://github.com/adoptium/installer>
-- mirror-script <https://github.com/adoptium/mirror-scripts>
+Paste the below message into the #release channel in Slack:
+
+With under a week to go until releases, we are entering a lockdown period for the following repositories: temurin-build, ci-jenkins-pipelines, github-release-scripts, containers, installer, and mirror-scripts.
+
+If you need to submit a pr for any of these repos during this period, you should:
+
+- Add a comment saying “Approval to merge during the lockdown cycle please” and post in the appropriate slack channel for awareness. This can be done before the PR is finalised.
+- Add a note into this channel saying you are requesting the approval with a link to the comment in the first bullet point.
+- The comment should have approval from at least one build committer and one PMC member to indicate that they agree it is critical that it goes in.
+- The PR can be merged after 2 hours of the post going into the build channel (to give people time to object). This delay may be skipped in cases where the delay will result in something breaking within that time.
 
 Only include "critical" fixes (i.e. those which will otherwise cause a build break or other problem which will prevent shipping the release builds).
 This stops last minute changes going in, which may destabilise things. "installer" repo might have exception due to the fact it requires new version of build.
 If a change has to go in during this "lockdown" period it should be done by posting a comment saying "Requesting approval to merge during the lockdown period. Please thumbs up the comment to approve" in Slack release channel.
 If two committers into the repository express approval then the change can be merged during the lockdown period.
 
-Release pipelines and jobs need to be re-generated with new tags by Release Champion:
+#### Enable code-freeze on  main branches of below repositories
+
+In order to enable the code freeze GitHub you need to change the line `if: github.repository_owner == 'adoptium' && false` to be `if: github.repository_owner == 'adoptium' && true` in the [code-freeze.yml](https://github.com/adoptium/.github/blob/main/.github/workflows/code-freeze.yml#L21) GitHub workflow. Please contact the PMC if you need help merging this change.
+
+Affected repositories:
+
+- temurin-build <https://github.com/adoptium/temurin-build>
+- ci-jenkins-pipelines <https://github.com/adoptium/ci-jenkins-pipelines>
+- jenkins-helper <https://github.com/adoptium/jenkins-helper>
+- github-release-scripts <https://github.com/adoptium/github-release-scripts>
+- containers <https://github.com/adoptium/containers>
+- installer <https://github.com/adoptium/installer>
+- mirror-script <https://github.com/adoptium/mirror-scripts>
+
+#### Release pipelines and jobs need to be re-generated with new tags by the Release Champion:
 
 - run [release-build-pipeline-generator](https://ci.adoptium.net/job/build-scripts/job/utils/job/release-build-pipeline-generator) with correct value:
   1. `releaseTag` is the branch on `ci-jenkins-pipeline` and `temurin-build` git repo.
@@ -155,8 +182,6 @@ step1 ---->|No| step1.1["sleep 10 minutes"] -->step1
 jdk8armStep1["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] -->jdk8armStep2["Get _adopt tag on jdk8 aarch32Linux"] -->jdk8armStep3["Manual run release-openjdk8u-pipeline with\n1: scmReference\n2: targetConfiguration\n3: overridePublishName"]
 
 ```
-
-</details>
 
 ### Dry run tests: Do this at least 2 weeks before release in the same calendar month
 

@@ -83,7 +83,27 @@ IMPORTED=('null')
 alreadyExistsCounter=0 # counter for duplicated file
 
 for FILE in certs/*.crt; do
-    ALIAS=$(openssl x509 -subject -noout -nameopt compat -in "$FILE" | tr '/' ' ' | sed 's/^subject=[[:space:]]*//' | tr -d ',')
+    # Use rfc2253 standard format, so output format is deterministic
+    ALIAS_FROM_SUBJECT=$(openssl x509 -subject -noout -nameopt rfc2253 -in "$FILE" | sed 's/^subject=[[:space:]]*//' | tr ' ' '_')
+    echo "Subject: ${ALIAS_FROM_SUBJECT}"
+
+    # Create ALIAS from widely recognised standard DN's
+    # shellcheck disable=SC2206
+    arrALIAS=(${ALIAS_FROM_SUBJECT//,/ })
+    ALIAS=""
+    for dn in "${arrALIAS[@]}"; do
+        case "$dn" in
+            # Build ALIAS from widely recognised DN's
+            C=*|CT=*|L=*|O=*|OU=*|ST=*|CN=*)
+                ALIAS="${ALIAS},${dn}"
+                ;;
+            *)
+                ;;
+        esac
+    done
+    # Remove leading ","
+    ALIAS=${ALIAS#,}
+    echo "Generated alias: ${ALIAS}"
 
     if printf '%s\n' "${IMPORTED[@]}" | grep "temurin_${ALIAS}_temurin"; then
         echo "Skipping certificate file $FILE with alias: $ALIAS as it already exists"
@@ -104,7 +124,7 @@ for FILE in certs/*.crt; do
             -storepass "changeit"
         else
             # Importing using OpenJDK GenerateCacerts, so must ensure alias is a valid filename
-            ALIAS_FILENAME=$(echo "${ALIAS}" | tr ' :()' '____' | tr '[:upper:]' '[:lower:]' | tr -cd '0-9a-z,_' )
+            ALIAS_FILENAME=$(echo "${ALIAS}" | tr ' :()=' '_____' | tr '[:upper:]' '[:lower:]' | tr -cd '0-9a-z,_' )
             echo "Renaming $FILE to certs/$ALIAS_FILENAME"
             if [ -f "certs/$ALIAS_FILENAME" ]; then
                 echo "ERROR: Certificate alias file already exists certs/$ALIAS_FILENAME"
