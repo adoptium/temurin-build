@@ -183,6 +183,8 @@ jdk8armStep1["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] 
 
 ```
 
+</details>
+
 ### Dry run tests: Do this at least 2 weeks before release in the same calendar month
 
 It is recommended that we perform an auto trigger test on a chosen version (suggest jdk8 and one other) to validate the trigger and build processes and the release pipeline. jdk-17 example:
