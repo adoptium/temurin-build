@@ -61,7 +61,7 @@
         <target name="download-jackson-core" unless="jackson-core_available">
                 <echo message="Downloading jackson-core version ${jackson-core-version}"/>
                 <download-file
-                  checksum="f804090e6399ce0cf78242db086017512dd71fcc"
+                  checksum="b5d37a77c88277b97e3593c8740925216c06df8e4172bbde058528df04ad3e7a"
                   destfile="jackson-core.jar"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"
                   />
@@ -102,7 +102,7 @@
         <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
                 <echo message="Downloading jackson-dataformat-xml version ${jackson-databind-version}"/>
                 <download-file
-                  checksum="01e71fddbc80bb86f71a6345ac1e8ab8a00e7134"
+                  checksum="edbda6c775a36049cf0088b111ab958cca0dc70cb9326918d6cf153cb3fa426b"
                   destfile="jackson-dataformat-xml.jar"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/dataformat/jackson-dataformat-xml/${jackson-databind-version}/jackson-dataformat-xml-${jackson-databind-version}.jar"/>
         </target>
@@ -110,7 +110,7 @@
         <target name="download-jackson-databind" unless="jackson-databind_available">
                 <echo message="Downloading jackson-databind version ${jackson-databind-version}"/>
                 <download-file
-                  checksum="a7aae9525864930723e3453ab799521fdfd9d873"
+                  checksum="501d3abce4d18dcc381058ec593c5b94477906bba6efbac14dae40a642f77424"
                   destfile="jackson-databind.jar"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/${jackson-databind-version}/jackson-databind-${jackson-databind-version}.jar"/>
         </target>
@@ -118,7 +118,7 @@
         <target name="download-jackson-annotations" unless="jackson-annotations_available">
                 <echo message="Downloading jackson-annotations version ${jackson-annotations-version}"/>
                 <download-file
-                  checksum="6b7802f6c22c09c4a92a2ebeb76e755c3c0a58dfbf419835fae470d89e469b86"
+                  checksum="2c6869d505cf60dc066734b7d50339f975bd3adc635e26a78abb71acb4473c0d"
                   destfile="jackson-annotations.jar"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/${jackson-annotations-version}/jackson-annotations-${jackson-annotations-version}.jar"/>
         </target>
@@ -126,7 +126,7 @@
         <target name="download-json-schema" unless="json-schema_available">
                 <echo message="Downloading json-schema version ${json-schema-version}"/>
                 <download-file
-                  checksum="29d953a66be49e6aeb8dac1310818b8e037e237b"
+                  checksum="968991e5718520cdd7b224770f790cf2c241cddf64d10a36c21f9f8b4a15e79c"
                   destfile="json-schema.jar"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=com/networknt/json-schema-validator/${json-schema-version}/json-schema-validator-${json-schema-version}.jar"/>
         </target>
@@ -150,7 +150,7 @@
         <target name="download-github-package-url" unless="github-package-url_available">
                 <echo message="Downloading github-package-url version ${github-package-url-version}"/>
                 <download-file
-                  checksum="fc7ab7ff3a33ae7bbf07df54987e85e48d26fc6c56e7948a695532228961718b"
+                  checksum="8e23280221afd1e6561d433dfb133252cd287167acb0eca5a991667118ff10a2"
                   destfile="github-package-url.jar"
                   srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
         </target>
@@ -500,11 +500,13 @@
 				<arg value="@{destdir}/@{destfile}"/>
 				<arg value="@{srcurl}"/>
 			</exec>
-      <checksum file="@{destdir}/@{destfile}" algorithm="@{algorithm}" property="downloaded.file.checksum" />
-      <condition property="checksum.match">
-        <equals arg1="${downloaded.file.checksum}" arg2="@{checksum}"/>
-      </condition>
-      <fail message="The checksum of the @{destfile} file does not match expected value." unless="checksum.match"/>
+			<local name="downloaded.file.checksum"/>
+			<checksum file="@{destdir}/@{destfile}" algorithm="@{algorithm}" property="downloaded.file.checksum" />
+			<local name="checksum.match"/>
+			<condition property="checksum.match">
+				<equals arg1="${downloaded.file.checksum}" arg2="@{checksum}"/>
+			</condition>
+			<fail message="The checksum of the @{destfile} file does not match expected value." unless="checksum.match"/>
 		</sequential>
 	</macrodef>
 </project>
