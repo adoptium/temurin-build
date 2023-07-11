@@ -173,8 +173,39 @@ signRelease()
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
         curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
-        rm -rf "${JDK_DIR}"
-        unzip -q -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
+        TESTMACSIGN=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
+        if [ $TESTMACSIGN -gt 0 ]
+        then
+          echo "Code Signed"
+          rm -rf "${JDK_DIR}"
+          unzip -q -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
+        else
+          echo "Retrying Code Signing"
+          max_iterations=20
+          iteration=1
+          while [ $iteration -le $max_iterations ]
+          do
+            echo "Code Not Signed - Have Another Try"
+            sleep 1
+            curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
+            TESTMACSIGN2=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
+            if [ $TESTMACSIGN2 -gt 0 ]
+            then
+              echo "$f Signed OK On Attempt $iteration"
+              rm -rf "${JDK_DIR}"
+              unzip -q -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
+              break
+            else
+              echo "$f Failed Signing On Attempt $iteration"
+              iteration=$((iteration+1))
+            fi
+            if [ $iteration -eq $max_iterations ]
+            then
+              echo "Reached Max Attempts = $max_iterations"
+              exit 1
+            fi
+          done
+        fi
       else
         # Login to KeyChain
         # shellcheck disable=SC2046
