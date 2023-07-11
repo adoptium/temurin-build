@@ -145,10 +145,10 @@ signRelease()
             chmod --reference="${dir}/unsigned_${file}" "$f"
             rm -rf "${dir}/unsigned_${file}"
           else
-            MAX_ITERATIONS=20
-            ITERATION=1
-            SUCCESS=false
-            ERRCOUNT=0
+            max_iterations=20
+            iteration=1
+            success=false
+            errcount=0
             echo "Code Not Signed For File $f"
             while [[ $iteration -le $max_iterations ]] && [ $success = false ]; do
               echo $iteration Of $max_iterations
