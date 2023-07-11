@@ -119,6 +119,7 @@ signRelease()
       echo "Signing OSX release"
 
       ENTITLEMENTS="$WORKSPACE/entitlements.plist"
+      MACSIGNSTRING="Apple Certification Authority"
       # Sign all files with the executable permission bit set.
       FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
 
@@ -132,11 +133,42 @@ signRelease()
           file=$(basename "$f")
           mv "$f" "${dir}/unsigned_${file}"
           curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
-          chmod --reference="${dir}/unsigned_${file}" "$f"
-          rm -rf "${dir}/unsigned_${file}"
+          TESTMACSIGN=`grep -i "$MACSIGNSTRING" "$f"|wc -l`
+          if [ $TESTMACSIGN -gt 0 ]
+          then
+            echo "Code Signed"
+            chmod --reference="${dir}/unsigned_${file}" "$f"
+            rm -rf "${dir}/unsigned_${file}"
+          else
+            echo "Retrying Code Signing"
+            max_iterations=20
+            iteration=1
+            while [ $iteration -le $max_iterations ]
+            do
+              echo "Code Not Signed - Have Another Try"
+              sleep 1
+              curl --fail -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
+              TESTMACSIGN2=`grep -i "$MACSIGNSTRING" "$f"|wc -l`
+              if [ $TESTMACSIGN2 -gt 0 ]
+              then
+                echo "$f Signed OK On Attempt $iteration"
+                chmod --reference="${dir}/unsigned_${file}" "$f"
+                rm -rf "${dir}/unsigned_${file}"
+                break
+              else
+                echo "$f Failed Signing On Attempt $iteration"
+                iteration=$((iteration+1))
+              fi
+              if [ $iteration -eq $max_iterations ]
+              then
+                echo "Reached Max Attempts = $max_iterations"
+                exit 1
+              fi
+            done
+          fi
         done
         JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
-        JDK=$(basename "${JDK_DIR}") 
+        JDK=$(basename "${JDK_DIR}")
         cd "${TMP_DIR}"
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
