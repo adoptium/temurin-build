@@ -134,6 +134,7 @@ signRelease()
           mv "$f" "${dir}/unsigned_${file}"
           curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
           TESTMACSIGN=`grep -i "$MACSIGNSTRING" "$f"|wc -l`
+          grep -i "$MACSIGNSTRING" "$f"
           if [ $TESTMACSIGN -gt 0 ]
           then
             echo "Code Signed"
@@ -148,6 +149,7 @@ signRelease()
               echo "Code Not Signed - Have Another Try"
               sleep 1
               curl --fail -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
+              grep -i "$MACSIGNSTRING" "$f"
               TESTMACSIGN2=`grep -i "$MACSIGNSTRING" "$f"|wc -l`
               if [ $TESTMACSIGN2 -gt 0 ]
               then
