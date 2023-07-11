@@ -28,10 +28,13 @@ function expandJDK() {
   cp -R ${JDK_ROOT}/* ${JDK_ROOT}_CP
   echo "Expanding the 'modules' Image to remove signatures from within.."
   modulesFile="${JDK_DIR}/lib/modules"
+  mkdir "${JDK_DIR}/lib/modules_extracted"
+  extractedDir="${JDK_DIR}/lib/modules_extracted"
   if [[ "$OS" =~ CYGWIN* ]]; then
-    modulesFile=`cygpath -w $modulesFile`
+    modulesFile=$(cygpath -w $modulesFile)
+    extractedDir=$(cygpath -w $extractedDir)
   fi
-  "${JDK_BIN_DIR}/jimage" extract --dir "${JDK_DIR}/lib/modules_extracted" "${modulesFile}"
+  "${JDK_BIN_DIR}/jimage" extract --dir "${extractedDir}" "${modulesFile}"
   rm "${JDK_DIR}/lib/modules"
   echo "Expanding the 'src.zip' to normalize file permissions"
   unzip "${JDK_DIR}/lib/src.zip" -d "${JDK_DIR}/lib/src_zip_expanded" 1> /dev/null
@@ -46,7 +49,8 @@ function expandJDK() {
       expand_dir="${dir}/expanded_${base}"
       mkdir -p "${expand_dir}"
       if [[ "$OS" =~ CYGWIN* ]]; then
-        f=`cygpath -w $f`
+        f=$(cygpath -w $f)
+        expand_dir=$(cygpath -w $expand_dir)
       fi
       "${JDK_BIN_DIR}/jmod" extract --dir "${expand_dir}" "$f"
     done
@@ -72,12 +76,11 @@ function removeSignatures() {
     FILES=$(find "${JDK_DIR}" -type f -name '*.exe' -o -name '*.dll')
     for f in $FILES
      do
-      echo "Removing signature from $f"
-      f=`cygpath -w $f`
-      if "$signToolPath" remove /s /v "$f"; then
-          echo "  ==> Successfully removed signature from $f"
-      else
-          echo "  ==> $f contains no signature"
+      f=$(cygpath -w $f)
+      rc=0
+      "$signToolPath" remove /s "$f" 1> /dev/null || rc=$?
+      if [ $rc -ne 0 ]; then
+        echo "Removing signature from $f failed"
       fi
      done
   elif [[ "$OS" =~ Darwin* ]]; then
@@ -115,13 +118,11 @@ function tempSign() {
     FILES=$(find "${JDK_DIR}" -type f -name '*.exe' -o -name '*.dll')
     for f in $FILES
      do
-      echo "Signing $f"
-      f=`cygpath -w $f`
-      if "$signToolPath" sign /f $selfCert.pfx /p test /fd SHA256 $f; then
-          echo "  ==> Successfully signed $f"
-      else
-          echo "  ==> $f failed to be signed!!"
-          exit 1
+      rc=0
+      f=$(cygpath -w $f)
+      "$signToolPath" sign /f $selfCert.pfx /p test /fd SHA256 $f 1> /dev/null || rc=$?
+      if [ $rc -ne 0 ]; then
+        echo "Adding Temp Signature for $f failed"
       fi
      done
   elif [[ "$OS" =~ Darwin* ]]; then
