@@ -24,11 +24,14 @@ function expandJDK() {
     JDK_BIN_DIR="${JDK_ROOT}_CP/Contents/Home/bin"
   fi
 
-  sleep 200
   mkdir "${JDK_ROOT}_CP"
   cp -R ${JDK_ROOT}/* ${JDK_ROOT}_CP
   echo "Expanding the 'modules' Image to remove signatures from within.."
-  "${JDK_BIN_DIR}/jimage" extract --dir "${JDK_DIR}/lib/modules_extracted" "${JDK_DIR}/lib/modules"
+  modulesFile="${JDK_DIR}/lib/modules"
+  if [[ "$OS" =~ CYGWIN* ]]; then
+    modulesFile=`cygpath -w $modulesFile`
+  fi
+  "${JDK_BIN_DIR}/jimage" extract --dir "${JDK_DIR}/lib/modules_extracted" "${modulesFile}"
   rm "${JDK_DIR}/lib/modules"
   echo "Expanding the 'src.zip' to normalize file permissions"
   unzip "${JDK_DIR}/lib/src.zip" -d "${JDK_DIR}/lib/src_zip_expanded" 1> /dev/null
@@ -42,6 +45,9 @@ function expandJDK() {
       dir=$(dirname "$f")
       expand_dir="${dir}/expanded_${base}"
       mkdir -p "${expand_dir}"
+      if [[ "$OS" =~ CYGWIN* ]]; then
+        f=`cygpath -w $f`
+      fi
       "${JDK_BIN_DIR}/jmod" extract --dir "${expand_dir}" "$f"
     done
 
@@ -61,12 +67,14 @@ function removeSignatures() {
   local OS="$2"
 
   if [[ "$OS" =~ CYGWIN* ]]; then
+    signToolPath="/cygdrive/c/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x64/signtool.exe"
     echo "Removing all Signatures from ${JDK_DIR}"
-    FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+    FILES=$(find "${JDK_DIR}" -type f -name '*.exe' -o -name '*.dll')
     for f in $FILES
      do
       echo "Removing signature from $f"
-      if signtool remove /s "$f"; then
+      f=`cygpath -w $f`
+      if "$signToolPath" remove /s /v "$f"; then
           echo "  ==> Successfully removed signature from $f"
       else
           echo "  ==> $f contains no signature"
@@ -99,14 +107,17 @@ function tempSign() {
   local OS="$2"
 
   if [[ "$OS" =~ CYGWIN* ]]; then
+    signToolPath="/cygdrive/c/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x64/signtool.exe"
     echo "Adding temp Signatures for ${JDK_DIR}"
-    openssl genpkey -algorithm RSA -pass pass:test -outform PEM -out SELF_CERT.key -pkeyopt rsa_keygen_bits:2048
-    openssl rsa -in SELF_CERT.key -passin pass:test -pubout -out SELF_CERT_PUBLIC.key
-    FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+    selfCert="test"
+    openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout $selfCert.key -out $selfCert.crt -subj "/CN=example.com" -addext "subjectAltName=DNS:example.com,DNS:*.example.com,IP:10.0.0.1"
+    openssl pkcs12 -export -passout pass:test -out $selfCert.pfx -inkey $selfCert.key -in $selfCert.crt
+    FILES=$(find "${JDK_DIR}" -type f -name '*.exe' -o -name '*.dll')
     for f in $FILES
      do
       echo "Signing $f"
-      if signtool sign /f SELF_CERT.key /p SELF_CERT_PPUBLIC.key "$f" ; then
+      f=`cygpath -w $f`
+      if "$signToolPath" sign /f $selfCert.pfx /p test /fd SHA256 $f; then
           echo "  ==> Successfully signed $f"
       else
           echo "  ==> $f failed to be signed!!"
