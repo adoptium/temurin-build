@@ -180,11 +180,17 @@ signRelease()
         JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
         JDK=$(basename "${JDK_DIR}")
         cd "${TMP_DIR}"
-        zip -r "${TMP_DIR}/unsigned.zip" "${JDK}"
+        zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
         curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
         echo "Debug 1"
-        unzip -vl "${TMP_DIR}/unsigned.zip"
+        unzip -p "${TMP_DIR}/unsigned.zip" "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources" > adb.txt
+        unzip -p "${TMP_DIR}/signed.zip" "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources" > adb2.txt
+        diff adb.txt adb2.txt
+        echo "File 1"
+        cat adb.txt
+        echo "File 2"
+        cat adb2.txt
         echo "Debug 2 = $MACSIGNSTRING"
         TESTMACSIGN=`unzip -l "${TMP_DIR}/signed.zip" | grep -c "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources"`
         # TESTMACSIGN=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
@@ -219,12 +225,12 @@ signRelease()
               errcount=$((errcount+1))
             fi
           done
-        fi
-        if [[ $errcount -gt 0 ]]
-        then
-            echo "Errors Encountered During Signing"
-            echo "Error Count = $errcount"
-            exit 1
+          if [[ $errcount -gt 0 ]]
+          then
+              echo "Errors Encountered During Signing"
+              echo "Error Count = $errcount"
+              exit 1
+          fi
         fi
       else
         # Login to KeyChain
