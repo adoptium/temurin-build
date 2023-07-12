@@ -169,12 +169,12 @@ signRelease()
                 errcount=$((errcount+1))
               fi
             done
-          fi
-          if [ "$errcount" -gt 0 ]
-          then
-            echo "Errors Encountered During Signing"
-            echo "Error Count = $errcount"
-            exit 1
+            if [ "$errcount" -gt 0 ]
+            then
+              echo "Errors Encountered During Signing"
+              echo "Error Count = $errcount"
+              exit 1
+            fi
           fi
         done
         JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
