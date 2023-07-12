@@ -148,7 +148,6 @@ signRelease()
             max_iterations=20
             iteration=1
             success=false
-            errcount=0
             echo "Code Not Signed For File $f"
             while [ $iteration -le $max_iterations ] && [ $success = false ]; do
               echo $iteration Of $max_iterations
@@ -166,15 +165,13 @@ signRelease()
                 echo "$f Failed Signing On Attempt $iteration"
                 success=false
                 iteration=$((iteration+1))
-                errcount=$((errcount+1))
+                if [ $iteration -gt $max_iterations ]
+                then
+                  echo "Errors Encountered During Signing"
+                  exit 1
+                fi
               fi
             done
-            if [ "$errcount" -gt 0 ]
-            then
-              echo "Errors Encountered During Signing"
-              echo "Error Count = $errcount"
-              exit 1
-            fi
           fi
         done
         JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
