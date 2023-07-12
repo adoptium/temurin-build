@@ -139,7 +139,7 @@ signRelease()
           echo File = "$f"
           TESTMACSIGN=(grep -ic "$MACSIGNSTRING" "$f")
           echo Sign Result = "$TESTMACSIGN"
-          if [[ "$TESTMACSIGN" -gt 0 ]]
+          if [ "$TESTMACSIGN" -gt 0 ]
           then
             echo "Code Signed For File $f"
             chmod --reference="${dir}/unsigned_${file}" "$f"
@@ -150,13 +150,13 @@ signRelease()
             success=false
             errcount=0
             echo "Code Not Signed For File $f"
-            while [[ $iteration -le $max_iterations ]] && [ $success = false ]; do
+            while [ $iteration -le $max_iterations ] && [ $success = false ]; do
               echo $iteration Of $max_iterations
               sleep 1
               curl --fail -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
               TESTMACSIGN2=(grep -ic "$MACSIGNSTRING" "$f")
               echo TESTMACSIGN2 = "$TESTMACSIGN2"
-              if [[ "$TESTMACSIGN2" -gt 0 ]]
+              if [ "$TESTMACSIGN2" -gt 0 ]
               then
                 echo "$f Signed OK On Attempt $iteration"
                 chmod --reference="${dir}/unsigned_${file}" "$f"
@@ -170,7 +170,7 @@ signRelease()
               fi
             done
           fi
-          if [[ $errcount -gt 0 ]]
+          if [ $errcount -gt 0 ]
           then
             echo "Errors Encountered During Signing"
             echo "Error Count = $errcount"
