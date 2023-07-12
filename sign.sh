@@ -181,6 +181,8 @@ signRelease()
         JDK=$(basename "${JDK_DIR}")
         cd "${TMP_DIR}"
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
+        echo "Debug 1"
+        zip -vl "${TMP_DIR}/unsigned.zip"
         cd -
         curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
         echo "Debug 2 = $MACSIGNSTRING"
