@@ -138,8 +138,8 @@ signRelease()
           curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
           echo File = "$f"
           TESTMACSIGN=(grep -ic "$MACSIGNSTRING" "$f")
-          echo "Sign Result = $TESTMACSIGN"
-          if [[ $TESTMACSIGN -gt 0 ]]
+          echo Sign Result = "$TESTMACSIGN"
+          if [[ "$TESTMACSIGN" -gt 0 ]]
           then
             echo "Code Signed For File $f"
             chmod --reference="${dir}/unsigned_${file}" "$f"
@@ -156,7 +156,7 @@ signRelease()
               curl --fail -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
               TESTMACSIGN2=(grep -ic "$MACSIGNSTRING" "$f")
               echo TESTMACSIGN2 = "$TESTMACSIGN2"
-              if [[ $TESTMACSIGN2 -gt 0 ]]
+              if [[ "$TESTMACSIGN2" -gt 0 ]]
               then
                 echo "$f Signed OK On Attempt $iteration"
                 chmod --reference="${dir}/unsigned_${file}" "$f"
