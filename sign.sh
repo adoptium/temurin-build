@@ -177,6 +177,7 @@ signRelease()
             fi
           fi
         done
+      fi
         JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
         JDK=$(basename "${JDK_DIR}")
         cd "${TMP_DIR}"
