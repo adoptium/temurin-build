@@ -180,11 +180,11 @@ signRelease()
         JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
         JDK=$(basename "${JDK_DIR}")
         cd "${TMP_DIR}"
-        zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
+        zip -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
         curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
         echo "Debug 1"
-        unzip -vl "@${TMP_DIR}/unsigned.zip"
+        unzip -vl "${TMP_DIR}/unsigned.zip"
         echo "Debug 2 = $MACSIGNSTRING"
         TESTMACSIGN=`unzip -l "${TMP_DIR}/signed.zip" | grep -c "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources"`
         # TESTMACSIGN=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
