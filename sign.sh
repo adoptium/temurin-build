@@ -183,15 +183,9 @@ signRelease()
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
         curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
-        echo "Debug 1 = $MACSIGNSTRING"
-        unzip -vl "${TMP_DIR}/signed.zip"
         echo "Debug 2 = $MACSIGNSTRING"
-        unzip -p . "${TMP_DIR}/signed.zip"  jdk-17.0.8+6/Contents/_CodeSignature/CodeResources
-        echo "Debug 3 = $MACSIGNSTRING"
-        unzip -dj . "${TMP_DIR}/signed.zip" jdk-17.0.8+6/Contents/_CodeSignature/CodeResources
-        echo "Debug 4 = $MACSIGNSTRING"
-        ls
-        TESTMACSIGN=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
+        TESTMACSIGN=`unzip -p . "${TMP_DIR}/signed.zip" "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources"|grep -i "$MACSIGNSTRING"|wc -l`
+        # TESTMACSIGN=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
         echo "Sign Result = $TESTMACSIGN"
         if [[ $TESTMACSIGN -gt 0 ]]
         then
@@ -208,7 +202,7 @@ signRelease()
             echo $iteration Of $max_iterations
             sleep 1
             curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
-            TESTMACSIGN2=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
+            TESTMACSIGN2=`unzip -p . "${TMP_DIR}/signed.zip" "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources"|grep -i "$MACSIGNSTRING"|wc -l`
             echo TESTMACSIGN2 = $TESTMACSIGN2
             if [[ $TESTMACSIGN2 -gt 0 ]]
             then
