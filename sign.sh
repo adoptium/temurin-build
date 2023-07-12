@@ -167,7 +167,6 @@ signRelease()
                 success=false
                 iteration=$((iteration+1))
                 errcount=$((errcount+1))
-                echo $MACSIGNSTRING >> 3.txt
               fi
             done
             if [[ $errcount -gt 0 ]]
@@ -184,6 +183,8 @@ signRelease()
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
         curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
+        echo "Debug 1 = $MACSIGNSTRING"
+        strings "${TMP_DIR}/signed.zip"
         TESTMACSIGN=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
         echo "Sign Result = $TESTMACSIGN"
         if [[ $TESTMACSIGN -gt 0 ]]
@@ -214,7 +215,6 @@ signRelease()
               success=false
               iteration=$((iteration+1))
               errcount=$((errcount+1))
-              echo $MACSIGNSTRING >> 3.txt
             fi
           done
         fi
