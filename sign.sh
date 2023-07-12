@@ -184,7 +184,7 @@ signRelease()
         cd -
         curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
         echo "Debug 1 = $MACSIGNSTRING"
-        ls -l@ "${TMP_DIR}/signed.zip"
+        unzip -vl "${TMP_DIR}/signed.zip"
         TESTMACSIGN=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
         echo "Sign Result = $TESTMACSIGN"
         if [[ $TESTMACSIGN -gt 0 ]]
