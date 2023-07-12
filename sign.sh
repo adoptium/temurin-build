@@ -154,7 +154,7 @@ signRelease()
               echo $iteration Of $max_iterations
               sleep 1
               curl --fail -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
-              TESTMACSIGN2==(grep -ic "$MACSIGNSTRING" "$f")
+              TESTMACSIGN2=(grep -ic "$MACSIGNSTRING" "$f")
               echo TESTMACSIGN2 = $TESTMACSIGN2
               if [[ $TESTMACSIGN2 -gt 0 ]]
               then
@@ -169,15 +169,14 @@ signRelease()
                 errcount=$((errcount+1))
               fi
             done
-            if [[ $errcount -gt 0 ]]
-            then
-            	echo "Errors Encountered During Signing"
-            	echo "Error Count = $errcount"
-              exit 1
-            fi
+          fi
+          if [[ $errcount -gt 0 ]]
+          then
+            echo "Errors Encountered During Signing"
+            echo "Error Count = $errcount"
+            exit 1
           fi
         done
-      fi
         JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
         JDK=$(basename "${JDK_DIR}")
         cd "${TMP_DIR}"
