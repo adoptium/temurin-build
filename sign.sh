@@ -136,8 +136,8 @@ signRelease()
           file=$(basename "$f")
           mv "$f" "${dir}/unsigned_${file}"
           curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
-          echo File = $f
-          TESTMACSIGN=`grep -i "$MACSIGNSTRING" "$f"|wc -l`
+          echo File = "$f"
+          TESTMACSIGN=(grep -ic "$MACSIGNSTRING" "$f")
           echo "Sign Result = $TESTMACSIGN"
           if [[ $TESTMACSIGN -gt 0 ]]
           then
@@ -154,7 +154,7 @@ signRelease()
               echo $iteration Of $max_iterations
               sleep 1
               curl --fail -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
-              TESTMACSIGN2=`grep -i "$MACSIGNSTRING" "$f"|wc -l`
+              TESTMACSIGN2==(grep -ic "$MACSIGNSTRING" "$f")
               echo TESTMACSIGN2 = $TESTMACSIGN2
               if [[ $TESTMACSIGN2 -gt 0 ]]
               then
