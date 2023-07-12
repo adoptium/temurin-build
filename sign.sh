@@ -183,7 +183,6 @@ signRelease()
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
         curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
-        diff "${TMP_DIR}/unsigned.zip" "${TMP_DIR}/signed.zip"
         rm -rf "${JDK_DIR}"
         unzip -q -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
       else
