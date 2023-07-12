@@ -217,18 +217,13 @@ signRelease()
               echo $MACSIGNSTRING >> 3.txt
             fi
           done
-          if [[ $errcount -gt 0 ]]
-          then
+        fi
+        if [[ $errcount -gt 0 ]]
+        then
             echo "Errors Encountered During Signing"
             echo "Error Count = $errcount"
             exit 1
-          fi
-
-
-
-
-
-
+        fi
       else
         # Login to KeyChain
         # shellcheck disable=SC2046
