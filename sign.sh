@@ -183,55 +183,9 @@ signRelease()
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -
         curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
-        echo "Debug 1"
-        unzip -p "${TMP_DIR}/unsigned.zip" "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources" > adb.txt
-        unzip -p "${TMP_DIR}/signed.zip" "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources" > adb2.txt
-        diff adb.txt adb2.txt
-        echo "File 1"
-        cat adb.txt
-        echo "File 2"
-        cat adb2.txt
-        echo "Debug 2 = $MACSIGNSTRING"
-        TESTMACSIGN=`unzip -l "${TMP_DIR}/signed.zip" | grep -c "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources"`
-        # TESTMACSIGN=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
-        echo "Sign Result = $TESTMACSIGN"
-        if [[ $TESTMACSIGN -gt 0 ]]
-        then
-          echo "Code Signed For File ${TMP_DIR}/signed.zip"
-          rm -rf "${JDK_DIR}"
-          unzip -q -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
-        else
-          max_iterations=20
-          iteration=1
-          success=false
-          errcount=0
-          echo "Code Not Signed For File ${TMP_DIR}/signed.zip"
-          while [[ $iteration -le $max_iterations ]] && [ $success = false ]; do
-            echo $iteration Of $max_iterations
-            sleep 1
-            curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
-            TESTMACSIGN2=`unzip -l "${TMP_DIR}/signed.zip" | grep -c "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources"`
-            echo TESTMACSIGN2 = $TESTMACSIGN2
-            if [[ $TESTMACSIGN2 -gt 0 ]]
-            then
-              echo "${TMP_DIR}/signed.zip Signed OK On Attempt $iteration"
-              rm -rf "${JDK_DIR}"
-              unzip -q -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
-              success=true
-            else
-              echo "${TMP_DIR}/signed.zip Failed Signing On Attempt $iteration"
-              success=false
-              iteration=$((iteration+1))
-              errcount=$((errcount+1))
-            fi
-          done
-          if [[ $errcount -gt 0 ]]
-          then
-              echo "Errors Encountered During Signing"
-              echo "Error Count = $errcount"
-              exit 1
-          fi
-        fi
+        diff "${TMP_DIR}/unsigned.zip" "${TMP_DIR}/signed.zip"
+        rm -rf "${JDK_DIR}"
+        unzip -q -d "${TMP_DIR}" "${TMP_DIR}/signed.zip"
       else
         # Login to KeyChain
         # shellcheck disable=SC2046
