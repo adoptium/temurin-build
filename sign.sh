@@ -170,7 +170,7 @@ signRelease()
               fi
             done
           fi
-          if [ $errcount -gt 0 ]
+          if [ "$errcount" -gt 0 ]
           then
             echo "Errors Encountered During Signing"
             echo "Error Count = $errcount"
