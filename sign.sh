@@ -184,7 +184,7 @@ signRelease()
         cd -
         curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
         echo "Debug 2 = $MACSIGNSTRING"
-        TESTMACSIGN=`unzip -p . "${TMP_DIR}/signed.zip" "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources"|grep -i "$MACSIGNSTRING"|wc -l`
+        TESTMACSIGN=`unzip -l jdk.zip | grep -c "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources"`
         # TESTMACSIGN=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
         echo "Sign Result = $TESTMACSIGN"
         if [[ $TESTMACSIGN -gt 0 ]]
@@ -202,7 +202,7 @@ signRelease()
             echo $iteration Of $max_iterations
             sleep 1
             curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
-            TESTMACSIGN2=`unzip -p . "${TMP_DIR}/signed.zip" "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources"|grep -i "$MACSIGNSTRING"|wc -l`
+            TESTMACSIGN2=`unzip -l jdk.zip | grep -c "jdk-17.0.8+6/Contents/_CodeSignature/CodeResources"`
             echo TESTMACSIGN2 = $TESTMACSIGN2
             if [[ $TESTMACSIGN2 -gt 0 ]]
             then
