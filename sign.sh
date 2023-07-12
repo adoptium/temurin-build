@@ -155,7 +155,7 @@ signRelease()
               sleep 1
               curl --fail -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
               TESTMACSIGN2=(grep -ic "$MACSIGNSTRING" "$f")
-              echo TESTMACSIGN2 = $TESTMACSIGN2
+              echo TESTMACSIGN2 = "$TESTMACSIGN2"
               if [[ $TESTMACSIGN2 -gt 0 ]]
               then
                 echo "$f Signed OK On Attempt $iteration"
