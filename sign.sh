@@ -185,8 +185,11 @@ signRelease()
         curl --fail --silent --show-error -o "${TMP_DIR}/signed.zip" -F file="@${TMP_DIR}/unsigned.zip" https://cbi.eclipse.org/macos/codesign/sign
         echo "Debug 1 = $MACSIGNSTRING"
         unzip -vl "${TMP_DIR}/signed.zip"
-        unzip -p . "${TMP_DIR}/signed.zip" jdk-17.0.8+6/Contents/_CodeSignature/CodeResources
+        echo "Debug 2 = $MACSIGNSTRING"
+        unzip -p . "${TMP_DIR}/signed.zip"  jdk-17.0.8+6/Contents/_CodeSignature/CodeResources
+        echo "Debug 3 = $MACSIGNSTRING"
         unzip -dj . "${TMP_DIR}/signed.zip" jdk-17.0.8+6/Contents/_CodeSignature/CodeResources
+        echo "Debug 4 = $MACSIGNSTRING"
         ls
         TESTMACSIGN=`grep -i "$MACSIGNSTRING" "${TMP_DIR}/signed.zip"|wc -l`
         echo "Sign Result = $TESTMACSIGN"
