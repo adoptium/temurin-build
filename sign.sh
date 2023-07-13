@@ -122,7 +122,7 @@ signRelease()
 
       # Sign all files with the executable permission bit set.
 
-      FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib' -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib' -type f)
+      FILES=$(find "${TMP_DIR}" -perm +111 -type f -not -name '.*' -o -name '*.dylib' || find "${TMP_DIR}" -perm /111 -type f -not -name '.*' -o -name '*.dylib')
       if [ "$FILES" == "" ]; then
         echo "No files to sign"
       elif [ "$SIGN_TOOL" = "eclipse" ]; then
