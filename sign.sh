@@ -117,15 +117,12 @@ signRelease()
     "mac"*)
       # TODO: Remove this completly once https://github.com/adoptium/openjdk-jdk11u/commit/b3250adefed0c1778f38a7e221109ae12e7c421e has been backported to JDK8u
       echo "Signing OSX release"
-
       ENTITLEMENTS="$WORKSPACE/entitlements.plist"
-
       MACSIGNSTRING="Apple Certification Authority"
 
-
       # Sign all files with the executable permission bit set.
-      FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
 
+      FILES=$(find "${TMP_DIR}" -perm +111 -type f -not -name '.*' -o -name '*.dylib' || find "${TMP_DIR}" -perm /111 -type f -not -name '.*' -o -name '*.dylib')
       if [ "$FILES" == "" ]; then
         echo "No files to sign"
       elif [ "$SIGN_TOOL" = "eclipse" ]; then
