@@ -56,6 +56,8 @@ Create release branch in the format `vYYYY.MM.NN` on each of the following repos
 
 These branches should be named according to the following format (vYYYY.MM+NN) ,e.g v2023.03+01 , whereby the final element is an incremental counter appended to the year and month of the release.
 
+If anything needs to be merged into the new branch, it should typically be merged into master, then a `git cherry-pick` operation should be done to create a new PR against the release branch. This can typically be merged without further approval.
+
 #### Code Freeze message
 
 Paste the below message into the #release channel in Slack:
@@ -182,6 +184,8 @@ step1 ---->|No| step1.1["sleep 10 minutes"] -->step1
 jdk8armStep1["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] -->jdk8armStep2["Get _adopt tag on jdk8 aarch32Linux"] -->jdk8armStep3["Manual run release-openjdk8u-pipeline with\n1: scmReference\n2: targetConfiguration\n3: overridePublishName"]
 
 ```
+
+</details>
 
 ### Dry run tests: Do this at least 2 weeks before release in the same calendar month
 
