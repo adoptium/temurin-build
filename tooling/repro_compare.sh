@@ -51,7 +51,7 @@ echo "Number of files: ${files1}"
 rc=0
 output="repro_diff.out"
 echo "Comparing ${JDK_DIR1} with ${JDK_DIR2} ... output to file: ${output}"
-diff -r "${JDK_DIR1}" "${JDK_DIR2}" > "${output}" || rc=$?
+diff -r -q "${JDK_DIR1}" "${JDK_DIR2}" > "${output}" || rc=$?
 
 num_differences=$(wc -l < "${output}")
 echo "Number of differences: ${num_differences}"
