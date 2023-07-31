@@ -26,7 +26,7 @@ function expandJDK() {
 
   mkdir "${JDK_ROOT}_CP"
   cp -R ${JDK_ROOT}/* ${JDK_ROOT}_CP
-  echo "Expanding the 'modules' Image to remove signatures from within.."
+  echo "Expanding the 'modules' Image to compare extracted files"
   modulesFile="${JDK_DIR}/lib/modules"
   mkdir "${JDK_DIR}/lib/modules_extracted"
   extractedDir="${JDK_DIR}/lib/modules_extracted"
