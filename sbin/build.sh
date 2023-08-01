@@ -874,9 +874,13 @@ generateSBoM() {
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
   # Below add build tools into metadata tools
-  addGLIBCforLinux
-  addGCC
+  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
+    addGLIBCforLinux
+    addGCC
+  fi
+
   addBootJDK
+
   # Add ALSA 3rd party
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt)"
   # Add FreeType 3rd party (windows + macOS)
@@ -912,18 +916,21 @@ checkingToolSummary() {
 # Below add versions to sbom | Facilitate reproducible builds
 
 addGLIBCforLinux() {
-   export CC=$(grep "^CC :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk)
-   export SYSROOT_CFLAGS=$(grep "^SYSROOT_CFLAGS :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk)
+   # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
+   export CC=$(grep "^CC :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3)
+   export SYSROOT_CFLAGS=$(grep "^SYSROOT_CFLAGS :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3)
    export GLIBC_MAJOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)"
    export GLIBC_MINOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)"
    export GLIBC_VERSION="${GLIBC_MAJOR}.${GLIBC_MINOR}"
+   echo "Adding GLIBC version to SBOM: ${GLIBC_VERSION}"
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GLIBC" "${GLIBC_VERSION}"
 }
 
 addGCC() {
-   echo "Checking and getting GCC Version:"
-   inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
-   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "C Compiler:" | tr -s " " | cut -d " " -f5)"
+   # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
+   export CC_VERSION_NUMBER=$(grep "^CC_VERSION_NUMBER :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3)
+   echo "Adding GCC version to SBOM: ${CC_VERSION_NUMBER}"
+   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "${CC_VERSION_NUMBER}"
 }
 
 addBootJDK() {
