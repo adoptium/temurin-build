@@ -93,7 +93,7 @@ function removeSignatures() {
     fi
 
     # Remove any extended app attr
-    xattr -c "${MAC_JDK_ROOT}"
+    xattr -cr "${MAC_JDK_ROOT}"
 
     FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
     for f in $FILES
@@ -128,14 +128,12 @@ function tempSign() {
   elif [[ "$OS" =~ Darwin* ]]; then
     MAC_JDK_ROOT="${JDK_DIR}/../../Contents"
     echo "Adding temp Signatures for ${MAC_JDK_ROOT}"
-    #TODO Generate locally certificate SELF_CERT
-
     FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
     for f in $FILES
     do
-        echo "Signing $f with a local certificate"
+        echo "Signing $f with ad-hoc signing"
         # Sign both with same local Certificate, this adjusts __LINKEDIT vmsize identically
-        codesign -s "$SELF_CERT" --options runtime -f --timestamp "$f"
+        codesign -s "-" "$f"
     done
   fi
 }
