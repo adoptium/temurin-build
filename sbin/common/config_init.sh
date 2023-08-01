@@ -472,7 +472,10 @@ function configDefaults() {
   BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
 
   case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
-    aix | sunos | *bsd )
+    aix )
+      BUILD_CONFIG[MAKE_COMMAND_NAME]="/opt/freeware/bin/make_64"
+      ;;
+    sunos | *bsd )
       BUILD_CONFIG[MAKE_COMMAND_NAME]="gmake"
       ;;
     * )
