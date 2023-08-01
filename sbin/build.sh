@@ -934,9 +934,16 @@ addGCC() {
 }
 
 addBootJDK() {
-   echo "Checking and getting BootJDK Version:"
    inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
-   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "BOOTJDK" "$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | tr -s " " | cut -d " " -f 6)"
+
+   local bootjdk
+   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]; then
+       bootjdk=$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | sed -E "s/^.*build ([^),]+).*/\1/" | sed "s/\-beta//g" | sed "s/\-.*//g")
+   else
+       bootjdk=$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | sed "s/^.*build \([^),]\+\).*/\1/" | sed "s/\-beta//g" | sed "s/\-.*//g")
+   fi
+   echo "Adding BOOTJDK to SBOM: ${bootjdk}"
+   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "BOOTJDK" "${bootjdk}"
 }
 
 getGradleJavaHome() {
