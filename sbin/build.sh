@@ -953,6 +953,8 @@ addBootJDK() {
    local bootjdk
    # JDK8 BootJDK build versions(jdk7?) vary in format compared to jdk-11+
    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+     bootjdk=$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | sed 's/.*(at \([^)]*\)).*/\1/')
+     echo "JDK: ${bootjdk}"
      if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]; then
        bootjdk=$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | sed -E "s/^.*build ([^),]+).*/\1/")
      else
