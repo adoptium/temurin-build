@@ -917,24 +917,30 @@ checkingToolSummary() {
 
 addGLIBCforLinux() {
    # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
-   export CC=$(grep "^CC :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3)
-   export SYSROOT_CFLAGS=$(grep "^SYSROOT_CFLAGS :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3)
-   export GLIBC_MAJOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)"
-   export GLIBC_MINOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)"
-   export GLIBC_VERSION="${GLIBC_MAJOR}.${GLIBC_MINOR}"
+
+   # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
+   local CC=$(grep "^CC :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk)
+   # Remove env=xx from CC, so we can call from bash to get __GLIBC.
+   CC=$(echo "$CC" | tr -s " " | cut -d" " -f3- | sed -E "s/[^ ]*=[^ ]*//g")
+   local SYSROOT_CFLAGS=$(grep "^SYSROOT_CFLAGS :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3-)
+
+   local GLIBC_MAJOR=$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)
+   local GLIBC_MINOR=$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)
+   local GLIBC_VERSION="${GLIBC_MAJOR}.${GLIBC_MINOR}"
+
    echo "Adding GLIBC version to SBOM: ${GLIBC_VERSION}"
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GLIBC" "${GLIBC_VERSION}"
 }
 
 addGCC() {
    # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
-   export CC_VERSION_NUMBER=$(grep "^CC_VERSION_NUMBER :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3)
+   local CC_VERSION_NUMBER=$(grep "^CC_VERSION_NUMBER :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3)
    echo "Adding GCC version to SBOM: ${CC_VERSION_NUMBER}"
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "${CC_VERSION_NUMBER}"
 }
 
 addBootJDK() {
-   inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
 
    local bootjdk
    if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]; then
