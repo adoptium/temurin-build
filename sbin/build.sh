@@ -921,8 +921,11 @@ addGLIBCforLinux() {
    # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
    local CC=$(grep "^CC :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk)
    # Remove env=xx from CC, so we can call from bash to get __GLIBC.
+echo $CC
    CC=$(echo "$CC" | tr -s " " | cut -d" " -f3- | sed -E "s/[^ ]*=[^ ]*//g")
+echo $CC
    local SYSROOT_CFLAGS=$(grep "^SYSROOT_CFLAGS :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3-)
+echo $SYSROOT_CFLAGS
 
    local GLIBC_MAJOR=$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)
    local GLIBC_MINOR=$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)
