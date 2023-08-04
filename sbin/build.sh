@@ -949,10 +949,19 @@ addBootJDK() {
    local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
 
    local bootjdk
-   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]; then
-       bootjdk=$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | sed -E "s/^.*build ([^),]+).*/\1/" | sed "s/\-beta//g" | sed "s/\-.*//g")
+   # JDK8 BootJDK build versions(jdk7?) vary in format compared to jdk-11+
+   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+     if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]; then
+       bootjdk=$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | sed -E "s/^.*build ([^),]+).*/\1/")
+     else
+       bootjdk=$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | sed "s/^.*build \([^),]\+\).*/\1/")
+     fi
    else
+     if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]; then
+       bootjdk=$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | sed -E "s/^.*build ([^),]+).*/\1/" | sed "s/\-beta//g" | sed "s/\-.*//g")
+     else
        bootjdk=$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | sed "s/^.*build \([^),]\+\).*/\1/" | sed "s/\-beta//g" | sed "s/\-.*//g")
+     fi
    fi
    echo "Adding BOOTJDK to SBOM: ${bootjdk}"
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "BOOTJDK" "${bootjdk}"
