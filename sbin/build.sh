@@ -923,14 +923,11 @@ addGLIBCforLinux() {
      addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MUSL" "${MUSL_VERSION}"
    else
      # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
-cat /home/jenkins/workspace/build-scripts/jobs/jdk8u/jdk8u-linux-x64-temurin/workspace/build/src/build/linux-x86_64-normal-server-release/spec.gmk
      # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
      local CC=$(grep "^CC :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk)
      # Remove env=xx from CC, so we can call from bash to get __GLIBC.
      CC=$(echo "$CC" | tr -s " " | cut -d" " -f3- | sed -E "s/[^ ]*=[^ ]*//g")
-echo "$CC"
      local SYSROOT_CFLAGS=$(grep "^SYSROOT_CFLAGS :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3-)
-echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1
      local GLIBC_MAJOR=$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)
      local GLIBC_MINOR=$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)
      local GLIBC_VERSION="${GLIBC_MAJOR}.${GLIBC_MINOR}"
