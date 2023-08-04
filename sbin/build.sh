@@ -924,7 +924,9 @@ addGLIBCforLinux() {
    else
      # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
      # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
+cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/linux-x86_64-normal-server-release/spec.gmk
      local CC=$(grep "^CC[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk)
+echo "CC=$CC"
      # Remove env=xx from CC, so we can call from bash to get __GLIBC.
      CC=$(echo "$CC" | tr -s " " | cut -d" " -f3- | sed -E "s/[^ ]*=[^ ]*//g")
      local SYSROOT_CFLAGS=$(grep "^SYSROOT_CFLAGS[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3-)
