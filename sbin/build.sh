@@ -926,7 +926,8 @@ echo $CC
 echo $CC
    local SYSROOT_CFLAGS=$(grep "^SYSROOT_CFLAGS :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3-)
 echo $SYSROOT_CFLAGS
- echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1
+# echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1
+"/lib/libc.musl-x86_64.so.1"
    local GLIBC_MAJOR=$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)
    local GLIBC_MINOR=$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)
    local GLIBC_VERSION="${GLIBC_MAJOR}.${GLIBC_MINOR}"
