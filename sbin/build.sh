@@ -928,9 +928,8 @@ cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[O
    fi
 
    if [[ "$libc_type" == "musl" ]]; then
-     # This is the only way to print the musl version
-     #local MUSL_VERSION=$("/lib/libc.musl-x86_64.so.1" 2>&1 | grep "Version" | tr -s " " | cut -d" " -f2)
-     local MUSL_VERSION=$(ldd --version)
+     # Get musl build ldd version
+     local MUSL_VERSION=$(ldd --version | grep "Version" | tr -s " " | cut -d" " -f2)
      echo "Adding MUSL version to SBOM: ${MUSL_VERSION}"
      addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MUSL" "${MUSL_VERSION}"
    else
