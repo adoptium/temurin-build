@@ -953,7 +953,7 @@ cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[O
 addGCC() {
    local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
 
-   local gcc_version="$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "C Compiler: Version" | tr -s " " | cut -d" " -f4)"
+   local gcc_version="$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | tr -s " " | grep "C Compiler: Version" | cut -d" " -f4)"
 
    echo "Adding GCC version to SBOM: ${gcc_version}"
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "${gcc_version}"
