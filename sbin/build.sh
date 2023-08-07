@@ -916,7 +916,7 @@ checkingToolSummary() {
 # Below add versions to sbom | Facilitate reproducible builds
 
 addGLIBCforLinux() {
-cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/linux-x86_64-normal-server-release/spec.gmk
+cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk
 
    # Determine target build LIBC from configure log "target system type" which is consistent for jdk8+
    local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
