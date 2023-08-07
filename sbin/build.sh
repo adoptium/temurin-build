@@ -924,7 +924,7 @@ cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[O
    local libc_type="$(grep "checking openjdk-target C library\.\.\." "${inputConfigFile}" | cut -d" " -f5)"
    if [[ "$libc_type" == "default" ]]; then
      # Default libc for linux is gnu gcc
-     libc_type = "gnu"
+     libc_type="gnu"
    fi
 
    if [[ "$libc_type" == "musl" ]]; then
