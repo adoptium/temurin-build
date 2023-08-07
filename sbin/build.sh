@@ -916,19 +916,30 @@ checkingToolSummary() {
 # Below add versions to sbom | Facilitate reproducible builds
 
 addGLIBCforLinux() {
-   # Alpine uses "musl" rather than "glibc"
-   if [[ "${BUILD_CONFIG[OS_FULL_VERSION]}" == *"Alpine"* ]]; then
-     local MUSL_VERSION=$("/lib/libc.musl-x86_64.so.1" 2>&1 | grep "Version" | tr -s " " | cut -d" " -f2)
+cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/linux-x86_64-normal-server-release/spec.gmk
+
+   # Determine target build LIBC from configure log "target system type" which is consistent for jdk8+
+   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+   # eg: checking openjdk-target C library... musl
+   local libc_type="$(grep "checking openjdk-target C library\.\.\." "${inputConfigFile}" | cut -d" " -f5)"
+   if [[ "$libc_type" == "default" ]]; then
+     # Default libc for linux is gnu gcc
+     libc_type = "gnu"
+   fi
+
+   if [[ "$libc_type" == "musl" ]]; then
+     # This is the only way to print the musl version
+     #local MUSL_VERSION=$("/lib/libc.musl-x86_64.so.1" 2>&1 | grep "Version" | tr -s " " | cut -d" " -f2)
+     local MUSL_VERSION=$(ldd --version)
      echo "Adding MUSL version to SBOM: ${MUSL_VERSION}"
      addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MUSL" "${MUSL_VERSION}"
    else
      # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
      # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
-cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/linux-x86_64-normal-server-release/spec.gmk
-     local CC=$(grep "^CC[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk)
+     local CC=$(grep "^CC[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^CC[ ]*:=[ ]*//")
 echo "CC=$CC"
      # Remove env=xx from CC, so we can call from bash to get __GLIBC.
-     CC=$(echo "$CC" | tr -s " " | cut -d" " -f3- | sed -E "s/[^ ]*=[^ ]*//g")
+     CC=$(echo "$CC" | tr -s " " | sed -E "s/[^ ]*=[^ ]*//g")
      local SYSROOT_CFLAGS=$(grep "^SYSROOT_CFLAGS[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3-)
 echo "CC=$CC"
 echo "SYSROOT=$SYSROOT_CFLAGS"
