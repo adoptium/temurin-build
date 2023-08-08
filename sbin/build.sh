@@ -930,7 +930,7 @@ cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[O
    if [[ "$libc_type" == "musl" ]]; then
      # Get musl build ldd version
 echo "CHECKING MUSL"
-     local MUSL_VERSION="$(ldd --version | grep "Version" | tr -s " " | cut -d" " -f2)"
+     local MUSL_VERSION="$(ldd --version 2>&1 | grep "Version" | tr -s " " | cut -d" " -f2)"
      echo "Adding MUSL version to SBOM: ${MUSL_VERSION}"
      addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MUSL" "${MUSL_VERSION}"
    else
