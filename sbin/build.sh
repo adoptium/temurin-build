@@ -929,20 +929,21 @@ cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[O
 
    if [[ "$libc_type" == "musl" ]]; then
      # Get musl build ldd version
-     local MUSL_VERSION=$(ldd --version | grep "Version" | tr -s " " | cut -d" " -f2)
+echo "CHECKING MUSL"
+     local MUSL_VERSION="$(ldd --version | grep "Version" | tr -s " " | cut -d" " -f2)"
      echo "Adding MUSL version to SBOM: ${MUSL_VERSION}"
      addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MUSL" "${MUSL_VERSION}"
    else
      # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
 
      # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
-     local CC=$(grep "^CC[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^CC[ ]*:=[ ]*//")
+     local CC="$(grep "^CC[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^CC[ ]*:=[ ]*//")"
      # Remove env=xx from CC, so we can call from bash to get __GLIBC.
      CC=$(echo "$CC" | tr -s " " | sed -E "s/[^ ]*=[^ ]*//g")
-     local SYSROOT_CFLAGS=$(grep "^SYSROOT_CFLAGS[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3-)
+     local SYSROOT_CFLAGS="$(grep "^SYSROOT_CFLAGS[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3-)"
 
-     local GLIBC_MAJOR=$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)
-     local GLIBC_MINOR=$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)
+     local GLIBC_MAJOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)"
+     local GLIBC_MINOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)"
      local GLIBC_VERSION="${GLIBC_MAJOR}.${GLIBC_MINOR}"
 
      echo "Adding GLIBC version to SBOM: ${GLIBC_VERSION}"
@@ -968,7 +969,7 @@ addBootJDK() {
        bootjava="${bootjava}.exe"
    fi
    echo "BootJDK java : ${bootjava}"
-   local bootjdk=$("${bootjava}" -XshowSettings 2>&1 | grep "java\.runtime\.version" | tr -s " " | cut -d" " -f4 | sed "s/\"//g")
+   local bootjdk="$("${bootjava}" -XshowSettings 2>&1 | grep "java\.runtime\.version" | tr -s " " | cut -d" " -f4 | sed "s/\"//g")"
 
    echo "Adding BOOTJDK to SBOM: ${bootjdk}"
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "BOOTJDK" "${bootjdk}"
