@@ -968,7 +968,7 @@ addBootJDK() {
        bootjava="${bootjava}.exe"
    fi
    echo "BootJDK java : ${bootjava}"
-   local bootjdk=$("${bootjava}" -XshowSettings 2>&1 | grep "java\.runtime\.version" | tr -s " " | cut -d" " -f4)
+   local bootjdk=$("${bootjava}" -XshowSettings 2>&1 | grep "java\.runtime\.version" | tr -s " " | cut -d" " -f4 | sed "s/\"//g")
 
    echo "Adding BOOTJDK to SBOM: ${bootjdk}"
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "BOOTJDK" "${bootjdk}"
