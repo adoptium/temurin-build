@@ -874,9 +874,13 @@ generateSBoM() {
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
   # Below add build tools into metadata tools
-  addGLIBCforLinux
-  addGCC
+  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
+    addGLIBCforLinux
+    addGCC
+  fi
+
   addBootJDK
+
   # Add ALSA 3rd party
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt)"
   # Add FreeType 3rd party (windows + macOS)
@@ -912,24 +916,60 @@ checkingToolSummary() {
 # Below add versions to sbom | Facilitate reproducible builds
 
 addGLIBCforLinux() {
-   export CC=$(grep "^CC :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk)
-   export SYSROOT_CFLAGS=$(grep "^SYSROOT_CFLAGS :=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk)
-   export GLIBC_MAJOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)"
-   export GLIBC_MINOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)"
-   export GLIBC_VERSION="${GLIBC_MAJOR}.${GLIBC_MINOR}"
-   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GLIBC" "${GLIBC_VERSION}"
+   # Determine target build LIBC from configure log "target system type" which is consistent for jdk8+
+   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+   # eg: checking openjdk-target C library... musl
+   local libc_type="$(grep "checking openjdk-target C library\.\.\." "${inputConfigFile}" | cut -d" " -f5)"
+   if [[ "$libc_type" == "default" ]]; then
+     # Default libc for linux is gnu gcc
+     libc_type="gnu"
+   fi
+
+   if [[ "$libc_type" == "musl" ]]; then
+     # Get musl build ldd version
+     local MUSL_VERSION="$(ldd --version 2>&1 | grep "Version" | tr -s " " | cut -d" " -f2)"
+     echo "Adding MUSL version to SBOM: ${MUSL_VERSION}"
+     addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MUSL" "${MUSL_VERSION}"
+   else
+     # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
+
+     # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
+     local CC="$(grep "^CC[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^CC[ ]*:=[ ]*//")"
+     # Remove env=xx from CC, so we can call from bash to get __GLIBC.
+     CC=$(echo "$CC" | tr -s " " | sed -E "s/[^ ]*=[^ ]*//g")
+     local SYSROOT_CFLAGS="$(grep "^SYSROOT_CFLAGS[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3-)"
+
+     local GLIBC_MAJOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)"
+     local GLIBC_MINOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)"
+     local GLIBC_VERSION="${GLIBC_MAJOR}.${GLIBC_MINOR}"
+
+     echo "Adding GLIBC version to SBOM: ${GLIBC_VERSION}"
+     addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GLIBC" "${GLIBC_VERSION}"
+   fi
 }
 
 addGCC() {
-   echo "Checking and getting GCC Version:"
-   inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
-   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "C Compiler:" | tr -s " " | cut -d " " -f5)"
+   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+
+   local gcc_version="$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | tr -s " " | grep "C Compiler: Version" | cut -d" " -f5)"
+
+   echo "Adding GCC version to SBOM: ${gcc_version}"
+   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "${gcc_version}"
 }
 
 addBootJDK() {
-   echo "Checking and getting BootJDK Version:"
-   inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
-   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "BOOTJDK" "$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | tr -s " " | cut -d " " -f 6)"
+   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+
+   local bootjava
+   bootjava="$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | grep "Boot JDK:" | sed 's/.*(at \([^)]*\)).*/\1/')/bin/java"
+   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == *"cygwin"* ]]; then
+       bootjava="${bootjava}.exe"
+   fi
+   echo "BootJDK java : ${bootjava}"
+   local bootjdk="$("${bootjava}" -XshowSettings 2>&1 | grep "java\.runtime\.version" | tr -s " " | cut -d" " -f4 | sed "s/\"//g")"
+
+   echo "Adding BOOTJDK to SBOM: ${bootjdk}"
+   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "BOOTJDK" "${bootjdk}"
 }
 
 getGradleJavaHome() {
