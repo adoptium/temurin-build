@@ -773,6 +773,8 @@ setupAntEnv() {
 
   if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
     javaHome=${JAVA_HOME}
+  elif [ ${JDK17_BOOT_DIR+x} ] && [ -d "${JDK17_BOOT_DIR}" ]; then
+    javaHome=${JDK17_BOOT_DIR}
   elif [ ${JDK8_BOOT_DIR+x} ] && [ -d "${JDK8_BOOT_DIR}" ]; then
     javaHome=${JDK8_BOOT_DIR}
   elif [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ]; then
