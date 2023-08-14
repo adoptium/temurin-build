@@ -74,6 +74,11 @@ public class FeatureTests {
         if (jdkVersion.isNewerOrEqual(17) && jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.PPC64LE)) {
         	shouldBePresent = true;
         }
+        if (jdkVersion.isNewerOrEqual(19) || jdkVersion.isNewerOrEqualSameFeature(17, 0, 9)) {
+            if (jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.RISCV64)) {
+                shouldBePresent = true;
+            }
+        }
 
         LOGGER.info(String.format("Detected %s on %s, expect Shenandoah to be present: %s",
                 jdkVersion, jdkPlatform, shouldBePresent));
@@ -127,6 +132,11 @@ public class FeatureTests {
                      */
                     // || jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X64)
             ) {
+                shouldBePresent = true;
+            }
+        }
+        if (jdkVersion.isNewerOrEqual(19) || jdkVersion.isNewerOrEqualSameFeature(17, 0, 9)) {
+            if (jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.RISCV64)) {
                 shouldBePresent = true;
             }
         }
