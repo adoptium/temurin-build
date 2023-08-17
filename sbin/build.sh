@@ -548,9 +548,7 @@ configureFreetypeLocation() {
 
 configureZlibLocation() {
   if [[ ! "${CONFIGURE_ARGS}" =~ "--with-zlib" ]]; then
-    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 21 ]]; then
         addConfigureArg "--with-zlib=" "bundled"
-    fi
   fi
 }
 
