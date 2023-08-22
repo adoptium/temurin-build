@@ -548,7 +548,7 @@ configureFreetypeLocation() {
 
 configureZlibLocation() {
   if [[ ! "${CONFIGURE_ARGS}" =~ "--with-zlib" ]]; then
-        addConfigureArg "--with-zlib=" "bundled"
+    addConfigureArg "--with-zlib=" "bundled"
   fi
 }
 
