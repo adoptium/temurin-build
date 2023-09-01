@@ -1,0 +1,55 @@
+#!groovy
+
+LABEL=params.LABEL ? params.LABEL : 'ci.role.test&&hw.arch.x86&&sw.os.linux'
+
+stage('Queue') {
+    node("$LABEL") {
+       cleanWs()
+       fetchDeps()
+    }
+}
+
+def fetchSingleFile(String jarFile, String sha, String mavenURL) {
+    sh 'echo "' + sha + '  sbom_dependencies/' + jarFile + '" >> sbom_dep_shas.txt'
+    sh 'curl -L -o "sbom_dependencies/' + jarFile + '" "https://search.maven.org/classic/remotecontent?filepath=' + mavenURL + '"'
+}
+
+def fetchDeps() {
+    def time_limit = 8
+    if(params.TIME_LIMIT) {
+        time_limit = params.TIME_LIMIT.toInteger()
+    }
+    timeout(time: time_limit, unit: 'HOURS') {
+        try {
+            sh 'mkdir sbom_dependencies'
+
+            def cyclonedx_core_java_version = "7.3.2"
+            def jackson_core_version = "2.14.2"
+            def jackson_annotations_version = "2.14.2"
+            def jackson_databind_version = "2.14.2"
+            def json_schema_version = "1.0.77"
+            def commons_codec_version = "1.15"
+            def commons_io_version = "2.11.0"
+            def github_package_url_version = "1.4.1"
+
+            fetchSingleFile("cyclonedx-core-java.jar", "88193228f85a955127dc73e1c72efc9e08e18a01d227df47d0865dc20eceffd1", "org/cyclonedx/cyclonedx-core-java/${cyclonedx_core_java_version}/cyclonedx-core-java-${cyclonedx_core_java_version}.jar")
+            fetchSingleFile("jackson-core.jar", "b5d37a77c88277b97e3593c8740925216c06df8e4172bbde058528df04ad3e7a", "com/fasterxml/jackson/core/jackson-core/${jackson_core_version}/jackson-core-${jackson_core_version}.jar")
+            fetchSingleFile("jackson-dataformat-xml.jar", "edbda6c775a36049cf0088b111ab958cca0dc70cb9326918d6cf153cb3fa426b", "com/fasterxml/jackson/dataformat/jackson-dataformat-xml/${jackson_databind_version}/jackson-dataformat-xml-${jackson_databind_version}.jar")
+            fetchSingleFile("jackson-databind.jar", "501d3abce4d18dcc381058ec593c5b94477906bba6efbac14dae40a642f77424", "com/fasterxml/jackson/core/jackson-databind/${jackson_databind_version}/jackson-databind-${jackson_databind_version}.jar")
+            fetchSingleFile("jackson-annotations.jar", "2c6869d505cf60dc066734b7d50339f975bd3adc635e26a78abb71acb4473c0d", "com/fasterxml/jackson/core/jackson-annotations/${jackson_annotations_version}/jackson-annotations-${jackson_annotations_version}.jar")
+            fetchSingleFile("json-schema.jar", "968991e5718520cdd7b224770f790cf2c241cddf64d10a36c21f9f8b4a15e79c", "com/networknt/json-schema-validator/${json_schema_version}/json-schema-validator-${json_schema_version}.jar")
+            fetchSingleFile("commons-codec.jar", "b3e9f6d63a790109bf0d056611fbed1cf69055826defeb9894a71369d246ed63", "commons-codec/commons-codec/${commons_codec_version}/commons-codec-${commons_codec_version}.jar")
+            fetchSingleFile("github-package-url.jar", "8e23280221afd1e6561d433dfb133252cd287167acb0eca5a991667118ff10a2", "com/github/package-url/packageurl-java/${github_package_url_version}/packageurl-java-${github_package_url_version}.jar")
+            fetchSingleFile("commons-io.jar", "961b2f6d87dbacc5d54abf45ab7a6e2495f89b75598962d8c723cea9bc210908", "commons-io/commons-io/${commons_io_version}/commons-io-${commons_io_version}.jar")
+
+            sh 'sha256sum -c sbom_dep_shas.txt'
+
+            archiveArtifacts '**/sbom_dependencies/*'
+        } finally {
+            cleanWs()
+        }
+    }
+}
+
+
+return this

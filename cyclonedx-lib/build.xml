@@ -20,18 +20,8 @@
 // jscpd:ignore-start
 -->
 
-        <!-- Dependency versions -->
+        <!-- All other dependency versions are now listed in the ./getDependencies file -->
         <property name="openkeystore-version" value="1.0.0"/>
-        <property name="cyclonedx-core-java-version" value="7.3.2"/>
-        <property name="jackson-core-version" value="2.14.2"/>
-
-        <property name="jackson-annotations-version" value="2.14.2"/>
-        <property name="jackson-databind-version" value="2.14.2"/>
-        <property name="json-schema-version" value="1.0.77"/>
-
-        <property name="commons-codec-version" value="1.15"/>
-        <property name="commons-io-version" value="2.11.0"/>
-        <property name="github-package-url-version" value="1.4.1"/>
 
         <!-- classpath for running application -->
         <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/temurin-sign-sbom.jar"/>
@@ -39,7 +29,7 @@
         <target name="dep-checks">
                 <available file="build/jar/cyclonedx-core-java.jar" property="cyclonedx_available"/>
                 <available file="build/jar/jackson-core.jar" property="jackson-core_available"/>
-                <available file="build/jar/jackson-dataformat-xml.jar" property="jackson-core_available"/>
+                <available file="build/jar/jackson-dataformat-xml.jar" property="jackson-dataformat_available"/>
                 <available file="build/jar/jackson-databind.jar" property="jackson-databind_available"/>
                 <available file="build/jar/jackson-annotations.jar" property="jackson-annotations_available"/>
                 <available file="build/jar/json-schema.jar" property="json-schema_available"/>
@@ -50,20 +40,20 @@
         </target>
 
         <target name="download-cyclonedx" unless="cyclonedx_available">
-                <echo message="Downloading cyclonedx-core-java version ${cyclonedx-core-java-version}"/>
+                <echo message="Downloading cyclonedx-core-java"/>
                 <download-file
                   destfile="cyclonedx-core-java.jar"
                   checksum="88193228f85a955127dc73e1c72efc9e08e18a01d227df47d0865dc20eceffd1"
-                  srcurl="https://search.maven.org/classic/remotecontent?filepath=org/cyclonedx/cyclonedx-core-java/${cyclonedx-core-java-version}/cyclonedx-core-java-${cyclonedx-core-java-version}.jar"
+                  srcurl="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies/cyclonedx-core-java.jar"
                   />
 	      </target>
 
         <target name="download-jackson-core" unless="jackson-core_available">
-                <echo message="Downloading jackson-core version ${jackson-core-version}"/>
+                <echo message="Downloading jackson-core"/>
                 <download-file
                   checksum="b5d37a77c88277b97e3593c8740925216c06df8e4172bbde058528df04ad3e7a"
                   destfile="jackson-core.jar"
-                  srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-core/${jackson-core-version}/jackson-core-${jackson-core-version}.jar"
+                  srcurl="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies/jackson-core.jar"
                   />
         </target>
 
@@ -99,60 +89,60 @@
                 </jar>
         </target>
 
-        <target name="download-jackson-dataformat-xml" unless="jackson-core_available">
-                <echo message="Downloading jackson-dataformat-xml version ${jackson-databind-version}"/>
+        <target name="download-jackson-dataformat-xml" unless="jackson-dataformat_available">
+                <echo message="Downloading jackson-dataformat-xml"/>
                 <download-file
                   checksum="edbda6c775a36049cf0088b111ab958cca0dc70cb9326918d6cf153cb3fa426b"
                   destfile="jackson-dataformat-xml.jar"
-                  srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/dataformat/jackson-dataformat-xml/${jackson-databind-version}/jackson-dataformat-xml-${jackson-databind-version}.jar"/>
+                  srcurl="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies/jackson-dataformat-xml.jar"/>
         </target>
 
         <target name="download-jackson-databind" unless="jackson-databind_available">
-                <echo message="Downloading jackson-databind version ${jackson-databind-version}"/>
+                <echo message="Downloading jackson-databind"/>
                 <download-file
                   checksum="501d3abce4d18dcc381058ec593c5b94477906bba6efbac14dae40a642f77424"
                   destfile="jackson-databind.jar"
-                  srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-databind/${jackson-databind-version}/jackson-databind-${jackson-databind-version}.jar"/>
+                  srcurl="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies/jackson-databind.jar"/>
         </target>
 
         <target name="download-jackson-annotations" unless="jackson-annotations_available">
-                <echo message="Downloading jackson-annotations version ${jackson-annotations-version}"/>
+                <echo message="Downloading jackson-annotations"/>
                 <download-file
                   checksum="2c6869d505cf60dc066734b7d50339f975bd3adc635e26a78abb71acb4473c0d"
                   destfile="jackson-annotations.jar"
-                  srcurl="https://search.maven.org/classic/remotecontent?filepath=com/fasterxml/jackson/core/jackson-annotations/${jackson-annotations-version}/jackson-annotations-${jackson-annotations-version}.jar"/>
+                  srcurl="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies/jackson-annotations.jar"/>
         </target>
 
         <target name="download-json-schema" unless="json-schema_available">
-                <echo message="Downloading json-schema version ${json-schema-version}"/>
+                <echo message="Downloading json-schema"/>
                 <download-file
                   checksum="968991e5718520cdd7b224770f790cf2c241cddf64d10a36c21f9f8b4a15e79c"
                   destfile="json-schema.jar"
-                  srcurl="https://search.maven.org/classic/remotecontent?filepath=com/networknt/json-schema-validator/${json-schema-version}/json-schema-validator-${json-schema-version}.jar"/>
+                  srcurl="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies/json-schema.jar"/>
         </target>
 
         <target name="download-commons-codec" unless="commons-codec_available">
-                <echo message="Downloading commons-codec version ${commons-codec-version}"/>
+                <echo message="Downloading commons-codec"/>
                 <download-file
                   checksum="b3e9f6d63a790109bf0d056611fbed1cf69055826defeb9894a71369d246ed63"
                   destfile="commons-codec.jar"
-                  srcurl="https://search.maven.org/classic/remotecontent?filepath=commons-codec/commons-codec/${commons-codec-version}/commons-codec-${commons-codec-version}.jar"/>
+                  srcurl="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies/commons-codec.jar"/>
         </target>
 
         <target name="download-commons-io" unless="commons-io_available">
-                <echo message="Downloading commons-io version ${commons-io-version}"/>
+                <echo message="Downloading commons-io"/>
                 <download-file
                   checksum="961b2f6d87dbacc5d54abf45ab7a6e2495f89b75598962d8c723cea9bc210908"
                   destfile="commons-io.jar"
-                  srcurl="https://search.maven.org/classic/remotecontent?filepath=commons-io/commons-io/${commons-io-version}/commons-io-${commons-io-version}.jar"/>
+                  srcurl="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies/commons-io.jar"/>
         </target>
 
         <target name="download-github-package-url" unless="github-package-url_available">
-                <echo message="Downloading github-package-url version ${github-package-url-version}"/>
+                <echo message="Downloading github-package-url"/>
                 <download-file
                   checksum="8e23280221afd1e6561d433dfb133252cd287167acb0eca5a991667118ff10a2"
                   destfile="github-package-url.jar"
-                  srcurl="https://search.maven.org/classic/remotecontent?filepath=com/github/package-url/packageurl-java/${github-package-url-version}/packageurl-java-${github-package-url-version}.jar"/>
+                  srcurl="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies/github-package-url.jar"/>
         </target>
 
 	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
