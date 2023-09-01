@@ -1670,7 +1670,14 @@ createOpenJDKTarArchive() {
   if [ -d "${sbomTargetPath}" ]; then
     # SBOM archive artifact as a .json file
     local sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}.json")
-    sbomTargetName="${sbomTargetName//\.tar\.gz/}"
+
+    # Remove the tarball extension from the name to be used for the SBOM
+    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+        sbomTargetName="${sbomTargetName//\.zip/}"
+    else
+        sbomTargetName="${sbomTargetName//\.tar\.gz/}"
+    fi
+
     local sbomArchiveTarget=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${sbomTargetName}
     echo "OpenJDK SBOM will be ${sbomTargetName}."
     cp "${sbomTargetPath}/sbom.json" "${sbomArchiveTarget}"
