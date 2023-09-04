@@ -98,8 +98,6 @@ configureReproducibleBuildParameter() {
       # Enable reproducible builds implicitly with --with-source-date
       if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]
       then
-          # TZ issue: https://github.com/adoptium/temurin-build/issues/3075
-          export TZ=UTC
           # Use release date
           addConfigureArg "--with-source-date=" "version" 
       else
@@ -119,6 +117,9 @@ configureReproducibleBuildParameter() {
           # Use supplied date
           addConfigureArg "--with-hotspot-build-time=" "'${BUILD_CONFIG[BUILD_TIMESTAMP]}'"
       fi
+
+      # TZ issue: https://github.com/adoptium/temurin-build/issues/3075
+      export TZ=UTC
 
       # disable CCache (remove --enable-ccache if exist)
       addConfigureArg "--disable-ccache"
