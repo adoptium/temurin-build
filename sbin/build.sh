@@ -98,11 +98,8 @@ configureReproducibleBuildParameter() {
       # Enable reproducible builds implicitly with --with-source-date
       if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]
       then
-          # TZ issue: https://github.com/adoptium/temurin-build/issues/3075
-          export TZ=UTC
-          # Use release date and disable CCache( remove --enable-ccache if exist)
-          addConfigureArg "--with-source-date=version"  " --disable-ccache"
-          CONFIGURE_ARGS="${CONFIGURE_ARGS//--enable-ccache/}"
+          # Use release date
+          addConfigureArg "--with-source-date=" "version" 
       else
           # Use BUILD_TIMESTAMP date
 
@@ -120,6 +117,14 @@ configureReproducibleBuildParameter() {
           # Use supplied date
           addConfigureArg "--with-hotspot-build-time=" "'${BUILD_CONFIG[BUILD_TIMESTAMP]}'"
       fi
+
+      # TZ issue: https://github.com/adoptium/temurin-build/issues/3075
+      export TZ=UTC
+
+      # disable CCache (remove --enable-ccache if exist)
+      addConfigureArg "--disable-ccache" ""
+      CONFIGURE_ARGS="${CONFIGURE_ARGS//--enable-ccache/}"
+
       # Ensure reproducible and comparable binary with a unique build user identifier
       addConfigureArg "--with-build-user=" "admin"
       if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]; then
