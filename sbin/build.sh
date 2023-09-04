@@ -122,7 +122,7 @@ configureReproducibleBuildParameter() {
       export TZ=UTC
 
       # disable CCache (remove --enable-ccache if exist)
-      addConfigureArg "--disable-ccache"
+      addConfigureArg "--disable-ccache" ""
       CONFIGURE_ARGS="${CONFIGURE_ARGS//--enable-ccache/}"
 
       # Ensure reproducible and comparable binary with a unique build user identifier
