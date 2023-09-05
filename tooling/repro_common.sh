@@ -53,6 +53,7 @@ function expandJDK() {
         expand_dir=$(cygpath -w $expand_dir)
       fi
       "${JDK_BIN_DIR}/jmod" extract --dir "${expand_dir}" "$f"
+      rm "$f"
     done
 
   echo "Expanding the 'jrt-fs.jar' to remove signatures from within.."
@@ -63,6 +64,8 @@ function expandJDK() {
   mkdir -p "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded"
   unzip -d "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded" "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar" 1> /dev/null
   rm "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
+
+  rm -rf "${JDK_ROOT}_CP"
 }
 
 # Remove all Signatures
@@ -71,7 +74,8 @@ function removeSignatures() {
   local OS="$2"
 
   if [[ "$OS" =~ CYGWIN* ]]; then
-    signToolPath="/cygdrive/c/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x64/signtool.exe"
+    # signtool should be on PATH
+    signToolPath="signtool"
     echo "Removing all Signatures from ${JDK_DIR}"
     FILES=$(find "${JDK_DIR}" -type f -name '*.exe' -o -name '*.dll')
     for f in $FILES
@@ -110,7 +114,8 @@ function tempSign() {
   local OS="$2"
 
   if [[ "$OS" =~ CYGWIN* ]]; then
-    signToolPath="/cygdrive/c/Program Files (x86)/Windows Kits/10/bin/10.0.17763.0/x64/signtool.exe"
+    # signtool should be on PATH
+    signToolPath="signtool"
     echo "Adding temp Signatures for ${JDK_DIR}"
     selfCert="test"
     openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout $selfCert.key -out $selfCert.crt -subj "/CN=example.com" -addext "subjectAltName=DNS:example.com,DNS:*.example.com,IP:10.0.0.1"
@@ -159,7 +164,7 @@ function cleanTemurinFiles() {
     sed -i "" '/^JVM_VARIANT=.*$/d' "${DIR}/release"
     sed -i "" '/^JVM_VERSION=.*$/d' "${DIR}/release"
     sed -i "" '/^IMAGE_TYPE=.*$/d' "${DIR}/release"
-  
+
     echo "Removing SOURCE= from ${DIR}/release file, as Temurin builds from Adoptium mirror repo _adopt tag"
     sed -i "" '/^SOURCE=.*$/d' "${DIR}/release"
   else
@@ -190,7 +195,7 @@ function cleanTemurinFiles() {
 # Temurin release file metadata BUILD_INFO/SOURCE can/will be different
 function cleanTemurinBuildInfo() {
   local DIR="$1"
-  
+
   echo "Cleaning any Temurin build-scripts release file BUILD_INFO from ${DIR}"
 
   if [[ $(uname) =~ Darwin* ]]; then
@@ -199,7 +204,7 @@ function cleanTemurinBuildInfo() {
     sed -i "" '/^BUILD_INFO=.*$/d' "${DIR}/release"
   else
     sed -i '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
-    sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release" 
+    sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
     sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
   fi
 }
