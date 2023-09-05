@@ -68,7 +68,7 @@ jobs:
             variant: bisheng
             image: adoptopenjdk/centos7_build_image
     steps:
-    - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
 
     - name: Build Linux
       run: ./build-farm/make-adopt-build-farm.sh
@@ -122,7 +122,7 @@ jobs:
         variant: [temurin]
 
     steps:
-    - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+    - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
 
     - name: Install Dependencies
       run: |
@@ -294,7 +294,7 @@ jobs:
        shell: bash
        run: mkdir -p "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
 
-     - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+     - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
        with:
          set-safe-directory: false
 
