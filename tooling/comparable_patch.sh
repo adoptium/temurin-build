@@ -29,13 +29,11 @@ set -eu
 TEMURIN_TOOLS_BINREPL="temurin.tools.BinRepl"
 
 JDK_DIR="$1"
-SELF_CERT="$2"
-SELF_CERT_PASS="$3"
-VERSION_REPL="$4"
-VENDOR_NAME="$5"
-VENDOR_URL="$6"
-VENDOR_BUG_URL="$7"
-VENDOR_VM_BUG_URL="$8"
+VERSION_REPL="$2"
+VENDOR_NAME="$3"
+VENDOR_URL="$4"
+VENDOR_BUG_URL="$5"
+VENDOR_VM_BUG_URL="$6"
 
 # Remove excluded files known to differ
 function removeExcludedFiles() {
@@ -132,7 +130,7 @@ function removeMacOSNonComparableData() {
         echo "  FAILED ==> java \"$TEMURIN_TOOLS_BINREPL\" --inFile \"$f\" --outFile \"$f\" --hex \"${uuidhex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\" --firstOnly"
         exit 1
       fi
-    fi      
+    fi
   done
 
   echo "Successfully removed all MacOS dylib non-comparable UUID from ${JDK_DIR}"
@@ -261,8 +259,8 @@ function neutraliseReleaseFile() {
   fi
 }
 
-if [ "$#" -ne 8 ]; then
-  echo "Syntax: cmd <jdk_dir> <cert_file> <cert_pass> <version_str> <vendor_name> <vendor_url> <vendor_bug_url> <vendor_vm_bug_url>"
+if [ "$#" -ne 6 ]; then
+  echo "Syntax: cmd <jdk_dir> <version_str> <vendor_name> <vendor_url> <vendor_bug_url> <vendor_vm_bug_url>"
   exit 1
 fi
 
@@ -284,7 +282,7 @@ else
   exit 1
 fi
 
-expandJDK "$JDK_DIR"
+expandJDK "$JDK_DIR" "$OS"
 
 echo "Removing all Signatures from ${JDK_DIR} in a deterministic way"
 
@@ -292,7 +290,7 @@ echo "Removing all Signatures from ${JDK_DIR} in a deterministic way"
 removeSignatures "$JDK_DIR" "$OS"
 
 # Sign with temporary cert, so we can remove it and end up with a deterministic result
-tempSign "$JDK_DIR" "$OS" "$SELF_CERT" "$SELF_CERT_PASS" 
+tempSign "$JDK_DIR" "$OS"
 
 # Remove temporary cert
 removeSignatures "$JDK_DIR" "$OS"
