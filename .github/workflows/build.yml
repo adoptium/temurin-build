@@ -73,7 +73,7 @@ jobs:
       if: matrix.image == 'adoptopenjdk/centos7_build_image'
       with:
         node-version: 20
-        node-mirror: https://unofficial-builds.nodejs.org/download/
+        node-mirror: https://unofficial-builds.nodejs.org/download/release/
 
     - uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
 
