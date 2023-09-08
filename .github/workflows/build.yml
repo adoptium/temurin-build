@@ -207,7 +207,7 @@ jobs:
      steps:
      - name: Restore cygwin packages from cache
        id: cygwin
-       uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+       uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
        with:
         path: C:\cygwin64
         key: cygwin-packages-${{ runner.os }}-v1
@@ -251,7 +251,7 @@ jobs:
      - name: Restore Visual Studio 2017 from cache
        id: vs2017
        if: matrix.version == 'jdk8u'
-       uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+       uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
        with:
          path: ~/vs2017.exe
          key: vs2017
