@@ -142,9 +142,13 @@ then
     then 
       export TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
-    elif [ "$JAVA_FEATURE_VERSION" -gt 11 ]
+    elif [ "$JAVA_FEATURE_VERSION" -gt 11 ] && [ "$JAVA_FEATURE_VERSION" -lt 21 ]
     then
       TOOLCHAIN_VERSION="2019"
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
+    elif [ "$JAVA_FEATURE_VERSION" -ge 21 ]
+    then
+      TOOLCHAIN_VERSION="2022"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     fi
   fi
@@ -210,9 +214,12 @@ then
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 39ce3ac499d4cd7371031a062f410953c8ecce29" # 2.8.1
       export PATH="/cygdrive/c/openjdk/make-3.82/:$PATH"
-    elif [ "$JAVA_FEATURE_VERSION" -ge 11 ]
+    elif [ "$JAVA_FEATURE_VERSION" -ge 11 ] && [ "$JAVA_FEATURE_VERSION" -lt 21 ]
     then
       TOOLCHAIN_VERSION="2019"
+    elif [ "$JAVA_FEATURE_VERSION" -ge 21 ]
+    then
+      TOOLCHAIN_VERSION="2022"
     fi
   fi
 

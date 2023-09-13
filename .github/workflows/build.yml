@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [linux]
-        version: [jdk8u, jdk11u, jdk17u, jdk19u, jdk] #jdk head == jdk20
+        version: [jdk8u, jdk11u, jdk17u, jdk] #jdk head == jdk22
         variant: [temurin]
         image: [adoptopenjdk/centos7_build_image]
         include:
@@ -42,10 +42,6 @@ jobs:
           - os: alpine-linux
             version: jdk17u
             variant: temurin
-            image: adoptopenjdk/alpine3_build_image
-          - os: alpine-linux
-            version: jdk19u
-            vm: temurin
             image: adoptopenjdk/alpine3_build_image
           - os: alpine-linux
             version: jdk
@@ -197,12 +193,13 @@ jobs:
      strategy:
        fail-fast: false
        matrix:
-         os: [windows-2019]
+         os: [windows-2022]
          version: [jdk8u, jdk11u, jdk17u, jdk]
          variant: [temurin]
 
      env:
-      VS2017_URL: "https://github.com/akashche/msvs_2017_installer_bootstrap/raw/master/vs_community__7955ddbf8a9b49dda0f8d18876e93bd2.exe"
+      VS2017_URL: "https://download.visualstudio.microsoft.com/download/pr/c5c75dfa-1b29-4419-80f8-bd39aed6bcd9/7ed8fa27575648163e07548ff5667b55b95663a2323e2b2a5f87b16284e481e6/vs_Community.exe"
+      VS2019_URL: "https://download.visualstudio.microsoft.com/download/pr/6b655578-de8c-4862-ad77-65044ca714cf/f29399a618bd3a8d1dcc96d349453f686b6176590d904308402a6402543e310b/vs_Community.exe"
 
      steps:
      - name: Restore cygwin packages from cache
@@ -256,15 +253,24 @@ jobs:
          path: ~/vs2017.exe
          key: vs2017
 
+     - name: Restore Visual Studio 2019 from cache
+       id: vs2019
+       if: matrix.version == 'jdk11u' || matrix.version == 'jdk17u'
+       uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+       with:
+         path: ~/vs2019.exe
+         key: vs2019
+
      - name: Uninstall WinSDKs
-       if: matrix.version == 'jdk8u'
+       if: matrix.version == 'jdk8u' || matrix.version == 'jdk11u' || matrix.version == 'jdk17u'
        run: >
          Start-Process -FilePath 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe' -Wait -NoNewWindow -ArgumentList
-         'modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"
+         'modify --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise"
          --remove Microsoft.VisualStudio.Component.Windows10SDK.18362
          --remove Microsoft.VisualStudio.Component.Windows10SDK.19041
          --remove Microsoft.VisualStudio.Component.Windows10SDK.20348
          --remove Microsoft.VisualStudio.Component.Windows10SDK.22000
+         --remove Microsoft.VisualStudio.Component.Windows10SDK.22621
          --quiet'
 
      - name: Download Visual Studio 2017
@@ -280,6 +286,21 @@ jobs:
          --add Microsoft.VisualStudio.Workload.NativeDesktop
          --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
          --add Microsoft.VisualStudio.Component.Windows10SDK.17763
+         --quiet --wait'
+
+     - name: Download Visual Studio 2019
+       run: |
+         curl -L "$env:VS2019_URL" -o "$HOME/vs2019.exe"
+       if: steps.vs2019.outputs.cache-hit != 'true' && (matrix.version == 'jdk11u' || matrix.version == 'jdk17u')
+
+     - name: Install Visual Studio 2019
+       if: matrix.version == 'jdk11u' || matrix.version == 'jdk17u'
+       run: >
+         Start-Process -FilePath "$HOME\vs2019.exe" -Wait -NoNewWindow -ArgumentList
+         'install --productId Microsoft.VisualStudio.Product.Community --channelId VisualStudio.15.Release
+         --add Microsoft.VisualStudio.Workload.NativeDesktop
+         --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
+         --add Microsoft.VisualStudio.Component.Windows10SDK.22000
          --quiet --wait'
 
      - name: Install Git
