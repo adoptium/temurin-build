@@ -552,8 +552,10 @@ configureFreetypeLocation() {
 }
 
 configureZlibLocation() {
-  if [[ ! "${CONFIGURE_ARGS}" =~ "--with-zlib" ]]; then
-    addConfigureArg "--with-zlib=" "bundled"
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
+    if [[ ! "${CONFIGURE_ARGS}" =~ "--with-zlib" ]]; then
+      addConfigureArg "--with-zlib=" "bundled"
+    fi
   fi
 }
 
