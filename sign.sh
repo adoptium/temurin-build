@@ -84,8 +84,7 @@ signRelease()
             file=$(basename "$f")
             mv "$f" "${dir}/unsigned_${file}"
             if ! curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign; then
-              rc="$?"
-              echo "curl returned rc=$rc, sign of $f failed"
+              echo "curl command failed, sign of $f failed"
 
               # Retry up to 20 times
               max_iterations=20
@@ -96,8 +95,7 @@ signRelease()
                 echo $iteration Of $max_iterations
                 sleep 1
                 if ! curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign; then
-                  rc="$?"
-                  echo "$f Failed Signing On Attempt $iteration, rc=$rc"
+                  echo "curl command failed, $f Failed Signing On Attempt $iteration"
                   success=false
                   iteration=$((iteration+1))
                   if [ $iteration -gt $max_iterations ]
@@ -160,8 +158,7 @@ signRelease()
           file=$(basename "$f")
           mv "$f" "${dir}/unsigned_${file}"
           if ! curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign; then
-              rc="$?"
-              echo "curl returned rc=$rc, sign of $f failed"
+              echo "curl command failed, sign of $f failed"
               TESTMACSIGN=0
           else
               echo File = "$f"
@@ -182,8 +179,7 @@ signRelease()
               echo $iteration Of $max_iterations
               sleep 1
               if ! curl --fail -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign; then
-                  rc="$?"
-                  echo "curl returned rc=$rc, sign of $f failed"
+                  echo "curl command failed, sign of $f failed"
                   TESTMACSIGN2=0
               else
                   TESTMACSIGN2=$(grep -ic "$MACSIGNSTRING" "$f")
