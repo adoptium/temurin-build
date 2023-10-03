@@ -32,7 +32,7 @@ if [ -z "$ARCHITECTURE"  ]; then
    if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi # AIX
    if [ "$ARCHITECTURE" = "arm"     ]; then ARCHITECTURE=aarch64;    fi # mac/aarch64
    if [ "$ARCHITECTURE" = "armv7l"  ]; then ARCHITECTURE=arm;        fi # Linux/arm32
-   echo ARCHITECTURE not defined - assuming $ARCHITECTURE
+   echo ARCHITECTURE not defined - assuming "$ARCHITECTURE"
    export ARCHITECTURE
 fi
 
