@@ -32,7 +32,7 @@ then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
   if [[ "${MACHINEARCHITECURE}" == "arm64" ]] && [[ "${ARCHITECTURE}" == "x64" ]]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=x86_64-apple-darwin"
-    MAC_ROSETTA_PREFIX="arch -x86_64"
+    export MAC_ROSETTA_PREFIX="arch -x86_64"
   fi
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
