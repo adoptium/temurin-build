@@ -26,11 +26,15 @@ export BUILD_ARGS="${BUILD_ARGS}"
 ## is x64 then we need to add the cross compilation option --openjdk-target=x86_64-apple-darwin
 MACHINEARCHITECTURE=$(uname -a)
 
+echo "MACHINEARCHITECTURE: ${MACHINEARCHITECTURE}"
+echo "ARCHITECTURE: ${ARCHITECTURE}"
+
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   XCODE_SWITCH_PATH="/Applications/Xcode-11.7.app"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
   if [[ "${MACHINEARCHITECTURE}" == "arm64" ]] && [[ "${ARCHITECTURE}" == "x64" ]]; then
+    echo "MACHINEARCHITECTURE == arm64 and ARCHITECTURE (to build) == x64"
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=x86_64-apple-darwin"
     export MAC_ROSETTA_PREFIX="arch -x86_64"
   fi
