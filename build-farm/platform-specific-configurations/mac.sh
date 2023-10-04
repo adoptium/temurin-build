@@ -24,7 +24,7 @@ export BUILD_ARGS="${BUILD_ARGS}"
 
 ## JDK8 only: If, at this point in the build, the architecure of the machine is arm64 while the ARCHITECTURE variable
 ## is x64 then we need to add the cross compilation option --openjdk-target=x86_64-apple-darwin
-MACHINEARCHITECTURE=$(uname -a)
+MACHINEARCHITECTURE=$(uname -m)
 
 echo "MACHINEARCHITECTURE: ${MACHINEARCHITECTURE}"
 echo "ARCHITECTURE: ${ARCHITECTURE}"
