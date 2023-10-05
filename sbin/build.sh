@@ -941,11 +941,16 @@ addFreeTypeVersionInfo() {
       local freetypeIncludeDirs=(${FREETYPE_CFLAGS})
       for i in "${!freetypeIncludeDirs[@]}"
       do
-          local include="${freetypeIncludeDirs[i]}/freetype/freetype.h"
-          echo "Checking for FreeType include ${include}"
-          if [[ -f "${include}" ]]; then
-              echo "Found ${include}"
-              freetypeInclude="${include}"
+          local include1="${freetypeIncludeDirs[i]}/freetype/freetype.h"
+          local include2="${freetypeIncludeDirs[i]}/freetype.h"
+
+          echo "Checking for FreeType include in path ${freetypeIncludeDirs[i]}"
+          if [[ -f "${include1}" ]]; then
+              echo "Found ${include1}"
+              freetypeInclude="${include1}"
+          elif [[ -f "${include2}" ]]; then
+              echo "Found ${include2}"
+              freetypeInclude="${include2}
           fi
       done
    elif [ "${FREETYPE_TO_USE}" == "bundled" ]; then
