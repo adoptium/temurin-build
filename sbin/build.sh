@@ -950,7 +950,7 @@ addFreeTypeVersionInfo() {
               freetypeInclude="${include1}"
           elif [[ -f "${include2}" ]]; then
               echo "Found ${include2}"
-              freetypeInclude="${include2}
+              freetypeInclude="${include2}"
           fi
       done
    elif [ "${FREETYPE_TO_USE}" == "bundled" ]; then
