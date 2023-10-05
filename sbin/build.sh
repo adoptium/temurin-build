@@ -938,6 +938,7 @@ addFreeTypeVersionInfo() {
       echo "FREETYPE_CFLAGS include paths=${FREETYPE_CFLAGS}"
 
       # Search freetype include path for freetype.h
+      # shellcheck disable=SC2206
       local freetypeIncludeDirs=(${FREETYPE_CFLAGS})
       for i in "${!freetypeIncludeDirs[@]}"
       do

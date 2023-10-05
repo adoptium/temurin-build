@@ -471,9 +471,7 @@ checkingAndDownloadingFreeType() {
       ;;
     esac
 
-    # Fetch the sha for the commit we just cloned
     cd freetype || exit
-    FREETYPE_SHA=$(git rev-parse HEAD) || exit
 
     if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
       return
