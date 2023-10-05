@@ -929,11 +929,13 @@ addFreeTypeVersionInfo() {
        FREETYPE_TO_USE="$(grep "^FREETYPE_TO_USE[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^FREETYPE_TO_USE[ ]*:=[ ]*//")"
    fi
 
+   echo "FREETYPE_TO_USE=${FREETYPE_TO_USE}"
+
    local version="Unknown"
    local freetypeInclude=""
    if [ "${FREETYPE_TO_USE}" == "system" ]; then
       local FREETYPE_CFLAGS="$(grep "^FREETYPE_CFLAGS[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^FREETYPE_CFLAGS[ ]*:=[ ]*//" | sed "s/\-I//g")"
-      echo "FREETYPE_CFLAGS paths=${FREETYPE_CFLAGS}"
+      echo "FREETYPE_CFLAGS include paths=${FREETYPE_CFLAGS}"
 
       # Search freetype include path for freetype.h
       local freetypeIncludeDirs=(${FREETYPE_CFLAGS})
