@@ -341,9 +341,9 @@ else
   fi
 fi
 
-if [ "$JAVA_FEATURE_VERSION" -ge 20 ]; then
+if [ "$JAVA_FEATURE_VERSION" -ge 20 -a "${ARCHITECTURE}" = "x64" -o "${ARCHITECTURE}" = "aarch64" -a "${VARIANT}" == "${BUILD_VARIANT_TEMURIN}" ]; then
   if [ -r /usr/local/lib/libcapstone.so.4 ]; then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-capstone=/usr/local"
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-hsdis-bundling --with-hsdis=capstone --with-capstone=/usr/local"
   fi
 fi
 
