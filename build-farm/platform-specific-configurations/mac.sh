@@ -32,12 +32,12 @@ echo "ARCHITECTURE: ${ARCHITECTURE}"
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   XCODE_SWITCH_PATH="/Applications/Xcode-11.7.app"
-  export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
   if [[ "${MACHINEARCHITECTURE}" == "arm64" ]] && [[ "${ARCHITECTURE}" == "x64" ]]; then
     echo "MACHINEARCHITECTURE == arm64 and ARCHITECTURE (to build) == x64"
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=x86_64-apple-darwin"
     export MAC_ROSETTA_PREFIX="arch -x86_64"
+    export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
   fi
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
