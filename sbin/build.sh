@@ -890,8 +890,8 @@ generateSBoM() {
 
   # Add ALSA 3rd party
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt)"
-  # Add FreeType 3rd party (windows + macOS)
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt)"
+  # Add FreeType 3rd party
+  addFreeTypeVersionInfo
   # Add FreeMarker 3rd party (openj9)
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt)"
   
@@ -918,6 +918,62 @@ checkingToolSummary() {
    inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
    outputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
    sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" > "${outputConfigFile}"
+}
+
+# Determine FreeType version being used in the build from either the system or bundled freetype.h definition
+addFreeTypeVersionInfo() {
+   # Default to "system"
+   local FREETYPE_TO_USE="system"
+   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
+       # For jdk-11+ get FreeType used from build spec.gmk, which can be "bundled" or "system"
+       FREETYPE_TO_USE="$(grep "^FREETYPE_TO_USE[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^FREETYPE_TO_USE[ ]*:=[ ]*//")"
+   fi
+
+   echo "FREETYPE_TO_USE=${FREETYPE_TO_USE}"
+
+   local version="Unknown"
+   local freetypeInclude=""
+   if [ "${FREETYPE_TO_USE}" == "system" ]; then
+      local FREETYPE_CFLAGS="$(grep "^FREETYPE_CFLAGS[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^FREETYPE_CFLAGS[ ]*:=[ ]*//" | sed "s/\-I//g")"
+      echo "FREETYPE_CFLAGS include paths=${FREETYPE_CFLAGS}"
+
+      # Search freetype include path for freetype.h
+      # shellcheck disable=SC2206
+      local freetypeIncludeDirs=(${FREETYPE_CFLAGS})
+      for i in "${!freetypeIncludeDirs[@]}"
+      do
+          local include1="${freetypeIncludeDirs[i]}/freetype/freetype.h"
+          local include2="${freetypeIncludeDirs[i]}/freetype.h"
+
+          echo "Checking for FreeType include in path ${freetypeIncludeDirs[i]}"
+          if [[ -f "${include1}" ]]; then
+              echo "Found ${include1}"
+              freetypeInclude="${include1}"
+          elif [[ -f "${include2}" ]]; then
+              echo "Found ${include2}"
+              freetypeInclude="${include2}"
+          fi
+      done
+   elif [ "${FREETYPE_TO_USE}" == "bundled" ]; then
+      # jdk-11+ supports "bundled"
+      # freetype.h location for jdk-11+
+      local include="src/java.desktop/share/native/libfreetype/include/freetype/freetype.h"
+      echo "Checking for FreeType include ${include}"
+      if [[ -f "${include}" ]]; then
+          echo "Found ${include}"
+          freetypeInclude="${include}"
+      fi
+   fi
+
+   # Obtain FreeType version from freetype.h
+   if [[ "x${freetypeInclude}" != "x" ]]; then
+      local ver_major="$(grep "FREETYPE_MAJOR" "${freetypeInclude}" | grep "#define" | tr -s " " | cut -d" " -f3)"
+      local ver_minor="$(grep "FREETYPE_MINOR" "${freetypeInclude}" | grep "#define" | tr -s " " | cut -d" " -f3)"
+      local ver_patch="$(grep "FREETYPE_PATCH" "${freetypeInclude}" | grep "#define" | tr -s " " | cut -d" " -f3)"
+      version="${ver_major}.${ver_minor}.${ver_patch}"
+   fi
+
+   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "${version}"
 }
 
 # Below add versions to sbom | Facilitate reproducible builds

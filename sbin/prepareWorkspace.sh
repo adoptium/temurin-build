@@ -450,7 +450,6 @@ checkingAndDownloadingFreeType() {
 
   FOUND_FREETYPE=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib/" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}" || true)
 
-  FREETYPE_BUILD_INFO="Unknown"
   if [[ -n "$FOUND_FREETYPE" ]]; then
     echo "Skipping FreeType download"
   else
@@ -472,14 +471,9 @@ checkingAndDownloadingFreeType() {
       ;;
     esac
 
-    # Fetch the sha for the commit we just cloned
     cd freetype || exit
-    FREETYPE_SHA=$(git rev-parse HEAD) || exit
-    FREETYPE_BUILD_INFO="https://github.com/freetype/freetype/commit/${FREETYPE_SHA}"
 
     if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-      # Record buildinfo version
-      echo "${FREETYPE_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
       return
     fi
 
@@ -534,9 +528,6 @@ checkingAndDownloadingFreeType() {
       fi
     fi
   fi
-
-  # Record buildinfo version
-  echo "${FREETYPE_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
 }
 
 # Recording Build image SHA into docker.txt
