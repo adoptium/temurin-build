@@ -922,10 +922,10 @@ checkingToolSummary() {
 
 # Determine FreeType version being used in the build from either the system or bundled freetype.h definition
 addFreeTypeVersionInfo() {
-   # Default to "system" the jdk8 only value
+   # Default to "system"
    local FREETYPE_TO_USE="system"
    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
-       # Get FreeType used from build spec.gmk, "bundled" or "system"
+       # For jdk-11+ get FreeType used from build spec.gmk, which can be "bundled" or "system"
        FREETYPE_TO_USE="$(grep "^FREETYPE_TO_USE[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^FREETYPE_TO_USE[ ]*:=[ ]*//")"
    fi
 
