@@ -32,6 +32,7 @@ echo "ARCHITECTURE: ${ARCHITECTURE}"
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   XCODE_SWITCH_PATH="/Applications/Xcode-11.7.app"
+  export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
   if [[ "${MACHINEARCHITECTURE}" == "arm64" ]] && [[ "${ARCHITECTURE}" == "x64" ]]; then
     echo "MACHINEARCHITECTURE == arm64 and ARCHITECTURE (to build) == x64"
