@@ -22,10 +22,19 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 export MACOSX_DEPLOYMENT_TARGET=10.9
 export BUILD_ARGS="${BUILD_ARGS}"
 
+## JDK8 only: If, at this point in the build, the architecure of the machine is arm64 while the ARCHITECTURE variable
+## is x64 then we need to add the cross compilation option --openjdk-target=x86_64-apple-darwin
+MACHINEARCHITECTURE=$(uname -m)
+
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
-  XCODE_SWITCH_PATH="/Applications/Xcode.app"
+  XCODE_SWITCH_PATH="/Applications/Xcode-11.7.app"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
+  if [[ "${MACHINEARCHITECTURE}" == "arm64" ]] && [[ "${ARCHITECTURE}" == "x64" ]]; then
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=x86_64-apple-darwin"
+    export MAC_ROSETTA_PREFIX="arch -x86_64"
+    export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
+  fi
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
     export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"

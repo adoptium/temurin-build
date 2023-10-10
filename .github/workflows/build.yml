@@ -135,6 +135,7 @@ jobs:
       run: |
         rm -rf /Applications/Xcode.app
         ln -s /Applications/Xcode_11.7.app /Applications/Xcode.app
+        ln -s /Applications/Xcode_11.7.app /Applications/Xcode-11.7.app
 
     - name: Build macOS
       run: |

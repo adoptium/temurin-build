@@ -32,7 +32,7 @@ if [ -z "$ARCHITECTURE"  ]; then
    if [ "$ARCHITECTURE" = "powerpc" ]; then ARCHITECTURE=ppc64;      fi # AIX
    if [ "$ARCHITECTURE" = "arm"     ]; then ARCHITECTURE=aarch64;    fi # mac/aarch64
    if [ "$ARCHITECTURE" = "armv7l"  ]; then ARCHITECTURE=arm;        fi # Linux/arm32
-   echo ARCHITECTURE not defined - assuming $ARCHITECTURE
+   echo ARCHITECTURE not defined - assuming "$ARCHITECTURE"
    export ARCHITECTURE
 fi
 
@@ -132,6 +132,7 @@ CONFIGURE_ARGS_FOR_ANY_PLATFORM=""
 CONFIGURE_ARGS=${CONFIGURE_ARGS:-""}
 BUILD_ARGS=${BUILD_ARGS:-""}
 VARIANT_ARG=""
+MAC_ROSETTA_PREFIX=""
 
 if [ -z "${JDK_BOOT_VERSION}" ]
 then
@@ -238,11 +239,11 @@ if [ "${JAVA_FEATURE_VERSION}" -lt 16 ]; then
   export BUILD_ARGS="${BUILD_ARGS} --create-jre-image"
 fi
 
-echo "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args ${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"
+echo "$MAC_ROSETTA_PREFIX $PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args ${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"
 
 # Convert all speech marks in config args to make them safe to pass in.
 # These will be converted back into speech marks shortly before we use them, in build.sh.
 CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM//\"/temporary_speech_mark_placeholder}"
 
 # shellcheck disable=SC2086
-bash -c "$PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args \"${CONFIGURE_ARGS_FOR_ANY_PLATFORM}\" --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"
+bash -c "$MAC_ROSETTA_PREFIX $PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args \"${CONFIGURE_ARGS_FOR_ANY_PLATFORM}\" --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"
