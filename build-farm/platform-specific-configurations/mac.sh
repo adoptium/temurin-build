@@ -33,12 +33,14 @@ fi
 
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
-  XCODE_SWITCH_PATH="/Applications/Xcode-11.7.app"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
   if [[ "${MACHINEARCHITECTURE}" == "arm64" ]] && [[ "${ARCHITECTURE}" == "x64" ]]; then
     # Cross compilation config needed only for jdk8
     export MAC_ROSETTA_PREFIX="arch -x86_64"
     export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
+    XCODE_SWITCH_PATH="/Applications/Xcode-11.7.app"
+  else
+    XCODE_SWITCH_PATH="/Applications/Xcode.app"
   fi
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
