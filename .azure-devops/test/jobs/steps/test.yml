@@ -17,8 +17,8 @@ steps:
     - script: |
         echo "##vso[task.setvariable variable=DISPLAY]:1";
         echo "##vso[task.setvariable variable=OPENJDK_SOURCES]$BUILD_REPOSITORY_LOCALPATH";
-        echo "##vso[task.setvariable variable=OPENJDK_BINARY]$PIPELINE_WORKSPACE/openjdkbinary";
-        echo "##vso[task.setvariable variable=TEST_JDK_HOME]$PIPELINE_WORKSPACE/openjdkbinary/j2sdk-image";
+        echo "##vso[task.setvariable variable=OPENJDK_BINARY]$PIPELINE_WORKSPACE/jdkbinary";
+        echo "##vso[task.setvariable variable=TEST_JDK_HOME]$PIPELINE_WORKSPACE/jdkbinary/j2sdk-image";
         echo "##vso[task.setvariable variable=TEST_DIR]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests"
         echo "##vso[task.setvariable variable=TKG_DIR]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests/TKG"
         echo "##vso[task.setvariable variable=JRE_IMAGE]$PIPELINE_WORKSPACE/j2re-image";
