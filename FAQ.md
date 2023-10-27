@@ -44,9 +44,12 @@ JDK | Platform | Build env | Compiler | Other info
 All | Linux/arm32 | Ubuntu 16.04 | GCC [1] | glibc 2.23
 All | Linux/s390x | RHEL 7 | GCC [1] | glibc 2.17
 All | Linux (others) | CentOS 7 | GCC [1] | glibc 2.17
-8 | Windows/x64 | Server 2012 | VS2017 - CL  19.16.27038 |
-11,17 | Windows/x64 | Server 2012 | VS2019 - CL 19.27.29111 |
-20+ | Windows/x64 | Server 2022 | VS2019 - CL 19.29.30146 |
+8 | Windows/x64 | Server 2022 | VS2017 - CL  19.16.27049 |
+11,17 | Windows/x64 | Server 2022 | VS2019 - CL 19.29.30146 |
+21+ | Windows/x64 | Server 2022 | VS2022 - CL 19.37.32822 |
+8 | Win32 | Server 2022 | VS2013 - CL 18.00.40629 |
+11 | Win32 | Server 2022 | VS2017 - CL 19.16.27049 |
+17 | Win32 | Server 2022 | VS2019 - CL 19.29.30146 |
 All | Macos/x64 | 10.14 (18.7.0) | clang-1001.0.46.4 |
 All | Macos/aarch64 | 11 (20.1.0) | clang-1200.0.32.29 | There is no build for JDK8
 All | Alpine/x64 | 3.15.6 | GCC 10.3.1 | Default compiler Alpine 10.3.1_git20211027
