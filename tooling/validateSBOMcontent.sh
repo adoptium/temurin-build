@@ -53,8 +53,8 @@ elif echo "$SBOMFILE" | grep _x64_windows_; then
   if [ "${MAJORVERSION}" = "8" ]; then
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2017 - CURRENTLY NOT WORKING)"
     #EXPECTED_FREETYPE="https://github.com/freetype/freetype/commit/ec8853cd18e1a0c275372769bdad37a79550ed66"
-  else
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2019)"
+  elif [ "${MAJORVERSION}" -ge 20 ]; then
+    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
   fi
 elif echo "$SBOMFILE" | grep _x86-32_windows_; then
   if [ "${MAJORVERSION}" = "8"  ]; then
