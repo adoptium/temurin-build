@@ -68,6 +68,7 @@ elif echo "$SBOMFILE" | grep _x86-32_windows_; then
 elif echo "$SBOMFILE" | grep _mac_; then
   # NOTE: mac/x64 native builds >=11 were using "clang (clang/LLVM from Xcode 10.3)"
   EXPECTED_COMPILER="clang (clang/LLVM from Xcode 12.4)"
+  # shellcheck disable=SC2166
   if [ "${MAJORVERSION}" = "8" -o "${MAJORVERSION}" = "11" ] && echo "$SBOMFILE" | grep _x64_; then
     EXPECTED_COMPILER="clang (clang/LLVM)"
 #    EXPECTED_FREETYPE="https://github.com/freetype/freetype/commit/ec8853cd18e1a0c275372769bdad37a79550ed66"
@@ -86,11 +87,11 @@ echo "BOOTJDK is ${BOOTJDK}"
 # Freetype versions are inconsistent at present - see build#3484
 #[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
-  # shellcheck disable=SC2086
+# shellcheck disable=SC2086
 [ -n "$(echo $FREETYPE | tr -d '[0-9]\.')" ] && echo "ERROR: FreeType version not a valid number (SBOM has ${FREETYPE})"   && RC=1
 echo "FREETYPE is ${FREETYPE}"
 [ "${FREEMARKER}" != "$EXPECTED_FREEMARKER"  ] && echo "ERROR: Freemarker version not ${EXPECTED_FREEMARKER} (SBOM has ${FREEMARKER})"   && RC=1
-
+# shellcheck disable=SC3037
 echo -n "Checking for JDK source SHA validity: "
 GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \")
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
@@ -100,6 +101,7 @@ if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
   RC=1
 fi
 
+# shellcheck disable=SC3037
 echo -n "Checking for temurin-build SHA validity: "
 GITSHA=$(jq '.components[].properties[] | select(.name|test("Temurin Build Ref")) | .value' "$1" | tr -d \")
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)

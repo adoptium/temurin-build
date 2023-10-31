@@ -32,7 +32,7 @@ else
 fi
 
 echo "$(date +%T) : IVT : I will be checking https://github.com/adoptium/temurin${MAJOR_VERSION}-binaries/releases/tag/$TAG"
-if [ -z "${MAJOR_VERSION}" -o -z "${TAG}" ]; then
+if [ -z "${MAJOR_VERSION}" ] || [ -z "${TAG}" ]; then
    echo "MAJOR_VERSION or TAG undefined - aborting"
    exit 1
 fi
@@ -59,6 +59,7 @@ fi
   # Parse the releases list for the one we want and download everything in it
   # shellcheck disable=SC2013
   for URL in $(grep "$FILTER" "$WORKSPACE/jdk${MAJOR_VERSION}.txt" | awk -F'"' '/browser_download_url/{print$4}'); do
+    # shellcheck disable=SC2046
     [ "$VERBOSE" = "true" ] && echo Downloading $(basename "$URL")
     curl -LORsS "$URL"
   done
@@ -74,6 +75,7 @@ export GNUPGHOME="$WORKSPACE/.gpg-temp"
 rm -rf "$GNUPGHOME"
 mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
 gpg -q --keyserver keyserver.ubuntu.com --recv-keys "${GPGID}" || exit 1
+# shellcheck disable=SC3037
 /bin/echo -e "5\ny\nq\n" | gpg -q --batch --command-fd 0 --expert --edit-key "${GPGID}" trust || exit 1
 
 RC=0
@@ -131,6 +133,7 @@ if ! strings tarballtest/bin/java | grep ^GLIBC_2.17 > /dev/null; then
   RC=4
 fi
 
+# shellcheck disable=SC2166
 [ "${MAJOR_VERSION}" = "8" -o "${MAJOR_VERSION}" = "11" ] && EXPECTED_GCC=7.5
 [ "${MAJOR_VERSION}" = "17" ] && EXPECTED_GCC=10.3
 [ "${MAJOR_VERSION}" -ge 20 ] && EXPECTED_GCC=11.2
@@ -148,15 +151,17 @@ if [ "$(sha256sum cyclonedx-linux-arm64 | cut -d' ' -f1)" != "eaac307ca4d7f3ee2a
    exit 1
 fi
 chmod 700 cyclonedx-linux-*
-cd "$STARTDIR"
+cd "$STARTDIR" || exit 1
 
+# shellcheck disable=SC2010
 for SBOM in $(ls -1 staging/"$TAG"/OpenJDK*-sbom*json | grep -v metadata); do
   echo "$(date +%T) : IVT : Validating $SBOM ..."
   if ! staging/"$TAG"/cyclonedx-linux-arm64 validate --input-file "$SBOM"; then
     echo "ERROR: Failed CycloneDX validation check"
     RC=5
   fi
-  if ! bash $(dirname "$0")/validateSBOMcontent.sh "$SBOM" "$MAJOR_VERSION" "$TAG"; then
+  # shellcheck disable=SC2086
+  if ! bash "$(dirname $0)/validateSBOMcontent.sh" "$SBOM" "$MAJOR_VERSION" "$TAG"; then
     echo "ERROR: Failed checks on $SBOM"
     RC=6
   fi
