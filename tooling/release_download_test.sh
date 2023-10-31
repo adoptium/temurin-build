@@ -25,10 +25,10 @@ TAG=${1:-$TAG}
 if echo "$TAG" | grep jdk8u; then
   MAJOR_VERSION=8
 elif echo "$TAG" | grep ^jdk-; then
-  MAJOR_VERSION=$(echo $TAG | cut -d- -f2 | cut -d. -f1 | cut -d\+ -f1)
+  MAJOR_VERSION=$(echo "$TAG" | cut -d- -f2 | cut -d. -f1 | cut -d\+ -f1)
 else
   # Probably a beta with the tag starting jdkXXu
-  MAJOR_VERSION=$(echo $TAG | cut -d- -f1 | tr -d jdku)
+  MAJOR_VERSION=$(echo "$TAG" | cut -d- -f1 | tr -d jdku)
 fi
 
 echo "$(date +%T) : IVT : I will be checking https://github.com/adoptium/temurin${MAJOR_VERSION}-binaries/releases/tag/$TAG"
@@ -37,13 +37,12 @@ if [ -z "${MAJOR_VERSION}" -o -z "${TAG}" ]; then
    exit 1
 fi
 
-curl -sS https://api.github.com/repos/adoptium/temurin${MAJOR_VERSION}-binaries/releases > "$WORKSPACE/jdk${MAJOR_VERSION}.txt"
-if [ $? -ne 0 ]; then
+if ! curl -sS "https://api.github.com/repos/adoptium/temurin${MAJOR_VERSION}-binaries/releases" > "$WORKSPACE/jdk${MAJOR_VERSION}.txt"; then
    echo "github API call failed - aborting"
    exit 2
 fi
 
-[ "$VERBOSE" = "tru" ] && echo "$(date +%T) : IVT: Downloading files from release repository"
+[ "$VERBOSE" = "true" ] && echo "$(date +%T) : IVT: Downloading files from release repository"
 
 # Leaving this "if/fi" commented out as it can be useful if doing standalone
 # testing to avoid having to re-download. May be removed in future
@@ -52,14 +51,15 @@ fi
   mkdir staging "staging/$TAG"
   cd "staging/$TAG" || exit 3
   # Early access versions are currently in a different format
-  if echo $TAG | grep ea-beta; then
+  if echo "$TAG" | grep ea-beta; then
      FILTER="ea_${MAJOR_VERSION}"
   else
-     FILTER=$(echo $TAG | sed 's/+/%2B/g')
+     FILTER=$(echo "$TAG" | sed 's/+/%2B/g')
   fi
   # Parse the releases list for the one we want and download everything in it
-  for URL in $(cat "$WORKSPACE/jdk${MAJOR_VERSION}.txt" | grep "$FILTER" | awk -F'"' '/browser_download_url/{print$4}'); do
-    [ "$VERBOSE" = "true" ] && echo "Downloading $(basename $URL)"
+  # shellcheck disable=SC2013
+  for URL in $(grep "$FILTER" "$WORKSPACE/jdk${MAJOR_VERSION}.txt" | awk -F'"' '/browser_download_url/{print$4}'); do
+    [ "$VERBOSE" = "true" ] && echo Downloading $(basename "$URL")
     curl -LORsS "$URL"
   done
   
@@ -97,22 +97,22 @@ done
 echo "$(date +%T): IVT : Verifying that all tarballs are a valid format and counting files within them"
 
 for A in OpenJDK*.tar.gz; do
-  if ! tar tfz $A > /dev/null; then
+  if ! tar tfz "$A" > /dev/null; then
     echo "ERROR: Failed to verify that $A can be extracted"
     RC=4
   fi
   # NOTE: 40 chosen because the static-libs is in the 40s - maybe switch for different tarballs in the future?
-  if [ "$(tar tfz $A | wc -l)" -lt 40 ]; then
+  if [ "$(tar tfz "$A" | wc -l)" -lt 40 ]; then
     echo "ERROR: Less than 40 files in $A - that does not seem correct"
     RC=4
   fi
 done
 for A in OpenJDK*.zip; do 
-  if ! unzip -t $A > /dev/null; then
+  if ! unzip -t "$A" > /dev/null; then
     echo "ERROR: Failed to verify that $A can be extracted"
     RC=4
   fi
-  if [ "$(unzip -l $A | wc -l)" -lt 44 ]; then
+  if [ "$(unzip -l "$A" | wc -l)" -lt 44 ]; then
     echo "ERROR: Less than 40 files in $A - that does not seem correct"
     RC=4
   fi
@@ -150,13 +150,13 @@ fi
 chmod 700 cyclonedx-linux-*
 cd "$STARTDIR"
 
-for SBOM in $(ls -1 staging/$TAG/OpenJDK*-sbom*json | grep -v metadata); do
+for SBOM in $(ls -1 staging/"$TAG"/OpenJDK*-sbom*json | grep -v metadata); do
   echo "$(date +%T) : IVT : Validating $SBOM ..."
-  if ! staging/$TAG/cyclonedx-linux-arm64 validate --input-file "$SBOM"; then
+  if ! staging/"$TAG"/cyclonedx-linux-arm64 validate --input-file "$SBOM"; then
     echo "ERROR: Failed CycloneDX validation check"
     RC=5
   fi
-  if ! bash $(dirname $0)/validateSBOMcontent.sh "$SBOM" $MAJOR_VERSION $TAG; then
+  if ! bash $(dirname "$0")/validateSBOMcontent.sh "$SBOM" "$MAJOR_VERSION" "$TAG"; then
     echo "ERROR: Failed checks on $SBOM"
     RC=6
   fi
