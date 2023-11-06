@@ -19,7 +19,6 @@
 
 set -euo pipefail
 
-STARTDIR="$PWD"
 WORKSPACE=${WORKSPACE:-"$PWD"}
 VERBOSE=false
 KEEP_STAGING=false

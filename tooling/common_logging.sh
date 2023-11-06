@@ -3,7 +3,7 @@
 # Utility functions for logging.
 #
 
-set -euo pipefail
+set -eu
 
 NORMAL=""
 BOLD=""
