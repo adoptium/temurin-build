@@ -171,7 +171,7 @@ if [ "$SKIP_DOWNLOADING" = "false" ]; then
   if echo "$TAG" | grep ea-beta; then
     FILTER="ea_${MAJOR_VERSION}"
   else
-    FILTER=$(echo "$TAG" | sed 's/+/%2B/g')
+    FILTER=${TAG//+/%2B}
   fi
 
   # Parse the releases list for the one we want and download everything in it
@@ -353,7 +353,7 @@ case "${CYCLONEDX_OS}-${CYCLONEDX_ARCH}" in
 esac
 
 CYCLONEDX_TOOL=""
-if [ ! -z "${CYCLONEDX_CHECKSUM}" ]; then
+if [ -n "${CYCLONEDX_CHECKSUM}" ]; then
   print_verbose "IVT : Downloading CycloneDX validation tool"
 
   CYCLONEDX_TOOL="cyclonedx-${CYCLONEDX_OS}-${CYCLONEDX_ARCH}${CYCLONEDX_SUFFIX}"
