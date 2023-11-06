@@ -109,8 +109,8 @@ if [ $# -ne "1" ]; then
     usage
 fi
 
-# shellcheck disable=SC2124
-TAG=${@:1:1}
+# the tag should be the remaining argument
+TAG=${1}
 
 if [ -z "${TAG-}" ]; then
     usage
