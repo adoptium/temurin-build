@@ -124,9 +124,9 @@ print_verbose "IVT : Verifying Tag '$TAG'"
 #
 ##########################################################################################################################
 
-if [[ "$TAG" =~ ^jdk8u.* ]]; then
+if echo "$TAG" | grep jdk8u > /dev/null; then
   MAJOR_VERSION=8
-elif [[ "$TAG" =~ ^jdk-.* ]]; then
+elif echo "$TAG" | grep ^jdk- > /dev/null; then
   MAJOR_VERSION=$(echo "$TAG" | cut -d- -f2 | cut -d. -f1 | cut -d\+ -f1)
 else
   # Probably a beta with the tag starting jdkXXu
@@ -171,7 +171,8 @@ if [ "$SKIP_DOWNLOADING" = "false" ]; then
   if echo "$TAG" | grep ea-beta; then
     FILTER="ea_${MAJOR_VERSION}"
   else
-    FILTER=${TAG//+/%2B}
+    # shellcheck disable=SC2001
+    FILTER=$(echo "$TAG" | sed 's/+/%2B/g')
   fi
 
   # Parse the releases list for the one we want and download everything in it
