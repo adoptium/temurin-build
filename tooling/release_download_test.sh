@@ -294,9 +294,12 @@ tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jdk_"${ARCH}"_"${OS}"_hot
 ##########################################################################################################################
 #
 # Verify GLIBC and GCC version of the release matching the OS/ARCH on which this script is running.
-# TODO: this should actually not only check the release matching the OS/ARCH but rather test all.
-#       I tested the OpenJDK21U-jdk_x64_linux_hotspot_21.0.1_12.tar.gz release and the GLIBC version used to build it is: GLIBC_2.2.5
-#       Currently only linux-aarch64 seems to be handled correctly.
+#
+# TODO: this should actually not only check the binary matching the OS/ARCH but rather test all.
+#       I tested the OpenJDK21U-jdk_x64_linux_hotspot_21.0.1_12.tar.gz binary and the GLIBC version
+#       used to build it is: GLIBC_2.2.5
+#       Currently only linux-aarch64 seems to be handled correctly for some jdk version.
+#
 ##########################################################################################################################
 
 print_verbose "IVT : Detected GLIBC version '$(strings tarballtest/bin/java | grep ^GLIBC)'"
