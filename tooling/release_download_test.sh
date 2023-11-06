@@ -35,7 +35,7 @@ if test -t 1; then
   # see if it supports colors...
   ncolors=$(tput colors)
 
-  if test -n "$ncolors" && test $ncolors -ge 8; then
+  if test -n "$ncolors" && test "$ncolors" -ge 8; then
     NORMAL="$(tput sgr0)"
     BOLD="$(tput bold)"
     RED="$(tput setaf 1)"
@@ -44,15 +44,15 @@ if test -t 1; then
 fi
 
 print_verbose() {
-  [ "$VERBOSE" = "true" ] && echo "${BOLD}$(date +%T) : $@${NORMAL}" 1>&2;
+  [ "$VERBOSE" = "true" ] && echo "${BOLD}$(date +%T) : $*${NORMAL}" 1>&2;
 }
 
 print_error() {
-  echo "${RED}ERROR:${NORMAL} $@" 1>&2; 
+  echo "${RED}ERROR:${NORMAL} $*" 1>&2; 
 }
 
 print_warning() {
-  echo "${YELLOW}WARN:${NORMAL} $@" 1>&2; 
+  echo "${YELLOW}WARN:${NORMAL} $*" 1>&2; 
 }
 
 usage() {
@@ -109,6 +109,7 @@ if [ $# -ne "1" ]; then
     usage
 fi
 
+# shellcheck disable=SC2124
 TAG=${@:1:1}
 
 if [ -z "${TAG-}" ]; then
@@ -271,7 +272,7 @@ case "${kernel}" in
     Linux*)     OS=linux;;
     Darwin*)    OS=mac;;
     CYGWIN*)    OS=windows;;
-    *)          echo 'Unknown kernel "$kernel"' && exit 3
+    *)          echo "Unknown kernel '$kernel'" && exit 3
 esac
 
 machine="$(uname -m)"
@@ -279,15 +280,15 @@ case "${machine}" in
     x86_64)     ARCH=x64;;
     aarch64)    ARCH=aarch64;;
     ppc64le)    ARCH=ppc64le;;
-    *)          echo 'Unknown machine "$machine"' && exit 3
+    *)          echo "Unknown machine '$machine'" && exit 3
 esac
 
 print_verbose "IVT : Running java -version and checking glibc version on ${OS}/${ARCH} tarballs"
 
 rm -rf tarballtest && mkdir tarballtest
-tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jre_${ARCH}_${OS}_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
+tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
 rm -rf tarballtest && mkdir tarballtest
-tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jdk_${ARCH}_${OS}_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
+tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jdk_"${ARCH}"_"${OS}"_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
 
 ##########################################################################################################################
 #
@@ -332,7 +333,7 @@ case "${kernel}" in
     CYGWIN*)    CYCLONEDX_OS=win
                 CYCLONEDX_SUFFIX=".exe"
                 ;;
-    *)          echo 'Unknown kernel "$kernel"' && exit 3
+    *)          echo "Unknown kernel '$kernel'" && exit 3
 esac
 
 case "${machine}" in
@@ -357,12 +358,12 @@ if [ ! -z "${CYCLONEDX_CHECKSUM}" ]; then
 
   CYCLONEDX_TOOL="cyclonedx-${CYCLONEDX_OS}-${CYCLONEDX_ARCH}${CYCLONEDX_SUFFIX}"
 
-  [ ! -r "${CYCLONEDX_TOOL}" ] && curl -LOsS https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.25.0/cyclonedx-${CYCLONEDX_OS}-${CYCLONEDX_ARCH}${CYCLONEDX_SUFFIX}
-  if [ "$(sha256sum ${CYCLONEDX_TOOL} | cut -d' ' -f1)" != "${CYCLONEDX_CHECKSUM}" ]; then
+  [ ! -r "${CYCLONEDX_TOOL}" ] && curl -LOsS https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.25.0/cyclonedx-"${CYCLONEDX_OS}"-"${CYCLONEDX_ARCH}""${CYCLONEDX_SUFFIX}"
+  if [ "$(sha256sum "${CYCLONEDX_TOOL}" | cut -d' ' -f1)" != "${CYCLONEDX_CHECKSUM}" ]; then
      print_error "Cannot verify checksum of cycloneDX CLI binary"
      exit 1
   fi
-  chmod 700 cyclonedx-${CYCLONEDX_OS}-*
+  chmod 700 cyclonedx-"${CYCLONEDX_OS}"-*
 else
   print_warning "No CycloneDX tool available for '${kernel}-${machine}', skipping sbom validation with cyclonedx tool"
 fi
@@ -373,7 +374,7 @@ cd "$STARTDIR" || exit 1
 for SBOM in $(ls -1 "$WORKSPACE"/staging/"$TAG"/OpenJDK*-sbom*json | grep -v metadata); do
   print_verbose "IVT : Validating $SBOM ..."
   
-  if [ ! -z "$CYCLONEDX_TOOL" ]; then
+  if [ -n "$CYCLONEDX_TOOL" ]; then
     if ! "$WORKSPACE"/staging/"$TAG"/"${CYCLONEDX_TOOL}" validate --input-file "$SBOM"; then
       print_error "Failed CycloneDX validation check"
       RC=5
