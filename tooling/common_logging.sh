@@ -23,12 +23,6 @@ if test -t 1; then
   fi
 fi
 
-print_verbose() {
-  if [ "$VERBOSE" = "true" ]; then
-    echo "${BOLD}$(date +%T) : $*${NORMAL}" 1>&2;
-  fi
-}
-
 print_error() {
   echo "${RED}ERROR:${NORMAL} $*" 1>&2;
 }
