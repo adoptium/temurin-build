@@ -482,7 +482,7 @@ checkingAndDownloadingFreeType() {
       freetypeEnv="export CC=\"gcc -m32\""
     fi
 
-    eval "${freetypeEnv}" && bash ./autogen.sh 
+    eval "${freetypeEnv}" && bash ./autogen.sh || exit
 
     local pngArg=""
     if ./configure --help | grep "with-png"; then
