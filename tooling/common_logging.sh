@@ -24,7 +24,9 @@ if test -t 1; then
 fi
 
 print_verbose() {
-  [ "$VERBOSE" = "true" ] && echo "${BOLD}$(date +%T) : $*${NORMAL}" 1>&2;
+  if [ "$VERBOSE" = "true" ]; then
+    echo "${BOLD}$(date +%T) : $*${NORMAL}" 1>&2;
+  fi
 }
 
 print_error() {
