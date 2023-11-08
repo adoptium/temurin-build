@@ -29,7 +29,7 @@ MAJOR_VERSION=""
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# shellcheck source=sbin/common/config_init.sh
+# shellcheck source=tooling/common_logging.sh
 source "$SCRIPT_DIR/common_logging.sh"
 
 usage() {
@@ -409,7 +409,7 @@ verify_sboms() {
     fi
 
     # shellcheck disable=SC2086
-    if ! bash "$(dirname $0)/validateSBOMcontent.sh" "${sbom}" "${MAJOR_VERSION}" "${TAG}"; then
+    if ! bash "${SCRIPT_DIR}/validateSBOMcontent.sh" "${sbom}" "${MAJOR_VERSION}" "${TAG}"; then
       print_error "Failed checks on ${sbom}"
       RC=6
     fi
