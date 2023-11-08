@@ -40,11 +40,10 @@ Usage: $(basename "${0}") [OPTIONS] TAG
 This scripts downloads the specified release from the GitHub temurinXX-binaries and runs validation checks on it.
 
 Options:
-  -k             keep staging area
-  -s             skip downloading release
+  -k             keep staging area (should only be used for debugging / testing);
+  -s             skip downloading of release artifacts (should only be used for debugging / testing)
   -v             enable verbose mode
   -h             show this help
-
 "
   echo "$USAGE"
   exit 1
