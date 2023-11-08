@@ -5,10 +5,10 @@
 
 set -eu
 
-NORMAL=""
-BOLD=""
-RED=""
-YELLOW=""
+export NORMAL=""
+export BOLD=""
+export RED=""
+export YELLOW=""
 
 # check if stdout is a terminal...
 if test -t 1; then
@@ -16,10 +16,10 @@ if test -t 1; then
   ncolors=$(tput colors)
 
   if test -n "$ncolors" && test "$ncolors" -ge 8; then
-    NORMAL="$(tput sgr0)"
-    BOLD="$(tput bold)"
-    RED="$(tput setaf 1)"
-    YELLOW="$(tput setaf 3)"
+    export NORMAL="$(tput sgr0)"
+    export BOLD="$(tput bold)"
+    export RED="$(tput setaf 1)"
+    export YELLOW="$(tput setaf 3)"
   fi
 fi
 
