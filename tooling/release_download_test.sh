@@ -25,7 +25,6 @@ KEEP_STAGING=false
 SKIP_DOWNLOADING=false
 USE_ANSI=false
 
-TAG=""
 MAJOR_VERSION=""
 
 SCRIPT_DIR="$( cd "$( dirname "${0}" )" && pwd )"
@@ -73,12 +72,13 @@ parse_options() {
 
   [ "$VERBOSE" = "true" ] && set +x
 
-  if [ $# -ne "1" ]; then
+  if [ $# -gt 1 ]; then
       usage
   fi
 
-  # the tag should be the remaining argument
-  TAG=${1}
+  # the tag should be the remaining argument, if no argument is available
+  # anymore, check if the environment already has a TAG variable.
+  TAG=${1:-$TAG}
 
   if [ -z "${TAG-}" ]; then
       usage
