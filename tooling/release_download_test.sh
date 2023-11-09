@@ -35,9 +35,13 @@ source "$SCRIPT_DIR/common_logging.sh"
 usage() {
   local USAGE
   USAGE="
-Usage: $(basename "${0}") [OPTIONS] TAG
+Usage: $(basename "${0}") [OPTIONS] [TAG]
 
 This scripts downloads the specified release from the GitHub temurinXX-binaries and runs validation checks on it.
+
+If no TAG is provided, it is expected that a \$TAG variable is present containing the tag to validate.
+If no \$WORKSPACE variable is set, the current working directory will be used as base for the staging area, otherwise
+the directory specified in the \$WORKSPACE variable will be used.
 
 Options:
   -k       keep staging area (should only be used for debugging / testing);
