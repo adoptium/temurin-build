@@ -152,7 +152,7 @@ download_release_files() {
     filter="ea_${MAJOR_VERSION}"
   else
     # shellcheck disable=SC2001
-    filter=$(echo "${TAG}" | sed 's/+/%2B/g')
+    filter=$(echo "/${TAG}/" | sed 's/+/%2B/g')
   fi
 
   # Parse the releases list for the one we want and download everything in it
