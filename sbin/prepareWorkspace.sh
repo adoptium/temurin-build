@@ -330,11 +330,13 @@ checkingAndDownloadingAlsa() {
 
     echo "GNUPGHOME=$GNUPGHOME"
     mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
-    gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
     # Should we clear this directory up after checking?
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now
-    gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
+    # Note: the uptime command below is to aid diagnostics for this issue:
+    # https://github.com/adoptium/temurin-build/issues/3518#issuecomment-1792606345
+    uptime
+    gpg --keyserver keyserver.ubuntu.com --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
     gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
 
