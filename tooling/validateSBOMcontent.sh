@@ -55,6 +55,8 @@ elif echo "$SBOMFILE" | grep _x64_windows_; then
     #EXPECTED_FREETYPE="https://github.com/freetype/freetype/commit/ec8853cd18e1a0c275372769bdad37a79550ed66"
   elif [ "${MAJORVERSION}" -ge 20 ]; then
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
+  else
+    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2019)"
   fi
 elif echo "$SBOMFILE" | grep _x86-32_windows_; then
   if [ "${MAJORVERSION}" = "8"  ]; then
@@ -112,7 +114,7 @@ if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
    if echo "$1" | grep '[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]' 2>/dev/null; then
      echo "Ignoring return code as filename looks like a nightly"
    else
-     echo "This can also happen with a branch being used and not a tag as we do for GAs so not failing"kd
+     echo "This can also happen with a branch being used and not a tag as we do for GAs so not failing"
      echo "Note: As this is a warning message this will not cause a non-zero return code by itself"
      # RC=1
    fi
