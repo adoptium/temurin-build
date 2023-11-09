@@ -28,7 +28,7 @@ USE_ANSI=false
 TAG=""
 MAJOR_VERSION=""
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$( cd "$( dirname "${0}" )" && pwd )"
 
 # shellcheck source=tooling/common_logging.sh
 source "$SCRIPT_DIR/common_logging.sh"
