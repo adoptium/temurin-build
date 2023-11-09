@@ -23,6 +23,7 @@ WORKSPACE=${WORKSPACE:-"$PWD"}
 VERBOSE=false
 KEEP_STAGING=false
 SKIP_DOWNLOADING=false
+USE_ANSI=false
 
 TAG=""
 MAJOR_VERSION=""
@@ -40,10 +41,11 @@ Usage: $(basename "${0}") [OPTIONS] TAG
 This scripts downloads the specified release from the GitHub temurinXX-binaries and runs validation checks on it.
 
 Options:
-  -k             keep staging area (should only be used for debugging / testing);
-  -s             skip downloading of release artifacts (should only be used for debugging / testing)
-  -v             enable verbose mode
-  -h             show this help
+  -k       keep staging area (should only be used for debugging / testing);
+  -s       skip downloading of release artifacts (should only be used for debugging / testing)
+  -a       enables ansi coloring of output
+  -v       enable verbose mode
+  -h       show this help
 "
   echo "$USAGE"
   exit 1
@@ -52,12 +54,13 @@ Options:
 parse_options() {
   local OPTIND opt
 
-  while getopts ":hvks" opt; do
+  while getopts ":hvksa" opt; do
       case "${opt}" in
           h)   usage;;
           v)   VERBOSE=true;;
           k)   KEEP_STAGING=true;;
           s)   SKIP_DOWNLOADING=true;;
+          a)   USE_ANSI=true;;
           "?") echo "Unknown option '-$OPTARG'"
                usage;;
           ":") echo "No argument value for option '-$OPTARG'"
@@ -435,6 +438,9 @@ verify_sboms() {
 
 parse_options "$@"
 
+# enable ansi logging if enabled
+[ "${USE_ANSI}" = "true" ] && init_ansi_logging
+
 if [ -z "${TAG}" ]; then
    print_error "TAG undefined - aborting"
    exit 1
@@ -451,10 +457,10 @@ fi
 
 JDK_RELEASES=$(download_jdk_releases)
 
-if [ "$SKIP_DOWNLOADING" = "false" ]; then
+if [ "${SKIP_DOWNLOADING}" = "false" ]; then
   print_verbose "IVT : Downloading files from release repository"
 
-  if [ "$KEEP_STAGING" = "false" ]; then
+  if [ "${KEEP_STAGING}" = "false" ]; then
     rm -rf "${WORKSPACE}/staging"
   fi
   mkdir -p "${WORKSPACE}/staging/${TAG}"

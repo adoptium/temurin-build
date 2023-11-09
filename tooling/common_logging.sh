@@ -10,23 +10,31 @@ BOLD=""
 RED=""
 YELLOW=""
 
-# check if stdout is a terminal...
-if test -t 1; then
-  # see if it supports colors...
-  ncolors=$(tput colors)
 
-  if test -n "$ncolors" && test "$ncolors" -ge 8; then
-    NORMAL="$(tput sgr0)"
-    BOLD="$(tput bold)"
-    RED="$(tput setaf 1)"
-    YELLOW="$(tput setaf 3)"
+########################################################################################################################
+#
+# Initializes logging with ansi coloring.
+#
+########################################################################################################################
+init_ansi_logging() {
+  # check if stdout is a terminal...
+  if test -t 1; then
+    # see if it supports colors...
+    ncolors=$(tput colors)
+
+    if test -n "$ncolors" && test "$ncolors" -ge 8; then
+      NORMAL="$(tput sgr0)"
+      BOLD="$(tput bold)"
+      RED="$(tput setaf 1)"
+      YELLOW="$(tput setaf 3)"
+    fi
   fi
-fi
 
-export NORMAL
-export BOLD
-export RED
-export YELLOW
+  export NORMAL
+  export BOLD
+  export RED
+  export YELLOW
+}
 
 
 print_error() {
