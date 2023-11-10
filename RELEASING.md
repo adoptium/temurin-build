@@ -417,6 +417,6 @@ Rename the nightly build targets file (it will be named `jdkxx.groovy`, [example
 
 Occasionally we may have to do an out-of-band release that does not align with a quarterly release from the upstream OpenJDK project. This may occur if there has been a problem with our build process that we missed at GA time, to fix a critical issue, or when a project outside OpenJDK :
 
-1. When triggering the pipeline, set `AdoptBuildNumber` to a unique number for the point release
+1. When triggering the pipeline, set `AdoptBuildNumber` to a unique number for the point release (the original will be "blank" so any subsequent point release required should start at "1")
 2. If you used a custom entry in `overridePublishName` when kicking off the GA pipeline, keep it the same as for the GA release - we DO NOT want the filenames changed to include the point number
 3. When running the publish job, you need to use a custom `TAG` in order to publish it to the website with a separate name from what you had initially e.g.  `jdk-11.0.5+10.1_openj9-0.17.1` (Note the position of the `.1` for OpenJ9 releases in that example - it's after the openj9 version but before the OpenJ9 version.
