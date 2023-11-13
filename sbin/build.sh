@@ -838,6 +838,9 @@ generateSBoM() {
   local fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
   local fullVerOutput=$($JAVA_LOC -version 2>&1)
 
+  echo "${fullVer}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/fullVer.txt" 2>&1
+  echo "${fullVerOutput}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/fullVerOutput.txt" 2>&1
+
   # Create initial SBOM json
   createSBOMFile "${javaHome}" "${classpath}" "${sbomJson}"
   # Set default SBOM metadata
@@ -946,10 +949,8 @@ finishSBoM() {
     javaHome=$(cygpath -w "${javaHome}")
   fi
 
-  # Run a series of SBOM API commands to generate the required SBOM
-  JAVA_LOC="$PRODUCT_HOME/bin/java"
-  local fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
-  local fullVerOutput=$($JAVA_LOC -version 2>&1)
+  local fullVer=$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/fullVer.txt")
+  local fullVerOutput=$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/fullVerOutput.txt")
 
   components=("JDK" "JRE" "SRC" "STATIC-LIBS" "DEBUGIMAGE" "TESTIMAGE")
   for component in "${components[@]}"
