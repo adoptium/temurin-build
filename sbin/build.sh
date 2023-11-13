@@ -915,6 +915,98 @@ generateSBoM() {
   echo ""
 }
 
+finishSBoM() {
+  local javaHome="${1}"
+
+  # classpath to run CycloneDX java app TemurinGenSBOM
+  CYCLONEDB_JAR_DIR="${CYCLONEDB_DIR}/build/jar"
+  classpath="${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar:${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar:${CYCLONEDB_JAR_DIR}/jackson-core.jar:${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar:${CYCLONEDB_JAR_DIR}/jackson-databind.jar:${CYCLONEDB_JAR_DIR}/jackson-annotations.jar:${CYCLONEDB_JAR_DIR}/json-schema.jar:${CYCLONEDB_JAR_DIR}/commons-codec.jar:${CYCLONEDB_JAR_DIR}/commons-io.jar:${CYCLONEDB_JAR_DIR}/github-package-url.jar"
+  local sbomJson=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}.json")
+
+  # Remove the tarball extension from the name to be used for the SBOM
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+      sbomJson="${sbomJson//\.zip/}"
+  else
+      sbomJson="${sbomJson//\.tar\.gz/}"
+  fi
+
+  sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}"/"${sbomJson}"
+
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    classpath=""
+    for jarfile in "${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar" "${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar" \
+      "${CYCLONEDB_JAR_DIR}/jackson-core.jar" "${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar" \
+      "${CYCLONEDB_JAR_DIR}/jackson-databind.jar" "${CYCLONEDB_JAR_DIR}/jackson-annotations.jar" \
+      "${CYCLONEDB_JAR_DIR}/json-schema.jar" "${CYCLONEDB_JAR_DIR}/commons-codec.jar" "${CYCLONEDB_JAR_DIR}/commons-io.jar" \
+      "${CYCLONEDB_JAR_DIR}/github-package-url.jar" ;
+    do
+      classpath+=$(cygpath -w "${jarfile}")";"
+    done
+    sbomJson=$(cygpath -w "${sbomJson}")
+    javaHome=$(cygpath -w "${javaHome}")
+  fi
+
+  # Run a series of SBOM API commands to generate the required SBOM
+  JAVA_LOC="$PRODUCT_HOME/bin/java"
+  local fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
+  local fullVerOutput=$($JAVA_LOC -version 2>&1)
+
+  components=("JDK" "JRE" "SRC" "STATIC-LIBS" "DEBUGIMAGE" "TESTIMAGE")
+  for component in "${components[@]}"
+  do
+    componentLowerCase=$(echo "${component}" | tr '[:upper:]' '[:lower:]')
+    echo "${component}"
+
+    local archiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed "s/-jdk/-${componentLowerCase}/")
+    local archiveFile="${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}"/"${archiveName}"
+
+    echo "${archiveFile}"
+
+    if [ ! -f "${archiveFile}" ]; then
+      continue
+    else
+      sha=$(sha256sum "${archiveFile}" | cut -f1 -d' ')
+      echo "${sha}"
+    fi
+
+    # Create JDK Component
+    addSBOMComponent "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} ${component} Component"
+
+    # Add SHA256 hash for the component
+    addSBOMComponentHash "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "${sha}"
+
+    # Below add different properties to JDK component
+    # Add variant as JDK Component Property
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "${component} Variant" "${BUILD_CONFIG[BUILD_VARIANT]^}"
+    # Add scmRef as JDK Component Property
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "SCM Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
+    # Add OpenJDK source ref commit as JDK Component Property
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "OpenJDK Source Commit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
+    # Add buildRef as JDK Component Property
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "Temurin Build Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
+
+    # Add build timestamp
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "Build Timestamp" "${BUILD_CONFIG[BUILD_TIMESTAMP]}"
+
+    # Add Tool Summary section from configure.txt
+    checkingToolSummary
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "Build Tools Summary" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
+    # Add builtConfig JDK Component Property, load as Json string
+    built_config=$(createConfigToJsonString)
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "Build Config" "${built_config}"
+    # Add full_version_output JDK Component Property
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "full_version_output" "${fullVerOutput}"
+    # Add makejdk_any_platform_args JDK Component Property
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "makejdk_any_platform_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
+    # Add make_command_args JDK Component Property
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${archiveName}" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
+  done
+
+  # Print SBOM json
+  echo "CycloneDX SBOM:"
+  cat  "${sbomJson}"
+  echo ""
+}
 
 # Generate build tools info into dependency file
 checkingToolSummary() {
@@ -2048,6 +2140,11 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   setPlistForMacOS
   addNoticeFile
   createOpenJDKTarArchive
+  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]] && [[ -d "${CYCLONEDB_DIR}" ]]; then
+    javaHome="$(setupAntEnv)"
+    finishSBoM "${javaHome}"
+    unset javaHome
+  fi
   exit 0
 fi
 
@@ -2084,6 +2181,11 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   setPlistForMacOS
   addNoticeFile
   createOpenJDKTarArchive
+  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]] && [[ -d "${CYCLONEDB_DIR}" ]]; then
+    javaHome="$(setupAntEnv)"
+    finishSBoM "${javaHome}"
+    unset javaHome
+  fi
 fi
 
 echo "build.sh : $(date +%T) : All done!"
