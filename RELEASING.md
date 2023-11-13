@@ -420,3 +420,19 @@ Occasionally we may have to do an out-of-band release that does not align with a
 1. When triggering the pipeline, set `AdoptBuildNumber` to a unique number for the point release (the original will be "blank" so any subsequent point release required should start at "1")
 2. If you used a custom entry in `overridePublishName` when kicking off the GA pipeline, keep it the same as for the GA release - we DO NOT want the filenames changed to include the point number
 3. When running the publish job, you need to use a custom `TAG` in order to publish it to the website with a separate name from what you had initially e.g.  `jdk-11.0.5+10.1_openj9-0.17.1` (Note the position of the `.1` for OpenJ9 releases in that example - it's after the openj9 version but before the OpenJ9 version.
+
+If you need to create a point release with a one-off patch (Usually a cherry pick of something already in the codebase which will go into the next release) use the following process:
+
+1. Clone the repository you need to patch (e.g. `git clone git@github.com:adoptium/jdk21u`)
+2. Check out the tag you wish to base it on (e.g. `git checkout jdk-21.0.1+12_adopt`)
+3. Create a branch for the new release (e.g. `git checkout -b jdk-21.0.1+12.1`)
+4. Cherry pick your patches to apply them onto the source
+5. Create a new `_adopt` tag for the point release (e.g. `git tag -a jdk-21.0.1+12.1_adopt`)
+6. Push the branch and tag: `git push origin jdk-21.0.1+12.1 && git push origin jdk-21.0.1+12.1_adopt`
+7. If the patch does not affect tests, create a PR to update testenv.properties in the aqa-tests release branch with the point release version number ([Sample PR against v0.9.9-release](https://github.com/adoptium/aqa-tests/pull/4865/files))
+8. If the patch does change tests, a new ".1" branch should be created in aqa-tests, based off the release branch, which has the updatre to testenv.properties (If this was needed in the above example, you would create a v0.9.9.1-release branch)
+9. Run the release-openjdkXX-pipeline with:
+   - the new `_adopt` tag as the `scmReference`
+   - `additionalConfigureArgs` of `--with-version-build=12` (replace 12 with the number after `+` but before new new `.1` in the version string)
+   - the `aqaReference` updated if step 8 was followd
+   - the desired set of platforms defined in the `targetConfigurations` parameter
