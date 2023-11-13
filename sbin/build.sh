@@ -653,6 +653,17 @@ buildTemplatedFile() {
     FULL_MAKE_COMMAND="make -t \&\& ${FULL_MAKE_COMMAND}"
   fi
 
+  if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
+    # Check if strace is available
+    if rpm -q strace &> /dev/null; then
+      echo -e "\n \nStrace is available on system"
+      FULL_MAKE_COMMAND="mkdir build/straceOutput \&\& strace -o build/straceOutput/outputFile -ff -e trace=openat,execve ${FULL_MAKE_COMMAND}"
+    else
+      echo -e "\n \n Strace is not available on system"
+      exit 2
+    fi
+  fi
+
   # shellcheck disable=SC2002
   cat "$SCRIPT_DIR/build.template" |
     sed -e "s|{configureArg}|${FULL_CONFIGURE}|" \
@@ -2116,6 +2127,8 @@ fixJavaHomeUnderDocker
 cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
 parseArguments "$@"
+
+# TODO: Add Function to check for strace availability
 
 if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   configureCommandParameters
