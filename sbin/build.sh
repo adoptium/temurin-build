@@ -655,11 +655,11 @@ buildTemplatedFile() {
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
     # Check if strace is available
-    if rpm -q strace &> /dev/null; then
-      echo -e "\n \nStrace is available on system"
+    if strace -V; then
+      echo "Strace is available on system"
       FULL_MAKE_COMMAND="mkdir build/straceOutput \&\& strace -o build/straceOutput/outputFile -ff -e trace=openat,execve ${FULL_MAKE_COMMAND}"
     else
-      echo -e "\n \n Strace is not available on system"
+      echo "Strace is not available on system"
       exit 2
     fi
   fi
