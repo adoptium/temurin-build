@@ -2128,8 +2128,6 @@ cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
 
 parseArguments "$@"
 
-# TODO: Add Function to check for strace availability
-
 if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   configureCommandParameters
   buildTemplatedFile
