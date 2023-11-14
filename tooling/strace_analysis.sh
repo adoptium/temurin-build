@@ -62,11 +62,10 @@ set +f
 totalFileCounter=0
 pkgs=()
 no_pkg_files=()
-for file in $allFiles
-do
-	echo "Processing: $file"
-	((totalFileCounter=totalFileCounter+1))
-	
+for file in $allFiles; do
+    echo "Processing: $file"
+    ((totalFileCounter = totalFileCounter + 1))
+
     filePath="$(readlink -f "$file")"
 
     pkg=$(rpm -qf "$filePath")
@@ -74,28 +73,27 @@ do
     if [[ "$rc" != "0" ]]; then
         # bin, lib, sbin pkgs may be installed under the root symlink
         if [[ "$isBinSymLink" == "true" ]] && [[ $filePath == /usr/bin* ]]; then
-			 	filePath=${filePath/#\/usr\/bin}
-			 	filePath="/bin${filePath}"
-			 	pkg=$(rpm -qf "$filePath" 2>/dev/null)
-			 	rc=$?
-			fi
-			if [[ "$isLibSymLink" == "true" ]] && [[ $filePath == /usr/lib* ]]; then
-            filePath=${filePath/#\/usr\/lib}
+            filePath=${filePath/#\/usr\/bin/}
+            filePath="/bin${filePath}"
+            pkg=$(rpm -qf "$filePath" 2>/dev/null)
+            rc=$?
+        fi
+        if [[ "$isLibSymLink" == "true" ]] && [[ $filePath == /usr/lib* ]]; then
+            filePath=${filePath/#\/usr\/lib/}
             filePath="/lib${filePath}"
             pkg=$(rpm -qf "$filePath" 2>/dev/null)
             rc=$?
-        	fi
-        	if [[ "$isSbinSymLink" == "true" ]] && [[ $filePath == /usr/sbin* ]]; then
-            filePath=${filePath/#\/usr\/sbin}
+        fi
+        if [[ "$isSbinSymLink" == "true" ]] && [[ $filePath == /usr/sbin* ]]; then
+            filePath=${filePath/#\/usr\/sbin/}
             filePath="/sbin${filePath}"
             pkg=$(rpm -qf "$filePath" 2>/dev/null)
             rc=$?
-        	fi
+        fi
     fi
 
     ignoreFile=false
-    for ignoreFile in "${ignores[@]}"
-    do
+    for ignoreFile in "${ignores[@]}"; do
         if [[ "$filePath" =~ $ignoreFile ]]; then
             ignoreFile=true
             break
@@ -109,28 +107,27 @@ do
         #echo "no pkg: $filePath"
         no_pkg_files+=("$filePath")
     else
-   		pkg="$(echo "$pkg" | cut -d" " -f1)"
-			pkg=${pkg::-1}
-   		#echo "file: $filePath pkg: $pkg version: $pkg"
-			pkgString="pkg: $pkg version: $pkg"
-			if ! echo "${pkgs[@]}" | grep "temurin_${pkgString}_temurin" >/dev/null; then
+        pkg="$(echo "$pkg" | cut -d" " -f1)"
+        pkg=${pkg::-1}
+        #echo "file: $filePath pkg: $pkg version: $pkg"
+        pkgString="pkg: $pkg version: $pkg"
+        if ! echo "${pkgs[@]}" | grep "temurin_${pkgString}_temurin" >/dev/null; then
             pkgs+=("temurin_${pkgString}_temurin")
         fi
     fi
 done
 echo "Number of all processed strace output files: $totalFileCounter"
-if [ $totalFileCounter == 0 ] ; then
+if [ $totalFileCounter == 0 ]; then
     echo "No strace output files available"
     exit 1
 fi
 
 npkgs=()
 # loop over all non-package dependencies and try to get the version. If version is not empty, add to array
-for file in "${no_pkg_files[@]}"
-do
+for file in "${no_pkg_files[@]}"; do
     npkg=$("$file" --version 2>/dev/null | head -n 1)
     if [[ "$npkg" != "" ]]; then
-    	npkgs+=("${npkg}")
+        npkgs+=("${npkg}")
     fi
 done
 
@@ -138,9 +135,8 @@ echo -e "\nNon-Package Dependencies:"
 printf '%s\n' "${npkgs[@]}" | sort -u
 
 echo -e "\nPackage Dependencies:"
-for pkg in "${pkgs[@]}"
-do
-    trimPkg=${pkg/#temurin_}
+for pkg in "${pkgs[@]}"; do
+    trimPkg=${pkg/#temurin_/}
     trimPkg=${trimPkg%_temurin}
     echo $trimPkg
 done
