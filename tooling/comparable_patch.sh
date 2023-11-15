@@ -66,7 +66,7 @@ function removeExcludedFiles() {
 # as they differ due to the Signatures
 function processModuleInfo() {
   if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
-    echo "Normalizing ModuleAttributes order in module-info.class, converting to javap.tmp"
+    echo "Normalizing ModuleAttributes order in module-info.class, converting to javap"
 
     moduleAttr="ModuleResolution ModuleTarget"
 

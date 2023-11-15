@@ -39,7 +39,7 @@ remove any Signatures from the executeables.
 
 ## Comparable Build Tools
 
-1. comparable_patch.sh : Patches a JDK folder to enable "Comparable" comparison of two different Vendor JDK builds.
+comparable_patch.sh : Patches a JDK folder to enable "Comparable" comparison of two different Vendor JDK builds.
 The patching process involves:
 
 - Expanding all zips and jmods, so executeables can be processed to remove signatures prior to comaprison.
@@ -47,4 +47,27 @@ The patching process involves:
 - Neutralise VS_VERSION_INFO Vendor strings (Windows).
 - Remove non-comparable CRC generated uuid values, which are binary values based on the hash of the content (Windows & MacOS).
 - Remove Vendor strings embedded in executables, classes and text files.
+- Remove module-info differences due to "hash" of Signed module executables
 - Remove any non-deterministic build process artifact strings, like Manifest Created-By stamps.
+
+### How to setup and run comparable_patch.sh on Windows
+
+Tooling setup:
+
+1. The comparable patch tools, tooling/src/c/WindowsUpdateVsVersionInfo.c and src/java/temurin/tools/BinRepl.java need compiling
+before the comparable_patch.sh can be run
+2. Compile tooling/src/c/WindowsUpdateVsVersionInfo.c :
+  - Ensure VS2022 SDK is installed and on PATH
+  - Compile:
+    - cd tooling/src/c
+    - cl WindowsUpdateVsVersionInfo.c version.lib
+3. Compile src/java/temurin/tools/BinRepl.java :
+  - Ensure suitable JDK on PATH
+  - cd tooling/src/java
+  - javac temurin/tools/BinRepl.java
+4. Setting environment within a CYGWIN shell :
+  - For BinRepl : export CLASSPATH=<temurin-build>/tooling/src/java:$CLASSPATH
+  - For WindowsUpdateVsVersionInfo.exe : export PATH=<temurin-build>/tooling/src/c:$PATH
+  - For dumpbin.exe MSVC tool : export PATH=/cygdrive/c/progra~1/micros~2/2022/Community/VC/Tools/MSVC/14.37.32822/bin/Hostx64/x64:$PATH
+  - For running BinRepl java : export PATH=<jdk>/bin:$PATH
+
