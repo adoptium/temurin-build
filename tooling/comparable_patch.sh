@@ -405,6 +405,16 @@ function neutraliseReleaseFile() {
   fi
 }
 
+# Remove some non-JDK files that some Vendors distribute
+# - NEWS : Some Vendors provide a NEWS text file
+# - demo : Not all vendors distribute the demo examples 
+function removeNonJdkFiles() {
+  echo "Removing non-JDK files"
+  
+  rm -f  "${JDK_DIR}/NEWS"
+  rm -rf "${JDK_DIR}/demo"
+}
+
 if [ ! -d "${JDK_DIR}" ]; then
   echo "$JDK_DIR does not exist"
   exit 1
@@ -463,6 +473,8 @@ neutraliseVersionProps
 neutraliseManifests
 
 neutraliseReleaseFile
+
+removeNonJdkFiles
 
 echo "***********"
 echo "SUCCESS :-)"
