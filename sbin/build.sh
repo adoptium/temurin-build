@@ -894,6 +894,8 @@ generateSBoM() {
   addFreeTypeVersionInfo
   # Add FreeMarker 3rd party (openj9)
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt)"
+  # Add CycloneDX versions
+  addCycloneDXVersions
   
   # Add Build Docker image SHA1
   buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
@@ -974,6 +976,19 @@ addFreeTypeVersionInfo() {
    fi
 
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "${version}"
+}
+
+# Determine and store CycloneDX SHAs that have been used to provide the SBOMs
+addCycloneDXVersions() {
+   if [ ! -d "${BUILD_CONFIG[WORKSPACE_DIR]}/cyclonedx-lib/build/jar" ]; then
+      echo "ERROR: CycloneDX jar directory not found at ${BUILD_CONFIG[WORKSPACE_DIR]}/cyclonedx-lib/build/jar - cannot store checksums in SBOM"
+   else
+       # This should probably cycle over all jars in the directory and include them
+       # but this is an initial PoC for discussion ...
+       # Also - should we do somethign if the sha256sum fails? Currently SHA will show blank
+       local JarSha=$(sha256sum "${BUILD_CONFIG[WORKSPACE_DIR]}/cyclonedx-lib/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+       addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX core java JAR SHA" "${JarSha}"
+   fi
 }
 
 # Below add versions to sbom | Facilitate reproducible builds
