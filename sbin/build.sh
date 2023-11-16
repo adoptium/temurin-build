@@ -980,13 +980,13 @@ addFreeTypeVersionInfo() {
 
 # Determine and store CycloneDX SHAs that have been used to provide the SBOMs
 addCycloneDXVersions() {
-   if [ ! -d "${BUILD_CONFIG[WORKSPACE_DIR]}/cyclonedx-lib/build/jar" ]; then
-      echo "ERROR: CycloneDX jar directory not found at ${BUILD_CONFIG[WORKSPACE_DIR]}/cyclonedx-lib/build/jar - cannot store checksums in SBOM"
+   if [ ! -d "${CYCLONEDB_DIR}/build/jar" ]; then
+      echo "ERROR: CycloneDX jar directory not found at ${CYCLONEDB_DIR}/build/jar - cannot store checksums in SBOM"
    else
        # This should probably cycle over all jars in the directory and include them
        # but this is an initial PoC for discussion ...
        # Also - should we do somethign if the sha256sum fails? Currently SHA will show blank
-       local JarSha=$(sha256sum "${BUILD_CONFIG[WORKSPACE_DIR]}/cyclonedx-lib/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+       local JarSha=$(sha256sum "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
        addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX core java JAR SHA" "${JarSha}"
    fi
 }
