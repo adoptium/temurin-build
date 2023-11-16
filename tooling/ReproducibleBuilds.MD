@@ -58,17 +58,20 @@ Tooling setup:
 before the comparable_patch.sh can be run
 
 2. Compile tooling/src/c/WindowsUpdateVsVersionInfo.c :
+
 - Ensure VS2022 SDK is installed and on PATH
 - Compile:
   - cd tooling/src/c
   - cl WindowsUpdateVsVersionInfo.c version.lib
 
 3. Compile src/java/temurin/tools/BinRepl.java :
+
 - Ensure suitable JDK on PATH
 - cd tooling/src/java
 - javac temurin/tools/BinRepl.java
 
 4. Setting environment within a CYGWIN shell :
+
 - For BinRepl : export CLASSPATH=<temurin-build>/tooling/src/java:$CLASSPATH
 - For WindowsUpdateVsVersionInfo.exe : export PATH=<temurin-build>/tooling/src/c:$PATH
 - For dumpbin.exe MSVC tool : export PATH=/cygdrive/c/progra~1/micros~2/2022/Community/VC/Tools/MSVC/14.37.32822/bin/Hostx64/x64:$PATH
