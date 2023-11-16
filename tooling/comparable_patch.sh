@@ -41,6 +41,9 @@ VENDOR_BUG_URL="$5"
 VENDOR_VM_BUG_URL="$6"
 
 # Remove excluded files known to differ
+#  NOTICE - Vendor specfic notice text file
+#  cacerts - Vendors use different cacerts
+#  classes.jsa, classes_nocoops.jsa - CDS archive caches will differ due to Vendor string differences
 function removeExcludedFiles() {
   excluded="NOTICE cacerts classes.jsa classes_nocoops.jsa"
 
@@ -91,7 +94,7 @@ function processModuleInfo() {
         cc=$((cc+1))
 
         # Module attr have only 1 line definition
-        if [[ "$foundAttr" = true ]] && [[ "$cc" > 1 ]]; then
+        if [[ "$foundAttr" = true ]] && [[ "$cc" -gt 1 ]]; then
           foundAttr=false
           attrName=""
         fi
@@ -168,14 +171,17 @@ function removeSystemModulesHashBuilderParams() {
           while IFS= read -r line
           do
             cc=$((cc+1))
+            # Detect hashForModule function
             if [[ "$line" =~ .*"$moduleHashesFunction".* ]]; then
               cc=0 
             fi
-            if [[ "$cc" == 3 ]] && [[ "$line" =~ .*"$moduleString"[a-z\.]+.* ]]; then
+            # 3rd instruction line is the Module string to confirm entry
+            if [[ "$cc" -eq 3 ]] && [[ "$line" =~ .*"$moduleString"[a-z\.]+.* ]]; then
               found=true
               module=$(echo "$line" | tr -s ' ' | tr -d '\r' | cut -d' ' -f6)
               echo "==> Found $module ModuleHashes\$Builder function, skipping hash parameter"
             fi
+            # hasForModule function section finishes upon finding invokevirtual
             if [[ "$found" = true ]] && [[ "$line" =~ .*"$virtualFunction".* ]]; then
               found=false
             fi
@@ -193,6 +199,11 @@ function removeSystemModulesHashBuilderParams() {
 }
 
 # Remove the Windows EXE/DLL timestamps and internal VS CRC and debug repro hex values
+# The Windows PE format contains various values determined from the binary content
+# which will vary due to the different Vendor branding
+#   timestamp - Used to be an actual timestamp but MSFT changed this to a checksum determined from binary content
+#   checksum  - A checksum value of the binary
+#   reprohex  - A hex UUID to identify the binary version, again generated from binary content
 function removeWindowsNonComparableData() {
  echo "Removing EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
  FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
@@ -207,18 +218,23 @@ function removeWindowsNonComparableData() {
         echo "  FAILED == > dumpbin \"$f\" /ALL > $dmpfile"
         exit 1
     fi
+
+    # Determine non-comparable stamps and hex codes from dumpbin output
     timestamp=$(grep "time date stamp" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f2)
     checksum=$(grep "checksum" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f2)
     reprohex=$(grep "${timestamp} repro" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f7-38 | tr ' ' ':' | tr -d '\r')
     reprohexhalf=$(grep "${timestamp} repro" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f7-22 | tr ' ' ':' | tr -d '\r')
     rm -f "$dmpfile"
 
+    # Neutralize reprohex string
     if [ -n  "$reprohex" ]; then
       if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA"; then
         echo "  FAILED ==> java $TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --hex \"${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\""
         exit 1
       fi
     fi
+
+    # Neutralize timestamp hex string
     hexstr="00000000"
     timestamphex=${hexstr:0:-${#timestamp}}$timestamp
     timestamphexLE="${timestamphex:6:2}:${timestamphex:4:2}:${timestamphex:2:2}:${timestamphex:0:2}"
@@ -233,6 +249,7 @@ function removeWindowsNonComparableData() {
       fi
     fi
 
+    # Neutralize checksum string
     # Prefix checksum to 8 digits
     hexstr="00000000"
     checksumhex=${hexstr:0:-${#checksum}}$checksum
@@ -272,7 +289,7 @@ function removeMacOSNonComparableData() {
   echo "Successfully removed all MacOS dylib non-comparable UUID from ${JDK_DIR}"
 }
 
-# Neutralize Windows VS_VERSION_INFO CompanyName
+# Neutralize Windows VS_VERSION_INFO CompanyName from the resource compiled PE section
 function neutraliseVsVersionInfo() {
   echo "Updating EXE/DLL VS_VERSION_INFO in ${JDK_DIR}"
   FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
