@@ -52,7 +52,7 @@ The patching process involves:
 
 ### How to setup and run comparable_patch.sh on Windows
 
-Tooling setup:
+#### Tooling setup:
 
 1. The comparable patch tools, tooling/src/c/WindowsUpdateVsVersionInfo.c and src/java/temurin/tools/BinRepl.java need compiling
 before the comparable_patch.sh can be run
@@ -76,3 +76,37 @@ before the comparable_patch.sh can be run
 - For WindowsUpdateVsVersionInfo.exe : export PATH=<temurin-build>/tooling/src/c:$PATH
 - For dumpbin.exe MSVC tool : export PATH=/cygdrive/c/progra\~1/micros\~2/2022/Community/VC/Tools/MSVC/14.37.32822/bin/Hostx64/x64:$PATH
 - For running BinRepl java : export PATH=<jdk>/bin:$PATH
+
+#### Running comparable_patch.sh: 
+
+1. Unzip your JDK archive into a directory (eg.jdk1)
+
+2. Run comparable_patch.sh
+
+```
+bash comparable_patch.sh <jdk_home_dir> <version_str> <vendor_name> <vendor_url> <vendor_bug_url> <vendor_vm_bug_url>
+```
+The Vendor strings and urls can be found by running your jdk's "java -XshowSettings":
+```
+java -XswhoSettings:
+...
+    java.vendor = Eclipse Adoptium
+    java.vendor.url = https://adoptium.net/
+    java.vendor.url.bug = https://github.com/adoptium/adoptium-support/issues
+    java.vendor.version = Temurin-21.0.1+12
+...
+```
+eg.
+```
+bash comparable_patch.sh jdk1/jdk-21.0.1+12 "Temurin-21.0.1+12" "Eclipse Adoptium" "https://adoptium.net/" "https://github.com/adoptium/adoptium-support/issues" "https://github.com/adoptium/adoptium-support/issues"
+```
+
+3. Unzip the other Vendor JDK to compare with, say into "jdk2", and run similar comparable_patch.sh
+for that Vendor branding
+
+4. Diff recursively the now Vendor neutralized jdk directories
+
+```
+diff -r jdk1 jdk2
+```
+The diff should be "identical" if the two Vendor JDK's are "Comparable", ie."Identical except for the Vendor Branding"

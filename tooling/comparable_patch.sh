@@ -29,7 +29,7 @@ set -eu
 TEMURIN_TOOLS_BINREPL="temurin.tools.BinRepl"
 
 if [ "$#" -ne 6 ]; then
-  echo "Syntax: comparable_patch.sh <jdk_dir> <version_str> <vendor_name> <vendor_url> <vendor_bug_url> <vendor_vm_bug_url>"
+  echo "Syntax: comparable_patch.sh <jdk_home_dir> <version_str> <vendor_name> <vendor_url> <vendor_bug_url> <vendor_vm_bug_url>"
   exit 1
 fi
 
