@@ -83,16 +83,14 @@ before the comparable_patch.sh can be run
 
 2. Run comparable_patch.sh
 
-
-```
+bash:```
 bash comparable_patch.sh <jdk_home_dir> <version_str> <vendor_name> <vendor_url> <vendor_bug_url> <vendor_vm_bug_url>
 
 ```
 
 The Vendor strings and urls can be found by running your jdk's "java -XshowSettings":
 
-
-```
+java:```
 java -XshowSettings:
 ...
     java.vendor = Eclipse Adoptium
@@ -104,7 +102,7 @@ java -XshowSettings:
 
 eg.
 
-```
+bash:```
 bash comparable_patch.sh jdk1/jdk-21.0.1+12 "Temurin-21.0.1+12" "Eclipse Adoptium" "https://adoptium.net/" "https://github.com/adoptium/adoptium-support/issues" "https://github.com/adoptium/adoptium-support/issues"
 ```
 
@@ -113,8 +111,7 @@ for that Vendor branding
 
 4. Diff recursively the now Vendor neutralized jdk directories
 
-
-```
+bash:```
 diff -r jdk1 jdk2
 ```
 
