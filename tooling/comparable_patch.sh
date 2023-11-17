@@ -28,6 +28,11 @@ set -eu
 
 TEMURIN_TOOLS_BINREPL="temurin.tools.BinRepl"
 
+if [ "$#" -ne 6 ]; then
+  echo "Syntax: comparable_patch.sh <jdk_home_dir> <version_str> <vendor_name> <vendor_url> <vendor_bug_url> <vendor_vm_bug_url>"
+  exit 1
+fi
+
 JDK_DIR="$1"
 VERSION_REPL="$2"
 VENDOR_NAME="$3"
@@ -36,12 +41,12 @@ VENDOR_BUG_URL="$5"
 VENDOR_VM_BUG_URL="$6"
 
 # Remove excluded files known to differ
+#  NOTICE - Vendor specfic notice text file
+#  cacerts - Vendors use different cacerts
+#  classes.jsa, classes_nocoops.jsa - CDS archive caches will differ due to Vendor string differences
 function removeExcludedFiles() {
-  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
-    excluded="NOTICE cacerts classes.jsa classes_nocoops.jsa SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class"
-  else
-    excluded="NOTICE cacerts classes.jsa classes_nocoops.jsa"
-  fi
+  excluded="NOTICE cacerts classes.jsa classes_nocoops.jsa"
+
   echo "Removing excluded files known to differ: ${excluded}"
   for exclude in $excluded
     do
@@ -53,36 +58,183 @@ function removeExcludedFiles() {
         done
     done
 
-  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
-    echo "Removing java.base module-info.class, known to differ by jdk.jpackage module hash"
-    rm "${JDK_DIR}/jmods/expanded_java.base.jmod/classes/module-info.class"
-    rm "${JDK_DIR}/lib/modules_extracted/java.base/module-info.class"
-  fi
   echo "Successfully removed all excluded files from ${JDK_DIR}"
 }
 
+# Normalize the following ModuleAttributes that can be ordered differently
+# depending on how the vendor has signed and re-packed the JMODs
+#   - ModuleResolution:
+#   - ModuleTarget:
+# java.base also requires the dependent module "hash:" values to be excluded
+# as they differ due to the Signatures
+function processModuleInfo() {
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
+    echo "Normalizing ModuleAttributes order in module-info.class, converting to javap"
+
+    moduleAttr="ModuleResolution ModuleTarget"
+
+    FILES=$(find "${JDK_DIR}" -type f -name "module-info.class")
+    for f in $FILES
+    do
+      echo "javap and re-order ModuleAttributes for $f"
+      javap -v -sysinfo -l -p -c -s -constants "$f" > "$f.javap.tmp"
+      rm "$f"
+
+      cc=99
+      foundAttr=false
+      attrName=""
+      # Clear any attr tmp files
+      for attr in $moduleAttr
+      do
+        rm -f "$f.javap.$attr"
+      done
+
+      while IFS= read -r line
+      do
+        cc=$((cc+1))
+
+        # Module attr have only 1 line definition
+        if [[ "$foundAttr" = true ]] && [[ "$cc" -gt 1 ]]; then
+          foundAttr=false
+          attrName=""
+        fi
+
+        # If not processing an attr then check for attr
+        if [[ "$foundAttr" = false ]]; then
+          for attr in $moduleAttr
+          do
+            if [[ "$line" =~ .*"$attr:".* ]]; then
+              cc=0
+              foundAttr=true
+              attrName="$attr"
+            fi
+          done
+        fi
+
+        # Echo attr to attr tmp file, otherwise to tmp2
+        if [[ "$foundAttr" = true ]]; then
+          echo "$line" >> "$f.javap.$attrName" 
+        else 
+          echo "$line" >> "$f.javap.tmp2"
+        fi
+      done < "$f.javap.tmp"
+      rm "$f.javap.tmp"
+
+      # Remove javap Classfile and timestamp and SHA-256 hash
+      if [[ "$f" =~ .*"java.base".* ]]; then
+        grep -v "Last modified\|Classfile\|SHA-256 checksum\|hash:" "$f.javap.tmp2" > "$f.javap" 
+      else 
+        grep -v "Last modified\|Classfile\|SHA-256 checksum" "$f.javap.tmp2" > "$f.javap"
+      fi
+      rm "$f.javap.tmp2"
+
+      # Append any ModuleAttr tmp files
+      for attr in $moduleAttr
+      do
+        if [[ -f "$f.javap.$attr" ]]; then
+          cat "$f.javap.$attr" >> "$f.javap"
+        fi
+        rm -f "$f.javap.$attr"
+      done
+    done
+  fi
+}
+
+# Process SystemModules classes to remove ModuleHashes$Builder differences due to Signatures
+#   1. javap
+#   2. search for line: // Method jdk/internal/module/ModuleHashes$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes$Builder;
+#   3. followed 3 lines later by: // String <module>
+#   4. then remove all lines until next: invokevirtual
+#   5. remove Last modified, Classfile and SHA-256 checksum javap artefact statements
+function removeSystemModulesHashBuilderParams() {
+  # Key strings
+  moduleHashesFunction="// Method jdk/internal/module/ModuleHashes\$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes\$Builder;"
+  moduleString="// String "
+  virtualFunction="invokevirtual"
+
+  systemModules="SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class"
+  echo "Removing SystemModules ModulesHashes\$Builder differences"
+  for systemModule in $systemModules
+    do
+      FILES=$(find "${JDK_DIR}" -type f -name "$systemModule")
+      for f in $FILES
+        do
+          echo "Processing $f"
+          javap -v -sysinfo -l -p -c -s -constants "$f" > "$f.javap.tmp"
+          rm "$f"
+
+          # Remove "instruction number:" prefix, so we can just match code  
+          sed -i -E "s/^[[:space:]]+[0-9]+:(.*)/\1/" "$f.javap.tmp" 
+
+          cc=99
+          found=false
+          while IFS= read -r line
+          do
+            cc=$((cc+1))
+            # Detect hashForModule function
+            if [[ "$line" =~ .*"$moduleHashesFunction".* ]]; then
+              cc=0 
+            fi
+            # 3rd instruction line is the Module string to confirm entry
+            if [[ "$cc" -eq 3 ]] && [[ "$line" =~ .*"$moduleString"[a-z\.]+.* ]]; then
+              found=true
+              module=$(echo "$line" | tr -s ' ' | tr -d '\r' | cut -d' ' -f6)
+              echo "==> Found $module ModuleHashes\$Builder function, skipping hash parameter"
+            fi
+            # hasForModule function section finishes upon finding invokevirtual
+            if [[ "$found" = true ]] && [[ "$line" =~ .*"$virtualFunction".* ]]; then
+              found=false
+            fi
+            if [[ "$found" = false ]]; then
+              echo "$line" >> "$f.javap.tmp2"
+            fi 
+          done < "$f.javap.tmp"
+          rm "$f.javap.tmp"
+          grep -v "Last modified\|Classfile\|SHA-256 checksum" "$f.javap.tmp2" > "$f.javap"
+          rm "$f.javap.tmp2"
+        done
+    done
+
+  echo "Successfully removed all SystemModules jdk.jpackage hash differences from ${JDK_DIR}"
+}
+
 # Remove the Windows EXE/DLL timestamps and internal VS CRC and debug repro hex values
+# The Windows PE format contains various values determined from the binary content
+# which will vary due to the different Vendor branding
+#   timestamp - Used to be an actual timestamp but MSFT changed this to a checksum determined from binary content
+#   checksum  - A checksum value of the binary
+#   reprohex  - A hex UUID to identify the binary version, again generated from binary content
 function removeWindowsNonComparableData() {
  echo "Removing EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
  FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
  for f in $FILES
   do
     echo "Removing EXE/DLL non-comparable timestamp, CRC, debug repro hex from $f"
-    rm -f dumpbin.tmp
-    if ! dumpbin "$f" /ALL > dumpbin.tmp; then
-        echo "  FAILED == > dumpbin \"$f\" /ALL > dumpbin.tmp"
+
+    # Determine non-comparable data using dumpbin
+    dmpfile="$f.dumpbin.tmp"
+    rm -f "$dmpfile"
+    if ! dumpbin "$f" /ALL > "$dmpfile"; then
+        echo "  FAILED == > dumpbin \"$f\" /ALL > $dmpfile"
         exit 1
     fi
-    timestamp=$(grep "time date stamp" dumpbin.tmp | head -1 | tr -s ' ' | cut -d' ' -f2)
-    checksum=$(grep "checksum" dumpbin.tmp | head -1 | tr -s ' ' | cut -d' ' -f2)
-    reprohex=$(grep "${timestamp} repro" dumpbin.tmp | head -1 | tr -s ' ' | cut -d' ' -f7-38 | tr ' ' ':' | tr -d '\r')
-    reprohexhalf=$(grep "${timestamp} repro" dumpbin.tmp | head -1 | tr -s ' ' | cut -d' ' -f7-22 | tr ' ' ':' | tr -d '\r')
+
+    # Determine non-comparable stamps and hex codes from dumpbin output
+    timestamp=$(grep "time date stamp" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f2)
+    checksum=$(grep "checksum" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f2)
+    reprohex=$(grep "${timestamp} repro" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f7-38 | tr ' ' ':' | tr -d '\r')
+    reprohexhalf=$(grep "${timestamp} repro" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f7-22 | tr ' ' ':' | tr -d '\r')
+    rm -f "$dmpfile"
+
+    # Neutralize reprohex string
     if [ -n  "$reprohex" ]; then
       if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA"; then
         echo "  FAILED ==> java $TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --hex \"${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\""
         exit 1
       fi
     fi
+
+    # Neutralize timestamp hex string
     hexstr="00000000"
     timestamphex=${hexstr:0:-${#timestamp}}$timestamp
     timestamphexLE="${timestamphex:6:2}:${timestamphex:4:2}:${timestamphex:2:2}:${timestamphex:0:2}"
@@ -97,6 +249,7 @@ function removeWindowsNonComparableData() {
       fi
     fi
 
+    # Neutralize checksum string
     # Prefix checksum to 8 digits
     hexstr="00000000"
     checksumhex=${hexstr:0:-${#checksum}}$checksum
@@ -136,7 +289,7 @@ function removeMacOSNonComparableData() {
   echo "Successfully removed all MacOS dylib non-comparable UUID from ${JDK_DIR}"
 }
 
-# Neutralize Windows VS_VERSION_INFO CompanyName
+# Neutralize Windows VS_VERSION_INFO CompanyName from the resource compiled PE section
 function neutraliseVsVersionInfo() {
   echo "Updating EXE/DLL VS_VERSION_INFO in ${JDK_DIR}"
   FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
@@ -231,38 +384,53 @@ function neutraliseReleaseFile() {
   echo "Removing Vendor strings from release file ${JDK_DIR}/release"
 
   if [[ "$OS" =~ Darwin* ]]; then
+    # Remove Vendor versions
     sed -i "" "s=$VERSION_REPL==g" "${JDK_DIR}/release"
     sed -i "" "s=$VENDOR_NAME==g" "${JDK_DIR}/release"
 
-    # BUILD_INFO likely different since built on different machines
-    sed -i "" "s=^BUILD_INFO.*$==g" "${JDK_DIR}/release"
+    # Temurin BUILD_* likely different since built on different machines and bespoke to Temurin
+    sed -i "" "/^BUILD_INFO/d" "${JDK_DIR}/release"
+    sed -i "" "/^BUILD_SOURCE/d" "${JDK_DIR}/release"
+    sed -i "" "/^BUILD_SOURCE_REPO/d" "${JDK_DIR}/release"
 
-    # BUILD_SOURCE possibly built not using temurin build scripts
-    sed -i "" "s=^BUILD_SOURCE.*$==g" "${JDK_DIR}/release"
-    sed -i "" "s=^BUILD_SOURCE_REPO.*$==g" "${JDK_DIR}/release"
-
-    # Temurin JVM_VARIANT has capital "Hotspot"
-    sed -i "" "s,^JVM_VARIANT=\"Hotspot\",JVM_VARIANT=\"hotspot\",g" "${JDK_DIR}/release"
+    # Remove bespoke Temurin fields
+    sed -i "" "/^SOURCE/d" "${JDK_DIR}/release"
+    sed -i "" "/^FULL_VERSION/d" "${JDK_DIR}/release"
+    sed -i "" "/^SEMANTIC_VERSION/d" "${JDK_DIR}/release"
+    sed -i "" "/^JVM_VARIANT/d" "${JDK_DIR}/release"
+    sed -i "" "/^JVM_VERSION/d" "${JDK_DIR}/release"
+    sed -i "" "/^JVM_VARIANT/d" "${JDK_DIR}/release"
+    sed -i "" "/^IMAGE_TYPE/d" "${JDK_DIR}/release"
   else
+    # Remove Vendor versions
     sed -i "s=$VERSION_REPL==g" "${JDK_DIR}/release"
     sed -i "s=$VENDOR_NAME==g" "${JDK_DIR}/release"
 
-    # BUILD_INFO likely different since built on different machines
-    sed -i "s=^BUILD_INFO.*$==g" "${JDK_DIR}/release"
+    # Temurin BUILD_* likely different since built on different machines and bespoke to Temurin
+    sed -i "/^BUILD_INFO/d" "${JDK_DIR}/release"
+    sed -i "/^BUILD_SOURCE/d" "${JDK_DIR}/release"
+    sed -i "/^BUILD_SOURCE_REPO/d" "${JDK_DIR}/release"
 
-    # BUILD_SOURCE possibly built not using temurin build scripts
-    sed -i "s=^BUILD_SOURCE.*$==g" "${JDK_DIR}/release"
-    sed -i "s=^BUILD_SOURCE_REPO.*$==g" "${JDK_DIR}/release"
-
-    # Temurin JVM_VARIANT has capital "Hotspot"
-    sed -i "s,^JVM_VARIANT=\"Hotspot\",JVM_VARIANT=\"hotspot\",g" "${JDK_DIR}/release"
+    # Remove bespoke Temurin fields
+    sed -i "/^SOURCE/d" "${JDK_DIR}/release"
+    sed -i "/^FULL_VERSION/d" "${JDK_DIR}/release"
+    sed -i "/^SEMANTIC_VERSION/d" "${JDK_DIR}/release"
+    sed -i "/^JVM_VARIANT/d" "${JDK_DIR}/release"
+    sed -i "/^JVM_VERSION/d" "${JDK_DIR}/release"
+    sed -i "/^JVM_VARIANT/d" "${JDK_DIR}/release"
+    sed -i "/^IMAGE_TYPE/d" "${JDK_DIR}/release"
   fi
 }
 
-if [ "$#" -ne 6 ]; then
-  echo "Syntax: cmd <jdk_dir> <version_str> <vendor_name> <vendor_url> <vendor_bug_url> <vendor_vm_bug_url>"
-  exit 1
-fi
+# Remove some non-JDK files that some Vendors distribute
+# - NEWS : Some Vendors provide a NEWS text file
+# - demo : Not all vendors distribute the demo examples 
+function removeNonJdkFiles() {
+  echo "Removing non-JDK files"
+  
+  rm -f  "${JDK_DIR}/NEWS"
+  rm -rf "${JDK_DIR}/demo"
+}
 
 if [ ! -d "${JDK_DIR}" ]; then
   echo "$JDK_DIR does not exist"
@@ -299,6 +467,10 @@ echo "Successfully removed all Signatures from ${JDK_DIR}"
 
 removeExcludedFiles
 
+processModuleInfo
+
+removeSystemModulesHashBuilderParams
+
 if [[ "$OS" =~ CYGWIN* ]]; then
   neutraliseVsVersionInfo
 fi
@@ -318,6 +490,8 @@ neutraliseVersionProps
 neutraliseManifests
 
 neutraliseReleaseFile
+
+removeNonJdkFiles
 
 echo "***********"
 echo "SUCCESS :-)"
