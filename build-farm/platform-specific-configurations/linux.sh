@@ -219,7 +219,7 @@ then
   # OpenJ9 fetches the latest OpenSSL in their get_source.sh
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched"
   if [ "${ARCHITECTURE}" == "aarch64" ]; then
-    echo PROBABLE JETSON NANO DEVELOPMENT ENVIRONMENT - Enabling CUDA ...
+    # Potentially a JetSon Nano dev environment so look here
     CUDA_HOME=/usr/local/cuda-10.2
   else
     CUDA_HOME=/usr/local/cuda-9.0
