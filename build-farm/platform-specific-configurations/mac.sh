@@ -47,11 +47,12 @@ then
     export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
   fi
 else
-  if [[ "$JAVA_FEATURE_VERSION" -ge 17 ]] || [[ "${ARCHITECTURE}" == "aarch64" ]]; then
+  if [[ "$JAVA_FEATURE_VERSION" -ge 11 ]]; then
     # JDK17 requires metal (included in full xcode) as does JDK11 on aarch64
+    # JDK11 on x64 is matched for consistency
     XCODE_SWITCH_PATH="/Applications/Xcode.app"
   else
-    # Command line tools used from JDK9-JDK16
+    # Command line tools used from JDK9-JDK10
     XCODE_SWITCH_PATH="/";
   fi
   export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
