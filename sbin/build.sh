@@ -941,7 +941,7 @@ generateSBoM() {
       continue
     fi
 
-    local sha=$(sha256sum "${archiveFile}" | cut -f1 -d' ')
+    local sha=$(sha256File "${archiveFile}")
 
     # Create JDK Component
     addSBOMComponent "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} ${component} Component"
