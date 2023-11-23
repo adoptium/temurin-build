@@ -98,7 +98,7 @@ function setDockerVolumeSuffix() {
 
 # Joins multiple parts to a valid file path for the current OS
 function joinPath() {
-  local path=$(printf '/%s' "${@%%/}")
+  local path=$(printf '/%s' "${@}" | sed 's|/\+|/|g')
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
       path=$(cygpath -w "${path}")
   fi
