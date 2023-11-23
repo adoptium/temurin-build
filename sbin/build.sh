@@ -1749,6 +1749,7 @@ getTargetFileNameForComponent() {
 
   # check if the target file name contains a -jdk pattern to be replaced with the component.
   if [[ "${target_file_name}" == *"-jdk"* ]]; then
+    # shellcheck disable=SC2001
     echo "${target_file_name}" | sed "s/-jdk/-${component}/"
   else
     # if no pattern is found, append the component name right before the extension.
