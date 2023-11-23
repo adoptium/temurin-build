@@ -669,7 +669,7 @@ createSourceArchive() {
     # shellcheck disable=SC2001
     srcArchiveName="$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/_x64_linux_hotspot_/-sources_/g')"
   else
-    srcArchiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sources}")
+    srcArchiveName=$(getTargetFileNameForComponent "sources")
   fi
 
   local oldPwd="${PWD}"
@@ -847,17 +847,12 @@ generateSBoM() {
   # classpath to run java app TemurinGenSBOM
   local classpath="$(getCyclonedxClasspath)"
 
-  local sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}.json")
-  # if the replacement did not work as the target file name does not contain the pattern '-jdk',
-  # construct the sbom name by just appending '-sbom.json' to the target file name.
-  if [[ ${sbomTargetName} != *"-sbom"* ]]; then
-    sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}-sbom.json")
-  fi
-  # Remove the tarball extension from the name to be used for the SBOM
+  local sbomTargetName=$(getTargetFileNameForComponent "sbom")
+  # Remove the tarball / zip extension from the name to be used for the SBOM
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    sbomTargetName="${sbomTargetName//\.zip/}"
+    sbomTargetName=$(echo "${sbomTargetName}.json" | sed "s/\.zip//")
   else
-    sbomTargetName="${sbomTargetName//\.tar\.gz/}"
+    sbomTargetName=$(echo "${sbomTargetName}.json" | sed "s/\.tar\.gz//")
   fi
 
   local sbomJson="$(joinPathOS ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${sbomTargetName})"
@@ -920,7 +915,7 @@ generateSBoM() {
 
     local componentName="${component} Component"
     # shellcheck disable=SC2001
-    local archiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed "s/-jdk/-${componentLowerCase}/")
+    local archiveName=$(getTargetFileNameForComponent "${componentLowerCase}")
     local archiveFile="$(joinPath ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${archiveName})"
 
     # special handling for static-libs, determine the glibc type that is used.
@@ -929,7 +924,7 @@ generateSBoM() {
       for staticLibsVariant in "${staticLibsVariants[@]}"
       do
         # shellcheck disable=SC2001
-        archiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed "s/-jdk/-static-libs${staticLibsVariant}/")
+        archiveName=$(getTargetFileNameForComponent "static-libs${staticLibsVariant}")
         archiveFile="$(joinPath ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${archiveName})"
         if [ -f "${archiveFile}" ]; then
           break
@@ -1747,6 +1742,20 @@ createArchive() {
   fi
 }
 
+# Gets the target file name for a given component in a fail-safe way.
+getTargetFileNameForComponent() {
+  local component=$1
+  local target_file_name=${BUILD_CONFIG[TARGET_FILE_NAME]}
+
+  # check if the target file name contains a -jdk pattern to be replaced with the component.
+  if [[ "${target_file_name}" == *"-jdk"* ]]; then
+    echo "${target_file_name}" | sed "s/-jdk/-${component}/"
+  else
+    # if no pattern is found, append the component name right before the extension.
+    echo "${target_file_name}" | sed -r "s/(.+)(\.tar\.gz|\.zip)/\1-${component}\2/"
+  fi
+}
+
 # Create a Tar ball
 createOpenJDKTarArchive() {
   local jdkTargetPath=$(getJdkArchivePath)
@@ -1759,7 +1768,7 @@ createOpenJDKTarArchive() {
 
   if [ -d "${jreTargetPath}" ]; then
     # shellcheck disable=SC2001
-    local jreName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-jre/')
+    local jreName=$(getTargetFileNameForComponent "jre")
     # for macOS system, code sign directory before creating tar.gz file
     if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ] && [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
       codesign --options runtime --timestamp --sign "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" "${jreTargetPath}"
@@ -1767,18 +1776,18 @@ createOpenJDKTarArchive() {
     createArchive "${jreTargetPath}" "${jreName}"
   fi
   if [ -d "${testImageTargetPath}" ]; then
-    echo "OpenJDK test image path will be ${testImageTargetPath}."
-    local testImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-testimage}")
+    local testImageName=$(getTargetFileNameForComponent "testimage")
+    echo "OpenJDK test image archive file name will be ${testImageName}."
     createArchive "${testImageTargetPath}" "${testImageName}"
   fi
   if [ -d "${debugImageTargetPath}" ]; then
-    echo "OpenJDK debug image path will be ${debugImageTargetPath}."
-    local debugImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debugimage}")
+    local debugImageName=$(getTargetFileNameForComponent "debugimage")
+    echo "OpenJDK debug image archive file name will be ${debugImageName}."
     createArchive "${debugImageTargetPath}" "${debugImageName}"
   fi
   if [ -d "${staticLibsImageTargetPath}" ]; then
     echo "OpenJDK static libs path will be ${staticLibsImageTargetPath}."
-    local staticLibsTag="-static-libs"
+    local staticLibsTag="static-libs"
     if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = "linux" ]; then
       # on Linux there might be glibc and musl variants of this
       local cLib="glibc"
@@ -1790,7 +1799,7 @@ createOpenJDKTarArchive() {
       staticLibsTag="${staticLibsTag}-${cLib}"
     fi
     # shellcheck disable=SC2001
-    local staticLibsImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed "s/-jdk/${staticLibsTag}/g")
+    local staticLibsImageName=$(getTargetFileNameForComponent "${staticLibsTag}")
     echo "OpenJDK static libs archive file name will be ${staticLibsImageName}."
     createArchive "${staticLibsImageTargetPath}" "${staticLibsImageName}"
   fi
