@@ -848,11 +848,16 @@ generateSBoM() {
   local classpath="$(getCyclonedxClasspath)"
 
   local sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}.json")
+  # if the replacement did not work as the target file name does not contain the pattern '-jdk',
+  # construct the sbom name by just appending '-sbom.json' to the target file name.
+  if [[ ${sbomTargetName} != *"-sbom"* ]]; then
+    sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}-sbom.json")
+  fi
   # Remove the tarball extension from the name to be used for the SBOM
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-      sbomTargetName="${sbomTargetName//\.zip/}"
+    sbomTargetName="${sbomTargetName//\.zip/}"
   else
-      sbomTargetName="${sbomTargetName//\.tar\.gz/}"
+    sbomTargetName="${sbomTargetName//\.tar\.gz/}"
   fi
 
   local sbomJson="$(joinPath ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${sbomTargetName})"
