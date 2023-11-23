@@ -860,7 +860,7 @@ generateSBoM() {
     sbomTargetName="${sbomTargetName//\.tar\.gz/}"
   fi
 
-  local sbomJson="$(joinPath ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${sbomTargetName})"
+  local sbomJson="$(joinPathOS ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${sbomTargetName})"
   echo "OpenJDK SBOM will be ${sbomJson}."
 
   # Clean any old json
@@ -895,7 +895,7 @@ generateSBoM() {
   # Add FreeType 3rd party
   addFreeTypeVersionInfo
   # Add FreeMarker 3rd party (openj9)
-  local freemarker_version="$(joinPath ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} 'metadata/dependency_version_freemarker.txt')"
+  local freemarker_version="$(joinPathOS ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} 'metadata/dependency_version_freemarker.txt')"
   if [ -f "${freemarker_version}" ]; then
       addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${freemarker_version})"
   fi
