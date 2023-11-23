@@ -877,39 +877,6 @@ generateSBoM() {
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS version" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
 
-  # Create JDK Component
-  addSBOMComponent "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
-
-  # Below add different properties to JDK component
-  # Add variant as JDK Component Property
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "JDK Variant" "${BUILD_CONFIG[BUILD_VARIANT]^}"
-  # Add scmRef as JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "SCM Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
-  # Add OpenJDK source ref commit as JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "OpenJDK Source Commit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
-  # Add buildRef as JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Temurin Build Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
-  # Add jenkins job ID as JDK Component Property
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Builder Job Reference" "${BUILD_URL:-N.A}"
-  # Add jenkins builder (agent/machine name) as JDK Component Property
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Builder Name" "${NODE_NAME:-N.A}"
-
-  # Add build timestamp
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Build Timestamp" "${BUILD_CONFIG[BUILD_TIMESTAMP]}"
-
-  # Add Tool Summary section from configure.txt
-  checkingToolSummary
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Build Tools Summary" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
-  # Add builtConfig JDK Component Property, load as Json string
-  built_config=$(createConfigToJsonString)
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Build Config" "${built_config}"
-  # Add full_version_output JDK Component Property
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "full_version_output" "${fullVerOutput}"
-  # Add makejdk_any_platform_args JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "makejdk_any_platform_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
-  # Add make_command_args JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
-
   # Below add build tools into metadata tools
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
     addGLIBCforLinux
@@ -986,6 +953,10 @@ generateSBoM() {
     addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "OpenJDK Source Commit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
     # Add buildRef as JDK Component Property
     addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Temurin Build Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
+    # Add jenkins job ID as JDK Component Property
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Builder Job Reference" "${BUILD_URL:-N.A}"
+    # Add jenkins builder (agent/machine name) as JDK Component Property
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Builder Name" "${NODE_NAME:-N.A}"
 
     # Add build timestamp
     addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Timestamp" "${BUILD_CONFIG[BUILD_TIMESTAMP]}"
