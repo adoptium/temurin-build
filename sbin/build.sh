@@ -914,6 +914,7 @@ generateSBoM() {
     local componentLowerCase=$(echo "${component}" | tr '[:upper:]' '[:lower:]')
 
     local componentName="${component} Component"
+    # shellcheck disable=SC2001
     local archiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed "s/-jdk/-${componentLowerCase}/")
     local archiveFile="$(joinPath ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${archiveName})"
 
@@ -922,6 +923,7 @@ generateSBoM() {
       local staticLibsVariants=("" "-glibc" "-musl")
       for staticLibsVariant in "${staticLibsVariants[@]}"
       do
+        # shellcheck disable=SC2001
         archiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed "s/-jdk/-static-libs${staticLibsVariant}/")
         archiveFile="$(joinPath ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${archiveName})"
         if [ -f "${archiveFile}" ]; then

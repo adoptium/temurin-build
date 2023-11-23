@@ -171,9 +171,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    /**
-     * Method to store Metadata --> name.
-     */
+    // Method to store Metadata --> name.
     static Bom addMetadata(final String fileName) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -209,9 +207,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    /**
-     * Method to store Metadata --> Properties List --> name-values.
-     */
+    // Method to store Metadata --> Properties List --> name-values.
     static Bom addMetadataProperty(final String fileName, final String name, final String value) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -236,9 +232,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    /**
-     * Method to store Component --> name & single name-value pair.
-     */
+    // Method to store Component --> name & single name-value pair.
     static Bom addComponent(final String fileName, final String compName, final String version, final String description) {
         Bom bom = readJSONfile(fileName);
         Component comp = new Component();
@@ -265,9 +259,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    /**
-     * Method to add Component --> Property --> name-value pairs.
-     */
+    // Method to add Component --> Property --> name-value pairs.
     static Bom addComponentProperty(final String fileName, final String compName, final String name, final String value) {
         Bom bom = readJSONfile(fileName);
         List<Component> componentArrayList = bom.getComponents();
@@ -282,9 +274,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    /**
-     * Method to store externalReferences: dependency_version_alsa.
-     */
+    // Method to store externalReferences: dependency_version_alsa.
     static Bom addExternalReference(final String fileName, final String hash, final String url, final String comment) {
         Bom bom = readJSONfile(fileName);
         ExternalReference extRef = new ExternalReference();
@@ -297,9 +287,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    /**
-     * Method to store externalReferences to store: openjdk_source.
-     */
+    // Method to store externalReferences to store: openjdk_source.
     static Bom addComponentExternalReference(final String fileName, final String hash, final String url, final String comment) {
         Bom bom = readJSONfile(fileName);
         ExternalReference extRef = new ExternalReference();
@@ -321,9 +309,7 @@ public final class TemurinGenSBOM {
         return json;
     }
 
-    /**
-     * Writes the BOM object to the specified file.
-     */
+    // Writes the BOM object to the specified file.
     static void writeJSONfile(final Bom bom, final String fileName) {
         FileWriter file;
         String json = generateBomJson(bom);
@@ -336,9 +322,7 @@ public final class TemurinGenSBOM {
         }
     }
 
-    /**
-     * Returns a parsed BOM object from the specified file.
-     */
+    // Returns a parsed BOM object from the specified file.
     static Bom readJSONfile(final String fileName) {
         Bom bom = null;
         try {
