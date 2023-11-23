@@ -41,11 +41,11 @@ public final class TemurinGenSBOM {
 
     private TemurinGenSBOM() {
     }
+
     /**
      * Main entry.
      * @param args Arguments for sbom operation.
      */
-
     public static void main(final String[] args) {
         String cmd = null;
         String comment = null;
@@ -85,17 +85,17 @@ public final class TemurinGenSBOM {
                 tool =  args[++i];
             } else if (args[i].equals("--createNewSBOM")) {
                 cmd = "createNewSBOM";
-            } else if (args[i].equals("--addMetadata")) {        // Metadata Component. We can set "name" for Metadata.
+            } else if (args[i].equals("--addMetadata")) {            // Metadata Component. We can set "name" for Metadata.
                 cmd = "addMetadata";
-            } else if (args[i].equals("--addMetadataComponent")) {  // Metadata Component. We can set "name" for Metadata->Component.
+            } else if (args[i].equals("--addMetadataComponent")) {   // Metadata Component. We can set "name" for Metadata->Component.
                 cmd = "addMetadataComponent";
-            } else if (args[i].equals("--addMetadataProp")) {    // MetaData Component --> Property -> name-value
+            } else if (args[i].equals("--addMetadataProp")) {        // MetaData Component --> Property -> name-value
                 cmd = "addMetadataProperty";
             } else if (args[i].equals("--addComponent")) {
                 cmd = "addComponent";
             } else if (args[i].equals("--addComponentHash")) {
                 cmd = "addComponentHash";
-            } else if (args[i].equals("--addComponentProp")) {  // Components->Property: will add name-value.
+            } else if (args[i].equals("--addComponentProp")) {       // Components --> Property: will add name-value.
                 cmd = "addComponentProp";
             } else if (args[i].equals("--addExternalReference")) {
                 cmd = "addExternalReference";
@@ -108,22 +108,22 @@ public final class TemurinGenSBOM {
             }
         }
         switch (cmd) {
-            case "createNewSBOM": // Creates JSON file
+            case "createNewSBOM":                                    // Creates JSON file
                 Bom bom = createBom();
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addMetadata": // Adds Metadata --> name
+            case "addMetadata":                                      // Adds Metadata --> name
                 bom = addMetadata(fileName);
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addMetadataComponent": // Adds Metadata --> Component --> name
+            case "addMetadataComponent":                             // Adds Metadata --> Component --> name
                 bom = addMetadataComponent(fileName, name, type, version, description);
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addMetadataProperty": // Adds MetaData --> Property --> name-value:
+            case "addMetadataProperty":                              // Adds MetaData --> Property --> name-value:
                 bom = addMetadataProperty(fileName, name, value);
                 writeJSONfile(bom, fileName);
                 break;
@@ -133,27 +133,27 @@ public final class TemurinGenSBOM {
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addComponent": // Adds Components --> Component --> name
+            case "addComponent":                                     // Adds Components --> Component --> name
                 bom = addComponent(fileName, compName, version, description);
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addComponentHash": // Adds Components --> Component --> hash
+            case "addComponentHash":                                 // Adds Components --> Component --> hash
                 bom = addComponentHash(fileName, compName, hash);
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addComponentProp": // Adds Components --> Component --> name-value pairs
+            case "addComponentProp":                                 // Adds Components --> Component --> name-value pairs
                 bom = addComponentProperty(fileName, compName, name, value);
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addExternalReference": // Adds external Reference
+            case "addExternalReference":                             // Adds external Reference
                 bom = addExternalReference(fileName, hash, url, comment);
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addComponentExternalReference": // Adds external Reference to component
+            case "addComponentExternalReference":                    // Adds external Reference to component
                 bom = addComponentExternalReference(fileName, hash, url, comment);
                 writeJSONfile(bom, fileName);
                 break;
@@ -170,7 +170,11 @@ public final class TemurinGenSBOM {
         Bom bom = new Bom();
         return bom;
     }
-    static Bom addMetadata(final String fileName) {          // Method to store metadata -->  name
+
+    /**
+     * Method to store Metadata --> name.
+     */
+    static Bom addMetadata(final String fileName) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
         OrganizationalEntity org = new OrganizationalEntity();
@@ -183,6 +187,7 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
+
     static Bom addMetadataComponent(final String fileName, final String name, final String type, final String version, final String description) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -203,7 +208,11 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
-    static Bom addMetadataProperty(final String fileName, final String name, final String value) {     // Method to store metadata --> Properties List --> name-values
+
+    /**
+     * Method to store Metadata --> Properties List --> name-values.
+     */
+    static Bom addMetadataProperty(final String fileName, final String name, final String value) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
         Property prop1 = new Property();
@@ -214,6 +223,7 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
+
     static Bom addMetadataTools(final String fileName, final String toolName, final String version) {
         Bom bom = readJSONfile(fileName);
         Metadata meta = new Metadata();
@@ -225,7 +235,11 @@ public final class TemurinGenSBOM {
         bom.setMetadata(meta);
         return bom;
     }
-    static Bom addComponent(final String fileName, final String compName, final String version, final String description) {      // Method to store Component --> name & single name-value pair
+
+    /**
+     * Method to store Component --> name & single name-value pair.
+     */
+    static Bom addComponent(final String fileName, final String compName, final String version, final String description) {
         Bom bom = readJSONfile(fileName);
         Component comp = new Component();
         comp.setName(compName);
@@ -233,11 +247,12 @@ public final class TemurinGenSBOM {
         comp.setType(Component.Type.FRAMEWORK);
         comp.setDescription(description);
         comp.setGroup("adoptium.net");
-        comp.setAuthor("Adoptium Temurin");
+        comp.setAuthor("Eclipse Temurin");
         comp.setPublisher("Eclipse Temurin");
         bom.addComponent(comp);
         return bom;
     }
+
     static Bom addComponentHash(final String fileName, final String compName, final String hash) {
         Bom bom = readJSONfile(fileName);
         List<Component> componentArrayList = bom.getComponents();
@@ -249,7 +264,11 @@ public final class TemurinGenSBOM {
         }
         return bom;
     }
-    static Bom addComponentProperty(final String fileName, final String compName, final String name, final String value) {     // Method to add Component --> Property --> name-value pairs
+
+    /**
+     * Method to add Component --> Property --> name-value pairs.
+     */
+    static Bom addComponentProperty(final String fileName, final String compName, final String name, final String value) {
         Bom bom = readJSONfile(fileName);
         List<Component> componentArrayList = bom.getComponents();
         for (Component item : componentArrayList) {
@@ -262,18 +281,26 @@ public final class TemurinGenSBOM {
         }
         return bom;
     }
-    static Bom addExternalReference(final String fileName, final String hash, final String url, final String comment) {   // Method to store externalReferences: dependency_version_alsa
+
+    /**
+     * Method to store externalReferences: dependency_version_alsa.
+     */
+    static Bom addExternalReference(final String fileName, final String hash, final String url, final String comment) {
         Bom bom = readJSONfile(fileName);
         ExternalReference extRef = new ExternalReference();
         Hash hash1 = new Hash(Hash.Algorithm.SHA3_256, hash);
         extRef.setType(ExternalReference.Type.BUILD_SYSTEM); //required
-        extRef.setUrl(url); // required must be a valid URL with protocal
+        extRef.setUrl(url); // required must be a valid URL with protocol
         extRef.setComment(comment);
         extRef.addHash(hash1);
         bom.addExternalReference(extRef);
         return bom;
     }
-    static Bom addComponentExternalReference(final String fileName, final String hash, final String url, final String comment) {  // Method to store externalReferences to store: openjdk_source
+
+    /**
+     * Method to store externalReferences to store: openjdk_source.
+     */
+    static Bom addComponentExternalReference(final String fileName, final String hash, final String url, final String comment) {
         Bom bom = readJSONfile(fileName);
         ExternalReference extRef = new ExternalReference();
         Hash hash1 = new Hash(Hash.Algorithm.SHA3_256, hash);
@@ -294,7 +321,10 @@ public final class TemurinGenSBOM {
         return json;
     }
 
-    static void writeJSONfile(final Bom bom, final String fileName) {          // Creates testJson.json file
+    /**
+     * Writes the BOM object to the specified file.
+     */
+    static void writeJSONfile(final Bom bom, final String fileName) {
         FileWriter file;
         String json = generateBomJson(bom);
         try {
@@ -306,7 +336,10 @@ public final class TemurinGenSBOM {
         }
     }
 
-    static Bom readJSONfile(final String fileName) { 	                               // Returns parse bom
+    /**
+     * Returns a parsed BOM object from the specified file.
+     */
+    static Bom readJSONfile(final String fileName) {
         Bom bom = null;
         try {
             FileReader reader = new FileReader(fileName);
