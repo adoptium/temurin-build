@@ -336,7 +336,19 @@ checkingAndDownloadingAlsa() {
     # Note: the uptime command below is to aid diagnostics for this issue:
     # https://github.com/adoptium/temurin-build/issues/3518#issuecomment-1792606345
     uptime
-    gpg --keyserver keyserver.ubuntu.com --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"
+    # Will retry command below until it passes or we've failed 10 times.
+    # Note that the hkp://keys.gnupg.net keyserver uses round robin DNS to give a different keyserver each 
+    # time we run the command, so this rerun loop allows us to ignore problematic keyservers (timeouts etc).
+    for i in {1..10}; do
+      gpg --keyserver hkp://keys.gnupg.net --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"
+      if [[ $? == 0 ]]; then
+        break
+      elif [[ ${i} -lt 10 ]]; then
+        echo "gpg recv-keys attempt ${i} has failed. Retrying..."
+      else
+        echo "ERROR: gpg recv-keys attempt 10 has failed. Will not try again."
+      fi
+    done
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
     gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
 
