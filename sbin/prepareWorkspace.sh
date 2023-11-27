@@ -342,7 +342,7 @@ checkingAndDownloadingAlsa() {
     for i in {1..10}; do
       keyserverHost="$(host hkp://keys.gnupg.net)"
       echo "Attempting to recieve keys from keyserver ${keyserverHost}"
-      if gpg --keyserver hkp://${keyserverHost} --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"; then
+      if gpg --keyserver "hkp://${keyserverHost}" --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"; then
         echo "gpg command has passed."
         break
       elif [[ ${i} -lt 10 ]]; then
