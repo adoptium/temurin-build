@@ -340,8 +340,8 @@ checkingAndDownloadingAlsa() {
     # Note that the hkp://keys.gnupg.net keyserver uses round robin DNS to give a different keyserver each 
     # time we run the command, so this rerun loop allows us to ignore problematic keyservers (timeouts etc).
     for i in {1..10}; do
-      gpg --keyserver hkp://keys.gnupg.net --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"
-      if [[ $? == 0 ]]; then
+      if gpg --keyserver hkp://keys.gnupg.net --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"; then
+        echo "gpg command has passed."
         break
       elif [[ ${i} -lt 10 ]]; then
         echo "gpg recv-keys attempt ${i} has failed. Retrying..."
