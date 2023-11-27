@@ -339,7 +339,7 @@ checkingAndDownloadingAlsa() {
     # Will retry command below until it passes or we've failed 10 times.
     # Note that the hkp://keys.gnupg.net keyserver uses round robin DNS to give a different keyserver each 
     # time we run the command, so this rerun loop allows us to ignore problematic keyservers (timeouts etc).
-    keyserverHostArray=("keyserver.ubuntu.com","keys.openpgp.org","pgp.mit.edu")
+    keyserverHostArray=("keyserver.ubuntu.com" "keys.openpgp.org" "pgp.mit.edu")
     for i in {0..2}; do
       echo "Attempting to recieve keys from keyserver ${keyserverHostArray[$i]}"
       if gpg --keyserver "hkp://${keyserverHostArray[$i]}" --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"; then
