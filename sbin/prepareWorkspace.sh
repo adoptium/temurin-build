@@ -339,16 +339,16 @@ checkingAndDownloadingAlsa() {
     # Will retry command below until it passes or we've failed 10 times.
     # Note that the hkp://keys.gnupg.net keyserver uses round robin DNS to give a different keyserver each 
     # time we run the command, so this rerun loop allows us to ignore problematic keyservers (timeouts etc).
-    for i in {1..10}; do
-      keyserverHost=$(host hkp://keys.gnupg.net)
-      echo "Attempting to recieve keys from keyserver ${keyserverHost}"
-      if gpg --keyserver "hkp://${keyserverHost}" --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"; then
+    keyserverHostArray=("keyserver.ubuntu.com","keys.openpgp.org","pgp.mit.edu")
+    for i in {0..2}; do
+      echo "Attempting to recieve keys from keyserver ${keyserverHostArray[$i]}"
+      if gpg --keyserver "hkp://${keyserverHostArray[$i]}" --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"; then
         echo "gpg command has passed."
         break
-      elif [[ ${i} -lt 10 ]]; then
-        echo "gpg recv-keys attempt ${i} has failed. Retrying..."
+      elif [[ ${i} -lt 2 ]]; then
+        echo "gpg recv-keys attempt has failed. Retrying on a different keyserver..."
       else
-        echo "ERROR: gpg recv-keys attempt 10 has failed. Will not try again."
+        echo "ERROR: gpg recv-keys final attempt has failed. Will not try again."
       fi
     done
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
