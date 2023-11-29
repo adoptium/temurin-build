@@ -194,6 +194,21 @@ function downloadBootJDK()
 if [ "${ARCHITECTURE}" == "x64" ]
 then
   export PATH=/opt/rh/devtoolset-2/root/usr/bin:$PATH
+  ## Fix For Issue https://github.com/adoptium/temurin-build/issues/3547
+  ## Add Missing Library Path For Ubuntu 22+
+  if [ -e /etc/os-release ]; then
+    ## source the os -release file if present
+    . /etc/os-release
+    INT_VERSION_ID=$(echo "$VERSION_ID" | awk -F'.' '{print $1'})
+    if [ "$ID" == "ubuntu" ] && [ "$INT_VERSION_ID" -ge "22" ]; then
+      echo "Ubuntu 22+"
+      export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH
+    else
+      echo "Not Ubuntu 22+"
+    fi
+  else
+    echo "Unable To Determine The O/S"
+  fi
 fi
 
 if [ "${ARCHITECTURE}" == "s390x" ]
