@@ -101,6 +101,10 @@ public final class TemurinGenSBOM {
                 cmd = "addComponentExternalReference";
             } else if (args[i].equals("--addMetadataTools")) {
                 cmd = "addMetadataTools";
+            } else if (args[i].equals("--addFormulation")) {        // Formulation Component. We can set "name" for Formulation.
+                cmd = "addFormulation";
+            } else if (args[i].equals("--addFormulationProp")) {    // Formulation --> Property -> name-value
+                cmd = "addFormulationProperty";
             } else if (args[i].equals("--verbose")) {
                 verbose = true;
             }
@@ -123,6 +127,22 @@ public final class TemurinGenSBOM {
 
             case "addMetadataProperty":                     // Adds MetaData--> Property --> name-value:
                 bom = addMetadataProperty(fileName, name, value);
+                writeJSONfile(bom, fileName);
+                break;
+
+            case "addFormulation":                              // Adds Formulation --> name
+                bom = addFormulation(fileName);
+                writeJSONfile(bom, fileName);
+                break;
+
+/*
+            case "addFormulationComponent":                   // Adds Formulation --> Component--> name
+                bom = addFormulationComponent(fileName, name, type, version, description);
+                writeJSONfile(bom, fileName);
+                break;
+*/
+            case "addFormulationProperty":                     // Adds Formulation--> Property --> name-value:
+                bom = addFormulationProperty(fileName, name, value);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -269,6 +289,37 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
+    static Bom addFormulation(final String fileName) {          // Method to store Formulation -->  name
+        Bom bom = readJSONfile(fileName);
+        Formulation formulation  = new Formulation();
+        bom.setFormula(formulation);
+        return bom;
+    }
+/*
+    static Bom addFormulaDependency(final String fileName, final String name, final String type, final String version, final String description) {
+        Bom bom = readJSONfile(fileName);
+        Formulation formulation = new Formulation();
+        Component comp = new Component();
+        Component.Type compType = Component.Type.FRAMEWORK;
+        comp.setType(compType); // required e.g Component.Type.FRAMEWORK
+        comp.setName(name); // required
+        comp.setVersion(version);
+        formulation.setComponent(comp);
+        bom.setMetadata(formulation);
+        return bom;
+    }
+*/
+    static Bom addFormulationProperty(final String fileName, final String name, final String value) {     // Method to store metadata --> Properties List --> name-values
+        Bom bom = readJSONfile(fileName);
+        Formulation formulation = new Formulation();
+        Property prop1 = new Property();
+        formulation = bom.getFormulation();
+        prop1.setName(name);
+        prop1.setValue(value);
+        formulation.addProperty(prop1);
+        bom.setMetadata(formulation);
+        return bom;
+    }
     static String generateBomJson(final Bom bom) {
         // Use schema v14: https://cyclonedx.org/schema/bom-1.4.schema.json
         BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_14, bom);

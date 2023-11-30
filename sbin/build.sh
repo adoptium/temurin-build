@@ -867,6 +867,9 @@ generateSBoM() {
   # Add build timestamp
   addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Build Timestamp" "${BUILD_CONFIG[BUILD_TIMESTAMP]}"
 
+  # Set default SBOM formulation
+  addSBOMFormulation "${javaHome}" "${classpath}" "${sbomJson}"
+
   # Add Tool Summary section from configure.txt
   checkingToolSummary
   addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Build Tools Summary" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
@@ -987,7 +990,7 @@ addCycloneDXVersions() {
        # but this is an initial PoC for discussion ...
        # Also - should we do somethign if the sha256sum fails? Currently SHA will show blank
        local JarSha=$(sha256sum "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
-       addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX core java JAR SHA" "${JarSha}"
+       addSBOMFormulationProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX core java JAR SHA" "${JarSha}"
    fi
 }
 
