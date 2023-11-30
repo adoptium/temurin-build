@@ -201,9 +201,9 @@ fi
 if [ -e /etc/os-release ]; then
   ID=$(grep "^ID=" /etc/os-release | awk -F'=' '{print $2}')
   INT_VERSION_ID=$(grep "^VERSION_ID=" /etc/os-release | awk -F'"' '{print $2}' | awk -F'.' '{print $1}')
-  LIB_ARCH=$(uname -m)
+  LIB_ARCH=$(uname -m)-linux-gnu
   if [ "$ID" == "ubuntu" ] && [ "$INT_VERSION_ID" -ge "22" ]; then
-      export LIBRARY_PATH=/usr/lib/$(uname -m)-linux-gnu:$LIBRARY_PATH
+      export LIBRARY_PATH=/usr/lib/$LIB_ARCH:$LIBRARY_PATH
   fi
 fi
 
