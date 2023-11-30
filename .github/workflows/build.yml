@@ -182,6 +182,12 @@ jobs:
       run: |
         imageroot=$(find "${HOME}/JDK" -name release -type f)
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
+
+    - name: Clean /usr/local to avoid python3 install link failure
+      run: |
+        # See: https://github.com/adoptium/temurin-build/issues/3550#issuecomment-1833369679
+        rm -f '/usr/local/bin/2to3'
+
     - name: Smoke test
       uses: adoptium/run-aqa@6bacb4e732ad546eda1b09665b9067cdc87651f4 # v2
       with:
