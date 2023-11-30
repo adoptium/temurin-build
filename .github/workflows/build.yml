@@ -123,6 +123,22 @@ jobs:
     steps:
     - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
 
+    # https://github.com/actions/runner-images/issues/6817
+    - name: (Mac) Workaround for homebrew
+      shell: bash
+      if: runner.os == 'macOS'
+      run: |
+          rm /usr/local/bin/2to3 || true
+          rm /usr/local/bin/2to3-3.11 || true
+          rm /usr/local/bin/idle3 || true
+          rm /usr/local/bin/idle3.11 || true
+          rm /usr/local/bin/pydoc3 || true
+          rm /usr/local/bin/pydoc3.11 || true
+          rm /usr/local/bin/python3 || true
+          rm /usr/local/bin/python3.11 || true
+          rm /usr/local/bin/python3-config || true
+          rm /usr/local/bin/python3.11-config || true
+            
     - name: Install Dependencies
       run: |
         brew install automake bash binutils freetype gnu-sed nasm
