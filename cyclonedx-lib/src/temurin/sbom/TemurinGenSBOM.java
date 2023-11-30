@@ -20,6 +20,7 @@ import org.cyclonedx.generators.json.BomJsonGenerator;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Component;
 import org.cyclonedx.model.ExternalReference;
+import org.cyclonedx.model.formulation.Formula;
 import org.cyclonedx.model.Hash;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.OrganizationalContact;
@@ -291,7 +292,7 @@ public final class TemurinGenSBOM {
 
     static Bom addFormulation(final String fileName) {          // Method to store Formulation -->  name
         Bom bom = readJSONfile(fileName);
-        Formulation formulation  = new Formulation();
+        Formula formulation  = new Formula();
         bom.setFormula(formulation);
         return bom;
     }
@@ -311,13 +312,13 @@ public final class TemurinGenSBOM {
 */
     static Bom addFormulationProperty(final String fileName, final String name, final String value) {     // Method to store metadata --> Properties List --> name-values
         Bom bom = readJSONfile(fileName);
-        Formulation formulation = new Formulation();
+        Formula formulation = new Formula();
         Property prop1 = new Property();
         formulation = bom.getFormulation();
         prop1.setName(name);
         prop1.setValue(value);
         formulation.addProperty(prop1);
-        bom.setMetadata(formulation);
+        bom.setFormulation(formulation);
         return bom;
     }
     static String generateBomJson(final Bom bom) {
