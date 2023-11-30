@@ -6,14 +6,9 @@ name: "Build Autotriage"
 on:
   schedule:
     - cron: '0 0 * * MON'
-  push:
-    paths:
-      - '**build-autotriage.yml'
-      - '**build_autotriage.sh'
-      - '**autotriage_regexes.sh'
-      
+
 env:
-  TRIAGE_SCRIPT: "${PWD}/tooling/build_autotriage/build_autotriage.sh"
+  TRIAGE_SCRIPT: "tooling/build_autotriage/build_autotriage.sh"
 
 jobs:
   Label:
@@ -22,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: "Run Build Auto Triage"
-        run: bash "${TRIAGE_SCRIPT}" jdk8u jdk11u jdk17u jdk21u jdk22head
+        run: bash "${PWD}/${TRIAGE_SCRIPT}" jdk8u jdk11u jdk17u jdk21u jdk22head
 
       - name: Create Issue From File
         env:
