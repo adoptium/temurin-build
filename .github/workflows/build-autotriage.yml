@@ -6,19 +6,9 @@ name: "Build Autotriage"
 on:
   schedule:
     - cron: '0 0 * * MON'
-  pull_request:
-    branches: [master]
-    paths:
-      - '**build-autotriage.yml'
-      - '**build_autotriage.sh'
-      - '**autotriage_regexes.sh'
 
 env:
   TRIAGE_SCRIPT: "tooling/build_autotriage/build_autotriage.sh"
-
-permissions:
-  contents: write
-  issues: write
 
 jobs:
   Label:
