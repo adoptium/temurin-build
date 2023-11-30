@@ -194,14 +194,16 @@ function downloadBootJDK()
 if [ "${ARCHITECTURE}" == "x64" ]
 then
   export PATH=/opt/rh/devtoolset-2/root/usr/bin:$PATH
-  ## Fix For Issue https://github.com/adoptium/temurin-build/issues/3547
-  ## Add Missing Library Path For Ubuntu 22+
-  if [ -e /etc/os-release ]; then
-    ID=$(grep "^ID=" /etc/os-release | awk -F'=' '{print $2}')
-    INT_VERSION_ID=$(grep "^VERSION_ID=" /etc/os-release | awk -F'"' '{print $2}' | awk -F'.' '{print $1}')
-    if [ "$ID" == "ubuntu" ] && [ "$INT_VERSION_ID" -ge "22" ]; then
-      export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH
-    fi
+fi
+
+## Fix For Issue https://github.com/adoptium/temurin-build/issues/3547
+## Add Missing Library Path For Ubuntu 22+
+if [ -e /etc/os-release ]; then
+  ID=$(grep "^ID=" /etc/os-release | awk -F'=' '{print $2}')
+  INT_VERSION_ID=$(grep "^VERSION_ID=" /etc/os-release | awk -F'"' '{print $2}' | awk -F'.' '{print $1}')
+  LIB_ARCH=$(uname -m)-linux-gnu
+  if [ "$ID" == "ubuntu" ] && [ "$INT_VERSION_ID" -ge "22" ]; then
+      export LIBRARY_PATH=/usr/lib/$LIB_ARCH:$LIBRARY_PATH
   fi
 fi
 
