@@ -16,6 +16,9 @@ on:
 env:
   TRIAGE_SCRIPT: "tooling/build_autotriage/build_autotriage.sh"
 
+permissions:
+  issues: write
+
 jobs:
   Label:
     runs-on: ubuntu-latest
