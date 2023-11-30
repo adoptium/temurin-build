@@ -17,6 +17,7 @@ env:
   TRIAGE_SCRIPT: "tooling/build_autotriage/build_autotriage.sh"
 
 permissions:
+  contents: write
   issues: write
 
 jobs:
