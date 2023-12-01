@@ -69,7 +69,7 @@ fi
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   export LDR_CNTRL=MAXDATA=0x80000000
 fi
-echo LDR_CNTRL=$LDR_CNTRL
+echo LDR_CNTRL="$LDR_CNTRL"
 
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
