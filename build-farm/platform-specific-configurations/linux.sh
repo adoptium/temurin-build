@@ -19,7 +19,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
-if [[ "${VARIANT}" == "${BUILD_VARIANT_TEMURIN}"] || ["${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ]] && [ "$JAVA_FEATURE_VERSION" -ge 21 ]; then
+# shellcheck disable=SC2109
+if [ "${VARIANT}" == "${BUILD_VARIANT_TEMURIN}" || "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ "$JAVA_FEATURE_VERSION" -ge 21 ]; then
   # Temurin/hotspot jdk-21+ uses "bundled" FreeType
   export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
 else
