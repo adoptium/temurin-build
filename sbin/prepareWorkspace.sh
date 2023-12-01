@@ -337,16 +337,13 @@ checkingAndDownloadingAlsa() {
     # https://github.com/adoptium/temurin-build/issues/3518#issuecomment-1792606345
     uptime
     # Will retry command below until it passes or we've failed 10 times.
-    # Note that the hkp://keys.gnupg.net keyserver uses round robin DNS to give a different keyserver each 
-    # time we run the command, so this rerun loop allows us to ignore problematic keyservers (timeouts etc).
-    keyserverHostArray=("keyserver.ubuntu.com" "keys.openpgp.org" "pgp.mit.edu")
-    for i in {0..2}; do
-      echo "Attempting to recieve keys from keyserver ${keyserverHostArray[$i]}"
-      if gpg --keyserver "hkp://${keyserverHostArray[$i]}" --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"; then
+    for i in {1..10}; do
+      if gpg --keyserver keyserver.ubuntu.com --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"; then
         echo "gpg command has passed."
         break
-      elif [[ ${i} -lt 2 ]]; then
-        echo "gpg recv-keys attempt has failed. Retrying on a different keyserver..."
+      elif [[ ${i} -lt 10 ]]; then
+        echo "gpg recv-keys attempt has failed. Retrying after 10 second pause..."
+        sleep 10s
       else
         echo "ERROR: gpg recv-keys final attempt has failed. Will not try again."
       fi
