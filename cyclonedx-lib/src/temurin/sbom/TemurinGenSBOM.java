@@ -104,7 +104,9 @@ public final class TemurinGenSBOM {
                 cmd = "addMetadataTools";
             } else if (args[i].equals("--addFormulation")) {        // Formulation Component. We can set "name" for Formulation.
                 cmd = "addFormulation";
-            } else if (args[i].equals("--addFormulationProp")) {    // Formulation --> Property -> name-value
+            } else if (args[i].equals("--addFormulationComp")) {        // Formulation Component. We can set "name" for Formulation.
+                cmd = "addFormulation";
+            } else if (args[i].equals("--addFormulationCompProp")) {    // Formulation --> Component --> Property --> name-value
                 cmd = "addFormulationProperty";
             } else if (args[i].equals("--verbose")) {
                 verbose = true;
@@ -132,18 +134,16 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addFormulation":                              // Adds Formulation --> name
-                bom = addFormulation(fileName);
+                bom = addFormula(fileName);
                 writeJSONfile(bom, fileName);
                 break;
 
-/*
             case "addFormulationComponent":                   // Adds Formulation --> Component--> name
-                bom = addFormulationComponent(fileName, name, type, version, description);
+                bom = addFormulaComponent(fileName, name, type);
                 writeJSONfile(bom, fileName);
                 break;
-*/
             case "addFormulationProperty":                     // Adds Formulation--> Property --> name-value:
-                bom = addFormulationProperty(fileName, name, value);
+                bom = addFormulaComponentProperty(fileName, compName, name, value);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -290,34 +290,58 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addFormulation(final String fileName) {          // Method to store Formulation -->  name
+    static Bom addFormula(final String fileName) {          // Method to store Formulation
         Bom bom = readJSONfile(fileName);
-        Formula formulation  = new Formula();
-        bom.setFormula(formulation);
+        List<Formula> formulation = bom.getFormulation();
+        Formula formula  = new Formula();
+// Assume this is auto-created        List<Formula> formulation = new LinkedList<Formula>();
+        formulation.add(formula);
+        bom.setFormulation(formulation);
         return bom;
     }
-/*
-    static Bom addFormulaDependency(final String fileName, final String name, final String type, final String version, final String description) {
+
+   static Bom addFormulaComponent(final String fileName, final String name, final String type/*, final String version, final String description */) {
         Bom bom = readJSONfile(fileName);
-        Formulation formulation = new Formulation();
+        List<Formula> formulation = bom.getFormulation();
+        Formula formula = formulation.get(0);
         Component comp = new Component();
         Component.Type compType = Component.Type.FRAMEWORK;
-        comp.setType(compType); // required e.g Component.Type.FRAMEWORK
-        comp.setName(name); // required
-        comp.setVersion(version);
-        formulation.setComponent(comp);
-        bom.setMetadata(formulation);
+/*        comp.setType(compType); // required e.g Component.Type.FRAMEWORK
+        comp.setName(name); // required */
+        List<Component> components = formula.getComponents();
+        if ( components == null ) {
+          System.out.println("SXAEC: INITIAL FORMULATION COMPONENTS IS NULL");
+//          components = new LinkedList<Component>();
+        }
+        else if ( components.isEmpty() ) {
+          System.out.println("SXAEC: INITIAL FORMULATION COMPONENTS IS PRESENT BUT EMPTY");
+        }
+        components.add(comp);
+        formula.setComponents(components);
+        bom.setFormulation(formulation);
         return bom;
     }
-*/
-    static Bom addFormulationProperty(final String fileName, final String name, final String value) {     // Method to store metadata --> Properties List --> name-values
+
+    static Bom addFormulaComponentProperty(final String fileName, final String componentName, final String name, final String value) {     // Method to store metadata --> Properties List --> name-values
         Bom bom = readJSONfile(fileName);
-        Formula formulation = new Formula();
-        Property prop1 = new Property();
-        formulation = bom.getFormulation();
-        prop1.setName(name);
-        prop1.setValue(value);
-        formulation.addProperty(prop1);
+        List<Formula> formulation = bom.getFormulation();
+        Formula formula = formulation.get(0);
+        // This isn't great as we're assuming there's only one
+        // But we can't create more, and they're not named ...
+        List<Component> components = formulation.get(0).getComponents();
+        for (Component item : components) {
+
+// What if the name wasn't found - this won't create a new one
+// Should we skip the "already exists" case and just issue an add?
+            if (item.getName().equals(componentName)) {
+                    Property prop1 = new Property();
+                    prop1.setName(name);
+                    prop1.setValue(value);
+                    item.addProperty(prop1);
+            }
+        }
+        formula.setComponents(components);
+        formulation.set(0, formula);
         bom.setFormulation(formulation);
         return bom;
     }

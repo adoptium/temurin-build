@@ -53,18 +53,24 @@ addSBOMFormulation() {
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulation --jsonFile "${jsonFile}"
 }
 
-# Ref: https://cyclonedx.org/docs/1.4/json/#formulation
-# Add the given Property name & value to the SBOM Formulation
-addSBOMFormulationProperty() {
+addSBOMFormulationComponent() {
   local javaHome="${1}"
   local classpath="${2}"
   local jsonFile="${3}"
   local name="${4}"
-  local value="${5}"
-  if [ -z "${value}" ]; then
-    value="N.A"
-  fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationCompoment --jsonFile "${jsonFile}" --name "${name}"
+}  
+
+# Ref: https://cyclonedx.org/docs/1.4/json/#formulation
+# Add the given Property name & value to the SBOM Formulation
+addSBOMFormulationComponentProperty() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local compName="${4}"
+  local name="${5}"
+  local value="${6}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationCompProp --jsonFile "${jsonFile}" --compName --name "${name}" --value "${value}"
 }
 
 
