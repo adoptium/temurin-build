@@ -138,11 +138,11 @@ public final class TemurinGenSBOM {
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addFormulationComponent":                   // Adds Formulation --> Component--> name
+            case "addFormulationComp":                   // Adds Formulation --> Component--> name
                 bom = addFormulaComponent(fileName, name, type);
                 writeJSONfile(bom, fileName);
                 break;
-            case "addFormulationProperty":                     // Adds Formulation--> Property --> name-value:
+            case "addFormulationCompProp":                     // Adds Formulation--> Property --> name-value:
                 bom = addFormulaComponentProperty(fileName, compName, name, value);
                 writeJSONfile(bom, fileName);
                 break;
