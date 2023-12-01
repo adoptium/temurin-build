@@ -30,7 +30,7 @@ export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --dis
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_TEMURIN}" ] && [ "$JAVA_FEATURE_VERSION" -ge 21 ]; then
   # Temurin jdk-21+ uses "bundled" FreeType
-  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir=bundled"
+  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
 else
   # We don't bundle freetype on alpine anymore, and expect the user to have it.
   export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"

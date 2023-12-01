@@ -70,7 +70,7 @@ fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_TEMURIN}" ] && [ "$JAVA_FEATURE_VERSION" -ge 21 ]; then
   # Temurin jdk-21+ uses "bundled" FreeType
-  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir=bundled"
+  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
 fi
 
 # The configure option '--with-macosx-codesign-identity' is supported in JDK8 OpenJ9 and JDK11 and JDK14+

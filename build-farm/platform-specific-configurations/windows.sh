@@ -233,7 +233,7 @@ fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_TEMURIN}" ] && [ "$JAVA_FEATURE_VERSION" -ge 21 ]; then
   # Temurin jdk-21+ uses "bundled" FreeType
-  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir=bundled"
+  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
 fi
 
 if [ "${ARCHITECTURE}" == "aarch64" ]; then
