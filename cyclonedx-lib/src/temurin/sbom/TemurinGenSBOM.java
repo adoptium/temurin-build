@@ -32,6 +32,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Collections;
 import java.util.List;
+import java.util.LinkedList;
 
 /**
  * Command line tool to construct a CycloneDX SBOM.
@@ -60,7 +61,7 @@ public final class TemurinGenSBOM {
         String url = null;
         String value = null;
         String version = null;
-
+        
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--jsonFile")) {
                 fileName = args[++i];
@@ -104,10 +105,11 @@ public final class TemurinGenSBOM {
                 cmd = "addMetadataTools";
             } else if (args[i].equals("--addFormulation")) {        // Formulation Component. We can set "name" for Formulation.
                 cmd = "addFormulation";
+                System.out.println("SXAEC: Found addFormulation command");
             } else if (args[i].equals("--addFormulationComp")) {        // Formulation Component. We can set "name" for Formulation.
-                cmd = "addFormulation";
+                cmd = "addFormulationComp";
             } else if (args[i].equals("--addFormulationCompProp")) {    // Formulation --> Component --> Property --> name-value
-                cmd = "addFormulationProperty";
+                cmd = "addFormulationCompProp";
             } else if (args[i].equals("--verbose")) {
                 verbose = true;
             }
@@ -134,6 +136,7 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addFormulation":                              // Adds Formulation --> name
+            System.out.println("SXAEC: Calling addFormulation");
                 bom = addFormula(fileName);
                 writeJSONfile(bom, fileName);
                 break;
@@ -141,6 +144,7 @@ public final class TemurinGenSBOM {
             case "addFormulationComp":                   // Adds Formulation --> Component--> name
                 bom = addFormulaComponent(fileName, name, type);
                 writeJSONfile(bom, fileName);
+                System.out.println("SXAEC: Writing JSON file");
                 break;
             case "addFormulationCompProp":                     // Adds Formulation--> Property --> name-value:
                 bom = addFormulaComponentProperty(fileName, compName, name, value);
@@ -291,34 +295,63 @@ public final class TemurinGenSBOM {
     }
 
     static Bom addFormula(final String fileName) {          // Method to store Formulation
+        System.out.println("SXAEC: addFormula");
         Bom bom = readJSONfile(fileName);
+        if ( bom == null ) System.out.println("SXAEC: bom object is null");
         List<Formula> formulation = bom.getFormulation();
-        Formula formula  = new Formula();
-// Assume this is auto-created        List<Formula> formulation = new LinkedList<Formula>();
-        formulation.add(formula);
-        bom.setFormulation(formulation);
+        if ( formulation == null ) {
+          System.out.println("formulation in bom is null, creating one");
+          formulation = new LinkedList<Formula>();
+          Formula formula  = new Formula();
+          formulation.add(formula);
+          bom.setFormulation(formulation);
+          if ( bom.getFormulation() == null ) System.out.println("Formulation is apparently still null :eyeroll:");
+        } else {
+          System.out.println("addFormula() has done nothing as there is a already a formulation object in the BoM");
+        }
         return bom;
     }
 
    static Bom addFormulaComponent(final String fileName, final String name, final String type/*, final String version, final String description */) {
+// START OF SECTION FROM addFormula
+        System.out.println("SXAEC: addFormula");
         Bom bom = readJSONfile(fileName);
+        if ( bom == null ) System.out.println("SXAEC: bom object is null");
         List<Formula> formulation = bom.getFormulation();
+        if ( formulation == null ) {
+          formulation = new LinkedList<Formula>();
+          Formula formula  = new Formula();
+          formulation.add(formula);
+          bom.setFormulation(formulation);
+        } else {
+          System.out.println("addFormula() has done nothing as there is a already a formulation object in the BoM");
+        }
+// END OF SECTION FROM addFormula
+//        Bom bom = readJSONfile(fileName);
+//        List<Formula> formulation = bom.getFormulation();
+        // SXA TODO: Not ideal to just be pulling the first entry here
+        // But the formula is currently unnamed
+if ( formulation==null ) System.out.println("formulation in the bom is null");
         Formula formula = formulation.get(0);
+if ( formula==null ) System.out.println("formula in the bom is null");
         Component comp = new Component();
         Component.Type compType = Component.Type.FRAMEWORK;
-/*        comp.setType(compType); // required e.g Component.Type.FRAMEWORK
-        comp.setName(name); // required */
+        comp.setType(compType);
+        comp.setName(name);
         List<Component> components = formula.getComponents();
         if ( components == null ) {
           System.out.println("SXAEC: INITIAL FORMULATION COMPONENTS IS NULL");
-//          components = new LinkedList<Component>();
-        }
-        else if ( components.isEmpty() ) {
+          components = new LinkedList<Component>();
+        } else if ( components.isEmpty() ) {
           System.out.println("SXAEC: INITIAL FORMULATION COMPONENTS IS PRESENT BUT EMPTY");
         }
         components.add(comp);
         formula.setComponents(components);
-        bom.setFormulation(formulation);
+        formulation.set(0,formula);
+        bom.setFormulation(formulation); // Not really required
+if ( bom.getFormulation().get(0).getComponents().get(0) == null ) System.out.println("Object retrieval was null");
+else System.out.println("Retrieved name: " + bom.getFormulation().get(0).getComponents().get(0).getName());
+System.out.println("SXAEC: Everything set");
         return bom;
     }
 
@@ -326,7 +359,7 @@ public final class TemurinGenSBOM {
         Bom bom = readJSONfile(fileName);
         List<Formula> formulation = bom.getFormulation();
         Formula formula = formulation.get(0);
-        // This isn't great as we're assuming there's only one
+        // Similar to the last method this isn't great as we're assuming there's only one
         // But we can't create more, and they're not named ...
         List<Component> components = formulation.get(0).getComponents();
         for (Component item : components) {
@@ -346,8 +379,8 @@ public final class TemurinGenSBOM {
         return bom;
     }
     static String generateBomJson(final Bom bom) {
-        // Use schema v14: https://cyclonedx.org/schema/bom-1.4.schema.json
-        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_14, bom);
+        // Use schema v15: https://cyclonedx.org/schema/bom-1.5.schema.json
+        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_15, bom);
         String json = bomGen.toJsonString();
         return json;
     }
