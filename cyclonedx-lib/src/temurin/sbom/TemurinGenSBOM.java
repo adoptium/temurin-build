@@ -331,7 +331,7 @@ public final class TemurinGenSBOM {
         }
         components.add(comp);
         formula.setComponents(components);
-        formulation.set(0,formula);
+        formulation.set(0, formula);
         bom.setFormulation(formulation);
         return bom;
     }
