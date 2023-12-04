@@ -359,9 +359,11 @@ function neutraliseVsVersionInfo() {
   echo "Successfully updated all EXE/DLL VS_VERSION_INFO in ${JDK_DIR}"
 }
 
-# Remove Vendor name from all binaries
+# Remove Vendor name from executables
+#   If patching VS_VERSION_INFO, then all executables need patching,
+#   otherwise just jvm library that contains the Vendor string differences.
 function removeVendorName() {
-  echo "Removing Vendor name: $VENDOR_NAME from binaries from ${JDK_DIR}"
+  echo "Removing Vendor name: $VENDOR_NAME from executables from ${JDK_DIR}"
 
   if [[ "$OS" =~ CYGWIN* ]]; then
     # We need to do this for all executables if patching VS_VERSION_INFO
@@ -390,7 +392,7 @@ function removeVendorName() {
     sed -i "" "s=${VENDOR_NAME}=AAAAAA=g" "${plist}"
   fi
 
-  echo "Successfully removed all Vendor name: $VENDOR_NAME from binaries from ${JDK_DIR}"
+  echo "Successfully removed all Vendor name: $VENDOR_NAME from executables from ${JDK_DIR}"
 }
 
 # Neutralise VersionProps.class/.java vendor strings
