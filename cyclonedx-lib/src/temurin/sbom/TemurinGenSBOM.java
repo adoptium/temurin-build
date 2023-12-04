@@ -105,7 +105,6 @@ public final class TemurinGenSBOM {
                 cmd = "addMetadataTools";
             } else if (args[i].equals("--addFormulation")) {        // Formulation Component. We can set "name" for Formulation.
                 cmd = "addFormulation";
-                System.out.println("SXAEC: Found addFormulation command");
             } else if (args[i].equals("--addFormulationComp")) {        // Formulation Component. We can set "name" for Formulation.
                 cmd = "addFormulationComp";
             } else if (args[i].equals("--addFormulationCompProp")) {    // Formulation --> Component --> Property --> name-value
@@ -136,7 +135,6 @@ public final class TemurinGenSBOM {
                 break;
 
             case "addFormulation":                              // Adds Formulation --> name
-            System.out.println("SXAEC: Calling addFormulation");
                 bom = addFormula(fileName);
                 writeJSONfile(bom, fileName);
                 break;
@@ -144,7 +142,6 @@ public final class TemurinGenSBOM {
             case "addFormulationComp":                   // Adds Formulation --> Component--> name
                 bom = addFormulaComponent(fileName, name, type);
                 writeJSONfile(bom, fileName);
-                System.out.println("SXAEC: Writing JSON file");
                 break;
             case "addFormulationCompProp":                     // Adds Formulation--> Property --> name-value:
                 bom = addFormulaComponentProperty(fileName, compName, name, value);
@@ -295,9 +292,7 @@ public final class TemurinGenSBOM {
     }
 
     static Bom addFormula(final String fileName) {          // Method to store Formulation
-        System.out.println("SXAEC: addFormula");
         Bom bom = readJSONfile(fileName);
-        if ( bom == null ) System.out.println("SXAEC: bom object is null");
         List<Formula> formulation = bom.getFormulation();
         if ( formulation == null ) {
           System.out.println("formulation in bom is null, creating one");
@@ -314,9 +309,7 @@ public final class TemurinGenSBOM {
 
    static Bom addFormulaComponent(final String fileName, final String name, final String type/*, final String version, final String description */) {
 // START OF SECTION FROM addFormula
-        System.out.println("SXAEC: addFormula");
         Bom bom = readJSONfile(fileName);
-        if ( bom == null ) System.out.println("SXAEC: bom object is null");
         List<Formula> formulation = bom.getFormulation();
         if ( formulation == null ) {
           formulation = new LinkedList<Formula>();
@@ -331,27 +324,19 @@ public final class TemurinGenSBOM {
 //        List<Formula> formulation = bom.getFormulation();
         // SXA TODO: Not ideal to just be pulling the first entry here
         // But the formula is currently unnamed
-if ( formulation==null ) System.out.println("formulation in the bom is null");
         Formula formula = formulation.get(0);
-if ( formula==null ) System.out.println("formula in the bom is null");
         Component comp = new Component();
         Component.Type compType = Component.Type.FRAMEWORK;
         comp.setType(compType);
         comp.setName(name);
         List<Component> components = formula.getComponents();
         if ( components == null ) {
-          System.out.println("SXAEC: INITIAL FORMULATION COMPONENTS IS NULL");
           components = new LinkedList<Component>();
-        } else if ( components.isEmpty() ) {
-          System.out.println("SXAEC: INITIAL FORMULATION COMPONENTS IS PRESENT BUT EMPTY");
         }
         components.add(comp);
         formula.setComponents(components);
         formulation.set(0,formula);
-        bom.setFormulation(formulation); // Not really required
-if ( bom.getFormulation().get(0).getComponents().get(0) == null ) System.out.println("Object retrieval was null");
-else System.out.println("Retrieved name: " + bom.getFormulation().get(0).getComponents().get(0).getName());
-System.out.println("SXAEC: Everything set");
+        bom.setFormulation(formulation);
         return bom;
     }
 
