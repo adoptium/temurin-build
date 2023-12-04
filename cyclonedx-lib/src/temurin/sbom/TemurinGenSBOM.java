@@ -61,7 +61,7 @@ public final class TemurinGenSBOM {
         String url = null;
         String value = null;
         String version = null;
-        
+
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--jsonFile")) {
                 fileName = args[++i];
@@ -294,15 +294,11 @@ public final class TemurinGenSBOM {
     static Bom addFormula(final String fileName) {          // Method to store Formulation
         Bom bom = readJSONfile(fileName);
         List<Formula> formulation = bom.getFormulation();
-        if ( formulation == null ) {
-          System.out.println("formulation in bom is null, creating one");
+        if (formulation == null) {
           formulation = new LinkedList<Formula>();
           Formula formula  = new Formula();
           formulation.add(formula);
           bom.setFormulation(formulation);
-          if ( bom.getFormulation() == null ) System.out.println("Formulation is apparently still null :eyeroll:");
-        } else {
-          System.out.println("addFormula() has done nothing as there is a already a formulation object in the BoM");
         }
         return bom;
     }
@@ -311,7 +307,7 @@ public final class TemurinGenSBOM {
 // START OF SECTION FROM addFormula
         Bom bom = readJSONfile(fileName);
         List<Formula> formulation = bom.getFormulation();
-        if ( formulation == null ) {
+        if (formulation == null) {
           formulation = new LinkedList<Formula>();
           Formula formula  = new Formula();
           formulation.add(formula);
@@ -330,7 +326,7 @@ public final class TemurinGenSBOM {
         comp.setType(compType);
         comp.setName(name);
         List<Component> components = formula.getComponents();
-        if ( components == null ) {
+        if (components == null) {
           components = new LinkedList<Component>();
         }
         components.add(comp);
