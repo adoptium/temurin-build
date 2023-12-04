@@ -54,17 +54,18 @@ The patching process involves:
 
 #### Tooling setup:
 
-1. The comparable patch tools, (Windows only)tooling/src/c/WindowsUpdateVsVersionInfo.c and src/java/temurin/tools/BinRepl.java need compiling
-before the comparable_patch.sh can be run
+1. The comparable patch tools, (Windows only) [tooling/src/c/WindowsUpdateVsVersionInfo.c](https://github.com/adoptium/temurin-build/blob/master/tooling/src/c/WindowsUpdateVsVersionInfo.c) and
+[src/java/temurin/tools/BinRepl.java](https://github.com/adoptium/temurin-build/blob/master/tooling/src/java/temurin/tools/BinRepl.java) need compiling
+before the comparable_patch.sh can be run.
 
-2. Compile tooling/src/c/WindowsUpdateVsVersionInfo.c (Windows only):
+2. Compile [tooling/src/c/WindowsUpdateVsVersionInfo.c](https://github.com/adoptium/temurin-build/blob/master/tooling/src/c/WindowsUpdateVsVersionInfo.c) (Windows only):
 
 - Ensure VS2022 SDK is installed and on PATH
 - Compile:
   - cd tooling/src/c
   - cl WindowsUpdateVsVersionInfo.c version.lib
 
-3. Compile src/java/temurin/tools/BinRepl.java :
+3. Compile [src/java/temurin/tools/BinRepl.java](https://github.com/adoptium/temurin-build/blob/master/tooling/src/java/temurin/tools/BinRepl.java) :
 
 - Ensure suitable JDK on PATH
 - cd tooling/src/java
