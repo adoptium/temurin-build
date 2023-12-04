@@ -63,7 +63,8 @@ while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
         "--patch-vs-version-info" )
         PATCH_VS_VERSION_INFO=true;;
 
-        *) echo >&2 "Invalid option: ${opt}"; exit 1;;
+        *) echo >&2 "Invalid option: ${opt}"
+        echo 'Syntax: comparable_patch.sh --jdk-dir "<jdk_home_dir>" --version-string "<version_str>" --vendor-name "<vendor_name>" --vendor_url "<vendor_url>" --vendor-bug-url "<vendor_bug_url>" --vendor-vm-bug-url "<vendor_vm_bug_url>" [--patch-vs-version-info]'; exit 1;;
   esac
 done
 
