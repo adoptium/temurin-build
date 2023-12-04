@@ -869,7 +869,7 @@ generateSBoM() {
 
   # Set default SBOM formulation
   addSBOMFormulation "${javaHome}" "${classpath}" "${sbomJson}"
-  addSBOMFormulationComponent "${javaHome}" "${classpath}" "${sbomJson}"
+  addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX SHAs"
 
   # Add Tool Summary section from configure.txt
   checkingToolSummary
