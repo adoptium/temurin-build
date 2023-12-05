@@ -165,9 +165,9 @@ jobs:
     - name: Build macOS
       run: |
         export JAVA_HOME=$JAVA_HOME_11_X64
-        # Skip freetype build on jdk11+
+        # jdk11u+ uses two part exploded & assemble build
         if [ ${{ matrix.version.name }} != "jdk8u" ]; then
-          export BUILD_ARGS="--skip-freetype --make-exploded-image --create-sbom"
+          export BUILD_ARGS="--make-exploded-image --create-sbom"
           ./build-farm/make-adopt-build-farm.sh
           export BUILD_ARGS="--assemble-exploded-image --create-sbom"
           ./build-farm/make-adopt-build-farm.sh

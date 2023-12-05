@@ -18,8 +18,14 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
-# Bundling our own freetype can cause problems, so we skip that on linux.
-export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+
+if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
+  # jdk-21+ uses "bundled" FreeType
+  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
+else
+  # Bundling our own freetype can cause problems, so we skip that on linux.
+  export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+fi
 
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi

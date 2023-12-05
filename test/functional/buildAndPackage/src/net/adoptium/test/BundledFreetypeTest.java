@@ -74,7 +74,11 @@ public class BundledFreetypeTest {
                 .filter(name -> freetypePattern.matcher(name).matches())
                 .collect(Collectors.toSet());
 
-        if (jdkPlatform.runsOn(OperatingSystem.MACOS)) {
+        if (jdkVersion.isNewerOrEqual(21)) {
+            // jdk-21+ uses "bundled" FreeType
+            assertTrue(freetypeFiles.size() > 0,
+              "Expected libfreetype.dylib to be bundled but it is not.");
+        } else if (jdkPlatform.runsOn(OperatingSystem.MACOS)) {
             assertTrue(freetypeFiles.size() > 0,
               "Expected libfreetype.dylib to be bundled but it is not.");
         } else if (jdkPlatform.runsOn(OperatingSystem.WINDOWS)) {

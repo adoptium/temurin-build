@@ -231,6 +231,11 @@ then
   fi
 fi
 
+if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
+  # jdk-21+ uses "bundled" FreeType
+  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
+fi
+
 if [ "${ARCHITECTURE}" == "aarch64" ]; then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --openjdk-target=aarch64-unknown-cygwin"
 fi
