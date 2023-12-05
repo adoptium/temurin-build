@@ -24,8 +24,8 @@ def fetchDeps() {
             sh 'mkdir sbom_dependencies'
             
        
-            # These versions come from https://github.com/CycloneDX/cyclonedx-core-java/tags
-            # Version->spec mappings are in https://github.com/CycloneDX/cyclonedx-core-java#cyclonedx-schema-support
+            // These versions come from https://github.com/CycloneDX/cyclonedx-core-java/tags
+            // Version->spec mappings are in https://github.com/CycloneDX/cyclonedx-core-java#cyclonedx-schema-support
             def cyclonedx_core_java_version = "8.0.3"
             def jackson_core_version = "2.14.2"
             def jackson_annotations_version = "2.14.2"
