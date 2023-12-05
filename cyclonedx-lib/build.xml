@@ -43,7 +43,7 @@
                 <echo message="Downloading cyclonedx-core-java"/>
                 <download-file
                   destfile="cyclonedx-core-java.jar"
-                  checksum="88193228f85a955127dc73e1c72efc9e08e18a01d227df47d0865dc20eceffd1"
+                  checksum="ecc371d12808dfe76047f87f8235665d74dd6cf8ec12c41d052715a3fd79e0b5"
                   srcurl="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies/cyclonedx-core-java.jar"
                   />
 	      </target>
