@@ -16,3 +16,4 @@
 # and then compares with the Temurin JDK for the same build version, or the optionally supplied TARBALL_URL.
 
 echo "hello" > reprotest.1.diff
+ls -l

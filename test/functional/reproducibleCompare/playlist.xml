@@ -16,9 +16,9 @@
 <playlist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../TKG/playlist.xsd">
 	<test>
 		<testCaseName>Reproducible_Comparison</testCaseName>
-		<command>docker run -v "$(TEST_RESROOT):/home/jenkins/test" -v "$(TEST_JDK_HOME)/..:/home/jenkins/jdkbinary" -w "/home/jenkins/" --name reproducibleCompare adoptopenjdk/centos7_build_image /bin/bash TEST_JDK_HOME.sh; \
+		<command>docker run -v "$(TEST_RESROOT):/home/jenkins/test" -v "$(TEST_JDK_HOME)/..:/home/jenkins/jdkbinary" -w "/home/jenkins/test" --name reproducibleCompare adoptopenjdk/centos7_build_image /bin/bash test.sh; \
 	$(TEST_STATUS); \
-	docker cp reproducibleCompare:/home/jenkins/reprotest*.diff "${REPORTDIR}" \;
+	docker cp reproducibleCompare:/home/jenkins/test/reprotest*.diff ./
 	</command>
 		<levels>
 			<level>extended</level>
