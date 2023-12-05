@@ -59,8 +59,8 @@ then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread"
 fi
 
-if [[ ("${VARIANT}" == "${BUILD_VARIANT_TEMURIN}" || "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}") && "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
-  # Temurin/hotspot jdk-21+ uses "bundled" FreeType
+if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
+  # jdk-21+ uses "bundled" FreeType
   export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
 else
   export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
