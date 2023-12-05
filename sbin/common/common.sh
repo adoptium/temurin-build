@@ -96,6 +96,21 @@ function setDockerVolumeSuffix() {
   fi
 }
 
+# Joins multiple parts to a valid file path for the current OS
+function joinPathOS() {
+  local path=$(printf '/%s' "${@}" | sed 's|/\+|/|g')
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+      path=$(cygpath -w "${path}")
+  fi
+  echo "${path}"
+}
+
+# Joins multiple parts to a valid file path using slashes
+function joinPath() {
+  local path=$(printf '/%s' "${@}" | sed 's|/\+|/|g')
+  echo "${path}"
+}
+
 # Create a Tar ball
 getArchiveExtension()
 {

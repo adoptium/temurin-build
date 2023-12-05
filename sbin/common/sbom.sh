@@ -23,7 +23,7 @@ verifySBOMSignature() {
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinSignSBOM --verifySBOMSignature --jsonFile "${jsonFile}" --publicKeyFile "${publicKeyFile}"
 }
 
-# Set basic SBMO metadata with timestamp, authors, manufacture to ${sbomJson}
+# Set basic SBOM metadata with timestamp, authors, manufacture to ${sbomJson}
 addSBOMMetadata() {
   local javaHome="${1}"
   local classpath="${2}"
@@ -118,6 +118,17 @@ addSBOMComponentFromFile() {
       value=$(cat "${propFile}")
   fi
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
+}
+
+# Ref: https://cyclonedx.org/docs/1.4/json/#components_items_hashes
+# Add the given sha256 hash to the given SBOM Component
+addSBOMComponentHash() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local compName="${4}"
+  local hash="${5}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentHash --jsonFile "${jsonFile}" --compName "${compName}" --hash "${hash}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components_items_properties

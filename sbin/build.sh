@@ -669,7 +669,7 @@ createSourceArchive() {
     # shellcheck disable=SC2001
     srcArchiveName="$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/_x64_linux_hotspot_/-sources_/g')"
   else
-    srcArchiveName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sources}")
+    srcArchiveName=$(getTargetFileNameForComponent "sources")
   fi
 
   local oldPwd="${PWD}"
@@ -791,6 +791,11 @@ setupAntEnv() {
     echo "Unable to find a suitable JAVA_HOME to build the cyclonedx-lib"
     exit 2
   fi
+
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    javaHome=$(cygpath -w "${javaHome}")
+  fi
+
   echo "${javaHome}"
 }
 
@@ -808,14 +813,12 @@ buildCyclonedxLib() {
   JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build
 }
 
-# Generate the SBoM
-generateSBoM() {
-  local javaHome="${1}"
+# get the classpath to run the CycloneDX java app TemurinGenSBOM
+getCyclonedxClasspath() {
 
-  # classpath to run CycloneDX java app TemurinGenSBOM
-  CYCLONEDB_JAR_DIR="${CYCLONEDB_DIR}/build/jar"
-  classpath="${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar:${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar:${CYCLONEDB_JAR_DIR}/jackson-core.jar:${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar:${CYCLONEDB_JAR_DIR}/jackson-databind.jar:${CYCLONEDB_JAR_DIR}/jackson-annotations.jar:${CYCLONEDB_JAR_DIR}/json-schema.jar:${CYCLONEDB_JAR_DIR}/commons-codec.jar:${CYCLONEDB_JAR_DIR}/commons-io.jar:${CYCLONEDB_JAR_DIR}/github-package-url.jar"
-  sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/sbom.json"
+  local CYCLONEDB_JAR_DIR="${CYCLONEDB_DIR}/build/jar"
+
+  local classpath="${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar:${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar:${CYCLONEDB_JAR_DIR}/jackson-core.jar:${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar:${CYCLONEDB_JAR_DIR}/jackson-databind.jar:${CYCLONEDB_JAR_DIR}/jackson-annotations.jar:${CYCLONEDB_JAR_DIR}/json-schema.jar:${CYCLONEDB_JAR_DIR}/commons-codec.jar:${CYCLONEDB_JAR_DIR}/commons-io.jar:${CYCLONEDB_JAR_DIR}/github-package-url.jar"
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     classpath=""
     for jarfile in "${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar" "${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar" \
@@ -826,17 +829,40 @@ generateSBoM() {
     do
       classpath+=$(cygpath -w "${jarfile}")";"
     done
-    sbomJson=$(cygpath -w "${sbomJson}")
-    javaHome=$(cygpath -w "${javaHome}")
   fi
+
+  echo "${classpath}"
+}
+
+# Generate the SBoM
+generateSBoM() {
+  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "false" ]] || [[ ! -d "${CYCLONEDB_DIR}" ]]; then
+    echo "Skip generating SBOM"
+    return
+  fi
+
+  local javaHome="$(setupAntEnv)"
+
+  buildCyclonedxLib "${javaHome}"
+  # classpath to run java app TemurinGenSBOM
+  local classpath="$(getCyclonedxClasspath)"
+
+  local sbomTargetName=$(getTargetFileNameForComponent "sbom")
+  # Remove the tarball / zip extension from the name to be used for the SBOM
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    sbomTargetName=$(echo "${sbomTargetName}.json" | sed "s/\.zip//")
+  else
+    sbomTargetName=$(echo "${sbomTargetName}.json" | sed "s/\.tar\.gz//")
+  fi
+
+  local sbomJson="$(joinPathOS ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${sbomTargetName})"
+  echo "OpenJDK SBOM will be ${sbomJson}."
 
   # Clean any old json
   rm -f "${sbomJson}"
 
-  # Run a series of SBOM API commands to generate the required SBOM
-  JAVA_LOC="$PRODUCT_HOME/bin/java"
-  local fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
-  local fullVerOutput=$($JAVA_LOC -version 2>&1)
+  local fullVer=$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/productVersion.txt")
+  local fullVerOutput=$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/productVersionOutput.txt")
 
   # Create initial SBOM json
   createSBOMFile "${javaHome}" "${classpath}" "${sbomJson}"
@@ -844,45 +870,12 @@ generateSBoM() {
   addSBOMMetadata "${javaHome}" "${classpath}" "${sbomJson}"
 
   # Create component to metadata in SBOM
-  addSBOMMetadataComponent "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "framework" "${fullVer}" "Temurin JDK Component"
+  addSBOMMetadataComponent "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "framework" "${fullVer}" "Eclipse Temurin components"
 
   # Below add property to metadata
   # Add OS full version (Kernel is covered in the first field)
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS version" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
-
-  # Create JDK Component
-  addSBOMComponent "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} JDK Component"
-
-  # Below add different properties to JDK component
-  # Add variant as JDK Component Property
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "JDK Variant" "${BUILD_CONFIG[BUILD_VARIANT]^}"
-  # Add scmRef as JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "SCM Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
-  # Add OpenJDK source ref commit as JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "OpenJDK Source Commit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
-  # Add buildRef as JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Temurin Build Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
-  # Add jenkins job ID as JDK Component Property
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Builder Job Reference" "${BUILD_URL:-N.A}"
-  # Add jenkins builder (agent/machine name) as JDK Component Property
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Builder Name" "${NODE_NAME:-N.A}"
-
-  # Add build timestamp
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Build Timestamp" "${BUILD_CONFIG[BUILD_TIMESTAMP]}"
-
-  # Add Tool Summary section from configure.txt
-  checkingToolSummary
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Build Tools Summary" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
-  # Add builtConfig JDK Component Property, load as Json string
-  built_config=$(createConfigToJsonString)
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "Build Config" "${built_config}"
-  # Add full_version_output JDK Component Property
-  addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "full_version_output" "${fullVerOutput}"
-  # Add makejdk_any_platform_args JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "makejdk_any_platform_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
-  # Add make_command_args JDK Component Property
-  addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
 
   # Below add build tools into metadata tools
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
@@ -897,10 +890,13 @@ generateSBoM() {
   # Add FreeType 3rd party
   addFreeTypeVersionInfo
   # Add FreeMarker 3rd party (openj9)
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt)"
-  
+  local freemarker_version="$(joinPathOS ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} 'metadata/dependency_version_freemarker.txt')"
+  if [ -f "${freemarker_version}" ]; then
+      addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${freemarker_version})"
+  fi
+
   # Add Build Docker image SHA1
-  buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
+  local buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
   # ${BUILD_CONFIG[USE_DOCKER]^} always set to false cannot rely on it.
   if [ -n "${buildimagesha}" ] && [ "${buildimagesha}" != "N.A" ]; then
     addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "true"
@@ -909,12 +905,82 @@ generateSBoM() {
     addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "false"
   fi
 
+  checkingToolSummary
+
+  # add individual components that have been generated in this build
+  local components=("JDK" "JRE" "SOURCES" "STATIC-LIBS" "DEBUGIMAGE" "TESTIMAGE")
+  for component in "${components[@]}"
+  do
+    local componentLowerCase=$(echo "${component}" | tr '[:upper:]' '[:lower:]')
+
+    local componentName="${component} Component"
+    # shellcheck disable=SC2001
+    local archiveName=$(getTargetFileNameForComponent "${componentLowerCase}")
+    local archiveFile="$(joinPath ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${archiveName})"
+
+    # special handling for static-libs, determine the glibc type that is used.
+    if [ "${component}" == "STATIC-LIBS" ]; then
+      local staticLibsVariants=("" "-glibc" "-musl")
+      for staticLibsVariant in "${staticLibsVariants[@]}"
+      do
+        # shellcheck disable=SC2001
+        archiveName=$(getTargetFileNameForComponent "static-libs${staticLibsVariant}")
+        archiveFile="$(joinPath ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${archiveName})"
+        if [ -f "${archiveFile}" ]; then
+          break
+        fi
+      done
+    fi
+
+    if [ ! -f "${archiveFile}" ]; then
+      continue
+    fi
+
+    local sha=$(sha256File "${archiveFile}")
+
+    # Create JDK Component
+    addSBOMComponent "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} ${component} Component"
+
+    # Add SHA256 hash for the component
+    addSBOMComponentHash "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "${sha}"
+
+    # Below add different properties to JDK component
+    # Add target archive name as JDK Component Property
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Filename" "${archiveName}"
+    # Add variant as JDK Component Property
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "JDK Variant" "${BUILD_CONFIG[BUILD_VARIANT]^}"
+    # Add scmRef as JDK Component Property
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "SCM Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
+    # Add OpenJDK source ref commit as JDK Component Property
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "OpenJDK Source Commit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
+    # Add buildRef as JDK Component Property
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Temurin Build Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
+    # Add jenkins job ID as JDK Component Property
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Builder Job Reference" "${BUILD_URL:-N.A}"
+    # Add jenkins builder (agent/machine name) as JDK Component Property
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Builder Name" "${NODE_NAME:-N.A}"
+
+    # Add build timestamp
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Timestamp" "${BUILD_CONFIG[BUILD_TIMESTAMP]}"
+
+    # Add Tool Summary section from configure.txt
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Tools Summary" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
+    # Add builtConfig JDK Component Property, load as Json string
+    built_config=$(createConfigToJsonString)
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Config" "${built_config}"
+    # Add full_version_output JDK Component Property
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "full_version_output" "${fullVerOutput}"
+    # Add makejdk_any_platform_args JDK Component Property
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "makejdk_any_platform_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
+    # Add make_command_args JDK Component Property
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
+  done
+
   # Print SBOM json
   echo "CycloneDX SBOM:"
   cat  "${sbomJson}"
   echo ""
 }
-
 
 # Generate build tools info into dependency file
 checkingToolSummary() {
@@ -1114,7 +1180,7 @@ printJavaVersionString() {
        exit 3
      elif [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
        # job is cross compiled, so we cannot run it on the build system
-       # So we leave it for now and retrive the version from a downstream job after the build
+       # So we leave it for now and retrieve the version from a downstream job after the build
        echo "Warning: java version can't be run on cross compiled build system. Faking version for now..."
      else
        # print version string around easy to find output
@@ -1178,7 +1244,6 @@ cleanAndMoveArchiveFiles() {
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
   local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
-  local sbomTargetPath=$(getSbomArchivePath)
 
   echo "Moving archive content to target archive paths and cleaning unnecessary files..."
 
@@ -1214,15 +1279,6 @@ cleanAndMoveArchiveFiles() {
     echo "moving ${testImagePath} to ${testImageTargetPath}"
     rm -rf "${testImageTargetPath}" || true
     mv "${testImagePath}" "${testImageTargetPath}"
-  fi
-
-  # If creating SBOM, move it to the target Sbom archive path
-  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]]; then
-    local sbomJson="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/sbom.json"
-    echo "moving ${sbomJson} to ${sbomTargetPath}/sbom.json"
-    rm -rf "${sbomTargetPath}" || true
-    mkdir "${sbomTargetPath}"
-    mv "${sbomJson}" "${sbomTargetPath}"
   fi
 
   # Static libs image - check if the directory exists
@@ -1686,6 +1742,21 @@ createArchive() {
   fi
 }
 
+# Gets the target file name for a given component in a fail-safe way.
+getTargetFileNameForComponent() {
+  local component=$1
+  local target_file_name=${BUILD_CONFIG[TARGET_FILE_NAME]}
+
+  # check if the target file name contains a -jdk pattern to be replaced with the component.
+  if [[ "${target_file_name}" == *"-jdk"* ]]; then
+    # shellcheck disable=SC2001
+    echo "${target_file_name}" | sed "s/-jdk/-${component}/"
+  else
+    # if no pattern is found, append the component name right before the extension.
+    echo "${target_file_name}" | sed -r "s/(.+)(\.tar\.gz|\.zip)/\1-${component}\2/"
+  fi
+}
+
 # Create a Tar ball
 createOpenJDKTarArchive() {
   local jdkTargetPath=$(getJdkArchivePath)
@@ -1693,13 +1764,12 @@ createOpenJDKTarArchive() {
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
   local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
-  local sbomTargetPath=$(getSbomArchivePath)
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
   if [ -d "${jreTargetPath}" ]; then
     # shellcheck disable=SC2001
-    local jreName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/-jdk/-jre/')
+    local jreName=$(getTargetFileNameForComponent "jre")
     # for macOS system, code sign directory before creating tar.gz file
     if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ] && [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
       codesign --options runtime --timestamp --sign "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" "${jreTargetPath}"
@@ -1707,18 +1777,18 @@ createOpenJDKTarArchive() {
     createArchive "${jreTargetPath}" "${jreName}"
   fi
   if [ -d "${testImageTargetPath}" ]; then
-    echo "OpenJDK test image path will be ${testImageTargetPath}."
-    local testImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-testimage}")
+    local testImageName=$(getTargetFileNameForComponent "testimage")
+    echo "OpenJDK test image archive file name will be ${testImageName}."
     createArchive "${testImageTargetPath}" "${testImageName}"
   fi
   if [ -d "${debugImageTargetPath}" ]; then
-    echo "OpenJDK debug image path will be ${debugImageTargetPath}."
-    local debugImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-debugimage}")
+    local debugImageName=$(getTargetFileNameForComponent "debugimage")
+    echo "OpenJDK debug image archive file name will be ${debugImageName}."
     createArchive "${debugImageTargetPath}" "${debugImageName}"
   fi
   if [ -d "${staticLibsImageTargetPath}" ]; then
     echo "OpenJDK static libs path will be ${staticLibsImageTargetPath}."
-    local staticLibsTag="-static-libs"
+    local staticLibsTag="static-libs"
     if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" = "linux" ]; then
       # on Linux there might be glibc and musl variants of this
       local cLib="glibc"
@@ -1730,24 +1800,9 @@ createOpenJDKTarArchive() {
       staticLibsTag="${staticLibsTag}-${cLib}"
     fi
     # shellcheck disable=SC2001
-    local staticLibsImageName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed "s/-jdk/${staticLibsTag}/g")
+    local staticLibsImageName=$(getTargetFileNameForComponent "${staticLibsTag}")
     echo "OpenJDK static libs archive file name will be ${staticLibsImageName}."
     createArchive "${staticLibsImageTargetPath}" "${staticLibsImageName}"
-  fi
-  if [ -d "${sbomTargetPath}" ]; then
-    # SBOM archive artifact as a .json file
-    local sbomTargetName=$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]//-jdk/-sbom}.json")
-
-    # Remove the tarball extension from the name to be used for the SBOM
-    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-        sbomTargetName="${sbomTargetName//\.zip/}"
-    else
-        sbomTargetName="${sbomTargetName//\.tar\.gz/}"
-    fi
-
-    local sbomArchiveTarget=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/${sbomTargetName}
-    echo "OpenJDK SBOM will be ${sbomTargetName}."
-    cp "${sbomTargetPath}/sbom.json" "${sbomArchiveTarget}"
   fi
   # for macOS system, code sign directory before creating tar.gz file
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ] && [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
@@ -1980,6 +2035,7 @@ addInfoToJson(){
   addVendorToJson
   addSourceToJson # Build repository and commit SHA
   addOpenJDKSourceToJson # OpenJDK repository and commit SHA
+  addProductVersionToJson
 }
 
 addVariantVersionToJson(){
@@ -2022,6 +2078,15 @@ addOpenJDKSourceToJson() { # name of git repo for which SOURCE sha is from
   fi
 }
 
+addProductVersionToJson() {
+  local JAVA_LOC="$PRODUCT_HOME/bin/java"
+  local fullVer=$(${JAVA_LOC} -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
+  local fullVerOutput=$(${JAVA_LOC} -version 2>&1)
+
+  echo "${fullVer}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/productVersion.txt" 2>&1
+  echo "${fullVerOutput}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/productVersionOutput.txt" 2>&1
+}
+
 ################################################################################
 
 loadConfigFromFile
@@ -2037,17 +2102,12 @@ if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
   printJavaVersionString
   addInfoToReleaseFile
   addInfoToJson
-  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]] && [[ -d "${CYCLONEDB_DIR}" ]]; then
-    javaHome="$(setupAntEnv)"
-    buildCyclonedxLib "${javaHome}"
-    generateSBoM "${javaHome}"
-    unset javaHome
-  fi
   cleanAndMoveArchiveFiles
   copyFreeFontForMacOS
   setPlistForMacOS
   addNoticeFile
   createOpenJDKTarArchive
+  generateSBoM
   exit 0
 fi
 
@@ -2073,17 +2133,12 @@ if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" != "true" ]]; then
   printJavaVersionString
   addInfoToReleaseFile
   addInfoToJson
-  if [[ "${BUILD_CONFIG[CREATE_SBOM]}" == "true" ]] && [[ -d "${CYCLONEDB_DIR}" ]]; then
-    javaHome="$(setupAntEnv)"
-    buildCyclonedxLib "${javaHome}"
-    generateSBoM "${javaHome}"
-    unset javaHome
-  fi
   cleanAndMoveArchiveFiles
   copyFreeFontForMacOS
   setPlistForMacOS
   addNoticeFile
   createOpenJDKTarArchive
+  generateSBoM
 fi
 
 echo "build.sh : $(date +%T) : All done!"
