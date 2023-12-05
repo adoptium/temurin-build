@@ -18,8 +18,14 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
-# Bundling our own freetype can cause problems, so we skip that on linux.
-export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+
+if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
+  # jdk-21+ uses "bundled" FreeType
+  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
+else
+  # Bundling our own freetype can cause problems, so we skip that on linux.
+  export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+fi
 
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
@@ -194,6 +200,17 @@ function downloadBootJDK()
 if [ "${ARCHITECTURE}" == "x64" ]
 then
   export PATH=/opt/rh/devtoolset-2/root/usr/bin:$PATH
+fi
+
+## Fix For Issue https://github.com/adoptium/temurin-build/issues/3547
+## Add Missing Library Path For Ubuntu 22+
+if [ -e /etc/os-release ]; then
+  ID=$(grep "^ID=" /etc/os-release | awk -F'=' '{print $2}')
+  INT_VERSION_ID=$(grep "^VERSION_ID=" /etc/os-release | awk -F'"' '{print $2}' | awk -F'.' '{print $1}')
+  LIB_ARCH=$(uname -m)-linux-gnu
+  if [ "$ID" == "ubuntu" ] && [ "$INT_VERSION_ID" -ge "22" ]; then
+      export LIBRARY_PATH=/usr/lib/$LIB_ARCH:$LIBRARY_PATH
+  fi
 fi
 
 if [ "${ARCHITECTURE}" == "s390x" ]

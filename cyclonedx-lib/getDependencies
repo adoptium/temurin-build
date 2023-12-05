@@ -22,8 +22,11 @@ def fetchDeps() {
     timeout(time: time_limit, unit: 'HOURS') {
         try {
             sh 'mkdir sbom_dependencies'
-
-            def cyclonedx_core_java_version = "7.3.2"
+            
+       
+            // These versions come from https://github.com/CycloneDX/cyclonedx-core-java/tags
+            // Version->spec mappings are in https://github.com/CycloneDX/cyclonedx-core-java#cyclonedx-schema-support
+            def cyclonedx_core_java_version = "8.0.3"
             def jackson_core_version = "2.14.2"
             def jackson_annotations_version = "2.14.2"
             def jackson_databind_version = "2.14.2"
@@ -32,7 +35,7 @@ def fetchDeps() {
             def commons_io_version = "2.11.0"
             def github_package_url_version = "1.4.1"
 
-            fetchSingleFile("cyclonedx-core-java.jar", "88193228f85a955127dc73e1c72efc9e08e18a01d227df47d0865dc20eceffd1", "org/cyclonedx/cyclonedx-core-java/${cyclonedx_core_java_version}/cyclonedx-core-java-${cyclonedx_core_java_version}.jar")
+            fetchSingleFile("cyclonedx-core-java.jar", "ecc371d12808dfe76047f87f8235665d74dd6cf8ec12c41d052715a3fd79e0b5", "org/cyclonedx/cyclonedx-core-java/${cyclonedx_core_java_version}/cyclonedx-core-java-${cyclonedx_core_java_version}.jar")
             fetchSingleFile("jackson-core.jar", "b5d37a77c88277b97e3593c8740925216c06df8e4172bbde058528df04ad3e7a", "com/fasterxml/jackson/core/jackson-core/${jackson_core_version}/jackson-core-${jackson_core_version}.jar")
             fetchSingleFile("jackson-dataformat-xml.jar", "edbda6c775a36049cf0088b111ab958cca0dc70cb9326918d6cf153cb3fa426b", "com/fasterxml/jackson/dataformat/jackson-dataformat-xml/${jackson_databind_version}/jackson-dataformat-xml-${jackson_databind_version}.jar")
             fetchSingleFile("jackson-databind.jar", "501d3abce4d18dcc381058ec593c5b94477906bba6efbac14dae40a642f77424", "com/fasterxml/jackson/core/jackson-databind/${jackson_databind_version}/jackson-databind-${jackson_databind_version}.jar")

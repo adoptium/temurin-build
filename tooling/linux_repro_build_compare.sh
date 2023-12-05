@@ -27,7 +27,7 @@ installPrereqs() {
   if test -r /etc/redhat-release; then
     yum install -y gcc gcc-c++ make autoconf unzip zip alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
     yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel # Not included above ...
-    yum install -y git bzip2 xz openssl pigz which # pigz/which not strictly needed but help in final compression
+    yum install -y git bzip2 xz openssl pigz which jq # pigz/which not strictly needed but help in final compression
     if grep -i release.6 /etc/redhat-release; then
       if [ ! -r /usr/local/bin/autoconf ]; then
         curl https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz | tar xpfz - || exit 1
@@ -49,20 +49,6 @@ downloadAnt() {
     (unzip -qnj /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar -d /usr/local/apache-ant-${ANT_VERSION}/lib)
     rm /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
   fi
-}
-
-# get the TEMURIN_VERSION form the SBOM metadata
-getTemurinVersion() {
-  TEMVER_MAJOR=$(grep '"major":' "$SBOM" | tr -d ' ,' | cut -d':' -f2)
-  TEMVER_MINOR=$(grep '"minor":' "$SBOM" | tr -d ' ,' | cut -d':' -f2)
-  TEMVER_SECURITY=$(grep '"security":' "$SBOM" | tr -d ' ,' | cut -d':' -f2)
-  TEMVER_BUILD=$(grep '"build":' "$SBOM" | tr -d ' ,' | cut -d':' -f2)
-
-  TEMURIN_VERSION="$TEMVER_MAJOR"
-  if [ "$TEMVER_SECURITY" != "0" ]; then
-    TEMURIN_VERSION="$TEMURIN_VERSION.$TEMVER_MINOR.$TEMVER_SECURITY"
-  fi
-  TEMURIN_VERSION="$TEMURIN_VERSION+$TEMVER_BUILD"
 }
 
 setEnvironment() {
@@ -105,13 +91,12 @@ downloadAnt
 echo "Retrieving and parsing SBOM from $SBOM_URL"
 curl -LO "$SBOM_URL"
 SBOM=$(basename "$SBOM_URL")
-BOOTJDK_VERSION=$(grep configure_arguments "$SBOM" | tr ' ' \\n | grep ^Temurin- | tail -1 | cut -d- -f2)
-GCCVERSION=$(tr ' ' \\n < "$SBOM" | grep CC= | cut -d- -f2 | cut -d\\ -f1)
+BOOTJDK_VERSION=$(jq -r '.metadata.tools[] | select(.name == "BOOTJDK") | .version' "$SBOM")
+GCCVERSION=$(jq -r '.metadata.tools[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
 LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
-TEMURIN_BUILD_SHA=$(awk -F'"' '/buildRef/{print$4}' "$SBOM"  | cut -d/ -f7)
-TEMURIN_BUILD_ARGS=$(grep makejdk_any_platform_args "$SBOM" | cut -d\" -f4 | sed -e "s/--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt/'--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt'/" -e "s/ --disable-warnings-as-errors --enable-dtrace/ '--disable-warnings-as-errors --enable-dtrace'/" -e 's/\\n//g' -e "s,--jdk-boot-dir [^ ]*,--jdk-boot-dir /usr/lib/jvm/jdk-$BOOTJDK_VERSION,g")
-
-getTemurinVersion
+TEMURIN_BUILD_SHA=$(jq -r '.components[] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
+TEMURIN_BUILD_ARGS=$(jq -r '.components[] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM" | cut -d\" -f4 | sed -e "s/--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt/'--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt'/" -e "s/ --disable-warnings-as-errors --enable-dtrace/ '--disable-warnings-as-errors --enable-dtrace'/" -e 's/\\n//g' -e "s,--jdk-boot-dir [^ ]*,--jdk-boot-dir /usr/lib/jvm/jdk-$BOOTJDK_VERSION,g")
+TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
 
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi

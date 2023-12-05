@@ -1,0 +1,27 @@
+---
+# Runs a script to triage the latest timer-initiated Temurin build pipelines.
+
+name: "Build Autotriage"
+
+on:
+  schedule:
+    - cron: '0 0 * * MON'
+
+env:
+  TRIAGE_SCRIPT: "tooling/build_autotriage/build_autotriage.sh"
+
+jobs:
+  Label:
+    runs-on: ubuntu-latest
+    name: Run Build Triage
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Run Build Auto Triage"
+        run: bash "${PWD}/${TRIAGE_SCRIPT}" jdk8u jdk11u jdk17u jdk21u jdk22head
+
+      - name: Create Issue From File
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: JasonEtco/create-an-issue@v2
+        with:
+          filename: ./build_triage_output.md

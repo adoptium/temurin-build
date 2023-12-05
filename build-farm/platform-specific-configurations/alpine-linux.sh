@@ -28,8 +28,13 @@ fi
 # ccache seems flaky on alpine
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
 
-# We don't bundle freetype on alpine anymore, and expect the user to have it.
-export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
+  # jdk-21+ uses "bundled" FreeType
+  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
+else
+  # We don't bundle freetype on alpine anymore, and expect the user to have it.
+  export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+fi
 
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
