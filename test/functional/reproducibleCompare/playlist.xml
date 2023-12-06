@@ -18,7 +18,8 @@
 		<testCaseName>Reproducible_Comparison</testCaseName>
 		<command>docker run -v "$(TEST_RESROOT):/home/jenkins/test" -v "$(TEST_JDK_HOME)/..:/home/jenkins/jdkbinary" -w "/home/jenkins/test" --name reproducibleCompare adoptopenjdk/centos7_build_image /bin/bash test.sh; \
 	$(TEST_STATUS); \
-	docker cp reproducibleCompare:/home/jenkins/test/reprotest*.diff ./
+	docker cp reproducibleCompare:/home/jenkins/test/reprotest.1.diff ./;
+	ls -l
 	</command>
 		<levels>
 			<level>extended</level>
