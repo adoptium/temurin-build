@@ -1086,11 +1086,16 @@ addCycloneDXVersions() {
    if [ ! -d "${CYCLONEDB_DIR}/build/jar" ]; then
       echo "ERROR: CycloneDX jar directory not found at ${CYCLONEDB_DIR}/build/jar - cannot store checksums in SBOM"
    else
-       # This should probably cycle over all jars in the directory and include them
-       # but this is an initial PoC for discussion ...
-       # Also - should we do something if the sha256sum fails? Currently SHA will show blank
-       local JarSha=$(sha256sum "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
-       addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX SHAs" "CycloneDX core java JAR SHA" "${JarSha}"
+       # Should we do something special if the sha256sum fails?
+       for JAR in "${CYCLONEDB_DIR}/build/jar"/*.jar; do
+         JarName=$(basename "$JAR")
+         if [ "$(uname)" = "Darwin" ]; then
+            JarSha=$(shasum -a 256 "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+         else
+            JarSha=$(sha256sum "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+         fi
+         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX SHAs" "${JarName}" "${JarSha}"
+       done
    fi
 }
 
