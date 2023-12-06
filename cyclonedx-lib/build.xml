@@ -478,7 +478,7 @@
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
-                  <arg value="--addFormulationComponent"/>
+                  <arg value="--addFormulationComp"/>
                   <arg value="--name"/>
                   <arg value="CycloneDX SHAs"/>
                   <arg value="--jsonFile"/>
