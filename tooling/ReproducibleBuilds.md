@@ -54,28 +54,29 @@ The patching process involves:
 
 #### Tooling setup:
 
-1. The comparable patch tools, tooling/src/c/WindowsUpdateVsVersionInfo.c and src/java/temurin/tools/BinRepl.java need compiling
-before the comparable_patch.sh can be run
+1. The comparable patch tools, (Windows only) [tooling/src/c/WindowsUpdateVsVersionInfo.c](https://github.com/adoptium/temurin-build/blob/master/tooling/src/c/WindowsUpdateVsVersionInfo.c) and
+[src/java/temurin/tools/BinRepl.java](https://github.com/adoptium/temurin-build/blob/master/tooling/src/java/temurin/tools/BinRepl.java) need compiling
+before the comparable_patch.sh can be run.
 
-2. Compile tooling/src/c/WindowsUpdateVsVersionInfo.c :
+2. Compile [tooling/src/c/WindowsUpdateVsVersionInfo.c](https://github.com/adoptium/temurin-build/blob/master/tooling/src/c/WindowsUpdateVsVersionInfo.c) (Windows only):
 
 - Ensure VS2022 SDK is installed and on PATH
 - Compile:
   - cd tooling/src/c
   - cl WindowsUpdateVsVersionInfo.c version.lib
 
-3. Compile src/java/temurin/tools/BinRepl.java :
+3. Compile [src/java/temurin/tools/BinRepl.java](https://github.com/adoptium/temurin-build/blob/master/tooling/src/java/temurin/tools/BinRepl.java) :
 
 - Ensure suitable JDK on PATH
 - cd tooling/src/java
 - javac temurin/tools/BinRepl.java
 
-4. Setting environment within a CYGWIN shell :
+4. Setting environment within a shell :
 
+- [Windows only] For WindowsUpdateVsVersionInfo.exe : export PATH=<temurin-build>/tooling/src/c:$PATH
+- [Windows only] For dumpbin.exe MSVC tool : export PATH=/cygdrive/c/progra\~1/micros\~2/2022/Community/VC/Tools/MSVC/14.37.32822/bin/Hostx64/x64:$PATH
 - For BinRepl : export CLASSPATH=<temurin-build>/tooling/src/java:$CLASSPATH
-- For WindowsUpdateVsVersionInfo.exe : export PATH=<temurin-build>/tooling/src/c:$PATH
-- For dumpbin.exe MSVC tool : export PATH=/cygdrive/c/progra\~1/micros\~2/2022/Community/VC/Tools/MSVC/14.37.32822/bin/Hostx64/x64:$PATH
-- For running BinRepl java : export PATH=<jdk>/bin:$PATH
+- A JDK for running BinRepl java : export PATH=<jdk>/bin:$PATH
 
 #### Running comparable_patch.sh:
 
@@ -84,7 +85,7 @@ before the comparable_patch.sh can be run
 2. Run comparable_patch.sh
 
 ```bash
-bash comparable_patch.sh <jdk_home_dir> <version_str> <vendor_name> <vendor_url> <vendor_bug_url> <vendor_vm_bug_url>
+bash comparable_patch.sh --jdk-dir "<jdk_home_dir>" --version-string "<version_str>" --vendor-name "<vendor_name>" --vendor_url "<vendor_url>" --vendor-bug-url "<vendor_bug_url>" --vendor-vm-bug-url "<vendor_vm_bug_url>" [--patch-vs-version-info]
 ```
 
 The Vendor strings and urls can be found by running your jdk's "java -XshowSettings":
@@ -102,7 +103,7 @@ java -XshowSettings:
 eg.
 
 ```bash
-bash comparable_patch.sh jdk1/jdk-21.0.1+12 "Temurin-21.0.1+12" "Eclipse Adoptium" "https://adoptium.net/" "https://github.com/adoptium/adoptium-support/issues" "https://github.com/adoptium/adoptium-support/issues"
+bash ./comparable_patch.sh --jdk-dir "jdk1/jdk-21.0.1+12" --version-string "Temurin-21.0.1+12" --vendor-name "Eclipse Adoptium" --vendor_url "https://adoptium.net/" --vendor-bug-url "https://github.com/adoptium/adoptium-support/issues" --vendor-vm-bug-url "https://github.com/adoptium/adoptium-support/issues"
 ```
 
 3. Unzip the other Vendor JDK to compare with, say into "jdk2", and run a similar comparable_patch.sh

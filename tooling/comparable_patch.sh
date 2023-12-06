@@ -28,17 +28,60 @@ set -eu
 
 TEMURIN_TOOLS_BINREPL="temurin.tools.BinRepl"
 
-if [ "$#" -ne 6 ]; then
-  echo "Syntax: comparable_patch.sh <jdk_home_dir> <version_str> <vendor_name> <vendor_url> <vendor_bug_url> <vendor_vm_bug_url>"
+JDK_DIR=""
+VERSION_REPL=""
+VENDOR_NAME=""
+VENDOR_URL=""
+VENDOR_BUG_URL=""
+VENDOR_VM_BUG_URL=""
+PATCH_VS_VERSION_INFO=false
+
+# Parse arguments
+while [[ $# -gt 0 ]] && [[ ."$1" = .-* ]] ; do
+  opt="$1";
+  shift;
+
+  case "$opt" in
+        "--jdk-dir" )
+        JDK_DIR="$1"; shift;;
+
+        "--version-string" )
+        VERSION_REPL="$1"; shift;;
+
+        "--vendor-name" )
+        VENDOR_NAME="$1"; shift;;
+
+        "--vendor_url" )
+        VENDOR_URL="$1"; shift;;
+
+        "--vendor-bug-url" )
+        VENDOR_BUG_URL="$1"; shift;;
+
+        "--vendor-vm-bug-url" )
+        VENDOR_VM_BUG_URL="$1"; shift;;
+
+        "--patch-vs-version-info" )
+        PATCH_VS_VERSION_INFO=true;;
+
+        *) echo >&2 "Invalid option: ${opt}"
+        echo 'Syntax: comparable_patch.sh --jdk-dir "<jdk_home_dir>" --version-string "<version_str>" --vendor-name "<vendor_name>" --vendor_url "<vendor_url>" --vendor-bug-url "<vendor_bug_url>" --vendor-vm-bug-url "<vendor_vm_bug_url>" [--patch-vs-version-info]'; exit 1;;
+  esac
+done
+
+if [ -z "$JDK_DIR" ] || [ -z "$VERSION_REPL" ] || [ -z "$VENDOR_NAME" ] || [ -z "$VENDOR_URL" ] || [ -z "$VENDOR_BUG_URL" ] || [ -z "$VENDOR_VM_BUG_URL" ]; then
+  echo "Error: Missing argument"
+  echo 'Syntax: comparable_patch.sh --jdk-dir "<jdk_home_dir>" --version-string "<version_str>" --vendor-name "<vendor_name>" --vendor_url "<vendor_url>" --vendor-bug-url "<vendor_bug_url>" --vendor-vm-bug-url "<vendor_vm_bug_url>" [--patch-vs-version-info]'
   exit 1
 fi
 
-JDK_DIR="$1"
-VERSION_REPL="$2"
-VENDOR_NAME="$3"
-VENDOR_URL="$4"
-VENDOR_BUG_URL="$5"
-VENDOR_VM_BUG_URL="$6"
+echo "Patching:"
+echo "  JDK_DIR=$JDK_DIR"
+echo "  VERSION_REPL=$VERSION_REPL"
+echo "  VENDOR_NAME=$VENDOR_NAME"
+echo "  VENDOR_URL=$VENDOR_URL"
+echo "  VENDOR_BUG_URL=$VENDOR_BUG_URL"
+echo "  VENDOR_VM_BUG_URL=$VENDOR_VM_BUG_URL"
+echo "  PATCH_VS_VERSION_INFO=$PATCH_VS_VERSION_INFO"
 
 # Remove excluded files known to differ
 #  NOTICE - Vendor specfic notice text file
@@ -206,7 +249,13 @@ function removeSystemModulesHashBuilderParams() {
 #   reprohex  - A hex UUID to identify the binary version, again generated from binary content
 function removeWindowsNonComparableData() {
  echo "Removing EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
- FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+
+ # We need to do this for all executables if patching VS_VERSION_INFO
+ if [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
+    FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+ else
+    FILES=$(find "${JDK_DIR}" -type f -name 'jvm.dll')
+ fi
  for f in $FILES
   do
     echo "Removing EXE/DLL non-comparable timestamp, CRC, debug repro hex from $f"
@@ -311,15 +360,23 @@ function neutraliseVsVersionInfo() {
   echo "Successfully updated all EXE/DLL VS_VERSION_INFO in ${JDK_DIR}"
 }
 
-# Remove Vendor name from all binaries
+# Remove Vendor name from executables
+#   If patching VS_VERSION_INFO, then all executables need patching,
+#   otherwise just jvm library that contains the Vendor string differences.
 function removeVendorName() {
-  echo "Removing Vendor name: $VENDOR_NAME from binaries from ${JDK_DIR}"
+  echo "Removing Vendor name: $VENDOR_NAME from executables from ${JDK_DIR}"
+
   if [[ "$OS" =~ CYGWIN* ]]; then
-   FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+    # We need to do this for all executables if patching VS_VERSION_INFO
+    if [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
+      FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
+    else
+      FILES=$(find "${JDK_DIR}" -type f -name 'jvm.dll')
+    fi
   elif [[ "$OS" =~ Darwin* ]]; then
-   FILES=$(find "${JDK_DIR}" -type f -path '*.dylib')
+   FILES=$(find "${JDK_DIR}" -type f -name 'libjvm.dylib')
   else
-   FILES=$(find "${JDK_DIR}" -type f -path '*.so')
+   FILES=$(find "${JDK_DIR}" -type f -name 'libjvm.so')
   fi
   for f in $FILES
     do
@@ -336,7 +393,7 @@ function removeVendorName() {
     sed -i "" "s=${VENDOR_NAME}=AAAAAA=g" "${plist}"
   fi
 
-  echo "Successfully removed all Vendor name: $VENDOR_NAME from binaries from ${JDK_DIR}"
+  echo "Successfully removed all Vendor name: $VENDOR_NAME from executables from ${JDK_DIR}"
 }
 
 # Neutralise VersionProps.class/.java vendor strings
@@ -467,16 +524,20 @@ echo "Successfully removed all Signatures from ${JDK_DIR}"
 
 removeExcludedFiles
 
+# Needed due to vendor variation in jmod re-packing after signing, putting attributes in different order
 processModuleInfo
 
-removeSystemModulesHashBuilderParams
-
-if [[ "$OS" =~ CYGWIN* ]]; then
+# Patch Windows VS_VERSION_INFO[COMPANY_NAME]
+if [[ "$OS" =~ CYGWIN* ]] && [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
+  # Neutralise COMPANY_NAME
   neutraliseVsVersionInfo
+
+  # SystemModules$*.class's differ due to hash differences from COMPANY_NAME
+  removeSystemModulesHashBuilderParams
 fi
 
 if [[ "$OS" =~ CYGWIN* ]]; then
- removeWindowsNonComparableData
+   removeWindowsNonComparableData
 fi
 
 if [[ "$OS" =~ Darwin* ]]; then
