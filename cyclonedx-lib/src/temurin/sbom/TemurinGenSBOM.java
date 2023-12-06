@@ -136,17 +136,17 @@ public final class TemurinGenSBOM {
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addFormulation":                              // Adds Formulation --> name
-                bom = addFormula(fileName);
+            case "addFormulation":                                   // Adds Formulation --> name
+                bom = addFormulation(fileName);
                 writeJSONfile(bom, fileName);
                 break;
 
-            case "addFormulationComp":                   // Adds Formulation --> Component--> name
-                bom = addFormulaComponent(fileName, name, type);
+            case "addFormulationComp":                               // Adds Formulation --> Component--> name
+                bom = addFormulationComp(fileName, name, type);
                 writeJSONfile(bom, fileName);
                 break;
-            case "addFormulationCompProp":                     // Adds Formulation--> Property --> name-value:
-                bom = addFormulaComponentProperty(fileName, compName, name, value);
+            case "addFormulationCompProp":                           // Adds Formulation --> Component -> name-value:
+                bom = addFormulationCompProp(fileName, compName, name, value);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -324,7 +324,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addFormula(final String fileName) {          // Method to store Formulation
+    static Bom addFormulation(final String fileName) {          // Method to store Formulation
         Bom bom = readJSONfile(fileName);
         List<Formula> formulation = bom.getFormulation();
         if (formulation == null) {
@@ -336,21 +336,9 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-   static Bom addFormulaComponent(final String fileName, final String name, final String type/*, final String version, final String description */) {
-// START OF SECTION FROM addFormula
+   static Bom addFormulationComp(final String fileName, final String name, final String type/*, final String version, final String description */) {
         Bom bom = readJSONfile(fileName);
         List<Formula> formulation = bom.getFormulation();
-        if (formulation == null) {
-          formulation = new LinkedList<Formula>();
-          Formula formula  = new Formula();
-          formulation.add(formula);
-          bom.setFormulation(formulation);
-        } else {
-          System.out.println("addFormula() has done nothing as there is a already a formulation object in the BoM");
-        }
-// END OF SECTION FROM addFormula
-//        Bom bom = readJSONfile(fileName);
-//        List<Formula> formulation = bom.getFormulation();
         // SXA TODO: Not ideal to just be pulling the first entry here
         // But the formula is currently unnamed
         Formula formula = formulation.get(0);
@@ -369,7 +357,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addFormulaComponentProperty(final String fileName, final String componentName, final String name, final String value) {     // Method to store metadata --> Properties List --> name-values
+    static Bom addFormulationCompProp(final String fileName, final String componentName, final String name, final String value) {     // Method to store metadata --> Properties List --> name-values
         Bom bom = readJSONfile(fileName);
         List<Formula> formulation = bom.getFormulation();
         Formula formula = formulation.get(0);
@@ -378,8 +366,8 @@ public final class TemurinGenSBOM {
         List<Component> components = formulation.get(0).getComponents();
         for (Component item : components) {
 
-// What if the name wasn't found - this won't create a new one
-// Should we skip the "already exists" case and just issue an add?
+        // What if the name wasn't found - this won't create a new one
+        // Should we skip the "already exists" case and just issue an add?
             if (item.getName().equals(componentName)) {
                     Property prop1 = new Property();
                     prop1.setName(name);
