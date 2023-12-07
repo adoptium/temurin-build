@@ -878,8 +878,8 @@ generateSBoM() {
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
 
   # Set default SBOM formulation
-  addSBOMFormulation "${javaHome}" "${classpath}" "${sbomJson}"
-  addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX jar SHAs"
+  addSBOMFormulation "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX"
+  addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs"
 
   # Below add build tools into metadata tools
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
@@ -1065,7 +1065,7 @@ addCycloneDXVersions() {
          else
             JarSha=$(sha256sum "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
          fi
-         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX jar SHAs" "${JarName}" "${JarSha}"
+         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}" "${JarSha}"
        done
    fi
 }

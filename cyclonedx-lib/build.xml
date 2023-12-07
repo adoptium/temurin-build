@@ -473,12 +473,16 @@
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addFormulation"/>
+                  <arg value="--formulaName"/>
+                  <arg value="MyFormula"/>
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addFormulationComp"/>
+                  <arg value="--formulaName"/>
+                  <arg value="MyFormula"/>
                   <arg value="--name"/>
                   <arg value="CycloneDX SHAs"/>
                   <arg value="--jsonFile"/>
@@ -487,6 +491,8 @@
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
                   <arg value="--verbose"/>
                   <arg value="--addFormulationCompProp"/>
+                  <arg value="--formulaName"/>
+                  <arg value="MyFormula"/>
                   <arg value="--compName"/>
                   <arg value="CycloneDX SHAs"/>
                   <arg value="--name"/>
