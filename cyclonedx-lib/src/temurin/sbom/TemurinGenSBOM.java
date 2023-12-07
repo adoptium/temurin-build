@@ -327,7 +327,7 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static Bom addFormulation(final String fileName, String name) {          // Method to store Formulation
+    static Bom addFormulation(final String fileName, final String name) {
         Bom bom = readJSONfile(fileName);
         List<Formula> formulation = bom.getFormulation();
         if (formulation == null) {
@@ -341,19 +341,19 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-   static Bom addFormulationComp(final String fileName, final String formulaName, final String name, final String type/*, final String version, final String description */) {
+   static Bom addFormulationComp(final String fileName, final String formulaName, final String name, final String type) {
         Bom bom = readJSONfile(fileName);
-        if ( formulaName == null ) {
+        if (formulaName == null) {
            System.out.println("addFormulationComp: formulaName is null");
            return bom;
-        } else if ( name == null ) {
+        } else if (name == null) {
            System.out.println("addFormulationComp: name is null");
            return bom;
         }
         List<Formula> formulation = bom.getFormulation();
         // Look for the formula, and add the new component to it
         boolean found = false;
-        for ( Formula item : formulation ) {
+        for (Formula item : formulation) {
           if (item.getBomRef().equals(formulaName)) {
             found = true;
             Component comp = new Component();
@@ -368,29 +368,29 @@ public final class TemurinGenSBOM {
             item.setComponents(components);
           }
         }
-        if (found == false) {
+        if (!found) {
           System.out.println("addFormulationComp could not add component as it couldn't find an entry for formula " + formulaName);
         }
         return bom;
     }
 
-    static Bom addFormulationCompProp(final String fileName, final String formulaName, final String componentName, final String name, final String value) {     // Method to store metadata --> Properties List --> name-values
+    static Bom addFormulationCompProp(final String fileName, final String formulaName, final String componentName, final String name, final String value) {
         Bom bom = readJSONfile(fileName);
-        boolean foundFormula=false;
-        boolean foundComponent=false;
+        boolean foundFormula = false;
+        boolean foundComponent = false;
         List<Formula> formulation = bom.getFormulation();
         // Look for the formula, and add the new component to it
-        for ( Formula item : formulation ) {
+        for (Formula item : formulation) {
           if (item.getBomRef().equals(formulaName)) {
-            foundFormula=true;
+            foundFormula = true;
             // Search for the component in the formula and add new component to it
             List<Component> components = item.getComponents();
-            if ( components == null ) {
+            if (components == null) {
               System.out.println("addFormulationCompProp: Components is null - has addFormulationComp been called?");
             } else {
               for (Component comp : components) {
                 if (comp.getName().equals(componentName)) {
-                  foundComponent=true;
+                  foundComponent = true;
                   Property prop1 = new Property();
                   prop1.setName(name);
                   prop1.setValue(value);
@@ -401,9 +401,9 @@ public final class TemurinGenSBOM {
             }
           }
         }
-        if (foundFormula == false) {
+        if (!foundFormula) {
           System.out.println("addFormulationCompProp could not add add property as it couldn't find an entry for formula " + formulaName);
-        } else if (foundComponent == false) {
+        } else if (!foundComponent) {
           System.out.println("addFormulationCompProp could not add add property as it couldn't find an entry for component " + componentName);
         }
         return bom;
