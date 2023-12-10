@@ -2,6 +2,10 @@
 
 # Before executing this script, strace output files need to be generated
 # $1 is path of temurin-build folder, for exmaple: /home/user/Documents/temurin-build"
+if [ -z "$1" ]; then
+    echo "temurin-build folder as param is missing!"
+    exit 1
+fi
 
 # File patterns to ignore
 ignores=("^/dev/")
