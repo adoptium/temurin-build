@@ -1,7 +1,10 @@
 #!/bin/bash
-
 # Before executing this script, strace output files need to be generated
-# $1 is path of temurin-build folder, for exmaple: /home/user/Documents/temurin-build"
+set -x
+# $1 is path of strace output folder
+# $2 is path of temurin-build folder, for exmaple: /home/user/Documents/temurin-build"
+git rem
+
 if [ -z "$1" ]; then
     echo "temurin-build folder as param is missing!"
     exit 1
@@ -58,10 +61,14 @@ echo ""
 #   <build_dir>      : begins with build directory
 #   <relative paths> : relative file paths
 
-set -f
+#set -f
 # filtering out relevant parts of strace output files
-allFiles="$(find ../ -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep -v "\.java$" | grep -v "\+\+\+" | grep -v "\-\-\-" | grep -v "^$1" | grep -v "test/*" | grep -v "^src/" | grep -v "^modules/" | grep -v "^make/" | grep -v "^jdk." | grep -v "^java." | grep -v "^.github" | grep -E "/usr/*|/bin/*|/proc/*|/sys/*" | sort | uniq)"
-set +f
+# grep -E "/usr/*|/bin/*|/sys/*"
+echo "Param 1: $1"
+echo "Param 2: $2"
+#allFiles="$(find "$2" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep -v "$1" | grep -v "\.java$" | grep -v "\+\+\+" | grep -v "\-\-\-" | grep -v "test/*" | grep -v "^src/" | grep -v "^modules/" | grep -v "^make/" | grep -v "^jdk." | grep -v "^java." | grep -v "^.github" | sort | uniq)"
+allFiles="$(find "$1" -type f -name 'outputFile.*'| xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | grep -v "\.java$" | grep -v "\.d$" | grep -v "\.o$" | grep -v "\.d\.targets$" | grep -v "^$2" | grep -v "\+\+\+" | grep -v "\-\-\-" | grep -v "^/dev/" | grep -v "^/proc/" | grep -v "^/sys/" | grep -v "^/tmp/" | sort | uniq)"
+#set +f
 
 totalFileCounter=0
 pkgs=()
