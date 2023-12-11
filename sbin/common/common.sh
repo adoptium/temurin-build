@@ -107,7 +107,7 @@ function joinPathOS() {
 
 # Joins multiple parts to a valid file path using slashes
 function joinPath() {
-  local path=$(printf '/%s' "${@}" | sed 's|/\+|/|g')
+  local path=$(IFS=/; echo "/$*" | tr -s /)
   echo "${path}"
 }
 
