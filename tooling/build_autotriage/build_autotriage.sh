@@ -24,7 +24,8 @@
 ################################################################################
 
 declare -a arrayOfFailedJobs
-# declare -a arrayOfFailedJobRegexs
+declare -a arrayOfRegexsForFailedJobs
+declare -a arrayOfErrorLinesForFailedJobs
 declare -a arrayOfAllJDKVersions
 declare -a arrayOfUs
 declare -a buildIssues
@@ -227,15 +228,34 @@ identifyFailedBuildsInTimerPipelines() {
 
 # Takes a single failed jenkins build job URL as a string, and identifies the source of
 # the failure if possible.
+# Uses: arrayOfRegexes, arrayOfRegexMetadata, arrayOfRegexPreventability
 buildFailureTriager() {
-  echo "Attempting to triage a job: ${1}"
-  echo "- Failed job: ${1}" >> build_triage_output.md
-  # Todo: Iterate over the failures found and triage them against the pending array of regexes.
-  # For now we'll put them in a tidy md-style file for issue inclusion.
-  
+  echo "Triaging job: ${1}"
+  # Iterate over the failures found and triage them against the pending array of regexes.
+  for failedJob in ${arrayOfFailedJobs[@]}; do
+    wget -q -O - "${failedJob}/consoleText" > ./jobOutput.txt
+    # If the file size is beyond 50m bytes, then report script error and do not triage, for efficiency.
+    if [[ $(wc -c < ./jobOutput.txt) -gt 52500000 ]]; then
+      errorLog "Error: The output for the following job is over 50mb, and will not be triaged: ${failedJob}"
+      continue
+    fi
+    while IFS= read -r jobOutputLine; do
+      for regexIndex in ${!arrayOfRegexes[@]}; do
+        # When a regex matches, store the id of the regex we matched against, and also the line of output that matched the regex.
+        if [[ "$jobOutputLine" =~ ${arrayOfRegexes[regexIndex]} ]]; then
+          arrayOfRegexsForFailedJobs+=("$regexIndex")
+          arrayOfErrorLinesForFailedJobs+=("$jobOutputLine")
+          continue 3
+        fi
+      done
+    done < ./jobOutput.txt
+    # If we reach this line, then we have not matched any of the regexs
+    arrayOfRegexsForFailedJobs+=("Unmatched")
+    arrayOfErrorLinesForFailedJobs+=("No error found")
+  done
 }
 
-startOutputFile() {
+generateOutputFile() {
   { echo "---";
     echo "name: Build Issue Summary";
     echo "about: For triaging the nightly and weekend build failures";
@@ -243,6 +263,36 @@ startOutputFile() {
     echo "labels: 'weekly-build-triage'";
     echo "---";
     echo "";
+    # 
+    if [[ ${#arrayOfFailedJobs[@]} -gt 0 ]]; then
+      echo "# Failed Builds"
+      for failedJobIndex in "${!arrayOfFailedJobs[@]}"
+      do
+        regexID="${arrayOfRegexsForFailedJobs[failedJobIndex]}"
+        preventable="yes"
+        if [[ "${arrayOfRegexPreventability[regexID]}" -gt 0 ]]; then
+          preventable="no"
+        fi
+        echo "Failure: ${arrayOfFailedJobs[failedJobIndex]}"
+        echo "Cause: ${arrayOfRegexMetadata[regexID]}"
+        echo "Preventable: ${preventability}"
+        echo "```"
+        echo "${arrayOfErrorLinesForFailedJobs[failedJobIndex]}"
+        echo "```"
+        echo "<br/>"
+      done
+      echo "#  End of list"
+    else
+      echo "All build jobs passed. Huzzah!"
+    fi
+    if [[ ${#buildIssues[@]} -gt 0 ]]; then
+      echo "# Script Issues"
+      for issueID in "${!buildIssues[@]}"
+      do
+        echo "- Issue ${issueID}: ${buildIssues[issueID]}\n"
+      done
+      echo "# End of Issues"
+    fi
   } >> build_triage_output.md
 }
 
@@ -254,26 +304,8 @@ argumentParser "$@"
 
 identifyFailedBuildsInTimerPipelines
 
-startOutputFile
+buildFailureTriager 
 
-if [[ ${#arrayOfFailedJobs[@]} -gt 0 ]]; then
-  echo "# Failed Builds" >> build_triage_output.md
-  for failedJob in "${arrayOfFailedJobs[@]}"
-  do
-    buildFailureTriager "$failedJob"
-  done
-  echo "#  End of list"  >> build_triage_output.md
-else
-  echo "All build jobs passed. Huzzah!"
-fi
-
-if [[ ${#buildIssues[@]} -gt 0 ]]; then
-  echo "# Script Issues"  >> build_triage_output.md
-  for issueID in "${!buildIssues[@]}"
-  do
-    echo "- Issue ${issueID}: ${buildIssues[issueID]}\n"  >> build_triage_output.md
-  done
-  echo "# End of Issues"  >> build_triage_output.md
-fi
+generateOutputFile
 
 echo "Build AutoTriage is complete."
