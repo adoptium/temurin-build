@@ -20,6 +20,7 @@ import org.cyclonedx.generators.json.BomJsonGenerator;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Component;
 import org.cyclonedx.model.ExternalReference;
+import org.cyclonedx.model.formulation.Formula;
 import org.cyclonedx.model.Hash;
 import org.cyclonedx.model.Metadata;
 import org.cyclonedx.model.OrganizationalContact;
@@ -31,6 +32,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Collections;
 import java.util.List;
+import java.util.LinkedList;
 
 /**
  * Command line tool to construct a CycloneDX SBOM.
@@ -50,6 +52,7 @@ public final class TemurinGenSBOM {
         String cmd = null;
         String comment = null;
         String compName = null;
+        String formulaName = null;
         String description = null;
         String fileName = null;
         String hash = null;
@@ -77,6 +80,8 @@ public final class TemurinGenSBOM {
                 hash = args[++i];
             } else if (args[i].equals("--compName")) {
                 compName = args[++i];
+            } else if (args[i].equals("--formulaName")) {
+                formulaName = args[++i];
             } else if (args[i].equals("--description")) {
                 description = args[++i];
             } else if (args[i].equals("--type")) {
@@ -103,6 +108,12 @@ public final class TemurinGenSBOM {
                 cmd = "addComponentExternalReference";
             } else if (args[i].equals("--addMetadataTools")) {
                 cmd = "addMetadataTools";
+            } else if (args[i].equals("--addFormulation")) {        // Formulation Component. We can set "name" for Formulation.
+                cmd = "addFormulation";
+            } else if (args[i].equals("--addFormulationComp")) {        // Formulation Component. We can set "name" for Formulation.
+                cmd = "addFormulationComp";
+            } else if (args[i].equals("--addFormulationCompProp")) {    // Formulation --> Component --> Property --> name-value
+                cmd = "addFormulationCompProp";
             } else if (args[i].equals("--verbose")) {
                 verbose = true;
             }
@@ -125,6 +136,20 @@ public final class TemurinGenSBOM {
 
             case "addMetadataProperty":                              // Adds MetaData --> Property --> name-value:
                 bom = addMetadataProperty(fileName, name, value);
+                writeJSONfile(bom, fileName);
+                break;
+
+            case "addFormulation":                                   // Adds Formulation --> name
+                bom = addFormulation(fileName, formulaName);
+                writeJSONfile(bom, fileName);
+                break;
+
+            case "addFormulationComp":                               // Adds Formulation --> Component--> name
+                bom = addFormulationComp(fileName, formulaName, name, type);
+                writeJSONfile(bom, fileName);
+                break;
+            case "addFormulationCompProp":                           // Adds Formulation --> Component -> name-value:
+                bom = addFormulationCompProp(fileName, formulaName, compName, name, value);
                 writeJSONfile(bom, fileName);
                 break;
 
@@ -302,9 +327,91 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
+    static Bom addFormulation(final String fileName, final String name) {
+        Bom bom = readJSONfile(fileName);
+        List<Formula> formulation = bom.getFormulation();
+        if (formulation == null) {
+          formulation = new LinkedList<Formula>();
+          Formula formula  = new Formula();
+          System.err.println("SXAECW: " + name);
+          formula.setBomRef(name);
+          formulation.add(formula);
+          bom.setFormulation(formulation);
+        }
+        return bom;
+    }
+
+   static Bom addFormulationComp(final String fileName, final String formulaName, final String name, final String type) {
+        Bom bom = readJSONfile(fileName);
+        if (formulaName == null) {
+           System.out.println("addFormulationComp: formulaName is null");
+           return bom;
+        } else if (name == null) {
+           System.out.println("addFormulationComp: name is null");
+           return bom;
+        }
+        List<Formula> formulation = bom.getFormulation();
+        // Look for the formula, and add the new component to it
+        boolean found = false;
+        for (Formula item : formulation) {
+          if (item.getBomRef().equals(formulaName)) {
+            found = true;
+            Component comp = new Component();
+            Component.Type compType = Component.Type.FRAMEWORK;
+            comp.setType(Component.Type.FRAMEWORK);
+            comp.setName(name);
+            List<Component> components = item.getComponents();
+            if (components == null) {
+              components = new LinkedList<Component>();
+            }
+            components.add(comp);
+            item.setComponents(components);
+          }
+        }
+        if (!found) {
+          System.out.println("addFormulationComp could not add component as it couldn't find an entry for formula " + formulaName);
+        }
+        return bom;
+    }
+
+    static Bom addFormulationCompProp(final String fileName, final String formulaName, final String componentName, final String name, final String value) {
+        Bom bom = readJSONfile(fileName);
+        boolean foundFormula = false;
+        boolean foundComponent = false;
+        List<Formula> formulation = bom.getFormulation();
+        // Look for the formula, and add the new component to it
+        for (Formula item : formulation) {
+          if (item.getBomRef().equals(formulaName)) {
+            foundFormula = true;
+            // Search for the component in the formula and add new component to it
+            List<Component> components = item.getComponents();
+            if (components == null) {
+              System.out.println("addFormulationCompProp: Components is null - has addFormulationComp been called?");
+            } else {
+              for (Component comp : components) {
+                if (comp.getName().equals(componentName)) {
+                  foundComponent = true;
+                  Property prop1 = new Property();
+                  prop1.setName(name);
+                  prop1.setValue(value);
+                  comp.addProperty(prop1);
+                  item.setComponents(components);
+                }
+              }
+            }
+          }
+        }
+        if (!foundFormula) {
+          System.out.println("addFormulationCompProp could not add add property as it couldn't find an entry for formula " + formulaName);
+        } else if (!foundComponent) {
+          System.out.println("addFormulationCompProp could not add add property as it couldn't find an entry for component " + componentName);
+        }
+        return bom;
+    }
+
     static String generateBomJson(final Bom bom) {
-        // Use schema v14: https://cyclonedx.org/schema/bom-1.4.schema.json
-        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_14, bom);
+        // Use schema v15: https://cyclonedx.org/schema/bom-1.5.schema.json
+        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_15, bom);
         String json = bomGen.toJsonString();
         return json;
     }

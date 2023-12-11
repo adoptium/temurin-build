@@ -468,8 +468,41 @@
                   <arg value="--metadataName"/>
                   <arg value="Eclipse Adoptium"/>
                   <arg value="--jsonFile"/>
+                 <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addFormulation"/>
+                  <arg value="--formulaName"/>
+                  <arg value="MyFormula"/>
+                  <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addFormulationComp"/>
+                  <arg value="--formulaName"/>
+                  <arg value="MyFormula"/>
+                  <arg value="--name"/>
+                  <arg value="CycloneDX SHAs"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <arg value="--verbose"/>
+                  <arg value="--addFormulationCompProp"/>
+                  <arg value="--formulaName"/>
+                  <arg value="MyFormula"/>
+                  <arg value="--compName"/>
+                  <arg value="CycloneDX SHAs"/>
+                  <arg value="--name"/>
+                  <arg value="CycloneDX core lib"/>
+                  <arg value="--value"/>
+                  <arg value="sha123"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                </java>
+
         </target>
 
 	<macrodef name="download-file" description="Use curl to download a file">

@@ -44,6 +44,39 @@ addSBOMMetadataProperty() {
   fi
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
+
+# Set basic SBoM formulation
+addSBOMFormulation() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local formulaName="${4}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulation --formulaName "${formulaName}" --jsonFile "${jsonFile}"
+}
+
+addSBOMFormulationComp() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local formulaName="${4}"
+  local name="${5}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationComp --jsonFile "${jsonFile}" --formulaName "${formulaName}" --name "${name}"
+}  
+
+# Ref: https://cyclonedx.org/docs/1.4/json/#formulation
+# Add the given Property name & value to the SBOM Formulation
+addSBOMFormulationComponentProperty() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local formulaName="${4}"
+  local compName="${5}"
+  local name="${6}"
+  local value="${7}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationCompProp --jsonFile "${jsonFile}" --formulaName "${formulaName}" --compName "${compName}" --name "${name}" --value "${value}"
+}
+
+
 # Ref: https://cyclonedx.org/docs/1.4/json/#metadata
 # If the given property file exists and size over 2bytes, then add the given Property name with the given file contents value to the SBOM Metadata
 addSBOMMetadataPropertyFromFile() {

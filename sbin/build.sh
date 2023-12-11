@@ -877,6 +877,10 @@ generateSBoM() {
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS version" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
 
+  # Set default SBOM formulation
+  addSBOMFormulation "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX"
+  addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs"
+
   # Below add build tools into metadata tools
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
     addGLIBCforLinux
@@ -894,6 +898,8 @@ generateSBoM() {
   if [ -f "${freemarker_version}" ]; then
       addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${freemarker_version})"
   fi
+  # Add CycloneDX versions
+  addCycloneDXVersions
 
   # Add Build Docker image SHA1
   local buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
@@ -1044,6 +1050,24 @@ addFreeTypeVersionInfo() {
    fi
 
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "${version}"
+}
+
+# Determine and store CycloneDX SHAs that have been used to provide the SBOMs
+addCycloneDXVersions() {
+   if [ ! -d "${CYCLONEDB_DIR}/build/jar" ]; then
+      echo "ERROR: CycloneDX jar directory not found at ${CYCLONEDB_DIR}/build/jar - cannot store checksums in SBOM"
+   else
+       # Should we do something special if the sha256sum fails?
+       for JAR in "${CYCLONEDB_DIR}/build/jar"/*.jar; do
+         JarName=$(basename "$JAR")
+         if [ "$(uname)" = "Darwin" ]; then
+            JarSha=$(shasum -a 256 "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+         else
+            JarSha=$(sha256sum "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+         fi
+         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}" "${JarSha}"
+       done
+   fi
 }
 
 # Below add versions to sbom | Facilitate reproducible builds
