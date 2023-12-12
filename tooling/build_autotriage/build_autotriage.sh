@@ -42,8 +42,8 @@ declare -a platformStart
 # The last jdk major version on that platform ("99" for ongoing).
 declare -a platformEnd
 
-totalBuildFailures="0"
-totalTestFailures="0"
+totalBuildFailures=0
+totalTestFailures=0
 
 temurinPlatforms+=("aix-ppc64");            platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("alpine-linux-aarch64"); platformStart+=(21); platformEnd+=(99)
