@@ -276,9 +276,9 @@ generateOutputFile() {
         echo "Failure: ${arrayOfFailedJobs[failedJobIndex]}"
         echo "Cause: ${arrayOfRegexMetadata[regexID]}"
         echo "Preventable: ${preventable}"
-        echo "```"
-        echo "${arrayOfErrorLinesForFailedJobs[failedJobIndex]}"
-        echo "```"
+        echo "\`\`\`"
+        echo "'${arrayOfErrorLinesForFailedJobs[failedJobIndex]}'"
+        echo "\`\`\`"
         echo ""
       done
       echo "#  End of list"
@@ -289,7 +289,7 @@ generateOutputFile() {
       echo "# Script Issues"
       for issueID in "${!buildIssues[@]}"
       do
-        echo "- Issue ${issueID}: ${buildIssues[issueID]}\n"
+        echo "- Issue ${issueID}: ${buildIssues[issueID]}"
       done
       echo "# End of Issues"
     fi
