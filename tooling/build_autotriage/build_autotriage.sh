@@ -235,8 +235,10 @@ buildFailureTriager() {
   for failedJob in ${arrayOfFailedJobs[@]}; do
     wget -q -O - "${failedJob}/consoleText" > ./jobOutput.txt
     # If the file size is beyond 50m bytes, then report script error and do not triage, for efficiency.
-    if [[ $(wc -c < ./jobOutput.txt) -gt 52500000 ]]; then
-      errorLog "Error: The output for the following job is over 50mb, and will not be triaged: ${failedJob}"
+    fileSize=$(wc -c < ./jobOutput.txt)
+    if [[ ${fileSize} -gt 52500000 ]]; then
+      arrayOfRegexsForFailedJobs+=("0")
+      arrayOfErrorLinesForFailedJobs+=("Output size was ${fileSize} bytes")
       continue
     fi
     while IFS= read -r jobOutputLine; do

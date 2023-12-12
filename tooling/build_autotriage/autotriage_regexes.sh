@@ -37,6 +37,11 @@ storeInArrays() {
 
 echo "Generating regex arrays to match against failures."
 
+r="This.regex.should.never.match.anything.1234567890"
+m="Build auto-triage could not process this job due to too much output."
+p="1"
+storeInArrays "${r}" "${m}" "${p}"
+
 r="SIGSEGV"
 m="Segmentation error."
 p="1"
