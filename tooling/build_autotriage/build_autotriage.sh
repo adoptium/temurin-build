@@ -237,7 +237,7 @@ buildFailureTriager() {
     # If the file size is beyond 50m bytes, then report script error and do not triage, for efficiency.
     fileSize=$(wc -c < ./jobOutput.txt)
     if [[ ${fileSize} -gt 52500000 ]]; then
-      arrayOfRegexsForFailedJobs+=("0")
+      arrayOfRegexsForFailedJobs+=("Unmatched")
       arrayOfErrorLinesForFailedJobs+=("Output size was ${fileSize} bytes")
       continue
     fi
@@ -271,16 +271,20 @@ generateOutputFile() {
       for failedJobIndex in "${!arrayOfFailedJobs[@]}"
       do
         regexID="${arrayOfRegexsForFailedJobs[failedJobIndex]}"
-        preventable="yes"
-        if [[ "${arrayOfRegexPreventability[regexID]}" -gt 0 ]]; then
-          preventable="no"
-        fi
         echo "Failure: ${arrayOfFailedJobs[failedJobIndex]}"
-        echo "Cause: ${arrayOfRegexMetadata[regexID]}"
-        echo "Preventable: ${preventable}"
-        echo "\`\`\`"
-        echo "${arrayOfErrorLinesForFailedJobs[failedJobIndex]}"
-        echo "\`\`\`"
+        if [[ ${regexID} =~ Unmatched ]]; then
+          echo "Cause: ${arrayOfErrorLinesForFailedJobs[failedJobIndex]}"
+        else
+          echo "Cause: ${arrayOfRegexMetadata[regexID]}"
+          preventable="yes"
+          if [[ "${arrayOfRegexPreventability[regexID]}" -gt 0 ]]; then
+            preventable="no"
+          fi
+          echo "Preventable: ${preventable}"
+          echo "\`\`\`"
+          echo "${arrayOfErrorLinesForFailedJobs[failedJobIndex]}"
+          echo "\`\`\`"
+        fi
         echo ""
       done
       echo "#  End of list"
