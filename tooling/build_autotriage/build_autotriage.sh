@@ -275,11 +275,11 @@ generateOutputFile() {
         fi
         echo "Failure: ${arrayOfFailedJobs[failedJobIndex]}"
         echo "Cause: ${arrayOfRegexMetadata[regexID]}"
-        echo "Preventable: ${preventability}"
+        echo "Preventable: ${preventable}"
         echo "```"
         echo "${arrayOfErrorLinesForFailedJobs[failedJobIndex]}"
         echo "```"
-        echo "<br/>"
+        echo ""
       done
       echo "#  End of list"
     else
