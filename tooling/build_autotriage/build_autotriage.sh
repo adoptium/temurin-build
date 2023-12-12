@@ -32,7 +32,7 @@ declare -a buildIssues
 
 headJDKVersion=9999
 
-# Imports arrayOfRegexes, arrayOfRegexMetadata, and arrayOfRegexPreventability
+# Imports arrayOfRegexes, arrayOfRegexMetadata, arrayOfRegexPreventability, and arrayOfFailureSources
 . ./tooling/build_autotriage/autotriage_regexes.sh
 
 # All temurin-available platforms.
@@ -41,6 +41,9 @@ declare -a temurinPlatforms
 declare -a platformStart
 # The last jdk major version on that platform ("99" for ongoing).
 declare -a platformEnd
+
+totalBuildFailures="0"
+totalTestFailures="0"
 
 temurinPlatforms+=("aix-ppc64");            platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("alpine-linux-aarch64"); platformStart+=(21); platformEnd+=(99)
@@ -239,6 +242,7 @@ buildFailureTriager() {
     if [[ ${fileSize} -gt 52500000 ]]; then
       arrayOfRegexsForFailedJobs+=("Unmatched")
       arrayOfErrorLinesForFailedJobs+=("Output size was ${fileSize} bytes")
+      totalBuildFailures=${totalBuildFailures}+1
       continue
     fi
     while IFS= read -r jobOutputLine; do
@@ -247,6 +251,11 @@ buildFailureTriager() {
         if [[ "$jobOutputLine" =~ ${arrayOfRegexes[regexIndex]} ]]; then
           arrayOfRegexsForFailedJobs+=("$regexIndex")
           arrayOfErrorLinesForFailedJobs+=("$jobOutputLine")
+          if [[ ${arrayOfFailureSources[regexIndex]} = 0 ]]; then
+            totalBuildFailures=${totalBuildFailures}+1
+          else
+            totalTestFailures=${totalTestFailures}+1
+          fi
           continue 3
         fi
       done
@@ -254,6 +263,7 @@ buildFailureTriager() {
     # If we reach this line, then we have not matched any of the regexs
     arrayOfRegexsForFailedJobs+=("Unmatched")
     arrayOfErrorLinesForFailedJobs+=("No error found")
+    totalBuildFailures=${totalBuildFailures}+1
   done
 }
 
@@ -265,7 +275,11 @@ generateOutputFile() {
     echo "labels: 'weekly-build-triage'";
     echo "---";
     echo "";
-    # 
+    echo "# Summary"
+    echo "Build failures: ${totalBuildFailures}"
+    echo "Test failures: ${totalTestFailures}"
+    echo ""
+    echo "# Breakdown"
     if [[ ${#arrayOfFailedJobs[@]} -gt 0 ]]; then
       echo "# Failed Builds"
       for failedJobIndex in "${!arrayOfFailedJobs[@]}"
