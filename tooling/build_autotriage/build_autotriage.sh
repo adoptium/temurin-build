@@ -242,7 +242,7 @@ buildFailureTriager() {
     if [[ ${fileSize} -gt 52500000 ]]; then
       arrayOfRegexsForFailedJobs+=("Unmatched")
       arrayOfErrorLinesForFailedJobs+=("Output size was ${fileSize} bytes")
-      totalBuildFailures=${totalBuildFailures}+1
+      totalBuildFailures=$((totalBuildFailures+1))
       continue
     fi
     while IFS= read -r jobOutputLine; do
@@ -252,9 +252,9 @@ buildFailureTriager() {
           arrayOfRegexsForFailedJobs+=("$regexIndex")
           arrayOfErrorLinesForFailedJobs+=("$jobOutputLine")
           if [[ ${arrayOfFailureSources[regexIndex]} = 0 ]]; then
-            totalBuildFailures=${totalBuildFailures}+1
+            totalBuildFailures=$((totalBuildFailures+1))
           else
-            totalTestFailures=${totalTestFailures}+1
+            totalTestFailures=$((totalTestFailures+1))
           fi
           continue 3
         fi
@@ -263,7 +263,7 @@ buildFailureTriager() {
     # If we reach this line, then we have not matched any of the regexs
     arrayOfRegexsForFailedJobs+=("Unmatched")
     arrayOfErrorLinesForFailedJobs+=("No error found")
-    totalBuildFailures=${totalBuildFailures}+1
+    totalBuildFailures=$((totalBuildFailures+1))
   done
 }
 
