@@ -277,7 +277,7 @@ generateOutputFile() {
         echo "Cause: ${arrayOfRegexMetadata[regexID]}"
         echo "Preventable: ${preventable}"
         echo "\`\`\`"
-        echo "'${arrayOfErrorLinesForFailedJobs[failedJobIndex]}'"
+        echo "${arrayOfErrorLinesForFailedJobs[failedJobIndex]}"
         echo "\`\`\`"
         echo ""
       done

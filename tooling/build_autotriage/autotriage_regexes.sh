@@ -107,11 +107,6 @@ m="Subjob failed. It was not a test, installer, or signing job."
 p="1"
 storeInArrays "${r}" "${m}" "${p}"
 
-r="No\ssuch\sfile\sor\sdirectory"
-m="No such file or directory."
-p="0"
-storeInArrays "${r}" "${m}" "${p}"
-
 r="(permission.denied|AccessDeniedException)"
 m="AccessDeniedException or Permission Denied"
 p="0"
