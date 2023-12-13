@@ -16,10 +16,10 @@
 
 ################################################################################
 #
-# This script turns a list of Temurin build jobs into two things:
-# 1. A markdown summary table that gives pass and fail numbers.
-# 2. A list of each failing job/subjob link, plus information that can
-#    help identify the specific issue causing the failure.
+# This script takes a list of JDK major versions and outputs a list of
+# the latest failed attempts to build Temurin at the Eclipse Adoptium project.
+# We then use a series of regular expressions to identify the cause of each
+# failure, and to output useful information to aid triage.
 #
 ################################################################################
 
@@ -32,7 +32,8 @@ declare -a buildIssues
 
 headJDKVersion=9999
 
-# Imports arrayOfRegexes, arrayOfRegexMetadata, arrayOfRegexPreventability, and arrayOfFailureSources
+# Imports a series of arrays related to the regular expressions we use to recognise failures:
+# arrayOfRegexes, arrayOfRegexMetadata, arrayOfRegexPreventability, and arrayOfFailureSources
 . ./tooling/build_autotriage/autotriage_regexes.sh
 
 # All temurin-available platforms.
@@ -60,6 +61,7 @@ temurinPlatforms+=("solaris-x64");          platformStart+=(8);  platformEnd+=(8
 temurinPlatforms+=("windows-x64");          platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("windows-x86-32");       platformStart+=(8);  platformEnd+=(17)
 
+# This stores any error messages that did not terminate the triage script altogether.
 errorLog() {
   buildIssues+=("$1")
   echo "ERROR FOUND: Issue ${#buildIssues[@]}: $1"
@@ -115,6 +117,10 @@ identifyFailedBuildsInTimerPipelines() {
     latestTimerJenkinsJobID=""
     oldIFS=$IFS
     IFS=","
+
+    # Here we identify the latest pipeline that wasn't run by a user.
+    # This is to avoid triaging a pipeline that uses a non-standard framework, and is 
+    # therefore not representative of the quality of Temurin pipelines during a release.
     for jsonEntry in $latestTimerPipelineRaw
     do
       if [[ $jsonEntry =~ ^\[\{\"_id\".* ]]; then
@@ -175,7 +181,8 @@ identifyFailedBuildsInTimerPipelines() {
 
     IFS=$oldIFS
 
-    # Now iterate over platforms to make sure we're launching every platform we should.
+    # Now iterate over platforms to make sure we're launching every platform we should,
+    # and that we're not running builds for any platform we shouldn't be.
     triageThesePlatforms=","
     for p in "${!temurinPlatforms[@]}"
     do
@@ -203,12 +210,14 @@ identifyFailedBuildsInTimerPipelines() {
       triageThesePlatforms+="${jdkJenkinsJobVersion}-${temurinPlatforms[p]}-temurin,"
     done
 
-    if [[ ${#triageThesePlatforms[@]} -gt 1 ]]; then
+    if [[ ${triageThesePlatforms} = "" ]]; then
       errorLog "Cannot find any valid build platforms launched by jdk ${arrayOfAllJDKVersions[v]}${arrayOfUs[v]} pipeline ${latestTimerJenkinsJobID}. Skipping to the next jdk version."
       continue
     fi
     echo "Platforms validated. Identifying build numbers for these platforms: ${triageThesePlatforms:1:-1}"
 
+    # Iterate over the platforms we need to triage and find the build numbers for 
+    # any build that failed or was aborted (includes propagated test failures).
     for b in "${!listOfBuildNames[@]}"
     do
       if [[ $triageThesePlatforms =~ .*,${listOfBuildNames[$b]},.* ]]; then
@@ -267,6 +276,7 @@ buildFailureTriager() {
   done
 }
 
+# Stores everything we've found in a markdown-formatted file.
 generateOutputFile() {
   { echo "---";
     echo "name: Build Issue Summary";
@@ -279,7 +289,6 @@ generateOutputFile() {
     echo "Build failures: ${totalBuildFailures}"
     echo "Test failures: ${totalTestFailures}"
     echo ""
-    echo "# Breakdown"
     if [[ ${#arrayOfFailedJobs[@]} -gt 0 ]]; then
       echo "# Failed Builds"
       for failedJobIndex in "${!arrayOfFailedJobs[@]}"
