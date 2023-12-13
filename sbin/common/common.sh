@@ -99,7 +99,7 @@ function setDockerVolumeSuffix() {
 # Joins multiple parts to a valid file path for the current OS
 function joinPathOS() {
   # dont use printf as it might not work as expected on solaris build machines.
-  local path=$(IFS=/; echo "/$*" | tr -s /)
+  local path=$(echo "/${@}" | tr ' ' / | tr -s /)
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
       path=$(cygpath -w "${path}")
   fi
@@ -109,7 +109,7 @@ function joinPathOS() {
 # Joins multiple parts to a valid file path using slashes
 function joinPath() {
   # dont use printf as it might not work as expected on solaris build machines.
-  local path=$(IFS=/; echo "/$*" | tr -s /)
+  local path=$(echo "/${@}" | tr ' ' / | tr -s /)
   echo "${path}"
 }
 
