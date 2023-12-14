@@ -242,9 +242,9 @@ identifyFailedBuildsInTimerPipelines() {
 # the failure if possible.
 # Uses: arrayOfRegexes, arrayOfRegexMetadata, arrayOfRegexPreventability
 buildFailureTriager() {
-  echo "Triaging job: ${1}"
+  echo "Triaging jobs now."
   # Iterate over the failures found and triage them against the pending array of regexes.
-  for failedJob in ${arrayOfFailedJobs[@]}; do
+  for failedJob in "${arrayOfFailedJobs[@]}"; do
     wget -q -O - "${failedJob}/consoleText" > ./jobOutput.txt
     # If the file size is beyond 50m bytes, then report script error and do not triage, for efficiency.
     fileSize=$(wc -c < ./jobOutput.txt)
@@ -255,7 +255,7 @@ buildFailureTriager() {
       continue
     fi
     while IFS= read -r jobOutputLine; do
-      for regexIndex in ${!arrayOfRegexes[@]}; do
+      for regexIndex in "${!arrayOfRegexes[@]}"; do
         # When a regex matches, store the id of the regex we matched against, and also the line of output that matched the regex.
         if [[ "$jobOutputLine" =~ ${arrayOfRegexes[regexIndex]} ]]; then
           arrayOfRegexsForFailedJobs+=("$regexIndex")
@@ -274,6 +274,7 @@ buildFailureTriager() {
     arrayOfErrorLinesForFailedJobs+=("No error found")
     totalBuildFailures=$((totalBuildFailures+1))
   done
+    echo "Triage has ended."
 }
 
 # Stores everything we've found in a markdown-formatted file.
