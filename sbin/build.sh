@@ -99,7 +99,7 @@ configureReproducibleBuildParameter() {
       if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]
       then
           # Use release date
-          addConfigureArg "--with-source-date=" "version" 
+          addConfigureArg "--with-source-date=" "version"
       else
           # Use BUILD_TIMESTAMP date
 
@@ -655,8 +655,8 @@ buildTemplatedFile() {
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
     # Check if strace is available
-    if strace -V; then
-      echo "Strace is available on system"
+    if rpm -q strace  && rpm --version ; then
+      echo "Strace and rpm is available on system"
       FULL_MAKE_COMMAND="mkdir build/straceOutput \&\& strace -o build/straceOutput/outputFile -ff -e trace=openat,execve ${FULL_MAKE_COMMAND}"
     else
       echo "Strace is not available on system"

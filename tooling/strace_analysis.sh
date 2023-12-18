@@ -1,26 +1,17 @@
 #!/bin/bash
 # Before executing this script, strace output files need to be generated
-set -x
 # $1 is path of strace output folder
 # $2 is path of temurin-build folder, for exmaple: /home/user/Documents/temurin-build"
-git rem
 
 if [ -z "$1" ]; then
-    echo "temurin-build folder as param is missing!"
+    echo "strace output folder as param is missing!"
     exit 1
 fi
 
-# File patterns to ignore
-ignores=("^/dev/")
-ignores+=("^/proc/")
-ignores+=("^/etc/ld.so.cache$")
-ignores+=("^/etc/nsswitch.conf$")
-ignores+=("^/etc/passwd$")
-ignores+=("^/etc/timezone$")
-ignores+=("^/sys/devices/system/cpu")
-ignores+=("^/sys/fs/cgroup/")
-ignores+=("^/lib/locale/locale-archive$")
-ignores+=("^/etc/mailcap$")
+if [ -z "$2" ]; then
+    echo "temurin-build folder as param is missing!"
+    exit 1
+fi
 
 isBinSymLink=false
 isLibSymLink=false
@@ -46,36 +37,58 @@ echo "/lib is symlink: $isLibSymLink"
 echo "/sbin is symlink: $isSbinSymLink"
 echo ""
 
-# grep strace files,
-# ignoring:
-#   ENOENT           : strace no entry
-#   +++              : strace +++ lines
-#   ---              : strace --- lines
-#   /dev/            : devices
-#   /proc/           : /proc processor paths
-#   /tmp/            : /tmp files
-#   .java            : .java files
-#   .d               : .d compiler output
-#   .o               : .o compiler output
-#   .d.targets       : .d.targets make compiler output
-#   <build_dir>      : begins with build directory
-#   <relative paths> : relative file paths
-
-#set -f
-# filtering out relevant parts of strace output files
-# grep -E "/usr/*|/bin/*|/sys/*"
 echo "Param 1: $1"
 echo "Param 2: $2"
-#allFiles="$(find "$2" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep -v "$1" | grep -v "\.java$" | grep -v "\+\+\+" | grep -v "\-\-\-" | grep -v "test/*" | grep -v "^src/" | grep -v "^modules/" | grep -v "^make/" | grep -v "^jdk." | grep -v "^java." | grep -v "^.github" | sort | uniq)"
-allFiles="$(find "$1" -type f -name 'outputFile.*'| xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | grep -v "\.java$" | grep -v "\.d$" | grep -v "\.o$" | grep -v "\.d\.targets$" | grep -v "^$2" | grep -v "\+\+\+" | grep -v "\-\-\-" | grep -v "^/dev/" | grep -v "^/proc/" | grep -v "^/sys/" | grep -v "^/tmp/" | sort | uniq)"
-#set +f
 
-totalFileCounter=0
+# Arrays to store different types of strace output, to treat them different
+allFiles=()
+usrLocalFiles=()
+otherFiles=()
+
+# Arrays for package and non-package dependencies
 pkgs=()
-no_pkg_files=()
-for file in $allFiles; do
+npkgs=()
+
+# grep strace files, ignoring:
+ignores=(
+  "\.java$"
+  "\.d$"
+  "\.o$"
+  "\.d\.targets$"
+  "^$2"
+  "\+\+\+"
+  "\-\-\-"
+  "^/dev/"
+  "^/proc/"
+  "^/sys/"
+  "^/tmp/"
+)
+
+grep_command="grep -Ev '(${ignores[0]}"
+for ((i=1; i<${#ignores[@]}; i++)); do
+    grep_command+="|${ignores[i]}"
+done
+grep_command+=")'"
+
+# filtering out relevant parts of strace output files
+allFiles=($(find "$1" -type f -name 'outputFile.*'| xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | eval $grep_command | sort | uniq))
+
+# go over all filtered files and store those with /usr/local in separate array
+for file in "${allFiles[@]}"; do
+    if [[ $file == "/usr/local/"* ]]; then
+        usrLocalFiles+=("$file")
+        echo "UsrLocalFile: $file"
+    else
+        otherFiles+=("$file")
+        echo "No usrLocalFile: $file"
+    fi
+done
+
+echo "Length of /usr/local: ${#usrLocalFiles[@]}"
+echo "Length of other files: ${#otherFiles[@]}"
+
+for file in "${otherFiles[@]}"; do
     echo "Processing: $file"
-    ((totalFileCounter = totalFileCounter + 1))
 
     filePath="$(readlink -f "$file")"
 
@@ -116,7 +129,7 @@ for file in $allFiles; do
 
     if [[ "$rc" != "0" ]]; then
         #echo "no pkg: $filePath"
-        no_pkg_files+=("$filePath")
+        usrLocalFiles+=("$filePath")
     else
         pkg="$(echo "$pkg" | cut -d" " -f1)"
         pkg=${pkg::-1}
@@ -127,15 +140,18 @@ for file in $allFiles; do
         fi
     fi
 done
-echo "Number of all processed strace output files: $totalFileCounter"
-if [ $totalFileCounter == 0 ]; then
-    echo "No strace output files available"
-    exit 1
+
+# Calculate and print number of all processed strace output files
+totalLength=$(( ${#usrLocalFiles[@]} + ${#otherFiles[@]} ))
+if [ $totalLength -ne 0 ]; then
+    printf '\nNumber of all processed strace output files: %s\n' "$totalLength"
+else
+    printf "\n No strace output files available"
+        exit 1
 fi
 
-npkgs=()
 # loop over all non-package dependencies and try to get the version. If version is not empty, add to array
-for file in "${no_pkg_files[@]}"; do
+for file in "${usrLocalFiles[@]-}"; do
     npkg=$("$file" --version 2>/dev/null | head -n 1)
     if [[ "$npkg" != "" ]]; then
         npkgs+=("${npkg}")
@@ -143,7 +159,7 @@ for file in "${no_pkg_files[@]}"; do
 done
 
 echo -e "\nNon-Package Dependencies:"
-printf '%s\n' "${npkgs[@]}" | sort -u
+printf '%s\n' "${npkgs[@]-}" | sort -u
 
 echo -e "\nPackage Dependencies:"
 for pkg in "${pkgs[@]}"; do
@@ -151,3 +167,4 @@ for pkg in "${pkgs[@]}"; do
     trimPkg=${trimPkg%_temurin}
     echo $trimPkg
 done
+echo -e "\n"
