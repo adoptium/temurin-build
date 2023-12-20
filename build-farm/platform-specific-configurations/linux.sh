@@ -331,7 +331,7 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION
   export CXX=/usr/local/gcc9/bin/g++-9.3
   # Enable GCC 10 for Java 17+ for repeatable builds, but not for our supported releases
   # Ref https://github.com/adoptium/temurin-build/issues/2787
-if [ "${ARCHITECTURE}" == "ricv64" ] && [ "${VARIANT}" == "${BUILD_VARIANT_HOTSPOT}" ] && [ -r /usr/bin/gcc-10 ]; then
+elif [ "${ARCHITECTURE}" == "riscv64" ] && [ -r /usr/bin/gcc-10 ]; then
   # Enable GCC 10 for RISC-V, given the rapid evolution of RISC-V, the newer the GCC toolchain, the better
   [ -r /usr/bin/gcc-10 ] && export  CC=/usr/bin/gcc-10
   [ -r /usr/bin/g++-10 ] && export CXX=/usr/bin/g++-10
