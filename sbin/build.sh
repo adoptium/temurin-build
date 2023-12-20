@@ -982,10 +982,8 @@ generateSBoM() {
     addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
   done
 
-  # Print SBOM json
-  echo "CycloneDX SBOM:"
-  cat  "${sbomJson}"
-  echo ""
+  # Print SBOM location
+  echo "CycloneDX SBOM has been created in ${sbomJson}"
 }
 
 # Generate build tools info into dependency file
