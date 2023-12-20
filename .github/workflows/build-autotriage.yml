@@ -6,6 +6,11 @@ name: "Build Autotriage"
 on:
   schedule:
     - cron: '0 0 * * MON'
+  push:
+    paths:
+      - '**build-autotriage.yml'
+      - '**build_autotriage.sh'
+      - '**autotriage_regexes.sh'
 
 env:
   TRIAGE_SCRIPT: "tooling/build_autotriage/build_autotriage.sh"
@@ -14,10 +19,11 @@ jobs:
   Label:
     runs-on: ubuntu-latest
     name: Run Build Triage
+    if: github.repository == 'adoptium/temurin-build'
     steps:
       - uses: actions/checkout@v3
       - name: "Run Build Auto Triage"
-        run: bash "${PWD}/${TRIAGE_SCRIPT}" jdk8u jdk11u jdk17u jdk21u jdk22
+        run: bash "${PWD}/${TRIAGE_SCRIPT}" jdk8u jdk11u jdk17u jdk21u jdk22 jdk23head
 
       - name: Create Issue From File
         env:
