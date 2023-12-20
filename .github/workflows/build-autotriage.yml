@@ -6,11 +6,6 @@ name: "Build Autotriage"
 on:
   schedule:
     - cron: '0 0 * * MON'
-  push:
-    paths:
-      - '**build-autotriage.yml'
-      - '**build_autotriage.sh'
-      - '**autotriage_regexes.sh'
 
 env:
   TRIAGE_SCRIPT: "tooling/build_autotriage/build_autotriage.sh"
@@ -19,7 +14,7 @@ jobs:
   Label:
     runs-on: ubuntu-latest
     name: Run Build Triage
-    if: github.repository == 'adamfarley/temurin-build'
+    if: github.repository == 'adoptium/temurin-build'
     steps:
       - uses: actions/checkout@v3
       - name: "Run Build Auto Triage"
