@@ -16,22 +16,24 @@
 
 ################################################################################
 #
-# This script turns a list of Temurin build jobs into two things:
-# 1. A markdown summary table that gives pass and fail numbers.
-# 2. A list of each failing job/subjob link, plus information that can
-#    help identify the specific issue causing the failure.
+# This script takes a list of JDK major versions and outputs a list of
+# the latest failed attempts to build Temurin at the Eclipse Adoptium project.
+# We then use a series of regular expressions to identify the cause of each
+# failure, and to output useful information to aid triage.
 #
 ################################################################################
 
 declare -a arrayOfFailedJobs
-# declare -a arrayOfFailedJobRegexs
+declare -a arrayOfRegexsForFailedJobs
+declare -a arrayOfErrorLinesForFailedJobs
 declare -a arrayOfAllJDKVersions
 declare -a arrayOfUs
 declare -a buildIssues
 
 headJDKVersion=9999
 
-# Imports arrayOfRegexes, arrayOfRegexMetadata, and arrayOfRegexPreventability
+# Imports a series of arrays related to the regular expressions we use to recognise failures:
+# arrayOfRegexes, arrayOfRegexMetadata, arrayOfRegexPreventability, and arrayOfFailureSources
 . ./tooling/build_autotriage/autotriage_regexes.sh
 
 # All temurin-available platforms.
@@ -40,6 +42,9 @@ declare -a temurinPlatforms
 declare -a platformStart
 # The last jdk major version on that platform ("99" for ongoing).
 declare -a platformEnd
+
+totalBuildFailures=0
+totalTestFailures=0
 
 temurinPlatforms+=("aix-ppc64");            platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("alpine-linux-aarch64"); platformStart+=(21); platformEnd+=(99)
@@ -56,6 +61,7 @@ temurinPlatforms+=("solaris-x64");          platformStart+=(8);  platformEnd+=(8
 temurinPlatforms+=("windows-x64");          platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("windows-x86-32");       platformStart+=(8);  platformEnd+=(17)
 
+# This stores any error messages that did not terminate the triage script altogether.
 errorLog() {
   buildIssues+=("$1")
   echo "ERROR FOUND: Issue ${#buildIssues[@]}: $1"
@@ -111,6 +117,10 @@ identifyFailedBuildsInTimerPipelines() {
     latestTimerJenkinsJobID=""
     oldIFS=$IFS
     IFS=","
+
+    # Here we identify the latest pipeline that wasn't run by a user.
+    # This is to avoid triaging a pipeline that uses a non-standard framework, and is 
+    # therefore not representative of the quality of Temurin pipelines during a release.
     for jsonEntry in $latestTimerPipelineRaw
     do
       if [[ $jsonEntry =~ ^\[\{\"_id\".* ]]; then
@@ -171,7 +181,8 @@ identifyFailedBuildsInTimerPipelines() {
 
     IFS=$oldIFS
 
-    # Now iterate over platforms to make sure we're launching every platform we should.
+    # Now iterate over platforms to make sure we're launching every platform we should,
+    # and that we're not running builds for any platform we shouldn't be.
     triageThesePlatforms=","
     for p in "${!temurinPlatforms[@]}"
     do
@@ -199,12 +210,14 @@ identifyFailedBuildsInTimerPipelines() {
       triageThesePlatforms+="${jdkJenkinsJobVersion}-${temurinPlatforms[p]}-temurin,"
     done
 
-    if [[ ${#triageThesePlatforms[@]} -gt 1 ]]; then
+    if [[ ${triageThesePlatforms} = "" ]]; then
       errorLog "Cannot find any valid build platforms launched by jdk ${arrayOfAllJDKVersions[v]}${arrayOfUs[v]} pipeline ${latestTimerJenkinsJobID}. Skipping to the next jdk version."
       continue
     fi
     echo "Platforms validated. Identifying build numbers for these platforms: ${triageThesePlatforms:1:-1}"
 
+    # Iterate over the platforms we need to triage and find the build numbers for 
+    # any build that failed or was aborted (includes propagated test failures).
     for b in "${!listOfBuildNames[@]}"
     do
       if [[ $triageThesePlatforms =~ .*,${listOfBuildNames[$b]},.* ]]; then
@@ -227,15 +240,45 @@ identifyFailedBuildsInTimerPipelines() {
 
 # Takes a single failed jenkins build job URL as a string, and identifies the source of
 # the failure if possible.
+# Uses: arrayOfRegexes, arrayOfRegexMetadata, arrayOfRegexPreventability
 buildFailureTriager() {
-  echo "Attempting to triage a job: ${1}"
-  echo "- Failed job: ${1}" >> build_triage_output.md
-  # Todo: Iterate over the failures found and triage them against the pending array of regexes.
-  # For now we'll put them in a tidy md-style file for issue inclusion.
-  
+  echo "Triaging jobs now."
+  # Iterate over the failures found and triage them against the pending array of regexes.
+  for failedJob in "${arrayOfFailedJobs[@]}"; do
+    wget -q -O - "${failedJob}/consoleText" > ./jobOutput.txt
+    # If the file size is beyond 50m bytes, then report script error and do not triage, for efficiency.
+    fileSize=$(wc -c < ./jobOutput.txt)
+    if [[ ${fileSize} -gt 52500000 ]]; then
+      arrayOfRegexsForFailedJobs+=("Unmatched")
+      arrayOfErrorLinesForFailedJobs+=("Output size was ${fileSize} bytes")
+      totalBuildFailures=$((totalBuildFailures+1))
+      continue
+    fi
+    while IFS= read -r jobOutputLine; do
+      for regexIndex in "${!arrayOfRegexes[@]}"; do
+        # When a regex matches, store the id of the regex we matched against, and also the line of output that matched the regex.
+        if [[ "$jobOutputLine" =~ ${arrayOfRegexes[regexIndex]} ]]; then
+          arrayOfRegexsForFailedJobs+=("$regexIndex")
+          arrayOfErrorLinesForFailedJobs+=("$jobOutputLine")
+          if [[ ${arrayOfFailureSources[regexIndex]} = 0 ]]; then
+            totalBuildFailures=$((totalBuildFailures+1))
+          else
+            totalTestFailures=$((totalTestFailures+1))
+          fi
+          continue 3
+        fi
+      done
+    done < ./jobOutput.txt
+    # If we reach this line, then we have not matched any of the regexs
+    arrayOfRegexsForFailedJobs+=("Unmatched")
+    arrayOfErrorLinesForFailedJobs+=("No error found")
+    totalBuildFailures=$((totalBuildFailures+1))
+  done
+    echo "Triage has ended."
 }
 
-startOutputFile() {
+# Stores everything we've found in a markdown-formatted file.
+generateOutputFile() {
   { echo "---";
     echo "name: Build Issue Summary";
     echo "about: For triaging the nightly and weekend build failures";
@@ -243,6 +286,43 @@ startOutputFile() {
     echo "labels: 'weekly-build-triage'";
     echo "---";
     echo "";
+    echo "# Summary"
+    echo "Build failures: ${totalBuildFailures}"
+    echo "Test failures: ${totalTestFailures}"
+    echo ""
+    if [[ ${#arrayOfFailedJobs[@]} -gt 0 ]]; then
+      echo "# Failed Builds"
+      for failedJobIndex in "${!arrayOfFailedJobs[@]}"
+      do
+        regexID="${arrayOfRegexsForFailedJobs[failedJobIndex]}"
+        echo "Failure: ${arrayOfFailedJobs[failedJobIndex]}"
+        if [[ ${regexID} =~ Unmatched ]]; then
+          echo "Cause: ${arrayOfErrorLinesForFailedJobs[failedJobIndex]}"
+        else
+          echo "Cause: ${arrayOfRegexMetadata[regexID]}"
+          preventable="yes"
+          if [[ "${arrayOfRegexPreventability[regexID]}" -gt 0 ]]; then
+            preventable="no"
+          fi
+          echo "Preventable: ${preventable}"
+          echo "\`\`\`"
+          echo "${arrayOfErrorLinesForFailedJobs[failedJobIndex]}"
+          echo "\`\`\`"
+        fi
+        echo ""
+      done
+      echo "#  End of list"
+    else
+      echo "All build jobs passed. Huzzah!"
+    fi
+    if [[ ${#buildIssues[@]} -gt 0 ]]; then
+      echo "# Script Issues"
+      for issueID in "${!buildIssues[@]}"
+      do
+        echo "- Issue ${issueID}: ${buildIssues[issueID]}"
+      done
+      echo "# End of Issues"
+    fi
   } >> build_triage_output.md
 }
 
@@ -254,26 +334,8 @@ argumentParser "$@"
 
 identifyFailedBuildsInTimerPipelines
 
-startOutputFile
+buildFailureTriager 
 
-if [[ ${#arrayOfFailedJobs[@]} -gt 0 ]]; then
-  echo "# Failed Builds" >> build_triage_output.md
-  for failedJob in "${arrayOfFailedJobs[@]}"
-  do
-    buildFailureTriager "$failedJob"
-  done
-  echo "#  End of list"  >> build_triage_output.md
-else
-  echo "All build jobs passed. Huzzah!"
-fi
-
-if [[ ${#buildIssues[@]} -gt 0 ]]; then
-  echo "# Script Issues"  >> build_triage_output.md
-  for issueID in "${!buildIssues[@]}"
-  do
-    echo "- Issue ${issueID}: ${buildIssues[issueID]}\n"  >> build_triage_output.md
-  done
-  echo "# End of Issues"  >> build_triage_output.md
-fi
+generateOutputFile
 
 echo "Build AutoTriage is complete."

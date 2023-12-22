@@ -14,10 +14,11 @@ jobs:
   Label:
     runs-on: ubuntu-latest
     name: Run Build Triage
+    if: github.repository == 'adoptium/temurin-build'
     steps:
       - uses: actions/checkout@v3
       - name: "Run Build Auto Triage"
-        run: bash "${PWD}/${TRIAGE_SCRIPT}" jdk8u jdk11u jdk17u jdk21u jdk22head
+        run: bash "${PWD}/${TRIAGE_SCRIPT}" jdk8u jdk11u jdk17u jdk21u jdk22 jdk23head
 
       - name: Create Issue From File
         env:
