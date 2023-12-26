@@ -146,12 +146,13 @@ totalLength=$(( ${#usrLocalFiles[@]} + ${#otherFiles[@]} ))
 if [ $totalLength -ne 0 ]; then
     printf '\nNumber of all processed strace output files: %s\n' "$totalLength"
 else
-    printf "\n No strace output files available"
-        exit 1
+    printf "\nNo strace output files available\n"
+    exit 1
 fi
 
 # loop over all non-package dependencies and try to get the version. If version is not empty, add to array
 for file in "${usrLocalFiles[@]-}"; do
+    printf 'File to check version %s' "$file"
     npkg=$("$file" --version 2>/dev/null | head -n 1)
     if [[ "$npkg" != "" ]]; then
         npkgs+=("${npkg}")
