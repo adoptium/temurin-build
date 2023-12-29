@@ -234,15 +234,15 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
 then
   # OpenJ9 fetches the latest OpenSSL in their get_source.sh
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched"
-
-  if [ "${ARCHITECTURE}" == "ppc64le" ] || [ "${ARCHITECTURE}" == "x64" ]
+  if [ "${ARCHITECTURE}" == "aarch64" ]; then
+    # Potentially a JetSon Nano dev environment so look here
+    CUDA_HOME=/usr/local/cuda-10.2
+  else
+    CUDA_HOME=/usr/local/cuda-9.0
+  fi
+  if [ -f $CUDA_HOME/include/cuda.h ]
   then
-    CUDA_VERSION=9.0
-    CUDA_HOME=/usr/local/cuda-$CUDA_VERSION
-    if [ -f $CUDA_HOME/include/cuda.h ]
-    then
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-cuda --with-cuda=$CUDA_HOME"
-    fi
+    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-cuda --with-cuda=$CUDA_HOME"
   fi
 fi
 
