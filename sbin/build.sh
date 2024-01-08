@@ -993,6 +993,15 @@ generateSBoM() {
     addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
   done
 
+
+  if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
+    echo -e "\n\n Executing Analysis Script"
+    tempBldDir="$(dirname "${BUILD_CONFIG[WORKSPACE_DIR]}")"
+    echo -e "\n\n\n DIRECTORY $tempBldDir"
+    source "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/straceOutput" "$tempBldDir" "$javaHome" "$classpath" "$sbomJson"
+  fi
+
+
   # Print SBOM location
   echo "CycloneDX SBOM has been created in ${sbomJson}"
 }

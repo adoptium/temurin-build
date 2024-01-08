@@ -2,6 +2,12 @@
 # Before executing this script, strace output files need to be generated
 # $1 is path of strace output folder
 # $2 is path of temurin-build folder, for exmaple: /home/user/Documents/temurin-build"
+# $3 is javaHome
+# $4 is classpath
+# $5 is sbomJson
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../sbin/common/sbom.sh"
 
 if [ -z "$1" ]; then
     echo "strace output folder as param is missing!"
@@ -12,6 +18,11 @@ if [ -z "$2" ]; then
     echo "temurin-build folder as param is missing!"
     exit 1
 fi
+
+javaHome=$3
+classpath=$4
+sbomJson=$5
+
 
 isBinSymLink=false
 isLibSymLink=false
@@ -39,6 +50,15 @@ echo ""
 
 echo "Param 1: $1"
 echo "Param 2: $2"
+echo "Param 3: $javaHome"
+echo "Param 4: $classpath"
+echo "Param 5: $sbomJson"
+
+# configure SBOM
+addSBOMFormulation "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies"
+addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Strace derived package dependencies"
+addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Strace derived non-package dependencies"
+
 
 # Arrays to store different types of strace output, to treat them different
 allFiles=()
@@ -91,8 +111,8 @@ for file in "${otherFiles[@]}"; do
     echo "Processing: $file"
 
     filePath="$(readlink -f "$file")"
-
     pkg=$(rpm -qf "$filePath")
+
     rc=$?
     if [[ "$rc" != "0" ]]; then
         # bin, lib, sbin pkgs may be installed under the root symlink
@@ -135,6 +155,7 @@ for file in "${otherFiles[@]}"; do
         pkg=${pkg::-1}
         #echo "file: $filePath pkg: $pkg version: $pkg"
         pkgString="pkg: $pkg version: $pkg"
+        addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Strace derived package dependencies" "${pkg}" "${pkg}"
         if ! echo "${pkgs[@]}" | grep "temurin_${pkgString}_temurin" >/dev/null; then
             pkgs+=("temurin_${pkgString}_temurin")
         fi
@@ -156,6 +177,9 @@ for file in "${usrLocalFiles[@]-}"; do
     npkg=$("$file" --version 2>/dev/null | head -n 1)
     if [[ "$npkg" != "" ]]; then
         npkgs+=("${npkg}")
+        # TODO: Cut version out
+        version=$(echo "$npkg" | awk '{print $NF}')
+        addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Strace derived non-package dependencies" "${npkg}" "${version}"
     fi
 done
 
@@ -168,4 +192,10 @@ for pkg in "${pkgs[@]}"; do
     trimPkg=${trimPkg%_temurin}
     echo $trimPkg
 done
+
+# addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs"
+
+# "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationComp --jsonFile "${jsonFile}" --formulaName "${formulaName}" --name "${name}"
+
+
 echo -e "\n"
