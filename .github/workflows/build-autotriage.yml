@@ -16,13 +16,13 @@ jobs:
     name: Run Build Triage
     if: github.repository == 'adoptium/temurin-build'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
       - name: "Run Build Auto Triage"
         run: bash "${PWD}/${TRIAGE_SCRIPT}" jdk8u jdk11u jdk17u jdk21u jdk22 jdk23head
 
       - name: Create Issue From File
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        uses: JasonEtco/create-an-issue@v2
+        uses: JasonEtco/create-an-issue@e27dddc79c92bc6e4562f268fffa5ed752639abd # v2
         with:
           filename: ./build_triage_output.md
