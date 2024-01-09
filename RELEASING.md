@@ -92,7 +92,7 @@ Affected repositories:
 
 #### Release pipelines and jobs need to be re-generated with new tags by the Release Champion:
 
-- run [release-build-pipeline-generator](https://ci.adoptium.net/job/build-scripts/job/utils/job/release-build-pipeline-generator) with correct value:
+- run [release-pipeline-generator](https://ci.adoptium.net/job/build-scripts/job/utils/job/release-pipeline-generator) with correct value:
   1. `releaseTag` is the branch on `ci-jenkins-pipeline` and `temurin-build` git repo.
   2. `helperTag` is the branch on `jenkins-helper` repo.
   3. `aqaTag` is the branch on `aqa-tests` repo, in form of `vX.Y.Z-release` and usually the [latest stable release](https://github.com/adoptium/aqa-tests/releases)
