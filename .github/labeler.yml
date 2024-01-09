@@ -8,30 +8,38 @@
 #   - tests/*
 
 ghActions:
-  - .github/*
+- changed-files:
+  - any-glob-to-any-file: [.github/*]
 documentation:
-  - '**/*.md'
+- changed-files:
+  - any-glob-to-any-file: ['**/*.md']
 jenkins:
-  - build-farm/*
+- changed-files:
+  - any-glob-to-any-file: [build-farm/*]
 aix:
-  - build-farm/platform-specific-configurations/aix.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/platform-specific-configurations/aix.sh]
 alpine-linux:
-  - build-farm/platform-specific-configurations/alpine-linux.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/platform-specific-configurations/alpine-linux.sh]
 macos:
-  - build-farm/platform-specific-configurations/mac.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/platform-specific-configurations/mac.sh]
 solaris:
-  - build-farm/platform-specific-configurations/solaris.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/platform-specific-configurations/solaris.sh]
 windows:
-  - build-farm/platform-specific-configurations/windows.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/platform-specific-configurations/windows.sh]
 docker:
-  - docker/*
-  - docker-build.sh
+- changed-files:
+  - any-glob-to-any-file: [docker/*, docker-build.sh]
 testing:
-  - tests/*
+- changed-files:
+  - any-glob-to-any-file: [tests/*]
 security:
-  - security/*
-  - SECURITY.md
-  - sbin/sig_check/*
+- changed-files:
+  - any-glob-to-any-file: [security/*, SECURITY.md, sbin/sig_check/*]
 installer:
-  - build-farm/sign-releases.sh
-  - sign.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/sign-releases.sh, sign.sh]
