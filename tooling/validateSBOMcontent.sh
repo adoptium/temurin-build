@@ -69,7 +69,7 @@ elif echo "$SBOMFILE" | grep _x86-32_windows_; then
   fi
 elif echo "$SBOMFILE" | grep _mac_; then
   # NOTE: mac/x64 native builds >=11 were using "clang (clang/LLVM from Xcode 10.3)"
-  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 12.4)"
+  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 15.0.1)"
   # shellcheck disable=SC2166
   if [ "${MAJORVERSION}" = "8" -o "${MAJORVERSION}" = "11" ] && echo "$SBOMFILE" | grep _x64_; then
     EXPECTED_COMPILER="clang (clang/LLVM)"
