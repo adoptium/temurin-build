@@ -1132,7 +1132,9 @@ addCompilerWindows() {
 
   echo "Adding Windows Compiler versions to SBOM: ${msvs_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS Windows Compiler Version" "${msvs_version}"
+  echo "Adding Windows C Compiler version to SBOM: ${msvs_c_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C Compiler Version" "${msvs_c_version}"
+  echo "Adding Windows C++ Compiler version to SBOM: ${msvs_cpp_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C++ Compiler Version" "${msvs_cpp_version}"
 }
 
