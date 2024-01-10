@@ -1125,11 +1125,15 @@ addGCC() {
 addCompilerWindows() {
   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
 
-  ## local msvs_version="$(cat "${inputConfigFile}" | grep -o -P '\* Toolchain:\s+\K[^"]+')"
+  ## Extract Windows Compiler Versions
   local msvs_version="$(grep -o -P '\* Toolchain:\s+\K[^"]+' "${inputConfigFile}")"
+  local msvs_c_version="$(grep -o -P '\* C Compiler:\s+\K[^"]+' "${inputConfigFile}" | awk '{print $2}')"
+  local msvs_cpp_version="$(grep -o -P '\* C\+\+ Compiler:\s+\K[^"]+' "${inputConfigFile}" | awk '{print $2}')"
 
-  echo "Adding Windows Compiler version to SBOM: ${msvs_version}"
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MS Windows Compiler" "${msvs_version}"
+  echo "Adding Windows Compiler versions to SBOM: ${msvs_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS Windows Compiler Version" "${msvs_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C Compiler Version" "${msvs_c_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C++ Compiler Version" "${msvs_cpp_version}"
 }
 
 addCompilerMacOS() {
