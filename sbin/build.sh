@@ -1125,7 +1125,8 @@ addGCC() {
 addCompilerWindows() {
   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
 
-  local msvs_version="$(cat "${inputConfigFile}" | grep -o -P '\* Toolchain:\s+\K[^"]+')"
+  ## local msvs_version="$(cat "${inputConfigFile}" | grep -o -P '\* Toolchain:\s+\K[^"]+')"
+  local msvs_version="$(grep -o -P '\* Toolchain:\s+\K[^"]+' "${inputConfigFile}")"
 
   echo "Adding Windows Compiler version to SBOM: ${msvs_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MS Windows Compiler" "${msvs_version}"
@@ -1134,7 +1135,8 @@ addCompilerWindows() {
 addCompilerMacOS() {
   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
 
-  local macx_version="$(cat "${inputConfigFile}" | grep "* Toolchain:" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
+  ## local macx_version="$(cat "${inputConfigFile}" | grep "* Toolchain:" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
+  local macx_version="$(grep "* Toolchain:" "${inputConfigFile}" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
 
   echo "Adding MacOS compiler version to SBOM: ${macx_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MacOS Compiler" "${macx_version}"
