@@ -1136,7 +1136,7 @@ addCompilerMacOS() {
   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
 
   ## local macx_version="$(cat "${inputConfigFile}" | grep "* Toolchain:" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
-  local macx_version="$(grep "* Toolchain:" "${inputConfigFile}" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
+  local macx_version="$(grep ".* Toolchain:" "${inputConfigFile}" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
 
   echo "Adding MacOS compiler version to SBOM: ${macx_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MacOS Compiler" "${macx_version}"
