@@ -99,7 +99,7 @@ configureReproducibleBuildParameter() {
       if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]
       then
           # Use release date
-          addConfigureArg "--with-source-date=" "version" 
+          addConfigureArg "--with-source-date=" "version"
       else
           # Use BUILD_TIMESTAMP date
 
@@ -141,7 +141,7 @@ configureReproducibleBuildParameter() {
 configureReproducibleBuildDebugMapping() {
   # For Linux add -fdebug-prefix-map'ings for root and gcc include paths,
   # pointing to a common set of folders so that the debug binaries are deterministic:
-  # 
+  #
   #  root include : /usr/include
   #  gcc include  : /usr/local/gcc_include
   #  g++ include  : /usr/local/gxx_include
@@ -343,7 +343,7 @@ configureVersionStringParameter() {
     buildTimestamp="${buildTimestamp//Z/}"
   else
     # Get current ISO-8601 datetime
-    buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S") 
+    buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S")
   fi
   BUILD_CONFIG[BUILD_TIMESTAMP]="${buildTimestamp}"
 
@@ -543,7 +543,7 @@ configureFreetypeLocation() {
         esac
       fi
 
-      if [[ -n "$freetypeDir" ]]; then 
+      if [[ -n "$freetypeDir" ]]; then
         echo "setting freetype dir to ${freetypeDir}"
         addConfigureArg "--with-freetype=" "${freetypeDir}"
       fi
@@ -887,6 +887,16 @@ generateSBoM() {
     addGCC
   fi
 
+  # Add Windows Compiler Version To SBOM
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    addCompilerWindows
+  fi
+
+  # Add Mac Compiler Version To SBOM
+  if [ "$(uname)" == "Darwin" ]; then
+    addCompilerMacOS
+  fi
+
   addBootJDK
 
   # Add ALSA 3rd party
@@ -1110,6 +1120,24 @@ addGCC() {
 
    echo "Adding GCC version to SBOM: ${gcc_version}"
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "${gcc_version}"
+}
+
+addCompilerWindows() {
+  local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+
+  local msvs_version="$(cat "${inputConfigFile}" | grep -o -P '\* Toolchain:\s+\K[^"]+')"
+
+  echo "Adding Windows Compiler version to SBOM: ${msvs_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MS Windows Compiler" "${msvs_version}"
+}
+
+addCompilerMacOS() {
+  local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+
+  local macx_version="$(cat "${inputConfigFile}" | grep "* Toolchain:" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
+
+  echo "Adding MacOS compiler version to SBOM: ${macx_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MacOS Compiler" "${macx_version}"
 }
 
 addBootJDK() {
@@ -1720,7 +1748,7 @@ getFirstTagFromOpenJDKGitRepo() {
   if [ -z "$firstMatchingNameFromRepo" ]; then
     echo "WARNING: Failed to identify latest tag in the repository" 1>&2
     # If the ADOPT_BRANCH_SAFETY flag is set, we may be building from an alternate
-    # repository that doesn't have the same tags, so allow defaults. For a better 
+    # repository that doesn't have the same tags, so allow defaults. For a better
     # options see https://github.com/adoptium/temurin-build/issues/2671
     if [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "true" ]; then
       if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
