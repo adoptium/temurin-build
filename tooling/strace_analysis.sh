@@ -6,6 +6,9 @@
 # $4 is classpath
 # $5 is sbomJson
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../sbin/common/sbom.sh"
+
 declare -g javaHome
 declare -g classpath
 declare -g sbomJson
@@ -17,7 +20,13 @@ declare -g otherFiles=()
 # Arrays for package and non-package dependencies
 declare -g pkgs=()
 declare -g npkgs=()
+
+# Array to store packages, to make sure no duplicates are added to Sbom
 declare -g uniqueVersions=()
+
+declare -g isBinSymLink=false
+declare -g isLibSymLink=false
+declare -g isSbinSymLink=false
 
 # ignore-patterns for strace files
 declare -g ignores=(
@@ -72,10 +81,6 @@ checkArguments() {
 }
 
 checkSymLinks() {
-  isBinSymLink=false
-  isLibSymLink=false
-  isSbinSymLink=false
-
   # Check if /bin, /lib, /sbin are symlinks, as sometimes pkgs are installed
   # under the symlink folder, eg.in Ubuntu 20.04
   binDir=$(readlink -f "/bin")
@@ -105,6 +110,7 @@ configureSbom() {
 
 filterStraceFiles() {
   allFiles=()
+
   # Configure grep command to use ignore-patterns
   grep_command="grep -Ev '(${ignores[0]}"
   for ((i=1; i<${#ignores[@]}; i++)); do
@@ -188,8 +194,8 @@ processFiles() {
       else
           pkg="$(echo "$pkg" | cut -d" " -f1)"
           pkg=${pkg::-1}
-          #echo "file: $filePath pkg: $pkg version: $pkg"
           pkgString="pkg: $pkg version: $pkg"
+
           if ! echo "${pkgs[@]-}" | grep "temurin_${pkgString}_temurin" >/dev/null; then
               addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool package dependencies" "${pkg}" "${pkg}"
               pkgs+=("temurin_${pkgString}_temurin")
@@ -205,10 +211,11 @@ processUsrLocalFiles() {
 
         if [[ "$npkg" != "" ]]; then
             version=$(echo "$npkg" | awk '{print $NF}')
+
+            # Make sure to only add unique packages to Sbom
             if [[ ! " ${uniqueVersions[@]-} " =~ " ${npkg} " ]]; then
                 npkgs+=("${npkg}")
                 uniqueVersions+=("${npkg}")   # Marking package as processed
-                
                 addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool non-package dependencies" "${npkg}" "${version}"
             fi
         fi
@@ -216,20 +223,19 @@ processUsrLocalFiles() {
 }
 
 printPackages() {
-  echo -e "\nNon-Package Dependencies:"
-  printf '%s\n' "${npkgs[@]-}" | sort -u
+  printf "\nNon-Package Dependencies:\n"
+  printf '%s\n' "${npkgs[@]-}"
 
-  echo -e "\nPackage Dependencies:"
+  printf "\nPackage Dependencies:\n"
   for pkg in "${pkgs[@]}"; do
       trimPkg=${pkg/#temurin_/}
       trimPkg=${trimPkg%_temurin}
       echo $trimPkg
   done
-  echo -e "\n"
+  printf "\n"
 }
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../sbin/common/sbom.sh"
+
 checkArguments "$@"
 checkSymLinks
 configureSbom
