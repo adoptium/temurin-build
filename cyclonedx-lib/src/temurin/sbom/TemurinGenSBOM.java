@@ -335,7 +335,7 @@ public final class TemurinGenSBOM {
             bom.setFormulation(formulation);
         }
         Formula formula = new Formula();
-        // System.err.println("SXAECW: " + name);
+        System.err.println("SXAECW: " + name);
         formula.setBomRef(name);
         formulation.add(formula);
 
