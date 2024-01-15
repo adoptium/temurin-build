@@ -235,7 +235,6 @@ printPackages() {
   printf "\n"
 }
 
-
 checkArguments "$@"
 checkSymLinks
 configureSbom
