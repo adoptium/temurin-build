@@ -1001,7 +1001,6 @@ generateSBoM() {
     source "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/straceOutput" "$tempBldDir" "$javaHome" "$classpath" "$sbomJson"
   fi
 
-
   # Print SBOM location
   echo "CycloneDX SBOM has been created in ${sbomJson}"
 }
