@@ -31,27 +31,27 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../sbin/common/sbom.sh"
 
-declare -g javaHome
-declare -g classpath
-declare -g sbomJson
+javaHome=""
+classpath=""
+sbomJson=""
 
 # Arrays to store different types of strace output, to treat them different
-declare -g usrLocalFiles=()
-declare -g otherFiles=()
+ usrLocalFiles=()
+ otherFiles=()
 
 # Arrays for package and non-package dependencies
-declare -g pkgs=()
-declare -g npkgs=()
+ pkgs=()
+ npkgs=()
 
 # Array to store packages, to make sure no duplicates are added to Sbom
-declare -g uniqueVersions=()
+ uniqueVersions=()
 
-declare -g isBinSymLink=false
-declare -g isLibSymLink=false
-declare -g isSbinSymLink=false
+ isBinSymLink=false
+ isLibSymLink=false
+ isSbinSymLink=false
 
 # ignore-patterns for strace files
-declare -g ignores=(
+ ignores=(
     "\.java$"
     "\.d$"
     "\.o$"
