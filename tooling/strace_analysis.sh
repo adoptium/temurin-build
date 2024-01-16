@@ -1,4 +1,26 @@
 #!/bin/bash
+
+################################################################################
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+################################################################################
+
+################################################################################
+#
+# This shell script deals with analysing the output files produced by strace
+# and adds them to SBOM
+#
+################################################################################
+
 # Before executing this script, strace output files need to be generated
 # $1 is path of strace output folder
 # $2 is path of temurin-build folder, for exmaple: /home/user/Documents/temurin-build"
