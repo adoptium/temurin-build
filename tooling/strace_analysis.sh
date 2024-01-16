@@ -213,7 +213,7 @@ processUsrLocalFiles() {
             version=$(echo "$npkg" | awk '{print $NF}')
 
             # Make sure to only add unique packages to Sbom
-            if [[ ! " ${uniqueVersions[@]-} " =~ " ${npkg} " ]]; then
+            if [[ ! " ${uniqueVersions[*]-} " =~ " ${npkg} " ]]; then
                 npkgs+=("${npkg}")
                 uniqueVersions+=("${npkg}") # Marking package as processed
                 addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool non-package dependencies" "${npkg}" "${version}"
