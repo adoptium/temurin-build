@@ -119,7 +119,7 @@ filterStraceFiles() {
     grep_command+=")'"
 
     # filtering out relevant parts of strace output files
-    allFiles=($(find "$1" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | eval $grep_command | sort | uniq))
+    mapfile -t allFiles < <(find "$1" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | eval "$grep_command" | sort | uniq)
 
     # loop over all filtered files and store those with /usr/local in separate array
     for file in "${allFiles[@]}"; do
@@ -213,7 +213,7 @@ processUsrLocalFiles() {
             version=$(echo "$npkg" | awk '{print $NF}')
 
             # Make sure to only add unique packages to Sbom
-            if [[ ! " ${uniqueVersions[*]-} " =~ " ${npkg} " ]]; then
+            if [[ ! " ${uniqueVersions[*]-} " =~ ${npkg} ]]; then
                 npkgs+=("${npkg}")
                 uniqueVersions+=("${npkg}") # Marking package as processed
                 addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool non-package dependencies" "${npkg}" "${version}"
@@ -230,7 +230,7 @@ printPackages() {
     for pkg in "${pkgs[@]}"; do
         trimPkg=${pkg/#temurin_/}
         trimPkg=${trimPkg%_temurin}
-        echo $trimPkg
+        echo "$trimPkg"
     done
     printf "\n"
 }
