@@ -78,7 +78,7 @@ jobs:
         PLATFORM_CONFIG_LOCATION: AdoptOpenJDK/openjdk-build/master/build-farm/platform-specific-configurations
         BUILD_ARGS: --create-sbom
 
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
       name: Collect and Archive Artifacts
       with:
         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -100,7 +100,7 @@ jobs:
         vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
         vendor_testBranches: "${{ github.head_ref }}"
         vendor_testDirs: "/test/functional"
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
@@ -183,7 +183,7 @@ jobs:
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
       
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
       name: Collect and Archive Artifacts
       with:
         name: ${{matrix.version.name}}-${{matrix.os}}-${{matrix.variant}}
@@ -206,7 +206,7 @@ jobs:
         vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
         vendor_testBranches: "${{ github.head_ref }}"
         vendor_testDirs: "/test/functional"
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
@@ -378,7 +378,7 @@ jobs:
          FILENAME: OpenJDK.zip
          BUILD_ARGS: --create-sbom
 
-     - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+     - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
        name: Collect and Archive Artifacts
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -411,7 +411,7 @@ jobs:
          vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
          vendor_testBranches: "${{ github.head_ref }}"
          vendor_testDirs: "/test/functional"
-     - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+     - uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8 # v4.3.0
        name: Collect and Archive SmokeTest Results
        if: failure()
        with:
