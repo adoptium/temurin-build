@@ -880,7 +880,6 @@ generateSBoM() {
   # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
   # and that confuses things when cross-compiling an x64 mac build on arm mac.
   #   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
-  echo "DEBUG 1"
   if [[ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_.* ]]; then
     addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "x86_64"
   else
