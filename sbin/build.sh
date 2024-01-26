@@ -880,7 +880,7 @@ generateSBoM() {
   # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
   # and that confuses things when cross-compiling an x64 mac build on arm mac.
   #   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
-  if [ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_mac_.* ]; then
+  if [ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_.* ]; then
     addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "x86_64"
   else
     addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
@@ -1360,7 +1360,12 @@ cleanAndMoveArchiveFiles() {
     #   Windows: lib/static/windows-amd64/
     #
     osArch="${BUILD_CONFIG[OS_ARCHITECTURE]}"
-    if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "x86_64" ]; then
+    # TODO: Replace this "if" condition with its predecessor (commented out below) once 
+    # OS_ARCHITECTURE has been replaced by the new target architecture variable.
+    # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
+    # and that confuses things when cross-compiling an x64 mac build on arm mac.
+    # if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "x86_64" ]; then
+    if [ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_.* ]; then
       osArch="amd64"
     fi
     pushd ${staticLibsImagePath}
@@ -1371,16 +1376,7 @@ cleanAndMoveArchiveFiles() {
         ;;
       darwin)
         # On MacOSX the layout is: Contents/Home/lib/static/darwin-[target architecture]/
-        # TODO: Replace this "if" with its predecessor (commented out below) once 
-        # OS_ARCHITECTURE has been replaced by the new target architecture variable.
-        # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
-        # and that confuses things when cross-compiling an x64 mac build on arm mac.
-        # staticLibsDir="Contents/Home/lib/static/darwin-${osArch}"
-        if [ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_mac_.* ]; then
-          staticLibsDir="Contents/Home/lib/static/darwin-amd64"
-        else
-          staticLibsDir="Contents/Home/lib/static/darwin-${osArch}"
-        fi
+        staticLibsDir="Contents/Home/lib/static/darwin-${osArch}"
         ;;
       linux)
         # on Linux the layout is: lib/static/linux-amd64/glibc
