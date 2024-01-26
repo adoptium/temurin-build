@@ -882,7 +882,6 @@ generateSBoM() {
   #   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
   echo "DEBUG 1"
   if [[ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_.* ]]; then
-    echo "DEBUG 2"
     addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "x86_64"
   else
     echo "DEBUG 3"
