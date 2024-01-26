@@ -31,7 +31,6 @@ set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "DEBUG: Running Adam's build script copy."
 
 # shellcheck source=sbin/prepareWorkspace.sh
 source "$SCRIPT_DIR/prepareWorkspace.sh"
