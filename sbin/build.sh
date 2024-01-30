@@ -875,7 +875,16 @@ generateSBoM() {
   # Below add property to metadata
   # Add OS full version (Kernel is covered in the first field)
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS version" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
+  # TODO: Replace this "if" with its predecessor (commented out below) once 
+  # OS_ARCHITECTURE has been replaced by the new target architecture variable.
+  # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
+  # and that confuses things when cross-compiling an x64 mac build on arm mac.
+  #   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
+  if [[ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_.* ]]; then
+    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "x86_64"
+  else
+    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
+  fi
 
   # Set default SBOM formulation
   addSBOMFormulation "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX"
@@ -1354,6 +1363,16 @@ cleanAndMoveArchiveFiles() {
     if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "x86_64" ]; then
       osArch="amd64"
     fi
+
+    # TODO: Remove the "if" below once OS_ARCHITECTURE has been replaced.
+    # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
+    # and that confuses things when cross-compiling an x64 mac build on arm mac.
+    if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "arm64" ]; then
+      if [[ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_.* ]]; then
+        osArch="amd64"
+      fi
+    fi
+
     pushd ${staticLibsImagePath}
       case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
       *cygwin*)
@@ -1361,7 +1380,7 @@ cleanAndMoveArchiveFiles() {
         staticLibsDir="lib/static/windows-${osArch}"
         ;;
       darwin)
-        # on MacOSX the layout is: Contents/Home/lib/static/darwin-amd64/
+        # On MacOSX the layout is: Contents/Home/lib/static/darwin-[target architecture]/
         staticLibsDir="Contents/Home/lib/static/darwin-${osArch}"
         ;;
       linux)
