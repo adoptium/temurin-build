@@ -142,8 +142,10 @@ then
   if [ "${JAVA_FEATURE_VERSION}" == "11" ] && [ "${VARIANT}" == "openj9" ]; then
     # OpenJ9 only supports building jdk-11 with jdk-11
     JDK_BOOT_VERSION="11"
-  fi
-  if [ "${JAVA_FEATURE_VERSION}" == "17" ]; then
+  elif [ "${JAVA_FEATURE_VERSION}" == "11" ] && [ "${VARIANT}" == "hotspot" ] && [ "${ARCHITECTURE}" == "riscv64" ]; then
+    # RISC-V isn't supported on (and isn't planned to support) anything before JDK 11
+    JDK_BOOT_VERSION="11"
+  elif [ "${JAVA_FEATURE_VERSION}" == "17" ]; then
     # To support reproducible-builds the jar/jmod --date option is required
     # which is only available in jdk-17 and from jdk-19 so we cannot bootstrap with JDK16
     JDK_BOOT_VERSION="17"
