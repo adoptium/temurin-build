@@ -319,15 +319,6 @@ checkingAndDownloadingAlsa() {
     curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
     curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
 
-    ## This affects Alpine docker images and also evaluation pipelines
-    if [ "$(pwd | wc -c)" -gt 83 ]; then
-      # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
-      # Alpine also cannot create ~/.gpg-temp within a docker context
-      export GNUPGHOME="/tmp/.gpg-temp.$$"
-    else
-      export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
-    fi
-
     echo "GNUPGHOME=$GNUPGHOME"
     mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
     # Should we clear this directory up after checking?
