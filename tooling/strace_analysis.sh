@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disbale=SC1091
+# shellcheck disable=SC1091
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,22 +36,22 @@ classpath=""
 sbomJson=""
 
 # Arrays to store different types of strace output, to treat them different
- usrLocalFiles=()
- otherFiles=()
+usrLocalFiles=()
+otherFiles=()
 
 # Arrays for package and non-package dependencies
- pkgs=()
- npkgs=()
+pkgs=()
+npkgs=()
 
 # Array to store packages, to make sure no duplicates are added to Sbom
- uniqueVersions=()
+uniqueVersions=()
 
- isBinSymLink=false
- isLibSymLink=false
- isSbinSymLink=false
+isBinSymLink=false
+isLibSymLink=false
+isSbinSymLink=false
 
 # ignore-patterns for strace files
- ignores=(
+ignores=(
     "\.java$"
     "\.d$"
     "\.o$"
@@ -142,9 +142,12 @@ filterStraceFiles() {
 
     # filtering out relevant parts of strace output files
     mapfile -t allFiles < <(find "$1" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | eval "$grep_command" | sort | uniq)
+    #mapfile -t allFiles < <(find "$1" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" sort | uniq)
+
 
     # loop over all filtered files and store those with /usr/local in separate array
     for file in "${allFiles[@]}"; do
+        echo -e "FILE: $file \n"
         if [[ $file == "/usr/local/"* ]]; then
             usrLocalFiles+=("$file")
             echo "UsrLocalFile: $file"
@@ -175,8 +178,8 @@ processFiles() {
 
         filePath="$(readlink -f "$file")"
         pkg=$(rpm -qf "$filePath")
-
         rc=$?
+
         if [[ "$rc" != "0" ]]; then
             # bin, lib, sbin pkgs may be installed under the root symlink
             if [[ "$isBinSymLink" == "true" ]] && [[ $filePath == /usr/bin* ]]; then
@@ -230,6 +233,8 @@ processUsrLocalFiles() {
     # loop over all non-package dependencies and try to get the version. If version is not empty, add to array
     for file in "${usrLocalFiles[@]-}"; do
         npkg=$("$file" --version 2>/dev/null | head -n 1)
+
+        echo -e "\n UsrLocalFile Package: $file ; $npkg"
 
         if [[ "$npkg" != "" ]]; then
             version=$(echo "$npkg" | awk '{print $NF}')
