@@ -145,17 +145,6 @@ filterStraceFiles() {
 
     for file in "${allFiles[@]}"; do
         echo "$file"
-    done
-}
-
-printNumberOfAllProcessedFiles() {
-    # Calculate and print number of all processed strace output files
-    totalLength=$((${#allFiles[@]}))
-    if [ $totalLength -ne 0 ]; then
-        printf '\nNumber of all processed strace output files: %s\n' "$totalLength"
-    else
-        printf "\nNo strace output files available\n"
-        exit 1
     fi
 }
 
