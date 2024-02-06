@@ -27,6 +27,16 @@ else
   export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
 fi
 
+## This affects Alpine docker images and also evaluation pipelines
+if [ "$(pwd | wc -c)" -gt 83 ]; then
+  # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
+  # Alpine also cannot create ~/.gpg-temp within a docker context
+  GNUPGHOME="$(mktemp --directory /tmp/.gpg-temp.XXXXX)"
+else
+  GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+fi
+export GNUPGHOME
+
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
 if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
@@ -136,10 +146,6 @@ function downloadBootJDK()
 {
   ARCH=$1
   VER=$2
-  export GNUPGHOME=$PWD/.gnupg-temp
-  if [ ! -d "$GNUPGHOME" ]; then
-    mkdir -m 700 "$GNUPGHOME"
-  fi
   export downloadArch
   case "$ARCH" in
      "riscv64") downloadArch="$NATIVE_API_ARCH";;
