@@ -144,7 +144,6 @@ filterStraceFiles() {
     mapfile -t allFiles < <(find "$1" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | eval "$grep_command" | sort | uniq)
     #mapfile -t allFiles < <(find "$1" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" sort | uniq)
 
-
     # loop over all filtered files and store those with /usr/local in separate array
     for file in "${allFiles[@]}"; do
         echo -e "FILE: $file \n"
