@@ -43,9 +43,10 @@ if [ "$(pwd | wc -c)" -gt 83 ]; then
   GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
 else
   GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
-  mkdir -p "$GNUPGHOME"
 fi
-chmod og-rwx "$GNUPGHOME"
+if [ ! -d "$GNUPGHOME" ]; then
+    mkdir -m 700 "$GNUPGHOME"
+fi
 export GNUPGHOME
 
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
