@@ -34,6 +34,7 @@ if [ "$(pwd | wc -c)" -gt 83 ]; then
   GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXX)"
 else
   GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+  mkdir -p "$GNUPGHOME"
 fi
 export GNUPGHOME
 
