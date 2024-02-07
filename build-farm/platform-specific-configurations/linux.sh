@@ -31,9 +31,12 @@ fi
 if [ "$(pwd | wc -c)" -gt 83 ]; then
   # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
   # Alpine also cannot create ~/.gpg-temp within a docker context
-  GNUPGHOME="$(mktemp --directory /tmp/.gpg-temp.XXXXX)"
+  GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
 else
   GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+fi
+if [ ! -d "$GNUPGHOME" ]; then
+    mkdir -m 700 "$GNUPGHOME"
 fi
 export GNUPGHOME
 
