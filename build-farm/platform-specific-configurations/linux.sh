@@ -36,6 +36,7 @@ else
   GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
   mkdir -p "$GNUPGHOME"
 fi
+chmod og-rwx "$GNUPGHOME"
 export GNUPGHOME
 
 NATIVE_API_ARCH=$(uname -m)

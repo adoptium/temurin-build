@@ -45,6 +45,7 @@ else
   GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
   mkdir -p "$GNUPGHOME"
 fi
+chmod og-rwx "$GNUPGHOME"
 export GNUPGHOME
 
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
