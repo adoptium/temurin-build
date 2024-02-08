@@ -251,6 +251,9 @@ echo "$MAC_ROSETTA_PREFIX $PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clea
 # These will be converted back into speech marks shortly before we use them, in build.sh.
 CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM//\"/temporary_speech_mark_placeholder}"
 
+echo "SXAEC: df -k"
+df -k 
+
 # shellcheck disable=SC2086
 bash -c "$MAC_ROSETTA_PREFIX $PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args \"${CONFIGURE_ARGS_FOR_ANY_PLATFORM}\" --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"
 
@@ -258,3 +261,5 @@ if [ -d "${WORKSPACE}" ]; then
   SPACEUSED=$(du -sk "$WORKSPACE")
   echo "Total disk space in Kb consumed by build process: $SPACEUSED"
 fi
+echo "SXAEC: df -k"
+df -k
