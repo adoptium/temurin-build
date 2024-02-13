@@ -875,7 +875,7 @@ generateSBoM() {
   # Below add property to metadata
   # Add OS full version (Kernel is covered in the first field)
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS version" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
-  # TODO: Replace this "if" with its predecessor (commented out below) once 
+  # TODO: Replace this "if" with its predecessor (commented out below) once
   # OS_ARCHITECTURE has been replaced by the new target architecture variable.
   # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
   # and that confuses things when cross-compiling an x64 mac build on arm mac.
@@ -1138,6 +1138,7 @@ addCompilerWindows() {
   local msvs_version="$(grep -o -P '\* Toolchain:\s+\K[^"]+' "${inputConfigFile}")"
   local msvs_c_version="$(grep -o -P '\* C Compiler:\s+\K[^"]+' "${inputConfigFile}" | awk '{print $2}')"
   local msvs_cpp_version="$(grep -o -P '\* C\+\+ Compiler:\s+\K[^"]+' "${inputConfigFile}" | awk '{print $2}')"
+  local msvs_winsdk_path="$(grep "checking for UCRT DLL dir" "${inputConfigFile}" | awk '{sub(/.*\.\.\./, "", $0); print $0}')"
 
   echo "Adding Windows Compiler versions to SBOM: ${msvs_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS Windows Compiler Version" "${msvs_version}"
@@ -1145,6 +1146,8 @@ addCompilerWindows() {
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C Compiler Version" "${msvs_c_version}"
   echo "Adding Windows C++ Compiler version to SBOM: ${msvs_cpp_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C++ Compiler Version" "${msvs_cpp_version}"
+  echo "Adding Windows SDK Path to SBOM: ${msvs_winsdk_path}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS Windows SDK Path" "${msvs_winsdk_path}"
 }
 
 addCompilerMacOS() {
