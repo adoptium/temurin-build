@@ -324,10 +324,15 @@ checkingAndDownloadingAlsa() {
         # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
         # Alpine also cannot create ~/.gpg-temp within a docker context
         GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
+    else
+        GNUPGHOME="${BUILD_CONFIG[WORKSPACE_DIR]:-$PWD}/.gpg-temp"
     fi
+    if [ ! -d "$GNUPGHOME" ]; then
+        mkdir -m 700 "$GNUPGHOME"
+    fi
+    export GNUPGHOME
 
     echo "GNUPGHOME=$GNUPGHOME"
-    mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
     # Should we clear this directory up after checking?
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now
