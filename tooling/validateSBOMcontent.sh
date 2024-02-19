@@ -24,7 +24,8 @@ EXPECTED_GCC=""
 EXPECTED_ALSA=N.A
 #EXPECTED_FREETYPE=N.A # https://github.com/adoptium/temurin-build/issues/3493
 #EXPECTED_FREETYPE=https://github.com/freetype/freetype/commit/86bc8a95056c97a810986434a3f268cbe67f2902
-EXPECTED_FREETYPE=Unknown
+if 
+EXPECTED_FREETYPE=2.8.0
 if echo "$SBOMFILE" | grep _solaris_; then
   #EXPECTED_FREETYPE=N.A
   EXPECTED_COMPILER="solstudio (Oracle Solaris Studio)"
@@ -45,7 +46,7 @@ elif echo "$SBOMFILE" | grep _linux_; then
   [ "${MAJORVERSION}" = "8" ] && EXPECTED_GCC=7.5.0
   [ "${MAJORVERSION}" = "11" ] && EXPECTED_GCC=7.5.0
   [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
-  [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_GCC=11.2.0
+  [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_GCC=11.2.0 && EXPECTED_FREETYPE=UNknown
   EXPECTED_ALSA=1.1.6
   #EXPECTED_FREETYPE=N.A
 #elif echo $SBOMFILE | grep _mac_; then
