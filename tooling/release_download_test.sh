@@ -200,7 +200,7 @@ verify_gpg_signatures() {
   for A in OpenJDK*.tar.gz OpenJDK*.zip *.msi *.pkg *sbom*[0-9].json; do
     print_verbose "IVT : Verifying signature of file ${A}"
 
-    if ! gpg -q --verify "${A}.sig" "${A}"; then
+    if ! gpg -q --verify "${A}.sig" "${A}" > /dev/null; then
       print_error "GPG signature verification failed for ${A}"
       RC=2
     fi
@@ -227,7 +227,6 @@ verify_valid_archives() {
 
   for A in OpenJDK*.tar.gz; do
     print_verbose "IVT : Counting files in tarball ${A}"
-    ls -l "${A}"
     if ! tar tfz "${A}" > /dev/null; then
       print_error "Failed to verify that ${A} can be extracted"
       RC=4
