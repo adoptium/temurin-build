@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 [ "$VERBOSE" = "true" ] && set -x
 if [ $# -lt 3 ]; then
   echo "Usage: $0 file.json majorversion fullversion"
@@ -14,7 +15,6 @@ GCC=$(jq '.metadata.tools[] | select(.name|test("GCC")) | .version'             
 BOOTJDK=$(jq '.metadata.tools[] | select(.name|test("BOOTJDK")) | .version'       "$1"  | tr -d \")
 ALSA=$(jq '.metadata.tools[] | select(.name|test("ALSA")) | .version'             "$1" | tr -d \" | sed -e 's/^.*alsa-lib-//' -e 's/\.tar.bz2//')
 FREETYPE=$(jq '.metadata.tools[] | select(.name|test("FreeType")) | .version'     "$1"  | tr -d \")
-FREEMARKER=$(jq '.metadata.tools[] | select(.name|test("FreeMarker")) | .version' "$1"  | tr -d \")
 COMPILER=$(jq '.components[0].properties[] | select(.name|test("Build Tools Summary")).value' "$SBOMFILE" | sed -e 's/^.*Toolchain: //g' -e 's/\ *\*.*//g')
 
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
@@ -24,6 +24,7 @@ EXPECTED_GCC=""
 EXPECTED_ALSA=N.A
 #EXPECTED_FREETYPE=N.A # https://github.com/adoptium/temurin-build/issues/3493
 #EXPECTED_FREETYPE=https://github.com/freetype/freetype/commit/86bc8a95056c97a810986434a3f268cbe67f2902
+EXPECTED_FREETYPE=Unknown
 if echo "$SBOMFILE" | grep _solaris_; then
   #EXPECTED_FREETYPE=N.A
   EXPECTED_COMPILER="solstudio (Oracle Solaris Studio)"
@@ -77,7 +78,6 @@ elif echo "$SBOMFILE" | grep _mac_; then
   fi
 fi
 
-EXPECTED_FREEMARKER=N.A
 RC=0
 if echo "$SBOMFILE" | grep 'linux_'; then
 	[ "${GLIBC}"      != "$EXPECTED_GLIBC"   ] && echo "ERROR: GLIBC version not ${EXPECTED_GLIBC} (SBOM has ${GLIBC})" && RC=1
@@ -90,15 +90,15 @@ echo "BOOTJDK is ${BOOTJDK}"
 #[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
 # shellcheck disable=SC2086
-[ -n "$(echo $FREETYPE | tr -d '[0-9]\.')" ] && echo "ERROR: FreeType version not a valid number (SBOM has ${FREETYPE})"   && RC=1
+[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
+
 echo "FREETYPE is ${FREETYPE}"
-[ "${FREEMARKER}" != "$EXPECTED_FREEMARKER"  ] && echo "ERROR: Freemarker version not ${EXPECTED_FREEMARKER} (SBOM has ${FREEMARKER})"   && RC=1
 # shellcheck disable=SC3037
 echo -n "Checking for JDK source SHA validity: "
-GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \")
+if GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \")
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$( echo "$GITSHA" | cut -d/ -f7)
-if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
+if -z $(git ls-remote "${GITREPO}" | grep "${GITSHA}"); then
   echo "ERROR: git sha of source repo not found"
   RC=1
 fi
@@ -109,7 +109,7 @@ GITSHA=$(jq '.components[].properties[] | select(.name|test("Temurin Build Ref")
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$(echo  "$GITSHA" | cut -d/ -f7)
 echo "Checking for temurin-build SHA $GITSHA"
-if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
+if -z $(git ls-remote "${GITREPO}" | grep "${GITSHA}"); then
    echo "WARNING: temurin-build SHA check failed. This can happen if it was not a tagged level"
    if echo "$1" | grep '[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]' 2>/dev/null; then
      echo "Ignoring return code as filename looks like a nightly"
