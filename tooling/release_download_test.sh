@@ -200,7 +200,7 @@ verify_gpg_signatures() {
   for A in OpenJDK*.tar.gz OpenJDK*.zip *.msi *.pkg *sbom*[0-9].json; do
     print_verbose "IVT : Verifying signature of file ${A}"
 
-    if ! gpg -q --verify "${A}.sig" "${A}" > /dev/null; then
+    if ! gpg -q --verify "${A}.sig" "${A}" 2> /dev/null; then
       print_error "GPG signature verification failed for ${A}"
       RC=2
     fi
