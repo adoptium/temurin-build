@@ -1,5 +1,5 @@
 #!/bin/sh
-set -x
+echo SXAEC: VERBOSE=${VERBOSE}
 [ "$VERBOSE" = "true" ] && set -x
 if [ $# -lt 3 ]; then
   echo "Usage: $0 file.json majorversion fullversion"
@@ -95,7 +95,7 @@ echo "BOOTJDK is ${BOOTJDK}"
 echo "FREETYPE is ${FREETYPE}"
 # shellcheck disable=SC3037
 echo -n "Checking for JDK source SHA validity: "
-if GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \")
+GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \" | uniq)
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$( echo "$GITSHA" | cut -d/ -f7)
 if -z $(git ls-remote "${GITREPO}" | grep "${GITSHA}"); then
@@ -105,11 +105,12 @@ fi
 
 # shellcheck disable=SC3037
 echo -n "Checking for temurin-build SHA validity: "
-GITSHA=$(jq '.components[].properties[] | select(.name|test("Temurin Build Ref")) | .value' "$1" | tr -d \")
+GITSHA=$(jq '.components[].properties[] | select(.name|test("Temurin Build Ref")) | .value' "$1" | tr -d \" | uniq)
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$(echo  "$GITSHA" | cut -d/ -f7)
-echo "Checking for temurin-build SHA $GITSHA"
-if -z $(git ls-remote "${GITREPO}" | grep "${GITSHA}"); then
+echo "Checking for temurin-build SHA $GITSHA in ${GITREPO}"
+
+if [ -z "$(git ls-remote ${GITREPO} | grep ${GITSHA})" ]; then
    echo "WARNING: temurin-build SHA check failed. This can happen if it was not a tagged level"
    if echo "$1" | grep '[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]' 2>/dev/null; then
      echo "Ignoring return code as filename looks like a nightly"
