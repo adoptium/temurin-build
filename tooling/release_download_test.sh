@@ -156,11 +156,13 @@ download_release_files() {
 
   # Parse the releases list for the one we want and download everything in it
   # shellcheck disable=SC2013
+  echo `date +%T` : Starting downloads ...
   for url in $(grep "${filter}" "${jdk_releases}" | awk -F'"' '/browser_download_url/{print$4}'); do
     # shellcheck disable=SC2046
     print_verbose "IVT : Downloading $(basename "$url")"
     curl -LORsS -C - "$url"
   done
+  echo `date +%T` : Finished downloads ...
 }
 
 ########################################################################################################################
@@ -230,9 +232,9 @@ verify_valid_archives() {
       print_error "Failed to verify that ${A} can be extracted"
       RC=4
     fi
-    # NOTE: 40 chosen because the static-libs is in the 40s - maybe switch for different tarballs in the future?
-    if [ "$(tar tfz "${A}" | wc -l)" -lt 40 ]; then
-      print_error "Less than 40 files in ${A} - that does not seem correct"
+    # NOTE: 38 chosen because the static-libs is 38 for JDK21/AIX - maybe switch for different tarballs in the future?
+    if [ "$(tar tfz "${A}" | wc -l)" -lt 38 ]; then
+      print_error "Less than 38 files in ${A} - that does not seem correct"
       RC=4
     fi
   done
