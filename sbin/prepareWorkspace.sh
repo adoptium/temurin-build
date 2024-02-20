@@ -324,6 +324,9 @@ checkingAndDownloadingAlsa() {
         # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
         # Alpine also cannot create ~/.gpg-temp within a docker context
         GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
+    elif [ "${BUILD_CONFIG[TARGET_OS]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] && [ "$(pwd | wc -c)" -gt 83 ]; then
+        # linux riscv64 also has gpg pathlength issue
+        GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
     else
         GNUPGHOME="${BUILD_CONFIG[WORKSPACE_DIR]:-$PWD}/.gpg-temp"
     fi
