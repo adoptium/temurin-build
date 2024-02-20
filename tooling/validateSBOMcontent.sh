@@ -106,7 +106,7 @@ echo -n "Checking for JDK source SHA validity: "
 GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \" | uniq)
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$( echo "$GITSHA" | cut -d/ -f7)
-if [ -z "$(git ls-remote ${GITREPO} | grep ${GITSHA})" ]; then
+if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
   echo "ERROR: git sha of source repo not found"
   RC=1
 fi
@@ -118,7 +118,7 @@ GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$(echo  "$GITSHA" | cut -d/ -f7)
 echo "Checking for temurin-build SHA $GITSHA in ${GITREPO}"
 
-if [ -z "$(git ls-remote ${GITREPO} | grep ${GITSHA})" ]; then
+if ! git ls-remote "${GITREPO}" | grep "2D${GITSHA}" ]; then
    echo "WARNING: temurin-build SHA check failed. This can happen if it was not a tagged level"
    if echo "$1" | grep '[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]' 2>/dev/null; then
      echo "Ignoring return code as filename looks like a nightly"
