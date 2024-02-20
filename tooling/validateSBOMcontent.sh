@@ -63,23 +63,23 @@ elif echo "$SBOMFILE" | grep _x64_windows_; then
     EXPECTED_FREETYPE=Unknown
   fi
 elif echo "$SBOMFILE" | grep _x86-32_windows_; then
-  EXPECTED_FREETYPE=2.5.3
+  EXPECTED_FREETYPE=Unknown
   if [ "${MAJORVERSION}" = "8"  ]; then
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2013)"
+    EXPECTED_FREETYPE=2.5.3
   elif [ "${MAJORVERSION}" = "11" ]; then
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2017)"
   else # JDK 11 and 17
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2019)"
-    EXPECTED_FREETYPE=Unknown
   fi
 elif echo "$SBOMFILE" | grep _mac_; then
   # NOTE: mac/x64 native builds >=11 were using "clang (clang/LLVM from Xcode 10.3)"
   EXPECTED_FREETYPE=Unknown
   EXPECTED_COMPILER="clang (clang/LLVM from Xcode 15.0.1)"
   # shellcheck disable=SC2166
-  if [ "${MAJORVERSION}" = "8" -o "${MAJORVERSION}" = "11" ] && echo "$SBOMFILE" | grep _x64_; then
+  if [ "${MAJORVERSION}" = "8" ] && echo "$SBOMFILE" | grep _x64_; then
     EXPECTED_COMPILER="clang (clang/LLVM)"
-    [ "${MAJORVERSION}" = "8" ] && EXPECTED_FREETYPE=2.9.1
+    EXPECTED_FREETYPE=2.9.1
   fi
 fi
 
