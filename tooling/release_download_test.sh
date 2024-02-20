@@ -156,13 +156,13 @@ download_release_files() {
 
   # Parse the releases list for the one we want and download everything in it
   # shellcheck disable=SC2013
-  echo $(date +%T) : Starting downloads ...
-  grep "${filter}" "${jdk_releases}" | awk -F'"' '/browser_download_url/{print$4}' | while read url; do
+  echo "$(date +%T) : Starting downloads ..."
+  grep "${filter}" "${jdk_releases}" | awk -F'"' '/browser_download_url/{print$4}' | while read -r url; do
     # shellcheck disable=SC2046
     print_verbose "IVT : Downloading $(basename "$url")"
     curl -LORsS -C - "$url"
   done
-  echo $(date +%T) : Finished downloads ...
+  echo "$(date +%T) : Finished downloads ..."
 }
 
 ########################################################################################################################
