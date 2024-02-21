@@ -1050,7 +1050,7 @@ addFreeTypeVersionInfo() {
    elif [ "${FREETYPE_TO_USE}" == "bundled" ]; then
       # jdk-11+ supports "bundled"
       # freetype.h location for jdk-11+
-      local include="src/java.desktop/share/native/libfreetype/include/freetype/freetype.h"
+      local include="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/src/java.desktop/share/native/libfreetype/include/freetype/freetype.h"
       echo "Checking for FreeType include ${include}"
       if [[ -f "${include}" ]]; then
           echo "Found ${include}"
