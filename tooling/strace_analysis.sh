@@ -36,12 +36,12 @@ classpath=""
 sbomJson=""
 
 # Arrays to store different types of strace output, to treat them different
-usrLocalFiles=()
-otherFiles=()
+nonPkgFiles=()
+allFiles=()
 
 # Arrays for package and non-package dependencies
 pkgs=()
-npkgs=()
+nonpkgs=()
 
 # Array to store packages, to make sure no duplicates are added to Sbom
 uniqueVersions=()
@@ -131,8 +131,6 @@ configureSbom() {
 }
 
 filterStraceFiles() {
-    allFiles=()
-
     # Configure grep command to use ignore-patterns
     grep_command="grep -Ev '(${ignores[0]}"
     for ((i = 1; i < ${#ignores[@]}; i++)); do
@@ -142,27 +140,16 @@ filterStraceFiles() {
 
     # filtering out relevant parts of strace output files
     mapfile -t allFiles < <(find "$1" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | eval "$grep_command" | sort | uniq)
-    #mapfile -t allFiles < <(find "$1" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" sort | uniq)
+    echo "find \"$1\" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'\"' -f2 | grep \"^/\" | eval \"$grep_command\" | sort | uniq"
 
-    # loop over all filtered files and store those with /usr/local in separate array
     for file in "${allFiles[@]}"; do
-        echo -e "FILE: $file \n"
-        if [[ $file == "/usr/local/"* ]]; then
-            usrLocalFiles+=("$file")
-            echo "UsrLocalFile: $file"
-        else
-            otherFiles+=("$file")
-            echo "No usrLocalFile: $file"
-        fi
+        echo "$file"
     done
-
-    echo "Number of /usr/local files: ${#usrLocalFiles[@]}"
-    echo "Number of other files: ${#otherFiles[@]}"
 }
 
 printNumberOfAllProcessedFiles() {
     # Calculate and print number of all processed strace output files
-    totalLength=$((${#usrLocalFiles[@]} + ${#otherFiles[@]}))
+    totalLength=$((${#allFiles[@]}))
     if [ $totalLength -ne 0 ]; then
         printf '\nNumber of all processed strace output files: %s\n' "$totalLength"
     else
@@ -172,8 +159,8 @@ printNumberOfAllProcessedFiles() {
 }
 
 processFiles() {
-    for file in "${otherFiles[@]}"; do
-        echo "Processing: $file"
+    for file in "${allFiles[@]}"; do
+        echo -e "\nProcessing: $file"
 
         filePath="$(readlink -f "$file")"
         pkg=$(rpm -qf "$filePath")
@@ -204,6 +191,7 @@ processFiles() {
         ignoreFile=false
         for ignoreFile in "${ignores[@]}"; do
             if [[ "$filePath" =~ $ignoreFile ]]; then
+                echo "FIle IGNORED: $file: $filePath"
                 ignoreFile=true
                 break
             fi
@@ -213,8 +201,8 @@ processFiles() {
         fi
 
         if [[ "$rc" != "0" ]]; then
-            #echo "no pkg: $filePath"
-            usrLocalFiles+=("$filePath")
+            echo "ERROR: no pkg for: $file: $filePath"
+            nonPkgFiles+=("$filePath")
         else
             pkg="$(echo "$pkg" | cut -d" " -f1)"
             pkg=${pkg::-1}
@@ -223,36 +211,60 @@ processFiles() {
             if ! echo "${pkgs[@]-}" | grep "temurin_${pkgString}_temurin" >/dev/null; then
                 addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool package dependencies" "${pkg}" "${pkg}"
                 pkgs+=("temurin_${pkgString}_temurin")
+                echo "Added to SBOM: $pkgString"
+            else
+                echo "Already Added: $file: $pkgString"
             fi
         fi
     done
 }
 
-processUsrLocalFiles() {
-    # loop over all non-package dependencies and try to get the version. If version is not empty, add to array
-    for file in "${usrLocalFiles[@]-}"; do
-        npkg=$("$file" --version 2>/dev/null | head -n 1)
+# TODO: Process Non Package Files
+processNonPkgFiles() {
+    for file in "${nonPkgFiles[@]-}"; do
+        echo -e "\nProcess file with ERROR: $file"
 
-        echo -e "\n UsrLocalFile Package: $file ; $npkg"
+        # We need to try and find the program's version using possible --version or -version
+        version=$("$file" --version 2>/dev/null | head -n 1)
 
-        if [[ "$npkg" != "" ]]; then
-            version=$(echo "$npkg" | awk '{print $NF}')
+        #if [[ "$version" == "" ]]; then
+        #    version=$("$file" -version dummy 2>/dev/null | head -n 1)
+        #fi
+        #if [[ "$version" == "" ]]; then
+        #    version=$("$file" --version dummy 2>&1 | grep -v "[Pp]ermission denied" | head -n 1)
+        #fi
+        #if [[ "$version" == "" ]]; then
+        #    version=$("$file" -version dummy 2>&1 | grep -v "[Pp]ermission denied" | head -n 1)
+        #fi
+        if [[ "$version" == "" ]]; then
+            version=$("$file" -version dummy 2>/dev/null | head -n 1)
+        fi
+        if [[ "$version" == *"Is a directory"* ]]; then
+            version=""
+        fi
+        echo "Version: $version"
 
-            # Make sure to only add unique packages to Sbom
-            if [[ ! " ${uniqueVersions[*]-} " =~ ${npkg} ]]; then
-                npkgs+=("${npkg}")
-                uniqueVersions+=("${npkg}") # Marking package as processed
-                addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool non-package dependencies" "${npkg}" "${version}"
+        if [[ "$version" != "" ]]; then
+            # Make sure to only add unique packages to SBOM
+            if [[ ! " ${uniqueVersions[*]-} " =~ ${version} ]]; then
+                addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool package dependencies" "${version}" "${version}"
+                nonpkgs+=("${version}")
+                uniqueVersions+=("${version}")
+                echo "Added to SBOM: $version"
+            else
+                echo "Already Added: $version"
             fi
+        else
+            echo "ERROR: strace analysis of non-package file ${file} cannot identify its version info"
         fi
     done
 }
 
 printPackages() {
-    printf "\nNon-Package Dependencies:\n"
-    printf '%s\n' "${npkgs[@]-}"
+    echo -e "\nNon-Package Dependencies:"
+    printf '%s\n' "${nonpkgs[@]-}"
 
-    printf "\nPackage Dependencies:\n"
+    echo -e "\nPackage Dependencies:"
     for pkg in "${pkgs[@]}"; do
         trimPkg=${pkg/#temurin_/}
         trimPkg=${trimPkg%_temurin}
@@ -265,7 +277,7 @@ checkArguments "$@"
 checkSymLinks
 configureSbom
 filterStraceFiles "$@"
-processFiles
-processUsrLocalFiles
 printNumberOfAllProcessedFiles
+processFiles
+processNonPkgFiles
 printPackages
