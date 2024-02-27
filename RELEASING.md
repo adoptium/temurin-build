@@ -92,7 +92,7 @@ Affected repositories:
 
 #### Release pipelines and jobs need to be re-generated with new tags by the Release Champion:
 
-- run [release-build-pipeline-generator](https://ci.adoptium.net/job/build-scripts/job/utils/job/release-build-pipeline-generator) with correct value:
+- run [release-pipeline-generator](https://ci.adoptium.net/job/build-scripts/job/utils/job/release-pipeline-generator) with correct value:
   1. `releaseTag` is the branch on `ci-jenkins-pipeline` and `temurin-build` git repo.
   2. `helperTag` is the branch on `jenkins-helper` repo.
   3. `aqaTag` is the branch on `aqa-tests` repo, in form of `vX.Y.Z-release` and usually the [latest stable release](https://github.com/adoptium/aqa-tests/releases)
@@ -315,11 +315,12 @@ Once the PRs to change those files have been merged, the [adoptium-packages-linu
 
 4. **[Docker Hub]** The information on updating the Adoptium official dockerhub repository is at <https://github.com/adoptium/containers#maintenance-of-dockerfiles> at the moment you cannot do this until all Linux architectures and windows64 are published for the appropriate version
 
-5. Publicise the Temurin release
+5. Once everything has been published to GitHub, use the [EclipseMirror](https://ci.eclipse.org/temurin-compliance/job/EclipseMirror/) job to mirror the artifacts to our Eclipse server for backup purposes. Note that this will need to be done by a team member in the temurin-compliance project (Run once for each of the releases)
+
+6. Publicise the Temurin release:
 
 - Via slack on the Adoptium #release channel
 - Find someone with the appropriate authority (Carmen, George, Martijn, Shelley, Stewart, Tim) to post a tweet about the new release from the Adoptium twitter account
-- Also run the EclipseMirror job in the Eclipse jenkins instance to create a backup of the release from GitHub onto the Eclipse servers.
 
 ### Post Release Tasks
 

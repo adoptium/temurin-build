@@ -112,7 +112,7 @@ p="1"
 s="0"
 storeInArrays "${r}" "${m}" "${p}" "${s}"
 
-r="Build.*\sign\_.*.\#[0-9].completed\:.(FAILURE|ABORTED)"
+r="Build.*sign\_.*.\#[0-9].completed\:.(FAILURE|ABORTED)"
 m="Signing subjob failed."
 p="1"
 s="0"

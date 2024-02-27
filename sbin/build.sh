@@ -141,7 +141,7 @@ configureReproducibleBuildParameter() {
 configureReproducibleBuildDebugMapping() {
   # For Linux add -fdebug-prefix-map'ings for root and gcc include paths,
   # pointing to a common set of folders so that the debug binaries are deterministic:
-  # 
+  #
   #  root include : /usr/include
   #  gcc include  : /usr/local/gcc_include
   #  g++ include  : /usr/local/gxx_include
@@ -343,7 +343,7 @@ configureVersionStringParameter() {
     buildTimestamp="${buildTimestamp//Z/}"
   else
     # Get current ISO-8601 datetime
-    buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S") 
+    buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S")
   fi
   BUILD_CONFIG[BUILD_TIMESTAMP]="${buildTimestamp}"
 
@@ -543,7 +543,7 @@ configureFreetypeLocation() {
         esac
       fi
 
-      if [[ -n "$freetypeDir" ]]; then 
+      if [[ -n "$freetypeDir" ]]; then
         echo "setting freetype dir to ${freetypeDir}"
         addConfigureArg "--with-freetype=" "${freetypeDir}"
       fi
@@ -886,7 +886,16 @@ generateSBoM() {
   # Below add property to metadata
   # Add OS full version (Kernel is covered in the first field)
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS version" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
+  # TODO: Replace this "if" with its predecessor (commented out below) once 
+  # OS_ARCHITECTURE has been replaced by the new target architecture variable.
+  # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
+  # and that confuses things when cross-compiling an x64 mac build on arm mac.
+  #   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
+  if [[ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_.* ]]; then
+    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "x86_64"
+  else
+    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
+  fi
 
   # Set default SBOM formulation
   addSBOMFormulation "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX"
@@ -896,6 +905,16 @@ generateSBoM() {
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
     addGLIBCforLinux
     addGCC
+  fi
+
+  # Add Windows Compiler Version To SBOM
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    addCompilerWindows
+  fi
+
+  # Add Mac Compiler Version To SBOM
+  if [ "$(uname)" == "Darwin" ]; then
+    addCompilerMacOS
   fi
 
   addBootJDK
@@ -1050,7 +1069,7 @@ addFreeTypeVersionInfo() {
    elif [ "${FREETYPE_TO_USE}" == "bundled" ]; then
       # jdk-11+ supports "bundled"
       # freetype.h location for jdk-11+
-      local include="src/java.desktop/share/native/libfreetype/include/freetype/freetype.h"
+      local include="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/src/java.desktop/share/native/libfreetype/include/freetype/freetype.h"
       echo "Checking for FreeType include ${include}"
       if [[ -f "${include}" ]]; then
           echo "Found ${include}"
@@ -1129,6 +1148,32 @@ addGCC() {
 
    echo "Adding GCC version to SBOM: ${gcc_version}"
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "${gcc_version}"
+}
+
+addCompilerWindows() {
+  local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+
+  ## Extract Windows Compiler Versions
+  local msvs_version="$(grep -o -P '\* Toolchain:\s+\K[^"]+' "${inputConfigFile}")"
+  local msvs_c_version="$(grep -o -P '\* C Compiler:\s+\K[^"]+' "${inputConfigFile}" | awk '{print $2}')"
+  local msvs_cpp_version="$(grep -o -P '\* C\+\+ Compiler:\s+\K[^"]+' "${inputConfigFile}" | awk '{print $2}')"
+
+  echo "Adding Windows Compiler versions to SBOM: ${msvs_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS Windows Compiler Version" "${msvs_version}"
+  echo "Adding Windows C Compiler version to SBOM: ${msvs_c_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C Compiler Version" "${msvs_c_version}"
+  echo "Adding Windows C++ Compiler version to SBOM: ${msvs_cpp_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C++ Compiler Version" "${msvs_cpp_version}"
+}
+
+addCompilerMacOS() {
+  local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+
+  ## local macx_version="$(cat "${inputConfigFile}" | grep "* Toolchain:" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
+  local macx_version="$(grep ".* Toolchain:" "${inputConfigFile}" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
+
+  echo "Adding MacOS compiler version to SBOM: ${macx_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MacOS Compiler" "${macx_version}"
 }
 
 addBootJDK() {
@@ -1337,6 +1382,16 @@ cleanAndMoveArchiveFiles() {
     if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "x86_64" ]; then
       osArch="amd64"
     fi
+
+    # TODO: Remove the "if" below once OS_ARCHITECTURE has been replaced.
+    # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
+    # and that confuses things when cross-compiling an x64 mac build on arm mac.
+    if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "arm64" ]; then
+      if [[ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_.* ]]; then
+        osArch="amd64"
+      fi
+    fi
+
     pushd ${staticLibsImagePath}
       case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
       *cygwin*)
@@ -1344,7 +1399,7 @@ cleanAndMoveArchiveFiles() {
         staticLibsDir="lib/static/windows-${osArch}"
         ;;
       darwin)
-        # on MacOSX the layout is: Contents/Home/lib/static/darwin-amd64/
+        # On MacOSX the layout is: Contents/Home/lib/static/darwin-[target architecture]/
         staticLibsDir="Contents/Home/lib/static/darwin-${osArch}"
         ;;
       linux)
@@ -1739,7 +1794,7 @@ getFirstTagFromOpenJDKGitRepo() {
   if [ -z "$firstMatchingNameFromRepo" ]; then
     echo "WARNING: Failed to identify latest tag in the repository" 1>&2
     # If the ADOPT_BRANCH_SAFETY flag is set, we may be building from an alternate
-    # repository that doesn't have the same tags, so allow defaults. For a better 
+    # repository that doesn't have the same tags, so allow defaults. For a better
     # options see https://github.com/adoptium/temurin-build/issues/2671
     if [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "true" ]; then
       if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then

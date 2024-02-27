@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2155,SC1091,SC2196
+# shellcheck disable=SC2155,SC1091,SC2196,SC2235
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -279,7 +279,7 @@ updateOpenj9Sources() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     # NOTE: fetched openssl will NOT be used in the RISC-V cross-compile situation
-    bash get_source.sh --openssl-version=3.0.12
+    bash get_source.sh --openssl-version=3.0.13
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
@@ -319,17 +319,21 @@ checkingAndDownloadingAlsa() {
     curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
     curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
 
-    ## This affects Alpine docker images and also evaluation pipelines
-    if [ "$(pwd | wc -c)" -gt 83 ]; then
-      # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
-      # Alpine also cannot create ~/.gpg-temp within a docker context
-      export GNUPGHOME="/tmp/.gpg-temp.$$"
+    ## This affects riscv64 & Alpine docker images and also evaluation pipelines
+    if ( [ -r /etc/alpine-release ] && [ "$(pwd | wc -c)" -gt 83 ] ) || \
+       ( [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] && [ "$(pwd | wc -c)" -gt 83 ] ); then
+        # Use /tmp in preference to $HOME as fails gpg operation if PWD > 83 characters
+        # Also cannot create ~/.gpg-temp within a docker context
+        GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
     else
-      export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+        GNUPGHOME="${BUILD_CONFIG[WORKSPACE_DIR]:-$PWD}/.gpg-temp"
     fi
+    if [ ! -d "$GNUPGHOME" ]; then
+        mkdir -m 700 "$GNUPGHOME"
+    fi
+    export GNUPGHOME
 
     echo "GNUPGHOME=$GNUPGHOME"
-    mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
     # Should we clear this directory up after checking?
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now

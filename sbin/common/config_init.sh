@@ -324,7 +324,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[REPOSITORY]="$1"; shift;;
 
         "--release" )
-        BUILD_CONFIG[RELEASE]=true; shift;;
+        BUILD_CONFIG[RELEASE]=true;;
 
         "--source" | "-s" )
         BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
