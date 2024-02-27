@@ -161,7 +161,7 @@ printNumberOfAllProcessedFiles() {
 
 processFiles() {
     for file in "${allFiles[@]}"; do
-        echo -e "\nProcessing: $file"
+        echo "Processing: $file"
 
         filePath="$(readlink -f "$file")"
         pkg=$(rpm -qf "$filePath")
@@ -192,7 +192,6 @@ processFiles() {
         ignoreFile=false
         for ignoreFile in "${ignores[@]}"; do
             if [[ "$filePath" =~ $ignoreFile ]]; then
-                echo "FIle IGNORED: $file: $filePath"
                 ignoreFile=true
                 break
             fi
@@ -202,19 +201,16 @@ processFiles() {
         fi
 
         if [[ "$rc" != "0" ]]; then
-            echo "ERROR: no pkg for: $file: $filePath"
             nonPkgFiles+=("$filePath")
         else
             pkg="$(echo "$pkg" | cut -d" " -f1)"
             pkg=${pkg::-1}
             pkgString="pkg: $pkg version: $pkg"
 
+            # Make sure to only add unique packages to SBOM
             if ! echo "${pkgs[@]-}" | grep "temurin_${pkgString}_temurin" >/dev/null; then
                 addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool package dependencies" "${pkg}" "${pkg}"
                 pkgs+=("temurin_${pkgString}_temurin")
-                echo "Added to SBOM: $pkgString"
-            else
-                echo "Already Added: $file: $pkgString"
             fi
         fi
     done
@@ -223,7 +219,6 @@ processFiles() {
 # TODO: Process Non Package Files
 processNonPkgFiles() {
     for file in "${nonPkgFiles[@]-}"; do
-        echo -e "\nProcess file with ERROR: $file"
 
         # We need to try and find the program's version using possible --version or -version
         version=$("$file" --version 2>/dev/null | head -n 1)
@@ -243,20 +238,15 @@ processNonPkgFiles() {
         if [[ "$version" == *"Is a directory"* ]]; then
             version=""
         fi
-        echo "Version: $version"
 
         if [[ "$version" != "" ]]; then
             # Make sure to only add unique packages to SBOM
             if [[ ! " ${uniqueVersions[*]-} " =~ ${version} ]]; then
-                addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool package dependencies" "${version}" "${version}"
+                addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool non-package dependencies" "${version}" "${version}"
                 nonpkgs+=("${version}")
                 uniqueVersions+=("${version}")
-                echo "Added to SBOM: $version"
-            else
-                echo "Already Added: $version"
             fi
         else
-            echo "ERROR: strace analysis of non-package file ${file} cannot identify its version info"
             errorpkgs+=("${file}")
         fi
     done
