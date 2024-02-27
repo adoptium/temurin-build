@@ -216,7 +216,6 @@ processFiles() {
     done
 }
 
-# TODO: Process Non Package Files
 processNonPkgFiles() {
     for file in "${nonPkgFiles[@]-}"; do
 
