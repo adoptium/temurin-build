@@ -42,6 +42,7 @@ allFiles=()
 # Arrays for package and non-package dependencies
 pkgs=()
 nonpkgs=()
+errorpkgs=()
 
 # Array to store packages, to make sure no duplicates are added to Sbom
 uniqueVersions=()
@@ -227,15 +228,15 @@ processNonPkgFiles() {
         # We need to try and find the program's version using possible --version or -version
         version=$("$file" --version 2>/dev/null | head -n 1)
 
-        #if [[ "$version" == "" ]]; then
-        #    version=$("$file" -version dummy 2>/dev/null | head -n 1)
-        #fi
-        #if [[ "$version" == "" ]]; then
-        #    version=$("$file" --version dummy 2>&1 | grep -v "[Pp]ermission denied" | head -n 1)
-        #fi
-        #if [[ "$version" == "" ]]; then
-        #    version=$("$file" -version dummy 2>&1 | grep -v "[Pp]ermission denied" | head -n 1)
-        #fi
+        if [[ "$version" == "" ]]; then
+            version=$("$file" -version dummy 2>/dev/null | head -n 1)
+        fi
+        if [[ "$version" == "" ]]; then
+            version=$("$file" --version dummy 2>&1 | grep -v "[Pp]ermission denied" | head -n 1)
+        fi
+        if [[ "$version" == "" ]]; then
+            version=$("$file" -version dummy 2>&1 | grep -v "[Pp]ermission denied" | head -n 1)
+        fi
         if [[ "$version" == "" ]]; then
             version=$("$file" -version dummy 2>/dev/null | head -n 1)
         fi
@@ -256,6 +257,7 @@ processNonPkgFiles() {
             fi
         else
             echo "ERROR: strace analysis of non-package file ${file} cannot identify its version info"
+            errorpkgs+=("${file}")
         fi
     done
 }
@@ -270,7 +272,9 @@ printPackages() {
         trimPkg=${trimPkg%_temurin}
         echo "$trimPkg"
     done
-    printf "\n"
+
+    echo -e "\nPackages where version cannot be identified:"
+    printf '%s\n' "${errorpkgs[@]-}"
 }
 
 checkArguments "$@"
