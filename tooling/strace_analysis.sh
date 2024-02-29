@@ -28,6 +28,8 @@
 # $4 is classpath
 # $5 is sbomJson
 
+set +eu
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../sbin/common/sbom.sh"
 
@@ -145,7 +147,7 @@ filterStraceFiles() {
 
     for file in "${allFiles[@]}"; do
         echo "$file"
-    fi
+    done
 }
 
 processFiles() {

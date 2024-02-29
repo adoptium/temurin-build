@@ -657,7 +657,7 @@ buildTemplatedFile() {
     # Check if strace is available
     if rpm --version && rpm -q strace ; then
       echo "Strace and rpm is available on system"
-      FULL_MAKE_COMMAND="mkdir build/straceOutput \&\& strace -o build/straceOutput/outputFile -ff -e trace=openat,execve ${FULL_MAKE_COMMAND}"
+      FULL_MAKE_COMMAND="mkdir build/straceOutput \&\& strace -o build/straceOutput/outputFile -ff -e trace=open,openat,execve ${FULL_MAKE_COMMAND}"
     else
       echo "Strace is not available on system"
       exit 2
@@ -1014,10 +1014,9 @@ generateSBoM() {
 
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
-    echo -e "\n\n Executing Analysis Script"
+    echo "Executing Analysis Script"
     tempBldDir="$(dirname "${BUILD_CONFIG[WORKSPACE_DIR]}")"
-    echo -e "\n\n\n DIRECTORY $tempBldDir"
-    source "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/straceOutput" "$tempBldDir" "$javaHome" "$classpath" "$sbomJson"
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/straceOutput" "$tempBldDir" "$javaHome" "$classpath" "$sbomJson"
   fi
 
   # Print SBOM location
