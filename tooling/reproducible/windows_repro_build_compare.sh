@@ -691,7 +691,6 @@ Compare_JDK() {
 
   # Unzip And Rename The Source JDK
   echo "Unzip Source"
-
   unzip -q -o src_jdk_dist.zip
   original_directory_name=$(find . -maxdepth 1 -type d | tail -1)
   mv "$original_directory_name" src_jdk
@@ -699,7 +698,7 @@ Compare_JDK() {
   #Unzip And Rename The Target JDK
   echo "Unzip Target"
   unzip -q -o built_jdk.zip
-  original_directory_name=$(find . -maxdepth 1 -type d | tail -1)
+  original_directory_name=$(find . -maxdepth 1 -type d | grep -v src_jdk | tail -1)
   mv "$original_directory_name" tar_jdk
 
   # These Two Files Are Generate Classes And Should Be Removed Prior To Running The Comparison
@@ -745,9 +744,6 @@ Compare_JDK() {
       SIGNPATHWIN=$(dirname "$SIGNTOOL")
     fi
   fi
-
-  echo "SIGNTOOL = $SIGNTOOL"
-  echo "SPW = $SIGNPATHWIN"
 
   # Ensure Java Home Is Set
   export JAVA_HOME=$BOOTJDK_HOME
