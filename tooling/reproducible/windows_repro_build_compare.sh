@@ -767,6 +767,7 @@ Compare_JDK() {
   cat "$WORK_DIR/compare/repro_diff.out"
   echo ""
   echo "---------------------------------------------"
+  mv "$WORK_DIR/compare/repro_diff.out" "$WORK_DIR"
 }
 
 Clean_Up_Everything() {
@@ -779,8 +780,10 @@ Clean_Up_Everything() {
   then
     if [ -f /usr/local/bin/apt-cyg ]; then rm -f /usr/local/bin/apt-cyg ; fi
   fi
-  # Remove Working Directory
-  rm -rf "$WORK_DIR"
+  # Remove Working Directorys
+  rm -rf "$WORK_DIR/compare"
+  rm -rf "$WORK_DIR/temurin-build"
+  rm -rf "$BOOTJDK_HOME"
 }
 
 # Begin Main Script Here
