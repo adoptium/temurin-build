@@ -693,13 +693,13 @@ Compare_JDK() {
   echo "Unzip Source"
 
   unzip -q -o src_jdk_dist.zip
-  original_directory_name=$(ls -td -- */ | head -n 1)
+  original_directory_name=$(find . -maxdepth 1 -type d | tail -1)
   mv "$original_directory_name" src_jdk
 
   #Unzip And Rename The Target JDK
   echo "Unzip Target"
   unzip -q -o built_jdk.zip
-  original_directory_name=$(ls -td -- */ | head -n 1)
+  original_directory_name=$(find . -maxdepth 1 -type d | tail -1)
   mv "$original_directory_name" tar_jdk
 
   # These Two Files Are Generate Classes And Should Be Removed Prior To Running The Comparison
