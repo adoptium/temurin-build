@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2155,SC1091,SC2196
+# shellcheck disable=SC2155,SC1091,SC2196,SC2235
 
 ################################################################################
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -315,12 +315,25 @@ checkingAndDownloadingAlsa() {
     echo "Skipping ALSA download"
   else
 
-    ALSA_BUILD_URL="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2"
+    ALSA_BUILD_URL="https://ftp2.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2"
     curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
     curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
 
+    ## This affects riscv64 & Alpine docker images and also evaluation pipelines
+    if ( [ -r /etc/alpine-release ] && [ "$(pwd | wc -c)" -gt 83 ] ) || \
+       ( [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] && [ "$(pwd | wc -c)" -gt 83 ] ); then
+        # Use /tmp in preference to $HOME as fails gpg operation if PWD > 83 characters
+        # Also cannot create ~/.gpg-temp within a docker context
+        GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
+    else
+        GNUPGHOME="${BUILD_CONFIG[WORKSPACE_DIR]:-$PWD}/.gpg-temp"
+    fi
+    if [ ! -d "$GNUPGHOME" ]; then
+        mkdir -m 700 "$GNUPGHOME"
+    fi
+    export GNUPGHOME
+
     echo "GNUPGHOME=$GNUPGHOME"
-    mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
     # Should we clear this directory up after checking?
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now
