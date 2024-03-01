@@ -7,6 +7,7 @@ on:
 jobs:
   comment:
     permissions:
+      issues: write
       pull-requests: write
     name: Add Comment
     runs-on: ubuntu-latest
