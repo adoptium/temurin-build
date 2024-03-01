@@ -754,11 +754,19 @@ Compare_JDK() {
 
   CPW=$(cygpath -u "$SIGNPATHWIN")
   export PATH="$PATH:$CPW"
-  echo PATH = "$PATH"
 
   # Run Comparison Script
   cd "$WORK_DIR/compare"
   ./repro_compare.sh temurin src_jdk temurin tar_jdk CYGWIN
+
+  # Display The Content Of repro_diff.out
+  echo ""
+  echo "---------------------------------------------"
+  echo "Output From JDK Comparison Script"
+  echo "---------------------------------------------"
+  cat "$WORK_DIR/compare/repro_diff.out"
+  echo ""
+  echo "---------------------------------------------"
 }
 
 Clean_Up_Everything() {
@@ -771,10 +779,11 @@ Clean_Up_Everything() {
   then
     if [ -f /usr/local/bin/apt-cyg ]; then rm -f /usr/local/bin/apt-cyg ; fi
   fi
+  # Remove Working Directory
+  rm -rf "$WORK_DIR"
 }
 
 # Begin Main Script Here
-
 echo "---------------------------------------------"
 echo "Begining Reproducible Windows Build From SBOM"
 echo "---------------------------------------------"
