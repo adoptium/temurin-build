@@ -14,7 +14,6 @@ GCC=$(jq '.metadata.tools[] | select(.name|test("GCC")) | .version'             
 BOOTJDK=$(jq '.metadata.tools[] | select(.name|test("BOOTJDK")) | .version'       "$1"  | tr -d \")
 ALSA=$(jq '.metadata.tools[] | select(.name|test("ALSA")) | .version'             "$1" | tr -d \" | sed -e 's/^.*alsa-lib-//' -e 's/\.tar.bz2//')
 FREETYPE=$(jq '.metadata.tools[] | select(.name|test("FreeType")) | .version'     "$1"  | tr -d \")
-FREEMARKER=$(jq '.metadata.tools[] | select(.name|test("FreeMarker")) | .version' "$1"  | tr -d \")
 COMPILER=$(jq '.components[0].properties[] | select(.name|test("Build Tools Summary")).value' "$SBOMFILE" | sed -e 's/^.*Toolchain: //g' -e 's/\ *\*.*//g')
 
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
@@ -25,59 +24,68 @@ EXPECTED_ALSA=N.A
 #EXPECTED_FREETYPE=N.A # https://github.com/adoptium/temurin-build/issues/3493
 #EXPECTED_FREETYPE=https://github.com/freetype/freetype/commit/86bc8a95056c97a810986434a3f268cbe67f2902
 if echo "$SBOMFILE" | grep _solaris_; then
-  #EXPECTED_FREETYPE=N.A
+  EXPECTED_FREETYPE=2.4.9
   EXPECTED_COMPILER="solstudio (Oracle Solaris Studio)"
 elif echo "$SBOMFILE" | grep _aix_; then
   EXPECTED_COMPILER="xlc (IBM XL C/C++)"
+  EXPECTED_FREETYPE=2.8.0
 elif echo "$SBOMFILE" | grep _alpine-linux_ > /dev/null; then
-  #EXPECTED_FREETYPE=N.A
+  EXPECTED_FREETYPE=2.11.1
   EXPECTED_ALSA=1.1.6
   EXPECTED_GCC=10.3.1
 elif echo "$SBOMFILE" | grep _linux_; then
-  if [ "$MAJORVERSION" -lt 20 ] && echo "$SBOMFILE" | grep x64 > /dev/null; then
+  
+  if [ "$MAJORVERSION" -lt 20 ] && echo "$SBOMFILE" | grep x64 > /dev/null; then # CentOS6
     EXPECTED_GLIBC=2.12
-  elif echo "$SBOMFILE" | grep _arm_ > /dev/null; then
+    EXPECTED_FREETYPE=2.3.11
+  elif echo "$SBOMFILE" | grep _arm_ > /dev/null; then # Ubuntu 16.04
     EXPECTED_GLIBC=2.23
-  else
+    EXPECTED_FREETYPE=2.6.1
+  else # CentOS7
     EXPECTED_GLIBC=2.17
+    EXPECTED_FREETYPE=2.8.0
   fi
   [ "${MAJORVERSION}" = "8" ] && EXPECTED_GCC=7.5.0
   [ "${MAJORVERSION}" = "11" ] && EXPECTED_GCC=7.5.0
   [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
-  [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_GCC=11.2.0
+  [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_GCC=11.2.0 && EXPECTED_FREETYPE=Unknown
   EXPECTED_ALSA=1.1.6
-  #EXPECTED_FREETYPE=N.A
 #elif echo $SBOMFILE | grep _mac_; then
 #  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 10.3)"
 elif echo "$SBOMFILE" | grep _x64_windows_; then
+  EXPECTED_FREETYPE=2.8.1
   if [ "${MAJORVERSION}" = "8" ]; then
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2017 - CURRENTLY NOT WORKING)"
-    #EXPECTED_FREETYPE="https://github.com/freetype/freetype/commit/ec8853cd18e1a0c275372769bdad37a79550ed66"
   elif [ "${MAJORVERSION}" -ge 20 ]; then
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
-  else
+  else # JDK11 and 17
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2019)"
+    EXPECTED_FREETYPE=Unknown
   fi
 elif echo "$SBOMFILE" | grep _x86-32_windows_; then
+  EXPECTED_FREETYPE=Unknown
   if [ "${MAJORVERSION}" = "8"  ]; then
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2013)"
-    #EXPECTED_FREETYPE="https://github.com/freetype/freetype/commit/ec8853cd18e1a0c275372769bdad37a79550ed66"
+    EXPECTED_FREETYPE=2.5.3
   elif [ "${MAJORVERSION}" = "11" ]; then
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2017)"
-  else
+  else # JDK 11 and 17
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2019)"
   fi
 elif echo "$SBOMFILE" | grep _mac_; then
   # NOTE: mac/x64 native builds >=11 were using "clang (clang/LLVM from Xcode 10.3)"
+  EXPECTED_FREETYPE=Unknown
   EXPECTED_COMPILER="clang (clang/LLVM from Xcode 15.0.1)"
   # shellcheck disable=SC2166
-  if [ "${MAJORVERSION}" = "8" -o "${MAJORVERSION}" = "11" ] && echo "$SBOMFILE" | grep _x64_; then
+  if [ "${MAJORVERSION}" = "8" ] && echo "$SBOMFILE" | grep _x64_; then
     EXPECTED_COMPILER="clang (clang/LLVM)"
-#    EXPECTED_FREETYPE="https://github.com/freetype/freetype/commit/ec8853cd18e1a0c275372769bdad37a79550ed66"
+    EXPECTED_FREETYPE=2.9.1
   fi
 fi
 
-EXPECTED_FREEMARKER=N.A
+[ "${MAJORVERSION}" -ge 20 ] && EXPECTED_FREETYPE=Unknown
+
+
 RC=0
 if echo "$SBOMFILE" | grep 'linux_'; then
 	[ "${GLIBC}"      != "$EXPECTED_GLIBC"   ] && echo "ERROR: GLIBC version not ${EXPECTED_GLIBC} (SBOM has ${GLIBC})" && RC=1
@@ -90,12 +98,12 @@ echo "BOOTJDK is ${BOOTJDK}"
 #[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
 # shellcheck disable=SC2086
-[ -n "$(echo $FREETYPE | tr -d '[0-9]\.')" ] && echo "ERROR: FreeType version not a valid number (SBOM has ${FREETYPE})"   && RC=1
+[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
+
 echo "FREETYPE is ${FREETYPE}"
-[ "${FREEMARKER}" != "$EXPECTED_FREEMARKER"  ] && echo "ERROR: Freemarker version not ${EXPECTED_FREEMARKER} (SBOM has ${FREEMARKER})"   && RC=1
 # shellcheck disable=SC3037
 echo -n "Checking for JDK source SHA validity: "
-GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \")
+GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \" | uniq)
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$( echo "$GITSHA" | cut -d/ -f7)
 if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
@@ -105,10 +113,11 @@ fi
 
 # shellcheck disable=SC3037
 echo -n "Checking for temurin-build SHA validity: "
-GITSHA=$(jq '.components[].properties[] | select(.name|test("Temurin Build Ref")) | .value' "$1" | tr -d \")
+GITSHA=$(jq '.components[].properties[] | select(.name|test("Temurin Build Ref")) | .value' "$1" | tr -d \" | uniq)
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$(echo  "$GITSHA" | cut -d/ -f7)
-echo "Checking for temurin-build SHA $GITSHA"
+echo "Checking for temurin-build SHA $GITSHA in ${GITREPO}"
+
 if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
    echo "WARNING: temurin-build SHA check failed. This can happen if it was not a tagged level"
    if echo "$1" | grep '[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]' 2>/dev/null; then

@@ -5,10 +5,12 @@ on:
     types: [ opened ]
 
 jobs:
-  Comment:
+  comment:
+    permissions:
+      issues: write
+      pull-requests: write
     name: Add Comment
     runs-on: ubuntu-latest
-
     steps:
       - name: Create comment
         uses: JJ/pr-greeting-action@01953a8c191056b059c8dbc667d833aa082fd865 # releases/v1
