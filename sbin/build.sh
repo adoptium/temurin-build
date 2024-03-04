@@ -886,7 +886,7 @@ generateSBoM() {
   # Below add property to metadata
   # Add OS full version (Kernel is covered in the first field)
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS version" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
-  # TODO: Replace this "if" with its predecessor (commented out below) once 
+  # TODO: Replace this "if" with its predecessor (commented out below) once
   # OS_ARCHITECTURE has been replaced by the new target architecture variable.
   # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
   # and that confuses things when cross-compiling an x64 mac build on arm mac.
@@ -1151,6 +1151,14 @@ addGCC() {
 
 addCompilerWindows() {
   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+  local inputSdkFile="${BUILD_CONFIG[TARGET_FILE_NAME]}"
+
+  # Derive Windows SDK Version From Built JDK
+  mkdir "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}temp"
+  unzip -j -o -q "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}$inputSdkFile" -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/temp"
+  local ucrt_file=$(cygpath -m ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/temp/ucrtbase.dll)
+  local ucrt_version=$(powershell.exe "(Get-Command $ucrt_file).FileVersionInfo.FileVersion")
+  rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/temp"
 
   ## Extract Windows Compiler Versions
   local msvs_version="$(grep -o -P '\* Toolchain:\s+\K[^"]+' "${inputConfigFile}")"
@@ -1163,6 +1171,8 @@ addCompilerWindows() {
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C Compiler Version" "${msvs_c_version}"
   echo "Adding Windows C++ Compiler version to SBOM: ${msvs_cpp_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C++ Compiler Version" "${msvs_cpp_version}"
+  echo "Adding Windows SDK version to SBOM: ${ucrt_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MS Windows SDK Version" "${ucrt_version}"
 }
 
 addCompilerMacOS() {
