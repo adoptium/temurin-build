@@ -74,7 +74,9 @@ public class FeatureTests {
         if (jdkVersion.isNewerOrEqual(17) && jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.PPC64LE)) {
         	shouldBePresent = true;
         }
-        if (jdkVersion.isNewerOrEqual(19) || jdkVersion.isNewerOrEqualSameFeature(17, 0, 9)) {
+        if (jdkVersion.isNewerOrEqual(19)
+                || jdkVersion.isNewerOrEqualSameFeature(17, 0, 9)
+                || jdkVersion.isNewerOrEqualSameFeature(11, 0, 23)) {
             if (jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.RISCV64)) {
                 shouldBePresent = true;
             }
