@@ -1,0 +1,23 @@
+---
+name: Semgrep Differential Scan
+on:
+  pull_request:
+
+jobs:
+  semgrep-diff:
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+
+    steps:
+      # Step 1: Clone application source code
+      - name: Checkout code
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # v3.1.0
+        with:
+          fetch-depth: 0
+
+      # Step 2: Differential scan
+      - name: Differential scan
+        run: |
+          semgrep ci \
+            --config="p/trailofbits"
