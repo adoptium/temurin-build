@@ -132,60 +132,29 @@ configureReproducibleBuildParameter() {
          addConfigureArg "--with-extra-cxxflags=" "-qnotimestamps"
       fi
 
-      configureReproducibleBuildDebugMapping
+      # For jdk21u a workaround is required for debug symbol mapping
+      # until https://bugs.openjdk.org/browse/JDK-8326685 is backported
+      if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 21 ]]
+      then
+         configureReproducibleBuildDebugMapping
+      fi
   fi
 }
 
-# For reproducible builds  we need to add debug mappings for the system header paths,
+# For reproducible builds we need to add debug mappings for the build/OUTPUTDIR
 # so that debug symbol files (and thus libraries) are deterministic
 configureReproducibleBuildDebugMapping() {
-  # For Linux add -fdebug-prefix-map'ings for root and gcc include paths,
-  # pointing to a common set of folders so that the debug binaries are deterministic:
-  #
-  #  root include : /usr/include
-  #  gcc include  : /usr/local/gcc_include
-  #  g++ include  : /usr/local/gxx_include
-  #
+  # Workaround until https://bugs.openjdk.org/browse/JDK-8326685 is backported to jdk21u
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
-    # Add debug prefix map for root /usr/include, allowing for a SYSROOT
-    sysroot="$(echo "${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]}" | sed -nE 's/.*\-\-with\-sysroot=([^[:space:]]+).*/\1/p')"
-    if [ "x$sysroot" != "x" ]; then
-       root_include=${sysroot%/}"/usr/include"
-       gcc_sysroot="--sysroot=${sysroot%/}"
+    local OUTPUT_DIR
+    if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
+      OUTPUT_DIR="linux-arm-serverANDclient-release"
     else
-       root_include="/usr/include"
-       gcc_sysroot=""
-    fi
-    echo "Adding -fdebug-prefix-map for root include: ${root_include}=/usr/include"
-    fdebug_flags="-fdebug-prefix-map=${root_include}/=/usr/include/"
-
-    # Add debug prefix map for gcc include, allowing for SYSROOT
-    if [ -n "${CC-}" ]; then
-      gcc_include="$(dirname "$(echo "#include <stddef.h>" | $CC $gcc_sysroot -v -E - 2>&1 | grep stddef | tail -1 | tr -s " " | cut -d'"' -f2)")"
-    elif [ "$(which gcc)" != "" ]; then
-      gcc_include="$(dirname "$(echo "#include <stddef.h>" | gcc $gcc_sysroot -v -E - 2>&1 | grep stddef | tail -1 | tr -s " " | cut -d'"' -f2)")"
-    else
-      # Can't find gcc..
-      gcc_include=""
-    fi
-    if [ "x$gcc_include" != "x" ]; then
-      echo "Adding -fdebug-prefix-map for gcc include: ${gcc_include}=/usr/local/gcc_include"
-      fdebug_flags+=" -fdebug-prefix-map=${gcc_include}/=/usr/local/gcc_include/"
+      OUTPUT_DIR="linux-${BUILD_CONFIG[OS_ARCHITECTURE]}-server-release"
     fi
 
-    # Add debug prefix map for g++ include, allowing for SYSROOT
-    if [ -n "${CXX-}" ]; then
-      gxx_include="$(dirname "$(echo "#include <cstddef>" | $CXX $gcc_sysroot -v -E -x c++ - 2>&1 | grep cstddef | tail -1 | tr -s " " | cut -d'"' -f2)")"
-    elif [ "$(which g++)" != "" ]; then
-      gxx_include="$(dirname "$(echo "#include <cstddef>" | g++ $gcc_sysroot -v -E -x c++ - 2>&1 | grep cstddef | tail -1 | tr -s " " | cut -d'"' -f2)")"
-    else
-      # Can't find g++..
-      gxx_include=""
-    fi
-    if [ "x$gxx_include" != "x" ]; then
-      echo "Adding -fdebug-prefix-map for g++ include: ${gxx_include}=/usr/local/gxx_include"
-      fdebug_flags+=" -fdebug-prefix-map=${gxx_include}/=/usr/local/gxx_include/"
-    fi
+    local buildOutputDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/${OUTPUT_DIR}/"
+    local fdebug_flags="-fdebug-prefix-map=${buildOutputDir}="
 
     addConfigureArg "--with-extra-cflags=" "'${fdebug_flags}'"
     addConfigureArg "--with-extra-cxxflags=" "'${fdebug_flags}'"
