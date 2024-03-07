@@ -206,20 +206,17 @@ identifyFailedBuildsInTimerPipelines() {
       if [[ ${arrayOfAllJDKVersions[v]} -eq 8 ]]; then
         if [[ $jsonEntry =~ ^\"startBy\".*betaTrigger.8ea ]]; then
           if [[ $jsonEntry =~ betaTrigger\_8ea.x64AlpineLinux && ${latestJdk8Pipelines[1]} == "none" ]]; then
-            wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"
-            if [[ $? -eq 0 ]]; then
+            if wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"; then
               latestJdk8Pipelines[1]=$latestTimerPipeline
               echo "Found Alpine Linux JDK8 pipeline here: https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/${latestTimerJenkinsJobID}/"
             fi
           elif [[ $jsonEntry =~ betaTrigger\_8ea\_arm32Linux && ${latestJdk8Pipelines[2]} == "none" ]]; then
-            wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"
-            if [[ $? -eq 0 ]]; then
+            if wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"; then
               latestJdk8Pipelines[2]=$latestTimerPipeline
               echo "Found Arm32 Linux JDK8 pipeline here: https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/${latestTimerJenkinsJobID}"
             fi
           elif [[ ${latestJdk8Pipelines[0]} == "none" ]]; then
-            wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"
-            if [[ $? -eq 0 ]]; then
+            if wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"; then
               latestJdk8Pipelines[0]=$latestTimerPipeline
               echo "Found core JDK8 pipeline here: https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/${latestTimerJenkinsJobID}"
             fi
@@ -230,22 +227,17 @@ identifyFailedBuildsInTimerPipelines() {
         fi
       fi
       else
-        if [[ ! $jsonEntry =~ .*user.* ]]; then
-          if [[ $jsonEntry =~ ^\"startBy\"\:\"timer ]]; then
-            wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"
-            if [[ $? -eq 0 ]]; then
-              break
-            fi
-          elif [[ $jsonEntry =~ ^\"startBy\"\:\".*build-scripts/weekly-openjdk ]]; then
-            wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"
-            if [[ $? -eq 0 ]]; then
-              break
-            fi
-          elif [[ $jsonEntry =~ ^\"startBy\"\:.*betaTrigger_${arrayOfAllJDKVersions[v]}ea ]]; then
-            wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"
-            if [[ $? -eq 0 ]]; then
-              break
-            fi
+        if [[ $jsonEntry =~ ^\"startBy\"\:\"timer ]]; then
+          if wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"; then
+            break
+          fi
+        elif [[ $jsonEntry =~ ^\"startBy\"\:\".*build-scripts/weekly-openjdk ]]; then
+          if wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"; then
+            break
+          fi
+        elif [[ $jsonEntry =~ ^\"startBy\"\:.*betaTrigger_${arrayOfAllJDKVersions[v]}ea ]]; then
+          if wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"; then
+            break
           fi
         fi
       fi
