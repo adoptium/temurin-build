@@ -166,7 +166,6 @@ identifyFailedBuildsInTimerPipelines() {
     latestTimerPipelineRaw="${latestTimerPipelineRaw},HereIsTheEndOfAVeryLongFile"
     latestTimerPipeline=""
     latestJdk8Pipelines=("none" "none" "none")
-    latestJdk8JenkinsJobIDs=("none" "none" "none")
     latestTimerJenkinsJobID=""
     pipelineStatus="unknown"
     jdkJenkinsJobVersion="jdk${arrayOfAllJDKVersions[v]}${arrayOfUs[v]}"
