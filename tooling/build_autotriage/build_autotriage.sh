@@ -210,27 +210,23 @@ identifyFailedBuildsInTimerPipelines() {
             wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"
             if [[ $? -eq 0 ]]; then
               latestJdk8Pipelines[1]=$latestTimerPipeline
-              latestJdk8JenkinsJobIDs[1]=$latestTimerJenkinsJobID
-              echo "Found Alpine Linux JDK8 pipeline with jenkins job ID: $latestTimerJenkinsJobID"
+              echo "Found Alpine Linux JDK8 pipeline here: https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/${latestTimerJenkinsJobID}/"
             fi
           elif [[ $jsonEntry =~ betaTrigger\_8ea\_arm32Linux && ${latestJdk8Pipelines[2]} == "none" ]]; then
             wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"
             if [[ $? -eq 0 ]]; then
               latestJdk8Pipelines[2]=$latestTimerPipeline
-              latestJdk8JenkinsJobIDs[2]=$latestTimerJenkinsJobID
-              echo "Found Arm32 Linux JDK8 pipeline with jenkins job ID: $latestTimerJenkinsJobID"
+              echo "Found Arm32 Linux JDK8 pipeline here: https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/${latestTimerJenkinsJobID}"
             fi
           elif [[ ${latestJdk8Pipelines[0]} == "none" ]]; then
             wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"
             if [[ $? -eq 0 ]]; then
               latestJdk8Pipelines[0]=$latestTimerPipeline
-              latestJdk8JenkinsJobIDs[0]=$latestTimerJenkinsJobID
-              echo "Found core JDK8 pipeline with jenkins job ID: $latestTimerJenkinsJobID"
+              echo "Found core JDK8 pipeline here: https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/${latestTimerJenkinsJobID}"
             fi
           fi
         if [[ ${latestJdk8Pipelines[0]} != "none" && ${latestJdk8Pipelines[1]} != "none" && ${latestJdk8Pipelines[2]} != "none" ]]; then
-          echo "Found all 3 pipeline ids for JDK8."
-          echo "Whose URLs are: \"https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/\" plus the pipeline ID."
+          echo "Found all 3 pipelines for JDK8."
           break
         fi
       fi
