@@ -332,40 +332,44 @@ if [ $executedJavaVersion -ne 0 ]; then
     exit 1
 fi
 
-if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 11 ] && [ -r /usr/local/gcc9/ ] && [ "${ARCHITECTURE}" == "aarch64" ]; then
-  # GCC9 rather than 10 requested by Alibaba for now
-  # Ref https://github.com/adoptium/temurin-build/issues/2250#issuecomment-732958466
-  export PATH=/usr/local/gcc9/bin:$PATH
-  export CC=/usr/local/gcc9/bin/gcc-9.3
-  export CXX=/usr/local/gcc9/bin/g++-9.3
-  # Enable GCC 10 for Java 17+ for repeatable builds, but not for our supported releases
-  # Ref https://github.com/adoptium/temurin-build/issues/2787
-elif [ "${ARCHITECTURE}" == "riscv64" ] && [ -r /usr/bin/gcc-10 ]; then
-  # Enable GCC 10 for RISC-V, given the rapid evolution of RISC-V, the newer the GCC toolchain, the better
-  [ -r /usr/bin/gcc-10 ] && export  CC=/usr/bin/gcc-10
-  [ -r /usr/bin/g++-10 ] && export CXX=/usr/bin/g++-10
-elif [ "$JAVA_FEATURE_VERSION" -ge 19 ] && [ -r /usr/local/gcc11/bin/gcc-11.2 ]; then
-  export PATH=/usr/local/gcc11/bin:$PATH
-  [ -r /usr/local/gcc11/bin/gcc-11.2 ] && export  CC=/usr/local/gcc11/bin/gcc-11.2
-  [ -r /usr/local/gcc11/bin/g++-11.2 ] && export CXX=/usr/local/gcc11/bin/g++-11.2
-  export LD_LIBRARY_PATH=/usr/local/gcc11/lib64:/usr/local/gcc11/lib
-elif [ "$JAVA_FEATURE_VERSION" -ge 17 ] && [ -r /usr/local/gcc10/bin/gcc-10.3 ]; then
-  export PATH=/usr/local/gcc10/bin:$PATH
-  [ -r /usr/local/gcc10/bin/gcc-10.3 ] && export  CC=/usr/local/gcc10/bin/gcc-10.3
-  [ -r /usr/local/gcc10/bin/g++-10.3 ] && export CXX=/usr/local/gcc10/bin/g++-10.3
-  export LD_LIBRARY_PATH=/usr/local/gcc10/lib64:/usr/local/gcc10/lib
-elif [ "$JAVA_FEATURE_VERSION" -gt 17 ] && [ -r /usr/bin/gcc-10 ]; then
-  [ -r /usr/bin/gcc-10 ] && export  CC=/usr/bin/gcc-10
-  [ -r /usr/bin/g++-10 ] && export CXX=/usr/bin/g++-10
-# Continue to use GCC 7 if present for JDK<=17 and where 10 does not exist
-elif [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
-  export PATH=/usr/local/gcc/bin:$PATH
-  [ -r /usr/local/gcc/bin/gcc-7.5 ] && export  CC=/usr/local/gcc/bin/gcc-7.5
-  [ -r /usr/local/gcc/bin/g++-7.5 ] && export CXX=/usr/local/gcc/bin/g++-7.5
-  export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
-elif [ -r /usr/bin/gcc-7 ]; then
-  [ -r /usr/bin/gcc-7 ] && export  CC=/usr/bin/gcc-7
-  [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
+if [[ "${CONFIGURE_ARGS}" =~ .*"--with-devkit=".* ]]; then
+  echo "Using gcc from DevKit toolchain specified in configure args"
+else 
+  if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 11 ] && [ -r /usr/local/gcc9/ ] && [ "${ARCHITECTURE}" == "aarch64" ]; then
+    # GCC9 rather than 10 requested by Alibaba for now
+    # Ref https://github.com/adoptium/temurin-build/issues/2250#issuecomment-732958466
+    export PATH=/usr/local/gcc9/bin:$PATH
+    export CC=/usr/local/gcc9/bin/gcc-9.3
+    export CXX=/usr/local/gcc9/bin/g++-9.3
+    # Enable GCC 10 for Java 17+ for repeatable builds, but not for our supported releases
+    # Ref https://github.com/adoptium/temurin-build/issues/2787
+  elif [ "${ARCHITECTURE}" == "riscv64" ] && [ -r /usr/bin/gcc-10 ]; then
+    # Enable GCC 10 for RISC-V, given the rapid evolution of RISC-V, the newer the GCC toolchain, the better
+    [ -r /usr/bin/gcc-10 ] && export  CC=/usr/bin/gcc-10
+    [ -r /usr/bin/g++-10 ] && export CXX=/usr/bin/g++-10
+  elif [ "$JAVA_FEATURE_VERSION" -ge 19 ] && [ -r /usr/local/gcc11/bin/gcc-11.2 ]; then
+    export PATH=/usr/local/gcc11/bin:$PATH
+    [ -r /usr/local/gcc11/bin/gcc-11.2 ] && export  CC=/usr/local/gcc11/bin/gcc-11.2
+    [ -r /usr/local/gcc11/bin/g++-11.2 ] && export CXX=/usr/local/gcc11/bin/g++-11.2
+    export LD_LIBRARY_PATH=/usr/local/gcc11/lib64:/usr/local/gcc11/lib
+  elif [ "$JAVA_FEATURE_VERSION" -ge 17 ] && [ -r /usr/local/gcc10/bin/gcc-10.3 ]; then
+    export PATH=/usr/local/gcc10/bin:$PATH
+    [ -r /usr/local/gcc10/bin/gcc-10.3 ] && export  CC=/usr/local/gcc10/bin/gcc-10.3
+    [ -r /usr/local/gcc10/bin/g++-10.3 ] && export CXX=/usr/local/gcc10/bin/g++-10.3
+    export LD_LIBRARY_PATH=/usr/local/gcc10/lib64:/usr/local/gcc10/lib
+  elif [ "$JAVA_FEATURE_VERSION" -gt 17 ] && [ -r /usr/bin/gcc-10 ]; then
+    [ -r /usr/bin/gcc-10 ] && export  CC=/usr/bin/gcc-10
+    [ -r /usr/bin/g++-10 ] && export CXX=/usr/bin/g++-10
+  # Continue to use GCC 7 if present for JDK<=17 and where 10 does not exist
+  elif [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
+    export PATH=/usr/local/gcc/bin:$PATH
+    [ -r /usr/local/gcc/bin/gcc-7.5 ] && export  CC=/usr/local/gcc/bin/gcc-7.5
+    [ -r /usr/local/gcc/bin/g++-7.5 ] && export CXX=/usr/local/gcc/bin/g++-7.5
+    export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
+  elif [ -r /usr/bin/gcc-7 ]; then
+    [ -r /usr/bin/gcc-7 ] && export  CC=/usr/bin/gcc-7
+    [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
+  fi
 fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
