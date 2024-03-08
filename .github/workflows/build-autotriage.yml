@@ -1,10 +1,10 @@
 ---
-name: "Build Autotriage"
+name: Build Autotriage
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 0 * * MON'
-  workflow_dispatch
 
 env:
   TRIAGE_SCRIPT: "tooling/build_autotriage/build_autotriage.sh"
