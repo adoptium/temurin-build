@@ -43,6 +43,9 @@ do
   fi
   # release file build machine OS level and builds-scripts SHA can/will be different
   cleanTemurinBuildInfo "${JDK_DIR}"
+  
+  removeSystemModulesHashBuilderParams
+  processModuleInfo
 done
 
 
@@ -69,4 +72,3 @@ fi
 echo "ReproduciblePercent = ${repro_pc} %"
 
 exit $rc
-

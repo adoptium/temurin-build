@@ -6,7 +6,8 @@ on:
     - cron: "0 0 * * *"
 
 permissions:
-  contents: read
+  contents: write  # to push local changes (gr2m/create-or-update-pull-request-action)
+  pull-requests: write  # to create a PR (gr2m/create-or-update-pull-request-action)
 
 jobs:
   update_ca_certs:

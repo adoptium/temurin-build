@@ -68,6 +68,140 @@ function expandJDK() {
   rm -rf "${JDK_ROOT}_CP"
 }
 
+# Process SystemModules classes to remove ModuleHashes$Builder differences due to Signatures
+#   1. javap
+#   2. search for line: // Method jdk/internal/module/ModuleHashes$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes$Builder;
+#   3. followed 3 lines later by: // String <module>
+#   4. then remove all lines until next: invokevirtual
+#   5. remove Last modified, Classfile and SHA-256 checksum javap artefact statements
+function removeSystemModulesHashBuilderParams() {
+  # Key strings
+  moduleHashesFunction="// Method jdk/internal/module/ModuleHashes\$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes\$Builder;"
+  moduleString="// String "
+  virtualFunction="invokevirtual"
+
+  systemModules="SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class"
+  for systemModule in $systemModules
+    do
+      FILES=$(find "${JDK_DIR}" -type f -name "$systemModule")
+      for f in $FILES
+        do
+          javap -v -sysinfo -l -p -c -s -constants "$f" > "$f.javap.tmp"
+          rm "$f"
+
+          # Remove "instruction number:" prefix, so we can just match code
+          sed -i -E "s/^[[:space:]]+[0-9]+:(.*)/\1/" "$f.javap.tmp"
+
+          cc=99
+          found=false
+          while IFS= read -r line
+          do
+            cc=$((cc+1))
+            # Detect hashForModule function
+            if [[ "$line" =~ .*"$moduleHashesFunction".* ]]; then
+              cc=0
+            fi
+            # 3rd instruction line is the Module string to confirm entry
+            if [[ "$cc" -eq 3 ]] && [[ "$line" =~ .*"$moduleString"[a-z\.]+.* ]]; then
+              found=true
+              module=$(echo "$line" | tr -s ' ' | tr -d '\r' | cut -d' ' -f6)
+              export module
+            fi
+            # hasForModule function section finishes upon finding invokevirtual
+            if [[ "$found" = true ]] && [[ "$line" =~ .*"$virtualFunction".* ]]; then
+              found=false
+            fi
+            if [[ "$found" = false ]]; then
+              echo "$line" >> "$f.javap.tmp2"
+            fi
+          done < "$f.javap.tmp"
+          rm "$f.javap.tmp"
+          grep -v "Last modified\|Classfile\|SHA-256 checksum" "$f.javap.tmp2" > "$f.javap"
+          rm "$f.javap.tmp2"
+        done
+    done
+
+  echo "Successfully removed all SystemModules jdk.jpackage hash differences from ${JDK_DIR}"
+}
+
+# Normalize the following ModuleAttributes that can be ordered differently
+# depending on how the vendor has signed and re-packed the JMODs
+#   - ModuleResolution:
+#   - ModuleTarget:
+# java.base also requires the dependent module "hash:" values to be excluded
+# as they differ due to the Signatures
+function processModuleInfo() {
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
+    echo "Normalizing ModuleAttributes order in module-info.class, converting to javap"
+
+    moduleAttr="ModuleResolution ModuleTarget"
+
+    FILES=$(find "${JDK_DIR}" -type f -name "module-info.class")
+    for f in $FILES
+    do
+      javap -v -sysinfo -l -p -c -s -constants "$f" > "$f.javap.tmp"
+      rm "$f"
+
+      cc=99
+      foundAttr=false
+      attrName=""
+      # Clear any attr tmp files
+      for attr in $moduleAttr
+      do
+        rm -f "$f.javap.$attr"
+      done
+
+      while IFS= read -r line
+      do
+        cc=$((cc+1))
+
+        # Module attr have only 1 line definition
+        if [[ "$foundAttr" = true ]] && [[ "$cc" -gt 1 ]]; then
+          foundAttr=false
+          attrName=""
+        fi
+
+        # If not processing an attr then check for attr
+        if [[ "$foundAttr" = false ]]; then
+          for attr in $moduleAttr
+          do
+            if [[ "$line" =~ .*"$attr:".* ]]; then
+              cc=0
+              foundAttr=true
+              attrName="$attr"
+            fi
+          done
+        fi
+
+        # Echo attr to attr tmp file, otherwise to tmp2
+        if [[ "$foundAttr" = true ]]; then
+          echo "$line" >> "$f.javap.$attrName"
+        else
+          echo "$line" >> "$f.javap.tmp2"
+        fi
+      done < "$f.javap.tmp"
+      rm "$f.javap.tmp"
+
+      # Remove javap Classfile and timestamp and SHA-256 hash
+      if [[ "$f" =~ .*"java.base".* ]]; then
+        grep -v "Last modified\|Classfile\|SHA-256 checksum\|hash:" "$f.javap.tmp2" > "$f.javap"
+      else
+        grep -v "Last modified\|Classfile\|SHA-256 checksum" "$f.javap.tmp2" > "$f.javap"
+      fi
+      rm "$f.javap.tmp2"
+
+      # Append any ModuleAttr tmp files
+      for attr in $moduleAttr
+      do
+        if [[ -f "$f.javap.$attr" ]]; then
+          cat "$f.javap.$attr" >> "$f.javap"
+        fi
+        rm -f "$f.javap.$attr"
+      done
+    done
+  fi
+}
+
 # Remove all Signatures
 function removeSignatures() {
   local JDK_DIR="$1"
@@ -82,10 +216,11 @@ function removeSignatures() {
      do
       f=$(cygpath -w $f)
       rc=0
-      "$signToolPath" remove /s "$f" 1> /dev/null || rc=$?
-      if [ $rc -ne 0 ]; then
-        echo "Removing signature from $f failed"
-      fi
+      "$signToolPath" remove /s "$f" 1> /dev/null 2>&1 || rc=$?
+
+      # if [ $rc -ne 0 ]; then
+      #   echo "Removing signature from $f failed"
+      # fi
      done
   elif [[ "$OS" =~ Darwin* ]]; then
     MAC_JDK_ROOT="${JDK_DIR}/../.."
@@ -227,4 +362,3 @@ function patchManifests() {
     sed -i '/^Created-By:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
   fi
 }
-

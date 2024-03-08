@@ -331,13 +331,13 @@ public final class TemurinGenSBOM {
         Bom bom = readJSONfile(fileName);
         List<Formula> formulation = bom.getFormulation();
         if (formulation == null) {
-          formulation = new LinkedList<Formula>();
-          Formula formula  = new Formula();
-          System.err.println("SXAECW: " + name);
-          formula.setBomRef(name);
-          formulation.add(formula);
-          bom.setFormulation(formulation);
+            formulation = new LinkedList<Formula>();
+            bom.setFormulation(formulation);
         }
+        Formula formula = new Formula();
+        formula.setBomRef(name);
+        formulation.add(formula);
+
         return bom;
     }
 

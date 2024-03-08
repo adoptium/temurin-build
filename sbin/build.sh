@@ -653,6 +653,17 @@ buildTemplatedFile() {
     FULL_MAKE_COMMAND="make -t \&\& ${FULL_MAKE_COMMAND}"
   fi
 
+  if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
+    # Check if strace is available
+    if rpm --version && rpm -q strace ; then
+      echo "Strace and rpm is available on system"
+      FULL_MAKE_COMMAND="mkdir build/straceOutput \&\& strace -o build/straceOutput/outputFile -ff -e trace=open,openat,execve ${FULL_MAKE_COMMAND}"
+    else
+      echo "Strace is not available on system"
+      exit 2
+    fi
+  fi
+
   # shellcheck disable=SC2002
   cat "$SCRIPT_DIR/build.template" |
     sed -e "s|{configureArg}|${FULL_CONFIGURE}|" \
@@ -875,7 +886,7 @@ generateSBoM() {
   # Below add property to metadata
   # Add OS full version (Kernel is covered in the first field)
   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS version" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
-  # TODO: Replace this "if" with its predecessor (commented out below) once 
+  # TODO: Replace this "if" with its predecessor (commented out below) once
   # OS_ARCHITECTURE has been replaced by the new target architecture variable.
   # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
   # and that confuses things when cross-compiling an x64 mac build on arm mac.
@@ -1000,6 +1011,13 @@ generateSBoM() {
     # Add make_command_args JDK Component Property
     addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
   done
+
+
+  if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
+    echo "Executing Analysis Script"
+    tempBldDir="$(dirname "${BUILD_CONFIG[WORKSPACE_DIR]}")"
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/straceOutput" "$tempBldDir" "$javaHome" "$classpath" "$sbomJson"
+  fi
 
   # Print SBOM location
   echo "CycloneDX SBOM has been created in ${sbomJson}"
@@ -1133,6 +1151,14 @@ addGCC() {
 
 addCompilerWindows() {
   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+  local inputSdkFile="${BUILD_CONFIG[TARGET_FILE_NAME]}"
+
+  # Derive Windows SDK Version From Built JDK
+  mkdir "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}temp"
+  unzip -j -o -q "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}$inputSdkFile" -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/temp"
+  local ucrt_file=$(cygpath -m ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/temp/ucrtbase.dll)
+  local ucrt_version=$(powershell.exe "(Get-Command $ucrt_file).FileVersionInfo.FileVersion")
+  rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/temp"
 
   ## Extract Windows Compiler Versions
   local msvs_version="$(grep -o -P '\* Toolchain:\s+\K[^"]+' "${inputConfigFile}")"
@@ -1145,6 +1171,8 @@ addCompilerWindows() {
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C Compiler Version" "${msvs_c_version}"
   echo "Adding Windows C++ Compiler version to SBOM: ${msvs_cpp_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C++ Compiler Version" "${msvs_cpp_version}"
+  echo "Adding Windows SDK version to SBOM: ${ucrt_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MS Windows SDK Version" "${ucrt_version}"
 }
 
 addCompilerMacOS() {

@@ -61,6 +61,7 @@ DISABLE_ADOPT_BRANCH_SAFETY
 DOCKER
 DOCKER_FILE_PATH
 DOCKER_SOURCE_VOLUME_NAME
+ENABLE_SBOM_STRACE
 FREETYPE
 FREETYPE_DIRECTORY
 FREETYPE_FONT_BUILD_TYPE_PARAM
@@ -276,6 +277,9 @@ function parseConfigurationArguments() {
 
         "--disable-shallow-git-clone" )
         BUILD_CONFIG[SHALLOW_CLONE_OPTION]="";;
+
+        "--enable-sbom-strace" )
+        BUILD_CONFIG[ENABLE_SBOM_STRACE]=true;;
 
         "--freetype-dir" | "-f" )
         BUILD_CONFIG[FREETYPE_DIRECTORY]="$1"; shift;;
@@ -494,6 +498,8 @@ function configDefaults() {
 
   # Set default value to "false". We config buildArg per each config file to have it enabled by our pipeline
   BUILD_CONFIG[CREATE_SBOM]="false"
+
+  BUILD_CONFIG[ENABLE_SBOM_STRACE]="false"
 
   # The default behavior of whether we want to create a separate source archive
   BUILD_CONFIG[CREATE_SOURCE_ARCHIVE]="false"
