@@ -131,35 +131,6 @@ configureReproducibleBuildParameter() {
          addConfigureArg "--with-extra-cflags=" "-qnotimestamps"
          addConfigureArg "--with-extra-cxxflags=" "-qnotimestamps"
       fi
-
-      # For jdk21u a workaround is required for debug symbol mapping
-      # until https://bugs.openjdk.org/browse/JDK-8326685 is backported
-      if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 21 ]]
-      then
-         configureReproducibleBuildDebugMapping
-      fi
-  fi
-}
-
-# For reproducible builds we need to add debug mappings for the build/OUTPUTDIR
-# so that debug symbol files (and thus libraries) are deterministic
-configureReproducibleBuildDebugMapping() {
-  # Workaround until https://bugs.openjdk.org/browse/JDK-8326685 is backported to jdk21u
-  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
-    local OUTPUT_DIR
-    if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
-      OUTPUT_DIR="linux-arm-serverANDclient-release"
-    else
-      OUTPUT_DIR="linux-${BUILD_CONFIG[OS_ARCHITECTURE]}-server-release"
-    fi
-
-    local buildOutputDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/${OUTPUT_DIR}/"
-    # Ensure directory is correctly formed so is mapped, with no ./ or //
-    buildOutputDir=$(echo ${buildOutputDir} | sed 's,\./,,' | sed 's,//,/,')
-    local fdebug_flags="-fdebug-prefix-map=${buildOutputDir}="
-
-    addConfigureArg "--with-extra-cflags=" "'${fdebug_flags}'"
-    addConfigureArg "--with-extra-cxxflags=" "'${fdebug_flags}'"
   fi
 }
 
