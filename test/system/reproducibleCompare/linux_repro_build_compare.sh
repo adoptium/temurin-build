@@ -18,7 +18,7 @@
 installPrereqs() {
   if test -r /etc/redhat-release; then
     yum install -y gcc gcc-c++ make autoconf unzip zip alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
-    yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel # Not included above ...
+    yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel epel-release # Not included above ...
     yum install -y git bzip2 xz openssl pigz which jq # pigz/which not strictly needed but help in final compression
     if grep -i release.6 /etc/redhat-release; then
       if [ ! -r /usr/local/bin/autoconf ]; then
@@ -26,6 +26,7 @@ installPrereqs() {
         (cd autoconf-2.69 && ./configure --prefix=/usr/local && make install)
       fi
     fi
+    jq --version
   fi
 }
 

@@ -17,13 +17,13 @@
 <playlist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../TKG/playlist.xsd">
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test</testCaseName>
-		<command>docker run -v "$(TEST_RESROOT):/home/jenkins/test" -v "$(TEST_JDK_HOME)/..:/home/jenkins/jdkbinary" -w "/home/jenkins/" --name reproducibleCompare adoptopenjdk/centos7_build_image /bin/bash /home/jenkins/test/linux_repro_build_compare.sh; \
+		<command>docker run -v "$(TEST_RESROOT):/home/jenkins/test" -v "$(TEST_JDK_HOME)/..:/home/jenkins/jdkbinary" -w "/home/jenkins/" --name reproducibleCompare centos:7 /bin/bash /home/jenkins/test/linux_repro_build_compare.sh; \
 	$(TEST_STATUS); \
 	docker cp reproducibleCompare:/home/jenkins/reprotest.diff ./; \
 	docker container rm reproducibleCompare
 	</command>
 		<levels>
-			<level>dev</level>
+			<level>special</level>
 		</levels>
 		<groups>
 			<group>system</group>

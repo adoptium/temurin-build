@@ -14,32 +14,22 @@
   ~ ********************************************************************************
 -->
 
-<project name="Functional Reproducible Comparison Tests" default="build" basedir=".">
+<project name="System Reproducible Comparison Tests" default="build" basedir=".">
     <taskdef resource="net/sf/antcontrib/antlib.xml"/>
     <description>
         Temurin Reproducible Comparison tests
     </description>
-    <import file="${TEST_ROOT}/functional/build.xml"/>
-
+    <!-- <import file="${TEST_ROOT}/system/common.xml"/>  -->
     <!-- set global properties for this build -->
-    <property name="DEST" value="${BUILD_ROOT}/functional/reproducibleCompare"/>
+    <property name="DEST" value="${BUILD_ROOT}/system/reproducibleCompare"/>
 
     <target name="init">
         <mkdir dir="${DEST}"/>
     </target>
 
-    <target name="dist" description="generate the distribution">
-        <copy todir="${DEST}">
-            <fileset dir="./" includes="*.xml, *.mk, *.sh"/>
-        </copy>
-    </target>
-
-    <target name="clean" depends="dist" description="clean up">
-        <!-- Delete the ${build} directory trees -->
-        <delete dir="${build}"/>
-    </target>
-
-    <target name="build">
-        <antcall target="clean" inheritall="true"/>
-    </target>
+    <target name="build" depends="init">
+		<copy todir="${DEST}">
+			<fileset dir="." includes="*.mk, *.xml, *.sh" />
+		</copy>
+	</target>
 </project>
