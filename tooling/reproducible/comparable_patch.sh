@@ -86,9 +86,10 @@ echo "  PATCH_VS_VERSION_INFO=$PATCH_VS_VERSION_INFO"
 # Remove excluded files known to differ
 #  NOTICE - Vendor specfic notice text file
 #  cacerts - Vendors use different cacerts
+#  classlist - Used to generate CDS archives, can vary due to different build machine environment
 #  classes.jsa, classes_nocoops.jsa - CDS archive caches will differ due to Vendor string differences
 function removeExcludedFiles() {
-  excluded="NOTICE cacerts classes.jsa classes_nocoops.jsa"
+  excluded="NOTICE cacerts classlist classes.jsa classes_nocoops.jsa"
 
   echo "Removing excluded files known to differ: ${excluded}"
   for exclude in $excluded
@@ -97,7 +98,7 @@ function removeExcludedFiles() {
       for f in $FILES
         do
           echo "Removing $f"
-          rm "$f"
+          rm -f "$f"
         done
     done
 
@@ -109,9 +110,8 @@ function removeExcludedFiles() {
 #   - ModuleResolution:
 #   - ModuleTarget:
 # java.base also requires the dependent module "hash:" values to be excluded
-# as they differ due to the Signatures
+# as they differ due to the Signatures and Vendor string differences
 function processModuleInfo() {
-  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
     echo "Normalizing ModuleAttributes order in module-info.class, converting to javap"
 
     moduleAttr="ModuleResolution ModuleTarget"
@@ -180,7 +180,6 @@ function processModuleInfo() {
         rm -f "$f.javap.$attr"
       done
     done
-  fi
 }
 
 # Process SystemModules classes to remove ModuleHashes$Builder differences due to Signatures
@@ -531,10 +530,10 @@ processModuleInfo
 if [[ "$OS" =~ CYGWIN* ]] && [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
   # Neutralise COMPANY_NAME
   neutraliseVsVersionInfo
-
-  # SystemModules$*.class's differ due to hash differences from COMPANY_NAME
-  removeSystemModulesHashBuilderParams
 fi
+
+# SystemModules$*.class's differ due to hash differences from COMPANY_NAME
+removeSystemModulesHashBuilderParams
 
 if [[ "$OS" =~ CYGWIN* ]]; then
    removeWindowsNonComparableData
