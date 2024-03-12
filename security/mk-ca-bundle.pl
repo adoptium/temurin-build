@@ -608,3 +608,25 @@ if($opt_u && -e $txt && !unlink($txt)) {
 }
 report "Done ($certnum CA certs processed, $skipnum skipped).";
 print $certnum;
+
+# Update test/functional/buildAndPackage/src/net/adoptium/test/VerifyCACertsTest.java
+# to private static final int EXPECTED_COUNT = $certnum
+my $filename = '../test/functional/buildAndPackage/src/net/adoptium/test/VerifyCACertsTest.java';
+open my $fh, '<', $filename or die "Couldn't open file: $!";
+
+# Read the entire file into an array
+my @lines = <$fh>;
+close $fh;
+
+# Open the same file for writing (this clears the file)
+open $fh, '>', $filename or die "Couldn't open file: $!";
+
+# Process each line
+foreach my $line (@lines) {
+  if ($line =~ /private static final int EXPECTED_COUNT = \d+/) {
+    $line = "    private static final int EXPECTED_COUNT = $certnum;\n";
+  }
+  print $fh $line;
+}
+
+close $fh;
