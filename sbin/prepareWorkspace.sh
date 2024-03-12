@@ -302,8 +302,8 @@ createWorkspace() {
   # If a user supplied OpenJDK build root directory has been specified and it is not empty
   # then fail with an error, we don't want to delete it in case user has specified a wrong directory
   # Ensure the directory is created if it doesn't exist
-  if [[ ! -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]]; then
-    if [[ -d "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]] && [[ "$(ls -A ${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]})" ]]; then
+  if [[ -n "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]]; then
+    if [[ -d "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]] && [[ "$(ls -A "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}")" ]]; then
       echo "ERROR: Existing user supplied OpenJDK build root directory ${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]} is not empty"
       exit 1
     fi
