@@ -973,7 +973,7 @@ generateSBoM() {
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
     echo "Executing Analysis Script"
     tempBldDir="$(dirname "${BUILD_CONFIG[WORKSPACE_DIR]}")"
-    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/straceOutput" "$tempBldDir" "$javaHome" "$classpath" "$sbomJson"
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput" "$tempBldDir" "$javaHome" "$classpath" "$sbomJson"
   fi
 
   # Print SBOM location
