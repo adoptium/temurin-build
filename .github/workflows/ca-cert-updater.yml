@@ -26,8 +26,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
         with:
+          branch: ca-certs-updater
           title: "Update CA Certs"
           body: "See details in the Meta Bug linked from the *Root Cert Inclusions into Mozilla Product Releases* section of https://wiki.mozilla.org/NSS:Release_Versions"
-          path: "security/"
           commit-message: "cacerts: pull in updated certs from Mozilla"
           author: "eclipse-temurin-bot <temurin-bot@eclipse.org>"
