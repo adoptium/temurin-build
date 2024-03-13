@@ -900,6 +900,7 @@ generateSBoM() {
   # Set default SBOM formulation
   addSBOMFormulation "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX"
   addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs"
+  addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions"
 
   # Below add build tools into metadata tools
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
@@ -1096,11 +1097,20 @@ addCycloneDXVersions() {
        for JAR in "${CYCLONEDB_DIR}/build/jar"/*.jar; do
          JarName=$(basename "$JAR")
          if [ "$(uname)" = "Darwin" ]; then
-            JarSha=$(shasum -a 256 "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+            JarSha=$(shasum -a 256 "$JAR" | cut -d' ' -f1)
          else
-            JarSha=$(sha256sum "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+            JarSha=$(sha256sum "$JAR" | cut -d' ' -f1)
          fi
          addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}" "${JarSha}"
+         # Now the jar's SHA has been added, we add the version string.
+         JarVersionFile="$(joinPath ${CYCLONEDB_DIR} dependency_data versions ${JarName}.version)"
+         if [ -f "${JarVersionFile}" ]; then
+           JarVersionString=$(cat "${JarVersionFile}")
+           addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions" "${JarName}" "${JarVersionString}"
+         elif [ "${JarName}" != "temurin-gen-sbom.jar" ]; then
+           echo "ERROR: Cannot find jar version file for SBOM creation dependency ${JarName}."
+           echo "ERROR: Expected location: ${JarVersionFile}"
+         fi
        done
    fi
 }
