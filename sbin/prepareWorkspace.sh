@@ -606,7 +606,7 @@ downloadDevkit() {
     # GPG verify
     gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
-    gpg --verify "${devkit_tar}.sig" ${devkit_tar} || exit 1
+    gpg --verify "${devkit_tar}.sig" "${devkit_tar}" || exit 1
 
     tar --xz -xpf "${devkit_tar}" -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
     rm "${devkit_tar}"
@@ -614,12 +614,12 @@ downloadDevkit() {
 
     # Validate devkit.info matches requirements
     devkitInfo="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.info"
-    if ! grep ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]} ${devkitInfo} || ! grep ADOPTIUM_DEVKIT_TARGET=${devkit_target} ${devkitInfo}; then
+    if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${devkitInfo}" || ! grep "ADOPTIUM_DEVKIT_TARGET=${devkit_target}" "${devkitInfo}"; then
         echo "ERROR: Devkit does not match required release and architecture:"
         echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
-        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_RELEASE= ${devkitInfo})"
+        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_RELEASE= "${devkitInfo}")"
         echo "       Required:   ADOPTIUM_DEVKIT_TARGET=${devkit_target}"
-        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_TARGET= ${devkitInfo})"
+        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_TARGET= "${devkitInfo}")"
         exit 1
     fi
   fi
