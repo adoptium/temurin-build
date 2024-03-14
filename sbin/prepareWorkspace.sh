@@ -601,8 +601,8 @@ downloadDevkit() {
 
     # Download tarball and GPG sig
     echo "Downloading DevKit : ${devkitUrl}/${devkit}.tar.xz"
-    curl --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
-    curl --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
+    curl -L --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
+    curl -L --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
 
     # GPG verify
     gpg --keyserver keyserver.ubuntu.com --recv-keys "${ADOPTIUM_GPGKEYID}"
