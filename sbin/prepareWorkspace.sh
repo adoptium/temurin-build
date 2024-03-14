@@ -36,6 +36,7 @@ ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
 ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f08783329157e8dd68b3de0c096de6d724}
 ALSA_LIB_GPGKEYID=${ALSA_LIB_GPGKEYID:-A6E59C91}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
+ADOPTIUM_GPGKEYID="3B04D753C9050D9A5D343F39843C48A565F8F04B"
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for Single Responsibility Principle (SRP)
@@ -330,21 +331,8 @@ checkingAndDownloadingAlsa() {
     curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
     curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
 
-    ## This affects riscv64 & Alpine docker images and also evaluation pipelines
-    if ( [ -r /etc/alpine-release ] && [ "$(pwd | wc -c)" -gt 83 ] ) || \
-       ( [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] && [ "$(pwd | wc -c)" -gt 83 ] ); then
-        # Use /tmp in preference to $HOME as fails gpg operation if PWD > 83 characters
-        # Also cannot create ~/.gpg-temp within a docker context
-        GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
-    else
-        GNUPGHOME="${BUILD_CONFIG[WORKSPACE_DIR]:-$PWD}/.gpg-temp"
-    fi
-    if [ ! -d "$GNUPGHOME" ]; then
-        mkdir -m 700 "$GNUPGHOME"
-    fi
-    export GNUPGHOME
+    setupGpg
 
-    echo "GNUPGHOME=$GNUPGHOME"
     # Should we clear this directory up after checking?
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now
@@ -577,6 +565,53 @@ prepareMozillaCacerts() {
     fi
 }
 
+Create and setup GNUPGHOME
+setupGpg() {
+    ## This affects riscv64 & Alpine docker images and also evaluation pipelines
+    if ( [ -r /etc/alpine-release ] && [ "$(pwd | wc -c)" -gt 83 ] ) || \
+       ( [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] && [ "$(pwd | wc -c)" -gt 83 ] ); then
+        # Use /tmp in preference to $HOME as fails gpg operation if PWD > 83 characters
+        # Also cannot create ~/.gpg-temp within a docker context
+        GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
+    else
+        GNUPGHOME="${BUILD_CONFIG[WORKSPACE_DIR]:-$PWD}/.gpg-temp"
+    fi
+    if [ ! -d "$GNUPGHOME" ]; then
+        mkdir -m 700 "$GNUPGHOME"
+    fi
+    export GNUPGHOME
+
+    echo "GNUPGHOME=$GNUPGHOME"
+}
+
+# Download the required DevKit if necessary
+downloadDevkit() {
+  if [[ -n "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" ]]; then
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+
+    devkit_tar="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.tar.xz"
+
+    setupGpg
+
+    # Determine DevKit tarball to download for this arch and release
+    devkitUrl="https://github.com/adoptium/devkit-binaries/releases/tag/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+    devkit_target="${BUILD_CONFIG[OS_ARCHITECTURE]}-linux-gnu"
+    devkit="devkit-$(echo "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" | cut -d'-' -f1-3)-${devkit_target}-$(echo "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" | cut -d'-' -f4)"
+
+    # Download tarball and GPG sig
+    curl --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
+    curl --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
+
+    # GPG verify
+    gpg --keyserver keyserver.ubuntu.com --recv-keys "${ADOPTIUM_GPGKEYID}"
+    echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ADOPTIUM_GPGKEYID}" trust;
+    gpg --verify "${devkit_tar}.sig" ${devkit_tar} || exit 1
+
+    tar xpzf "${devkit_tar}" -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+  fi
+}
+
 # Download all of the dependencies for OpenJDK (Alsa, FreeType etc.)
 downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
@@ -695,6 +730,7 @@ function configureWorkspace() {
   if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" != "true" ]]; then
     createWorkspace
     downloadingRequiredDependencies
+    downloadDevkit
     relocateToTmpIfNeeded
     checkoutAndCloneOpenJDKGitRepo
     applyPatches
