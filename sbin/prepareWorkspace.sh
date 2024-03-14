@@ -600,6 +600,7 @@ downloadDevkit() {
     devkit="devkit-$(echo "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" | cut -d'-' -f1-3)-${devkit_target}-$(echo "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" | cut -d'-' -f4)"
 
     # Download tarball and GPG sig
+    echo curl --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
     curl --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
     curl --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
 
