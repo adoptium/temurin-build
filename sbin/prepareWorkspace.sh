@@ -36,7 +36,6 @@ ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
 ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f08783329157e8dd68b3de0c096de6d724}
 ALSA_LIB_GPGKEYID=${ALSA_LIB_GPGKEYID:-A6E59C91}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
-ADOPTIUM_GPGKEYID=3B04D753C9050D9A5D343F39843C48A565F8F04B
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for Single Responsibility Principle (SRP)
@@ -605,8 +604,8 @@ downloadDevkit() {
     curl -L --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
 
     # GPG verify
-    gpg --keyserver keyserver.ubuntu.com --recv-keys "${ADOPTIUM_GPGKEYID}"
-    echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ADOPTIUM_GPGKEYID}" trust;
+    gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
+    echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
     gpg --verify "${devkit_tar}.sig" ${devkit_tar} || exit 1
 
     tar --xz -xpf "${devkit_tar}" -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
