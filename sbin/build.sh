@@ -75,6 +75,13 @@ addConfigureArgIfValueIsNotEmpty() {
   fi
 }
 
+# Configure the DevKit if required
+configureDevKitConfigureParameter() {
+  if [[ -n "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" ]]; then
+    addConfigureArg "--with-devkit=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+  fi
+} 
+
 # Configure the boot JDK
 configureBootJDKConfigureParameter() {
   addConfigureArgIfValueIsNotEmpty "--with-boot-jdk=" "${BUILD_CONFIG[JDK_BOOT_DIR]}"
