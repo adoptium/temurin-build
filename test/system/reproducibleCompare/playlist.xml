@@ -38,4 +38,25 @@
 		</versions>
 		<platformRequirements>os.linux</platformRequirements>
 	</test>
+	<test>
+		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test_win</testCaseName>
+		<command>docker run -v "$(TEST_RESROOT):/home/jenkins/test" -v "$(TEST_JDK_HOME)/..:/home/jenkins/jdkbinary" -w "/home/jenkins/" --name reproducibleCompare adoptopenjdk/centos7_build_image /bin/bash /home/jenkins/test/linux_repro_build_compare.sh; \
+	$(TEST_STATUS); \
+	docker cp reproducibleCompare:/home/jenkins/reprotest.diff ./; \
+	docker container rm reproducibleCompare
+	</command>
+		<levels>
+			<level>dev</level>
+		</levels>
+		<groups>
+			<group>system</group>
+		</groups>
+        <vendors>
+            <vendor>eclipse</vendor>
+        </vendors>
+		<versions>
+			<version>21+</version>
+		</versions>
+		<platformRequirements>os.linux</platformRequirements>
+	</test>
 </playlist>
