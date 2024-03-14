@@ -510,6 +510,7 @@ configureZlibLocation() {
 configureCommandParameters() {
   configureVersionStringParameter
   configureBootJDKConfigureParameter
+  configureDevKitConfigureParameter
   configureShenandoahBuildParameter
   configureMacOSCodesignParameter
   configureDebugParameters
