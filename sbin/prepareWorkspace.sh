@@ -618,9 +618,10 @@ downloadDevkit() {
     if ! grep ADOPTIUM_DEVKIT_RELaEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]} ${devkitInfo} || ! grep ADOPTIUM_DEVKIT_TARGET=${devkit_target} ${devkitInfo}; then
         echo "ERROR: Devkit does not match required release and architecture:"
         echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
-        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_RELEASE= devkit.info)"
+        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_RELEASE= ${devkitInfo})"
         echo "       Required:   ADOPTIUM_DEVKIT_TARGET=${devkit_target}"
-        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_TARGET= devkit.info)"
+        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_TARGET= ${devkitInfo})"
+        exit 1
     fi
   fi
 }
