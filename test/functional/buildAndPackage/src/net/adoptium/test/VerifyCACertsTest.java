@@ -39,7 +39,7 @@ public class VerifyCACertsTest {
     private static final JdkVersion JDK_VERSION = new JdkVersion();
 
     // Expect matching certs number
-    private static final int EXPECTED_COUNT = 146;
+    private static final int EXPECTED_COUNT = 147;
 
     /* TODO: add up to 141 certs
     private static final Map<String, String> EXPFP_MAP = new HashMap<>() {
