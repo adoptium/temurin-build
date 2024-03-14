@@ -565,7 +565,7 @@ prepareMozillaCacerts() {
     fi
 }
 
-Create and setup GNUPGHOME
+# Create and setup GNUPGHOME
 setupGpg() {
     ## This affects riscv64 & Alpine docker images and also evaluation pipelines
     if ( [ -r /etc/alpine-release ] && [ "$(pwd | wc -c)" -gt 83 ] ) || \
