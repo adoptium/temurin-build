@@ -131,6 +131,39 @@ configureReproducibleBuildParameter() {
          addConfigureArg "--with-extra-cflags=" "-qnotimestamps"
          addConfigureArg "--with-extra-cxxflags=" "-qnotimestamps"
       fi
+
+      # For jdk21u a workaround is required for debug symbol mapping
+      # until https://bugs.openjdk.org/browse/JDK-8326685 is backported in jdk-21.0.4
+      if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 21 ]]
+      then
+         configureReproducibleBuildDebugMapping
+      fi
+  fi
+}
+
+# For reproducible builds we need to add debug mappings for the openjdk build outputdir
+# so that debug symbol files (and thus libraries) are deterministic
+configureReproducibleBuildDebugMapping() {
+  # Workaround until https://bugs.openjdk.org/browse/JDK-8326685 is backported to jdk21u
+  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
+    local buildOutputDir
+    if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+      if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
+        buildOutputDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/linux-arm-serverANDclient-release/"
+      else
+        buildOutputDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/linux-${BUILD_CONFIG[OS_ARCHITECTURE]}-server-release/"
+      fi
+    else
+      buildOutputDir="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/"
+    fi
+
+    # Ensure directory is correctly formed so is mapped, with no ./ or //
+    buildOutputDir=$(echo ${buildOutputDir} | sed 's,\./,,' | sed 's,//,/,')
+
+    local fdebug_flags="-fdebug-prefix-map=${buildOutputDir}="
+
+    addConfigureArg "--with-extra-cflags=" "'${fdebug_flags}'"
+    addConfigureArg "--with-extra-cxxflags=" "'${fdebug_flags}'"
   fi
 }
 
