@@ -101,7 +101,7 @@ ANT_VERSION=1.10.5
 ANT_CONTRIB_VERSION=1.0b3
 installPrereqs
 downloadAnt
-ls
+
 BOOTJDK_VERSION=$(jq -r '.metadata.tools[] | select(.name == "BOOTJDK") | .version' "$SBOM")
 GCCVERSION=$(jq -r '.metadata.tools[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
 LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
