@@ -13,20 +13,20 @@
 # ********************************************************************************
 
 # This script examines the given SBOM metadata file, and then builds the exact same binary
-# and then compares with the Temurin JDK for the same build version, or the optionally supplied TARBALL_URL.
+# and then compares with the Temurin JDK for the same build version, or the optionally supplied TARBALL_PARAM.
 
 set -e
 
-[ $# -lt 1 ] && echo "Usage: $0 SBOM_URL TARBALL_URL" && exit 1
-SBOM_URL=$1
-TARBALL_URL=$2
+[ $# -lt 1 ] && echo "Usage: $0 SBOM_PARAM TARBALL_PARAM" && exit 1
+SBOM_PARAM=$1
+TARBALL_PARAM=$2
 ANT_VERSION=1.10.5
 ANT_CONTRIB_VERSION=1.0b3
 
 installPrereqs() {
   if test -r /etc/redhat-release; then
     yum install -y gcc gcc-c++ make autoconf unzip zip alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
-    yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel # Not included above ...
+    yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel epel-release # Not included above ...
     yum install -y git bzip2 xz openssl pigz which jq # pigz/which not strictly needed but help in final compression
     if grep -i release.6 /etc/redhat-release; then
       if [ ! -r /usr/local/bin/autoconf ]; then
@@ -85,12 +85,17 @@ checkAllVariablesSet() {
   fi
 }
 
+echo "pwd is $PWD"
+ls
 installPrereqs
 downloadAnt
 
-echo "Retrieving and parsing SBOM from $SBOM_URL"
-curl -LO "$SBOM_URL"
-SBOM=$(basename "$SBOM_URL")
+if [[ $SBOM_PARAM =~ ^https?:// ]]; then
+  echo "Retrieving and parsing SBOM from $SBOM_PARAM"
+  curl -LO "$SBOM_PARAM"
+fi
+
+SBOM=$(basename "$SBOM_PARAM")
 BOOTJDK_VERSION=$(jq -r '.metadata.tools[] | select(.name == "BOOTJDK") | .version' "$SBOM")
 GCCVERSION=$(jq -r '.metadata.tools[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
 LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
@@ -108,10 +113,14 @@ downloadTooling
 setEnvironment
 
 if [ ! -d "jdk-${TEMURIN_VERSION}" ]; then
-   if [ -z "$TARBALL_URL" ]; then
-       TARBALL_URL="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
-   fi
-   echo Retrieving original tarball from adoptium.net && curl -L "$TARBALL_URL" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
+  if [ -z "$TARBALL_PARAM" ]; then
+    TARBALL_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
+  fi
+  if [[ $TARBALL_PARAM =~ ^https?:// ]]; then
+    echo Retrieving original tarball from adoptium.net && curl -L "$TARBALL_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
+  else
+    tar xfz $TARBALL_PARAM -C "$PWD/jdk-${TEMURIN_VERSION}"
+  fi
 fi
 
 echo "  cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh

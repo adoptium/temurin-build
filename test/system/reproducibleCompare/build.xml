@@ -22,7 +22,7 @@
     <!-- <import file="${TEST_ROOT}/system/common.xml"/>  -->
     <!-- set global properties for this build -->
     <property name="DEST" value="${BUILD_ROOT}/system/reproducibleCompare"/>
-
+	<property environment="env"/>
     <target name="init">
         <mkdir dir="${DEST}"/>
     </target>
@@ -49,7 +49,7 @@
 		<if>
 			<isset property="env.VENDOR_TEST_BRANCHES"/>
 			<then>
-				<property name="buildBranch" value="${env.VENDOR_TEST_REPOS}"/>
+				<property name="buildBranch" value="${env.VENDOR_TEST_BRANCHES}"/>
 			</then>
 			<else>
 				<property name="buildBranch" value="master"/>
@@ -61,10 +61,14 @@
 				<arg value="${buildBranch}" />
 				<arg value="${buildRepo}" />
 		</exec>
-		<copy todir="${DEST}">
+		<copy todir="." failonerror="false">
 			<fileset dir="temurin-build/tooling/reproducible/" includes="*.sh" />
 		</copy>
-		<delete dir="temurin-build" />
+		<copy todir="." failonerror="false">
+			<fileset dir="openjdk-build/tooling/reproducible/" includes="*.sh" />
+		</copy>
+		<delete dir="temurin-build" failonerror="false" />
+		<delete dir="openjdk-build" failonerror="false" />
 	</target>
 	<target name="build" depends="init,stage">
 		<copy todir="${DEST}">
