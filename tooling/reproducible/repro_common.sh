@@ -65,6 +65,14 @@ function expandJDK() {
   unzip -d "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded" "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar" 1> /dev/null
   rm "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
 
+  echo "Expanding 'ct.sym' to workaround zip timestamp differences (https://bugs.openjdk.org/browse/JDK-8327466)"
+  mkdir "${JDK_DIR}/lib/ct-sym-expanded"
+  unzip -d "${JDK_DIR}/lib/ct-sym-expanded" "${JDK_DIR}/lib/ct.sym" 1> /dev/null
+  rm "${JDK_DIR}/lib/ct.sym"
+  mkdir -p "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct-sym-expanded"
+  unzip -d "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct-sym-expanded" "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct.sym" 1> /dev/null
+  rm "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct.sym"
+
   rm -rf "${JDK_ROOT}_CP"
 }
 

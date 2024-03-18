@@ -681,9 +681,9 @@ Compare_JDK() {
   cp "$WORK_DIR/built_jdk.zip" "$WORK_DIR/compare"
 
   # Get The Current Versions Of The Reproducible Build Scripts
-  wget -o "$WORK_DIR/compare/repro_common.sh" "https://github.com/adoptium/temurin-build/blob/master/tooling/reproducible/repro_common.sh"
-  wget -o "$WORK_DIR/compare/repro_compare.sh" "https://github.com/adoptium/temurin-build/blob/master/tooling/reproducible/repro_compare"
-  wget -o "$WORK_DIR/compare/repro_process.sh" "https://github.com/adoptium/temurin-build/blob/master/tooling/reproducible/repro_process.sh"
+  wget -O "$WORK_DIR/compare/repro_common.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_common.sh"
+  wget -O "$WORK_DIR/compare/repro_compare.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_compare.sh"
+  wget -O "$WORK_DIR/compare/repro_process.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_process.sh"
 
   # Set Permissions
   chmod +x "$WORK_DIR/compare/"*sh
