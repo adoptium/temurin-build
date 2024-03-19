@@ -39,7 +39,6 @@ TARBALL_URL="$2"
 # These Values Should Be Updated To Reflect The Build Environment
 # The Defaults Below Are Suitable For An Adoptium Windows Build Environment
 # Which Has Been Created Via The Ansible Infrastructure Playbooks
-
 WORK_DIR="/cygdrive/c/comp-jdk-build"
 ANT_VERSION="1.10.5"
 ANT_CONTRIB_VERSION="1.0b3"
@@ -171,10 +170,16 @@ Install_PreReqs() {
         APTJQ_INSTALLED="False"
         apt-cyg install jq libjq1 libonig5
       fi
+<<<<<<< Upstream, based on upstream/master
   fi
 
   # Install JQ Where Not Already Installed
 
+=======
+  else
+    echo "JQ Is Already Installed"
+  fi
+>>>>>>> 775b25c Set copy and delelet failonerror="false"
 }
 
 Get_SBOM_Values() {
