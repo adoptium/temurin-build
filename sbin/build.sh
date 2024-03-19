@@ -1038,9 +1038,9 @@ addCycloneDXVersions() {
        for JAR in "${CYCLONEDB_DIR}/build/jar"/*.jar; do
          JarName=$(basename "$JAR")
          if [ "$(uname)" = "Darwin" ]; then
-            JarSha=$(shasum -a 256 "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+            JarSha=$(shasum -a 256 "$JAR" | cut -d' ' -f1)
          else
-            JarSha=$(sha256sum "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+            JarSha=$(sha256sum "$JAR" | cut -d' ' -f1)
          fi
          addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}" "${JarSha}"
        done
