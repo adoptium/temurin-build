@@ -137,38 +137,11 @@ Check_Parameters() {
   fi
 }
 
-Install_PreReqs() {
-  # Install Cygwin Package Manager If Not Present
-  echo "Checking If Apt-Cyg Is Already Installed"
-  if [ -f /usr/local/bin/apt-cyg ]; then
-    echo "Skipping apt-cyg Install"
-    APTCYG_INSTALLED="True"
-  else
-    echo "Installing apt-cyg"
-    APTCYG_INSTALLED="False"
-    wget -q -O "./apt-cyg" "https://raw.githubusercontent.com/transcode-open/apt-cyg/master/apt-cyg"
-    ACTSHASUM=$(sha256sum "apt-cyg" | awk '{print $1}')
-    EXPSHASUM="d020050e2cb56fec990f16fd10695e153afd064cb0839ba935247b5a9e4c29a0"
-
-    if [ "$ACTSHASUM" == "$EXPSHASUM" ]; then
-      chmod +x apt-cyg
-      mv apt-cyg /usr/local/bin
-    else
-      echo "Checksum Is Not OK - Exiting"
+Check_PreReqs() {
+    if ! command -v jq &> /dev/null; then
+      echo "Error: JQ is not installed. Please install JQ before proceeding."
       exit 1
     fi
-  fi
-
-  # Install JQ Where Not Already Installed
-  echo "Checking If JQ Is Already Installed"
-  if [ -f /usr/local/bin/jq ]; then
-    echo "Skipping JQ Install"
-    APTJQ_INSTALLED="True"
-  else
-    echo "Installing JQ via APTCYG"
-    APTJQ_INSTALLED="False"
-    apt-cyg install jq libjq1 libonig5
-  fi
 }
 
 Get_SBOM_Values() {
@@ -796,7 +769,7 @@ Create_WorkDir
 echo "---------------------------------------------"
 Check_Parameters
 echo "---------------------------------------------"
-Install_PreReqs
+Check_PreReqs
 echo "---------------------------------------------"
 Get_SBOM_Values
 echo "---------------------------------------------"
