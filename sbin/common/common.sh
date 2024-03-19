@@ -152,7 +152,7 @@ createOpenJDKArchive()
   local fullPath
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "darwin" ]]; then
     fullPath=$(crossPlatformRealPath "$repoDir")
-    if [[ "$fullPath" != "${BUILD_CONFIG[WORKSPACE_DIR]}"* ]]; then
+    if [[ "$fullPath" != "${BUILD_CONFIG[WORKSPACE_DIR]}"* ]] && { [[ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]] || [[ "$fullPath" != "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"* ]]; }; then
       echo "Requested to archive a dir outside of workspace"
       exit 1
     fi
