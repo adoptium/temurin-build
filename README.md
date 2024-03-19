@@ -236,6 +236,10 @@ This is typically used in conjunction with -b.
 --use-jep319-certs
 Use certs defined in JEP319 in Java 8/9. Deprecated, has no effect.
 
+--user-openjdk-build-root-directory <openjdk build root path>
+Use a user specified openjdk build root directory, rather than the OpenJDK git source directory.
+The directory must be empty, or not exist (in which case it gets created).
+
 -v, --version
 specify the OpenJDK version to build e.g. jdk8u.  Left for backwards compatibility.
 

@@ -104,6 +104,7 @@ USE_JEP319_CERTS
 USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
 USER_SUPPLIED_MAKE_ARGS
+USER_OPENJDK_BUILD_ROOT_DIRECTORY
 VENDOR
 VENDOR_URL
 VENDOR_BUG_URL
@@ -355,6 +356,9 @@ function parseConfigurationArguments() {
         "--use-jep319-certs" )
         BUILD_CONFIG[USE_JEP319_CERTS]=true;;
 
+        "--user-openjdk-build-root-directory" )
+        BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]="$1"; shift;;
+
         "--vendor" | "-ve" )
         BUILD_CONFIG[VENDOR]="$1"; shift;;
 
@@ -489,6 +493,9 @@ function configDefaults() {
 
   # Default to no supplied reproducible build date, uses current date
   BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]=""
+
+  # Default to no user supplied openjdk build root directory
+  BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]=""
 
   # The default behavior of whether we want to create a separate debug symbols archive
   BUILD_CONFIG[CREATE_DEBUG_IMAGE]="false"
