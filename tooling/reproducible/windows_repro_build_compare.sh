@@ -39,7 +39,8 @@ TARBALL_URL="$2"
 # These Values Should Be Updated To Reflect The Build Environment
 # The Defaults Below Are Suitable For An Adoptium Windows Build Environment
 # Which Has Been Created Via The Ansible Infrastructure Playbooks
-WORK_DIR="/cmp$(date +%Y%m%d%H%M%S)"
+CURR_DIR=$(pwd)
+WORK_DIR="$CURR_DIR/cmp$(date +%Y%m%d%H%M%S)"
 ANT_VERSION="1.10.5"
 ANT_CONTRIB_VERSION="1.0b3"
 ANT_BASE_PATH="/cygdrive/c/apache-ant"
@@ -137,11 +138,44 @@ Check_Parameters() {
   fi
 }
 
-Check_PreReqs() {
-    if ! command -v jq &> /dev/null; then
-      echo "Error: JQ is not installed. Please install JQ before proceeding."
-      exit 1
-    fi
+Install_PreReqs() {
+  # Check For JQ & Install Apt-Cyg & JQ Where Not Available
+  if ! command -v jq &> /dev/null; then
+      echo "WARNING: JQ is not installed. Attempting To Install Via Apt-Cyg"
+      echo "Checking If Apt-Cyg Is Already Installed"
+      if [ -f /usr/local/bin/apt-cyg ]; then
+        echo "Skipping apt-cyg Install"
+        APTCYG_INSTALLED="True"
+      else
+        echo "Installing apt-cyg"
+        APTCYG_INSTALLED="False"
+        wget -q -O "./apt-cyg" "https://raw.githubusercontent.com/transcode-open/apt-cyg/master/apt-cyg"
+        ACTSHASUM=$(sha256sum "apt-cyg" | awk '{print $1}')
+        EXPSHASUM="d020050e2cb56fec990f16fd10695e153afd064cb0839ba935247b5a9e4c29a0"
+        if [ "$ACTSHASUM" == "$EXPSHASUM" ]; then
+          chmod +x apt-cyg
+          mv apt-cyg /usr/local/bin
+        else
+          echo "Checksum Is Not OK - Exiting"
+          exit 1
+        fi
+      fi
+
+      echo "Checking If JQ Is Already Installed"
+      if [ -f /usr/local/bin/jq ]; then
+        echo "Skipping JQ Install"
+        APTJQ_INSTALLED="True"
+      else
+        echo "Installing JQ via APTCYG"
+        APTJQ_INSTALLED="False"
+        apt-cyg install jq libjq1 libonig5
+      fi
+  else
+    echo "JQ Is Already Installed"
+  fi
+
+  # Install JQ Where Not Already Installed
+
 }
 
 Get_SBOM_Values() {
@@ -769,7 +803,7 @@ Create_WorkDir
 echo "---------------------------------------------"
 Check_Parameters
 echo "---------------------------------------------"
-Check_PreReqs
+Install_PreReqs
 echo "---------------------------------------------"
 Get_SBOM_Values
 echo "---------------------------------------------"
