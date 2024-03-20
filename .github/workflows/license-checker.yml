@@ -11,20 +11,19 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
-name: Code Freeze Bot
+# Check license headers
 
-# Controls when the workflow will run
+name: Check License Headers
 on:
-  pull_request_target:
-    branches: [ "v[0-9]+.[0-9]+.[0-9]+" ]
-  issue_comment:
-    types: [created]
-
-permissions:
-  contents: write
-  pull-requests: write
+  pull_request:
+    branches: [ master ]
 
 jobs:
-  codefreeze:
-    uses: adoptium/.github/.github/workflows/code-freeze.yml@main
-    secrets: inherit
+  license-check:
+    runs-on: ubuntu-latest
+    name: License Headers 
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+    - name: Check License Header
+      uses: apache/skywalking-eyes/header@6b2529214f6b1ccee3ec92bb0adfeabf6f66f538 # v0.5.0
