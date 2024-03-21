@@ -170,8 +170,6 @@ Install_PreReqs() {
         APTJQ_INSTALLED="False"
         apt-cyg install jq libjq1 libonig5
       fi
-  else
-    echo "JQ Is Already Installed"
   fi
 
   # Install JQ Where Not Already Installed
