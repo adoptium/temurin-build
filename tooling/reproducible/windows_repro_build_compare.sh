@@ -572,7 +572,7 @@ Prepare_Env_For_Build() {
   # Loop through the words
   for word in "${words[@]}"; do
     # Check if the word starts with '--'
-    if [[ $word == --* ]]; then
+    if [[ $word == --* ]] || [[ $word == -b* ]]; then
       # If a parameter already exists, store it in the params array
       if [[ -n $param ]]; then
         params+=("$param=$value")
@@ -587,8 +587,6 @@ Prepare_Env_For_Build() {
 
     # Add the last parameter to the array
   params+=("$param = $value")
-
-
 
   # Read the separated parameters and values into a new array
   export fixed_param=""
@@ -607,12 +605,14 @@ Prepare_Env_For_Build() {
     fixed_value=$(echo "$prepped_value" | awk '{$1=$1};1')
 
     # Handle Special parameters
+    if [ "$fixed_param" == "-b" ]; then fixed_value="$fixed_value " ; fi
     if [ "$fixed_param" == "--jdk-boot-dir" ]; then fixed_value="$BOOTJDK_HOME " ; fi
     if [ "$fixed_param" == "--freetype-dir" ]; then fixed_value="$fixed_value " ; fi
     if [ "$fixed_param" == "--with-toolchain-version" ]; then fixed_value="$visualStudioVersion " ; fi
     if [ "$fixed_param" == "--with-ucrt-dll-dir" ]; then fixed_value="temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder " ; fi
     if [ "$fixed_param" == "--target-file-name" ]; then target_file="$fixed_value" ; fixed_value="$fixed_value " ; fi
     if [ "$fixed_param" == "--tag" ]; then fixed_value="$fixed_value " ; fi
+
 
     # Fix Build Variant Parameter To Strip JDK Version
 
