@@ -1,6 +1,6 @@
 #!/bin/bash
 # ********************************************************************************
-# Copyright (c) 2024 Contributors to the Eclipse Foundation
+# Copyright (c) 2023 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) where distributed with this work for additional
 # information regarding copyright ownership.
@@ -11,6 +11,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
+
 ################################################################################
 #
 # This script produces arrays of regular expressions that match a type of failure

@@ -1,6 +1,7 @@
 #!/bin/bash
+# shellcheck disable=SC2129
 # ********************************************************************************
-# Copyright (c) 2024 Contributors to the Eclipse Foundation
+# Copyright (c) 2020 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) where distributed with this work for additional
 # information regarding copyright ownership.
@@ -11,8 +12,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
-
-# shellcheck disable=SC2129
 
 set -eu
 
@@ -155,7 +154,7 @@ printPreamble() {
   echo "
 #
 # ********************************************************************************
-# Copyright (c) 2024 Contributors to the Eclipse Foundation
+# Copyright (c) 2020 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) where distributed with this work for additional
 # information regarding copyright ownership.

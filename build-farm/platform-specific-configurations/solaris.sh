@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC1091
 # ********************************************************************************
-# Copyright (c) 2024 Contributors to the Eclipse Foundation
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) where distributed with this work for additional
 # information regarding copyright ownership.

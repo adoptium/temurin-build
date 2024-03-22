@@ -12,7 +12,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
-# shellcheck disable=SC1091source repro_common.sh
+# shellcheck disable=SC1091
+source repro_common.sh
 
 BLD_TYPE1="$1"
 JDK_DIR1="$2"

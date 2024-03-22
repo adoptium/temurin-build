@@ -1,6 +1,7 @@
 #!/bin/bash
+# shellcheck disable=SC2155,SC1091,SC2196,SC2235
 # ********************************************************************************
-# Copyright (c) 2024 Contributors to the Eclipse Foundation
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) where distributed with this work for additional
 # information regarding copyright ownership.
@@ -12,7 +13,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
-# shellcheck disable=SC2155,SC1091,SC2196,SC2235
 ################################################################################
 #
 # This script prepares the workspace to build (Adoptium) OpenJDK.

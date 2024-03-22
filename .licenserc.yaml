@@ -38,6 +38,7 @@ header:
     - '**/*.md'
     - '.gitignore'
     - '.dockerignore'
+    - 'docker/.gitignore'
     - 'security/.gitignore'
     - 'security/mk-ca-bundle.pl'
     - 'security/certdata.txt'
