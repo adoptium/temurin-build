@@ -39,10 +39,38 @@ FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 
 
 copyFromDir() {
-  echo "Copyng existing ${BUILD_CONFIG[+OPENJDK_FOREST_DIR_ABSPATH]} to `pwd`/${BUILD_CONFIG[OPENJDK_FOREST_NAME]} to be built"
+  echo "Copyng existing ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} to `pwd`/${BUILD_CONFIG[OPENJDK_FOREST_NAME]} to be built"
   mkdir -p "./${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
   # we really do not want to use .git for dirs, as we expect user have them set up, ignoring them
   cp -rf ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}/* "./${BUILD_CONFIG[OPENJDK_FOREST_NAME]}/"
+}
+
+unpackFromArchive() {
+  echo "Extracting source tarball ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} to `pwd`/${BUILD_CONFIG[OPENJDK_FOREST_NAME]} to be built"
+  mkdir -p "./${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
+  # if the tarball contains .git files, they should be ignored later withut shame
+  # todo, support also zips?
+  pushd "./${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
+    local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" | wc -l)
+    if [ "$topLevelItems" -eq "1" ] ; then
+      echo "Source tarball contans exaclty one directory, using"
+      tar --strip-components 1 -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
+    else
+      echo "Source tarball do not contains top level directory, using"
+      tar -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
+    fi
+  popd
+}
+
+copyFromDirOrUnpackFromArchive() {
+  if [ -d "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" ] ; then
+    copyFromDir
+  elif [ -f "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" ] ; then
+    unpackFromArchive
+  else
+    echo "Not directory nor file ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
+    exit 1
+  fi
 }
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
@@ -87,7 +115,7 @@ checkoutAndCloneOpenJDKGitRepo() {
       exit 1
     fi
   elif [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
-    copyFromDir
+    copyFromDirOrUnpackFromArchive
   elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
     echo "Could not find a valid openjdk git repository at $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} so re-cloning the source to openjdk"
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"

@@ -27,6 +27,15 @@ that you are building for further details.
 This will start a Docker container and build you the latest Java 8 Temurin
 binary from the source at https://github.com/adoptium/openjdk-jdk8u
 
+"./makejdk-any-platform.sh --jdk-dir-altid jdk17u ~/repos/myJdk"
+
+This will start a build of yours myJdk directory treating it as jdk17
+
+"./makejdk-any-platform.sh jdk21u.tar.gz"
+
+This will start a build of yours source tarball of jdk17.
+But it is always safer with --jdk-dir-altid
+
 Please visit https://www.adoptium.net for further support
 
 .SH VERSIONS
@@ -121,7 +130,8 @@ the one you are trying to build.
 .TP
 .BR " \-\-jdk-dir-altid " " \fI<string_word>\fR
 specify the name of original forest if the name of the dir is not self-describing.
-This build script is deducting several parts from repository name. If your dir do not fit by naming conventions and you do not set individual parts, use this.
+This build script is deducting several parts from repository name. If your dir
+do not fit by naming conventions and you do not set individual parts, use this.
 Used only if built jdk is local directory, and not remote repositroy.
 .TP
 .BR \-k ", " \-\-keep

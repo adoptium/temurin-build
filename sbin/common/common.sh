@@ -18,8 +18,8 @@
 # shellcheck disable=SC2153
 function setOpenJdkVersion() {
   local forest_name=$1
-
-  if [ -d "${forest_name}" ] ; then
+set -x
+  if [ -e "${forest_name}" ] ; then
     BUILD_CONFIG[OPENJDK_FOREST_DIR]="true"
     BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]=$(readlink -f "${forest_name}")
     BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]="true"
