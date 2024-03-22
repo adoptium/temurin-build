@@ -239,37 +239,32 @@ processArgumentsforSpecificArchitectures() {
       jvm_variant=server
     fi
 
-    # Work out autoconf configuration name
-    # Note: not entirely sure CONF=/SPEC= is needed at all as only one make configuration, but keep as it was for consistency
-    # make autoconf configuration is identified by CONF when configured within src root
-    # and SPEC location when a user build directory is specified
-    local make_autoconf_arg
+    # Determine correct autoconf configuration name
     if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
       if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 12 ]; then
         build_full_name=linux-s390x-${jvm_variant}-release
       else
         build_full_name=linux-s390x-normal-${jvm_variant}-release
       fi
-      make_autoconf_arg="CONF=${build_full_name}"
     else
       build_full_name="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"
-      make_autoconf_arg="SPEC=${build_full_name}/spec.gmk"
     fi
 
     # This is to ensure consistency with the defaults defined in setMakeArgs()
     if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
-      make_args_for_any_platform="${make_autoconf_arg} DEBUG_BINARIES=true images"
+      make_args_for_any_platform="DEBUG_BINARIES=true images"
     # Don't produce a JRE
     elif [ "${BUILD_CONFIG[CREATE_JRE_IMAGE]}" == "false" ]; then
-      make_args_for_any_platform="${make_autoconf_arg} DEBUG_BINARIES=true product-images"
+      make_args_for_any_platform="DEBUG_BINARIES=true product-images"
     else
-      make_args_for_any_platform="${make_autoconf_arg} DEBUG_BINARIES=true product-images legacy-jre-image"
+      make_args_for_any_platform="DEBUG_BINARIES=true product-images legacy-jre-image"
     fi
     ;;
 
   "ppc64le")
     jvm_variant=server
 
+    # Determine correct autoconf configuration name
     if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
       if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK12_CORE_VERSION}" ] ||
         [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK13_CORE_VERSION}" ] ||
