@@ -56,7 +56,7 @@ SIGNTOOL_BASE="C:/Program Files (x86)/Windows Kits/10"
 
 # Define What Are Configure Args & Redundant Args
 # This MAY Need Updating If Additional Configure Args Are Passed
-CONFIG_ARGS=("--disable-warnings-as-errors" "--disable-ccache" "--with-toolchain-version" "--with-ucrt-dll-dir")
+CONFIG_ARGS=("--disable-warnings-as-errors" "--disable-ccache" "--with-toolchain-version" "--with-ucrt-dll-dir" "--with-version-opt")
 NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args")
 
 # Addiitonal Working Variables Defined For Use By This Script
@@ -286,7 +286,7 @@ Get_SBOM_Values() {
       echo "Temurin Build Arguments: $buildArgs"
       export buildArgs
   else
-      echo "ERROR: Temurin Build Version not found in the SBOM."
+      echo "ERROR: Temurin Build Arguments not found in the SBOM."
       echo "This Is A Mandatory Element"
       exit 1
   fi
@@ -585,8 +585,10 @@ Prepare_Env_For_Build() {
     fi
   done
 
-  # Add the last parameter to the array
+    # Add the last parameter to the array
   params+=("$param = $value")
+
+
 
   # Read the separated parameters and values into a new array
   export fixed_param=""
@@ -608,7 +610,7 @@ Prepare_Env_For_Build() {
     if [ "$fixed_param" == "--jdk-boot-dir" ]; then fixed_value="$BOOTJDK_HOME " ; fi
     if [ "$fixed_param" == "--freetype-dir" ]; then fixed_value="$fixed_value " ; fi
     if [ "$fixed_param" == "--with-toolchain-version" ]; then fixed_value="$visualStudioVersion " ; fi
-    if [ "$fixed_param" == "--with-ucrt-dll-dir" ]; then fixed_value="temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder" ; fi
+    if [ "$fixed_param" == "--with-ucrt-dll-dir" ]; then fixed_value="temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder " ; fi
     if [ "$fixed_param" == "--target-file-name" ]; then target_file="$fixed_value" ; fixed_value="$fixed_value " ; fi
     if [ "$fixed_param" == "--tag" ]; then fixed_value="$fixed_value " ; fi
 
@@ -633,7 +635,7 @@ Prepare_Env_For_Build() {
       # Add Config Arg To New Array
 
       # Handle Windows Param Names In Config Args (Replace Space with =)
-      if [ "$fixed_param" == "--with-toolchain-version" ] || [ "$fixed_param" == "--with-ucrt-dll-dir" ] ; then
+      if [ "$fixed_param" == "--with-toolchain-version" ] || [ "$fixed_param" == "--with-ucrt-dll-dir" ] ||  [ "$fixed_param" == "--with-version-opt" ] ; then
         STRINGTOADD="$fixed_param=$fixed_value"
         CONFIG_ARRAY+=("$STRINGTOADD")
       else
