@@ -24,7 +24,7 @@
 ################################################################################
 
 set -eu
-
+set -x
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=sbin/common/constants.sh
@@ -37,6 +37,14 @@ ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f0878332915
 ALSA_LIB_GPGKEYID=${ALSA_LIB_GPGKEYID:-A6E59C91}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 
+
+copyFromDir() {
+  echo "Copyng existing ${BUILD_CONFIG[+OPENJDK_FOREST_DIR_ABSPATH]} to `pwd`/${BUILD_CONFIG[OPENJDK_FOREST_NAME]} to be built"
+  mkdir -p "./${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
+  # we really do not want to use .git for dirs, as we expect user have them set up, ignoring them
+  cp -rf ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}/* "./${BUILD_CONFIG[OPENJDK_FOREST_NAME]}/"
+}
+
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for Single Responsibility Principle (SRP)
 checkoutAndCloneOpenJDKGitRepo() {
@@ -44,7 +52,7 @@ checkoutAndCloneOpenJDKGitRepo() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
 
   # Check that we have a git repo, we assume that it is a repo that contains openjdk source
-  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
+  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" -a "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "false" ]; then
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
@@ -78,6 +86,8 @@ checkoutAndCloneOpenJDKGitRepo() {
       echo "If this is inside a docker you can purge the existing source by passing --clean-docker-build"
       exit 1
     fi
+  elif [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+    copyFromDir
   elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
     echo "Could not find a valid openjdk git repository at $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} so re-cloning the source to openjdk"
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
@@ -106,8 +116,9 @@ checkoutAndCloneOpenJDKGitRepo() {
     fi
   fi
 
-  git clean -ffdx
-
+  if [ ! "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+    git clean -ffdx
+  fi
   updateOpenj9Sources
 
   createSourceTagFile
@@ -118,6 +129,17 @@ checkoutAndCloneOpenJDKGitRepo() {
 # Checkout the required code to build from the given cached git repo
 # Set checkoutRc to result so we can retry
 checkoutRequiredCodeToBuild() {
+
+  if [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+    echo "skipping checkoutRequiredCodeToBuild - local directory under processing:"
+    echo "  workspace = ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    echo "  BUILD_VARIANT = ${BUILD_CONFIG[BUILD_VARIANT]}"
+    echo "  TAG = ${BUILD_CONFIG[TAG]} - Used only in name, if at all"
+    echo "  BRANCH = ${BUILD_CONFIG[BRANCH]} - UNUSED!"
+    checkoutRc=0
+    return
+  fi
+
   checkoutRc=1
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"

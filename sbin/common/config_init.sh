@@ -82,7 +82,10 @@ NUM_PROCESSORS
 OPENJDK_BUILD_NUMBER
 OPENJDK_CORE_VERSION
 OPENJDK_FEATURE_NUMBER
+OPENJDK_FOREST_ALTID
 OPENJDK_FOREST_NAME
+OPENJDK_FOREST_DIR
+OPENJDK_FOREST_DIR_ABSPATH
 OPENJDK_SOURCE_DIR
 OPENJDK_UPDATE_VERSION
 OS_KERNEL_NAME
@@ -306,6 +309,9 @@ function parseConfigurationArguments() {
         "--jdk-boot-dir" | "-J" )
         BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
 
+        "--jdk-dir-altid")
+        BUILD_CONFIG[OPENJDK_FOREST_ALTID]="$1";shift;;
+
         "--cross-compile" )
         BUILD_CONFIG[CROSSCOMPILE]=true;;
 
@@ -456,6 +462,15 @@ function configDefaults() {
 
   # The full forest name, e.g. jdk8, jdk8u, jdk9, jdk9u, etc.
   BUILD_CONFIG[OPENJDK_FOREST_NAME]=""
+
+  # whether the forest is local directory or not
+  BUILD_CONFIG[OPENJDK_FOREST_DIR]="false"
+
+  # whether the forest is local directory or not
+  BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]=""
+
+  # whether user provided original repo if the directory is useless
+  BUILD_CONFIG[OPENJDK_FOREST_ALTID]=""
 
   # The abridged openjdk core version name, e.g. jdk8, jdk9, etc.
   BUILD_CONFIG[OPENJDK_CORE_VERSION]=""

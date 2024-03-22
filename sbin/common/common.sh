@@ -19,6 +19,19 @@
 function setOpenJdkVersion() {
   local forest_name=$1
 
+  if [ -d "${forest_name}" ] ; then
+    BUILD_CONFIG[OPENJDK_FOREST_DIR]="true"
+    BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]=$(readlink -f "${forest_name}")
+    BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]="true"
+    if [ ! -z "${BUILD_CONFIG[OPENJDK_FOREST_ALTID]}" ] ; then
+      forest_name="${BUILD_CONFIG[OPENJDK_FOREST_ALTID]}"
+    else
+      # we want to use "." and similar
+      forest_name=$(basename "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}")
+    fi
+    BUILD_CONFIG[OPENJDK_SOURCE_DIR]="${forest_name}"
+  fi
+
   # Derive the openjdk_core_version from the forest name.
   local openjdk_core_version=${forest_name}
   if [[ ${forest_name} == *u ]]; then

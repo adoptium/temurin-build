@@ -119,6 +119,11 @@ For reference, OpenJDK needs the previous version of a JDK in order to build
 itself. You should select the path to a JDK install that is N-1 versions below
 the one you are trying to build.
 .TP
+.BR " \-\-jdk-dir-altid " " \fI<string_word>\fR
+specify the name of original forest if the name of the dir is not self-describing.
+This build script is deducting several parts from repository name. If your dir do not fit by naming conventions and you do not set individual parts, use this.
+Used only if built jdk is local directory, and not remote repositroy.
+.TP
 .BR \-k ", " \-\-keep
 if using docker, keep the container after the build.
 .TP
