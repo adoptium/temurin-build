@@ -28,6 +28,8 @@ header:
       
       SPDX-License-Identifier: Apache-2.0
       ********************************************************************************
+    pattern: Copyright (c) \d{4} Contributors to the Eclipse Foundation
+      
   comment: on-failure
 
   paths-ignore:
