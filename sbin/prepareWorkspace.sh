@@ -42,7 +42,8 @@ copyFromDir() {
   echo "Copyng existing ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} to `pwd`/${BUILD_CONFIG[OPENJDK_FOREST_NAME]} to be built"
   mkdir -p "./${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
   # we really do not want to use .git for dirs, as we expect user have them set up, ignoring them
-  cp -rf ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}/* "./${BUILD_CONFIG[OPENJDK_FOREST_NAME]}/"
+  local files=$(find ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} -maxdepth 1 -mindepth 1 | grep -v -e "/workspace$" -e "/build$" -e "/.git")
+  cp -rf $files "./${BUILD_CONFIG[OPENJDK_FOREST_NAME]}/"
 }
 
 unpackFromArchive() {
