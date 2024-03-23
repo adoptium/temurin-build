@@ -117,7 +117,9 @@ ignore the existing docker container if you have one already.
 specify the JDK boot dir.
 For reference, OpenJDK needs the previous version of a JDK in order to build
 itself. You should select the path to a JDK install that is N-1 versions below
-the one you are trying to build.
+the one you are trying to build. On some platforms, you can use magic keyword
+of `download`, and boot jdk will be downloaded for you in best attempt. It will
+be reused as long as you keep workspace or clean libs.
 .TP
 .BR \-k ", " \-\-keep
 if using docker, keep the container after the build.
