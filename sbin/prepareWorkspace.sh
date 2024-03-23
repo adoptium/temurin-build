@@ -72,6 +72,7 @@ copyFromDirOrUnpackFromArchive() {
     echo "Not directory nor file ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
     exit 1
   fi
+  rm -vf ./${BUILD_CONFIG[OPENJDK_FOREST_NAME]}/build/*/configure-support/config.status
 }
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
