@@ -170,16 +170,7 @@ Install_PreReqs() {
         APTJQ_INSTALLED="False"
         apt-cyg install jq libjq1 libonig5
       fi
-<<<<<<< Upstream, based on upstream/master
   fi
-
-  # Install JQ Where Not Already Installed
-
-=======
-  else
-    echo "JQ Is Already Installed"
-  fi
->>>>>>> 775b25c Set copy and delelet failonerror="false"
 }
 
 Get_SBOM_Values() {
@@ -208,7 +199,7 @@ Get_SBOM_Values() {
   msvsCCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MSVS C Compiler Version").version')
   msvsCppCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MSVS C++ Compiler Version").version')
   msvsSDKver=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MS Windows SDK Version").version')
-  bootJDK=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "BOOTJDK").version')
+  bootJDK=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "BOOTJDK").version' | sed -e 's#-LTS$##')
   buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
   buildSHA=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value' | awk -F'/' '{print $NF}')
   buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
