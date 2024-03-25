@@ -15,8 +15,6 @@
 # limitations under the License.
 ################################################################################
 
-DOWLOADERS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
 # this one should be swithing per (supported) oses in future
 function downloadBootJDK() {
   downloadLinuxBootJDK "$@"
