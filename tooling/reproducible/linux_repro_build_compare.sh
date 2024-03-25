@@ -96,7 +96,7 @@ if [[ $SBOM_PARAM =~ ^https?:// ]]; then
 fi
 
 SBOM=$(basename "$SBOM_PARAM")
-BOOTJDK_VERSION=$(jq -r '.metadata.tools[] | select(.name == "BOOTJDK") | .version' "$SBOM")
+BOOTJDK_VERSION=$(jq -r '.metadata.tools[] | select(.name == "BOOTJDK") | .version' "$SBOM" | sed -e 's#-LTS$##')
 GCCVERSION=$(jq -r '.metadata.tools[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
 LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
 TEMURIN_BUILD_SHA=$(jq -r '.components[] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
