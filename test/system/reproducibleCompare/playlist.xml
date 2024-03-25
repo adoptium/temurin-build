@@ -18,9 +18,10 @@
 	<include>reproducible.mk</include>
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test</testCaseName>
-		<command>cp $(TEST_JDK_HOME)/../*.json $(TEST_RESROOT); \
+		<command>cp $(TEST_JDK_HOME)/../*-sbom*.json $(TEST_RESROOT); \
 		 cp $(TEST_JDK_HOME)/../*-jdk_*.tar.gz $(TEST_RESROOT); \
 		docker run -v "$(TEST_RESROOT):/home/jenkins/test" -w "/home/jenkins/test" --name reproducibleCompare centos:7 /bin/bash /home/jenkins/test/linux_repro_build_compare.sh $(SBOM_FILE) $(JDK_FILE); \
+	docker container rm reproducibleCompare; \
 	$(TEST_STATUS); \
 	docker cp reproducibleCompare:/home/jenkins/reprotest.diff ./; \
 	docker container rm reproducibleCompare
