@@ -589,14 +589,14 @@ downloadDevkit() {
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
     mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
 
-    devkit_tar="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.tar.xz"
+    local devkit_tar="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.tar.xz"
 
     setupGpg
 
     # Determine DevKit tarball to download for this arch and release
-    devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
-    devkit_target="${BUILD_CONFIG[OS_ARCHITECTURE]}-linux-gnu"
-    devkit="devkit-$(echo "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" | cut -d'-' -f1-3)-${devkit_target}-$(echo "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" | cut -d'-' -f4)"
+    local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+    local devkit_target="${BUILD_CONFIG[OS_ARCHITECTURE]}-linux-gnu"
+    local devkit="devkit-${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}-${devkit_target}"
 
     # Download tarball and GPG sig
     echo "Downloading DevKit : ${devkitUrl}/${devkit}.tar.xz"
@@ -613,7 +613,7 @@ downloadDevkit() {
     rm "${devkit_tar}.sig"
 
     # Validate devkit.info matches requirements
-    devkitInfo="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.info"
+    local devkitInfo="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.info"
     if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${devkitInfo}" || ! grep "ADOPTIUM_DEVKIT_TARGET=${devkit_target}" "${devkitInfo}"; then
         echo "ERROR: Devkit does not match required release and architecture:"
         echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
