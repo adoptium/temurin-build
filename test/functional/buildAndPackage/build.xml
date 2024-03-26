@@ -3,7 +3,7 @@
   ~ ********************************************************************************
   ~ Copyright (c) 2021 Contributors to the Eclipse Foundation
   ~
-  ~ See the NOTICE file(s) where distributed with this work for additional
+  ~ See the NOTICE file(s) with this work for additional
   ~ information regarding copyright ownership.
   ~
   ~ This program and the accompanying materials are made
@@ -27,7 +27,7 @@
     <!--Properties for this particular build-->
     <property name="src" location="./src"/>
     <property name="build" location="./bin"/>
-    <property name="LIB" value="testng"/>
+    <property name="LIB" value="testng,jcommander"/>
     <import file="${TEST_ROOT}/TKG/scripts/getDependencies.xml"/>
 
     <target name="init">
