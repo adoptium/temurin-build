@@ -49,6 +49,7 @@ The patching process involves:
 - Remove Vendor strings embedded in executables, classes and text files.
 - Remove module-info differences due to "hash" of Signed module executables
 - Remove any non-deterministic build process artifact strings, like Manifest Created-By stamps.
+- Remove .gnu_debuglink sections to eliminate .debuginfo-induced CRC differences.
 
 ### How to setup and run comparable_patch.sh on Windows
 

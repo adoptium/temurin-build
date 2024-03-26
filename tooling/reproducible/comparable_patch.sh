@@ -478,6 +478,32 @@ function neutraliseReleaseFile() {
   fi
 }
 
+# Remove .gnu_debuglink ELF sections.  These contain a CRC32 checksum
+# of the separate .debuginfo file.  A given .debuginfo file will
+# differ when compiled in different environments.  Specifically, if
+# some declaration in a system header is referenced by OpenJDK source
+# code, and that declaration's line number changes between
+# environments, the .debuginfo files will have many bytewise
+# differences.  Even seemingly inconsequential header changes will
+# result in large .debuginfo differences, for example, additions of
+# new preprocessor macros, or comment additions and deletions.  The
+# CRC32 checksum is thus sensitive to almost any textual changes to
+# system headers.  Therefore, remove these sections prior to
+# comparison.
+function neutraliseDebuglinkSections() {
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
+    # Assume Cygwin and Darwin toolchains do not produce .gnu_debuglink sections.
+    return
+  fi
+  # Expected objcopy results:
+  # - file is not an ELF file
+  # - file is empty
+  # - file is an ELF file without a .gnu_debuglink section
+  # - file is an ELF file with a .gnu_debuglink section => remove it
+  # Unexpected results will be printed to standard error.
+  find "${JDK_DIR}" -type f \! -name '*.debuginfo' -exec objcopy -R .gnu_debuglink '{}' ';' 2> >(grep -vE "(file format not recognized$|is empty$)")
+}
+
 # Remove some non-JDK files that some Vendors distribute
 # - NEWS : Some Vendors provide a NEWS text file
 # - demo : Not all vendors distribute the demo examples 
@@ -550,6 +576,8 @@ neutraliseVersionProps
 neutraliseManifests
 
 neutraliseReleaseFile
+
+neutraliseDebuglinkSections
 
 removeNonJdkFiles
 
