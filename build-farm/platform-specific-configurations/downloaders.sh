@@ -138,5 +138,5 @@ function downloadWindowsBootJDK() {
         fi
       fi
       unzip -q openjdk.zip
-      mv "$(ls -d jdk-"${VER}"*)" "$bootDir"
+      mv "$(ls -d jdk*"${VER}"*)" "$bootDir"
 }
