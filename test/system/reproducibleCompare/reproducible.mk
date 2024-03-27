@@ -16,7 +16,7 @@ SBOM_FILE := $(shell find $(TEST_JDK_HOME)/../ -type f -name '*-sbom_*.json')
 JDK_FILE := $(shell find $(TEST_JDK_HOME)/../ -type f -name '*-jdk_*')
 
 ifeq ($(OS),Linux)
-	SBOM_FILE := $(subst $(TEST_JDK_HOME)/..,/home/jenkins/jdkbinary,$(SBOM_FILE))
-	JDK_FILE := $(subst $(TEST_JDK_HOME)/..,/home/jenkins/jdkbinary,$(JDK_FILE))
+	SBOM_FILE := $(subst $(TEST_JDK_HOME)/..,/home/jenkins/test,$(SBOM_FILE))
+	JDK_FILE := $(subst $(TEST_JDK_HOME)/..,/home/jenkins/test,$(JDK_FILE))
 endif
 
