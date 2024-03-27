@@ -577,14 +577,32 @@ prepareMozillaCacerts() {
     fi
 }
 
-# Download all of the dependencies for OpenJDK (Alsa, FreeType etc.)
+downloadBootJdkIfNeeded () {
+  if [[ "${BUILD_CONFIG[JDK_BOOT_DIR]}" == "download" ]]; then
+    # the bootDir is used by refactored downloaders.sh methods; it would benice to change in future
+    bootDir="${BUILD_CONFIG[WORKSPACE_DIR]}/downloaded-boot-jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
+    if  [ -e "$bootDir" ] ; then
+      echo "Reusing $bootDir"
+    else
+      source "$SCRIPT_DIR/../build-farm/platform-specific-configurations/downloaders.sh"
+      echo "Downloading to $bootDir"
+      downloadBootJDK $(uname -m) ${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}
+    fi
+    BUILD_CONFIG[JDK_BOOT_DIR]="${bootDir}"
+  fi
+}
+
+# Download all of the dependencies for OpenJDK (Alsa, FreeType, boot-jdk etc.)
 downloadingRequiredDependencies() {
+
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
-
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" || true
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype" || true
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/downloaded-boot-jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" || true
   fi
+
+  downloadBootJdkIfNeeded
 
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
