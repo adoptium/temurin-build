@@ -119,7 +119,8 @@ if [ ! -d "jdk-${TEMURIN_VERSION}" ]; then
   if [[ $TARBALL_PARAM =~ ^https?:// ]]; then
     echo Retrieving original tarball from adoptium.net && curl -L "$TARBALL_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
   else
-    tar xfz $TARBALL_PARAM -C "$PWD/jdk-${TEMURIN_VERSION}"
+    mkdir "$PWD/jdk-${TEMURIN_VERSION}"
+    tar xpfz $TARBALL_PARAM -C "$PWD/jdk-${TEMURIN_VERSION}"
   fi
 fi
 
