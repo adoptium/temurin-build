@@ -39,8 +39,8 @@ TARBALL_URL="$2"
 # These Values Should Be Updated To Reflect The Build Environment
 # The Defaults Below Are Suitable For An Adoptium Windows Build Environment
 # Which Has Been Created Via The Ansible Infrastructure Playbooks
-CURR_DIR=$(pwd)
-WORK_DIR="$CURR_DIR/cmp$(date +%Y%m%d%H%M%S)"
+
+WORK_DIR="C:/workspace/comp-jdk-build/"
 ANT_VERSION="1.10.5"
 ANT_CONTRIB_VERSION="1.0b3"
 ANT_BASE_PATH="/cygdrive/c/apache-ant"
