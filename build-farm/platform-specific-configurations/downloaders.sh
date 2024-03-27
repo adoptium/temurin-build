@@ -15,6 +15,11 @@
 # limitations under the License.
 ################################################################################
 
+####################################################################################
+# This file is gathering all download boot jdk functions, so they can b reused later
+# On long run, the methods - due theirs simialrity - should converge to one
+####################################################################################
+
 # this one should be swithing per (supported) oses in future
 function downloadBootJDK() {
   if uname -o | grep -i -e Linux ; then
