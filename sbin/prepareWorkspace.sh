@@ -22,7 +22,7 @@
 ################################################################################
 
 set -eu
-
+set -x
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=sbin/common/constants.sh
@@ -38,6 +38,46 @@ ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f0878332915
 ALSA_LIB_GPGKEYID=${ALSA_LIB_GPGKEYID:-A6E59C91}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 
+
+copyFromDir() {
+  echo "Copyng existing ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} to `pwd`/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
+  # we really do not want to use .git for dirs, as we expect user have them set up, ignoring them
+  local files=$(find ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} -maxdepth 1 -mindepth 1 | grep -v -e "/workspace$" -e "/build$" -e "/.git" -e -"/build/")
+  cp -rf $files "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/"
+}
+
+unpackFromArchive() {
+  echo "Extracting source tarball ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
+  # if the tarball contains .git files, they should be ignored later withut shame
+  # todo, support also zips?
+  pushd "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" | wc -l)
+    if [ "$topLevelItems" -eq "1" ] ; then
+      echo "Source tarball contans exaclty one directory, using"
+      tar --exclude='*/build' --strip-components 1 -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
+    else
+      echo "Source tarball do not contains top level directory, using"
+      tar --exclude='*/build' --strip-components 0 -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
+    fi
+  popd
+}
+
+copyFromDirOrUnpackFromArchive() {
+  echo "Removing copy of openjdk source repository of $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} in 10 seconds..."
+  sleep 10
+  rm -rf "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  mkdir  "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  # note, that we are not persisting build directory
+  if [ -d "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" ] ; then
+    copyFromDir
+  elif [ -f "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" ] ; then
+    unpackFromArchive
+  else
+    echo "Not directory nor file ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
+    exit 1
+  fi
+}
+
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for Single Responsibility Principle (SRP)
 checkoutAndCloneOpenJDKGitRepo() {
@@ -45,7 +85,7 @@ checkoutAndCloneOpenJDKGitRepo() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
 
   # Check that we have a git repo, we assume that it is a repo that contains openjdk source
-  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
+  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "false" ]; then
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
@@ -79,6 +119,8 @@ checkoutAndCloneOpenJDKGitRepo() {
       echo "If this is inside a docker you can purge the existing source by passing --clean-docker-build"
       exit 1
     fi
+  elif [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+    copyFromDirOrUnpackFromArchive
   elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
     echo "Could not find a valid openjdk git repository at $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} so re-cloning the source to openjdk"
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
@@ -107,8 +149,9 @@ checkoutAndCloneOpenJDKGitRepo() {
     fi
   fi
 
-  git clean -ffdx
-
+  if [ ! "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+    git clean -ffdx
+  fi
   updateOpenj9Sources
 
   createSourceTagFile
@@ -119,6 +162,17 @@ checkoutAndCloneOpenJDKGitRepo() {
 # Checkout the required code to build from the given cached git repo
 # Set checkoutRc to result so we can retry
 checkoutRequiredCodeToBuild() {
+
+  if [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+    echo "skipping checkoutRequiredCodeToBuild - local directory under processing:"
+    echo "  workspace = ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    echo "  BUILD_VARIANT = ${BUILD_CONFIG[BUILD_VARIANT]}"
+    echo "  TAG = ${BUILD_CONFIG[TAG]} - Used only in name, if at all"
+    echo "  BRANCH = ${BUILD_CONFIG[BRANCH]} - UNUSED!"
+    checkoutRc=0
+    return
+  fi
+
   checkoutRc=1
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"

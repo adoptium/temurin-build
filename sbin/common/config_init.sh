@@ -81,6 +81,8 @@ OPENJDK_BUILD_NUMBER
 OPENJDK_CORE_VERSION
 OPENJDK_FEATURE_NUMBER
 OPENJDK_FOREST_NAME
+OPENJDK_FOREST_DIR
+OPENJDK_FOREST_DIR_ABSPATH
 OPENJDK_SOURCE_DIR
 OPENJDK_UPDATE_VERSION
 OS_KERNEL_NAME
@@ -315,6 +317,9 @@ function parseConfigurationArguments() {
         "--no-adopt-patches" )
         BUILD_CONFIG[ADOPT_PATCHES]=false;;
 
+        "--openjdk-source" | "-o" )
+        setLocalDir "${1}";shift;;
+
         "--patches" )
         BUILD_CONFIG[PATCHES]="$1"; shift;;
 
@@ -413,6 +418,23 @@ function setBranch() {
   BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}
 }
 
+# Set the local dir if used
+function setLocalDir() {
+  if [ ! -e "${1}" ] ; then
+    echo "you have specified -o/--openjdk-source, but '${1}' do not exists"
+    exit 1
+  fi
+  BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]=$(readlink -f "$1");
+  if [ ! -e "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" ] ; then
+    echo "you have specified -o/--openjdk-source, but '${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}' do not exists"
+    exit 1
+  fi
+  BUILD_CONFIG[OPENJDK_FOREST_DIR]="true";
+  if [ -z "${BUILD_CONFIG[TAG]}" ] ; then
+    echo "You have not yet specified --tag. It is strongly recommended you do so, otherwise default one will be provided"
+  fi
+}
+
 # Set the config defaults
 function configDefaults() {
 
@@ -459,6 +481,12 @@ function configDefaults() {
 
   # The full forest name, e.g. jdk8, jdk8u, jdk9, jdk9u, etc.
   BUILD_CONFIG[OPENJDK_FOREST_NAME]=""
+
+  # whether the forest is local directory or not
+  BUILD_CONFIG[OPENJDK_FOREST_DIR]="false"
+
+  # whether the forest is local directory or not
+  BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]=""
 
   # The abridged openjdk core version name, e.g. jdk8, jdk9, etc.
   BUILD_CONFIG[OPENJDK_CORE_VERSION]=""

@@ -183,8 +183,9 @@ configureMacOSCodesignParameter() {
 # Get the OpenJDK update version and build version
 getOpenJDKUpdateAndBuildVersion() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
-
-  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+    echo "Version: local dir; OPENJDK_BUILD_NUMBER set as  ${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
+  elif [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
 
     # It does exist and it's a repo other than the Temurin one
     cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
@@ -232,7 +233,9 @@ patchFreetypeWindows() {
 getOpenJdkVersion() {
   local version
 
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+    version=${BUILD_CONFIG[TAG]:-$(createDefaultTag)}
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
     local corrVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
 
     local corrVersion="$(cut -d'.' -f 1 <"${corrVerFile}")"
@@ -1777,9 +1780,24 @@ getLatestTagJDK11plus() {
   fi
 }
 
+createDefaultTag() {
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
+    echo "WARNING: Could not identify latest tag but the ADOPT_BRANCH_SAFETY flag is off so defaulting to 8u000-b00" 1>&2
+      echo "8u000-b00"
+  else
+    echo "WARNING: Could not identify latest tag but the ADOPT_BRANCH_SAFETY flag is off so defaulting to jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0" 1>&2
+    echo "jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0"
+  fi
+}
+
 # Get the tags from the git repo and choose the latest numerically ordered tag for the given JDK version.
 #
 getFirstTagFromOpenJDKGitRepo() {
+
+  if [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+    echo "you are building froum source snapshot. getFirstTagFromOpenJDKGitRepo is not allowed"  1>&2
+    exit 1
+  fi
 
   # Save current directory of caller so we can return to that directory at the end of this function.
   # Some callers are not in the git repo root, but instead build root sub-directory like the archive functions
@@ -1808,15 +1826,20 @@ getFirstTagFromOpenJDKGitRepo() {
     TAG_SEARCH="aarch64-shenandoah-jdk8u*-b*"
   fi
 
-  # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon,
-  # read OPENJDK_TAG value from that file.
-  local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] && [[ -f "${openj9_openjdk_tag_file}" ]]; then
-    firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
+  if [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+    echo "Skipping tag reading from local dir. You shoud have set up TAG" 1>&2
+    firstMatchingNameFromRepo=""
   else
-    git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    firstMatchingNameFromRepo=$(git tag --list "$TAG_SEARCH" | "$get_tag_cmd")
-  fi
+    # If openj9 and the closed/openjdk-tag.gmk file exists which specifies what level the openj9 jdk code is based upon,
+    # read OPENJDK_TAG value from that file.
+    local openj9_openjdk_tag_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/closed/openjdk-tag.gmk"
+    if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]] && [[ -f "${openj9_openjdk_tag_file}" ]]; then
+      firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
+    else
+      git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+      firstMatchingNameFromRepo=$(git tag --list "$TAG_SEARCH" | "$get_tag_cmd")
+    fi
+ fi
 
   if [ -z "$firstMatchingNameFromRepo" ]; then
     echo "WARNING: Failed to identify latest tag in the repository" 1>&2
@@ -1824,13 +1847,7 @@ getFirstTagFromOpenJDKGitRepo() {
     # repository that doesn't have the same tags, so allow defaults. For a better
     # options see https://github.com/adoptium/temurin-build/issues/2671
     if [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "true" ]; then
-      if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
-         echo "WARNING: Could not identify latest tag but the ADOPT_BRANCH_SAFETY flag is off so defaulting to 8u000-b00" 1>&2
-         echo "8u000-b00"
-      else
-         echo "WARNING: Could not identify latest tag but the ADOPT_BRANCH_SAFETY flag is off so defaulting to jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0" 1>&2
-         echo "jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0"
-      fi
+      createDefaultTag
     else
       echo "WARNING: Failed to identify latest tag in the repository" 1>&2
     fi
@@ -2247,6 +2264,7 @@ echo "build.sh : $(date +%T) : Configuring workspace inc. clone and cacerts gene
 configureWorkspace
 
 echo "build.sh : $(date +%T) : Initiating build ..."
+set -x
 getOpenJDKUpdateAndBuildVersion
 if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
   patchFreetypeWindows

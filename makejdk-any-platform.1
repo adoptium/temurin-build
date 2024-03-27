@@ -27,6 +27,10 @@ that you are building for further details.
 This will start a Docker container and build you the latest Java 8 Temurin
 binary from the source at https://github.com/adoptium/openjdk-jdk8u
 
+"./makejdk-any-platform.sh -o my/dir/or/archive.tar.gz jdk22u"
+
+This will start a build of your local sources as Temurin 22.
+
 Please visit https://www.adoptium.net for further support
 
 .SH VERSIONS
@@ -128,6 +132,11 @@ specify any custom user make arguments.
 .BR \-\-no\-adopt\-patches
 This indicates to the build script that the build does not have Temurin's additional patches applied.
 .TP
+.BR  \-o ", " \-\-openjdk\-source " " \fI<dir/archive>\fR
+If set, must point to directory or archive with sources.
+Those will be used instead of cloning without any .git magic.
+You have to set main argument though, and you should use \-\-tag too.
+.TP
 .BR \-p ", " \-\-processors " " \fI<args>\fR
 specify the number of processors to use for the docker build.
 .TP
@@ -190,6 +199,8 @@ specify the vendor vm bug url
 .TP
 .BR \-v ", " \-\-version " " \fI<version>\fR
 specify the OpenJDK version to build e.g. jdk8u.  Left for backwards compatibility.
+Useful, when cloning repo of weird name, eg shenandoah-jdk8u (main argument),
+to tell system that it is jdk8u
 .TP
 .BR \-V ", " \-\-jvm-variant " " \fI<jvm_variant>\fR
 specify the JVM variant (server or client), defaults to server.
