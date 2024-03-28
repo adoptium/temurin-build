@@ -608,7 +608,7 @@ downloadDevkit() {
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
     gpg --verify "${devkit_tar}.sig" "${devkit_tar}" || exit 1
 
-    tar --xz -xpf "${devkit_tar}" -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    tar xpJf "${devkit_tar}" -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
     rm "${devkit_tar}"
     rm "${devkit_tar}.sig"
 
