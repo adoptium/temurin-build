@@ -612,7 +612,7 @@ downloadDevkit() {
     rm "${devkit_tar}"
     rm "${devkit_tar}.sig"
 
-    # Validate devkit.info matches requirements
+    # Validate devkit.info matches value passed in and current architecture
     local devkitInfo="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.info"
     if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${devkitInfo}" || ! grep "ADOPTIUM_DEVKIT_TARGET=${devkit_target}" "${devkitInfo}"; then
         echo "ERROR: Devkit does not match required release and architecture:"
