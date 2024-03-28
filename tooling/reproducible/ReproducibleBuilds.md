@@ -20,22 +20,21 @@ It will then:
 - Download the official "Temurin JDK.tar.gz"
 - Compare the locally built JDK with the official Temurin JDK
 
-2. linux_repro_compare.sh : Compares two linux JDK folders:
+2. windows_repro_build_compare.sh : Takes as parameters "SBOM URL" of Temurin JDK to be rebuilt, and the official Temurin Windows JDK Zip file.
+It will then:
 
-- linux_repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2
-- Calls linux_repro_process.sh to pre-process the folder before comparison. This expands zips and jmods.
+- Setup the identical environment from the properties within the SBOM
+- Build the JDK locally
+- Download the official Temurin Windows JDK Zip file
+- Compare the locally built JDK with the official Temurin JDK
 
-3. windows_repro_compare.sh : Compares two windows JDK folders:
+3. repro_compare.sh : Compares two JDK folders:
 
-- windows_repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 temp_selfcert_file temp selfcert_pwd
-- Calls windows_repro_process.sh to pre-process the folder before comparison. This expands zips and jmods, then deterministically
-remove any Signatures from the executeables.
+   - repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 OS
+   - Calls repro_process.sh to pre-process the folder before comparison. This expands zips and jmods.
+     - On Windows and MacOS it also deterministically removes any signatures from the executables.
 
-4. mac_repro_compare.sh : Compares two mac JDK folders:
-
-- mac_repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 temp_selfcert temp selfcert_pwd
-- Calls mac_repro_process.sh to pre-process the folder before comparison. This expands zips and jmods, then deterministically
-remove any Signatures from the executeables.
+4. windows_build_as_temurin.sh : Builds an identical Windows Temurin binary without directly using temurin-build scripts.
 
 ## Comparable Build Tools
 
