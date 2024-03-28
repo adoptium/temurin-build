@@ -39,26 +39,26 @@ FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 
 
 copyFromDir() {
-  echo "Copyng existing ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} to `pwd`/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
+  echo "Copying OpenJDK source from  ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} to `pwd`/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
   # we really do not want to use .git for dirs, as we expect user have them set up, ignoring them
   local files=$(find ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} -maxdepth 1 -mindepth 1 | grep -v -e "/workspace$" -e "/build$" -e "/.git" -e -"/build/")
   cp -rf $files "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/"
 }
 
 unpackFromArchive() {
-  echo "Extracting source tarball ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
+  echo "Extracting OpenJDK source tarbal ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
   # if the tarball contains .git files, they should be ignored later withut shame
   # todo, support also zips?
   pushd "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" | wc -l)
     if [ "$topLevelItems" -eq "1" ] ; then
-      echo "Source tarball contans exaclty one directory, using"
+      echo "Source tarball contains exaclty one directory, using"
       tar --strip-components 1 -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
     else
-      echo "Source tarball do not contains top level directory, using"
+      echo "Source tarball does not contain a top level directory, using"
       tar --strip-components 0 -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
     fi
-    rm -rf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}/build"
+    rm -rf "build"
   popd
 }
 
