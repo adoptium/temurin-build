@@ -2264,7 +2264,6 @@ echo "build.sh : $(date +%T) : Configuring workspace inc. clone and cacerts gene
 configureWorkspace
 
 echo "build.sh : $(date +%T) : Initiating build ..."
-set -x
 getOpenJDKUpdateAndBuildVersion
 if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
   patchFreetypeWindows
