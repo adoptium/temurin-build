@@ -19,6 +19,17 @@
 function setOpenJdkVersion() {
   local forest_name=$1
 
+  # the argument passed here have actually very strict format of jdk8, jdk8u...,jdk
+  # the build may fail later if this is not honoured.
+  # If your repository have different name, have to go with --version or build from dir/snapshot
+  local forest_name_check=0
+  echo "$forest_name" | grep -q -e "^jdk$" -e "^jdk[0-9]\\{1,3\\}[u]\\{0,1\\}$" || forest_name_check=$?
+  if [ ${forest_name_check} -ne 0 ]; then
+    echo "The mandatory repo argument have very strict format 'jdk[0-9]{1,3}[u]{0,1}' or jsut plain 'jdk' for tip. '$forest_name' do not match."
+    echo "This can be workarounded by '--version jdkXYu'. If set (and matching) then main argument can have any value."
+    exit 1
+  fi
+
   # Derive the openjdk_core_version from the forest name.
   local openjdk_core_version=${forest_name}
   if [[ ${forest_name} == *u ]]; then
