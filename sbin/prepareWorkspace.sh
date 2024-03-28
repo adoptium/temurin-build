@@ -54,11 +54,12 @@ unpackFromArchive() {
     local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" | wc -l)
     if [ "$topLevelItems" -eq "1" ] ; then
       echo "Source tarball contans exaclty one directory, using"
-      tar --exclude='*/build' --strip-components 1 -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
+      tar --strip-components 1 -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
     else
       echo "Source tarball do not contains top level directory, using"
-      tar --exclude='*/build' --strip-components 0 -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
+      tar --strip-components 0 -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
     fi
+    rm -rf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}/build"
   popd
 }
 
