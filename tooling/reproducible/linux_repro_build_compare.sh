@@ -123,6 +123,7 @@ if [ ! -d "jdk-${TEMURIN_VERSION}" ]; then
   else
     mkdir "$PWD/jdk-${TEMURIN_VERSION}"
     tar xpfz $TARBALL_PARAM --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
+    ls "$PWD/jdk-${TEMURIN_VERSION}"
   fi
 fi
 
@@ -138,13 +139,13 @@ cleanBuildInfo
 # shellcheck disable=SC2069
 rc=0
 # shellcheck disable=SC2069
-diff -r "jdk-${TEMURIN_VERSION}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.$(uname).$TEMURIN_VERSION.diff" || rc=$?
+diff -r "jdk-${TEMURIN_VERSION}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.diff" || rc=$?
 
 if [ $rc == 0 ]; then
   echo "Compare identical !"
 else
-  cat "reprotest.$(uname).$TEMURIN_VERSION.diff"
-  echo "Differences found..., logged in: reprotest.$(uname).$TEMURIN_VERSION.diff"
+  cat "reprotest.diff"
+  echo "Differences found..., logged in: reprotest.diff"
 fi
 
 exit $rc
