@@ -760,7 +760,8 @@ Compare_JDK() {
   export PATH="$PATH:$CPW"
 
   # Run Comparison Script
-  echo "cd $WORK_DIR/compare && ./repro_compare.sh temurin src_jdk temurin tar_jdk CYGWIN 2>&1" | sh
+  echo "cd $WORK_DIR/compare && ./repro_compare.sh temurin src_jdk temurin tar_jdk CYGWIN 2>&1" | sh &
+  wait
 
   # Display The Content Of repro_diff.out
   echo ""
