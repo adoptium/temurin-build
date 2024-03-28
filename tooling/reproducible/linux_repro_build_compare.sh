@@ -93,9 +93,11 @@ downloadAnt
 if [[ $SBOM_PARAM =~ ^https?:// ]]; then
   echo "Retrieving and parsing SBOM from $SBOM_PARAM"
   curl -LO "$SBOM_PARAM"
+  SBOM=$(basename "$SBOM_PARAM")
+else
+  SBOM=$SBOM_PARAM
 fi
 
-SBOM=$(basename "$SBOM_PARAM")
 BOOTJDK_VERSION=$(jq -r '.metadata.tools[] | select(.name == "BOOTJDK") | .version' "$SBOM" | sed -e 's#-LTS$##')
 GCCVERSION=$(jq -r '.metadata.tools[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
 LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
@@ -124,6 +126,7 @@ if [ ! -d "jdk-${TEMURIN_VERSION}" ]; then
   fi
 fi
 
+
 echo "  cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
 
 echo Comparing ...
@@ -133,12 +136,16 @@ tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare.$$
 cleanBuildInfo
 
 # shellcheck disable=SC2069
-if diff -r "jdk-${TEMURIN_VERSION}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.$(uname).$TEMURIN_VERSION.diff"; then
-    echo "Compare identical !"
-    exit 0
+rc=0
+# shellcheck disable=SC2069
+diff -r "jdk-${TEMURIN_VERSION}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.$(uname).$TEMURIN_VERSION.diff" || rc=$?
+
+if [ $rc == 0 ]; then
+  echo "Compare identical !"
 else
-    cat "reprotest.$(uname).$TEMURIN_VERSION.diff"
-    echo "Differences found..., logged in: reprotest.$(uname).$TEMURIN_VERSION.diff"
-    exit 1
+  cat "reprotest.$(uname).$TEMURIN_VERSION.diff"
+  echo "Differences found..., logged in: reprotest.$(uname).$TEMURIN_VERSION.diff"
 fi
+
+exit $rc
 
