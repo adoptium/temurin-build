@@ -1,5 +1,5 @@
 # ********************************************************************************
-# Copyright (c) 2020 Contributors to the Eclipse Foundation
+# Copyright (c) 2024 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) with this work for additional
 # information regarding copyright ownership.
@@ -11,12 +11,23 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
-name: "Adoptium-$(JAVA_TO_BUILD)-$(Date:yyyy-MM-dd)"
+# Check license headers
 
-trigger: none
+name: Check License Headers
+on:
+  pull_request:
+    branches: [ master ]
 
-pr: none
+permissions:
+  contents: write
+  pull-requests: write
 
-stages:
-  - template: ./build/build.yml
-  - template: ./test/sanity.yml
+jobs:
+  license-check:
+    runs-on: ubuntu-latest
+    name: License Headers 
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+    - name: Check License Header
+      uses: apache/skywalking-eyes@6b2529214f6b1ccee3ec92bb0adfeabf6f66f538 # v0.5.0
