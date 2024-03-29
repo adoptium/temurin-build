@@ -85,8 +85,6 @@ checkAllVariablesSet() {
   fi
 }
 
-echo "pwd is $PWD"
-ls
 installPrereqs
 downloadAnt
 
@@ -123,7 +121,6 @@ if [ ! -d "jdk-${TEMURIN_VERSION}" ]; then
   else
     mkdir "$PWD/jdk-${TEMURIN_VERSION}"
     tar xpfz $TARBALL_PARAM --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
-    ls "$PWD/jdk-${TEMURIN_VERSION}"
   fi
 fi
 

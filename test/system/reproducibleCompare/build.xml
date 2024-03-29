@@ -60,15 +60,12 @@
 				<arg value="-b" />
 				<arg value="${buildBranch}" />
 				<arg value="${buildRepo}" />
+				<arg value="temurin-build" />
 		</exec>
 		<copy todir="." failonerror="false">
 			<fileset dir="temurin-build/tooling/reproducible/" includes="*.sh" />
 		</copy>
-		<copy todir="." failonerror="false">
-			<fileset dir="openjdk-build/tooling/reproducible/" includes="*.sh" />
-		</copy>
 		<delete dir="temurin-build" failonerror="false" />
-		<delete dir="openjdk-build" failonerror="false" />
 	</target>
 	<target name="build" depends="init,stage">
 		<copy todir="${DEST}">
