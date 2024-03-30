@@ -39,7 +39,8 @@ TARBALL_URL="$2"
 # These Values Should Be Updated To Reflect The Build Environment
 # The Defaults Below Are Suitable For An Adoptium Windows Build Environment
 # Which Has Been Created Via The Ansible Infrastructure Playbooks
-WORK_DIR="/cmp$(date +%Y%m%d%H%M%S)"
+
+WORK_DIR="/cygdrive/c/comp-jdk-build"
 ANT_VERSION="1.10.5"
 ANT_CONTRIB_VERSION="1.0b3"
 ANT_BASE_PATH="/cygdrive/c/apache-ant"
@@ -55,12 +56,13 @@ SIGNTOOL_BASE="C:/Program Files (x86)/Windows Kits/10"
 
 # Define What Are Configure Args & Redundant Args
 # This MAY Need Updating If Additional Configure Args Are Passed
-CONFIG_ARGS=("--disable-warnings-as-errors" "--disable-ccache" "--with-toolchain-version" "--with-ucrt-dll-dir")
+CONFIG_ARGS=("--disable-warnings-as-errors" "--disable-ccache" "--with-toolchain-version" "--with-ucrt-dll-dir" "--with-version-opt")
 NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args")
 
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$WORK_DIR/src_sbom.json"
 DISTLocalPath="$WORK_DIR/src_jdk_dist.zip"
+ScriptPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Function to check if a string is a valid URL
 is_url() {
@@ -92,7 +94,7 @@ Create_WorkDir() {
     echo "Folder Exists - Removing '$WORK_DIR'"
   fi
   echo "Creating $WORK_DIR"
-  mkdir "$WORK_DIR"
+  mkdir -p "$WORK_DIR"
 }
 
 # Function To Check The SBOM
@@ -138,37 +140,41 @@ Check_Parameters() {
 }
 
 Install_PreReqs() {
-  # Install Cygwin Package Manager If Not Present
-  echo "Checking If Apt-Cyg Is Already Installed"
-  if [ -f /usr/local/bin/apt-cyg ]; then
-    echo "Skipping apt-cyg Install"
-    APTCYG_INSTALLED="True"
-  else
-    echo "Installing apt-cyg"
-    APTCYG_INSTALLED="False"
-    wget -q -O "./apt-cyg" "https://raw.githubusercontent.com/transcode-open/apt-cyg/master/apt-cyg"
-    ACTSHASUM=$(sha256sum "apt-cyg" | awk '{print $1}')
-    EXPSHASUM="d020050e2cb56fec990f16fd10695e153afd064cb0839ba935247b5a9e4c29a0"
+  # Check For JQ & Install Apt-Cyg & JQ Where Not Available
+  if ! command -v jq &> /dev/null; then
+      echo "WARNING: JQ is not installed. Attempting To Install Via Apt-Cyg"
+      echo "Checking If Apt-Cyg Is Already Installed"
+      if [ -f /usr/local/bin/apt-cyg ]; then
+        echo "Skipping apt-cyg Install"
+        APTCYG_INSTALLED="True"
+      else
+        echo "Installing apt-cyg"
+        APTCYG_INSTALLED="False"
+        wget -q -O "./apt-cyg" "https://raw.githubusercontent.com/transcode-open/apt-cyg/master/apt-cyg"
+        ACTSHASUM=$(sha256sum "apt-cyg" | awk '{print $1}')
+        EXPSHASUM="d020050e2cb56fec990f16fd10695e153afd064cb0839ba935247b5a9e4c29a0"
+        if [ "$ACTSHASUM" == "$EXPSHASUM" ]; then
+          chmod +x apt-cyg
+          mv apt-cyg /usr/local/bin
+        else
+          echo "Checksum Is Not OK - Exiting"
+          exit 1
+        fi
+      fi
 
-    if [ "$ACTSHASUM" == "$EXPSHASUM" ]; then
-      chmod +x apt-cyg
-      mv apt-cyg /usr/local/bin
-    else
-      echo "Checksum Is Not OK - Exiting"
-      exit 1
-    fi
+      echo "Checking If JQ Is Already Installed"
+      if [ -f /usr/local/bin/jq ]; then
+        echo "Skipping JQ Install"
+        APTJQ_INSTALLED="True"
+      else
+        echo "Installing JQ via APTCYG"
+        APTJQ_INSTALLED="False"
+        apt-cyg install jq libjq1 libonig5
+      fi
   fi
 
   # Install JQ Where Not Already Installed
-  echo "Checking If JQ Is Already Installed"
-  if [ -f /usr/local/bin/jq ]; then
-    echo "Skipping JQ Install"
-    APTJQ_INSTALLED="True"
-  else
-    echo "Installing JQ via APTCYG"
-    APTJQ_INSTALLED="False"
-    apt-cyg install jq libjq1 libonig5
-  fi
+
 }
 
 Get_SBOM_Values() {
@@ -281,7 +287,7 @@ Get_SBOM_Values() {
       echo "Temurin Build Arguments: $buildArgs"
       export buildArgs
   else
-      echo "ERROR: Temurin Build Version not found in the SBOM."
+      echo "ERROR: Temurin Build Arguments not found in the SBOM."
       echo "This Is A Mandatory Element"
       exit 1
   fi
@@ -567,7 +573,7 @@ Prepare_Env_For_Build() {
   # Loop through the words
   for word in "${words[@]}"; do
     # Check if the word starts with '--'
-    if [[ $word == --* ]]; then
+    if [[ $word == --* ]] || [[ $word == -b* ]]; then
       # If a parameter already exists, store it in the params array
       if [[ -n $param ]]; then
         params+=("$param=$value")
@@ -580,7 +586,7 @@ Prepare_Env_For_Build() {
     fi
   done
 
-  # Add the last parameter to the array
+    # Add the last parameter to the array
   params+=("$param = $value")
 
   # Read the separated parameters and values into a new array
@@ -600,12 +606,14 @@ Prepare_Env_For_Build() {
     fixed_value=$(echo "$prepped_value" | awk '{$1=$1};1')
 
     # Handle Special parameters
+    if [ "$fixed_param" == "-b" ]; then fixed_value="$fixed_value " ; fi
     if [ "$fixed_param" == "--jdk-boot-dir" ]; then fixed_value="$BOOTJDK_HOME " ; fi
     if [ "$fixed_param" == "--freetype-dir" ]; then fixed_value="$fixed_value " ; fi
     if [ "$fixed_param" == "--with-toolchain-version" ]; then fixed_value="$visualStudioVersion " ; fi
-    if [ "$fixed_param" == "--with-ucrt-dll-dir" ]; then fixed_value="temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder" ; fi
+    if [ "$fixed_param" == "--with-ucrt-dll-dir" ]; then fixed_value="temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder " ; fi
     if [ "$fixed_param" == "--target-file-name" ]; then target_file="$fixed_value" ; fixed_value="$fixed_value " ; fi
     if [ "$fixed_param" == "--tag" ]; then fixed_value="$fixed_value " ; fi
+
 
     # Fix Build Variant Parameter To Strip JDK Version
 
@@ -628,7 +636,7 @@ Prepare_Env_For_Build() {
       # Add Config Arg To New Array
 
       # Handle Windows Param Names In Config Args (Replace Space with =)
-      if [ "$fixed_param" == "--with-toolchain-version" ] || [ "$fixed_param" == "--with-ucrt-dll-dir" ] ; then
+      if [ "$fixed_param" == "--with-toolchain-version" ] || [ "$fixed_param" == "--with-ucrt-dll-dir" ] ||  [ "$fixed_param" == "--with-version-opt" ] ; then
         STRINGTOADD="$fixed_param=$fixed_value"
         CONFIG_ARRAY+=("$STRINGTOADD")
       else
@@ -675,7 +683,6 @@ Build_JDK() {
 Compare_JDK() {
   echo "Comparing JDKs"
   echo ""
-  cd "$WORK_DIR"
   mkdir "$WORK_DIR/compare"
   cp "$WORK_DIR/src_jdk_dist.zip" "$WORK_DIR/compare"
   cp "$WORK_DIR/built_jdk.zip" "$WORK_DIR/compare"
@@ -749,15 +756,12 @@ Compare_JDK() {
   export JAVA_HOME=$BOOTJDK_HOME
   export PATH=$JAVA_HOME/bin:$PATH
 
-  # Run Comparison Script
-  cd "$WORK_DIR/compare"
-
   CPW=$(cygpath -u "$SIGNPATHWIN")
   export PATH="$PATH:$CPW"
 
   # Run Comparison Script
-  cd "$WORK_DIR/compare"
-  ./repro_compare.sh temurin src_jdk temurin tar_jdk CYGWIN
+  echo "cd $WORK_DIR/compare && ./repro_compare.sh temurin src_jdk temurin tar_jdk CYGWIN 2>&1" | sh &
+  wait
 
   # Display The Content Of repro_diff.out
   echo ""
@@ -767,7 +771,9 @@ Compare_JDK() {
   cat "$WORK_DIR/compare/repro_diff.out"
   echo ""
   echo "---------------------------------------------"
-  mv "$WORK_DIR/compare/repro_diff.out" "$WORK_DIR"
+  echo "Copying Output To $(dirname "$0")"
+  cp "$WORK_DIR/compare/repro_diff.out" "$ScriptPath"
+
 }
 
 Clean_Up_Everything() {
