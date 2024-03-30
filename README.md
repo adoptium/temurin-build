@@ -233,6 +233,11 @@ For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 (162) or the 3rd position in the semVer version string (4).
 This is typically used in conjunction with -b.
 
+--use-adoptium-devkit <Adoptium DevKit release tag>
+Download and use the given DevKit from https://github.com/adoptium/devkit-binaries/releases.
+The DevKit is downloaded and unpacked to WORKSPACE_DIR/WORKING_DIR/devkit
+and will add the configure arg --with-devkit=WORKSPACE_DIR/WORKING_DIR/devkit.
+
 --use-jep319-certs
 Use certs defined in JEP319 in Java 8/9. Deprecated, has no effect.
 

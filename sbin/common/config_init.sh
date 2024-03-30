@@ -99,6 +99,7 @@ TARGET_DIR
 TARGET_FILE_NAME
 TMP_CONTAINER_NAME
 TMP_SPACE_BUILD
+USE_ADOPTIUM_DEVKIT
 USE_DOCKER
 USE_JEP319_CERTS
 USE_SSH
@@ -122,6 +123,7 @@ WORKSPACE_DIR
 #  <WORKSPACE_DIR>/config                              Configuration                        /openjdk/config             $(pwd)/workspace/config
 #  <WORKSPACE_DIR>/<WORKING_DIR>                       Build area                           /openjdk/build              $(pwd)/workspace/build/
 #  <WORKSPACE_DIR>/<WORKING_DIR>/<OPENJDK_SOURCE_DIR>  Source code                          /openjdk/build/src          $(pwd)/workspace/build/src
+#  <WORKSPACE_DIR>/<WORKING_DIR>/devkit                DevKit download                      /openjdk/build/devkit       $(pwd)/workspace/build/devkit
 #  <WORKSPACE_DIR>/target                              Destination of built artifacts       /openjdk/target             $(pwd)/workspace/target
 
 # Helper code to perform index lookups by name
@@ -355,6 +357,9 @@ function parseConfigurationArguments() {
 
         "--use-jep319-certs" )
         BUILD_CONFIG[USE_JEP319_CERTS]=true;;
+
+        "--use-adoptium-devkit")
+        BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]="$1"; shift;;
 
         "--user-openjdk-build-root-directory" )
         BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]="$1"; shift;;
@@ -599,6 +604,9 @@ function configDefaults() {
   BUILD_CONFIG[CLEAN_GIT_REPO]=false
 
   BUILD_CONFIG[CLEAN_LIBS]=false
+
+  # Default to no Adoptium DevKit
+  BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]=""
 
   # By default dont backport JEP318 certs to < Java 10
   BUILD_CONFIG[USE_JEP319_CERTS]=false

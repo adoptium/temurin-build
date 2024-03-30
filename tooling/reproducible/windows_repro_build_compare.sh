@@ -39,8 +39,8 @@ TARBALL_URL="$2"
 # These Values Should Be Updated To Reflect The Build Environment
 # The Defaults Below Are Suitable For An Adoptium Windows Build Environment
 # Which Has Been Created Via The Ansible Infrastructure Playbooks
-CURR_DIR=$(pwd)
-WORK_DIR="$CURR_DIR/cmp$(date +%Y%m%d%H%M%S)"
+
+WORK_DIR="/cygdrive/c/comp-jdk-build"
 ANT_VERSION="1.10.5"
 ANT_CONTRIB_VERSION="1.0b3"
 ANT_BASE_PATH="/cygdrive/c/apache-ant"
@@ -62,6 +62,7 @@ NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args")
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$WORK_DIR/src_sbom.json"
 DISTLocalPath="$WORK_DIR/src_jdk_dist.zip"
+ScriptPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Function to check if a string is a valid URL
 is_url() {
@@ -93,7 +94,7 @@ Create_WorkDir() {
     echo "Folder Exists - Removing '$WORK_DIR'"
   fi
   echo "Creating $WORK_DIR"
-  mkdir "$WORK_DIR"
+  mkdir -p "$WORK_DIR"
 }
 
 # Function To Check The SBOM
@@ -682,7 +683,6 @@ Build_JDK() {
 Compare_JDK() {
   echo "Comparing JDKs"
   echo ""
-  cd "$WORK_DIR"
   mkdir "$WORK_DIR/compare"
   cp "$WORK_DIR/src_jdk_dist.zip" "$WORK_DIR/compare"
   cp "$WORK_DIR/built_jdk.zip" "$WORK_DIR/compare"
@@ -756,15 +756,12 @@ Compare_JDK() {
   export JAVA_HOME=$BOOTJDK_HOME
   export PATH=$JAVA_HOME/bin:$PATH
 
-  # Run Comparison Script
-  cd "$WORK_DIR/compare"
-
   CPW=$(cygpath -u "$SIGNPATHWIN")
   export PATH="$PATH:$CPW"
 
   # Run Comparison Script
-  cd "$WORK_DIR/compare"
-  ./repro_compare.sh temurin src_jdk temurin tar_jdk CYGWIN
+  echo "cd $WORK_DIR/compare && ./repro_compare.sh temurin src_jdk temurin tar_jdk CYGWIN 2>&1" | sh &
+  wait
 
   # Display The Content Of repro_diff.out
   echo ""
@@ -774,7 +771,9 @@ Compare_JDK() {
   cat "$WORK_DIR/compare/repro_diff.out"
   echo ""
   echo "---------------------------------------------"
-  mv "$WORK_DIR/compare/repro_diff.out" "$WORK_DIR"
+  echo "Copying Output To $(dirname "$0")"
+  cp "$WORK_DIR/compare/repro_diff.out" "$ScriptPath"
+
 }
 
 Clean_Up_Everything() {
