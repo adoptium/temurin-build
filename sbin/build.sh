@@ -75,6 +75,13 @@ addConfigureArgIfValueIsNotEmpty() {
   fi
 }
 
+# Configure the DevKit if required
+configureDevKitConfigureParameter() {
+  if [[ -n "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" ]]; then
+    addConfigureArg "--with-devkit=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+  fi
+} 
+
 # Configure the boot JDK
 configureBootJDKConfigureParameter() {
   addConfigureArgIfValueIsNotEmpty "--with-boot-jdk=" "${BUILD_CONFIG[JDK_BOOT_DIR]}"
@@ -131,6 +138,39 @@ configureReproducibleBuildParameter() {
          addConfigureArg "--with-extra-cflags=" "-qnotimestamps"
          addConfigureArg "--with-extra-cxxflags=" "-qnotimestamps"
       fi
+
+      # For jdk21u a workaround is required for debug symbol mapping
+      # until https://bugs.openjdk.org/browse/JDK-8326685 is backported in jdk-21.0.4
+      if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 21 ]]
+      then
+         configureReproducibleBuildDebugMapping
+      fi
+  fi
+}
+
+# For reproducible builds we need to add debug mappings for the openjdk build outputdir
+# so that debug symbol files (and thus libraries) are deterministic
+configureReproducibleBuildDebugMapping() {
+  # Workaround until https://bugs.openjdk.org/browse/JDK-8326685 is backported to jdk21u
+  if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
+    local buildOutputDir
+    if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+      if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
+        buildOutputDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/linux-arm-serverANDclient-release/"
+      else
+        buildOutputDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/linux-${BUILD_CONFIG[OS_ARCHITECTURE]}-server-release/"
+      fi
+    else
+      buildOutputDir="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/"
+    fi
+
+    # Ensure directory is correctly formed so is mapped, with no ./ or //
+    buildOutputDir=$(echo ${buildOutputDir} | sed 's,\./,,' | sed 's,//,/,')
+
+    local fdebug_flags="-fdebug-prefix-map=${buildOutputDir}="
+
+    addConfigureArg "--with-extra-cflags=" "'${fdebug_flags}'"
+    addConfigureArg "--with-extra-cxxflags=" "'${fdebug_flags}'"
   fi
 }
 
@@ -263,8 +303,6 @@ getOpenJdkVersion() {
 # OpenJDK 64-Bit Server VM Temurin-11.0.12+7 (build 11.0.12+7, mixed mode)
 
 configureVersionStringParameter() {
-  stepIntoTheWorkingDirectory
-
   local openJdkVersion=$(getOpenJdkVersion)
   echo "OpenJDK repo tag is ${openJdkVersion}"
 
@@ -505,6 +543,7 @@ configureZlibLocation() {
 configureCommandParameters() {
   configureVersionStringParameter
   configureBootJDKConfigureParameter
+  configureDevKitConfigureParameter
   configureShenandoahBuildParameter
   configureMacOSCodesignParameter
   configureDebugParameters
@@ -544,28 +583,39 @@ configureCommandParameters() {
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
-# Make sure we're in the source directory for OpenJDK now
-stepIntoTheWorkingDirectory() {
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || exit
+# Make sure we're in the build root directory for OpenJDK now
+# This maybe the OpenJDK source directory, or a user supplied build directory
+stepIntoTheOpenJDKBuildRootDirectory() {
+  if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+    cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || exit
 
-  # corretto/corretto-8 (jdk-8 only) nest their source under /src in their dir
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ] && [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
-    cd "src"
+    # corretto/corretto-8 (jdk-8 only) nest their source under /src in their dir
+    if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ] && [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
+      cd "src"
+    fi
+  else
+    if [ ! -d "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+      echo "ERROR: User supplied openjdk build root directory does not exist: ${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"
+      exit 2
+    else
+      echo "Using user supplied openjdk build root directory: ${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"
+      cd "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" || exit
+    fi
   fi
 
-  echo "Should have the source, I'm at $PWD"
+  echo "Should be in the openjdk build root directory, I'm at $PWD"
 }
 
 buildTemplatedFile() {
   echo "Configuring command and using the pre-built config params..."
 
-  stepIntoTheWorkingDirectory
+  stepIntoTheOpenJDKBuildRootDirectory
 
   echo "Currently at '${PWD}'"
 
   if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" != "true" ]]; then
-    FULL_CONFIGURE="bash ./configure --verbose ${CONFIGURE_ARGS}"
-    echo "Running ./configure with arguments '${FULL_CONFIGURE}'"
+    FULL_CONFIGURE="bash ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/configure --verbose ${CONFIGURE_ARGS}"
+    echo "Running ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/configure with arguments '${FULL_CONFIGURE}'"
   else
     FULL_CONFIGURE="echo \"Skipping configure because we're assembling an exploded image\""
     echo "Skipping configure because we're assembling an exploded image"
@@ -599,7 +649,7 @@ buildTemplatedFile() {
     # Check if strace is available
     if rpm --version && rpm -q strace ; then
       echo "Strace and rpm is available on system"
-      FULL_MAKE_COMMAND="mkdir build/straceOutput \&\& strace -o build/straceOutput/outputFile -ff -e trace=open,openat,execve ${FULL_MAKE_COMMAND}"
+      FULL_MAKE_COMMAND="mkdir ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput \&\& strace -o ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput/outputFile -ff -e trace=open,openat,execve ${FULL_MAKE_COMMAND}"
     else
       echo "Strace is not available on system"
       exit 2
@@ -653,7 +703,7 @@ executeTemplatedFile() {
   if [ "${BUILD_CONFIG[CREATE_SOURCE_ARCHIVE]}" == "true" ]; then
     createSourceArchive
   fi
-  stepIntoTheWorkingDirectory
+  stepIntoTheOpenJDKBuildRootDirectory
 
   echo "Currently at '${PWD}'"
 
@@ -678,8 +728,12 @@ executeTemplatedFile() {
 
   if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 19 || "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 17 ]]; then
     if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]; then
+      local specFile="./spec.gmk"
+      if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+        specFile="build/*/spec.gmk"
+      fi
       # For "release" reproducible builds get openjdk timestamp used
-      local buildTimestamp=$(grep SOURCE_DATE_ISO_8601 build/*/spec.gmk | tr -s ' ' | cut -d' ' -f4)
+      local buildTimestamp=$(grep SOURCE_DATE_ISO_8601 ${specFile} | tr -s ' ' | cut -d' ' -f4)
       # BusyBox doesn't use T Z iso8601 format
       buildTimestamp="${buildTimestamp//T/ }"
       buildTimestamp="${buildTimestamp//Z/}"
@@ -693,7 +747,9 @@ executeTemplatedFile() {
 
 createOpenJDKFailureLogsArchive() {
     echo "OpenJDK make failed, archiving make failed logs"
-    cd build/*
+    if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+      cd build/*
+    fi
 
     local adoptLogArchiveDir="TemurinLogsArchive"
 
@@ -958,7 +1014,7 @@ generateSBoM() {
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
     echo "Executing Analysis Script"
     tempBldDir="$(dirname "${BUILD_CONFIG[WORKSPACE_DIR]}")"
-    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/straceOutput" "$tempBldDir" "$javaHome" "$classpath" "$sbomJson"
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput" "$tempBldDir" "$javaHome" "$classpath" "$sbomJson"
   fi
 
   # Print SBOM location
@@ -975,11 +1031,18 @@ checkingToolSummary() {
 
 # Determine FreeType version being used in the build from either the system or bundled freetype.h definition
 addFreeTypeVersionInfo() {
+   local specFile
+   if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+     specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
+   else
+     specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
+   fi
+
    # Default to "system"
    local FREETYPE_TO_USE="system"
    if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
        # For jdk-11+ get FreeType used from build spec.gmk, which can be "bundled" or "system"
-       FREETYPE_TO_USE="$(grep "^FREETYPE_TO_USE[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^FREETYPE_TO_USE[ ]*:=[ ]*//")"
+       FREETYPE_TO_USE="$(grep "^FREETYPE_TO_USE[ ]*:=" ${specFile} | sed "s/^FREETYPE_TO_USE[ ]*:=[ ]*//")"
    fi
 
    echo "FREETYPE_TO_USE=${FREETYPE_TO_USE}"
@@ -987,7 +1050,7 @@ addFreeTypeVersionInfo() {
    local version="Unknown"
    local freetypeInclude=""
    if [ "${FREETYPE_TO_USE}" == "system" ]; then
-      local FREETYPE_CFLAGS="$(grep "^FREETYPE_CFLAGS[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^FREETYPE_CFLAGS[ ]*:=[ ]*//" | sed "s/\-I//g")"
+      local FREETYPE_CFLAGS="$(grep "^FREETYPE_CFLAGS[ ]*:=" ${specFile} | sed "s/^FREETYPE_CFLAGS[ ]*:=[ ]*//" | sed "s/\-I//g")"
       echo "FREETYPE_CFLAGS include paths=${FREETYPE_CFLAGS}"
 
       # Search freetype include path for freetype.h
@@ -1038,9 +1101,9 @@ addCycloneDXVersions() {
        for JAR in "${CYCLONEDB_DIR}/build/jar"/*.jar; do
          JarName=$(basename "$JAR")
          if [ "$(uname)" = "Darwin" ]; then
-            JarSha=$(shasum -a 256 "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+            JarSha=$(shasum -a 256 "$JAR" | cut -d' ' -f1)
          else
-            JarSha=$(sha256sum "${CYCLONEDB_DIR}/build/jar/cyclonedx-core-java.jar" | cut -d' ' -f1)
+            JarSha=$(sha256sum "$JAR" | cut -d' ' -f1)
          fi
          addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}" "${JarSha}"
        done
@@ -1066,12 +1129,18 @@ addGLIBCforLinux() {
      addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MUSL" "${MUSL_VERSION}"
    else
      # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
+     local specFile
+     if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+       specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
+     else
+       specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
+     fi
 
      # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
-     local CC="$(grep "^CC[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | sed "s/^CC[ ]*:=[ ]*//")"
+     local CC="$(grep "^CC[ ]*:=" ${specFile} | sed "s/^CC[ ]*:=[ ]*//")"
      # Remove env=xx from CC, so we can call from bash to get __GLIBC.
      CC=$(echo "$CC" | tr -s " " | sed -E "s/[^ ]*=[^ ]*//g")
-     local SYSROOT_CFLAGS="$(grep "^SYSROOT_CFLAGS[ ]*:=" ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk | tr -s " " | cut -d" " -f3-)"
+     local SYSROOT_CFLAGS="$(grep "^SYSROOT_CFLAGS[ ]*:=" ${specFile} | tr -s " " | cut -d" " -f3-)"
 
      local GLIBC_MAJOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)"
      local GLIBC_MINOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)"
@@ -1192,16 +1261,21 @@ parseJavaVersionString() {
 
 # Print the version string so we know what we've produced
 printJavaVersionString() {
-  stepIntoTheWorkingDirectory
+  stepIntoTheOpenJDKBuildRootDirectory
+
+  local imagesFolder="images"
+  if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+    imagesFolder="build/*/images"
+  fi
 
   case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
   "darwin")
     # shellcheck disable=SC2086
-    PRODUCT_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JDK_PATH]}/Contents/Home)
+    PRODUCT_HOME=$(ls -d ${PWD}/${imagesFolder}/${BUILD_CONFIG[JDK_PATH]}/Contents/Home)
     ;;
   *)
     # shellcheck disable=SC2086
-    PRODUCT_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JDK_PATH]})
+    PRODUCT_HOME=$(ls -d ${PWD}/${imagesFolder}/${BUILD_CONFIG[JDK_PATH]})
     ;;
   esac
   if [[ -d "$PRODUCT_HOME" ]]; then
@@ -1284,9 +1358,13 @@ cleanAndMoveArchiveFiles() {
 
   echo "Moving archive content to target archive paths and cleaning unnecessary files..."
 
-  stepIntoTheWorkingDirectory
+  stepIntoTheOpenJDKBuildRootDirectory
 
-  cd build/*/images || return
+  local imagesFolder="images"
+  if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+    imagesFolder="build/*/images"
+  fi
+  cd ${imagesFolder} || return
 
   echo "Currently at '${PWD}'"
 
@@ -1706,7 +1784,7 @@ getLatestTagJDK11plus() {
 getFirstTagFromOpenJDKGitRepo() {
 
   # Save current directory of caller so we can return to that directory at the end of this function.
-  # Some callers are not in the git repo root, but instead build/*/images directory like the archive functions
+  # Some callers are not in the git repo root, but instead build root sub-directory like the archive functions
   # and any function called after cleanAndMoveArchiveFiles().
   local savePwd="${PWD}"
 
@@ -2051,15 +2129,20 @@ addSemVer() { # Pulls the semantic version from the tag associated with the open
 
 # Disable shellcheck in here as it causes issues with ls on mac
 mirrorToJRE() {
-  stepIntoTheWorkingDirectory
+  stepIntoTheOpenJDKBuildRootDirectory
+
+  local imagesFolder="images"
+  if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+    imagesFolder="build/*/images"
+  fi
 
   # shellcheck disable=SC2086
   case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
   "darwin")
-    JRE_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JRE_PATH]}/Contents/Home)
+    JRE_HOME=$(ls -d ${PWD}/${imagesFolder}/${BUILD_CONFIG[JRE_PATH]}/Contents/Home)
     ;;
   *)
-    JRE_HOME=$(ls -d ${PWD}/build/*/images/${BUILD_CONFIG[JRE_PATH]})
+    JRE_HOME=$(ls -d ${PWD}/${imagesFolder}/${BUILD_CONFIG[JRE_PATH]})
     ;;
   esac
 

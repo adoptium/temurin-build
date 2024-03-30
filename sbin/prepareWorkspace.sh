@@ -298,6 +298,17 @@ createWorkspace() {
   umask 022
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
+
+  # If a user supplied OpenJDK build root directory has been specified and it is not empty
+  # then fail with an error, we don't want to delete it in case user has specified a wrong directory
+  # Ensure the directory is created if it doesn't exist
+  if [[ -n "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]]; then
+    if [[ -d "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]] && [[ "$(ls -A "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}")" ]]; then
+      echo "ERROR: Existing user supplied OpenJDK build root directory ${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]} is not empty"
+      exit 1
+    fi
+    mkdir -p "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" || exit
+  fi
 }
 
 # ALSA first for sound
@@ -319,21 +330,8 @@ checkingAndDownloadingAlsa() {
     curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
     curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
 
-    ## This affects riscv64 & Alpine docker images and also evaluation pipelines
-    if ( [ -r /etc/alpine-release ] && [ "$(pwd | wc -c)" -gt 83 ] ) || \
-       ( [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] && [ "$(pwd | wc -c)" -gt 83 ] ); then
-        # Use /tmp in preference to $HOME as fails gpg operation if PWD > 83 characters
-        # Also cannot create ~/.gpg-temp within a docker context
-        GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
-    else
-        GNUPGHOME="${BUILD_CONFIG[WORKSPACE_DIR]:-$PWD}/.gpg-temp"
-    fi
-    if [ ! -d "$GNUPGHOME" ]; then
-        mkdir -m 700 "$GNUPGHOME"
-    fi
-    export GNUPGHOME
+    setupGpg
 
-    echo "GNUPGHOME=$GNUPGHOME"
     # Should we clear this directory up after checking?
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now
@@ -566,6 +564,67 @@ prepareMozillaCacerts() {
     fi
 }
 
+# Create and setup GNUPGHOME
+setupGpg() {
+    ## This affects riscv64 & Alpine docker images and also evaluation pipelines
+    if ( [ -r /etc/alpine-release ] && [ "$(pwd | wc -c)" -gt 83 ] ) || \
+       ( [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] && [ "$(pwd | wc -c)" -gt 83 ] ); then
+        # Use /tmp in preference to $HOME as fails gpg operation if PWD > 83 characters
+        # Also cannot create ~/.gpg-temp within a docker context
+        GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
+    else
+        GNUPGHOME="${BUILD_CONFIG[WORKSPACE_DIR]:-$PWD}/.gpg-temp"
+    fi
+    if [ ! -d "$GNUPGHOME" ]; then
+        mkdir -m 700 "$GNUPGHOME"
+    fi
+    export GNUPGHOME
+
+    echo "GNUPGHOME=$GNUPGHOME"
+}
+
+# Download the required DevKit if necessary
+downloadDevkit() {
+  if [[ -n "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" ]]; then
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+
+    local devkit_tar="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.tar.xz"
+
+    setupGpg
+
+    # Determine DevKit tarball to download for this arch and release
+    local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+    local devkit_target="${BUILD_CONFIG[OS_ARCHITECTURE]}-linux-gnu"
+    local devkit="devkit-${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}-${devkit_target}"
+
+    # Download tarball and GPG sig
+    echo "Downloading DevKit : ${devkitUrl}/${devkit}.tar.xz"
+    curl -L --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
+    curl -L --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
+
+    # GPG verify
+    gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
+    echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
+    gpg --verify "${devkit_tar}.sig" "${devkit_tar}" || exit 1
+
+    tar xpJf "${devkit_tar}" -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    rm "${devkit_tar}"
+    rm "${devkit_tar}.sig"
+
+    # Validate devkit.info matches value passed in and current architecture
+    local devkitInfo="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.info"
+    if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${devkitInfo}" || ! grep "ADOPTIUM_DEVKIT_TARGET=${devkit_target}" "${devkitInfo}"; then
+        echo "ERROR: Devkit does not match required release and architecture:"
+        echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_RELEASE= "${devkitInfo}")"
+        echo "       Required:   ADOPTIUM_DEVKIT_TARGET=${devkit_target}"
+        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_TARGET= "${devkitInfo}")"
+        exit 1
+    fi
+  fi
+}
+
 # Download all of the dependencies for OpenJDK (Alsa, FreeType etc.)
 downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
@@ -684,6 +743,7 @@ function configureWorkspace() {
   if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" != "true" ]]; then
     createWorkspace
     downloadingRequiredDependencies
+    downloadDevkit
     relocateToTmpIfNeeded
     checkoutAndCloneOpenJDKGitRepo
     applyPatches

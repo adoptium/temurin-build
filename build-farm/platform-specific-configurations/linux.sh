@@ -333,6 +333,8 @@ fi
 
 if [[ "${CONFIGURE_ARGS}" =~ .*"--with-devkit=".* ]]; then
   echo "Using gcc from DevKit toolchain specified in configure args"
+elif [[ "${BUILD_ARGS}" =~ .*"--use-adoptium-devkit".* ]]; then
+  echo "Using gcc from Adoptium DevKit toolchain specified in --use-adoptium-devkit build args"
 else 
   if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 11 ] && [ -r /usr/local/gcc9/ ] && [ "${ARCHITECTURE}" == "aarch64" ]; then
     # GCC9 rather than 10 requested by Alibaba for now
