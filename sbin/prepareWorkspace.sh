@@ -632,7 +632,7 @@ downloadBootJdkIfNeeded () {
     else
       source "$SCRIPT_DIR/../build-farm/platform-specific-configurations/downloaders.sh"
       echo "Downloading to $bootDir"
-      downloadBootJDK $(uname -m) ${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}
+      downloadBootJDK "$(uname -m)" "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
     fi
     BUILD_CONFIG[JDK_BOOT_DIR]="${bootDir}"
   fi

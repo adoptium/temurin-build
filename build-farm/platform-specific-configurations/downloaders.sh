@@ -27,7 +27,7 @@ function downloadBootJDK() {
   elif uname -o | grep -i -e Cygwin -e Windows ; then
     downloadWindowsBootJDK "$@"
   else
-    echo "Unsupported platfrom for direct download of boot jdk: `uname -m` `uname -o`"
+    echo "Unsupported platfrom for direct download of boot jdk: $(uname -m) $(uname -o)"
     exit 1
   fi
 }
