@@ -20,7 +20,7 @@
 # On long run, the methods - due theirs simialrity - should converge to one
 ####################################################################################
 
-# this one should be swithing per (supported) oses in future
+# This function switches logic based on the (supported) os
 function downloadBootJDK() {
   if uname -o | grep -i -e Linux ; then
     downloadLinuxBootJDK "$@"
