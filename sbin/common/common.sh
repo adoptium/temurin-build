@@ -26,7 +26,7 @@ function setOpenJdkVersion() {
   echo "$forest_name" | grep -q -e "^jdk$" -e "^jdk[0-9]\\{1,3\\}[u]\\{0,1\\}$" || forest_name_check=$?
   if [ ${forest_name_check} -ne 0 ]; then
     echo "The mandatory repo argument has a very strict format 'jdk[0-9]{1,3}[u]{0,1}' or just plain 'jdk' for tip. '$forest_name' does not match."
-    echo "This can be workarounded by '--version jdkXYu'. If set (and matching) then main argument can have any value."
+    echo "This can be worked around by using '--version jdkXYu'. If set (and matching) then the main argument can have any value."
     exit 1
   fi
 
