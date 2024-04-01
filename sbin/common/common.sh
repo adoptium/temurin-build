@@ -19,7 +19,7 @@
 function setOpenJdkVersion() {
   local forest_name=$1
 
-  # the argument passed here have actually very strict format of jdk8, jdk8u...,jdk
+  # the argument passed here have actually very strict format of jdk8, jdk8u..., jdk
   # the build may fail later if this is not honoured.
   # If your repository have different name, have to go with --version or build from dir/snapshot
   local forest_name_check=0
