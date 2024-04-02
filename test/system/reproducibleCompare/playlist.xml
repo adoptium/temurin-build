@@ -21,6 +21,7 @@
 		<command>docker run -v "$(TEST_RESROOT):/home/jenkins/test" -w "/home/jenkins/" -v "$(TEST_JDK_HOME)/../:/home/jenkins/jdkbinary/" --name reproducibleCompare centos:7 /bin/bash /home/jenkins/test/linux_repro_build_compare.sh $(SBOM_FILE) $(JDK_FILE); \
 	$(TEST_STATUS); \
 	docker cp reproducibleCompare:/home/jenkins/reprotest.diff ./; \
+	docker cp reproducibleCompare:/home/jenkins/reproJDK.tar.gz ./; \
 	docker container rm reproducibleCompare
 	</command>
 		<levels>

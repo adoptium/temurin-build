@@ -130,6 +130,7 @@ echo "  cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 |
 echo Comparing ...
 mkdir compare.$$
 tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare.$$
+cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
 
 cleanBuildInfo
 
