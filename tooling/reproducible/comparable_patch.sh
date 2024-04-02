@@ -478,6 +478,43 @@ function neutraliseReleaseFile() {
   fi
 }
 
+# The last four bytes of a .gnu_debuglink ELF section contains a
+# 32-bit cyclic redundancy check (CRC32) of the separate .debuginfo
+# file.  A given .debuginfo file will differ when compiled in
+# different environments.  Specifically, if some declaration in a
+# system header is referenced by OpenJDK source code, and that
+# declaration's line number changes between environments, the
+# .debuginfo files will have many bytewise differences.  Even
+# seemingly inconsequential header changes will result in large
+# .debuginfo differences, for example, additions of new preprocessor
+# macros, or comment additions and deletions.  The CRC32 is thus
+# sensitive to almost any textual changes to system headers.  This
+# function changes the four bytes to zeroes.
+function neutraliseDebuglinkCRCs() {
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
+    # Assume Cygwin and Darwin toolchains do not produce .gnu_debuglink sections.
+    return
+  fi
+  elf_magic="^7f454c46$"
+  # Does not handle filenames with newlines because the hexdump format does not support \0. 
+  find "${JDK_DIR}" -type f \! -name '*.debuginfo' -print -exec hexdump -n 4 -e '4/1 "%.2x" "\n"' '{}' ';' \
+    | grep --no-group-separator -B 1 "${elf_magic}" | grep -v "${elf_magic}" \
+    | while read -r -d $'\n' file; do
+    if objdump -Fsj .gnu_debuglink "${file}" >/dev/null 2>&1; then
+      echo "Zeroing .gnu_debuglink cyclic redundancy check bytes in ${file}"
+      section="$(objdump -Fsj .gnu_debuglink "${file}")"
+      section_offset_within_file=$((16#$(echo "${section}" | awk '/^Contents of section/ { sub(/\x29/, ""); sub(/0x/, ""); print $9; }')))
+      contents_line="$(echo "${section}" | sed '/^Contents of section.*$/q' | wc -l)"
+      section_bytes_in_hex="$(echo "${section}" | tail -q -n +$((contents_line + 1)) | cut -b 7-41 | tr -d ' \n')"
+      check_length=4
+      hex_chars_per_byte=2
+      check_offset_within_section="$((${#section_bytes_in_hex} / hex_chars_per_byte - check_length))"
+      check_offset_within_file="$((section_offset_within_file + check_offset_within_section))"
+      printf "%0.s\0" $(seq 1 "${check_length}") | dd of="${file}" bs=1 seek="${check_offset_within_file}" count="${check_length}" conv=notrunc status=none
+    fi
+  done
+}
+
 # Remove some non-JDK files that some Vendors distribute
 # - NEWS : Some Vendors provide a NEWS text file
 # - demo : Not all vendors distribute the demo examples 
@@ -550,6 +587,8 @@ neutraliseVersionProps
 neutraliseManifests
 
 neutraliseReleaseFile
+
+neutraliseDebuglinkCRCs
 
 removeNonJdkFiles
 
