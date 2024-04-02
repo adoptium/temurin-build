@@ -11,12 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##############################################################################
-OS:=$(shell uname -s)
-SBOM_FILE := $(shell find $(TEST_JDK_HOME)/../ -type f -name '*-sbom_*.json')
-JDK_FILE := $(shell find $(TEST_JDK_HOME)/../ -type f -name '*-jdk_*')
 
-ifeq ($(OS),Linux)
+SBOM_FILE := $(shell ls $(TEST_JDK_HOME)/../ | grep "sbom" | grep -v "metadata")
+SBOM_FILE := $(TEST_JDK_HOME)/../$(SBOM_FILE)
+ifeq (,$(findstring win,$(SPEC)))
+	JDK_FILE := $(shell find $(TEST_JDK_HOME)/../ -type f -name '*-jdk_*.tar.gz')
+else
+	JDK_FILE := $(shell find $(TEST_JDK_HOME)/../ -type f -name '*-jdk_*.zip')
+endif
+
+ifneq (,$(findstring linux,$(SPEC)))
 	SBOM_FILE := $(subst $(TEST_JDK_HOME)/..,/home/jenkins/jdkbinary,$(SBOM_FILE))
 	JDK_FILE := $(subst $(TEST_JDK_HOME)/..,/home/jenkins/jdkbinary,$(JDK_FILE))
 endif
-
