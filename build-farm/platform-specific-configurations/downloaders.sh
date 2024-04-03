@@ -17,10 +17,11 @@
 
 ####################################################################################
 # This file is gathering all download boot jdk functions, so they can b reused later
-# On long run, the methods - due theirs simialrity - should converge to one
+# On long run, the methods - due theirs similarity - should converge to one
 ####################################################################################
 
 # This function switches logic based on the (supported) os
+# It is currently relying on $bootDir being set. This should be fixed later
 function downloadBootJDK() {
   if uname -o | grep -i -e Linux ; then
     downloadLinuxBootJDK "$@"
@@ -55,7 +56,9 @@ function downloadLinuxBootJDK() {
     gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
     gpg --verify bootjdk.tar.gz.sig bootjdk.tar.gz || exit 1
+    # shellcheck disable=SC2154
     mkdir "$bootDir"
+    # shellcheck disable=SC2154
     tar xpzf bootjdk.tar.gz --strip-components=1 -C "$bootDir"
     set -e
   else
@@ -76,7 +79,9 @@ function downloadLinuxBootJDK() {
       gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
       echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
       gpg --verify bootjdk.tar.gz.sig bootjdk.tar.gz || exit 1
+      # shellcheck disable=SC2154
       mkdir "$bootDir"
+      # shellcheck disable=SC2154
       tar xpzf bootjdk.tar.gz --strip-components=1 -C "$bootDir"
     else
       # If no binaries are available then try from adoptopenjdk
@@ -143,5 +148,6 @@ function downloadWindowsBootJDK() {
         fi
       fi
       unzip -q openjdk.zip
+      # shellcheck disable=SC2154
       mv "$(ls -d jdk*"${VER}"*)" "$bootDir"
 }
