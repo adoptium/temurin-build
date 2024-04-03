@@ -591,7 +591,7 @@ downloadDevkit() {
 
     local devkit_target="${BUILD_CONFIG[OS_ARCHITECTURE]}-linux-gnu"
 
-    local USR_LOCAL_DEVKIT="/usr/local/devkit"
+    local USR_LOCAL_DEVKIT="/usr/local/devkit/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
     if [[ -d "${USR_LOCAL_DEVKIT}" ]]; then
       local usrLocalDevkitInfo="${USR_LOCAL_DEVKIT}/devkit.info"
        if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${usrLocalDevkitInfo}" || ! grep "ADOPTIUM_DEVKIT_TARGET=${devkit_target}" "${usrLocalDevkitInfo}"; then
