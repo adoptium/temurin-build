@@ -65,11 +65,17 @@
 		<copy todir="." failonerror="false">
 			<fileset dir="temurin-build/tooling/reproducible/" includes="*.sh" />
 		</copy>
+		<copy todir="." failonerror="false">
+			<fileset dir="${TEST_ROOT}/../jdkbinary/" >
+				<include name="*-sbom_*.json"/>
+				<exclude name="*-metadata.json"/>
+			</fileset>
+		</copy>
 		<delete dir="temurin-build" failonerror="false" />
 	</target>
 	<target name="build" depends="init,stage">
 		<copy todir="${DEST}">
-			<fileset dir="." includes="*.mk, *.xml, *.sh" />
+			<fileset dir="." includes="*.mk, *.xml, *.sh, *.json" />
 		</copy>
 	</target>
 </project>

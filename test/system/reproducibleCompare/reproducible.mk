@@ -16,9 +16,6 @@ ifndef SBOM_FILE
 	SBOM_FILE := $(TEST_ROOT)/../jdkbinary/$(SBOM_FILE)
 endif
 
-$(info SBOM_FILE1 is set to $(SBOM_FILE))
 ifneq (,$(findstring linux,$(SPEC)))
-	SBOM_FILE := $(subst $(TEST_ROOT)/..,/home/jenkins,$(SBOM_FILE))
+	SBOM_FILE := $(subst $(TEST_ROOT)/../jdkbinary,/home/jenkins/test,$(SBOM_FILE))
 endif
-
-$(info SBOM_FILE2 is set to $(SBOM_FILE))

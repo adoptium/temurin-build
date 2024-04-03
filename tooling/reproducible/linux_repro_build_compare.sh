@@ -131,6 +131,8 @@ comparedDir="jdk-${TEMURIN_VERSION}"
 if [ isLocalDir ]; then
   comparedDir=$JDK_PARAM
 fi
+
+echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
 echo Comparing ...
 mkdir compare.$$
 tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare.$$
