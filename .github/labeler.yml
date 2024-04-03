@@ -1,3 +1,16 @@
+# ********************************************************************************
+# Copyright (c) 2021 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 # Config file used by .github/workflows/labeler.yml
 
 # This file matches file/folder changes to labels. See https://github.com/actions/labeler for more information.
@@ -8,30 +21,38 @@
 #   - tests/*
 
 ghActions:
-  - .github/*
+- changed-files:
+  - any-glob-to-any-file: [.github/*]
 documentation:
-  - '**/*.md'
+- changed-files:
+  - any-glob-to-any-file: ['**/*.md']
 jenkins:
-  - build-farm/*
+- changed-files:
+  - any-glob-to-any-file: [build-farm/*]
 aix:
-  - build-farm/platform-specific-configurations/aix.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/platform-specific-configurations/aix.sh]
 alpine-linux:
-  - build-farm/platform-specific-configurations/alpine-linux.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/platform-specific-configurations/alpine-linux.sh]
 macos:
-  - build-farm/platform-specific-configurations/mac.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/platform-specific-configurations/mac.sh]
 solaris:
-  - build-farm/platform-specific-configurations/solaris.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/platform-specific-configurations/solaris.sh]
 windows:
-  - build-farm/platform-specific-configurations/windows.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/platform-specific-configurations/windows.sh]
 docker:
-  - docker/*
-  - docker-build.sh
+- changed-files:
+  - any-glob-to-any-file: [docker/*, docker-build.sh]
 testing:
-  - tests/*
+- changed-files:
+  - any-glob-to-any-file: [tests/*]
 security:
-  - security/*
-  - SECURITY.md
-  - sbin/sig_check/*
+- changed-files:
+  - any-glob-to-any-file: [security/*, SECURITY.md, sbin/sig_check/*]
 installer:
-  - build-farm/sign-releases.sh
-  - sign.sh
+- changed-files:
+  - any-glob-to-any-file: [build-farm/sign-releases.sh, sign.sh]

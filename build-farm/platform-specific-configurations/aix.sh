@@ -1,22 +1,28 @@
 #!/bin/bash
 # shellcheck disable=SC1091
-
-################################################################################
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
-
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Clear out /tmp/sh-np files if we're running in jenkins to avoid
+# "ambiguous redirect" pipe failures. This will be ok with only one executor
+# See https://github.com/adoptium/infrastructure/issues/929
+if [ "$(whoami)" = "jenkins" ] && [ -n "$WORKSPACE" ]; then
+   echo "There are $(/usr/bin/find /tmp \( -user jenkins -a -name sh-np.\* \) | wc -l) sh-np files owned by jenkins in /tmp that I am going to remove..."
+   /usr/bin/find /tmp \( -user jenkins -a -name sh-np.\* \) | xargs rm -f
+fi
+
 
 # AIX default ulimit is frequently less than we need to clone the LTS JDK repositories
 FILESIZELIMIT=$(ulimit)
@@ -51,12 +57,17 @@ then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread"
 fi
 
-export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
+  # jdk-21+ uses "bundled" FreeType
+  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
+else
+  export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   export LDR_CNTRL=MAXDATA=0x80000000
 fi
-echo LDR_CNTRL=$LDR_CNTRL
+echo LDR_CNTRL="$LDR_CNTRL"
 
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
@@ -70,10 +81,10 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       echo "Could not use ${BOOT_JDK_VARIABLE} - using /usr/java${JDK_BOOT_VERSION}_64"
       # shellcheck disable=SC2140
       export "${BOOT_JDK_VARIABLE}"="/usr/java${JDK_BOOT_VERSION}_64"
-    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
+    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8
       mkdir -p "${bootDir}"
       releaseType="ga"
-      apiUrlTemplate="https://api.adoptium.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/aix/\${ARCHITECTURE}/jdk/hotspot/normal/adoptium"
+      apiUrlTemplate="https://api.adoptium.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/aix/\${ARCHITECTURE}/jdk/hotspot/normal/eclipse"
       apiURL=$(eval echo ${apiUrlTemplate})
       echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
       # make-adopt-build-farm.sh has 'set -e'. We need to disable that for

@@ -1,15 +1,16 @@
 /*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * ********************************************************************************
+ * Copyright (c) 2021 Contributors to the Eclipse Foundation
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ * See the NOTICE file(s) with this work for additional
+ * information regarding copyright ownership.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This program and the accompanying materials are made
+ * available under the terms of the Apache Software License 2.0
+ * which is available at https://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ * ********************************************************************************
  */
 
 package net.adoptium.test;
@@ -74,6 +75,13 @@ public class FeatureTests {
         if (jdkVersion.isNewerOrEqual(17) && jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.PPC64LE)) {
         	shouldBePresent = true;
         }
+        if (jdkVersion.isNewerOrEqual(19)
+                || jdkVersion.isNewerOrEqualSameFeature(17, 0, 9)
+                || jdkVersion.isNewerOrEqualSameFeature(11, 0, 23)) {
+            if (jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.RISCV64)) {
+                shouldBePresent = true;
+            }
+        }
 
         LOGGER.info(String.format("Detected %s on %s, expect Shenandoah to be present: %s",
                 jdkVersion, jdkPlatform, shouldBePresent));
@@ -130,6 +138,11 @@ public class FeatureTests {
                 shouldBePresent = true;
             }
         }
+        if (jdkVersion.isNewerOrEqual(19) || jdkVersion.isNewerOrEqualSameFeature(17, 0, 9)) {
+            if (jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.RISCV64)) {
+                shouldBePresent = true;
+            }
+        }
 
         LOGGER.info(String.format("Detected %s on %s, expect ZGC to be present: %s",
                 jdkVersion, jdkPlatform, shouldBePresent));
@@ -144,7 +157,9 @@ public class FeatureTests {
             processBuilder.inheritIO();
 
             int retCode = processBuilder.start().waitFor();
-            if (!jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X64)) {
+            if (!jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X64)
+                && !jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.AARCH64)
+            ) {
                 if (shouldBePresent) {
                     assertEquals(retCode, 0, "Expected ZGC to be present but it is absent.");
                 } else {
@@ -175,7 +190,7 @@ public class FeatureTests {
         }
         boolean shouldBePresent = false;
         if (jdkVersion.isNewerOrEqual(11) || jdkVersion.isNewerOrEqualSameFeature(8, 0, 262)) {
-            if (!jdkPlatform.runsOn(OperatingSystem.AIX)) {
+            if (!jdkPlatform.runsOn(OperatingSystem.AIX) || jdkVersion.isNewerOrEqual(20)) {
                 shouldBePresent = true;
             }
         }

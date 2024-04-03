@@ -1,19 +1,17 @@
 #!/bin/bash
 # shellcheck disable=SC1091,SC2140
-
-################################################################################
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
@@ -22,19 +20,47 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 export MACOSX_DEPLOYMENT_TARGET=10.9
 export BUILD_ARGS="${BUILD_ARGS}"
 
+c_flags_bucket=""
+cxx_flags_bucket=""
+
+## JDK8 only: If, at this point in the build, the architecure of the machine is arm64 while the ARCHITECTURE variable
+## is x64 then we need to add the cross compilation option --openjdk-target=x86_64-apple-darwin
+MACHINEARCHITECTURE=$(uname -m)
+
+if [[ "${MACHINEARCHITECTURE}" == "arm64" ]] && [[ "${ARCHITECTURE}" == "x64" ]]; then
+  # Adds cross compilation arg if building x64 binary on arm64
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=x86_64-apple-darwin"
+fi
+
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
-  XCODE_SWITCH_PATH="/Applications/Xcode.app"
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
+  if [[ "${MACHINEARCHITECTURE}" == "arm64" ]] && [[ "${ARCHITECTURE}" == "x64" ]]; then
+    # Cross compilation config needed only for jdk8
+    export MAC_ROSETTA_PREFIX="arch -x86_64"
+    export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
+    XCODE_SWITCH_PATH="/Applications/Xcode-11.7.app"
+  else
+    XCODE_SWITCH_PATH="/Applications/Xcode.app"
+  fi
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
+    export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
   fi
 else
-  if [[ "$JAVA_FEATURE_VERSION" -ge 17 ]] || [[ "${ARCHITECTURE}" == "aarch64" ]]; then
+  if [[ "$JAVA_FEATURE_VERSION" -ge 11 ]]; then
     # JDK17 requires metal (included in full xcode) as does JDK11 on aarch64
+    # JDK11 on x64 is matched for consistency
     XCODE_SWITCH_PATH="/Applications/Xcode.app"
+    # JDK11 and 17 on Mac (x86 and aarch) has excessive warnings.
+    # This is due to a harfbuzz fix which is pending backport.
+    # Suppressing the warnings for now to aid triage.
+    if [[ "$JAVA_FEATURE_VERSION" -le 17 ]]; then
+      export cxx_flags_bucket="${cxx_flags_bucket} -Wno-deprecated-builtins -Wno-deprecated-declarations -Wno-deprecated-non-prototype"
+      export c_flags_bucket="${c_flags_bucket} -Wno-deprecated-builtins -Wno-deprecated-declarations -Wno-deprecated-non-prototype"
+    fi
   else
-    # Command line tools used from JDK9-JDK16
+    # Command line tools used from JDK9-JDK10
     XCODE_SWITCH_PATH="/";
   fi
   export PATH="/Users/jenkins/ccache-3.2.4:$PATH"
@@ -43,11 +69,16 @@ else
   else
     if [ "${ARCHITECTURE}" == "x64" ]; then
       # We can only target 10.9 on intel macs
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags=-mmacosx-version-min=10.9"
+      export cxx_flags_bucket="${cxx_flags_bucket} -mmacosx-version-min=10.9"
     elif [ "${ARCHITECTURE}" == "aarch64" ]; then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=aarch64-apple-darwin"
     fi
   fi
+fi
+
+if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
+  # jdk-21+ uses "bundled" FreeType
+  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
 fi
 
 # The configure option '--with-macosx-codesign-identity' is supported in JDK8 OpenJ9 and JDK11 and JDK14+
@@ -83,45 +114,29 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
     if [ -x "/Library/Java/JavaVirtualMachines/jdk-${JDK_BOOT_VERSION}/Contents/Home/bin/javac" ]; then
       echo "Could not use ${BOOT_JDK_VARIABLE} - using /Library/Java/JavaVirtualMachines/jdk-${JDK_BOOT_VERSION}/Contents/Home"
       export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/jdk-${JDK_BOOT_VERSION}/Contents/Home"
-    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adopt has no build pre-8
+    elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8
       mkdir -p "$bootDir"
-      releaseType="ga"
-      vendor="adoptium"
-      apiUrlTemplate="https://api.\${vendor}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/mac/\${ARCHITECTURE}/jdk/hotspot/normal/\${vendor}"
-      apiURL=$(eval echo ${apiUrlTemplate})
-      echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
-      # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
-      # the fallback mechanism, as downloading of the GA binary might fail.
-      set +e
-      wget -q -O "${JDK_BOOT_VERSION}.tgz" "${apiURL}" && tar xpzf "${JDK_BOOT_VERSION}.tgz" --strip-components=1 -C "$bootDir" && rm "${JDK_BOOT_VERSION}.tgz"
-      retVal=$?
-      set -e
-      if [ $retVal -ne 0 ]; then
-        # We must be a JDK HEAD build for which no boot JDK exists other than
-        # nightlies?
-        echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} failed."
+      for releaseType in "ga" "ea"
+      do
         # shellcheck disable=SC2034
-        releaseType="ea"
-        # shellcheck disable=SC2034
-        vendor="adoptium"
-        apiURL=$(eval echo ${apiUrlTemplate})
-        echo "Attempting to download EA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
-        set +e
-        wget -q -O "${JDK_BOOT_VERSION}.tgz" "${apiURL}" && tar xpzf "${JDK_BOOT_VERSION}.tgz" --strip-components=1 -C "$bootDir" && rm "${JDK_BOOT_VERSION}.tgz"
-        retVal=$?
-        set -e
-        if [ $retVal -ne 0 ]; then
-          # If no binaries are available then try from adoptopenjdk
-          echo "Downloading Temurin release of boot JDK version ${JDK_BOOT_VERSION} failed."
+        for vendor1 in "adoptium" "adoptopenjdk"
+        do
           # shellcheck disable=SC2034
-          releaseType="ga"
-          # shellcheck disable=SC2034
-          vendor="adoptopenjdk"
-          apiURL=$(eval echo ${apiUrlTemplate})
-          echo "Attempting to download GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
-          wget -q -O - "${apiURL}" | tar xpzf - --strip-components=1 -C "$bootDir"
-        fi
-      fi
+          for vendor2 in "eclipse" "adoptium" "adoptopenjdk"
+          do
+            apiUrlTemplate="https://api.\${vendor1}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/mac/\${ARCHITECTURE}/jdk/hotspot/normal/\${vendor2}"
+            apiURL=$(eval echo ${apiUrlTemplate})
+            echo "Downloading ${releaseType} release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
+            set +e
+            wget -q -O "${JDK_BOOT_VERSION}.tgz" "${apiURL}" && tar xpzf "${JDK_BOOT_VERSION}.tgz" --strip-components=1 -C "$bootDir" && rm "${JDK_BOOT_VERSION}.tgz"
+            retVal=$?
+            set -e
+            if [ $retVal -eq 0 ]; then
+              break 3
+            fi
+          done
+        done
+      done
     fi
   fi
 fi
@@ -148,4 +163,12 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export TAR=gtar
     export SDKPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
   fi
+fi
+
+if [ ! "${c_flags_bucket}" = "" ]; then
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cflags='${c_flags_bucket}'"
+fi
+
+if [ ! "${cxx_flags_bucket}" = "" ]; then
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-cxxflags='${cxx_flags_bucket}'"
 fi

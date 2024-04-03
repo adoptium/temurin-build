@@ -1,19 +1,17 @@
 #!/bin/bash
 # shellcheck disable=SC1090,SC1091
-
-################################################################################
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
@@ -22,23 +20,6 @@ source "$SCRIPT_DIR/../sbin/common/constants.sh"
 if [ "${JAVA_TO_BUILD}" != "${JDK8_VERSION}" ]
 then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-warnings-as-errors"
-fi
-
-# jdk-19 and above support reproducible builds
-if [[ "${JAVA_FEATURE_VERSION}" -ge 19 ]]
-then
-    # Enable reproducible builds implicitly with --with-source-date
-    if [ "${RELEASE}" == "true" ]
-    then
-        # Use release date
-        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-source-date=version"
-    else
-        # Use build date
-        export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-source-date=updated"
-    fi
-
-    # Ensure reproducible binary with a unique build user identifier
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-build-user=adoptium"
 fi
 
 export VARIANT_ARG="--build-variant ${VARIANT}"
@@ -98,13 +79,13 @@ then
 
         if [ $ret -ne 0 ] || [[ ! $fileContents =~ $contentsErrorRegex ]]
         then
-            # If there is no user platform config, use adopt's as a default instead
-            echo "[WARNING] Failed to download a user platform configuration file. Downloading Adopt's ${OPERATING_SYSTEM}.sh configuration file instead."
+            # If there is no user platform config, use Adoptium's as a default instead
+            echo "[WARNING] Failed to download a user platform configuration file. Downloading Adoptium's ${OPERATING_SYSTEM}.sh configuration file instead."
             downloadPlatformConfigFile "${ADOPT_PLATFORM_CONFIG_LOCATION}" "${OPERATING_SYSTEM}.sh"
 
             if [ $ret -ne 0 ] || [[ ! $fileContents =~ $contentsErrorRegex ]]
             then
-                echo "[ERROR] Failed to download a platform configuration file from User and Adopt's repositories"
+                echo "[ERROR] Failed to download a platform configuration file from User and Adoptium's repositories"
                 exit 2
             fi
         fi

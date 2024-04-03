@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
+# ********************************************************************************
+# Copyright (c) 2020 Contributors to the Eclipse Foundation
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 set -euo pipefail
 
 PROGRAM_NAME="${0##*/}"
@@ -46,19 +46,18 @@ rm -f ca-bundle.crt cacerts
 rm -rf certs && mkdir certs
 
 # Abort if certdata.txt is not present because we do not want mk-ca-bundle.pl
-# to download it. Otherwise we might have inconsistent certificate stores
-# between builds.
+# to download it. Otherwise we might have inconsistent certificate stores between builds.
 if ! [ -f "certdata.txt" ] ; then
     echo "Local certdata.txt missing, aborting." >&2
     exit 1
 fi
 
-# Convert Mozilla's list of certificates into a PEM file. The -n switch makes
+# Convert Mozilla's list of certificates into a PEM file. The -n switch makes
 # it use the local certdata.txt in this folder.
-./mk-ca-bundle.pl -v -n ca-bundle.crt
+certNum=$(./mk-ca-bundle.pl -v -n ca-bundle.crt)
+echo "mk-ca-bundle.pl generates $certNum certificates"
 
-# Split them PEM file into individual files because keytool cannot do it on its
-# own.
+# Split the PEM file into individual files because keytool cannot do it on its own.
 awk '
   split_after == 1 {close("certs/cert" n ".crt");n++;split_after=0}
   /-----END CERTIFICATE-----/ {split_after=1}
@@ -81,22 +80,41 @@ awk '
 # The full subject needs to be used to prevent alias collisions.
 
 IMPORTED=('null')
+alreadyExistsCounter=0 # counter for duplicated file
 
 for FILE in certs/*.crt; do
-    SUBJECT=$(openssl x509 -subject -noout -in "$FILE")
-    TRIMMED_SUBJECT="${SUBJECT#*subject= /}"
-    if [ "$NO_KEYSTORE" = false ] ; then
-        ALIAS="${TRIMMED_SUBJECT//\//,}"
-    else
-        # Remove/translate characters not valid in a filename
-        ALIAS_NO_INVALID="${TRIMMED_SUBJECT//[ :()]/_}"
-        ALIAS=$(echo "${ALIAS_NO_INVALID}" | tr -cd 'a-zA-Z,_' | tr A-Z a-z)
-    fi
+    # Use rfc2253 standard format, so output format is deterministic
+    # Translate spaces and escaped commas(\,) to underscore
+    ALIAS_FROM_SUBJECT=$(openssl x509 -subject -noout -nameopt rfc2253 -in "$FILE" | sed 's/^subject= *//' | tr ' ' '_' | sed 's/\\\,/_/g')
+    echo "Subject: ${ALIAS_FROM_SUBJECT}"
 
-    if [ "$NO_KEYSTORE" = false ] ; then
-         if printf '%s\n' "${IMPORTED[@]}" | grep "${ALIAS}"; then
-            echo "Skipping certificate with alias: $ALIAS as it already exists"
-        else
+    # Create ALIAS from widely recognised standard DN's
+    # shellcheck disable=SC2206
+    arrALIAS=(${ALIAS_FROM_SUBJECT//,/ })
+    ALIAS=""
+    for dn in "${arrALIAS[@]}"; do
+        case "$dn" in
+            # Build ALIAS from widely recognised DN's
+            C=*|CT=*|L=*|O=*|OU=*|ST=*|CN=*)
+                ALIAS="${ALIAS},${dn}"
+                ;;
+            *)
+                ;;
+        esac
+    done
+    # Remove leading ","
+    ALIAS=${ALIAS#,}
+    echo "Generated alias: ${ALIAS}"
+
+    if printf '%s\n' "${IMPORTED[@]}" | grep "temurin_${ALIAS}_temurin"; then
+        echo "Skipping certificate file $FILE with alias: $ALIAS as it already exists"
+        if [ "$NO_KEYSTORE" = true ] ; then # for jdk17+
+            # Remove duplicate $FILE so it is not imported using OpenJDK GenerateCacerts
+            rm "$FILE"
+        fi
+        (("alreadyExistsCounter=alreadyExistsCounter+1"))
+    else
+        if [ "$NO_KEYSTORE" = false ] ; then # for jdk8, jdk11
             echo "Processing certificate with alias: $ALIAS"
             "$KEYTOOL" -noprompt \
             -import \
@@ -105,11 +123,35 @@ for FILE in certs/*.crt; do
             -file "$FILE" \
             -keystore "cacerts" \
             -storepass "changeit"
-
-            IMPORTED+=("${ALIAS}")
+        else
+            # Importing using OpenJDK GenerateCacerts, so must ensure alias is a valid filename
+            ALIAS_FILENAME=$(echo "${ALIAS}" | tr ' :()=' '_____' | tr '[:upper:]' '[:lower:]' | tr -cd '0-9a-z,_' )
+            echo "Renaming $FILE to certs/$ALIAS_FILENAME"
+            if [ -f "certs/$ALIAS_FILENAME" ]; then
+                echo "ERROR: Certificate alias file already exists certs/$ALIAS_FILENAME"
+                echo "security/mk-cacerts.sh needs ALIAS_FILENAME filter updating to make unique"
+                exit 1
+            fi
+            mv "$FILE" "certs/$ALIAS_FILENAME"
         fi
-    else
-         echo "Renaming $FILE to certs/$ALIAS"
-         mv "$FILE" "certs/$ALIAS"
+
+        IMPORTED+=("temurin_${ALIAS}_temurin")
     fi
 done
+
+if [ "$NO_KEYSTORE" = false ] ; then # for jdk8, jdk11
+    num_certs=$("$KEYTOOL" -v -list -storepass changeit -keystore cacerts | grep -c "Alias name:")
+else
+    num_certs=$(find certs/* | wc -l)
+fi
+echo "Number of certs processed: $num_certs"
+
+# post verification: (nr.(mk-ca-bundle.pl) - nr.(already imported file) == (nr. (current files in certs folder)) || (nr. (alias in cacerts))
+certNum="$((certNum-alreadyExistsCounter))"
+num_certs="$(echo -e "${num_certs}" | tr -d '[:space:]')"
+if [ "$certNum" != "$num_certs" ]; then
+    echo "Number of cert from mk-ca-bundle.pl: $certNum"
+    echo "Number imported to $KEYTOOL: $num_certs"
+    echo "Mismatch number of certificates"
+    exit 1
+fi

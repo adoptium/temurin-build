@@ -1,23 +1,21 @@
 #!/bin/bash
-# shellcheck disable=SC2155,SC1091
+# shellcheck disable=SC2155,SC1091,SC2196,SC2235
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
 ################################################################################
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
-
-################################################################################
-#
-# This script prepares the workspace to build (Adopt) OpenJDK.
+# This script prepares the workspace to build (Adoptium) OpenJDK.
 # See the configureWorkspace function for details
 # It is sourced by build.sh
 #
@@ -34,11 +32,8 @@ source "$SCRIPT_DIR/common/constants.sh"
 
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
 ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f08783329157e8dd68b3de0c096de6d724}
-FREEMARKER_LIB_CHECKSUM=${FREEMARKER_LIB_CHECKSUM:-8723ec9ffe006e8d376b6c7dbe7950db34ad1fa163aef4026e6477151a1a0deb}
-FREETYPE_LIB_CHECKSUM=${FREETYPE_LIB_CHECKSUM:-ec391504e55498adceb30baceebd147a6e963f636eb617424bcfc47a169898ce}
-
+ALSA_LIB_GPGKEYID=${ALSA_LIB_GPGKEYID:-A6E59C91}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
-FREEMARKER_LIB_VERSION=${FREEMARKER_LIB_VERSION:-2.3.31}
 
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for Single Responsibility Principle (SRP)
@@ -59,9 +54,9 @@ checkoutAndCloneOpenJDKGitRepo() {
     # eg. origin https://github.com/alibaba/dragonwell8.git (fetch)
     # eg. origin https://github.com/feilongjiang/bishengjdk-11-mirror.git (fetch)
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ] || [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep -E "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | egrep "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
     else
-      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | grep -E "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
+      git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v | grep "origin.*fetch" | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" | egrep "${BUILD_CONFIG[REPOSITORY]}.git|${BUILD_CONFIG[REPOSITORY]}\s"
     fi
     local isValidGitRepo=$?
     set -e
@@ -102,7 +97,7 @@ checkoutAndCloneOpenJDKGitRepo() {
   fi
 
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]]; then
-    # Verify Adopt patches tag is being built, otherwise we may be accidently just building "raw" OpenJDK
+    # Verify Adoptium patches tag is being built, otherwise we may be accidently just building "raw" OpenJDK
     if [ ! -f "${TEMURIN_MARKER_FILE}" ] && [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "false" ]; then
       echo "${TEMURIN_MARKER_FILE} marker file not found in fetched source to be built, this may mean the wrong SCMReference build parameter has been specified. Ensure the correct Temurin patch release tag is specified, eg.for build jdk-11.0.4+10, it would be jdk-11.0.4+10_adopt"
       exit 1
@@ -136,6 +131,7 @@ checkoutRequiredCodeToBuild() {
   local rc=0
 
   local tag="${BUILD_CONFIG[TAG]}"
+  local sha=""
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
     git fetch --tags || rc=$?
     if [ $rc -eq 0 ]; then
@@ -143,6 +139,11 @@ checkoutRequiredCodeToBuild() {
         echo "looks like the scm ref given is a valid tag, so treat it as a tag"
         tag="${BUILD_CONFIG[BRANCH]}"
         BUILD_CONFIG[TAG]="${tag}"
+        BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""
+      elif git cat-file commit "${BUILD_CONFIG[BRANCH]}"; then
+        echo "look like the scm ref given is a valid sha, so treat it as a sha"
+        sha="${BUILD_CONFIG[BRANCH]}"
+        BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""
       fi
     else
       echo "Failed cmd: git fetch --tags"
@@ -167,6 +168,19 @@ checkoutRequiredCodeToBuild() {
         fi
       else
         echo "Failed cmd: git fetch origin \"refs/tags/${tag}:refs/tags/${tag}\""
+      fi
+    elif [ "$sha" ]; then
+      echo "Checking out sha ${sha}"
+      git checkout "${sha}" || rc=$?
+      if [ $rc -eq 0 ]; then
+        git reset --hard || rc=$?
+        if [ $rc -eq 0 ]; then
+          echo "Checked out sha ${sha}"
+        else
+          echo "Failed cmd reset sha: git reset --hard"
+        fi
+      else
+        echo "Failed cmd: git checkout \"${sha}\""
       fi
     else
       git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}" || rc=$?
@@ -205,7 +219,7 @@ checkoutRequiredCodeToBuild() {
         # Tag will be something similar to jdk-11.0.8+8_adopt-160-g824f8474f5
         # jdk-11.0.8+8_adopt = TAGNAME
         # 160 = NUMBER OF COMMITS ON TOP OF THE ORIGINAL TAGGED OBJECT
-        # g824f8474f5 = THE SHORT HASH OF THE MOST RECENT COMMIT
+        # g824f8474f5 = "g" + THE SHORT HASH OF THE MOST RECENT COMMIT
         echo "SUCCESS: TAG FOUND! Exporting to $scmrefPath..."
         git describe > "$scmrefPath"
 
@@ -263,7 +277,7 @@ updateOpenj9Sources() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     # NOTE: fetched openssl will NOT be used in the RISC-V cross-compile situation
-    bash get_source.sh --openssl-version=1.1.1o
+    bash get_source.sh --openssl-version=3.0.13
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
@@ -282,6 +296,17 @@ createWorkspace() {
   umask 022
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
+
+  # If a user supplied OpenJDK build root directory has been specified and it is not empty
+  # then fail with an error, we don't want to delete it in case user has specified a wrong directory
+  # Ensure the directory is created if it doesn't exist
+  if [[ -n "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]]; then
+    if [[ -d "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]] && [[ "$(ls -A "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}")" ]]; then
+      echo "ERROR: Existing user supplied OpenJDK build root directory ${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]} is not empty"
+      exit 1
+    fi
+    mkdir -p "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" || exit
+  fi
 }
 
 # ALSA first for sound
@@ -294,12 +319,37 @@ checkingAndDownloadingAlsa() {
 
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/" || exit
 
-  ALSA_BUILD_INFO="Unknown"
+  ALSA_BUILD_URL="Unknown"
   if [[ -n "$FOUND_ALSA" ]]; then
     echo "Skipping ALSA download"
   else
-    downloadFile "alsa-lib.tar.bz2" "https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2" "${ALSA_LIB_CHECKSUM}"
-    ALSA_BUILD_INFO="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2"
+
+    ALSA_BUILD_URL="https://ftp2.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2"
+    curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
+    curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
+
+    setupGpg
+
+    # Should we clear this directory up after checking?
+    # Would this risk removing anyone's existing dir with that name?
+    # Erring on the side of caution for now
+    # Note: the uptime command below is to aid diagnostics for this issue:
+    # https://github.com/adoptium/temurin-build/issues/3518#issuecomment-1792606345
+    uptime
+    # Will retry command below until it passes or we've failed 10 times.
+    for i in {1..10}; do
+      if gpg --keyserver keyserver.ubuntu.com --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"; then
+        echo "gpg command has passed."
+        break
+      elif [[ ${i} -lt 10 ]]; then
+        echo "gpg recv-keys attempt has failed. Retrying after 10 second pause..."
+        sleep 10s
+      else
+        echo "ERROR: gpg recv-keys final attempt has failed. Will not try again."
+      fi
+    done
+    echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
+    gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
 
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
       bzip2 -d alsa-lib.tar.bz2
@@ -312,7 +362,7 @@ checkingAndDownloadingAlsa() {
   fi
 
   # Record buildinfo version
-  echo "${ALSA_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt"
+  echo "${ALSA_BUILD_URL}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt"
 }
 
 sha256File() {
@@ -355,7 +405,7 @@ checkFingerprint() {
   echo "$verify"
 
   # grep out and trim fingerprint from line of the form "Primary key fingerprint: 58E0 C111 E39F 5408 C5D3  EC76 C1A6 0EAC E707 FDA5"
-  local fingerprint=$(echo "$verify" | grep "Primary key fingerprint" | grep -E -o "([0-9A-F]{4} ? ?){10}" | head -n 1)
+  local fingerprint=$(echo "$verify" | grep "Primary key fingerprint" | egrep -o "([0-9A-F]{4} ? ?){10}" | head -n 1)
 
   # Remove whitespace from finger print as different versions of gpg may or may not add spaces to the fingerprint
   # specifically gpg on Ubuntu 16.04 produces:
@@ -372,41 +422,6 @@ checkFingerprint() {
     echo "expected \"$expectedFingerprint\" got \"$fingerprint\""
     exit 1
   fi
-}
-
-# Freemarker for OpenJ9
-checkingAndDownloadingFreemarker() {
-  echo "Checking for FREEMARKER"
-
-  cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/" || exit
-  FOUND_FREEMARKER=$(find "." -type d -name "freemarker-${FREEMARKER_LIB_VERSION}")
-
-  FREEMARKER_BUILD_INFO="Unknown"
-  if [[ -n "$FOUND_FREEMARKER" ]]; then
-    echo "Skipping FREEMARKER download"
-  else
-
-    # www.mirrorservice.org unavailable - issue #1867
-    #wget -nc --no-check-certificate "https://www.mirrorservice.org/sites/ftp.apache.org/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
-
-    wget "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" ||
-      curl -L -o "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
-
-    # Allow fallback to curl since wget fails cert check on macos - issue #1194
-    wget "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" ||
-      curl -L -o "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc"
-
-    FREEMARKER_BUILD_INFO="https://www.apache.org/dist/freemarker/engine/${FREEMARKER_LIB_VERSION}/binaries/apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
-
-    checkFingerprint "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz.asc" "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" "freemarker" "13AC 2213 964A BE1D 1C14 7C0E 1939 A252 0BAB 1D90" "${FREEMARKER_LIB_CHECKSUM}"
-
-    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/" || exit
-    tar -xzf "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz" --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/freemarker-${FREEMARKER_LIB_VERSION}/"
-    rm "apache-freemarker-${FREEMARKER_LIB_VERSION}-bin.tar.gz"
-  fi
-
-  # Record buildinfo version
-  echo "${FREEMARKER_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freemarker.txt"
 }
 
 # Utility function
@@ -441,39 +456,38 @@ downloadFile() {
   fi
 }
 
-# Get Freetype
+# Clone Freetype from GitHub
 checkingAndDownloadingFreeType() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   echo "Checking for freetype at ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
 
   FOUND_FREETYPE=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib/" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}" || true)
 
-  FREETYPE_BUILD_INFO="Unknown"
   if [[ -n "$FOUND_FREETYPE" ]]; then
     echo "Skipping FreeType download"
   else
-    downloadFile "freetype.tar.gz" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
-    downloadFile "freetype.tar.gz.sig" "https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz.sig"
-    checkFingerprint "freetype.tar.gz.sig" "freetype.tar.gz" "freetype" "58E0 C111 E39F 5408 C5D3 EC76 C1A6 0EAC E707 FDA5" "${FREETYPE_LIB_CHECKSUM}"
-
-    FREETYPE_BUILD_INFO="https://ci.adoptopenjdk.net/userContent/freetype/freetype-${BUILD_CONFIG[FREETYPE_FONT_VERSION]}.tar.gz"
-
+    # Delete existing freetype folder if it exists
     rm -rf "./freetype" || true
-    mkdir -p "freetype" || true
-    tar xpzf freetype.tar.gz --strip-components=1 -C "freetype"
-    rm freetype.tar.gz
 
-    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-      # Record buildinfo version
-      echo "${FREETYPE_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
-      return
-    fi
+    case ${BUILD_CONFIG[FREETYPE_FONT_VERSION]} in
+    *.*)
+      # Replace . with - in version number e.g 2.8.1 -> 2-8-1
+      FREETYPE_BRANCH="VER-${BUILD_CONFIG[FREETYPE_FONT_VERSION]//./-}"
+      git clone https://github.com/freetype/freetype.git -b "${FREETYPE_BRANCH}" freetype || exit
+      ;;
+    *)
+      # Use specific git hash
+      git clone https://github.com/freetype/freetype.git freetype || exit
+      cd freetype || exit
+      git checkout "${BUILD_CONFIG[FREETYPE_FONT_VERSION]}" || exit
+      cd .. || exit
+      ;;
+    esac
 
     cd freetype || exit
 
-    local pngArg=""
-    if ./configure --help | grep "with-png"; then
-      pngArg="--with-png=no"
+    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+      return
     fi
 
     local freetypeEnv=""
@@ -481,9 +495,16 @@ checkingAndDownloadingFreeType() {
       freetypeEnv="export CC=\"gcc -m32\""
     fi
 
+    eval "${freetypeEnv}" && bash ./autogen.sh || exit 1
+
+    local pngArg=""
+    if ./configure --help | grep "with-png"; then
+      pngArg="--with-png=no"
+    fi
+
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if ! (eval "${freetypeEnv}" && bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${pngArg}" "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${pngArg}" "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
       echo "Failed to configure and build libfreetype, exiting"
       exit
@@ -522,24 +543,87 @@ checkingAndDownloadingFreeType() {
       fi
     fi
   fi
+}
 
-  # Record buildinfo version
-  echo "${FREETYPE_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
+# Recording Build image SHA into docker.txt
+writeDockerImageSHA(){
+  echo "${BUILDIMAGESHA-N.A}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt"
 }
 
 # Generates cacerts file
 prepareMozillaCacerts() {
     echo "Generating cacerts from Mozilla's bundle"
     cd "$SCRIPT_DIR/../security"
-    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge "19" ]]; then
-      # jdk-19+ build uses JDK make tool to load keystore for reproducible builds
+    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge "17" ]]; then
+      # jdk-17+ build uses JDK make tool GenerateCacerts to load keystore for reproducible builds
       time ./mk-cacerts.sh --nokeystore
     else
       time ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
     fi
 }
 
-# Download all of the dependencies for OpenJDK (Alsa, FreeType, etc.)
+# Create and setup GNUPGHOME
+setupGpg() {
+    ## This affects riscv64 & Alpine docker images and also evaluation pipelines
+    if ( [ -r /etc/alpine-release ] && [ "$(pwd | wc -c)" -gt 83 ] ) || \
+       ( [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] && [ "$(pwd | wc -c)" -gt 83 ] ); then
+        # Use /tmp in preference to $HOME as fails gpg operation if PWD > 83 characters
+        # Also cannot create ~/.gpg-temp within a docker context
+        GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
+    else
+        GNUPGHOME="${BUILD_CONFIG[WORKSPACE_DIR]:-$PWD}/.gpg-temp"
+    fi
+    if [ ! -d "$GNUPGHOME" ]; then
+        mkdir -m 700 "$GNUPGHOME"
+    fi
+    export GNUPGHOME
+
+    echo "GNUPGHOME=$GNUPGHOME"
+}
+
+# Download the required DevKit if necessary
+downloadDevkit() {
+  if [[ -n "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" ]]; then
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+
+    local devkit_tar="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.tar.xz"
+
+    setupGpg
+
+    # Determine DevKit tarball to download for this arch and release
+    local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+    local devkit_target="${BUILD_CONFIG[OS_ARCHITECTURE]}-linux-gnu"
+    local devkit="devkit-${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}-${devkit_target}"
+
+    # Download tarball and GPG sig
+    echo "Downloading DevKit : ${devkitUrl}/${devkit}.tar.xz"
+    curl -L --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
+    curl -L --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
+
+    # GPG verify
+    gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
+    echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
+    gpg --verify "${devkit_tar}.sig" "${devkit_tar}" || exit 1
+
+    tar xpJf "${devkit_tar}" -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    rm "${devkit_tar}"
+    rm "${devkit_tar}.sig"
+
+    # Validate devkit.info matches value passed in and current architecture
+    local devkitInfo="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.info"
+    if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${devkitInfo}" || ! grep "ADOPTIUM_DEVKIT_TARGET=${devkit_target}" "${devkitInfo}"; then
+        echo "ERROR: Devkit does not match required release and architecture:"
+        echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_RELEASE= "${devkitInfo}")"
+        echo "       Required:   ADOPTIUM_DEVKIT_TARGET=${devkit_target}"
+        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_TARGET= "${devkitInfo}")"
+        exit 1
+    fi
+  fi
+}
+
+# Download all of the dependencies for OpenJDK (Alsa, FreeType etc.)
 downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
@@ -551,31 +635,27 @@ downloadingRequiredDependencies() {
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
 
-  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
-    echo "macOS, Windows or Windows-like environment detected, skipping download of dependency Alsa."
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]] ||  [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ||  [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]] ; then
+    echo "Non-Linux-based environment detected, skipping download of dependency Alsa."
   else
-    echo "Checking and downloading Alsa dependency"
+    echo "Checking and downloading Alsa dependency because OSTYPE=\"${OSTYPE}\""
     checkingAndDownloadingAlsa
   fi
 
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
-    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-      echo "Windows or Windows-like environment detected, skipping download of dependency Freemarker."
-    else
-      echo "Checking and downloading Freemarker dependency"
-      checkingAndDownloadingFreemarker
-    fi
-  fi
-
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
-    if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
-      echo "Checking and download FreeType Font dependency"
-      checkingAndDownloadingFreeType
-    else
-      echo ""
-      echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
-      echo ""
-    fi
+    case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
+      jdk8* | jdk9* | jdk10*)
+        if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
+          echo "Checking and download FreeType Font dependency"
+          checkingAndDownloadingFreeType
+        else
+          echo ""
+          echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
+          echo ""
+        fi
+      ;;
+      *) echo "Using bundled Freetype" ;;
+    esac
   else
     echo "Skipping Freetype"
   fi
@@ -597,7 +677,7 @@ function moveTmpToWorkspaceLocation() {
 
 relocateToTmpIfNeeded() {
   if [ "${BUILD_CONFIG[TMP_SPACE_BUILD]}" == "true" ]; then
-    jobName=$(echo "${JOB_NAME:-build-dir}" | grep -E -o "[^/]+$")
+    jobName=$(echo "${JOB_NAME:-build-dir}" | egrep -o "[^/]+$")
     local tmpdir="/tmp/openjdk-${jobName}"
     mkdir -p "$tmpdir"
 
@@ -661,6 +741,7 @@ function configureWorkspace() {
   if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" != "true" ]]; then
     createWorkspace
     downloadingRequiredDependencies
+    downloadDevkit
     relocateToTmpIfNeeded
     checkoutAndCloneOpenJDKGitRepo
     applyPatches
@@ -668,4 +749,5 @@ function configureWorkspace() {
       prepareMozillaCacerts
     fi
   fi
+  writeDockerImageSHA
 }

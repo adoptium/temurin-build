@@ -1,20 +1,18 @@
 #!/bin/bash
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 # shellcheck disable=SC2155
-
-################################################################################
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
-
 # shellcheck disable=SC2153
 function setOpenJdkVersion() {
   local forest_name=$1
@@ -41,8 +39,8 @@ function setOpenJdkVersion() {
     retryMax=5
     until [ "$retryCount" -ge "$retryMax" ]
     do
-        # Use Adopt API to get the JDK Head number
-        echo "This appears to be JDK Head. Querying the Adopt API to get the JDK HEAD Number (https://api.adoptium.net/v3/info/available_releases)..."
+        # Use Adoptium API to get the JDK Head number
+        echo "This appears to be JDK Head. Querying the Adoptium API to get the JDK HEAD Number (https://api.adoptium.net/v3/info/available_releases)..."
         local featureNumber=$(curl -q https://api.adoptium.net/v3/info/available_releases | awk '/tip_version/{print$2}')
         
         # Checks the api request was successful and the return value is a number
@@ -96,6 +94,21 @@ function setDockerVolumeSuffix() {
   fi
 }
 
+# Joins multiple parts to a valid file path for the current OS
+function joinPathOS() {
+  local path=$(echo "/${*}" | tr ' ' / | tr -s /)
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+      path=$(cygpath -w "${path}")
+  fi
+  echo "${path}"
+}
+
+# Joins multiple parts to a valid file path using slashes
+function joinPath() {
+  local path=$(echo "/${*}" | tr ' ' / | tr -s /)
+  echo "${path}"
+}
+
 # Create a Tar ball
 getArchiveExtension()
 {
@@ -129,6 +142,7 @@ createOpenJDKArchive()
   if which pigz > /dev/null 2>&1; then
     COMPRESS=pigz
   fi
+
   echo "Archiving and compressing with $COMPRESS"
 
   EXT=$(getArchiveExtension)
@@ -136,7 +150,7 @@ createOpenJDKArchive()
   local fullPath
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "darwin" ]]; then
     fullPath=$(crossPlatformRealPath "$repoDir")
-    if [[ "$fullPath" != "${BUILD_CONFIG[WORKSPACE_DIR]}"* ]]; then
+    if [[ "$fullPath" != "${BUILD_CONFIG[WORKSPACE_DIR]}"* ]] && { [[ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]] || [[ "$fullPath" != "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"* ]]; }; then
       echo "Requested to archive a dir outside of workspace"
       exit 1
     fi
@@ -215,3 +229,17 @@ function isHotSpot() {
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_SAP}" ] ||
   [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]
 }
+
+# A function that determines if the local date implementation is a GNU or BusyBox
+# as opposed to BSD, so that the correct date syntax can be used
+function isGnuCompatDate() {
+  local isGnuCompatDate=$(date --version 2>&1 | grep "GNU\|BusyBox" || true)
+  [ "x${isGnuCompatDate}" != "x" ]
+}
+
+# Returns true if the OPENJDK_FEATURE_NUMBER is an LTS version (every 2 years)
+# from jdk-21 onwards
+function isFromJdk21LTS() {
+  [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 21 ]] && [[ $(((BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]-21) % 4)) == 0 ]]
+}
+

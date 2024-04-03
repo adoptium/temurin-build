@@ -1,19 +1,17 @@
 #!/bin/bash
 # shellcheck disable=SC1091
-
-################################################################################
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
 set -eu
 
@@ -63,7 +61,7 @@ checkSignConfiguration() {
 # Sign the built binary
 signRelease()
 {
-  TIMESTAMPSERVERS=$(cut -d= -f2 < "$WORKSPACE/$TIMESTAMP_SERVER_CONFIG" | tr -d \\\\r)
+  TIMESTAMPSERVERS=$(cut -d= -f2 < "$WORKSPACE/$TIMESTAMP_SERVER_CONFIG" )
 
   case "$OPERATING_SYSTEM" in
     "windows")
@@ -72,65 +70,140 @@ signRelease()
 
       # Sign .exe files
       FILES=$(find . -type f -name '*.exe' -o -name '*.dll')
-      for f in $FILES
-      do
-        echo "Signing ${f}"
-        if [ "$SIGN_TOOL" = "eclipse" ]; then
-          echo "Signing $f using Eclipse Foundation codesign service"
-          dir=$(dirname "$f")
-          file=$(basename "$f")
-          mv "$f" "${dir}/unsigned_${file}"
-          curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign
-          chmod --reference="${dir}/unsigned_${file}" "$f"
-          rm -rf "${dir}/unsigned_${file}"
-        else
-          STAMPED=false
-          for SERVER in $TIMESTAMPSERVERS; do
-            if [ "$STAMPED" = "false" ]; then
-              echo "Signing $f using $SERVER"
-              if [ "$SIGN_TOOL" = "ucl" ]; then
-                ucl sign-code --file "$f" -n WindowsSHA -t "${SERVER}" --hash SHA256
-              else
-                "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"
-              fi
-              RC=$?
-              if [ $RC -eq 0 ]; then
-                STAMPED=true
-              else
-                echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${SERVER} - Trying new server in 5 seconds"
-                sleep 2
-              fi
+      if [ "$FILES" == "" ]; then
+        echo "No files to sign"
+      else
+        for f in $FILES
+        do
+          echo "Signing ${f}"
+          if [ "$SIGN_TOOL" = "eclipse" ]; then
+            echo "Signing $f using Eclipse Foundation codesign service"
+            dir=$(dirname "$f")
+            file=$(basename "$f")
+            mv "$f" "${dir}/unsigned_${file}"
+            if ! curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign; then
+              echo "curl command failed, sign of $f failed"
+
+              # Retry up to 20 times
+              max_iterations=20
+              iteration=1
+              success=false 
+              echo "Code Not Signed For File $f"
+              while [ $iteration -le $max_iterations ] && [ $success = false ]; do
+                echo $iteration Of $max_iterations
+                sleep 1
+                if ! curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign; then
+                  echo "curl command failed, $f Failed Signing On Attempt $iteration"
+                  success=false
+                  iteration=$((iteration+1))
+                  if [ $iteration -gt $max_iterations ]
+                  then
+                    echo "Errors Encountered During Signing"
+                    exit 1
+                  fi
+                else
+                  echo "$f Signed OK On Attempt $iteration"
+                  success=true
+                fi
+              done
             fi
-          done
-          if [ "$STAMPED" = "false" ]; then
-            echo "Failed to sign ${f} using any time server - aborting"
-            exit 1
+            chmod --reference="${dir}/unsigned_${file}" "$f"
+            rm -rf "${dir}/unsigned_${file}"
+          else
+            STAMPED=false
+            for SERVER in $TIMESTAMPSERVERS; do
+              if [ "$STAMPED" = "false" ]; then
+                echo "Signing $f using $SERVER"
+                if [ "$SIGN_TOOL" = "ucl" ]; then
+                  ucl sign-code --file "$f" -n WindowsSHA -t "${SERVER}" --hash SHA256
+                else
+                  "$signToolPath" sign /f "${SIGNING_CERTIFICATE}" /p "$SIGN_PASSWORD" /fd SHA256 /t "${SERVER}" "$f"
+                fi
+                RC=$?
+                if [ $RC -eq 0 ]; then
+                  STAMPED=true
+                else
+                  echo "RETRYWARNING: Failed to sign ${f} at $(date +%T): Possible timestamp server error at ${SERVER} - Trying new server in 5 seconds"
+                  sleep 2
+                fi
+              fi
+            done
+            if [ "$STAMPED" = "false" ]; then
+              echo "Failed to sign ${f} using any time server - aborting"
+              exit 1
+            fi
           fi
-        fi
-      done
+        done
+      fi
     ;;
 
     "mac"*)
       # TODO: Remove this completly once https://github.com/adoptium/openjdk-jdk11u/commit/b3250adefed0c1778f38a7e221109ae12e7c421e has been backported to JDK8u
       echo "Signing OSX release"
-
       ENTITLEMENTS="$WORKSPACE/entitlements.plist"
-      # Sign all files with the executable permission bit set.
-      FILES=$(find "${TMP_DIR}" -perm +111 -type f -o -name '*.dylib'  -type f || find "${TMP_DIR}" -perm /111 -type f -o -name '*.dylib'  -type f)
+      MACSIGNSTRING="Apple Certification Authority"
 
-      if [ "$SIGN_TOOL" = "eclipse" ]; then
+      # Sign all files with the executable permission bit set.
+
+      FILES=$(find "${TMP_DIR}" -perm +111 -type f -not -name '.*' -o -name '*.dylib' || find "${TMP_DIR}" -perm /111 -type f -not -name '.*' -o -name '*.dylib')
+      if [ "$FILES" == "" ]; then
+        echo "No files to sign"
+      elif [ "$SIGN_TOOL" = "eclipse" ]; then
         for f in $FILES
         do
           echo "Signing $f using Eclipse Foundation codesign service"
           dir=$(dirname "$f")
           file=$(basename "$f")
           mv "$f" "${dir}/unsigned_${file}"
-          curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign
-          chmod --reference="${dir}/unsigned_${file}" "$f"
-          rm -rf "${dir}/unsigned_${file}"
+          if ! curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign; then
+              echo "curl command failed, sign of $f failed"
+              TESTMACSIGN=0
+          else
+              echo File = "$f"
+              TESTMACSIGN=$(grep -ic "$MACSIGNSTRING" "$f")
+          fi
+          echo Sign Result = "$TESTMACSIGN"
+          if [ "$TESTMACSIGN" -gt 0 ]
+          then
+            echo "Code Signed For File $f"
+            chmod --reference="${dir}/unsigned_${file}" "$f"
+            rm -rf "${dir}/unsigned_${file}"
+          else
+            max_iterations=20
+            iteration=1
+            success=false
+            echo "Code Not Signed For File $f"
+            while [ $iteration -le $max_iterations ] && [ $success = false ]; do
+              echo $iteration Of $max_iterations
+              sleep 1
+              if ! curl --fail -o "$f" -F file="@${dir}/unsigned_${file}" -F entitlements="@$ENTITLEMENTS" https://cbi.eclipse.org/macos/codesign/sign; then
+                  echo "curl command failed, sign of $f failed"
+                  TESTMACSIGN2=0
+              else
+                  TESTMACSIGN2=$(grep -ic "$MACSIGNSTRING" "$f")
+                  echo TESTMACSIGN2 = "$TESTMACSIGN2"
+              fi
+              if [ "$TESTMACSIGN2" -gt 0 ]
+              then
+                echo "$f Signed OK On Attempt $iteration"
+                chmod --reference="${dir}/unsigned_${file}" "$f"
+                rm -rf "${dir}/unsigned_${file}"
+                success=true
+              else
+                echo "$f Failed Signing On Attempt $iteration"
+                success=false
+                iteration=$((iteration+1))
+                if [ $iteration -gt $max_iterations ]
+                then
+                  echo "Errors Encountered During Signing"
+                  exit 1
+                fi
+              fi
+            done
+          fi
         done
         JDK_DIR=$(ls -d "${TMP_DIR}"/jdk*)
-        JDK=$(basename "${JDK_DIR}") 
+        JDK=$(basename "${JDK_DIR}")
         cd "${TMP_DIR}"
         zip -q -r "${TMP_DIR}/unsigned.zip" "${JDK}"
         cd -

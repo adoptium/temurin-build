@@ -1,15 +1,16 @@
 /*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * ********************************************************************************
+ * Copyright (c) 2021 Contributors to the Eclipse Foundation
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ * See the NOTICE file(s) with this work for additional
+ * information regarding copyright ownership.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This program and the accompanying materials are made
+ * available under the terms of the Apache Software License 2.0
+ * which is available at https://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ * ********************************************************************************
  */
 
 package net.adoptium.test;
@@ -26,6 +27,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static net.adoptium.test.JdkPlatform.OperatingSystem;
+import static net.adoptium.test.JdkVersion.VM;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -67,20 +69,24 @@ public class BundledFreetypeTest {
         }
 
         Pattern freetypePattern
-            = Pattern.compile("(.*)?freetype\\.(dll|dylib|so)$");
+            = Pattern.compile("(.*)?freetype(\\.(\\d)+)?\\.(dll|dylib|so)$");
         Set<String> freetypeFiles = Files.walk(Paths.get(testJdkHome))
                 .map(Path::toString)
                 .filter(name -> freetypePattern.matcher(name).matches())
                 .collect(Collectors.toSet());
 
-        if (jdkPlatform.runsOn(OperatingSystem.MACOS)) {
+        if (jdkVersion.isNewerOrEqual(21)) {
+            // jdk-21+ uses "bundled" FreeType
+            assertTrue(freetypeFiles.size() > 0,
+              "Expected libfreetype.dylib to be bundled but it is not.");
+        } else if (jdkPlatform.runsOn(OperatingSystem.MACOS)) {
             assertTrue(freetypeFiles.size() > 0,
               "Expected libfreetype.dylib to be bundled but it is not.");
         } else if (jdkPlatform.runsOn(OperatingSystem.WINDOWS)) {
             assertTrue(freetypeFiles.size() > 0,
               "Expected freetype.dll to be bundled, but it is not.");
         } else if (jdkPlatform.runsOn(OperatingSystem.AIX)
-                && jdkVersion.isNewerOrEqual(13)) {
+                && (jdkVersion.isNewerOrEqual(13) || (jdkVersion.usesVM(VM.OPENJ9) && jdkVersion.isNewerOrEqual(8)))) {
             assertTrue(freetypeFiles.size() > 0,
               "Expected libfreetype.so to be bundled, but it is not.");
         } else {

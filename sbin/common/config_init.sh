@@ -1,21 +1,18 @@
 #!/bin/bash
-# shellcheck disable=SC2153,SC2155
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
-################################################################################
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-################################################################################
+# shellcheck disable=SC2153,SC2155
 
 ################################################################################
 #
@@ -38,6 +35,8 @@ OPENJDK_BUILD_REPO_BRANCH
 OPENJDK_BUILD_REPO_URI
 BRANCH
 BUILD_FULL_NAME
+BUILD_REPRODUCIBLE_DATE
+BUILD_TIMESTAMP
 BUILD_VARIANT
 CERTIFICATE
 CLEAN_DOCKER_BUILD
@@ -59,6 +58,7 @@ DISABLE_ADOPT_BRANCH_SAFETY
 DOCKER
 DOCKER_FILE_PATH
 DOCKER_SOURCE_VOLUME_NAME
+ENABLE_SBOM_STRACE
 FREETYPE
 FREETYPE_DIRECTORY
 FREETYPE_FONT_BUILD_TYPE_PARAM
@@ -96,11 +96,13 @@ TARGET_DIR
 TARGET_FILE_NAME
 TMP_CONTAINER_NAME
 TMP_SPACE_BUILD
+USE_ADOPTIUM_DEVKIT
 USE_DOCKER
 USE_JEP319_CERTS
 USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
 USER_SUPPLIED_MAKE_ARGS
+USER_OPENJDK_BUILD_ROOT_DIRECTORY
 VENDOR
 VENDOR_URL
 VENDOR_BUG_URL
@@ -118,6 +120,7 @@ WORKSPACE_DIR
 #  <WORKSPACE_DIR>/config                              Configuration                        /openjdk/config             $(pwd)/workspace/config
 #  <WORKSPACE_DIR>/<WORKING_DIR>                       Build area                           /openjdk/build              $(pwd)/workspace/build/
 #  <WORKSPACE_DIR>/<WORKING_DIR>/<OPENJDK_SOURCE_DIR>  Source code                          /openjdk/build/src          $(pwd)/workspace/build/src
+#  <WORKSPACE_DIR>/<WORKING_DIR>/devkit                DevKit download                      /openjdk/build/devkit       $(pwd)/workspace/build/devkit
 #  <WORKSPACE_DIR>/target                              Destination of built artifacts       /openjdk/target             $(pwd)/workspace/target
 
 # Helper code to perform index lookups by name
@@ -130,7 +133,7 @@ index=0
 while [  $index -lt $numParams ]; do
     paramName=${CONFIG_PARAMS[$index]};
     eval declare -r -x "$paramName=$index"
-    PARAM_LOOKUP[$index]=$paramName
+    PARAM_LOOKUP[index]=$paramName
 
     # shellcheck disable=SC2219
     let index=index+1
@@ -152,6 +155,16 @@ function writeConfigToFile() {
     mkdir -p "workspace/config"
   fi
   displayParams | sed 's/\r$//' > ./workspace/config/built_config.cfg
+}
+
+function createConfigToJsonString() {
+  jsonString="{ "
+  for K in "${!BUILD_CONFIG[@]}";
+  do
+    jsonString+="\"${PARAM_LOOKUP[$K]}\" : \"${BUILD_CONFIG[$K]}\", "
+  done
+  jsonString+=" \"Data Source\" : \"BUILD_CONFIG hashmap\"}"
+  echo "${jsonString}"
 }
 
 function loadConfigFromFile() {
@@ -201,6 +214,9 @@ function parseConfigurationArguments() {
 
         "--build-variant" )
         BUILD_CONFIG[BUILD_VARIANT]="$1"; shift;;
+
+        "--build-reproducible-date" )
+        BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]="$1"; shift;;
 
         "--branch" | "-b" )
         BUILD_CONFIG[BRANCH]="$1"; shift;;
@@ -262,6 +278,9 @@ function parseConfigurationArguments() {
         "--disable-shallow-git-clone" )
         BUILD_CONFIG[SHALLOW_CLONE_OPTION]="";;
 
+        "--enable-sbom-strace" )
+        BUILD_CONFIG[ENABLE_SBOM_STRACE]=true;;
+
         "--freetype-dir" | "-f" )
         BUILD_CONFIG[FREETYPE_DIRECTORY]="$1"; shift;;
 
@@ -305,7 +324,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[REPOSITORY]="$1"; shift;;
 
         "--release" )
-        BUILD_CONFIG[RELEASE]=true; shift;;
+        BUILD_CONFIG[RELEASE]=true;;
 
         "--source" | "-s" )
         BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
@@ -336,8 +355,23 @@ function parseConfigurationArguments() {
         "--use-jep319-certs" )
         BUILD_CONFIG[USE_JEP319_CERTS]=true;;
 
+        "--use-adoptium-devkit")
+        BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]="$1"; shift;;
+
+        "--user-openjdk-build-root-directory" )
+        BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]="$1"; shift;;
+
         "--vendor" | "-ve" )
         BUILD_CONFIG[VENDOR]="$1"; shift;;
+
+        "--vendor-url")
+        BUILD_CONFIG[VENDOR_URL]="$1"; shift;;
+
+        "--vendor-bug-url")
+        BUILD_CONFIG[VENDOR_BUG_URL]="$1"; shift;;
+
+        "--vendor-vm-bug-url")
+        BUILD_CONFIG[VENDOR_VM_BUG_URL]="$1"; shift;;
 
         "--version"  | "-v" )
         setOpenJdkVersion "$1"
@@ -387,21 +421,16 @@ function configDefaults() {
   # Determine OS full system version
   local unameSys=$(uname -s)
   local unameOSSysVer=$(uname -sr)
+  local unameKernel=$(uname -r)
   if [ "${unameSys}" == "Linux" ]; then
-    # Linux distribs add more useful distrib in the single line file /etc/system-release,
-    # or property file /etc/os-release
-    if [ -f "/etc/system-release" ]; then
+    if [ -f "/etc/os-release" ]; then
+      local unameFullOSVer=$(awk -F= '/^NAME=/{OS=$2}/^VERSION_ID=/{VER=$2}END{print OS " " VER}' /etc/os-release  | tr -d '"')
+      unameOSSysVer="${unameFullOSVer} (Kernel: ${unameKernel})"
+    elif [ -f "/etc/system-release" ]; then
       local linuxName=$(tr -d '"' < /etc/system-release)
-      unameOSSysVer="${unameOSSysVer} : ${linuxName}"
-    elif [ -f "/etc/os-release" ]; then
-      if grep "^NAME=" /etc/os-release; then
-        local osName=$(grep "^NAME=" /etc/os-release | cut -d= -f2 | tr -d '"')
-        unameOSSysVer="${unameOSSysVer} : ${osName}"
-      fi
-      if grep "^VERSION=" /etc/os-release; then
-        local osVersion=$(grep "^VERSION=" /etc/os-release | cut -d= -f2 | tr -d '"')
-        unameOSSysVer="${unameOSSysVer} ${osVersion}"
-      fi
+      unameOSSysVer="${unameOSSysVer} : ${linuxName} (Kernel: ${unameKernel} )"
+    else
+      unameOSSysVer="${unameSys} : unameOSSysVer (Kernel: ${unameKernel} )"
     fi
   elif [ "${unameSys}" == "AIX" ]; then
     # AIX provides full version info using oslevel
@@ -449,11 +478,14 @@ function configDefaults() {
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="false"
   BUILD_CONFIG[FREETYPE]=true
   BUILD_CONFIG[FREETYPE_DIRECTORY]=""
-  BUILD_CONFIG[FREETYPE_FONT_VERSION]="2.9.1"
+  BUILD_CONFIG[FREETYPE_FONT_VERSION]="86bc8a95056c97a810986434a3f268cbe67f2902" # 2.9.1
   BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
 
   case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
-    aix | sunos | *bsd )
+    aix )
+      BUILD_CONFIG[MAKE_COMMAND_NAME]="/opt/freeware/bin/make_64"
+      ;;
+    sunos | *bsd )
       BUILD_CONFIG[MAKE_COMMAND_NAME]="gmake"
       ;;
     * )
@@ -461,14 +493,22 @@ function configDefaults() {
       ;;
   esac
 
+  # Default to no supplied reproducible build date, uses current date
+  BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]=""
+
+  # Default to no user supplied openjdk build root directory
+  BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]=""
+
   # The default behavior of whether we want to create a separate debug symbols archive
   BUILD_CONFIG[CREATE_DEBUG_IMAGE]="false"
 
   # The default behavior of whether we want to create the legacy JRE
   BUILD_CONFIG[CREATE_JRE_IMAGE]="false"
 
-  # Do not create an SBOM by default
+  # Set default value to "false". We config buildArg per each config file to have it enabled by our pipeline
   BUILD_CONFIG[CREATE_SBOM]="false"
+
+  BUILD_CONFIG[ENABLE_SBOM_STRACE]="false"
 
   # The default behavior of whether we want to create a separate source archive
   BUILD_CONFIG[CREATE_SOURCE_ARCHIVE]="false"
@@ -562,6 +602,9 @@ function configDefaults() {
 
   BUILD_CONFIG[CLEAN_LIBS]=false
 
+  # Default to no Adoptium DevKit
+  BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]=""
+
   # By default dont backport JEP318 certs to < Java 10
   BUILD_CONFIG[USE_JEP319_CERTS]=false
 
@@ -569,7 +612,7 @@ function configDefaults() {
 
   BUILD_CONFIG[CROSSCOMPILE]=false
 
-  # By default assume we have adopt patches applied to the repo
+  # By default assume we have Adoptium patches applied to the repo
   BUILD_CONFIG[ADOPT_PATCHES]=true
 
   BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false

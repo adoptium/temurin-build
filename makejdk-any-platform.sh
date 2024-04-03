@@ -1,25 +1,21 @@
 #!/bin/bash
 # shellcheck disable=SC1091
+# ********************************************************************************
+# Copyright (c) 2017 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
 ################################################################################
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-################################################################################
-
-################################################################################
-#
-# Entry point to build (Adopt) OpenJDK binaries for any platform.
+# Entry point to build (Adoptium) OpenJDK binaries for any platform.
 #
 # 1. Source scripts to support configuration, docker builds and native builds.
 # 2. Parse the Command Line Args
@@ -47,7 +43,7 @@ source "${SCRIPT_DIR}/native-build.sh"
 # shellcheck source=configureBuild.sh
 source "${SCRIPT_DIR}/configureBuild.sh"
 
-echo "Starting $0 to configure, build (Adopt)OpenJDK binary"
+echo "Starting $0 to configure, build (Adoptium)OpenJDK binary"
 
 # Configure the build, display the parameters and write the config to disk
 # see ${SCRIPT_DIR}/sbin/common/config_init.sh for details
@@ -57,7 +53,7 @@ writeConfigToFile
 # Store params to this script as "buildinfo"
 echo "$@" > ./workspace/config/makejdk-any-platform.args
 
-# Let's build and test the (Adopt) OpenJDK binary in Docker or natively
+# Let's build and test the (Adoptium) OpenJDK binary in Docker or natively
 if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
   buildOpenJDKViaDocker
 else

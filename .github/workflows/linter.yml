@@ -1,3 +1,16 @@
+# ********************************************************************************
+# Copyright (c) 2020 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 ---
 ###########################
 ###########################
@@ -21,8 +34,14 @@ on:
 ###############
 # Set the Job #
 ###############
+permissions:
+  contents: read
+
 jobs:
   linter:
+    permissions:
+      contents: read  # for actions/checkout to fetch code
+      statuses: write  # for github/super-linter to mark status of each linter run
     # Name the Job
     name: Lint Code Base
     # Set the agent to run on
@@ -36,7 +55,7 @@ jobs:
       # Checkout the code base #
       ##########################
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
@@ -45,7 +64,7 @@ jobs:
       # Run Linter against code base #
       ################################
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: github/super-linter@45fc0d88288beee4701c62761281edfee85655d7 # v5.0.0
         env:
           VALIDATE_ALL_CODEBASE: false
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -53,3 +72,8 @@ jobs:
           FILTER_REGEX_EXCLUDE: .github/ISSUE_TEMPLATE/*
           # TODO: Disable the perl linter as there are lots of errors that are not really understood, see https://github.com/adoptium/temurin-build/issues/2612
           VALIDATE_PERL: false
+          # Disable google-java-format linter as it produces no useful error messages: see: https://github.com/adoptium/temurin-build/issues/3259
+          VALIDATE_GOOGLE_JAVA_FORMAT: false
+          # Disable cpplint, as not useful formatting
+          VALIDATE_CPP: false
+
