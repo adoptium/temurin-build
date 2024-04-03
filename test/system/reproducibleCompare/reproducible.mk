@@ -11,16 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##############################################################################
-
-SBOM_FILE := $(shell ls $(TEST_JDK_HOME)/../ | grep "sbom" | grep -v "metadata")
-SBOM_FILE := $(TEST_JDK_HOME)/../$(SBOM_FILE)
+TODO: BINARY location!
+SBOM_FILE := $(shell ls $(TEST_ROOT)/../jdkbinary/ | grep "sbom" | grep -v "metadata")
+SBOM_FILE := $(TEST_ROOT)/../jdkbinary/$(SBOM_FILE)
 ifeq (,$(findstring win,$(SPEC)))
-	JDK_FILE := $(shell find $(TEST_JDK_HOME)/../ -type f -name '*-jdk_*.tar.gz')
+	JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.tar.gz')
 else
-	JDK_FILE := $(shell find $(TEST_JDK_HOME)/../ -type f -name '*-jdk_*.zip')
+	JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.zip')
 endif
 
 ifneq (,$(findstring linux,$(SPEC)))
-	SBOM_FILE := $(subst $(TEST_JDK_HOME)/..,/home/jenkins/jdkbinary,$(SBOM_FILE))
-	JDK_FILE := $(subst $(TEST_JDK_HOME)/..,/home/jenkins/jdkbinary,$(JDK_FILE))
+	SBOM_FILE := $(subst $(TEST_ROOT)/..,/home/jenkins,$(SBOM_FILE))
+	JDK_FILE := $(subst $(TEST_ROOT)/..,/home/jenkins,$(JDK_FILE))
 endif
