@@ -67,7 +67,7 @@ copyFromDirOrUnpackFromArchive() {
   sleep 10
   rm -rf "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
   mkdir  "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-  # note, that we are not persisting build directory
+  # Note that we are not persisting the build directory
   if [ -d "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" ] ; then
     copyFromDir
   elif [ -f "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" ] ; then
