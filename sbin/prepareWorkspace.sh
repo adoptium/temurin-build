@@ -164,7 +164,7 @@ checkoutAndCloneOpenJDKGitRepo() {
 checkoutRequiredCodeToBuild() {
 
   if [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
-    echo "skipping checkoutRequiredCodeToBuild - local directory under processing:"
+    echo "Skipping checkoutRequiredCodeToBuild - local directory under processing:"
     echo "  workspace = ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     echo "  BUILD_VARIANT = ${BUILD_CONFIG[BUILD_VARIANT]}"
     echo "  TAG = ${BUILD_CONFIG[TAG]} - Used only in name, if at all"
