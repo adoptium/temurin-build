@@ -13,15 +13,16 @@
 # ********************************************************************************
 
 # This script examines the given SBOM metadata file, and then builds the exact same binary
-# and then compares with the Temurin JDK for the same build version, or the optionally supplied TARBALL_PARAM.
+# and then compares with the supplied TARBALL_PARAM.
 
 set -e
 
-[ $# -lt 1 ] && echo "Usage: $0 SBOM_PARAM TARBALL_PARAM" && exit 1
+[ $# -lt 1 ] && echo "Usage: $0 SBOM_PARAM JDK_PARAM" && exit 1
 SBOM_PARAM=$1
-TARBALL_PARAM=$2
+JDK_PARAM=$2
 ANT_VERSION=1.10.5
 ANT_CONTRIB_VERSION=1.0b3
+isLocalDir=0
 
 installPrereqs() {
   if test -r /etc/redhat-release; then
@@ -112,21 +113,24 @@ checkAllVariablesSet
 downloadTooling
 setEnvironment
 
-if [ ! -d "jdk-${TEMURIN_VERSION}" ]; then
-  if [ -z "$TARBALL_PARAM" ]; then
-    TARBALL_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
-  fi
-  if [[ $TARBALL_PARAM =~ ^https?:// ]]; then
-    echo Retrieving original tarball from adoptium.net && curl -L "$TARBALL_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
-  else
-    mkdir "$PWD/jdk-${TEMURIN_VERSION}"
-    tar xpfz $TARBALL_PARAM --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
-  fi
+if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
+    JDK_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
 fi
 
+if [[ $JDK_PARAM =~ ^https?:// ]]; then
+  echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
+elif [[ $JDK_PARAM =~ tar.gz ]]; then
+  mkdir "$PWD/jdk-${TEMURIN_VERSION}"
+  tar xpfz $JDK_PARAM --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
+else
+  echo "Local jdk dir"
+  isLocalDir=1
+fi
 
-echo "  cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
-
+comparedDir="jdk-${TEMURIN_VERSION}"
+if [ isLocalDir ]; then
+  comparedDir=$JDK_PARAM
+fi
 echo Comparing ...
 mkdir compare.$$
 tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare.$$
@@ -137,7 +141,7 @@ cleanBuildInfo
 # shellcheck disable=SC2069
 rc=0
 # shellcheck disable=SC2069
-diff -r "jdk-${TEMURIN_VERSION}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.diff" || rc=$?
+diff -r "${comparedDir}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.diff" || rc=$?
 
 if [ $rc == 0 ]; then
   echo "Compare identical !"
