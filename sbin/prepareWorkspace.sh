@@ -149,7 +149,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     fi
   fi
 
-  if [ ! "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "false" ]; then
     git clean -ffdx
   fi
   updateOpenj9Sources
