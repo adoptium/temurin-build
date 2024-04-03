@@ -56,7 +56,7 @@ unpackFromArchive() {
       tar --strip-components 1 -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
     else
       echo "Source tarball does not contain a top level directory, using"
-      tar --strip-components 0 -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
+      tar -xf "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
     fi
     rm -rf "build"
   popd
