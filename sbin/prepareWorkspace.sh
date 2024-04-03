@@ -603,6 +603,7 @@ downloadDevkit() {
         echo "Attempting to download the required DevKit instead"
       else
         # Found a matching DevKit
+        echo "Using matching DevKit from location ${USR_LOCAL_DEVKIT}"
         BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]="${USR_LOCAL_DEVKIT}"
       fi
     fi
