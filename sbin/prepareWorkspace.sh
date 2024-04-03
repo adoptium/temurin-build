@@ -73,7 +73,7 @@ copyFromDirOrUnpackFromArchive() {
   elif [ -f "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" ] ; then
     unpackFromArchive
   else
-    echo "Not directory nor file ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}"
+    echo "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} is not a directory or a file "
     exit 1
   fi
 }
