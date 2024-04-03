@@ -76,7 +76,7 @@ addConfigureArgIfValueIsNotEmpty() {
 # Configure the DevKit if required
 configureDevKitConfigureParameter() {
   if [[ -n "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" ]]; then
-    addConfigureArg "--with-devkit=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    addConfigureArg "--with-devkit=" "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}"
   fi
 } 
 
