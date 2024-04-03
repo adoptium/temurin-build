@@ -589,6 +589,8 @@ downloadDevkit() {
 
     BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]=""
 
+    local devkit_target="${BUILD_CONFIG[OS_ARCHITECTURE]}-linux-gnu"
+
     local USR_LOCAL_DEVKIT="/usr/local/devkit"
     if [[ -d "${USR_LOCAL_DEVKIT}" ]]; then
       local usrLocalDevkitInfo="${USR_LOCAL_DEVKIT}/devkit.info"
@@ -613,7 +615,6 @@ downloadDevkit() {
 
       # Determine DevKit tarball to download for this arch and release
       local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
-      local devkit_target="${BUILD_CONFIG[OS_ARCHITECTURE]}-linux-gnu"
       local devkit="devkit-${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}-${devkit_target}"
 
       # Download tarball and GPG sig
