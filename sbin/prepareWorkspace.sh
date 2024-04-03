@@ -625,16 +625,15 @@ downloadDevkit() {
 
 downloadBootJdkIfNeeded () {
   if [[ "${BUILD_CONFIG[JDK_BOOT_DIR]}" == "download" ]]; then
-    # The bootDir is used by downloaders.sh methods; it would be nice to change it in future so the download method is unified
-    bootDir="${BUILD_CONFIG[WORKSPACE_DIR]}/downloaded-boot-jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
-    if  [ -e "$bootDir" ] ; then
-      echo "Reusing $bootDir"
+    local futureBootDir="${BUILD_CONFIG[WORKSPACE_DIR]}/downloaded-boot-jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
+    if  [ -e "$futureBootDir" ] ; then
+      echo "Reusing $futureBootDir"
     else
       source "$SCRIPT_DIR/../build-farm/platform-specific-configurations/downloaders.sh"
-      echo "Downloading to $bootDir"
-      downloadBootJDK "$(uname -m)" "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
+      echo "Downloading to $futureBootDir"
+      downloadBootJDK "$(uname -m)" "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" "${futureBootDir}"
     fi
-    BUILD_CONFIG[JDK_BOOT_DIR]="${bootDir}"
+    BUILD_CONFIG[JDK_BOOT_DIR]="${futureBootDir}"
   fi
 }
 

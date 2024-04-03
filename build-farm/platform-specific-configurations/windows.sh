@@ -44,7 +44,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       # shellcheck disable=SC2140
       export "${BOOT_JDK_VARIABLE}"="/cygdrive/c/openjdk/jdk-${JDK_BOOT_VERSION}"
     elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8
-      downloadWindowsBootJDK "${ARCHITECTURE}" "${JDK_BOOT_VERSION}"
+      downloadWindowsBootJDK "${ARCHITECTURE}" "${JDK_BOOT_VERSION}" "$bootDir"
     fi
   fi
 fi

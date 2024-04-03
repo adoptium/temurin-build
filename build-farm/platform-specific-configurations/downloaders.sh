@@ -20,21 +20,21 @@
 ####################################################################################
 
 # This function switches logic based on the (supported) os
-# It is currently relying on $bootDir being set. This should be fixed later
 function downloadBootJDK() {
   if uname -o | grep -i -e Linux ; then
     downloadLinuxBootJDK "$@"
   elif uname -o | grep -i -e Cygwin -e Windows ; then
     downloadWindowsBootJDK "$@"
   else
-    echo "Unsupported platfrom for direct download of boot jdk: $(uname -m) $(uname -o)"
+    echo "Unsupported platform for direct download of boot jdk: $(uname -m) $(uname -o)"
     exit 1
   fi
 }
 
 function downloadLinuxBootJDK() {
-  ARCH=$1
-  VER=$2
+  local ARCH="${1}"
+  local VER="${2}"
+  local bootDir="${3}"
   export downloadArch
   case "$ARCH" in
      "riscv64") downloadArch="$NATIVE_API_ARCH";;
@@ -55,9 +55,7 @@ function downloadLinuxBootJDK() {
     gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
     gpg --verify bootjdk.tar.gz.sig bootjdk.tar.gz || exit 1
-    # shellcheck disable=SC2154
     mkdir "$bootDir"
-    # shellcheck disable=SC2154
     tar xpzf bootjdk.tar.gz --strip-components=1 -C "$bootDir"
     set -e
   else
@@ -78,9 +76,7 @@ function downloadLinuxBootJDK() {
       gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
       echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
       gpg --verify bootjdk.tar.gz.sig bootjdk.tar.gz || exit 1
-      # shellcheck disable=SC2154
       mkdir "$bootDir"
-      # shellcheck disable=SC2154
       tar xpzf bootjdk.tar.gz --strip-components=1 -C "$bootDir"
     else
       # If no binaries are available then try from adoptopenjdk
@@ -97,8 +93,9 @@ function downloadLinuxBootJDK() {
 }
 
 function downloadWindowsBootJDK() {
-      ARCHITECTURE="${1}"
-      VER=${2}
+      local ARCHITECTURE="${1}"
+      local VER="${2}"
+      local bootDir="${3}"
       # This is needed to convert x86-32 to x32 which is what the API uses
       export downloadArch
       case "$ARCHITECTURE" in
@@ -147,6 +144,5 @@ function downloadWindowsBootJDK() {
         fi
       fi
       unzip -q openjdk.zip
-      # shellcheck disable=SC2154
       mv "$(ls -d jdk*"${VER}"*)" "$bootDir"
 }
