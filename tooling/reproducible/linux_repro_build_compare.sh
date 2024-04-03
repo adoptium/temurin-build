@@ -22,7 +22,7 @@ SBOM_PARAM=$1
 JDK_PARAM=$2
 ANT_VERSION=1.10.5
 ANT_CONTRIB_VERSION=1.0b3
-isLocalDir=0
+isJdkDir=0
 
 installPrereqs() {
   if test -r /etc/redhat-release; then
@@ -62,9 +62,12 @@ setEnvironment() {
 }
 
 cleanBuildInfo() {
+  local DIR="$1"
   # BUILD_INFO name of OS level build was built on will likely differ
-  sed -i '/^BUILD_INFO=.*$/d' "jdk-${TEMURIN_VERSION}/release"
-  sed -i '/^BUILD_INFO=.*$/d' "compare.$$/jdk-${TEMURIN_VERSION}/release"
+  sed -i '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
+  sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
+  sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
+  sed -i '/^SOURCE_REPO=.*$/d' "${DIR}/release"
 }
 
 downloadTooling() {
@@ -121,14 +124,14 @@ if [[ $JDK_PARAM =~ ^https?:// ]]; then
   echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
 elif [[ $JDK_PARAM =~ tar.gz ]]; then
   mkdir "$PWD/jdk-${TEMURIN_VERSION}"
-  tar xpfz $JDK_PARAM --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
+  tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
 else
   echo "Local jdk dir"
-  isLocalDir=1
+  isJdkDir=true
 fi
 
 comparedDir="jdk-${TEMURIN_VERSION}"
-if [ isLocalDir ]; then
+if [ "${isJdkDir}" = true ]; then
   comparedDir=$JDK_PARAM
 fi
 
@@ -138,14 +141,15 @@ mkdir compare.$$
 tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare.$$
 cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
 
-cleanBuildInfo
+cleanBuildInfo "${comparedDir}"
+cleanBuildInfo "compare.$$/jdk-$TEMURIN_VERSION"
 
 # shellcheck disable=SC2069
 rc=0
 # shellcheck disable=SC2069
 diff -r "${comparedDir}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.diff" || rc=$?
 
-if [ $rc == 0 ]; then
+if [ $rc = 0 ]; then
   echo "Compare identical !"
 else
   cat "reprotest.diff"
