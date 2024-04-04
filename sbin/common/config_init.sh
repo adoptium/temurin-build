@@ -29,6 +29,7 @@
 # (because of GPL3), we therefore have to name the indexes of the CONFIG_PARAMS
 # map. This is why we can't have nice things.
 CONFIG_PARAMS=(
+ADOPTIUM_DEVKIT_LOCATION
 ADOPT_PATCHES
 ASSEMBLE_EXPLODED_IMAGE
 OPENJDK_BUILD_REPO_BRANCH
@@ -604,6 +605,7 @@ function configDefaults() {
 
   # Default to no Adoptium DevKit
   BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]=""
+  BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]=""
 
   # By default dont backport JEP318 certs to < Java 10
   BUILD_CONFIG[USE_JEP319_CERTS]=false
