@@ -343,7 +343,7 @@ checkingAndDownloadingAlsa() {
         break
       elif [[ ${i} -lt 10 ]]; then
         echo "gpg recv-keys attempt has failed. Retrying after 10 second pause..."
-        sleep 10s
+        sleep 10
       else
         echo "ERROR: gpg recv-keys final attempt has failed. Will not try again."
       fi

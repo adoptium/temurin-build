@@ -101,7 +101,7 @@ then
         then
             echo "RETRYWARNING: Query ${retryCount} failed. Retrying in 30 seconds (max retries = ${retryMax})..."
             retryCount=$((retryCount+1))
-            sleep 30s
+            sleep 30
         else
             echo "JAVA_FEATURE_VERSION FOUND: ${JAVA_FEATURE_VERSION}" && break
         fi
