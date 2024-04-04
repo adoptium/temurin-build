@@ -1,4 +1,17 @@
 #!/bin/bash
+# ********************************************************************************
+# Copyright (c) 2022 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 # Create a default SBOM json file: sbomJson
 createSBOMFile() {
   local javaHome="${1}"
@@ -23,7 +36,7 @@ verifySBOMSignature() {
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinSignSBOM --verifySBOMSignature --jsonFile "${jsonFile}" --publicKeyFile "${publicKeyFile}"
 }
 
-# Set basic SBMO metadata with timestamp, authors, manufacture to ${sbomJson}
+# Set basic SBOM metadata with timestamp, authors, manufacture to ${sbomJson}
 addSBOMMetadata() {
   local javaHome="${1}"
   local classpath="${2}"
@@ -44,6 +57,39 @@ addSBOMMetadataProperty() {
   fi
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
+
+# Set basic SBoM formulation
+addSBOMFormulation() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local formulaName="${4}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulation --formulaName "${formulaName}" --jsonFile "${jsonFile}"
+}
+
+addSBOMFormulationComp() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local formulaName="${4}"
+  local name="${5}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationComp --jsonFile "${jsonFile}" --formulaName "${formulaName}" --name "${name}"
+}  
+
+# Ref: https://cyclonedx.org/docs/1.4/json/#formulation
+# Add the given Property name & value to the SBOM Formulation
+addSBOMFormulationComponentProperty() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local formulaName="${4}"
+  local compName="${5}"
+  local name="${6}"
+  local value="${7}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationCompProp --jsonFile "${jsonFile}" --formulaName "${formulaName}" --compName "${compName}" --name "${name}" --value "${value}"
+}
+
+
 # Ref: https://cyclonedx.org/docs/1.4/json/#metadata
 # If the given property file exists and size over 2bytes, then add the given Property name with the given file contents value to the SBOM Metadata
 addSBOMMetadataPropertyFromFile() {
@@ -118,6 +164,17 @@ addSBOMComponentFromFile() {
       value=$(cat "${propFile}")
   fi
   "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
+}
+
+# Ref: https://cyclonedx.org/docs/1.4/json/#components_items_hashes
+# Add the given sha256 hash to the given SBOM Component
+addSBOMComponentHash() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local compName="${4}"
+  local hash="${5}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentHash --jsonFile "${jsonFile}" --compName "${compName}" --hash "${hash}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components_items_properties

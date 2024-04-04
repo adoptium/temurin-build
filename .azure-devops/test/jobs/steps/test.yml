@@ -1,3 +1,16 @@
+# ********************************************************************************
+# Copyright (c) 2020 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 steps:
     - script: |
         brew update
@@ -17,8 +30,8 @@ steps:
     - script: |
         echo "##vso[task.setvariable variable=DISPLAY]:1";
         echo "##vso[task.setvariable variable=OPENJDK_SOURCES]$BUILD_REPOSITORY_LOCALPATH";
-        echo "##vso[task.setvariable variable=OPENJDK_BINARY]$PIPELINE_WORKSPACE/openjdkbinary";
-        echo "##vso[task.setvariable variable=TEST_JDK_HOME]$PIPELINE_WORKSPACE/openjdkbinary/j2sdk-image";
+        echo "##vso[task.setvariable variable=OPENJDK_BINARY]$PIPELINE_WORKSPACE/jdkbinary";
+        echo "##vso[task.setvariable variable=TEST_JDK_HOME]$PIPELINE_WORKSPACE/jdkbinary/j2sdk-image";
         echo "##vso[task.setvariable variable=TEST_DIR]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests"
         echo "##vso[task.setvariable variable=TKG_DIR]$COMMON_TESTRESULTSDIRECTORY/openjdk-tests/TKG"
         echo "##vso[task.setvariable variable=JRE_IMAGE]$PIPELINE_WORKSPACE/j2re-image";

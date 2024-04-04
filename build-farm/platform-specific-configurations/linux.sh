@@ -1,25 +1,42 @@
 #!/bin/bash
 # shellcheck disable=SC1091
-
-################################################################################
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
-# Bundling our own freetype can cause problems, so we skip that on linux.
-export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+
+if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
+  # jdk-21+ uses "bundled" FreeType
+  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
+else
+  # Bundling our own freetype can cause problems, so we skip that on linux.
+  export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
+fi
+
+## This affects Alpine docker images and also evaluation pipelines
+if [ "$(pwd | wc -c)" -gt 83 ]; then
+  # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
+  # Alpine also cannot create ~/.gpg-temp within a docker context
+  GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
+else
+  GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
+fi
+if [ ! -d "$GNUPGHOME" ]; then
+    mkdir -m 700 "$GNUPGHOME"
+fi
+export GNUPGHOME
 
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
@@ -130,10 +147,6 @@ function downloadBootJDK()
 {
   ARCH=$1
   VER=$2
-  export GNUPGHOME=$PWD/.gnupg-temp
-  if [ ! -d "$GNUPGHOME" ]; then
-    mkdir -m 700 "$GNUPGHOME"
-  fi
   export downloadArch
   case "$ARCH" in
      "riscv64") downloadArch="$NATIVE_API_ARCH";;
@@ -196,6 +209,17 @@ then
   export PATH=/opt/rh/devtoolset-2/root/usr/bin:$PATH
 fi
 
+## Fix For Issue https://github.com/adoptium/temurin-build/issues/3547
+## Add Missing Library Path For Ubuntu 22+
+if [ -e /etc/os-release ]; then
+  ID=$(grep "^ID=" /etc/os-release | awk -F'=' '{print $2}')
+  INT_VERSION_ID=$(grep "^VERSION_ID=" /etc/os-release | awk -F'"' '{print $2}' | awk -F'.' '{print $1}')
+  LIB_ARCH=$(uname -m)-linux-gnu
+  if [ "$ID" == "ubuntu" ] && [ "$INT_VERSION_ID" -ge "22" ]; then
+      export LIBRARY_PATH=/usr/lib/$LIB_ARCH:$LIBRARY_PATH
+  fi
+fi
+
 if [ "${ARCHITECTURE}" == "s390x" ]
 then
   export LANG=C
@@ -220,8 +244,7 @@ then
 
   if [ "${ARCHITECTURE}" == "ppc64le" ] || [ "${ARCHITECTURE}" == "x64" ]
   then
-    CUDA_VERSION=9.0
-    CUDA_HOME=/usr/local/cuda-$CUDA_VERSION
+    CUDA_HOME=/usr/local/cuda
     if [ -f $CUDA_HOME/include/cuda.h ]
     then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-cuda --with-cuda=$CUDA_HOME"
@@ -306,36 +329,46 @@ if [ $executedJavaVersion -ne 0 ]; then
     exit 1
 fi
 
-if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 11 ] && [ -r /usr/local/gcc9/ ] && [ "${ARCHITECTURE}" == "aarch64" ]; then
-  # GCC9 rather than 10 requested by Alibaba for now
-  # Ref https://github.com/adoptium/temurin-build/issues/2250#issuecomment-732958466
-  export PATH=/usr/local/gcc9/bin:$PATH
-  export CC=/usr/local/gcc9/bin/gcc-9.3
-  export CXX=/usr/local/gcc9/bin/g++-9.3
-  # Enable GCC 10 for Java 17+ for repeatable builds, but not for our supported releases
-  # Ref https://github.com/adoptium/temurin-build/issues/2787
-elif [ "$JAVA_FEATURE_VERSION" -ge 19 ] && [ -r /usr/local/gcc11/bin/gcc-11.2 ]; then
-  export PATH=/usr/local/gcc11/bin:$PATH
-  [ -r /usr/local/gcc11/bin/gcc-11.2 ] && export  CC=/usr/local/gcc11/bin/gcc-11.2
-  [ -r /usr/local/gcc11/bin/g++-11.2 ] && export CXX=/usr/local/gcc11/bin/g++-11.2
-  export LD_LIBRARY_PATH=/usr/local/gcc11/lib64:/usr/local/gcc11/lib
-elif [ "$JAVA_FEATURE_VERSION" -ge 17 ] && [ -r /usr/local/gcc10/bin/gcc-10.3 ]; then
-  export PATH=/usr/local/gcc10/bin:$PATH
-  [ -r /usr/local/gcc10/bin/gcc-10.3 ] && export  CC=/usr/local/gcc10/bin/gcc-10.3
-  [ -r /usr/local/gcc10/bin/g++-10.3 ] && export CXX=/usr/local/gcc10/bin/g++-10.3
-  export LD_LIBRARY_PATH=/usr/local/gcc10/lib64:/usr/local/gcc10/lib
-elif [ "$JAVA_FEATURE_VERSION" -gt 17 ] && [ -r /usr/bin/gcc-10 ]; then
-  [ -r /usr/bin/gcc-10 ] && export  CC=/usr/bin/gcc-10
-  [ -r /usr/bin/g++-10 ] && export CXX=/usr/bin/g++-10
-# Continue to use GCC 7 if present for JDK<=17 and where 10 does not exist
-elif [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
-  export PATH=/usr/local/gcc/bin:$PATH
-  [ -r /usr/local/gcc/bin/gcc-7.5 ] && export  CC=/usr/local/gcc/bin/gcc-7.5
-  [ -r /usr/local/gcc/bin/g++-7.5 ] && export CXX=/usr/local/gcc/bin/g++-7.5
-  export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
-elif [ -r /usr/bin/gcc-7 ]; then
-  [ -r /usr/bin/gcc-7 ] && export  CC=/usr/bin/gcc-7
-  [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
+if [[ "${CONFIGURE_ARGS}" =~ .*"--with-devkit=".* ]]; then
+  echo "Using gcc from DevKit toolchain specified in configure args"
+elif [[ "${BUILD_ARGS}" =~ .*"--use-adoptium-devkit".* ]]; then
+  echo "Using gcc from Adoptium DevKit toolchain specified in --use-adoptium-devkit build args"
+else 
+  if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 11 ] && [ -r /usr/local/gcc9/ ] && [ "${ARCHITECTURE}" == "aarch64" ]; then
+    # GCC9 rather than 10 requested by Alibaba for now
+    # Ref https://github.com/adoptium/temurin-build/issues/2250#issuecomment-732958466
+    export PATH=/usr/local/gcc9/bin:$PATH
+    export CC=/usr/local/gcc9/bin/gcc-9.3
+    export CXX=/usr/local/gcc9/bin/g++-9.3
+    # Enable GCC 10 for Java 17+ for repeatable builds, but not for our supported releases
+    # Ref https://github.com/adoptium/temurin-build/issues/2787
+  elif [ "${ARCHITECTURE}" == "riscv64" ] && [ -r /usr/bin/gcc-10 ]; then
+    # Enable GCC 10 for RISC-V, given the rapid evolution of RISC-V, the newer the GCC toolchain, the better
+    [ -r /usr/bin/gcc-10 ] && export  CC=/usr/bin/gcc-10
+    [ -r /usr/bin/g++-10 ] && export CXX=/usr/bin/g++-10
+  elif [ "$JAVA_FEATURE_VERSION" -ge 19 ] && [ -r /usr/local/gcc11/bin/gcc-11.2 ]; then
+    export PATH=/usr/local/gcc11/bin:$PATH
+    [ -r /usr/local/gcc11/bin/gcc-11.2 ] && export  CC=/usr/local/gcc11/bin/gcc-11.2
+    [ -r /usr/local/gcc11/bin/g++-11.2 ] && export CXX=/usr/local/gcc11/bin/g++-11.2
+    export LD_LIBRARY_PATH=/usr/local/gcc11/lib64:/usr/local/gcc11/lib
+  elif [ "$JAVA_FEATURE_VERSION" -ge 17 ] && [ -r /usr/local/gcc10/bin/gcc-10.3 ]; then
+    export PATH=/usr/local/gcc10/bin:$PATH
+    [ -r /usr/local/gcc10/bin/gcc-10.3 ] && export  CC=/usr/local/gcc10/bin/gcc-10.3
+    [ -r /usr/local/gcc10/bin/g++-10.3 ] && export CXX=/usr/local/gcc10/bin/g++-10.3
+    export LD_LIBRARY_PATH=/usr/local/gcc10/lib64:/usr/local/gcc10/lib
+  elif [ "$JAVA_FEATURE_VERSION" -gt 17 ] && [ -r /usr/bin/gcc-10 ]; then
+    [ -r /usr/bin/gcc-10 ] && export  CC=/usr/bin/gcc-10
+    [ -r /usr/bin/g++-10 ] && export CXX=/usr/bin/g++-10
+  # Continue to use GCC 7 if present for JDK<=17 and where 10 does not exist
+  elif [ -r /usr/local/gcc/bin/gcc-7.5 ]; then
+    export PATH=/usr/local/gcc/bin:$PATH
+    [ -r /usr/local/gcc/bin/gcc-7.5 ] && export  CC=/usr/local/gcc/bin/gcc-7.5
+    [ -r /usr/local/gcc/bin/g++-7.5 ] && export CXX=/usr/local/gcc/bin/g++-7.5
+    export LD_LIBRARY_PATH=/usr/local/gcc/lib64:/usr/local/gcc/lib
+  elif [ -r /usr/bin/gcc-7 ]; then
+    [ -r /usr/bin/gcc-7 ] && export  CC=/usr/bin/gcc-7
+    [ -r /usr/bin/g++-7 ] && export CXX=/usr/bin/g++-7
+  fi
 fi
 
 if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then

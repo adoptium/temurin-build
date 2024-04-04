@@ -35,25 +35,41 @@ There is also some documentation in [CHANGELOG.md](CHANGELOG.md)
 - The upstream OpenJDK build requirements are at [Supported Build Platforms](https://wiki.openjdk.java.net/display/Build/Supported+Build+Platforms)
 - The Temurin levels we build on are in [Minimum-OS-levels](https://github.com/adoptium/temurin-build/wiki/%5BWIP%5D-Minimum-OS-levels) although anything with comparable equivalent or later C libraries should work OK (in particular we have built on most current Linux distros without issues)
 
-In terms of compilers, these are what we currently use for each release:
+In terms of OSs and compilers, these are what we currently use for each Temurin release:
 
-| Version | OS      | Compiler |
-|---------|---------|----------|
-| JDK8/11 | Linux   | GCC 7.5                                           |
-| JDK17/18| Linux   | GCC 10.3                                          |
-| JDK19+  | Linux   | GCC 11.2                                          |
-| All     | Alpine  | GCC 10.3.1                                        |
-| JDK8    | Solaris | Sun Studio 12.3                                   |
-| JDK8    | Windows | VS2017 (19) (Win64) or VS2013 (12) (Win32 and J9) |
-| JDK11+  | Windows | VS2019 (10) (Win64) or VS2017 (19) (Win32)        |
-| JDK8    | AIX     | xlC/C++ 13.1.3                                    |
-| JDK11+  | AIX     | xlC/C++ 16.1.0                                    |
-| JDK8    | macOS   | GCC 4.2.1 (LLVM 2336.11.00                        |
-| JDK11   | macOS   | clang-700.1.81                                    |
-| JDK13+  | macOS   | clang-900.0.39.2                                  |
+JDK | Platform | Build env | Compiler | Other info
+--- | --- | --- | --- | ---
+8,11,17 | Linux/x64 | CentOS 6 | GCC [1] | glibc 2.12
+20+ | Linux/x64 | CentOS 7 | GCC [1] | glibc 2.17
+All | Linux/arm32 | Ubuntu 16.04 | GCC [1] | glibc 2.23
+All | Linux/s390x | RHEL 7 | GCC [1] | glibc 2.17
+All | Linux (others) | CentOS 7 | GCC [1] | glibc 2.17
+8 | Windows/x64 | Server 2022 | VS2017 - CL  19.16.27049 |
+11,17 | Windows/x64 | Server 2022 | VS2019 - CL 19.29.30146 |
+21+ | Windows/x64 | Server 2022 | VS2022 - CL 19.37.32822 |
+8 | Win32 | Server 2022 | VS2013 - CL 18.00.40629 |
+11 | Win32 | Server 2022 | VS2017 - CL 19.16.27049 |
+17 | Win32 | Server 2022 | VS2019 - CL 19.29.30146 |
+All | Macos/x64 | 10.14 (18.7.0) | clang-1001.0.46.4 |
+All | Macos/aarch64 | 11 (20.1.0) | clang-1200.0.32.29 | There is no build for JDK8
+All | Alpine/x64 | 3.15.6 | GCC 10.3.1 | Default compiler Alpine 10.3.1_git20211027
+All | Alpine/aarch64 | 3.15.4 | GCC 10.3.1 | Default compiler Alpine 10.3.1_git20211027
+8 | AIX | 7.2 (7200-02) | xlc 13.1.3 (13.01.0003.0007) |  
+11+ | AIX | 7.2 (7200-02) | xlc 16.1.0 (16.01.0000.0011) |
+8 | Solaris (Both) | 10 1/13 | Studio 12.3 (C 5.12) |
 
-All machines at Temurin are set up using the ansible playbooks from the
-[infrastructure](https://github.com/adoptopenjdk/openjdk-infrastructure) repository.
+[1] - Linux gcc levels are 7.5 for JDK8 and 11, 10.3.0 for JDK17 and 11.2.0 for
+JDK20+. At present these are all built from us from the
+[upstream GCC sources](https://gcc.gnu.org/releases.html)
+on our machines as a one off and stored in https://ci.adoptium.net/userContent/gcc/
+where they are consumed [by our playbooks](https://github.com/adoptium/infrastructure/blob/master/ansible/playbooks/AdoptOpenJDK_Unix_Playbook/roles/gcc_11/tasks/main.yml)
+
+All of our machines used for building Temurin are set up using the ansible
+playbooks from the
+[infrastructure](https://github.com/adoptopenjdk/openjdk-infrastructure)
+repository.
+
+Runtime platforms are in our [supported platforms page](https://adoptium.net/supported_platforms.html).
 
 ## How do I change the parameters, such as configure flags, for a Jenkins build
 
@@ -105,12 +121,6 @@ They use the same mechanisms and automation used by the AQA test suite.  This me
 They are also run as part of the Jenkins build pipelines (see the [runSmokeTests()](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/common/openjdk_build_pipeline.groovy#L264-L301) method in the openjdk_build_pipeline groovy script), triggered after the build is complete and before any AQA tests get run against the build.  If smoke tests fail, it likely indicates we built the 'wrong thing' and there is no point running further testing until we resolve the build issues.
 
 To run them on the command-line, one can follow the same general instructions for running any AQA test on the command-line, with the additional step of exporting variables to indicate where to find test material (VENDOR_TEST_REPOS, VENDOR_TEST_BRANCHES, VENDOR_TEST_DIRS).   See: [SmokeTesting.md](https://github.com/adoptium/temurin-build/blob/master/SmokeTesting.md)
-
-## Which OS levels do we build on?
-
-The operating systems/distributions which we build or are documented in the
-[temurin-build wiki](https://github.com/adoptium/temurin-build/wiki/%5BWIP%5D-Minimum-OS-levels).
-Runtime platforms are in our [supported platforms page](https://adoptium.net/supported_platforms.html).
 
 ## How to add a new build pipeline param and associated job configuration?
 

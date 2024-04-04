@@ -56,6 +56,8 @@ Create release branch in the format `vYYYY.MM.NN` on each of the following repos
 
 These branches should be named according to the following format (vYYYY.MM+NN) ,e.g v2023.03+01 , whereby the final element is an incremental counter appended to the year and month of the release.
 
+If anything needs to be merged into the new branch, it should typically be merged into master, then a `git cherry-pick` operation should be done to create a new PR against the release branch. This can typically be merged without further approval.
+
 #### Code Freeze message
 
 Paste the below message into the #release channel in Slack:
@@ -90,7 +92,7 @@ Affected repositories:
 
 #### Release pipelines and jobs need to be re-generated with new tags by the Release Champion:
 
-- run [release-build-pipeline-generator](https://ci.adoptium.net/job/build-scripts/job/utils/job/release-build-pipeline-generator) with correct value:
+- run [release-pipeline-generator](https://ci.adoptium.net/job/build-scripts/job/utils/job/release-pipeline-generator) with correct value:
   1. `releaseTag` is the branch on `ci-jenkins-pipeline` and `temurin-build` git repo.
   2. `helperTag` is the branch on `jenkins-helper` repo.
   3. `aqaTag` is the branch on `aqa-tests` repo, in form of `vX.Y.Z-release` and usually the [latest stable release](https://github.com/adoptium/aqa-tests/releases)
@@ -182,6 +184,8 @@ step1 ---->|No| step1.1["sleep 10 minutes"] -->step1
 jdk8armStep1["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] -->jdk8armStep2["Get _adopt tag on jdk8 aarch32Linux"] -->jdk8armStep3["Manual run release-openjdk8u-pipeline with\n1: scmReference\n2: targetConfiguration\n3: overridePublishName"]
 
 ```
+
+</details>
 
 ### Dry run tests: Do this at least 2 weeks before release in the same calendar month
 
@@ -285,13 +289,15 @@ Once the openjdk pipeline has completed:
 3. Publish packages for different OS
 
   3.1. **[Mac only]** Once the binaries are available on the website you need to update the Homebrew casks. There are 4 casks in total
+and all but the first one is in the `hombrew-cask-versions` repository. If you're doing a point release, the format of the version string is 11.0.20.1,1 so the version is always the same as "our" one but with the `+` replaced with a `,`
 
-- [`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/temurin.rb) which always serves the latest release version
+- [`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin.rb) which always serves the latest release version
 - [`temurin8`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin8.rb)
 - [`temurin11`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin11.rb)
 - [`temurin17`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin17.rb)
 
-An example PR can be found [here](https://github.com/Homebrew/homebrew-cask/commit/4565865e9d7c3d3018ee8aa67803ea68c54dde86). The required SHA sums can be easily updated by `brew bump-cask-pr` command . The separate pull request is required for each version you update. If in doubt reach out to @gdams as he's a maintainer.
+An example PR can be found [here](https://github.com/Homebrew/homebrew-cask-versions/pull/17582/files). The required SHA sums can be updated by `brew bump-cask-pr temurinXX --version 11.0.XX,Y` command if you're on a macos system, or manually if not . The separate pull request is required for each version you update. If in doubt reach out to @gdams as he's a maintainer.
+
   3.2. **[Linux only]** Once the binaries are available on the website you can begin updating the specfiles for the RPM/DEB/APK files. There are 4 different types of linux installer
 
 - [debian](https://github.com/adoptium/installer/tree/master/linux/jdk/debian/src/main/packaging/temurin)
@@ -309,11 +315,12 @@ Once the PRs to change those files have been merged, the [adoptium-packages-linu
 
 4. **[Docker Hub]** The information on updating the Adoptium official dockerhub repository is at <https://github.com/adoptium/containers#maintenance-of-dockerfiles> at the moment you cannot do this until all Linux architectures and windows64 are published for the appropriate version
 
-5. Publicise the Temurin release
+5. Once everything has been published to GitHub, use the [EclipseMirror](https://ci.eclipse.org/temurin-compliance/job/EclipseMirror/) job to mirror the artifacts to our Eclipse server for backup purposes. Note that this will need to be done by a team member in the temurin-compliance project (Run once for each of the releases)
+
+6. Publicise the Temurin release:
 
 - Via slack on the Adoptium #release channel
 - Find someone with the appropriate authority (Carmen, George, Martijn, Shelley, Stewart, Tim) to post a tweet about the new release from the Adoptium twitter account
-- Also run the EclipseMirror job in the Eclipse jenkins instance to create a backup of the release from GitHub onto the Eclipse servers.
 
 ### Post Release Tasks
 
@@ -411,6 +418,22 @@ Rename the nightly build targets file (it will be named `jdkxx.groovy`, [example
 
 Occasionally we may have to do an out-of-band release that does not align with a quarterly release from the upstream OpenJDK project. This may occur if there has been a problem with our build process that we missed at GA time, to fix a critical issue, or when a project outside OpenJDK :
 
-1. When triggering the pipeline, set `AdoptBuildNumber` to a unique number for the point release
+1. When triggering the pipeline, set `AdoptBuildNumber` to a unique number for the point release (the original will be "blank" so any subsequent point release required should start at "1")
 2. If you used a custom entry in `overridePublishName` when kicking off the GA pipeline, keep it the same as for the GA release - we DO NOT want the filenames changed to include the point number
 3. When running the publish job, you need to use a custom `TAG` in order to publish it to the website with a separate name from what you had initially e.g.  `jdk-11.0.5+10.1_openj9-0.17.1` (Note the position of the `.1` for OpenJ9 releases in that example - it's after the openj9 version but before the OpenJ9 version.
+
+If you need to create a point release with a one-off patch (Usually a cherry pick of something already in the codebase which will go into the next release) use the following process:
+
+1. Clone the repository you need to patch (e.g. `git clone git@github.com:adoptium/jdk21u`)
+2. Check out the tag you wish to base it on (e.g. `git checkout jdk-21.0.1+12_adopt`)
+3. Create a branch for the new release (e.g. `git checkout -b jdk-21.0.1+12.1`)
+4. Cherry pick your patches to apply them onto the source
+5. Create a new `_adopt` tag for the point release (e.g. `git tag -a jdk-21.0.1+12.1_adopt`)
+6. Push the branch and tag: `git push origin jdk-21.0.1+12.1 && git push origin jdk-21.0.1+12.1_adopt`
+7. If the patch does not affect tests, create a PR to update testenv.properties in the aqa-tests release branch with the point release version number ([Sample PR against v0.9.9-release](https://github.com/adoptium/aqa-tests/pull/4865/files))
+8. If the patch does change tests, a new ".1" branch should be created in aqa-tests, based off the release branch, which has the updatre to testenv.properties (If this was needed in the above example, you would create a v0.9.9.1-release branch)
+9. Run the release-openjdkXX-pipeline with:
+   - the new `_adopt` tag as the `scmReference`
+   - `additionalConfigureArgs` of `--with-version-build=12` (replace 12 with the number after `+` but before new new `.1` in the version string)
+   - the `aqaReference` updated if step 8 was followd
+   - the desired set of platforms defined in the `targetConfigurations` parameter

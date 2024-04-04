@@ -1,19 +1,17 @@
 #!/bin/bash
-# shellcheck disable=SC2155,SC1091,SC2196
-
-################################################################################
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# shellcheck disable=SC2155,SC1091,SC2196,SC2235
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
 ################################################################################
 #
@@ -279,7 +277,7 @@ updateOpenj9Sources() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     # NOTE: fetched openssl will NOT be used in the RISC-V cross-compile situation
-    bash get_source.sh --openssl-version=1.1.1u
+    bash get_source.sh --openssl-version=3.0.13
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
@@ -298,6 +296,17 @@ createWorkspace() {
   umask 022
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}" || exit
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" || exit
+
+  # If a user supplied OpenJDK build root directory has been specified and it is not empty
+  # then fail with an error, we don't want to delete it in case user has specified a wrong directory
+  # Ensure the directory is created if it doesn't exist
+  if [[ -n "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]]; then
+    if [[ -d "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]] && [[ "$(ls -A "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}")" ]]; then
+      echo "ERROR: Existing user supplied OpenJDK build root directory ${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]} is not empty"
+      exit 1
+    fi
+    mkdir -p "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" || exit
+  fi
 }
 
 # ALSA first for sound
@@ -315,26 +324,30 @@ checkingAndDownloadingAlsa() {
     echo "Skipping ALSA download"
   else
 
-    ALSA_BUILD_URL="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2"
+    ALSA_BUILD_URL="https://ftp2.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2"
     curl -o "alsa-lib.tar.bz2" "$ALSA_BUILD_URL"
     curl -o "alsa-lib.tar.bz2.sig" "https://www.alsa-project.org/files/pub/lib/alsa-lib-${ALSA_LIB_VERSION}.tar.bz2.sig"
 
-    ## This affects Alpine docker images and also evaluation pipelines
-    if [ "$(pwd | wc -c)" -gt 83 ]; then
-      # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
-      # Alpine also cannot create ~/.gpg-temp within a docker context
-      export GNUPGHOME="/tmp/.gpg-temp.$$"
-    else
-      export GNUPGHOME="${WORKSPACE:-$PWD}/.gpg-temp"
-    fi
+    setupGpg
 
-    echo "GNUPGHOME=$GNUPGHOME"
-    mkdir -p "$GNUPGHOME" && chmod og-rwx "$GNUPGHOME"
-    gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
     # Should we clear this directory up after checking?
     # Would this risk removing anyone's existing dir with that name?
     # Erring on the side of caution for now
-    gpg --keyserver keyserver.ubuntu.com --recv-keys "${ALSA_LIB_GPGKEYID}"
+    # Note: the uptime command below is to aid diagnostics for this issue:
+    # https://github.com/adoptium/temurin-build/issues/3518#issuecomment-1792606345
+    uptime
+    # Will retry command below until it passes or we've failed 10 times.
+    for i in {1..10}; do
+      if gpg --keyserver keyserver.ubuntu.com --keyserver-options timeout=300 --recv-keys "${ALSA_LIB_GPGKEYID}"; then
+        echo "gpg command has passed."
+        break
+      elif [[ ${i} -lt 10 ]]; then
+        echo "gpg recv-keys attempt has failed. Retrying after 10 second pause..."
+        sleep 10s
+      else
+        echo "ERROR: gpg recv-keys final attempt has failed. Will not try again."
+      fi
+    done
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
     gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
 
@@ -450,7 +463,6 @@ checkingAndDownloadingFreeType() {
 
   FOUND_FREETYPE=$(find "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype/lib/" -name "${FREETYPE_FONT_SHARED_OBJECT_FILENAME}" || true)
 
-  FREETYPE_BUILD_INFO="Unknown"
   if [[ -n "$FOUND_FREETYPE" ]]; then
     echo "Skipping FreeType download"
   else
@@ -472,20 +484,10 @@ checkingAndDownloadingFreeType() {
       ;;
     esac
 
-    # Fetch the sha for the commit we just cloned
     cd freetype || exit
-    FREETYPE_SHA=$(git rev-parse HEAD) || exit
-    FREETYPE_BUILD_INFO="https://github.com/freetype/freetype/commit/${FREETYPE_SHA}"
 
     if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-      # Record buildinfo version
-      echo "${FREETYPE_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
       return
-    fi
-
-    local pngArg=""
-    if ./configure --help | grep "with-png"; then
-      pngArg="--with-png=no"
     fi
 
     local freetypeEnv=""
@@ -493,9 +495,16 @@ checkingAndDownloadingFreeType() {
       freetypeEnv="export CC=\"gcc -m32\""
     fi
 
+    eval "${freetypeEnv}" && bash ./autogen.sh || exit 1
+
+    local pngArg=""
+    if ./configure --help | grep "with-png"; then
+      pngArg="--with-png=no"
+    fi
+
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if ! (eval "${freetypeEnv}" && bash ./autogen.sh && bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${pngArg}" "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${pngArg}" "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
       echo "Failed to configure and build libfreetype, exiting"
       exit
@@ -534,9 +543,6 @@ checkingAndDownloadingFreeType() {
       fi
     fi
   fi
-
-  # Record buildinfo version
-  echo "${FREETYPE_BUILD_INFO}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_freetype.txt"
 }
 
 # Recording Build image SHA into docker.txt
@@ -554,6 +560,92 @@ prepareMozillaCacerts() {
     else
       time ./mk-cacerts.sh --keytool "${BUILD_CONFIG[JDK_BOOT_DIR]}/bin/keytool"
     fi
+}
+
+# Create and setup GNUPGHOME
+setupGpg() {
+    ## This affects riscv64 & Alpine docker images and also evaluation pipelines
+    if ( [ -r /etc/alpine-release ] && [ "$(pwd | wc -c)" -gt 83 ] ) || \
+       ( [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] && [ "$(pwd | wc -c)" -gt 83 ] ); then
+        # Use /tmp in preference to $HOME as fails gpg operation if PWD > 83 characters
+        # Also cannot create ~/.gpg-temp within a docker context
+        GNUPGHOME="$(mktemp -d /tmp/.gpg-temp.XXXXXX)"
+    else
+        GNUPGHOME="${BUILD_CONFIG[WORKSPACE_DIR]:-$PWD}/.gpg-temp"
+    fi
+    if [ ! -d "$GNUPGHOME" ]; then
+        mkdir -m 700 "$GNUPGHOME"
+    fi
+    export GNUPGHOME
+
+    echo "GNUPGHOME=$GNUPGHOME"
+}
+
+# Download the required DevKit if necessary and not available in /usr/local/devkit
+downloadDevkit() {
+  if [[ -n "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" ]]; then
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+
+    BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]=""
+
+    local devkit_target="${BUILD_CONFIG[OS_ARCHITECTURE]}-linux-gnu"
+
+    local USR_LOCAL_DEVKIT="/usr/local/devkit/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+    if [[ -d "${USR_LOCAL_DEVKIT}" ]]; then
+      local usrLocalDevkitInfo="${USR_LOCAL_DEVKIT}/devkit.info"
+       if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${usrLocalDevkitInfo}" || ! grep "ADOPTIUM_DEVKIT_TARGET=${devkit_target}" "${usrLocalDevkitInfo}"; then
+        echo "WARNING: Devkit ${usrLocalDevkitInfo} does not match required release and architecture:"
+        echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+        echo "       ${USR_LOCAL_DEVKIT}: $(grep ADOPTIUM_DEVKIT_RELEASE= "${usrLocalDevkitInfo}")"
+        echo "       Required:   ADOPTIUM_DEVKIT_TARGET=${devkit_target}"
+        echo "       ${USR_LOCAL_DEVKIT}: $(grep ADOPTIUM_DEVKIT_TARGET= "${usrLocalDevkitInfo}")"
+        echo "Attempting to download the required DevKit instead"
+      else
+        # Found a matching DevKit
+        echo "Using matching DevKit from location ${USR_LOCAL_DEVKIT}"
+        BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]="${USR_LOCAL_DEVKIT}"
+      fi
+    fi
+
+    # Download from adoptium/devkit-runtimes if we have not found a matching one locally
+    if [[ -z "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}" ]]; then
+      local devkit_tar="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.tar.xz"
+
+      setupGpg
+
+      # Determine DevKit tarball to download for this arch and release
+      local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+      local devkit="devkit-${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}-${devkit_target}"
+
+      # Download tarball and GPG sig
+      echo "Downloading DevKit : ${devkitUrl}/${devkit}.tar.xz"
+      curl -L --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
+      curl -L --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
+
+      # GPG verify
+      gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
+      echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
+      gpg --verify "${devkit_tar}.sig" "${devkit_tar}" || exit 1
+
+      tar xpJf "${devkit_tar}" -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+      rm "${devkit_tar}"
+      rm "${devkit_tar}.sig"
+
+      # Validate devkit.info matches value passed in and current architecture
+      local devkitInfo="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.info"
+      if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${devkitInfo}" || ! grep "ADOPTIUM_DEVKIT_TARGET=${devkit_target}" "${devkitInfo}"; then
+        echo "ERROR: Devkit does not match required release and architecture:"
+        echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_RELEASE= "${devkitInfo}")"
+        echo "       Required:   ADOPTIUM_DEVKIT_TARGET=${devkit_target}"
+        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_TARGET= "${devkitInfo}")"
+        exit 1
+      fi
+
+      BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    fi
+  fi
 }
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType etc.)
@@ -674,6 +766,7 @@ function configureWorkspace() {
   if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" != "true" ]]; then
     createWorkspace
     downloadingRequiredDependencies
+    downloadDevkit
     relocateToTmpIfNeeded
     checkoutAndCloneOpenJDKGitRepo
     applyPatches
