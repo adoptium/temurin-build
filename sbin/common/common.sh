@@ -250,6 +250,6 @@ function verboseSleep() {
   else
     local i="${1}"
   fi
-  while [ $i -gt 0 ] ; do echo -n " $i " && sleep 1 && i=$(($i-1)) ; done && echo " $i"
+  while [ "$i" -gt 0 ] ; do echo -n " $i " && sleep 1s && i=$((i-1)) ; done && echo " $i"
 }
 
