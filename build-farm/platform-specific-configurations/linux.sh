@@ -334,7 +334,11 @@ if [[ "${CONFIGURE_ARGS}" =~ $devkit_regex ]]; then
   devkit_path=${BASH_REMATCH[1]};
   if [[ -d "${devkit_path}" ]]; then
     echo "Using gcc from DevKit toolchain specified in configure args location: --with-devkit=${devkit_path}"
-    export LD_LIBRARY_PATH=${devkit_path}/lib64:${devkit_path}/lib:${LD_LIBRARY_PATH}
+    if [[ -z ${LD_LIBRARY_PATH+x} ]]; then
+      export LD_LIBRARY_PATH=${devkit_path}/lib64:${devkit_path}/lib
+    else
+      export LD_LIBRARY_PATH=${devkit_path}/lib64:${devkit_path}/lib:${LD_LIBRARY_PATH}
+    fi
   else
     echo "--with-devkit location '${devkit_path}' not found"
     exit 1
