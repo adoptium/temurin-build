@@ -653,7 +653,6 @@ downloadDevkit() {
       else
           export LD_LIBRARY_PATH=${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/lib64:${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/lib:${LD_LIBRARY_PATH}
       fi
-echo "SET LD_LIBRARY_PATH to ${LD_LIBRARY_PATH}"
     fi
   fi
 }
