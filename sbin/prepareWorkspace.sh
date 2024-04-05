@@ -28,6 +28,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/common/constants.sh"
 
+# shellcheck source=sbin/common/common.sh
+source "$SCRIPT_DIR/common/common.sh"
+
 # Set default versions for 3 libraries that OpenJDK relies on to build
 
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
@@ -65,7 +68,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     if [ "${isValidGitRepo}" == "0" ]; then
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
-      sleep 10
+      verboseSleep 10
       echo "Pulling latest changes from git openjdk source repository"
     elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
       echo "Removing current git repo as it is the wrong type"
@@ -343,7 +346,7 @@ checkingAndDownloadingAlsa() {
         break
       elif [[ ${i} -lt 10 ]]; then
         echo "gpg recv-keys attempt has failed. Retrying after 10 second pause..."
-        sleep 10s
+        verboseSleep 10
       else
         echo "ERROR: gpg recv-keys final attempt has failed. Will not try again."
       fi
