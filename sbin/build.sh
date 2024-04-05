@@ -575,10 +575,34 @@ configureCommandParameters() {
   # at the number of escapes needed to ensure that they persist up to this point.
   CONFIGURE_ARGS="${CONFIGURE_ARGS} ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]//temporary_speech_mark_placeholder/\"}"
 
+  setDevKitEnvironment
+
   configureFreetypeLocation
   configureZlibLocation
 
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
+}
+
+# Ensure environment set correctly for devkit
+setDevKitEnvironment() {
+  if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]]; then
+    # If DevKit is used ensure LD_LIBRARY_PATH for linux is using the DevKit sysroot
+    local devkit_regex="--with-devkit=([^ ]+)"
+    if [[ "${CONFIGURE_ARGS}" =~ $devkit_regex ]]; then
+      local devkit_path=${BASH_REMATCH[1]};
+      if [[ -d "${devkit_path}" ]]; then
+        echo "Using gcc from DevKit toolchain specified in configure args location: --with-devkit=${devkit_path}"
+        if [[ -z ${LD_LIBRARY_PATH+x} ]]; then
+          export LD_LIBRARY_PATH=${devkit_path}/lib64:${devkit_path}/lib
+        else
+          export LD_LIBRARY_PATH=${devkit_path}/lib64:${devkit_path}/lib:${LD_LIBRARY_PATH}
+        fi
+      else
+        echo "--with-devkit location '${devkit_path}' not found"
+        exit 1
+      fi
+    fi
+  fi
 }
 
 # Make sure we're in the build root directory for OpenJDK now

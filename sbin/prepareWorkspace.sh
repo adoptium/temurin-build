@@ -645,15 +645,6 @@ downloadDevkit() {
 
       BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
     fi
-
-    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]]; then
-      # Ensure LD_LIBRARY_PATH is set on linux to use Devkit
-      if [[ -z ${LD_LIBRARY_PATH+x} ]]; then
-          export LD_LIBRARY_PATH=${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/lib64:${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/lib
-      else
-          export LD_LIBRARY_PATH=${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/lib64:${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/lib:${LD_LIBRARY_PATH}
-      fi
-    fi
   fi
 }
 
