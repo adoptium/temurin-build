@@ -329,8 +329,16 @@ if [ $executedJavaVersion -ne 0 ]; then
     exit 1
 fi
 
-if [[ "${CONFIGURE_ARGS}" =~ .*"--with-devkit=".* ]]; then
-  echo "Using gcc from DevKit toolchain specified in configure args"
+devkit_regex="--with-devkit=([^ ]+)"
+if [[ "${CONFIGURE_ARGS}" =~ $devkit_regex ]]; then
+  devkit_path=${BASH_REMATCH[1]};
+  if [[ -d "${devkit_path}" ]]; then
+    echo "Using gcc from DevKit toolchain specified in configure args location: --with-devkit=${devkit_path}"
+    export LD_LIBRARY_PATH=${devkit_path}/lib64:${devkit_path}/lib:${LD_LIBRARY_PATH}
+  else
+    echo "--with-devkit location '${devkit_path}' not found"
+    exit 1
+  fi
 elif [[ "${BUILD_ARGS}" =~ .*"--use-adoptium-devkit".* ]]; then
   echo "Using gcc from Adoptium DevKit toolchain specified in --use-adoptium-devkit build args"
 else 
