@@ -65,10 +65,7 @@ cleanBuildInfo() {
   # shellcheck disable=SC3043
   local DIR="$1"
   # BUILD_INFO name of OS level build was built on will likely differ
-  sed -i '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
-  sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
   sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
-  sed -i '/^SOURCE_REPO=.*$/d' "${DIR}/release"
 }
 
 downloadTooling() {
