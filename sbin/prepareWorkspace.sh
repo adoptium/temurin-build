@@ -28,6 +28,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/common/constants.sh"
 
+# shellcheck source=sbin/common/common.sh
+source "$SCRIPT_DIR/common/common.sh"
+
 # Set default versions for 3 libraries that OpenJDK relies on to build
 
 ALSA_LIB_VERSION=${ALSA_LIB_VERSION:-1.1.6}
@@ -65,7 +68,7 @@ checkoutAndCloneOpenJDKGitRepo() {
     if [ "${isValidGitRepo}" == "0" ]; then
       cd "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
       echo "Resetting the git openjdk source repository at $PWD in 10 seconds..."
-      sleep 10
+      verboseSleep 10
       echo "Pulling latest changes from git openjdk source repository"
     elif [ "${BUILD_CONFIG[CLEAN_GIT_REPO]}" == "true" ]; then
       echo "Removing current git repo as it is the wrong type"
@@ -343,7 +346,7 @@ checkingAndDownloadingAlsa() {
         break
       elif [[ ${i} -lt 10 ]]; then
         echo "gpg recv-keys attempt has failed. Retrying after 10 second pause..."
-        sleep 10s
+        verboseSleep 10
       else
         echo "ERROR: gpg recv-keys final attempt has failed. Will not try again."
       fi
@@ -581,44 +584,69 @@ setupGpg() {
     echo "GNUPGHOME=$GNUPGHOME"
 }
 
-# Download the required DevKit if necessary
+# Download the required DevKit if necessary and not available in /usr/local/devkit
 downloadDevkit() {
   if [[ -n "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
     mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
 
-    local devkit_tar="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.tar.xz"
+    BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]=""
 
-    setupGpg
-
-    # Determine DevKit tarball to download for this arch and release
-    local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
     local devkit_target="${BUILD_CONFIG[OS_ARCHITECTURE]}-linux-gnu"
-    local devkit="devkit-${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}-${devkit_target}"
 
-    # Download tarball and GPG sig
-    echo "Downloading DevKit : ${devkitUrl}/${devkit}.tar.xz"
-    curl -L --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
-    curl -L --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
+    local USR_LOCAL_DEVKIT="/usr/local/devkit/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+    if [[ -d "${USR_LOCAL_DEVKIT}" ]]; then
+      local usrLocalDevkitInfo="${USR_LOCAL_DEVKIT}/devkit.info"
+       if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${usrLocalDevkitInfo}" || ! grep "ADOPTIUM_DEVKIT_TARGET=${devkit_target}" "${usrLocalDevkitInfo}"; then
+        echo "WARNING: Devkit ${usrLocalDevkitInfo} does not match required release and architecture:"
+        echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+        echo "       ${USR_LOCAL_DEVKIT}: $(grep ADOPTIUM_DEVKIT_RELEASE= "${usrLocalDevkitInfo}")"
+        echo "       Required:   ADOPTIUM_DEVKIT_TARGET=${devkit_target}"
+        echo "       ${USR_LOCAL_DEVKIT}: $(grep ADOPTIUM_DEVKIT_TARGET= "${usrLocalDevkitInfo}")"
+        echo "Attempting to download the required DevKit instead"
+      else
+        # Found a matching DevKit
+        echo "Using matching DevKit from location ${USR_LOCAL_DEVKIT}"
+        BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]="${USR_LOCAL_DEVKIT}"
+      fi
+    fi
 
-    # GPG verify
-    gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
-    echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
-    gpg --verify "${devkit_tar}.sig" "${devkit_tar}" || exit 1
+    # Download from adoptium/devkit-runtimes if we have not found a matching one locally
+    if [[ -z "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}" ]]; then
+      local devkit_tar="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.tar.xz"
 
-    tar xpJf "${devkit_tar}" -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
-    rm "${devkit_tar}"
-    rm "${devkit_tar}.sig"
+      setupGpg
 
-    # Validate devkit.info matches value passed in and current architecture
-    local devkitInfo="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.info"
-    if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${devkitInfo}" || ! grep "ADOPTIUM_DEVKIT_TARGET=${devkit_target}" "${devkitInfo}"; then
+      # Determine DevKit tarball to download for this arch and release
+      local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+      local devkit="devkit-${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}-${devkit_target}"
+
+      # Download tarball and GPG sig
+      echo "Downloading DevKit : ${devkitUrl}/${devkit}.tar.xz"
+      curl -L --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
+      curl -L --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
+
+      # GPG verify
+      gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
+      echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
+      gpg --verify "${devkit_tar}.sig" "${devkit_tar}" || exit 1
+
+      tar xpJf "${devkit_tar}" -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+      rm "${devkit_tar}"
+      rm "${devkit_tar}.sig"
+
+      # Validate devkit.info matches value passed in and current architecture
+      local devkitInfo="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.info"
+      if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${devkitInfo}" || ! grep "ADOPTIUM_DEVKIT_TARGET=${devkit_target}" "${devkitInfo}"; then
         echo "ERROR: Devkit does not match required release and architecture:"
         echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
         echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_RELEASE= "${devkitInfo}")"
         echo "       Required:   ADOPTIUM_DEVKIT_TARGET=${devkit_target}"
         echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_TARGET= "${devkitInfo}")"
         exit 1
+      fi
+
+      BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
     fi
   fi
 }

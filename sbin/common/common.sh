@@ -243,3 +243,13 @@ function isFromJdk21LTS() {
   [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 21 ]] && [[ $(((BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]-21) % 4)) == 0 ]]
 }
 
+# Waits N seconds (10 by default), printing a countdown every second.
+function verboseSleep() {
+  if [[ -z "${1}" ]] ; then
+    local i=10
+  else
+    local i="${1}"
+  fi
+  while [ "$i" -gt 0 ] ; do echo -n " $i " && sleep 1s && i=$((i-1)) ; done && echo " $i"
+}
+
