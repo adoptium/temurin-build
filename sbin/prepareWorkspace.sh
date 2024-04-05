@@ -42,7 +42,10 @@ copyFromDir() {
   echo "Copying OpenJDK source from  ${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
   # we really do not want to use .git for dirs, as we expect user have them set up, ignoring them
   local files=$(find "${BUILD_CONFIG[OPENJDK_FOREST_DIR_ABSPATH]}" -maxdepth 1 -mindepth 1 | grep -v -e "/workspace$" -e "/build$" -e "/.git" -e -"/build/")
-  cp -rf "$files" "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/"
+  # SC2086 (info): Double quote to prevent globbing and word splitting.
+  # globbing is intentional here
+  # shellcheck disable=SC2086
+  cp -rf $files "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/"
 }
 
 unpackFromArchive() {
