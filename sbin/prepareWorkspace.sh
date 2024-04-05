@@ -64,7 +64,7 @@ unpackFromArchive() {
 
 copyFromDirOrUnpackFromArchive() {
   echo "Removing copy of openjdk source repository of $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} in 10 seconds..."
-  sleep 10
+  verboseSleep	 10
   rm -rf "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
   mkdir  "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
   # Note that we are not persisting the build directory
