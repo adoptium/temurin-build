@@ -49,7 +49,7 @@ copyFromDir() {
 }
 
 unpackFromArchive() {
-  echo "Extracting OpenJDK source tarbal ${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
+  echo "Extracting OpenJDK source tarball ${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to build the binary"
   # If the tarball contains .git files, they should be ignored later
   # todo, support also zips?
   pushd "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
