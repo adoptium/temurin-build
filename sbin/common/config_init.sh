@@ -426,7 +426,7 @@ function setOpenjdkSourceDir() {
   fi
   BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]=$(readlink -f "$1");
   if [ ! -e "${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]}" ] ; then
-    echo "you have specified -o/--openjdk-source, but '${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]}' does not exists"
+    echo "You have specified -o/--openjdk-source, but '${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]}' does not exist"
     exit 1
   fi
   BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE]="true";
