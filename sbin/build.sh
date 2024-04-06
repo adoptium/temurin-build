@@ -1819,7 +1819,7 @@ createDefaultTag() {
 getFirstTagFromOpenJDKGitRepo() {
 
   if [ "${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE]}" == "true" ]; then
-    echo "you are building froum source snapshot. getFirstTagFromOpenJDKGitRepo is not allowed"  1>&2
+    echo "You are building from a local source snapshot. getFirstTagFromOpenJDKGitRepo is not allowed"  1>&2
     exit 1
   fi
 
