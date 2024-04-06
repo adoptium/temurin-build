@@ -183,7 +183,7 @@ configureMacOSCodesignParameter() {
 # Get the OpenJDK update version and build version
 getOpenJDKUpdateAndBuildVersion() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
-  if [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE]}" == "true" ]; then
     echo "Version: local dir; OPENJDK_BUILD_NUMBER set as  ${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
   elif [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
 
@@ -233,7 +233,7 @@ patchFreetypeWindows() {
 getOpenJdkVersion() {
   local version
 
-  if [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE]}" == "true" ]; then
     version=${BUILD_CONFIG[TAG]:-$(createDefaultTag)}
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
     local corrVerFile=${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/version.txt
@@ -1818,7 +1818,7 @@ createDefaultTag() {
 #
 getFirstTagFromOpenJDKGitRepo() {
 
-  if [ "${BUILD_CONFIG[OPENJDK_FOREST_DIR]}" == "true" ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE]}" == "true" ]; then
     echo "you are building froum source snapshot. getFirstTagFromOpenJDKGitRepo is not allowed"  1>&2
     exit 1
   fi
