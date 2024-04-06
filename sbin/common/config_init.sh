@@ -421,7 +421,7 @@ function setBranch() {
 # Set the local dir if used
 function setOpenjdkSourceDir() {
   if [ ! -e "${1}" ] ; then
-    echo "you have specified -o/--openjdk-source, but '${1}' do not exists"
+    echo "You have specified -o/--openjdk-source, but '${1}' does not exist"
     exit 1
   fi
   BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]=$(readlink -f "$1");
