@@ -55,7 +55,7 @@ unpackFromArchive() {
   pushd "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]}" | wc -l)
     if [ "$topLevelItems" -eq "1" ] ; then
-      echo "Source tarball contains exaclty one directory, using"
+      echo "Source tarball contains exactly one directory"
       tar --strip-components 1 -xf "${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]}"
     else
       echo "Source tarball does not contain a top level directory"
