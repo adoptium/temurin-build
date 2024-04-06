@@ -306,7 +306,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[REUSE_CONTAINER]=false;;
 
         "--jdk-boot-dir" | "-J" )
-        BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
+        BUILD_CONFIG[JDK_BOOT_DIR]="$1"; shift;;
 
         "--cross-compile" )
         BUILD_CONFIG[CROSSCOMPILE]=true;;
