@@ -58,7 +58,7 @@ unpackFromArchive() {
       echo "Source tarball contains exaclty one directory, using"
       tar --strip-components 1 -xf "${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]}"
     else
-      echo "Source tarball does not contain a top level directory, using"
+      echo "Source tarball does not contain a top level directory"
       tar -xf "${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]}"
     fi
     rm -rf "build"
