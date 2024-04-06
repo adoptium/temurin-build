@@ -318,7 +318,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[ADOPT_PATCHES]=false;;
 
         "--openjdk-source" | "-o" )
-        setOpenjdkSourceDir "${1}";shift;;
+        setOpenjdkSourceDir "${1}"; shift;;
 
         "--patches" )
         BUILD_CONFIG[PATCHES]="$1"; shift;;
