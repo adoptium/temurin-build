@@ -479,7 +479,6 @@ buildingTheRestOfTheConfigParameters() {
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
     addConfigureArg "--with-x=" "/usr/include/X11"
-    addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
   fi
 }
 
@@ -503,6 +502,10 @@ configureDebugParameters() {
       fi
     fi
   fi
+}
+
+configureAlsaLocation() {
+  addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
 }
 
 configureFreetypeLocation() {
@@ -551,6 +554,7 @@ configureCommandParameters() {
   else
     echo "Building up the configure command..."
     buildingTheRestOfTheConfigParameters
+    configureAlsaLocation
   fi
 
   echo "Adjust configure for reproducible build"
