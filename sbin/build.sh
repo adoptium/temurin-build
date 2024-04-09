@@ -505,7 +505,11 @@ configureDebugParameters() {
 }
 
 configureAlsaLocation() {
-  addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
+  if [[ ! "${CONFIGURE_ARGS}" =~ "--with-alsa" ]]; then
+    if [[ "${BUILD_CONFIG[ALSA]}" == "true" ]]; then
+      addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
+    fi
+  fi
 }
 
 configureFreetypeLocation() {
