@@ -47,4 +47,4 @@ header:
     - '.github/linters/*'
     - 'cyclonedx-lib/getDependencies'
     - 'makejdk-any-platform.1'
-    - serverTimestamp.properties
+    - 'serverTimestamp.properties'
