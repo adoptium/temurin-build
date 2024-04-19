@@ -95,7 +95,7 @@ jobs:
         CONFIGURE_ARGS: --with-native-debug-symbols=none
 
     # pinned at v3 to as Node.js 20.x is not supported on Centos 7
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
       name: Collect and Archive Artifacts
       with:
         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -118,7 +118,7 @@ jobs:
         vendor_testBranches: "${{ github.head_ref }}"
         vendor_testDirs: "/test/functional"
     # pinned at v3 to as Node.js 20.x is not supported on Centos 7
-    - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+    - uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
@@ -207,7 +207,7 @@ jobs:
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
       
-    - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+    - uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
       name: Collect and Archive Artifacts
       with:
         name: ${{matrix.version.name}}-${{matrix.os}}-${{matrix.variant}}
@@ -230,7 +230,7 @@ jobs:
         vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
         vendor_testBranches: "${{ github.head_ref }}"
         vendor_testDirs: "/test/functional"
-    - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+    - uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
@@ -402,7 +402,7 @@ jobs:
          FILENAME: OpenJDK.zip
          BUILD_ARGS: --create-sbom
 
-     - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+     - uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
        name: Collect and Archive Artifacts
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -435,7 +435,7 @@ jobs:
          vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
          vendor_testBranches: "${{ github.head_ref }}"
          vendor_testDirs: "/test/functional"
-     - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+     - uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
        name: Collect and Archive SmokeTest Results
        if: failure()
        with:
