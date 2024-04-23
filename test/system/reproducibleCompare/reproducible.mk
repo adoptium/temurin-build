@@ -1,5 +1,5 @@
 # ********************************************************************************
-# Copyright (c) 2020 Contributors to the Eclipse Foundation
+# Copyright (c) 2017 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) with this work for additional
 # information regarding copyright ownership.
@@ -11,12 +11,11 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
-name: "Adoptium-$(JAVA_TO_BUILD)-$(Date:yyyy-MM-dd)"
+ifndef SBOM_FILE
+	SBOM_FILE := $(shell ls $(TEST_ROOT)/../jdkbinary/ | grep "sbom" | grep -v "metadata")
+	SBOM_FILE := $(TEST_ROOT)/../jdkbinary/$(SBOM_FILE)
+endif
 
-trigger: none
-
-pr: none
-
-stages:
-  - template: ./build/build.yml
-  - template: ./test/sanity.yml
+ifneq (,$(findstring linux,$(SPEC)))
+	SBOM_FILE := $(subst $(TEST_ROOT)/../jdkbinary,/home/jenkins/test,$(SBOM_FILE))
+endif

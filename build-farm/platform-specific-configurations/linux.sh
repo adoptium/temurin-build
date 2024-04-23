@@ -1,19 +1,17 @@
 #!/bin/bash
 # shellcheck disable=SC1091
-
-################################################################################
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
@@ -246,8 +244,7 @@ then
 
   if [ "${ARCHITECTURE}" == "ppc64le" ] || [ "${ARCHITECTURE}" == "x64" ]
   then
-    CUDA_VERSION=9.0
-    CUDA_HOME=/usr/local/cuda-$CUDA_VERSION
+    CUDA_HOME=/usr/local/cuda
     if [ -f $CUDA_HOME/include/cuda.h ]
     then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-cuda --with-cuda=$CUDA_HOME"
@@ -334,6 +331,8 @@ fi
 
 if [[ "${CONFIGURE_ARGS}" =~ .*"--with-devkit=".* ]]; then
   echo "Using gcc from DevKit toolchain specified in configure args"
+elif [[ "${BUILD_ARGS}" =~ .*"--use-adoptium-devkit".* ]]; then
+  echo "Using gcc from Adoptium DevKit toolchain specified in --use-adoptium-devkit build args"
 else 
   if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 11 ] && [ -r /usr/local/gcc9/ ] && [ "${ARCHITECTURE}" == "aarch64" ]; then
     # GCC9 rather than 10 requested by Alibaba for now

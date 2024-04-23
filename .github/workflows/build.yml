@@ -1,3 +1,16 @@
+# ********************************************************************************
+# Copyright (c) 2020 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 ---
 name: Build
 
@@ -241,7 +254,7 @@ jobs:
      steps:
      - name: Restore cygwin packages from cache
        id: cygwin
-       uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
+       uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
        with:
         path: C:\cygwin64
         key: cygwin-packages-${{ runner.os }}-v1
@@ -285,7 +298,7 @@ jobs:
      - name: Restore Visual Studio 2017 from cache
        id: vs2017
        if: matrix.version == 'jdk8u'
-       uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
+       uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
        with:
          path: ~/vs2017.exe
          key: vs2017
@@ -293,7 +306,7 @@ jobs:
      - name: Restore Visual Studio 2019 from cache
        id: vs2019
        if: matrix.version == 'jdk11u' || matrix.version == 'jdk17u'
-       uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
+       uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
        with:
          path: ~/vs2019.exe
          key: vs2019
@@ -396,7 +409,7 @@ jobs:
          path: workspace/target/*
 
      - name: Restore build artifacts
-       uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+       uses: actions/download-artifact@8caf195ad4b1dee92908e23f56eeb0696f1dd42d # v4.1.5
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
          path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
