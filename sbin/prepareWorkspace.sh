@@ -672,7 +672,7 @@ downloadingRequiredDependencies() {
       checkingAndDownloadingAlsa
     else
       echo ""
-      echo "---> Skipping the process of checking and downloading the Alsa dependency, a pre-built version provided via -C/--configure-args <---"
+      echo "---> Skipping the process of checking and downloading the Alsa dependency, a pre-built version should be provided via -C/--configure-args <---"
       echo ""
     fi
   fi
