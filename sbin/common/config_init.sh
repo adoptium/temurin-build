@@ -81,8 +81,8 @@ OPENJDK_BUILD_NUMBER
 OPENJDK_CORE_VERSION
 OPENJDK_FEATURE_NUMBER
 OPENJDK_FOREST_NAME
-OPENJDK_FOREST_SOURCE_ARCHIVE
-OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH
+OPENJDK_LOCAL_SOURCE_ARCHIVE
+OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH
 OPENJDK_SOURCE_DIR
 OPENJDK_UPDATE_VERSION
 OS_KERNEL_NAME
@@ -424,12 +424,12 @@ function setOpenjdkSourceDir() {
     echo "You have specified -o/--openjdk-source, but '${1}' does not exist"
     exit 1
   fi
-  BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]=$(readlink -f "$1");
-  if [ ! -e "${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]}" ] ; then
-    echo "You have specified -o/--openjdk-source, but '${BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]}' does not exist"
+  BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]=$(readlink -f "$1");
+  if [ ! -e "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" ] ; then
+    echo "You have specified -o/--openjdk-source, but '${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}' does not exist"
     exit 1
   fi
-  BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE]="true";
+  BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]="true";
   if [ -z "${BUILD_CONFIG[TAG]}" ] ; then
     echo "You have not yet specified --tag. It is strongly recommended you do so, otherwise a default one will be provided."
   fi
@@ -483,10 +483,10 @@ function configDefaults() {
   BUILD_CONFIG[OPENJDK_FOREST_NAME]=""
 
   # whether the forest is local directory or not
-  BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE]="false"
+  BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]="false"
 
   # whether the forest is local directory or not
-  BUILD_CONFIG[OPENJDK_FOREST_SOURCE_ARCHIVE_ABSPATH]=""
+  BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]=""
 
   # The abridged openjdk core version name, e.g. jdk8, jdk9, etc.
   BUILD_CONFIG[OPENJDK_CORE_VERSION]=""
