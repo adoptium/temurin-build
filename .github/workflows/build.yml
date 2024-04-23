@@ -185,6 +185,7 @@ jobs:
       run: |
         rm -rf /Applications/Xcode.app
         ln -s /Applications/Xcode_15.2.app /Applications/Xcode.app
+        ls -l /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include
 
     - name: Build macOS
       run: |
