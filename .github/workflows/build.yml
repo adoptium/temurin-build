@@ -184,6 +184,7 @@ jobs:
       if: matrix.version.name != 'jdk8u'
       run: |
         rm -rf /Applications/Xcode.app
+        ls -l /Applications
         ln -s /Applications/Xcode_15.0.1.app /Applications/Xcode.app
 
     - name: Build macOS
