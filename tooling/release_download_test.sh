@@ -344,7 +344,7 @@ verify_gcc_version() {
   # shellcheck disable=SC2166
   [ "${MAJOR_VERSION}" = "8" -o "${MAJOR_VERSION}" = "11" ] && expected_gcc=7.5.0
   [ "${MAJOR_VERSION}" = "17" ] && expected_gcc=10.3.0
-  [ "${MAJOR_VERSION}" -ge 20 ] && expected_gcc=11.2.0
+  [ "${MAJOR_VERSION}" -ge 20 ] && expected_gcc=11.3.0
 
   if ! strings tarballtest/bin/java | grep "^GCC:.*${expected_gcc}"; then
     print_error "GCC version detected in the JDK java executable is not the expected ${expected_gcc}"
