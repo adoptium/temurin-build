@@ -1,0 +1,54 @@
+# ********************************************************************************
+# Copyright (c) 2023 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
+name: Code Freeze New Bot
+
+# Controls when the workflow will run
+on:
+  pull_request_target:
+    branches:
+      - '*'
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  codefreeze_new:
+    steps:
+      - name: Get pull request target branch
+        id: get-pr-target-branch
+        if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
+        run: echo "pr_target_branch=$(gh pr view $PR_NUMBER --repo $REPOSITORY --json baseRefName --jq '.baseRefName')" >> $GITHUB_OUTPUT
+        env:
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Filter target branch to code freeze branches
+        id: filter-branch
+        if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
+        run: echo "filtered_code_freeze_branch=$(echo $PR_TARGET_BRANCH | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$')" >> $GITHUB_OUTPUT
+        env:
+          PR_TARGET_BRANCH: $${{ steps.get-pr-target-branch.outputs.pr_target_branch }}
+
+      - name: Code Freeze New
+        if: (github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)) && steps.filter-branch.outputs.filtered_code_freeze_branch == steps.get-pr-target-branch.outputs.pr_target_branch
+        run: echo "CODE_FREEZE $PR_TARGET_BRANCH"
+        env:
+          PR_TARGET_BRANCH: $${{ steps.get-pr-target-branch.outputs.pr_target_branch }}
+
+        #uses: adoptium/.github/.github/workflows/code-freeze.yml@main
+        #secrets: inherit
