@@ -134,7 +134,7 @@ jobs:
         os: [macOS]
         version: [
           { name: jdk8u, distro: macos-11 },
-          { name: jdk11u, distro: macos-13 },
+          { name: jdk11u, distro: macos-14 },
           { name: jdk17u, distro: macos-14 }
         ]
         variant: [temurin]
@@ -184,7 +184,7 @@ jobs:
       if: matrix.version.name != 'jdk8u'
       run: |
         rm -rf /Applications/Xcode.app
-        ln -s /Applications/Xcode_15.0.1.app /Applications/Xcode.app
+        ln -s /Applications/Xcode_15.2.app /Applications/Xcode.app
 
     - name: Build macOS
       run: |
