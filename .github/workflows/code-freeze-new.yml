@@ -30,8 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Get pull request target branch
-      id: get-pr-target-branch
       if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
+      id: get-pr-target-branch
       run: |
         TARGET_BRANCH="$(gh pr view $PR_NUMBER --repo $REPOSITORY --json baseRefName --jq '.baseRefName')"
         echo "pr_target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
@@ -41,8 +41,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Filter target branch to code freeze branches
-      id: filter-branch
       if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
+      id: filter-branch
       # Following grep "regex" needs to exactly match the required target branches to "freeze"
       run: |
         FILTERED_BRANCH="$(echo $PR_TARGET_BRANCH | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$')"
