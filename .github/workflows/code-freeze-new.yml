@@ -29,33 +29,31 @@ jobs:
   codefreeze_new:
     runs-on: ubuntu-latest
     steps:
-    - name: Get pull request target branch
-      if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
-      id: get-pr-target-branch
-      run: |
-        TARGET_BRANCH="$(gh pr view $PR_NUMBER --repo $REPOSITORY --json baseRefName --jq '.baseRefName')"
-        echo "pr_target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
-      env:
-        REPOSITORY: ${{ github.repository }}
-        PR_NUMBER: ${{ github.event.issue.number }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get pull request target branch
+        if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
+        id: get-pr-target-branch
+        run: |
+          TARGET_BRANCH="$(gh pr view $PR_NUMBER --repo $REPOSITORY --json baseRefName --jq '.baseRefName')"
+          echo "pr_target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
+        env:
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Filter target branch to code freeze branches
-      if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
-      id: filter-branch
-      # Following grep "regex" needs to exactly match the required target branches to "freeze"
-      run: |
-        FILTERED_BRANCH="$(echo $PR_TARGET_BRANCH | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$')"
-        echo "filtered_code_freeze_branch=$FILTERED_BRANCH" >> $GITHUB_OUTPUT
-      env:
-        PR_TARGET_BRANCH: $${{ steps.get-pr-target-branch.outputs.pr_target_branch }}
+      - name: Filter target branch to code freeze branches
+        if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
+        id: filter-branch
+        # Following grep "regex" needs to exactly match the required target branches to "freeze"
+        run: |
+          FILTERED_BRANCH="$(echo $PR_TARGET_BRANCH | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$')"
+          echo "filtered_code_freeze_branch=$FILTERED_BRANCH" >> $GITHUB_OUTPUT
+        env:
+          PR_TARGET_BRANCH: $${{ steps.get-pr-target-branch.outputs.pr_target_branch }}
 
-    - name: Code Freeze New
-      if: (github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)) && steps.filter-branch.outputs.filtered_code_freeze_branch == steps.get-pr-target-branch.outputs.pr_target_branch
-      uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
-      with:
-        issue-number: ${{ github.event.issue.number }}
-        body: echo "CODE_FREEZE ${{ github.event.issue.number }}"
+      - name: Code Freeze New
+        if: (github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)) && steps.filter-branch.outputs.filtered_code_freeze_branch == steps.get-pr-target-branch.outputs.pr_target_branch
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: echo "CODE_FREEZE ${{ github.event.issue.number }}"
 
-      #uses: adoptium/.github/.github/workflows/code-freeze.yml@main
-      #secrets: inherit
