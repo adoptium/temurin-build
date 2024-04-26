@@ -43,7 +43,7 @@ jobs:
           echo "Getting target branch"
           TARGET_BRANCH="$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" --json baseRefName --jq '.baseRefName')"
           echo "pr_target_branch=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
-          echo "br=$TARGET_BRANCH"
+          echo "PR target branch = $TARGET_BRANCH"
         env:
           REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.issue.number }}
@@ -60,6 +60,7 @@ jobs:
             FREEZE_BRANCH='false'
           fi
           echo "code_freeze_branch=$FREEZE_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "Is $PR_TARGET_BRANCH a code freeze branch? => $FREEZE_BRANCH"
         env:
           PR_TARGET_BRANCH: ${{ steps.get-pr-target-branch.outputs.pr_target_branch }}
 
