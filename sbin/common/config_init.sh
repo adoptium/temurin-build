@@ -354,7 +354,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[SIGN]=true; BUILD_CONFIG[CERTIFICATE]="$1"; shift;;
 
         "--sudo" )
-        BUILD_CONFIG[DOCKER]="sudo docker";;
+        BUILD_CONFIG[DOCKER]="sudo";;
 
         "--tag" | "-t" )
         BUILD_CONFIG[TAG]="$1"; BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
@@ -606,7 +606,7 @@ function configDefaults() {
   # Whether to use Temurin's cacerts file (true) or use the file provided by OpenJDK (false)
   BUILD_CONFIG[CUSTOM_CACERTS]=${BUILD_CONFIG[CUSTOM_CACERTS]:-"true"}
 
-  BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-"docker"}
+  BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-""}
 
   BUILD_CONFIG[TMP_SPACE_BUILD]=${BUILD_CONFIG[TMP_SPACE_BUILD]:-false}
 
