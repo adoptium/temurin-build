@@ -16,7 +16,6 @@ name: Code Freeze New Bot
 
 # Controls when the workflow will run
 on:
-  push:
   pull_request_target:
     branches:
       - '*'
