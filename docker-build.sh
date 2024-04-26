@@ -71,6 +71,8 @@ buildDockerContainer()
 buildOpenJDKViaDocker()
 {
 
+  DOCKER_PPODMAN="${1}"
+
   # TODO This could be extracted overridden by the user if we support more
   # architectures going forwards
   local container_architecture="x86_64/ubuntu"

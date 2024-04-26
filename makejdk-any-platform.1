@@ -22,7 +22,7 @@ that you are building for further details.
 
 \fBExample:\fR The simplest use case to run is:
 
-"./makejdk-any-platform.sh --docker jdk8u"
+"./makejdk-any-platform.sh -D jdk8u"
 
 This will start a Docker container and build you the latest Java 8 Temurin
 binary from the source at https://github.com/adoptium/openjdk-jdk8u
@@ -97,8 +97,8 @@ specify the location for the built binary, e.g. /path/.
 This is typically used in conjunction with \fB<-T>\fR to create a custom path
 / file name for the resulting binary.
 .TP
-.BR \-D ", " \-\-docker
-build OpenJDK in a docker container.
+.BR \-D ", " \-\-docker ", " \-\-podman
+build OpenJDK in a docker/podman container. -D will autodetect, using podman if found, docker otherwise.
 .TP
 .BR \-\-debug-docker
 debug OpenJDK build script in a docker container. Only valid if \fB-D\fR is selected.

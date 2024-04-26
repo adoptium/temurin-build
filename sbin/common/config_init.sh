@@ -273,8 +273,14 @@ function parseConfigurationArguments() {
         "--destination" | "-d" )
         BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
 
-        "--docker" | "-D" )
-        BUILD_CONFIG[USE_DOCKER]="true";;
+        "-D" )
+        if [ which podman ] ; then BUILD_CONFIG[USE_DOCKER]="podman" ; else BUILD_CONFIG[USE_DOCKER]="docker" ; fi;;
+
+        "--docker" )
+        BUILD_CONFIG[USE_DOCKER]="docker";;
+
+        "--podman" )
+        BUILD_CONFIG[USE_DOCKER]="podman";;
 
         "--debug-docker" )
         BUILD_CONFIG[DEBUG_DOCKER]="true";;

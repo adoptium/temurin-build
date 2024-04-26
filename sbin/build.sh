@@ -2100,7 +2100,7 @@ createTargetDir() {
 
 fixJavaHomeUnderDocker() {
   # If we are inside docker we cannot trust the JDK_BOOT_DIR that was detected on the host system
-  if [[ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ]]; then
+  if [[ ! "${BUILD_CONFIG[USE_DOCKER]}" == "false" ]]; then
     # clear BUILD_CONFIG[JDK_BOOT_DIR] and re set it
     BUILD_CONFIG[JDK_BOOT_DIR]=""
     setBootJdk
