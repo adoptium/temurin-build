@@ -34,7 +34,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
           issue-number: ${{ github.event.issue.number }}
-          body: echo "CODE_FREEZE ${{ github.event.issue.number }}"
+          body: echo "CODE_FREEZE check ${{ github.event.issue.number }}"
 
       - name: Get pull request target branch
         if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
