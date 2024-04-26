@@ -43,6 +43,7 @@ jobs:
           echo "Getting target branch"
           TARGET_BRANCH="$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" --json baseRefName --jq '.baseRefName')"
           echo "pr_target_branch=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "br=$TARGET_BRANCH"
         env:
           REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.issue.number }}
