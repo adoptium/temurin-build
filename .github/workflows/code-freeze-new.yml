@@ -49,21 +49,24 @@ jobs:
           PR_NUMBER: ${{ github.event.issue.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Filter target branch to code freeze branches
+      - name: Check if target branch is a code freeze branch
         if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
-        id: filter-branch
+        id: check-freeze-branch
         # Following grep "regex" needs to exactly match the required target branches to "freeze"
         run: |
-          echo "target = $PR_TARGET_BRANCH"
-          FILTERED_BRANCH="$(echo "$PR_TARGET_BRANCH" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$')"
-          echo "filtered_code_freeze_branch=$FILTERED_BRANCH" >> "$GITHUB_OUTPUT"
+          if echo "$PR_TARGET_BRANCH" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            FREEZE_BRANCH="true"
+          else
+            FREEZE_BRANCH="false"
+          fi
+          echo "code_freeze_branch=$FREEZE_BRANCH" >> "$GITHUB_OUTPUT"
         env:
           PR_TARGET_BRANCH: ${{ steps.get-pr-target-branch.outputs.pr_target_branch }}
 
       - name: Code Freeze New
-        if: (github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)) && steps.filter-branch.outputs.filtered_code_freeze_branch == steps.get-pr-target-branch.outputs.pr_target_branch
+        if: (github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)) && steps.check-freeze-branch.outputs.code_freeze_branch == "true"
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
           issue-number: ${{ github.event.issue.number }}
-          body: echo "CODE_FREEZE ${{ github.event.issue.number }}"
+          body: echo "IS CODE_FREEZE ${{ github.event.issue.number }}"
 
