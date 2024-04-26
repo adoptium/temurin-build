@@ -12,7 +12,7 @@
 # ********************************************************************************
 
 ---
-name: Code Freeze New Bot
+name: Code Freeze New freeze Bot
 
 # Controls when the workflow will run
 on:
