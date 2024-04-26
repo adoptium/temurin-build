@@ -34,8 +34,8 @@ jobs:
         if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
         id: get-pr-target-branch
         run: |
-          TARGET_BRANCH="$(gh pr view $PR_NUMBER --repo $REPOSITORY --json baseRefName --jq '.baseRefName')"
-          echo "pr_target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
+          TARGET_BRANCH="$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" --json baseRefName --jq '.baseRefName')"
+          echo "pr_target_branch=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
         env:
           REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.issue.number }}
