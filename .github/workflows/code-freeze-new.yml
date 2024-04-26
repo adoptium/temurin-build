@@ -54,7 +54,7 @@ jobs:
         id: check-freeze-branch
         # Following grep "regex" needs to exactly match the required target branches to "freeze"
         run: |
-          if echo "v2024.04.01" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+          if echo "$PR_TARGET_BRANCH" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
             FREEZE_BRANCH='true'
           else
             FREEZE_BRANCH='false'
