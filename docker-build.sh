@@ -39,12 +39,16 @@ createPersistentDockerDataVolume()
     # shellcheck disable=SC2154
     echo "Removing old volumes and containers"
     # shellcheck disable=SC2046
-    ${BUILD_CONFIG[DOCKER]} rm -f $(${BUILD_CONFIG[DOCKER]} ps -a --no-trunc -q -f volume="${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}") || true
-    ${BUILD_CONFIG[DOCKER]} volume rm -f "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
+    ${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]} rm -f $(${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]} ps -a --no-trunc -q -f volume="${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}") || true
+    ${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]} volume rm -f "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
 
     # shellcheck disable=SC2154
     echo "Creating tmp container"
-    ${BUILD_CONFIG[DOCKER]} volume create --name "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}"
+    if echo ${BUILD_CONFIG[USE_DOCKER]} | grep docker ; then
+      ${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]} volume create --name "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}"
+    else
+      ${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]} volume create "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}"
+    fi
   fi
 }
 
@@ -64,7 +68,7 @@ buildDockerContainer()
 
   writeConfigToFile
 
-  ${BUILD_CONFIG[DOCKER]} build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" --build-arg "HostUID=${UID}"
+  ${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]} build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" --build-arg "HostUID=${UID}"
 }
 
 # Execute the (Adoptium) OpenJDK build inside the Docker Container
@@ -185,11 +189,26 @@ buildOpenJDKViaDocker()
   fi
 
   # Command without gitSshAccess or dockerMode arrays
+  local pipelinesdir="${hostDir}"/workspace/pipelines
+  if [ -e "${hostDir}"/pipelines ] ; then
+    local pipelinesdir="${hostDir}"/pipelines
+  else
+    mkdir -p "${pipelinesdir}"
+  fi
+  if echo ${BUILD_CONFIG[USE_DOCKER]} | grep docker ; then
+    local cpuset="--cpuset-cpus=${cpuSet}"
+  else
+    local cpuset=""
+  fi
+  local mountflag=Z #rw? maybe this should be bound to root/rootles content of BUILD_CONFIG[DOCKER] rather then jsut podman/docker in USE_DOCKER?
+  local targetdir="${hostDir}"/workspace/target
+  mkdir -p "${hostDir}"/workspace/build  # shouldnt be already there?
+  echo "If you get permissions denied on ${targetdir} or ${pipelinesdir} try to turn off selinux"
   local commandString=(
-         "--cpuset-cpus=${cpuSet}" 
+         ${cpuset}
          -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build"
-         -v "${hostDir}"/workspace/target:/"${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}":Z 
-         -v "${hostDir}"/pipelines:/openjdk/pipelines:Z
+         -v "${targetdir}":/"${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}":$mountflag 
+         -v "${pipelinesdir}":/openjdk/pipelines:$mountflag
          -e "DEBUG_DOCKER_FLAG=${BUILD_CONFIG[DEBUG_DOCKER]}" 
          -e "BUILD_VARIANT=${BUILD_CONFIG[BUILD_VARIANT]}"
           "${dockerEntrypoint[@]:+${dockerEntrypoint[@]}}")
@@ -206,14 +225,14 @@ buildOpenJDKViaDocker()
   fi
 
   # Run the command string in Docker
-  ${BUILD_CONFIG[DOCKER]} run --name "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" "${commandString[@]}"
+  ${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]} run --name "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" "${commandString[@]}"
 
   # Tell user where the resulting binary can be found on the host system
-  echo "The finished image can be found in ${hostDir}/workspace/target on the host system"
+  echo "The finished image can be found in ${targetdir} on the host system"
 
   # If we didn't specify to keep the container then remove it
   if [[ "${BUILD_CONFIG[KEEP_CONTAINER]}" == "false" ]] ; then
       echo "Removing container ${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}"
-      ${BUILD_CONFIG[DOCKER]} ps -a | awk '{ print $1,$(NF) }' | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" rm {}
+      ${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]} ps -a | awk '{ print $1,$(NF) }' | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[DOCKER]}" ${BUILD_CONFIG[USE_DOCKER] rm {}
   fi
 }
