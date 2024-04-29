@@ -28,7 +28,9 @@ permissions:
 
 jobs:
   codefreeze_regex:
-    uses: adoptium/andrew-m-leonard/.github/workflows/code-freeze-regex-branch.yml@master
+    uses: andrew-m-leonard/openjdk-build/.github/workflows/code-freeze-regex-branch.yml@master
+    secrets: inherit
     with:
-      branch-regex: "^v[0-9]+.[0-9]+.[0-9]+$"
+      ##branch-regex: "^v[0-9]+.[0-9]+.[0-9]+$"
+      branch-regex: "^ma.*er$"
 
