@@ -27,44 +27,11 @@ permissions:
   pull-requests: write
 
 jobs:
-  codefreeze_new:
+  codefreeze_regex:
     runs-on: ubuntu-latest
     steps:
-      - name: Get pull request target branch
-        if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
-        id: get-pr-target-branch
-        run: |
-          echo "Getting target branch"
-          if [[ -z $PR_NUMBER ]]; then
-            PR_NUMBER="${{ github.event.pull_request.number }}"
-          fi
-          TARGET_BRANCH="$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" --json baseRefName --jq '.baseRefName')"
-          echo "pr_target_branch=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
-          echo "PR target branch = $TARGET_BRANCH"
-        env:
-          REPOSITORY: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.issue.number }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check if target branch is a code freeze branch
-        if: github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)
-        id: check-freeze-branch
-        # Following grep "regex" needs to exactly match the required target branches to "freeze"
-        run: |
-          if echo "$PR_TARGET_BRANCH" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
-            FREEZE_BRANCH='true'
-          else
-            FREEZE_BRANCH='false'
-          fi
-          echo "code_freeze_branch=$FREEZE_BRANCH" >> "$GITHUB_OUTPUT"
-          echo "Is $PR_TARGET_BRANCH a code freeze branch? => $FREEZE_BRANCH"
-        env:
-          PR_TARGET_BRANCH: ${{ steps.get-pr-target-branch.outputs.pr_target_branch }}
-
-      - name: Code Freeze New
-        if: (github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)) && steps.check-freeze-branch.outputs.code_freeze_branch == 'true'
-        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
+      - name: Code Freeze Regex Branch
+        uses: adoptium/andrew-m-leonard/.github/workflows/code-freeze-regex-branch.yml@master
         with:
-          issue-number: ${{ github.event.issue.number }}
-          body: echo "IT FUNNY!! REALLY IS A CODE_FREEZE!! ${{ github.event.issue.number }}"
+          branch-regex: "^v[0-9]+.[0-9]+.[0-9]+$"
 
