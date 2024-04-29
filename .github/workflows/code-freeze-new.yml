@@ -35,6 +35,9 @@ jobs:
         id: get-pr-target-branch
         run: |
           echo "Getting target branch"
+          if [[ -z $PR_NUMBER ]]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+          fi
           TARGET_BRANCH="$(gh pr view "$PR_NUMBER" --repo "$REPOSITORY" --json baseRefName --jq '.baseRefName')"
           echo "pr_target_branch=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
           echo "PR target branch = $TARGET_BRANCH"
