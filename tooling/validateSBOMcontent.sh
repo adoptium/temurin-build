@@ -41,7 +41,11 @@ if echo "$SBOMFILE" | grep _solaris_; then
   EXPECTED_COMPILER="solstudio (Oracle Solaris Studio)"
 elif echo "$SBOMFILE" | grep _aix_; then
   EXPECTED_COMPILER="xlc (IBM XL C/C++)"
-  EXPECTED_FREETYPE=2.8.0
+  if [ "$MAJORVERSION" -lt 17 ]; then
+    EXPECTED_FREETYPE=2.8.0
+  else
+    EXPECTED_FREETYPE=2.13.2 # Bundled version
+  fi
 elif echo "$SBOMFILE" | grep _alpine-linux_ > /dev/null; then
   EXPECTED_FREETYPE=2.11.1
   EXPECTED_ALSA=1.1.6
@@ -61,8 +65,12 @@ elif echo "$SBOMFILE" | grep _linux_; then
   [ "${MAJORVERSION}" = "8" ] && EXPECTED_GCC=7.5.0
   [ "${MAJORVERSION}" = "11" ] && EXPECTED_GCC=7.5.0
   [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
-  [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_GCC=11.2.0 && EXPECTED_FREETYPE=Unknown
+  [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_GCC=11.3.0 && EXPECTED_FREETYPE=Unknown
   EXPECTED_ALSA=1.1.6
+  if echo "$SBOMFILE" | grep _riscv64_ > /dev/null; then
+    EXPECTED_GCC=10.5.0 # No devkit yet so default in Ubuntu 20.04
+    EXPECTED_GLIBC=2.31
+  fi
 #elif echo $SBOMFILE | grep _mac_; then
 #  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 10.3)"
 elif echo "$SBOMFILE" | grep _x64_windows_; then
@@ -73,10 +81,10 @@ elif echo "$SBOMFILE" | grep _x64_windows_; then
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
   else # JDK11 and 17
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2019)"
-    EXPECTED_FREETYPE=Unknown
+    EXPECTED_FREETYPE=2.13.2 # Bundled version
   fi
 elif echo "$SBOMFILE" | grep _x86-32_windows_; then
-  EXPECTED_FREETYPE=Unknown
+  EXPECTED_FREETYPE=2.13.2 # Bundled version
   if [ "${MAJORVERSION}" = "8"  ]; then
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2013)"
     EXPECTED_FREETYPE=2.5.3
@@ -87,8 +95,8 @@ elif echo "$SBOMFILE" | grep _x86-32_windows_; then
   fi
 elif echo "$SBOMFILE" | grep _mac_; then
   # NOTE: mac/x64 native builds >=11 were using "clang (clang/LLVM from Xcode 10.3)"
-  EXPECTED_FREETYPE=Unknown
-  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 15.0.1)"
+  EXPECTED_FREETYPE=2.13.2 # Bundled version
+  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 15.2)"
   # shellcheck disable=SC2166
   if [ "${MAJORVERSION}" = "8" ] && echo "$SBOMFILE" | grep _x64_; then
     EXPECTED_COMPILER="clang (clang/LLVM)"
@@ -96,8 +104,7 @@ elif echo "$SBOMFILE" | grep _mac_; then
   fi
 fi
 
-[ "${MAJORVERSION}" -ge 20 ] && EXPECTED_FREETYPE=Unknown
-
+[ "${MAJORVERSION}" -ge 20 ] && EXPECTED_FREETYPE=2.13.2 # Bundled version
 
 RC=0
 if echo "$SBOMFILE" | grep 'linux_'; then
