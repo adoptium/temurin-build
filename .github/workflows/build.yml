@@ -162,7 +162,7 @@ jobs:
           rm /usr/local/bin/python3-config || true
           rm /usr/local/bin/python3.11-config || true
           rm /usr/local/bin/python3.12-config || true
-            
+
     - name: Install Dependencies
       run: |
         brew install automake bash binutils freetype gnu-sed nasm
@@ -173,7 +173,7 @@ jobs:
         java-version: 7
         distribution: 'zulu'
       if: matrix.version.name == 'jdk8u'
-      
+
     - name: Select correct Xcode (JDK8)
       if: matrix.version.name == 'jdk8u'
       run: |
@@ -206,7 +206,7 @@ jobs:
         TARGET_OS: mac
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
-      
+
     - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
       name: Collect and Archive Artifacts
       with:
@@ -249,7 +249,9 @@ jobs:
 
      env:
       VS2017_URL: "https://download.visualstudio.microsoft.com/download/pr/c5c75dfa-1b29-4419-80f8-bd39aed6bcd9/7ed8fa27575648163e07548ff5667b55b95663a2323e2b2a5f87b16284e481e6/vs_Community.exe"
+      VS2017_SHA: "7ed8fa27575648163e07548ff5667b55b95663a2323e2b2a5f87b16284e481e6"
       VS2019_URL: "https://download.visualstudio.microsoft.com/download/pr/6b655578-de8c-4862-ad77-65044ca714cf/f29399a618bd3a8d1dcc96d349453f686b6176590d904308402a6402543e310b/vs_Community.exe"
+      VS2019_SHA: "f29399a618bd3a8d1dcc96d349453f686b6176590d904308402a6402543e310b"
 
      steps:
      - name: Restore cygwin packages from cache
@@ -326,6 +328,7 @@ jobs:
      - name: Download Visual Studio 2017
        run: |
          curl -L "$env:VS2017_URL" -o "$HOME/vs2017.exe"
+         echo "$env:VS2017_SHA $HOME/vs2017.exe" | sha256sum --check --status
        if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
 
      - name: Install Visual Studio 2017
@@ -341,6 +344,7 @@ jobs:
      - name: Download Visual Studio 2019
        run: |
          curl -L "$env:VS2019_URL" -o "$HOME/vs2019.exe"
+         echo "$env:VS2019_SHA $HOME/vs2019.exe" | sha1sum --check --status
        if: steps.vs2019.outputs.cache-hit != 'true' && (matrix.version == 'jdk11u' || matrix.version == 'jdk17u')
 
      - name: Install Visual Studio 2019
