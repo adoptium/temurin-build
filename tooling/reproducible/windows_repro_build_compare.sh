@@ -555,6 +555,7 @@ Prepare_Env_For_Build() {
   export BOOTJDK_HOME=$WORK_DIR/jdk-${bootJDK}
 
   echo "Parsing Make JDK Any Platform ARGS For Build"
+  echo "buildargs is $buildArgs"
   # Split the string into an array of words
   IFS=' ' read -ra words <<< "$buildArgs"
 
@@ -583,7 +584,7 @@ Prepare_Env_For_Build() {
   done
 
     # Add the last parameter to the array
-  params+=("$param = $value")
+  params+=("$param=$value")
 
   # Read the separated parameters and values into a new array
   export fixed_param=""
@@ -595,6 +596,7 @@ Prepare_Env_For_Build() {
   IGNORED_ARRAY=()
 
   for p in "${params[@]}"; do
+    echo "p is $p"
     IFS='=' read -ra parts <<< "$p"
     prefixed_param=${parts[0]}
     fixed_param="${prefixed_param%%[[:space:]]}"
@@ -646,6 +648,7 @@ Prepare_Env_For_Build() {
     else
       # Not A Config Param Nor Should Be Ignored, So Add To Build Array
       STRINGTOADD="$fixed_param $fixed_value"
+      echo "stringGOTOadd is $STRINGTOADD"
       BUILD_ARRAY+=("$STRINGTOADD")
     fi
   done
