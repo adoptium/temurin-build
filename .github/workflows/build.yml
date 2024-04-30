@@ -162,7 +162,7 @@ jobs:
           rm /usr/local/bin/python3-config || true
           rm /usr/local/bin/python3.11-config || true
           rm /usr/local/bin/python3.12-config || true
-            
+
     - name: Install Dependencies
       run: |
         brew install automake bash binutils freetype gnu-sed nasm
@@ -173,7 +173,7 @@ jobs:
         java-version: 7
         distribution: 'zulu'
       if: matrix.version.name == 'jdk8u'
-      
+
     - name: Select correct Xcode (JDK8)
       if: matrix.version.name == 'jdk8u'
       run: |
@@ -206,7 +206,7 @@ jobs:
         TARGET_OS: mac
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
-      
+
     - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
       name: Collect and Archive Artifacts
       with:
@@ -328,6 +328,19 @@ jobs:
          curl -L "$env:VS2017_URL" -o "$HOME/vs2017.exe"
        if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
 
+     - name: Verify Download Of Visual Studio 2017
+       shell: powershell
+       run: |
+         $expected_checksum="7ED8FA27575648163E07548FF5667B55B95663A2323E2B2A5F87B16284E481E6"
+         $actual_checksum=(Get-FileHash -Algorithm SHA256 -Path $HOME/vs2017.exe | Select-Object -ExpandProperty Hash)
+         echo "Expect : $expected_checksum"
+         echo "Actual : $actual_checksum"
+         if ($expected_checksum -ne $actual_checksum) {
+           Write-Output "Error - Checksum Verification Failed - Exiting"
+           exit 1
+         }
+       if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
+
      - name: Install Visual Studio 2017
        if: matrix.version == 'jdk8u'
        run: >
@@ -341,6 +354,19 @@ jobs:
      - name: Download Visual Studio 2019
        run: |
          curl -L "$env:VS2019_URL" -o "$HOME/vs2019.exe"
+       if: steps.vs2019.outputs.cache-hit != 'true' && (matrix.version == 'jdk11u' || matrix.version == 'jdk17u')
+
+     - name: Verify Download Of Visual Studio 2019
+       shell: powershell
+       run: |
+         $expected_checksum="F29399A618BD3A8D1DCC96D349453F686B6176590D904308402A6402543E310B"
+         $actual_checksum=(Get-FileHash -Algorithm SHA256 -Path $HOME/vs2019.exe | Select-Object -ExpandProperty Hash)
+         echo "Expect : $expected_checksum"
+         echo "Actual : $actual_checksum"
+         if ($expected_checksum -ne $actual_checksum) {
+           Write-Output "Error - Checksum Verification Failed - Exiting"
+           exit 1
+         }
        if: steps.vs2019.outputs.cache-hit != 'true' && (matrix.version == 'jdk11u' || matrix.version == 'jdk17u')
 
      - name: Install Visual Studio 2019
