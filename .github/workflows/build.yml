@@ -249,9 +249,7 @@ jobs:
 
      env:
       VS2017_URL: "https://download.visualstudio.microsoft.com/download/pr/c5c75dfa-1b29-4419-80f8-bd39aed6bcd9/7ed8fa27575648163e07548ff5667b55b95663a2323e2b2a5f87b16284e481e6/vs_Community.exe"
-      VS2017_SHA: "7ed8fa27575648163e07548ff5667b55b95663a2323e2b2a5f87b16284e481e6"
       VS2019_URL: "https://download.visualstudio.microsoft.com/download/pr/6b655578-de8c-4862-ad77-65044ca714cf/f29399a618bd3a8d1dcc96d349453f686b6176590d904308402a6402543e310b/vs_Community.exe"
-      VS2019_SHA: "f29399a618bd3a8d1dcc96d349453f686b6176590d904308402a6402543e310b"
 
      steps:
      - name: Restore cygwin packages from cache
@@ -328,7 +326,19 @@ jobs:
      - name: Download Visual Studio 2017
        run: |
          curl -L "$env:VS2017_URL" -o "$HOME/vs2017.exe"
-         echo "$env:VS2017_SHA $HOME/vs2017.exe" | sha256sum --check --status
+       if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
+
+     - name: Verify Download Of Visual Studio 2017
+       shell: powershell
+       run: |
+         $expected_checksum="7ED8FA27575648163E07548FF5667B55B95663A2323E2B2A5F87B16284E481E6"
+         $actual_checksum=(Get-FileHash -Algorithm SHA256 -Path $HOME/vs2017.exe | Select-Object -ExpandProperty Hash)
+         echo "Expect : $expected_checksum"
+         echo "Actual : $actual_checksum"
+         if ($expected_checksum -ne $actual_checksum) {
+           Write-Output "Error - Checksum Verification Failed - Exiting"
+           exit 1
+         }
        if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
 
      - name: Install Visual Studio 2017
@@ -344,7 +354,19 @@ jobs:
      - name: Download Visual Studio 2019
        run: |
          curl -L "$env:VS2019_URL" -o "$HOME/vs2019.exe"
-         echo "$env:VS2019_SHA $HOME/vs2019.exe" | sha1sum --check --status
+       if: steps.vs2019.outputs.cache-hit != 'true' && (matrix.version == 'jdk11u' || matrix.version == 'jdk17u')
+
+     - name: Verify Download Of Visual Studio 2019
+       shell: powershell
+       run: |
+         $expected_checksum="F29399A618BD3A8D1DCC96D349453F686B6176590D904308402A6402543E310B"
+         $actual_checksum=(Get-FileHash -Algorithm SHA256 -Path $HOME/vs2019.exe | Select-Object -ExpandProperty Hash)
+         echo "Expect : $expected_checksum"
+         echo "Actual : $actual_checksum"
+         if ($expected_checksum -ne $actual_checksum) {
+           Write-Output "Error - Checksum Verification Failed - Exiting"
+           exit 1
+         }
        if: steps.vs2019.outputs.cache-hit != 'true' && (matrix.version == 'jdk11u' || matrix.version == 'jdk17u')
 
      - name: Install Visual Studio 2019

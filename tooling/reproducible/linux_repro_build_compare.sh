@@ -35,10 +35,10 @@ installPrereqs() {
       if [ ! -r /usr/local/bin/autoconf ]; then
         curl --output ./autoconf-2.69.tar.gz https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
         ACSHA256=954bd69b391edc12d6a4a51a2dd1476543da5c6bbf05a95b59dc0dd6fd4c2969
-        ACCHKSHA=`sha256sum ./autoconf-2.69.tar.gz|cut -d" " -f1
-        if [[ "$ACSHA256" == "$ACCHKSHA" ]]; then
+        ACCHKSHA=$(sha256sum ./autoconf-2.69.tar.gz|cut -d" " -f1)
+        if [ "$ACSHA256" = "$ACCHKSHA" ]; then
           echo "Hi"
-          cat ./autoconf-2.69.tar.gz | tar xpfz - || exit 1
+          tar xpfz ./autoconf-2.69.tar.gz || exit 1
           (cd autoconf-2.69 && ./configure --prefix=/usr/local && make install)
         else
           echo "ERROR - Checksum For AutoConf Download Is Incorrect"
@@ -51,26 +51,26 @@ installPrereqs() {
 
 # ant required for --create-sbom
 downloadAnt() {
-  if [ ! -r /usr/local/apache-ant-${ANT_VERSION}/bin/ant ]; then
-    echo Downloading ant for SBOM creation:
-    curl https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.zip > /tmp/apache-ant-${ANT_VERSION}-bin.zip
-    ANTCHKSHA=`sha256sum /tmp/apache-ant-${ANT_VERSION}-bin.zip|cut -d" " -f1
-    if [[ "$ANT_SHA" == "$ANTCHKSHA" ]]; then
-      (cd /usr/local && unzip -qn /tmp/apache-ant-${ANT_VERSION}-bin.zip)
-      rm /tmp/apache-ant-${ANT_VERSION}-bin.zip
+  if [ ! -r "/usr/local/apache-ant-${ANT_VERSION}/bin/ant" ]; then
+    echo "Downloading ant for SBOM creation..."
+    curl -o "/tmp/apache-ant-${ANT_VERSION}-bin.zip" "https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.zip"
+    ANTCHKSHA=$(sha256sum "/tmp/apache-ant-${ANT_VERSION}-bin.zip" | cut -d" " -f1)
+    if [ "$ANT_SHA" = "$ANTCHKSHA" ]; then
+      (cd /usr/local && unzip -qn "/tmp/apache-ant-${ANT_VERSION}-bin.zip")
+      rm "/tmp/apache-ant-${ANT_VERSION}-bin.zip"
     else
-      echo "ERROR - Checksum For Ant Download Is Incorrect"
-      exit 1;
+      echo "ERROR - Checksum for Ant download is incorrect"
+      exit 1
     fi
-    echo Downloading ant-contrib-${ANT_CONTRIB_VERSION}:
-    curl -L https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip > /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
-    ANTCTRCHKSHA=`sha256sum /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip`
-    if [[ "$ANT_CONTRIB_SHA" == "$ANTCTRCHKSHA" ]]; then
-      (unzip -qnj /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar -d /usr/local/apache-ant-${ANT_VERSION}/lib)
-      rm /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
+    echo "Downloading ant-contrib-${ANT_CONTRIB_VERSION}..."
+    curl -Lo "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" "https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip"
+    ANTCTRCHKSHA=$(sha256sum "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" | cut -d" " -f1)
+    if [ "$ANT_CONTRIB_SHA" = "$ANTCTRCHKSHA" ]; then
+      (unzip -qnj "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" "ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar" -d "/usr/local/apache-ant-${ANT_VERSION}/lib")
+      rm "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip"
     else
-      echo "ERROR - Checksum For Ant Contrib Download Is Incorrect"
-      exit 1;
+      echo "ERROR - Checksum for Ant Contrib download is incorrect"
+      exit 1
     fi
   fi
 }
