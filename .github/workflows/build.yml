@@ -134,7 +134,7 @@ jobs:
         os: [macOS]
         version: [
           { name: jdk8u, distro: macos-11 },
-          { name: jdk11u, distro: macos-13 },
+          { name: jdk11u, distro: macos-14 },
           { name: jdk17u, distro: macos-14 }
         ]
         variant: [temurin]
@@ -184,7 +184,7 @@ jobs:
       if: matrix.version.name != 'jdk8u'
       run: |
         rm -rf /Applications/Xcode.app
-        ln -s /Applications/Xcode_15.0.1.app /Applications/Xcode.app
+        ln -s /Applications/Xcode_15.2.app /Applications/Xcode.app
 
     - name: Build macOS
       run: |
@@ -409,7 +409,7 @@ jobs:
          path: workspace/target/*
 
      - name: Restore build artifacts
-       uses: actions/download-artifact@9c19ed7fe5d278cd354c7dfd5d3b88589c7e2395 # v4.1.6
+       uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
          path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
