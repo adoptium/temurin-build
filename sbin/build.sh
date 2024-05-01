@@ -482,7 +482,6 @@ buildingTheRestOfTheConfigParameters() {
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
     addConfigureArg "--with-x=" "/usr/include/X11"
-    addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
   fi
 }
 
@@ -504,6 +503,14 @@ configureDebugParameters() {
       if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
         addConfigureArg "--with-native-debug-symbols=" "none"
       fi
+    fi
+  fi
+}
+
+configureAlsaLocation() {
+  if [[ ! "${CONFIGURE_ARGS}" =~ "--with-alsa" ]]; then
+    if [[ "${BUILD_CONFIG[ALSA]}" == "true" ]]; then
+      addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
     fi
   fi
 }
@@ -554,6 +561,7 @@ configureCommandParameters() {
   else
     echo "Building up the configure command..."
     buildingTheRestOfTheConfigParameters
+    configureAlsaLocation
   fi
 
   echo "Adjust configure for reproducible build"
@@ -923,6 +931,7 @@ generateSBoM() {
   # Set default SBOM formulation
   addSBOMFormulation "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX"
   addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs"
+  addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions"
 
   # Below add build tools into metadata tools
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
@@ -1131,6 +1140,15 @@ addCycloneDXVersions() {
             JarSha=$(sha256sum "$JAR" | cut -d' ' -f1)
          fi
          addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}" "${JarSha}"
+         # Now the jar's SHA has been added, we add the version string.
+         JarVersionFile="$(joinPath ${CYCLONEDB_DIR} dependency_data versions ${JarName}.version)"
+         if [ -f "${JarVersionFile}" ]; then
+           JarVersionString=$(cat "${JarVersionFile}")
+           addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions" "${JarName}" "${JarVersionString}"
+         elif [ "${JarName}" != "temurin-gen-sbom.jar" ]; then
+           echo "ERROR: Cannot find jar version file for SBOM creation dependency ${JarName}."
+           echo "ERROR: Expected location: ${JarVersionFile}"
+         fi
        done
    fi
 }

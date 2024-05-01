@@ -371,6 +371,7 @@ createWorkspace() {
 
 # ALSA first for sound
 checkingAndDownloadingAlsa() {
+
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
 
   echo "Checking for ALSA"
@@ -724,7 +725,13 @@ downloadingRequiredDependencies() {
     echo "Non-Linux-based environment detected, skipping download of dependency Alsa."
   else
     echo "Checking and downloading Alsa dependency because OSTYPE=\"${OSTYPE}\""
-    checkingAndDownloadingAlsa
+    if [[ "${BUILD_CONFIG[ALSA]}" == "true" ]]; then
+      checkingAndDownloadingAlsa
+    else
+      echo ""
+      echo "---> Skipping the process of checking and downloading the Alsa dependency, a pre-built version should be provided via -C/--configure-args <---"
+      echo ""
+    fi
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then

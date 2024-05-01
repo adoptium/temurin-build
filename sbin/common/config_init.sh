@@ -31,6 +31,7 @@
 CONFIG_PARAMS=(
 ADOPTIUM_DEVKIT_LOCATION
 ADOPT_PATCHES
+ALSA
 ASSEMBLE_EXPLODED_IMAGE
 OPENJDK_BUILD_REPO_BRANCH
 OPENJDK_BUILD_REPO_URI
@@ -299,6 +300,9 @@ function parseConfigurationArguments() {
         "--skip-freetype" | "-F" )
         BUILD_CONFIG[FREETYPE]=false;;
 
+        "--skip-alsa" | "-A" )
+        BUILD_CONFIG[ALSA]=false;;
+
         "--help" | "-h" )
         man ./makejdk-any-platform.1 && exit 0;;
 
@@ -505,7 +509,8 @@ function configDefaults() {
 
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG]="false"
   BUILD_CONFIG[COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG]="false"
-  BUILD_CONFIG[FREETYPE]=true
+  BUILD_CONFIG[ALSA]="true"
+  BUILD_CONFIG[FREETYPE]="true"
   BUILD_CONFIG[FREETYPE_DIRECTORY]=""
   BUILD_CONFIG[FREETYPE_FONT_VERSION]="86bc8a95056c97a810986434a3f268cbe67f2902" # 2.9.1
   BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]=""
