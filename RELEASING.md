@@ -165,11 +165,11 @@ In order to reduce time to GA, we have automated triggers to ensure that the GA 
 
 "release-openjdkXX-pipeline" can be manually run by Release Champion: set `scmReference` with correct "_adopt" tag.
 
-4. For jdk8 aarch32Linux, the Release Champion needs to manually trigger https://ci.adoptium.net/job/build-scripts/job/release-openjdk8-pipeline/
+4. For jdk8 arm32Linux, the Release Champion needs to manually trigger https://ci.adoptium.net/job/build-scripts/job/release-openjdk8-pipeline/
 
-- different `scmReference` tag from https://github.com/adoptium/aarch32-jdk8u than in https://github.com/adoptium/jdk8u
-- customized `targetConfigurations` value: should only contain one target
-- customized `overridePublishName` value
+- different `scmReference` tag from https://github.com/adoptium/aarch32-jdk8u than in https://github.com/adoptium/jdk8u (with the `_adopt` suffix)
+- customized `targetConfigurations` value: should only contain the target architecture of `arm32Linux`  
+- customized `overridePublishName` value - use the tag consistent with the other architectures (e.g. `jdk8uXXX-bYY`)
 
 <details>
 <summary>FLOW CHART OF THE RELEASE TRIGGER PROCESS</summary>
