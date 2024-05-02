@@ -1,3 +1,16 @@
+# ********************************************************************************
+# Copyright (c) 2020 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 ---
 name: Build
 
@@ -121,7 +134,7 @@ jobs:
         os: [macOS]
         version: [
           { name: jdk8u, distro: macos-11 },
-          { name: jdk11u, distro: macos-13 },
+          { name: jdk11u, distro: macos-14 },
           { name: jdk17u, distro: macos-14 }
         ]
         variant: [temurin]
@@ -149,18 +162,18 @@ jobs:
           rm /usr/local/bin/python3-config || true
           rm /usr/local/bin/python3.11-config || true
           rm /usr/local/bin/python3.12-config || true
-            
+
     - name: Install Dependencies
       run: |
         brew install automake bash binutils freetype gnu-sed nasm
 
-    - uses: actions/setup-java@9704b39bf258b59bc04b50fa2dd55e9ed76b47a8 # v4.1.0
+    - uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
       id: setup-java
       with:
         java-version: 7
         distribution: 'zulu'
       if: matrix.version.name == 'jdk8u'
-      
+
     - name: Select correct Xcode (JDK8)
       if: matrix.version.name == 'jdk8u'
       run: |
@@ -171,7 +184,7 @@ jobs:
       if: matrix.version.name != 'jdk8u'
       run: |
         rm -rf /Applications/Xcode.app
-        ln -s /Applications/Xcode_15.0.1.app /Applications/Xcode.app
+        ln -s /Applications/Xcode_15.2.app /Applications/Xcode.app
 
     - name: Build macOS
       run: |
@@ -193,7 +206,7 @@ jobs:
         TARGET_OS: mac
         FILENAME: OpenJDK.tar.gz
         JDK7_BOOT_DIR: ${{ steps.setup-java.outputs.path }}
-      
+
     - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
       name: Collect and Archive Artifacts
       with:
@@ -241,7 +254,7 @@ jobs:
      steps:
      - name: Restore cygwin packages from cache
        id: cygwin
-       uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
+       uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
        with:
         path: C:\cygwin64
         key: cygwin-packages-${{ runner.os }}-v1
@@ -269,14 +282,14 @@ jobs:
            wget,
            zip
 
-     - uses: actions/setup-java@9704b39bf258b59bc04b50fa2dd55e9ed76b47a8 # v4.1.0
+     - uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
        id: setup-java7
        with:
          distribution: 'zulu'
          java-version: 7
        if: matrix.version == 'jdk8u'
 
-     - uses: actions/setup-java@9704b39bf258b59bc04b50fa2dd55e9ed76b47a8 # v4.1.0
+     - uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
        id: setup-java11
        with:
          distribution: 'temurin'
@@ -285,7 +298,7 @@ jobs:
      - name: Restore Visual Studio 2017 from cache
        id: vs2017
        if: matrix.version == 'jdk8u'
-       uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
+       uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
        with:
          path: ~/vs2017.exe
          key: vs2017
@@ -293,7 +306,7 @@ jobs:
      - name: Restore Visual Studio 2019 from cache
        id: vs2019
        if: matrix.version == 'jdk11u' || matrix.version == 'jdk17u'
-       uses: actions/cache@ab5e6d0c87105b4c9c2047343972218f562e4319 # v4.0.1
+       uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
        with:
          path: ~/vs2019.exe
          key: vs2019
@@ -315,6 +328,19 @@ jobs:
          curl -L "$env:VS2017_URL" -o "$HOME/vs2017.exe"
        if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
 
+     - name: Verify Download Of Visual Studio 2017
+       shell: powershell
+       run: |
+         $expected_checksum="7ED8FA27575648163E07548FF5667B55B95663A2323E2B2A5F87B16284E481E6"
+         $actual_checksum=(Get-FileHash -Algorithm SHA256 -Path $HOME/vs2017.exe | Select-Object -ExpandProperty Hash)
+         echo "Expect : $expected_checksum"
+         echo "Actual : $actual_checksum"
+         if ($expected_checksum -ne $actual_checksum) {
+           Write-Output "Error - Checksum Verification Failed - Exiting"
+           exit 1
+         }
+       if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
+
      - name: Install Visual Studio 2017
        if: matrix.version == 'jdk8u'
        run: >
@@ -328,6 +354,19 @@ jobs:
      - name: Download Visual Studio 2019
        run: |
          curl -L "$env:VS2019_URL" -o "$HOME/vs2019.exe"
+       if: steps.vs2019.outputs.cache-hit != 'true' && (matrix.version == 'jdk11u' || matrix.version == 'jdk17u')
+
+     - name: Verify Download Of Visual Studio 2019
+       shell: powershell
+       run: |
+         $expected_checksum="F29399A618BD3A8D1DCC96D349453F686B6176590D904308402A6402543E310B"
+         $actual_checksum=(Get-FileHash -Algorithm SHA256 -Path $HOME/vs2019.exe | Select-Object -ExpandProperty Hash)
+         echo "Expect : $expected_checksum"
+         echo "Actual : $actual_checksum"
+         if ($expected_checksum -ne $actual_checksum) {
+           Write-Output "Error - Checksum Verification Failed - Exiting"
+           exit 1
+         }
        if: steps.vs2019.outputs.cache-hit != 'true' && (matrix.version == 'jdk11u' || matrix.version == 'jdk17u')
 
      - name: Install Visual Studio 2019
@@ -396,7 +435,7 @@ jobs:
          path: workspace/target/*
 
      - name: Restore build artifacts
-       uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
+       uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e # v4.1.7
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
          path: ~/${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}

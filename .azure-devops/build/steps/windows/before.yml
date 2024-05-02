@@ -1,3 +1,16 @@
+# ********************************************************************************
+# Copyright (c) 2020 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 # before.yml
 # install Windows platform dependencies & set environment variables
 
@@ -33,9 +46,17 @@ steps:
   # install cygwin and build dependencies
   - powershell: |
       $ProgressPreference = 'SilentlyContinue';
-      Invoke-WebRequest -UseBasicParsing 'https://cygwin.com/setup-x86_64.exe' -OutFile '${{ parameters.dependenciesDir }}\cygwin.exe';
-      Start-Process -Wait -FilePath '${{ parameters.dependenciesDir }}\cygwin.exe' -ArgumentList '--packages wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install --delete-orphans --site https://mirrors.kernel.org/sourceware/cygwin/ --local-package-dir $(Agent.BuildDirectory)\cygwin_packages --root $(Agent.BuildDirectory)\cygwin64';
-    displayName: "[Windows Before] download and install Cygwin"
+      $DownloadedFile = "${{ parameters.dependenciesDir }}\cygwin.exe";
+      $DownloadUrl = 'https://cygwin.com/setup-x86_64.exe';
+      $ExpectedChecksum = 'e7815d360ab098fdd1f03f10f43f363c73a632e8866e304c72573cf1e6a0dec8';
+      Invoke-WebRequest -UseBasicParsing -Uri $DownloadUrl -OutFile $DownloadedFile;
+
+      # Calculate SHA256 checksum of the downloaded file
+      $DownloadedChecksum = (Get-FileHash -Path $DownloadedFile -Algorithm SHA256).Hash;
+
+      # Compare calculated checksum with the expected checksum
+      if ($DownloadedChecksum -eq $ExpectedChecksum) {
+        Start-Process -Wait -FilePath $DownloadedFile -ArgumentList '--packages wget,bsdtar,rsync,gnupg,git,autoconf,make,gcc-core,mingw64-x86_64-gcc-core,unzip,zip,cpio,curl,grep,perl --quiet-mode --download --local-install --delete-orphans --site
 
   # add cygwin bin to PATH
   - script: |

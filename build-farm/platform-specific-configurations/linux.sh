@@ -1,19 +1,17 @@
 #!/bin/bash
 # shellcheck disable=SC1091
-
-################################################################################
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
@@ -53,14 +51,44 @@ function locateDragonwell8BootJDK()
   else
     echo Dragonwell 8 requires a Dragonwell boot JDK - downloading one ...
     mkdir -p "$PWD/jdk-8"
+    # if [ "$(uname -m)" = "x86_64" ]; then
+    #   curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.11.12_jdk8u332-ga/Alibaba_Dragonwell_8.11.12_x64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+    # elif [ "$(uname -m)" = "aarch64" ]; then
+    #   curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.8.9_jdk8u302-ga/Alibaba_Dragonwell_8.8.9_aarch64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+    # else
+    #   echo "Unknown architecture $(uname -m) for building Dragonwell - cannot download boot JDK"
+    #   exit 1
+    # fi
+    ## Secure Dragonwell Downloads By Validating Checksums
     if [ "$(uname -m)" = "x86_64" ]; then
-      curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.11.12_jdk8u332-ga/Alibaba_Dragonwell_8.11.12_x64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+      DOWNLOAD_URL="https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.11.12_jdk8u332-ga/Alibaba_Dragonwell_8.11.12_x64_linux.tar.gz"
+      EXPECTED_SHA256="E03923f200dffddf9eee2aadc0c495674fe0b87cc2eece94a9a8dec84812d12bd"
     elif [ "$(uname -m)" = "aarch64" ]; then
-      curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.8.9_jdk8u302-ga/Alibaba_Dragonwell_8.8.9_aarch64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+      DOWNLOAD_URL="https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.8.9_jdk8u302-ga/Alibaba_Dragonwell_8.8.9_aarch64_linux.tar.gz"
+      EXPECTED_SHA256="ff0594f36d13883972ca0b302d35cca5099f10b8be54c70c091f626e4e308774"
     else
       echo "Unknown architecture $(uname -m) for building Dragonwell - cannot download boot JDK"
       exit 1
     fi
+    # Download the file and calculate its SHA256 checksum
+    TMP_FILE=$(mktemp)
+    curl -L "$DOWNLOAD_URL" -o "$TMP_FILE"
+
+    # Calculate the SHA256 checksum of the downloaded file
+    ACTUAL_SHA256=$(sha256sum "$TMP_FILE" | awk '{print $1}')
+
+    # Compare the actual and expected SHA256 checksums
+    if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
+      echo "Checksum verification failed for downloaded file!"
+      rm "$TMP_FILE"
+      exit 1
+    fi
+
+    # Extract the downloaded file
+    tar xpzf "$TMP_FILE" --strip-components=1 -C "$PWD/jdk-8"
+
+    # Clean up the temporary file
+    rm "$TMP_FILE"
     export "${BOOT_JDK_VARIABLE}"="$PWD/jdk-8"
   fi
 }
@@ -246,8 +274,7 @@ then
 
   if [ "${ARCHITECTURE}" == "ppc64le" ] || [ "${ARCHITECTURE}" == "x64" ]
   then
-    CUDA_VERSION=9.0
-    CUDA_HOME=/usr/local/cuda-$CUDA_VERSION
+    CUDA_HOME=/usr/local/cuda
     if [ -f $CUDA_HOME/include/cuda.h ]
     then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-cuda --with-cuda=$CUDA_HOME"
@@ -334,7 +361,9 @@ fi
 
 if [[ "${CONFIGURE_ARGS}" =~ .*"--with-devkit=".* ]]; then
   echo "Using gcc from DevKit toolchain specified in configure args"
-else 
+elif [[ "${BUILD_ARGS}" =~ .*"--use-adoptium-devkit".* ]]; then
+  echo "Using gcc from Adoptium DevKit toolchain specified in --use-adoptium-devkit build args"
+else
   if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 11 ] && [ -r /usr/local/gcc9/ ] && [ "${ARCHITECTURE}" == "aarch64" ]; then
     # GCC9 rather than 10 requested by Alibaba for now
     # Ref https://github.com/adoptium/temurin-build/issues/2250#issuecomment-732958466

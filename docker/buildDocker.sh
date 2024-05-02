@@ -1,4 +1,17 @@
 #!/bin/bash
+# ********************************************************************************
+# Copyright (c) 2019 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 set -u
 
 BOOTDIR=""
@@ -116,6 +129,13 @@ useEclipseOpenJ9DockerFiles()
     mkdir -p "$dockerfileDir"
     cd "$dockerfileDir" || { echo "Dockerfile directory ($dockerfileDir) was not found"; exit 3; }
     getFile https://raw.githubusercontent.com/eclipse-openj9/openj9/master/buildenv/docker/mkdocker.sh mkdocker.sh
+    MKDOCK_SHA="a09a00c2beb9c53985b4c3ed6fb62825d90808775941ab56417bef75a575be55"
+    mkd_downloaded_sha=$(sha256sum mkdocker.sh | awk '{print $1}')
+    if [ "$mkd_downloaded_sha" != "$MKDOCK_SHA" ]; then
+      echo "ERROR: SHA256 checksum mismatch for mkdocker.sh"
+      exit 1
+    fi
+
     chmod +x mkdocker.sh
     # Generate an Ubuntu1804 Dockerfile using mkdocker.sh
     "$dockerfileDir/mkdocker.sh" --dist=ubuntu --version=18 --print >> "$dockerfileDir/Dockerfile"

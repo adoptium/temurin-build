@@ -1,23 +1,32 @@
 #!/bin/bash
+# ********************************************************************************
+# Copyright (c) 2018 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 # shellcheck disable=SC2155
-
-################################################################################
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-################################################################################
-
 # shellcheck disable=SC2153
 function setOpenJdkVersion() {
   local forest_name=$1
+
+  # The argument passed here have actually very strict format of jdk8, jdk8u..., jdk
+  # the build may fail later if this is not honoured.
+  # If your repository has a different name, you can use --version or build from dir/snapshot
+  local forest_name_check=0
+  echo "$forest_name" | grep -q -e "^jdk$" -e "^jdk[0-9]\\{1,3\\}[u]\\{0,1\\}$" || forest_name_check=$?
+  if [ ${forest_name_check} -ne 0 ]; then
+    echo "The mandatory repo argument has a very strict format 'jdk[0-9]{1,3}[u]{0,1}' or just plain 'jdk' for tip. '$forest_name' does not match."
+    echo "This can be worked around by using '--version jdkXYu'. If set (and matching) then the main argument can have any value."
+    exit 1
+  fi
 
   # Derive the openjdk_core_version from the forest name.
   local openjdk_core_version=${forest_name}
@@ -152,7 +161,7 @@ createOpenJDKArchive()
   local fullPath
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "darwin" ]]; then
     fullPath=$(crossPlatformRealPath "$repoDir")
-    if [[ "$fullPath" != "${BUILD_CONFIG[WORKSPACE_DIR]}"* ]]; then
+    if [[ "$fullPath" != "${BUILD_CONFIG[WORKSPACE_DIR]}"* ]] && { [[ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ]] || [[ "$fullPath" != "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"* ]]; }; then
       echo "Requested to archive a dir outside of workspace"
       exit 1
     fi
@@ -243,5 +252,15 @@ function isGnuCompatDate() {
 # from jdk-21 onwards
 function isFromJdk21LTS() {
   [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 21 ]] && [[ $(((BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]-21) % 4)) == 0 ]]
+}
+
+# Waits N seconds (10 by default), printing a countdown every second.
+function verboseSleep() {
+  if [[ -z "${1}" ]] ; then
+    local i=10
+  else
+    local i="${1}"
+  fi
+  while [ "$i" -gt 0 ] ; do echo -n " $i " && sleep 1s && i=$((i-1)) ; done && echo " $i"
 }
 
