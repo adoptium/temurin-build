@@ -22,6 +22,7 @@ function setOpenJdkVersion() {
   # If your repository has a different name, you can use --version or build from dir/snapshot
   local forest_name_check1=0
   local forest_name_check2=0
+  # this unhappy two returns condition is there to make grep on solaris happy. -e, -q and  \( and \| seems to not be working
   echo "$forest_name" | grep "^jdk[0-9]\\{1,3\\}[u]\\{0,1\\}$" >/dev/null || forest_name_check1=$?
   echo "$forest_name" | grep "^jdk$" >/dev/null || forest_name_check2=$?
   if [ ${forest_name_check1} -ne 0 ] && [ ${forest_name_check2} -ne 0 ]; then
