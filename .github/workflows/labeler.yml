@@ -19,6 +19,9 @@ on:
   issues:
   issue_comment:
 
+permissions:
+  contents: read
+
 jobs:
   label:
     permissions:

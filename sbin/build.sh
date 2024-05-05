@@ -479,7 +479,6 @@ buildingTheRestOfTheConfigParameters() {
 
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
     addConfigureArg "--with-x=" "/usr/include/X11"
-    addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
   fi
 }
 
@@ -501,6 +500,14 @@ configureDebugParameters() {
       if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]]; then
         addConfigureArg "--with-native-debug-symbols=" "none"
       fi
+    fi
+  fi
+}
+
+configureAlsaLocation() {
+  if [[ ! "${CONFIGURE_ARGS}" =~ "--with-alsa" ]]; then
+    if [[ "${BUILD_CONFIG[ALSA]}" == "true" ]]; then
+      addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
     fi
   fi
 }
@@ -551,6 +558,7 @@ configureCommandParameters() {
   else
     echo "Building up the configure command..."
     buildingTheRestOfTheConfigParameters
+    configureAlsaLocation
   fi
 
   echo "Adjust configure for reproducible build"

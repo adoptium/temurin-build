@@ -48,6 +48,12 @@ Build JDK (tip), defaults to https://github.com/adoptium/jdk
 
 .SH OPTIONS
 .TP
+.BR \-A ", " \-\-skip-alsa
+Skip downloading of alsa automatically.
+If you do so, the underlying configure will detect system lib and headers.
+If you wish to point to some custom build/install pass it via \fI\-C, \-\-configure-args <args>\fR
+Presence of \-\-with-alsa in  \-\-configure-args will also not include freshly installed alsa to build.
+.TP
 .BR \-b ", " \-\-branch " " \fI<branch>\fR
 specify a custom branch to build from, e.g. dev.
 For reference, Adoptium GitHub source repos default to the \fI<dev>\fR

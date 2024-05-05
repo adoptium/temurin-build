@@ -20,9 +20,12 @@ function setOpenJdkVersion() {
   # The argument passed here have actually very strict format of jdk8, jdk8u..., jdk
   # the build may fail later if this is not honoured.
   # If your repository has a different name, you can use --version or build from dir/snapshot
-  local forest_name_check=0
-  echo "$forest_name" | grep -q -e "^jdk$" -e "^jdk[0-9]\\{1,3\\}[u]\\{0,1\\}$" || forest_name_check=$?
-  if [ ${forest_name_check} -ne 0 ]; then
+  local forest_name_check1=0
+  local forest_name_check2=0
+  # This two returns condition is there to make grep on solaris happy. -e, -q and  \( and \| do not work on that platform
+  echo "$forest_name" | grep "^jdk[0-9]\\{1,3\\}[u]\\{0,1\\}$" >/dev/null || forest_name_check1=$?
+  echo "$forest_name" | grep "^jdk$" >/dev/null || forest_name_check2=$?
+  if [ ${forest_name_check1} -ne 0 ] && [ ${forest_name_check2} -ne 0 ]; then
     echo "The mandatory repo argument has a very strict format 'jdk[0-9]{1,3}[u]{0,1}' or just plain 'jdk' for tip. '$forest_name' does not match."
     echo "This can be worked around by using '--version jdkXYu'. If set (and matching) then the main argument can have any value."
     exit 1
