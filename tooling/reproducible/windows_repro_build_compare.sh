@@ -553,14 +553,14 @@ Clone_Build_Repo() {
 Prepare_Env_For_Build() {
   echo "Setting Variables"
   export BOOTJDK_HOME=$WORK_DIR/jdk-${bootJDK}
-
   echo "Parsing Make JDK Any Platform ARGS For Build"
   echo "buildargs is $buildArgs"
   # Split the string into an array of words
   IFS=' ' read -ra words <<< "$buildArgs"
 
   # Add The Build Time Stamp In Case It Wasnt In The SBOM ARGS
-  words+=( "--build-reproducible-date \"$buildStamp\"" )
+  words+=("--build-reproducible-date")
+  words+=("\"$buildStamp\"")
 
   # Initialize variables
   param=""
@@ -579,10 +579,10 @@ Prepare_Env_For_Build() {
       param="$word"
       value=""
     else
-      value+=" $word"
+      value+="$word "
     fi
   done
-
+  
     # Add the last parameter to the array
   params+=("$param=$value")
 
@@ -596,22 +596,16 @@ Prepare_Env_For_Build() {
   IGNORED_ARRAY=()
 
   for p in "${params[@]}"; do
-    echo "p is $p"
     IFS='=' read -ra parts <<< "$p"
     prefixed_param=${parts[0]}
     fixed_param="${prefixed_param%%[[:space:]]}"
     prepped_value=${parts[1]}
     fixed_value=$(echo "$prepped_value" | awk '{$1=$1};1')
-
     # Handle Special parameters
-    if [ "$fixed_param" == "-b" ]; then fixed_value="$fixed_value " ; fi
-    if [ "$fixed_param" == "--jdk-boot-dir" ]; then fixed_value="$BOOTJDK_HOME " ; fi
-    if [ "$fixed_param" == "--freetype-dir" ]; then fixed_value="$fixed_value " ; fi
-    if [ "$fixed_param" == "--with-toolchain-version" ]; then fixed_value="$visualStudioVersion " ; fi
+    if [ "$fixed_param" == "--jdk-boot-dir" ]; then fixed_value="$BOOTJDK_HOME" ; fi
+    if [ "$fixed_param" == "--with-toolchain-version" ]; then fixed_value="$visualStudioVersion" ; fi
     if [ "$fixed_param" == "--with-ucrt-dll-dir" ]; then fixed_value="temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder " ; fi
-    if [ "$fixed_param" == "--target-file-name" ]; then target_file="$fixed_value" ; fixed_value="$fixed_value " ; fi
-    if [ "$fixed_param" == "--tag" ]; then fixed_value="$fixed_value " ; fi
-
+    if [ "$fixed_param" == "--target-file-name" ]; then target_file="$fixed_value" ; fi
 
     # Fix Build Variant Parameter To Strip JDK Version
 
@@ -648,20 +642,13 @@ Prepare_Env_For_Build() {
     else
       # Not A Config Param Nor Should Be Ignored, So Add To Build Array
       STRINGTOADD="$fixed_param $fixed_value"
-      echo "stringGOTOadd is $STRINGTOADD"
       BUILD_ARRAY+=("$STRINGTOADD")
     fi
   done
 
-  for element in "${BUILD_ARRAY[@]}"; do
-    build_string+="$element"
-  done
-
-  for element in "${CONFIG_ARRAY[@]}"; do
-    config_string+="$element"
-  done
-
-  final_params="$build_string--configure-args \"$config_string\" $jdk"
+  IFS=' ' build_string="${BUILD_ARRAY[*]}"
+  IFS=' ' config_string=$"${CONFIG_ARRAY[*]}"
+  final_params="$build_string --configure-args \"$config_string\" $jdk"
 
   echo "Make JDK Any Platform Argument List = "
   echo "$final_params"
