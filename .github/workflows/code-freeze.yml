@@ -1,5 +1,5 @@
 # ********************************************************************************
-# Copyright (c) 2023 Contributors to the Eclipse Foundation
+# Copyright (c) 2023, 2024 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) with this work for additional
 # information regarding copyright ownership.
@@ -16,7 +16,8 @@ name: Code Freeze Bot
 # Controls when the workflow will run
 on:
   pull_request_target:
-    branches: [ "v[0-9]+.[0-9]+.[0-9]+" ]
+    branches:
+      - '*'
   issue_comment:
     types: [created]
 
@@ -25,6 +26,15 @@ permissions:
   pull-requests: write
 
 jobs:
-  codefreeze:
+  # Check if the pull request target branch matches the required branch-regex?
+  codefreeze_branch_check:
+    uses: adoptium/.github/.github/workflows/code-freeze-regex-branch.yml@main
+    with:
+      branch-regex: "^v[0-9]+.[0-9]+.[0-9]+$"
+
+  # Code freeze if branch-regex matches
+  codefreeze_if_branch_match:
+    needs: codefreeze_branch_check
     uses: adoptium/.github/.github/workflows/code-freeze.yml@main
+    if: (github.event_name == 'pull_request_target' || (github.event_name == 'issue_comment' && github.event.issue.pull_request)) && needs.codefreeze_branch_check.outputs.regex-matches == 'true'
     secrets: inherit
