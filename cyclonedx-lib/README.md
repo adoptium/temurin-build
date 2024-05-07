@@ -34,13 +34,12 @@ formulation section (mostly because the author of this added such a section
 recently)
 
 1. Check that the version of CycloneDX you are using supports the
-    functionality you want.  If not, it will need to be updated. To do this
-    you need to do three steps [Sample PR](https://github.com/adoptium/temurin-build/pull/3558/files):
-    - Update [getDependencies](https://github.com/adoptium/temurin-build/blob/master/cyclonedx-lib/getDependencies) with the new version and SHA
+    functionality you want. If not, it will need to be updated. To do this
+    you need to do two steps:
+    - Update the [sha and version files](https://github.com/adoptium/temurin-build/blob/master/cyclonedx-lib/dependency_data) for each jar you plan to change.
     - Ensure [build.getDependency](https://ci.adoptium.net/job/build.getDependency/) is run to pick up the new version
-    - Update [build.xml](https://github.com/adoptium/temurin-build/blob/master/cyclonedx-lib/build.xml) with the new SHA to allow it to be downloaded successfully during the build (This change can be made along with the getDependencies one if     you co--ordinate the update appopriately
-2. If the build and java code does not already have support for the CycloneDX functionality that you need the follow ([Sample PR](https://github.com/adoptium/temurin-build/blob/master/cyclonedx-lib/build.xml))
-    - Updates to [cyclonedx-lib/TemurinGenSBOM.java])https://github.com/adoptium/temurin-build/blob/master/sbin/common/sbom.sh) to add a new parameter, a new function to implement it, the call to that function from the `switch` functionality in the `main` function
+2. If the build and java code does not already have support for the CycloneDX functionality that you need, then follow these steps ([Sample PR](https://github.com/adoptium/temurin-build/pull/3538))
+    - Updates to [cyclonedx-lib/TemurinGenSBOM.java](https://github.com/adoptium/temurin-build/blob/master/sbin/common/sbom.sh) to add a new parameter, a new function to implement it, the call to that function from the `switch` functionality in the `main` function
     - Update [cyclonedx-lib/build.xml](https://github.com/adoptium/temurin-build/blob/master/cyclonedx-lib/build.xml) to add tests for the new functionality
     - Add a new function to [sbin/common/sbom.sh](https://github.com/adoptium/temurin-build/blob/master/sbin/common/sbom.sh) to add the fields you need
     - Updates to [sbin/build.sh](https://github.com/adoptium/temurin-build/blob/master/sbin/build.sh) to invoke the new function(s) in sbom.sh

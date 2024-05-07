@@ -22,6 +22,9 @@ on:
 env:
   TRIAGE_SCRIPT: "tooling/build_autotriage/build_autotriage.sh"
 
+permissions:
+  contents: read
+
 jobs:
   autotriage:
     permissions:
