@@ -238,30 +238,35 @@ verify_valid_archives() {
 
   cd "${WORKSPACE}/staging/${TAG}" || exit 1
 
-  for A in OpenJDK*.tar.gz; do
-    print_verbose "IVT : Counting files in tarball ${A}"
-    if ! tar tfz "${A}" > /dev/null; then
-      print_error "Failed to verify that ${A} can be extracted"
-      RC=4
-    fi
-    # NOTE: 38 chosen because the static-libs is 38 for JDK21/AIX - maybe switch for different tarballs in the future?
-    if [ "$(tar tfz "${A}" | wc -l)" -lt 38 ]; then
-      print_error "Less than 38 files in ${A} - that does not seem correct"
-      RC=4
-    fi
-  done
+  # Check to prevent script aborting if no such files exist
+  if ls OpenJDK*.tar.gz > /dev/null; then
+    for A in OpenJDK*.tar.gz; do
+      print_verbose "IVT : Counting files in tarball ${A}"
+      if ! tar tfz "${A}" > /dev/null; then
+        print_error "Failed to verify that ${A} can be extracted"
+        RC=4
+      fi
+      # NOTE: 38 chosen because the static-libs is 38 for JDK21/AIX - maybe switch for different tarballs in the future?
+      if [ "$(tar tfz "${A}" | wc -l)" -lt 38 ]; then
+        print_error "Less than 38 files in ${A} - that does not seem correct"
+        RC=4
+      fi
+    done
+  fi
 
-  for A in OpenJDK*.zip; do
-    print_verbose "IVT : Counting files in archive ${A}"
-    if ! unzip -t "${A}" > /dev/null; then
-      print_error "Failed to verify that ${A} can be extracted"
-      RC=4
-    fi
-    if [ "$(unzip -l "${A}" | wc -l)" -lt 44 ]; then
-      print_error "Less than 40 files in ${A} - that does not seem correct"
-      RC=4
-    fi
-  done
+  if ls OpenJDK*.zip > /dev/null; then
+    for A in OpenJDK*.zip; do
+      print_verbose "IVT : Counting files in archive ${A}"
+      if ! unzip -t "${A}" > /dev/null; then
+        print_error "Failed to verify that ${A} can be extracted"
+        RC=4
+      fi
+      if [ "$(unzip -l "${A}" | wc -l)" -lt 44 ]; then
+        print_error "Less than 40 files in ${A} - that does not seem correct"
+        RC=4
+      fi
+    done
+  fi
 }
 
 ########################################################################################################################
@@ -304,14 +309,18 @@ determine_arch() {
 #
 ########################################################################################################################
 verify_working_executables() {
-  print_verbose "IVT : Running java -version and checking glibc version on ${OS}/${ARCH} tarballs"
+  if ! ls OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz > /dev/null 2>&1; then
+    print_verbose "IVT: Release does not contain a JRE for $OS/$ARCH so not running local checks"
+  else
+    print_verbose "IVT : Running java -version and checking glibc version on ${OS}/${ARCH} tarballs"
 
-  cd "${WORKSPACE}/staging/${TAG}" || exit 1
+    cd "${WORKSPACE}/staging/${TAG}" || exit 1
 
-  rm -rf tarballtest && mkdir tarballtest
-  tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
-  rm -rf tarballtest && mkdir tarballtest
-  tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jdk_"${ARCH}"_"${OS}"_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
+    rm -rf tarballtest && mkdir tarballtest
+    tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
+    rm -rf tarballtest && mkdir tarballtest
+    tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jdk_"${ARCH}"_"${OS}"_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
+  fi
 }
 
 ########################################################################################################################
