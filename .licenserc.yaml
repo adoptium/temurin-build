@@ -28,7 +28,7 @@ header:
       
       SPDX-License-Identifier: Apache-2.0
       ********************************************************************************
-    pattern: Copyright (c) \d{4} Contributors to the Eclipse Foundation
+    pattern: Copyright (c) ((\d{4})(, \d{4})*) Contributors to the Eclipse Foundation
       
   comment: on-failure
 
@@ -39,6 +39,7 @@ header:
     - '**/*.asc'
     - '.gitignore'
     - '.dockerignore'
+    - '.semgrepignore'
     - 'docker/.gitignore'
     - 'security/.gitignore'
     - 'security/mk-ca-bundle.pl'
