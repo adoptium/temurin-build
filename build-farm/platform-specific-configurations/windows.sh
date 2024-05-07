@@ -16,7 +16,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
-source "$SCRIPT_DIR/downloaders.sh"
+source "$SCRIPT_DIR/../../sbin/common/downloaders.sh"
 
 export ANT_HOME=/cygdrive/C/Projects/OpenJDK/apache-ant-1.10.1
 export DRAGONWELL8_BOOTSTRAP=/cygdrive/C/openjdk/dragonwell-bootstrap/jdk8u272-ga

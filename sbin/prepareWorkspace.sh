@@ -658,7 +658,7 @@ downloadBootJdkIfNeeded () {
     if  [ -e "$futureBootDir" ] ; then
       echo "Reusing $futureBootDir"
     else
-      source "$SCRIPT_DIR/../build-farm/platform-specific-configurations/downloaders.sh"
+      source "$SCRIPT_DIR/common/downloaders.sh"
       echo "Downloading to $futureBootDir"
       downloadBootJDK "$(uname -m)" "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" "${futureBootDir}"
     fi

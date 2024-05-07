@@ -16,7 +16,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
-source "$SCRIPT_DIR/downloaders.sh"
+source "$SCRIPT_DIR/../../sbin/common/downloaders.sh"
 
 if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
   # jdk-21+ uses "bundled" FreeType
