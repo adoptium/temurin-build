@@ -18,6 +18,7 @@ set -eu
 OPENJ9=false
 BUILD=false
 COMMENTS=false
+DIRS=
 PRINT=false
 DOCKERFILE_DIR=
 DOCKERFILE_PATH=
@@ -87,6 +88,11 @@ processArgs() {
         COMMENTS=true
         shift
         ;;
+      --dirs)
+        DIRS="${2}"
+        shift
+        shift
+        ;;
       --path)
         DOCKERFILE_DIR=$2
         shift
@@ -135,6 +141,7 @@ usage() {
       --build        Build the docker image after generation and create interactive container
       --clean        Remove all dockerfiles (Dockerfile*) from '--path'
       --comments        Prints comments into the dockerfile
+      --dirs         space separated list of dirs to be created, with proper permissions
       --path <FILEPATH>    Specify where to save the dockerfile (Default: $PWD)
       --print        Print the Dockerfile to screen after generation
       --openj9        Make the Dockerfile able to build w/OpenJ9 JIT
@@ -264,6 +271,14 @@ printgcc() {
 ENV CC=gcc-7 CXX=g++-7" >> "$DOCKERFILE_PATH"
 }
 
+printCustomDirs() {
+  for dir in ${DIRS} ; do
+    echo "RUN mkdir -p $dir"  >> "$DOCKERFILE_PATH"
+    echo "RUN chmod 755 $dir"  >> "$DOCKERFILE_PATH"
+    echo "RUN chown -R build $dir"  >> "$DOCKERFILE_PATH"
+  done
+}
+
 printDockerJDKs() {
   # JDK8 uses zulu-7 to as it's bootjdk
   if [ "${JDK_VERSION}" != 8 ] && [ "${JDK_VERSION}" != "${JDK_MAX}" ]; then
@@ -339,7 +354,9 @@ ARG HostUID
 ENV HostUID=\$HostUID
 RUN useradd -u \$HostUID -ms /bin/bash build
 WORKDIR /openjdk/build
-RUN chown -R build /openjdk/
+RUN chown -R build /openjdk/" >> "$DOCKERFILE_PATH"
+  printCustomDirs
+  echo "
 USER build" >> "$DOCKERFILE_PATH"
 }
 

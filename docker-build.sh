@@ -77,6 +77,12 @@ buildOpenJDKViaDocker()
 
   DOCKER_PPODMAN="${1}"
 
+  local hostDir
+  hostDir="$(pwd)"
+  local pipelinesdir="${hostDir}"/workspace/pipelines
+  local workspacedir="${hostDir}"/workspace # we must ensure build user have correct permissions here
+  local targetdir="${hostDir}"/workspace/target
+
   # TODO This could be extracted overridden by the user if we support more
   # architectures going forwards
   local container_architecture="x86_64/ubuntu"
@@ -86,7 +92,8 @@ buildOpenJDKViaDocker()
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "openj9" ]; then
     build_variant_flag="--openj9"
   fi
-  docker/dockerfile-generator.sh --version "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" "$build_variant_flag"
+  docker/dockerfile-generator.sh --version "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" "$build_variant_flag" \
+     --dirs "${workspacedir} ${targetdir}"
 
   # shellcheck disable=SC1090,SC1091
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
@@ -167,9 +174,6 @@ buildOpenJDKViaDocker()
   # Show the user all of the config before we build
   displayParams
 
-  local hostDir
-  hostDir="$(pwd)"
-
   echo "Target binary directory on host machine: ${hostDir}/target"
   mkdir -p "${hostDir}/workspace/target"
 
@@ -189,7 +193,6 @@ buildOpenJDKViaDocker()
   fi
 
   # Command without gitSshAccess or dockerMode arrays
-  local pipelinesdir="${hostDir}"/workspace/pipelines
   if [ -e "${hostDir}"/pipelines ] ; then
     local pipelinesdir="${hostDir}"/pipelines
   else
@@ -206,7 +209,6 @@ buildOpenJDKViaDocker()
     local userns=""
   fi
   local mountflag=Z #rw? maybe this should be bound to root/rootles content of BUILD_CONFIG[DOCKER] rather then jsut podman/docker in USE_DOCKER?
-  local targetdir="${hostDir}"/workspace/target
   mkdir -p "${hostDir}"/workspace/build  # shouldnt be already there?
   echo "If you get permissions denied on ${targetdir} or ${pipelinesdir} try to turn off selinux"
   local commandString=(
