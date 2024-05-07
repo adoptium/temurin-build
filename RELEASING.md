@@ -101,7 +101,6 @@ Affected repositories:
   2. `targetConfigurations` should only include what we officially release for temurin.
   3. `buildReference` and `ciReference` should have the value of `releaseTag` used when we generate pipeline.
   4. `helperReference` should have the same value of `helperTag` used when we generate pipeline.
-  5. `additionalConfigureArgs` has correct value, especially in `release-openjdk8-pipeline` it is different than other jdk versions. This requires certain modification manually
 - ensure downstream build jobs in <https://ci.adoptium.net/job/build-scripts/job/jobs/job/release/job/jobs/jdkXXu/> are created or updated
   1. `BUILD_CONFIGURATION.USE_ADOPT_SHELL_SCRIPTS` is set to `true`
   2. `DEFAULTS_JSON.repository.build_branch`, `ADOPT_DEFAULTS_JSON.repository.build_branch`, `DEFAULTS_JSON.repository.pipeline_branch` and `ADOPT_DEFAULTS_JSON.repository.pipeline_branch` should get correct release branch name as `releaseTag`
@@ -195,7 +194,7 @@ It is recommended that we perform an auto trigger test on a chosen version (sugg
 2. Choose the second latest openjdk tag without the `_adopt` suffix (unless it is the same as the latest in which case keep going backwards..) in the adoptium/jdkNNu repository that you are using for the dry run.
 3. Ensure that the branch of aqa_tests has been created for this release.
 4. Update [testenv/testenv.properties](https://github.com/adoptium/aqa-tests/blob/master/testenv/testenv.properties) in the branch of aqa-tests to point to the tag as the JDKnn_BRANCH e.g. `jdk-17.0.x+y` (i.e. not `dev`)
-5. Get an Adoptium administrator to create the `-dryrun` tag to build in the adoptium mirror, as in the following example:
+5. Get an Adoptium administrator to create the `-dryrun-ga` tag to build in the adoptium mirror, as in the following example:
 
 <!-- markdownlint-disable-next-line MD036 -->
 **IMPORTANT: trial tag MUST be something that is sorted before `-ga`. Recommended format: "-dryrun-ga"**
@@ -211,6 +210,16 @@ It is recommended that we perform an auto trigger test on a chosen version (sugg
 6. Wait for the release trigger job to detect the tag (wait up to 10mins), e.g. [releaseTrigger_jdk17u](https://ci.adoptium.net/job/build-scripts/job/utils/job/releaseTrigger_jdk17u) (Note that the schedule for that job is only run on the release months, so may not work if you are keen and try to do this in the month before)
 7. The trial release pipeline job should now be running, eg: https://ci.adoptium.net/job/build-scripts/job/release-openjdk17-pipeline/
 8. Once you have verified that everything looks good, testenv.properties should be adjusted to have the expected GA tag before the final release appears.
+
+If the tag in step 5 MUST NOT contain the +nn from the underlying tag.
+If you accidentally create a +nn-dryrun-ga then you will get this error from
+openjdk_pipeline.groovy:
+```
+[INFO] Resolved jdk-17.0.11-dryrun-ga to upstream build tag jdk-17.0.11+6jdk-17.0.11+6-dryrun-ga
+[Pipeline] echo
+[ERROR] scmReference does not match with any JDK branch in testenv.properties in aqa-tests release branch. Please update aqa-tests v1.0.1-release release branch. Set the current build result to FAILURE!
+```
+Deleting the tag will not fix the problem as it will have been cached on the jenkins worker node used for the trigger jobs - see https://github.com/adoptium/temurin/issues/28#issuecomment-2041364554 for the details, but you'll need to manually adjust build-scripts/utils/./releaseTrigger_jdk*/workspace/tracking
 
 <details>
 <summary>Manual execution of the build pipelines (without using trigger jobs - now mostly obsolete other than jdk8u/arm32)</summary>
