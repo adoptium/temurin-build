@@ -200,12 +200,18 @@ buildOpenJDKViaDocker()
   else
     local cpuset=""
   fi
+  if echo ${BUILD_CONFIG[USE_DOCKER]} | grep podman ; then
+    local userns="--userns=keep-id"
+  else
+    local userns=""
+  fi
   local mountflag=Z #rw? maybe this should be bound to root/rootles content of BUILD_CONFIG[DOCKER] rather then jsut podman/docker in USE_DOCKER?
   local targetdir="${hostDir}"/workspace/target
   mkdir -p "${hostDir}"/workspace/build  # shouldnt be already there?
   echo "If you get permissions denied on ${targetdir} or ${pipelinesdir} try to turn off selinux"
   local commandString=(
          ${cpuset}
+         ${userns}
          -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build"
          -v "${targetdir}":/"${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}":$mountflag 
          -v "${pipelinesdir}":/openjdk/pipelines:$mountflag
