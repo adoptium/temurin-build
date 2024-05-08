@@ -74,9 +74,6 @@ buildDockerContainer()
 # Execute the (Adoptium) OpenJDK build inside the Docker Container
 buildOpenJDKViaDocker()
 {
-
-  DOCKER_PPODMAN="${1}"
-
   local hostDir
   hostDir="$(pwd)"
   local pipelinesdir="${hostDir}"/workspace/pipelines
