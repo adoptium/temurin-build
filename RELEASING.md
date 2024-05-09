@@ -216,11 +216,13 @@ It is recommended that we perform an auto trigger test on a chosen version (sugg
 If the tag in step 5 MUST NOT contain the +nn from the underlying tag.
 If you accidentally create a +nn-dryrun-ga then you will get this error from
 openjdk_pipeline.groovy:
+
 ```
 [INFO] Resolved jdk-17.0.11-dryrun-ga to upstream build tag jdk-17.0.11+6jdk-17.0.11+6-dryrun-ga
 [Pipeline] echo
 [ERROR] scmReference does not match with any JDK branch in testenv.properties in aqa-tests release branch. Please update aqa-tests v1.0.1-release release branch. Set the current build result to FAILURE!
 ```
+
 Deleting the tag will not fix the problem as it will have been cached on the jenkins worker node used for the trigger jobs - see https://github.com/adoptium/temurin/issues/28#issuecomment-2041364554 for the details, but you'll need to manually adjust build-scripts/utils/./releaseTrigger_jdk*/workspace/tracking
 
 <details>
