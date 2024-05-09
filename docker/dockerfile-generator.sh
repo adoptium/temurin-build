@@ -340,6 +340,7 @@ printCopyFolders(){
   echo "
 COPY sbin /openjdk/sbin
 COPY security /openjdk/security
+COPY test /openjdk/test
 COPY workspace/config /openjdk/config" >> "$DOCKERFILE_PATH"
 }
 
