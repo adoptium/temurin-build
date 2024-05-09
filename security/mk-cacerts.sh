@@ -12,19 +12,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
-## resolve folder of this script, following all symlinks,
-## http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
-SCRIPT_SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SCRIPT_SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  SCRIPT_DIR="$( cd -P "$( dirname "$SCRIPT_SOURCE" )" && pwd )"
-  SCRIPT_SOURCE="$(readlink "$SCRIPT_SOURCE")"
-  # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-  [[ $SCRIPT_SOURCE != /* ]] && SCRIPT_SOURCE="$SCRIPT_DIR/$SCRIPT_SOURCE"
-done
-readonly SCRIPT_DIR="$( cd -P "$( dirname "$SCRIPT_SOURCE" )" && pwd )"
-
-
-
 set -euo pipefail
 
 PROGRAM_NAME="${0##*/}"
@@ -67,7 +54,7 @@ fi
 
 # Convert Mozilla's list of certificates into a PEM file. The -n switch makes
 # it use the local certdata.txt in this folder.
-certNum=$(${SCRIPT_DIR}/mk-ca-bundle.pl -v -n ca-bundle.crt)
+certNum=$(./mk-ca-bundle.pl -v -n ca-bundle.crt)
 echo "mk-ca-bundle.pl generates $certNum certificates"
 
 # Split the PEM file into individual files because keytool cannot do it on its own.
