@@ -16,6 +16,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
+source "$SCRIPT_DIR/../../sbin/common/downloaders.sh"
 
 export ANT_HOME=/cygdrive/C/Projects/OpenJDK/apache-ant-1.10.1
 export DRAGONWELL8_BOOTSTRAP=/cygdrive/C/openjdk/dragonwell-bootstrap/jdk8u272-ga
@@ -43,55 +44,7 @@ if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
       # shellcheck disable=SC2140
       export "${BOOT_JDK_VARIABLE}"="/cygdrive/c/openjdk/jdk-${JDK_BOOT_VERSION}"
     elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8
-      # This is needed to convert x86-32 to x32 which is what the API uses
-      export downloadArch
-      case "$ARCHITECTURE" in
-         "x86-32") downloadArch="x32";;
-        "aarch64") downloadArch="x64";;
-                *) downloadArch="$ARCHITECTURE";;
-      esac
-      releaseType="ga"
-      vendor="eclipse"
-      api="adoptium"
-      apiUrlTemplate="https://api.\${api}.net/v3/binary/latest/\${JDK_BOOT_VERSION}/\${releaseType}/windows/\${downloadArch}/jdk/hotspot/normal/\${vendor}"
-      apiURL=$(eval echo ${apiUrlTemplate})
-      echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
-      # make-adopt-build-farm.sh has 'set -e'. We need to disable that for
-      # the fallback mechanism, as downloading of the GA binary might fail
-      set +e
-      wget -q "${apiURL}" -O openjdk.zip
-      retVal=$?
-      set -e
-      if [ $retVal -ne 0 ]; then
-        # We must be a JDK HEAD build for which no boot JDK exists other than
-        # nightlies?
-        echo "Downloading GA release of boot JDK version ${JDK_BOOT_VERSION} failed."
-        # shellcheck disable=SC2034
-        releaseType="ea"
-        # shellcheck disable=SC2034
-        vendor="adoptium"
-        apiURL=$(eval echo ${apiUrlTemplate})
-        echo "Attempting to download EA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
-        set +e
-        wget -q "${apiURL}" -O openjdk.zip
-        retVal=$?
-        set -e
-        if [ $retVal -ne 0 ]; then
-          # If no binaries are available then try from adoptopenjdk
-          echo "Downloading Temurin release of boot JDK version ${JDK_BOOT_VERSION} failed."
-          # shellcheck disable=SC2034
-          releaseType="ga"
-          # shellcheck disable=SC2034
-          vendor="adoptopenjdk"
-          # shellcheck disable=SC2034
-          api="adoptopenjdk"
-          apiURL=$(eval echo ${apiUrlTemplate})
-          echo "Attempting to download GA release of boot JDK version ${JDK_BOOT_VERSION} from ${apiURL}"
-          wget -q "${apiURL}" -O openjdk.zip
-        fi
-      fi
-      unzip -q openjdk.zip
-      mv "$(ls -d jdk-"${JDK_BOOT_VERSION}"*)" "$bootDir"
+      downloadWindowsBootJDK "${ARCHITECTURE}" "${JDK_BOOT_VERSION}" "$bootDir"
     fi
   fi
 fi

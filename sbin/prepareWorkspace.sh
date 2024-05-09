@@ -652,14 +652,30 @@ downloadDevkit() {
   fi
 }
 
-# Download all of the dependencies for OpenJDK (Alsa, FreeType etc.)
+downloadBootJdkIfNeeded () {
+  if [[ "${BUILD_CONFIG[JDK_BOOT_DIR]}" == "download" ]]; then
+    local futureBootDir="${BUILD_CONFIG[WORKSPACE_DIR]}/downloaded-boot-jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
+    if  [ -e "$futureBootDir" ] ; then
+      echo "Reusing $futureBootDir"
+    else
+      source "$SCRIPT_DIR/common/downloaders.sh"
+      echo "Downloading to $futureBootDir"
+      downloadBootJDK "$(uname -m)" "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" "${futureBootDir}"
+    fi
+    BUILD_CONFIG[JDK_BOOT_DIR]="${futureBootDir}"
+  fi
+}
+
+# Download all of the dependencies for OpenJDK (Alsa, FreeType, boot-jdk etc.)
 downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
-
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" || true
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype" || true
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/downloaded-boot-jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" || true
   fi
+
+  downloadBootJdkIfNeeded
 
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
