@@ -62,7 +62,8 @@ If anything needs to be merged into the new branch, it should typically be merge
 
 Paste the below message into the #release channel in Slack:
 
-With under a week to go until releases, we are entering a lockdown period for the following repositories: temurin-build, ci-jenkins-pipelines, github-release-scripts, containers, installer, and mirror-scripts.
+With under a week to go until releases, we are entering a lockdown period for the main branches to the following repositories: github-release-scripts, containers, installer, and mirror-scripts.
+The temurin-build, ci-jenkins-pipelines and jenkins-helper main branches are still open for work, however the "release" branch will be under code-freeze management.
 
 If you need to submit a pr for any of these repos during this period, you should:
 
@@ -76,19 +77,22 @@ This stops last minute changes going in, which may destabilise things. "installe
 If a change has to go in during this "lockdown" period it should be done by posting a comment saying "Requesting approval to merge during the lockdown period. Please thumbs up the comment to approve" in Slack release channel.
 If two committers into the repository express approval then the change can be merged during the lockdown period.
 
-#### Enable code-freeze on  main branches of below repositories
+#### Enable code-freeze on main branches of below repositories
 
 In order to enable the code freeze GitHub you need to change the line `if: github.repository_owner == 'adoptium' && false` to be `if: github.repository_owner == 'adoptium' && true` in the [code-freeze.yml](https://github.com/adoptium/.github/blob/main/.github/workflows/code-freeze.yml#L21) GitHub workflow. Please contact the PMC if you need help merging this change.
 
 Affected repositories:
 
-- temurin-build <https://github.com/adoptium/temurin-build>
-- ci-jenkins-pipelines <https://github.com/adoptium/ci-jenkins-pipelines>
-- jenkins-helper <https://github.com/adoptium/jenkins-helper>
 - github-release-scripts <https://github.com/adoptium/github-release-scripts>
 - containers <https://github.com/adoptium/containers>
 - installer <https://github.com/adoptium/installer>
 - mirror-script <https://github.com/adoptium/mirror-scripts>
+
+Only "release" branch frozen:
+
+- temurin-build <https://github.com/adoptium/temurin-build>
+- ci-jenkins-pipelines <https://github.com/adoptium/ci-jenkins-pipelines>
+- jenkins-helper <https://github.com/adoptium/jenkins-helper>
 
 #### Release pipelines and jobs need to be re-generated with new tags by the Release Champion:
 
