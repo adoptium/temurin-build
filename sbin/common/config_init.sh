@@ -274,7 +274,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
 
         "-D" )
-        if [ which podman ] ; then BUILD_CONFIG[USE_DOCKER]="podman" ; else BUILD_CONFIG[USE_DOCKER]="docker" ; fi;;
+        if which podman > /dev/null ; then BUILD_CONFIG[USE_DOCKER]="podman" ; else BUILD_CONFIG[USE_DOCKER]="docker" ; fi;;
 
         "--docker" )
         BUILD_CONFIG[USE_DOCKER]="docker";;
