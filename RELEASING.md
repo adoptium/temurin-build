@@ -83,12 +83,14 @@ In order to enable the code freeze GitHub you need to change the line `if: githu
 Affected repositories:
 
 master branch:
+
 - github-release-scripts <https://github.com/adoptium/github-release-scripts>
 - containers <https://github.com/adoptium/containers>
 - installer <https://github.com/adoptium/installer>
 - mirror-script <https://github.com/adoptium/mirror-scripts>
 
 release branch:
+
 - temurin-build <https://github.com/adoptium/temurin-build>
 - ci-jenkins-pipelines <https://github.com/adoptium/ci-jenkins-pipelines>
 - jenkins-helper <https://github.com/adoptium/jenkins-helper>
@@ -220,11 +222,8 @@ If the tag in step 5 MUST NOT contain the +nn from the underlying tag.
 If you accidentally create a +nn-dryrun-ga then you will get this error from
 openjdk_pipeline.groovy:
 
-```
-[INFO] Resolved jdk-17.0.11-dryrun-ga to upstream build tag jdk-17.0.11+6jdk-17.0.11+6-dryrun-ga
-[Pipeline] echo
-[ERROR] scmReference does not match with any JDK branch in testenv.properties in aqa-tests release branch. Please update aqa-tests v1.0.1-release release branch. Set the current build result to FAILURE!
-```
+`[INFO] Resolved jdk-17.0.11-dryrun-ga to upstream build tag jdk-17.0.11+6jdk-17.0.11+6-dryrun-ga`
+`[ERROR] scmReference does not match with any JDK branch in testenv.properties in aqa-tests release branch. Please update aqa-tests v1.0.1-release release branch. Set the current build result to FAILURE!`
 
 Deleting the tag will not fix the problem as it will have been cached on the jenkins worker node used for the trigger jobs - see https://github.com/adoptium/temurin/issues/28#issuecomment-2041364554 for the details, but you'll need to manually adjust build-scripts/utils/./releaseTrigger_jdk*/workspace/tracking
 
