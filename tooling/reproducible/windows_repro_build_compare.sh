@@ -606,6 +606,7 @@ Prepare_Env_For_Build() {
     if [ "$fixed_param" == "--with-toolchain-version" ]; then fixed_value="$visualStudioVersion" ; fi
     if [ "$fixed_param" == "--with-ucrt-dll-dir" ]; then fixed_value="temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder " ; fi
     if [ "$fixed_param" == "--target-file-name" ]; then target_file="$fixed_value" ; fi
+    if [ "$fixed_param" == "--user-openjdk-build-root-directory" ]; then fixed_value="$WORK_DIR/temurin-build/workspace/build/openjdkbuild" ; fi
 
     # Fix Build Variant Parameter To Strip JDK Version
 
