@@ -209,9 +209,13 @@ verify_gpg_signatures() {
 
   cd "${WORKSPACE}/staging/${TAG}" || exit 1
 
-  # Note: This will run into problems if there are no tar.gz files
-  #       e.g. if only windows has been uploaded to the release
-  for A in `ls -1d OpenJDK*.tar.gz OpenJDK*.zip *.msi *.pkg *sbom*[0-9].json`; do
+  # Note: This SC disable is because the change has been made to
+  #       use ls instead of a straight glob to avoid problems when
+  #       there are no files of a particular type in the release
+  #       e.g. a point release for one platform e.g. 22.0.1.1+1
+
+  # shellcheck disable=SC2045
+  for A in $(ls -1d OpenJDK*.tar.gz OpenJDK*.zip ./*.msi ./*.pkg ./*sbom*[0-9].json); do
     print_verbose "IVT : Verifying signature of file ${A}"
 
     if ! gpg -q --verify "${A}.sig" "${A}" 2> /dev/null; then
