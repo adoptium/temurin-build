@@ -63,6 +63,7 @@ If anything needs to be merged into the new branch, it should typically be merge
 Paste the below message into the #release channel in Slack:
 
 With under a week to go until releases, we are entering a lockdown period for the main branches to the following repositories: github-release-scripts, containers, installer, and mirror-scripts.
+
 The temurin-build, ci-jenkins-pipelines and jenkins-helper main branches are still open for work, however the "release" branch will be under code-freeze management.
 
 If you need to submit a pr for any of these repos during this period, you should:
