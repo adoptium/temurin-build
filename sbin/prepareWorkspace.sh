@@ -52,7 +52,7 @@ copyFromDir() {
 # it requires  absolute tar-filepath as it changes dir and is hardcoded to one
 # similar approach can be used also for zip in future
 untarGnuAbsPathWithStripComponents1() {
-  local tmp=`mktemp -d`
+  local tmp=$(mktemp -d)
   pushd "$tmp" > /dev/null
     tar "$@"
   popd  > /dev/null
