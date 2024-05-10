@@ -184,7 +184,7 @@ configureMacOSCodesignParameter() {
 getOpenJDKUpdateAndBuildVersion() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
   if [ "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]}" == "true" ]; then
-    echo "Version: local dir; OPENJDK_BUILD_NUMBER set as  ${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
+    echo "Version: local dir; OPENJDK_BUILD_NUMBER set as ${BUILD_CONFIG[OPENJDK_BUILD_NUMBER]}"
   elif [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
 
     # It does exist and it's a repo other than the Temurin one
