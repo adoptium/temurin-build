@@ -669,8 +669,11 @@ Build_JDK() {
 
 Compare_JDK() {
   echo "Comparing JDKs"
-  echo ""
-  cd "$WORK_DIR"  
+  mkdir "$WORK_DIR/compare"
+  cp "$WORK_DIR/src_jdk_dist.zip" "$WORK_DIR/compare"
+  cp "$WORK_DIR/reproJDK.zip" "$WORK_DIR/compare"
+  cd "$WORK_DIR/compare"
+
   # Unzip And Rename The Source JDK
   echo "Unzip Source"
   unzip -q -o src_jdk_dist.zip
@@ -685,22 +688,7 @@ Compare_JDK() {
 
   # These Two Files Are Generate Classes And Should Be Removed Prior To Running The Comparison
   # jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa
-
-  if [ -f "$WORK_DIR/src_jdk/bin/server/classes.jsa" ] ; then
-    rm -rf "$WORK_DIR/src_jdk/bin/server/classes.jsa"
-  fi
-
-  if [ -f "$WORK_DIR/tar_jdk/bin/server/classes.jsa" ] ; then
-    rm -rf "$WORK_DIR/tar_jdk/bin/server/classes.jsa"
-  fi
-
-  if [ -f "$WORK_DIR/src_jdk/bin/server/classes_nocoops.jsa" ] ; then
-    rm -rf "$WORK_DIR/src_jdk/bin/server/classes_nocoops.jsa"
-  fi
-
-  if [ -f "$WORK_DIR/tar_jdk/bin/server/classes_nocoops.jsa" ] ; then
-    rm -rf "$WORK_DIR/tar_jdk/bin/server/classes_nocoops.jsa"
-  fi
+  # should move to repro_common.sh
 
   # Ensure Signtool Is In The Path
   TOOLCOUNT=$(find "$SIGNTOOL_BASE" | grep $msvsArch | grep -ic "signtool.exe$")
@@ -735,7 +723,7 @@ Compare_JDK() {
   export PATH="$PATH:$CPW"
 
   # Run Comparison Script
-  echo "cd $WORK_DIR && $ScriptPath/repro_compare.sh temurin src_jdk temurin tar_jdk CYGWIN 2>&1" | sh &
+  echo "cd $ScriptPath && ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk CYGWIN 2>&1" | sh &
   wait
 
   # Display The Content Of reprotest.diff
@@ -743,16 +731,15 @@ Compare_JDK() {
   echo "---------------------------------------------"
   echo "Output From JDK Comparison Script"
   echo "---------------------------------------------"
-  cat "$WORK_DIR/reprotest.diff"
+  cat "$ScriptPath/reprotest.diff"
   echo ""
   echo "---------------------------------------------"
   echo "Copying Output To $(dirname "$0")"
 
-  if [ -z "$REPORT_DIR" ]; then
-    REPORT_DIR="$ScriptPath"
+  if [ -n "$REPORT_DIR" ]; then
+    cp "$ScriptPath/reprotest.diff" "$REPORT_DIR"
+    cp "$WORK_DIR/reproJDK.zip" "$REPORT_DIR"
   fi
-  cp "$WORK_DIR/reprotest.diff" "$REPORT_DIR"
-  cp "$WORK_DIR/reproJDK.zip" "$REPORT_DIR"
 }
 
 Clean_Up_Everything() {

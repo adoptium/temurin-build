@@ -40,7 +40,8 @@
 	</test>
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test_win</testCaseName>
-		<command>$(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)windows_repro_build_compare.sh $(SBOM_FILE) $(JDK_FILE); \
+		<command>ls $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D); \
+		$(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)windows_repro_build_compare.sh $(SBOM_FILE) $(JDK_FILE); \
 	$(TEST_STATUS)
 		</command>
 		<levels>
