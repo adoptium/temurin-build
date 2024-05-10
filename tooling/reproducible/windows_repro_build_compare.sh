@@ -759,8 +759,8 @@ Compare_JDK() {
   echo ""
   echo "---------------------------------------------"
   echo "Copying Output To $(dirname "$0")"
-  cp "$WORK_DIR/compare/repro_diff.out" "$ScriptPath"
-
+  cp "$WORK_DIR/compare/repro_diff.out" "$(dirname "$0")"
+  cp "$WORK_DIR/compare/repro_diff.out" "$(dirname "$0")"
 }
 
 Clean_Up_Everything() {
