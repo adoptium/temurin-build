@@ -34,6 +34,7 @@ fi
 # Read Parameters
 SBOM_URL="$1"
 TARBALL_URL="$2"
+REPORT_DIR="$3"
 
 # Constants Required By This Script
 # These Values Should Be Updated To Reflect The Build Environment
@@ -61,8 +62,7 @@ NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args")
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$WORK_DIR/src_sbom.json"
 DISTLocalPath="$WORK_DIR/src_jdk_dist.zip"
-ScriptPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
+ScriptPath=$(dirname "$(realpath "$0")")
 # Function to check if a string is a valid URL
 is_url() {
   local url=$1
@@ -664,25 +664,13 @@ Build_JDK() {
   cd "$WORK_DIR"
   echo "cd temurin-build && ./makejdk-any-platform.sh $final_params 2>&1 | tee build.$$.log" | sh
   # Copy The Built JDK To The Working Directory
-  cp "$WORK_DIR/temurin-build/workspace/target/$target_file" "$WORK_DIR/built_jdk.zip"
+  cp "$WORK_DIR/temurin-build/workspace/target/$target_file" "$WORK_DIR/reproJDK.zip"
 }
 
 Compare_JDK() {
   echo "Comparing JDKs"
   echo ""
-  mkdir "$WORK_DIR/compare"
-  cp "$WORK_DIR/src_jdk_dist.zip" "$WORK_DIR/compare"
-  cp "$WORK_DIR/built_jdk.zip" "$WORK_DIR/compare"
-
-  # Get The Current Versions Of The Reproducible Build Scripts
-  wget -O "$WORK_DIR/compare/repro_common.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_common.sh"
-  wget -O "$WORK_DIR/compare/repro_compare.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_compare.sh"
-  wget -O "$WORK_DIR/compare/repro_process.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_process.sh"
-
-  # Set Permissions
-  chmod +x "$WORK_DIR/compare/"*sh
-  cd "$WORK_DIR/compare"
-
+  cd "$WORK_DIR"  
   # Unzip And Rename The Source JDK
   echo "Unzip Source"
   unzip -q -o src_jdk_dist.zip
@@ -691,27 +679,27 @@ Compare_JDK() {
 
   #Unzip And Rename The Target JDK
   echo "Unzip Target"
-  unzip -q -o built_jdk.zip
+  unzip -q -o reproJDK.zip
   original_directory_name=$(find . -maxdepth 1 -type d | grep -v src_jdk | tail -1)
   mv "$original_directory_name" tar_jdk
 
   # These Two Files Are Generate Classes And Should Be Removed Prior To Running The Comparison
   # jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa
 
-  if [ -f "$WORK_DIR/compare/src_jdk/bin/server/classes.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/src_jdk/bin/server/classes.jsa"
+  if [ -f "$WORK_DIR/src_jdk/bin/server/classes.jsa" ] ; then
+    rm -rf "$WORK_DIR/src_jdk/bin/server/classes.jsa"
   fi
 
-  if [ -f "$WORK_DIR/compare/tar_jdk/bin/server/classes.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/tar_jdk/bin/server/classes.jsa"
+  if [ -f "$WORK_DIR/tar_jdk/bin/server/classes.jsa" ] ; then
+    rm -rf "$WORK_DIR/tar_jdk/bin/server/classes.jsa"
   fi
 
-  if [ -f "$WORK_DIR/compare/src_jdk/bin/server/classes_nocoops.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/src_jdk/bin/server/classes_nocoops.jsa"
+  if [ -f "$WORK_DIR/src_jdk/bin/server/classes_nocoops.jsa" ] ; then
+    rm -rf "$WORK_DIR/src_jdk/bin/server/classes_nocoops.jsa"
   fi
 
-  if [ -f "$WORK_DIR/compare/tar_jdk/bin/server/classes_nocoops.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/tar_jdk/bin/server/classes_nocoops.jsa"
+  if [ -f "$WORK_DIR/tar_jdk/bin/server/classes_nocoops.jsa" ] ; then
+    rm -rf "$WORK_DIR/tar_jdk/bin/server/classes_nocoops.jsa"
   fi
 
   # Ensure Signtool Is In The Path
@@ -747,20 +735,24 @@ Compare_JDK() {
   export PATH="$PATH:$CPW"
 
   # Run Comparison Script
-  echo "cd $WORK_DIR/compare && ./repro_compare.sh temurin src_jdk temurin tar_jdk CYGWIN 2>&1" | sh &
+  echo "cd $WORK_DIR && $ScriptPath/repro_compare.sh temurin src_jdk temurin tar_jdk CYGWIN 2>&1" | sh &
   wait
 
-  # Display The Content Of repro_diff.out
+  # Display The Content Of reprotest.diff
   echo ""
   echo "---------------------------------------------"
   echo "Output From JDK Comparison Script"
   echo "---------------------------------------------"
-  cat "$WORK_DIR/compare/repro_diff.out"
+  cat "$WORK_DIR/reprotest.diff"
   echo ""
   echo "---------------------------------------------"
   echo "Copying Output To $(dirname "$0")"
-  cp "$WORK_DIR/compare/repro_diff.out" "$(dirname "$0")"
-  cp "$WORK_DIR/compare/repro_diff.out" "$(dirname "$0")"
+
+  if [ -z "$REPORT_DIR" ]; then
+    REPORT_DIR="$ScriptPath"
+  fi
+  cp "$WORK_DIR/reprotest.diff" "$REPORT_DIR"
+  cp "$WORK_DIR/reproJDK.zip" "$REPORT_DIR"
 }
 
 Clean_Up_Everything() {
