@@ -53,7 +53,7 @@ unpackFromArchive() {
   # If the tarball contains .git files, they should be ignored later
   # todo, support also zips?
   pushd "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"  | grep "/$" | wc -l ) || local topLevelItems=1
+    local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"  | grep "/$" -c) || local topLevelItems=1
     if [ "$topLevelItems" -eq "1" ] ; then
       echo "Source tarball contains exactly one directory"
       tar --strip-components 1 -xf "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
