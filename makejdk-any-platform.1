@@ -144,7 +144,7 @@ This indicates to the build script that the build does not have Temurin's additi
 .BR  \-o ", " \-\-openjdk\-source " " \fI<dir/archive>\fR
 If set, must point to directory or archive with valid OpenJDK source code.
 This local source code will be used instead of cloning from a git repository and without any git tag or git reset.
-You have to set main argument though, and it is recommended that you add \-\-tag too.
+You still have to set the version argument though, and it is recommended that you add \-\-tag too so that the top level directory names in the output, as well as the details in "java -version" are created correctly.
 .TP
 .BR \-p ", " \-\-processors " " \fI<args>\fR
 specify the number of processors to use for the docker build.
