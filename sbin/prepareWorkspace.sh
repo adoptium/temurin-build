@@ -48,6 +48,20 @@ copyFromDir() {
   cp -rf $files "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/"
 }
 
+# this is workarounding --strip-components 1 missing on gnu tar
+# it requires  absolute tar-filepath as it changes dir and is hardcoded to one
+# similar approach can be used also for zip in future
+untarGnuAbsPathWithStripComponents1() {
+  local tmp=`mktemp -d`
+  pushd "$tmp" > /dev/null
+    tar "$@"
+  popd  > /dev/null
+  mv "$tmp"/*/* .
+  mv "$tmp"/*/.* . || echo "no hidden files in tarball"
+  rmdir "$tmp"/*
+  rmdir "$tmp"
+}
+
 unpackFromArchive() {
   echo "Extracting OpenJDK source tarball ${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to build the binary"
   # If the tarball contains .git files, they should be ignored later
@@ -56,7 +70,7 @@ unpackFromArchive() {
     local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"  | grep "/$" -c) || local topLevelItems=1
     if [ "$topLevelItems" -eq "1" ] ; then
       echo "Source tarball contains exactly one directory"
-      tar --strip-components 1 -xf "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
+      untarGnuAbsPathWithStripComponents1 -xf "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
     else
       echo "Source tarball does not contain a top level directory"
       tar -xf "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
