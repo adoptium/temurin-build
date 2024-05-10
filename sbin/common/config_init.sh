@@ -321,7 +321,7 @@ function parseConfigurationArguments() {
         "--no-adopt-patches" )
         BUILD_CONFIG[ADOPT_PATCHES]=false;;
 
-        "--openjdk-source" | "-o" )
+        "--openjdk-source-location" | "-l" )
         setOpenjdkSourceDir "${1}"; shift;;
 
         "--patches" )
@@ -425,12 +425,12 @@ function setBranch() {
 # Set the local dir if used
 function setOpenjdkSourceDir() {
   if [ ! -e "${1}" ] ; then
-    echo "You have specified -o/--openjdk-source, but '${1}' does not exist"
+    echo "You have specified -l/--openjdk-source-location, but '${1}' does not exist"
     exit 1
   fi
   BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]=$(readlink -f "$1");
   if [ ! -e "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" ] ; then
-    echo "You have specified -o/--openjdk-source, but '${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}' does not exist"
+    echo "You have specified -l/--openjdk-source-location, but '${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}' does not exist"
     exit 1
   fi
   BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]="true";
