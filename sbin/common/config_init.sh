@@ -435,7 +435,7 @@ function setOpenjdkSourceDir() {
   fi
   BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]="true";
   if [ -z "${BUILD_CONFIG[TAG]}" ] ; then
-    echo "You have not yet specified --tag. It is strongly recommended you do so, otherwise a default one will be provided."
+    echo "WARNING: You have not yet specified --tag. It is strongly recommended you do so, otherwise a default one will be provided."
   fi
 }
 
