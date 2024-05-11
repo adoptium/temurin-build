@@ -135,16 +135,16 @@ the one you are trying to build.
 .BR \-k ", " \-\-keep
 if using docker, keep the container after the build.
 .TP
+.BR  \-l ", " \-\-openjdk\-source\-location " " \fI<dir/archive>\fR
+If set, must point to directory or archive with valid OpenJDK source code.
+This local source code will be used instead of cloning from a git repository and without any git tag or git reset.
+You still have to set the version argument though, and it is recommended that you add \-\-tag too so that the top level directory names in the output, as well as the details in "java -version" are created correctly.
+.TP
 .BR \-\-make-args " " \fI<args>\fR
 specify any custom user make arguments.
 .TP
 .BR \-\-no\-adopt\-patches
 This indicates to the build script that the build does not have Temurin's additional patches applied.
-.TP
-.BR  \-l ", " \-\-openjdk\-source\-location " " \fI<dir/archive>\fR
-If set, must point to directory or archive with valid OpenJDK source code.
-This local source code will be used instead of cloning from a git repository and without any git tag or git reset.
-You still have to set the version argument though, and it is recommended that you add \-\-tag too so that the top level directory names in the output, as well as the details in "java -version" are created correctly.
 .TP
 .BR \-p ", " \-\-processors " " \fI<args>\fR
 specify the number of processors to use for the docker build.
