@@ -90,7 +90,7 @@ buildOpenJDKViaDocker()
     build_variant_flag="--openj9"
   fi
   docker/dockerfile-generator.sh --version "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" "$build_variant_flag" \
-     --dirs "${workspacedir} ${targetdir}"
+     --dirs "${workspacedir} ${targetdir}" --command "${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]}"
 
   # shellcheck disable=SC1090,SC1091
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
@@ -139,7 +139,7 @@ buildOpenJDKViaDocker()
     BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
     BUILD_CONFIG[STATIC_LIBS_IMAGE_PATH]=$static_libs_dir
 
-  if [ -z "$(command -v docker)" ]; then
+  if [ -z "$(command -v ${BUILD_CONFIG[USE_DOCKER]})" ]; then
      # shellcheck disable=SC2154
     echo "Error, please install docker and ensure that it is in your path and running!"
     exit

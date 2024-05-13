@@ -113,6 +113,11 @@ processArgs() {
         shift
         shift
         ;;
+      --command)
+        CMD="${2}"
+        shift
+        shift
+        ;;
       *)
         echo "Unrecognised Argument: $1"
         exit 1
@@ -131,6 +136,14 @@ processArgs() {
   DOCKERFILE_PATH="$DOCKERFILE_DIR/Dockerfile"
   if [ ${OPENJ9} == true ]; then
     DOCKERFILE_PATH="$DOCKERFILE_PATH-openj9"
+  fi
+
+  if [ -z "$CMD" ]; then
+    if which podman > /dev/null; then
+       CMD=podman
+    else
+       CMD=docker
+    fi
   fi
 }
 
@@ -435,7 +448,7 @@ if [ "${BUILD}" == true ]; then
   fi
 
   # although this works for both docekr and podman with docker alias, it shodl honour the setup pf BUILD_CONFIG[USE_DOCKER] (also maybe with  BUILD_CONFIG[DOCKER] which set sudo/no sudo)
-  docker build -t "jdk${JDK_VERSION}_build_image" -f "$DOCKERFILE_PATH" . --build-arg "OPENJDK_CORE_VERSION=${JDK_VERSION}" --build-arg "HostUID=${UID}"
+  ${CMD} build -t "jdk${JDK_VERSION}_build_image" -f "$DOCKERFILE_PATH" . --build-arg "OPENJDK_CORE_VERSION=${JDK_VERSION}" --build-arg "HostUID=${UID}"
   echo "To start a build run ${commandString}"
-  docker run -it "jdk${JDK_VERSION}_build_image" bash
+  ${CMD} run -it "jdk${JDK_VERSION}_build_image" bash
 fi
