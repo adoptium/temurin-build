@@ -734,9 +734,9 @@ Compare_JDK() {
   cat "$ScriptPath/reprotest.diff"
   echo ""
   echo "---------------------------------------------"
-  echo "Copying Output To $(dirname "$0")"
 
   if [ -n "$REPORT_DIR" ]; then
+    echo "Copying Output To $REPORT_DIR"
     cp "$ScriptPath/reprotest.diff" "$REPORT_DIR"
     cp "$WORK_DIR/reproJDK.zip" "$REPORT_DIR"
   fi
