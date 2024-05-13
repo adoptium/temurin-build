@@ -82,6 +82,8 @@ OPENJDK_BUILD_NUMBER
 OPENJDK_CORE_VERSION
 OPENJDK_FEATURE_NUMBER
 OPENJDK_FOREST_NAME
+OPENJDK_LOCAL_SOURCE_ARCHIVE
+OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH
 OPENJDK_SOURCE_DIR
 OPENJDK_UPDATE_VERSION
 OS_KERNEL_NAME
@@ -308,7 +310,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[REUSE_CONTAINER]=false;;
 
         "--jdk-boot-dir" | "-J" )
-        BUILD_CONFIG[JDK_BOOT_DIR]="$1";shift;;
+        BUILD_CONFIG[JDK_BOOT_DIR]="$1"; shift;;
 
         "--cross-compile" )
         BUILD_CONFIG[CROSSCOMPILE]=true;;
@@ -318,6 +320,9 @@ function parseConfigurationArguments() {
 
         "--no-adopt-patches" )
         BUILD_CONFIG[ADOPT_PATCHES]=false;;
+
+        "--openjdk-source-location" | "-l" )
+        setOpenjdkSourceDir "${1}"; shift;;
 
         "--patches" )
         BUILD_CONFIG[PATCHES]="$1"; shift;;
@@ -417,6 +422,23 @@ function setBranch() {
   BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}
 }
 
+# Set the local dir if used
+function setOpenjdkSourceDir() {
+  if [ ! -e "${1}" ] ; then
+    echo "You have specified -l/--openjdk-source-location, but '${1}' does not exist"
+    exit 1
+  fi
+  BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]=$(readlink -f "$1");
+  if [ ! -e "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" ] ; then
+    echo "You have specified -l/--openjdk-source-location, but '${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}' does not exist"
+    exit 1
+  fi
+  BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]="true";
+  if [ -z "${BUILD_CONFIG[TAG]}" ] ; then
+    echo "WARNING: You have not yet specified --tag. It is strongly recommended you do so, otherwise a default one will be provided."
+  fi
+}
+
 # Set the config defaults
 function configDefaults() {
 
@@ -463,6 +485,12 @@ function configDefaults() {
 
   # The full forest name, e.g. jdk8, jdk8u, jdk9, jdk9u, etc.
   BUILD_CONFIG[OPENJDK_FOREST_NAME]=""
+
+  # whether the forest is local directory or not
+  BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]="false"
+
+  # whether the forest is local directory or not
+  BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]=""
 
   # The abridged openjdk core version name, e.g. jdk8, jdk9, etc.
   BUILD_CONFIG[OPENJDK_CORE_VERSION]=""

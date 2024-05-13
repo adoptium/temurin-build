@@ -30,6 +30,10 @@ Note that the main argument, in this case jdk8, is compared and enforced
 against an enumeration - jdk8, jdk8u, ... jdk21, jdk21u, ...jdk. Nothing else.
 You can workaround this by \-\-version switch.
 
+"./makejdk-any-platform.sh -l my/dir/or/archive.tar.gz jdk22u"
+
+This will start a build of Java 22 from your local sources
+
 Please visit https://www.adoptium.net for further support
 
 .SH VERSIONS
@@ -133,6 +137,11 @@ be reused as long as you keep workspace or clean libs.
 .BR \-k ", " \-\-keep
 if using docker, keep the container after the build.
 .TP
+.BR  \-l ", " \-\-openjdk\-source\-location " " \fI<dir/archive>\fR
+If set, must point to directory or archive with valid OpenJDK source code.
+This local source code will be used instead of cloning from a git repository and without any git tag or git reset.
+You still have to set the version argument though, and it is recommended that you add \-\-tag too so that the top level directory names in the output, as well as the details in "java -version" are created correctly.
+.TP
 .BR \-\-make-args " " \fI<args>\fR
 specify any custom user make arguments.
 .TP
@@ -201,6 +210,8 @@ specify the vendor vm bug url
 .TP
 .BR \-v ", " \-\-version " " \fI<version>\fR
 specify the OpenJDK version to build e.g. jdk8u.  Left for backwards compatibility.
+Useful, when cloning a repo with a non-uniform name, e.g., shenandoah-jdk8u (main version argument),
+to tell the build that you are effectively building a jdk8u binary.
 .TP
 .BR \-V ", " \-\-jvm-variant " " \fI<jvm_variant>\fR
 specify the JVM variant (server or client), defaults to server.

@@ -22,7 +22,6 @@
 ################################################################################
 
 set -eu
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=sbin/common/constants.sh
@@ -38,6 +37,64 @@ ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f0878332915
 ALSA_LIB_GPGKEYID=${ALSA_LIB_GPGKEYID:-A6E59C91}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 
+
+copyFromDir() {
+  echo "Copying OpenJDK source from  ${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
+  # We really do not want to use .git for dirs, as we expect user have them set up, ignoring them
+  local files=$(find "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" -maxdepth 1 -mindepth 1 | grep -v -e "/workspace$" -e "/build$" -e "/.git" -e -"/build/")
+  # SC2086 (info): Double quote to prevent globbing and word splitting.
+  # globbing is intentional here
+  # shellcheck disable=SC2086
+  cp -rf $files "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/"
+}
+
+# this is workarounding --strip-components 1 missing on gnu tar
+# it requires  absolute tar-filepath as it changes dir and is hardcoded to one
+# similar approach can be used also for zip in future
+untarGnuAbsPathWithStripComponents1() {
+  local tmp=$(mktemp -d)
+  pushd "$tmp" > /dev/null
+    tar "$@"
+  popd  > /dev/null
+  mv "$tmp"/*/* .
+  mv "$tmp"/*/.* . || echo "no hidden files in tarball"
+  rmdir "$tmp"/*
+  rmdir "$tmp"
+}
+
+unpackFromArchive() {
+  echo "Extracting OpenJDK source tarball ${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to build the binary"
+  # If the tarball contains .git files, they should be ignored later
+  # todo, support also zips?
+  pushd "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"  | grep "/$" -c) || local topLevelItems=1
+    if [ "$topLevelItems" -eq "1" ] ; then
+      echo "Source tarball contains exactly one directory"
+      untarGnuAbsPathWithStripComponents1 -xf "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
+    else
+      echo "Source tarball does not contain a top level directory"
+      tar -xf "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
+    fi
+    rm -rf "build"
+  popd
+}
+
+copyFromDirOrUnpackFromArchive() {
+  echo "Cleaning the copy of OpenJDK source repository from $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} and replacing with a fresh copy in 10 seconds..."
+  verboseSleep	 10
+  rm -rf "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  mkdir  "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  # Note that we are not persisting the build directory
+  if [ -d "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" ] ; then
+    copyFromDir
+  elif [ -f "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" ] ; then
+    unpackFromArchive
+  else
+    echo "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} is not a directory or a file "
+    exit 1
+  fi
+}
+
 # Create a new clone or update the existing clone of the OpenJDK source repo
 # TODO refactor this for Single Responsibility Principle (SRP)
 checkoutAndCloneOpenJDKGitRepo() {
@@ -45,7 +102,7 @@ checkoutAndCloneOpenJDKGitRepo() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
 
   # Check that we have a git repo, we assume that it is a repo that contains openjdk source
-  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
+  if [ -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ] && [ "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]}" == "false" ]; then
     set +e
     git --git-dir "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" remote -v
     echo "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}"
@@ -79,6 +136,8 @@ checkoutAndCloneOpenJDKGitRepo() {
       echo "If this is inside a docker you can purge the existing source by passing --clean-docker-build"
       exit 1
     fi
+  elif [ "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]}" == "true" ]; then
+    copyFromDirOrUnpackFromArchive
   elif [ ! -d "${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.git" ]; then
     echo "Could not find a valid openjdk git repository at $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} so re-cloning the source to openjdk"
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]:?}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
@@ -107,8 +166,9 @@ checkoutAndCloneOpenJDKGitRepo() {
     fi
   fi
 
-  git clean -ffdx
-
+  if [ "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]}" == "false" ]; then
+    git clean -ffdx
+  fi
   updateOpenj9Sources
 
   createSourceTagFile
@@ -119,6 +179,17 @@ checkoutAndCloneOpenJDKGitRepo() {
 # Checkout the required code to build from the given cached git repo
 # Set checkoutRc to result so we can retry
 checkoutRequiredCodeToBuild() {
+
+  if [ "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]}" == "true" ]; then
+    echo "Skipping checkoutRequiredCodeToBuild - local directory under processing:"
+    echo "  workspace = ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    echo "  BUILD_VARIANT = ${BUILD_CONFIG[BUILD_VARIANT]}"
+    echo "  TAG = ${BUILD_CONFIG[TAG]} - Used only in name, if at all"
+    echo "  BRANCH = ${BUILD_CONFIG[BRANCH]} - UNUSED!"
+    checkoutRc=0
+    return
+  fi
+
   checkoutRc=1
 
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
