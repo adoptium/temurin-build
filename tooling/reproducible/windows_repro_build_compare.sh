@@ -63,6 +63,7 @@ NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args")
 SBOMLocalPath="$WORK_DIR/src_sbom.json"
 DISTLocalPath="$WORK_DIR/src_jdk_dist.zip"
 ScriptPath=$(dirname "$(realpath "$0")")
+rc=0
 # Function to check if a string is a valid URL
 is_url() {
   local url=$1
@@ -723,9 +724,12 @@ Compare_JDK() {
   export PATH="$PATH:$CPW"
 
   # Run Comparison Script
-  echo "cd $ScriptPath && ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk CYGWIN 2>&1" | sh &
-  wait
+  cd $ScriptPath || exit 1
+  ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk CYGWIN 2>&1 &
+  pid=$!
+  wait $pid
 
+  rc=$?
   # Display The Content Of reprotest.diff
   echo ""
   echo "---------------------------------------------"
@@ -795,3 +799,4 @@ echo "---------------------------------------------"
 Compare_JDK
 echo "---------------------------------------------"
 Clean_Up_Everything
+exit $rc
