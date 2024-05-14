@@ -410,5 +410,7 @@ configure_build() {
   setWorkingDirectory
   configureMacFreeFont
   setMakeArgs
-  setBootJdk
+  if [ "${BUILD_CONFIG[USE_DOCKER]}" == false ] ; then
+    setBootJdk
+  fi
 }
