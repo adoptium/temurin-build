@@ -952,7 +952,7 @@ generateSBoM() {
   addBootJDK
 
   # Add ALSA 3rd party
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_version_alsa.txt)"
+  addALSAVersion
   # Add FreeType 3rd party
   addFreeTypeVersionInfo
   # Add FreeMarker 3rd party (openj9)
@@ -1154,6 +1154,35 @@ addCycloneDXVersions() {
 }
 
 # Below add versions to sbom | Facilitate reproducible builds
+
+addALSAVersion() {
+     # Get ALSA include location from configured build spec.gmk and locate version.h definition
+     local specFile
+     if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+       specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
+     else
+       specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
+     fi
+
+     # Get ALSA include dir from the built build spec.gmk for ALSA_CFLAGS.
+     local ALSA_INCLUDE="$(grep "^ALSA_CFLAGS[ ]*:=" ${specFile} | sed "s/^ALSA_CFLAGS[ ]*:=[ ]*//" | sed "s/^-I//")"
+     if [ -z "${ALSA_INCLUDE}" ]; then
+       echo "No ALSA_CFLAGS, ALSA not used"
+     else
+       local ALSA_VERSION_H="${ALSA_INCLUDE}/version.h"
+
+       # Get SND_LIB_VERSION_STR from version.h
+       local ALSA_VERSION="$(grep "SND_LIB_VERSION_STR" ${ALSA_VERSION_H} | tr "\t" " " | tr -s " " | cut -d" " -f3 | sed "s/\"//g")"
+
+       if [ -z "${ALSA_VERSION}" ]; then
+         echo "Unable to find SND_LIB_VERSION_STR in ${ALSA_VERSION_H}"
+         ALSA_VERSION="Unknown"
+       fi
+
+       echo "Adding ALSA version to SBOM: ${ALSA_VERSION}"
+       addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "${ALSA_VERSION}"
+     fi
+}
 
 addGLIBCforLinux() {
    # Determine target build LIBC from configure log "target system type" which is consistent for jdk8+
