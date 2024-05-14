@@ -555,7 +555,6 @@ Prepare_Env_For_Build() {
   echo "Setting Variables"
   export BOOTJDK_HOME=$WORK_DIR/jdk-${bootJDK}
   echo "Parsing Make JDK Any Platform ARGS For Build"
-  echo "buildargs is $buildArgs"
   # Split the string into an array of words
   IFS=' ' read -ra words <<< "$buildArgs"
 
@@ -724,12 +723,15 @@ Compare_JDK() {
   export PATH="$PATH:$CPW"
 
   # Run Comparison Script
+  set +e
   cd $ScriptPath || exit 1
   ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk CYGWIN 2>&1 &
   pid=$!
   wait $pid
 
   rc=$?
+  set -e
+  cd $WORK_DIR
   # Display The Content Of reprotest.diff
   echo ""
   echo "---------------------------------------------"
