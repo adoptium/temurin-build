@@ -564,7 +564,7 @@ Build_JDK() {
   cd "$WORK_DIR"
   echo "cd temurin-build && ./makejdk-any-platform.sh $final_params 2>&1 | tee build.$$.log" | sh
   # Copy The Built JDK To The Working Directory
-  cp "$WORK_DIR/temurin-build/workspace/target/$target_file" "$WORK_DIR/reproJDK.tar.gz"
+  cp $WORK_DIR/temurin-build/workspace/target/$target_file $WORK_DIR/reproJDK.tar.gz
 }
 
 Compare_JDK() {
@@ -599,26 +599,26 @@ Compare_JDK() {
   # These Two Files Are Generate Classes And Should Be Removed Prior To Running The Comparison
   # jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa
 
-  if [ -f "$WORK_DIR/compare/src_jdk/bin/server/classes.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/src_jdk/bin/server/classes.jsa"
+  if [ -f "$WORK_DIR/compare/src_jdk/Contents/Home/bin/server/classes.jsa" ] ; then
+    rm -rf "$WORK_DIR/compare/src_jdk/Contents/Home/bin/server/classes.jsa"
   fi
 
-  if [ -f "$WORK_DIR/compare/tar_jdk/bin/server/classes.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/tar_jdk/bin/server/classes.jsa"
+  if [ -f "$WORK_DIR/compare/tar_jdk/Contents/Home/bin/server/classes.jsa" ] ; then
+    rm -rf "$WORK_DIR/compare/tar_jdk/Contents/Home/bin/server/classes.jsa"
   fi
 
-  if [ -f "$WORK_DIR/compare/src_jdk/bin/server/classes_nocoops.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/src_jdk/bin/server/classes_nocoops.jsa"
+  if [ -f "$WORK_DIR/compare/src_jdk/Contents/Home/bin/server/classes_nocoops.jsa" ] ; then
+    rm -rf "$WORK_DIR/compare/src_jdk/Contents/Home/bin/server/classes_nocoops.jsa"
   fi
 
-  if [ -f "$WORK_DIR/compare/tar_jdk/bin/server/classes_nocoops.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/tar_jdk/bin/server/classes_nocoops.jsa"
+  if [ -f "$WORK_DIR/compare/tar_jdk/Contents/Home/bin/server/classes_nocoops.jsa" ] ; then
+    rm -rf "$WORK_DIR/compare/tar_jdk/Contents/Home/bin/server/classes_nocoops.jsa"
   fi
   # Ensure Java Home Is Set
   export JAVA_HOME=$BOOTJDK_HOME
   export PATH=$JAVA_HOME/bin:$PATH
   cd "$ScriptPath" || exit 1
-  ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk Darwin 2>&1 &
+  ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk/Contents/Home temurin $WORK_DIR/compare/tar_jdk/Contents/Home Darwin 2>&1 &
   pid=$!
   wait $pid
 
