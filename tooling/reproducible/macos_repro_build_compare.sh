@@ -309,7 +309,7 @@ Check_Compiler_Versions() {
   done < <(find "$MAC_COMPILER_BASE" -maxdepth 1 -type d -name "$MAC_COMPILER_APP_PREFIX*")
   XCODE_COUNT=${#XCODE_PATHS[@]}
 
-  if  [ $XCODE_COUNT -eq 0 ] ; then
+  if  [ "$XCODE_COUNT" -eq 0 ] ; then
     echo "Error - An Xcode Installaton Could Not Be Found In The Default Path : $MAC_COMPILER_BASE / $MAC_COMPILER_APP_PREFIX "
     exit 1
   else
@@ -439,11 +439,6 @@ Prepare_Env_For_Build() {
   echo "Setting Variables"
   export BOOTJDK_HOME=$WORK_DIR/jdk-${bootJDK}/Contents/Home
 
-  echo "SFO0"
-  echo ""
-  echo $buildArgs
-  echo ""
-
   echo "Parsing Make JDK Any Platform ARGS For Build"
   # Split the string into an array of words
   IFS=' ' read -ra words <<< "$buildArgs"
@@ -480,7 +475,6 @@ Prepare_Env_For_Build() {
   export fixed_value=""
   export fixed_params=()
   export new_params=""
-  PARAM_ARRAY=()
   CONFIG_ARRAY=()
   BUILD_ARRAY=()
   FINAL_ARRAY=()
@@ -565,7 +559,7 @@ Build_JDK() {
   cd "$WORK_DIR"
   echo "cd temurin-build && ./makejdk-any-platform.sh $final_params 2>&1 | tee build.$$.log" | sh
   # Copy The Built JDK To The Working Directory
-  cp $WORK_DIR/temurin-build/workspace/target/$target_file $WORK_DIR/built_jdk.tar.gz
+  cp $WORK_DIR/temurin-build/workspace/target/"$target_file" $WORK_DIR/built_jdk.tar.gz
 }
 
 Compare_JDK() {
