@@ -483,6 +483,12 @@ buildingTheRestOfTheConfigParameters() {
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
     addConfigureArg "--with-x=" "/usr/include/X11"
   fi
+
+  # For jdk-17+ aarch64 linux, we need to add --enable-compatible-cds-alignment, until upstream
+  # fix for https://bugs.openjdk.org/browse/JDK-8331942 is merged into all jdk-17+ versions
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 17 ] && [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "aarch64" ]; then
+    addConfigureArg "--enable-compatible-cds-alignment" ""
+  fi
 }
 
 configureDebugParameters() {
