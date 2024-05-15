@@ -53,7 +53,7 @@ done
 files1=$(find "${JDK_DIR1}" -type f | wc -l)
 echo "Number of files: ${files1}"
 rc=0
-output="repro_diff.out"
+output="reprotest.diff"
 echo "Comparing ${JDK_DIR1} with ${JDK_DIR2} ... output to file: ${output}"
 diff -r -q "${JDK_DIR1}" "${JDK_DIR2}" > "${output}" || rc=$?
 

@@ -34,12 +34,12 @@ fi
 # Read Parameters
 SBOM_URL="$1"
 TARBALL_URL="$2"
+REPORT_DIR="$3"
 
 # Constants Required By This Script
 # These Values Should Be Updated To Reflect The Build Environment
 # The Defaults Below Are Suitable For An Adoptium Windows Build Environment
 # Which Has Been Created Via The Ansible Infrastructure Playbooks
-
 WORK_DIR="/cygdrive/c/comp-jdk-build"
 ANT_VERSION="1.10.5"
 ANT_CONTRIB_VERSION="1.0b3"
@@ -62,8 +62,8 @@ NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args")
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$WORK_DIR/src_sbom.json"
 DISTLocalPath="$WORK_DIR/src_jdk_dist.zip"
-ScriptPath="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
+ScriptPath=$(dirname "$(realpath "$0")")
+rc=0
 # Function to check if a string is a valid URL
 is_url() {
   local url=$1
@@ -172,9 +172,6 @@ Install_PreReqs() {
         apt-cyg install jq libjq1 libonig5
       fi
   fi
-
-  # Install JQ Where Not Already Installed
-
 }
 
 Get_SBOM_Values() {
@@ -203,7 +200,7 @@ Get_SBOM_Values() {
   msvsCCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MSVS C Compiler Version").version')
   msvsCppCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MSVS C++ Compiler Version").version')
   msvsSDKver=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MS Windows SDK Version").version')
-  bootJDK=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "BOOTJDK").version')
+  bootJDK=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "BOOTJDK").version' | sed -e 's#-LTS$##')
   buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
   buildSHA=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value' | awk -F'/' '{print $NF}')
   buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
@@ -557,13 +554,13 @@ Clone_Build_Repo() {
 Prepare_Env_For_Build() {
   echo "Setting Variables"
   export BOOTJDK_HOME=$WORK_DIR/jdk-${bootJDK}
-
   echo "Parsing Make JDK Any Platform ARGS For Build"
   # Split the string into an array of words
   IFS=' ' read -ra words <<< "$buildArgs"
 
   # Add The Build Time Stamp In Case It Wasnt In The SBOM ARGS
-  words+=( "--build-reproducible-date \"$buildStamp\"" )
+  words+=("--build-reproducible-date")
+  words+=("\"$buildStamp\"")
 
   # Initialize variables
   param=""
@@ -582,12 +579,12 @@ Prepare_Env_For_Build() {
       param="$word"
       value=""
     else
-      value+=" $word"
+      value+="$word "
     fi
   done
-
+  
     # Add the last parameter to the array
-  params+=("$param = $value")
+  params+=("$param=$value")
 
   # Read the separated parameters and values into a new array
   export fixed_param=""
@@ -604,16 +601,12 @@ Prepare_Env_For_Build() {
     fixed_param="${prefixed_param%%[[:space:]]}"
     prepped_value=${parts[1]}
     fixed_value=$(echo "$prepped_value" | awk '{$1=$1};1')
-
     # Handle Special parameters
-    if [ "$fixed_param" == "-b" ]; then fixed_value="$fixed_value " ; fi
-    if [ "$fixed_param" == "--jdk-boot-dir" ]; then fixed_value="$BOOTJDK_HOME " ; fi
-    if [ "$fixed_param" == "--freetype-dir" ]; then fixed_value="$fixed_value " ; fi
-    if [ "$fixed_param" == "--with-toolchain-version" ]; then fixed_value="$visualStudioVersion " ; fi
+    if [ "$fixed_param" == "--jdk-boot-dir" ]; then fixed_value="$BOOTJDK_HOME" ; fi
+    if [ "$fixed_param" == "--with-toolchain-version" ]; then fixed_value="$visualStudioVersion" ; fi
     if [ "$fixed_param" == "--with-ucrt-dll-dir" ]; then fixed_value="temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder " ; fi
-    if [ "$fixed_param" == "--target-file-name" ]; then target_file="$fixed_value" ; fixed_value="$fixed_value " ; fi
-    if [ "$fixed_param" == "--tag" ]; then fixed_value="$fixed_value " ; fi
-
+    if [ "$fixed_param" == "--target-file-name" ]; then target_file="$fixed_value" ; fi
+    if [ "$fixed_param" == "--user-openjdk-build-root-directory" ]; then fixed_value="$WORK_DIR/temurin-build/workspace/build/openjdkbuild" ; fi
 
     # Fix Build Variant Parameter To Strip JDK Version
 
@@ -654,15 +647,9 @@ Prepare_Env_For_Build() {
     fi
   done
 
-  for element in "${BUILD_ARRAY[@]}"; do
-    build_string+="$element"
-  done
-
-  for element in "${CONFIG_ARRAY[@]}"; do
-    config_string+="$element"
-  done
-
-  final_params="$build_string--configure-args \"$config_string\" $jdk"
+  IFS=' ' build_string="${BUILD_ARRAY[*]}"
+  IFS=' ' config_string=$"${CONFIG_ARRAY[*]}"
+  final_params="$build_string --configure-args \"$config_string\" $jdk"
 
   echo "Make JDK Any Platform Argument List = "
   echo "$final_params"
@@ -677,23 +664,14 @@ Build_JDK() {
   cd "$WORK_DIR"
   echo "cd temurin-build && ./makejdk-any-platform.sh $final_params 2>&1 | tee build.$$.log" | sh
   # Copy The Built JDK To The Working Directory
-  cp "$WORK_DIR/temurin-build/workspace/target/$target_file" "$WORK_DIR/built_jdk.zip"
+  cp "$WORK_DIR/temurin-build/workspace/target/$target_file" "$WORK_DIR/reproJDK.zip"
 }
 
 Compare_JDK() {
   echo "Comparing JDKs"
-  echo ""
   mkdir "$WORK_DIR/compare"
   cp "$WORK_DIR/src_jdk_dist.zip" "$WORK_DIR/compare"
-  cp "$WORK_DIR/built_jdk.zip" "$WORK_DIR/compare"
-
-  # Get The Current Versions Of The Reproducible Build Scripts
-  wget -O "$WORK_DIR/compare/repro_common.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_common.sh"
-  wget -O "$WORK_DIR/compare/repro_compare.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_compare.sh"
-  wget -O "$WORK_DIR/compare/repro_process.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_process.sh"
-
-  # Set Permissions
-  chmod +x "$WORK_DIR/compare/"*sh
+  cp "$WORK_DIR/reproJDK.zip" "$WORK_DIR/compare"
   cd "$WORK_DIR/compare"
 
   # Unzip And Rename The Source JDK
@@ -704,28 +682,9 @@ Compare_JDK() {
 
   #Unzip And Rename The Target JDK
   echo "Unzip Target"
-  unzip -q -o built_jdk.zip
+  unzip -q -o reproJDK.zip
   original_directory_name=$(find . -maxdepth 1 -type d | grep -v src_jdk | tail -1)
   mv "$original_directory_name" tar_jdk
-
-  # These Two Files Are Generate Classes And Should Be Removed Prior To Running The Comparison
-  # jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa
-
-  if [ -f "$WORK_DIR/compare/src_jdk/bin/server/classes.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/src_jdk/bin/server/classes.jsa"
-  fi
-
-  if [ -f "$WORK_DIR/compare/tar_jdk/bin/server/classes.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/tar_jdk/bin/server/classes.jsa"
-  fi
-
-  if [ -f "$WORK_DIR/compare/src_jdk/bin/server/classes_nocoops.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/src_jdk/bin/server/classes_nocoops.jsa"
-  fi
-
-  if [ -f "$WORK_DIR/compare/tar_jdk/bin/server/classes_nocoops.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/tar_jdk/bin/server/classes_nocoops.jsa"
-  fi
 
   # Ensure Signtool Is In The Path
   TOOLCOUNT=$(find "$SIGNTOOL_BASE" | grep $msvsArch | grep -ic "signtool.exe$")
@@ -760,20 +719,29 @@ Compare_JDK() {
   export PATH="$PATH:$CPW"
 
   # Run Comparison Script
-  echo "cd $WORK_DIR/compare && ./repro_compare.sh temurin src_jdk temurin tar_jdk CYGWIN 2>&1" | sh &
-  wait
+  set +e
+  cd "$ScriptPath" || exit 1
+  ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk CYGWIN 2>&1 &
+  pid=$!
+  wait $pid
 
-  # Display The Content Of repro_diff.out
+  rc=$?
+  set -e
+  cd "$WORK_DIR"
+  # Display The Content Of reprotest.diff
   echo ""
   echo "---------------------------------------------"
   echo "Output From JDK Comparison Script"
   echo "---------------------------------------------"
-  cat "$WORK_DIR/compare/repro_diff.out"
+  cat "$ScriptPath/reprotest.diff"
   echo ""
   echo "---------------------------------------------"
-  echo "Copying Output To $(dirname "$0")"
-  cp "$WORK_DIR/compare/repro_diff.out" "$ScriptPath"
 
+  if [ -n "$REPORT_DIR" ]; then
+    echo "Copying Output To $REPORT_DIR"
+    cp "$ScriptPath/reprotest.diff" "$REPORT_DIR"
+    cp "$WORK_DIR/reproJDK.zip" "$REPORT_DIR"
+  fi
 }
 
 Clean_Up_Everything() {
@@ -829,3 +797,4 @@ echo "---------------------------------------------"
 Compare_JDK
 echo "---------------------------------------------"
 Clean_Up_Everything
+exit $rc
