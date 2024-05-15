@@ -686,10 +686,6 @@ Compare_JDK() {
   original_directory_name=$(find . -maxdepth 1 -type d | grep -v src_jdk | tail -1)
   mv "$original_directory_name" tar_jdk
 
-  # These Two Files Are Generate Classes And Should Be Removed Prior To Running The Comparison
-  # jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa
-  # should move to repro_common.sh
-
   # Ensure Signtool Is In The Path
   TOOLCOUNT=$(find "$SIGNTOOL_BASE" | grep $msvsArch | grep -ic "signtool.exe$")
 
