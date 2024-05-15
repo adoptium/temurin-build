@@ -617,7 +617,7 @@ Compare_JDK() {
   # Ensure Java Home Is Set
   export JAVA_HOME=$BOOTJDK_HOME
   export PATH=$JAVA_HOME/bin:$PATH
-  cd "$ScriptPath" || exit 1
+  cd $WORK_DIR/compare || exit 1
   ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk/Contents/Home temurin $WORK_DIR/compare/tar_jdk/Contents/Home Darwin 2>&1 &
   pid=$!
   wait $pid
@@ -630,15 +630,15 @@ Compare_JDK() {
   echo "---------------------------------------------"
   echo "Output From JDK Comparison Script"
   echo "---------------------------------------------"
-  cat "$ScriptPath/reprotest.diff"
+  cat "$WORK_DIR/compare/repro_diff.out"
   echo ""
   echo "---------------------------------------------"
   echo "Copying Output To $(dirname "$0")"
-  cp $WORK_DIR/compare/repro_diff.out $WORK_DIR
+  cp $WORK_DIR/compare/repro_diff.out $WORK_DIR/reprotest.diff
 
-    if [ -n "$REPORT_DIR" ]; then
+  if [ -n "$REPORT_DIR" ]; then
     echo "Copying Output To $REPORT_DIR"
-    cp "$ScriptPath/reprotest.diff" "$REPORT_DIR"
+    cp "$WORK_DIR/compare/reprotest.diff" "$REPORT_DIR"
     cp "$WORK_DIR/reproJDK.zip" "$REPORT_DIR"
   fi
 }
