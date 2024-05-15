@@ -65,7 +65,6 @@ ANT_BASE_PATH="/usr/local/bin"
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$WORK_DIR/src_sbom.json"
 DISTLocalPath="$WORK_DIR/src_jdk_dist.tar.gz"
-ScriptPath=$(dirname "$(realpath "$0")")
 rc=0
 
 # Function to check if a string is a valid URL
