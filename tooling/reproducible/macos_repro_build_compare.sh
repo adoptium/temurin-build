@@ -571,8 +571,8 @@ Compare_JDK() {
   echo "Comparing JDKs"
   echo ""
   mkdir "$WORK_DIR/compare"
-  cp "$WORK_DIR/src_jdk_dist.tar.gz" "$WORK_DIR/compare"
-  cp "$WORK_DIR/reproJDK.tar.gz" "$WORK_DIR/compare"
+  cp $WORK_DIR/src_jdk_dist.tar.gz $WORK_DIR/compare
+  cp $WORK_DIR/reproJDK.tar.gz $WORK_DIR/compare
   
 
   # Get The Current Versions Of The Reproducible Build Scripts
