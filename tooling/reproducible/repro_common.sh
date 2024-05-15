@@ -100,9 +100,7 @@ function removeSystemModulesHashBuilderParams() {
 
           # Remove "instruction number:" prefix, so we can just match code
           if [[ $(uname) =~ Darwin* ]]; then
-            echo sed -i "" -E 's/^[[:space:]]+[0-9]+:(.*)/\1/' "$f.javap.tmp"
             sed -i "" -E 's/^[[:space:]]+[0-9]+:(.*)/\1/' "$f.javap.tmp"
-exit 1
           else
             sed -i -E 's/^[[:space:]]+[0-9]+:(.*)/\1/' "$f.javap.tmp"
           fi
