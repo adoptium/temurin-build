@@ -83,58 +83,64 @@ function expandJDK() {
 #   4. then remove all lines until next: invokevirtual
 #   5. remove Last modified, Classfile and SHA-256 checksum javap artefact statements
 function removeSystemModulesHashBuilderParams() {
-  # Key strings
-  moduleHashesFunction="// Method jdk/internal/module/ModuleHashes\$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes\$Builder;"
-  moduleString="// String "
-  virtualFunction="invokevirtual"
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
+    # Key strings
+    moduleHashesFunction="// Method jdk/internal/module/ModuleHashes\$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes\$Builder;"
+    moduleString="// String "
+    virtualFunction="invokevirtual"
 
-  systemModules="SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class"
-  for systemModule in $systemModules
-    do
-      FILES=$(find "${JDK_DIR}" -type f -name "$systemModule")
-      for f in $FILES
-        do
-          ff=$(cygpath -w $f)
-          javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
-          rm "$f"
-
-          # Remove "instruction number:" prefix, so we can just match code
-          if [[ $(uname) =~ Darwin* ]]; then
-            sed -i "" -E 's/^[[:space:]]+[0-9]+:(.*)/\1/' "$f.javap.tmp"
-          else
-            sed -i -E 's/^[[:space:]]+[0-9]+:(.*)/\1/' "$f.javap.tmp"
-          fi
-
-          cc=99
-          found=false
-          while IFS= read -r line
+    systemModules="SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class"
+    for systemModule in $systemModules
+      do
+        FILES=$(find "${JDK_DIR}" -type f -name "$systemModule")
+        for f in $FILES
           do
-            cc=$((cc+1))
-            # Detect hashForModule function
-            if [[ "$line" =~ .*"$moduleHashesFunction".* ]]; then
-              cc=0
+            if [[ "$OS" =~ CYGWIN* ]]; then
+              ff=$(cygpath -w $f)
+            else
+              ff=f
             fi
-            # 3rd instruction line is the Module string to confirm entry
-            if [[ "$cc" -eq 3 ]] && [[ "$line" =~ .*"$moduleString"[a-z\.]+.* ]]; then
-              found=true
-              module=$(echo "$line" | tr -s ' ' | tr -d '\r' | cut -d' ' -f6)
-              export module
-            fi
-            # hasForModule function section finishes upon finding invokevirtual
-            if [[ "$found" = true ]] && [[ "$line" =~ .*"$virtualFunction".* ]]; then
-              found=false
-            fi
-            if [[ "$found" = false ]]; then
-              echo "$line" >> "$f.javap.tmp2"
-            fi
-          done < "$f.javap.tmp"
-          rm "$f.javap.tmp"
-          grep -v "Last modified\|Classfile\|SHA-256 checksum" "$f.javap.tmp2" > "$f.javap"
-          rm "$f.javap.tmp2"
-        done
-    done
+            javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
+            rm "$f"
 
-  echo "Successfully removed all SystemModules jdk.jpackage hash differences from ${JDK_DIR}"
+            # Remove "instruction number:" prefix, so we can just match code
+            if [[ $(uname) =~ Darwin* ]]; then
+              sed -i "" -E 's/^[[:space:]]+[0-9]+:(.*)/\1/' "$f.javap.tmp"
+            else
+              sed -i -E 's/^[[:space:]]+[0-9]+:(.*)/\1/' "$f.javap.tmp"
+            fi
+
+            cc=99
+            found=false
+            while IFS= read -r line
+            do
+              cc=$((cc+1))
+              # Detect hashForModule function
+              if [[ "$line" =~ .*"$moduleHashesFunction".* ]]; then
+                cc=0
+              fi
+              # 3rd instruction line is the Module string to confirm entry
+              if [[ "$cc" -eq 3 ]] && [[ "$line" =~ .*"$moduleString"[a-z\.]+.* ]]; then
+                found=true
+                module=$(echo "$line" | tr -s ' ' | tr -d '\r' | cut -d' ' -f6)
+                export module
+              fi
+              # hasForModule function section finishes upon finding invokevirtual
+              if [[ "$found" = true ]] && [[ "$line" =~ .*"$virtualFunction".* ]]; then
+                found=false
+              fi
+              if [[ "$found" = false ]]; then
+                echo "$line" >> "$f.javap.tmp2"
+              fi
+            done < "$f.javap.tmp"
+            rm "$f.javap.tmp"
+            grep -v "Last modified\|Classfile\|SHA-256 checksum" "$f.javap.tmp2" > "$f.javap"
+            rm "$f.javap.tmp2"
+          done
+      done
+
+    echo "Successfully removed all SystemModules jdk.jpackage hash differences from ${JDK_DIR}"
+  fi
 }
 
 # Remove the Windows EXE/DLL timestamps and internal VS CRC and debug repro hex values
@@ -249,7 +255,11 @@ function processModuleInfo() {
     FILES=$(find "${JDK_DIR}" -type f -name "module-info.class")
     for f in $FILES
     do
-      ff=$(cygpath -w $f)
+      if [[ "$OS" =~ CYGWIN* ]]; then
+        ff=$(cygpath -w $f)
+      else
+        ff=f
+      fi
       javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
       rm "$f"
 
