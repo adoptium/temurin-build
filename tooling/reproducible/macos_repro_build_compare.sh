@@ -180,7 +180,7 @@ Get_SBOM_Values() {
     buildArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
 
   # Check if the tool was found
-  if [ -n "macOSCompiler" ]; then
+  if [ -n "$macOSCompiler" ]; then
       echo "MacOS Compiler Version: $macOSCompiler"
       export macOSCompiler
   else
