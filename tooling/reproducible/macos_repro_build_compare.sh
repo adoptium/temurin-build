@@ -22,7 +22,7 @@
 set -e
 
 # Check All 3 Params Are Supplied
-if [ "$#" -lt 2 ]; then
+if [ "$#" -lt 3 ]; then
   echo "Usage: $0 SBOM_URL/SBOM_PATH JDKZIP_URL/JDKZIP_PATH"
   echo ""
   echo "1. SBOM_URL/SBOM_PATH - should be the FULL path OR a URL to a Temurin JDK SBOM JSON file in CycloneDX Format"
@@ -31,19 +31,22 @@ if [ "$#" -lt 2 ]; then
   echo "2. JDKZIP_URL/JDKZIP_PATH - should be the FULL path OR a URL to a Temurin Windows JDK Zip file"
   echo "    eg. https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%2B9/OpenJDK21U-jdk_x64_mac_hotspot_21.0.3_9.tar.gz"
   echo ""
+  echo "3. REPORT_DIR - should be the FULL path OR a URL to the output directory for the comparison report
+  echo ""
   exit 1
 fi
 
 # Read Parameters
 SBOM_URL="$1"
 TARBALL_URL="$2"
+REPORT_DIR="$3"
 
 # Constants Required By This Script
 # These Values Should Be Updated To Reflect The Build Environment
 # The Defaults Below Are Suitable For An Adoptium Windows Build Environment
 # Which Has Been Created Via The Ansible Infrastructure Playbooks
 
-WORK_DIR=/Users/jenkins/sfryer/comp-jdk-build
+WORK_DIR=~/comp-jdk-build
 MAC_COMPILER_BASE=/Applications
 MAC_COMPILER_APP_PREFIX=Xcode
 MAC_SDK_LOCATION=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
@@ -62,6 +65,8 @@ ANT_BASE_PATH="/usr/local/bin"
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$WORK_DIR/src_sbom.json"
 DISTLocalPath="$WORK_DIR/src_jdk_dist.tar.gz"
+ScriptPath=$(dirname "$(realpath "$0")")
+rc=0
 
 # Function to check if a string is a valid URL
 is_url() {
@@ -172,7 +177,7 @@ Get_SBOM_Values() {
 
     # Extract All Required Fields From The SBOM Content
     macOSCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MacOS Compiler").version')
-    bootJDK=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "BOOTJDK").version')
+    bootJDK=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "BOOTJDK").version' | sed -e 's#-LTS$##')
     buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
     buildSHA=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value' | awk -F'/' '{print $NF}')
     buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
@@ -445,7 +450,7 @@ Prepare_Env_For_Build() {
 
   # Add The Build Time Stamp In Case It Wasnt In The SBOM ARGS
   words+=( " --build-reproducible-date \"$buildStamp\"" )
-
+  
   # Initialize variables
   param=""
   value=""
@@ -559,7 +564,7 @@ Build_JDK() {
   cd "$WORK_DIR"
   echo "cd temurin-build && ./makejdk-any-platform.sh $final_params 2>&1 | tee build.$$.log" | sh
   # Copy The Built JDK To The Working Directory
-  cp $WORK_DIR/temurin-build/workspace/target/"$target_file" $WORK_DIR/built_jdk.tar.gz
+  cp "$WORK_DIR/temurin-build/workspace/target/$target_file" "$WORK_DIR/reproJDK.tar.gz"
 }
 
 Compare_JDK() {
@@ -567,7 +572,8 @@ Compare_JDK() {
   echo ""
   mkdir "$WORK_DIR/compare"
   cp "$WORK_DIR/src_jdk_dist.tar.gz" "$WORK_DIR/compare"
-  cp "$WORK_DIR/built_jdk.tar.gz" "$WORK_DIR/compare"
+  cp "$WORK_DIR/reproJDK.tar.gz" "$WORK_DIR/compare"
+  
 
   # Get The Current Versions Of The Reproducible Build Scripts
   wget -O "$WORK_DIR/compare/repro_common.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_common.sh"
@@ -580,15 +586,13 @@ Compare_JDK() {
 
   # Unzip And Rename The Source JDK
   echo "Unzip Source"
-  # unzip -q -o src_jdk_dist.zip
   tar xvfz src_jdk_dist.tar.gz
   original_directory_name=$(find . -maxdepth 1 -type d | tail -1)
   mv "$original_directory_name" src_jdk
 
   #Unzip And Rename The Target JDK
   echo "Unzip Target"
-  # unzip -q -o built_jdk.zip
-  tar xvfz built_jdk.tar.gz
+  tar xvfz reproJDK.tar.gz
   original_directory_name=$(find . -maxdepth 1 -type d | grep -v src_jdk | tail -1)
   mv "$original_directory_name" tar_jdk
 
@@ -613,19 +617,30 @@ Compare_JDK() {
   # Ensure Java Home Is Set
   export JAVA_HOME=$BOOTJDK_HOME
   export PATH=$JAVA_HOME/bin:$PATH
-  echo "cd $WORK_DIR/compare && ./repro_compare.sh temurin src_jdk/Contents/Home temurin tar_jdk/Contents/Home Darwin 2>&1" | sh &
-  wait
+  cd "$ScriptPath" || exit 1
+  ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk Darwin 2>&1 &
+  pid=$!
+  wait $pid
 
+  rc=$?
+  set -e
+  cd "$WORK_DIR"
   # Display The Content Of repro_diff.out
   echo ""
   echo "---------------------------------------------"
   echo "Output From JDK Comparison Script"
   echo "---------------------------------------------"
-  cat "$WORK_DIR/compare/repro_diff.out"
+  cat "$ScriptPath/reprotest.diff"
   echo ""
   echo "---------------------------------------------"
   echo "Copying Output To $(dirname "$0")"
   cp $WORK_DIR/compare/repro_diff.out $WORK_DIR
+
+    if [ -n "$REPORT_DIR" ]; then
+    echo "Copying Output To $REPORT_DIR"
+    cp "$ScriptPath/reprotest.diff" "$REPORT_DIR"
+    cp "$WORK_DIR/reproJDK.zip" "$REPORT_DIR"
+  fi
 }
 #
 Clean_Up_Everything() {
@@ -668,6 +683,4 @@ echo "---------------------------------------------"
 Compare_JDK
 echo "---------------------------------------------"
 Clean_Up_Everything
-echo "---------------------------------------------"
-echo "ALL DONE"
-echo "---------------------------------------------"
+exit $rc
