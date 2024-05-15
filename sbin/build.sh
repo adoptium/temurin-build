@@ -453,7 +453,8 @@ buildingTheRestOfTheConfigParameters() {
 
   # For jdk-17+ aarch64 linux, we need to add --enable-compatible-cds-alignment, until upstream
   # fix for https://bugs.openjdk.org/browse/JDK-8331942 is merged into all jdk-17+ versions
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 17 ] && [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "aarch64" ]; then
+  # (but not for OpenJ9 where it's not supported)
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 17 ] && [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "aarch64" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
     addConfigureArg "--enable-compatible-cds-alignment" ""
   fi
 }
