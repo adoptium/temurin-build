@@ -210,6 +210,17 @@ function processModuleInfo() {
   fi
 }
 
+# Remove windowns generate classes jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa 
+function removeGeneratedClasses() {
+  local JDK_DIR="$1"
+  local OS="$2"
+
+  if [[ "$OS" =~ CYGWIN* ]]; then
+    rm -rf "$JDK_DIR/bin/server/classes.jsa"
+    rm -rf "$JDK_DIR/bin/server/classes_nocoops.jsa"
+  fi
+}
+
 # Remove all Signatures
 function removeSignatures() {
   local JDK_DIR="$1"
