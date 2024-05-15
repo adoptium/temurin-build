@@ -1,8 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2086
 # ********************************************************************************
-# Copyright (c) 2024 Contributors to the Eclipse Foundation
-#
 # See the NOTICE file(s) with this work for additional
 # information regarding copyright ownership.
 #
@@ -102,9 +100,9 @@ function removeSystemModulesHashBuilderParams() {
 
           # Remove "instruction number:" prefix, so we can just match code
           if [[ $(uname) =~ Darwin* ]]; then
-            sed -i "" -E "s/^[[:space:]]+[0-9]+:(.*)/\1/" "$f.javap.tmp"
+            sed -i "" -E 's/^[[:space:]]+[0-9]+:(.*)/\1/' "$f.javap.tmp"
           else
-            sed -i -E "s/^[[:space:]]+[0-9]+:(.*)/\1/" "$f.javap.tmp"
+            sed -i -E 's/^[[:space:]]+[0-9]+:(.*)/\1/' "$f.javap.tmp"
           fi
 
           cc=99
