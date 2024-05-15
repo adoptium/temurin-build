@@ -177,7 +177,7 @@ Get_SBOM_Values() {
 
     # Extract All Required Fields From The SBOM Content
     macOSCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MacOS Compiler").version')
-    bootJDK=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "BOOTJDK").version' | sed -e 's#-LTS$##')
+    bootJDK=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "BOOTJDK").version' | sed -e 's/-LTS$//')
     buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
     buildSHA=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value' | awk -F'/' '{print $NF}')
     buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
