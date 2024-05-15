@@ -564,7 +564,7 @@ Build_JDK() {
   cd "$WORK_DIR"
   echo "cd temurin-build && ./makejdk-any-platform.sh $final_params 2>&1 | tee build.$$.log" | sh
   # Copy The Built JDK To The Working Directory
-  cp $WORK_DIR/temurin-build/workspace/target/$target_file $WORK_DIR/reproJDK.tar.gz
+  cp $WORK_DIR/temurin-build/workspace/target/"$target_file" $WORK_DIR/reproJDK.tar.gz
 }
 
 Compare_JDK() {
