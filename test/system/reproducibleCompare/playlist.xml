@@ -38,4 +38,23 @@
 		</versions>
 		<platformRequirements>os.linux</platformRequirements>
 	</test>
+	<test>
+		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test_win</testCaseName>
+		<command>$(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)windows_repro_build_compare.sh $(SBOM_FILE) $(JDK_FILE) $(REPORTDIR); \
+	$(TEST_STATUS)
+		</command>
+		<levels>
+			<level>dev</level>
+		</levels>
+		<groups>
+			<group>system</group>
+		</groups>
+        <vendors>
+            <vendor>eclipse</vendor>
+        </vendors>
+		<versions>
+			<version>21+</version>
+		</versions>
+		<platformRequirements>os.win</platformRequirements>
+	</test>
 </playlist>
