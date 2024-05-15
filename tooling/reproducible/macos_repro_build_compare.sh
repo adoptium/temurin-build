@@ -31,7 +31,7 @@ if [ "$#" -lt 3 ]; then
   echo "2. JDKZIP_URL/JDKZIP_PATH - should be the FULL path OR a URL to a Temurin Windows JDK Zip file"
   echo "    eg. https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%2B9/OpenJDK21U-jdk_x64_mac_hotspot_21.0.3_9.tar.gz"
   echo ""
-  echo "3. REPORT_DIR - should be the FULL path OR a URL to the output directory for the comparison report
+  echo "3. REPORT_DIR - should be the FULL path OR a URL to the output directory for the comparison report"
   echo ""
   exit 1
 fi
