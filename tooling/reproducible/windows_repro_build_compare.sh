@@ -724,14 +724,14 @@ Compare_JDK() {
 
   # Run Comparison Script
   set +e
-  cd $ScriptPath || exit 1
+  cd "$ScriptPath" || exit 1
   ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk CYGWIN 2>&1 &
   pid=$!
   wait $pid
 
   rc=$?
   set -e
-  cd $WORK_DIR
+  cd "$WORK_DIR"
   # Display The Content Of reprotest.diff
   echo ""
   echo "---------------------------------------------"
