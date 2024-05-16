@@ -44,8 +44,10 @@ do
   fi
   # release file build machine OS level and builds-scripts SHA can/will be different
   cleanTemurinBuildInfo "${JDK_DIR}"
-  
-  removeSystemModulesHashBuilderParams
+
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then 
+    removeSystemModulesHashBuilderParams
+  fi
   processModuleInfo
 done
 
@@ -56,6 +58,8 @@ rc=0
 output="reprotest.diff"
 echo "Comparing ${JDK_DIR1} with ${JDK_DIR2} ... output to file: ${output}"
 diff -r -q "${JDK_DIR1}" "${JDK_DIR2}" > "${output}" || rc=$?
+
+cat "${output}"
 
 num_differences=$(wc -l < "${output}")
 echo "Number of differences: ${num_differences}"

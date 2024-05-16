@@ -182,161 +182,6 @@ function processModuleInfo() {
     done
 }
 
-# Process SystemModules classes to remove ModuleHashes$Builder differences due to Signatures
-#   1. javap
-#   2. search for line: // Method jdk/internal/module/ModuleHashes$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes$Builder;
-#   3. followed 3 lines later by: // String <module>
-#   4. then remove all lines until next: invokevirtual
-#   5. remove Last modified, Classfile and SHA-256 checksum javap artefact statements
-function removeSystemModulesHashBuilderParams() {
-  # Key strings
-  moduleHashesFunction="// Method jdk/internal/module/ModuleHashes\$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes\$Builder;"
-  moduleString="// String "
-  virtualFunction="invokevirtual"
-
-  systemModules="SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class"
-  echo "Removing SystemModules ModulesHashes\$Builder differences"
-  for systemModule in $systemModules
-    do
-      FILES=$(find "${JDK_DIR}" -type f -name "$systemModule")
-      for f in $FILES
-        do
-          echo "Processing $f"
-          javap -v -sysinfo -l -p -c -s -constants "$f" > "$f.javap.tmp"
-          rm "$f"
-
-          # Remove "instruction number:" prefix, so we can just match code  
-          sed -i -E "s/^[[:space:]]+[0-9]+:(.*)/\1/" "$f.javap.tmp" 
-
-          cc=99
-          found=false
-          while IFS= read -r line
-          do
-            cc=$((cc+1))
-            # Detect hashForModule function
-            if [[ "$line" =~ .*"$moduleHashesFunction".* ]]; then
-              cc=0 
-            fi
-            # 3rd instruction line is the Module string to confirm entry
-            if [[ "$cc" -eq 3 ]] && [[ "$line" =~ .*"$moduleString"[a-z\.]+.* ]]; then
-              found=true
-              module=$(echo "$line" | tr -s ' ' | tr -d '\r' | cut -d' ' -f6)
-              echo "==> Found $module ModuleHashes\$Builder function, skipping hash parameter"
-            fi
-            # hasForModule function section finishes upon finding invokevirtual
-            if [[ "$found" = true ]] && [[ "$line" =~ .*"$virtualFunction".* ]]; then
-              found=false
-            fi
-            if [[ "$found" = false ]]; then
-              echo "$line" >> "$f.javap.tmp2"
-            fi 
-          done < "$f.javap.tmp"
-          rm "$f.javap.tmp"
-          grep -v "Last modified\|Classfile\|SHA-256 checksum" "$f.javap.tmp2" > "$f.javap"
-          rm "$f.javap.tmp2"
-        done
-    done
-
-  echo "Successfully removed all SystemModules jdk.jpackage hash differences from ${JDK_DIR}"
-}
-
-# Remove the Windows EXE/DLL timestamps and internal VS CRC and debug repro hex values
-# The Windows PE format contains various values determined from the binary content
-# which will vary due to the different Vendor branding
-#   timestamp - Used to be an actual timestamp but MSFT changed this to a checksum determined from binary content
-#   checksum  - A checksum value of the binary
-#   reprohex  - A hex UUID to identify the binary version, again generated from binary content
-function removeWindowsNonComparableData() {
- echo "Removing EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
-
- # We need to do this for all executables if patching VS_VERSION_INFO
- if [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
-    FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
- else
-    FILES=$(find "${JDK_DIR}" -type f -name 'jvm.dll')
- fi
- for f in $FILES
-  do
-    echo "Removing EXE/DLL non-comparable timestamp, CRC, debug repro hex from $f"
-
-    # Determine non-comparable data using dumpbin
-    dmpfile="$f.dumpbin.tmp"
-    rm -f "$dmpfile"
-    if ! dumpbin "$f" /ALL > "$dmpfile"; then
-        echo "  FAILED == > dumpbin \"$f\" /ALL > $dmpfile"
-        exit 1
-    fi
-
-    # Determine non-comparable stamps and hex codes from dumpbin output
-    timestamp=$(grep "time date stamp" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f2)
-    checksum=$(grep "checksum" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f2)
-    reprohex=$(grep "${timestamp} repro" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f7-38 | tr ' ' ':' | tr -d '\r')
-    reprohexhalf=$(grep "${timestamp} repro" "$dmpfile" | head -1 | tr -s ' ' | cut -d' ' -f7-22 | tr ' ' ':' | tr -d '\r')
-    rm -f "$dmpfile"
-
-    # Neutralize reprohex string
-    if [ -n  "$reprohex" ]; then
-      if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA"; then
-        echo "  FAILED ==> java $TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --hex \"${reprohex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\""
-        exit 1
-      fi
-    fi
-
-    # Neutralize timestamp hex string
-    hexstr="00000000"
-    timestamphex=${hexstr:0:-${#timestamp}}$timestamp
-    timestamphexLE="${timestamphex:6:2}:${timestamphex:4:2}:${timestamphex:2:2}:${timestamphex:0:2}"
-    if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${timestamphexLE}-AA:AA:AA:AA"; then
-        echo "  FAILED ==> java $TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --hex \"${timestamphexLE}-AA:AA:AA:AA\""
-        exit 1
-    fi
-    if [ -n "$reprohexhalf" ]; then
-      if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${reprohexhalf}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA"; then
-        echo "  FAILED ==> java $TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --hex \"${reprohexhalf}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\""
-        exit 1
-      fi
-    fi
-
-    # Neutralize checksum string
-    # Prefix checksum to 8 digits
-    hexstr="00000000"
-    checksumhex=${hexstr:0:-${#checksum}}$checksum
-    checksumhexLE="${checksumhex:6:2}:${checksumhex:4:2}:${checksumhex:2:2}:${checksumhex:0:2}"
-    if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${checksumhexLE}-AA:AA:AA:AA" --firstOnly --32bitBoundaryOnly; then
-        echo "  FAILED ==> java $TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --hex \"${checksumhexLE}-AA:AA:AA:AA\" --firstOnly --32bitBoundaryOnly"
-        exit 1
-    fi
-  done
- echo "Successfully removed all EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
-}
-
-# Remove the MACOS dylib non-comparable data
-#   MacOS Mach-O format stores a uuid value that consists of a "hash" of the code and
-#   the some length part of the user's build folder.
-# See https://github.com/adoptium/temurin-build/issues/2899#issuecomment-1153757419
-function removeMacOSNonComparableData() {
-  echo "Removing MacOS dylib non-comparable UUID from ${JDK_DIR}"
-
-  FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
-  for f in $FILES
-  do
-    uuid=$(otool -l "$f" | grep "uuid" | tr -s " " | tr -d "-" | cut -d" " -f3)
-    if [ -z "$uuid" ]; then
-      echo "  FAILED ==> otool -l \"$f\" | grep \"uuid\" | tr -s \" \" | tr -d \"-\" | cut -d\" \" -f3"
-      exit 1
-    else
-      # Format uuid for BINREPL
-      uuidhex="${uuid:0:2}:${uuid:2:2}:${uuid:4:2}:${uuid:6:2}:${uuid:8:2}:${uuid:10:2}:${uuid:12:2}:${uuid:14:2}:${uuid:16:2}:${uuid:18:2}:${uuid:20:2}:${uuid:22:2}:${uuid:24:2}:${uuid:26:2}:${uuid:28:2}:${uuid:30:2}"
-      if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --hex "${uuidhex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA" --firstOnly; then
-        echo "  FAILED ==> java \"$TEMURIN_TOOLS_BINREPL\" --inFile \"$f\" --outFile \"$f\" --hex \"${uuidhex}-AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA\" --firstOnly"
-        exit 1
-      fi
-    fi
-  done
-
-  echo "Successfully removed all MacOS dylib non-comparable UUID from ${JDK_DIR}"
-}
-
 # Neutralize Windows VS_VERSION_INFO CompanyName from the resource compiled PE section
 function neutraliseVsVersionInfo() {
   echo "Updating EXE/DLL VS_VERSION_INFO in ${JDK_DIR}"
@@ -569,11 +414,13 @@ if [[ "$OS" =~ CYGWIN* ]] && [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
   neutraliseVsVersionInfo
 fi
 
-# SystemModules$*.class's differ due to hash differences from COMPANY_NAME
-removeSystemModulesHashBuilderParams
+if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
+  # SystemModules$*.class's differ due to hash differences from Windows COMPANY_NAME and Signatures
+  removeSystemModulesHashBuilderParams
+fi
 
 if [[ "$OS" =~ CYGWIN* ]]; then
-   removeWindowsNonComparableData
+  removeWindowsNonComparableData
 fi
 
 if [[ "$OS" =~ Darwin* ]]; then
