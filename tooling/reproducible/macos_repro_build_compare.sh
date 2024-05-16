@@ -142,7 +142,6 @@ Check_Parameters() {
 }
 
 Install_PreReqs() {
-
   # Check if jq is installed
   if ! command -v jq &> /dev/null; then
     echo "Error: jq is not installed. Please install jq before running this script."
@@ -508,7 +507,10 @@ Prepare_Env_For_Build() {
       fixed_value="=$split_value"
     fi
     if [ "$fixed_param" == "--tag" ]; then fixed_param="-b" fixed_value=" $fixed_value" ; fi
-    if [ "$fixed_param" == "--target-file-name" ]; then target_file="$fixed_value" ; fixed_value=" $fixed_value" ; fi
+    if [ "$fixed_param" == "--target-file-name" ]; then
+      target_file="$(echo -e "${fixed_value}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+      fixed_value=" $fixed_value"
+    fi
     if [ "$fixed_param" == "--freetype-dir" ]; then fixed_value=" $fixed_value" ; fi
     if [ "$fixed_param" == "--user-openjdk-build-root-directory" ]; then fixed_value=" $WORK_DIR/temurin-build/workspace/build/openjdkbuild/ " ; fi
     if [ "$fixed_param" == "--build-variant" ]; then fixed_value=" $fixed_value " ; fi
