@@ -15,6 +15,11 @@ ifndef SBOM_FILE
 	SBOM_FILE := $(shell ls $(TEST_ROOT)/../jdkbinary/ | grep "sbom" | grep -v "metadata")
 	SBOM_FILE := $(TEST_ROOT)/../jdkbinary/$(SBOM_FILE)
 endif
+ifndef JDK_FILE
+	ifneq (,$(findstring win,$(SPEC)))
+		JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.zip')
+	endif
+endif
 
 ifneq (,$(findstring linux,$(SPEC)))
 	SBOM_FILE := $(subst $(TEST_ROOT)/../jdkbinary,/home/jenkins/test,$(SBOM_FILE))
