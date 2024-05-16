@@ -53,7 +53,7 @@ do
     removeMacOSNonComparableData
   fi
  
-  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]];; then 
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then 
     removeSystemModulesHashBuilderParams
   fi
   processModuleInfo
