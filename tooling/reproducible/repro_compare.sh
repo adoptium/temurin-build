@@ -45,14 +45,6 @@ do
   # release file build machine OS level and builds-scripts SHA can/will be different
   cleanTemurinBuildInfo "${JDK_DIR}"
 
-  if [[ "$OS" =~ CYGWIN* ]]; then
-    removeWindowsNonComparableData
-  fi
-
-  if [[ "$OS" =~ Darwin* ]]; then
-    removeMacOSNonComparableData
-  fi
- 
   if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then 
     removeSystemModulesHashBuilderParams
   fi

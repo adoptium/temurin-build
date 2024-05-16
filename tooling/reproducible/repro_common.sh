@@ -143,6 +143,8 @@ function removeSystemModulesHashBuilderParams() {
   echo "Successfully removed all SystemModules jdk.jpackage hash differences from ${JDK_DIR}"
 }
 
+# Required for Vendor "Comparable Builds"
+#
 # Remove the Windows EXE/DLL timestamps and internal VS CRC and debug repro hex values
 # The Windows PE format contains various values determined from the binary content
 # which will vary due to the different Vendor branding
@@ -213,6 +215,8 @@ function removeWindowsNonComparableData() {
  echo "Successfully removed all EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
 }
 
+# Required for Vendor "Comparable Builds"
+#
 # Remove the MACOS dylib non-comparable data
 #   MacOS Mach-O format stores a uuid value that consists of a "hash" of the code and
 #   the some length part of the user's build folder.
