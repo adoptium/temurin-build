@@ -596,24 +596,6 @@ Compare_JDK() {
   original_directory_name=$(find . -maxdepth 1 -type d | grep -v src_jdk | tail -1)
   mv "$original_directory_name" tar_jdk
 
-  # These Two Files Are Generate Classes And Should Be Removed Prior To Running The Comparison
-  # jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa
-
-  if [ -f "$WORK_DIR/compare/src_jdk/Contents/Home/bin/server/classes.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/src_jdk/Contents/Home/bin/server/classes.jsa"
-  fi
-
-  if [ -f "$WORK_DIR/compare/tar_jdk/Contents/Home/bin/server/classes.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/tar_jdk/Contents/Home/bin/server/classes.jsa"
-  fi
-
-  if [ -f "$WORK_DIR/compare/src_jdk/Contents/Home/bin/server/classes_nocoops.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/src_jdk/Contents/Home/bin/server/classes_nocoops.jsa"
-  fi
-
-  if [ -f "$WORK_DIR/compare/tar_jdk/Contents/Home/bin/server/classes_nocoops.jsa" ] ; then
-    rm -rf "$WORK_DIR/compare/tar_jdk/Contents/Home/bin/server/classes_nocoops.jsa"
-  fi
   # Ensure Java Home Is Set
   export JAVA_HOME=$BOOTJDK_HOME
   export PATH=$JAVA_HOME/bin:$PATH
