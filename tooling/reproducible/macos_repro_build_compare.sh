@@ -56,7 +56,6 @@ CONFIG_ARGS=("--disable-warnings-as-errors" "--openjdk-target" "--with-sysroot" 
 NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args")
 FINAL_ARG=("--build-variant")
 
-
 # These variables relate to the pre-requisite ant installation
 ANT_VERSION="1.10.5"
 ANT_CONTRIB_VERSION="1.0b3"
