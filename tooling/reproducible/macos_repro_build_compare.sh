@@ -43,7 +43,7 @@ REPORT_DIR="$3"
 
 # Constants Required By This Script
 # These Values Should Be Updated To Reflect The Build Environment
-# The Defaults Below Are Suitable For An Adoptium Windows Build Environment
+# The Defaults Below Are Suitable For An Adoptium Mac OS X Build Environment
 # Which Has Been Created Via The Ansible Infrastructure Playbooks
 
 WORK_DIR=~/comp-jdk-build
