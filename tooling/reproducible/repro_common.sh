@@ -98,7 +98,7 @@ function removeSystemModulesHashBuilderParams() {
             if [[ "$OS" =~ CYGWIN* ]]; then
               ff=$(cygpath -w $f)
             else
-              ff=f
+              ff=$f
             fi
             javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
             rm "$f"
@@ -258,7 +258,7 @@ function processModuleInfo() {
       if [[ "$OS" =~ CYGWIN* ]]; then
         ff=$(cygpath -w $f)
       else
-        ff=f
+        ff=$f
       fi
       javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
       rm "$f"
