@@ -182,64 +182,6 @@ function processModuleInfo() {
     done
 }
 
-# Process SystemModules classes to remove ModuleHashes$Builder differences due to Signatures
-#   1. javap
-#   2. search for line: // Method jdk/internal/module/ModuleHashes$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes$Builder;
-#   3. followed 3 lines later by: // String <module>
-#   4. then remove all lines until next: invokevirtual
-#   5. remove Last modified, Classfile and SHA-256 checksum javap artefact statements
-function removeSystemModulesHashBuilderParams() {
-  # Key strings
-  moduleHashesFunction="// Method jdk/internal/module/ModuleHashes\$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes\$Builder;"
-  moduleString="// String "
-  virtualFunction="invokevirtual"
-
-  systemModules="SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class"
-  echo "Removing SystemModules ModulesHashes\$Builder differences"
-  for systemModule in $systemModules
-    do
-      FILES=$(find "${JDK_DIR}" -type f -name "$systemModule")
-      for f in $FILES
-        do
-          echo "Processing $f"
-          javap -v -sysinfo -l -p -c -s -constants "$f" > "$f.javap.tmp"
-          rm "$f"
-
-          # Remove "instruction number:" prefix, so we can just match code  
-          sed -i -E "s/^[[:space:]]+[0-9]+:(.*)/\1/" "$f.javap.tmp" 
-
-          cc=99
-          found=false
-          while IFS= read -r line
-          do
-            cc=$((cc+1))
-            # Detect hashForModule function
-            if [[ "$line" =~ .*"$moduleHashesFunction".* ]]; then
-              cc=0 
-            fi
-            # 3rd instruction line is the Module string to confirm entry
-            if [[ "$cc" -eq 3 ]] && [[ "$line" =~ .*"$moduleString"[a-z\.]+.* ]]; then
-              found=true
-              module=$(echo "$line" | tr -s ' ' | tr -d '\r' | cut -d' ' -f6)
-              echo "==> Found $module ModuleHashes\$Builder function, skipping hash parameter"
-            fi
-            # hasForModule function section finishes upon finding invokevirtual
-            if [[ "$found" = true ]] && [[ "$line" =~ .*"$virtualFunction".* ]]; then
-              found=false
-            fi
-            if [[ "$found" = false ]]; then
-              echo "$line" >> "$f.javap.tmp2"
-            fi 
-          done < "$f.javap.tmp"
-          rm "$f.javap.tmp"
-          grep -v "Last modified\|Classfile\|SHA-256 checksum" "$f.javap.tmp2" > "$f.javap"
-          rm "$f.javap.tmp2"
-        done
-    done
-
-  echo "Successfully removed all SystemModules jdk.jpackage hash differences from ${JDK_DIR}"
-}
-
 # Neutralize Windows VS_VERSION_INFO CompanyName from the resource compiled PE section
 function neutraliseVsVersionInfo() {
   echo "Updating EXE/DLL VS_VERSION_INFO in ${JDK_DIR}"
@@ -472,8 +414,10 @@ if [[ "$OS" =~ CYGWIN* ]] && [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
   neutraliseVsVersionInfo
 fi
 
-# SystemModules$*.class's differ due to hash differences from COMPANY_NAME
-removeSystemModulesHashBuilderParams
+if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
+  # SystemModules$*.class's differ due to hash differences from Windows COMPANY_NAME and Signatures
+  removeSystemModulesHashBuilderParams
+fi
 
 if [[ "$OS" =~ CYGWIN* ]]; then
   removeWindowsNonComparableData
