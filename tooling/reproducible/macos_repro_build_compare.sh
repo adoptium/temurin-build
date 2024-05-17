@@ -575,11 +575,24 @@ Compare_JDK() {
   cp $WORK_DIR/reproJDK.tar.gz $WORK_DIR/compare
   
 
-  # Get The Current Versions Of The Reproducible Build Scripts
-  wget -O "$WORK_DIR/compare/repro_common.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_common.sh"
-  wget -O "$WORK_DIR/compare/repro_compare.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_compare.sh"
-  wget -O "$WORK_DIR/compare/repro_process.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_process.sh"
+  # Check The Comparison Scripts Are Present And Copy To The Working Directory
 
+  if [ -f ./repro_common.sh ]; then
+    cp ./repro_common.sh $WORK_DIR/compare/repro_common.sh
+  else
+    wget -O "$WORK_DIR/compare/repro_common.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_common.sh"
+  fi
+  if [ -f ./repro_compare.sh ]; then
+    cp ./repro_compare.sh $WORK_DIR/compare/repro_compare.sh
+  else
+    wget -O "$WORK_DIR/compare/repro_compare.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_compare.sh"
+  fi
+  if [ -f ./repro_process.sh ]; then
+    cp ./repro_process.sh $WORK_DIR/compare/repro_process.sh
+  else
+    wget -O "$WORK_DIR/compare/repro_process.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_process.sh"
+  fi
+  
   # Set Permissions
   chmod +x "$WORK_DIR/compare/"*sh
   cd "$WORK_DIR/compare"
@@ -609,16 +622,16 @@ Compare_JDK() {
   echo "---------------------------------------------"
   echo "Output From JDK Comparison Script"
   echo "---------------------------------------------"
-  cat ./compare/repro_diff.out
+  cat $WORK_DIR/compare/reprotest.diff
   echo ""
   echo "---------------------------------------------"
   echo "Copying Output To $(dirname "$0")"
-  cp $WORK_DIR/compare/repro_diff.out $WORK_DIR/reprotest.diff
-
+  cp $WORK_DIR/compare/reprotest.diff $WORK_DIR/reprotest.diff
+   
   if [ -n "$REPORT_DIR" ]; then
     echo "Copying Output To $REPORT_DIR"
-    cp "$WORK_DIR/compare/reprotest.diff" "$REPORT_DIR"
-    cp "$WORK_DIR/reproJDK.zip" "$REPORT_DIR"
+    cp $WORK_DIR/compare/reprotest.diff $REPORT_DIR
+    cp $WORK_DIR/reproJDK.tar.gz $REPORT_DIR
   fi
   
 }
