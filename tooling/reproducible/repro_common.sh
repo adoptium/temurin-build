@@ -332,7 +332,7 @@ function removeGeneratedClasses() {
   local JDK_DIR="$1"
   local OS="$2"
 
-  if [[ "$OS" =~ CYGWIN* ]]; then
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
     rm -rf "$JDK_DIR/bin/server/classes.jsa"
     rm -rf "$JDK_DIR/bin/server/classes_nocoops.jsa"
   fi
