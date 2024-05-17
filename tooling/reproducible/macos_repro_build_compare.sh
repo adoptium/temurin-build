@@ -630,8 +630,8 @@ Compare_JDK() {
    
   if [ -n "$REPORT_DIR" ]; then
     echo "Copying Output To $REPORT_DIR"
-    cp $WORK_DIR/compare/reprotest.diff $REPORT_DIR
-    cp $WORK_DIR/reproJDK.tar.gz $REPORT_DIR
+    cp $WORK_DIR/compare/reprotest.diff "$REPORT_DIR"
+    cp $WORK_DIR/reproJDK.tar.gz "$REPORT_DIR"
   fi
   
 }
