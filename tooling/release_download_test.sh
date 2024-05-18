@@ -36,6 +36,7 @@ WORKSPACE=${WORKSPACE:-"$PWD"}
 KEEP_STAGING=false
 SKIP_DOWNLOADING=false
 USE_ANSI=false
+VERBOSE=false
 
 MAJOR_VERSION=""
 
@@ -208,9 +209,13 @@ verify_gpg_signatures() {
 
   cd "${WORKSPACE}/staging/${TAG}" || exit 1
 
-  # Note: This will run into problems if there are no tar.gz files
-  #       e.g. if only windows has been uploaded to the release
-  for A in OpenJDK*.tar.gz OpenJDK*.zip *.msi *.pkg *sbom*[0-9].json; do
+  # Note: This SC disable is because the change has been made to
+  #       use ls instead of a straight glob to avoid problems when
+  #       there are no files of a particular type in the release
+  #       e.g. a point release for one platform e.g. 22.0.1.1+1
+
+  # shellcheck disable=SC2045
+  for A in $(ls -1d OpenJDK*.tar.gz OpenJDK*.zip ./*.msi ./*.pkg ./*sbom*[0-9].json); do
     print_verbose "IVT : Verifying signature of file ${A}"
 
     if ! gpg -q --verify "${A}.sig" "${A}" 2> /dev/null; then
@@ -238,30 +243,56 @@ verify_valid_archives() {
 
   cd "${WORKSPACE}/staging/${TAG}" || exit 1
 
-  for A in OpenJDK*.tar.gz; do
-    print_verbose "IVT : Counting files in tarball ${A}"
-    if ! tar tfz "${A}" > /dev/null; then
-      print_error "Failed to verify that ${A} can be extracted"
-      RC=4
-    fi
-    # NOTE: 38 chosen because the static-libs is 38 for JDK21/AIX - maybe switch for different tarballs in the future?
-    if [ "$(tar tfz "${A}" | wc -l)" -lt 38 ]; then
-      print_error "Less than 38 files in ${A} - that does not seem correct"
-      RC=4
-    fi
-  done
+  # Check to prevent script aborting if no such files exist
+  if ls OpenJDK*.tar.gz > /dev/null; then
+    for A in OpenJDK*.tar.gz; do
+      print_verbose "IVT : Counting files in tarball ${A}"
+      if ! tar tfz "${A}" > /dev/null; then
+        print_error "Failed to verify that ${A} can be extracted"
+        RC=4
+      fi
+      # NOTE: 38 chosen because the static-libs is 38 for JDK21/AIX - maybe switch for different tarballs in the future?
+      if [ "$(tar tfz "${A}" | wc -l)" -lt 38 ]; then
+        print_error "Less than 38 files in ${A} - that does not seem correct"
+        RC=4
+      fi
+    done
+  fi
 
-  for A in OpenJDK*.zip; do
-    print_verbose "IVT : Counting files in archive ${A}"
-    if ! unzip -t "${A}" > /dev/null; then
-      print_error "Failed to verify that ${A} can be extracted"
+  if ls OpenJDK*.zip > /dev/null; then
+    for A in OpenJDK*.zip; do
+      print_verbose "IVT : Counting files in archive ${A}"
+      if ! unzip -t "${A}" > /dev/null; then
+        print_error "Failed to verify that ${A} can be extracted"
+        RC=4
+      fi
+      if [ "$(unzip -l "${A}" | wc -l)" -lt 44 ]; then
+        print_error "Less than 40 files in ${A} - that does not seem correct"
+        RC=4
+      fi
+    done
+  fi
+
+  # If there was an x64 linux version in the release, check for source archive
+  if ls OpenJDK*-jdk_x64_linux_hotspot_*.tar.gz > /dev/null; then
+    if ls OpenJDK*-jdk-sources*.tar.gz > /dev/null; then
+      for A in OpenJDK*-jdk-sources*.tar.gz; do
+        print_verbose "IVT : Counting files in source ${A}"
+        if ! tar tfz "${A}" > /dev/null; then
+          print_error "Failed to verify that ${A} can be extracted"
+          RC=4
+        fi
+        if [ "$(tar tfz "${A}" | wc -l)" -lt 45000 ]; then
+          print_error "less than 45000 files in source archive ${A} - that does not seem correct"
+          RC=4
+        fi
+      done
+    else
+      print_error "IVT: x64 linux tarballs present but no source archive - they should be published together"
       RC=4
     fi
-    if [ "$(unzip -l "${A}" | wc -l)" -lt 44 ]; then
-      print_error "Less than 40 files in ${A} - that does not seem correct"
-      RC=4
-    fi
-  done
+  fi
+        
 }
 
 ########################################################################################################################
@@ -304,14 +335,18 @@ determine_arch() {
 #
 ########################################################################################################################
 verify_working_executables() {
-  print_verbose "IVT : Running java -version and checking glibc version on ${OS}/${ARCH} tarballs"
+  if ! ls OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz > /dev/null 2>&1; then
+    print_verbose "IVT: Release does not contain a JRE for $OS/$ARCH so not running local checks"
+  else
+    print_verbose "IVT : Running java -version and checking glibc version on ${OS}/${ARCH} tarballs"
 
-  cd "${WORKSPACE}/staging/${TAG}" || exit 1
+    cd "${WORKSPACE}/staging/${TAG}" || exit 1
 
-  rm -rf tarballtest && mkdir tarballtest
-  tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
-  rm -rf tarballtest && mkdir tarballtest
-  tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jdk_"${ARCH}"_"${OS}"_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
+    rm -rf tarballtest && mkdir tarballtest
+    tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
+    rm -rf tarballtest && mkdir tarballtest
+    tar -C tarballtest --strip-components=1 -xzpf OpenJDK*-jdk_"${ARCH}"_"${OS}"_hotspot_*.tar.gz && tarballtest/bin/java -version || exit 3
+  fi
 }
 
 ########################################################################################################################
@@ -326,10 +361,14 @@ verify_working_executables() {
 #
 ########################################################################################################################
 verify_glibc_version() {
-  print_verbose "IVT : Detected GLIBC version '$(strings tarballtest/bin/java | grep ^GLIBC)'"
-  if ! strings tarballtest/bin/java | grep ^GLIBC_2.17 > /dev/null; then
-    print_error "GLIBC version detected in the JDK java executable is not the expected 2.17"
-    RC=4
+  if ! ls OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz > /dev/null 2>&1; then
+    print_verbose "IVT: Release does not contain a JRE for $OS/$ARCH so not running glibc version checks"
+  else  
+    print_verbose "IVT : Detected GLIBC version '$(strings tarballtest/bin/java | grep ^GLIBC)'"
+    if ! strings tarballtest/bin/java | grep ^GLIBC_2.17 > /dev/null; then
+      print_error "GLIBC version detected in the JDK java executable is not the expected 2.17"
+      RC=4
+    fi
   fi
 }
 
@@ -346,9 +385,13 @@ verify_gcc_version() {
   [ "${MAJOR_VERSION}" = "17" ] && expected_gcc=10.3.0
   [ "${MAJOR_VERSION}" -ge 20 ] && expected_gcc=11.3.0
 
-  if ! strings tarballtest/bin/java | grep "^GCC:.*${expected_gcc}"; then
-    print_error "GCC version detected in the JDK java executable is not the expected ${expected_gcc}"
-    RC=4
+  if ! ls OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz > /dev/null 2>&1; then
+    print_verbose "IVT: Release does not contain a JRE for $OS/$ARCH so not running local checks"
+  else
+    if ! strings tarballtest/bin/java | grep "^GCC:.*${expected_gcc}"; then
+      print_error "GCC version detected in the JDK java executable is not the expected ${expected_gcc}"
+      RC=4
+    fi
   fi
 }
 
