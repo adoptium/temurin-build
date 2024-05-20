@@ -484,7 +484,10 @@ configureDebugParameters() {
 configureAlsaLocation() {
   if [[ ! "${CONFIGURE_ARGS}" =~ "--with-alsa" ]]; then
     if [[ "${BUILD_CONFIG[ALSA]}" == "true" ]]; then
-      addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
+      # Only use the Adoptium downloaded ALSA if not using a DevKit, which already has a sysroot ALSA
+      if [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]} != *"--with-devkit="* ]] && [[ ${CONFIGURE_ARGS} != *"--with-devkit="* ]]; then
+        addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
+      fi
     fi
   fi
 }
