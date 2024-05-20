@@ -148,7 +148,7 @@ processArgs() {
 }
 
 usage() {
-  echo" Usage: ./dockerfile_generator.sh [OPTIONS]
+  echo " Usage: ./dockerfile_generator.sh [OPTIONS]
   Options:
       --help | -h        Print this message and exit
       --build        Build the docker image after generation and create interactive container
