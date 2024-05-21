@@ -1148,7 +1148,7 @@ addALSAVersion() {
      else
        local ALSA_VERSION
        if [ "${ALSA_INCLUDE}" == "ignoreme" ]; then
-         # Value will be "ignoreme" if default/sysroot include path ALSA is being used, ask compiler for version
+         # Value will be "ignoreme" if default/sysroot/devkit include path ALSA is being used, ask compiler for version
          ALSA_VERSION=getHeaderPropertyUsingCompiler "alsa/version.h" "#define[ ]+SND_LIB_VERSION_STR"
        else
          local ALSA_VERSION_H="${ALSA_INCLUDE}/version.h"
