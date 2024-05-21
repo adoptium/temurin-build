@@ -484,7 +484,10 @@ configureDebugParameters() {
 configureAlsaLocation() {
   if [[ ! "${CONFIGURE_ARGS}" =~ "--with-alsa" ]]; then
     if [[ "${BUILD_CONFIG[ALSA]}" == "true" ]]; then
-      addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
+      # Only use the Adoptium downloaded ALSA if not using a DevKit, which already has a sysroot ALSA
+      if [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]} != *"--with-devkit="* ]] && [[ ${CONFIGURE_ARGS} != *"--with-devkit="* ]]; then
+        addConfigureArg "--with-alsa=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa"
+      fi
     fi
   fi
 }
@@ -1143,10 +1146,16 @@ addALSAVersion() {
      if [ -z "${ALSA_INCLUDE}" ]; then
        echo "No ALSA_CFLAGS, ALSA not used"
      else
-       local ALSA_VERSION_H="${ALSA_INCLUDE}/version.h"
+       local ALSA_VERSION
+       if [ "${ALSA_INCLUDE}" == "ignoreme" ]; then
+         # Value will be "ignoreme" if default/sysroot/devkit include path ALSA is being used, ask compiler for version
+         ALSA_VERSION=$(getHeaderPropertyUsingCompiler "alsa/version.h" "#define[ ]+SND_LIB_VERSION_STR")
+       else
+         local ALSA_VERSION_H="${ALSA_INCLUDE}/version.h"
 
-       # Get SND_LIB_VERSION_STR from version.h
-       local ALSA_VERSION="$(grep "SND_LIB_VERSION_STR" ${ALSA_VERSION_H} | tr "\t" " " | tr -s " " | cut -d" " -f3 | sed "s/\"//g")"
+         # Get SND_LIB_VERSION_STR from version.h
+         ALSA_VERSION="$(grep "SND_LIB_VERSION_STR" ${ALSA_VERSION_H} | tr "\t" " " | tr -s " " | cut -d" " -f3 | sed "s/\"//g")"
+       fi
 
        if [ -z "${ALSA_VERSION}" ]; then
          echo "Unable to find SND_LIB_VERSION_STR in ${ALSA_VERSION_H}"
@@ -1156,6 +1165,31 @@ addALSAVersion() {
        echo "Adding ALSA version to SBOM: ${ALSA_VERSION}"
        addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "${ALSA_VERSION}"
      fi
+}
+
+# Obtained the required include file property definition by asking the configured
+# spec.gmk CC compiler with optional SYSROOT
+# $1 - include file
+# $2 - property (can include regex)
+getHeaderPropertyUsingCompiler() {
+   # Get required include file property value by asking CC compiler
+   local specFile
+   if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+     specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
+   else
+     specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
+   fi
+
+   # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
+   local CC="$(grep "^CC[ ]*:=" ${specFile} | sed "s/^CC[ ]*:=[ ]*//")"
+   # Remove env=xx from CC, so we can call from bash
+   CC=$(echo "$CC" | tr -s " " | sed -E "s/[^ ]*=[^ ]*//g")
+   local SYSROOT_CFLAGS="$(grep "^SYSROOT_CFLAGS[ ]*:=" ${specFile} | tr -s " " | cut -d" " -f3-)"
+
+   local property_value="$(echo "#include <${1}>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep -E "${2}" | cut -d" " -f3 | sed "s/\"//g")"
+
+   # Return property value
+   echo ${property_value}
 }
 
 addGLIBCforLinux() {
@@ -1175,21 +1209,8 @@ addGLIBCforLinux() {
      addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MUSL" "${MUSL_VERSION}"
    else
      # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
-     local specFile
-     if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
-       specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
-     else
-       specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
-     fi
-
-     # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
-     local CC="$(grep "^CC[ ]*:=" ${specFile} | sed "s/^CC[ ]*:=[ ]*//")"
-     # Remove env=xx from CC, so we can call from bash to get __GLIBC.
-     CC=$(echo "$CC" | tr -s " " | sed -E "s/[^ ]*=[^ ]*//g")
-     local SYSROOT_CFLAGS="$(grep "^SYSROOT_CFLAGS[ ]*:=" ${specFile} | tr -s " " | cut -d" " -f3-)"
-
-     local GLIBC_MAJOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC__" | cut -d" " -f3)"
-     local GLIBC_MINOR="$(echo "#include <features.h>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep "#define __GLIBC_MINOR__" | cut -d" " -f3)"
+     local GLIBC_MAJOR=$(getHeaderPropertyUsingCompiler "features.h" "#define[ ]+__GLIBC__")
+     local GLIBC_MINOR=$(getHeaderPropertyUsingCompiler "features.h" "#define[ ]+__GLIBC_MINOR__")
      local GLIBC_VERSION="${GLIBC_MAJOR}.${GLIBC_MINOR}"
 
      echo "Adding GLIBC version to SBOM: ${GLIBC_VERSION}"
