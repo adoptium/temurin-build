@@ -1149,7 +1149,7 @@ addALSAVersion() {
        local ALSA_VERSION
        if [ "${ALSA_INCLUDE}" == "ignoreme" ]; then
          # Value will be "ignoreme" if default/sysroot/devkit include path ALSA is being used, ask compiler for version
-         ALSA_VERSION=getHeaderPropertyUsingCompiler "alsa/version.h" "#define[ ]+SND_LIB_VERSION_STR"
+         ALSA_VERSION=$(getHeaderPropertyUsingCompiler "alsa/version.h" "#define[ ]+SND_LIB_VERSION_STR")
        else
          local ALSA_VERSION_H="${ALSA_INCLUDE}/version.h"
 
@@ -1209,8 +1209,8 @@ addGLIBCforLinux() {
      addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MUSL" "${MUSL_VERSION}"
    else
      # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
-     local GLIBC_MAJOR=getHeaderPropertyUsingCompiler "features.h" "#define[ ]+__GLIBC__"
-     local GLIBC_MINOR=getHeaderPropertyUsingCompiler "features.h" "#define[ ]+__GLIBC_MINOR__"
+     local GLIBC_MAJOR=$(getHeaderPropertyUsingCompiler "features.h" "#define[ ]+__GLIBC__")
+     local GLIBC_MINOR=$(getHeaderPropertyUsingCompiler "features.h" "#define[ ]+__GLIBC_MINOR__")
      local GLIBC_VERSION="${GLIBC_MAJOR}.${GLIBC_MINOR}"
 
      echo "Adding GLIBC version to SBOM: ${GLIBC_VERSION}"
