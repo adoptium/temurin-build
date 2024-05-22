@@ -571,13 +571,24 @@ configureCommandParameters() {
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
+# Get the DevKit path from the --with-devkit configure arg
+getDevKitPath() {
+  local devkit_path=""
+
+  local devkit_regex="--with-devkit=([^ ]+)"
+  if [[ "${CONFIGURE_ARGS}" =~ $devkit_regex ]]; then
+    devkit_path=${BASH_REMATCH[1]};
+  fi
+
+  echo "${devkit_path}"
+}
+
 # Ensure environment set correctly for devkit
 setDevKitEnvironment() {
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]]; then
     # If DevKit is used ensure LD_LIBRARY_PATH for linux is using the DevKit sysroot
-    local devkit_regex="--with-devkit=([^ ]+)"
-    if [[ "${CONFIGURE_ARGS}" =~ $devkit_regex ]]; then
-      local devkit_path=${BASH_REMATCH[1]};
+    local devkit_path=$(getDevKitPath)
+    if [[ -n "${devkit_path}" ]]; then
       if [[ -d "${devkit_path}" ]]; then
         echo "Using gcc from DevKit toolchain specified in configure args location: --with-devkit=${devkit_path}"
         if [[ -z ${LD_LIBRARY_PATH+x} ]]; then
@@ -1024,8 +1035,16 @@ generateSBoM() {
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
     echo "Executing Analysis Script"
-    tempBldDir="$(dirname "${BUILD_CONFIG[WORKSPACE_DIR]}")"
-    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput" "$tempBldDir" "$javaHome" "$classpath" "$sbomJson"
+    local temurinBuildDir="$(dirname "${BUILD_CONFIG[WORKSPACE_DIR]}")"
+    local buildOutputDir
+    if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+      buildOutputDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build"
+    else
+      buildOutputDir="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"
+    fi
+    local devkit_path=$(getDevKitPath)
+    
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput" "$temurinBuildDir" "$javaHome" "$classpath" "$sbomJson" "$buildOutputDir" "${devkit_path}"
   fi
 
   # Print SBOM location
