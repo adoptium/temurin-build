@@ -22,6 +22,7 @@
 	$(TEST_STATUS); \
 	docker cp reproducibleCompare:/home/jenkins/reprotest.diff ./; \
 	docker cp reproducibleCompare:/home/jenkins/reproJDK.tar.gz ./; \
+	docker cp reproducibleCompare:/home/jenkins/SBOM.json ./; \
 	docker container rm reproducibleCompare
 	</command>
 		<levels>
