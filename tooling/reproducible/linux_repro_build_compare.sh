@@ -84,6 +84,114 @@ setEnvironment() {
   ls -ld "$CC" "$CXX" "/usr/lib/jvm/jdk-${BOOTJDK_VERSION}/bin/javac" || exit 1
 }
 
+containsElement() {
+  local e
+  for e in "${@:2}"; do
+    if [ "$e" == "$1" ]; then
+      return 0  # Match found
+    fi
+  done
+  return 1  # No match found
+}
+
+setBuildArgs() {
+  local CONFIG_ARGS=("--disable-warnings-as-errors" "--enable-dtrace" "--without-version-pre" "--without-version-opt" "--with-version-opt")
+  local NOTUSE_ARGS=("--configure-args")
+  export BOOTJDK_HOME="/usr/lib/jvm/jdk-${BOOTJDK_VERSION}"
+  echo "Parsing Make JDK Any Platform ARGS For Build"
+  # Split the string into an array of words
+  IFS=' ' read -ra words <<< "$TEMURIN_BUILD_ARGS"
+
+  # Add The Build Time Stamp In Case It Wasnt In The SBOM ARGS
+  words+=("--build-reproducible-date")
+  words+=("\"$BUILDSTAMP\"")
+
+  # Initialize variables
+  param=""
+  value=""
+  params=()
+
+  # Loop through the words
+  for word in "${words[@]}"; do
+    # Check if the word starts with '--'
+    if [[ $word == --* ]] || [[ $word == -b* ]]; then
+      # If a parameter already exists, store it in the params array
+      if [[ -n $param ]]; then
+        params+=("$param=$value")
+      fi
+      # Reset variables for the new parameter
+      param="$word"
+      value=""
+    else
+      value+="$word "
+    fi
+  done
+  
+    # Add the last parameter to the array
+  params+=("$param=$value")
+
+  # Read the separated parameters and values into a new array
+  export fixed_param=""
+  export fixed_value=""
+  export fixed_params=()
+  export new_params=""
+  CONFIG_ARRAY=()
+  BUILD_ARRAY=()
+  IGNORED_ARRAY=()
+
+  for p in "${params[@]}"; do
+    IFS='=' read -ra parts <<< "$p"
+    prefixed_param=${parts[0]}
+    fixed_param="${prefixed_param%%[[:space:]]}"
+    prepped_value=${parts[1]}
+    fixed_value=$(echo "$prepped_value" | awk '{$1=$1};1')
+    # Handle Special parameters
+    if [ "$fixed_param" == "--jdk-boot-dir" ]; then fixed_value="$BOOTJDK_HOME" ; fi
+    
+    # Fix Build Variant Parameter To Strip JDK Version
+    if [ "$fixed_param" == "--build-variant" ] ; then
+      # Remove Leading White Space
+      trimmed_value=$(echo "$prepped_value" | awk '{$1=$1};1')
+      IFS=' ' read -r variant jdk <<< "$trimmed_value"
+      if [[ $jdk == jdk* ]]; then
+        variant="$variant "
+      else
+        temp="$variant "
+        variant="$jdk"
+        jdk="$temp"
+      fi
+      fixed_value=$variant
+    fi
+
+    # Check if fixed_param is in CONFIG_ARGS
+    if containsElement "$fixed_param" "${CONFIG_ARGS[@]}"; then
+      # Add Config Arg To New Array
+      if [ "$fixed_param" == "--with-version-opt" ] ; then
+        STRINGTOADD="$fixed_param=$fixed_value"
+        CONFIG_ARRAY+=("$STRINGTOADD")
+      else
+        STRINGTOADD="$fixed_param"
+        CONFIG_ARRAY+=("$STRINGTOADD")
+      fi
+    elif containsElement "$fixed_param" "${NOTUSE_ARGS[@]}"; then
+      # Strip Parameters To Be Ignored
+      STRINGTOADD="$fixed_param $fixed_value"
+      IGNORED_ARRAY+=("$STRINGTOADD")
+    else
+      # Not A Config Param Nor Should Be Ignored, So Add To Build Array
+      STRINGTOADD="$fixed_param $fixed_value"
+      BUILD_ARRAY+=("$STRINGTOADD")
+    fi
+  done
+
+  IFS=' ' build_string="${BUILD_ARRAY[*]}"
+  IFS=' ' config_string=$"${CONFIG_ARRAY[*]}"
+  final_params="$build_string --configure-args \"$config_string\" $jdk"
+
+  echo "Make JDK Any Platform Argument List = "
+  echo "$final_params"
+}
+
 cleanBuildInfo() {
   # shellcheck disable=SC3043
   local DIR="$1"
@@ -126,17 +234,17 @@ BOOTJDK_VERSION=$(jq -r '.metadata.tools[] | select(.name == "BOOTJDK") | .versi
 GCCVERSION=$(jq -r '.metadata.tools[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
 LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
 TEMURIN_BUILD_SHA=$(jq -r '.components[0] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
-TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM" | cut -d\" -f4 | sed -e "s/--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt/'--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt'/" -e "s/ --disable-warnings-as-errors --enable-dtrace/ '--disable-warnings-as-errors --enable-dtrace'/" -e 's/\\n//g' -e "s,--jdk-boot-dir [^ ]*,--jdk-boot-dir /usr/lib/jvm/jdk-$BOOTJDK_VERSION,g")
+TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
 TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
-
+BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
 if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
 
 checkAllVariablesSet
-
 downloadTooling
 setEnvironment
+setBuildArgs
 
 if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
     JDK_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
@@ -158,12 +266,7 @@ if [ "${isJdkDir}" = true ]; then
   comparedDir=$JDK_PARAM
 fi
 
-rc=0
-echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log; echo \$?" | sh > temp.log
-rc=$(tail -n 1 temp.log)
-if [ $rc -ne 0 ]; then
-  echo "JDK rebuild failed. Stop and Exit..."
-fi
+echo " cd temurin-build && ./makejdk-any-platform.sh $final_params 2>&1 | tee build.$$.log" | sh
 
 echo Comparing ...
 mkdir compare.$$
@@ -173,7 +276,7 @@ cp "$SBOM" SBOM.json
 
 cleanBuildInfo "${comparedDir}"
 cleanBuildInfo "compare.$$/jdk-$TEMURIN_VERSION"
-
+rc=0
 # shellcheck disable=SC2069
 diff -r "${comparedDir}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.diff" || rc=$?
 
