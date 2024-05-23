@@ -1042,6 +1042,9 @@ generateSBoM() {
     else
       buildOutputDir="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"
     fi
+
+    # strace analysis needs to know the bootJDK and optional DevKit, as these versions will
+    # be present in the analysis and not necessarily installed as packages 
     local devkit_path=$(getConfigureArgPath "--with-devkit")
     local bootjdk_path=$(getConfigureArgPath "--with-boot-jdk")
     if [[ -z "${bootjdk_path}" ]]; then
