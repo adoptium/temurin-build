@@ -572,22 +572,22 @@ configureCommandParameters() {
 }
 
 # Get the DevKit path from the --with-devkit configure arg
-getDevKitPath() {
-  local devkit_path=""
+getConfigureArgPath() {
+  local arg_path=""
 
-  local devkit_regex="--with-devkit=([^ ]+)"
-  if [[ "${CONFIGURE_ARGS}" =~ $devkit_regex ]]; then
-    devkit_path=${BASH_REMATCH[1]};
+  local arg_regex="${1}=([^ ]+)"
+  if [[ "${CONFIGURE_ARGS}" =~ $arg_regex ]]; then
+    arg_path=${BASH_REMATCH[1]};
   fi
 
-  echo "${devkit_path}"
+  echo "${arg_path}"
 }
 
 # Ensure environment set correctly for devkit
 setDevKitEnvironment() {
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]]; then
     # If DevKit is used ensure LD_LIBRARY_PATH for linux is using the DevKit sysroot
-    local devkit_path=$(getDevKitPath)
+    local devkit_path=$(getConfigureArgPath "--with-devkit")
     if [[ -n "${devkit_path}" ]]; then
       if [[ -d "${devkit_path}" ]]; then
         echo "Using gcc from DevKit toolchain specified in configure args location: --with-devkit=${devkit_path}"
@@ -1042,9 +1042,14 @@ generateSBoM() {
     else
       buildOutputDir="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"
     fi
-    local devkit_path=$(getDevKitPath)
+    local devkit_path=$(getConfigureArgPath "--with-devkit")
+    local bootjdk_path=$(getConfigureArgPath "--with-boot-jdk")
+    if [[ -z "${bootjdk_path}" ]]; then
+        # No boot jdk specified use environment javaHome
+        bootjdk_path="$javaHome"
+    fi
     
-    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput" "$temurinBuildDir" "$javaHome" "$classpath" "$sbomJson" "$buildOutputDir" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" "${devkit_path}"
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput" "$temurinBuildDir" "$bootjdk_path" "$classpath" "$sbomJson" "$buildOutputDir" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" "${devkit_path}"
   fi
 
   # Print SBOM location

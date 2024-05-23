@@ -204,7 +204,7 @@ processFiles() {
         if [[ "$non_pkg" = true ]]; then
             nonPkgFiles+=("$filePath")
         else
-            pkg="$(echo "$pkg" | cut -d" " -f1 | tr -d '\\n')"
+            pkg="$(echo "$pkg" | cut -d" " -f1 | tr -d '\\n\\r')"
             pkgString="pkg: $pkg version: $pkg"
 
             # Make sure to only add unique packages to SBOM
