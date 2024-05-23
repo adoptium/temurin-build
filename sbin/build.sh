@@ -1044,7 +1044,7 @@ generateSBoM() {
     fi
     local devkit_path=$(getDevKitPath)
     
-    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput" "$temurinBuildDir" "$javaHome" "$classpath" "$sbomJson" "$buildOutputDir" "${devkit_path}"
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput" "$temurinBuildDir" "$javaHome" "$classpath" "$sbomJson" "$buildOutputDir" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" "${devkit_path}"
   fi
 
   # Print SBOM location
