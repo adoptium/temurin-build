@@ -1034,7 +1034,8 @@ generateSBoM() {
 
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
-    echo "Executing Analysis Script"
+    echo "Executing Strace Analysis Script to add dependencies to the SBOM"
+    local straceOutputDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput"
     local temurinBuildDir="$(dirname "${BUILD_CONFIG[WORKSPACE_DIR]}")"
     local buildOutputDir
     if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
@@ -1042,6 +1043,7 @@ generateSBoM() {
     else
       buildOutputDir="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"
     fi
+    local openjdkSrcDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
     # strace analysis needs to know the bootJDK and optional DevKit, as these versions will
     # be present in the analysis and not necessarily installed as packages 
@@ -1051,8 +1053,16 @@ generateSBoM() {
         # No boot jdk specified use environment javaHome
         bootjdk_path="$javaHome"
     fi
-    
-    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput" "$temurinBuildDir" "$bootjdk_path" "$classpath" "$sbomJson" "$buildOutputDir" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" "${devkit_path}"
+
+    # Ensure paths don't contain "./" or "//", otherwise paths will not match strace output paths
+    straceOutputDir=$(echo ${straceOutputDir} | sed 's,\./,,' | sed 's,//,/,')
+    temurinBuildDir=$(echo ${temurinBuildDir} | sed 's,\./,,' | sed 's,//,/,')
+    buildOutputDir=$(echo ${buildOutputDir} | sed 's,\./,,' | sed 's,//,/,')
+    openjdkSrcDir=$(echo ${openjdkSrcDir} | sed 's,\./,,' | sed 's,//,/,')
+    devkit_path=$(echo ${devkit_path} | sed 's,\./,,' | sed 's,//,/,')
+    bootjdk_path=$(echo ${bootjdk_path} | sed 's,\./,,' | sed 's,//,/,')
+
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${straceOutputDir}" "${temurinBuildDir}" "${bootjdk_path}" "${classpath}" "${sbomJson}" "${buildOutputDir}" "${openjdkSrcDir}" "${devkit_path}"
   fi
 
   # Print SBOM location
