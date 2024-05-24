@@ -84,7 +84,7 @@ buildOpenJDKViaDocker()
   local pipelinesdir="${hostDir}"/workspace/pipelines
   local workspacedir="${hostDir}"/workspace # we must ensure build user have correct permissions here
   local targetdir="${hostDir}"/workspace/target
-  local targetsrcdir="${hostDir}"/workspace/build/src
+  local targetbuilddir="${hostDir}"/workspace/build
   local configdir="${hostDir}"/workspace/config
 
   # TODO This could be extracted overridden by the user if we support more
@@ -97,7 +97,7 @@ buildOpenJDKViaDocker()
     build_variant_flag="--openj9"
   fi
   docker/dockerfile-generator.sh --version "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" "$build_variant_flag" \
-     --dirs "${workspacedir} ${targetdir} ${targetsrcdir} ${configdir}" --command "${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]}"
+     --dirs "${workspacedir} ${targetdir} ${targetbuilddir} ${configdir}" --command "${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]}"
 
   # shellcheck disable=SC1090,SC1091
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
