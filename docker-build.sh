@@ -221,7 +221,7 @@ buildOpenJDKViaDocker()
   local mountflag=Z #rw? maybe this should be bound to root/rootles content of BUILD_CONFIG[DOCKER] rather then just podman/docker in USE_DOCKER?
   mkdir -p "${hostDir}"/workspace/build  # shouldnt be already there?
   local localsourcesdirmount=
-  if [ ! -z "${localsourcesdir}" ] ; then
+  if [ -n "${localsourcesdir}" ] ; then
     localsourcesdirmount="-v ${localsourcesdir}:${localsourcesdir}:${mountflag}" #read only? Is copied anwya
   fi
   echo "If you get permissions denied on ${targetdir} or ${pipelinesdir} try to turn off selinux"
