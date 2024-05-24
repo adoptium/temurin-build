@@ -274,16 +274,13 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
 
         "-D" )
-        if which podman > /dev/null ; then BUILD_CONFIG[USE_DOCKER]="podman" ; else BUILD_CONFIG[USE_DOCKER]="docker" ; fi;
-        BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=true;;
+        if which podman > /dev/null ; then BUILD_CONFIG[USE_DOCKER]="podman" ; else BUILD_CONFIG[USE_DOCKER]="docker" ; fi;;
 
         "--docker" )
-        BUILD_CONFIG[USE_DOCKER]="docker";
-        BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=true;;
+        BUILD_CONFIG[USE_DOCKER]="docker";;
 
         "--podman" )
-        BUILD_CONFIG[USE_DOCKER]="podman";
-        BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]=true;;
+        BUILD_CONFIG[USE_DOCKER]="podman";;
 
         "--debug-docker" )
         BUILD_CONFIG[DEBUG_DOCKER]="true";;
