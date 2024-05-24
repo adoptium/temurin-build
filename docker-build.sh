@@ -214,7 +214,7 @@ buildOpenJDKViaDocker()
   fi
   local mountflag=Z #rw? maybe this should be bound to root/rootles content of BUILD_CONFIG[DOCKER] rather then just podman/docker in USE_DOCKER?
   mkdir -p "${hostDir}"/workspace/build  # shouldnt be already there?
-	  echo "If you get permissions denied on ${targetdir} or ${pipelinesdir} try to turn off selinux"
+  echo "If you get permissions denied on ${targetdir} or ${pipelinesdir} try to turn off selinux"
   local commandString=(
          ${cpuset}
          ${userns}
