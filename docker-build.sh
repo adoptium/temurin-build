@@ -86,6 +86,12 @@ buildOpenJDKViaDocker()
   local targetdir="${hostDir}"/workspace/target
   local targetbuilddir="${hostDir}"/workspace/build
   local configdir="${hostDir}"/workspace/config
+  local localsourcesdir=
+
+  if [ "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE]}" = "true" ] ; then
+    # OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH can be file, you can nto mount file
+    localsourcesdir=$(dirname "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}")
+  fi
 
   # TODO This could be extracted overridden by the user if we support more
   # architectures going forwards
@@ -97,7 +103,7 @@ buildOpenJDKViaDocker()
     build_variant_flag="--openj9"
   fi
   docker/dockerfile-generator.sh --version "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" "$build_variant_flag" \
-     --dirs "${workspacedir} ${targetdir} ${targetbuilddir} ${configdir}" --command "${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]}"
+     --dirs "${workspacedir} ${targetdir} ${targetbuilddir} ${configdir} ${localsourcesdir}" --command "${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]}"
 
   # shellcheck disable=SC1090,SC1091
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
@@ -214,10 +220,15 @@ buildOpenJDKViaDocker()
   fi
   local mountflag=Z #rw? maybe this should be bound to root/rootles content of BUILD_CONFIG[DOCKER] rather then just podman/docker in USE_DOCKER?
   mkdir -p "${hostDir}"/workspace/build  # shouldnt be already there?
+  local localsourcesdirmount=
+  if [ ! -z "${localsourcesdir}" ] ; then
+    localsourcesdirmount="-v ${localsourcesdir}:${localsourcesdir}:${mountflag}" #read only? Is copied anwya
+  fi
   echo "If you get permissions denied on ${targetdir} or ${pipelinesdir} try to turn off selinux"
   local commandString=(
          ${cpuset}
          ${userns}
+         ${localsourcesdirmount}
          -v "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}:/openjdk/build"
          -v "${targetdir}":/"${BUILD_CONFIG[WORKSPACE_DIR]}"/"${BUILD_CONFIG[TARGET_DIR]}":"${mountflag}"
          -v "${pipelinesdir}":/openjdk/pipelines:"${mountflag}"
