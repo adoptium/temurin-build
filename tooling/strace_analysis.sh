@@ -174,6 +174,7 @@ processFiles() {
         non_pkg=false
 
         # Attempt to determine rpm pkg
+        # shellcheck disable=SC2069
         if ! rpm -qf "$filePath" 2>&1>/dev/null; then
             # bin, lib, sbin pkgs may be installed under the root symlink
             if [[ "$isBinSymLink" == "true" ]] && [[ $filePath == /usr/bin* ]]; then
@@ -188,7 +189,8 @@ processFiles() {
                 filePath=${filePath/#\/usr\/sbin/}
                 filePath="/sbin${filePath}"
             fi
- 
+
+            # shellcheck disable=SC2069 
             if ! rpm -qf "$filePath" 2>&1>/dev/null; then
                 non_pkg=true
             else
@@ -321,7 +323,7 @@ printPackages() {
     done
 
     # If some packages cannot be identified then list them
-    if [[ -n "${errorpkgs[@]-}" ]]; then
+    if [[ -n "${errorpkgs[*]-}" ]]; then
         echo -e "\nERROR: Some package versions cannot be identified:"
         printf '%s\n' "${errorpkgs[@]-}"
     fi
