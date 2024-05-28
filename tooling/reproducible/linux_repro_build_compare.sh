@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # ********************************************************************************
 # Copyright (c) 2024 Contributors to the Eclipse Foundation
 #
@@ -84,10 +84,13 @@ setEnvironment() {
   ls -ld "$CC" "$CXX" "/usr/lib/jvm/jdk-${BOOTJDK_VERSION}/bin/javac" || exit 1
 }
 
-containsElement() {
+# Function to check if a value is in the array
+containsElement () {
+  # shellcheck disable=SC3043
   local e
+  # shellcheck disable=SC3057
   for e in "${@:2}"; do
-    if [ "$e" == "$1" ]; then
+    if [ "$e" = "$1" ]; then
       return 0  # Match found
     fi
   done
@@ -95,7 +98,9 @@ containsElement() {
 }
 
 setBuildArgs() {
+  # shellcheck disable=SC3043,SC3030
   local CONFIG_ARGS=("--disable-warnings-as-errors" "--enable-dtrace" "--without-version-pre" "--without-version-opt" "--with-version-opt")
+  # shellcheck disable=SC3043,SC3030
   local NOTUSE_ARGS=("--configure-args")
   export BOOTJDK_HOME="/usr/lib/jvm/jdk-${BOOTJDK_VERSION}"
   echo "Parsing Make JDK Any Platform ARGS For Build"
@@ -104,6 +109,7 @@ setBuildArgs() {
 
   # Add The Build Time Stamp In Case It Wasnt In The SBOM ARGS
   words+=("--build-reproducible-date")
+  # shellcheck disable=SC3024
   words+=("\"$BUILDSTAMP\"")
 
   # Initialize variables
@@ -146,10 +152,10 @@ setBuildArgs() {
     prepped_value=${parts[1]}
     fixed_value=$(echo "$prepped_value" | awk '{$1=$1};1')
     # Handle Special parameters
-    if [ "$fixed_param" == "--jdk-boot-dir" ]; then fixed_value="$BOOTJDK_HOME" ; fi
+    if [ "$fixed_param" = "--jdk-boot-dir" ]; then fixed_value="$BOOTJDK_HOME" ; fi
     
     # Fix Build Variant Parameter To Strip JDK Version
-    if [ "$fixed_param" == "--build-variant" ] ; then
+    if [ "$fixed_param" = "--build-variant" ] ; then
       # Remove Leading White Space
       trimmed_value=$(echo "$prepped_value" | awk '{$1=$1};1')
       IFS=' ' read -r variant jdk <<< "$trimmed_value"

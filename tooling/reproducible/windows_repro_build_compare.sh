@@ -64,6 +64,7 @@ SBOMLocalPath="$WORK_DIR/src_sbom.json"
 DISTLocalPath="$WORK_DIR/src_jdk_dist.zip"
 ScriptPath=$(dirname "$(realpath "$0")")
 rc=0
+
 # Function to check if a string is a valid URL
 is_url() {
   local url=$1
