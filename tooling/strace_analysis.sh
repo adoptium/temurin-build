@@ -288,10 +288,10 @@ addDevKitInfo() {
 
         local adoptium_devkit_version=""
         if grep "ADOPTIUM_DEVKIT_RELEASE" "${devkitInfo}"; then
-            adoptium_devkit_version="${adoptium_devkit_version}$(grep "ADOPTIUM_DEVKIT_RELEASE" "${devkitInfo}" | cut -d"=" -f2)"
+            adoptium_devkit_version="$(grep "ADOPTIUM_DEVKIT_RELEASE" "${devkitInfo}" | cut -d"=" -f2)"
         fi
         if grep "ADOPTIUM_DEVKIT_TARGET" "${devkitInfo}"; then
-            adoptium_devkit_version="${adoptium_devkit_version}$(grep "ADOPTIUM_DEVKIT_TARGET" "${devkitInfo}" | cut -d"=" -f2)"
+            adoptium_devkit_version="${adoptium_devkit_version}-$(grep "ADOPTIUM_DEVKIT_TARGET" "${devkitInfo}" | cut -d"=" -f2)"
         fi
 
         local devkit_name="Unknown"
