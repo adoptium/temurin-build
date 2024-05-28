@@ -1479,12 +1479,16 @@ cleanAndMoveArchiveFiles() {
       osArch="amd64"
     fi
 
-    # TODO: Remove the "if" below once OS_ARCHITECTURE has been replaced.
-    # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
-    # and that confuses things when cross-compiling an x64 mac build on arm mac.
     if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "arm64" ]; then
+      # TODO: Remove the "if" below once OS_ARCHITECTURE has been replaced.
+      # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
+      # and that confuses things when cross-compiling an x64 mac build on arm mac.
       if [[ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_.* ]]; then
         osArch="amd64"
+      else
+        # GraalVM expects aarch64 for arm64 builds on MacOS. This is also consistent
+        # with linux and windows builds.
+        osArch="aarch64"
       fi
     fi
 
