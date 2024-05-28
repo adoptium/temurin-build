@@ -129,6 +129,14 @@ checkSymLinks() {
         isSbinSymLink=true
     fi
 
+    # Check if javaHome is a sym link, if so resolve it to the real path
+    # which will be used in strace output
+    javaHomeLink=$(readlink -f "${javaHome}")
+    if [[ "x${javaHomeLink}" != "x${javaHome}" ]]; then
+        echo "Resolving javaHome '${javaHome}' sym link to '${javaHomeLink}'"
+        javaHome="${javaHomeLink}"
+    fi
+
     echo "/bin is symlink: $isBinSymLink"
     echo "/lib is symlink: $isLibSymLink"
     echo "/sbin is symlink: $isSbinSymLink"
@@ -217,39 +225,49 @@ processFiles() {
 }
 
 processNonPkgFiles() {
-    for file in "${nonPkgFiles[@]-}"; do
+    for np_file in "${nonPkgFiles[@]-}"; do
+        # Ensure we have the full real path name
+        file=$(readlink -f "${np_file}")
+
         if [[ "$file" =~ ^"$temurin_build_dir".* ]]; then
-            if [[ -z "$devkit_dir" ]] || [[ ! "$file" =~ ^"$devkit_dir".* ]]; then
-                # temurin-build file, and not DevKit path, ignore as part of temurin-build
+            if [[ ( -z "$devkit_dir" || ! "$file" =~ ^"$devkit_dir".* ) && (! "$file" =~ ^"$javaHome".*) ]]; then
+                # not DevKit or javaHome path within, so ignore as part of temurin-build
                 continue
             fi
         fi
 
-        # We need to try and find the program's version using possible --version or -version
-        version=$("$file" --version 2>/dev/null | head -n 1)
+        local version
+        # If file is part of javaHome, then obtain version of the JDK
+        if [[ "$file" =~ ^"$javaHome".* ]]; then
+          # Get javaHome version
+          version=$("${javaHome}/bin/java" -version 2>&1 | head -2 | tail -1)
+        else
+          # We need to try and find the program's version using possible --version or -version
+          version=$("$file" --version 2>/dev/null | head -n 1)
 
-        if [[ "$version" == "" ]]; then
-            version=$("$file" -version dummy 2>/dev/null | head -n 1)
-        fi
-        if [[ "$version" == "" ]]; then
-            version=$("$file" --version dummy 2>&1 | grep -v "[Pp]ermission denied" | grep -v "not found" | grep -v "error while loading" | head -n 1)
-        fi
-        if [[ "$version" == "" ]]; then
-            version=$("$file" -version dummy 2>&1 | grep -v "[Pp]ermission denied" | grep -v "not found" | grep -v "error while loading" | head -n 1)
-        fi
-        if [[ "$version" == "" ]]; then
-            version=$("$file" -version dummy 2>/dev/null | head -n 1)
-        fi
-        if [[ "$version" == *"Is a directory"* ]]; then
-            version=""
+          if [[ "$version" == "" ]]; then
+              version=$("$file" -version dummy 2>/dev/null | head -n 1)
+          fi
+          if [[ "$version" == "" ]]; then
+              version=$("$file" --version dummy 2>&1 | grep -v "[Pp]ermission denied" | grep -v "not found" | grep -v "error while loading" | head -n 1)
+          fi
+          if [[ "$version" == "" ]]; then
+              version=$("$file" -version dummy 2>&1 | grep -v "[Pp]ermission denied" | grep -v "not found" | grep -v "error while loading" | head -n 1)
+          fi
+          if [[ "$version" == "" ]]; then
+              version=$("$file" -version dummy 2>/dev/null | head -n 1)
+          fi
+          if [[ "$version" == *"Is a directory"* ]]; then
+              version=""
+          fi
         fi
 
         if [[ "$version" != "" ]]; then
             # Make sure to only add unique packages to SBOM
-            if [[ ! " ${uniqueVersions[*]-} " =~ ${version} ]]; then
+            if [[ ! "${uniqueVersions[*]-}" =~ .*"END_${version}_END".* ]]; then
                 addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool non-package dependencies" "${version}" "${version}"
                 nonpkgs+=("${version}")
-                uniqueVersions+=("${version}")
+                uniqueVersions+=("END_${version}_END")
             fi
         else
             if [[ -n "$devkit_dir" ]] && [[ "$file" =~ ^"$devkit_dir".* ]]; then
@@ -281,12 +299,12 @@ addDevKitInfo() {
 
         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool non-package dependencies" "DEVKIT_NAME" "${devkit_name}"
         nonpkgs+=("DevKit: ${devkit_name}")
-        uniqueVersions+=("DevKit: ${devkit_name}")
+        uniqueVersions+=("END_DevKit: ${devkit_name}_END")
 
         if [[ -n "${adoptium_devkit_version}" ]]; then
             addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool non-package dependencies" "ADOPTIUM_DEVKIT" "${adoptium_devkit_version}"
             nonpkgs+=("DevKit Adoptium Version: ${adoptium_devkit_version}")
-            uniqueVersions+=("DevKit Adoptium Version: ${adoptium_devkit_version}")
+            uniqueVersions+=("END_DevKit Adoptium Version: ${adoptium_devkit_version}_END")
         fi
     fi
 }
@@ -302,8 +320,11 @@ printPackages() {
         echo "$trimPkg"
     done
 
-    echo -e "\nPackages where version cannot be identified:"
-    printf '%s\n' "${errorpkgs[@]-}"
+    # If some packages cannot be identified then list them
+    if [[ -n "${errorpkgs[@]-}" ]]; then
+        echo -e "\nERROR: Some package versions cannot be identified:"
+        printf '%s\n' "${errorpkgs[@]-}"
+    fi
 }
 
 checkArguments "$@"
