@@ -62,7 +62,7 @@ function setOpenJdkVersion() {
         then
             echo "RETRYWARNING: Query ${retryCount} failed. Retrying in 30 seconds (max retries = ${retryMax})..."
             retryCount=$((retryCount+1)) 
-            sleep 30s
+            sleep 30
         else
             echo "featureNumber FOUND: ${featureNumber}" && break
         fi
@@ -264,6 +264,6 @@ function verboseSleep() {
   else
     local i="${1}"
   fi
-  while [ "$i" -gt 0 ] ; do echo -n " $i " && sleep 1s && i=$((i-1)) ; done && echo " $i"
+  while [ "$i" -gt 0 ] ; do echo -n " $i " && sleep 1 && i=$((i-1)) ; done && echo " $i"
 }
 
