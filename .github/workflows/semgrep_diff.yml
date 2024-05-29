@@ -16,6 +16,10 @@ name: Semgrep Differential Scan
 on:
   pull_request:
 
+permissions:
+  contents: read
+  statuses: write
+  
 jobs:
   semgrep-diff:
     uses: adoptium/.github/.github/workflows/semgrep_diff.yml@main
