@@ -57,7 +57,7 @@ SIGNTOOL_BASE="C:/Program Files (x86)/Windows Kits/10"
 # Define What Are Configure Args & Redundant Args
 # This MAY Need Updating If Additional Configure Args Are Passed
 CONFIG_ARGS=("--disable-warnings-as-errors" "--disable-ccache" "--with-toolchain-version" "--with-ucrt-dll-dir" "--with-version-opt")
-NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args")
+NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args" "--enable-sbom-strace")
 
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$WORK_DIR/src_sbom.json"

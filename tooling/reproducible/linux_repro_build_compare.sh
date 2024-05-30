@@ -29,7 +29,7 @@ isJdkDir=false
 installPrereqs() {
   if test -r /etc/redhat-release; then
     yum install -y gcc gcc-c++ make autoconf unzip zip alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
-    yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel epel-release strace # Not included above ...
+    yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel epel-release # Not included above ...
     yum install -y git bzip2 xz openssl pigz which jq # pigz/which not strictly needed but help in final compression
     if grep -i release.6 /etc/redhat-release; then
       if [ ! -r /usr/local/bin/autoconf ]; then
@@ -86,9 +86,7 @@ setEnvironment() {
 
 # Function to check if a value is in the array
 containsElement () {
-  # shellcheck disable=SC3043
   local e
-  # shellcheck disable=SC3057
   for e in "${@:2}"; do
     if [ "$e" = "$1" ]; then
       return 0  # Match found
@@ -98,10 +96,8 @@ containsElement () {
 }
 
 setBuildArgs() {
-  # shellcheck disable=SC3043,SC3030
   local CONFIG_ARGS=("--disable-warnings-as-errors" "--enable-dtrace" "--without-version-pre" "--without-version-opt" "--with-version-opt")
-  # shellcheck disable=SC3043,SC3030
-  local NOTUSE_ARGS=("--configure-args")
+  local NOTUSE_ARGS=("--configure-args" "--enable-sbom-strace")
   export BOOTJDK_HOME="/usr/lib/jvm/jdk-${BOOTJDK_VERSION}"
   echo "Parsing Make JDK Any Platform ARGS For Build"
   # Split the string into an array of words
@@ -109,7 +105,6 @@ setBuildArgs() {
 
   # Add The Build Time Stamp In Case It Wasnt In The SBOM ARGS
   words+=("--build-reproducible-date")
-  # shellcheck disable=SC3024
   words+=("\"$BUILDSTAMP\"")
 
   # Initialize variables
@@ -199,7 +194,6 @@ setBuildArgs() {
 }
 
 cleanBuildInfo() {
-  # shellcheck disable=SC3043
   local DIR="$1"
   # BUILD_INFO name of OS level build was built on will likely differ
   sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
@@ -227,7 +221,6 @@ checkAllVariablesSet() {
 installPrereqs
 downloadAnt
 
-# shellcheck disable=SC3010
 if [[ $SBOM_PARAM =~ ^https?:// ]]; then
   echo "Retrieving and parsing SBOM from $SBOM_PARAM"
   curl -LO "$SBOM_PARAM"
@@ -256,7 +249,6 @@ if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
     JDK_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
 fi
 
-# shellcheck disable=SC3010
 if [[ $JDK_PARAM =~ ^https?:// ]]; then
   echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
 elif [[ $JDK_PARAM =~ tar.gz ]]; then
@@ -283,6 +275,7 @@ cp "$SBOM" SBOM.json
 cleanBuildInfo "${comparedDir}"
 cleanBuildInfo "compare.$$/jdk-$TEMURIN_VERSION"
 rc=0
+
 # shellcheck disable=SC2069
 diff -r "${comparedDir}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.diff" || rc=$?
 
