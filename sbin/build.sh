@@ -571,13 +571,24 @@ configureCommandParameters() {
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
 
+# Get the DevKit path from the --with-devkit configure arg
+getConfigureArgPath() {
+  local arg_path=""
+
+  local arg_regex="${1}=([^ ]+)"
+  if [[ "${CONFIGURE_ARGS}" =~ $arg_regex ]]; then
+    arg_path=${BASH_REMATCH[1]};
+  fi
+
+  echo "${arg_path}"
+}
+
 # Ensure environment set correctly for devkit
 setDevKitEnvironment() {
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]]; then
     # If DevKit is used ensure LD_LIBRARY_PATH for linux is using the DevKit sysroot
-    local devkit_regex="--with-devkit=([^ ]+)"
-    if [[ "${CONFIGURE_ARGS}" =~ $devkit_regex ]]; then
-      local devkit_path=${BASH_REMATCH[1]};
+    local devkit_path=$(getConfigureArgPath "--with-devkit")
+    if [[ -n "${devkit_path}" ]]; then
       if [[ -d "${devkit_path}" ]]; then
         echo "Using gcc from DevKit toolchain specified in configure args location: --with-devkit=${devkit_path}"
         if [[ -z ${LD_LIBRARY_PATH+x} ]]; then
@@ -1023,9 +1034,35 @@ generateSBoM() {
 
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
-    echo "Executing Analysis Script"
-    tempBldDir="$(dirname "${BUILD_CONFIG[WORKSPACE_DIR]}")"
-    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput" "$tempBldDir" "$javaHome" "$classpath" "$sbomJson"
+    echo "Executing Strace Analysis Script to add dependencies to the SBOM"
+    local straceOutputDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput"
+    local temurinBuildDir="$(dirname "${BUILD_CONFIG[WORKSPACE_DIR]}")"
+    local buildOutputDir
+    if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+      buildOutputDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build"
+    else
+      buildOutputDir="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"
+    fi
+    local openjdkSrcDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+
+    # strace analysis needs to know the bootJDK and optional DevKit, as these versions will
+    # be present in the analysis and not necessarily installed as packages 
+    local devkit_path=$(getConfigureArgPath "--with-devkit")
+    local bootjdk_path=$(getConfigureArgPath "--with-boot-jdk")
+    if [[ -z "${bootjdk_path}" ]]; then
+        # No boot jdk specified use environment javaHome
+        bootjdk_path="$javaHome"
+    fi
+
+    # Ensure paths don't contain "./" or "//", otherwise paths will not match strace output paths
+    straceOutputDir=$(echo ${straceOutputDir} | sed 's,\./,,' | sed 's,//,/,')
+    temurinBuildDir=$(echo ${temurinBuildDir} | sed 's,\./,,' | sed 's,//,/,')
+    buildOutputDir=$(echo ${buildOutputDir} | sed 's,\./,,' | sed 's,//,/,')
+    openjdkSrcDir=$(echo ${openjdkSrcDir} | sed 's,\./,,' | sed 's,//,/,')
+    devkit_path=$(echo ${devkit_path} | sed 's,\./,,' | sed 's,//,/,')
+    bootjdk_path=$(echo ${bootjdk_path} | sed 's,\./,,' | sed 's,//,/,')
+
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${straceOutputDir}" "${temurinBuildDir}" "${bootjdk_path}" "${classpath}" "${sbomJson}" "${buildOutputDir}" "${openjdkSrcDir}" "${devkit_path}"
   fi
 
   # Print SBOM location
