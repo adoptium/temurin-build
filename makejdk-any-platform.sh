@@ -51,7 +51,17 @@ configure_build "$@"
 writeConfigToFile
 
 # Store params to this script as "buildinfo"
-echo "$@" > ./workspace/config/makejdk-any-platform.args
+# Ensure arguments containing "spaces" are quoted
+makeJdkArgs=""
+for arg in "$@"; do
+  # Quote the argument if it contains spaces
+  if [[ "${arg}" =~ .*" ".* ]]; then
+    makeJdkArgs="${makeJdkArgs} \"${arg}\""
+  else
+    makeJdkArgs="${makeJdkArgs} ${arg}"
+  fi
+done
+echo "${makeJdkArgs}" > ./workspace/config/makejdk-any-platform.args
 
 # Let's build and test the (Adoptium) OpenJDK binary in Docker or natively
 if [ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ] ; then
