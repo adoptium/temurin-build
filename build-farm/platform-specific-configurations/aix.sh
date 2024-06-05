@@ -127,7 +127,7 @@ else
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} DF=/usr/sysv/bin/df"
 fi
 
-if [ "$JAVA_FEATURE_VERSION" -le 21 ]; then
+if [ "$JAVA_FEATURE_VERSION" -le 21 -a "$JAVA_FEATURE_VERSION" -ge 11 ]; then
   export LANG=C
   export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/xlC/16.1.0/bin:/opt/IBM/xlc/16.1.0/bin:$PATH
   export CC=xlclang
