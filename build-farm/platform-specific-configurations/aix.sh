@@ -48,7 +48,7 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 export PATH="/opt/freeware/bin:/usr/local/bin:/opt/IBM/xlC/13.1.3/bin:/opt/IBM/xlc/13.1.3/bin:$PATH"
 # Without this, java adds /usr/lib to the LIBPATH and it's own library
 # directories of anything it forks which breaks linkage
-export LIBPATH=/opt/freeware/lib/pthread/ppc64:/opt/freeware/lib:/usr/lib
+export LIBPATH=/opt/freeware/lib/pthread:/opt/freeware/lib:/usr/lib
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-cups-include=/opt/freeware/include"
 
 # Any version below 11
@@ -133,7 +133,13 @@ if [ "$JAVA_FEATURE_VERSION" -ge 11 ]; then
   export CC=xlclang
   export CXX=xlclang++
 fi
-
+if [ "$JAVA_FEATURE_VERSION" -ge 22 ]; then
+  export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/openxlC/17.1.1/bin:$PATH
+  export EXTRA_PATH=/opt/IBM/openxlC/17.1.1/tools
+  export TOOLCHAIN_TYPE="clang"
+  export CC=ibm-clang_r
+  export CXX=ibm-clang++_r
+fi
 # J9 JDK14 builds seem to be chewing up more RAM than the others, so restrict it
 # Ref: https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1151
 if [ "$JAVA_FEATURE_VERSION" -ge 14 ]; then
