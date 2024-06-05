@@ -52,6 +52,8 @@ export CONFIGURE_ARGS=""
 export ADDITIONAL_MAKE_TARGETS=""
 export GIT_CLONE_ARGUMENTS=()
 
+JAVA_HOME_MISSING_ERROR="Unable to find a suitable JAVA_HOME to build the cyclonedx-lib"
+
 # Parse the CL arguments, defers to the shared function in common-functions.sh
 function parseArguments() {
   parseConfigurationArguments "$@"
@@ -818,7 +820,7 @@ setupAntEnv() {
   # fall back to use JDK_BOOT_DIR which is set in make-adopt-build-farm.sh
     javaHome="${BUILD_CONFIG[JDK_BOOT_DIR]}"
   else
-    echo "Unable to find a suitable JAVA_HOME to build the cyclonedx-lib"
+    echo "$JAVA_HOME_MISSING_ERROR"
     exit 2
   fi
 
@@ -827,6 +829,16 @@ setupAntEnv() {
   fi
 
   echo "${javaHome}"
+}
+
+# if setupAntEnv is called in substitution subshel (eg.: `` ort $()), its exit
+# is not propagated so all consumers of it must check one more times
+checkJavaHome() {
+  local javaHome="${1}"
+  if [ ! -e "${javaHome}" ] ; then
+    echo "${JAVA_HOME_MISSING_ERROR}: $javaHome"
+    exit 2
+  fi
 }
 
 # Build the CycloneDX Java library and app used for SBoM generation
@@ -872,6 +884,7 @@ generateSBoM() {
   fi
 
   local javaHome="$(setupAntEnv)"
+  checkJavaHome "${javaHome}"
 
   buildCyclonedxLib "${javaHome}"
   # classpath to run java app TemurinGenSBOM
