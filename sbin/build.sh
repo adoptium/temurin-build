@@ -871,6 +871,8 @@ generateSBoM() {
     return
   fi
 
+  # exit from $(setupAntEnv) is not propagated. We ahve to ensure it is fatal, co calling it one more times
+  setupAntEnv
   local javaHome="$(setupAntEnv)"
 
   buildCyclonedxLib "${javaHome}"
