@@ -96,10 +96,15 @@ cleanBuildInfo() {
 setTemurinBuildArgs() {
   local buildArgs="$1"
   local bootJdk="$2"
+  local timeStamp="$3"
   local ignoreOptions=("--enable-sbom-strace ")
   for ignoreOption in "${ignoreOptions[@]}"; do
     buildArgs="${buildArgs/${ignoreOption}//}"
   done
+  # set --build-reproducible-date if not yet
+  if [[ "${buildArgs}" != *"--build-reproducible-date"* ]]; then
+    buildArgs="--build-reproducible-date \"${timeStamp}\" ${buildArgs}" 
+  fi
   #reset --jdk-boot-dir
   # shellcheck disable=SC2001
   buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir /usr/lib/jvm/jdk-${bootJdk}|")"
@@ -146,7 +151,7 @@ LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
 TEMURIN_BUILD_SHA=$(jq -r '.components[0] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
 TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
 TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
-#BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
+BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
 if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
@@ -161,7 +166,7 @@ if [[ "${USING_DEVKIT}" == "false" ]]; then
 fi
 setAntEnvironment
 echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
-TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION")
+TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION" "$BUILDSTAMP")
 
 
 if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
