@@ -57,14 +57,13 @@ SIGNTOOL_BASE="C:/Program Files (x86)/Windows Kits/10"
 # Define What Are Configure Args & Redundant Args
 # This MAY Need Updating If Additional Configure Args Are Passed
 CONFIG_ARGS=("--disable-warnings-as-errors" "--disable-ccache" "--with-toolchain-version" "--with-ucrt-dll-dir" "--with-version-opt")
-NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args" "--enable-sbom-strace")
+NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args")
 
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$WORK_DIR/src_sbom.json"
 DISTLocalPath="$WORK_DIR/src_jdk_dist.zip"
 ScriptPath=$(dirname "$(realpath "$0")")
 rc=0
-
 # Function to check if a string is a valid URL
 is_url() {
   local url=$1
