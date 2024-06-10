@@ -871,7 +871,7 @@ generateSBoM() {
     return
   fi
 
-  # exit from $(setupAntEnv) is not propagated. We ahve to ensure it is fatal, co calling it one more times
+  # exit from $(setupAntEnv) is not propagated. We have to ensure it runs, so calling it one more time
   setupAntEnv
   local javaHome="$(setupAntEnv)"
 
