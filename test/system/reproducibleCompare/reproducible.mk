@@ -18,6 +18,8 @@ endif
 ifndef JDK_FILE
 	ifneq (,$(findstring win,$(SPEC)))
 		JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.zip')
+	else
+		JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.tar.gz')
 	endif
 endif
 
