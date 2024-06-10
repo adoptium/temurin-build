@@ -871,7 +871,8 @@ generateSBoM() {
     return
   fi
 
-  # exit from $(setupAntEnv) is not propagated. We have to ensure it runs, so calling it one more time
+  # exit from $(setupAntEnv) is not propagated. We have to ensure, the exit propagates, and is fatal for the script
+  # co calling it one more time, rather sooner then later, without subshell.
   setupAntEnv
   local javaHome="$(setupAntEnv)"
 
