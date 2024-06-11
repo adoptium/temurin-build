@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 # shellcheck disable=SC2155,SC2153,SC2038,SC1091,SC2116,SC2086
 # ********************************************************************************
 # Copyright (c) 2017 Contributors to the Eclipse Foundation
