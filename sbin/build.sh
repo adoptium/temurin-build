@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 # shellcheck disable=SC2155,SC2153,SC2038,SC1091,SC2116,SC2086
 # ********************************************************************************
 # Copyright (c) 2017 Contributors to the Eclipse Foundation
@@ -132,7 +132,7 @@ configureReproducibleBuildParameter() {
 
       # Ensure reproducible and comparable binary with a unique build user identifier
       addConfigureArg "--with-build-user=" "admin"
-      if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}"  == "aix" ] && [ "${JDK_VERSION_NUMBER}" -lt 22 ]; then
+      if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}"  == "aix" ] && [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 22 ]; then
          addConfigureArg "--with-extra-cflags=" "-qnotimestamps"
          addConfigureArg "--with-extra-cxxflags=" "-qnotimestamps"
       fi
