@@ -748,18 +748,17 @@ executeTemplatedFile() {
   fi
 
   if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 19 || "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 17 ]]; then
-    if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]; then
+      # Always get the "actual" buildTimestamp used in making openjdk
       local specFile="./spec.gmk"
       if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
         specFile="build/*/spec.gmk"
       fi
-      # For "release" reproducible builds get openjdk timestamp used
+      # For reproducible builds get openjdk timestamp used in the spec.gmk file
       local buildTimestamp=$(grep SOURCE_DATE_ISO_8601 ${specFile} | tr -s ' ' | cut -d' ' -f4)
       # BusyBox doesn't use T Z iso8601 format
       buildTimestamp="${buildTimestamp//T/ }"
       buildTimestamp="${buildTimestamp//Z/}"
       BUILD_CONFIG[BUILD_TIMESTAMP]="${buildTimestamp}"
-    fi
   fi
 
   # Restore exit behavior
