@@ -75,7 +75,7 @@ unpackFromArchive() {
   # If the tarball contains .git files, they should be ignored later
   pushd "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     if [ "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]: -4}" == ".zip" ] ; then
-        echo "Source zip unpacked as if ti contains exactly one directory"
+        echo "Source zip unpacked as if it contains exactly one directory"
         unzipGnuAbsPathWithStripComponents1 "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
     else
       local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"  | grep "/$" -c) || local topLevelItems=1
