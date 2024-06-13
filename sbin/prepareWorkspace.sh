@@ -78,7 +78,7 @@ unpackFromArchive() {
         echo "Source zip unpacked as if it contains exactly one directory"
         unzipGnuAbsPathWithStripComponents1 "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
     else
-      local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"  | grep "/$" -c) || local topLevelItems=1
+      local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" | grep "/$" -c) || local topLevelItems=1
       if [ "$topLevelItems" -eq "1" ] ; then
         echo "Source tarball contains exactly one directory"
         untarGnuAbsPathWithStripComponents1 "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
