@@ -871,7 +871,7 @@ generateSBoM() {
     return
   fi
 
-  # exit from local var=$(setupAntEnv) is not propagated. We have to ensure, the exit propagates, and is fatal for the script
+  # exit from local var=$(setupAntEnv) is not propagated. We have to ensure that the exit propagates, and is fatal for the script
   # So the declaration is split. In that case the bug do not occur and thus the `exit 2` from setupAntEnv is correctly propagated
   local javaHome
   javaHome="$(setupAntEnv)"
