@@ -25,7 +25,7 @@ ANT_SHA=9028e2fc64491cca0f991acc09b06ee7fe644afe41d1d6caf72702ca25c4613c
 ANT_CONTRIB_VERSION=1.0b3
 ANT_CONTRIB_SHA=4d93e07ae6479049bb28071b069b7107322adaee5b70016674a0bffd4aac47f9
 isJdkDir=false
-USING_DEVKIT="true"
+USING_DEVKIT="false"
 installPrereqs() {
   if test -r /etc/redhat-release; then
     yum install -y gcc gcc-c++ make autoconf unzip zip alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
@@ -83,8 +83,6 @@ setGccEnvironment() {
 
 setAntEnvironment() {
   export PATH="${LOCALGCCDIR}/bin:/usr/local/bin:/usr/bin:$PATH:/usr/local/apache-ant-${ANT_VERSION}/bin"
-  # /usr/local/bin required to pick up the new autoconf if required
-  ls -ld "$CC" "$CXX" "/usr/lib/jvm/jdk-${BOOTJDK_VERSION}/bin/javac" || exit 1
 }
 
 cleanBuildInfo() {
@@ -156,7 +154,7 @@ NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
 if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
 if [[ "$TEMURIN_BUILD_ARGS" =~ .*"--use-adoptium-devkit".* ]]; then
-  USING_DEVKIT="false"
+  USING_DEVKIT="true"
 fi
 
 checkAllVariablesSet
