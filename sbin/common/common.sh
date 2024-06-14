@@ -102,8 +102,8 @@ function setBranch() {
   local branch="master"
   local adoptium_mirror_branch="dev"
 
-  # non-u jdk-23+ hotspot and adoptium version source is within a "version" branch
-  if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} != *u ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 23 ]]; then
+  # non-u (and non-tip) jdk-23+ hotspot and adoptium version source is within a "version" branch
+  if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} != *u ]] && [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} != "jdk" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 23 ]]; then
     branch="jdk${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
     adoptium_mirror_branch="dev_jdk${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
   fi
