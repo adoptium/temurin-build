@@ -236,7 +236,7 @@ getOpenjdkGithubRepoName() {
     local featureNumber=$(echo "${forest_name}" | tr -d "[:alpha:]")
 
     # jdk-23+ stabilisation versions are with the jdk(head) repository
-    if [[ "${featureNumber]}" -ge 23 ]]; then
+    if [[ "${featureNumber}" -ge 23 ]]; then
       repoName="jdk"
     else
       repoName="${forest_name}"
