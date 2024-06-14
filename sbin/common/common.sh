@@ -16,8 +16,12 @@
 # shellcheck disable=SC2153
 function setOpenJdkVersion() {
   # forest_name represents the JDK version with "u" suffix for an "update version"
-  # It no longer relates directly to the openjdk repository name
-  # jdkNN[u]
+  #
+  # It no longer relates directly to the openjdk repository name, as the jdk(head) repository
+  # now has version branches for jdk-23+
+  #
+  # Format: jdkNN[u]
+  #
   local forest_name=$1
 
   echo "Setting version based on forest_name=${forest_name}"
