@@ -397,31 +397,6 @@ function parseConfigurationArguments() {
     setBranch
 }
 
-function setBranch() {
-
-  # Which repo branch to build, e.g. dev by default for temurin, "openj9" for openj9
-  local branch="master"
-  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]; then
-    branch="dev"
-  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
-    branch="openj9";
-  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
-    branch="master";
-  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_FAST_STARTUP}" ]; then
-    branch="master";
-  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
-    branch="develop";
-  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
-    if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] ; then
-      branch="risc-v"
-    else
-      branch="master"
-    fi
-  fi
-
-  BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}
-}
-
 # Set the local dir if used
 function setOpenjdkSourceDir() {
   if [ ! -e "${1}" ] ; then
