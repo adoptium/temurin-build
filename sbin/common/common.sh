@@ -20,6 +20,8 @@ function setOpenJdkVersion() {
   # jdkNN[u]
   local forest_name=$1
 
+  echo "Setting version based on forest_name=${forest_name}"
+
   # The argument passed here have actually very strict format of jdk8, jdk8u..., jdk
   # the build may fail later if this is not honoured.
   # If your repository has a different name, you can use --version or build from dir/snapshot
@@ -97,9 +99,9 @@ function setBranch() {
   local adoptium_mirror_branch="dev"
 
   # Forest and feature number maybe not set yet if provided via command line argument
-  if [[ -n "${BUILD_CONFIG[OPENJDK_FOREST_NAME]}" ]] && [[ -n "$BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]" ]]; then
+  if [[ -n "${BUILD_CONFIG[OPENJDK_FOREST_NAME]}" ]] && [[ -n "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" ]]; then
     # non-u jdk-23+ hotspot and adoptium is within a "version" branch
-    if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} != *u ]] && [[ "$BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]" -ge 23 ]]; then
+    if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} != *u ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 23 ]]; then
       branch="jdk${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
       adoptium_mirror_branch="dev_jdk${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
     fi
