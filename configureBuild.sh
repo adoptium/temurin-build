@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC1091
+# shellcheck disable=SC1091,SC2155
 # ********************************************************************************
 # Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
