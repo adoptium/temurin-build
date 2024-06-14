@@ -393,8 +393,6 @@ function parseConfigurationArguments() {
         *) echo >&2 "Invalid build.sh option: ${opt}"; exit 1;;
       esac
     done
-
-    setBranch
 }
 
 # Set the local dir if used
