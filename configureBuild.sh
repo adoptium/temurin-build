@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC1091
+# shellcheck disable=SC1091,SC2155
 # ********************************************************************************
 # Copyright (c) 2018 Contributors to the Eclipse Foundation
 #
@@ -170,6 +170,7 @@ setVariablesForConfigure() {
 setRepository() {
 
   local suffix
+  local githubRepoName=$(getOpenjdkGithubRepoName "${BUILD_CONFIG[OPENJDK_FOREST_NAME]}")
 
   # Location of Extensions for OpenJ9 project
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
@@ -200,12 +201,12 @@ setRepository() {
       || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK11_CORE_VERSION}" ]; then
       suffix="openjdk/riscv-port-${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
     else
-      suffix="openjdk/${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
+      suffix="openjdk/${githubRepoName}"
     fi
   elif [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]]; then
-    suffix="adoptium/${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
+    suffix="adoptium/${githubRepoName}"
   else
-    suffix="openjdk/${BUILD_CONFIG[OPENJDK_FOREST_NAME]}"
+    suffix="openjdk/${githubRepoName}"
   fi
 
   local repository
@@ -219,6 +220,30 @@ setRepository() {
   repository="$(echo "${repository}" | awk '{print tolower($0)}')"
 
   BUILD_CONFIG[REPOSITORY]="${BUILD_CONFIG[REPOSITORY]:-${repository}}"
+
+  echo "Using source repository ${BUILD_CONFIG[REPOSITORY]}"
+}
+
+# Given a forest_name (eg.jdk23), return the corresponding repository name
+getOpenjdkGithubRepoName() {
+  local forest_name="$1"
+  local repoName=""
+
+  # "Update" versions are currently in a repository with the name of the forest
+  if [[ ${forest_name} == *u ]]; then
+    repoName="${forest_name}"
+  else
+    local featureNumber=$(echo "${forest_name}" | tr -d "[:alpha:]")
+
+    # jdk-23+ stabilisation versions are within the jdk(head) repository
+    if [[ "${featureNumber}" -ge 23 ]]; then
+      repoName="jdk"
+    else
+      repoName="${forest_name}"
+    fi
+  fi
+
+  echo "${repoName}"
 }
 
 # Specific architectures need to have special build settings

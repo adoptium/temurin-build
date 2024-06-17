@@ -15,7 +15,16 @@
 # shellcheck disable=SC2155
 # shellcheck disable=SC2153
 function setOpenJdkVersion() {
+  # forest_name represents the JDK version with "u" suffix for an "update version"
+  #
+  # It no longer relates directly to the openjdk repository name, as the jdk(head) repository
+  # now has version branches for jdk-23+
+  #
+  # Format: jdkNN[u]
+  #
   local forest_name=$1
+
+  echo "Setting version based on forest_name=${forest_name}"
 
   # The argument passed here have actually very strict format of jdk8, jdk8u..., jdk
   # the build may fail later if this is not honoured.
@@ -81,6 +90,45 @@ function setOpenJdkVersion() {
   # feature number e.g. 11
   BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber}
 
+  # Set default branch based on JDK forest and feature number
+  setBranch
+}
+
+# Set the default BUILD_CONFIG[BRANCH] for the jdk version being built
+# For "hotspot" and "Temurin" builds of non-"u" jdk-23+ the branch is dev_<version>
+function setBranch() {
+
+  # Which repo branch to build, e.g. dev by default for temurin, "openj9" for openj9
+  local branch="master"
+  local adoptium_mirror_branch="dev"
+
+  # non-u (and non-tip) jdk-23+ hotspot and adoptium version source is within a "version" branch in the "jdk" repository
+  if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} != *u ]] && [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} != "jdk" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 23 ]]; then
+    branch="jdk${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
+    adoptium_mirror_branch="dev_jdk${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
+  fi
+
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]; then
+    branch="${adoptium_mirror_branch}"
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    branch="openj9";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+    branch="master";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_FAST_STARTUP}" ]; then
+    branch="master";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
+    branch="develop";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] ; then
+      branch="risc-v"
+    else
+      branch="master"
+    fi
+  fi
+
+  BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}
+
+  echo "Default branch set to BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]}"
 }
 
 function crossPlatformRealPath() {
