@@ -2171,7 +2171,7 @@ addJVMVariant() {
 }
 
 addBuildSHA() { # git SHA of the build repository i.e. openjdk-build
-  local buildSHA=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" rev-parse HEAD 2>/dev/null)
+  local buildSHA=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}" && git rev-parse HEAD 2>/dev/null)
   if [[ $buildSHA ]]; then
     # shellcheck disable=SC2086
     echo -e BUILD_SOURCE=\"git:$buildSHA\" >>release
@@ -2181,7 +2181,7 @@ addBuildSHA() { # git SHA of the build repository i.e. openjdk-build
 }
 
 addBuildSourceRepo() { # name of git repo for which BUILD_SOURCE sha is from
-  local buildSourceRepo=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" config --get remote.origin.url 2>/dev/null)
+  local buildSourceRepo=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}" && git config --get remote.origin.url 2>/dev/null)
   if [[ $buildSourceRepo ]]; then
     # shellcheck disable=SC2086
     echo -e BUILD_SOURCE_REPO=\"$buildSourceRepo\" >>release
@@ -2191,7 +2191,7 @@ addBuildSourceRepo() { # name of git repo for which BUILD_SOURCE sha is from
 }
 
 addOpenJDKSourceRepo() { # name of git repo for which SOURCE sha is from
-  local openjdkSourceRepo=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" config --get remote.origin.url 2>/dev/null)
+  local openjdkSourceRepo=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git config --get remote.origin.url 2>/dev/null)
   if [[ $openjdkSourceRepo ]]; then
     # shellcheck disable=SC2086
     echo -e SOURCE_REPO=\"$openjdkSourceRepo\" >>release
@@ -2221,7 +2221,7 @@ addJ9Tag() {
   # This code makes sure that a version number is always present in the release file i.e. openj9-0.21.0
   local j9Location="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/openj9"
   # Pull the tag associated with the J9 commit being used
-  J9_TAG=$(git -C $j9Location describe --abbrev=0)
+  J9_TAG=$(cd "$j9Location describe" && git --abbrev=0)
   # shellcheck disable=SC2086
   if [ ${BUILD_CONFIG[RELEASE]} = false ]; then
     echo -e OPENJ9_TAG=\"$J9_TAG\" >> release
@@ -2304,9 +2304,9 @@ addVendorToJson(){
 }
 
 addSourceToJson(){ # Pulls the origin repo, or uses 'openjdk-build' in rare cases of failure
-  local repoName=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" config --get remote.origin.url 2>/dev/null)
+  local repoName=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}" && git config --get remote.origin.url 2>/dev/null)
   local repoNameStr="${repoName:-"ErrorUnknown"}"
-  local buildSHA=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" rev-parse HEAD 2>/dev/null)
+  local buildSHA=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}" && git rev-parse HEAD 2>/dev/null)
   if [[ $buildSHA ]]; then
     echo -n "${repoNameStr%%.git}/commit/$buildSHA" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
   else
@@ -2315,8 +2315,8 @@ addSourceToJson(){ # Pulls the origin repo, or uses 'openjdk-build' in rare case
 }
 
 addOpenJDKSourceToJson() { # name of git repo for which SOURCE sha is from
-  local openjdkSourceRepo=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" config --get remote.origin.url 2>/dev/null)
-  local openjdkSHA=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" rev-parse HEAD 2>/dev/null)
+  local openjdkSourceRepo=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git config --get remote.origin.url 2>/dev/null)
+  local openjdkSHA=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git rev-parse HEAD 2>/dev/null)
   if [[ $openjdkSHA ]]; then
     echo -n "${openjdkSourceRepo%%.git}/commit/${openjdkSHA}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
   else
