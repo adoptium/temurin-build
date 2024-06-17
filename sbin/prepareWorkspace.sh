@@ -843,13 +843,13 @@ applyPatches() {
 createSourceTagFile(){
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
     local OpenJDK_TopDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    local OpenJDK_SHA=$(git -C "$OpenJDK_TopDir" rev-parse --short HEAD)
+    local OpenJDK_SHA=$(cd "$OpenJDK_TopDir" && git rev-parse --short HEAD)
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
       # OpenJ9 list 3 SHA's in their release file: OpenJDK, OpenJ9, and OMR.
       local OpenJ9_TopDir="$OpenJDK_TopDir/openj9"
       local OMR_TopDir="$OpenJDK_TopDir/omr"
-      local OpenJ9_SHA=$(git -C "$OpenJ9_TopDir" rev-parse --short HEAD)
-      local OMR_SHA=$(git -C "$OMR_TopDir" rev-parse --short HEAD)
+      local OpenJ9_SHA=$(cd "$OpenJ9_TopDir" && git rev-parse --short HEAD)
+      local OMR_SHA=$(cd "$OMR_TopDir" && git rev-parse --short HEAD)
       (printf "OpenJDK: %s OpenJ9: %s OMR: %s" "$OpenJDK_SHA" "$OpenJ9_SHA" "$OMR_SHA") > "$OpenJDK_TopDir/.hgtip"
     else # Other variants only list the main repo SHA.
       (printf "OpenJDK: %s" "$OpenJDK_SHA") > "$OpenJDK_TopDir/.hgtip"
