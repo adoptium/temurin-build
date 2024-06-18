@@ -257,6 +257,6 @@ buildOpenJDKViaDocker()
   # If we didn't specify to keep the container then remove it
   if [[ "${BUILD_CONFIG[KEEP_CONTAINER]}" == "false" ]] ; then
       echo "Removing container ${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}"
-      ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" ps -a | awk '{ print $1,$(NF) }' | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" | awk '{print $1 }' | xargs -I {} ${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER] rm {}
+      ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" ps -a | awk '{ print $1,$(NF) }' | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" | awk '{print $1 }' | xargs -I {} ${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]} rm {}
   fi
 }
