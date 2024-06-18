@@ -97,7 +97,7 @@ setTemurinBuildArgs() {
   local timeStamp="$3"
   local ignoreOptions=("--enable-sbom-strace ")
   for ignoreOption in "${ignoreOptions[@]}"; do
-    buildArgs="${buildArgs/${ignoreOption}//}"
+    buildArgs="${buildArgs/${ignoreOption}/}"
   done
   # set --build-reproducible-date if not yet
   if [[ "${buildArgs}" != *"--build-reproducible-date"* ]]; then
@@ -147,9 +147,21 @@ BOOTJDK_VERSION=$(jq -r '.metadata.tools[] | select(.name == "BOOTJDK") | .versi
 GCCVERSION=$(jq -r '.metadata.tools[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
 LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
 TEMURIN_BUILD_SHA=$(jq -r '.components[0] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
-TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
 TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
 BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
+TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
+
+# Using old method to escape configure-args in SBOM (build PR 3835)", can be removed later.
+if echo "$TEMURIN_BUILD_ARGS" | grep -v configure-args\ \\\"; then
+  TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | \
+        cut -d\" -f4 | \
+        sed -e "s/--with-jobs=[0-9]*//g" \
+         -e "s/--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt/'--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt'/" \
+         -e "s/--disable-warnings-as-errors --enable-dtrace *--with-version-opt=ea/'--disable-warnings-as-errors --enable-dtrace --with-version-opt=ea'/" \
+         -e "s/--disable-warnings-as-errors --enable-dtrace/'--disable-warnings-as-errors --enable-dtrace'/" \
+         -e 's/\\n//g')
+fi
+
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
 if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
@@ -165,7 +177,6 @@ fi
 setAntEnvironment
 echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
 TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION" "$BUILDSTAMP")
-
 
 if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
     JDK_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
