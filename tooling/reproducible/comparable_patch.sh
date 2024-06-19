@@ -414,10 +414,8 @@ if [[ "$OS" =~ CYGWIN* ]] && [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
   neutraliseVsVersionInfo
 fi
 
-if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
-  # SystemModules$*.class's differ due to hash differences from Windows COMPANY_NAME and Signatures
-  removeSystemModulesHashBuilderParams
-fi
+# Remove SystemModule "hashes" caused by "Vendor String" and Windows/Mac Signature differences
+removeSystemModulesHashBuilderParams
 
 if [[ "$OS" =~ CYGWIN* ]]; then
   removeWindowsNonComparableData

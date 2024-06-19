@@ -78,7 +78,10 @@ function expandJDK() {
   rm -rf "${JDK_ROOT}_CP"
 }
 
-# Process SystemModules classes to remove ModuleHashes$Builder differences due to Signatures
+# Process SystemModules classes to remove ModuleHashes$Builder differences
+# due to "hash" differences caused by:
+# - Windows&Mac Signatures for "Reproducible Builds"
+# - "Vendor String" differences for "Comparable Builds"
 #   1. javap
 #   2. search for line: // Method jdk/internal/module/ModuleHashes$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes$Builder;
 #   3. followed 3 lines later by: // String <module>
