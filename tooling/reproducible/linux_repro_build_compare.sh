@@ -197,7 +197,7 @@ if [ "${isJdkDir}" = true ]; then
   comparedDir=$JDK_PARAM
 fi
 
-echo "Rebuild Temurin build args is $TEMURIN_BUILD_ARGS"
+echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
 echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
 
 echo Comparing ...
