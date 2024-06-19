@@ -447,7 +447,7 @@ if [ "${BUILD}" == true ]; then
     commandString="${commandString} --build-variant openj9"
   fi
 
-  # although this works for both docekr and podman with docker alias, it shodl honour the setup pf BUILD_CONFIG[USE_DOCKER] (also maybe with  BUILD_CONFIG[DOCKER] which set sudo/no sudo)
+  # although this works for both docekr and podman with docker alias, it shodl honour the setup of BUILD_CONFIG[USE_DOCKER] (also maybe with  BUILD_CONFIG[DOCKER] which set sudo/no sudo)
   ${CMD} build -t "jdk${JDK_VERSION}_build_image" -f "$DOCKERFILE_PATH" . --build-arg "OPENJDK_CORE_VERSION=${JDK_VERSION}" --build-arg "HostUID=${UID}"
   echo "To start a build run ${commandString}"
   ${CMD} run -it "jdk${JDK_VERSION}_build_image" bash
