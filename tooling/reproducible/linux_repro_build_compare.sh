@@ -158,7 +158,7 @@ if echo "$TEMURIN_BUILD_ARGS" | grep -v configure-args\ \\\"; then
         sed -e "s/--with-jobs=[0-9]*//g" \
          -e "s/--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt/'--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt'/" \
          -e "s/--disable-warnings-as-errors --enable-dtrace *--with-version-opt=ea/'--disable-warnings-as-errors --enable-dtrace --with-version-opt=ea'/" \
-         -e "s/--disable-warnings-as-errors --enable-dtrace/'--disable-warnings-as-errors --enable-dtrace'/" \
+         -e "s/ --disable-warnings-as-errors --enable-dtrace/ '--disable-warnings-as-errors --enable-dtrace'/" \
          -e 's/\\n//g')
 fi
 
