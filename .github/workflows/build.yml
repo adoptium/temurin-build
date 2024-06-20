@@ -133,7 +133,7 @@ jobs:
       matrix:
         os: [macOS]
         version: [
-          { name: jdk8u, distro: macos-11 },
+          { name: jdk8u, distro: macos-14 },
           { name: jdk11u, distro: macos-14 },
           { name: jdk17u, distro: macos-14 }
         ]
