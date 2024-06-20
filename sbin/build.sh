@@ -870,7 +870,10 @@ generateSBoM() {
     return
   fi
 
-  local javaHome="$(setupAntEnv)"
+  # exit from local var=$(setupAntEnv) is not propagated. We have to ensure that the exit propagates, and is fatal for the script
+  # So the declaration is split. In that case the bug does not occur and thus the `exit 2` from setupAntEnv is correctly propagated
+  local javaHome
+  javaHome="$(setupAntEnv)"
 
   buildCyclonedxLib "${javaHome}"
   # classpath to run java app TemurinGenSBOM
