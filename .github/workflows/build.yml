@@ -165,7 +165,6 @@ jobs:
     - name: Install Dependencies
       run: |
         brew install automake bash binutils freetype gnu-sed nasm
-        brew remove harfbuzz
 
     - name: Select correct Xcode (JDK11+)
       run: |
