@@ -75,7 +75,7 @@ downloadAnt() {
   fi
 }
 
-setGccEnvironment() {
+setNonDevkitGccEnvironment() {
   export CC="${LOCALGCCDIR}/bin/gcc-${GCCVERSION}"
   export CXX="${LOCALGCCDIR}/bin/g++-${GCCVERSION}"
   export LD_LIBRARY_PATH="${LOCALGCCDIR}/lib64"
@@ -172,7 +172,7 @@ fi
 checkAllVariablesSet
 downloadTooling "$USING_DEVKIT"
 if [[ "${USING_DEVKIT}" == "false" ]]; then
-  setGccEnvironment
+  setNonDevkitGccEnvironment
 fi
 setAntEnvironment
 echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
