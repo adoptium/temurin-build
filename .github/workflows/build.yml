@@ -165,7 +165,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        brew install automake bash binutils freetype gnu-sed nasm libtool
+        brew install automake bash binutils freetype gnu-sed nasm libtool harfbuzz
 
     - uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
       id: setup-java
