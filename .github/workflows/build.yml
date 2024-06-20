@@ -178,7 +178,10 @@ jobs:
       if: matrix.version.name == 'jdk8u'
       run: |
         rm -rf /Applications/Xcode.app
-        ln -s /Applications/Xcode_11.7.app /Applications/Xcode.app
+        ln -s /Applications/Xcode_15.2.app /Applications/Xcode.app
+        # macos-14 runner does not have 11.7, use 15.2 instead when building on arm64 machine
+        rm -rf /Applications/Xcode-11.7.app
+        ln -s /Applications/Xcode_15.2.app /Applications/Xcode-11.7.app
 
     - name: Select correct Xcode (JDK11+)
       if: matrix.version.name != 'jdk8u'
