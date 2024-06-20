@@ -170,7 +170,7 @@ jobs:
     - uses: actions/setup-java@99b8673ff64fbf99d8d325f52d9a5bdedb8483e9 # v4.2.1
       id: setup-java
       with:
-        java-version: 7
+        java-version: 8
         distribution: 'zulu'
       if: matrix.version.name == 'jdk8u'
 
