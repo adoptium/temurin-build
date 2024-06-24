@@ -233,7 +233,7 @@ createOpenJDKArchive()
 
 function setBootJdk() {
   # Stops setting the bootJDK on the host machine when running docker-build
-  if [ "${BUILD_CONFIG[DOCKER]}" == "false" ] || { [ "${BUILD_CONFIG[DOCKER]}" != "false" ] && [ "${BUILD_CONFIG[DOCKER_FILE_PATH]}" != "" ]; } ; then
+  if [ "${BUILD_CONFIG[CONTAINER_AS_ROOT]}" == "false" ] || { [ "${BUILD_CONFIG[CONTAINER_AS_ROOT]}" != "false" ] && [ "${BUILD_CONFIG[DOCKER_FILE_PATH]}" != "" ]; } ; then
     if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
       echo "Searching for JDK_BOOT_DIR"
 

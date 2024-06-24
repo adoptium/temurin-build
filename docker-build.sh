@@ -20,7 +20,7 @@
 #
 ################################################################################
 
-# the ${BUILD_CONFIG[DOCKER]} can not be quoted. It is sudo (or simialrly) or nothing. "" is not an option.
+# the ${BUILD_CONFIG[CONTAINER_AS_ROOT]} can not be quoted. It is sudo (or simialrly) or nothing. "" is not an option.
 # simialrly the  ${cpuset} and ${userns}
 # shellcheck disable=SC2206
 # shellcheck disable=SC2046
@@ -36,7 +36,7 @@ set -eu
 createPersistentDockerDataVolume()
 {
   set +e
-  ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" volume inspect "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" > /dev/null 2>&1
+  ${BUILD_CONFIG[CONTAINER_AS_ROOT]} "${BUILD_CONFIG[CONTAINER_COMMAND]}" volume inspect "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" > /dev/null 2>&1
   local data_volume_exists=$?
   set -e
 
@@ -44,15 +44,15 @@ createPersistentDockerDataVolume()
 
     # shellcheck disable=SC2154
     echo "Removing old volumes and containers"
-    ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" rm -f $(${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" ps -a --no-trunc -q -f volume="${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}") || true
-    ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" volume rm -f "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
+    ${BUILD_CONFIG[CONTAINER_AS_ROOT]} "${BUILD_CONFIG[CONTAINER_COMMAND]}" rm -f $(${BUILD_CONFIG[CONTAINER_AS_ROOT]} "${BUILD_CONFIG[CONTAINER_COMMAND]}" ps -a --no-trunc -q -f volume="${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}") || true
+    ${BUILD_CONFIG[CONTAINER_AS_ROOT]} "${BUILD_CONFIG[CONTAINER_COMMAND]}" volume rm -f "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}" || true
 
     # shellcheck disable=SC2154
     echo "Creating tmp container"
-    if echo "${BUILD_CONFIG[USE_DOCKER]}" | grep docker ; then
-      ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" volume create --name "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}"
+    if echo "${BUILD_CONFIG[CONTAINER_COMMAND]}" | grep docker ; then
+      ${BUILD_CONFIG[CONTAINER_AS_ROOT]} "${BUILD_CONFIG[CONTAINER_COMMAND]}" volume create --name "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}"
     else
-      ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" volume create "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}"
+      ${BUILD_CONFIG[CONTAINER_AS_ROOT]} "${BUILD_CONFIG[CONTAINER_COMMAND]}" volume create "${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]}"
     fi
   fi
 }
@@ -73,7 +73,7 @@ buildDockerContainer()
 
   writeConfigToFile
 
-  ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" --build-arg "HostUID=${UID}"
+  ${BUILD_CONFIG[CONTAINER_AS_ROOT]} "${BUILD_CONFIG[CONTAINER_COMMAND]}" build -t "${BUILD_CONFIG[CONTAINER_NAME]}" -f "${dockerFile}" . --build-arg "OPENJDK_CORE_VERSION=${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" --build-arg "HostUID=${UID}"
 }
 
 # Execute the (Adoptium) OpenJDK build inside the Docker Container
@@ -103,7 +103,7 @@ buildOpenJDKViaDocker()
     build_variant_flag="--openj9"
   fi
   docker/dockerfile-generator.sh --version "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" --path "${BUILD_CONFIG[DOCKER_FILE_PATH]}" "$build_variant_flag" \
-     --dirs "${workspacedir} ${targetdir} ${targetbuilddir} ${configdir} ${localsourcesdir}" --command "${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]}"
+     --dirs "${workspacedir} ${targetdir} ${targetbuilddir} ${configdir} ${localsourcesdir}" --command "${BUILD_CONFIG[CONTAINER_AS_ROOT]} ${BUILD_CONFIG[CONTAINER_COMMAND]}"
 
   # shellcheck disable=SC1090,SC1091
   source "${BUILD_CONFIG[DOCKER_FILE_PATH]}/dockerConfiguration.sh"
@@ -152,7 +152,7 @@ buildOpenJDKViaDocker()
     BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
     BUILD_CONFIG[STATIC_LIBS_IMAGE_PATH]=$static_libs_dir
 
-  if [ -z "$(command -v "${BUILD_CONFIG[USE_DOCKER]}")" ]; then
+  if [ -z "$(command -v "${BUILD_CONFIG[CONTAINER_COMMAND]}")" ]; then
      # shellcheck disable=SC2154
     echo "Error, please install docker and ensure that it is in your path and running!"
     exit
@@ -167,7 +167,7 @@ buildOpenJDKViaDocker()
   if [[ "${BUILD_CONFIG[REUSE_CONTAINER]}" == "true" ]] ; then
      # shellcheck disable=SC2086
      # If we can't find the previous Docker container then build a new one
-     if [ "$(${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]} ps -a | grep -c \"${BUILD_CONFIG[CONTAINER_NAME]}\")" == 0 ]; then
+     if [ "$(${BUILD_CONFIG[CONTAINER_AS_ROOT]} ${BUILD_CONFIG[CONTAINER_COMMAND]} ps -a | grep -c \"${BUILD_CONFIG[CONTAINER_NAME]}\")" == 0 ]; then
          echo "No docker container for reuse was found, so creating '${BUILD_CONFIG[CONTAINER_NAME]}' "
          buildDockerContainer
      fi
@@ -175,7 +175,7 @@ buildOpenJDKViaDocker()
      # shellcheck disable=SC2154
      echo "Since you specified --ignore-container, we are removing the existing container (if it exists) and building you a new one{$good}"
      # Find the previous Docker container and remove it (if it exists)
-     ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" rm -f {}
+     ${BUILD_CONFIG[CONTAINER_AS_ROOT]} "${BUILD_CONFIG[CONTAINER_COMMAND]}" ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} ${BUILD_CONFIG[CONTAINER_AS_ROOT]} "${BUILD_CONFIG[CONTAINER_COMMAND]}" rm -f {}
 
      # Build a new container
      buildDockerContainer
@@ -208,17 +208,17 @@ buildOpenJDKViaDocker()
   else
     mkdir -p "${pipelinesdir}"
   fi
-  if echo "${BUILD_CONFIG[USE_DOCKER]}" | grep docker ; then
+  if echo "${BUILD_CONFIG[CONTAINER_COMMAND]}" | grep docker ; then
     local cpuset="--cpuset-cpus=${cpuSet}"
   else
     local cpuset=""
   fi
-  if echo "${BUILD_CONFIG[USE_DOCKER]}" | grep podman ; then
+  if echo "${BUILD_CONFIG[CONTAINER_COMMAND]}" | grep podman ; then
     local userns="--userns=keep-id"
   else
     local userns=""
   fi
-  local mountflag=Z #rw? maybe this should be bound to root/rootles content of BUILD_CONFIG[DOCKER] rather then just podman/docker in USE_DOCKER?
+  local mountflag=Z #rw? maybe this should be bound to root/rootles content of BUILD_CONFIG[CONTAINER_AS_ROOT] rather then just podman/docker in USE_DOCKER?
   mkdir -p "${hostDir}"/workspace/build  # shouldnt be already there?
   local localsourcesdirmount=
   if [ -n "${localsourcesdir}" ] ; then
@@ -249,7 +249,7 @@ buildOpenJDKViaDocker()
   fi
 
   # Run the command string in Docker
-  ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" run --name "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" "${commandString[@]}"
+  ${BUILD_CONFIG[CONTAINER_AS_ROOT]} "${BUILD_CONFIG[CONTAINER_COMMAND]}" run --name "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" "${commandString[@]}"
 
   # Tell user where the resulting binary can be found on the host system
   echo "The finished image can be found in ${targetdir} on the host system"
@@ -257,6 +257,6 @@ buildOpenJDKViaDocker()
   # If we didn't specify to keep the container then remove it
   if [[ "${BUILD_CONFIG[KEEP_CONTAINER]}" == "false" ]] ; then
       echo "Removing container ${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}"
-      ${BUILD_CONFIG[DOCKER]} "${BUILD_CONFIG[USE_DOCKER]}" ps -a | awk '{ print $1,$(NF) }' | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" | awk '{print $1 }' | xargs -I {} ${BUILD_CONFIG[DOCKER]} ${BUILD_CONFIG[USE_DOCKER]} rm {}
+      ${BUILD_CONFIG[CONTAINER_AS_ROOT]} "${BUILD_CONFIG[CONTAINER_COMMAND]}" ps -a | awk '{ print $1,$(NF) }' | grep "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}-${BUILD_CONFIG[BUILD_VARIANT]}" | awk '{print $1 }' | xargs -I {} ${BUILD_CONFIG[CONTAINER_AS_ROOT]} ${BUILD_CONFIG[CONTAINER_COMMAND]} rm {}
   fi
 }

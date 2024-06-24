@@ -14,7 +14,7 @@
 
 exit_script() {
     if [[ -z "${BUILD_CONFIG[KEEP_CONTAINER]}" ]] ; then
-      "${BUILD_CONFIG[USE_DOCKER]}" ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[USE_DOCKER]}" rm -f {}
+      "${BUILD_CONFIG[CONTAINER_COMMAND]}" ps -a | awk '{ print $1,$2 }' | grep "${BUILD_CONFIG[CONTAINER_NAME]}" | awk '{print $1 }' | xargs -I {} "${BUILD_CONFIG[CONTAINER_COMMAND]}" rm -f {}
     fi
     echo "Process exited"
     trap - SIGINT SIGTERM # clear the trap

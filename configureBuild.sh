@@ -86,7 +86,7 @@ doAnyBuildVariantOverrides() {
 # Set the working directory for this build
 setWorkingDirectory() {
   if [ -z "${BUILD_CONFIG[WORKSPACE_DIR]}" ]; then
-    if [[ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ]]; then
+    if [[ "${BUILD_CONFIG[CONTAINER_COMMAND]}" == "true" ]]; then
       BUILD_CONFIG[WORKSPACE_DIR]="/openjdk/"
     else
       BUILD_CONFIG[WORKSPACE_DIR]="$PWD/workspace"
@@ -410,7 +410,7 @@ configure_build() {
   setWorkingDirectory
   configureMacFreeFont
   setMakeArgs
-  if [ "${BUILD_CONFIG[USE_DOCKER]}" == false ] ; then
+  if [ "${BUILD_CONFIG[CONTAINER_COMMAND]}" == false ] ; then
     setBootJdk
   fi
 }

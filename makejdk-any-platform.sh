@@ -64,7 +64,7 @@ done
 echo "${makeJdkArgs}" > ./workspace/config/makejdk-any-platform.args
 
 # Let's build and test the (Adoptium) OpenJDK binary in Docker or natively
-if [ ! "${BUILD_CONFIG[USE_DOCKER]}" == "false" ] ; then
+if [ ! "${BUILD_CONFIG[CONTAINER_COMMAND]}" == "false" ] ; then
   buildOpenJDKViaDocker
 else
   buildOpenJDKInNativeEnvironment
