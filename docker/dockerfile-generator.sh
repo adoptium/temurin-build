@@ -337,7 +337,7 @@ printUserCreate(){
   echo "
 ARG HostUID
 ENV HostUID=\$HostUID
-RUN useradd -u \$HostUID -ms /bin/bash build
+RUN useradd -o -u \$HostUID -ms /bin/bash build
 WORKDIR /openjdk/build
 RUN chown -R build /openjdk/
 USER build" >> "$DOCKERFILE_PATH"
