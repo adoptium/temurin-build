@@ -175,7 +175,7 @@ processFiles() {
 
         package_query="rpm -qf"
         # Alpine uses apk info --who-owns
-        cat /etc/os-release | grep "Alpine Linux" 2>&1>/dev/null
+        grep "Alpine Linux" /etc/os-release 2>&1>/dev/null
         isAlpine=$(echo $?)
         if [[ "$isAlpine" == "0" ]]; then
             package_query="apk info --who-owns"
