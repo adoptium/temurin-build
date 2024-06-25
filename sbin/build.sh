@@ -955,7 +955,7 @@ generateSBoM() {
 
   # Add Build Docker image SHA1
   local buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
-  # ${BUILD_CONFIG[USE_DOCKER]^} always set to false cannot rely on it.
+  # ${BUILD_CONFIG[CONTAINER_COMMAND]^} always set to false cannot rely on it.
   if [ -n "${buildimagesha}" ] && [ "${buildimagesha}" != "N.A" ]; then
     addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "true"
     addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "Docker image SHA1" "${buildimagesha}"
@@ -2100,7 +2100,7 @@ createTargetDir() {
 
 fixJavaHomeUnderDocker() {
   # If we are inside docker we cannot trust the JDK_BOOT_DIR that was detected on the host system
-  if [[ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ]]; then
+  if [[ ! "${BUILD_CONFIG[CONTAINER_COMMAND]}" == "false" ]]; then
     # clear BUILD_CONFIG[JDK_BOOT_DIR] and re set it
     BUILD_CONFIG[JDK_BOOT_DIR]=""
     setBootJdk

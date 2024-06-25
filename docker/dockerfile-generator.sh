@@ -18,6 +18,7 @@ set -eu
 OPENJ9=false
 BUILD=false
 COMMENTS=false
+DIRS=
 PRINT=false
 DOCKERFILE_DIR=
 DOCKERFILE_PATH=
@@ -87,6 +88,11 @@ processArgs() {
         COMMENTS=true
         shift
         ;;
+      --dirs)
+        DIRS="${2}"
+        shift
+        shift
+        ;;
       --path)
         DOCKERFILE_DIR=$2
         shift
@@ -104,6 +110,11 @@ processArgs() {
       JDK_VERSION=$(echo "$2" | tr -d [:alpha:])
         fi
     checkJDK
+        shift
+        shift
+        ;;
+      --command)
+        CMD="${2}"
         shift
         shift
         ;;
@@ -126,15 +137,24 @@ processArgs() {
   if [ ${OPENJ9} == true ]; then
     DOCKERFILE_PATH="$DOCKERFILE_PATH-openj9"
   fi
+
+  if [ -z "$CMD" ]; then
+    if which podman > /dev/null; then
+       CMD=podman
+    else
+       CMD=docker
+    fi
+  fi
 }
 
 usage() {
-  echo" Usage: ./dockerfile_generator.sh [OPTIONS]
+  echo " Usage: ./dockerfile_generator.sh [OPTIONS]
   Options:
       --help | -h        Print this message and exit
       --build        Build the docker image after generation and create interactive container
       --clean        Remove all dockerfiles (Dockerfile*) from '--path'
       --comments        Prints comments into the dockerfile
+      --dirs         space separated list of dirs to be created, with proper permissions
       --path <FILEPATH>    Specify where to save the dockerfile (Default: $PWD)
       --print        Print the Dockerfile to screen after generation
       --openj9        Make the Dockerfile able to build w/OpenJ9 JIT
@@ -264,6 +284,14 @@ printgcc() {
 ENV CC=gcc-7 CXX=g++-7" >> "$DOCKERFILE_PATH"
 }
 
+printCustomDirs() {
+  for dir in ${DIRS} ; do
+    echo "RUN mkdir -p $dir"  >> "$DOCKERFILE_PATH"
+    echo "RUN chmod 755 $dir"  >> "$DOCKERFILE_PATH"
+    echo "RUN chown -R build $dir"  >> "$DOCKERFILE_PATH"
+  done
+}
+
 printDockerJDKs() {
   # JDK8 uses zulu-7 to as it's bootjdk
   if [ "${JDK_VERSION}" != 8 ] && [ "${JDK_VERSION}" != "${JDK_MAX}" ]; then
@@ -325,6 +353,7 @@ printCopyFolders(){
   echo "
 COPY sbin /openjdk/sbin
 COPY security /openjdk/security
+COPY test /openjdk/test
 COPY workspace/config /openjdk/config" >> "$DOCKERFILE_PATH"
 }
 
@@ -339,7 +368,9 @@ ARG HostUID
 ENV HostUID=\$HostUID
 RUN useradd -u \$HostUID -ms /bin/bash build
 WORKDIR /openjdk/build
-RUN chown -R build /openjdk/
+RUN chown -R build /openjdk/" >> "$DOCKERFILE_PATH"
+  printCustomDirs
+  echo "
 USER build" >> "$DOCKERFILE_PATH"
 }
 
@@ -416,7 +447,8 @@ if [ "${BUILD}" == true ]; then
     commandString="${commandString} --build-variant openj9"
   fi
 
-  docker build -t "jdk${JDK_VERSION}_build_image" -f "$DOCKERFILE_PATH" . --build-arg "OPENJDK_CORE_VERSION=${JDK_VERSION}" --build-arg "HostUID=${UID}"
+  # although this works for both docekr and podman with docker alias, it shodl honour the setup of BUILD_CONFIG[CONTAINER_COMMAND] (also maybe with  BUILD_CONFIG[CONTAINER_AS_ROOT] which set sudo/no sudo)
+  ${CMD} build -t "jdk${JDK_VERSION}_build_image" -f "$DOCKERFILE_PATH" . --build-arg "OPENJDK_CORE_VERSION=${JDK_VERSION}" --build-arg "HostUID=${UID}"
   echo "To start a build run ${commandString}"
-  docker run -it "jdk${JDK_VERSION}_build_image" bash
+  ${CMD} run -it "jdk${JDK_VERSION}_build_image" bash
 fi

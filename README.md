@@ -45,7 +45,7 @@ as we can generate valid dockerfile for it):
 
 ```bash
 ./makejdk-any-platform.sh --docker --clean-docker-build jdk8u
-./makejdk-any-platform.sh --docker --clean-docker-build --build-variant openj9 jdk11u
+./makejdk-any-platform.sh --podman --clean-docker-build --build-variant openj9 jdk11u
 ```
 
 We test these dockerfiles on a regular basis in the
@@ -144,8 +144,8 @@ specify the location for the built binary, e.g. /path/.
 This is typically used in conjunction with -T to create a custom path
 / file name for the resulting binary.
 
--D, --docker
-build OpenJDK in a docker container.
+-D, --docker, --podman
+build OpenJDK in a docker/podman container. -D will autodetect, using podman if found, docker otherwise.
 
 --cross-compile
 use this if you are cross compiling - it will skip the java -version checks at the end
@@ -253,7 +253,7 @@ specify the JVM variant (server or client), defaults to server.
 
 Example usage:
 
-./makejdk-any-platform --docker jdk8u
+./makejdk-any-platform -D jdk8u
 ./makejdk-any-platform -T MyOpenJDK10.tar.gz jdk10
 
 ```
