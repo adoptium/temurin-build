@@ -99,7 +99,8 @@ This is typically used in conjunction with \fB<-T>\fR to create a custom path
 .TP
 .BR \-D ", " \-\-docker ", " \-\-podman
 build OpenJDK in a docker/podman container. -D will autodetect, using podman if found, docker otherwise.
-When podman is used, there is bug requiring \fI--custom-cacerts\fR to be used. It is known issue: https://github.com/adoptium/temurin-build/issues/3862
+When podman is used, there is bug requiring \fI--custom-cacerts\fR to be used under some circumstances.
+It is known issue: https://github.com/adoptium/temurin-build/issues/3862
 .TP
 .BR \-\-debug-docker
 debug OpenJDK build script in a docker container. Only valid if \fB-D\fR is selected.
