@@ -190,10 +190,28 @@ getOpenJDKUpdateAndBuildVersion() {
 patchFreetypeWindows() {
   # Allow freetype 2.8.1 to be built for JDK8u with Visual Studio 2017 (see https://github.com/openjdk/jdk8u-dev/pull/3#issuecomment-1087677766).
   # Don't apply the patch for OpenJ9 (OpenJ9 doesn't need the patch and, technically, it should only be applied for version 2.8.1).
-  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" = "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" = "x86_64" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
-    rm "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
-    # Copy the replacement freetype.vcxproj file from the .github directory
-    cp "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.github/workflows/freetype.vcxproj" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" = "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
+    echo "Checking cloned freetype source version for version 2.8.1, that needs updated builds/windows/vc2010/freetype.vcxproj ..."
+    # Determine cloned freetype version
+    local freetype_version=""
+    # Obtain FreeType version from freetype.h
+    local freetypeInclude="${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/include/freetype/freetype.h"
+    if [[ -f "${freetypeInclude}" ]]; then
+      local ver_major="$(grep "FREETYPE_MAJOR" "${freetypeInclude}" | grep "#define" | tr -s " " | cut -d" " -f3)"
+      local ver_minor="$(grep "FREETYPE_MINOR" "${freetypeInclude}" | grep "#define" | tr -s " " | cut -d" " -f3)"
+      local ver_patch="$(grep "FREETYPE_PATCH" "${freetypeInclude}" | grep "#define" | tr -s " " | cut -d" " -f3)"
+      local freetype_version="${ver_major}.${ver_minor}.${ver_patch}"
+      if [[ "${freetype_version}" == "2.8.1" ]]; then
+        echo "Freetype 2.8.1 found, updating builds/windows/vc2010/freetype.vcxproj ..."
+        rm "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
+        # Copy the replacement freetype.vcxproj file from the .github directory
+        cp "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.github/workflows/freetype.vcxproj" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
+      else
+        echo "Freetype source is version ${freetype_version}, no updated required."
+      fi
+    else
+      echo "No include/freetype/freetype.h found, Freetype source not version 2.8.1, no updated required."
+    fi
   fi
 }
 
