@@ -173,9 +173,14 @@ processFiles() {
         filePath="$(readlink -f "$file")"
         non_pkg=false
 
+        package_query="rpm -qf"
+        # Alpine uses apk info --who-owns
+        if grep "Alpine Linux" /etc/os-release >/dev/null 2>&1; then
+            package_query="apk info --who-owns"
+        fi
         # Attempt to determine rpm pkg
         # shellcheck disable=SC2069
-        if ! rpm -qf "$filePath" 2>&1>/dev/null; then
+        if ! ${package_query} "$filePath" 2>&1>/dev/null; then
             # bin, lib, sbin pkgs may be installed under the root symlink
             if [[ "$isBinSymLink" == "true" ]] && [[ $filePath == /usr/bin* ]]; then
                 filePath=${filePath/#\/usr\/bin/}
@@ -191,13 +196,13 @@ processFiles() {
             fi
 
             # shellcheck disable=SC2069 
-            if ! rpm -qf "$filePath" 2>&1>/dev/null; then
+            if ! ${package_query} "$filePath" 2>&1>/dev/null; then
                 non_pkg=true
             else
-                pkg=$(rpm -qf "$filePath")
+                pkg=$(${package_query} "$filePath")
             fi
         else
-            pkg=$(rpm -qf "$filePath")
+            pkg=$(${package_query} "$filePath")
         fi
 
         ignoreFile=false
