@@ -169,15 +169,22 @@ filterStraceFiles() {
 processFiles() {
     echo "Processing found files to determine 'Package' versions... (this will take a few minutes)"
 
+    # Determine OS package query command
+    # Default to "rpm"
+    package_query="rpm -qf"
+
+    if grep "Alpine Linux" /etc/os-release >/dev/null 2>&1; then
+        # Alpine
+        package_query="apk info --who-owns"
+    elif grep "Ubuntu" /etc/os-release >/dev/null 2>&1; then
+        # Ubuntu
+        package_query="dpkg -S"
+    fi
+
     for file in "${allFiles[@]}"; do
         filePath="$(readlink -f "$file")"
         non_pkg=false
 
-        package_query="rpm -qf"
-        # Alpine uses apk info --who-owns
-        if grep "Alpine Linux" /etc/os-release >/dev/null 2>&1; then
-            package_query="apk info --who-owns"
-        fi
         # Attempt to determine rpm pkg
         # shellcheck disable=SC2069
         if ! ${package_query} "$filePath" 2>&1>/dev/null; then
