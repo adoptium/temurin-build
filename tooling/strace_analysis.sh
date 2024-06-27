@@ -177,9 +177,9 @@ processFiles() {
         # Alpine
         os_type=alpine
         package_query="apk info --who-owns"
-    elif grep "Ubuntu" /etc/os-release >/dev/null 2>&1; then
-        # Ubuntu
-        os_type=ubuntu
+    elif grep "^ID.*debian" /etc/os-release >/dev/null 2>&1; then
+        # Debian
+        os_type=debian
         package_query="dpkg -S"
     fi
 
@@ -234,8 +234,8 @@ processFiles() {
                     pkg_name="$(echo "$pkg" | sed 's/is owned by//g' | tr -s ' ' | cut -d' ' -f2 | tr -d '\\n\\r')"
                     pkg_version="$pkg_name"
                     ;;
-                "ubuntu")
-                    # Process ubuntu package query output: "PACKAGE: FILE"
+                "debian")
+                    # Process debian package query output: "PACKAGE: FILE"
                     pkg_name="$(echo "$pkg" | cut -d":" -f1 | tr -d '\\n\\r')"
                     pkg_version="$(apt show "$pkg_name" 2>/dev/null | grep Version | cut -d" " -f2 | tr -d '\\n\\r')"
                     ;;
