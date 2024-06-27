@@ -173,7 +173,7 @@ processFiles() {
     os_type=""
     package_query=""
 
-    if which rpm; then
+    if which rpm >/dev/null 2>&1; then
         os_type=centos
         package_query="rpm -qf"
     elif grep "Alpine Linux" /etc/os-release >/dev/null 2>&1; then
