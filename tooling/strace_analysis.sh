@@ -170,10 +170,13 @@ processFiles() {
     echo "Processing found files to determine 'Package' versions... (this will take a few minutes)"
 
     # Determine OS package query command
-    os_type=centos
-    package_query="rpm -qf"
+    os_type=""
+    package_query=""
 
-    if grep "Alpine Linux" /etc/os-release >/dev/null 2>&1; then
+    if which rpm; then
+        os_type=centos
+        package_query="rpm -qf"
+    elif grep "Alpine Linux" /etc/os-release >/dev/null 2>&1; then
         # Alpine
         os_type=alpine
         package_query="apk info --who-owns"
@@ -181,6 +184,9 @@ processFiles() {
         # Debian
         os_type=debian
         package_query="dpkg -S"
+    else
+        echo "ERROR: Unable to determine OS package query tooling"
+        exit 1
     fi
 
     for file in "${allFiles[@]}"; do
@@ -239,10 +245,15 @@ processFiles() {
                     pkg_name="$(echo "$pkg" | cut -d":" -f1 | tr -d '\\n\\r')"
                     pkg_version="$(apt show "$pkg_name" 2>/dev/null | grep Version | cut -d" " -f2 | tr -d '\\n\\r')"
                     ;;
-                *)
-                    # Process standard rpm package query output: "PACKAGE"
+                "centos")
+                    # Process rpm package query output: "PACKAGE"
                     pkg_name="$(echo "$pkg" | cut -d" " -f1 | tr -d '\\n\\r')"
                     pkg_version="$pkg_name"
+                    ;;
+                *)
+                    # Unknown
+                    echo "ERROR: Unknown os_type: ${os_type}"
+                    exit 1
                     ;;
             esac
 
