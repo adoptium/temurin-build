@@ -228,7 +228,7 @@ processFiles() {
         if [[ "$non_pkg" = true ]]; then
             nonPkgFiles+=("$filePath")
         else
-            case "${os_type]}" in
+            case "${os_type}" in
                 "alpine")
                     # Process alpine package query output: "FILE is owned by PACKAGE"
                     pkg_name="$(echo "$pkg" | sed 's/is owned by//g' | tr -s ' ' | cut -d' ' -f2 | tr -d '\\n\\r')"
