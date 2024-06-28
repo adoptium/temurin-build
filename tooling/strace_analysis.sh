@@ -115,7 +115,9 @@ checkArguments() {
 
 resolveFilePath() {
     # Resolve path using readlink, and ensure "//" is resolved to a single "/"
-    local realpath=$(readlink -f "$1" | sed 's,//,/,g')
+    local realpath
+    realpath=$(readlink -f "$1" | sed 's,//,/,g')
+
     echo "$realpath"
 }
 
