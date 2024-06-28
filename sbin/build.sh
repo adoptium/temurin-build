@@ -688,8 +688,16 @@ buildTemplatedFile() {
     # Check if strace is available
     if which strace >/dev/null 2>&1; then
       echo "Strace is available on system"
+
+      if [[ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]]; then
+        # arm32 strace does not support the ? optional syscall syntax
+        strace_calls="open,openat,execve"
+      else
+        strace_calls="?open,?openat,?execve"
+      fi
+
       # trace syscalls "open,openat,execve" if they are available on the given OS
-      FULL_MAKE_COMMAND="mkdir ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput \&\& strace -o ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput/outputFile -ff -e trace=open,openat,execve ${FULL_MAKE_COMMAND}"
+      FULL_MAKE_COMMAND="mkdir ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput \&\& strace -o ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput/outputFile -ff -e trace=${strace_calls} ${FULL_MAKE_COMMAND}"
     else
       echo "Strace is not available on system"
       exit 2
