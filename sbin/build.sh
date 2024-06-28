@@ -893,6 +893,7 @@ generateSBoM() {
   local javaHome
   javaHome="$(setupAntEnv)"
 
+  echo "build.sh : $(date +%T) : Generating SBoM ..."
   buildCyclonedxLib "${javaHome}"
   # classpath to run java app TemurinGenSBOM
   local classpath="$(getCyclonedxClasspath)"
