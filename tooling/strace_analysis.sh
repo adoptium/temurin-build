@@ -113,25 +113,31 @@ checkArguments() {
     ignores+=("^${cloned_openjdk_dir}")
 }
 
+resolveFilePath() {
+    # Resolve path using readlink, and ensure "//" is resolved to a single "/"
+    local realpath=$(readlink -f "$1" | sed 's,//,/,g')
+    echo "$realpath"
+}
+
 checkSymLinks() {
     # Check if /bin, /lib, /sbin are symlinks, as sometimes pkgs are installed
     # under the symlink folder, eg.in Ubuntu 20.04
-    binDir=$(readlink -f "/bin")
+    binDir=$(resolveFilePath "/bin")
     if [[ "$binDir" != "/bin" ]]; then
         isBinSymLink=true
     fi
-    libDir=$(readlink -f "/lib")
+    libDir=$(resolveFilePath "/lib")
     if [[ "$libDir" != "/lib" ]]; then
         isLibSymLink=true
     fi
-    sbinDir=$(readlink -f "/sbin")
+    sbinDir=$(resolveFilePath "/sbin")
     if [[ "$sbinDir" != "/sbin" ]]; then
         isSbinSymLink=true
     fi
 
     # Check if javaHome is a sym link, if so resolve it to the real path
     # which will be used in strace output
-    javaHomeLink=$(readlink -f "${javaHome}")
+    javaHomeLink=$(resolveFilePath "${javaHome}")
     if [[ "x${javaHomeLink}" != "x${javaHome}" ]]; then
         echo "Resolving javaHome '${javaHome}' sym link to '${javaHomeLink}'"
         javaHome="${javaHomeLink}"
@@ -190,12 +196,12 @@ processFiles() {
     fi
 
     for file in "${allFiles[@]}"; do
-        filePath="$(readlink -f "$file")"
+        filePath="$(resolveFilePath "$file")"
         non_pkg=false
 
         # Attempt to determine rpm pkg
         # shellcheck disable=SC2069
-        if ! ${package_query} "$filePath" 2>&1>/dev/null; then
+        if ! ${package_query} "$filePath" >/dev/null 2>&1; then
             # bin, lib, sbin pkgs may be installed under the root symlink
             if [[ "$isBinSymLink" == "true" ]] && [[ $filePath == /usr/bin* ]]; then
                 filePath=${filePath/#\/usr\/bin/}
@@ -211,7 +217,7 @@ processFiles() {
             fi
 
             # shellcheck disable=SC2069 
-            if ! ${package_query} "$filePath" 2>&1>/dev/null; then
+            if ! ${package_query} "$filePath" >/dev/null 2>&1; then
                 non_pkg=true
             else
                 pkg=$(${package_query} "$filePath")
@@ -271,7 +277,7 @@ processFiles() {
 processNonPkgFiles() {
     for np_file in "${nonPkgFiles[@]-}"; do
         # Ensure we have the full real path name
-        file=$(readlink -f "${np_file}")
+        file=$(resolveFilePath "${np_file}")
 
         if [[ "$file" =~ ^"$temurin_build_dir".* ]]; then
             if [[ ( -z "$devkit_dir" || ! "$file" =~ ^"$devkit_dir".* ) && (! "$file" =~ ^"$javaHome".*) ]]; then
