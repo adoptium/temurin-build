@@ -689,7 +689,7 @@ buildTemplatedFile() {
     if which strace >/dev/null 2>&1; then
       echo "Strace is available on system"
       # trace syscalls "open,openat,execve" if they are available on the given OS
-      FULL_MAKE_COMMAND="mkdir ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput \&\& strace -o ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput/outputFile -ff -e trace=?open,?openat,?execve ${FULL_MAKE_COMMAND}"
+      FULL_MAKE_COMMAND="mkdir ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput \&\& strace -o ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput/outputFile -ff -e trace=open,openat,execve ${FULL_MAKE_COMMAND}"
     else
       echo "Strace is not available on system"
       exit 2
