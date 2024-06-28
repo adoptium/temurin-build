@@ -200,6 +200,14 @@ processFiles() {
 
     for file in "${allFiles[@]}"; do
         filePath="$(resolveFilePath "$file")"
+
+        # Ignore any strace open on directory, as pkg query if it returns anything
+        # at all (and on Alpine it won't), then it is purely the list of owning pkg's for the files within
+        if [[ -d "$filePath" ]]; then
+            echo "Ignoring strace open on a directory $filePath"
+            continue
+        fi
+
         non_pkg=false
 
         # Attempt to determine pkg
