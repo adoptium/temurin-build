@@ -179,10 +179,7 @@ processFiles() {
     os_type=""
     package_query=""
 
-    if which rpm >/dev/null 2>&1; then
-        os_type=centos
-        package_query="rpm -qf"
-    elif grep "Alpine Linux" /etc/os-release >/dev/null 2>&1; then
+    if grep "Alpine Linux" /etc/os-release >/dev/null 2>&1; then
         # Alpine
         os_type=alpine
         package_query="apk info --who-owns"
@@ -190,6 +187,10 @@ processFiles() {
         # Debian
         os_type=debian
         package_query="dpkg -S"
+    elif which rpm >/dev/null 2>&1; then
+        # Probably Centos or RHEL
+        os_type=centos
+        package_query="rpm -qf"
     else
         echo "ERROR: Unable to determine OS package query tooling"
         exit 1
@@ -199,7 +200,7 @@ processFiles() {
         filePath="$(resolveFilePath "$file")"
         non_pkg=false
 
-        # Attempt to determine rpm pkg
+        # Attempt to determine pkg
         # shellcheck disable=SC2069
         if ! ${package_query} "$filePath" >/dev/null 2>&1; then
             # bin, lib, sbin pkgs may be installed under the root symlink
@@ -252,7 +253,7 @@ processFiles() {
                     pkg_version="$(apt show "$pkg_name" 2>/dev/null | grep Version | cut -d" " -f2 | tr -d '\\n\\r')"
                     ;;
                 "centos")
-                    # Process rpm package query output: "PACKAGE"
+                    # Process centos package query output: "PACKAGE"
                     pkg_name="$(echo "$pkg" | cut -d" " -f1 | tr -d '\\n\\r')"
                     pkg_version="$pkg_name"
                     ;;
