@@ -166,8 +166,8 @@ filterStraceFiles() {
     grep_command+=")'"
 
     # filtering out relevant parts of strace output files
-    mapfile -t allFiles < <(find "${strace_dir}" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | eval "$grep_command" | sort | uniq)
-    echo "find \"${strace_dir}\" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'\"' -f2 | grep \"^/\" | eval \"$grep_command\" | sort | uniq"
+    mapfile -t allFiles < <(find "${strace_dir}" -type f -name 'outputFile*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | eval "$grep_command" | sort | uniq)
+    echo "find \"${strace_dir}\" -type f -name 'outputFile*' | xargs -n100 grep -v ENOENT | cut -d'\"' -f2 | grep \"^/\" | eval \"$grep_command\" | sort | uniq"
 
     for file in "${allFiles[@]}"; do
         echo "$file"
