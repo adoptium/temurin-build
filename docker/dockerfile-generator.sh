@@ -24,6 +24,7 @@ DOCKERFILE_DIR=
 DOCKERFILE_PATH=
 # Default to JDK8
 JDK_VERSION=8
+IMAGE="ubuntu:18.04"
 JDK_MAX=
 JDK_GA=
 
@@ -93,6 +94,11 @@ processArgs() {
         shift
         shift
         ;;
+      --base-image)
+        IMAGE="${2}"
+        shift
+        shift
+        ;;
       --path)
         DOCKERFILE_DIR=$2
         shift
@@ -152,6 +158,7 @@ usage() {
   Options:
       --help | -h        Print this message and exit
       --build        Build the docker image after generation and create interactive container
+      --base-image   set the base image if used container. Default: $IMAGE 
       --clean        Remove all dockerfiles (Dockerfile*) from '--path'
       --comments        Prints comments into the dockerfile
       --dirs         space separated list of dirs to be created, with proper permissions
@@ -186,7 +193,7 @@ printPreamble() {
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
-FROM ubuntu:18.04
+FROM $IMAGE
 
 LABEL maintainer=\"AdoptOpenJDK <adoption-discuss@openjdk.java.net>\"
   " >> "$DOCKERFILE_PATH"
