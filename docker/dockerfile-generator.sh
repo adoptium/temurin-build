@@ -203,7 +203,7 @@ LABEL maintainer=\"AdoptOpenJDK <adoption-discuss@openjdk.java.net>\"
 printAptPackages() {
   if [ ${COMMENTS} == true ]; then
     echo "
-# Install required OS tools
+# Install required OS tools as .deb via apt-get
 # dirmngr, gpg-agent & coreutils are all required for the apt-add repository command" >> "$DOCKERFILE_PATH"
   fi
 
@@ -273,6 +273,60 @@ RUN apt-get update \\
   fi
 
   echo "  && rm -rf /var/lib/apt/lists/*" >> "$DOCKERFILE_PATH"
+}
+
+# Put in dnf packages required for building a JDK
+printDnfPackages() {
+  if [ ${COMMENTS} == true ]; then
+    echo "
+# Install required OS tools as rpms via dnf" >> "$DOCKERFILE_PATH"
+  fi
+local skipGpg="" # it may bite from time to time
+#local skipGpg="--nogpgcheck"
+  echo " 
+RUN dnf $skipGpg -y install \\
+    ant \\
+    autoconf \\
+    automake \\
+    bzip2-libs \\
+    bzip2 \\
+    ca-certificates \\
+    cmake \\
+    cpio \\
+    curl \\
+    file \\
+    git \\
+    alsa-lib-devel \\
+    cups-devel \\
+    gcc \\
+    gcc-c++ \\
+    gdb \\
+    fontconfig-devel \\
+    freetype-devel \\
+    libtool \\
+    libX11-devel \\
+    libXi-devel \\
+    libXinerama-devel \\
+    libXrandr-devel \\
+    libXrender-devel \\
+    libXt-devel \\
+    libXtst-devel \\
+    lksctp-tools-devel \\
+    lksctp-tools pcsc-lite-libs \\
+    make \\
+    perl \\
+    openssh-clients \\
+    openssl \\
+    systemtap-sdt-devel \\
+    unzip \\
+    wget \\
+    zip \\
+    kernel-headers \\
+    libstdc++-static \\
+    \"lcms*\" \\
+    nss-devel \\
+    pcsc-lite-devel \\
+    tzdata-java " >> "$DOCKERFILE_PATH"
 }
 
 printCreateFolder() {
@@ -419,12 +473,17 @@ processArgs "$@"
 generateFile
 generateConfig
 printPreamble
-printAptPackages
-# OpenJ9 MUST use gcc7, HS doesn't have to
-if [ ${OPENJ9} == true ]; then
-  printgcc
+if echo "${IMAGE}" | grep -i -e "fedora" -e "centos" -e "rocky" -e "stream" -e "rhel" ; then
+  printDnfPackages
+elif echo "${IMAGE}" | grep -i -e "ubuntu" -e "debian" ;  then
+  printAptPackages
+  # OpenJ9 MUST use gcc7, HS doesn't have to
+  if [ ${OPENJ9} == true ]; then
+    printgcc
+  fi
+else
+  echo "Unknown system, can not install build deps: $IMAGE"
 fi
-
 printDockerJDKs
 printGitCloneJenkinsPipelines
 
