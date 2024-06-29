@@ -95,7 +95,8 @@ buildOpenJDKViaDocker()
 
   # TODO This could be extracted overridden by the user if we support more
   # architectures going forwards
-  local container_architecture="x86_64/`echo ${BUILD_CONFIG[CONTAINER_IMAGE]} | sed s/:.*//`"
+  local container_architecture
+  container_architecture="x86_64/${BUILD_CONFIG[CONTAINER_IMAGE]//:*/}"
   local build_variant_flag=""
   BUILD_CONFIG[DOCKER_FILE_PATH]="docker/${BUILD_CONFIG[OPENJDK_CORE_VERSION]}/$container_architecture"
 
