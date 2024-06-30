@@ -283,8 +283,9 @@ printDnfPackages() {
   fi
 local skipGpg="" # it may bite from time to time
 #local skipGpg="--nogpgcheck"
+local erasing="--allowerasing"
   echo " 
-RUN dnf $skipGpg -y install \\
+RUN dnf $skipGpg -y install $erasing \\
     ant \\
     autoconf \\
     automake \\
@@ -315,6 +316,7 @@ RUN dnf $skipGpg -y install \\
     lksctp-tools pcsc-lite-libs \\
     make \\
     perl \\
+    procps-ng \\
     openssh-clients \\
     openssl \\
     systemtap-sdt-devel \\
@@ -322,11 +324,14 @@ RUN dnf $skipGpg -y install \\
     wget \\
     zip \\
     kernel-headers \\
-    libstdc++-static \\
     \"lcms*\" \\
     nss-devel \\
-    pcsc-lite-devel \\
     tzdata-java " >> "$DOCKERFILE_PATH"
+  # not sure how much needed
+  if echo "${IMAGE}" | grep fedora ; then
+    echo "    libstdc++-static \\
+    pcsc-lite-devel " >> "$DOCKERFILE_PATH"
+  fi
 }
 
 printCreateFolder() {
