@@ -284,6 +284,11 @@ printDnfPackages() {
 local skipGpg="" # it may bite from time to time
 #local skipGpg="--nogpgcheck"
 local erasing="--allowerasing"
+  if echo "${IMAGE}" | grep stream8 ; then
+    echo " 
+RUN cd /etc/yum.repos.d/ ; sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+RUN cd /etc/yum.repos.d/ ; sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* " >> "$DOCKERFILE_PATH"
+  fi
   echo " 
 RUN dnf $skipGpg -y install $erasing \\
     ant \\
@@ -295,6 +300,7 @@ RUN dnf $skipGpg -y install $erasing \\
     cmake \\
     cpio \\
     curl \\
+    diffutils \\
     file \\
     git \\
     alsa-lib-devel \\
