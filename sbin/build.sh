@@ -693,7 +693,7 @@ buildTemplatedFile() {
         # arm32 strace does not support the ? optional syscall syntax
         strace_calls="open,openat,execve"
       else
-        strace_calls="?open,?openat,?execve"
+        strace_calls="open,openat,execve"
       fi
 
       # trace syscalls "open,openat,execve" if they are available on the given OS
