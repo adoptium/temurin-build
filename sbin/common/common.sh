@@ -91,7 +91,7 @@ function checkOpenJdkVersion() {
   local forest_name="${1}"
   # The argument passed here has a very strict format of jdk8, jdk8u..., jdk
   # the build may fail later if this is not honoured.
-  # If your repository has a different name, you can use --version or build from dir/snapshot
+  # If your repository has a different name, you can use --version or build from a dir/snapshot
   local forest_name_check1=0
   local forest_name_check2=0
   # This two returns condition is there to make grep on solaris happy. -e, -q and  \( and \| do not work on that platform
