@@ -1075,7 +1075,7 @@ generateSBoM() {
     local cc_path=$(getCCFromSpecGmk)
     if [[ -n "${cc_path}" ]]; then
         # Get toolchain directory name
-        cc_path=$(dirname $(dirname "${cc_path}"))
+        cc_path=$(dirname "$(dirname "${cc_path}")")
     fi
     local toolchain_path
     if [[ -z "${devkit_path}" ]]; then
