@@ -428,6 +428,7 @@ function setOpenjdkSourceDir() {
 # Set custom image base if set
 function setCustomImage() {
   local imageCandidate="${1}"
+  # is next param empty?
   if [[ -z ${imageCandidate} ]] ; then
     echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
     return 1
@@ -442,6 +443,7 @@ function setCustomImage() {
    echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
    return 1
   fi
+  # not empty, not switch, not main arg - image, use it
   BUILD_CONFIG[CONTAINER_IMAGE]="${imageCandidate}"
   echo "base image will be set to: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
   return 0
