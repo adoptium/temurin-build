@@ -281,9 +281,9 @@ printDnfPackages() {
     echo "
 # Install required OS tools as rpms via dnf" >> "$DOCKERFILE_PATH"
   fi
-local skipGpg="" # it may bite from time to time
-#local skipGpg="--nogpgcheck"
-local erasing="--allowerasing"
+  local skipGpg="" # it may bite from time to time
+  #local skipGpg="--nogpgcheck"
+  local erasing="--allowerasing"
   if echo "${IMAGE}" | grep stream8 ; then
     echo " 
 RUN cd /etc/yum.repos.d/ ; sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
