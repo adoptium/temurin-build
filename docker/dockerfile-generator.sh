@@ -28,6 +28,17 @@ IMAGE="ubuntu:18.04"
 JDK_MAX=
 JDK_GA=
 
+UBUNTU_PREAMBLE="apt-get update \\
+  && apt-get install -qq -u --no-install-recommends \\
+    software-properties-common \\
+    dirmngr \\
+    gpg-agent \\
+    coreutils \\
+  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \\
+  && add-apt-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \\
+  && apt-get update \\	
+  && apt-get -y upgrade \\"
+
 getFile() {
   if [ $# -ne 2 ]; then
     echo "getFile takes 2 arguments, $# argument(s) given"
@@ -199,25 +210,61 @@ LABEL maintainer=\"AdoptOpenJDK <adoption-discuss@openjdk.java.net>\"
   " >> "$DOCKERFILE_PATH"
 }
 
-# Put in apt packages required for building a JDK
-printAptPackages() {
+
+printAptPackagesBase() {
   if [ ${COMMENTS} == true ]; then
     echo "
-# Install required OS tools as .deb via apt-get
+# Install required OS tools to setup environment as .deb via apt-get
+# dirmngr, gpg-agent & coreutils are all required for the apt-add repository command" >> "$DOCKERFILE_PATH"
+  fi
+  echo " 
+RUN $UBUNTU_PREAMBLE
+  && apt-get install -qq -y --no-install-recommends \\
+    curl \\
+    git \\
+    unzip \\
+    wget \\
+    zip " >> "$DOCKERFILE_PATH"
+  echo "
+RUN rm -rf /var/lib/apt/lists/*" >> "$DOCKERFILE_PATH"
+}
+
+printDnfPackagesBase() {
+  if [ ${COMMENTS} == true ]; then
+    echo "
+# Install required OS tools to setup environment as rpms via dnf" >> "$DOCKERFILE_PATH"
+  fi
+  local skipGpg="" # it may bite from time to time
+  #local skipGpg="--nogpgcheck"
+  local erasing="--allowerasing"
+  if echo "${IMAGE}" | grep stream8 ; then
+    echo " 
+RUN cd /etc/yum.repos.d/ ; sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+RUN cd /etc/yum.repos.d/ ; sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* " >> "$DOCKERFILE_PATH"
+  fi
+  echo " 
+RUN dnf $skipGpg -y update $erasing
+RUN dnf $skipGpg -y install $erasing \\
+    bzip2-libs \\
+    bzip2 \\
+    curl \\
+    git \\
+    unzip \\
+    wget \\
+    zip " >> "$DOCKERFILE_PATH"
+  echo " 
+RUN dnf clean all" >> "$DOCKERFILE_PATH"
+}
+
+printAptPackagesJdk() {
+  if [ ${COMMENTS} == true ]; then
+    echo "
+# Install required OS tools to build JDK as .deb via apt-get
 # dirmngr, gpg-agent & coreutils are all required for the apt-add repository command" >> "$DOCKERFILE_PATH"
   fi
 
   echo " 
-RUN apt-get update \\
-  && apt-get install -qq -u --no-install-recommends \\
-    software-properties-common \\
-    dirmngr \\
-    gpg-agent \\
-    coreutils \\
-  && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9 \\
-  && add-apt-repository 'deb http://repos.azulsystems.com/ubuntu stable main' \\
-  && apt-get update \\
-  && apt-get -y upgrade \\
+RUN $UBUNTU_PREAMBLE
   && apt-get install -qq -y --no-install-recommends \\
     ant \\
     ant-contrib \\
@@ -225,9 +272,7 @@ RUN apt-get update \\
     ca-certificates \\
     cmake \\
     cpio \\
-    curl \\
     file \\
-    git \\
     libasound2-dev \\
     libcups2-dev \\
     libelf-dev \\
@@ -243,10 +288,7 @@ RUN apt-get update \\
     make \\
     perl \\
     ssh \\
-    systemtap-sdt-dev \\
-    unzip \\
-    wget \\
-    zip \\" >> "$DOCKERFILE_PATH"
+    systemtap-sdt-dev \\" >> "$DOCKERFILE_PATH"
 
   if [ ${OPENJ9} = true ]; then
     echo "    gcc-7 \\
@@ -275,34 +317,24 @@ RUN apt-get update \\
   echo "  && rm -rf /var/lib/apt/lists/*" >> "$DOCKERFILE_PATH"
 }
 
-# Put in dnf packages required for building a JDK
-printDnfPackages() {
+printDnfPackagesJdk() {
   if [ ${COMMENTS} == true ]; then
     echo "
-# Install required OS tools as rpms via dnf" >> "$DOCKERFILE_PATH"
+# Install required OS tools to build JDK as rpms via dnf" >> "$DOCKERFILE_PATH"
   fi
   local skipGpg="" # it may bite from time to time
   #local skipGpg="--nogpgcheck"
   local erasing="--allowerasing"
-  if echo "${IMAGE}" | grep stream8 ; then
-    echo " 
-RUN cd /etc/yum.repos.d/ ; sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-RUN cd /etc/yum.repos.d/ ; sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* " >> "$DOCKERFILE_PATH"
-  fi
   echo " 
 RUN dnf $skipGpg -y install $erasing \\
     ant \\
     autoconf \\
     automake \\
-    bzip2-libs \\
-    bzip2 \\
     ca-certificates \\
     cmake \\
     cpio \\
-    curl \\
     diffutils \\
     file \\
-    git \\
     alsa-lib-devel \\
     cups-devel \\
     gcc \\
@@ -326,18 +358,17 @@ RUN dnf $skipGpg -y install $erasing \\
     openssh-clients \\
     openssl \\
     systemtap-sdt-devel \\
-    unzip \\
-    wget \\
-    zip \\
     kernel-headers \\
     \"lcms*\" \\
-    nss-devel \\
-    tzdata-java " >> "$DOCKERFILE_PATH"
+    nss-devel \\ " >> "$DOCKERFILE_PATH"
   # not sure how much needed
   if echo "${IMAGE}" | grep fedora ; then
     echo "    libstdc++-static \\
-    pcsc-lite-devel " >> "$DOCKERFILE_PATH"
+    pcsc-lite-devel \\	" >> "$DOCKERFILE_PATH"
   fi
+  echo "    tzdata-java " >> "$DOCKERFILE_PATH"
+  echo " 
+RUN dnf clean all" >> "$DOCKERFILE_PATH"
 }
 
 printCreateFolder() {
@@ -450,6 +481,9 @@ RUN useradd -u \$HostUID -ms /bin/bash build
 WORKDIR /openjdk/build
 RUN chown -R build /openjdk/" >> "$DOCKERFILE_PATH"
   printCustomDirs
+}
+
+printUserSet(){
   echo "
 USER build" >> "$DOCKERFILE_PATH"
 }
@@ -468,6 +502,42 @@ ENV OPENJDK_CORE_VERSION=\$OPENJDK_CORE_VERSION
 ENV ARCHITECTURE=$(adoptiumArch)
 ENV JDK_PATH=jdk
 ENV JDK8_BOOT_DIR=/usr/lib/jvm/jdk8" >> "$DOCKERFILE_PATH"
+}
+
+isRpm() {
+  echo "${IMAGE}" | grep -i -e "fedora" -e "centos" -e "rocky" -e "stream" -e "rhel"
+}
+
+isDeb() {
+  echo "${IMAGE}" | grep -i -e "ubuntu" -e "debian" 
+}
+
+printDepsBase() {
+  if isRpm ; then
+    printDnfPackagesBase
+  elif isDeb ;  then
+    printAptPackagesBase
+    # OpenJ9 MUST use gcc7, HS doesn't have to
+    if [ ${OPENJ9} == true ]; then
+      printgcc
+    fi
+  else
+    echo "Unknown system, can not install build deps: $IMAGE"
+  fi
+}
+
+printDepsJdk() {
+  if isRpm ; then
+    printDnfPackagesJdk
+  elif isDeb ;  then
+    printAptPackagesJdk
+    # OpenJ9 MUST use gcc7, HS doesn't have to
+    if [ ${OPENJ9} == true ]; then
+      printgcc
+    fi
+  else
+    echo "Unknown system, can not install build deps: $IMAGE"
+  fi
 }
 
 generateFile() {
@@ -499,20 +569,9 @@ processArgs "$@"
 generateFile
 generateConfig
 printPreamble
-if echo "${IMAGE}" | grep -i -e "fedora" -e "centos" -e "rocky" -e "stream" -e "rhel" ; then
-  printDnfPackages
-elif echo "${IMAGE}" | grep -i -e "ubuntu" -e "debian" ;  then
-  printAptPackages
-  # OpenJ9 MUST use gcc7, HS doesn't have to
-  if [ ${OPENJ9} == true ]; then
-    printgcc
-  fi
-else
-  echo "Unknown system, can not install build deps: $IMAGE"
-fi
-printDockerJDKs
+printUserCreate
+printDepsBase
 printGitCloneJenkinsPipelines
-
 # If building the image straight away, it can't be assumed the folders to be copied are in place
 # Therefore create an image that instead git clones openjdk-build and a build can be started there
 if [ ${BUILD} == false ]; then
@@ -520,8 +579,9 @@ if [ ${BUILD} == false ]; then
 else
   printGitClone
 fi
-
-printUserCreate
+printDepsJdk
+printDockerJDKs
+printUserSet
 printContainerVars
 
 echo "Dockerfile created at $DOCKERFILE_PATH"
