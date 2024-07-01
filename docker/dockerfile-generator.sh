@@ -490,9 +490,9 @@ USER build" >> "$DOCKERFILE_PATH"
 
 adoptiumArch() {
   local arch
-  arch=`uname -m`
+  arch=$(uname -m)
   if [ "$arch" = "x86_64" ] ; then arch="x64" ; fi
-  echo $arch
+  echo "$arch"
 }
 
 printContainerVars() {
