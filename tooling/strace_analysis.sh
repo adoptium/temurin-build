@@ -29,7 +29,7 @@
 # $6 is path of openjdk build output folder
 # $7 is path of cloned openjdk folder
 # $8 is javaHome to use to call TemurinGenSbom.java
-# $9 is Optional, path of devkit
+# $9 is Optional, path of compiler toolchain
 
 set -eu
 
@@ -44,7 +44,7 @@ sbomJson=""
 build_output_dir=""
 cloned_openjdk_dir=""
 javaHome=""
-devkit_dir=""
+toolchain_dir=""
 
 # Arrays to store different types of strace output, to treat them different
 nonPkgFiles=()
@@ -82,7 +82,7 @@ checkArguments() {
     if [ $# -lt 8 ]; then
         echo "Missing argument(s)"
         echo "Syntax:"
-        echo "  $0 <Strace output folder> <temurin-build folder> <bootjdk> <classpath> <sbomJson> <build output folder> <cloned openjdk folder> <javaHome> [<DevKit folder>]"
+        echo "  $0 <Strace output folder> <temurin-build folder> <bootjdk> <classpath> <sbomJson> <build output folder> <cloned openjdk folder> <javaHome> [<toolchain folder>]"
         exit 1
     fi
 
@@ -95,7 +95,7 @@ checkArguments() {
     cloned_openjdk_dir="$7"
     javaHome="$8"
     if [ $# -gt 8 ]; then
-        devkit_dir="$9"
+        toolchain_dir="$9"
     fi
 
     echo "Strace output folder: $strace_dir"
@@ -106,8 +106,8 @@ checkArguments() {
     echo "build output folder: $build_output_dir"
     echo "cloned openjdk folder: $cloned_openjdk_dir"
     echo "javaHome to use: $javaHome"
-    if [ -n "$devkit_dir" ]; then
-        echo "DevKit folder: $devkit_dir"
+    if [ -n "$toolchain_dir" ]; then
+        echo "Toolchain folder: $toolchain_dir"
     fi
 
     # Add build output folder to the ignore list as it is just build output
@@ -295,8 +295,8 @@ processNonPkgFiles() {
         file=$(resolveFilePath "${np_file}")
 
         if [[ "$file" =~ ^"$temurin_build_dir".* ]]; then
-            if [[ ( -z "$devkit_dir" || ! "$file" =~ ^"$devkit_dir".* ) && (! "$file" =~ ^"$bootjdk".*) ]]; then
-                # not DevKit or bootjdk path within, so ignore as part of temurin-build
+            if [[ ( -z "$toolchain_dir" || ! "$file" =~ ^"$toolchain_dir".* ) && (! "$file" =~ ^"$bootjdk".*) ]]; then
+                # not DevKit toolchain or bootjdk path within, so ignore as part of temurin-build
                 continue
             fi
         fi
@@ -335,8 +335,8 @@ processNonPkgFiles() {
                 uniqueVersions+=("END_${version}_END")
             fi
         else
-            if [[ -n "$devkit_dir" ]] && [[ "$file" =~ ^"$devkit_dir".* ]]; then
-                # DevKit file, then ignore, as we recognise it and manually add DevKit info
+            if [[ -n "$toolchain_dir" ]] && [[ "$file" =~ ^"$toolchain_dir".* ]]; then
+                # Toolchain file, then ignore, as we recognise it and manually add Toolchain compiler version and DevKit info
                 continue
             else
                 errorpkgs+=("${file}")
@@ -345,9 +345,10 @@ processNonPkgFiles() {
     done
 }
 
+# If toolchain_dir is a DevKit then add info from devkit.info
 addDevKitInfo() {
-    if [[ -n "$devkit_dir" ]]; then
-        local devkitInfo="${devkit_dir}/devkit.info"
+    if [[ -n "$toolchain_dir" ]] && [[ -f "${toolchain_dir}/devkit.info" ]]; then
+        local devkitInfo="${toolchain_dir}/devkit.info"
 
         local adoptium_devkit_version=""
         if grep "ADOPTIUM_DEVKIT_RELEASE" "${devkitInfo}"; then

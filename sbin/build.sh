@@ -1069,9 +1069,21 @@ generateSBoM() {
     fi
     local openjdkSrcDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
-    # strace analysis needs to know the bootJDK and optional DevKit, as these versions will
+    # strace analysis needs to know the bootJDK and optional local DevKit/Toolchain, as these versions will
     # be present in the analysis and not necessarily installed as packages 
     local devkit_path=$(getConfigureArgPath "--with-devkit")
+    local cc_path=$(getCCFromSpecGmk)
+    if [[ -n "${cc_path}" ]]; then
+        # Get toolchain directory name
+        cc_path=$(dirname $(dirname "${cc_path}"))
+    fi
+    local toolchain_path
+    if [[ -z "${devkit_path}" ]]; then
+        toolchain_path="$cc_path"
+    else
+        toolchain_path="$devkit_path"
+    fi
+
     local bootjdk_path=$(getConfigureArgPath "--with-boot-jdk")
     if [[ -z "${bootjdk_path}" ]]; then
         # No boot jdk specified use environment javaHome
@@ -1086,7 +1098,7 @@ generateSBoM() {
     devkit_path=$(echo ${devkit_path} | sed 's,\./,,' | sed 's,//,/,')
     bootjdk_path=$(echo ${bootjdk_path} | sed 's,\./,,' | sed 's,//,/,')
 
-    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${straceOutputDir}" "${temurinBuildDir}" "${bootjdk_path}" "${classpath}" "${sbomJson}" "${buildOutputDir}" "${openjdkSrcDir}" "${javaHome}" "${devkit_path}"
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${straceOutputDir}" "${temurinBuildDir}" "${bootjdk_path}" "${classpath}" "${sbomJson}" "${buildOutputDir}" "${openjdkSrcDir}" "${javaHome}" "${toolchain_path}"
   fi
 
   # Print SBOM location
@@ -1228,6 +1240,24 @@ addALSAVersion() {
      fi
 }
 
+# Obtain the toolchain CC compiler path from the build spec.gmk
+getCCFromSpecGmk() {
+   # Get required include file property value by asking CC compiler
+   local specFile
+   if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+     specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
+   else
+     specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
+   fi
+
+   # Get CC from the built build spec.gmk.
+   local CC="$(grep "^CC[ ]*:=" ${specFile} | sed "s/^CC[ ]*:=[ ]*//")"
+   # Remove any "env=xx" from CC, so we have just the compiler path
+   CC=$(echo "$CC" | tr -s " " | sed -E "s/[^ ]*=[^ ]*//g")
+
+   echo "${CC}"
+}
+
 # Obtained the required include file property definition by asking the configured
 # spec.gmk CC compiler with optional SYSROOT
 # $1 - include file
@@ -1242,9 +1272,7 @@ getHeaderPropertyUsingCompiler() {
    fi
 
    # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
-   local CC="$(grep "^CC[ ]*:=" ${specFile} | sed "s/^CC[ ]*:=[ ]*//")"
-   # Remove env=xx from CC, so we can call from bash
-   CC=$(echo "$CC" | tr -s " " | sed -E "s/[^ ]*=[^ ]*//g")
+   local CC=$(getCCFromSpecGmk)
    local SYSROOT_CFLAGS="$(grep "^SYSROOT_CFLAGS[ ]*:=" ${specFile} | tr -s " " | cut -d" " -f3-)"
 
    local property_value="$(echo "#include <${1}>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep -E "${2}" | cut -d" " -f3 | sed "s/\"//g")"
