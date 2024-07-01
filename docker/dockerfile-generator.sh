@@ -357,6 +357,10 @@ ENV CC=gcc-7 CXX=g++-7" >> "$DOCKERFILE_PATH"
 }
 
 printCustomDirs() {
+  if [ ${COMMENTS} == true ]; then
+    echo "# In podman (in docker do not harm) shared folder is owned by root, and is read for others, unless it already exists" >> "$DOCKERFILE_PATH"
+    echo "# So we have to create all future-mounted dirs, with proper owner and permissions" >> "$DOCKERFILE_PATH"
+  fi
   for dir in ${DIRS} ; do
     echo "RUN mkdir -p $dir"  >> "$DOCKERFILE_PATH"
     echo "RUN chmod 755 $dir"  >> "$DOCKERFILE_PATH"
@@ -365,6 +369,10 @@ printCustomDirs() {
 }
 
 printDockerJDKs() {
+  if [ ${COMMENTS} == true ]; then
+    echo "
+    # Linking of boot jdk must happen after the system jdk is isntalled, as it is iverwriting whatever java/javac from system" >> "$DOCKERFILE_PATH"
+  fi
   # JDK8 uses zulu-7 to as it's bootjdk
   if [ "${JDK_VERSION}" != 8 ] && [ "${JDK_VERSION}" != "${JDK_MAX}" ]; then
     if [ "${JDK_VERSION}" == 11 ]; then
