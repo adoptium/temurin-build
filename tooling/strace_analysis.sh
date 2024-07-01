@@ -23,12 +23,13 @@
 # Before executing this script, strace output files need to be generated
 # $1 is path of strace output folder
 # $2 is path of temurin-build folder, for example: /home/user/Documents/temurin-build"
-# $3 is javaHome
+# $3 is path of bootjdk used for build
 # $4 is classpath
 # $5 is sbomJson
 # $6 is path of openjdk build output folder
 # $7 is path of cloned openjdk folder
-# $8 is Optional, path of devkit
+# $8 is javaHome to use to call TemurinGenSbom.java
+# $9 is Optional, path of devkit
 
 set -eu
 
@@ -37,11 +38,12 @@ source "$SCRIPT_DIR/../sbin/common/sbom.sh"
 
 strace_dir=""
 temurin_build_dir=""
-javaHome=""
+bootjdk=""
 classpath=""
 sbomJson=""
 build_output_dir=""
 cloned_openjdk_dir=""
+javaHome=""
 devkit_dir=""
 
 # Arrays to store different types of strace output, to treat them different
@@ -77,31 +79,33 @@ ignores=(
 
 checkArguments() {
     
-    if [ $# -lt 6 ]; then
+    if [ $# -lt 8 ]; then
         echo "Missing argument(s)"
         echo "Syntax:"
-        echo "  $0 <Strace output folder> <temurin-build folder> <javaHome> <classpath> <sbomJson> <build output folder> <cloned openjdk folder> [<DevKit folder>]"
+        echo "  $0 <Strace output folder> <temurin-build folder> <bootjdk> <classpath> <sbomJson> <build output folder> <cloned openjdk folder> <javaHome> [<DevKit folder>]"
         exit 1
     fi
 
     strace_dir="$1"
     temurin_build_dir="$2"
-    javaHome="$3"
+    bootjdk="$3"
     classpath="$4"
     sbomJson="$5"
     build_output_dir="$6"
     cloned_openjdk_dir="$7"
-    if [ $# -gt 7 ]; then
-        devkit_dir="$8"
+    javaHome="$8"
+    if [ $# -gt 8 ]; then
+        devkit_dir="$9"
     fi
 
     echo "Strace output folder: $strace_dir"
     echo "temurin-build folder: $temurin_build_dir"
-    echo "javaHome: $javaHome"
+    echo "bootjdk: $bootjdk"
     echo "classpath: $classpath"
     echo "sbomJson: $sbomJson"
     echo "build output folder: $build_output_dir"
     echo "cloned openjdk folder: $cloned_openjdk_dir"
+    echo "javaHome to use: $javaHome"
     if [ -n "$devkit_dir" ]; then
         echo "DevKit folder: $devkit_dir"
     fi
@@ -137,12 +141,12 @@ checkSymLinks() {
         isSbinSymLink=true
     fi
 
-    # Check if javaHome is a sym link, if so resolve it to the real path
+    # Check if bootjdk is a sym link, if so resolve it to the real path
     # which will be used in strace output
-    javaHomeLink=$(resolveFilePath "${javaHome}")
-    if [[ "x${javaHomeLink}" != "x${javaHome}" ]]; then
-        echo "Resolving javaHome '${javaHome}' sym link to '${javaHomeLink}'"
-        javaHome="${javaHomeLink}"
+    bootjdkLink=$(resolveFilePath "${bootjdk}")
+    if [[ "x${bootjdkLink}" != "x${bootjdk}" ]]; then
+        echo "Resolving bootjdk '${bootjdk}' sym link to '${bootjdkLink}'"
+        bootjdk="${bootjdkLink}"
     fi
 
     echo "/bin is symlink: $isBinSymLink"
@@ -291,17 +295,17 @@ processNonPkgFiles() {
         file=$(resolveFilePath "${np_file}")
 
         if [[ "$file" =~ ^"$temurin_build_dir".* ]]; then
-            if [[ ( -z "$devkit_dir" || ! "$file" =~ ^"$devkit_dir".* ) && (! "$file" =~ ^"$javaHome".*) ]]; then
-                # not DevKit or javaHome path within, so ignore as part of temurin-build
+            if [[ ( -z "$devkit_dir" || ! "$file" =~ ^"$devkit_dir".* ) && (! "$file" =~ ^"$bootjdk".*) ]]; then
+                # not DevKit or bootjdk path within, so ignore as part of temurin-build
                 continue
             fi
         fi
 
         local version
-        # If file is part of javaHome, then obtain version of the JDK
-        if [[ "$file" =~ ^"$javaHome".* ]]; then
-          # Get javaHome version
-          version=$("${javaHome}/bin/java" -version 2>&1 | head -2 | tail -1)
+        # If file is part of bootjdk, then obtain version of the JDK
+        if [[ "$file" =~ ^"$bootjdk".* ]]; then
+          # Get bootjdk version
+          version=$("${bootjdk}/bin/java" -version 2>&1 | head -2 | tail -1)
         else
           # We need to try and find the program's version using possible --version or -version
           version=$("$file" --version 2>/dev/null | head -n 1)

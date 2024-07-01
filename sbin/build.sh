@@ -689,14 +689,9 @@ buildTemplatedFile() {
     if which strace >/dev/null 2>&1; then
       echo "Strace is available on system"
 
-      if [[ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]]; then
-        # arm32 strace does not support the ? optional syscall syntax
-        strace_calls="open,openat,execve"
-      else
-        strace_calls="open,openat,execve"
-      fi
+      strace_calls="open,openat,execve"
 
-      # trace syscalls "open,openat,execve" if they are available on the given OS
+      # trace syscalls
       FULL_MAKE_COMMAND="mkdir ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput \&\& strace -o ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput/outputFile -ff -e trace=${strace_calls} ${FULL_MAKE_COMMAND}"
     else
       echo "Strace is not available on system"
@@ -828,8 +823,8 @@ createOpenJDKFailureLogsArchive() {
     createArchive "${adoptLogArchiveDir}" "${makeFailureLogsName}"
 }
 
-# Setup JAVA env to run "ant task"
-setupAntEnv() {
+# Setup JAVA env to run TemurinGenSbom.java
+setupJavaEnv() {
   local javaHome=""
 
   if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
@@ -897,10 +892,10 @@ generateSBoM() {
     return
   fi
 
-  # exit from local var=$(setupAntEnv) is not propagated. We have to ensure that the exit propagates, and is fatal for the script
-  # So the declaration is split. In that case the bug does not occur and thus the `exit 2` from setupAntEnv is correctly propagated
+  # exit from local var=$(setupJavaEnv) is not propagated. We have to ensure that the exit propagates, and is fatal for the script
+  # So the declaration is split. In that case the bug does not occur and thus the `exit 2` from setupJavaEnv is correctly propagated
   local javaHome
-  javaHome="$(setupAntEnv)"
+  javaHome="$(setupJavaEnv)"
 
   buildCyclonedxLib "${javaHome}"
   # classpath to run java app TemurinGenSBOM
@@ -1091,7 +1086,7 @@ generateSBoM() {
     devkit_path=$(echo ${devkit_path} | sed 's,\./,,' | sed 's,//,/,')
     bootjdk_path=$(echo ${bootjdk_path} | sed 's,\./,,' | sed 's,//,/,')
 
-    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${straceOutputDir}" "${temurinBuildDir}" "${bootjdk_path}" "${classpath}" "${sbomJson}" "${buildOutputDir}" "${openjdkSrcDir}" "${devkit_path}"
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${straceOutputDir}" "${temurinBuildDir}" "${bootjdk_path}" "${classpath}" "${sbomJson}" "${buildOutputDir}" "${openjdkSrcDir}" "${javaHome}" "${devkit_path}"
   fi
 
   # Print SBOM location
