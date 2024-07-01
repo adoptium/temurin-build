@@ -27,6 +27,7 @@ JDK_VERSION=8
 IMAGE="ubuntu:18.04"
 JDK_MAX=
 JDK_GA=
+DNF_INSTALL=dnf
 
 UBUNTU_PREAMBLE="apt-get update \\
   && apt-get install -qq -u --no-install-recommends \\
@@ -237,23 +238,27 @@ printDnfPackagesBase() {
   local skipGpg="" # it may bite from time to time
   #local skipGpg="--nogpgcheck"
   local erasing="--allowerasing"
-  if echo "${IMAGE}" | grep stream8 ; then
+  if [ ${DNF_INSTALL} = yum ] ; then
+    erasing=""
+  fi
+  if echo "${IMAGE}" | grep -e "stream8" -e "centos:7" ; then
     echo " 
 RUN cd /etc/yum.repos.d/ ; sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
 RUN cd /etc/yum.repos.d/ ; sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* " >> "$DOCKERFILE_PATH"
   fi
   echo " 
-RUN dnf $skipGpg -y update $erasing
-RUN dnf $skipGpg -y install $erasing \\
+RUN ${DNF_INSTALL} $skipGpg -y update $erasing
+RUN ${DNF_INSTALL} $skipGpg -y install $erasing \\
     bzip2-libs \\
     bzip2 \\
     curl \\
     git \\
     unzip \\
+    /usr/bin/which \\
     wget \\
     zip " >> "$DOCKERFILE_PATH"
   echo " 
-RUN dnf clean all" >> "$DOCKERFILE_PATH"
+RUN ${DNF_INSTALL} clean all" >> "$DOCKERFILE_PATH"
 }
 
 printAptPackagesJdk() {
@@ -325,8 +330,11 @@ printDnfPackagesJdk() {
   local skipGpg="" # it may bite from time to time
   #local skipGpg="--nogpgcheck"
   local erasing="--allowerasing"
+  if [ ${DNF_INSTALL} = yum ] ; then
+    erasing=""
+  fi
   echo " 
-RUN dnf $skipGpg -y install $erasing \\
+RUN ${DNF_INSTALL} $skipGpg -y install $erasing \\
     ant \\
     autoconf \\
     automake \\
@@ -368,7 +376,7 @@ RUN dnf $skipGpg -y install $erasing \\
   fi
   echo "    tzdata-java " >> "$DOCKERFILE_PATH"
   echo " 
-RUN dnf clean all" >> "$DOCKERFILE_PATH"
+RUN ${DNF_INSTALL} clean all" >> "$DOCKERFILE_PATH"
 }
 
 printCreateFolder() {
@@ -512,8 +520,17 @@ isDeb() {
   echo "${IMAGE}" | grep -i -e "ubuntu" -e "debian" 
 }
 
+isYum() {
+  if echo "${IMAGE}" | grep -e "stream7" -e "centos:7" ; then
+    DNF_INSTALL=yum
+  else
+    DNF_INSTALL=dnf
+  fi
+}
+
 printDepsBase() {
   if isRpm ; then
+    isYum
     printDnfPackagesBase
   elif isDeb ;  then
     printAptPackagesBase
@@ -528,6 +545,7 @@ printDepsBase() {
 
 printDepsJdk() {
   if isRpm ; then
+    isYum
     printDnfPackagesJdk
   elif isDeb ;  then
     printAptPackagesJdk
