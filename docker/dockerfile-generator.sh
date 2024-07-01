@@ -413,7 +413,7 @@ printDockerJDKs() {
 printJDK() {
   local JDKVersion=$1
   echo "
-RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptium.net/v3/binary/latest/$JDKVersion/ga/linux/x64/jdk/hotspot/normal/adoptium?project=jdk' -O - | tar xzf - -C /usr/lib/jvm/jdk$JDKVersion --strip-components=1\"" >> "$DOCKERFILE_PATH"
+RUN sh -c \"mkdir -p /usr/lib/jvm/jdk$JDKVersion && wget 'https://api.adoptium.net/v3/binary/latest/$JDKVersion/ga/linux/$(adoptiumArch)/jdk/hotspot/normal/adoptium?project=jdk' -O - | tar xzf - -C /usr/lib/jvm/jdk$JDKVersion --strip-components=1\"" >> "$DOCKERFILE_PATH"
 }
 
 printGitCloneJenkinsPipelines(){
@@ -446,11 +446,18 @@ RUN chown -R build /openjdk/" >> "$DOCKERFILE_PATH"
 USER build" >> "$DOCKERFILE_PATH"
 }
 
-printContainerVars(){
+adoptiumArch() {
+  local arch
+  arch=`uname -m`
+  if [ "$arch" = "x86_64" ] ; then arch="x64" ; fi
+  echo $arch
+}
+
+printContainerVars() {
   echo "
 ARG OPENJDK_CORE_VERSION
 ENV OPENJDK_CORE_VERSION=\$OPENJDK_CORE_VERSION
-ENV ARCHITECTURE=x64
+ENV ARCHITECTURE=$(adoptiumArch)
 ENV JDK_PATH=jdk
 ENV JDK8_BOOT_DIR=/usr/lib/jvm/jdk8" >> "$DOCKERFILE_PATH"
 }
