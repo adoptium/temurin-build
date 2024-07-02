@@ -369,7 +369,6 @@ RUN ${DNF_INSTALL} $skipGpg -y install $erasing \\
     kernel-headers \\
     \"lcms*\" \\
     nss-devel \\ " >> "$DOCKERFILE_PATH"
-  # not sure how much needed
   if echo "${IMAGE}" | grep fedora ; then
     echo "    libstdc++-static \\
     pcsc-lite-devel \\	" >> "$DOCKERFILE_PATH"
