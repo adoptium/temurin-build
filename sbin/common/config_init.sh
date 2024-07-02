@@ -433,7 +433,7 @@ function setCustomImage() {
     echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
     return 1
   fi
-  # is next param switch?
+  # is the next parameter a switch?
   if [[ ${imageCandidate} == -* ]] ; then
     echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
     return 1
