@@ -443,7 +443,7 @@ function setCustomImage() {
    echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
    return 1
   fi
-  # not empty, not switch, not main arg - image, use it
+  # not empty, not switch, not main arg - therefore it must be an image, use it
   BUILD_CONFIG[CONTAINER_IMAGE]="${imageCandidate}"
   echo "base image will be set to: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
   return 0
