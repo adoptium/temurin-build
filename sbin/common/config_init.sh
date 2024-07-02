@@ -438,7 +438,7 @@ function setCustomImage() {
     echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
     return 1
   fi
-  # is next param main arg?
+  # is the next param a main arg?
   if checkOpenJdkVersion "${imageCandidate}" ; then
    echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
    return 1
