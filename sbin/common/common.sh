@@ -22,19 +22,12 @@ function setOpenJdkVersion() {
   #
   # Format: jdkNN[u]
   #
-  local forest_name=$1
+  local forest_name="${1}"
 
   echo "Setting version based on forest_name=${forest_name}"
-
-  # The argument passed here have actually very strict format of jdk8, jdk8u..., jdk
-  # the build may fail later if this is not honoured.
-  # If your repository has a different name, you can use --version or build from dir/snapshot
-  local forest_name_check1=0
-  local forest_name_check2=0
-  # This two returns condition is there to make grep on solaris happy. -e, -q and  \( and \| do not work on that platform
-  echo "$forest_name" | grep "^jdk[0-9]\\{1,3\\}[u]\\{0,1\\}$" >/dev/null || forest_name_check1=$?
-  echo "$forest_name" | grep "^jdk$" >/dev/null || forest_name_check2=$?
-  if [ ${forest_name_check1} -ne 0 ] && [ ${forest_name_check2} -ne 0 ]; then
+  forest_name_check=0
+  checkOpenJdkVersion "${forest_name}" || forest_name_check=$?
+  if [ ${forest_name_check} -ne 0 ] ; then
     echo "The mandatory repo argument has a very strict format 'jdk[0-9]{1,3}[u]{0,1}' or just plain 'jdk' for tip. '$forest_name' does not match."
     echo "This can be worked around by using '--version jdkXYu'. If set (and matching) then the main argument can have any value."
     exit 1
@@ -92,6 +85,23 @@ function setOpenJdkVersion() {
 
   # Set default branch based on JDK forest and feature number
   setBranch
+}
+
+function checkOpenJdkVersion() {
+  local forest_name="${1}"
+  # The argument passed here has a very strict format of jdk8, jdk8u..., jdk
+  # the build may fail later if this is not honoured.
+  # If your repository has a different name, you can use --version or build from a dir/snapshot
+  local forest_name_check1=0
+  local forest_name_check2=0
+  # This two returns condition is there to make grep on solaris happy. -e, -q and  \( and \| do not work on that platform
+  echo "$forest_name" | grep "^jdk[0-9]\\{1,3\\}[u]\\{0,1\\}$" >/dev/null || forest_name_check1=$?
+  echo "$forest_name" | grep "^jdk$" >/dev/null || forest_name_check2=$?
+  if [ ${forest_name_check1} -ne 0 ] && [ ${forest_name_check2} -ne 0 ]; then
+    return 1
+  else
+    return 0
+  fi
 }
 
 # Set the default BUILD_CONFIG[BRANCH] for the jdk version being built

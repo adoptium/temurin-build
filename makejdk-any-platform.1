@@ -22,7 +22,7 @@ that you are building for further details.
 
 \fBExample:\fR The simplest use case to run is:
 
-"./makejdk-any-platform.sh -D jdk8u"
+"./makejdk-any-platform.sh -D fedora:latest jdk8u"
 
 This will start a Docker container and build you the latest Java 8 Temurin
 binary from the source at https://github.com/adoptium/openjdk-jdk8u
@@ -97,8 +97,9 @@ specify the location for the built binary, e.g. /path/.
 This is typically used in conjunction with \fB<-T>\fR to create a custom path
 / file name for the resulting binary.
 .TP
-.BR \-D ", " \-\-docker ", " \-\-podman
+.BR \-D ", " \-\-docker ", " \-\-podman  " " \fI[base_to_use]\fR
 build OpenJDK in a docker/podman container. -D will autodetect, using podman if found, docker otherwise.
+You can optionally set base image to use. Default is ubuntu:18.04. Dnf/apt is determined by hardcoded list.
 When podman is used, there is bug requiring \fI--custom-cacerts\fR to be used under some circumstances.
 It is known issue: https://github.com/adoptium/temurin-build/issues/3862
 .TP
