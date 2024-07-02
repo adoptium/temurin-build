@@ -252,6 +252,14 @@ CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM//\"/temporary
 # shellcheck disable=SC2086
 bash -c "$MAC_ROSETTA_PREFIX $PLATFORM_SCRIPT_DIR/../makejdk-any-platform.sh --clean-git-repo --jdk-boot-dir ${JDK_BOOT_DIR} --configure-args \"${CONFIGURE_ARGS_FOR_ANY_PLATFORM}\" --target-file-name ${FILENAME} ${TAG_OPTION} ${OPTIONS} ${BUILD_ARGS} ${VARIANT_ARG} ${JAVA_TO_BUILD}"
 
+# If this is jdk8u on mac x64 that has cross compiled on arm64 we need to restore Xcode from the Xcode-11.7.app to Xcode.app
+if [[ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]] && [[ -n "$MAC_ROSETTA_PREFIX" ]]; then
+  XCODE_SWITCH_PATH="/Applications/Xcode.app"
+  echo "Restoring Xcode select to ${XCODE_SWITCH_PATH}"
+  echo "[WARNING] You may be asked for your su user password, attempting to switch Xcode version to ${XCODE_SWITCH_PATH}"
+  sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
+fi
+
 if [ -d "${WORKSPACE}" ]; then
   SPACEUSED=$(du -sk "$WORKSPACE")
   echo "Total disk space in Kb consumed by build process: $SPACEUSED"
