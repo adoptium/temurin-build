@@ -617,7 +617,7 @@ Compare_JDK() {
   rc=$?
   set -e
   cd "$WORK_DIR"
-  # Display The Content Of repro_diff.out
+  # Display The Content Of reprotest.diff
   echo ""
   echo "---------------------------------------------"
   echo "Output From JDK Comparison Script"
