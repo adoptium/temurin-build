@@ -47,6 +47,7 @@ CLEAN_GIT_REPO
 CLEAN_LIBS
 CONTAINER_COMMAND
 CONTAINER_NAME
+CONTAINER_IMAGE
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
@@ -274,13 +275,19 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
 
         "-D" )
-        if which podman > /dev/null ; then BUILD_CONFIG[CONTAINER_COMMAND]="podman" ; else BUILD_CONFIG[CONTAINER_COMMAND]="docker" ; fi;;
+        if which podman > /dev/null ; then BUILD_CONFIG[CONTAINER_COMMAND]="podman" ; else BUILD_CONFIG[CONTAINER_COMMAND]="docker" ; fi;
+        if setCustomImage "${1-}"; then shift ; fi
+        ;;
 
         "--docker" )
-        BUILD_CONFIG[CONTAINER_COMMAND]="docker";;
+        BUILD_CONFIG[CONTAINER_COMMAND]="docker";
+        if setCustomImage "${1-}"; then shift ; fi 
+        ;;
 
         "--podman" )
-        BUILD_CONFIG[CONTAINER_COMMAND]="podman";;
+        BUILD_CONFIG[CONTAINER_COMMAND]="podman";
+        if setCustomImage "${1-}"; then shift ; fi 
+        ;;
 
         "--debug-docker" )
         BUILD_CONFIG[DEBUG_DOCKER]="true";;
@@ -418,6 +425,30 @@ function setOpenjdkSourceDir() {
   fi
 }
 
+# Set custom image base if set
+function setCustomImage() {
+  local imageCandidate="${1}"
+  # is next param empty?
+  if [[ -z ${imageCandidate} ]] ; then
+    echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+    return 1
+  fi
+  # is the next parameter a switch?
+  if [[ ${imageCandidate} == -* ]] ; then
+    echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+    return 1
+  fi
+  # is the next param a main arg?
+  if checkOpenJdkVersion "${imageCandidate}" ; then
+   echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+   return 1
+  fi
+  # not empty, not switch, not main arg - therefore it must be an image, use it
+  BUILD_CONFIG[CONTAINER_IMAGE]="${imageCandidate}"
+  echo "base image will be set to: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+  return 0
+}
+
 # Set the config defaults
 function configDefaults() {
 
@@ -544,6 +575,7 @@ function configDefaults() {
   BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]=${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]:-"openjdk-source-volume"}
 
   BUILD_CONFIG[CONTAINER_NAME]=${BUILD_CONFIG[CONTAINER_NAME]:-openjdk_container}
+  BUILD_CONFIG[CONTAINER_IMAGE]=${BUILD_CONFIG[CONTAINER_IMAGE]:-"ubuntu:18.04"}
 
   BUILD_CONFIG[TMP_CONTAINER_NAME]=${BUILD_CONFIG[TMP_CONTAINER_NAME]:-openjdk-copy-src}
   BUILD_CONFIG[CLEAN_DOCKER_BUILD]=${BUILD_CONFIG[CLEAN_DOCKER_BUILD]:-false}
