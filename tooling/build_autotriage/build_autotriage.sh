@@ -28,6 +28,7 @@ declare -a arrayOfErrorLinesForFailedJobs
 declare -a arrayOfAllJDKVersions
 declare -a arrayOfUs
 declare -a buildIssues
+declare -a arrayOfPipelinesToTriage
 
 headJDKVersion=9999
 
@@ -121,7 +122,7 @@ wasPipelineStartedByUser() {
       sampleBuildNum="${jsonEntry:11}"
     fi
     if [[ ! "${sampleBuildName}_${sampleBuildNum}" =~ none ]]; then
-      continue
+      break
     fi
   done
 
@@ -214,17 +215,17 @@ identifyFailedBuildsInTimerPipelines() {
               latestJdk8Pipelines[2]=$latestTimerPipeline
               echo "Found Arm32 Linux JDK8 pipeline here: https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/${latestTimerJenkinsJobID}"
             fi
-          elif [[ ${latestJdk8Pipelines[0]} == "none" ]]; then
+          elif [[ $jsonEntry =~ betaTrigger\_8ea\\\" && ${latestJdk8Pipelines[0]} == "none" ]]; then
             if wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"; then
               latestJdk8Pipelines[0]=$latestTimerPipeline
               echo "Found core JDK8 pipeline here: https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/${latestTimerJenkinsJobID}"
             fi
           fi
-        if [[ ${latestJdk8Pipelines[0]} != "none" && ${latestJdk8Pipelines[1]} != "none" && ${latestJdk8Pipelines[2]} != "none" ]]; then
-          echo "Found all 3 pipelines for JDK8."
-          break
+          if [[ ${latestJdk8Pipelines[0]} != "none" && ${latestJdk8Pipelines[1]} != "none" && ${latestJdk8Pipelines[2]} != "none" ]]; then
+            echo "Found all 3 pipelines for JDK8."
+            break
+          fi
         fi
-      fi
       else
         if [[ $jsonEntry =~ ^\"startBy\"\:\"timer ]]; then
           if wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"; then
@@ -256,6 +257,17 @@ identifyFailedBuildsInTimerPipelines() {
     if [[ ! ${arrayOfAllJDKVersions[v]} -eq 8 ]]; then
       echo "Found TRSS pipeline id for ${jdkJenkinsJobVersion} - ${latestTimerPipeline}"
       echo "Whose URL is: https://ci.adoptium.net/job/build-scripts/job/openjdk${arrayOfAllJDKVersions[v]}-pipeline/${latestTimerJenkinsJobID}/"
+      arrayOfPipelinesToTriage+=("JDK${arrayOfAllJDKVersions[v]}: https://trss.adoptium.net/resultSummary?parentId=${latestTimerPipeline}")
+    else
+      if [[ ${latestJdk8Pipelines[0]} != "none" ]]; then
+        arrayOfPipelinesToTriage+=("JDK8: https://trss.adoptium.net/resultSummary?parentId=${latestJdk8Pipelines[0]}")
+      fi
+      if [[ ${latestJdk8Pipelines[1]} != "none" ]]; then
+        arrayOfPipelinesToTriage+=("JDK8 Alpine: https://trss.adoptium.net/resultSummary?parentId=${latestJdk8Pipelines[1]}")
+      fi
+      if [[ ${latestJdk8Pipelines[2]} != "none" ]]; then
+        arrayOfPipelinesToTriage+=("JDK8 Arm32 Linux: https://trss.adoptium.net/resultSummary?parentId=${latestJdk8Pipelines[2]}")
+      fi
     fi
 
     # Now grab a full list of builds launched by this pipeline.
@@ -415,27 +427,53 @@ generateOutputFile() {
     echo "Build failures: ${totalBuildFailures}"
     echo "Test failures: ${totalTestFailures}"
     echo ""
+    echo "# TRSS Pipeline Links"
+    if [[ ${#arrayOfPipelinesToTriage[@]} -gt 0 ]]; then
+      for pipelineTrssLink in "${arrayOfPipelinesToTriage[@]}"
+      do
+        echo "${pipelineTrssLink}"
+      done
+    fi
+    echo ""
     if [[ ${#arrayOfFailedJobs[@]} -gt 0 ]]; then
-      echo "# Failed Builds"
+      outputForFailedBuilds=""
+      outputForFailedTests=""
       for failedJobIndex in "${!arrayOfFailedJobs[@]}"
       do
         regexID="${arrayOfRegexsForFailedJobs[failedJobIndex]}"
-        echo "Failure: ${arrayOfFailedJobs[failedJobIndex]}"
+        jobTriageOutput="Failure: ${arrayOfFailedJobs[failedJobIndex]}\n"
         if [[ ${regexID} =~ Unmatched ]]; then
-          echo "Cause: ${arrayOfErrorLinesForFailedJobs[failedJobIndex]}"
+          jobTriageOutput+="Cause: ${arrayOfErrorLinesForFailedJobs[failedJobIndex]}\n"
         else
-          echo "Cause: ${arrayOfRegexMetadata[regexID]}"
+          jobTriageOutput+="Cause: ${arrayOfRegexMetadata[regexID]}\n"
           preventable="yes"
           if [[ "${arrayOfRegexPreventability[regexID]}" -gt 0 ]]; then
             preventable="no"
           fi
-          echo "Preventable: ${preventable}"
-          echo "\`\`\`"
-          echo "${arrayOfErrorLinesForFailedJobs[failedJobIndex]}"
-          echo "\`\`\`"
+          jobTriageOutput+="Preventable: ${preventable}\n"
+          jobTriageOutput+="\`\`\`\n"
+          jobTriageOutput+="${arrayOfErrorLinesForFailedJobs[failedJobIndex]}\n"
+          jobTriageOutput+="\`\`\`\n"
         fi
-        echo ""
+        jobTriageOutput+="\n"
+        if [[ ${arrayOfFailureSources[regexID]} -eq 1 ]]; then
+          outputForFailedTests+="${jobTriageOutput}"
+        else
+          outputForFailedBuilds+="${jobTriageOutput}"
+        fi
       done
+      echo "# Failed Builds"
+      if [[ -n "${outputForFailedBuilds}" ]]; then
+        echo -e "${outputForFailedBuilds}"
+      else
+        echo "None."
+      fi
+      echo "# Builds with Failed Tests (suspected)"
+      if [[ -n "${outputForFailedTests}" ]]; then
+          echo -e "${outputForFailedTests}"
+        else
+          echo "None."
+        fi
       echo "#  End of list"
     else
       echo "All build jobs passed. Huzzah!"
