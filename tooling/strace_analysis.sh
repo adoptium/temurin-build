@@ -23,12 +23,13 @@
 # Before executing this script, strace output files need to be generated
 # $1 is path of strace output folder
 # $2 is path of temurin-build folder, for example: /home/user/Documents/temurin-build"
-# $3 is javaHome
+# $3 is path of bootjdk used for build
 # $4 is classpath
 # $5 is sbomJson
 # $6 is path of openjdk build output folder
 # $7 is path of cloned openjdk folder
-# $8 is Optional, path of devkit
+# $8 is javaHome to use to call TemurinGenSbom.java
+# $9 is Optional, path of compiler toolchain
 
 set -eu
 
@@ -37,12 +38,13 @@ source "$SCRIPT_DIR/../sbin/common/sbom.sh"
 
 strace_dir=""
 temurin_build_dir=""
-javaHome=""
+bootjdk=""
 classpath=""
 sbomJson=""
 build_output_dir=""
 cloned_openjdk_dir=""
-devkit_dir=""
+javaHome=""
+toolchain_dir=""
 
 # Arrays to store different types of strace output, to treat them different
 nonPkgFiles=()
@@ -77,33 +79,35 @@ ignores=(
 
 checkArguments() {
     
-    if [ $# -lt 6 ]; then
+    if [ $# -lt 8 ]; then
         echo "Missing argument(s)"
         echo "Syntax:"
-        echo "  $0 <Strace output folder> <temurin-build folder> <javaHome> <classpath> <sbomJson> <build output folder> <cloned openjdk folder> [<DevKit folder>]"
+        echo "  $0 <Strace output folder> <temurin-build folder> <bootjdk> <classpath> <sbomJson> <build output folder> <cloned openjdk folder> <javaHome> [<toolchain folder>]"
         exit 1
     fi
 
     strace_dir="$1"
     temurin_build_dir="$2"
-    javaHome="$3"
+    bootjdk="$3"
     classpath="$4"
     sbomJson="$5"
     build_output_dir="$6"
     cloned_openjdk_dir="$7"
-    if [ $# -gt 7 ]; then
-        devkit_dir="$8"
+    javaHome="$8"
+    if [ $# -gt 8 ]; then
+        toolchain_dir="$9"
     fi
 
     echo "Strace output folder: $strace_dir"
     echo "temurin-build folder: $temurin_build_dir"
-    echo "javaHome: $javaHome"
+    echo "bootjdk: $bootjdk"
     echo "classpath: $classpath"
     echo "sbomJson: $sbomJson"
     echo "build output folder: $build_output_dir"
     echo "cloned openjdk folder: $cloned_openjdk_dir"
-    if [ -n "$devkit_dir" ]; then
-        echo "DevKit folder: $devkit_dir"
+    echo "javaHome to use: $javaHome"
+    if [ -n "$toolchain_dir" ]; then
+        echo "Toolchain folder: $toolchain_dir"
     fi
 
     # Add build output folder to the ignore list as it is just build output
@@ -113,28 +117,36 @@ checkArguments() {
     ignores+=("^${cloned_openjdk_dir}")
 }
 
+resolveFilePath() {
+    # Resolve path using readlink, and ensure "//" is resolved to a single "/"
+    local realpath
+    realpath=$(readlink -f "$1" | sed 's,//,/,g')
+
+    echo "$realpath"
+}
+
 checkSymLinks() {
     # Check if /bin, /lib, /sbin are symlinks, as sometimes pkgs are installed
     # under the symlink folder, eg.in Ubuntu 20.04
-    binDir=$(readlink -f "/bin")
+    binDir=$(resolveFilePath "/bin")
     if [[ "$binDir" != "/bin" ]]; then
         isBinSymLink=true
     fi
-    libDir=$(readlink -f "/lib")
+    libDir=$(resolveFilePath "/lib")
     if [[ "$libDir" != "/lib" ]]; then
         isLibSymLink=true
     fi
-    sbinDir=$(readlink -f "/sbin")
+    sbinDir=$(resolveFilePath "/sbin")
     if [[ "$sbinDir" != "/sbin" ]]; then
         isSbinSymLink=true
     fi
 
-    # Check if javaHome is a sym link, if so resolve it to the real path
+    # Check if bootjdk is a sym link, if so resolve it to the real path
     # which will be used in strace output
-    javaHomeLink=$(readlink -f "${javaHome}")
-    if [[ "x${javaHomeLink}" != "x${javaHome}" ]]; then
-        echo "Resolving javaHome '${javaHome}' sym link to '${javaHomeLink}'"
-        javaHome="${javaHomeLink}"
+    bootjdkLink=$(resolveFilePath "${bootjdk}")
+    if [[ "x${bootjdkLink}" != "x${bootjdk}" ]]; then
+        echo "Resolving bootjdk '${bootjdk}' sym link to '${bootjdkLink}'"
+        bootjdk="${bootjdkLink}"
     fi
 
     echo "/bin is symlink: $isBinSymLink"
@@ -158,8 +170,8 @@ filterStraceFiles() {
     grep_command+=")'"
 
     # filtering out relevant parts of strace output files
-    mapfile -t allFiles < <(find "${strace_dir}" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | eval "$grep_command" | sort | uniq)
-    echo "find \"${strace_dir}\" -type f -name 'outputFile.*' | xargs -n100 grep -v ENOENT | cut -d'\"' -f2 | grep \"^/\" | eval \"$grep_command\" | sort | uniq"
+    mapfile -t allFiles < <(find "${strace_dir}" -type f -name 'outputFile*' | xargs -n100 grep -v ENOENT | cut -d'"' -f2 | grep "^/" | eval "$grep_command" | sort | uniq)
+    echo "find \"${strace_dir}\" -type f -name 'outputFile*' | xargs -n100 grep -v ENOENT | cut -d'\"' -f2 | grep \"^/\" | eval \"$grep_command\" | sort | uniq"
 
     for file in "${allFiles[@]}"; do
         echo "$file"
@@ -169,13 +181,42 @@ filterStraceFiles() {
 processFiles() {
     echo "Processing found files to determine 'Package' versions... (this will take a few minutes)"
 
+    # Determine OS package query command
+    os_type=""
+    package_query=""
+
+    if grep "Alpine Linux" /etc/os-release >/dev/null 2>&1; then
+        # Alpine
+        os_type=alpine
+        package_query="apk info --who-owns"
+    elif grep "^ID.*debian" /etc/os-release >/dev/null 2>&1; then
+        # Debian
+        os_type=debian
+        package_query="dpkg -S"
+    elif which rpm >/dev/null 2>&1; then
+        # Probably Centos or RHEL
+        os_type=centos
+        package_query="rpm -qf"
+    else
+        echo "ERROR: Unable to determine OS package query tooling"
+        exit 1
+    fi
+
     for file in "${allFiles[@]}"; do
-        filePath="$(readlink -f "$file")"
+        filePath="$(resolveFilePath "$file")"
+
+        # Ignore any strace open on directory, as pkg query if it returns anything
+        # at all (and on Alpine it won't), then it is purely the list of owning pkg's for the files within
+        if [[ -d "$filePath" ]]; then
+            echo "Ignoring strace open on a directory $filePath"
+            continue
+        fi
+
         non_pkg=false
 
-        # Attempt to determine rpm pkg
+        # Attempt to determine pkg
         # shellcheck disable=SC2069
-        if ! rpm -qf "$filePath" 2>&1>/dev/null; then
+        if ! ${package_query} "$filePath" >/dev/null 2>&1; then
             # bin, lib, sbin pkgs may be installed under the root symlink
             if [[ "$isBinSymLink" == "true" ]] && [[ $filePath == /usr/bin* ]]; then
                 filePath=${filePath/#\/usr\/bin/}
@@ -191,13 +232,13 @@ processFiles() {
             fi
 
             # shellcheck disable=SC2069 
-            if ! rpm -qf "$filePath" 2>&1>/dev/null; then
+            if ! ${package_query} "$filePath" >/dev/null 2>&1; then
                 non_pkg=true
             else
-                pkg=$(rpm -qf "$filePath")
+                pkg=$(${package_query} "$filePath")
             fi
         else
-            pkg=$(rpm -qf "$filePath")
+            pkg=$(${package_query} "$filePath")
         fi
 
         ignoreFile=false
@@ -214,12 +255,34 @@ processFiles() {
         if [[ "$non_pkg" = true ]]; then
             nonPkgFiles+=("$filePath")
         else
-            pkg="$(echo "$pkg" | cut -d" " -f1 | tr -d '\\n\\r')"
-            pkgString="pkg: $pkg version: $pkg"
+            case "${os_type}" in
+                "alpine")
+                    # Process alpine package query output: "FILE is owned by PACKAGE"
+                    pkg_name="$(echo "$pkg" | sed 's/is owned by//g' | tr -s ' ' | cut -d' ' -f2 | tr -d '\\n\\r')"
+                    pkg_version="$pkg_name"
+                    ;;
+                "debian")
+                    # Process debian package query output: "PACKAGE: FILE"
+                    pkg_name="$(echo "$pkg" | cut -d":" -f1 | tr -d '\\n\\r')"
+                    pkg_version="$(apt show "$pkg_name" 2>/dev/null | grep Version | cut -d" " -f2 | tr -d '\\n\\r')"
+                    ;;
+                "centos")
+                    # Process centos package query output: "PACKAGE"
+                    pkg_name="$(echo "$pkg" | cut -d" " -f1 | tr -d '\\n\\r')"
+                    pkg_version="$pkg_name"
+                    ;;
+                *)
+                    # Unknown
+                    echo "ERROR: Unknown os_type: ${os_type}"
+                    exit 1
+                    ;;
+            esac
+
+            pkgString="pkg: $pkg_name version: $pkg_version"
 
             # Make sure to only add unique packages to SBOM
             if ! echo "${pkgs[@]-}" | grep "temurin_${pkgString}_temurin" >/dev/null; then
-                addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool package dependencies" "${pkg}" "${pkg}"
+                addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "Build Dependencies" "Build tool package dependencies" "${pkg_name}" "${pkg_version}"
                 pkgs+=("temurin_${pkgString}_temurin")
             fi
         fi
@@ -229,20 +292,20 @@ processFiles() {
 processNonPkgFiles() {
     for np_file in "${nonPkgFiles[@]-}"; do
         # Ensure we have the full real path name
-        file=$(readlink -f "${np_file}")
+        file=$(resolveFilePath "${np_file}")
 
         if [[ "$file" =~ ^"$temurin_build_dir".* ]]; then
-            if [[ ( -z "$devkit_dir" || ! "$file" =~ ^"$devkit_dir".* ) && (! "$file" =~ ^"$javaHome".*) ]]; then
-                # not DevKit or javaHome path within, so ignore as part of temurin-build
+            if [[ ( -z "$toolchain_dir" || ! "$file" =~ ^"$toolchain_dir".* ) && (! "$file" =~ ^"$bootjdk".*) ]]; then
+                # not DevKit toolchain or bootjdk path within, so ignore as part of temurin-build
                 continue
             fi
         fi
 
         local version
-        # If file is part of javaHome, then obtain version of the JDK
-        if [[ "$file" =~ ^"$javaHome".* ]]; then
-          # Get javaHome version
-          version=$("${javaHome}/bin/java" -version 2>&1 | head -2 | tail -1)
+        # If file is part of bootjdk, then obtain version of the JDK
+        if [[ "$file" =~ ^"$bootjdk".* ]]; then
+          # Get bootjdk version
+          version=$("${bootjdk}/bin/java" -version 2>&1 | head -2 | tail -1)
         else
           # We need to try and find the program's version using possible --version or -version
           version=$("$file" --version 2>/dev/null | head -n 1)
@@ -272,8 +335,8 @@ processNonPkgFiles() {
                 uniqueVersions+=("END_${version}_END")
             fi
         else
-            if [[ -n "$devkit_dir" ]] && [[ "$file" =~ ^"$devkit_dir".* ]]; then
-                # DevKit file, then ignore, as we recognise it and manually add DevKit info
+            if [[ -n "$toolchain_dir" ]] && [[ "$file" =~ ^"$toolchain_dir".* ]]; then
+                # Toolchain file, then ignore, as we recognise it and manually add Toolchain compiler version and DevKit info
                 continue
             else
                 errorpkgs+=("${file}")
@@ -282,9 +345,10 @@ processNonPkgFiles() {
     done
 }
 
+# If toolchain_dir is a DevKit then add info from devkit.info
 addDevKitInfo() {
-    if [[ -n "$devkit_dir" ]]; then
-        local devkitInfo="${devkit_dir}/devkit.info"
+    if [[ -n "$toolchain_dir" ]] && [[ -f "${toolchain_dir}/devkit.info" ]]; then
+        local devkitInfo="${toolchain_dir}/devkit.info"
 
         local adoptium_devkit_version=""
         if grep "ADOPTIUM_DEVKIT_RELEASE" "${devkitInfo}"; then

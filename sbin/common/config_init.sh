@@ -41,10 +41,13 @@ BUILD_REPRODUCIBLE_DATE
 BUILD_TIMESTAMP
 BUILD_VARIANT
 CERTIFICATE
+CONTAINER_AS_ROOT
 CLEAN_DOCKER_BUILD
 CLEAN_GIT_REPO
 CLEAN_LIBS
+CONTAINER_COMMAND
 CONTAINER_NAME
+CONTAINER_IMAGE
 COPY_MACOSX_FREE_FONT_LIB_FOR_JDK_FLAG
 COPY_MACOSX_FREE_FONT_LIB_FOR_JRE_FLAG
 COPY_TO_HOST
@@ -57,7 +60,6 @@ CROSSCOMPILE
 DEBUG_DOCKER
 DEBUG_IMAGE_PATH
 DISABLE_ADOPT_BRANCH_SAFETY
-DOCKER
 DOCKER_FILE_PATH
 DOCKER_SOURCE_VOLUME_NAME
 ENABLE_SBOM_STRACE
@@ -101,7 +103,6 @@ TARGET_FILE_NAME
 TMP_CONTAINER_NAME
 TMP_SPACE_BUILD
 USE_ADOPTIUM_DEVKIT
-USE_DOCKER
 USE_JEP319_CERTS
 USE_SSH
 USER_SUPPLIED_CONFIGURE_ARGS
@@ -273,8 +274,20 @@ function parseConfigurationArguments() {
         "--destination" | "-d" )
         BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
 
-        "--docker" | "-D" )
-        BUILD_CONFIG[USE_DOCKER]="true";;
+        "-D" )
+        if which podman > /dev/null ; then BUILD_CONFIG[CONTAINER_COMMAND]="podman" ; else BUILD_CONFIG[CONTAINER_COMMAND]="docker" ; fi;
+        if setCustomImage "${1-}"; then shift ; fi
+        ;;
+
+        "--docker" )
+        BUILD_CONFIG[CONTAINER_COMMAND]="docker";
+        if setCustomImage "${1-}"; then shift ; fi 
+        ;;
+
+        "--podman" )
+        BUILD_CONFIG[CONTAINER_COMMAND]="podman";
+        if setCustomImage "${1-}"; then shift ; fi 
+        ;;
 
         "--debug-docker" )
         BUILD_CONFIG[DEBUG_DOCKER]="true";;
@@ -348,7 +361,7 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[SIGN]=true; BUILD_CONFIG[CERTIFICATE]="$1"; shift;;
 
         "--sudo" )
-        BUILD_CONFIG[DOCKER]="sudo docker";;
+        BUILD_CONFIG[CONTAINER_AS_ROOT]="sudo";;
 
         "--tag" | "-t" )
         BUILD_CONFIG[TAG]="$1"; BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""; shift;;
@@ -410,6 +423,30 @@ function setOpenjdkSourceDir() {
   if [ -z "${BUILD_CONFIG[TAG]}" ] ; then
     echo "WARNING: You have not yet specified --tag. It is strongly recommended you do so, otherwise a default one will be provided."
   fi
+}
+
+# Set custom image base if set
+function setCustomImage() {
+  local imageCandidate="${1}"
+  # is next param empty?
+  if [[ -z ${imageCandidate} ]] ; then
+    echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+    return 1
+  fi
+  # is the next parameter a switch?
+  if [[ ${imageCandidate} == -* ]] ; then
+    echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+    return 1
+  fi
+  # is the next param a main arg?
+  if checkOpenJdkVersion "${imageCandidate}" ; then
+   echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+   return 1
+  fi
+  # not empty, not switch, not main arg - therefore it must be an image, use it
+  BUILD_CONFIG[CONTAINER_IMAGE]="${imageCandidate}"
+  echo "base image will be set to: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+  return 0
 }
 
 # Set the config defaults
@@ -538,12 +575,13 @@ function configDefaults() {
   BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]=${BUILD_CONFIG[DOCKER_SOURCE_VOLUME_NAME]:-"openjdk-source-volume"}
 
   BUILD_CONFIG[CONTAINER_NAME]=${BUILD_CONFIG[CONTAINER_NAME]:-openjdk_container}
+  BUILD_CONFIG[CONTAINER_IMAGE]=${BUILD_CONFIG[CONTAINER_IMAGE]:-"ubuntu:18.04"}
 
   BUILD_CONFIG[TMP_CONTAINER_NAME]=${BUILD_CONFIG[TMP_CONTAINER_NAME]:-openjdk-copy-src}
   BUILD_CONFIG[CLEAN_DOCKER_BUILD]=${BUILD_CONFIG[CLEAN_DOCKER_BUILD]:-false}
 
   # Use Docker to build (defaults to false)
-  BUILD_CONFIG[USE_DOCKER]=${BUILD_CONFIG[USE_DOCKER]:-false}
+  BUILD_CONFIG[CONTAINER_COMMAND]=${BUILD_CONFIG[CONTAINER_COMMAND]:-false}
 
   # Alow to debug docker build.sh script (dafult to false)
   BUILD_CONFIG[DEBUG_DOCKER]=${BUILD_CONFIG[DEBUG_DOCKER]:-false}
@@ -600,7 +638,7 @@ function configDefaults() {
   # Whether to use Temurin's cacerts file (true) or use the file provided by OpenJDK (false)
   BUILD_CONFIG[CUSTOM_CACERTS]=${BUILD_CONFIG[CUSTOM_CACERTS]:-"true"}
 
-  BUILD_CONFIG[DOCKER]=${BUILD_CONFIG[DOCKER]:-"docker"}
+  BUILD_CONFIG[CONTAINER_AS_ROOT]=${BUILD_CONFIG[CONTAINER_AS_ROOT]:-""}
 
   BUILD_CONFIG[TMP_SPACE_BUILD]=${BUILD_CONFIG[TMP_SPACE_BUILD]:-false}
 
