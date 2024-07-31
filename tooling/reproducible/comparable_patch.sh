@@ -105,83 +105,6 @@ function removeExcludedFiles() {
   echo "Successfully removed all excluded files from ${JDK_DIR}"
 }
 
-# Normalize the following ModuleAttributes that can be ordered differently
-# depending on how the vendor has signed and re-packed the JMODs
-#   - ModuleResolution:
-#   - ModuleTarget:
-# java.base also requires the dependent module "hash:" values to be excluded
-# as they differ due to the Signatures and Vendor string differences
-function processModuleInfo() {
-    echo "Normalizing ModuleAttributes order in module-info.class, converting to javap"
-
-    moduleAttr="ModuleResolution ModuleTarget"
-
-    FILES=$(find "${JDK_DIR}" -type f -name "module-info.class")
-    for f in $FILES
-    do
-      echo "javap and re-order ModuleAttributes for $f"
-      javap -v -sysinfo -l -p -c -s -constants "$f" > "$f.javap.tmp"
-      rm "$f"
-
-      cc=99
-      foundAttr=false
-      attrName=""
-      # Clear any attr tmp files
-      for attr in $moduleAttr
-      do
-        rm -f "$f.javap.$attr"
-      done
-
-      while IFS= read -r line
-      do
-        cc=$((cc+1))
-
-        # Module attr have only 1 line definition
-        if [[ "$foundAttr" = true ]] && [[ "$cc" -gt 1 ]]; then
-          foundAttr=false
-          attrName=""
-        fi
-
-        # If not processing an attr then check for attr
-        if [[ "$foundAttr" = false ]]; then
-          for attr in $moduleAttr
-          do
-            if [[ "$line" =~ .*"$attr:".* ]]; then
-              cc=0
-              foundAttr=true
-              attrName="$attr"
-            fi
-          done
-        fi
-
-        # Echo attr to attr tmp file, otherwise to tmp2
-        if [[ "$foundAttr" = true ]]; then
-          echo "$line" >> "$f.javap.$attrName" 
-        else 
-          echo "$line" >> "$f.javap.tmp2"
-        fi
-      done < "$f.javap.tmp"
-      rm "$f.javap.tmp"
-
-      # Remove javap Classfile and timestamp and SHA-256 hash
-      if [[ "$f" =~ .*"java.base".* ]]; then
-        grep -v "Last modified\|Classfile\|SHA-256 checksum\|hash:" "$f.javap.tmp2" > "$f.javap" 
-      else 
-        grep -v "Last modified\|Classfile\|SHA-256 checksum" "$f.javap.tmp2" > "$f.javap"
-      fi
-      rm "$f.javap.tmp2"
-
-      # Append any ModuleAttr tmp files
-      for attr in $moduleAttr
-      do
-        if [[ -f "$f.javap.$attr" ]]; then
-          cat "$f.javap.$attr" >> "$f.javap"
-        fi
-        rm -f "$f.javap.$attr"
-      done
-    done
-}
-
 # Neutralize Windows VS_VERSION_INFO CompanyName from the resource compiled PE section
 function neutraliseVsVersionInfo() {
   echo "Updating EXE/DLL VS_VERSION_INFO in ${JDK_DIR}"
@@ -189,6 +112,7 @@ function neutraliseVsVersionInfo() {
   for f in $FILES
     do
       echo "Removing EXE/DLL VS_VERSION_INFO from $f"
+      f=$(cygpath -w "$f")
 
       # Neutralize CompanyName
       WindowsUpdateVsVersionInfo "$f" "CompanyName=AAAAAA"
@@ -226,6 +150,9 @@ function removeVendorName() {
     do
       # Neutralize vendor string with 0x00 to same length
       echo "Neutralizing $VENDOR_NAME in $f"
+      if [[ "$OS" =~ CYGWIN* ]]; then
+          f=$(cygpath -w "$f")
+      fi
       if ! java "$TEMURIN_TOOLS_BINREPL" --inFile "$f" --outFile "$f" --string "${VENDOR_NAME}=" --pad 00; then
           echo "  Not found ==> java $TEMURIN_TOOLS_BINREPL --inFile \"$f\" --outFile \"$f\" --string \"${VENDOR_NAME}=\" --pad 00"
       fi
@@ -248,7 +175,12 @@ function neutraliseVersionProps() {
   for f in $FILES
     do
       echo "javap and remove vendor string lines from $f"
-      javap -v -sysinfo -l -p -c -s -constants "$f" > "$f.javap.tmp"
+      if [[ "$OS" =~ CYGWIN* ]]; then
+        ff=$(cygpath -w "$f")
+      else
+	ff=$f
+      fi
+      javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
       rm "$f"
       grep -v "Last modified\|$VERSION_REPL\|$VENDOR_NAME\|$VENDOR_URL\|$VENDOR_BUG_URL\|$VENDOR_VM_BUG_URL\|Classfile\|SHA-256" "$f.javap.tmp" > "$f.javap"
       rm "$f.javap.tmp"
