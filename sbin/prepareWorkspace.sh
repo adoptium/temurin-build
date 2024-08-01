@@ -51,10 +51,11 @@ copyFromDir() {
 # this is workarounding --strip-components 1 missing on gnu tar
 # it requires  absolute tar-filepath as it changes dir and is hardcoded to one
 # similar approach can be used also for zip in future
-untarGnuAbsPathWithStripComponents1() {
+# warning! this method do not merge if (parts of!) destination exists.
+unpackGnuAbsPathWithStrip1Component() {
   local tmp=$(mktemp -d)
   pushd "$tmp" > /dev/null
-    tar "$@"
+    "$@"
   popd  > /dev/null
   mv "$tmp"/*/* .
   mv "$tmp"/*/.* . || echo "no hidden files in tarball"
@@ -62,18 +63,30 @@ untarGnuAbsPathWithStripComponents1() {
   rmdir "$tmp"
 }
 
+untarGnuAbsPathWithStrip1Component() {
+  unpackGnuAbsPathWithStrip1Component tar -xf "$@"
+}
+
+unzipGnuAbsPathWithStrip1Component() {
+  unpackGnuAbsPathWithStrip1Component unzip "$@"
+}
+
 unpackFromArchive() {
   echo "Extracting OpenJDK source tarball ${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to build the binary"
   # If the tarball contains .git files, they should be ignored later
-  # todo, support also zips?
   pushd "./${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"  | grep "/$" -c) || local topLevelItems=1
-    if [ "$topLevelItems" -eq "1" ] ; then
-      echo "Source tarball contains exactly one directory"
-      untarGnuAbsPathWithStripComponents1 -xf "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
+    if [ "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]: -4}" == ".zip" ] ; then
+        echo "Source zip unpacked as if it contains exactly one directory"
+        unzipGnuAbsPathWithStrip1Component "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
     else
-      echo "Source tarball does not contain a top level directory"
-      tar -xf "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
+      local topLevelItems=$(tar --exclude='*/*' -tf  "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}" | grep "/$" -c) || local topLevelItems=1
+      if [ "$topLevelItems" -eq "1" ] ; then
+        echo "Source tarball contains exactly one directory"
+        untarGnuAbsPathWithStrip1Component "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
+      else
+        echo "Source tarball does not contain a top level directory"
+        tar -xf "${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]}"
+      fi
     fi
     rm -rf "build"
   popd
@@ -843,13 +856,13 @@ applyPatches() {
 createSourceTagFile(){
   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
     local OpenJDK_TopDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    local OpenJDK_SHA=$(git -C "$OpenJDK_TopDir" rev-parse --short HEAD)
+    local OpenJDK_SHA=$(cd "$OpenJDK_TopDir" && git rev-parse --short HEAD)
     if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
       # OpenJ9 list 3 SHA's in their release file: OpenJDK, OpenJ9, and OMR.
       local OpenJ9_TopDir="$OpenJDK_TopDir/openj9"
       local OMR_TopDir="$OpenJDK_TopDir/omr"
-      local OpenJ9_SHA=$(git -C "$OpenJ9_TopDir" rev-parse --short HEAD)
-      local OMR_SHA=$(git -C "$OMR_TopDir" rev-parse --short HEAD)
+      local OpenJ9_SHA=$(cd "$OpenJ9_TopDir" && git rev-parse --short HEAD)
+      local OMR_SHA=$(cd "$OMR_TopDir" && git rev-parse --short HEAD)
       (printf "OpenJDK: %s OpenJ9: %s OMR: %s" "$OpenJDK_SHA" "$OpenJ9_SHA" "$OMR_SHA") > "$OpenJDK_TopDir/.hgtip"
     else # Other variants only list the main repo SHA.
       (printf "OpenJDK: %s" "$OpenJDK_SHA") > "$OpenJDK_TopDir/.hgtip"

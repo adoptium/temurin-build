@@ -132,7 +132,7 @@ configureReproducibleBuildParameter() {
 
       # Ensure reproducible and comparable binary with a unique build user identifier
       addConfigureArg "--with-build-user=" "admin"
-      if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]; then
+      if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}"  == "aix" ] && [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 22 ]; then
          addConfigureArg "--with-extra-cflags=" "-qnotimestamps"
          addConfigureArg "--with-extra-cxxflags=" "-qnotimestamps"
       fi
@@ -190,10 +190,28 @@ getOpenJDKUpdateAndBuildVersion() {
 patchFreetypeWindows() {
   # Allow freetype 2.8.1 to be built for JDK8u with Visual Studio 2017 (see https://github.com/openjdk/jdk8u-dev/pull/3#issuecomment-1087677766).
   # Don't apply the patch for OpenJ9 (OpenJ9 doesn't need the patch and, technically, it should only be applied for version 2.8.1).
-  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" = "${JDK8_CORE_VERSION}" ] && [ "${ARCHITECTURE}" = "x64" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
-    rm "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
-    # Copy the replacement freetype.vcxproj file from the .github directory
-    cp "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.github/workflows/freetype.vcxproj" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
+  if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" = "${JDK8_CORE_VERSION}" ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
+    echo "Checking cloned freetype source version for version 2.8.1, that needs updated builds/windows/vc2010/freetype.vcxproj ..."
+    # Determine cloned freetype version
+    local freetype_version=""
+    # Obtain FreeType version from freetype.h
+    local freetypeInclude="${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/include/freetype/freetype.h"
+    if [[ -f "${freetypeInclude}" ]]; then
+      local ver_major="$(grep "FREETYPE_MAJOR" "${freetypeInclude}" | grep "#define" | tr -s " " | cut -d" " -f3)"
+      local ver_minor="$(grep "FREETYPE_MINOR" "${freetypeInclude}" | grep "#define" | tr -s " " | cut -d" " -f3)"
+      local ver_patch="$(grep "FREETYPE_PATCH" "${freetypeInclude}" | grep "#define" | tr -s " " | cut -d" " -f3)"
+      local freetype_version="${ver_major}.${ver_minor}.${ver_patch}"
+      if [[ "${freetype_version}" == "2.8.1" ]]; then
+        echo "Freetype 2.8.1 found, updating builds/windows/vc2010/freetype.vcxproj ..."
+        rm "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
+        # Copy the replacement freetype.vcxproj file from the .github directory
+        cp "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/.github/workflows/freetype.vcxproj" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype/builds/windows/vc2010/freetype.vcxproj"
+      else
+        echo "Freetype source is version ${freetype_version}, no updated required."
+      fi
+    else
+      echo "No include/freetype/freetype.h found, Freetype source not version 2.8.1, no updated required."
+    fi
   fi
 }
 
@@ -668,9 +686,13 @@ buildTemplatedFile() {
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
     # Check if strace is available
-    if rpm --version && rpm -q strace ; then
-      echo "Strace and rpm is available on system"
-      FULL_MAKE_COMMAND="mkdir ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput \&\& strace -o ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput/outputFile -ff -e trace=open,openat,execve ${FULL_MAKE_COMMAND}"
+    if which strace >/dev/null 2>&1; then
+      echo "Strace is available on system"
+
+      strace_calls="open,openat,execve"
+
+      # trace syscalls
+      FULL_MAKE_COMMAND="mkdir ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput \&\& strace -o ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/straceOutput/outputFile -ff -e trace=${strace_calls} ${FULL_MAKE_COMMAND}"
     else
       echo "Strace is not available on system"
       exit 2
@@ -748,18 +770,17 @@ executeTemplatedFile() {
   fi
 
   if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 19 || "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 17 ]]; then
-    if [ "${BUILD_CONFIG[RELEASE]}" == "true" ]; then
+      # Always get the "actual" buildTimestamp used in making openjdk
       local specFile="./spec.gmk"
       if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
         specFile="build/*/spec.gmk"
       fi
-      # For "release" reproducible builds get openjdk timestamp used
+      # For reproducible builds get openjdk timestamp used in the spec.gmk file
       local buildTimestamp=$(grep SOURCE_DATE_ISO_8601 ${specFile} | tr -s ' ' | cut -d' ' -f4)
       # BusyBox doesn't use T Z iso8601 format
       buildTimestamp="${buildTimestamp//T/ }"
       buildTimestamp="${buildTimestamp//Z/}"
       BUILD_CONFIG[BUILD_TIMESTAMP]="${buildTimestamp}"
-    fi
   fi
 
   # Restore exit behavior
@@ -802,8 +823,8 @@ createOpenJDKFailureLogsArchive() {
     createArchive "${adoptLogArchiveDir}" "${makeFailureLogsName}"
 }
 
-# Setup JAVA env to run "ant task"
-setupAntEnv() {
+# Setup JAVA env to run TemurinGenSbom.java
+setupJavaEnv() {
   local javaHome=""
 
   if [ ${JAVA_HOME+x} ] && [ -d "${JAVA_HOME}" ]; then
@@ -871,8 +892,12 @@ generateSBoM() {
     return
   fi
 
-  local javaHome="$(setupAntEnv)"
+  # exit from local var=$(setupJavaEnv) is not propagated. We have to ensure that the exit propagates, and is fatal for the script
+  # So the declaration is split. In that case the bug does not occur and thus the `exit 2` from setupJavaEnv is correctly propagated
+  local javaHome
+  javaHome="$(setupJavaEnv)"
 
+  echo "build.sh : $(date +%T) : Generating SBoM ..."
   buildCyclonedxLib "${javaHome}"
   # classpath to run java app TemurinGenSBOM
   local classpath="$(getCyclonedxClasspath)"
@@ -953,7 +978,7 @@ generateSBoM() {
 
   # Add Build Docker image SHA1
   local buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
-  # ${BUILD_CONFIG[USE_DOCKER]^} always set to false cannot rely on it.
+  # ${BUILD_CONFIG[CONTAINER_COMMAND]^} always set to false cannot rely on it.
   if [ -n "${buildimagesha}" ] && [ "${buildimagesha}" != "N.A" ]; then
     addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "true"
     addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "Docker image SHA1" "${buildimagesha}"
@@ -1045,9 +1070,21 @@ generateSBoM() {
     fi
     local openjdkSrcDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
-    # strace analysis needs to know the bootJDK and optional DevKit, as these versions will
+    # strace analysis needs to know the bootJDK and optional local DevKit/Toolchain, as these versions will
     # be present in the analysis and not necessarily installed as packages 
     local devkit_path=$(getConfigureArgPath "--with-devkit")
+    local cc_path=$(getCCFromSpecGmk)
+    if [[ -n "${cc_path}" ]]; then
+        # Get toolchain directory name
+        cc_path=$(dirname "$(dirname "${cc_path}")")
+    fi
+    local toolchain_path
+    if [[ -z "${devkit_path}" ]]; then
+        toolchain_path="$cc_path"
+    else
+        toolchain_path="$devkit_path"
+    fi
+
     local bootjdk_path=$(getConfigureArgPath "--with-boot-jdk")
     if [[ -z "${bootjdk_path}" ]]; then
         # No boot jdk specified use environment javaHome
@@ -1062,7 +1099,7 @@ generateSBoM() {
     devkit_path=$(echo ${devkit_path} | sed 's,\./,,' | sed 's,//,/,')
     bootjdk_path=$(echo ${bootjdk_path} | sed 's,\./,,' | sed 's,//,/,')
 
-    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${straceOutputDir}" "${temurinBuildDir}" "${bootjdk_path}" "${classpath}" "${sbomJson}" "${buildOutputDir}" "${openjdkSrcDir}" "${devkit_path}"
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${straceOutputDir}" "${temurinBuildDir}" "${bootjdk_path}" "${classpath}" "${sbomJson}" "${buildOutputDir}" "${openjdkSrcDir}" "${javaHome}" "${toolchain_path}"
   fi
 
   # Print SBOM location
@@ -1204,6 +1241,24 @@ addALSAVersion() {
      fi
 }
 
+# Obtain the toolchain CC compiler path from the build spec.gmk
+getCCFromSpecGmk() {
+   # Get required include file property value by asking CC compiler
+   local specFile
+   if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+     specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
+   else
+     specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
+   fi
+
+   # Get CC from the built build spec.gmk.
+   local CC="$(grep "^CC[ ]*:=" ${specFile} | sed "s/^CC[ ]*:=[ ]*//")"
+   # Remove any "env=xx" from CC, so we have just the compiler path
+   CC=$(echo "$CC" | tr -s " " | sed -E "s/[^ ]*=[^ ]*//g")
+
+   echo "${CC}"
+}
+
 # Obtained the required include file property definition by asking the configured
 # spec.gmk CC compiler with optional SYSROOT
 # $1 - include file
@@ -1218,9 +1273,7 @@ getHeaderPropertyUsingCompiler() {
    fi
 
    # Get CC and SYSROOT_CFLAGS from the built build spec.gmk.
-   local CC="$(grep "^CC[ ]*:=" ${specFile} | sed "s/^CC[ ]*:=[ ]*//")"
-   # Remove env=xx from CC, so we can call from bash
-   CC=$(echo "$CC" | tr -s " " | sed -E "s/[^ ]*=[^ ]*//g")
+   local CC=$(getCCFromSpecGmk)
    local SYSROOT_CFLAGS="$(grep "^SYSROOT_CFLAGS[ ]*:=" ${specFile} | tr -s " " | cut -d" " -f3-)"
 
    local property_value="$(echo "#include <${1}>" | $CC $SYSROOT_CFLAGS -dM -E - 2>&1 | tr -s " " | grep -E "${2}" | cut -d" " -f3 | sed "s/\"//g")"
@@ -1328,7 +1381,7 @@ getGradleJavaHome() {
 
   # Special case arm because for some unknown reason the JDK11_BOOT_DIR that arm downloads is unable to form connection
   # to services.gradle.org
-  if [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ] && [ "${ARCHITECTURE}" != "arm" ]; then
+  if [ ${JDK11_BOOT_DIR+x} ] && [ -d "${JDK11_BOOT_DIR}" ] && [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "arm" ]; then
     gradleJavaHome=${JDK11_BOOT_DIR}
   fi
 
@@ -2098,7 +2151,7 @@ createTargetDir() {
 
 fixJavaHomeUnderDocker() {
   # If we are inside docker we cannot trust the JDK_BOOT_DIR that was detected on the host system
-  if [[ "${BUILD_CONFIG[USE_DOCKER]}" == "true" ]]; then
+  if [[ ! "${BUILD_CONFIG[CONTAINER_COMMAND]}" == "false" ]]; then
     # clear BUILD_CONFIG[JDK_BOOT_DIR] and re set it
     BUILD_CONFIG[JDK_BOOT_DIR]=""
     setBootJdk
@@ -2172,7 +2225,7 @@ addJVMVariant() {
 }
 
 addBuildSHA() { # git SHA of the build repository i.e. openjdk-build
-  local buildSHA=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" rev-parse HEAD 2>/dev/null)
+  local buildSHA=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}" && git rev-parse HEAD 2>/dev/null)
   if [[ $buildSHA ]]; then
     # shellcheck disable=SC2086
     echo -e BUILD_SOURCE=\"git:$buildSHA\" >>release
@@ -2182,7 +2235,7 @@ addBuildSHA() { # git SHA of the build repository i.e. openjdk-build
 }
 
 addBuildSourceRepo() { # name of git repo for which BUILD_SOURCE sha is from
-  local buildSourceRepo=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" config --get remote.origin.url 2>/dev/null)
+  local buildSourceRepo=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}" && git config --get remote.origin.url 2>/dev/null)
   if [[ $buildSourceRepo ]]; then
     # shellcheck disable=SC2086
     echo -e BUILD_SOURCE_REPO=\"$buildSourceRepo\" >>release
@@ -2192,7 +2245,7 @@ addBuildSourceRepo() { # name of git repo for which BUILD_SOURCE sha is from
 }
 
 addOpenJDKSourceRepo() { # name of git repo for which SOURCE sha is from
-  local openjdkSourceRepo=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" config --get remote.origin.url 2>/dev/null)
+  local openjdkSourceRepo=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git config --get remote.origin.url 2>/dev/null)
   if [[ $openjdkSourceRepo ]]; then
     # shellcheck disable=SC2086
     echo -e SOURCE_REPO=\"$openjdkSourceRepo\" >>release
@@ -2222,7 +2275,7 @@ addJ9Tag() {
   # This code makes sure that a version number is always present in the release file i.e. openj9-0.21.0
   local j9Location="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/openj9"
   # Pull the tag associated with the J9 commit being used
-  J9_TAG=$(git -C $j9Location describe --abbrev=0)
+  J9_TAG=$(cd "$j9Location" && git describe --abbrev=0)
   # shellcheck disable=SC2086
   if [ ${BUILD_CONFIG[RELEASE]} = false ]; then
     echo -e OPENJ9_TAG=\"$J9_TAG\" >> release
@@ -2305,9 +2358,9 @@ addVendorToJson(){
 }
 
 addSourceToJson(){ # Pulls the origin repo, or uses 'openjdk-build' in rare cases of failure
-  local repoName=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" config --get remote.origin.url 2>/dev/null)
+  local repoName=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}" && git config --get remote.origin.url 2>/dev/null)
   local repoNameStr="${repoName:-"ErrorUnknown"}"
-  local buildSHA=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}" rev-parse HEAD 2>/dev/null)
+  local buildSHA=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}" && git rev-parse HEAD 2>/dev/null)
   if [[ $buildSHA ]]; then
     echo -n "${repoNameStr%%.git}/commit/$buildSHA" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
   else
@@ -2316,8 +2369,8 @@ addSourceToJson(){ # Pulls the origin repo, or uses 'openjdk-build' in rare case
 }
 
 addOpenJDKSourceToJson() { # name of git repo for which SOURCE sha is from
-  local openjdkSourceRepo=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" config --get remote.origin.url 2>/dev/null)
-  local openjdkSHA=$(git -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" rev-parse HEAD 2>/dev/null)
+  local openjdkSourceRepo=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git config --get remote.origin.url 2>/dev/null)
+  local openjdkSHA=$(cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git rev-parse HEAD 2>/dev/null)
   if [[ $openjdkSHA ]]; then
     echo -n "${openjdkSourceRepo%%.git}/commit/${openjdkSHA}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
   else

@@ -15,17 +15,19 @@
 # shellcheck disable=SC2155
 # shellcheck disable=SC2153
 function setOpenJdkVersion() {
-  local forest_name=$1
+  # forest_name represents the JDK version with "u" suffix for an "update version"
+  #
+  # It no longer relates directly to the openjdk repository name, as the jdk(head) repository
+  # now has version branches for jdk-23+
+  #
+  # Format: jdkNN[u]
+  #
+  local forest_name="${1}"
 
-  # The argument passed here have actually very strict format of jdk8, jdk8u..., jdk
-  # the build may fail later if this is not honoured.
-  # If your repository has a different name, you can use --version or build from dir/snapshot
-  local forest_name_check1=0
-  local forest_name_check2=0
-  # This two returns condition is there to make grep on solaris happy. -e, -q and  \( and \| do not work on that platform
-  echo "$forest_name" | grep "^jdk[0-9]\\{1,3\\}[u]\\{0,1\\}$" >/dev/null || forest_name_check1=$?
-  echo "$forest_name" | grep "^jdk$" >/dev/null || forest_name_check2=$?
-  if [ ${forest_name_check1} -ne 0 ] && [ ${forest_name_check2} -ne 0 ]; then
+  echo "Setting version based on forest_name=${forest_name}"
+  forest_name_check=0
+  checkOpenJdkVersion "${forest_name}" || forest_name_check=$?
+  if [ ${forest_name_check} -ne 0 ] ; then
     echo "The mandatory repo argument has a very strict format 'jdk[0-9]{1,3}[u]{0,1}' or just plain 'jdk' for tip. '$forest_name' does not match."
     echo "This can be worked around by using '--version jdkXYu'. If set (and matching) then the main argument can have any value."
     exit 1
@@ -81,6 +83,62 @@ function setOpenJdkVersion() {
   # feature number e.g. 11
   BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]=${featureNumber}
 
+  # Set default branch based on JDK forest and feature number
+  setBranch
+}
+
+function checkOpenJdkVersion() {
+  local forest_name="${1}"
+  # The argument passed here has a very strict format of jdk8, jdk8u..., jdk
+  # the build may fail later if this is not honoured.
+  # If your repository has a different name, you can use --version or build from a dir/snapshot
+  local forest_name_check1=0
+  local forest_name_check2=0
+  # This two returns condition is there to make grep on solaris happy. -e, -q and  \( and \| do not work on that platform
+  echo "$forest_name" | grep "^jdk[0-9]\\{1,3\\}[u]\\{0,1\\}$" >/dev/null || forest_name_check1=$?
+  echo "$forest_name" | grep "^jdk$" >/dev/null || forest_name_check2=$?
+  if [ ${forest_name_check1} -ne 0 ] && [ ${forest_name_check2} -ne 0 ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+# Set the default BUILD_CONFIG[BRANCH] for the jdk version being built
+# For "hotspot" and "Temurin" builds of non-"u" jdk-23+ the branch is dev_<version>
+function setBranch() {
+
+  # Which repo branch to build, e.g. dev by default for temurin, "openj9" for openj9
+  local branch="master"
+  local adoptium_mirror_branch="dev"
+
+  # non-u (and non-tip) jdk-23+ hotspot and adoptium version source is within a "version" branch in the "jdk" repository
+  if [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} != *u ]] && [[ ${BUILD_CONFIG[OPENJDK_FOREST_NAME]} != "jdk" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 23 ]]; then
+    branch="jdk${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
+    adoptium_mirror_branch="dev_jdk${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
+  fi
+
+  if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]; then
+    branch="${adoptium_mirror_branch}"
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
+    branch="openj9";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_DRAGONWELL}" ]; then
+    branch="master";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_FAST_STARTUP}" ]; then
+    branch="master";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_CORRETTO}" ]; then
+    branch="develop";
+  elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
+    if [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "riscv64" ] ; then
+      branch="risc-v"
+    else
+      branch="master"
+    fi
+  fi
+
+  BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]:-$branch}
+
+  echo "Default branch set to BUILD_CONFIG[BRANCH]=${BUILD_CONFIG[BRANCH]}"
 }
 
 function crossPlatformRealPath() {
@@ -185,7 +243,7 @@ createOpenJDKArchive()
 
 function setBootJdk() {
   # Stops setting the bootJDK on the host machine when running docker-build
-  if [ "${BUILD_CONFIG[DOCKER]}" != "docker" ] || { [ "${BUILD_CONFIG[DOCKER]}" == "docker" ] && [ "${BUILD_CONFIG[DOCKER_FILE_PATH]}" != "" ]; } ; then
+  if [ "${BUILD_CONFIG[CONTAINER_AS_ROOT]}" == "false" ] || { [ "${BUILD_CONFIG[CONTAINER_AS_ROOT]}" != "false" ] && [ "${BUILD_CONFIG[DOCKER_FILE_PATH]}" != "" ]; } ; then
     if [ -z "${BUILD_CONFIG[JDK_BOOT_DIR]}" ] ; then
       echo "Searching for JDK_BOOT_DIR"
 

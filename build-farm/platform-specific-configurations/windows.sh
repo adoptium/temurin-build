@@ -136,7 +136,7 @@ then
       export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
     fi
 
-    CUDA_VERSION=9.0
+    CUDA_VERSION=9.1
     CUDA_HOME_FULL="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v$CUDA_VERSION"
     # use cygpath to map to 'short' names (without spaces)
     CUDA_HOME=$(cygpath -ms "$CUDA_HOME_FULL")

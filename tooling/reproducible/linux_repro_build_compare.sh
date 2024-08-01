@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # ********************************************************************************
 # Copyright (c) 2024 Contributors to the Eclipse Foundation
 #
@@ -25,7 +25,7 @@ ANT_SHA=9028e2fc64491cca0f991acc09b06ee7fe644afe41d1d6caf72702ca25c4613c
 ANT_CONTRIB_VERSION=1.0b3
 ANT_CONTRIB_SHA=4d93e07ae6479049bb28071b069b7107322adaee5b70016674a0bffd4aac47f9
 isJdkDir=false
-
+USING_DEVKIT="false"
 installPrereqs() {
   if test -r /etc/redhat-release; then
     yum install -y gcc gcc-c++ make autoconf unzip zip alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
@@ -75,28 +75,50 @@ downloadAnt() {
   fi
 }
 
-setEnvironment() {
+setNonDevkitGccEnvironment() {
   export CC="${LOCALGCCDIR}/bin/gcc-${GCCVERSION}"
   export CXX="${LOCALGCCDIR}/bin/g++-${GCCVERSION}"
   export LD_LIBRARY_PATH="${LOCALGCCDIR}/lib64"
-  # /usr/local/bin required to pick up the new autoconf if required
+}
+
+setAntEnvironment() {
   export PATH="${LOCALGCCDIR}/bin:/usr/local/bin:/usr/bin:$PATH:/usr/local/apache-ant-${ANT_VERSION}/bin"
-  ls -ld "$CC" "$CXX" "/usr/lib/jvm/jdk-${BOOTJDK_VERSION}/bin/javac" || exit 1
 }
 
 cleanBuildInfo() {
-  # shellcheck disable=SC3043
   local DIR="$1"
   # BUILD_INFO name of OS level build was built on will likely differ
   sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
 }
 
+setTemurinBuildArgs() {
+  local buildArgs="$1"
+  local bootJdk="$2"
+  local timeStamp="$3"
+  local ignoreOptions=("--enable-sbom-strace ")
+  for ignoreOption in "${ignoreOptions[@]}"; do
+    buildArgs="${buildArgs/${ignoreOption}/}"
+  done
+  # set --build-reproducible-date if not yet
+  if [[ "${buildArgs}" != *"--build-reproducible-date"* ]]; then
+    buildArgs="--build-reproducible-date \"${timeStamp}\" ${buildArgs}" 
+  fi
+  #reset --jdk-boot-dir
+  # shellcheck disable=SC2001
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir /usr/lib/jvm/jdk-${bootJdk}|")"
+  echo "${buildArgs}"
+}
+
 downloadTooling() {
+  local using_DEVKIT=$1
+
   if [ ! -r "/usr/lib/jvm/jdk-${BOOTJDK_VERSION}/bin/javac" ]; then
     echo "Retrieving boot JDK $BOOTJDK_VERSION" && mkdir -p /usr/lib/jvm && curl -L "https://api.adoptium.net/v3/binary/version/jdk-${BOOTJDK_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" | (cd /usr/lib/jvm && tar xpzf -)
   fi
-  if [ ! -r "${LOCALGCCDIR}/bin/g++-${GCCVERSION}" ]; then
-    echo "Retrieving gcc $GCCVERSION" && curl "https://ci.adoptium.net/userContent/gcc/gcc$(echo "$GCCVERSION" | tr -d .).$(uname -m).tar.xz" | (cd /usr/local && tar xJpf -) || exit 1
+  if [[ "${using_DEVKIT}" == "false" ]]; then
+    if [ ! -r "${LOCALGCCDIR}/bin/g++-${GCCVERSION}" ]; then
+      echo "Retrieving gcc $GCCVERSION" && curl "https://ci.adoptium.net/userContent/gcc/gcc$(echo "$GCCVERSION" | tr -d .).$(uname -m).tar.xz" | (cd /usr/local && tar xJpf -) || exit 1
+    fi
   fi
   if [ ! -r temurin-build ]; then
     git clone https://github.com/adoptium/temurin-build || exit 1
@@ -113,7 +135,6 @@ checkAllVariablesSet() {
 installPrereqs
 downloadAnt
 
-# shellcheck disable=SC3010
 if [[ $SBOM_PARAM =~ ^https?:// ]]; then
   echo "Retrieving and parsing SBOM from $SBOM_PARAM"
   curl -LO "$SBOM_PARAM"
@@ -126,23 +147,41 @@ BOOTJDK_VERSION=$(jq -r '.metadata.tools[] | select(.name == "BOOTJDK") | .versi
 GCCVERSION=$(jq -r '.metadata.tools[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
 LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
 TEMURIN_BUILD_SHA=$(jq -r '.components[0] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
-TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM" | cut -d\" -f4 | sed -e "s/--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt/'--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt'/" -e "s/ --disable-warnings-as-errors --enable-dtrace/ '--disable-warnings-as-errors --enable-dtrace'/" -e 's/\\n//g' -e "s,--jdk-boot-dir [^ ]*,--jdk-boot-dir /usr/lib/jvm/jdk-$BOOTJDK_VERSION,g")
 TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
+BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
+TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
+
+# Using old method to escape configure-args in SBOM (build PR 3835)", can be removed later.
+if echo "$TEMURIN_BUILD_ARGS" | grep -v configure-args\ \\\"; then
+  TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | \
+        cut -d\" -f4 | \
+        sed -e "s/--with-jobs=[0-9]*//g" \
+         -e "s/--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt/'--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt'/" \
+         -e "s/--disable-warnings-as-errors --enable-dtrace *--with-version-opt=ea/'--disable-warnings-as-errors --enable-dtrace --with-version-opt=ea'/" \
+         -e "s/ --disable-warnings-as-errors --enable-dtrace/ '--disable-warnings-as-errors --enable-dtrace'/" \
+         -e 's/\\n//g')
+fi
 
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
 if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
+if [[ "$TEMURIN_BUILD_ARGS" =~ .*"--use-adoptium-devkit".* ]]; then
+  USING_DEVKIT="true"
+fi
 
 checkAllVariablesSet
-
-downloadTooling
-setEnvironment
+downloadTooling "$USING_DEVKIT"
+if [[ "${USING_DEVKIT}" == "false" ]]; then
+  setNonDevkitGccEnvironment
+fi
+setAntEnvironment
+echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
+TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION" "$BUILDSTAMP")
 
 if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
     JDK_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
 fi
 
-# shellcheck disable=SC3010
 if [[ $JDK_PARAM =~ ^https?:// ]]; then
   echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
 elif [[ $JDK_PARAM =~ tar.gz ]]; then
@@ -158,20 +197,23 @@ if [ "${isJdkDir}" = true ]; then
   comparedDir=$JDK_PARAM
 fi
 
+echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
 echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
+
 echo Comparing ...
 mkdir compare.$$
 tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare.$$
 cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
+cp "$SBOM" SBOM.json
 
 cleanBuildInfo "${comparedDir}"
 cleanBuildInfo "compare.$$/jdk-$TEMURIN_VERSION"
-
 rc=0
+
 # shellcheck disable=SC2069
 diff -r "${comparedDir}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.diff" || rc=$?
 
-if [ $rc = 0 ]; then
+if [ $rc -eq 0 ]; then
   echo "Compare identical !"
 else
   cat "reprotest.diff"

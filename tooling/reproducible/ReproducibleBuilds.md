@@ -75,7 +75,8 @@ before the comparable_patch.sh can be run.
 
 - [Windows only] For WindowsUpdateVsVersionInfo.exe : export PATH=<temurin-build>/tooling/src/c:$PATH
 - [Windows only] For dumpbin.exe MSVC tool : export PATH=/cygdrive/c/progra\~1/micros\~2/2022/Community/VC/Tools/MSVC/14.37.32822/bin/Hostx64/x64:$PATH
-- For BinRepl : export CLASSPATH=<temurin-build>/tooling/src/java:$CLASSPATH
+- [Windows only] For signtool.exe MSVS tool : export PATH=/cygdrive/c/progra\~2/wi3cf2\~1/10/bin/10.0.22621.0/x64:$PATH
+- For BinRepl.class : export CLASSPATH=<temurin-build>/tooling/src/java:$CLASSPATH
 - A JDK for running BinRepl java : export PATH=<jdk>/bin:$PATH
 
 #### Running comparable_patch.sh:
