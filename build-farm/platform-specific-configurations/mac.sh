@@ -52,10 +52,10 @@ else
     # JDK17 requires metal (included in full xcode) as does JDK11 on aarch64
     # JDK11 on x64 is matched for consistency
     XCODE_SWITCH_PATH="/Applications/Xcode.app"
-    # JDK11 and 17 on Mac (x86 and aarch) has excessive warnings.
+    # JDK11 (x86 and aarch) has excessive warnings.
     # This is due to a harfbuzz fix which is pending backport.
     # Suppressing the warnings for now to aid triage.
-    if [[ "$JAVA_FEATURE_VERSION" -le 17 ]]; then
+    if [[ "$JAVA_FEATURE_VERSION" -le 11 ]]; then
       export cxx_flags_bucket="${cxx_flags_bucket} -Wno-deprecated-builtins -Wno-deprecated-declarations -Wno-deprecated-non-prototype"
       export c_flags_bucket="${c_flags_bucket} -Wno-deprecated-builtins -Wno-deprecated-declarations -Wno-deprecated-non-prototype"
     fi
