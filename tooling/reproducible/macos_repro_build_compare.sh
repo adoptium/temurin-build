@@ -573,28 +573,7 @@ Compare_JDK() {
   mkdir "$WORK_DIR/compare"
   cp $WORK_DIR/src_jdk_dist.tar.gz $WORK_DIR/compare
   cp $WORK_DIR/reproJDK.tar.gz $WORK_DIR/compare
-  
 
-  # Check The Comparison Scripts Are Present And Copy To The Working Directory
-
-  if [ -f ./repro_common.sh ]; then
-    cp ./repro_common.sh $WORK_DIR/compare/repro_common.sh
-  else
-    wget -O "$WORK_DIR/compare/repro_common.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_common.sh"
-  fi
-  if [ -f ./repro_compare.sh ]; then
-    cp ./repro_compare.sh $WORK_DIR/compare/repro_compare.sh
-  else
-    wget -O "$WORK_DIR/compare/repro_compare.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_compare.sh"
-  fi
-  if [ -f ./repro_process.sh ]; then
-    cp ./repro_process.sh $WORK_DIR/compare/repro_process.sh
-  else
-    wget -O "$WORK_DIR/compare/repro_process.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_process.sh"
-  fi
-  
-  # Set Permissions
-  chmod +x "$WORK_DIR/compare/"*sh
   cd "$WORK_DIR/compare"
 
   # Unzip And Rename The Source JDK
