@@ -113,21 +113,17 @@ then
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="$PATH:/c/cygwin64/bin"
       export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
-      TOOLCHAIN_VERSION="2017"
     elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
     then
-      TOOLCHAIN_VERSION="2013"
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
     elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
     elif [ "$JAVA_FEATURE_VERSION" -lt 19 ]
     then
-      TOOLCHAIN_VERSION="2019"
       export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
     elif [ "$JAVA_FEATURE_VERSION" -ge 19 ]
     then
-      TOOLCHAIN_VERSION="2022"
       export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
     fi
 
