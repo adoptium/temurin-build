@@ -293,6 +293,11 @@ jobs:
          --remove Microsoft.VisualStudio.Component.Windows10SDK.22621
          --quiet'
 
+     - name: Uninstall OS image VS2022
+       run: >
+         Start-Process -FilePath 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" -Wait -NoNewWindow -ArgumentList
+         'uninstall --quiet --wait --norestart'
+
      - name: Download Visual Studio 2022
        run: |
          curl -L "$env:VS2022_URL" -o "$HOME/vs2022.exe"
