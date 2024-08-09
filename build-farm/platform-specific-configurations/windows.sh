@@ -24,7 +24,7 @@ export ALLOW_DOWNLOADS=true
 export LANG=C
 export OPENJ9_NASM_VERSION=2.13.03
 
-TOOLCHAIN_VERSION=""
+TOOLCHAIN_VERSION="2022"
 
 if [ "$ARCHITECTURE" == "aarch64" ]; then
   # Windows aarch64 cross compiles requires same version boot jdk
@@ -72,7 +72,6 @@ then
       # https://github.com/adoptium/temurin-build/issues/243
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="/c/cygwin64/bin:/usr/bin:$PATH"
-      TOOLCHAIN_VERSION="2017"
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
@@ -86,20 +85,16 @@ then
   else
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
-      TOOLCHAIN_VERSION="2013"
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export PATH="/cygdrive/c/openjdk/make-3.82/:$PATH"
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then 
-      export TOOLCHAIN_VERSION="2017"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     elif [ "$JAVA_FEATURE_VERSION" -gt 11 ] && [ "$JAVA_FEATURE_VERSION" -lt 21 ]
     then
-      TOOLCHAIN_VERSION="2019"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     elif [ "$JAVA_FEATURE_VERSION" -ge 21 ]
     then
-      TOOLCHAIN_VERSION="2022"
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     fi
   fi
@@ -118,21 +113,17 @@ then
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="$PATH:/c/cygwin64/bin"
       export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
-      TOOLCHAIN_VERSION="2017"
     elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
     then
-      TOOLCHAIN_VERSION="2013"
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
     elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
     elif [ "$JAVA_FEATURE_VERSION" -lt 19 ]
     then
-      TOOLCHAIN_VERSION="2019"
       export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
     elif [ "$JAVA_FEATURE_VERSION" -ge 19 ]
     then
-      TOOLCHAIN_VERSION="2022"
       export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
     fi
 
@@ -159,18 +150,11 @@ then
     # NASM required for OpenSSL support as per #604
     export PATH="/cygdrive/c/Program Files/LLVM/bin:/usr/bin:/cygdrive/c/openjdk/nasm-$OPENJ9_NASM_VERSION:$PATH"
   else
-    TOOLCHAIN_VERSION="2017"
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
       export BUILD_ARGS="${BUILD_ARGS} --freetype-version 39ce3ac499d4cd7371031a062f410953c8ecce29" # 2.8.1
       export PATH="/cygdrive/c/openjdk/make-3.82/:$PATH"
-    elif [ "$JAVA_FEATURE_VERSION" -ge 11 ] && [ "$JAVA_FEATURE_VERSION" -lt 21 ]
-    then
-      TOOLCHAIN_VERSION="2019"
-    elif [ "$JAVA_FEATURE_VERSION" -ge 21 ]
-    then
-      TOOLCHAIN_VERSION="2022"
     fi
   fi
 
