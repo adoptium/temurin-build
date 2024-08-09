@@ -2421,7 +2421,10 @@ configureWorkspace
 echo "build.sh : $(date +%T) : Initiating build ..."
 getOpenJDKUpdateAndBuildVersion
 if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-  patchFreetypeWindows
+  # Not required for VS2022 and later which we are defaulting to
+  if [[ "${CONFIGURE_ARGS}" =~ "--with-toolchain-version=201" ]]; then
+    patchFreetypeWindows
+  fi
 fi
 configureCommandParameters
 buildTemplatedFile
