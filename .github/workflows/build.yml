@@ -323,6 +323,18 @@ jobs:
                  --add Microsoft.VisualStudio.Workload.NativeDesktop
                  --includeRecommended --includeOptional --quiet --norestart'
 
+     - name: DEBUG
+       shell: bash
+       run: ls -l '/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2022'
+
+     - name: DEBUG2
+       shell: bash
+       run: ls -l '/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools'
+
+     - name: DEBUG3
+       shell: bash
+       run: ls -l '/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/../../BuildTools/vc/auxiliary/build/vcvarsx86_amd64.bat'
+
      - name: Install Git
        run: |
          Invoke-WebRequest 'https://github.com/git-for-windows/git/releases/download/v2.14.3.windows.1/Git-2.14.3-64-bit.exe' -OutFile 'C:\temp\git.exe'
