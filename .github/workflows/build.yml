@@ -323,6 +323,7 @@ jobs:
                  --add Microsoft.VisualStudio.Workload.NativeDesktop
                  --includeRecommended --includeOptional --quiet --norestart'
      - name: DEBUG
+       shell: bash
        run: >
          ls -l $(cygpath "c:\Program Files (x86)\Microsoft Visual Studio\2022")
 
