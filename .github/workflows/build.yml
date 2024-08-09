@@ -293,10 +293,10 @@ jobs:
          --remove Microsoft.VisualStudio.Component.Windows10SDK.22621
          --quiet'
 
-     - name: Uninstall OS image VS2022
+     - name: Uninstall github runner OS image VS2022 Enterprise
        run: >
          Start-Process -FilePath 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe' -Wait -NoNewWindow -ArgumentList
-         'uninstall --quiet --norestart --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise"'
+         'uninstall --quiet --norestart --productId Microsoft.VisualStudio.Product.Enterprise --channelId VisualStudio.17.Release'
 
      - name: Download Visual Studio 2022
        run: |
