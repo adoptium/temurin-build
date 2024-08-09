@@ -296,7 +296,7 @@ jobs:
      - name: Uninstall OS image VS2022
        run: >
          Start-Process -FilePath 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe' -Wait -NoNewWindow -ArgumentList
-         'uninstall --quiet --wait --norestart'
+         'uninstall --quiet --norestart'
 
      - name: Download Visual Studio 2022
        run: |
