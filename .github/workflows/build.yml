@@ -319,7 +319,8 @@ jobs:
      - name: Install Visual Studio 2022
        run: >
          Start-Process -FilePath "$HOME\vs2022.exe" -Wait -NoNewWindow -ArgumentList
-         '--wait --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
+         '--wait --productId Microsoft.VisualStudio.Product.BuildTools --channelId VisualStudio.17.Release
+                 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
                  --add Microsoft.VisualStudio.Workload.NativeDesktop
                  --includeRecommended --includeOptional --quiet --norestart'
 
