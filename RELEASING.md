@@ -308,7 +308,6 @@ Once all supported platform binaries have been released it's time to publish AQA
 - Collect AQA test results, run jenkins job [TAP_Collection](https://ci.adoptium.net/view/Test_grinder/job/TAP_Collection/)
 - Publish the results, run the restricted access [release tool job](https://ci.adoptopenjdk.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) by setting  UPLOAD_TESTRESULTS_ONLY, ARTIFACTS_TO_COPY=**/*.tar.gz and UPSTREAM_JOB_NAME=TAP_Collection
 
-
 4. Publish packages for different OS
 
   4.1. **[Mac only]** Once the binaries are available on the website you need to update the Homebrew casks. There are 4 casks in total
