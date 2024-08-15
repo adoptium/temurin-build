@@ -28,14 +28,9 @@ isJdkDir=false
 USING_DEVKIT="false"
 installPrereqs() {
   if test -r /etc/redhat-release; then
-    if [ "$(uname -m)" == "x86_64" ]; then
-      echo "Running on x64 architecture";
-      sed -i -e 's!#baseurl=http://mirror.centos.org/centos/\$releasever!baseurl=https://vault.centos.org/7.9.2009/!g' /etc/yum.repos.d/CentOS-Base.repo; \
-    else
-      echo "Running on non-x64 architecture";
-      sed -i 's|#baseurl=http://mirror.centos.org/altarch/\$releasever/|baseurl=http://vault.centos.org/altarch/7.9.2009/|' /etc/yum.repos.d/CentOS-Base.repo; \
-    fi
-
+    #Replace mirrorlist to vault as centos7 reached EOL.
+    sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Base.repo
+    sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Base.repo
     yum install -y gcc gcc-c++ make autoconf unzip zip alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
     yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel epel-release # Not included above ...
     yum install -y git bzip2 xz openssl pigz which jq # pigz/which not strictly needed but help in final compression
