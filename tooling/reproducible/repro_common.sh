@@ -327,14 +327,18 @@ function processModuleInfo() {
   fi
 }
 
-# Remove windowns generate classes jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa 
+# Remove non-relevant files
 function removeGeneratedClasses() {
   local JDK_DIR="$1"
   local OS="$2"
 
-  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
-    rm -rf "$JDK_DIR/bin/server/classes.jsa"
-    rm -rf "$JDK_DIR/bin/server/classes_nocoops.jsa"
+  rm -rf "$JDK_DIR/bin/server/classes.jsa"
+  rm -rf "$JDK_DIR/bin/server/classes_nocoops.jsa"
+  rm -rf "$JDK_DIR/release"
+  rm -rf "$JDK_DIR/NOTICE"  
+
+  if [[ "$OS" =~ Linux ]]; then
+    find "$JDK_DIR/" -type f -name "*.debuginfo" -delete    
   fi
 }
 
