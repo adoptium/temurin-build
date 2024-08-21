@@ -26,6 +26,7 @@ ANT_CONTRIB_VERSION=1.0b3
 ANT_CONTRIB_SHA=4d93e07ae6479049bb28071b069b7107322adaee5b70016674a0bffd4aac47f9
 isJdkDir=false
 USING_DEVKIT="false"
+ScriptPath=$(dirname "$(realpath "$0")")
 installPrereqs() {
   if test -r /etc/redhat-release; then
     # Replace mirrorlist to vault as centos7 reached EOL.
@@ -86,12 +87,6 @@ setNonDevkitGccEnvironment() {
 
 setAntEnvironment() {
   export PATH="${LOCALGCCDIR}/bin:/usr/local/bin:/usr/bin:$PATH:/usr/local/apache-ant-${ANT_VERSION}/bin"
-}
-
-cleanBuildInfo() {
-  local DIR="$1"
-  # BUILD_INFO name of OS level build was built on will likely differ
-  sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
 }
 
 setTemurinBuildArgs() {
@@ -204,22 +199,20 @@ echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
 echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
 
 echo Comparing ...
-mkdir compare.$$
-tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare.$$
+mkdir compare
+tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare
 cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
 cp "$SBOM" SBOM.json
 
-cleanBuildInfo "${comparedDir}"
-cleanBuildInfo "compare.$$/jdk-$TEMURIN_VERSION"
 rc=0
 
-# shellcheck disable=SC2069
-diff -r "${comparedDir}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.diff" || rc=$?
+echo "./repro_compare.sh temurin ${comparedDir}/ temurin compare/ Linux 2>&1" | sh &
+wait
+rc=$?
 
 if [ $rc -eq 0 ]; then
   echo "Compare identical !"
 else
-  cat "reprotest.diff"
   echo "Differences found..., logged in: reprotest.diff"
 fi
 
