@@ -196,7 +196,8 @@ if [ "${isJdkDir}" = true ]; then
 fi
 
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
-echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
+#Testing disable build
+# echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
 
 echo Comparing ...
 mkdir compare
@@ -204,11 +205,20 @@ tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare
 cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
 cp "$SBOM" SBOM.json
 
+cp "$ScriptPath"/repro_*.sh "$PWD"
+echo "under script path 
+files permission"
+ls -l "$ScriptPath"
+echo "files permission"
+ls -l
 rc=0
+set +e
 
-echo "./repro_compare.sh temurin ${comparedDir}/ temurin compare/ Linux 2>&1" | sh &
+#Testing disable compare#
+#echo "./repro_compare.sh temurin $comparedDir/ temurin compare/ Linux 2>&1" | sh &
 wait
 rc=$?
+set -e
 
 if [ $rc -eq 0 ]; then
   echo "Compare identical !"

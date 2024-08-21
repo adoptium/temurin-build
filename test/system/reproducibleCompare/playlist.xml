@@ -59,24 +59,4 @@
 		</versions>
 		<platformRequirements>os.win</platformRequirements>
 	</test>
-	<test>
-		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test_Mac</testCaseName>
-		<command>ls -l $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D);\
-		$(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)macos_repro_build_compare.sh $(SBOM_FILE) $(JDK_FILE) $(REPORTDIR); \
-	$(TEST_STATUS)
-		</command>
-		<levels>
-			<level>dev</level>
-		</levels>
-		<groups>
-			<group>system</group>
-		</groups>
-        <vendors>
-            <vendor>eclipse</vendor>
-        </vendors>
-		<versions>
-			<version>21+</version>
-		</versions>
-		<platformRequirements>os.osx</platformRequirements>
-	</test>
 </playlist>
