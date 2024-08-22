@@ -70,7 +70,7 @@ else
     if [ "${ARCHITECTURE}" == "x64" ]; then
       # We can only target 10.9 on intel macs
       export cxx_flags_bucket="${cxx_flags_bucket} -mmacosx-version-min=10.9"
-    elif [ "${ARCHITECTURE}" == "aarch64" ]; then
+    elif [[ "${MACHINEARCHITECTURE}" == "x64" ]] && [[ "${ARCHITECTURE}" == "aarch64" ]]; then
       export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=aarch64-apple-darwin"
     fi
   fi
