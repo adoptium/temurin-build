@@ -335,11 +335,7 @@ function removeGeneratedClasses() {
   rm -rf "$JDK_DIR/bin/server/classes.jsa"
   rm -rf "$JDK_DIR/bin/server/classes_nocoops.jsa"
   rm -rf "$JDK_DIR/release"
-  rm -rf "$JDK_DIR/NOTICE"  
-
-  if [[ "$OS" =~ Linux ]]; then
-    find "$JDK_DIR/" -type f -name "*.debuginfo" -delete    
-  fi
+  rm -rf "$JDK_DIR/NOTICE"
 }
 
 # Remove all Signatures
