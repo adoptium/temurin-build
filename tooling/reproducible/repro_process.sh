@@ -23,7 +23,7 @@ OS="$2"
 
 expandJDK "$JDK_DIR" "$OS"
 
-removeGeneratedClasses "$JDK_DIR"
+removeExcludedFiles "$JDK_DIR"
 if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
 
   # Remove existing signature
@@ -39,6 +39,6 @@ fi
 patchManifests "${JDK_DIR}"
 
 echo "***********"
-echo "SUCCESS :-)"
+echo " Preprocess ${JDK_DIR} SUCCESS :-)"
 echo "***********"
 

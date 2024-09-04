@@ -188,7 +188,7 @@ elif [[ $JDK_PARAM =~ tar.gz ]]; then
   tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
 else
   #Local jdk dir
-  cp -R ${JDK_PARAM}/* ${sourceJDK}
+  cp -R "${JDK_PARAM}"/* "${sourceJDK}"
 fi
 
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
@@ -204,9 +204,7 @@ cp "$ScriptPath"/repro_*.sh "$PWD"
 chmod +x "$PWD"/repro_*.sh
 rc=0
 set +e
-echo "./repro_compare.sh temurin $sourceJDK temurin tarJDK Linux 2>&1" | sh &
-wait
-rc=$?
+./repro_compare.sh temurin $sourceJDK temurin tarJDK/jdk-$TEMURIN_VERSION Linux 2>&1 || rc=$?
 set -e
 
 if [ $rc -eq 0 ]; then
