@@ -204,7 +204,7 @@ cp "$ScriptPath"/repro_*.sh "$PWD"
 chmod +x "$PWD"/repro_*.sh
 rc=0
 set +e
-./repro_compare.sh temurin $sourceJDK temurin tarJDK/jdk-$TEMURIN_VERSION Linux 2>&1 || rc=$?
+./repro_compare.sh temurin "$sourceJDK" temurin tarJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
 set -e
 
 if [ $rc -eq 0 ]; then
