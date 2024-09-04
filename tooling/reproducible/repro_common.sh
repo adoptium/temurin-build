@@ -330,12 +330,9 @@ function processModuleInfo() {
 # Remove non-relevant files
 function removeGeneratedClasses() {
   local JDK_DIR="$1"
-  local OS="$2"
 
   rm -rf "$JDK_DIR/bin/server/classes.jsa"
   rm -rf "$JDK_DIR/bin/server/classes_nocoops.jsa"
-  rm -rf "$JDK_DIR/release"
-  rm -rf "$JDK_DIR/NOTICE"
 }
 
 # Remove all Signatures
@@ -424,6 +421,36 @@ function cleanTemurinFiles() {
   echo "Removing Temurin NOTICE file from $DIR"
   rm "${DIR}"/NOTICE
 
+  if [[ $(uname) =~ Darwin* ]]; then
+    echo "Removing Temurin specific lines from release file in $DIR"
+    sed -i "" '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
+    sed -i "" '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
+    sed -i "" '/^SOURCE_REPO=.*$/d' "${DIR}/release"
+    sed -i "" '/^FULL_VERSION=.*$/d' "${DIR}/release"
+    sed -i "" '/^SEMANTIC_VERSION=.*$/d' "${DIR}/release"
+    sed -i "" '/^BUILD_INFO=.*$/d' "${DIR}/release"
+    sed -i "" '/^JVM_VARIANT=.*$/d' "${DIR}/release"
+    sed -i "" '/^JVM_VERSION=.*$/d' "${DIR}/release"
+    sed -i "" '/^IMAGE_TYPE=.*$/d' "${DIR}/release"
+
+    echo "Removing SOURCE= from ${DIR}/release file, as Temurin builds from Adoptium mirror repo _adopt tag"
+    sed -i "" '/^SOURCE=.*$/d' "${DIR}/release"
+  else
+    echo "Removing Temurin specific lines from release file in $DIR"
+    sed -i '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
+    sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
+    sed -i '/^SOURCE_REPO=.*$/d' "${DIR}/release"
+    sed -i '/^FULL_VERSION=.*$/d' "${DIR}/release"
+    sed -i '/^SEMANTIC_VERSION=.*$/d' "${DIR}/release"
+    sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
+    sed -i '/^JVM_VARIANT=.*$/d' "${DIR}/release"
+    sed -i '/^JVM_VERSION=.*$/d' "${DIR}/release"
+    sed -i '/^IMAGE_TYPE=.*$/d' "${DIR}/release"
+
+    echo "Removing SOURCE= from ${DIR}/release file, as Temurin builds from Adoptium mirror repo _adopt tag"
+    sed -i '/^SOURCE=.*$/d' "${DIR}/release"
+  fi
+
   echo "Removing cacerts file, as Temurin builds with different Mozilla cacerts"
   find "${DIR}" -type f -name "cacerts" -delete
 
@@ -431,6 +458,23 @@ function cleanTemurinFiles() {
   find "${DIR}" -type f -name "*.pdb" -delete
   find "${DIR}" -type f -name "*.map" -delete
   rm -rf "${DIR}/demo"
+}
+
+# Temurin release file metadata BUILD_INFO/SOURCE can/will be different
+function cleanTemurinBuildInfo() {
+  local DIR="$1"
+
+  echo "Cleaning any Temurin build-scripts release file BUILD_INFO from ${DIR}"
+
+  if [[ $(uname) =~ Darwin* ]]; then
+    sed -i "" '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
+    sed -i "" '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
+    sed -i "" '/^BUILD_INFO=.*$/d' "${DIR}/release"
+  else
+    sed -i '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
+    sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
+    sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
+  fi
 }
 
 # Patch the Vendor strings from the BootJDK in jrt-fs/jar MANIFEST

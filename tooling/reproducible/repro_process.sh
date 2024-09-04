@@ -23,7 +23,7 @@ OS="$2"
 
 expandJDK "$JDK_DIR" "$OS"
 
-removeGeneratedClasses "$JDK_DIR" "$OS"
+removeGeneratedClasses "$JDK_DIR"
 if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
 
   # Remove existing signature
