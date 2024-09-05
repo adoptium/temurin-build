@@ -327,24 +327,15 @@ function processModuleInfo() {
   fi
 }
 
-# Remove excluded files known to differ
-#  NOTICE - Vendor specfic notice text file
-#  cacerts - Vendors use different cacerts
-#  classlist - Used to generate CDS archives, can vary due to different build machine environment
-#  classes.jsa, classes_nocoops.jsa - CDS archive caches will differ due to Vendor string differences
-function removeExcludedFiles() {
+# Remove windowns generate classes jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa 
+function removeGeneratedClasses() {
   local JDK_DIR="$1"
-  excluded="NOTICE cacerts classlist classes.jsa classes_nocoops.jsa"
-  echo "Removing excluded files known to differ: ${excluded}"
-  for exclude in $excluded
-    do
-      FILES=$(find "${JDK_DIR}" -type f -name "$exclude")
-      for f in $FILES
-        do
-          echo "Removing $f"
-          rm -f "$f"
-        done
-    done
+  local OS="$2"
+
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
+    rm -rf "$JDK_DIR/bin/server/classes.jsa"
+    rm -rf "$JDK_DIR/bin/server/classes_nocoops.jsa"
+  fi
 }
 
 # Remove all Signatures
@@ -429,6 +420,8 @@ function cleanTemurinFiles() {
   local DIR="$1"
 
   echo "Cleaning Temurin build-scripts specific files and metadata from ${DIR}"
+  echo "Removing Temurin NOTICE file from $DIR"
+  rm "${DIR}"/NOTICE
 
   if [[ $(uname) =~ Darwin* ]]; then
     echo "Removing Temurin specific lines from release file in $DIR"
@@ -459,6 +452,9 @@ function cleanTemurinFiles() {
     echo "Removing SOURCE= from ${DIR}/release file, as Temurin builds from Adoptium mirror repo _adopt tag"
     sed -i '/^SOURCE=.*$/d' "${DIR}/release"
   fi
+  
+  echo "Removing cacerts file, as Temurin builds with different Mozilla cacerts"
+  find "${DIR}" -type f -name "cacerts" -delete
 
   echo "Removing any JDK image files not shipped by Temurin(*.pdb, *.pdb, demo) in $DIR"
   find "${DIR}" -type f -name "*.pdb" -delete

@@ -187,7 +187,7 @@ if [[ $JDK_PARAM =~ ^https?:// ]]; then
 elif [[ $JDK_PARAM =~ tar.gz ]]; then
   tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
 else
-  #Local jdk dir
+  # Local jdk dir
   cp -R "${JDK_PARAM}"/* "${sourceJDK}"
 fi
 
