@@ -24,8 +24,9 @@ ANT_VERSION=1.10.5
 ANT_SHA=9028e2fc64491cca0f991acc09b06ee7fe644afe41d1d6caf72702ca25c4613c
 ANT_CONTRIB_VERSION=1.0b3
 ANT_CONTRIB_SHA=4d93e07ae6479049bb28071b069b7107322adaee5b70016674a0bffd4aac47f9
-isJdkDir=false
 USING_DEVKIT="false"
+ScriptPath=$(dirname "$(realpath "$0")")
+
 installPrereqs() {
   if test -r /etc/redhat-release; then
     # Replace mirrorlist to vault as centos7 reached EOL.
@@ -86,12 +87,6 @@ setNonDevkitGccEnvironment() {
 
 setAntEnvironment() {
   export PATH="${LOCALGCCDIR}/bin:/usr/local/bin:/usr/bin:$PATH:/usr/local/apache-ant-${ANT_VERSION}/bin"
-}
-
-cleanBuildInfo() {
-  local DIR="$1"
-  # BUILD_INFO name of OS level build was built on will likely differ
-  sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
 }
 
 setTemurinBuildArgs() {
@@ -185,41 +180,36 @@ if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
     JDK_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
 fi
 
+sourceJDK="jdk-${TEMURIN_VERSION}"
+mkdir "${sourceJDK}"
 if [[ $JDK_PARAM =~ ^https?:// ]]; then
   echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
 elif [[ $JDK_PARAM =~ tar.gz ]]; then
-  mkdir "$PWD/jdk-${TEMURIN_VERSION}"
   tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
 else
-  echo "Local jdk dir"
-  isJdkDir=true
-fi
-
-comparedDir="jdk-${TEMURIN_VERSION}"
-if [ "${isJdkDir}" = true ]; then
-  comparedDir=$JDK_PARAM
+  # Local jdk dir
+  cp -R "${JDK_PARAM}"/* "${sourceJDK}"
 fi
 
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
 echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
 
 echo Comparing ...
-mkdir compare.$$
-tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C compare.$$
+mkdir tarJDK
+tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C tarJDK
 cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
 cp "$SBOM" SBOM.json
 
-cleanBuildInfo "${comparedDir}"
-cleanBuildInfo "compare.$$/jdk-$TEMURIN_VERSION"
+cp "$ScriptPath"/repro_*.sh "$PWD"
+chmod +x "$PWD"/repro_*.sh
 rc=0
-
-# shellcheck disable=SC2069
-diff -r "${comparedDir}" "compare.$$/jdk-$TEMURIN_VERSION" 2>&1 > "reprotest.diff" || rc=$?
+set +e
+./repro_compare.sh temurin "$sourceJDK" temurin tarJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+set -e
 
 if [ $rc -eq 0 ]; then
   echo "Compare identical !"
 else
-  cat "reprotest.diff"
   echo "Differences found..., logged in: reprotest.diff"
 fi
 

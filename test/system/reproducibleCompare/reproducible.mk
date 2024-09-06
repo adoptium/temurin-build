@@ -24,3 +24,5 @@ endif
 ifneq (,$(findstring linux,$(SPEC)))
 	SBOM_FILE := $(subst $(TEST_ROOT)/../jdkbinary,/home/jenkins/test,$(SBOM_FILE))
 endif
+
+RM_DEBUGINFO := $(shell find $(TEST_JDK_HOME) -type f -name "*.debuginfo" -delete)

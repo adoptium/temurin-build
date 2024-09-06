@@ -420,7 +420,6 @@ function cleanTemurinFiles() {
   local DIR="$1"
 
   echo "Cleaning Temurin build-scripts specific files and metadata from ${DIR}"
-
   echo "Removing Temurin NOTICE file from $DIR"
   rm "${DIR}"/NOTICE
 
@@ -453,7 +452,7 @@ function cleanTemurinFiles() {
     echo "Removing SOURCE= from ${DIR}/release file, as Temurin builds from Adoptium mirror repo _adopt tag"
     sed -i '/^SOURCE=.*$/d' "${DIR}/release"
   fi
-
+  
   echo "Removing cacerts file, as Temurin builds with different Mozilla cacerts"
   find "${DIR}" -type f -name "cacerts" -delete
 

@@ -39,6 +39,6 @@ fi
 patchManifests "${JDK_DIR}"
 
 echo "***********"
-echo "SUCCESS :-)"
+echo " Preprocess ${JDK_DIR} SUCCESS :-)"
 echo "***********"
 
