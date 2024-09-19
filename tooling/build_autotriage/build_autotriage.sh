@@ -52,6 +52,7 @@ temurinPlatforms+=("alpine-linux-x64");     platformStart+=(8);  platformEnd+=(9
 temurinPlatforms+=("linux-aarch64");        platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("linux-arm");            platformStart+=(8);  platformEnd+=(20)
 temurinPlatforms+=("linux-ppc64le");        platformStart+=(8);  platformEnd+=(99)
+temurinPlatforms+=("linux-riscv64");        platformStart+=(21); platformEnd+=(99)
 temurinPlatforms+=("linux-s390x");          platformStart+=(11); platformEnd+=(99)
 temurinPlatforms+=("linux-x64");            platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("mac-aarch64");          platformStart+=(11); platformEnd+=(99)
