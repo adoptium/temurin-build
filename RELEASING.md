@@ -193,30 +193,50 @@ jdk8armStep1["ReleaseChampion check once GA tag on jdk8 aarch32Linux is ready"] 
 
 </details>
 
-### Dry run tests: Do this at least 2 weeks before release in the same calendar month
+### Dry run tests: Do this at least 1 week before release in the same calendar month
 
-It is recommended that we perform an auto trigger test on a chosen version (suggest jdk8 and one other) to validate the trigger and build processes and the release pipeline. jdk-17 example:
+It is recommended that we perform an auto trigger test on at least two of the release versions (suggest jdk8 and one other) to validate the trigger and build processes and the release pipeline:
 
-1. Update [releasePlan.cfg](https://github.com/adoptium/mirror-scripts/blob/master/releasePlan.cfg) with the correct version numbers for the new release.
-2. Choose the second latest openjdk tag without the `_adopt` suffix (unless it is the same as the latest in which case keep going backwards..) in the adoptium/jdkNNu repository that you are using for the dry run.
-3. Ensure that the branch of aqa_tests has been created for this release.
-4. Update [testenv/testenv.properties](https://github.com/adoptium/aqa-tests/blob/master/testenv/testenv.properties) in the branch of aqa-tests to point to the tag as the JDKnn_BRANCH e.g. `jdk-17.0.x+y` (i.e. not `dev`)
-5. Get an Adoptium administrator to create the `-dryrun-ga` tag to build in the adoptium mirror, as in the following example:
+1. Decide on which versions will be running a "dryrun" (eg.say we choose 17.0.12 and 23).
+2. Update [releasePlan.cfg](https://github.com/adoptium/mirror-scripts/blob/master/releasePlan.cfg) with the correct version numbers for the release, adding -dryrun- to the dryrun versions eg:
+
+- jdk8u422-ga
+- jdk-21.0.24-ga
+- jdk-17.0.12-dryrun-ga
+- jdk-21.0.4-ga
+- jdk-23-dryrun-ga)
+
+3. Ensure that the release branch of aqa_tests has been created for this release.
+4. Update [testenv/testenv.properties](https://github.com/adoptium/aqa-tests/blob/master/testenv/testenv.properties) in the **release branch** of aqa-tests to point to the same "-ga" or "-dryrun-ga" tags for the JDKnn_BRANCH properties.
+5. Determine the **"latest"** upstream OpenJDK tag for the dry-runs
+6. Get an Adoptium administrator to create the `-dryrun-ga` tag in the adoptium mirror, as in the following example:
 
 <!-- markdownlint-disable-next-line MD036 -->
-**IMPORTANT: trial tag MUST be something that is sorted before `-ga`. Recommended format: "-dryrun-ga"**
+**IMPORTANT: dryrun tag MUST be something that is sorted before `-ga`. Always use format: "-dryrun-ga"**
 
-`git clone git@github.com:adoptium/jdk17u.git`
+** For an OpenJDK UPDATE repository eg.jdk8u,jdk11u,jdk17u,jdk21u:**
 
-`cd jdk17u`
+```
+git clone git@github.com:adoptium/jdk17u.git
+cd jdk17u
+git tag -a "jdk-17.0.12-dryrun-ga" jdk-17.0.12+7^{} -m"YYYY.MM release dry run test"
+git push --tags origin master
+```
 
-`git tag -a "jdk-17.0.6-dryrun-ga" jdk-17.0.6+8^{} -m"YYYY.MM release dry run test"`
+** For the new release versions in the OpenJDK HEAD repository adoptium/jdk:**
 
-`git push --tags origin master`
+```
+git clone git@github.com:adoptium/jdk.git
+cd jdk
+git checkout jdk23   # Checkout version branch
+git tag -a "jdk-23-dryrun-ga" jdk-23+37^{} -m"YYYY.MM release dry run test"
+git push --tags origin jdk23
+```
 
-6. Wait for the release trigger job to detect the tag (wait up to 10mins), e.g. [releaseTrigger_jdk17u](https://ci.adoptium.net/job/build-scripts/job/utils/job/releaseTrigger_jdk17u) (Note that the schedule for that job is only run on the release months, so may not work if you are keen and try to do this in the month before)
-7. The trial release pipeline job should now be running, eg: https://ci.adoptium.net/job/build-scripts/job/release-openjdk17-pipeline/
-8. Once you have verified that everything looks good, testenv.properties should be adjusted to have the expected GA tag before the final release appears.
+7. Wait for the release trigger job to detect the tag (wait up to 10mins), e.g. [releaseTrigger_jdk17u](https://ci.adoptium.net/job/build-scripts/job/utils/job/releaseTrigger_jdk17u) (Note that the schedule for that job is only run on the release months, so may not work if you are keen and try to do this in the month before)
+8. The trial release pipeline job should now be running, eg: https://ci.adoptium.net/job/build-scripts/job/release-openjdk17-pipeline/
+9. Ensure the build, aqa-tests and jck tests are run and triaged successfully.
+10. Once you have verified that everything looks good, testenv.properties should be adjusted to remove "-dryrun" before the final release tags appear.
 
 If the tag in step 5 MUST NOT contain the +nn from the underlying tag.
 If you accidentally create a +nn-dryrun-ga then you will get this error from
@@ -359,24 +379,23 @@ For the api.adoptium.net repository:
 
 ## OpenJDK "New" Major Release process
 
-- The refers to a "new" major (Short or Long Term) OpenJDK Release (e.g. jdk13, jdk14, ...)
-- Oracle and contributors work on releases in the "head" OpenJDK stream: <https://hg.openjdk.java.net/jdk/jdk>
-- 3 months prior to the GA date, the `head` stream is branched into a new release stream for development rampdown e.g. <https://hg.openjdk.java.net/jdk/jdk13>
-- Regular builds are tagged every week or so in a format such as `jdk-13+21`
-- Eventually after rampdown and final phase testing the GA build is tagged and released, e.g. the `jdk-13-ga` code level is tagged along side the actual release build tag.
-- When a new release occurs, we must also update one of our job generators to match the new jdk versions and remove old STR that are no longer needed. The full details on what these are in the [regeneration README.md](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md) but for a quick run down on how to update them when we want to build a new release, follow the steps below:
+- The refers to a "new" major (Short or Long Term) OpenJDK Release (e.g. jdk23, jdk24, ...)
+- Oracle and contributors work on releases in the "head" OpenJDK stream: <http://github.com/openjdk/jdk>
+- 3 months prior to the GA date, the `head` stream is branched into a new release branch for development rampdown e.g.branch "jdk23" within http://github.com/openjdk/jdk
+- Regular builds are tagged every week or so in a format such as `jdk-23+21`
+- Eventually after rampdown and final phase testing the GA build is tagged and released, e.g. the `jdk-23-ga` code level is tagged along side the actual release build tag.
+- When a new release occurs, we must also update one of our job generators to match the new jdk versions and remove old versions that are no longer needed. The full details on what these are in the [regeneration README.md](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md) but for a quick run down on how to update them when we want to build a new release, follow the steps below:
 
   1. Update the Job Folder - <https://ci.adoptium.net/job/build-scripts/job/utils/>: The jobs themselves you are looking for are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD). Firstly, ensure that the job description of each generator (and it's parameter's descriptions) are up to date. Then, follow these steps:
   
   - If you are ADDING a JDK version:
     - Ensure that JDK N-1 is available as build JDK on the builders. For example in order to build JDK 15, JDK 14 needs to be installed on the build machines. As a temporary measure, [code](./build-farm/platform-specific-configurations/linux.sh#L110) so as to download the JDK to the builder via the API has been added. NOTE: For the transition period shortly after a new JDK has been branched, there might not yet exist a generally available release of JDK N-1.
     - Ensure that JDK sources are being mirrored. Example [infrastructure request](https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1096)
-    - Ensure that a repository which contains the binary releases exists. Example [temurin15-binaries](https://github.com/adoptium/temurin15-binaries)
-    - Add build scripts for the new JDK release. Example for [JDK 14](https://github.com/adoptium/temurin-build/commit/808b08fe2aefc005cf53f6cc1deb28a9b323ff)
+    - Ensure that a repository which contains the binary releases exists. Example [temurin23-binaries](https://github.com/adoptium/temurin23-binaries), if not then create using OtterDog <https://github.com/adoptium/.eclipsefdn/blob/68e1a3c84a7f51e538ab0cbc8a6b5d3428028c37/otterdog/adoptium.jsonnet#L753>:
     - Regenerate build jobs:
       - Create a New Item in the folder linked above that copies the `pipeline_jobs_generator_jdk` job. Call it `pipeline_jobs_generator_jdk<new-version-number>`.
       - Change the `Script Path` setting of the new job to `pipelines/build/regeneration/jdk<new-version-number>_regeneration_pipeline.groovy`. Don't worry if this currently doesn't exist in this repository, you'll add it in step 3.
-      - Update the `Script Path` setting of the JDK-HEAD job (`pipeline_jobs_generator_jdk`) to whatever the new JDK HEAD is. I.e. if the new head is JDK16, change `Script Path` to `pipelines/build/regeneration/jdk16_regeneration_pipeline.groovy`
+      - Update the `Script Path` setting of the JDK-HEAD job (`pipeline_jobs_generator_jdk`) to whatever the new JDK HEAD is. I.e. if the new head is JDK23, change `Script Path` to `pipelines/build/regeneration/jdk23_regeneration_pipeline.groovy`
   - If you are REMOVING a JDK version:
     - Delete the job `pipeline_jobs_generator_jdk<version-you-want-to-delete>`
 
@@ -385,13 +404,11 @@ For the api.adoptium.net repository:
   - Create a new `jdk<new-version-number>_pipeline_config.groovy` file with the desired `buildConfigurations` for the new pipeline. 99% of the time, copy and pasting the configs from the previous version is acceptable. Ensure that the classname and instance of it is changed to `Config<new-version-number>`. Don't remove any old version configs.
   - Furthermore, you will also need to create another config file to state what jobs will be run with any new versions. If it doesn't currently exist, add a `jdkxx.groovy` file to [configurations/](https://github.com/adoptium/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations). [Example on how to do this](https://github.com/adoptium/temurin-build/pull/1815/files). Note, some files will need to be named `jdkxxu.groovy` depending on whether the version is maintained in an update repository or not. These will be the ONLY os/archs/variants that are regenerated using the job regenerators as described in the [regeneration readme](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md).
   
-  3. Create a new Regeneration Pipeline for the downstream jobs - <https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration>:
+  3. Add new versions to the releaseVersions: https://github.com/adoptium/ci-jenkins-pipelines/blob/d9429d510fecd3c5435c8b048eb899f5726afa85/pipelines/build/regeneration/release_pipeline_generator.groovy#L10
   
-  Create a new `jdk<new-version-number>_regeneration_pipeline.groovy`. Ensure that the `javaVersion`, `targetConfigurations` and `buildConfigurations` variables are what they should be for the new version. Don't remove any old version configs. While you're here, make sure all of the current releases have a `regeneration_pipeline.groovy` file (including head). If they don't, create one using the same technique as above.
-  
-  1. Build the `pipeline_jobs_generator` that you just made. Ensure the equivalent `openjdkxx_pipeline` to the generator exists or this will fail. If the job fails or is unstable, search the console log for `WARNING` or `ERROR` messages for why. Once it has completed successfully, the [pipeline](https://ci.adoptium.net/job/build-scripts/) is ready to go!
+  4. Build the `pipeline_jobs_generator` that you just made. Ensure the equivalent `openjdkxx_pipeline` to the generator exists or this will fail. If the job fails or is unstable, search the console log for `WARNING` or `ERROR` messages for why. Once it has completed successfully, the [pipeline](https://ci.adoptium.net/job/build-scripts/) is ready to go!
 
-  1. Update the view for the [build and test pipeline calendar](https://ci.adoptium.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version.
+  5. Update the view for the [build and test pipeline calendar](https://ci.adoptium.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version.
 
 ### Update Repository (jdkXXu)
 
@@ -401,13 +418,17 @@ At some point in a java version's lifecycle, the JDK version will be maintained 
 - [jdk-updates-dev](https://mail.openjdk.java.net/mailman/listinfo/jdk-updates-dev)
 When this occurs, usually a Temurin committer will create the `jdk<version>u` update repository ([example of the JDK11u one](https://github.com/adopium/openjdk-jdk11u)) via our Skara mirroring jobs that pull in the commit and tag info from the Mercurial repository. To find out more about Skara and our other mirroring jobs, see <https://github.com/adoptium/mirror-scripts>.
 
-*New Adoptium mirror repository creation, by an Adoptium GitHub Admin:*
+*New Adoptium mirror repository creation, for a new OpenJDK UPDATE version repository, by an Adoptium GitHub Admin:*
 
 1. Create a new empty repository adoptium/openjdk-jdkNNu
-2. Rename mirror job from <https://ci.adoptium.net/view/git-mirrors/job/git-mirrors/job/git-skara-jdkNN> to <https://ci.adoptium.net/view/git-mirrors/job/git-mirrors/job/git-skara-jdkNNu>
+2. Create a new mirror job using an existing job as a template eg.<https://ci.adoptium.net/view/git-mirrors/job/git-mirrors/job/git-skara-jdk21u> to a new job <https://ci.adoptium.net/view/git-mirrors/job/git-mirrors/job/git-skara-jdkNNu>
 3. Update mirror job "Execute shell" to pass jdkNNu as parameter to bash ./skaraMirror.sh jdkNNu
-4. Run the renamed job twice, first one will fail due to empty repository, 2nd run should succeed.
-5. Add the Adoptium.md "marker" text file to both branches "dev" and "release".
+4. Run the new job twice, first one will fail due to empty repository, 2nd run should succeed.
+
+*New Adoptium mirror repository creation, for a new OpenJDK VERSION branch in the HEAD repository, by an Adoptium GitHub Admin:*
+
+1. Edit the existing jdk HEAD mirror job configuration "Build Steps" https://ci.adoptium.net/view/git-mirrors/job/git-mirrors/job/adoptium/job/git-skara-jdk/configure and within the Execute shell, update the "branches" variable to include the new jdkNN version branch.
+2. Run the new job to check it succeeds.
 
 When the repository has been created, a few changes to the codebase will be necessary where the code references a jdk version but not it's new update version. I.e. `jdk11` became `jdk11u` when it was moved to an update repository.
 
