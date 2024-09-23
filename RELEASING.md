@@ -214,18 +214,20 @@ It is recommended that we perform an auto trigger test on at least two of the re
 <!-- markdownlint-disable-next-line MD036 -->
 **IMPORTANT: dryrun tag MUST be something that is sorted before `-ga`. Always use format: "-dryrun-ga"**
 
+<!-- markdownlint-disable-next-line MD036 -->
 ** For an OpenJDK UPDATE repository eg.jdk8u,jdk11u,jdk17u,jdk21u:**
 
-```
+```bash
 git clone git@github.com:adoptium/jdk17u.git
 cd jdk17u
 git tag -a "jdk-17.0.12-dryrun-ga" jdk-17.0.12+7^{} -m"YYYY.MM release dry run test"
 git push --tags origin master
 ```
 
+<!-- markdownlint-disable-next-line MD036 -->
 ** For the new release versions in the OpenJDK HEAD repository adoptium/jdk:**
 
-```
+```bash
 git clone git@github.com:adoptium/jdk.git
 cd jdk
 git checkout jdk23   # Checkout version branch
