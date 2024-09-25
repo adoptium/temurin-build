@@ -554,99 +554,25 @@ Clone_Build_Repo() {
 Prepare_Env_For_Build() {
   echo "Setting Variables"
   export BOOTJDK_HOME=$WORK_DIR/jdk-${bootJDK}
-  echo "Parsing Make JDK Any Platform ARGS For Build"
-  # Split the string into an array of words
-  IFS=' ' read -ra words <<< "$buildArgs"
 
-  # Add The Build Time Stamp In Case It Wasnt In The SBOM ARGS
-  words+=("--build-reproducible-date")
-  words+=("\"$buildStamp\"")
+  # set --build-reproducible-date if not yet
+  if [[ "${buildArgs}" != *"--build-reproducible-date"* ]]; then
+    buildArgs="--build-reproducible-date \"${buildStamp}\" ${buildArgs}" 
+  fi
+  # reset --jdk-boot-dir
+  # shellcheck disable=SC2001
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir ${BOOTJDK_HOME}|")"
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--with-sysroot=[^ ]*|--with-sysroot=${MAC_SDK_LOCATION}|")"
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--user-openjdk-build-root-directory [^ ]*|--user-openjdk-build-root-directory ${WORK_DIR}/temurin-build/workspace/build/openjdkbuild/|")"
+  # remove ingored options
+  buildArgs=${buildArgs/--assemble-exploded-image /}
+  buildArgs=${buildArgs/--enable-sbom-strace /}
 
-  # Initialize variables
-  param=""
-  value=""
-  params=()
-
-  # Loop through the words
-  for word in "${words[@]}"; do
-    # Check if the word starts with '--'
-    if [[ $word == --* ]] || [[ $word == -b* ]]; then
-      # If a parameter already exists, store it in the params array
-      if [[ -n $param ]]; then
-        params+=("$param=$value")
-      fi
-      # Reset variables for the new parameter
-      param="$word"
-      value=""
-    else
-      value+="$word "
-    fi
-  done
-  
-    # Add the last parameter to the array
-  params+=("$param=$value")
-
-  # Read the separated parameters and values into a new array
-  export fixed_param=""
-  export fixed_value=""
-  export fixed_params=()
-  export new_params=""
-  CONFIG_ARRAY=()
-  BUILD_ARRAY=()
-  IGNORED_ARRAY=()
-
-  for p in "${params[@]}"; do
-    IFS='=' read -ra parts <<< "$p"
-    prefixed_param=${parts[0]}
-    fixed_param="${prefixed_param%%[[:space:]]}"
-    prepped_value=${parts[1]}
-    fixed_value=$(echo "$prepped_value" | awk '{$1=$1};1')
-    # Handle Special parameters
-    if [ "$fixed_param" == "--jdk-boot-dir" ]; then fixed_value="$BOOTJDK_HOME" ; fi
-    if [ "$fixed_param" == "--with-toolchain-version" ]; then fixed_value="$visualStudioVersion" ; fi
-    if [ "$fixed_param" == "--with-ucrt-dll-dir" ]; then fixed_value="temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder " ; fi
-    if [ "$fixed_param" == "--target-file-name" ]; then target_file="$fixed_value" ; fi
-    if [ "$fixed_param" == "--user-openjdk-build-root-directory" ]; then fixed_value="$WORK_DIR/temurin-build/workspace/build/openjdkbuild" ; fi
-
-    # Fix Build Variant Parameter To Strip JDK Version
-
-    if [ "$fixed_param" == "--build-variant" ] ; then
-      # Remove Leading White Space
-      trimmed_value=$(echo "$prepped_value" | awk '{$1=$1};1')
-      IFS=' ' read -r variant jdk <<< "$trimmed_value"
-      if [[ $jdk == jdk* ]]; then
-        variant="$variant "
-      else
-        temp="$variant "
-        variant="$jdk"
-        jdk="$temp"
-      fi
-      fixed_value=$variant
-    fi
-
-    # Check if fixed_param is in CONFIG_ARGS
-    if containsElement "$fixed_param" "${CONFIG_ARGS[@]}"; then
-      # Add Config Arg To New Array
-
-      # Handle Windows Param Names In Config Args (Replace Space with =)
-      if [ "$fixed_param" == "--with-toolchain-version" ] || [ "$fixed_param" == "--with-ucrt-dll-dir" ] ||  [ "$fixed_param" == "--with-version-opt" ] ; then
-        STRINGTOADD="$fixed_param=$fixed_value"
-        CONFIG_ARRAY+=("$STRINGTOADD")
-      else
-        STRINGTOADD="$fixed_param $fixed_value"
-        CONFIG_ARRAY+=("$STRINGTOADD")
-      fi
-    elif containsElement "$fixed_param" "${NOTUSE_ARGS[@]}"; then
-      # Strip Parameters To Be Ignored
-      STRINGTOADD="$fixed_param $fixed_value"
-      IGNORED_ARRAY+=("$STRINGTOADD")
-    else
-      # Not A Config Param Nor Should Be Ignored, So Add To Build Array
-      STRINGTOADD="$fixed_param $fixed_value"
-      BUILD_ARRAY+=("$STRINGTOADD")
-    fi
-  done
-
+  echo ""
+  echo "Make JDK Any Platform Argument List = "
+  echo "$buildArgs"
+  echo ""
+  echo "Parameters Parsed Successfully"
   IFS=' ' build_string="${BUILD_ARRAY[*]}"
   IFS=' ' config_string=$"${CONFIG_ARRAY[*]}"
   final_params="$build_string --configure-args \"$config_string\" $jdk"
