@@ -562,7 +562,8 @@ Prepare_Env_For_Build() {
   # reset --jdk-boot-dir
   # shellcheck disable=SC2001
   buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir ${BOOTJDK_HOME}|")"
-  buildArgs="$(echo "$buildArgs" | sed -e "s|--with-sysroot=[^ ]*|--with-sysroot=${MAC_SDK_LOCATION}|")"
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--with-toolchain-version [^ ]*|with-toolchain-version ${visualStudioVersion}|")"
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--with-ucrt-dll-dir=[^ ]*|--with-ucrt-dll-dir=temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder|")"
   buildArgs="$(echo "$buildArgs" | sed -e "s|--user-openjdk-build-root-directory [^ ]*|--user-openjdk-build-root-directory ${WORK_DIR}/temurin-build/workspace/build/openjdkbuild/|")"
   # remove ingored options
   buildArgs=${buildArgs/--assemble-exploded-image /}
@@ -573,14 +574,6 @@ Prepare_Env_For_Build() {
   echo "$buildArgs"
   echo ""
   echo "Parameters Parsed Successfully"
-  IFS=' ' build_string="${BUILD_ARRAY[*]}"
-  IFS=' ' config_string=$"${CONFIG_ARRAY[*]}"
-  final_params="$build_string --configure-args \"$config_string\" $jdk"
-
-  echo "Make JDK Any Platform Argument List = "
-  echo "$final_params"
-  echo ""
-  echo "Parameters Parsed Successfully"
 }
 
 Build_JDK() {
@@ -588,9 +581,9 @@ Build_JDK() {
 
   # Trigger Build
   cd "$WORK_DIR"
-  echo "cd temurin-build && ./makejdk-any-platform.sh $final_params 2>&1 | tee build.$$.log" | sh
+  echo "cd temurin-build && ./makejdk-any-platform.sh $buildArgs 2>&1 | tee build.$$.log" | sh
   # Copy The Built JDK To The Working Directory
-  cp "$WORK_DIR/temurin-build/workspace/target/$target_file" "$WORK_DIR/reproJDK.zip"
+  cp "${WORK_DIR}"/temurin-build/workspace/target/OpenJDK*-jdk_*.zip "$WORK_DIR/reproJDK.zip"
 }
 
 Compare_JDK() {
