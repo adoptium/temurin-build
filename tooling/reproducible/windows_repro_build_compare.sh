@@ -545,13 +545,13 @@ Prepare_Env_For_Build() {
   fi
   # reset --jdk-boot-dir
   # shellcheck disable=SC2001
-  # buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir ${BOOTJDK_HOME}|")" 
-  # buildArgs="$(echo "$buildArgs" | sed -e "s|--with-toolchain-version [^ ]*|with-toolchain-version ${visualStudioVersion}|")"
-  # buildArgs="$(echo "$buildArgs" | sed -e "s|--with-ucrt-dll-dir=[^ ]*|--with-ucrt-dll-dir=temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder|")"
-  buildArgs="${buildArgs/--jdk-boot-dir [^ ]*/--jdk-boot-dir ${BOOTJDK_HOME}}"
-  buildArgs="${buildArgs/--with-toolchain-version [^ ]*/with-toolchain-version ${visualStudioVersion}}"
-  buildArgs="${buildArgs/--with-ucrt-dll-dir=[^ ]*/--with-ucrt-dll-dir=temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder}}"
-  buildArgs="${buildArgs/--user-openjdk-build-root-directory [^ ]*/--user-openjdk-build-root-directory ${WORK_DIR}/temurin-build/workspace/build/openjdkbuild/}}"
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir ${BOOTJDK_HOME}|")"
+  # shellcheck disable=SC2001
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--with-toolchain-version [^ ]*|with-toolchain-version ${visualStudioVersion}|")"
+  # shellcheck disable=SC2001
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--with-ucrt-dll-dir=[^ ]*|--with-ucrt-dll-dir=temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder|")"
+  # shellcheck disable=SC2001
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--user-openjdk-build-root-directory [^ ]*|--user-openjdk-build-root-directory ${WORK_DIR}/temurin-build/workspace/build/openjdkbuild/|")"
   # remove ingored options
   buildArgs=${buildArgs/--assemble-exploded-image /}
   buildArgs=${buildArgs/--enable-sbom-strace /}
