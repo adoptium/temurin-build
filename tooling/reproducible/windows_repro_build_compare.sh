@@ -54,11 +54,6 @@ CPP_COMPILER_EXE="cl.exe"
 WIN_URCT_BASE="C:/Program Files (x86)/Windows Kits/10/Redist"
 SIGNTOOL_BASE="C:/Program Files (x86)/Windows Kits/10"
 
-# Define What Are Configure Args & Redundant Args
-# This MAY Need Updating If Additional Configure Args Are Passed
-CONFIG_ARGS=("--disable-warnings-as-errors" "--disable-ccache" "--with-toolchain-version" "--with-ucrt-dll-dir" "--with-version-opt")
-NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args")
-
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$WORK_DIR/src_sbom.json"
 DISTLocalPath="$WORK_DIR/src_jdk_dist.zip"
@@ -72,17 +67,6 @@ is_url() {
   else
     return 1  # Not a URL
   fi
-}
-
-# Function to check if a value is in the array
-containsElement () {
-  local e
-  for e in "${@:2}"; do
-    if [ "$e" == "$1" ]; then
-      return 0  # Match found
-    fi
-  done
-  return 1  # No match found
 }
 
 Create_WorkDir() {
