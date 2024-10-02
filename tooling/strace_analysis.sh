@@ -258,17 +258,17 @@ processFiles() {
             case "${os_type}" in
                 "alpine")
                     # Process alpine package query output: "FILE is owned by PACKAGE"
-                    pkg_name="$(echo "$pkg" | sed 's/is owned by//g' | tr -s ' ' | cut -d' ' -f2 | tr -d '\\n\\r')"
+                    pkg_name="$(echo "$pkg" | sed 's/is owned by//g' | tr -s ' ' | cut -d' ' -f2 | tr -d '\\\n\\\r')"
                     pkg_version="$pkg_name"
                     ;;
                 "debian")
                     # Process debian package query output: "PACKAGE: FILE"
-                    pkg_name="$(echo "$pkg" | cut -d":" -f1 | tr -d '\\n\\r')"
-                    pkg_version="$(apt show "$pkg_name" 2>/dev/null | grep Version | cut -d" " -f2 | tr -d '\\n\\r')"
+                    pkg_name="$(echo "$pkg" | cut -d":" -f1 | tr -d '\\\n\\\r')"
+                    pkg_version="$(apt show "$pkg_name" 2>/dev/null | grep Version | cut -d" " -f2 | tr -d '\\\n\\\r')"
                     ;;
                 "centos")
                     # Process centos package query output: "PACKAGE"
-                    pkg_name="$(echo "$pkg" | cut -d" " -f1 | tr -d '\\n\\r')"
+                    pkg_name="$(echo "$pkg" | cut -d" " -f1 | tr -d '\\\n\\\r')"
                     pkg_version="$pkg_name"
                     ;;
                 *)
