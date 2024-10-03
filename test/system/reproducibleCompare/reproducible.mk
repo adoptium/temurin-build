@@ -16,6 +16,7 @@ ifndef SBOM_FILE
 	SBOM_FILE := $(TEST_ROOT)/../jdkbinary/$(SBOM_FILE)
 endif
 ifndef JDK_FILE
+	JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.tar.gz')
 	ifneq (,$(findstring win,$(SPEC)))
 		JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.zip')
 	endif

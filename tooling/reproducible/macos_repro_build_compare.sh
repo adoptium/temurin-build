@@ -20,6 +20,7 @@
 # 3. This script requires that the correct versions of the sdk are installed and in the loaction defined in the MAC_SDK_LOCATION below.
 
 set -e
+source "$(dirname "$0")"/repro_compare.sh
 
 # Check All 3 Params Are Supplied
 if [ "$#" -lt 3 ]; then
@@ -46,15 +47,10 @@ REPORT_DIR="$3"
 # The Defaults Below Are Suitable For An Adoptium Mac OS X Build Environment
 # Which Has Been Created Via The Ansible Infrastructure Playbooks
 
-WORK_DIR=~/comp-jdk-build
+WORK_DIR="${PWD}"/comp-jdk-build
 MAC_COMPILER_BASE=/Applications
 MAC_COMPILER_APP_PREFIX=Xcode
 MAC_SDK_LOCATION=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-
-# These 3 variables dictate which parameters passed to makejdk_any_platform.sh are config arguments, build arguments or should be ignored.
-CONFIG_ARGS=("--disable-warnings-as-errors" "--openjdk-target" "--with-sysroot" "--with-extra-cxxflags='" "--enable-dtrace" "--with-version-opt")
-NOTUSE_ARGS=("--assemble-exploded-image" "--configure-args")
-FINAL_ARG=("--build-variant")
 
 # These variables relate to the pre-requisite ant installation
 ANT_VERSION="1.10.5"
@@ -441,118 +437,22 @@ Prepare_Env_For_Build() {
   echo "Setting Variables"
   export BOOTJDK_HOME=$WORK_DIR/jdk-${bootJDK}/Contents/Home
 
-  echo "Parsing Make JDK Any Platform ARGS For Build"
-  # Split the string into an array of words
-  IFS=' ' read -ra words <<< "$buildArgs"
+  # set --build-reproducible-date if not yet
+  if [[ "${buildArgs}" != *"--build-reproducible-date"* ]]; then
+    buildArgs="--build-reproducible-date \"${buildStamp}\" ${buildArgs}" 
+  fi
+  # reset --jdk-boot-dir
+  # shellcheck disable=SC2001
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir ${BOOTJDK_HOME}|")"
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--with-sysroot=[^ ]*|--with-sysroot=${MAC_SDK_LOCATION}|")"
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--user-openjdk-build-root-directory [^ ]*|--user-openjdk-build-root-directory ${WORK_DIR}/temurin-build/workspace/build/openjdkbuild/|")"
+  # remove ingored options
+  buildArgs=${buildArgs/--assemble-exploded-image /}
+  buildArgs=${buildArgs/--enable-sbom-strace /}
 
-  # Add The Build Time Stamp In Case It Wasnt In The SBOM ARGS
-  words+=( " --build-reproducible-date \"$buildStamp\"" )
-  
-  # Initialize variables
-  param=""
-  value=""
-  params=()
-
-  # Loop through the words
-  for word in "${words[@]}"; do
-    # Check if the word starts with '--'
-    if [[ $word == --* ]] || [[ $word == -b* ]]; then
-      # If a parameter already exists, store it in the params array
-      if [[ -n $param ]]; then
-        params+=("$param $value")
-      fi
-      # Reset variables for the new parameter
-      param="$word"
-      value=""
-    else
-      value+=" $word"
-    fi
-  done
-
-    # Add the last parameter to the array
-  params+=("$param $value")
-
-  # Loop Through The Parameters And Reformat Appropriately
-  export fixed_param=""
-  export fixed_value=""
-  export fixed_params=()
-  export new_params=""
-  CONFIG_ARRAY=()
-  BUILD_ARRAY=()
-  FINAL_ARRAY=()
-  for element in "${params[@]}"; do
-    IFS=' ' read -ra parts <<< "$element"
-    prepped_part0=${parts[0]}
-    prepped_part1=${parts[1]}
-    prepped_part2=${parts[2]}
-
-    fixed_param="$prepped_part0"
-    fixed_value="$prepped_part1 $prepped_part2"
-
-    # Handle Special Parameters ( overrides and = seperated )
-    if [ "$fixed_param" == "--jdk-boot-dir" ]; then fixed_value=" $BOOTJDK_HOME " ; fi
-    if [[ "$fixed_param" == "--with-sysroot="* ]]; then
-      IFS='=' read -r split_param split_value <<< "$fixed_param"
-      fixed_param="$split_param"
-      fixed_value="=$MAC_SDK_LOCATION " ;
-    fi
-    if [[ "$fixed_param" == "--openjdk-target="* ]]; then
-      IFS='=' read -r split_param split_value <<< "$fixed_param"
-      fixed_param="$split_param"
-      fixed_value="=$split_value "
-    fi
-    if [[ "$fixed_param" == "--with-version-opt="* ]]; then
-      IFS='=' read -r split_param split_value <<< "$fixed_param"
-      fixed_param="$split_param"
-      fixed_value="=$split_value"
-    fi
-    if [ "$fixed_param" == "--tag" ]; then fixed_param="-b" fixed_value=" $fixed_value" ; fi
-    if [ "$fixed_param" == "--target-file-name" ]; then
-      target_file="$(echo -e "${fixed_value}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-      fixed_value=" $fixed_value"
-    fi
-    if [ "$fixed_param" == "--freetype-dir" ]; then fixed_value=" $fixed_value" ; fi
-    if [ "$fixed_param" == "--user-openjdk-build-root-directory" ]; then fixed_value=" $WORK_DIR/temurin-build/workspace/build/openjdkbuild/ " ; fi
-    if [ "$fixed_param" == "--build-variant" ]; then fixed_value=" $fixed_value " ; fi
-    if [ "$fixed_param" == "--build-reproducible-date" ]; then fixed_value=" $fixed_value" ; fi
-
-    if containsElement "$fixed_param" "${CONFIG_ARGS[@]}"; then
-      # Check if fixed_param is in CONFIG_ARGS
-      STRINGTOADD="$fixed_param$fixed_value"
-      CONFIG_ARRAY+=("$STRINGTOADD")
-    elif containsElement "$fixed_param" "${NOTUSE_ARGS[@]}"; then
-      # Check if fixed_param is in NOTUSE_ARGS
-      STRINGTOADD="$fixed_param$fixed_value"
-      IGNORED_ARRAY+=("$STRINGTOADD")
-    elif containsElement "$fixed_param" "${FINAL_ARG[@]}"; then
-      # Check if parameter should be at the end, usually just version & variant
-      STRINGTOADD="$fixed_param$fixed_value"
-      FINAL_ARRAY+=("$STRINGTOADD")
-    else
-      # Neither Config Or Ignore, so Build
-      STRINGTOADD="$fixed_param$fixed_value"
-      BUILD_ARRAY+=("$STRINGTOADD")
-    fi
-  done
-
-  # Construct Final Parameter String
-  for element in "${BUILD_ARRAY[@]}"; do
-    build_string+="$element"
-  done
-
-  for element in "${CONFIG_ARRAY[@]}"; do
-    config_string+="$element"
-  done
-
-  for element in "${FINAL_ARRAY[@]}"; do
-    final_string+="$element"
-  done
-
-  final_params="$build_string --configure-args \"$config_string\" $final_string"
-
-echo ""
+  echo ""
   echo "Make JDK Any Platform Argument List = "
-  echo "$final_params"
+  echo "$buildArgs"
   echo ""
   echo "Parameters Parsed Successfully"
 }
@@ -562,9 +462,9 @@ Build_JDK() {
 
   # Trigger Build
   cd "$WORK_DIR"
-  echo "cd temurin-build && ./makejdk-any-platform.sh $final_params 2>&1 | tee build.$$.log" | sh
+  echo "cd temurin-build && ./makejdk-any-platform.sh $buildArgs 2>&1 | tee build.$$.log" | sh
   # Copy The Built JDK To The Working Directory
-  cp $WORK_DIR/temurin-build/workspace/target/"$target_file" $WORK_DIR/reproJDK.tar.gz
+  cp $WORK_DIR/temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz $WORK_DIR/reproJDK.tar.gz
 }
 
 Compare_JDK() {
@@ -577,21 +477,21 @@ Compare_JDK() {
 
   # Check The Comparison Scripts Are Present And Copy To The Working Directory
 
-  if [ -f ./repro_common.sh ]; then
-    cp ./repro_common.sh $WORK_DIR/compare/repro_common.sh
-  else
-    wget -O "$WORK_DIR/compare/repro_common.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_common.sh"
-  fi
-  if [ -f ./repro_compare.sh ]; then
-    cp ./repro_compare.sh $WORK_DIR/compare/repro_compare.sh
-  else
-    wget -O "$WORK_DIR/compare/repro_compare.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_compare.sh"
-  fi
-  if [ -f ./repro_process.sh ]; then
-    cp ./repro_process.sh $WORK_DIR/compare/repro_process.sh
-  else
-    wget -O "$WORK_DIR/compare/repro_process.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_process.sh"
-  fi
+  # if [ -f ./repro_common.sh ]; then
+  #   cp ./repro_common.sh $WORK_DIR/compare/repro_common.sh
+  # else
+  #   wget -O "$WORK_DIR/compare/repro_common.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_common.sh"
+  # fi
+  # if [ -f ./repro_compare.sh ]; then
+  #   cp ./repro_compare.sh $WORK_DIR/compare/repro_compare.sh
+  # else
+  #   wget -O "$WORK_DIR/compare/repro_compare.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_compare.sh"
+  # fi
+  # if [ -f ./repro_process.sh ]; then
+  #   cp ./repro_process.sh $WORK_DIR/compare/repro_process.sh
+  # else
+  #   wget -O "$WORK_DIR/compare/repro_process.sh" "https://raw.githubusercontent.com/adoptium/temurin-build/master/tooling/reproducible/repro_process.sh"
+  # fi
   
   # Set Permissions
   chmod +x "$WORK_DIR/compare/"*sh
@@ -612,27 +512,23 @@ Compare_JDK() {
   # Ensure Java Home Is Set
   export JAVA_HOME=$BOOTJDK_HOME
   export PATH=$JAVA_HOME/bin:$PATH
-  echo "cd $WORK_DIR/compare && ./repro_compare.sh temurin src_jdk/Contents/Home temurin tar_jdk/Contents/Home Darwin 2>&1" | sh &
-  wait
-  rc=$?
-  set -e
+  rc=0
+  ./repro_compare.sh temurin src_jdk/Contents/Home temurin tar_jdk/Contents/Home Darwin 2>&1 || rc=$?
   cd "$WORK_DIR"
-  # Display The Content Of reprotest.diff
-  echo ""
-  echo "---------------------------------------------"
-  echo "Output From JDK Comparison Script"
-  echo "---------------------------------------------"
-  cat $WORK_DIR/compare/reprotest.diff
-  echo ""
-  echo "---------------------------------------------"
-  echo "Copying Output To $(dirname "$0")"
-  cp $WORK_DIR/compare/reprotest.diff $WORK_DIR/reprotest.diff
-   
+
+  if [ $rc -eq 0 ]; then
+    echo "Compare identical !"
+  else
+    echo "Differences found..., logged in: reprotest.diff"
+  fi
+
   if [ -n "$REPORT_DIR" ]; then
     echo "Copying Output To $REPORT_DIR"
     cp $WORK_DIR/compare/reprotest.diff "$REPORT_DIR"
     cp $WORK_DIR/reproJDK.tar.gz "$REPORT_DIR"
   fi
+  
+  exit $rc
   
 }
 #
