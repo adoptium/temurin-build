@@ -46,7 +46,7 @@ do
   cleanTemurinBuildInfo "${JDK_DIR}"
 
   if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then 
-    removeSystemModulesHashBuilderParams
+    removeSystemModulesHashBuilderParams "${JDK_DIR}"
   fi
   processModuleInfo
 done
