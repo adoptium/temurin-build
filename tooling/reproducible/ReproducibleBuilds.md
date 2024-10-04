@@ -105,7 +105,8 @@ before the comparable_patch.sh can be run.
   WINKIT=$(dirname "$(find '/cygdrive/c/Program Files (x86)/Windows Kits' | grep  x64/signtool.exe$ | head -n 1)")
   MSVSCBUILDTOOLS=$(find "$MSBASE_PATH" -type d | grep Auxiliary/Build$ | head -n 1 )
 ```
- - note the cygpath usages, sometimes are necessary, sometimes not. Java *bianries* have issues with it, eg for javac it is mandatory:
+ - note the cygpath usages, sometimes are necessary, sometimes not. Java *bianries* have issues with it:
+  - eg for javac:
 ```
       ftureDir="$(pwd)/classes"
       if uname | grep CYGWIN ; then
@@ -113,7 +114,7 @@ before the comparable_patch.sh can be run.
       fi
       $AQA_DIR/$jdkName/bin/javac -d "${ftureDir}" "../../tooling/src/java/temurin/tools/BinRepl.java"
 ```
-
+  - or $CLASSPATH it is mandatory
 #### Running comparable_patch.sh:
 
 1. Unzip your JDK archive into a directory (eg.jdk1)
