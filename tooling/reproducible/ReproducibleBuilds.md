@@ -71,6 +71,7 @@ before the comparable_patch.sh can be run.
 3. Compile [src/java/temurin/tools/BinRepl.java](https://github.com/adoptium/temurin-build/blob/master/tooling/src/java/temurin/tools/BinRepl.java) :
 
 - Ensure suitable JDK on PATH
+  - **do not ** use JDK you are just patching, the JDK is **broken** after (also during) of patching
 - cd tooling/src/java
 - javac temurin/tools/BinRepl.java
 
