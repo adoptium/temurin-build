@@ -667,7 +667,9 @@ buildTemplatedFile() {
   if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]]; then
     ADDITIONAL_MAKE_TARGETS=" test-image debug-image"
   elif [ "$JDK_VERSION_NUMBER" -gt 8 ] && [ "$JDK_VERSION_NUMBER" -lt 22 ]; then
-    ADDITIONAL_MAKE_TARGETS=" test-image static-libs-image"
+      if [[ "$JDK_VERSION_NUMBER" -gt 8 ]] && [[ "${BUILD_CONFIG[DISABLE_TEST_IMAGE]}" != "true" ]]; then
+          ADDITIONAL_MAKE_TARGETS=" test-image static-libs-image"
+      fi
   elif [ "$JDK_VERSION_NUMBER" -ge 22 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
     ADDITIONAL_MAKE_TARGETS=" test-image static-libs-graal-image"
   fi

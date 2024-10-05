@@ -41,6 +41,7 @@ BUILD_REPRODUCIBLE_DATE
 BUILD_TIMESTAMP
 BUILD_VARIANT
 CERTIFICATE
+CHECK_FINGERPRINT
 CONTAINER_AS_ROOT
 CLEAN_DOCKER_BUILD
 CLEAN_GIT_REPO
@@ -62,11 +63,14 @@ DEBUG_IMAGE_PATH
 DISABLE_ADOPT_BRANCH_SAFETY
 DOCKER_FILE_PATH
 DOCKER_SOURCE_VOLUME_NAME
+DISABLE_TEST_IMAGE
 ENABLE_SBOM_STRACE
 FREETYPE
 FREETYPE_DIRECTORY
 FREETYPE_FONT_BUILD_TYPE_PARAM
 FREETYPE_FONT_VERSION
+HSWAP_AGENT_DOWNLOAD_URL
+HSWAP_AGENT_CORE_DOWNLOAD_URL
 GRADLE_USER_HOME_DIR
 KEEP_CONTAINER
 JDK_BOOT_DIR
@@ -228,6 +232,9 @@ function parseConfigurationArguments() {
 
         "--build-number"  | "-B" )
         BUILD_CONFIG[OPENJDK_BUILD_NUMBER]="$1"; shift;;
+
+        "--check-fingerprint" )
+        BUILD_CONFIG[CHECK_FINGERPRINT]="$1"; shift;;
 
         "--configure-args"  | "-C" )
         BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="$1"; shift;;
@@ -402,6 +409,15 @@ function parseConfigurationArguments() {
 
         "--jvm-variant"  | "-V" )
         BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
+
+        "--disable-test-image" )
+          BUILD_CONFIG[DISABLE_TEST_IMAGE]=true;;
+
+        "--hswap-agent-download-url" )
+        BUILD_CONFIG[HSWAP_AGENT_DOWNLOAD_URL]="$1"; shift;;
+
+        "--hswap-agent-core-download-url" )
+        BUILD_CONFIG[HSWAP_AGENT_CORE_DOWNLOAD_URL]="$1"; shift;;
 
         *) echo >&2 "Invalid build.sh option: ${opt}"; exit 1;;
       esac
@@ -662,6 +678,12 @@ function configDefaults() {
   BUILD_CONFIG[ADOPT_PATCHES]=true
 
   BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=false
+
+  BUILD_CONFIG[HSWAP_AGENT_DOWNLOAD_URL]=${BUILD_CONFIG[HSWAP_AGENT_DOWNLOAD_URL]:-""}
+
+  BUILD_CONFIG[HSWAP_AGENT_CORE_DOWNLOAD_URL]=${BUILD_CONFIG[HSWAP_AGENT_CORE_DOWNLOAD_URL]:-""}
+
+  BUILD_CONFIG[CHECK_FINGERPRINT]=true
 
   # Used in 'release' file for jdk8u
   BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"Undefined Vendor"}

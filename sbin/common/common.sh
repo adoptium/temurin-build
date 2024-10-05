@@ -219,6 +219,19 @@ createOpenJDKArchive()
 
   EXT=$(getArchiveExtension)
 
+  if [[ ! -z "${BUILD_CONFIG[HSWAP_AGENT_DOWNLOAD_URL]}" ]]; then
+      local hotswapAgentDir=${repoDir}
+      case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+          "darwin") hotswapAgentDir="${repoDir}/Contents/Home" ;;
+      esac
+      echo "Downloading HotswapAgent from ${BUILD_CONFIG[HSWAP_AGENT_DOWNLOAD_URL]}"
+      mkdir -p "${hotswapAgentDir}/lib/hotswap"
+      wget -q -O "${hotswapAgentDir}/lib/hotswap/hotswap-agent.jar" "${BUILD_CONFIG[HSWAP_AGENT_DOWNLOAD_URL]}"
+      if [[ ! -z "${BUILD_CONFIG[HSWAP_AGENT_CORE_DOWNLOAD_URL]}" ]]; then
+          wget -q -O "${hotswapAgentDir}/lib/hotswap/hotswap-agent-core.jar" "${BUILD_CONFIG[HSWAP_AGENT_CORE_DOWNLOAD_URL]}"
+      fi
+  fi
+
   local fullPath
   if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" != "darwin" ]]; then
     fullPath=$(crossPlatformRealPath "$repoDir")

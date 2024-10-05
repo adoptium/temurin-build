@@ -355,8 +355,13 @@ checkoutRequiredCodeToBuild() {
 setGitCloneArguments() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   local git_remote_repo_address="${BUILD_CONFIG[REPOSITORY]}.git"
+  local repo_path="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
   # shellcheck disable=SC2206
-  GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} "$git_remote_repo_address" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}")
+  if [ -x "$(which realpath)" ]; then
+      repo_path=$(realpath --relative-to=./ $repo_path)
+  fi
+
+  GIT_CLONE_ARGUMENTS=(${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} "$git_remote_repo_address" $repo_path)
 }
 
 updateOpenj9Sources() {
@@ -467,6 +472,10 @@ checkFingerprint() {
   local publicKey="$3"
   local expectedFingerprint="$4"
   local expectedChecksum="$5"
+
+  if [[ "${BUILD_CONFIG[CHECK_FINGERPRINT]}" == "false" ]]; then
+    return
+  fi
 
   if ! [ -x "$(command -v gpg)" ] || [ "${BUILD_CONFIG[OS_ARCHITECTURE]}" == "armv7l" ]; then
     echo "WARNING: GPG not present, resorting to checksum"
