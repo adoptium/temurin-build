@@ -71,7 +71,7 @@ before the comparable_patch.sh can be run.
 3. Compile [src/java/temurin/tools/BinRepl.java](https://github.com/adoptium/temurin-build/blob/master/tooling/src/java/temurin/tools/BinRepl.java) :
 
 - Ensure suitable JDK on PATH
-  - **do not ** use JDK you are just patching, the JDK is **broken** after (also during) of patching
+  - **do not** use JDK you are just patching, the JDK is **broken** after (also during) of patching
 - cd tooling/src/java
 - javac temurin/tools/BinRepl.java
 
@@ -84,52 +84,61 @@ before the comparable_patch.sh can be run.
 - A JDK for running BinRepl java : export PATH=<jdk>/bin:$PATH
 
 ##### Cygwin treacherousness
- - it is extremly difficult (maybe impossible) to invoke `vcvarsall.bat+cl` in cygwin directly
- - thus it is recomeded to launch this via `cmd -c` or better by executable .bat file:
-```
+
+- it is extremely difficult (maybe impossible) to invoke `vcvarsall.bat+cl` in cygwin directly
+- thus it is recommended to launch this via `cmd -c` or better by executable .bat file:
+
+```bash
  pushd "$MSVSC/BUILD/TOOLS"
+    rm -f WindowsUpdateVsVersionInfo.obj
     echo "
-    call vcvars64.bat
-    cl $(cygpath -m $YOUR_WORKDIR/temurin-build/tooling/src/c/WindowsUpdateVsVersionInfo.c) version.lib
+      call vcvars64.bat
+      cl $(cygpath -m $YOUR_WORKDIR/temurin-build/tooling/src/c/WindowsUpdateVsVersionInfo.c) version.lib
     " > bat.bat
     chmod 777 bat.bat
     ./bat.bat
     # copy it to any dir on path or add this dir to path
-    mv WindowsUpdateVsVersionInfo.exe  "$some/location/on/future/path"
+    mv WindowsUpdateVsVersionInfo.exe  "$FUTURE_PATH_ADDITIONS"
+    rm WindowsUpdateVsVersionInfo.obj bat.bat
   popd
 ```
- - the default paths should work fine, but are quite hidden eg:
-```
+
+- the default paths should work fine, but are quite hidden eg:
+
+```bash
   MSBASE_PATH="/cygdrive/c/Program Files/Microsoft Visual Studio/"
   MSVSC=$(find "$MSBASE_PATH" -type d | grep Hostx64/x64$ | head -n 1 )
   WINKIT=$(dirname "$(find '/cygdrive/c/Program Files (x86)/Windows Kits' | grep  x64/signtool.exe$ | head -n 1)")
   MSVSCBUILDTOOLS=$(find "$MSBASE_PATH" -type d | grep Auxiliary/Build$ | head -n 1 )
 ```
- - note the cygpath usages, sometimes are necessary, sometimes not. Java *bianries* have issues with it:
-  - eg for javac:
-```
+
+- note the cygpath usages, sometimes are necessary, sometimes not. Java *binaries* have issues with it:
+  - eg for $CLASSPATH,
+  - or javac it is mandatory:
+
+```bash
       ftureDir="$(pwd)/classes"
       if uname | grep CYGWIN ; then
         ftureDir=$(cygpath -m "${ftureDir}")
       fi
       $AQA_DIR/$jdkName/bin/javac -d "${ftureDir}" "../../tooling/src/java/temurin/tools/BinRepl.java"
 ```
-  - or $CLASSPATH it is mandatory
+
 #### Running comparable_patch.sh:
 
 1. Unzip your JDK archive into a directory (eg.jdk1)
-   - Note, that jdk will be modified, so the lcoation must be writiable
+   - Note, that jdk will be modified, so the location must be writable
    - if it is in admin/root location, `cp -rL` it to some temp.
    - in cygwin, you may need to fix permissions `chmod -R 777 "${JDK_DIR}"`
      - otherwise future calls to java/javap/javac would fail
 
-3. Run comparable_patch.sh
+2. Run comparable_patch.sh
 
 ```bash
 bash comparable_patch.sh --jdk-dir "<jdk_home_dir>" --version-string "<version_str>" --vendor-name "<vendor_name>" --vendor_url "<vendor_url>" --vendor-bug-url "<vendor_bug_url>" --vendor-vm-bug-url "<vendor_vm_bug_url>" [--patch-vs-version-info]
 ```
 
-The Vendor strings and urls can be found by running your jdk's "java -XshowSettings":
+The Vendor strings and URLs can be found by running your jdk's "java -XshowSettings":
 
 ```java
 java -XshowSettings:
@@ -140,12 +149,14 @@ java -XshowSettings:
     java.vendor.version = Temurin-21.0.1+12
 ...
 ```
+
 In cygwin, you must handle the trailing `\r` otherwise it will fail later:
-```
+
+```bash
    JAVA_VENDOR="$($JDK_DIR/bin/java -XshowSettings 2>&1| grep 'java.vendor = ' | sed 's/.* = //' | sed 's/\r.*//' )"
 ```
 
-eg.
+eg:
 
 ```bash
 bash ./comparable_patch.sh --jdk-dir "jdk1/jdk-21.0.1+12" --version-string "Temurin-21.0.1+12" --vendor-name "Eclipse Adoptium" --vendor_url "https://adoptium.net/" --vendor-bug-url "https://github.com/adoptium/adoptium-support/issues" --vendor-vm-bug-url "https://github.com/adoptium/adoptium-support/issues"
