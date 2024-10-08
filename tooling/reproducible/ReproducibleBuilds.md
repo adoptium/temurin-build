@@ -85,7 +85,7 @@ before the comparable_patch.sh can be run.
 
 ##### Cygwin treacherousness
 
-- it is extremely difficult (maybe impossible) to invoke `vcvarsall.bat+cl` in cygwin directly
+- It is extremely difficult (maybe impossible) to invoke `vcvarsall.bat+cl` in cygwin directly
 - thus it is recommended to launch this via `cmd -c` or better by executable .bat file:
 
 ```bash
