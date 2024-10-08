@@ -113,7 +113,7 @@ before the comparable_patch.sh can be run.
 ```
 
 - NOTE: Using `cygpath` is sometimes necessary. However, Java *binaries* can have issues with it:
-  - eg for $CLASSPATH,
+  - e.g., Use `cygpath` for `$CLASSPATH`,
   - or javac it is mandatory:
 
 ```bash
