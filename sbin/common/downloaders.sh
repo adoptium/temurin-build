@@ -49,7 +49,7 @@ function downloadLinuxBootJDK() {
   # the fallback mechanism, as downloading of the GA binary might fail.
   set +e
   curl -L -o bootjdk.tar.gz "${apiURL}"
-  apiSigURL=$(curl -v "${apiURL}" 2>&1 | tr -d \\r | awk '/^< Location:/{print $3 ".sig"}')
+  apiSigURL=$(curl -v "${apiURL}" 2>&1 | tr -d \\r | awk '/^< [Ll]ocation:/{print $3 ".sig"}')
   if ! grep "No releases match the request" bootjdk.tar.gz; then
     curl -L -o bootjdk.tar.gz.sig "${apiSigURL}"
     gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
