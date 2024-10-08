@@ -2,8 +2,8 @@
 
 LABEL=params.LABEL ? params.LABEL : 'ci.role.test&&hw.arch.x86&&sw.os.linux'
 
-TEMURIN_BUILD_REPO="https://github.com/adamfarley/temurin-build"
-TEMURIN_BUILD_BRANCH="add_versions_and_shas_to_build_getdependencies"
+TEMURIN_BUILD_REPO="https://github.com/adoptium/temurin-build"
+TEMURIN_BUILD_BRANCH="master"
 
 stage('Queue') {
     node("$LABEL") {
