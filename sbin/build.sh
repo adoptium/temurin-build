@@ -91,10 +91,10 @@ configureDevKitConfigureParameter() {
       fi
 
       # Add Windows Redist DLL paths
-      addConfigureArg "--with-ucrt-dll-dir="    "{BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/ucrt/DLLs/${dll_arch}"
-      addConfigureArg "--with-msvcr-dll="       "{BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/${dll_arch}/vcruntime140.dll"
-      addConfigureArg "--with-vcruntime-1-dll=" "{BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/${dll_arch}/vcruntime140_1.dll"
-      addConfigureArg "--with-msvcp-dll="       "{BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/${dll_arch}/msvcp140.dll"
+      addConfigureArg "--with-ucrt-dll-dir="    "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/ucrt/DLLs/${dll_arch}"
+      addConfigureArg "--with-msvcr-dll="       "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/${dll_arch}/vcruntime140.dll"
+      addConfigureArg "--with-vcruntime-1-dll=" "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/${dll_arch}/vcruntime140_1.dll"
+      addConfigureArg "--with-msvcp-dll="       "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/${dll_arch}/msvcp140.dll"
     else
       addConfigureArg "--with-devkit=" "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}"
     fi
