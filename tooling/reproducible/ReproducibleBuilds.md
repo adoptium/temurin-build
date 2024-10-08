@@ -65,7 +65,7 @@ before the comparable_patch.sh can be run.
   - cd tooling/src/c
   - run vcvarsall.bat as your arch needs. Eg: vcvars64.bat on x64 windows
     - You can set up INCLUDES manually but it is not worthy
-    - vcvarsall.bat creates subshell, if  you do not want it, use `call` eg `call vcvars64.bat` instead of direct execution
+    - vcvarsall.bat creates a subshell, if you do not want it to create a subshell, use `call` eg `call vcvars64.bat` instead of the direct execution.
   - cl WindowsUpdateVsVersionInfo.c version.lib
 
 3. Compile [src/java/temurin/tools/BinRepl.java](https://github.com/adoptium/temurin-build/blob/master/tooling/src/java/temurin/tools/BinRepl.java) :
