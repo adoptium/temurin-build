@@ -83,11 +83,11 @@ configureDevKitConfigureParameter() {
       # ARCHITECTURE is set to the "target" architecture by caller, or defaults to build architecture if not set
       local dll_arch
       if [[ "${ARCHITECTURE}" == "x86-32" ]]; then
-        dll_arch = "x86"
+        dll_arch="x86"
       elif [[ "${ARCHITECTURE}" == "aarch64" ]]; then
-        dll_arch = "arm64"
+        dll_arch="arm64"
       else
-        dll_arch = "x64"
+        dll_arch="x64"
       fi
 
       # Add Windows Redist DLL paths
