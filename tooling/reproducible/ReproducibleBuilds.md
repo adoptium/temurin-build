@@ -130,7 +130,7 @@ before the comparable_patch.sh can be run.
    - Note, that jdk will be modified, so the location must be writable
    - if it is in admin/root location, `cp -rL` it to some temp directory.
    - in cygwin, you may need to fix permissions `chmod -R 777 "${JDK_DIR}"`
-     - otherwise future calls to java/javap/javac would fail
+     - otherwise future calls to `java/javap/javac` would fail
 
 2. Run comparable_patch.sh
 
