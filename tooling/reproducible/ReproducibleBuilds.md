@@ -64,7 +64,7 @@ before the comparable_patch.sh can be run.
 - Compile:
   - cd tooling/src/c
   - run vcvarsall.bat as your arch needs. Eg: vcvars64.bat on x64 windows
-    - You can set up INCUDES manually but it is not worthy
+    - You can set up INCLUDES manually but it is not worthy
     - vcvarsall.bat creates subshell, if  you do not want it, use `call` eg `call vcvars64.bat` instead of direct execution
   - cl WindowsUpdateVsVersionInfo.c version.lib
 
