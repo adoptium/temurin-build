@@ -112,7 +112,7 @@ before the comparable_patch.sh can be run.
   MSVSCBUILDTOOLS=$(find "$MSBASE_PATH" -type d | grep Auxiliary/Build$ | head -n 1 )
 ```
 
-- note the cygpath usages, sometimes are necessary, sometimes not. Java *binaries* have issues with it:
+- NOTE: Using `cygpath` is sometimes necessary. However, Java *binaries* can have issues with it:
   - eg for $CLASSPATH,
   - or javac it is mandatory:
 
