@@ -156,7 +156,7 @@ In cygwin, you must handle the trailing `\r` otherwise it will fail later:
    JAVA_VENDOR="$($JDK_DIR/bin/java -XshowSettings 2>&1| grep 'java.vendor = ' | sed 's/.* = //' | sed 's/\r.*//' )"
 ```
 
-eg:
+e.g.,:
 
 ```bash
 bash ./comparable_patch.sh --jdk-dir "jdk1/jdk-21.0.1+12" --version-string "Temurin-21.0.1+12" --vendor-name "Eclipse Adoptium" --vendor_url "https://adoptium.net/" --vendor-bug-url "https://github.com/adoptium/adoptium-support/issues" --vendor-vm-bug-url "https://github.com/adoptium/adoptium-support/issues"
