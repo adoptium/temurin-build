@@ -76,7 +76,28 @@ addConfigureArgIfValueIsNotEmpty() {
 # Configure the DevKit if required
 configureDevKitConfigureParameter() {
   if [[ -n "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" ]]; then
-    addConfigureArg "--with-devkit=" "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}"
+    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+      # Windows DevKit, currently only Redist DLLs
+
+      # This is TARGET Architecture for the Redist DLLs to use
+      # ARCHITECTURE is set to the "target" architecture by caller, or defaults to build architecture if not set
+      local dll_arch
+      if [[ "${ARCHITECTURE}" == "x86-32" ]]; then
+        dll_arch = "x86"
+      elif [[ "${ARCHITECTURE}" == "aarch64" ]]; then
+        dll_arch = "arm64"
+      else
+        dll_arch = "x64"
+      fi
+
+      # Add Windows Redist DLL paths
+      addConfigureArg "--with-ucrt-dll-dir="    "{BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/ucrt/DLLs/${dll_arch}"
+      addConfigureArg "--with-msvcr-dll="       "{BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/${dll_arch}/vcruntime140.dll"
+      addConfigureArg "--with-vcruntime-1-dll=" "{BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/${dll_arch}/vcruntime140_1.dll"
+      addConfigureArg "--with-msvcp-dll="       "{BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}/${dll_arch}/msvcp140.dll"
+    else
+      addConfigureArg "--with-devkit=" "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}"
+    fi
   fi
 } 
 

@@ -37,6 +37,8 @@ ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f0878332915
 ALSA_LIB_GPGKEYID=${ALSA_LIB_GPGKEYID:-A6E59C91}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 
+# sha256 of https://github.com/adoptium/devkit-binaries/releases/tag/vs2022_redist_14.40.33807_10.0.26100.0
+WINDOWS_REDIST_CHECKSUM="a29ada15d941a7b2065e9a4273fd6b97df44d089ed2b9f860ded442f7fe69767"
 
 copyFromDir() {
   echo "Copying OpenJDK source from  ${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
@@ -669,14 +671,8 @@ setupGpg() {
     echo "GNUPGHOME=$GNUPGHOME"
 }
 
-# Download the required DevKit if necessary and not available in /usr/local/devkit
-downloadDevkit() {
-  if [[ -n "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" ]]; then
-    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
-    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
-
-    BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]=""
-
+# Download the required Linux DevKit if necessary and not available in /usr/local/devkit
+downloadLinuxDevkit() {
     local devkit_target="${BUILD_CONFIG[OS_ARCHITECTURE]}-linux-gnu"
 
     local USR_LOCAL_DEVKIT="/usr/local/devkit/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
@@ -732,6 +728,77 @@ downloadDevkit() {
       fi
 
       BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    fi
+}
+
+# Download the required Windows DevKit if necessary and not available in /usr/local/devkit
+#   For the moment this is just support for Windows Redist DLLs
+downloadWindowsDevkit() {
+    local USR_LOCAL_DEVKIT="/usr/local/devkit/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+    if [[ -d "${USR_LOCAL_DEVKIT}" ]]; then
+      local usrLocalDevkitInfo="${USR_LOCAL_DEVKIT}/devkit.info"
+       if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${usrLocalDevkitInfo}"; then
+        echo "WARNING: Devkit ${usrLocalDevkitInfo} does not match required release:"
+        echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+        echo "       ${USR_LOCAL_DEVKIT}: $(grep ADOPTIUM_DEVKIT_RELEASE= "${usrLocalDevkitInfo}")"
+        echo "Attempting to download the required DevKit instead"
+      else
+        # Found a matching DevKit
+        echo "Using matching DevKit from location ${USR_LOCAL_DEVKIT}"
+        BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]="${USR_LOCAL_DEVKIT}"
+      fi
+    fi
+
+    # Download from adoptium/devkit-runtimes if we have not found a matching one locally
+    if [[ -z "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}" ]]; then
+      local devkit_zip="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.zip"
+
+      # Determine DevKit zip to download for this release
+      local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+      local devkit="${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}.zip"
+
+      # Download zip
+      echo "Downloading DevKit : ${devkitUrl}/${devkit}"
+      curl -L --fail --silent --show-error -o "${devkit_zip}" "${devkitUrl}/${devkit}"
+
+      # Verify checksum
+      local expectedChecksum="${WINDOWS_REDIST_CHECKSUM}"
+      local actualChecksum=$(sha256File "${devkit_zip}")
+      if [ "${actualChecksum}" != "${expectedChecksum}" ]; then
+        echo "Failed to verify checksum on ${devkit_zip}"
+
+        echo "Expected ${expectedChecksum} got ${actualChecksum}"
+        exit 1
+      fi
+
+      unzip "${devkit_zip}" -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+      rm "${devkit_zip}"
+
+      # Validate devkit.info matches value passed in
+      local devkitInfo="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.info"
+      if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${devkitInfo}"; then
+        echo "ERROR: Devkit does not match required release:"
+        echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+        echo "       Downloaded: $(grep ADOPTIUM_DEVKIT_RELEASE= "${devkitInfo}")"
+        exit 1
+      fi
+
+      BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    fi
+}
+
+# Download the required DevKit if necessary and not available in /usr/local/devkit
+downloadDevkit() {
+  if [[ -n "${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" ]]; then
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
+
+    BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]=""
+
+    if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
+      downloadLinuxDevkit
+    elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+      downloadWindowsDevkit
     fi
   fi
 }
