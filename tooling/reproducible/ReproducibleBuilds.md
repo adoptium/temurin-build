@@ -128,7 +128,7 @@ before the comparable_patch.sh can be run.
 
 1. Unzip your JDK archive into a directory (eg.jdk1)
    - Note, that jdk will be modified, so the location must be writable
-   - if it is in admin/root location, `cp -rL` it to some temp.
+   - if it is in admin/root location, `cp -rL` it to some temp directory.
    - in cygwin, you may need to fix permissions `chmod -R 777 "${JDK_DIR}"`
      - otherwise future calls to java/javap/javac would fail
 
