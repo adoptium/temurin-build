@@ -731,21 +731,21 @@ downloadLinuxDevkit() {
     fi
 }
 
-# Download the required Windows DevKit if necessary and not available in /usr/local/devkit
+# Download the required Windows DevKit if necessary and not available in c:/openjdk/devkit
 #   For the moment this is just support for Windows Redist DLLs
 downloadWindowsDevkit() {
-    local USR_LOCAL_DEVKIT="/usr/local/devkit/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
-    if [[ -d "${USR_LOCAL_DEVKIT}" ]]; then
-      local usrLocalDevkitInfo="${USR_LOCAL_DEVKIT}/devkit.info"
-       if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${usrLocalDevkitInfo}"; then
-        echo "WARNING: Devkit ${usrLocalDevkitInfo} does not match required release:"
+    local WIN_LOCAL_DEVKIT="/cygdrive/C/openjdk/devkit/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+    if [[ -d "${WIN_LOCAL_DEVKIT}" ]]; then
+      local winLocalDevkitInfo="${WIN_LOCAL_DEVKIT}/devkit.info"
+       if ! grep "ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}" "${winLocalDevkitInfo}"; then
+        echo "WARNING: Devkit ${winLocalDevkitInfo} does not match required release:"
         echo "       Required:   ADOPTIUM_DEVKIT_RELEASE=${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
-        echo "       ${USR_LOCAL_DEVKIT}: $(grep ADOPTIUM_DEVKIT_RELEASE= "${usrLocalDevkitInfo}")"
+        echo "       ${WIN_LOCAL_DEVKIT}: $(grep ADOPTIUM_DEVKIT_RELEASE= "${winLocalDevkitInfo}")"
         echo "Attempting to download the required DevKit instead"
       else
         # Found a matching DevKit
-        echo "Using matching DevKit from location ${USR_LOCAL_DEVKIT}"
-        BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]="${USR_LOCAL_DEVKIT}"
+        echo "Using matching DevKit from location ${WIN_LOCAL_DEVKIT}"
+        BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]="${WIN_LOCAL_DEVKIT}"
       fi
     fi
 
