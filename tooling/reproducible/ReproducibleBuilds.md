@@ -103,7 +103,7 @@ before the comparable_patch.sh can be run.
   popd
 ```
 
-- the default paths should work fine, but are quite hidden eg:
+- NOTE: The default paths should work fine, e.g.,:
 
 ```bash
   MSBASE_PATH="/cygdrive/c/Program Files/Microsoft Visual Studio/"
