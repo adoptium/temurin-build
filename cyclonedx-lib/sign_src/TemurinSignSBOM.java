@@ -17,8 +17,6 @@ package temurin.sbom;
 
 import org.cyclonedx.exception.GeneratorException;
 import org.cyclonedx.generators.json.BomJsonGenerator;
-import org.cyclonedx.CycloneDxSchema;
-import org.cyclonedx.generators.json.BomJsonGenerator;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.parsers.JsonParser;
 import org.cyclonedx.Version;
