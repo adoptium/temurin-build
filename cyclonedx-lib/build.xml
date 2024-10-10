@@ -24,10 +24,10 @@
         <property name="openkeystore-version" value="1.0.0"/>
 
         <!-- When retrieving sbom dependency jars with default settings, we will look here. -->
-        <property name="sbom_dependency_default_location" value="https://ci.adoptium.net/view/all/job/build.getDependency/467/artifact/sbom_dependencies"/>
+        <property name="sbom_dependency_default_location" value="https://ci.adoptium.net/view/all/job/build.getDependency/469/artifact/sbom_dependencies"/>
 
         <!-- classpath for running application -->
-        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/temurin-sign-sbom.jar"/>
+        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/temurin-sign-sbom.jar:build/jar/commons-collections4.jar"/>
 
         <target name="dep-checks">
                 <available file="build/jar/cyclonedx-core-java.jar" property="cyclonedx_available"/>
@@ -38,6 +38,7 @@
                 <available file="build/jar/json-schema.jar" property="json-schema_available"/>
                 <available file="build/jar/commons-codec.jar" property="commons-codec_available"/>
                 <available file="build/jar/commons-io.jar" property="commons-io_available"/>
+                <available file="build/jar/commons-collections4.jar" property="commons-collections4_available"/>
                 <available file="build/jar/github-package-url.jar" property="github-package-url_available"/>
                 <available file="build/webpki.org-libext-1.00.jar" property="openkeystore_available"/>
         </target>
@@ -65,7 +66,7 @@
                 </move>
         </target>
 
-        <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
+        <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-commons-collections4, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
                 <echo message="Building cyclonedx-lib TemurinSignSBOM"/>
         </target>
 
@@ -114,12 +115,17 @@
                 <download-file-with-default-options destfile="commons-io.jar"/>
         </target>
 
+        <target name="download-commons-collections4" unless="commons-collections4_available">
+                <echo message="Downloading commons-collections4"/>
+                <download-file-with-default-options destfile="commons-collections4.jar"/>
+        </target>
+
         <target name="download-github-package-url" unless="github-package-url_available">
                 <echo message="Downloading github-package-url"/>
                 <download-file-with-default-options destfile="github-package-url.jar"/>
         </target>
 
-	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
+	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-commons-collections4, download-github-package-url, compile, jar">
                 <echo message="Building cyclonedx-lib"/>
         </target>
 
