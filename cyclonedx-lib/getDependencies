@@ -48,6 +48,7 @@ def fetchDeps() {
             def commons_codec_version = readFile(file : dep_data + 'versions/commons-codec.jar.version').replaceAll("\\s","")
             def commons_io_version = readFile(file : dep_data + 'versions/commons-io.jar.version').replaceAll("\\s","")
             def github_package_url_version = readFile(file : dep_data + 'versions/github-package-url.jar.version').replaceAll("\\s","")
+            def commons_collections4_version = readFile(file : dep_data + 'versions/commons-collections4.jar.version').replaceAll("\\s","")
 
             // Each of these fetches a jar in the format: fetchSingleFile(jar name post-download, current jar location under Maven)
             fetchSingleFile("cyclonedx-core-java.jar", "org/cyclonedx/cyclonedx-core-java/${cyclonedx_core_java_version}/cyclonedx-core-java-${cyclonedx_core_java_version}.jar")
@@ -59,6 +60,7 @@ def fetchDeps() {
             fetchSingleFile("commons-codec.jar", "commons-codec/commons-codec/${commons_codec_version}/commons-codec-${commons_codec_version}.jar")
             fetchSingleFile("github-package-url.jar", "com/github/package-url/packageurl-java/${github_package_url_version}/packageurl-java-${github_package_url_version}.jar")
             fetchSingleFile("commons-io.jar", "commons-io/commons-io/${commons_io_version}/commons-io-${commons_io_version}.jar")
+            fetchSingleFile("commons-collections4.jar", "org/apache/commons/commons-collections4/${commons_collections4_version}/commons-collections4-${commons_collections4_version}.jar")
 
 
             // Check that every file matches the sha of the file we expected.
