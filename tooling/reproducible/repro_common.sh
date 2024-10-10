@@ -91,6 +91,8 @@ function removeSystemModulesHashBuilderParams() {
   virtualFunction="invokevirtual"
   systemModules="SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class"
   local JDK_DIR="$1"
+  local OS="$2"
+  local work_JDK="$3"
   for systemModule in $systemModules
     do
       FILES=$(find "${JDK_DIR}" -type f -name "$systemModule")
@@ -101,7 +103,7 @@ function removeSystemModulesHashBuilderParams() {
           else
             ff=$f
           fi
-          "${JDK_DIR}"/bin/javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
+          "${work_JDK}"/bin/javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
           rm "$f"
 
           # Remove "instruction number:" prefix, so we can just match code
@@ -250,6 +252,9 @@ function removeMacOSNonComparableData() {
 # java.base also requires the dependent module "hash:" values to be excluded
 # as they differ due to the Signatures
 function processModuleInfo() {
+  local JDK_DIR="$1"
+  local OS="$2"
+  local work_JDK="$3"
   echo "process Module Info from ${JDK_DIR}" 
   if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
     echo "Normalizing ModuleAttributes order in module-info.class, converting to javap"
@@ -264,7 +269,7 @@ function processModuleInfo() {
       else
         ff=$f
       fi
-      "${JDK_DIR}"/bin/javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
+      "${work_JDK}"/bin/javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
       rm "$f"
 
       cc=99

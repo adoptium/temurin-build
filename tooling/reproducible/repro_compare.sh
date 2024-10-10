@@ -21,6 +21,10 @@ BLD_TYPE2="$3"
 JDK_DIR2="$4"
 OS="$5"
 
+mkdir "${JDK_DIR}_BK"
+cp -R "${JDK_DIR1}"/* "${JDK_DIR}"_BK
+BK_JDK_DIR=$(realpath "${JDK_DIR}"_BK/)
+
 JDK_DIR_Arr=("${JDK_DIR1}" "${JDK_DIR2}")
 for  JDK_DIR in "${JDK_DIR_Arr[@]}"
 do
@@ -46,9 +50,9 @@ do
   cleanTemurinBuildInfo "${JDK_DIR}"
 
   if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then 
-    removeSystemModulesHashBuilderParams "${JDK_DIR}" "${OS}"
+    removeSystemModulesHashBuilderParams "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"
   fi
-  processModuleInfo
+  processModuleInfo "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"
 done
 
 
