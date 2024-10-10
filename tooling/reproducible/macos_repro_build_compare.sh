@@ -355,7 +355,7 @@ Check_And_Install_Ant() {
     echo "Ant Doesnt Exist At The Correct Version - Installing"
     # Ant Version Not Found... Check And Create Paths
     echo Downloading ant for SBOM creation:
-    curl https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.zip > ${WORK_DIR}/apache-ant-${ANT_VERSION}-bin.zip
+    curl https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.zip > "${WORK_DIR}"/apache-ant-${ANT_VERSION}-bin.zip
     (cd "$WORK_DIR" && unzip -qn ./apache-ant-${ANT_VERSION}-bin.zip)
     rm "$WORK_DIR"/apache-ant-${ANT_VERSION}-bin.zip
     echo Downloading ant-contrib-${ANT_CONTRIB_VERSION}:
@@ -452,7 +452,7 @@ Build_JDK() {
   cd "$WORK_DIR"
   echo "cd temurin-build && ./makejdk-any-platform.sh $buildArgs 2>&1 | tee build.$$.log" | sh
   # Copy The Built JDK To The Working Directory
-  cp "$WORK_DIR"/temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz $WORK_DIR/reproJDK.tar.gz
+  cp "$WORK_DIR"/temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz "$WORK_DIR"/reproJDK.tar.gz
 }
 
 Compare_JDK() {
@@ -497,9 +497,8 @@ Compare_JDK() {
     cp "$WORK_DIR"/compare/reprotest.diff "$REPORT_DIR"
     cp "$WORK_DIR"/reproJDK.tar.gz "$REPORT_DIR"
   fi
-  
-  exit $rc
-  
+  Clean_Up_Everything
+  exit $rc 
 }
 
 #
@@ -541,6 +540,3 @@ echo "---------------------------------------------"
 Build_JDK
 echo "---------------------------------------------"
 Compare_JDK
-echo "---------------------------------------------"
-Clean_Up_Everything
-exit $rc
