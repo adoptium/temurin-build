@@ -89,8 +89,8 @@ function removeSystemModulesHashBuilderParams() {
   moduleHashesFunction="// Method jdk/internal/module/ModuleHashes\$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes\$Builder;"
   moduleString="// String "
   virtualFunction="invokevirtual"
-  local JDK_DIR="$1"
   systemModules="SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class"
+  local JDK_DIR="$1"
   for systemModule in $systemModules
     do
       FILES=$(find "${JDK_DIR}" -type f -name "$systemModule")
@@ -101,11 +101,11 @@ function removeSystemModulesHashBuilderParams() {
           else
             ff=$f
           fi
-          javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
+          "${JDK_DIR}"/bin/javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
           rm "$f"
 
           # Remove "instruction number:" prefix, so we can just match code
-          if [[ $(uname) =~ Darwin* ]]; then
+          if [[ "$OS" =~ Darwin* ]]; then
             sed -i "" -E 's/^[[:space:]]+[0-9]+:(.*)/\1/' "$f.javap.tmp"
           else
             sed -i -E 's/^[[:space:]]+[0-9]+:(.*)/\1/' "$f.javap.tmp"
@@ -153,7 +153,6 @@ function removeSystemModulesHashBuilderParams() {
 #   reprohex  - A hex UUID to identify the binary version, again generated from binary content
 function removeWindowsNonComparableData() {
  echo "Removing EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
-
  # We need to do this for all executables if patching VS_VERSION_INFO
  if [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
     FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
@@ -223,7 +222,7 @@ function removeWindowsNonComparableData() {
 # See https://github.com/adoptium/temurin-build/issues/2899#issuecomment-1153757419
 function removeMacOSNonComparableData() {
   echo "Removing MacOS dylib non-comparable UUID from ${JDK_DIR}"
-
+  MAC_JDK_ROOT="${JDK_DIR}/../../Contents"
   FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
   for f in $FILES
   do
@@ -251,6 +250,7 @@ function removeMacOSNonComparableData() {
 # java.base also requires the dependent module "hash:" values to be excluded
 # as they differ due to the Signatures
 function processModuleInfo() {
+  echo "process Module Info from ${JDK_DIR}" 
   if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
     echo "Normalizing ModuleAttributes order in module-info.class, converting to javap"
 
@@ -264,7 +264,7 @@ function processModuleInfo() {
       else
         ff=$f
       fi
-      javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
+      "${JDK_DIR}"/bin/javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
       rm "$f"
 
       cc=99
