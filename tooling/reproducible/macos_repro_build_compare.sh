@@ -432,7 +432,9 @@ Prepare_Env_For_Build() {
   # reset --jdk-boot-dir
   # shellcheck disable=SC2001
   buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir ${BOOTJDK_HOME}|")"
+  # shellcheck disable=SC2001
   buildArgs="$(echo "$buildArgs" | sed -e "s|--with-sysroot=[^ ]*|--with-sysroot=${MAC_SDK_LOCATION}|")"
+  # shellcheck disable=SC2001
   buildArgs="$(echo "$buildArgs" | sed -e "s|--user-openjdk-build-root-directory [^ ]*|--user-openjdk-build-root-directory ${WORK_DIR}/temurin-build/workspace/build/openjdkbuild/|")"
   # remove ingored options
   buildArgs=${buildArgs/--assemble-exploded-image /}

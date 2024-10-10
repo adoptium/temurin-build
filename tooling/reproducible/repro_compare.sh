@@ -13,7 +13,7 @@
 # ********************************************************************************
 
 # shellcheck disable=SC1091
-source $(dirname "$0")/repro_common.sh
+source "$(dirname "$0")"/repro_common.sh
 
 BLD_TYPE1="$1"
 JDK_DIR1="$2"
@@ -36,7 +36,7 @@ do
 
   echo "Pre-processing ${JDK_DIR}"
   rc=0
-  source $(dirname "$0")/repro_process.sh "${JDK_DIR}" "${OS}" || rc=$?
+  source "$(dirname "$0")"/repro_process.sh "${JDK_DIR}" "${OS}" || rc=$?
   if [ $rc != 0 ]; then
     echo "Pre-process of ${JDK_DIR} ${OS} failed"
     exit 1
