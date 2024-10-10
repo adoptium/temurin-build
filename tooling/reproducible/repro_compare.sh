@@ -51,10 +51,9 @@ do
 
   if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then 
     removeSystemModulesHashBuilderParams "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"
+    processModuleInfo "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"
   fi
-  processModuleInfo "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"
 done
-
 
 files1=$(find "${JDK_DIR1}" -type f | wc -l)
 echo "Number of files: ${files1}"
