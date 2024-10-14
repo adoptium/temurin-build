@@ -472,7 +472,8 @@ pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
     CLASSPATH="${ftureDir}"
     export CLASSPATH
     if uname | grep CYGWIN ; then
-      export CLASSPATH=$(cygpath -m "${CLASSPATH}")
+      CLASSPATH=$(cygpath -m "${CLASSPATH}")
+      export CLASSPATH="${CLASSPATH}"
     fi
     getKeysForComparablePatch "${WORKDIR}/${jdkName}"
     # we cannot use the JDK we are currently processing. It is broken by the patching
