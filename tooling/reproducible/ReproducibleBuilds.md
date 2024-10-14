@@ -148,11 +148,7 @@ java -XshowSettings:
 ...
 ```
 
-In cygwin, you must handle the trailing `\r` otherwise it will fail later:
-
-```bash
-   JAVA_VENDOR="$($JDK_DIR/bin/java -XshowSettings 2>&1| grep 'java.vendor = ' | sed 's/.* = //' | sed 's/\r.*//' )"
-```
+In cygwin, you must handle the trailing `\r` otherwise it will fail later. sed `\r`  away as eg: `sed 's/\r.*//'` is usually enough.
 
 e.g.,:
 
