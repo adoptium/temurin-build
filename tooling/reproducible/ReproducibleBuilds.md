@@ -63,11 +63,15 @@ before the comparable_patch.sh can be run.
 - Ensure VS2022 SDK is installed and on PATH
 - Compile:
   - cd tooling/src/c
+  - run vcvarsall.bat as your arch needs. Eg: vcvars64.bat on x64 windows
+    - You can set up INCLUDES manually but it is not worthy
+    - vcvarsall.bat creates a subshell, if you do not want it to create a subshell, use `call` eg `call vcvars64.bat` instead of the direct execution.
   - cl WindowsUpdateVsVersionInfo.c version.lib
 
 3. Compile [src/java/temurin/tools/BinRepl.java](https://github.com/adoptium/temurin-build/blob/master/tooling/src/java/temurin/tools/BinRepl.java) :
 
 - Ensure suitable JDK on PATH
+  - **do not** use JDK you are just patching, as that JDK gets **broken** by the process of patching
 - cd tooling/src/java
 - javac temurin/tools/BinRepl.java
 
@@ -79,9 +83,52 @@ before the comparable_patch.sh can be run.
 - For BinRepl.class : export CLASSPATH=<temurin-build>/tooling/src/java:$CLASSPATH
 - A JDK for running BinRepl java : export PATH=<jdk>/bin:$PATH
 
+##### Cygwin treacherousness
+
+- It is extremely difficult (maybe impossible) to invoke `vcvarsall.bat+cl` in cygwin directly
+- Thus, it is recommended to launch this via `cmd -c` or preferably by an executable `.bat` file such as:
+
+```bash
+ pushd "$MSVSC/BUILD/TOOLS"
+    rm -f WindowsUpdateVsVersionInfo.obj
+    echo "
+      call vcvars64.bat
+      cl $(cygpath -m $YOUR_WORKDIR/temurin-build/tooling/src/c/WindowsUpdateVsVersionInfo.c) version.lib
+    " > bat.bat
+    chmod 777 bat.bat
+    ./bat.bat
+    # copy it to any dir on path or add this dir to path
+    mv WindowsUpdateVsVersionInfo.exe  "$FUTURE_PATH_ADDITIONS"
+    rm WindowsUpdateVsVersionInfo.obj bat.bat
+  popd
+```
+
+- NOTE: The default paths should work fine, e.g.,:
+
+```bash
+  MSBASE_PATH="/cygdrive/c/Program Files/Microsoft Visual Studio/"
+  MSVSC=$(find "$MSBASE_PATH" -type d | grep Hostx64/x64$ | head -n 1 )
+  WINKIT=$(dirname "$(find '/cygdrive/c/Program Files (x86)/Windows Kits' | grep  x64/signtool.exe$ | head -n 1)")
+  MSVSCBUILDTOOLS=$(find "$MSBASE_PATH" -type d | grep Auxiliary/Build$ | head -n 1 )
+```
+
+- NOTE: Using `cygpath` is sometimes necessary. However, Java *binaries* can have issues with it:
+  - e.g., Use `cygpath` for `$CLASSPATH`,
+  - or javac it is mandatory:
+
+```bash
+      ftureDir="$(pwd)/classes"
+      if uname | grep CYGWIN ; then
+        ftureDir=$(cygpath -m "${ftureDir}")
+      fi
+      $AQA_DIR/$jdkName/bin/javac -d "${ftureDir}" "../../tooling/src/java/temurin/tools/BinRepl.java"
+```
+
 #### Running comparable_patch.sh:
 
 1. Unzip your JDK archive into a directory (eg.jdk1)
+   - Note, that jdk will be modified, so the location must be writable
+   - if it is in admin/root location, `cp -rL` it to some temp directory.
 
 2. Run comparable_patch.sh
 
@@ -89,7 +136,7 @@ before the comparable_patch.sh can be run.
 bash comparable_patch.sh --jdk-dir "<jdk_home_dir>" --version-string "<version_str>" --vendor-name "<vendor_name>" --vendor_url "<vendor_url>" --vendor-bug-url "<vendor_bug_url>" --vendor-vm-bug-url "<vendor_vm_bug_url>" [--patch-vs-version-info]
 ```
 
-The Vendor strings and urls can be found by running your jdk's "java -XshowSettings":
+The Vendor strings and URLs can be found by running your jdk's "java -XshowSettings":
 
 ```java
 java -XshowSettings:
@@ -101,7 +148,9 @@ java -XshowSettings:
 ...
 ```
 
-eg.
+In cygwin, you must handle the trailing `\r` otherwise it will fail later. sed `\r`  away as eg: `sed 's/\r.*//'` is usually enough.
+
+e.g.,:
 
 ```bash
 bash ./comparable_patch.sh --jdk-dir "jdk1/jdk-21.0.1+12" --version-string "Temurin-21.0.1+12" --vendor-name "Eclipse Adoptium" --vendor_url "https://adoptium.net/" --vendor-bug-url "https://github.com/adoptium/adoptium-support/issues" --vendor-vm-bug-url "https://github.com/adoptium/adoptium-support/issues"
