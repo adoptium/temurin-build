@@ -1,5 +1,5 @@
 #!/bin/bash
- ********************************************************************************
+# ********************************************************************************
 # Copyright (c) 2024 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) with this work for additional
@@ -43,7 +43,8 @@ while [ -h "$SCRIPT_SOURCE" ]; do # resolve $SOURCE until the file is no longer 
   # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
   [[ $SCRIPT_SOURCE != /* ]] && SCRIPT_SOURCE="$SCRIPT_DIR/$SCRIPT_SOURCE"
 done
-readonly COMPARE_WAPPER_SCRIPT_DIR="$( cd -P "$( dirname "$SCRIPT_SOURCE" )" && pwd )"
+COMPARE_WAPPER_SCRIPT_DIR="$( cd -P "$( dirname "$SCRIPT_SOURCE" )" && pwd )"
+readonly COMPARE_WAPPER_SCRIPT_DIR
 
 set -euxo pipefail
 
@@ -186,7 +187,7 @@ function compileAndSetToFuturePath() {
     # withotu call, the vcvars64.bat crates subshell (sub cmd)
     echo "
       call vcvars64.bat
-      cl $(cygpath -m ${COMPARE_WAPPER_SCRIPT_DIR}/src/c/WindowsUpdateVsVersionInfo.c) version.lib
+      cl $(cygpath -m "${COMPARE_WAPPER_SCRIPT_DIR}/src/c/WindowsUpdateVsVersionInfo.c") version.lib
     " > bat.bat
     chmod 777 bat.bat
     ./bat.bat
@@ -208,11 +209,11 @@ function chmod777() {
 function getKeysForComparablePatch() {
   local JDK_DIR="${1}"
   set +e
-    JAVA_VENDOR="$($JDK_DIR/bin/java -XshowSettings 2>&1| grep 'java.vendor = ' | sed 's/.* = //' | sed 's/\r.*//' )"
-    JAVA_VENDOR_URL="$($JDK_DIR/bin/java -XshowSettings 2>&1| grep 'java.vendor.url = ' | sed 's/.* = //' | sed 's/\r.*//')"
-    JAVA_VENDOR_URL_BUG="$($JDK_DIR/bin/java -XshowSettings 2>&1| grep 'java.vendor.url.bug = ' | sed 's/.* = //' | sed 's/\r.*//')"
-    JAVA_VENDOR_VERSION="$($JDK_DIR/bin/java -XshowSettings 2>&1| grep 'java.vendor.version = ' | sed 's/.* = //' | sed 's/\r.*//')"
-  set -e # dont ask
+    JAVA_VENDOR="$("$JDK_DIR/bin/java" -XshowSettings 2>&1| grep 'java.vendor = ' | sed 's/.* = //' | sed 's/\r.*//' )"
+    JAVA_VENDOR_URL="$("$JDK_DIR/bin/java" -XshowSettings 2>&1| grep 'java.vendor.url = ' | sed 's/.* = //' | sed 's/\r.*//')"
+    JAVA_VENDOR_URL_BUG="$("$JDK_DIR/bin/java" -XshowSettings 2>&1| grep 'java.vendor.url.bug = ' | sed 's/.* = //' | sed 's/\r.*//')"
+    JAVA_VENDOR_VERSION="$("$JDK_DIR/bin/java" -XshowSettings 2>&1| grep 'java.vendor.version = ' | sed 's/.* = //' | sed 's/\r.*//')"
+  set -e
 }
 
 function deps() {
@@ -244,24 +245,26 @@ function setMainVariables() {
 
 # tag:os.arch
 function getTag() {
-  echo ${1%%:*}  
+  echo "${1%%:*}"
 }
 
 # tag:os.arch
 function getOsArch() {
-  echo ${1##*:}  
+  echo "${1##*:}"
 }
 
 # tag:os.arch
 function getOs() {
-  local osArch=$(getOsArch "${1}")
-  echo ${osArch%%.*}  
+  osArch=$(getOsArch "${1}")
+  local osArch="$osArch"
+  echo "${osArch%%.*}"
 }
 
 # tag:os.arch
 function getArch() {
-  local osArch=$(getOsArch "${1}")
-  echo ${osArch##*.}  
+  osArch=$(getOsArch "${1}")
+  local osArch="$osArch"
+  echo "${osArch##*.}"
 }
 
 function getDiff() {
@@ -270,11 +273,16 @@ function getDiff() {
 }
 
 function downloadAdoptiumReleases() {
-  local TAG_NON_URL=$(getTag "${1}")
-  local TAG=${TAG_NON_URL/+/%2B}
-  local ADOPTIUM_ARCH=$(getArch "${1}")
-  local OS=$(getOs "${1}")
-  local ADOPTIUM_JSON="adoptium.json"
+  TAG_NON_URL=$(getTag "${1}")
+  TAG=${TAG_NON_URL/+/%2B}
+  ADOPTIUM_ARCH=$(getArch "${1}")
+  OS=$(getOs "${1}")
+  ADOPTIUM_JSON="adoptium.json"
+  local TAG_NON_URL="${TAG_NON_URL}"
+  local TAG="${TAG}"
+  local ADOPTIUM_ARCH="${ADOPTIUM_ARCH}"
+  local OS="${OS}"
+  local ADOPTIUM_JSON="${ADOPTIUM_JSON}"
   curl -X 'GET' \
     "https://api.adoptium.net/v3/assets/release_name/eclipse/${TAG}?architecture=${ADOPTIUM_ARCH}&heap_size=normal&image_type=jdk&project=jdk&os=${OS}" \
     -H 'accept: application/json' > $ADOPTIUM_JSON
@@ -291,7 +299,8 @@ function downloadAdoptiumReleases() {
   ls > before
   curl -OLJSks "https://api.adoptium.net/v3/binary/version/${TAG}/${OS}/${ADOPTIUM_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
   ls > after
-  local ORIG_LAST_DOWNLOADED_FILE=$(getDiff)
+  ORIG_LAST_DOWNLOADED_FILE=$(getDiff)
+  local ORIG_LAST_DOWNLOADED_FILE="${ORIG_LAST_DOWNLOADED_FILE}"
   LAST_DOWNLOADED_FILE="ojdk$(date +%s)_${ORIG_LAST_DOWNLOADED_FILE}"
   mv "${ORIG_LAST_DOWNLOADED_FILE}" "${LAST_DOWNLOADED_FILE}"
   if [ ! -e "${LAST_DOWNLOADED_FILE}" ]; then
@@ -325,7 +334,8 @@ function unpackJdk() {
     tar -xf "${jdk_source}"
   fi
   ls > after
-  local unpacked=$(getDiff)
+  unpacked=$(getDiff)
+  local unpacked=${unpacked}
   rm -rf "${jdk_name}"
   mv "${unpacked}" "${jdk_name}"
 }
@@ -348,7 +358,8 @@ function prepareAlternateJavaHome() {
   if uname | grep CYGWIN ; then
     chmod777 "${futur_java_home}"
   fi
-  export JAVA_HOME=$(readlink -f "${futur_java_home}");
+  JAVA_HOME=$(readlink -f "${futur_java_home}");
+  export JAVA_HOME="${JAVA_HOME}"
 }
 
 function tapsAndJunits() {
@@ -360,7 +371,9 @@ function tapsAndJunits() {
       fi
       RFAT="$(pwd)/run-folder-as-tests"
     fi
+    # shellcheck disable=SC1091
     source "${RFAT}/jtreg-shell-xml.sh"
+    # shellcheck disable=SC1091
     source "${RFAT}/tap-shell-tap.sh"
     resultsTapFile="${WORKDIR}/compare-comparable-builds.tap"
     tapHeader "1"  "$(date)" > "${resultsTapFile}"
@@ -381,6 +394,7 @@ function tapsAndJunits() {
     fi
     printXmlFooter >> "${unitFile}"
     set +e
+      # shellcheck disable=SC2002
       cat "${diffFileParam}" | sed "s|${WORKDIR}||g" > diffFileCopy
       tapFromWholeFile "diffFileCopy" "reprotest.diff" >> "${resultsTapFile}"
     set -e
@@ -402,23 +416,21 @@ deps
 declare -A JDK_INFO
   JDK_INFO["first_source"]="${JDK1_STRING}"
   JDK_INFO["second_source"]="${JDK2_STRING}"
-  JDK_INFO["first_id"]=$(basename $(readlink -f "${JDK1_STRING}"))
-  JDK_INFO["second_id"]=$(basename $(readlink -f "${JDK2_STRING}"))
-  JDK_INFO["first_taglike"]="$(getTag ${JDK_INFO["first_id"]})"
-  JDK_INFO["second_taglike"]="$(getTag ${JDK_INFO["second_id"]})"
+  JDK_INFO["first_id"]=$(basename "$(readlink -f "${JDK1_STRING}")")
+  JDK_INFO["second_id"]=$(basename "$(readlink -f "${JDK2_STRING}")")
+  JDK_INFO["first_tagonly"]="$(getTag "${JDK_INFO["first_id"]}")"
+  JDK_INFO["second_tagonly"]="$(getTag "${JDK_INFO["second_id"]}")"
   # java do not work if there is colon in its dir!
   JDK_INFO["first_name"]=$(echo "${JDK_INFO["first_id"]}-ours" | sed "s/:/_/")
   JDK_INFO["second_name"]=$(echo "${JDK_INFO["second_id"]}-theirs" | sed "s/:/_/")
   JDK_INFO["first_json"]="adoptium1.json"
   JDK_INFO["second_json"]="adoptium2.json"
 
-
 for id in "first" "second" ; do
   JDK_ID="${JDK_INFO["${id}_id"]}"  
   JDK_SOURCE="${JDK_INFO["${id}_source"]}"
   JDK_NAME="${JDK_INFO["${id}_name"]}"
   JDK_JSON="${JDK_INFO["${id}_json"]}"
-  JDK_TAGLIKE="${JDK_INFO["${id}_taglike"]}"
 
   echo "Processing $id: ${JDK_SOURCE} (${JDK_ID})"
   if [ -d "${JDK_SOURCE}" ] ; then
@@ -428,12 +440,12 @@ for id in "first" "second" ; do
   else
     echo "${JDK_SOURCE} is tag:os.arch, will be downloaded and unpacked"
     downloadAdoptiumReleases "${JDK_ID}"
-    mv ${LAST_ADOPTIUM_JSON} ${JDK_JSON}
+    mv "${LAST_ADOPTIUM_JSON}" "${JDK_JSON}"
     unpackJdk "${LAST_DOWNLOADED_FILE}" "${JDK_NAME}"
   fi
-  ls -l $(pwd)
+  ls -l "$(pwd)"
 
-  if [ -z "${JAVA_HOME:-}" -a "${id}" = "first" ] ; then
+  if [ -z "${JAVA_HOME:-}" ] && [ "${id}" = "first" ] ; then
     prepareAlternateJavaHome "${JDK_ID}" "${LAST_DOWNLOADED_FILE}"
   fi
 done
@@ -445,7 +457,7 @@ if uname | grep CYGWIN ; then
 fi
 
 # comapre build can not run if not run from its pwd
-pushd ${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/
+pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
   for jdkName in ${JDK_INFO["first_name"]} ${JDK_INFO["second_name"]} ; do
     # better to try them asap
     "${WORKDIR}/${jdkName}/bin/java" --version 
@@ -457,15 +469,16 @@ pushd ${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/
     # the java in java_home will be used later, try it
     "$JAVA_HOME/bin/java" --version
     "$JAVA_HOME/bin/javac" -d "${ftureDir}" "../../tooling/src/java/temurin/tools/BinRepl.java"
-    export CLASSPATH="${ftureDir}"
+    CLASSPATH="${ftureDir}"
+    export CLASSPATH
     if uname | grep CYGWIN ; then
       export CLASSPATH=$(cygpath -m "${CLASSPATH}")
     fi
-    getKeysForComparablePatch ${WORKDIR}/${jdkName}
+    getKeysForComparablePatch "${WORKDIR}/${jdkName}"
     # we cannot use the JDK we are currently processing. It is broken by the patching
     PATH="${JAVA_HOME}/bin:${PATH}" bash ./comparable_patch.sh --jdk-dir "${WORKDIR}/${jdkName}" --version-string "$JAVA_VENDOR_VERSION" --vendor-name "$JAVA_VENDOR" --vendor_url "$JAVA_VENDOR_URL" --vendor-bug-url "$JAVA_VENDOR_URL_BUG" --vendor-vm-bug-url "$JAVA_VENDOR_URL_BUG"  2>&1 | tee -a "$LOG"
   done
-  if [ "x${DO_BREAK:-}" == "xtrue" ] ; then
+  if [ "${DO_BREAK:-}" == "true" ] ; then
     echo "dead" > "${WORKDIR}/${JDK_INFO["first_name"]}/bin/java"
     echo "dead" > "${WORKDIR}/${JDK_INFO["first_name"]}/lib/server/libjvm.so"
   fi
@@ -475,9 +488,9 @@ popd
 
 diffFile="${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/reprotest.diff"
 tapsAndJunits "${diffFile}"
-cp ${diffFile} "${WORKDIR}"
+cp "${diffFile}" "${WORKDIR}"
 pwd
-ls -l $(pwd)
+ls -l "$(pwd)"
 
 if [ ! "${DO_RESULTS:-}" == "false" ] ; then
   # the result will be changed via tap plugin or jtreg plugin
