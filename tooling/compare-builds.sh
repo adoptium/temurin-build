@@ -1,13 +1,25 @@
 #!/bin/bash
+ ********************************************************************************
+# Copyright (c) 2024 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
 
 #
 # useful variables: DO_BREAK DO_RESULTS
-#                    DO_DEPS RFAT
-#                    JAVA_HOME               
+#                   DO_DEPS RFAT
+#                   JAVA_HOME               
 
 #######################################################################################################################
 # This is top level script for comparing two jdks.  It 
-# This script expects exactly two args - tag:arch/dir/archive, two times
+# This script expects exactly two args - tag:os.arch/dir/archive, two times
 # eg: compare_builds.sh  /usr/lib/jvm/java-21-openjdk /my/home/my_custom_tarball.tar.xz
 # eg: compare_builds.sh  /my/custom/dir/with_jdk jdk-21.0.4+7:windows.x64
 # if the parameter is tag, the temurin jdk of given tag:os.arch is downloaded
