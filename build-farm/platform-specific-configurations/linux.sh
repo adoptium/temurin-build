@@ -51,11 +51,11 @@ function locateDragonwell8BootJDK()
     export "${BOOT_JDK_VARIABLE}"=/usr/lib/jvm/dragonwell8
   else
     echo Dragonwell 8 requires a Dragonwell boot JDK - downloading one ...
-    mkdir -p "$PWD/jdk-8"
+    mkdir -p "$PWD/jdk8"
     # if [ "$(uname -m)" = "x86_64" ]; then
-    #   curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.11.12_jdk8u332-ga/Alibaba_Dragonwell_8.11.12_x64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+    #   curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.11.12_jdk8u332-ga/Alibaba_Dragonwell_8.11.12_x64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk8"
     # elif [ "$(uname -m)" = "aarch64" ]; then
-    #   curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.8.9_jdk8u302-ga/Alibaba_Dragonwell_8.8.9_aarch64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk-8"
+    #   curl -L "https://github.com/alibaba/dragonwell8/releases/download/dragonwell-8.8.9_jdk8u302-ga/Alibaba_Dragonwell_8.8.9_aarch64_linux.tar.gz" | tar xpzf - --strip-components=1 -C "$PWD/jdk8"
     # else
     #   echo "Unknown architecture $(uname -m) for building Dragonwell - cannot download boot JDK"
     #   exit 1
@@ -86,11 +86,11 @@ function locateDragonwell8BootJDK()
     fi
 
     # Extract the downloaded file
-    tar xpzf "$TMP_FILE" --strip-components=1 -C "$PWD/jdk-8"
+    tar xpzf "$TMP_FILE" --strip-components=1 -C "$PWD/jdk8"
 
     # Clean up the temporary file
     rm "$TMP_FILE"
-    export "${BOOT_JDK_VARIABLE}"="$PWD/jdk-8"
+    export "${BOOT_JDK_VARIABLE}"="$PWD/jdk8"
   fi
 }
 
@@ -273,16 +273,16 @@ if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION
 fi
 
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-  bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
+  bootDir="$PWD/jdk$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
   export "${BOOT_JDK_VARIABLE}"="$bootDir"
   if [ ! -x "$bootDir/bin/javac" ]; then
     # Set to a default location as linked in the ansible playbooks
-    if [ -x "/usr/lib/jvm/jdk-${JDK_BOOT_VERSION}/bin/javac" ]; then
-      echo "Could not use ${BOOT_JDK_VARIABLE} - using /usr/lib/jvm/jdk-${JDK_BOOT_VERSION}"
+    if [ -x "/usr/lib/jvm/jdk${JDK_BOOT_VERSION}/bin/javac" ]; then
+      echo "Could not use ${BOOT_JDK_VARIABLE} - using /usr/lib/jvm/jdk${JDK_BOOT_VERSION}"
       # shellcheck disable=SC2140
-      export "${BOOT_JDK_VARIABLE}"="/usr/lib/jvm/jdk-${JDK_BOOT_VERSION}"
+      export "${BOOT_JDK_VARIABLE}"="/usr/lib/jvm/jdk${JDK_BOOT_VERSION}"
     elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8
       downloadLinuxBootJDK "${ARCHITECTURE}" "${JDK_BOOT_VERSION}" "$bootDir"
     fi
