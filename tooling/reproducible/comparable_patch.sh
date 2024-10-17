@@ -338,7 +338,8 @@ echo "Successfully removed all Signatures from ${JDK_DIR}"
 removeExcludedFiles
 
 # Needed due to vendor variation in jmod re-packing after signing, putting attributes in different order
-processModuleInfo
+# Comparable patch, as per read-me, requires java on path
+processModuleInfo "${JDK_DIR}" "${OS}" "$(dirname "$(dirname "$(readlink -f  "$(which java)")")")"
 
 # Patch Windows VS_VERSION_INFO[COMPANY_NAME]
 if [[ "$OS" =~ CYGWIN* ]] && [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
