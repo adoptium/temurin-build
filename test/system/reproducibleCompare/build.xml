@@ -65,6 +65,7 @@
 		<copy todir="." failonerror="false">
 			<fileset dir="temurin-build/tooling/reproducible/" includes="*.sh" />
 		</copy>
+		<chmod dir="." perm="755" includes="**/*.sh"/>
 		<copy todir="." failonerror="false">
 			<fileset dir="${TEST_ROOT}/../jdkbinary/" >
 				<include name="*-sbom_*.json"/>
