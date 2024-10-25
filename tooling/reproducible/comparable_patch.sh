@@ -349,7 +349,7 @@ fi
 
 if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
   # SystemModules$*.class's differ due to hash differences from Windows COMPANY_NAME and Signatures
-  removeSystemModulesHashBuilderParams "${JDK_DIR}"
+  removeSystemModulesHashBuilderParams "${JDK_DIR}" "${OS}" "$(dirname "$(dirname "$(readlink -f  "$(which java)")")")"
 fi
 
 if [[ "$OS" =~ CYGWIN* ]]; then
