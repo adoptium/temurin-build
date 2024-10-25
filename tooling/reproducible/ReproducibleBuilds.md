@@ -103,14 +103,9 @@ before the comparable_patch.sh can be run.
   popd
 ```
 
-- NOTE: The default paths should work fine, e.g.,:
-
-```bash
-  MSBASE_PATH="/cygdrive/c/Program Files/Microsoft Visual Studio/"
-  MSVSC=$(find "$MSBASE_PATH" -type d | grep Hostx64/x64$ | head -n 1 )
-  WINKIT=$(dirname "$(find '/cygdrive/c/Program Files (x86)/Windows Kits' | grep  x64/signtool.exe$ | head -n 1)")
-  MSVSCBUILDTOOLS=$(find "$MSBASE_PATH" -type d | grep Auxiliary/Build$ | head -n 1 )
-```
+- NOTE: The default paths should work fine. In Cygwin, they are usually at:
+ * MSVSC cl/bat files in `/cygdrive/c/Program Files/Microsoft Visual Studio/` under `Hostx64/x64` (or similar) and `Auxiliary/Build` dirs
+ * the signtool.exe then in `/cygdrive/c/Program Files (x86)/Windows Kits`. Again in arch-specific dir like `x64`
 
 - NOTE: Using `cygpath` is sometimes necessary. However, Java *binaries* can have issues with it:
   - e.g., Use `cygpath` for `$CLASSPATH`,
