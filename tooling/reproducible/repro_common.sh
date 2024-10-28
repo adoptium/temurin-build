@@ -25,10 +25,11 @@ function expandJDK() {
     JDK_ROOT=$(realpath ${JDK_DIR}/../../)
     JDK_BIN_DIR="${JDK_ROOT}_CP/Contents/Home/bin"
   fi
-
+  echo "$(date +%T) : Expanding various components to enable comparisons ${JDK_DIR} (original files will be removed):"
   mkdir "${JDK_ROOT}_CP"
   cp -R ${JDK_ROOT}/* ${JDK_ROOT}_CP
-  echo "Expanding the 'modules' Image to compare extracted files"
+
+  echo "$(date +%T) :   Using 'jimage extract' to expand lib/modules image into lib/modules_extracted"
   modulesFile="${JDK_DIR}/lib/modules"
   mkdir "${JDK_DIR}/lib/modules_extracted"
   extractedDir="${JDK_DIR}/lib/modules_extracted"
@@ -38,11 +39,11 @@ function expandJDK() {
   fi
   "${JDK_BIN_DIR}/jimage" extract --dir "${extractedDir}" "${modulesFile}"
   rm "${JDK_DIR}/lib/modules"
-  echo "Expanding the 'src.zip' to normalize file permissions"
-  unzip "${JDK_DIR}/lib/src.zip" -d "${JDK_DIR}/lib/src_zip_expanded" 1> /dev/null
+  echo "$(date +%T) :   Unzipping lib/src.zip to normalize file permissions, then removing src.zip"
+  unzip -q "${JDK_DIR}/lib/src.zip" -d "${JDK_DIR}/lib/src_zip_expanded"
   rm "${JDK_DIR}/lib/src.zip"
 
-  echo "Expanding jmods to process binaries within"
+  echo "$(date +%T) :   Using 'jmod extract' to expand all jmods to jmods/expanded_ directories"
   FILES=$(find "${JDK_DIR}" -type f -path '*.jmod')
   for f in $FILES
     do
@@ -58,21 +59,21 @@ function expandJDK() {
       rm "$f"
     done
 
-  echo "Expanding the 'jrt-fs.jar' to remove signatures from within.."
+  echo "$(date +%T) :   Expanding lib/jrt-fs.jar to lib/jrt-fs-exanded to remove signatures from within.."
   mkdir "${JDK_DIR}/lib/jrt-fs-expanded"
-  unzip -d "${JDK_DIR}/lib/jrt-fs-expanded" "${JDK_DIR}/lib/jrt-fs.jar" 1> /dev/null
+  unzip -qd "${JDK_DIR}/lib/jrt-fs-expanded" "${JDK_DIR}/lib/jrt-fs.jar"
   rm "${JDK_DIR}/lib/jrt-fs.jar"
 
   mkdir -p "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded"
-  unzip -d "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded" "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar" 1> /dev/null
+  unzip -qd "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded" "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
   rm "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
 
-  echo "Expanding 'ct.sym' to workaround zip timestamp differences (https://bugs.openjdk.org/browse/JDK-8327466)"
+  echo "$(date +%T) :   Expanding lib/ct.sym to workaround zip timestamp differences (https://bugs.openjdk.org/browse/JDK-8327466)"
   mkdir "${JDK_DIR}/lib/ct-sym-expanded"
-  unzip -d "${JDK_DIR}/lib/ct-sym-expanded" "${JDK_DIR}/lib/ct.sym" 1> /dev/null
+  unzip -qd "${JDK_DIR}/lib/ct-sym-expanded" "${JDK_DIR}/lib/ct.sym"
   rm "${JDK_DIR}/lib/ct.sym"
   mkdir -p "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct-sym-expanded"
-  unzip -d "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct-sym-expanded" "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct.sym" 1> /dev/null
+  unzip -qd "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct-sym-expanded" "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct.sym"
   rm "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct.sym"
 
   rm -rf "${JDK_ROOT}_CP"
@@ -141,7 +142,7 @@ function removeSystemModulesHashBuilderParams() {
         done
     done
 
-  echo "Successfully removed all SystemModules jdk.jpackage hash differences from ${JDK_DIR}"
+  echo "$(date +%T) : Successfully removed all SystemModules jdk.jpackage hash differences from ${JDK_DIR}"
 }
 
 # Required for Vendor "Comparable Builds"
@@ -153,7 +154,7 @@ function removeSystemModulesHashBuilderParams() {
 #   checksum  - A checksum value of the binary
 #   reprohex  - A hex UUID to identify the binary version, again generated from binary content
 function removeWindowsNonComparableData() {
- echo "Removing EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
+ echo "$(date +%T) : Removing EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
  # We need to do this for all executables if patching VS_VERSION_INFO
  if [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
     FILES=$(find "${JDK_DIR}" -type f -path '*.exe' && find "${JDK_DIR}" -type f -path '*.dll')
@@ -163,13 +164,13 @@ function removeWindowsNonComparableData() {
  for ff in $FILES
   do
     f=$(cygpath -w $ff)
-    echo "Removing EXE/DLL non-comparable timestamp, CRC, debug repro hex from $f"
+    echo "$(date +%T) : Removing EXE/DLL non-comparable timestamp, CRC, debug repro hex from $f"
 
     # Determine non-comparable data using dumpbin
     dmpfile="$ff.dumpbin.tmp"
     rm -f "$dmpfile"
     if ! dumpbin "$f" /HEADERS > "$dmpfile"; then
-        echo "  FAILED == > dumpbin \"$f\" /ALL > $dmpfile"
+        echo "$(date +%T) :  FAILED == > dumpbin \"$f\" /ALL > $dmpfile"
         exit 1
     fi
 
@@ -254,8 +255,8 @@ function processModuleInfo() {
   local JDK_DIR="$1"
   local OS="$2"
   local work_JDK="$3"
-  echo "process Module Info from ${JDK_DIR}" 
-  echo "Normalizing ModuleAttributes order in module-info.class, converting to javap"
+  echo "$(date +%T) : Process Module Info from ${JDK_DIR}" 
+  echo "$(date +%T) : Normalizing ModuleAttributes order in module-info.class, converting to javap"
   moduleAttr="ModuleResolution ModuleTarget"
   FILES=$(find "${JDK_DIR}" -type f -name "module-info.class")
   for f in $FILES
@@ -343,7 +344,7 @@ function removeSignatures() {
   if [[ "$OS" =~ CYGWIN* ]]; then
     # signtool should be on PATH
     signToolPath="signtool"
-    echo "Removing all Signatures from ${JDK_DIR}"
+    echo "$(date +%T) : Removing all signatures from exe and dll files in ${JDK_DIR}"
     FILES=$(find "${JDK_DIR}" -type f -name '*.exe' -o -name '*.dll')
     for f in $FILES
      do
@@ -384,9 +385,9 @@ function tempSign() {
   if [[ "$OS" =~ CYGWIN* ]]; then
     # signtool should be on PATH
     signToolPath="signtool"
-    echo "Adding temp Signatures for ${JDK_DIR}"
+    echo "Generating temp signatures with openssl and adding them to exe/dll files in ${JDK_DIR}"
     selfCert="test"
-    openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout $selfCert.key -out $selfCert.crt -subj "/CN=example.com" -addext "subjectAltName=DNS:example.com,DNS:*.example.com,IP:10.0.0.1"
+    openssl req -x509 -quiet -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout $selfCert.key -out $selfCert.crt -subj "/CN=example.com" -addext "subjectAltName=DNS:example.com,DNS:*.example.com,IP:10.0.0.1"
     openssl pkcs12 -export -passout pass:test -out $selfCert.pfx -inkey $selfCert.key -in $selfCert.crt
     FILES=$(find "${JDK_DIR}" -type f -name '*.exe' -o -name '*.dll')
     for f in $FILES
@@ -416,8 +417,7 @@ function tempSign() {
 function cleanTemurinFiles() {
   local DIR="$1"
 
-  echo "Cleaning Temurin build-scripts specific files and metadata from ${DIR}"
-  echo "Removing Temurin NOTICE file from $DIR"
+  echo "$(date +%T): Cleaning Temurin NOTICE file and build-scripts specific files and metadata from ${DIR}"
   rm "${DIR}"/NOTICE
 
   if [[ $(uname) =~ Darwin* ]]; then

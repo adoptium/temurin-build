@@ -34,11 +34,11 @@ do
     exit 1
   fi
 
-  echo "Pre-processing ${JDK_DIR}"
+  echo "$(date +%T) : Pre-processing ${JDK_DIR}"
   rc=0
   source "$(dirname "$0")"/repro_process.sh "${JDK_DIR}" "${OS}" || rc=$?
   if [ $rc != 0 ]; then
-    echo "Pre-process of ${JDK_DIR} ${OS} failed"
+    echo "$(date +%T): Pre-processing of ${JDK_DIR} ${OS} failed"
     exit 1
   fi
 
@@ -59,8 +59,9 @@ files1=$(find "${JDK_DIR1}" -type f | wc -l)
 echo "Number of files: ${files1}"
 rc=0
 output="reprotest.diff"
-echo "Comparing ${JDK_DIR1} with ${JDK_DIR2} ... output to file: ${output}"
+echo "$(date +%T) : Comparing expanded JDKs from ${JDK_DIR1} with ${JDK_DIR2} ..."
 diff -r -q "${JDK_DIR1}" "${JDK_DIR2}" > "${output}" || rc=$?
+echo "$(date +%T) : diff complete - rc=$rc. Output written to file: ${output}"
 
 cat "${output}"
 
