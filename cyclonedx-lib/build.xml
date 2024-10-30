@@ -119,7 +119,7 @@
                 <download-file-with-default-options destfile="github-package-url.jar"/>
         </target>
 
-	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
+	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar, build-sign-sbom">
                 <echo message="Building cyclonedx-lib"/>
         </target>
 
