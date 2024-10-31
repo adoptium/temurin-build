@@ -89,6 +89,13 @@ setAntEnvironment() {
   export PATH="${LOCALGCCDIR}/bin:/usr/local/bin:/usr/bin:$PATH:/usr/local/apache-ant-${ANT_VERSION}/bin"
 }
 
+enableIPV6() {
+  sysctl -w net.ipv6.conf.all.disable_ipv6=0
+  sysctl -w net.ipv6.conf.default.disable_ipv6=0
+  sysctl -w net.ipv6.conf.tun0.disable_ipv6=0
+  sysctl -p
+}
+
 setTemurinBuildArgs() {
   local buildArgs="$1"
   local bootJdk="$2"
@@ -173,6 +180,7 @@ if [[ "${USING_DEVKIT}" == "false" ]]; then
   setNonDevkitGccEnvironment
 fi
 setAntEnvironment
+enableIPV6
 echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
 TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION" "$BUILDSTAMP")
 
