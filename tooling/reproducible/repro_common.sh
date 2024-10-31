@@ -387,8 +387,9 @@ function tempSign() {
     signToolPath="signtool"
     echo "Generating temp signatures with openssl and adding them to exe/dll files in ${JDK_DIR}"
     selfCert="test"
-    openssl req -x509 -quiet -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout $selfCert.key -out $selfCert.crt -subj "/CN=example.com" -addext "subjectAltName=DNS:example.com,DNS:*.example.com,IP:10.0.0.1"
-    openssl pkcs12 -export -passout pass:test -out $selfCert.pfx -inkey $selfCert.key -in $selfCert.crt
+
+    openssl req -x509 -quiet -newkey rsa:4096 -sha256 -days 3650 -passout pass:test -keyout $selfCert.key -out $selfCert.crt -subj "/CN=example.com" -addext "subjectAltName=DNS:example.com,DNS:*.example.com,IP:10.0.0.1"
+    openssl pkcs12 -export -passout pass:test -passin pass:test -out $selfCert.pfx -inkey $selfCert.key -in $selfCert.crt
     FILES=$(find "${JDK_DIR}" -type f -name '*.exe' -o -name '*.dll')
     for f in $FILES
      do
