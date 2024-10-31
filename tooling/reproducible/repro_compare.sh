@@ -13,13 +13,17 @@
 # ********************************************************************************
 
 # shellcheck disable=SC1091
-source repro_common.sh
+source "$(dirname "$0")"/repro_common.sh
 
 BLD_TYPE1="$1"
 JDK_DIR1="$2"
 BLD_TYPE2="$3"
 JDK_DIR2="$4"
 OS="$5"
+
+mkdir "${JDK_DIR}_BK"
+cp -R "${JDK_DIR1}"/* "${JDK_DIR}"_BK
+BK_JDK_DIR=$(realpath "${JDK_DIR}"_BK/)
 
 JDK_DIR_Arr=("${JDK_DIR1}" "${JDK_DIR2}")
 for  JDK_DIR in "${JDK_DIR_Arr[@]}"
@@ -32,7 +36,7 @@ do
 
   echo "Pre-processing ${JDK_DIR}"
   rc=0
-  source ./repro_process.sh "${JDK_DIR}" "${OS}" || rc=$?
+  source "$(dirname "$0")"/repro_process.sh "${JDK_DIR}" "${OS}" || rc=$?
   if [ $rc != 0 ]; then
     echo "Pre-process of ${JDK_DIR} ${OS} failed"
     exit 1
@@ -46,11 +50,10 @@ do
   cleanTemurinBuildInfo "${JDK_DIR}"
 
   if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then 
-    removeSystemModulesHashBuilderParams "${JDK_DIR}"
+    removeSystemModulesHashBuilderParams "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"
+    processModuleInfo "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"
   fi
-  processModuleInfo
 done
-
 
 files1=$(find "${JDK_DIR1}" -type f | wc -l)
 echo "Number of files: ${files1}"

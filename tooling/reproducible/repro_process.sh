@@ -13,7 +13,7 @@
 # ********************************************************************************
 
 # shellcheck disable=SC1091
-source repro_common.sh
+source "$(dirname "$0")"/repro_common.sh
 
 JDK_DIR="$1"
 OS="$2"
