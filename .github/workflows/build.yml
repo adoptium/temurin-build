@@ -235,7 +235,7 @@ jobs:
      steps:
      - name: Restore cygwin packages from cache
        id: cygwin
-       uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
+       uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
        with:
         path: C:\cygwin64
         key: cygwin-packages-${{ runner.os }}-v1
@@ -263,14 +263,14 @@ jobs:
            wget,
            zip
 
-     - uses: actions/setup-java@b36c23c0d998641eff861008f374ee103c25ac73 # v4.4.0
+     - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b # v4.5.0
        id: setup-java7
        with:
          distribution: 'zulu'
          java-version: 7
        if: matrix.version == 'jdk8u'
 
-     - uses: actions/setup-java@b36c23c0d998641eff861008f374ee103c25ac73 # v4.4.0
+     - uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b # v4.5.0
        id: setup-java11
        with:
          distribution: 'temurin'
@@ -279,7 +279,7 @@ jobs:
      - name: Restore Visual Studio 2017 from cache
        id: vs2017
        if: matrix.version == 'jdk8u'
-       uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
+       uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
        with:
          path: ~/vs2017.exe
          key: vs2017
@@ -287,7 +287,7 @@ jobs:
      - name: Restore Visual Studio 2019 from cache
        id: vs2019
        if: matrix.version == 'jdk11u' || matrix.version == 'jdk17u'
-       uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
+       uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
        with:
          path: ~/vs2019.exe
          key: vs2019
