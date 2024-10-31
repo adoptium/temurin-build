@@ -64,7 +64,7 @@ diff -r -q "${JDK_DIR1}" "${JDK_DIR2}" > "${output}" || rc=$?
 
 cat "${output}"
 
-grep "Files .*class" "${output}" | while read -r line; do
+grep "Files .*" "${output}" | while read -r line; do
   FILE1=$(echo "$line" | awk '{print $2}')
   FILE2=$(echo "$line" | awk '{print $4}')
   echo "diff -c on $FILE1 and $FILE2"
