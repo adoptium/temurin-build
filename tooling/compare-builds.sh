@@ -392,23 +392,26 @@ function tapsAndJunits() {
        failed=$(("${failed}"+1))
     fi
     local totalDiffs
-     # warning, this do not work without pipefail
+    # warning, this do not work without pipefail
+    # shellcheck disable=SC2002
     totalDiffs=$(cat "${differencesFile}" | grep "Number of" | sed "s/[^0-9]\+//" || echo "999999999") # if there is no record we need to fail
     local totalFiles
+    # shellcheck disable=SC2002
     totalFiles=$(cat "${totalFile}" | grep "Number of" | sed "s/[^0-9]\+//" || echo "0") # if there is no record we need to fail
     local totalOnlyIn
+    # shellcheck disable=SC2002
     totalOnlyIn=$(cat "${differencesFile}" | grep "Only in:" | sed "s/[^0-9]\+//" || echo "0") #if there is non, we eant to pass
-    if [ $totalDiffs -eq 0 ] ; then
+    if [ "${totalDiffs}" -eq 0 ] ; then
       passed=$(("${passed}"+1))
     else
       failed=$(("${failed}"+1))
     fi
-    if [ $totalFiles -ne 0 ] ; then
+    if [ "${totalFiles}" -ne 0 ] ; then
       passed=$(("${passed}"+1))
     else
       failed=$(("${failed}"+1))
     fi
-    if [ $totalOnlyIn -eq 0 ] ; then
+    if [ "${totalOnlyIn}" -eq 0 ] ; then
       passed=$(("${passed}"+1))
     else
       failed=$(("${failed}"+1))
@@ -556,12 +559,16 @@ pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
   bash ./repro_compare.sh openjdk "${WORKDIR}/${JDK_INFO["first_name"]}" openjdk "${WORKDIR}/${JDK_INFO["second_name"]}" 2>&1 | tee -a "${LOG}" || GLOABL_RESULT=$?
   diflog="${WORKDIR}/differences.log"
   totlog="${WORKDIR}/totalfiles.log"
+  # shellcheck disable=SC2002
   cat "${LOG}" | grep "Number of differences" -A 1 > "${diflog}"
   echo "Warning, the files which are only in one of the JDKs may be missing in this summary:" >> "${diflog}"
   set +e
+  # shellcheck disable=SC2002
   cat "${LOG}" | grep "Only in" | sed "s|${WORKDIR}||g">> "${diflog}"
   echo -n "Only in: " >> "${diflog}"
+  # shellcheck disable=SC2002
   cat "${LOG}" | grep "Only in " | wc -l  >> "${diflog}"
+  # shellcheck disable=SC2002
   cat "${LOG}" | grep "Number of files" > "${totlog}"
   set -e
 popd
