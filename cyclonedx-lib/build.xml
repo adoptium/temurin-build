@@ -24,7 +24,7 @@
         <property name="openkeystore-version" value="1.0.0"/>
 
         <!-- When retrieving sbom dependency jars with default settings, we will look here. -->
-        <property name="sbom_dependency_default_location" value="https://ci.adoptium.net/view/all/job/build.getDependency/469/artifact/sbom_dependencies"/>
+        <property name="sbom_dependency_default_location" value="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies"/>
 
         <!-- classpath for running application -->
         <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/temurin-sign-sbom.jar:build/jar/commons-collections4.jar"/>
