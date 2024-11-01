@@ -379,7 +379,6 @@ function tapsAndJunits() {
     # shellcheck disable=SC1091
     source "${RFAT}/tap-shell-tap.sh"
     resultsTapFile="${WORKDIR}/compare-comparable-builds.tap"
-    tapHeader "1"  "$(date)" > "${resultsTapFile}"
     unitFile="compare-comparable-builds.jtr.xml"
     unitFileArchive="$unitFile.tar.xz"
     set +x
@@ -416,6 +415,7 @@ function tapsAndJunits() {
     fi
     total=$(("${passed}"+"${failed}"))
     printXmlHeader "${passed}" "${failed}" "${total}" 0 "compare-comparable-builds" > "${unitFile}"
+    tapHeader "${total}"  "$(date)" > "${resultsTapFile}"
     if [ "${totalDiffs}" -eq 0 ] ; then
       printXmlTest "compare" "differences-count" "1" "" "../artifact/$(basename "${differencesFile}")" >> "${unitFile}"
       tapTestStart "ok" "1" "differences-count" >> "${resultsTapFile}"
