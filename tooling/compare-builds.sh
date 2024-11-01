@@ -463,7 +463,7 @@ function tapsAndJunits() {
     fi
     set +e
       # shellcheck disable=SC2002
-      cat "${diffFileParam}" | sed "s|${WORKDIR}||g" > diffFileCopy
+      cat "${diffFileParam}" | sed "s|${WORKDIR}||g" > diffFileCopy || true
       tapFromWholeFile "diffFileCopy" "reprotest.diff" >> "${resultsTapFile}"
     set -e
     printXmlFooter >> "${unitFile}"
@@ -558,7 +558,7 @@ pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
   totlog="${WORKDIR}/totalfiles.log"
   cat "${LOG}" | grep "Number of differences" -A 1 > "${diflog}"
   echo "Warning, the files which are only in one of the JDKs may be missing in this summary:" >> "${diflog}"
-  cat "${LOG}" | grep "Only in" | sed "s|${WORKDIR}||g">> "${diflog}"
+  cat "${LOG}" | grep "Only in" | sed "s|${WORKDIR}||g">> "${diflog}" || true
   echo -n "Only in: " >> "${diflog}"
   cat "${LOG}" | grep "Only in " | wc -l  >> "${diflog}"
   cat "${LOG}" | grep "Number of files" > "${totlog}"
