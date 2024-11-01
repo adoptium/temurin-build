@@ -388,7 +388,12 @@ function tempSign() {
     echo "Generating temp signatures with openssl and adding them to exe/dll files in ${JDK_DIR}"
     selfCert="test"
 
+    # semgrep needs to ignore this as it objects to the password, but that
+    # is only used for generating a temporary dummy signature required for
+    # the comparison and not used for validating anything
+    # nosemgrep
     openssl req -x509 -quiet -newkey rsa:4096 -sha256 -days 3650 -passout pass:test -keyout $selfCert.key -out $selfCert.crt -subj "/CN=example.com" -addext "subjectAltName=DNS:example.com,DNS:*.example.com,IP:10.0.0.1"
+    # nosemgrep
     openssl pkcs12 -export -passout pass:test -passin pass:test -out $selfCert.pfx -inkey $selfCert.key -in $selfCert.crt
     FILES=$(find "${JDK_DIR}" -type f -name '*.exe' -o -name '*.dll')
     for f in $FILES
