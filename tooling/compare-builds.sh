@@ -430,6 +430,7 @@ function tapsAndJunits() {
     fi
     set +e
       tapFromWholeFile "${differencesFile}" "${differencesFile}" >> "${resultsTapFile}"
+      tapTestEnd >> "${resultsTapFile}"
     set -e
     if [ "${totalFiles}" -ne 0 ] ; then
       printXmlTest "compare" "compared-files-count" "2" "" "../artifact/$(basename "${totalFile}")" >> "${unitFile}"
@@ -442,6 +443,7 @@ function tapsAndJunits() {
     fi
     set +e
       tapFromWholeFile "${totalFile}" "${totalFile}" >> "${resultsTapFile}"
+      tapTestEnd >> "${resultsTapFile}"
     set -e
     if [ "${totalOnlyIn}" -eq 0 ] ; then
       printXmlTest "compare" "onlyin-count" "3" "" "../artifact/$(basename "${differencesFile}")" >> "${unitFile}"
@@ -454,6 +456,7 @@ function tapsAndJunits() {
     fi
     set +e
       tapFromWholeFile "${differencesFile}" "${differencesFile}" >> "${resultsTapFile}"
+      tapTestEnd >> "${resultsTapFile}"
     set -e
     if [ $GLOABL_RESULT -eq 0 ] ; then
       printXmlTest "compare" "comparable-builds" "4" "" "../artifact/$(basename "${diffFileParam}")" >> "${unitFile}"
@@ -468,9 +471,9 @@ function tapsAndJunits() {
       # shellcheck disable=SC2002
       cat "${diffFileParam}" | sed "s|${WORKDIR}||g" > diffFileCopy || true
       tapFromWholeFile "diffFileCopy" "reprotest.diff" >> "${resultsTapFile}"
+      tapTestEnd >> "${resultsTapFile}"
     set -e
     printXmlFooter >> "${unitFile}"
-    tapTestEnd >> "${resultsTapFile}"
     set -x
     tar -cJf "${WORKDIR}/${unitFileArchive}"  "${unitFile}"
   else
