@@ -79,9 +79,10 @@ configureDevKitConfigureParameter() {
     if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
       # Windows DevKit, currently only Redist DLLs
 
+
       # Default to build architecture unless target ARCHITECTURE variable is set
       def target_arch="${BUILD_CONFIG[OS_ARCHITECTURE]}"
-      if [[ -n "${ARCHITECTURE}" ]]; then
+      if [[ ! -z "${ARCHITECTURE+x}" ]]; then
         target_arch="${ARCHITECTURE}"
       fi
       echo "Target architecture for Windows devkit: ${target_arch}"
