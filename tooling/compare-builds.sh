@@ -51,7 +51,7 @@ set -euxo pipefail
 function processArgs() {
   set +x
     if [ ! "$#" -eq 2 ] ; then
-      echo "This script expects exactly two args - tag:arch/dir/archive, two times"
+      echo "This script expects exactly two args - tag/dir/archive, two times"
       echo "eg: compare_builds.sh  /usr/lib/jvm/java-21-openjdk /my/home/my_custom_tarball.tar.xz"
       echo "eg: compare_builds.sh  /my/custom/dir/with_jdk jdk-21.0.4+7"
       echo "if the parameter is tag, the temurin jdk of given tag:os.arch is downloaded"
@@ -364,6 +364,8 @@ function prepareAlternateJavaHome() {
 
 function tapsAndJunits() {
   local diffFileParam="${1}"
+  local differencesFile="${2}"
+  local totalFile="${3}"
   if [ ! "${DO_RESULTS:-}" == "false" ] ; then
     if [ -z "${RFAT:-}" ] ; then
       if [ ! -e run-folder-as-tests ] ; then
@@ -381,23 +383,85 @@ function tapsAndJunits() {
     unitFileArchive="$unitFile.tar.xz"
     set +x
     echo "writing $unitFileArchive"
-    if [ $result -eq 0 ] ; then
-      printXmlHeader 1 0 1 0 "compare-comparable-builds" > "${unitFile}"
-      printXmlTest "compare" "comparable-builds" "1" "" "../artifact/reprotest.diff" >> "${unitFile}"
-      tapTestStart "ok" "1" "comparable-builds" >> "${resultsTapFile}"
+    local total=4
+    local passed=0
+    local failed=0
+    if [ $GLOABL_RESULT -eq 0 ] ; then
+      let passed=$passed+1
+    else
+       let failed=$failed+1
+    fi
+    local totalDiffs=$(cat ${differencesFile} | grep "Number of" | sed "s/[^0-9]\+//")
+    local totalFiles=$(cat ${totalFile} | grep "Number of" | sed "s/[^0-9]\+//")
+    local totalOnlyIn=$(cat ${differencesFile} | grep "Only in:" | sed "s/[^0-9]\+//")
+    if [ $totalDiffs -eq 0 ] ; then
+      let passed=$passed+1
+    else
+       let failed=$failed+1
+    fi
+    if [ $totalFiles -ne 0 ] ; then
+      let passed=$passed+1
+    else
+       let failed=$failed+1
+    fi
+    if [ $totalOnlyIn -eq 0 ] ; then
+      let passed=$passed+1
+    else
+       let failed=$failed+1
+    fi
+    let total=$passed+$failed
+    printXmlHeader $passed $failed $total 0 "compare-comparable-builds" > "${unitFile}"
+    if [ $totalDiffs -eq 0 ] ; then
+      printXmlTest "compare" "differences-count" "1" "" "../artifact/$(dirname ${differencesFile})" >> "${unitFile}"
+      tapTestStart "ok" "1" "differences-count" >> "${resultsTapFile}"
+      echo "-- no differences --"
+    else
+      printXmlTest "compare" "differences-count" "1" "${differencesFile}" "../artifact/$(dirname ${differencesFile})" >> "${unitFile}"
+      tapTestStart "not ok" "1" "differences-count" >> "${resultsTapFile}"
+      echo "-- differences count: $totalDiffs --"
+    fi
+    set +e
+      tapFromWholeFile "${differencesFile}" "${differencesFile}" >> "${resultsTapFile}"
+    set -e
+    if [ $totalFiles -ne 0 ] ; then
+      printXmlTest "compare" "compared-files-count" "2" "" "../artifact/$(dirname ${totalFile})" >> "${unitFile}"
+      tapTestStart "ok" "2" "compared-files-count" >> "${resultsTapFile}"
+      echo "-- files compared: $totalFiles --"
+    else
+      printXmlTest "compare" "compared-files-count" "2" "${totalFile}" "../artifact/$(dirname ${totalFile})" >> "${unitFile}"
+      tapTestStart "not ok" "2" "compared-files-count" >> "${resultsTapFile}"
+      echo "-- no files compared --"
+    fi
+    set +e
+      tapFromWholeFile "${totalFile}" "${totalFile}" >> "${resultsTapFile}"
+    set -e
+    if [ $totalOnlyIn -eq 0 ] ; then
+      printXmlTest "compare" "onlyin-count" "3" "" "../artifact/$(dirname ${differencesFile})" >> "${unitFile}"
+      tapTestStart "ok" "3" "onlyin-count" >> "${resultsTapFile}"
+      echo "-- no onlyin files --"
+    else
+      printXmlTest "compare" "onlyin-count" "3" "${differencesFile}" "../artifact/$(dirname ${differencesFile})" >> "${unitFile}"
+      tapTestStart "not ok" "3" "onlyin-count" >> "${resultsTapFile}"
+      echo "-- onlyin files count: $totalOnlyIn --"
+    fi
+    set +e
+      tapFromWholeFile "${differencesFile}" "${differencesFile}" >> "${resultsTapFile}"
+    set -e
+    if [ $GLOABL_RESULT -eq 0 ] ; then
+      printXmlTest "compare" "comparable-builds" "4" "" "../artifact/$(dirname ${diffFileParam})" >> "${unitFile}"
+      tapTestStart "ok" "4" "comparable-builds" >> "${resultsTapFile}"
       echo "-- COMPARABLE --"
     else
-      printXmlHeader 0 1 1 0 "compare-comparable-builds" > "${unitFile}"
-      printXmlTest "compare" "comparable-builds" "1" "${diffFileParam}" "../artifact/reprotest.diff" >> "${unitFile}"
-      tapTestStart "not ok" "1" "comparable-builds" >> "${resultsTapFile}"
+      printXmlTest "compare" "comparable-builds" "4" "${diffFileParam}" "../artifact/$(dirname ${diffFileParam})" >> "${unitFile}"
+      tapTestStart "not ok" "4" "comparable-builds" >> "${resultsTapFile}"
       echo "-- MISMATCH --"
     fi
-    printXmlFooter >> "${unitFile}"
     set +e
       # shellcheck disable=SC2002
       cat "${diffFileParam}" | sed "s|${WORKDIR}||g" > diffFileCopy
       tapFromWholeFile "diffFileCopy" "reprotest.diff" >> "${resultsTapFile}"
     set -e
+    printXmlFooter >> "${unitFile}"
     tapTestEnd >> "${resultsTapFile}"
     set -x
     tar -cJf "${WORKDIR}/${unitFileArchive}"  "${unitFile}"
@@ -483,12 +547,20 @@ pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
     echo "dead" > "${WORKDIR}/${JDK_INFO["first_name"]}/bin/java"
     echo "dead" > "${WORKDIR}/${JDK_INFO["first_name"]}/lib/server/libjvm.so"
   fi
-  result=0
-  bash ./repro_compare.sh openjdk "${WORKDIR}/${JDK_INFO["first_name"]}" openjdk "${WORKDIR}/${JDK_INFO["second_name"]}" 2>&1 | tee -a "${LOG}" || result=$?
+  GLOABL_RESULT=0
+  bash ./repro_compare.sh openjdk "${WORKDIR}/${JDK_INFO["first_name"]}" openjdk "${WORKDIR}/${JDK_INFO["second_name"]}" 2>&1 | tee -a "${LOG}" || GLOABL_RESULT=$?
+  diflog=${WORKDIR}/differences.log
+  totlog=${WORKDIR}/totalfiles.log
+  cat "${LOG}" | grep "Number of differences" -A 1 > ${diflog}
+  echo "Warning, the files which are only in one of the JDKs may be missing in this summary:" >> ${diflog}
+  cat "${LOG}" | grep "Only in" | sed "s|${WORKDIR}||g">> ${diflog}
+  echo -n "Only in: " >> ${diflog}
+  cat "${LOG}" | grep "Only in " | wc -l  >> ${diflog}
+  cat "${LOG}" | grep "Number of files" > ${totlog}
 popd
 
 diffFile="${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/reprotest.diff"
-tapsAndJunits "${diffFile}"
+tapsAndJunits "${diffFile}" ${diflog} ${totlog}
 cp "${diffFile}" "${WORKDIR}"
 pwd
 ls -l "$(pwd)"
@@ -497,5 +569,5 @@ if [ ! "${DO_RESULTS:-}" == "false" ] ; then
   # the result will be changed via tap plugin or jtreg plugin
   exit 0
 else
-  exit ${result}
+  exit ${GLOABL_RESULT}
 fi
