@@ -393,11 +393,12 @@ function tapsAndJunits() {
        failed=$(("${failed}"+1))
     fi
     local totalDiffs
-    totalDiffs=$(cat "${differencesFile}" | grep "Number of" | sed "s/[^0-9]\+//")
+     # warning, this do not work without pipefail
+    totalDiffs=$(cat "${differencesFile}" | grep "Number of" | sed "s/[^0-9]\+//" || echo "999999999") # if there is no record we need to fail
     local totalFiles
-    totalFiles=$(cat "${totalFile}" | grep "Number of" | sed "s/[^0-9]\+//")
+    totalFiles=$(cat "${totalFile}" | grep "Number of" | sed "s/[^0-9]\+//" || echo "0") # if there is no record we need to fail
     local totalOnlyIn
-    totalOnlyIn=$(cat "${differencesFile}" | grep "Only in:" | sed "s/[^0-9]\+//")
+    totalOnlyIn=$(cat "${differencesFile}" | grep "Only in:" | sed "s/[^0-9]\+//" || echo "0") #if there is non, we eant to pass
     if [ $totalDiffs -eq 0 ] ; then
       passed=$(("${passed}"+1))
     else
