@@ -34,7 +34,6 @@
 # If you need to compare jdks on different platform then they are for, you need to go manually.
 #######################################################################################################################
 
-## shellcheck disable=SC2126
 ## resolve folder of this script, following all symlinks,
 ## http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
 SCRIPT_SOURCE="${BASH_SOURCE[0]}"
@@ -559,13 +558,16 @@ pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
   bash ./repro_compare.sh openjdk "${WORKDIR}/${JDK_INFO["first_name"]}" openjdk "${WORKDIR}/${JDK_INFO["second_name"]}" 2>&1 | tee -a "${LOG}" || GLOABL_RESULT=$?
   diflog="${WORKDIR}/differences.log"
   totlog="${WORKDIR}/totalfiles.log"
-  grep "Number of differences" -A 1 "${LOG}" > "${diflog}"
-  echo "Warning, the files which are only in one of the JDKs may be missing in this summary:" >> "${diflog}"
   set +e
-  grep "Only in" "${LOG}" | sed "s|${WORKDIR}||g">> "${diflog}"
-  echo -n "Only in: " >> "${diflog}"
-  grep "Only in " "${LOG}" | wc -l  >> "${diflog}"
-  grep "Number of files" "${LOG}" > "${totlog}"
+    {
+      grep "Number of differences" -A 1 "${LOG}"
+      echo "Warning, the files which are only in one of the JDKs may be missing in this summary:"
+      grep "Only in" "${LOG}" | sed "s|${WORKDIR}||g"
+      echo -n "Only in: "
+      ## shellcheck disable=SC2126
+      grep "Only in " "${LOG}" | wc -l
+    } > "${diflog}"
+    grep "Number of files" "${LOG}" > "${totlog}"
   set -e
 popd
 
