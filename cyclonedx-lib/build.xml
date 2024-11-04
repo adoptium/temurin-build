@@ -39,7 +39,7 @@
                 <available file="build/jar/commons-codec.jar" property="commons-codec_available"/>
                 <available file="build/jar/commons-io.jar" property="commons-io_available"/>
                 <available file="build/jar/github-package-url.jar" property="github-package-url_available"/>
-                <available file="build/webpki.org-libext-1.00.jar" property="openkeystore_available"/>
+                <available file="build/jar/webpki.org-libext-1.00.jar" property="openkeystore_available"/>
         </target>
 
         <target name="download-cyclonedx" unless="cyclonedx_available">
