@@ -64,6 +64,13 @@ diff -r -q "${JDK_DIR1}" "${JDK_DIR2}" > "${output}" || rc=$?
 
 cat "${output}"
 
+grep "Files .*" "${output}" | while read -r line; do
+  FILE1=$(echo "$line" | awk '{print $2}')
+  FILE2=$(echo "$line" | awk '{print $4}')
+  echo "diff -c on $FILE1 and $FILE2"
+  diff -c "$FILE1" "$FILE2"
+done
+
 num_differences=$(wc -l < "${output}")
 echo "Number of differences: ${num_differences}"
 repro_pc100=$(( (files1-num_differences)*100*100/files1 ))
