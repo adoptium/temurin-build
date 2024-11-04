@@ -528,9 +528,9 @@ Clone_Build_Repo() {
   if [ ! -r "$WORK_DIR/temurin-build" ] ; then
     echo "Cloning Temurin Build Repository"
     echo ""
-    git clone -q https://github.com/adoptium/temurin-build "$WORK_DIR/temurin-build" || exit 1
-    echo "Switching To Build SHA From SBOM : $buildSHA"
-    (cd "$WORK_DIR/temurin-build" && git checkout -q "$buildSHA")
+    git clone -q https://github.com/andrew-m-leonard/openjdk-build "$WORK_DIR/temurin-build" || exit 1
+    echo "Switching To Build SHA From SBOM : win_repo"
+    (cd "$WORK_DIR/temurin-build" && git checkout -q "win_repo")
     echo "Completed"
   fi
 }
