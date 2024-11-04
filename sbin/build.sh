@@ -79,8 +79,6 @@ configureDevKitConfigureParameter() {
     if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
       # Windows DevKit, currently only Redist DLLs
 
-      echo "HERE!"
-
       # Default to build architecture unless target ARCHITECTURE variable is set
       local target_arch="${BUILD_CONFIG[OS_ARCHITECTURE]}"
       if [[ -n "${ARCHITECTURE+x}" ]]; then
