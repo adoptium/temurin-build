@@ -23,7 +23,7 @@
         <!-- All other dependency versions are listed in the relevant ./dependency_data/versions files -->
         <property name="openkeystore-version" value="1.0.0"/>
 
-        <!-- Retrieve sbom dependency jars, versions, sh256 and download urls -->
+        <!-- Retrieve sbom dependency jar: versions, sha256 and download urls -->
         <property file="dependency_data/dependency_data.properties"/>
 
         <!-- classpath for running application -->
