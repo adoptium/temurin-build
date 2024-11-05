@@ -20,7 +20,7 @@
 // jscpd:ignore-start
 -->
 
-        <!-- All other dependency versions are listed in the relevant ./dependency_data/versions files -->
+        <!-- Branch of cyberphone/openkeystore to clone -->
         <property name="openkeystore-version" value="1.0.0"/>
 
         <!-- Retrieve sbom dependency jar: versions, sha256 and download urls -->
