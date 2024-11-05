@@ -33,16 +33,16 @@ if [ "$ARCHITECTURE" == "aarch64" ]; then
 fi
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-  bootDir="$PWD/jdk$JDK_BOOT_VERSION"
+  bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
   export "${BOOT_JDK_VARIABLE}"="$bootDir"
   if [ ! -x "$bootDir/bin/javac.exe" ]; then
     # Set to a default location as linked in the ansible playbooks
-    if [ -x "/cygdrive/c/openjdk/jdk${JDK_BOOT_VERSION}/bin/javac" ]; then
-      echo "Could not use ${BOOT_JDK_VARIABLE} - using /cygdrive/c/openjdk/jdk${JDK_BOOT_VERSION}"
+    if [ -x "/cygdrive/c/openjdk/jdk-${JDK_BOOT_VERSION}/bin/javac" ]; then
+      echo "Could not use ${BOOT_JDK_VARIABLE} - using /cygdrive/c/openjdk/jdk-${JDK_BOOT_VERSION}"
       # shellcheck disable=SC2140
-      export "${BOOT_JDK_VARIABLE}"="/cygdrive/c/openjdk/jdk${JDK_BOOT_VERSION}"
+      export "${BOOT_JDK_VARIABLE}"="/cygdrive/c/openjdk/jdk-${JDK_BOOT_VERSION}"
     elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8
       downloadWindowsBootJDK "${ARCHITECTURE}" "${JDK_BOOT_VERSION}" "$bootDir"
     fi
