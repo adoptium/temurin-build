@@ -565,7 +565,7 @@ pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
       grep "Only in" "${LOG}" | sed "s|${WORKDIR}||g"
       echo -n "Only in: "
       ## shellcheck disable=SC2126
-      grep "Only in " "${LOG}" | wc -l
+      grep -c "Only in " "${LOG}"
     } > "${diflog}"
     grep "Number of files" "${LOG}" > "${totlog}"
   set -e
