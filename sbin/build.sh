@@ -81,7 +81,7 @@ configureDevKitConfigureParameter() {
 
       # Default to build architecture unless target ARCHITECTURE variable is set
       local target_arch="${BUILD_CONFIG[OS_ARCHITECTURE]}"
-      if [[ -n "${ARCHITECTURE+x}" ]]; then
+      if [ ${ARCHITECTURE+x} ] && [ -n "${ARCHITECTURE}" ]; then
         target_arch="${ARCHITECTURE}"
       fi
       echo "Target architecture for Windows devkit: ${target_arch}"
