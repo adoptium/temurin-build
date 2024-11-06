@@ -20,6 +20,10 @@
 // jscpd:ignore-start
 -->
 
+        <condition property="local.deps.cache.dir.set" else="false">
+            <isset property="local.deps.cache.dir"/>
+        </condition>
+
         <!-- Branch of cyberphone/openkeystore to clone -->
         <property name="openkeystore-version" value="1.0.0"/>
 
@@ -44,12 +48,10 @@
         </target>
 
         <target name="download-cyclonedx" unless="cyclonedx_available">
-                <echo message="Downloading cyclonedx-core-java"/>
                 <download-component component="cyclonedx-core-java"/>
-	    </target>
+        </target>
 
         <target name="download-jackson-core" unless="jackson-core_available">
-                <echo message="Downloading jackson-core"/>
                 <download-component component="jackson-core"/>
         </target>
 
@@ -86,42 +88,34 @@
         </target>
 
         <target name="download-jackson-dataformat-xml" unless="jackson-dataformat_available">
-                <echo message="Downloading jackson-dataformat-xml"/>
                 <download-component component="jackson-dataformat-xml"/>
         </target>
 
         <target name="download-jackson-databind" unless="jackson-databind_available">
-                <echo message="Downloading jackson-databind"/>
                 <download-component component="jackson-databind"/>
         </target>
 
         <target name="download-jackson-annotations" unless="jackson-annotations_available">
-                <echo message="Downloading jackson-annotations"/>
                 <download-component component="jackson-annotations"/>
         </target>
 
         <target name="download-json-schema-validator" unless="json-schema-validator_available">
-                <echo message="Downloading json-schema-validator"/>
                 <download-component component="json-schema-validator"/>
         </target>
 
         <target name="download-commons-codec" unless="commons-codec_available">
-                <echo message="Downloading commons-codec"/>
                 <download-component component="commons-codec"/>
         </target>
 
         <target name="download-commons-io" unless="commons-io_available">
-                <echo message="Downloading commons-io"/>
                 <download-component component="commons-io"/>
         </target>
 
         <target name="download-commons-collections4" unless="commons-collections4_available">
-                <echo message="Downloading commons-collections4"/>
                 <download-component component="commons-collections4"/>
         </target>
 
         <target name="download-github-package-url" unless="github-package-url_available">
-                <echo message="Downloading github-package-url"/>
                 <download-component component="github-package-url"/>
         </target>
 
@@ -490,10 +484,35 @@
 		<sequential>
 			<echo message="Executing macro download-component for: @{component}"/>
 			<echo message="Expected checksum: ${@{component}.sha256}"/>
-			<download-file
+
+                        <!-- Check if local cache file is available? -->
+                        <if>
+                          <equals arg1="${local.deps.cache.dir.set}" arg2="true"/>
+                          <then>
+                            <available file="${local.deps.cache.dir}/${@{component}.jar}" property="@{component}_cache_available"/>
+                          </then>
+                          <else>
+                            <property name="@{component}_cache_available" value="false"/>
+                          </else>
+                        </if>
+
+                        <!-- Use local cache if available, otherwise download -->
+                        <if>
+                          <equals arg1="${@{component}_cache_available}" arg2="true"/>
+                          <then>
+                            <!-- Use local cache -->
+                            <echo message="Copying @{component}.jar from local cache location ${local.deps.cache.dir}/${@{component}.jar}"/>
+                            <copy file="${local.deps.cache.dir}/${@{component}.jar}" tofile="build/jar/@{component}.jar"/>
+                          </then>
+                          <else>
+                            <!-- Download if no local cache -->
+                            <download-file
 				checksum="${@{component}.sha256}"
+                                destdir="build/jar"
 				destfile="@{component}.jar"
 				srcurl="${@{component}.url}"/>
+                          </else>
+                        </if>
 		</sequential>
 	</macrodef>
 

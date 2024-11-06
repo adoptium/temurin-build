@@ -185,6 +185,9 @@ the one you are trying to build.
 -k, --keep
 if using docker, keep the container after the build.
 
+--local-dependency-cache-dir <Local dependency cache directory>
+specify the location of a local cache of required build dependency jars
+
 --make-exploded-image
 creates an exploded image (useful for codesigning jmods). Use --assemble-exploded-image once you have signed the jmods to complete the packaging steps.
 

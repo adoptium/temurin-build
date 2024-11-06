@@ -887,8 +887,15 @@ buildCyclonedxLib() {
   else
     ANTBUILDFILE="${CYCLONEDB_DIR}/build.xml"
   fi
+
+  # Do we have a local cache for the dependency jars?
+  local localJarCacheOption=""
+  if [[ -n "${BUILD_CONFIG[LOCAL_DEPENDENCY_CACHE_DIR]}" ]]; then
+    localJarCacheOption="-Dlocal.deps.cache.dir=${BUILD_CONFIG[LOCAL_DEPENDENCY_CACHE_DIR]}"
+  fi
+
   JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" clean
-  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build
+  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build "${localJarCacheOption}"
 }
 
 # get the classpath to run the CycloneDX java app TemurinGenSBOM
@@ -1211,21 +1218,20 @@ addCycloneDXVersions() {
    else
        # Should we do something special if the sha256sum fails?
        for JAR in "${CYCLONEDB_DIR}/build/jar"/*.jar; do
-         JarName=$(basename "$JAR")
+         JarName=$(basename "$JAR" | cut -d'.' -f1)
          if [ "$(uname)" = "Darwin" ]; then
             JarSha=$(shasum -a 256 "$JAR" | cut -d' ' -f1)
          else
             JarSha=$(sha256sum "$JAR" | cut -d' ' -f1)
          fi
-         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}" "${JarSha}"
+         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}.jar" "${JarSha}"
          # Now the jar's SHA has been added, we add the version string.
-         JarVersionFile="$(joinPath ${CYCLONEDB_DIR} dependency_data versions ${JarName}.version)"
-         if [ -f "${JarVersionFile}" ]; then
-           JarVersionString=$(cat "${JarVersionFile}")
-           addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions" "${JarName}" "${JarVersionString}"
-         elif [ "${JarName}" != "temurin-gen-sbom.jar" ]; then
-           echo "ERROR: Cannot find jar version file for SBOM creation dependency ${JarName}."
-           echo "ERROR: Expected location: ${JarVersionFile}"
+         JarDepsFile="$(joinPath ${CYCLONEDB_DIR} dependency_data/dependency_data.properties)"
+         JarVersionString=$(grep "${JarName}\.version=" "${JarDepsFile}" | cut -d'=' -f2)
+         if [ -n "${JarVersionString}" ]; then
+           addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions" "${JarName}.jar" "${JarVersionString}"
+         elif [ "${JarName}" != "temurin-gen-sbom" ]; then
+           echo "ERROR: Cannot determine jar version from ${JarDepsFile} for SBOM creation dependency ${JarName}.jar."
          fi
        done
    fi
