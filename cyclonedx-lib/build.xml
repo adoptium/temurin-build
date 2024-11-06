@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
   ~ ********************************************************************************
-  ~ Copyright (c) 2021 Contributors to the Eclipse Foundation
+  ~ Copyright (c) 2021, 2024 Contributors to the Eclipse Foundation
   ~
   ~ See the NOTICE file(s) with this work for additional
   ~ information regarding copyright ownership.
@@ -14,8 +14,7 @@
   ~ ********************************************************************************
 -->
 
-<project name="cyclonedx-lib build" default="build" basedir=".">
-        <taskdef resource="net/sf/antcontrib/antlib.xml" />
+<project name="cyclonedx-lib build" default="build" basedir="." xmlns:if="ant:if" xmlns:unless="ant:unless">
         <!--
 // jscpd:ignore-start
 -->
@@ -48,11 +47,11 @@
         </target>
 
         <target name="download-cyclonedx" unless="cyclonedx_available">
-                <download-component component="cyclonedx-core-java"/>
+                <get-component component="cyclonedx-core-java"/>
         </target>
 
         <target name="download-jackson-core" unless="jackson-core_available">
-                <download-component component="jackson-core"/>
+                <get-component component="jackson-core"/>
         </target>
 
         <target name="clone-and-build-openkeystore" unless="openkeystore_available">
@@ -88,35 +87,35 @@
         </target>
 
         <target name="download-jackson-dataformat-xml" unless="jackson-dataformat_available">
-                <download-component component="jackson-dataformat-xml"/>
+                <get-component component="jackson-dataformat-xml"/>
         </target>
 
         <target name="download-jackson-databind" unless="jackson-databind_available">
-                <download-component component="jackson-databind"/>
+                <get-component component="jackson-databind"/>
         </target>
 
         <target name="download-jackson-annotations" unless="jackson-annotations_available">
-                <download-component component="jackson-annotations"/>
+                <get-component component="jackson-annotations"/>
         </target>
 
         <target name="download-json-schema-validator" unless="json-schema-validator_available">
-                <download-component component="json-schema-validator"/>
+                <get-component component="json-schema-validator"/>
         </target>
 
         <target name="download-commons-codec" unless="commons-codec_available">
-                <download-component component="commons-codec"/>
+                <get-component component="commons-codec"/>
         </target>
 
         <target name="download-commons-io" unless="commons-io_available">
-                <download-component component="commons-io"/>
+                <get-component component="commons-io"/>
         </target>
 
         <target name="download-commons-collections4" unless="commons-collections4_available">
-                <download-component component="commons-collections4"/>
+                <get-component component="commons-collections4"/>
         </target>
 
         <target name="download-github-package-url" unless="github-package-url_available">
-                <download-component component="github-package-url"/>
+                <get-component component="github-package-url"/>
         </target>
 
 	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema-validator, download-commons-codec, download-commons-io, download-commons-collections4, download-github-package-url, compile, jar">
@@ -479,40 +478,23 @@
 
         </target>
 
-	<macrodef name="download-component" description="Use curl to download the given component and verify its checksum.">
-		<attribute name="component" description="Dependency component to download"/>
+	<macrodef name="get-component" description="Obtain the given component from the local cache if available or download, and verify its checksum.">
+		<attribute name="component" description="Dependency component to obtain"/>
 		<sequential>
-			<echo message="Executing macro download-component for: @{component}"/>
+			<echo message="Executing macro get-component for: @{component}"/>
 			<echo message="Expected checksum: ${@{component}.sha256}"/>
 
                         <!-- Check if local cache file is available? -->
-                        <if>
-                          <equals arg1="${local.deps.cache.dir.set}" arg2="true"/>
-                          <then>
-                            <available file="${local.deps.cache.dir}/${@{component}.jar}" property="@{component}_cache_available"/>
-                          </then>
-                          <else>
-                            <property name="@{component}_cache_available" value="false"/>
-                          </else>
-                        </if>
+                        <available file="${local.deps.cache.dir}/${@{component}.jar}" property="@{component}_cache_available" if:true="${local.deps.cache.dir.set}"/>
+                        <property name="@{component}_cache_available" value="false" unless:true="${local.deps.cache.dir.set}"/>
 
                         <!-- Use local cache if available, otherwise download -->
-                        <if>
-                          <equals arg1="${@{component}_cache_available}" arg2="true"/>
-                          <then>
-                            <!-- Use local cache -->
-                            <echo message="Copying @{component}.jar from local cache location ${local.deps.cache.dir}/${@{component}.jar}"/>
-                            <copy file="${local.deps.cache.dir}/${@{component}.jar}" tofile="build/jar/@{component}.jar"/>
-                          </then>
-                          <else>
-                            <!-- Download if no local cache -->
-                            <download-file
+                        <copy verbose="true" file="${local.deps.cache.dir}/${@{component}.jar}" tofile="build/jar/@{component}.jar" if:true="${@{component}_cache_available}"/>
+                        <download-file unless:true="${@{component}_cache_available}"
 				checksum="${@{component}.sha256}"
                                 destdir="build/jar"
 				destfile="@{component}.jar"
 				srcurl="${@{component}.url}"/>
-                          </else>
-                        </if>
 		</sequential>
 	</macrodef>
 
