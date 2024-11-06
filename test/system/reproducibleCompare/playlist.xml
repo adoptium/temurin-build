@@ -79,6 +79,6 @@
 		<versions>
 			<version>21+</version>
 		</versions>
-		<platformRequirements>os.osx,arch.aarch64</platformRequirements>
+		<platformRequirements>os.osx</platformRequirements>
 	</test>
 </playlist>
