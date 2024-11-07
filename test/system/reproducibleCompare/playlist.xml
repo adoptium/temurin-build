@@ -47,7 +47,7 @@
 	$(TEST_STATUS)
 		</command>
 		<levels>
-			<level>dev</level>
+			<level>special</level>
 		</levels>
 		<groups>
 			<group>system</group>
@@ -68,7 +68,7 @@
 	$(TEST_STATUS)
 		</command>
 		<levels>
-			<level>dev</level>
+			<level>special</level>
 		</levels>
 		<groups>
 			<group>system</group>
