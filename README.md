@@ -189,7 +189,7 @@ if using docker, keep the container after the build.
 specify the location of a local cache of required build dependency jars. If not specified
 the following default locations are searched
 Windows: c:/dependency_cache
-MacOs: ${HOME}/dependency_cache
+MacOS: ${HOME}/dependency_cache
 Unix: /usr/local/dependency_cache
 
 --make-exploded-image
