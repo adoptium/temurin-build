@@ -1,6 +1,6 @@
 /*
  * ********************************************************************************
- * Copyright (c) 2021 Contributors to the Eclipse Foundation
+ * Copyright (c) 2021, 2024 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) with this work for additional
  * information regarding copyright ownership.
@@ -15,8 +15,7 @@
 
 package temurin.sbom;
 
-import org.cyclonedx.BomGeneratorFactory;
-import org.cyclonedx.CycloneDxSchema;
+import org.cyclonedx.exception.GeneratorException;
 import org.cyclonedx.generators.json.BomJsonGenerator;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Component;
@@ -29,6 +28,7 @@ import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Property;
 import org.cyclonedx.model.Tool;
 import org.cyclonedx.parsers.JsonParser;
+import org.cyclonedx.Version;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Collections;
@@ -410,9 +410,9 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
-    static String generateBomJson(final Bom bom) {
-        // Use schema v15: https://cyclonedx.org/schema/bom-1.5.schema.json
-        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_15, bom);
+    static String generateBomJson(final Bom bom) throws GeneratorException {
+        // Use schema v16: https://cyclonedx.org/schema/bom-1.6.schema.json
+        BomJsonGenerator bomGen = new BomJsonGenerator(bom, Version.VERSION_16);
         String json = bomGen.toJsonString();
         return json;
     }
@@ -420,13 +420,15 @@ public final class TemurinGenSBOM {
     // Writes the BOM object to the specified file.
     static void writeJSONfile(final Bom bom, final String fileName) {
         FileWriter file;
-        String json = generateBomJson(bom);
         try {
+            String json = generateBomJson(bom);
+
             file = new FileWriter(fileName);
             file.write(json);
             file.close();
         } catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
@@ -439,6 +441,7 @@ public final class TemurinGenSBOM {
             bom = parser.parse(reader);
         } catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         } finally {
            return bom;
         }

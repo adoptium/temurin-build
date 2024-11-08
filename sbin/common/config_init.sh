@@ -75,6 +75,7 @@ JRE_PATH
 TEST_IMAGE_PATH
 STATIC_LIBS_IMAGE_PATH
 JVM_VARIANT
+LOCAL_DEPENDENCY_CACHE_DIR
 MACOSX_CODESIGN_IDENTITY
 MAKE_ARGS_FOR_ANY_PLATFORM
 MAKE_EXPLODED
@@ -381,6 +382,9 @@ function parseConfigurationArguments() {
         "--use-adoptium-devkit")
         BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]="$1"; shift;;
 
+        "--local-dependency-cache-dir")
+        BUILD_CONFIG[LOCAL_DEPENDENCY_CACHE_DIR]="$1"; shift;;
+
         "--user-openjdk-build-root-directory" )
         BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]="$1"; shift;;
 
@@ -650,6 +654,9 @@ function configDefaults() {
   # Default to no Adoptium DevKit
   BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]=""
   BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]=""
+
+  # Default to no local dependency cache
+  BUILD_CONFIG[LOCAL_DEPENDENCY_CACHE_DIR]=""
 
   # By default dont backport JEP318 certs to < Java 10
   BUILD_CONFIG[USE_JEP319_CERTS]=false

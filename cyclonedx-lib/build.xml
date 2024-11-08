@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
   ~ ********************************************************************************
-  ~ Copyright (c) 2021 Contributors to the Eclipse Foundation
+  ~ Copyright (c) 2021, 2024 Contributors to the Eclipse Foundation
   ~
   ~ See the NOTICE file(s) with this work for additional
   ~ information regarding copyright ownership.
@@ -14,20 +14,23 @@
   ~ ********************************************************************************
 -->
 
-<project name="cyclonedx-lib build" default="build" basedir=".">
-        <taskdef resource="net/sf/antcontrib/antlib.xml" />
+<project name="cyclonedx-lib build" default="build" basedir="." xmlns:if="ant:if" xmlns:unless="ant:unless">
         <!--
 // jscpd:ignore-start
 -->
 
-        <!-- All other dependency versions are listed in the relevant ./dependency_data/versions files -->
+        <condition property="local.deps.cache.dir.set" else="false">
+            <isset property="local.deps.cache.dir"/>
+        </condition>
+
+        <!-- Branch of cyberphone/openkeystore to clone -->
         <property name="openkeystore-version" value="1.0.0"/>
 
-        <!-- When retrieving sbom dependency jars with default settings, we will look here. -->
-        <property name="sbom_dependency_default_location" value="https://ci.adoptium.net/view/all/job/build.getDependency/lastSuccessfulBuild/artifact/sbom_dependencies"/>
+        <!-- Retrieve sbom dependency jar: versions, sha256 and download urls -->
+        <property file="dependency_data/dependency_data.properties"/>
 
         <!-- classpath for running application -->
-        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/temurin-sign-sbom.jar"/>
+        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema-validator.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/temurin-sign-sbom.jar:build/jar/commons-collections4.jar"/>
 
         <target name="dep-checks">
                 <available file="build/jar/cyclonedx-core-java.jar" property="cyclonedx_available"/>
@@ -35,21 +38,20 @@
                 <available file="build/jar/jackson-dataformat-xml.jar" property="jackson-dataformat_available"/>
                 <available file="build/jar/jackson-databind.jar" property="jackson-databind_available"/>
                 <available file="build/jar/jackson-annotations.jar" property="jackson-annotations_available"/>
-                <available file="build/jar/json-schema.jar" property="json-schema_available"/>
+                <available file="build/jar/json-schema-validator.jar" property="json-schema-validator_available"/>
                 <available file="build/jar/commons-codec.jar" property="commons-codec_available"/>
                 <available file="build/jar/commons-io.jar" property="commons-io_available"/>
+                <available file="build/jar/commons-collections4.jar" property="commons-collections4_available"/>
                 <available file="build/jar/github-package-url.jar" property="github-package-url_available"/>
                 <available file="build/webpki.org-libext-1.00.jar" property="openkeystore_available"/>
         </target>
 
         <target name="download-cyclonedx" unless="cyclonedx_available">
-                <echo message="Downloading cyclonedx-core-java"/>
-                <download-file-with-default-options destfile="cyclonedx-core-java.jar"/>
-	    </target>
+                <get-component component="cyclonedx-core-java"/>
+        </target>
 
         <target name="download-jackson-core" unless="jackson-core_available">
-                <echo message="Downloading jackson-core"/>
-                <download-file-with-default-options destfile="jackson-core.jar"/>
+                <get-component component="jackson-core"/>
         </target>
 
         <target name="clone-and-build-openkeystore" unless="openkeystore_available">
@@ -65,7 +67,7 @@
                 </move>
         </target>
 
-        <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
+        <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema-validator, download-commons-codec, download-commons-io, download-commons-collections4, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
                 <echo message="Building cyclonedx-lib TemurinSignSBOM"/>
         </target>
 
@@ -85,41 +87,38 @@
         </target>
 
         <target name="download-jackson-dataformat-xml" unless="jackson-dataformat_available">
-                <echo message="Downloading jackson-dataformat-xml"/>
-                <download-file-with-default-options destfile="jackson-dataformat-xml.jar"/>
+                <get-component component="jackson-dataformat-xml"/>
         </target>
 
         <target name="download-jackson-databind" unless="jackson-databind_available">
-                <echo message="Downloading jackson-databind"/>
-                <download-file-with-default-options destfile="jackson-databind.jar"/>
+                <get-component component="jackson-databind"/>
         </target>
 
         <target name="download-jackson-annotations" unless="jackson-annotations_available">
-                <echo message="Downloading jackson-annotations"/>
-                <download-file-with-default-options destfile="jackson-annotations.jar"/>
+                <get-component component="jackson-annotations"/>
         </target>
 
-        <target name="download-json-schema" unless="json-schema_available">
-                <echo message="Downloading json-schema"/>
-                <download-file-with-default-options destfile="json-schema.jar"/>
+        <target name="download-json-schema-validator" unless="json-schema-validator_available">
+                <get-component component="json-schema-validator"/>
         </target>
 
         <target name="download-commons-codec" unless="commons-codec_available">
-                <echo message="Downloading commons-codec"/>
-                <download-file-with-default-options destfile="commons-codec.jar"/>
+                <get-component component="commons-codec"/>
         </target>
 
         <target name="download-commons-io" unless="commons-io_available">
-                <echo message="Downloading commons-io"/>
-                <download-file-with-default-options destfile="commons-io.jar"/>
+                <get-component component="commons-io"/>
+        </target>
+
+        <target name="download-commons-collections4" unless="commons-collections4_available">
+                <get-component component="commons-collections4"/>
         </target>
 
         <target name="download-github-package-url" unless="github-package-url_available">
-                <echo message="Downloading github-package-url"/>
-                <download-file-with-default-options destfile="github-package-url.jar"/>
+                <get-component component="github-package-url"/>
         </target>
 
-	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema, download-commons-codec, download-commons-io, download-github-package-url, compile, jar">
+	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema-validator, download-commons-codec, download-commons-io, download-commons-collections4, download-github-package-url, compile, jar">
                 <echo message="Building cyclonedx-lib"/>
         </target>
 
@@ -479,17 +478,23 @@
 
         </target>
 
-	<macrodef name="download-file-with-default-options" description="Use curl to download a file and retrieve its checksum from default locations.">
-		<attribute name="destfile" description="File name of the downloaded file"/>
+	<macrodef name="get-component" description="Obtain the given component from the local cache if available or download, and verify its checksum.">
+		<attribute name="component" description="Dependency component to obtain"/>
 		<sequential>
-			<echo message="Executing macro download-file-with-default-options"/>
-			<echo message="Fetching checksum prior to downloading file."/>
-			<loadfile property="checksum-for-@{destfile}" srcFile="dependency_data/shas/@{destfile}.sha256"/>
-			<echo message="Checksum found: ${checksum-for-@{destfile}}"/>
-			<download-file
-				checksum="${checksum-for-@{destfile}}"
-				destfile="@{destfile}"
-				srcurl="${sbom_dependency_default_location}/@{destfile}"/>
+			<echo message="Executing macro get-component for: @{component}"/>
+			<echo message="Expected checksum: ${@{component}.sha256}"/>
+
+                        <!-- Check if local cache file is available? -->
+                        <available file="${local.deps.cache.dir}/${@{component}.jar}" property="@{component}_cache_available" if:true="${local.deps.cache.dir.set}"/>
+                        <property name="@{component}_cache_available" value="false" unless:true="${local.deps.cache.dir.set}"/>
+
+                        <!-- Use local cache if available, otherwise download -->
+                        <copy verbose="true" file="${local.deps.cache.dir}/${@{component}.jar}" tofile="build/jar/@{component}.jar" if:true="${@{component}_cache_available}"/>
+                        <download-file unless:true="${@{component}_cache_available}"
+				checksum="${@{component}.sha256}"
+                                destdir="build/jar"
+				destfile="@{component}.jar"
+				srcurl="${@{component}.url}"/>
 		</sequential>
 	</macrodef>
 
