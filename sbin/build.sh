@@ -888,10 +888,22 @@ buildCyclonedxLib() {
     ANTBUILDFILE="${CYCLONEDB_DIR}/build.xml"
   fi
 
-  # Do we have a local cache for the dependency jars?
+  # Has the user specified their own local cache for the dependency jars?
   local localJarCacheOption=""
   if [[ -n "${BUILD_CONFIG[LOCAL_DEPENDENCY_CACHE_DIR]}" ]]; then
     localJarCacheOption="-Dlocal.deps.cache.dir=${BUILD_CONFIG[LOCAL_DEPENDENCY_CACHE_DIR]}"
+  else
+    # Select a suitable default location that users may use
+    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+      # Windows
+      localJarCacheOption="-Dlocal.deps.cache.dir=c:/dependency_cache"
+    elif [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+      # MacOS
+      localJarCacheOption="-Dlocal.deps.cache.dir=${HOME}/dependency_cache"
+    else
+      # Assume unix based path
+      localJarCacheOption="-Dlocal.deps.cache.dir=/usr/local/dependency_cache"
+    fi
   fi
 
   JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" clean
