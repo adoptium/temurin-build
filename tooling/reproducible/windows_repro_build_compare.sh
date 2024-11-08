@@ -684,10 +684,12 @@ Check_Architecture
 echo "---------------------------------------------"
 Check_VS_Versions
 echo "---------------------------------------------"
-Get_SRC_UCRT_Version
-echo "---------------------------------------------"
-Check_UCRT_Location
-echo "---------------------------------------------"
+if [[ "${buildArgs}" != *"--use-adoptium-devkit"* ]]; then
+  Get_SRC_UCRT_Version
+  echo "---------------------------------------------"
+  Check_UCRT_Location
+  echo "---------------------------------------------"
+fi
 echo "All Validation Checks Passed - Proceeding To Build"
 echo "---------------------------------------------"
 Check_And_Install_Ant

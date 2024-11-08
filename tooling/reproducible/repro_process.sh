@@ -38,7 +38,5 @@ fi
 
 patchManifests "${JDK_DIR}"
 
-echo "***********"
-echo " Preprocess ${JDK_DIR} SUCCESS :-)"
-echo "***********"
-
+echo "$(date +%T) : Pre-processing of ${JDK_DIR} SUCCESSFUL :-)"
+echo "" # blank line separator in log file
