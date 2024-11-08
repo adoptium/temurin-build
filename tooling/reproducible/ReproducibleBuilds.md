@@ -95,7 +95,7 @@ before the comparable_patch.sh can be run.
       call vcvars64.bat
       cl $(cygpath -m $YOUR_WORKDIR/temurin-build/tooling/src/c/WindowsUpdateVsVersionInfo.c) version.lib
     " > bat.bat
-    chmod 777 bat.bat
+    chmod 755 bat.bat
     ./bat.bat
     # copy it to any dir on path or add this dir to path
     mv WindowsUpdateVsVersionInfo.exe  "$FUTURE_PATH_ADDITIONS"
