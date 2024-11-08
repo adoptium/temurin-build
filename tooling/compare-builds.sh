@@ -188,12 +188,12 @@ function compileAndSetToFuturePath() {
     echo "
       call vcvars64.bat
       cl $(cygpath -m "${COMPARE_WAPPER_SCRIPT_DIR}/src/c/WindowsUpdateVsVersionInfo.c") version.lib
-    " > bat.bat
-    chmod 777 bat.bat
-    ./bat.bat
+    " > setupEnvAndCompile.bat
+    chmod 755 setupEnvAndCompile.bat
+    ./setupEnvAndCompile.bat
     # copy it to any dir on path or add this dir to path
     mv WindowsUpdateVsVersionInfo.exe  "$FUTURE_PATH_ADDITIONS"
-    rm WindowsUpdateVsVersionInfo.obj bat.bat
+    rm WindowsUpdateVsVersionInfo.obj setupEnvAndCompile.bat
   popd
 }
 
