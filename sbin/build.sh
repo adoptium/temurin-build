@@ -905,6 +905,7 @@ buildCyclonedxLib() {
       localJarCacheOption="-Dlocal.deps.cache.dir=/usr/local/dependency_cache"
     fi
   fi
+  echo "Using CycloneDX local jar cache build option: ${localJarCacheOption}"
 
   JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" clean
   JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build "${localJarCacheOption}"
