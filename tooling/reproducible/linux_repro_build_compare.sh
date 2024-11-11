@@ -200,8 +200,6 @@ echo Comparing ...
 mkdir tarJDK
 tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C tarJDK
 
-ls -l tarJDK
-
 cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
 cp "$SBOM" SBOM.json
 
