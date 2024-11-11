@@ -14,6 +14,11 @@
 
 # This script examines the given SBOM metadata file, and then builds the exact same binary
 # and then compares with the supplied TARBALL_PARAM.
+#  SBOM_PARAM : Path to SBOM json file
+#  JDK_PARAM  : One of:
+#      URL of JDK tarball
+#      Path to JDK tarball file
+#      Local directory that contains the given expanded "jdk-V.0.M+B" JDK folder
 
 set -e
 
