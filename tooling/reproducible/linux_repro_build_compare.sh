@@ -188,16 +188,10 @@ elif [[ $JDK_PARAM =~ tar.gz ]]; then
   tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
 else
   # Local jdk dir
-  cp -R "${JDK_PARAM}"/* "${sourceJDK}"
+  cp -R "${JDK_PARAM}/jdk-${TEMURIN_VERSION}"/* "${sourceJDK}"
 fi
 
 echo "JDK_PARAM is ${JDK_PARAM}"
-ls -l "${JDK_PARAM}"
-echo "Current pwd:"
-pwd
-ls -l "$sourceJDK"
-echo "bin:"
-ls -l "${sourceJDK}/bin"
 
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
 echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
