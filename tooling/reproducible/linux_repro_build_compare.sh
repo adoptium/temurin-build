@@ -14,7 +14,9 @@
 
 # This script examines the given SBOM metadata file, and then builds the exact same binary
 # and then compares with the supplied TARBALL_PARAM.
-#  SBOM_PARAM : Path to SBOM json file
+#  SBOM_PARAM : One of:
+#      URL of SBOM metadata json file
+#      Path to SBOM metadata json file
 #  JDK_PARAM  : One of:
 #      URL of JDK tarball
 #      Path to JDK tarball file
