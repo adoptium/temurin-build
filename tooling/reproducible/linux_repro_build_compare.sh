@@ -191,15 +191,12 @@ else
   cp -R "${JDK_PARAM}/jdk-${TEMURIN_VERSION}"/* "${sourceJDK}"
 fi
 
-echo "JDK_PARAM is ${JDK_PARAM}"
-
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
 echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
 
 echo Comparing ...
 mkdir tarJDK
 tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C tarJDK
-
 cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
 cp "$SBOM" SBOM.json
 
