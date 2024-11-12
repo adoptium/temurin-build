@@ -1,4 +1,4 @@
-# This is a templated file from https://github.com/adoptium/.eclipsefdn/tree/main/otterdog/policies/require_dependabot_auto_merge.yml
+# This is a templated file from https://github.com/adoptium/.eclipsefdn/tree/main/otterdog/blueprints/require_dependabot_auto_merge.yml
 name: Dependabot auto-merge
 on: pull_request_target
 
