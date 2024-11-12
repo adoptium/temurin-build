@@ -198,6 +198,14 @@ else
   cp -R "${JDK_PARAM}/jdk-${TEMURIN_VERSION}"/* "${sourceJDK}"
 fi
 
+echo "JDK_PARAM = ${JDK_PARAM}"
+ls -l "${JDK_PARAM}"
+echo "jdk folder:"
+ls -l "${JDK_PARAM}/jdk-${TEMURIN_VERSION}"
+echo "sourceJDK:"
+ls -l "${sourceJDK}"
+
+
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
 echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
 
