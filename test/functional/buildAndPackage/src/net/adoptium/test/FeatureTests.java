@@ -15,12 +15,15 @@
 
 package net.adoptium.test;
 
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import static net.adoptium.test.JdkPlatform.Architecture;
 import static net.adoptium.test.JdkPlatform.OperatingSystem;
@@ -40,6 +43,68 @@ public class FeatureTests {
 
     private final JdkPlatform jdkPlatform = new JdkPlatform();
 
+    private String testJdkHome = null;
+
+    @BeforeTest
+    public void ensureTestJDKSet() {
+        String testJdkHome = System.getenv("TEST_JDK_HOME");
+        if (testJdkHome == null) {
+            throw new AssertionError("TEST_JDK_HOME is not set");
+        }
+        this.testJdkHome = testJdkHome;
+    }
+
+    /**
+     * Tests whether JEP 493 is enabled for Eclipse Temurin builds
+     *
+     * @see <a href="https://openjdk.java.net/jeps/493">JEP 493: Linking Run-Time Images without JMODs</a>
+     */
+    @Test
+    public void testLinkableRuntimeJDK24Plus() {
+        // Only JDK 24 and better and temurin builds have this enabled
+        if (jdkVersion.isNewerOrEqual(24) && isVendorAdoptium()) {
+            List<String> command = new ArrayList<>();
+            command.add(String.format("%s/bin/jlink", testJdkHome));
+            command.add("-J-Duser.lang=en");
+            command.add("--help");
+
+            try {
+                ProcessBuilder processBuilder = new ProcessBuilder(command);
+                Process process = processBuilder.start();
+
+                String stdout = StreamUtils.consumeStream(process.getInputStream());
+                if (process.waitFor() != 0) {
+                    throw new AssertionError("Could not run jlink --help");
+                }
+                String[] lines = stdout.split(Pattern.quote(System.lineSeparator()));
+                boolean seenCapabilities = false;
+                String capLine = "";
+                for (int i = 0; i < lines.length; i++) {
+                    if (lines[i].trim().startsWith("Capabilities:")) {
+                        seenCapabilities = true;
+                        continue; // skip Capabilities line
+                    }
+                    if (!seenCapabilities) {
+                        continue;
+                    }
+                    if (seenCapabilities) {
+                        capLine = lines[i].trim();
+                        break;
+                    }
+                }
+                LOGGER.info(String.format("Matched 'Capabilities:' line: %s", capLine));
+                assertEquals(capLine, "Linking from run-time image enabled",
+                             "jlink should have enabled run-time image link capability");
+            } catch (InterruptedException | IOException e) {
+                throw new RuntimeException("Failed to launch JVM", e);
+            }
+        }
+    }
+
+    private boolean isVendorAdoptium() {
+        return System.getProperty("java.vendor", "").toLowerCase(Locale.US).contains("adoptium");
+    }
+
     /**
      * Tests whether Shenandoah GC is available.
      * <p/>
@@ -53,10 +118,6 @@ public class FeatureTests {
      */
     @Test
     public void testShenandoahAvailable() {
-        String testJdkHome = System.getenv("TEST_JDK_HOME");
-        if (testJdkHome == null) {
-            throw new AssertionError("TEST_JDK_HOME is not set");
-        }
 
         boolean shouldBePresent = false;
         if ((jdkVersion.isNewerOrEqual(15) || jdkVersion.isNewerOrEqualSameFeature(11, 0, 9))) {
@@ -73,7 +134,7 @@ public class FeatureTests {
             }
         }
         if (jdkVersion.isNewerOrEqual(17) && jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.PPC64LE)) {
-        	shouldBePresent = true;
+            shouldBePresent = true;
         }
         if (jdkVersion.isNewerOrEqual(19)
                 || jdkVersion.isNewerOrEqualSameFeature(17, 0, 9)
@@ -116,10 +177,6 @@ public class FeatureTests {
      */
     @Test
     public void testZGCAvailable() {
-        String testJdkHome = System.getenv("TEST_JDK_HOME");
-        if (testJdkHome == null) {
-            throw new AssertionError("TEST_JDK_HOME is not set");
-        }
 
         boolean shouldBePresent = false;
         if (jdkVersion.isNewerOrEqual(15)) {
@@ -184,10 +241,6 @@ public class FeatureTests {
      */
     @Test
     public void testJFRAvailable() {
-        String testJdkHome = System.getenv("TEST_JDK_HOME");
-        if (testJdkHome == null) {
-            throw new AssertionError("TEST_JDK_HOME is not set");
-        }
         boolean shouldBePresent = false;
         if (jdkVersion.isNewerOrEqual(11) || jdkVersion.isNewerOrEqualSameFeature(8, 0, 262)) {
             if (!jdkPlatform.runsOn(OperatingSystem.AIX) || jdkVersion.isNewerOrEqual(20)) {
@@ -213,4 +266,5 @@ public class FeatureTests {
             throw new RuntimeException("Failed to launch JVM", e);
         }
     }
+
 }
