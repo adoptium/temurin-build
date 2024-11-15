@@ -45,6 +45,9 @@ public class FeatureTests {
 
     private String testJdkHome = null;
 
+    /**
+     * Ensure TEST_JDK_HOME environment variable is set for every test in this class.
+     */
     @BeforeTest
     public final void ensureTestJDKSet() {
         String tmpJdkHome = System.getenv("TEST_JDK_HOME");
