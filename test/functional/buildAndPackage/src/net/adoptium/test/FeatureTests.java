@@ -46,16 +46,16 @@ public class FeatureTests {
     private String testJdkHome = null;
 
     @BeforeTest
-    public void ensureTestJDKSet() {
-        String testJdkHome = System.getenv("TEST_JDK_HOME");
-        if (testJdkHome == null) {
+    public final void ensureTestJDKSet() {
+        String tmpJdkHome = System.getenv("TEST_JDK_HOME");
+        if (tmpJdkHome == null) {
             throw new AssertionError("TEST_JDK_HOME is not set");
         }
-        this.testJdkHome = testJdkHome;
+        this.testJdkHome = tmpJdkHome;
     }
 
     /**
-     * Tests whether JEP 493 is enabled for Eclipse Temurin builds
+     * Tests whether JEP 493 is enabled for Eclipse Temurin builds.
      *
      * @see <a href="https://openjdk.java.net/jeps/493">JEP 493: Linking Run-Time Images without JMODs</a>
      */
