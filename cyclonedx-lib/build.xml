@@ -30,7 +30,7 @@
         <property file="dependency_data/dependency_data.properties"/>
 
         <!-- classpath for running application -->
-        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema-validator.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/temurin-sign-sbom.jar:build/jar/commons-collections4.jar"/>
+        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/temurin-gen-cdxa.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema-validator.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/temurin-sign-sbom.jar:build/jar/commons-collections4.jar:build/jar/commons-lang3.jar:build/jar/stax2-api.jar:build/jar/woodstox-core.jar:build/jar/jackson-module-jaxb-annotations.jar"/>
 
         <target name="dep-checks">
                 <available file="build/jar/cyclonedx-core-java.jar" property="cyclonedx_available"/>
@@ -42,8 +42,12 @@
                 <available file="build/jar/commons-codec.jar" property="commons-codec_available"/>
                 <available file="build/jar/commons-io.jar" property="commons-io_available"/>
                 <available file="build/jar/commons-collections4.jar" property="commons-collections4_available"/>
+                <available file="build/jar/commons-lang3.jar" property="commons-lang3_available"/>
                 <available file="build/jar/github-package-url.jar" property="github-package-url_available"/>
                 <available file="build/webpki.org-libext-1.00.jar" property="openkeystore_available"/>
+                <available file="build/jar/stax2-api.jar" property="stax2-api_available"/>
+                <available file="build/jar/woodstox-core.jar" property="woodstox-core_available"/>
+                <available file="build/jar/jackson-module-jaxb-annotations.jar" property="jackson-module-jaxb-annotations_available"/>
         </target>
 
         <target name="download-cyclonedx" unless="cyclonedx_available">
@@ -67,7 +71,7 @@
                 </move>
         </target>
 
-        <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema-validator, download-commons-codec, download-commons-io, download-commons-collections4, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
+        <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema-validator, download-commons-codec, download-commons-io, download-commons-collections4, download-commons-lang3, download-stax2-api, download-woodstox-core, download-jackson-module-jaxb-annotations, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
                 <echo message="Building cyclonedx-lib TemurinSignSBOM"/>
         </target>
 
@@ -114,11 +118,27 @@
                 <get-component component="commons-collections4"/>
         </target>
 
+        <target name="download-commons-lang3" unless="commons-lang3_available">
+                <get-component component="commons-lang3"/>
+        </target>
+
         <target name="download-github-package-url" unless="github-package-url_available">
                 <get-component component="github-package-url"/>
         </target>
 
-	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema-validator, download-commons-codec, download-commons-io, download-commons-collections4, download-github-package-url, compile, jar">
+        <target name="download-stax2-api" unless="stax2-api_available">
+                <get-component component="stax2-api"/>
+        </target>
+
+        <target name="download-woodstox-core" unless="woodstox-core_available">
+                <get-component component="woodstox-core"/>
+        </target>
+
+        <target name="download-jackson-module-jaxb-annotations" unless="jackson-module-jaxb-annotations_available">
+                <get-component component="jackson-module-jaxb-annotations"/>
+        </target>
+
+	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema-validator, download-commons-codec, download-commons-io, download-commons-collections4, download-commons-lang3, download-stax2-api, download-woodstox-core, download-jackson-module-jaxb-annotations, download-github-package-url, compile, jar">
                 <echo message="Building cyclonedx-lib"/>
         </target>
 
@@ -134,9 +154,14 @@
 
         <target name="jar">
                 <mkdir dir="build/jar"/>
-                <jar destfile="build/jar/temurin-gen-sbom.jar" basedir="build/classes">
+                <jar destfile="build/jar/temurin-gen-sbom.jar" basedir="build/classes" includes="temurin/sbom/TemurinGenSBOM*,package-info*">
                         <manifest>
                                 <attribute name="Main-Class" value="temurin.sbom.TemurinGenSBOM"/>
+                        </manifest>
+                </jar>
+                <jar destfile="build/jar/temurin-gen-cdxa.jar" basedir="build/classes" includes="temurin/sbom/TemurinGenCDXA*,package-info*">
+                        <manifest>
+                                <attribute name="Main-Class" value="temurin.sbom.TemurinGenCDXA"/>
                         </manifest>
                 </jar>
         </target>
@@ -176,6 +201,53 @@
                   <arg value="${testSBOMFile}"/>
                   <arg value="--publicKeyFile"/>
                   <arg value="${publicPemFile}"/>
+                </java>
+        </target>
+
+        <target name="runCDXA">
+                <property name="testCDXA_XMLFile" location="build/testCDXA.xml"/>
+                <property name="testCDXA_JSONFile" location="build/testCDXA.json"/>
+                <delete file="${testCDXA_XMLFile}"/>
+                <delete file="${testCDXA_JSONFile}"/>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenCDXA">
+                  <arg value="--verbose"/>
+                  <arg value="--createNewCDXA"/>
+                  <arg value="--attesting-org-name"/>
+                  <arg value="Acme Inc"/>
+                  <arg value="--predicate"/>
+                  <arg value="VERIFIED_REPRODUCIBLE_BUILD"/>
+                  <arg value="--target-name"/>
+                  <arg value="Temurin jdk-21.0.5+11 x64 Linux"/>
+                  <arg value="--target-url"/>
+                  <arg value="https://api.adoptium.net/v3/binary/version/jdk-21.0.5+11/linux/x64/jdk/hotspot/normal/eclipse"/>
+                  <arg value="--target-sha256-hash"/>
+                  <arg value="1234567890123456789012345678901234567890123456789012345678901234"/>
+                  <arg value="--affirmation-stmt"/>
+                  <arg value="Acme confirms a verified reproducible build"/>
+                  <arg value="--affirmation-website"/>
+                  <arg value="https://acme-inc.com"/>
+                  <arg value="--xmlFile"/>
+                  <arg value="${testCDXA_XMLFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenCDXA">
+                  <arg value="--verbose"/>
+                  <arg value="--createNewCDXA"/>
+                  <arg value="--attesting-org-name"/>
+                  <arg value="Acme Inc"/>
+                  <arg value="--predicate"/>
+                  <arg value="VERIFIED_REPRODUCIBLE_BUILD"/>
+                  <arg value="--target-name"/>
+                  <arg value="Temurin jdk-21.0.5+11 x64 Linux"/>
+                  <arg value="--target-url"/>
+                  <arg value="https://api.adoptium.net/v3/binary/version/jdk-21.0.5+11/linux/x64/jdk/hotspot/normal/eclipse"/>
+                  <arg value="--target-sha256-hash"/>
+                  <arg value="1234567890123456789012345678901234567890123456789012345678901234"/>
+                  <arg value="--affirmation-stmt"/>
+                  <arg value="Acme confirms a verified reproducible build"/>
+                  <arg value="--affirmation-website"/>
+                  <arg value="https://acme-inc.com"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testCDXA_JSONFile}"/>
                 </java>
         </target>
 

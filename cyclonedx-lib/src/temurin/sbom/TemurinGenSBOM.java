@@ -34,6 +34,7 @@ import java.io.FileWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.UUID;
 
 /**
  * Command line tool to construct a CycloneDX SBOM.
@@ -50,7 +51,7 @@ public final class TemurinGenSBOM {
      * @param args Arguments for sbom operation.
      */
     public static void main(final String[] args) {
-        String cmd = null;
+        String cmd = "";
         String comment = null;
         String compName = null;
         String formulaName = null;
@@ -194,6 +195,7 @@ public final class TemurinGenSBOM {
      */
     static Bom createBom() {
         Bom bom = new Bom();
+        bom.setSerialNumber("urn:uuid:"+UUID.randomUUID());
         return bom;
     }
 
