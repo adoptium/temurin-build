@@ -82,7 +82,8 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Build Linux
-      run: docker run --rm -w /home/jenkins -v $PWD:/home/jenkins \
+      run: |
+          docker run --rm -w /home/jenkins -v $PWD:/home/jenkins \
                       -e "JAVA_TO_BUILD=${{ matrix.version }}" \
                       -e "ARCHITECTURE=x64" \
                       -e "VARIANT=${{ matrix.variant }}" \
@@ -91,7 +92,7 @@ jobs:
                       -e "PLATFORM_CONFIG_LOCATION=adoptium/temurin-build/master/build-farm/platform-specific-configurations" \
                       -e "BUILD_ARGS=--create-sbom" \
                       -e "CONFIGURE_ARGS=--with-native-debug-symbols=none" \
-                      ${{ matrix.image }}
+                      ${{ matrix.image }} \
                       ./build-farm/make-adopt-build-farm.sh
       #env:
       #  JAVA_TO_BUILD: ${{ matrix.version }}
