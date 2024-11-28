@@ -52,6 +52,13 @@ jobs:
       - name: Run TemurinGenSBOM Unit test
         run: ant -noinput -buildfile cyclonedx-lib/build.xml run
 
+      - name: Validate generated testSBOM.json using cyclonedx-cli validate
+        run: |
+          curl -L -O https://github.com/CycloneDX/cyclonedx-cli/releases/latest/download/cyclonedx-linux-x64
+          chmod +x cyclonedx-linux-x64
+          cyclonedx-linux-x64 validate --input-file cyclonedx-lib/build/testSBOM.json --fail-on-errors --input-version v1_6
+          cyclonedx-linux-x64 validate --input-file cyclonedx-lib/build/testSBOM.xml --fail-on-errors --input-version v1_6
+
       - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
         name: Collect and Archive TemurinGenSBOM Artifacts
         with:
