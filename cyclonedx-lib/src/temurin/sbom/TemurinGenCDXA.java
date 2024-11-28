@@ -166,7 +166,9 @@ public final class TemurinGenCDXA {
             System.out.println("--affirmation-website not specified");
             validInput = false;
         }
-        if (!validInput) return null;
+        if (!validInput) {
+            return null;
+        }
 
         Declarations   declarations = new Declarations();
         Assessor       assessor     = new Assessor();
@@ -208,7 +210,7 @@ public final class TemurinGenCDXA {
         List<Assessor> assessors = new LinkedList<Assessor>();
         assessors.add(assessor);
         declarations.setAssessors(assessors);
-        
+
         // Claim
         claim.setPredicate(predicate);
         claim.setTarget(targetJDK.getBomRef());
