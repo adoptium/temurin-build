@@ -30,7 +30,7 @@
         <property file="dependency_data/dependency_data.properties"/>
 
         <!-- classpath for running application -->
-        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/temurin-gen-cdxa.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema-validator.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/temurin-sign-sbom.jar:build/jar/commons-collections4.jar:build/jar/commons-lang3.jar:build/jar/stax2-api.jar:build/jar/woodstox-core.jar:build/jar/jackson-module-jaxb-annotations.jar"/>
+        <property name="classpath" value="build/jar/temurin-gen-sbom.jar:build/jar/temurin-gen-cdxa.jar:build/jar/cyclonedx-core-java.jar:build/jar/jackson-core.jar:build/jar/jackson-dataformat-xml.jar:build/jar/jackson-databind.jar:build/jar/jackson-annotations.jar:build/jar/json-schema-validator.jar:build/jar/commons-codec.jar:build/jar/commons-io.jar:build/jar/github-package-url.jar:build/jar/webpki.org-libext-1.00.jar:build/jar/temurin-sign-sbom.jar:build/jar/commons-collections4.jar:build/jar/commons-lang3.jar:build/jar/stax2-api.jar:build/jar/woodstox-core.jar"/>
 
         <target name="dep-checks">
                 <available file="build/jar/cyclonedx-core-java.jar" property="cyclonedx_available"/>
@@ -47,7 +47,6 @@
                 <available file="build/webpki.org-libext-1.00.jar" property="openkeystore_available"/>
                 <available file="build/jar/stax2-api.jar" property="stax2-api_available"/>
                 <available file="build/jar/woodstox-core.jar" property="woodstox-core_available"/>
-                <available file="build/jar/jackson-module-jaxb-annotations.jar" property="jackson-module-jaxb-annotations_available"/>
         </target>
 
         <target name="download-cyclonedx" unless="cyclonedx_available">
@@ -71,7 +70,7 @@
                 </move>
         </target>
 
-        <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema-validator, download-commons-codec, download-commons-io, download-commons-collections4, download-commons-lang3, download-stax2-api, download-woodstox-core, download-jackson-module-jaxb-annotations, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
+        <target name="build-sign-sbom" depends="dep-checks, clone-and-build-openkeystore, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema-validator, download-commons-codec, download-commons-io, download-commons-collections4, download-commons-lang3, download-stax2-api, download-woodstox-core, download-github-package-url, compile-sign-sbom, jar-sign-sbom">
                 <echo message="Building cyclonedx-lib TemurinSignSBOM"/>
         </target>
 
@@ -134,11 +133,7 @@
                 <get-component component="woodstox-core"/>
         </target>
 
-        <target name="download-jackson-module-jaxb-annotations" unless="jackson-module-jaxb-annotations_available">
-                <get-component component="jackson-module-jaxb-annotations"/>
-        </target>
-
-	      <target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema-validator, download-commons-codec, download-commons-io, download-commons-collections4, download-commons-lang3, download-stax2-api, download-woodstox-core, download-jackson-module-jaxb-annotations, download-github-package-url, compile, jar">
+	<target name="build" depends="dep-checks, download-cyclonedx, download-jackson-core, download-jackson-dataformat-xml, download-jackson-databind, download-jackson-annotations, download-json-schema-validator, download-commons-codec, download-commons-io, download-commons-collections4, download-commons-lang3, download-stax2-api, download-woodstox-core, download-github-package-url, compile, jar">
                 <echo message="Building cyclonedx-lib"/>
         </target>
 
