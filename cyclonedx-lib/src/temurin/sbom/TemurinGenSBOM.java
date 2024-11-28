@@ -182,15 +182,6 @@ public final class TemurinGenSBOM {
                 writeFile(bom, fileName);
                 break;
 
-            case "addExternalReference":                             // Adds external Reference
-                bom = addExternalReference(fileName, hash, url, comment);
-                writeFile(bom, fileName);
-                break;
-
-            case "addComponentExternalReference":                    // Adds external Reference to component
-                bom = addComponentExternalReference(fileName, hash, url, comment);
-                writeFile(bom, fileName);
-                break;
             default:
                 System.out.println("Please enter a command.");
         }
@@ -306,34 +297,6 @@ public final class TemurinGenSBOM {
                     item.addProperty(prop1);
             }
         }
-        return bom;
-    }
-
-    // Method to store externalReferences: dependency_version_alsa.
-    static Bom addExternalReference(final String fileName, final String hash, final String url, final String comment) {
-        Bom bom = readFile(fileName);
-        ExternalReference extRef = new ExternalReference();
-        Hash hash1 = new Hash(Hash.Algorithm.SHA_256, hash);
-        extRef.setType(ExternalReference.Type.BUILD_SYSTEM); //required
-        extRef.setUrl(url); // required must be a valid URL with protocol
-        extRef.setComment(comment);
-        extRef.addHash(hash1);
-        bom.addExternalReference(extRef);
-        return bom;
-    }
-
-    // Method to store externalReferences to store: openjdk_source.
-    static Bom addComponentExternalReference(final String fileName, final String hash, final String url, final String comment) {
-        Bom bom = readFile(fileName);
-        ExternalReference extRef = new ExternalReference();
-        Hash hash1 = new Hash(Hash.Algorithm.SHA_256, hash);
-        Component comp = new Component();
-        extRef.addHash(hash1);
-        extRef.setUrl(url);
-        extRef.setComment(comment); //"openjdk_source"
-        extRef.setType(ExternalReference.Type.BUILD_SYSTEM);
-        comp.addExternalReference(extRef);
-        bom.addComponent(comp);
         return bom;
     }
 
