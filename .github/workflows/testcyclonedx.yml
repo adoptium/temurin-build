@@ -30,8 +30,8 @@ permissions:
   contents: read
 
 jobs:
-  test_sbom_gen:
-    name: gen_sbom
+  test_cyclonedx_gen:
+    name: gen_cyclonedx
     runs-on: ubuntu-latest
 
     steps:
