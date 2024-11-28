@@ -35,8 +35,6 @@ jobs:
   build_linux:
     name: Linux
     runs-on: ubuntu-latest
-    #container:
-    #  image: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
