@@ -31,7 +31,6 @@ import org.cyclonedx.model.attestation.Claim;
 import org.cyclonedx.model.attestation.affirmation.Affirmation;
 import org.cyclonedx.model.attestation.affirmation.Signatory;
 import org.cyclonedx.model.attestation.Targets;
-import org.cyclonedx.model.Property;
 import org.cyclonedx.parsers.JsonParser;
 import org.cyclonedx.parsers.XmlParser;
 import org.cyclonedx.Version;
@@ -124,8 +123,14 @@ public final class TemurinGenCDXA {
                           final String affirmationStmt, final String affirmationWebsite, final boolean thirdParty) {
         // Validate inputs
         boolean validInput = true;
-        if (fileName == null) { System.out.println("--xmlFile|--jsonFile not specified"); validInput = false; }
-        if (attestingOrgName == null) { System.out.println("--attesting-org-name not specified"); validInput = false; }
+        if (fileName == null) {
+            System.out.println("--xmlFile|--jsonFile not specified");
+            validInput = false;
+         }
+        if (attestingOrgName == null) {
+            System.out.println("--attesting-org-name not specified");
+            validInput = false;
+        }
         if (predicate == null) {
             System.out.println("--predicate not specified"); validInput = false;
         } else {
@@ -136,13 +141,31 @@ public final class TemurinGenCDXA {
                     break;
                 }
             }
-            if (!validPred) { System.out.println("--predicate " + predicate + " not a valid value"); validInput = false; }
+            if (!validPred) {
+                System.out.println("--predicate " + predicate + " not a valid value");
+                validInput = false;
+            }
         }
-        if (targetName == null) { System.out.println("--target-name not specified"); validInput = false; }
-        if (targetUrl == null) { System.out.println("--target-url not specified"); validInput = false; }
-        if (targetHash == null) { System.out.println("--target-sha256-hash not specified"); validInput = false; }
-        if (affirmationStmt == null) { System.out.println("--affirmation-stmt not specified"); validInput = false; }
-        if (affirmationWebsite == null) { System.out.println("--affirmation-website not specified"); validInput = false; }
+        if (targetName == null) {
+            System.out.println("--target-name not specified");
+            validInput = false;
+        }
+        if (targetUrl == null) {
+            System.out.println("--target-url not specified");
+            validInput = false;
+        }
+        if (targetHash == null) {
+            System.out.println("--target-sha256-hash not specified");
+            validInput = false;
+        }
+        if (affirmationStmt == null) {
+            System.out.println("--affirmation-stmt not specified");
+            validInput = false;
+        }
+        if (affirmationWebsite == null) {
+            System.out.println("--affirmation-website not specified");
+            validInput = false;
+        }
         if (!validInput) return null;
 
         Declarations   declarations = new Declarations();
@@ -154,9 +177,9 @@ public final class TemurinGenCDXA {
         Attestation    attestation  = new Attestation();
         AttestationMap attestationMap = new AttestationMap();
 
-        final String TARGET_JDK_BOM_REF  = "target-jdk-1";
-        final String ASSESSOR_BOM_REF    = "assessor-1";
-        final String CLAIM_BOM_REF       = "claim-1";
+        final String targetJdkBomRef  = "target-jdk-1";
+        final String assessorBomRef   = "assessor-1";
+        final String claimBomRef      = "claim-1";
 
         // External reference to the target JDK
         ExternalReference extRef = new ExternalReference();
@@ -170,7 +193,7 @@ public final class TemurinGenCDXA {
         targetJDK.setType(Component.Type.APPLICATION);
         targetJDK.setName(targetName);
         targetJDK.addExternalReference(extRef);
-        targetJDK.setBomRef(TARGET_JDK_BOM_REF);
+        targetJDK.setBomRef(targetJdkBomRef);
         List<Component> components = new LinkedList<Component>();
         components.add(targetJDK);
         targets.setComponents(components);
@@ -181,7 +204,7 @@ public final class TemurinGenCDXA {
         OrganizationalEntity org = new OrganizationalEntity();
         org.setName(attestingOrgName);
         assessor.setOrganization(org);
-        assessor.setBomRef(ASSESSOR_BOM_REF);
+        assessor.setBomRef(assessorBomRef);
         List<Assessor> assessors = new LinkedList<Assessor>();
         assessors.add(assessor);
         declarations.setAssessors(assessors);
@@ -189,7 +212,7 @@ public final class TemurinGenCDXA {
         // Claim
         claim.setPredicate(predicate);
         claim.setTarget(targetJDK.getBomRef());
-        claim.setBomRef(CLAIM_BOM_REF);
+        claim.setBomRef(claimBomRef);
         List<Claim> claims = new LinkedList<Claim>();
         claims.add(claim);
         declarations.setClaims(claims);
@@ -221,7 +244,7 @@ public final class TemurinGenCDXA {
 
         // Create CDXA Bom
         Bom cdxa = new Bom();
-        cdxa.setSerialNumber("urn:uuid:"+UUID.randomUUID());
+        cdxa.setSerialNumber("urn:uuid:" + UUID.randomUUID());
         cdxa.setDeclarations(declarations);
 
         return cdxa;
