@@ -128,7 +128,7 @@ public final class TemurinGenSBOM {
             }
         }
         switch (cmd) {
-            case "createNewSBOM":                                    // Creates new SBOM 
+            case "createNewSBOM":                                    // Creates new SBOM
                 Bom bom = createBom();
                 writeFile(bom, fileName);
                 break;
@@ -202,7 +202,7 @@ public final class TemurinGenSBOM {
      */
     static Bom createBom() {
         Bom bom = new Bom();
-        bom.setSerialNumber("urn:uuid:"+UUID.randomUUID());
+        bom.setSerialNumber("urn:uuid:" + UUID.randomUUID());
         return bom;
     }
 
@@ -436,9 +436,9 @@ public final class TemurinGenSBOM {
     static void writeFile(final Bom bom, final String fileName) {
         if (useJson) {
             writeJSONfile(bom, fileName);
-        } else {    
+        } else {
             writeXMLfile(bom, fileName);
-        }       
+        }
     }
 
     // Read the BOM object from the specified type of file
