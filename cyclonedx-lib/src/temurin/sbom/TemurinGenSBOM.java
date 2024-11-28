@@ -20,7 +20,6 @@ import org.cyclonedx.generators.json.BomJsonGenerator;
 import org.cyclonedx.generators.xml.BomXmlGenerator;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Component;
-import org.cyclonedx.model.ExternalReference;
 import org.cyclonedx.model.formulation.Formula;
 import org.cyclonedx.model.Hash;
 import org.cyclonedx.model.Metadata;
