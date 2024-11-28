@@ -35,8 +35,8 @@ jobs:
   build_linux:
     name: Linux
     runs-on: ubuntu-latest
-    container:
-      image: ${{ matrix.image }}
+    #container:
+    #  image: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
@@ -82,17 +82,27 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Build Linux
-      run: ./build-farm/make-adopt-build-farm.sh
-      env:
-        JAVA_TO_BUILD: ${{ matrix.version }}
-        ARCHITECTURE: x64
-        VARIANT: ${{ matrix.variant }}
-        TARGET_OS: ${{ matrix.os }}
-        FILENAME: OpenJDK.tar.gz
-        # Don't set the OS as we use both linux and alpine-linux
-        PLATFORM_CONFIG_LOCATION: adoptium/temurin-build/master/build-farm/platform-specific-configurations
-        BUILD_ARGS: --create-sbom
-        CONFIGURE_ARGS: --with-native-debug-symbols=none
+      run: docker run --rm -w /home/jenkins -v $PWD:/home/jenkins \
+                      -e "JAVA_TO_BUILD=${{ matrix.version }}" \
+                      -e "ARCHITECTURE=x64" \
+                      -e "VARIANT=${{ matrix.variant }}" \
+                      -e "TARGET_OS=${{ matrix.os }}" \
+                      -e "FILENAME=OpenJDK.tar.gz" \
+                      -e "PLATFORM_CONFIG_LOCATION=adoptium/temurin-build/master/build-farm/platform-specific-configurations" \
+                      -e "BUILD_ARGS=--create-sbom" \
+                      -e "CONFIGURE_ARGS=--with-native-debug-symbols=none" \
+                      ${{ matrix.image }}
+                      ./build-farm/make-adopt-build-farm.sh
+      #env:
+      #  JAVA_TO_BUILD: ${{ matrix.version }}
+      #  ARCHITECTURE: x64
+      #  VARIANT: ${{ matrix.variant }}
+      #  TARGET_OS: ${{ matrix.os }}
+      #  FILENAME: OpenJDK.tar.gz
+      #  # Don't set the OS as we use both linux and alpine-linux
+      #  PLATFORM_CONFIG_LOCATION: adoptium/temurin-build/master/build-farm/platform-specific-configurations
+      #  BUILD_ARGS: --create-sbom
+      #  CONFIGURE_ARGS: --with-native-debug-symbols=none
 
     # pinned at v3 to as Node.js 20.x is not supported on Centos 7
     - uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
