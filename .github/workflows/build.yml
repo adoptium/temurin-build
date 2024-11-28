@@ -35,8 +35,6 @@ jobs:
   build_linux:
     name: Linux
     runs-on: ubuntu-latest
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
     container:
       image: ${{ matrix.image }}
     strategy:
