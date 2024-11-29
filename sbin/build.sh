@@ -24,7 +24,6 @@
 # Calls 'configure' then 'make' in order to build OpenJDK
 #
 ################################################################################
-# TEST!
 
 set -eu
 
