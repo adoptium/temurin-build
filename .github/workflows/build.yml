@@ -120,7 +120,7 @@ jobs:
       run: |
         aaa="${PWD}"
         echo "HOME=${HOME}"
-        echo "pwd=${aaa}"
+        echo "AAA=${aaa}"
         ls -l
         docker run --rm -w /home/jenkins -v "$HOME":"/home/jenkins" \
             -e "TEST_JDK_HOME=${TEST_JDK_HOME}" \
