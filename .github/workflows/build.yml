@@ -111,7 +111,6 @@ jobs:
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")"
         ls -l "${TEST_JDK_HOME}/bin"
-        "${TEST_JDK_HOME}/bin/java -version"
         cat "$GITHUB_ENV"
     - name: Smoke test
       uses: adoptium/run-aqa@6bacb4e732ad546eda1b09665b9067cdc87651f4 # v2
