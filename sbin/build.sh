@@ -765,8 +765,12 @@ createSourceArchive() {
      exit 1
   fi
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
-  echo "Temporarily moving VCS source dir to ${tmpSourceVCS}"
-  mv "${sourceDir}/.git" "${tmpSourceVCS}"
+  if [ -e "${sourceDir}/.git" ] ; then
+    echo "Temporarily moving VCS source dir to ${tmpSourceVCS}"
+    mv "${sourceDir}/.git" "${tmpSourceVCS}"
+  else
+    echo "No VCS source dir found in ${sourceDir}"
+  fi
   echo "Temporarily moving source dir to ${sourceArchiveTargetPath}"
   mv "${sourceDir}" "${sourceArchiveTargetPath}"
 
@@ -775,8 +779,10 @@ createSourceArchive() {
 
   echo "Restoring source dir from ${sourceArchiveTargetPath} to ${sourceDir}"
   mv "${sourceArchiveTargetPath}" "${sourceDir}"
-  echo "Restoring VCS source dir from ${tmpSourceVCS} to ${sourceDir}/.git"
-  mv "${tmpSourceVCS}" "${sourceDir}/.git"
+  if [ -e "${tmpSourceVCS}" ] ; then
+    echo "Restoring VCS source dir from ${tmpSourceVCS} to ${sourceDir}/.git"
+    mv "${tmpSourceVCS}" "${sourceDir}/.git"
+  fi
   cd "${oldPwd}"
 }
 
