@@ -80,8 +80,9 @@ jobs:
 
     - name: Build Linux within container image "${{ matrix.image }}"
       run: |
-          echo "HOME=${HOME}"
           echo "PWD=${PWD}"
+          echo "HOME=${HOME}"
+          echo "AAA"
           docker run --rm -w /home/jenkins -v "$PWD":"/home/jenkins" \
                       -e "JAVA_TO_BUILD=${{ matrix.version }}" \
                       -e "ARCHITECTURE=x64" \
