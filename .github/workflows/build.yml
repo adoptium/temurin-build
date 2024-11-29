@@ -80,7 +80,7 @@ jobs:
 
     - name: Build Linux within container image "${{ matrix.image }}"
       run: |
-          echo docker run --rm -w /home/jenkins -v "$PWD":"/home/jenkins" \
+          docker run --rm -w /home/jenkins -v "$PWD":"/home/jenkins" \
                       -e "JAVA_TO_BUILD=${{ matrix.version }}" \
                       -e "ARCHITECTURE=x64" \
                       -e "VARIANT=${{ matrix.variant }}" \
@@ -100,13 +100,13 @@ jobs:
 
     - name: Unpack jdk
       run: |
-        echo mkdir -p "${HOME}/JDK"
-        echo tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
+        mkdir -p "${HOME}/JDK"
+        tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
     - name: Set root of jdk image dir
       run: |
-        echo imageroot=$(find "${HOME}/JDK" -name release -type f)
+        imageroot=$(find "${HOME}/JDK" -name release -type f)
         # TEST_JDK_HOME needs to be mapped to the docker container /home/jenkins mapping
-        echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | sed "s,${HOME},/home/jenkins," >> "$GITHUB_ENV"
+        "TEST_JDK_HOME=$(dirname "${imageroot}")" | sed "s,${HOME},/home/jenkins," >> "$GITHUB_ENV"
 
     - name: Checkout aqa-tests repo
       uses: actions/checkout@v4
@@ -119,7 +119,6 @@ jobs:
         VENDOR_BRANCH: ${{ github.head_ref }}
       run: |
         WORK_DIR=$(echo "${PWD}" | sed "s,${HOME},/home/jenkins,")
-        echo "WORK_DIR=${WORK_DIR}"
         docker run --rm -w /home/jenkins -v "$HOME":"/home/jenkins" \
             -e "TEST_JDK_HOME=${TEST_JDK_HOME}" \
             -e "BUILD_LIST=functional/buildAndPackage" \
