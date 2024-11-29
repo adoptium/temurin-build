@@ -107,6 +107,7 @@ jobs:
     - name: Set root of jdk image dir
       run: |
         imageroot=$(find "${HOME}/JDK" -name release -type f)
+        TEST_JDK_HOME=$(dirname "${imageroot}")
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")"
         ls -l "${TEST_JDK_HOME}/bin"
