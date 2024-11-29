@@ -102,10 +102,14 @@ jobs:
       run: |
         mkdir -p "${HOME}/JDK"
         tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
+        echo "==> ${HOME}/JDK"
+        ls -l "${HOME}/JDK"
     - name: Set root of jdk image dir
       run: |
         imageroot=$(find "${HOME}/JDK" -name release -type f)
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
+        echo "TEST_JDK_HOME=$(dirname "${imageroot}")"
+        cat "$GITHUB_ENV"
     - name: Smoke test
       uses: adoptium/run-aqa@6bacb4e732ad546eda1b09665b9067cdc87651f4 # v2
       with:
