@@ -112,14 +112,25 @@ jobs:
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")"
         ls -l "${TEST_JDK_HOME}/bin"
         cat "$GITHUB_ENV"
-    - name: Smoke test
-      uses: adoptium/run-aqa@6bacb4e732ad546eda1b09665b9067cdc87651f4 # v2
+    - name: Checkout aqa-tests repo
+      uses: actions/checkout@v4
       with:
-        build_list: 'functional/buildAndPackage'
-        target: '_extended.functional'
-        vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
-        vendor_testBranches: "${{ github.head_ref }}"
-        vendor_testDirs: "/test/functional"
+        repository: adoptium/aqa-tests
+        path: aqa-tests
+    - name: Run Smoke test within the container
+      run: |
+        docker run --rm -w /home/jenkins -v "$PWD":"/home/jenkins" \
+            -e "TEST_JDK_HOME=${TEST_JDK_HOME}" \
+            -e "BUILD_LIST=functional/buildAndPackage" \
+            "${{ matrix.image }}" \
+            "cd aqa-tests && \
+             ./get.sh --vendor_repos ${{ github.event.pull_request.head.repo.html_url }}.git \
+                      --vendor_branches ${{ github.head_ref }} \
+                      --vendor_dirs /test/functional && \
+             cd TKG && \
+             make compile && \
+             make _extended.functional"
+        
     - uses: actions/upload-artifact@v4
       name: Collect and Archive SmokeTest Results
       if: failure()
