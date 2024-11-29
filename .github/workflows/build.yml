@@ -100,11 +100,11 @@ jobs:
 
     - name: Unpack jdk
       run: |
-        mkdir -p "${HOME}/JDK"
-        tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
+        echo mkdir -p "${HOME}/JDK"
+        echo tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
     - name: Set root of jdk image dir
       run: |
-        imageroot=$(find "${HOME}/JDK" -name release -type f)
+        echo imageroot=$(find "${HOME}/JDK" -name release -type f)
         # TEST_JDK_HOME needs to be mapped to the docker container /home/jenkins mapping
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | sed "s,${HOME},/home/jenkins," >> "$GITHUB_ENV"
 
