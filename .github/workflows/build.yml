@@ -115,8 +115,8 @@ jobs:
         path: aqa-tests
     - name: Run Smoke test within container image "${{ matrix.image }}"
       env:
-        VENDOR_REPOS: ${{ github.head_ref }}
-        VENDOR_BRANCH: ${{ github.event.pull_request.head.repo.html_url }}.git
+        VENDOR_REPOS: ${{ github.event.pull_request.head.repo.html_url }}.git
+        VENDOR_BRANCH: ${{ github.head_ref }}
       run: |
         docker run --rm -w /home/jenkins -v "$PWD":"/home/jenkins" \
             -e "TEST_JDK_HOME=${TEST_JDK_HOME}" \
