@@ -106,7 +106,7 @@ jobs:
       run: |
         imageroot=$(find "${HOME}/JDK" -name release -type f)
         # TEST_JDK_HOME needs to be mapped to the docker container /home/jenkins mapping
-        "TEST_JDK_HOME=$(dirname "${imageroot}")" | sed "s,${HOME},/home/jenkins," >> "$GITHUB_ENV"
+        echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | sed "s,${HOME},/home/jenkins," >> "$GITHUB_ENV"
 
     - name: Checkout aqa-tests repo
       uses: actions/checkout@v4
