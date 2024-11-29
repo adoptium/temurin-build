@@ -105,7 +105,8 @@ jobs:
     - name: Set root of jdk image dir
       run: |
         imageroot=$(find "${HOME}/JDK" -name release -type f)
-        echo "TEST_JDK_HOME=$(dirname "${imageroot}")" >> "$GITHUB_ENV"
+        # TEST_JDK_HOME needs to be mapped to the docker container /home/jenkins mapping
+        echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | sed "s,${HOME},/home/jenkins," >> "$GITHUB_ENV"
 
     - name: Checkout aqa-tests repo
       uses: actions/checkout@v4
@@ -113,20 +114,21 @@ jobs:
         repository: adoptium/aqa-tests
         path: aqa-tests
     - name: Run Smoke test within container image "${{ matrix.image }}"
+      env:
+        VENDOR_REPOS: ${{ github.head_ref }}
+        VENDOR_BRANCH: ${{ github.event.pull_request.head.repo.html_url }}.git
       run: |
-        VENDOR_REPOS="${{ github.event.pull_request.head.repo.html_url }}.git"
-        VENDOR_BRANCH="${{ github.head_ref }}"
         docker run --rm -w /home/jenkins -v "$PWD":"/home/jenkins" \
             -e "TEST_JDK_HOME=${TEST_JDK_HOME}" \
             -e "BUILD_LIST=functional/buildAndPackage" \
             "${{ matrix.image }}" \
-            sh -c 'cd aqa-tests && \
-             ./get.sh --vendor_repos "${VENDOR_REPOS}" \
-                      --vendor_branches "${VENDOR_BRANCH}" \
+            sh -c "cd aqa-tests && \
+             ./get.sh --vendor_repos ${VENDOR_REPOS} \
+                      --vendor_branches ${VENDOR_BRANCH} \
                       --vendor_dirs /test/functional && \
              cd TKG && \
              make compile && \
-             make _extended.functional'
+             make _extended.functional"
         
     - uses: actions/upload-artifact@v4
       name: Collect and Archive SmokeTest Results
