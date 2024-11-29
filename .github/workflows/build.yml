@@ -118,15 +118,13 @@ jobs:
         VENDOR_REPOS: ${{ github.event.pull_request.head.repo.html_url }}.git
         VENDOR_BRANCH: ${{ github.head_ref }}
       run: |
-        aaa="${PWD}"
-        echo "HOME=${HOME}"
-        echo "AAA=${aaa}"
-        ls -l
+        WORK_DIR=$(echo "${PWD}" | sed "s,${HOME},/home/jenkins,")
+        echo "WORK_DIR=${WORK_DIR}"
         docker run --rm -w /home/jenkins -v "$HOME":"/home/jenkins" \
             -e "TEST_JDK_HOME=${TEST_JDK_HOME}" \
             -e "BUILD_LIST=functional/buildAndPackage" \
             "${{ matrix.image }}" \
-            sh -c "cd aqa-tests && \
+            sh -c "cd ${WORK_DIR}/aqa-tests && \
              ./get.sh --vendor_repos ${VENDOR_REPOS} \
                       --vendor_branches ${VENDOR_BRANCH} \
                       --vendor_dirs /test/functional && \
