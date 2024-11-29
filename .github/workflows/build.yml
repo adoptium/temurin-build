@@ -102,6 +102,9 @@ jobs:
       run: |
         mkdir -p "${HOME}/JDK"
         tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
+        ls -l "${HOME}/JDK"
+        ls -l "${HOME}/JDK/jdk8u442-b04"
+        ls -l "${HOME}/JDK/jdk8u442-b04/bin"
     - name: Set root of jdk image dir
       run: |
         imageroot=$(find "${HOME}/JDK" -name release -type f)
