@@ -80,10 +80,7 @@ jobs:
 
     - name: Build Linux within container image "${{ matrix.image }}"
       run: |
-          aaa="${PWD}"
-          echo "HOME=${HOME}"
-          echo "AAA=${aaa}"
-          docker run --rm -w /home/jenkins -v "$PWD":"/home/jenkins" \
+          echo docker run --rm -w /home/jenkins -v "$PWD":"/home/jenkins" \
                       -e "JAVA_TO_BUILD=${{ matrix.version }}" \
                       -e "ARCHITECTURE=x64" \
                       -e "VARIANT=${{ matrix.variant }}" \
@@ -105,9 +102,6 @@ jobs:
       run: |
         mkdir -p "${HOME}/JDK"
         tar -xf "${GITHUB_WORKSPACE}/workspace/target/OpenJDK.tar.gz" -C "${HOME}/JDK"
-        ls -l "${HOME}/JDK"
-        ls -l "${HOME}/JDK/jdk8u442-b04"
-        ls -l "${HOME}/JDK/jdk8u442-b04/bin"
     - name: Set root of jdk image dir
       run: |
         imageroot=$(find "${HOME}/JDK" -name release -type f)
@@ -124,7 +118,11 @@ jobs:
         VENDOR_REPOS: ${{ github.event.pull_request.head.repo.html_url }}.git
         VENDOR_BRANCH: ${{ github.head_ref }}
       run: |
-        docker run --rm -w /home/jenkins -v "$PWD":"/home/jenkins" \
+        aaa="${PWD}"
+        echo "HOME=${HOME}"
+        echo "pwd=${aaa}"
+        ls -l
+        docker run --rm -w /home/jenkins -v "$HOME":"/home/jenkins" \
             -e "TEST_JDK_HOME=${TEST_JDK_HOME}" \
             -e "BUILD_LIST=functional/buildAndPackage" \
             "${{ matrix.image }}" \
