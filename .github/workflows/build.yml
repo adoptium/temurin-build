@@ -118,7 +118,7 @@ jobs:
         VENDOR_REPOS: ${{ github.event.pull_request.head.repo.html_url }}.git
         VENDOR_BRANCH: ${{ github.head_ref }}
       run: |
-        WORK_DIR=$(echo "${PWD}" | sed "s,${HOME},/home/jenkins,")
+        WORK_DIR="${PWD//${HOME}//home/jenkins}"
         docker run --rm -w /home/jenkins -v "$HOME":"/home/jenkins" \
             -e "TEST_JDK_HOME=${TEST_JDK_HOME}" \
             -e "BUILD_LIST=functional/buildAndPackage" \
