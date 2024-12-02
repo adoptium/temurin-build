@@ -2094,7 +2094,9 @@ getTargetFileNameForComponent() {
     echo "${target_file_name}" | sed "s/-jdk/-${component}/"
   else
     # if no pattern is found, append the component name right before the extension.
-    echo "${target_file_name}" | sed -r "s/(.+)(\.tar\.gz|\.zip)/\1-${component}\2/"
+    echo "${target_file_name}" | sed \
+       -e "s/\(.*\)\(\.tar\.gz\)/\1-$component\2/" \
+       -e "s/\(.*\)\(\.zip\)/\1-${component}\2/"
   fi
 }
 
