@@ -855,8 +855,13 @@
 
                         <!-- Use local cache if available, otherwise download -->
                         <copy verbose="true" file="${local.deps.cache.dir}/${@{component}.jar}" tofile="build/jar/@{component}.jar" if:true="${@{component}_cache_available}"/>
+                        <propertyregex property="@{component}_sha256"
+                            input="${@{component}.sha256}"
+                            regexp="([a-zA-Z0-9]+)\s.*"
+                            select="\1"
+                            casesensitive="false"/>
                         <download-file unless:true="${@{component}_cache_available}"
-				checksum="${@{component}.sha256}"
+				checksum="${@{component}_sha256}"
                                 destdir="build/jar"
 				destfile="@{component}.jar"
 				srcurl="${@{component}.url}"/>
