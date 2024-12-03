@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC2155,SC2153,SC2038,SC1091,SC2116,SC2086
 # ********************************************************************************
-# Copyright (c) 2017 Contributors to the Eclipse Foundation
+# Copyright (c) 2017, 2024 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) with this work for additional
 # information regarding copyright ownership.
@@ -171,6 +171,17 @@ configureMacOSCodesignParameter() {
   if [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
     # This command needs to escape the double quotes because they are needed to preserve the spaces in the codesign cert name
     addConfigureArg "--with-macosx-codesign-identity=" "\"${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}\""
+  fi
+}
+
+# JDK 24+ includes JEP 493 which allows for the JDK to enable
+# linking from the run-time image (instead of only from JMODs). Enable
+# this option. This has the effect, that no 'jmods' directory will be
+# produced in the resulting build. Thus, the tarball and, especially the
+# extracted tarball will be smaller in terms of disk space size.
+configureLinkableRuntimeParameter() {
+  if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 24 ]]; then
+    addConfigureArg "--enable-linkable-runtime" ""
   fi
 }
 
@@ -574,6 +585,7 @@ configureCommandParameters() {
   configureVersionStringParameter
   configureBootJDKConfigureParameter
   configureDevKitConfigureParameter
+  configureLinkableRuntimeParameter
   configureShenandoahBuildParameter
   configureMacOSCodesignParameter
   configureDebugParameters
@@ -887,8 +899,28 @@ buildCyclonedxLib() {
   else
     ANTBUILDFILE="${CYCLONEDB_DIR}/build.xml"
   fi
+
+  # Has the user specified their own local cache for the dependency jars?
+  local localJarCacheOption=""
+  if [[ -n "${BUILD_CONFIG[LOCAL_DEPENDENCY_CACHE_DIR]}" ]]; then
+    localJarCacheOption="-Dlocal.deps.cache.dir=${BUILD_CONFIG[LOCAL_DEPENDENCY_CACHE_DIR]}"
+  else
+    # Select a suitable default location that users may use
+    if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+      # Windows
+      localJarCacheOption="-Dlocal.deps.cache.dir=c:/dependency_cache"
+    elif [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
+      # MacOS
+      localJarCacheOption="-Dlocal.deps.cache.dir=${HOME}/dependency_cache"
+    else
+      # Assume unix based path
+      localJarCacheOption="-Dlocal.deps.cache.dir=/usr/local/dependency_cache"
+    fi
+  fi
+  echo "Using CycloneDX local jar cache build option: ${localJarCacheOption}"
+
   JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" clean
-  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build
+  JAVA_HOME=${javaHome} ant -f "${ANTBUILDFILE}" build "${localJarCacheOption}"
 }
 
 # get the classpath to run the CycloneDX java app TemurinGenSBOM
@@ -896,14 +928,14 @@ getCyclonedxClasspath() {
 
   local CYCLONEDB_JAR_DIR="${CYCLONEDB_DIR}/build/jar"
 
-  local classpath="${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar:${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar:${CYCLONEDB_JAR_DIR}/jackson-core.jar:${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar:${CYCLONEDB_JAR_DIR}/jackson-databind.jar:${CYCLONEDB_JAR_DIR}/jackson-annotations.jar:${CYCLONEDB_JAR_DIR}/json-schema.jar:${CYCLONEDB_JAR_DIR}/commons-codec.jar:${CYCLONEDB_JAR_DIR}/commons-io.jar:${CYCLONEDB_JAR_DIR}/github-package-url.jar"
+  local classpath="${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar:${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar:${CYCLONEDB_JAR_DIR}/jackson-core.jar:${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar:${CYCLONEDB_JAR_DIR}/jackson-databind.jar:${CYCLONEDB_JAR_DIR}/jackson-annotations.jar:${CYCLONEDB_JAR_DIR}/json-schema-validator.jar:${CYCLONEDB_JAR_DIR}/commons-codec.jar:${CYCLONEDB_JAR_DIR}/commons-io.jar:${CYCLONEDB_JAR_DIR}/github-package-url.jar:${CYCLONEDB_JAR_DIR}/commons-collections4.jar"
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     classpath=""
     for jarfile in "${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar" "${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar" \
       "${CYCLONEDB_JAR_DIR}/jackson-core.jar" "${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar" \
       "${CYCLONEDB_JAR_DIR}/jackson-databind.jar" "${CYCLONEDB_JAR_DIR}/jackson-annotations.jar" \
-      "${CYCLONEDB_JAR_DIR}/json-schema.jar" "${CYCLONEDB_JAR_DIR}/commons-codec.jar" "${CYCLONEDB_JAR_DIR}/commons-io.jar" \
-      "${CYCLONEDB_JAR_DIR}/github-package-url.jar" ;
+      "${CYCLONEDB_JAR_DIR}/json-schema-validator.jar" "${CYCLONEDB_JAR_DIR}/commons-codec.jar" "${CYCLONEDB_JAR_DIR}/commons-io.jar" \
+      "${CYCLONEDB_JAR_DIR}/github-package-url.jar" "${CYCLONEDB_JAR_DIR}/commons-collections4.jar";
     do
       classpath+=$(cygpath -w "${jarfile}")";"
     done
@@ -1211,21 +1243,20 @@ addCycloneDXVersions() {
    else
        # Should we do something special if the sha256sum fails?
        for JAR in "${CYCLONEDB_DIR}/build/jar"/*.jar; do
-         JarName=$(basename "$JAR")
+         JarName=$(basename "$JAR" | cut -d'.' -f1)
          if [ "$(uname)" = "Darwin" ]; then
             JarSha=$(shasum -a 256 "$JAR" | cut -d' ' -f1)
          else
             JarSha=$(sha256sum "$JAR" | cut -d' ' -f1)
          fi
-         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}" "${JarSha}"
+         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}.jar" "${JarSha}"
          # Now the jar's SHA has been added, we add the version string.
-         JarVersionFile="$(joinPath ${CYCLONEDB_DIR} dependency_data versions ${JarName}.version)"
-         if [ -f "${JarVersionFile}" ]; then
-           JarVersionString=$(cat "${JarVersionFile}")
-           addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions" "${JarName}" "${JarVersionString}"
-         elif [ "${JarName}" != "temurin-gen-sbom.jar" ]; then
-           echo "ERROR: Cannot find jar version file for SBOM creation dependency ${JarName}."
-           echo "ERROR: Expected location: ${JarVersionFile}"
+         JarDepsFile="$(joinPath ${CYCLONEDB_DIR} dependency_data/dependency_data.properties)"
+         JarVersionString=$(grep "${JarName}\.version=" "${JarDepsFile}" | cut -d'=' -f2)
+         if [ -n "${JarVersionString}" ]; then
+           addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions" "${JarName}.jar" "${JarVersionString}"
+         elif [ "${JarName}" != "temurin-gen-sbom" ]; then
+           echo "ERROR: Cannot determine jar version from ${JarDepsFile} for SBOM creation dependency ${JarName}.jar."
          fi
        done
    fi

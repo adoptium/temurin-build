@@ -47,7 +47,7 @@
 	$(TEST_STATUS)
 		</command>
 		<levels>
-			<level>dev</level>
+			<level>special</level>
 		</levels>
 		<groups>
 			<group>system</group>
@@ -68,7 +68,7 @@
 	$(TEST_STATUS)
 		</command>
 		<levels>
-			<level>dev</level>
+			<level>special</level>
 		</levels>
 		<groups>
 			<group>system</group>
@@ -79,6 +79,6 @@
 		<versions>
 			<version>21+</version>
 		</versions>
-		<platformRequirements>os.osx,arch.aarch64</platformRequirements>
+		<platformRequirements>os.osx</platformRequirements>
 	</test>
 </playlist>
