@@ -174,6 +174,17 @@ configureMacOSCodesignParameter() {
   fi
 }
 
+# JDK 24+ includes JEP 493 which allows for the JDK to enable
+# linking from the run-time image (instead of only from JMODs). Enable
+# this option. This has the effect, that no 'jmods' directory will be
+# produced in the resulting build. Thus, the tarball and, especially the
+# extracted tarball will be smaller in terms of disk space size.
+configureLinkableRuntimeParameter() {
+  if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 24 ]]; then
+    addConfigureArg "--enable-linkable-runtime" ""
+  fi
+}
+
 # Get the OpenJDK update version and build version
 getOpenJDKUpdateAndBuildVersion() {
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"
@@ -574,6 +585,7 @@ configureCommandParameters() {
   configureVersionStringParameter
   configureBootJDKConfigureParameter
   configureDevKitConfigureParameter
+  configureLinkableRuntimeParameter
   configureShenandoahBuildParameter
   configureMacOSCodesignParameter
   configureDebugParameters

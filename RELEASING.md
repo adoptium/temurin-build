@@ -149,7 +149,7 @@ flowchart TD
 
 </details>
 
-Disable nightly testing so the release builds aren't delayed by any nightly test runs (set `enableTests : false` in [defaults.json](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/defaults.json)). Ensure the build pipeline generator job runs successfully (<https://ci.adoptium.net/job/build-scripts/job/utils/job/build-pipeline-generator/>), and the flag is disabled by bringing up the Build pipeline job and check the  `enableTests` checkbox is unticked.
+Scheduled pipeline Testing is automatically disabled from the Saturday prior to "release Tuesday", to the Sunday after, see: https://github.com/adoptium/ci-jenkins-pipelines/blob/5bd79eb1d95a033c4ee364a8f9fcc270ad653178/pipelines/build/common/trigger_beta_build.groovy#L51
 
 Add a banner to the website to indicate that the releases are coming in the near future ([Example Changes](https://github.com/adoptium/adoptium.net/blob/main/src/components/Banner.tsx)).
 

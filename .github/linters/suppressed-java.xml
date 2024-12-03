@@ -28,4 +28,5 @@
     <suppress files="." checks="LineLength" />
     <suppress files="." checks="Header" /> <!-- Disabled as we don't use headers in our project for the test files -->
     <suppress files="." checks="FileTabCharacter" /> <!-- Disabled as it generally doesn't matter if tabs are disabled or not -->
+    <suppress files="." checks="ParameterNumber" />
 </suppressions>
