@@ -13,12 +13,18 @@
 
 ifndef SBOM_FILE
 	SBOM_FILE := $(shell ls $(TEST_ROOT)/../jdkbinary/ | grep "sbom" | grep -v "metadata")
+	ifeq ($(strip $(SBOM_FILE)),)
+    $(error no SBOM_FILE available)
+	endif
 	SBOM_FILE := $(TEST_ROOT)/../jdkbinary/$(SBOM_FILE)
 endif
 ifndef JDK_FILE
 	JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.tar.gz')
 	ifneq (,$(findstring win,$(SPEC)))
 		JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.zip')
+	endif
+	ifeq ($(strip $(JDK_FILE)),)
+    $(error no JDK_FILE available)
 	endif
 endif
 
