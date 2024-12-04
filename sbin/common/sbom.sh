@@ -12,36 +12,36 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
-# Create a default SBOM json file: sbomJson
+# Create a default SBOM xml file: sbomXML
 createSBOMFile() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "${jsonFile}"
+  local xmlFile="${3}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --xmlFile "${xmlFile}"
 }
 
 signSBOMFile() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local privateKeyFile="${4}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinSignSBOM --signSBOM --jsonFile "${jsonFile}" --privateKeyFile "${privateKeyFile}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinSignSBOM --signSBOM --xmlFile "${xmlFile}" --privateKeyFile "${privateKeyFile}"
 }
 
 verifySBOMSignature() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local publicKeyFile="${4}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinSignSBOM --verifySBOMSignature --jsonFile "${jsonFile}" --publicKeyFile "${publicKeyFile}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinSignSBOM --verifySBOMSignature --xmlFile "${xmlFile}" --publicKeyFile "${publicKeyFile}"
 }
 
-# Set basic SBOM metadata with timestamp, authors, manufacture to ${sbomJson}
+# Set basic SBOM metadata with timestamp, authors, manufacture to ${sbomXML}
 addSBOMMetadata() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "${jsonFile}"
+  local xmlFile="${3}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --xmlFile "${xmlFile}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#metadata
@@ -49,31 +49,31 @@ addSBOMMetadata() {
 addSBOMMetadataProperty() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local name="${4}"
   local value="${5}"
   if [ -z "${value}" ]; then
     value="N.A"
   fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --xmlFile "${xmlFile}" --name "${name}" --value "${value}"
 }
 
 # Set basic SBoM formulation
 addSBOMFormulation() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local formulaName="${4}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulation --formulaName "${formulaName}" --jsonFile "${jsonFile}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulation --formulaName "${formulaName}" --xmlFile "${xmlFile}"
 }
 
 addSBOMFormulationComp() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local formulaName="${4}"
   local name="${5}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationComp --jsonFile "${jsonFile}" --formulaName "${formulaName}" --name "${name}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationComp --xmlFile "${xmlFile}" --formulaName "${formulaName}" --name "${name}"
 }  
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#formulation
@@ -81,12 +81,12 @@ addSBOMFormulationComp() {
 addSBOMFormulationComponentProperty() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local formulaName="${4}"
   local compName="${5}"
   local name="${6}"
   local value="${7}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationCompProp --jsonFile "${jsonFile}" --formulaName "${formulaName}" --compName "${compName}" --name "${name}" --value "${value}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationCompProp --xmlFile "${xmlFile}" --formulaName "${formulaName}" --compName "${compName}" --name "${name}" --value "${value}"
 }
 
 
@@ -95,7 +95,7 @@ addSBOMFormulationComponentProperty() {
 addSBOMMetadataPropertyFromFile() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local name="${4}"
   local propFile="${5}"
   local value="N.A"
@@ -104,7 +104,7 @@ addSBOMMetadataPropertyFromFile() {
         value=$(cat "${propFile}")
       fi
   fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --xmlFile "${xmlFile}" --name "${name}" --value "${value}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#metadata_tools
@@ -112,26 +112,26 @@ addSBOMMetadataPropertyFromFile() {
 addSBOMMetadataTools() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local tool="${4}"
   local version="${5}"
   if [ -z "${version}" ]; then
     version="N.A"
   fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataTools --jsonFile "${jsonFile}" --tool "${tool}" --version "${version}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataTools --xmlFile "${xmlFile}" --tool "${tool}" --version "${version}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#metadata_component
-# Add JDK as component into metadata, this is not a list, i.e cannot be called multiple times for the same ${sbomJson}
+# Add JDK as component into metadata, this is not a list, i.e cannot be called multiple times for the same ${sbomXML}
 addSBOMMetadataComponent() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local name="${4}"
   local type="${5}"
   local version="${6}"
   local description="${7}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataComponent --jsonFile "${jsonFile}" --name "${name}"  --type "${type}" --version "${version}" --description "${description}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataComponent --xmlFile "${xmlFile}" --name "${name}"  --type "${type}" --version "${version}" --description "${description}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components
@@ -139,11 +139,11 @@ addSBOMMetadataComponent() {
 addSBOMComponent(){
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local compName="${4}"
   local version="${5}"
   local description="${6}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "${jsonFile}" --compName "${compName}" --version "${version}" --description "${description}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --xmlFile "${xmlFile}" --compName "${compName}" --version "${version}" --description "${description}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components
@@ -152,18 +152,18 @@ addSBOMComponent(){
 addSBOMComponentFromFile() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local compName="${4}"
   local description="${5}"
   local name="${6}"
   local propFile="${7}"
   # always create component in sbom
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --xmlFile "${xmlFile}" --compName "${compName}" --description "${description}"
   local value="N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
   if [ -e "${propFile}" ]; then
       value=$(cat "${propFile}")
   fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --xmlFile "${xmlFile}" --compName "${compName}" --name "${name}" --value "${value}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components_items_hashes
@@ -171,10 +171,10 @@ addSBOMComponentFromFile() {
 addSBOMComponentHash() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local compName="${4}"
   local hash="${5}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentHash --jsonFile "${jsonFile}" --compName "${compName}" --hash "${hash}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentHash --xmlFile "${xmlFile}" --compName "${compName}" --hash "${hash}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components_items_properties
@@ -182,11 +182,11 @@ addSBOMComponentHash() {
 addSBOMComponentProperty() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local compName="${4}"
   local name="${5}"
   local value="${6}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --xmlFile "${xmlFile}" --compName "${compName}" --name "${name}" --value "${value}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components_items_properties
@@ -194,14 +194,14 @@ addSBOMComponentProperty() {
 addSBOMComponentPropertyFromFile() {
   local javaHome="${1}"
   local classpath="${2}"
-  local jsonFile="${3}"
+  local xmlFile="${3}"
   local compName="${4}"
   local name="${5}"
   local propFile="${6}"
   local value="N.A"
   if [ -e "${propFile}" ]; then
       value=$(cat "${propFile}")
-      "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
+      "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --xmlFile "${xmlFile}" --compName "${compName}" --name "${name}" --value "${value}"
   fi
 }
 
