@@ -193,7 +193,6 @@ public final class TemurinGenSBOM {
                 System.out.print(args[i] + " ");
             }
             System.out.println("\nException: "+e);
-e.printStackTrace();
             System.exit(1);
         }
     }
