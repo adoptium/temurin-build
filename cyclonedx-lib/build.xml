@@ -204,7 +204,7 @@
                 <property name="testCDXA_JSONFile" location="build/testCDXA.json"/>
                 <delete file="${testCDXA_XMLFile}"/>
                 <delete file="${testCDXA_JSONFile}"/>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenCDXA">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenCDXA" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--createNewCDXA"/>
                   <arg value="--attesting-org-name"/>
@@ -224,7 +224,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testCDXA_XMLFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenCDXA">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenCDXA" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--createNewCDXA"/>
                   <arg value="--attesting-org-name"/>
@@ -251,8 +251,8 @@
                 <property name="testSBOMFile_xml" location="build/testSBOM.xml"/>
                 <delete file="${testSBOMFile}"/>
                 <delete file="${testSBOMFile_xml}"/>
-
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+<echo message="${classpath}"/>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--createNewSBOM"/>
                   <arg value="--name"/>
@@ -263,7 +263,7 @@
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
 
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--createNewSBOM"/>
                   <arg value="--name"/>
@@ -275,7 +275,7 @@
                 </java>
 
                 <!-- JSON tests -->
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -283,7 +283,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -295,7 +295,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                  <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -307,7 +307,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                  <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -319,7 +319,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -331,7 +331,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-               <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+               <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -339,7 +339,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -351,7 +351,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -363,7 +363,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -373,7 +373,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -385,7 +385,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -397,7 +397,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -407,7 +407,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -419,7 +419,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -427,7 +427,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -439,7 +439,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -451,7 +451,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -461,7 +461,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -473,7 +473,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -481,7 +481,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -493,31 +493,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
-                  <arg value="--verbose"/>
-                  <arg value="--addExternalReference"/>
-                  <arg value="--url"/>
-                  <arg value="https://github.com/adoptium/jdk17/commit/a5afad28437"/>
-                  <arg value="--hashes"/>
-                  <arg value="1234567890123456789012345678901234567890123456789012345678901234"/>
-                  <arg value="--comment"/>
-                  <arg value="openjdk_source"/>
-                  <arg value="--jsonFile"/>
-                  <arg value="${testSBOMFile}"/>
-                </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
-                  <arg value="--verbose"/>
-                  <arg value="--addExternalReference"/>
-                  <arg value="--url"/>
-                  <arg value="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-1.1.6.tar.bz2"/>
-                  <arg value="--hashes"/>
-                  <arg value="1234567890123456789012345678901234567890123456789012345678901234"/>
-                  <arg value="--comment"/>
-                  <arg value="dependency_version_alsa"/>
-                  <arg value="--jsonFile"/>
-                  <arg value="${testSBOMFile}"/>
-                </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addMetadata"/>
                   <arg value="--metadataName"/>
@@ -525,7 +501,27 @@
                   <arg value="--jsonFile"/>
                  <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addMetadataTools"/>
+                  <arg value="--tool"/>
+                  <arg value="BOOTJDK"/>
+                  <arg value="--version"/>
+                  <arg value="20.0.2+9"/>
+                  <arg value="--jsonFile"/>
+                 <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addMetadataTools"/>
+                  <arg value="--tool"/>
+                  <arg value="GCC"/>
+                  <arg value="--version"/>
+                  <arg value="10.1"/>
+                  <arg value="--jsonFile"/>
+                 <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addFormulation"/>
                   <arg value="--formulaName"/>
@@ -533,7 +529,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addFormulationComp"/>
                   <arg value="--formulaName"/>
@@ -543,7 +539,7 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addFormulationCompProp"/>
                   <arg value="--formulaName"/>
@@ -559,7 +555,7 @@
                 </java>
 
                 <!-- XML tests -->
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -567,7 +563,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -579,7 +575,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                  <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -591,7 +587,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                  <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                  <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -603,7 +599,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -615,7 +611,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-               <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+               <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -623,7 +619,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -635,7 +631,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -647,7 +643,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -657,7 +653,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -669,7 +665,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -681,7 +677,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -691,7 +687,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -703,7 +699,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -711,7 +707,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -723,7 +719,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -735,7 +731,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -745,7 +741,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -757,7 +753,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponent"/>
                   <arg value="--compName"/>
@@ -765,7 +761,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addComponentProp"/>
                   <arg value="--compName"/>
@@ -777,31 +773,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
-                  <arg value="--verbose"/>
-                  <arg value="--addExternalReference"/>
-                  <arg value="--url"/>
-                  <arg value="https://github.com/adoptium/jdk17/commit/a5afad28437"/>
-                  <arg value="--hashes"/>
-                  <arg value="1234567890123456789012345678901234567890123456789012345678901234"/>
-                  <arg value="--comment"/>
-                  <arg value="openjdk_source"/>
-                  <arg value="--xmlFile"/>
-                  <arg value="${testSBOMFile_xml}"/>
-                </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
-                  <arg value="--verbose"/>
-                  <arg value="--addExternalReference"/>
-                  <arg value="--url"/>
-                  <arg value="https://ftp.osuosl.org/pub/blfs/conglomeration/alsa-lib/alsa-lib-1.1.6.tar.bz2"/>
-                  <arg value="--hashes"/>
-                  <arg value="1234567890123456789012345678901234567890123456789012345678901234"/>
-                  <arg value="--comment"/>
-                  <arg value="dependency_version_alsa"/>
-                  <arg value="--xmlFile"/>
-                  <arg value="${testSBOMFile_xml}"/>
-                </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addMetadata"/>
                   <arg value="--metadataName"/>
@@ -809,7 +781,29 @@
                   <arg value="--xmlFile"/>
                  <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+
+
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addMetadataTools"/>
+                  <arg value="--tool"/>
+                  <arg value="BOOTJDK"/>
+                  <arg value="--version"/>
+                  <arg value="20.0.2+9"/>
+                  <arg value="--xmlFile"/>
+                 <arg value="${testSBOMFile_xml}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addMetadataTools"/>
+                  <arg value="--tool"/>
+                  <arg value="GCC"/>
+                  <arg value="--version"/>
+                  <arg value="10.1"/>
+                  <arg value="--xmlFile"/>
+                 <arg value="${testSBOMFile_xml}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addFormulation"/>
                   <arg value="--formulaName"/>
@@ -817,7 +811,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addFormulationComp"/>
                   <arg value="--formulaName"/>
@@ -827,7 +821,7 @@
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
-                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM">
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--addFormulationCompProp"/>
                   <arg value="--formulaName"/>

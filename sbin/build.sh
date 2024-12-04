@@ -1256,7 +1256,7 @@ addCycloneDXVersions() {
          JarVersionString=$(grep "${JarName}\.version=" "${JarDepsFile}" | cut -d'=' -f2)
          if [ -n "${JarVersionString}" ]; then
            addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomXml}" "CycloneDX" "CycloneDX jar versions" "${JarName}.jar" "${JarVersionString}"
-         elif [ "${JarName}" != "temurin-gen-sbom" ]; then
+         elif [ "${JarName}" != "temurin-gen-sbom" ] && [ "${JarName}" != "temurin-gen-cdxa" ]; then
            echo "ERROR: Cannot determine jar version from ${JarDepsFile} for SBOM creation dependency ${JarName}.jar."
          fi
        done

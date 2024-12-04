@@ -102,7 +102,8 @@ public final class TemurinGenCDXA {
             }
         }
 
-        switch (cmd) {
+        try {
+          switch (cmd) {
             case "createCDXA":  // Create a new CDXA json file
                 Bom bom = createCdxa(fileName, attestingOrgName, predicate, targetName, targetUrl, targetHash, affirmationStmt, affirmationWebsite, thirdParty);
                 if (bom != null) {
@@ -113,8 +114,20 @@ public final class TemurinGenCDXA {
                 break;
 
             default:
-                System.out.println("Please enter a command.");
+                // Echo input command:
+                for (int i = 0; i < args.length; i++) {
+                    System.out.print(args[i] + " ");
+                }
+                System.out.println("\nPlease enter a valid command.");
                 System.exit(1);
+          }
+        } catch(Exception e) {
+            // Echo input command:
+            for (int i = 0; i < args.length; i++) {
+                System.out.print(args[i] + " ");
+            }
+            System.out.println("\nException: "+e);
+            System.exit(1);
         }
     }
 
