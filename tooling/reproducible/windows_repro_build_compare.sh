@@ -19,7 +19,7 @@
 set -e
 
 # Check All 3 Params Are Supplied
-if [ "$#" -lt 2 ]; then
+if [ "$#" -lt 3 ]; then
   echo "Usage: $0 SBOM_URL/SBOM_PATH JDKZIP_URL/JDKZIP_PATH"
   echo ""
   echo "1. SBOM_URL/SBOM_PATH - should be the FULL path OR a URL to a Temurin JDK SBOM JSON file in CycloneDX Format"
@@ -27,6 +27,8 @@ if [ "$#" -lt 2 ]; then
   echo ""
   echo "2. JDKZIP_URL/JDKZIP_PATH - should be the FULL path OR a URL to a Temurin Windows JDK Zip file"
   echo "    eg. https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.2%2B13/OpenJDK21U-jdk_x64_windows_hotspot_21.0.2_13.zip"
+  echo ""
+  echo "3. REPORT_DIR - should be the FULL path OR a URL to the output directory for the comparison report"
   echo ""
   exit 1
 fi
