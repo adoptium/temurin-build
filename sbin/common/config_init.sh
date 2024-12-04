@@ -63,6 +63,7 @@ DISABLE_ADOPT_BRANCH_SAFETY
 DOCKER_FILE_PATH
 DOCKER_SOURCE_VOLUME_NAME
 ENABLE_SBOM_STRACE
+ENABLE_SECURE_MODE
 FREETYPE
 FREETYPE_DIRECTORY
 FREETYPE_FONT_BUILD_TYPE_PARAM
@@ -298,6 +299,9 @@ function parseConfigurationArguments() {
 
         "--enable-sbom-strace" )
         BUILD_CONFIG[ENABLE_SBOM_STRACE]=true;;
+
+        "--enable-secure-mode" )
+        BUILD_CONFIG[ENABLE_SECURE_MODE]=true;;
 
         "--freetype-dir" | "-f" )
         BUILD_CONFIG[FREETYPE_DIRECTORY]="$1"; shift;;
@@ -557,6 +561,9 @@ function configDefaults() {
   BUILD_CONFIG[CREATE_SBOM]="false"
 
   BUILD_CONFIG[ENABLE_SBOM_STRACE]="false"
+
+  # Set default value to "false", for maximum user convenience. "false" enables potentially-insecure functionality, like the dynamic download of boot JDKs.
+  BUILD_CONFIG[ENABLE_SECURE_MODE]="false"
 
   # The default behavior of whether we want to create a separate source archive
   BUILD_CONFIG[CREATE_SOURCE_ARCHIVE]="false"
