@@ -1,6 +1,6 @@
 /*
  * ********************************************************************************
- * Copyright (c) 2023 Contributors to the Eclipse Foundation
+ * Copyright (c) 2023, 2024 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) with this work for additional
  * information regarding copyright ownership.
@@ -15,11 +15,11 @@
 
 package temurin.sbom;
 
-import org.cyclonedx.BomGeneratorFactory;
-import org.cyclonedx.CycloneDxSchema;
+import org.cyclonedx.exception.GeneratorException;
 import org.cyclonedx.generators.json.BomJsonGenerator;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.parsers.JsonParser;
+import org.cyclonedx.Version;
 
 import org.webpki.json.JSONAsymKeySigner;
 import org.webpki.json.JSONObjectReader;
@@ -60,7 +60,7 @@ public final class TemurinSignSBOM {
      * @param args Arguments for sbom operation.
      */
     public static void main(final String[] args) {
-        String cmd = null;
+        String cmd = "";
         String privateKeyFile = null;
         String publicKeyFile = null;
         String fileName = null;
@@ -95,6 +95,8 @@ public final class TemurinSignSBOM {
         } else if (cmd.equals("verifySignature")) {
             success = verifySignature(fileName, publicKeyFile); // set success to the result of verifySignature
             System.out.println("Signature verification result: " + (success ? "Valid" : "Invalid"));
+        } else {
+            System.out.println("Please enter a command.");
         }
 
         // Set success to true only when the operation is completed successfully.
@@ -113,7 +115,13 @@ public final class TemurinSignSBOM {
             if (bom == null) {
                 return null;
             }
-            String sbomDataToSign = generateBomJson(bom);
+            String sbomDataToSign;
+            try {
+                sbomDataToSign = generateBomJson(bom);
+            } catch (GeneratorException e) {
+                LOGGER.log(Level.SEVERE, "Exception generating BOM", e);
+                return null;
+            }
 
             // Read the private key
             KeyPair signingKey = PEMDecoder.getKeyPair(Files.readAllBytes(Paths.get(pemFile)));
@@ -132,15 +140,22 @@ public final class TemurinSignSBOM {
         }
     }
 
-    static String generateBomJson(final Bom bom) {
-        BomJsonGenerator bomGen = BomGeneratorFactory.createJson(CycloneDxSchema.Version.VERSION_14, bom);
+    static String generateBomJson(final Bom bom) throws GeneratorException {
+        BomJsonGenerator bomGen = new BomJsonGenerator(bom, Version.VERSION_16);
         String json = bomGen.toJsonString();
         return json;
     }
 
     static boolean writeJSONfile(final Bom bom, final String fileName) {
         // Creates testJson.json file
-        String json = generateBomJson(bom);
+        String json;
+        try {
+            json = generateBomJson(bom);
+        } catch (GeneratorException e) {
+            LOGGER.log(Level.SEVERE, "Exception generating BOM", e);
+            return false;
+        }
+
         try (FileWriter file = new FileWriter(fileName)) {
             file.write(json);
             return true;
@@ -164,7 +179,13 @@ public final class TemurinSignSBOM {
         try {
             // Read the JSON file to be verified
             Bom bom = readJSONfile(jsonFile);
-            String signedSbomData = generateBomJson(bom);
+            String signedSbomData;
+            try {
+                signedSbomData = generateBomJson(bom);
+            } catch (GeneratorException e) {
+                LOGGER.log(Level.SEVERE, "Exception generating BOM", e);
+                return false;
+            }
 
             // Parse JSON
             JSONObjectReader reader = JSONParser.parse(signedSbomData);

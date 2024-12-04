@@ -105,13 +105,18 @@ if [ "${JDK_BOOT_VERSION}" == "7" ]; then
 fi
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
 if [ ! -d "$(eval echo "\$$BOOT_JDK_VARIABLE")" ]; then
-  bootDir="$PWD/jdk-$JDK_BOOT_VERSION"
+  bootDir="$PWD/jdk$JDK_BOOT_VERSION"
   # Note we export $BOOT_JDK_VARIABLE (i.e. JDKXX_BOOT_DIR) here
   # instead of BOOT_JDK_VARIABLE (no '$').
   export "${BOOT_JDK_VARIABLE}"="$bootDir/Contents/Home"
   if [ ! -x "$bootDir/Contents/Home/bin/javac" ]; then
-    # To support multiple vendor names we set a jdk-* symlink pointing to the actual boot JDK
-    if [ -x "/Library/Java/JavaVirtualMachines/jdk-${JDK_BOOT_VERSION}/Contents/Home/bin/javac" ]; then
+    # To support multiple vendor names we set a jdk* symlink pointing to the actual boot JDK
+    if [ -x "/Library/Java/JavaVirtualMachines/jdk${JDK_BOOT_VERSION}/Contents/Home/bin/javac" ]; then
+      echo "Could not use ${BOOT_JDK_VARIABLE} - using /Library/Java/JavaVirtualMachines/jdk${JDK_BOOT_VERSION}/Contents/Home"
+      export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/jdk${JDK_BOOT_VERSION}/Contents/Home"
+    elif [ -x "/Library/Java/JavaVirtualMachines/jdk-${JDK_BOOT_VERSION}/Contents/Home/bin/javac" ]; then
+      # TODO: This temporary ELIF allows us to accomodate undesired dashes that may be present
+      # in boot directory names (e.g. jdk-10) on Orka node images (fix pending).
       echo "Could not use ${BOOT_JDK_VARIABLE} - using /Library/Java/JavaVirtualMachines/jdk-${JDK_BOOT_VERSION}/Contents/Home"
       export "${BOOT_JDK_VARIABLE}"="/Library/Java/JavaVirtualMachines/jdk-${JDK_BOOT_VERSION}/Contents/Home"
     elif [ "$JDK_BOOT_VERSION" -ge 8 ]; then # Adoptium has no build pre-8

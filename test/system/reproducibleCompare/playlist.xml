@@ -19,7 +19,7 @@
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test</testCaseName>
 		<command>docker container rm -f reproducibleCompare; \
-	docker run -v "$(TEST_RESROOT):/home/jenkins/test" -w "/home/jenkins/" -v "$(TEST_JDK_HOME):/home/jenkins/jdkbinary/" --name reproducibleCompare centos:7 /bin/bash /home/jenkins/test/linux_repro_build_compare.sh $(SBOM_FILE) /home/jenkins/jdkbinary; \
+	docker run --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv6.conf.default.disable_ipv6=0 -v "$(TEST_RESROOT):/home/jenkins/test" -w "/home/jenkins/" -v "$(TEST_JDK_HOME):/home/jenkins/jdkbinary/" --name reproducibleCompare centos:7 /bin/bash /home/jenkins/test/linux_repro_build_compare.sh $(SBOM_FILE) /home/jenkins/jdkbinary; \
 	$(TEST_STATUS); \
 	docker cp reproducibleCompare:/home/jenkins/reprotest.diff ./; \
 	docker cp reproducibleCompare:/home/jenkins/reproJDK.tar.gz ./; \
@@ -47,7 +47,7 @@
 	$(TEST_STATUS)
 		</command>
 		<levels>
-			<level>dev</level>
+			<level>special</level>
 		</levels>
 		<groups>
 			<group>system</group>
@@ -68,7 +68,7 @@
 	$(TEST_STATUS)
 		</command>
 		<levels>
-			<level>dev</level>
+			<level>special</level>
 		</levels>
 		<groups>
 			<group>system</group>
@@ -79,6 +79,6 @@
 		<versions>
 			<version>21+</version>
 		</versions>
-		<platformRequirements>os.osx,arch.aarch64</platformRequirements>
+		<platformRequirements>os.osx</platformRequirements>
 	</test>
 </playlist>

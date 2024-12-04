@@ -46,6 +46,7 @@ header:
     - 'security/certdata.txt'
     - 'sbin/*.template'
     - '.github/linters/*'
+    - '.github/workflows/dependabot-auto-merge.yml'
     - 'cyclonedx-lib/getDependencies'
     - 'cyclonedx-lib/dependency_data/**'
     - 'makejdk-any-platform.1'
