@@ -979,7 +979,7 @@ generateSBoM() {
   local fullVer=$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/productVersion.txt")
   local fullVerOutput=$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/productVersionOutput.txt")
 
-  # Create initial SBOMjson 
+  # Create initial SBOM json 
   createSBOMFile "${javaHome}" "${classpath}" "${sbomJson}"
   # Set default SBOM metadata
   addSBOMMetadata "${javaHome}" "${classpath}" "${sbomJson}"
