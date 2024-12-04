@@ -60,7 +60,7 @@ public final class TemurinSignSBOM {
      * @param args Arguments for sbom operation.
      */
     public static void main(final String[] args) {
-        String cmd = null;
+        String cmd = "";
         String privateKeyFile = null;
         String publicKeyFile = null;
         String fileName = null;
@@ -95,6 +95,8 @@ public final class TemurinSignSBOM {
         } else if (cmd.equals("verifySignature")) {
             success = verifySignature(fileName, publicKeyFile); // set success to the result of verifySignature
             System.out.println("Signature verification result: " + (success ? "Valid" : "Invalid"));
+        } else {
+            System.out.println("Please enter a command.");
         }
 
         // Set success to true only when the operation is completed successfully.

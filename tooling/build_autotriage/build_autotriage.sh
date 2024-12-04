@@ -59,6 +59,7 @@ temurinPlatforms+=("mac-aarch64");          platformStart+=(11); platformEnd+=(9
 temurinPlatforms+=("mac-x64");              platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("solaris-sparcv9");      platformStart+=(8);  platformEnd+=(8)
 temurinPlatforms+=("solaris-x64");          platformStart+=(8);  platformEnd+=(8)
+temurinPlatforms+=("windows-aarch64");      platformStart+=(21); platformEnd+=(99)
 temurinPlatforms+=("windows-x64");          platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("windows-x86-32");       platformStart+=(8);  platformEnd+=(17)
 

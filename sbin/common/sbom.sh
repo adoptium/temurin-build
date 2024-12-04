@@ -205,18 +205,3 @@ addSBOMComponentPropertyFromFile() {
   fi
 }
 
-# Function not in use
-# Ref: https://cyclonedx.org/docs/1.4/json/#externalReferences
-addExternalReference() {
-  local javaHome="${1}"
-  local classpath="${2}"
-  local jsonFile="${3}"
-  local url="${4}" # required
-  local comment="${5}"
-  local hash="${6}"
-  if [ -z "${hash}" ]; then
-    "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addExternalReference --jsonFile "${jsonFile}" --url "${url}" --comment "${comment}" --hash "${hash}"
-  else
-    "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addExternalReference --jsonFile "${jsonFile}" --url "${url}" --comment "${comment}"
-  fi
-}

@@ -1,0 +1,5 @@
+title = "gitleaks config"
+[allowlist]
+files = [
+    "cyclonedx-lib/dependency_data/dependency_data.properties"
+]

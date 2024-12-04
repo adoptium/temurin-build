@@ -70,8 +70,8 @@ For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 9.0.4+11 (for Java 9+) with the build number being the suffix at the end.
 .TP
 .BR \-\-build-variant " " \fI<variant_name>\fR
-specify a OpenJDK build variant, e.g. openj9.
-For reference, the default variant is hotspot and does not need to be specified.
+specify a OpenJDK build variant, e.g. openj9 or temurin.
+For reference, the default variant is \fBhotspot\fR and does not need to be specified.
 .TP
 .BR \-c ", " \-\-clean-docker-build
 removes the existing docker container and persistent volume before starting
@@ -105,6 +105,10 @@ It is known issue: https://github.com/adoptium/temurin-build/issues/3862
 .TP
 .BR \-\-debug-docker
 debug OpenJDK build script in a docker container. Only valid if \fB-D\fR is selected.
+.TP
+.BR \-\-disable-adopt-branch-safety
+disable the default check for correct tags and README.JAVASE in case of \fBtemurin\fR as --build-variant.
+This is mandatory, when you are building \fBtemurin\fR variant from archive or directory without repository metadata.
 .TP
 .BR \-\-disable-shallow-git-clone
 disable the default \fB--depth=1\fR shallow cloning of git repo(s).
