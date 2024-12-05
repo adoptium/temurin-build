@@ -12,25 +12,25 @@
 # ********************************************************************************
 
 ifndef SBOM_FILE
-SBOM_FILE := $(shell ls $(TEST_ROOT)/../jdkbinary/ | grep "sbom" | grep -v "metadata")
-ifeq ($(strip $(SBOM_FILE)),)
-$(error ERROR! NO SBOM_FILE AVAILABLE)
-endif
-SBOM_FILE := $(TEST_ROOT)/../jdkbinary/$(SBOM_FILE)
+    SBOM_FILE := $(shell ls $(TEST_ROOT)/../jdkbinary/ | grep "sbom" | grep -v "metadata")
+    ifeq ($(strip $(SBOM_FILE)),)
+        $(error ERROR! NO SBOM_FILE AVAILABLE)
+    endif
+    SBOM_FILE := $(TEST_ROOT)/../jdkbinary/$(SBOM_FILE)
 endif
 
 ifndef JDK_FILE
-JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.tar.gz')
-ifneq (,$(findstring win,$(SPEC)))
-JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.zip')
-endif
-ifeq ($(strip $(JDK_FILE)),)
-$(error ERROR! NO JDK_FILE AVAILABLE)
-endif
+    JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.tar.gz')
+    ifneq (,$(findstring win,$(SPEC)))
+        JDK_FILE := $(shell find $(TEST_ROOT)/../jdkbinary/ -type f -name '*-jdk_*.zip')
+    endif
+    ifeq ($(strip $(JDK_FILE)),)
+        $(error ERROR! NO JDK_FILE AVAILABLE)
+    endif
 endif
 
 ifneq (,$(findstring linux,$(SPEC)))
-SBOM_FILE := $(subst $(TEST_ROOT)/../jdkbinary,/home/jenkins/test,$(SBOM_FILE))
+    SBOM_FILE := $(subst $(TEST_ROOT)/../jdkbinary,/home/jenkins/test,$(SBOM_FILE))
 endif
 
 RM_DEBUGINFO := $(shell find $(TEST_JDK_HOME) -type f -name "*.debuginfo" -delete)
