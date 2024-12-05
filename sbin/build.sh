@@ -964,9 +964,9 @@ generateSBoM() {
   local sbomTargetName=$(getTargetFileNameForComponent "sbom")
   # Remove the tarball / zip extension from the name to be used for the SBOM
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    sbomTargetName=$(echo "${sbomTargetName}.json" | sed "s/\.zip//")
+    sbomTargetName=$(echo "${sbomTargetName}.xml" | sed "s/\.zip//")
   else
-    sbomTargetName=$(echo "${sbomTargetName}.json" | sed "s/\.tar\.gz//")
+    sbomTargetName=$(echo "${sbomTargetName}.xml" | sed "s/\.tar\.gz//")
   fi
 
   local sbomXML="$(joinPathOS ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${sbomTargetName})"
