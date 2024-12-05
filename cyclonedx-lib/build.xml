@@ -44,7 +44,7 @@
                 <available file="build/jar/commons-collections4.jar" property="commons-collections4_available"/>
                 <available file="build/jar/commons-lang3.jar" property="commons-lang3_available"/>
                 <available file="build/jar/github-package-url.jar" property="github-package-url_available"/>
-                <available file="build/webpki.org-libext-1.00.jar" property="openkeystore_available"/>
+                <available file="build/jar/webpki.org-libext-1.00.jar" property="openkeystore_available"/>
                 <available file="build/jar/stax2-api.jar" property="stax2-api_available"/>
                 <available file="build/jar/woodstox-core.jar" property="woodstox-core_available"/>
         </target>
