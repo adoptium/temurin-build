@@ -251,7 +251,6 @@
                 <property name="testSBOMFile_xml" location="build/testSBOM.xml"/>
                 <delete file="${testSBOMFile}"/>
                 <delete file="${testSBOMFile_xml}"/>
-<echo message="${classpath}"/>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--createNewSBOM"/>

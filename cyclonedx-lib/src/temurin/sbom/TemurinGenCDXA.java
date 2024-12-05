@@ -121,12 +121,12 @@ public final class TemurinGenCDXA {
                 System.out.println("\nPlease enter a valid command.");
                 System.exit(1);
           }
-        } catch(Exception e) {
+        } catch (Exception e) {
             // Echo input command:
             for (int i = 0; i < args.length; i++) {
                 System.out.print(args[i] + " ");
             }
-            System.out.println("\nException: "+e);
+            System.out.println("\nException: " + e);
             System.exit(1);
         }
     }
