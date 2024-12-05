@@ -934,14 +934,15 @@ getCyclonedxClasspath() {
 
   local CYCLONEDB_JAR_DIR="${CYCLONEDB_DIR}/build/jar"
 
-  local classpath="${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar:${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar:${CYCLONEDB_JAR_DIR}/jackson-core.jar:${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar:${CYCLONEDB_JAR_DIR}/jackson-databind.jar:${CYCLONEDB_JAR_DIR}/jackson-annotations.jar:${CYCLONEDB_JAR_DIR}/json-schema-validator.jar:${CYCLONEDB_JAR_DIR}/commons-codec.jar:${CYCLONEDB_JAR_DIR}/commons-io.jar:${CYCLONEDB_JAR_DIR}/github-package-url.jar:${CYCLONEDB_JAR_DIR}/commons-collections4.jar"
+  local classpath="${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar:${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar:${CYCLONEDB_JAR_DIR}/jackson-core.jar:${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar:${CYCLONEDB_JAR_DIR}/jackson-databind.jar:${CYCLONEDB_JAR_DIR}/jackson-annotations.jar:${CYCLONEDB_JAR_DIR}/json-schema-validator.jar:${CYCLONEDB_JAR_DIR}/commons-codec.jar:${CYCLONEDB_JAR_DIR}/commons-io.jar:${CYCLONEDB_JAR_DIR}/github-package-url.jar:${CYCLONEDB_JAR_DIR}/commons-collections4.jar:${CYCLONEDB_JAR_DIR}/stax2-api.jar:${CYCLONEDB_JAR_DIR}/woodstox-core.jar:${CYCLONEDB_JAR_DIR}/commons-lang3.jar"
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     classpath=""
     for jarfile in "${CYCLONEDB_JAR_DIR}/temurin-gen-sbom.jar" "${CYCLONEDB_JAR_DIR}/cyclonedx-core-java.jar" \
       "${CYCLONEDB_JAR_DIR}/jackson-core.jar" "${CYCLONEDB_JAR_DIR}/jackson-dataformat-xml.jar" \
       "${CYCLONEDB_JAR_DIR}/jackson-databind.jar" "${CYCLONEDB_JAR_DIR}/jackson-annotations.jar" \
       "${CYCLONEDB_JAR_DIR}/json-schema-validator.jar" "${CYCLONEDB_JAR_DIR}/commons-codec.jar" "${CYCLONEDB_JAR_DIR}/commons-io.jar" \
-      "${CYCLONEDB_JAR_DIR}/github-package-url.jar" "${CYCLONEDB_JAR_DIR}/commons-collections4.jar";
+      "${CYCLONEDB_JAR_DIR}/github-package-url.jar" "${CYCLONEDB_JAR_DIR}/commons-collections4.jar" \
+      "${CYCLONEDB_JAR_DIR}/stax2-api.jar" "${CYCLONEDB_JAR_DIR}/woodstox-core.jar" "${CYCLONEDB_JAR_DIR}/commons-lang3.jar";
     do
       classpath+=$(cygpath -w "${jarfile}")";"
     done
@@ -1261,7 +1262,7 @@ addCycloneDXVersions() {
          JarVersionString=$(grep "${JarName}\.version=" "${JarDepsFile}" | cut -d'=' -f2)
          if [ -n "${JarVersionString}" ]; then
            addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions" "${JarName}.jar" "${JarVersionString}"
-         elif [ "${JarName}" != "temurin-gen-sbom" ]; then
+         elif [ "${JarName}" != "temurin-gen-sbom" ] && [ "${JarName}" != "temurin-gen-cdxa" ]; then
            echo "ERROR: Cannot determine jar version from ${JarDepsFile} for SBOM creation dependency ${JarName}.jar."
          fi
        done

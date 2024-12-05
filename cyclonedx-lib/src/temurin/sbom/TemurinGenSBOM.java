@@ -23,10 +23,10 @@ import org.cyclonedx.model.Component;
 import org.cyclonedx.model.formulation.Formula;
 import org.cyclonedx.model.Hash;
 import org.cyclonedx.model.Metadata;
+import org.cyclonedx.model.metadata.ToolInformation;
 import org.cyclonedx.model.OrganizationalContact;
 import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Property;
-import org.cyclonedx.model.Tool;
 import org.cyclonedx.parsers.JsonParser;
 import org.cyclonedx.parsers.XmlParser;
 import org.cyclonedx.Version;
@@ -110,10 +110,6 @@ public final class TemurinGenSBOM {
                 cmd = "addComponentHash";
             } else if (args[i].equals("--addComponentProp")) {       // Components --> Property: will add name-value.
                 cmd = "addComponentProp";
-            } else if (args[i].equals("--addExternalReference")) {
-                cmd = "addExternalReference";
-            } else if (args[i].equals("--addComponentExtRef")) {
-                cmd = "addComponentExternalReference";
             } else if (args[i].equals("--addMetadataTools")) {
                 cmd = "addMetadataTools";
             } else if (args[i].equals("--addFormulation")) {        // Formulation Component. We can set "name" for Formulation.
@@ -126,7 +122,8 @@ public final class TemurinGenSBOM {
                 verbose = true;
             }
         }
-        switch (cmd) {
+        try {
+          switch (cmd) {
             case "createNewSBOM":                                    // Creates new SBOM
                 Bom bom = createBom();
                 writeFile(bom, fileName);
@@ -182,7 +179,20 @@ public final class TemurinGenSBOM {
                 break;
 
             default:
-                System.out.println("Please enter a command.");
+                // Echo input command:
+                for (int i = 0; i < args.length; i++) {
+                    System.out.print(args[i] + " ");
+                }
+                System.out.println("\nPlease enter a valid command.");
+                System.exit(1);
+          }
+        } catch (Exception e) {
+            // Echo input command:
+            for (int i = 0; i < args.length; i++) {
+                System.out.print(args[i] + " ");
+            }
+            System.out.println("\nException: " + e);
+            System.exit(1);
         }
     }
 
@@ -196,10 +206,19 @@ public final class TemurinGenSBOM {
         return bom;
     }
 
+    // Create Metadata if it doesn't exist
+    static Metadata getBomMetadata(final Bom bom) {
+        Metadata metadata = bom.getMetadata();
+        if (metadata == null) {
+            metadata = new Metadata();
+        }
+        return metadata;
+    }
+
     // Method to store Metadata --> name.
     static Bom addMetadata(final String fileName) {
         Bom bom = readFile(fileName);
-        Metadata meta = new Metadata();
+        Metadata meta = getBomMetadata(bom);
         OrganizationalEntity org = new OrganizationalEntity();
         org.setName("Eclipse Foundation");
         org.setUrls(Collections.singletonList("https://www.eclipse.org/"));
@@ -213,7 +232,7 @@ public final class TemurinGenSBOM {
 
     static Bom addMetadataComponent(final String fileName, final String name, final String type, final String version, final String description) {
         Bom bom = readFile(fileName);
-        Metadata meta = new Metadata();
+        Metadata meta = getBomMetadata(bom);
         Component comp = new Component();
         Component.Type compType = Component.Type.FRAMEWORK;
         switch (type) {
@@ -235,9 +254,8 @@ public final class TemurinGenSBOM {
     // Method to store Metadata --> Properties List --> name-values.
     static Bom addMetadataProperty(final String fileName, final String name, final String value) {
         Bom bom = readFile(fileName);
-        Metadata meta = new Metadata();
+        Metadata meta = getBomMetadata(bom);
         Property prop1 = new Property();
-        meta = bom.getMetadata();
         prop1.setName(name);
         prop1.setValue(value);
         meta.addProperty(prop1);
@@ -247,12 +265,30 @@ public final class TemurinGenSBOM {
 
     static Bom addMetadataTools(final String fileName, final String toolName, final String version) {
         Bom bom = readFile(fileName);
-        Metadata meta = new Metadata();
-        Tool tool = new Tool();
-        meta = bom.getMetadata();
+        Metadata meta = getBomMetadata(bom);
+
+        // Create Tool Component
+        Component tool = new Component();
+        tool.setType(Component.Type.APPLICATION);
         tool.setName(toolName);
         tool.setVersion(version);
-        meta.addTool(tool);
+
+        // Create ToolInformation if not already
+        ToolInformation tools = meta.getToolChoice();
+        if (tools == null) {
+            tools = new ToolInformation();
+        }
+
+        // Create new components array, add existing to it
+        List<Component> components = tools.getComponents();
+        if (components == null) {
+            components = new LinkedList<Component>();
+        }
+
+        components.add(tool);
+        tools.setComponents(components);
+        meta.setToolChoice(tools);
+
         bom.setMetadata(meta);
         return bom;
     }

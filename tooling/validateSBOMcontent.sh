@@ -22,11 +22,11 @@ SBOMFILE="$1"
 MAJORVERSION="$2"
 #FULLVERSION="$3"
 
-GLIBC=$(jq '.metadata.tools[] | select(.name|test("GLIBC")) | .version'           "$1" | tr -d \")
-GCC=$(jq '.metadata.tools[] | select(.name|test("GCC")) | .version'               "$1" | tr -d \")
-BOOTJDK=$(jq '.metadata.tools[] | select(.name|test("BOOTJDK")) | .version'       "$1"  | tr -d \")
-ALSA=$(jq '.metadata.tools[] | select(.name|test("ALSA")) | .version'             "$1" | tr -d \" | sed -e 's/^.*alsa-lib-//' -e 's/\.tar.bz2//')
-FREETYPE=$(jq '.metadata.tools[] | select(.name|test("FreeType")) | .version'     "$1"  | tr -d \")
+GLIBC=$(jq '.metadata.tools.components[] | select(.name|test("GLIBC")) | .version'           "$1" | tr -d \")
+GCC=$(jq '.metadata.tools.components[] | select(.name|test("GCC")) | .version'               "$1" | tr -d \")
+BOOTJDK=$(jq '.metadata.tools.components[] | select(.name|test("BOOTJDK")) | .version'       "$1"  | tr -d \")
+ALSA=$(jq '.metadata.tools.components[] | select(.name|test("ALSA")) | .version'             "$1" | tr -d \" | sed -e 's/^.*alsa-lib-//' -e 's/\.tar.bz2//')
+FREETYPE=$(jq '.metadata.tools.components[] | select(.name|test("FreeType")) | .version'     "$1"  | tr -d \")
 COMPILER=$(jq '.components[0].properties[] | select(.name|test("Build Tools Summary")).value' "$SBOMFILE" | sed -e 's/^.*Toolchain: //g' -e 's/\ *\*.*//g')
 
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
