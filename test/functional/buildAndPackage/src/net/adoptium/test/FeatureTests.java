@@ -1,6 +1,6 @@
 /*
  * ********************************************************************************
- * Copyright (c) 2021 Contributors to the Eclipse Foundation
+ * Copyright (c) 2021, 2024 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) with this work for additional
  * information regarding copyright ownership.
@@ -15,20 +15,27 @@
 
 package net.adoptium.test;
 
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import static net.adoptium.test.JdkPlatform.Architecture;
-import static net.adoptium.test.JdkPlatform.OperatingSystem;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
+
+import net.adoptium.test.JdkPlatform.Architecture;
+import net.adoptium.test.JdkPlatform.OperatingSystem;
 
 /**
  * Tests the availability of various features like garbage collectors, flight recorder, that need to be enabled via
@@ -102,6 +109,68 @@ public class FeatureTests {
                 throw new RuntimeException("Failed to launch JVM", e);
             }
         }
+    }
+
+    /**
+     * Tests whether basic jlink works using the default module path. The only
+     * included module in the output image is {@code java.base}.
+     */
+    @Test
+    public void testJlinkJdk11AndBetter() throws IOException {
+        // Only JDK 11 (JDK 9, really) and better have jlink
+        if (jdkVersion.isNewerOrEqual(11)) {
+            Path output = Paths.get("java.base-image");
+            ensureOutputDirectoryDeleted(output);
+            List<String> command = new ArrayList<>();
+            command.add(String.format("%s/bin/jlink", testJdkHome));
+            command.add("--add-modules");
+            command.add("java.base");
+            command.add("--output");
+            command.add(output.toString());
+            command.add("--verbose");
+
+            try {
+                ProcessBuilder processBuilder = new ProcessBuilder(command);
+                processBuilder.inheritIO();
+                Process process = processBuilder.start();
+
+                if (process.waitFor() != 0) {
+                    throw new AssertionError("Basic jlink smoke test failed! " + command);
+                }
+                LOGGER.info("Basic jlink smoke test passed. Command was: " + command);
+            } catch (InterruptedException | IOException e) {
+                throw new RuntimeException("Failed to launch JVM", e);
+            } finally {
+                ensureOutputDirectoryDeleted(output);
+            }
+        }
+    }
+
+    private static void ensureOutputDirectoryDeleted(final Path path) throws IOException {
+        if (Files.exists(path)) {
+            deleteDirRecursively(path);
+        }
+    }
+
+    private static void deleteDirRecursively(final Path path) throws IOException {
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+
+            @Override
+            public FileVisitResult postVisitDirectory(final Path dir, final IOException e) throws IOException {
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                if (Files.isDirectory(file)) {
+                    // deleted in post-visit
+                    return FileVisitResult.CONTINUE;
+                }
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     private boolean isVendorAdoptium() {
