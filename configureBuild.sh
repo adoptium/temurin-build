@@ -163,6 +163,7 @@ setVariablesForConfigure() {
   BUILD_CONFIG[TEST_IMAGE_PATH]=$openjdk_test_image_path
   BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
   BUILD_CONFIG[STATIC_LIBS_IMAGE_PATH]=$static_libs_path
+  BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]="--build=x86_64-unknown-linux-gnu --openjdk-target=x86_64-unknown-linux-gnu"
 }
 
 # Set the repository to build from, defaults to adoptium if not set by the user
