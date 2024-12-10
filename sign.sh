@@ -151,7 +151,7 @@ signRelease()
 
       if [ "$SIGN_TOOL" = "eclipse" ] && [ "${VERSION}" != "8" ]; then
         # Eclipse jdk-11+ post-build signing should only sign the libjli.dylib bundle executable, as there rest are already internally signed in the build
-        FILES=$(find . -name 'libjli.dylib' | grep 'Contents/MacOS')
+        FILES=$(find . -name 'libjli.dylib' | grep 'Contents/MacOS' || true)
       else
         FILES=$(find "${TMP_DIR}" -perm +111 -type f -not -name '.*' -o -name '*.dylib' || find "${TMP_DIR}" -perm /111 -type f -not -name '.*' -o -name '*.dylib')
       fi
