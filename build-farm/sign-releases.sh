@@ -19,6 +19,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 export SIGN_TOOL
 export OPERATING_SYSTEM
+export VERSION
 
 if [ "${OPERATING_SYSTEM}" == "mac" ] ; then
   EXTENSION="tar.gz"

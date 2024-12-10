@@ -77,6 +77,7 @@ signRelease()
         do
           echo "Signing ${f}"
           if [ "$SIGN_TOOL" = "eclipse" ]; then
+           if [ "${VERSION}" = "8" ]; then
             echo "Signing $f using Eclipse Foundation codesign service"
             dir=$(dirname "$f")
             file=$(basename "$f")
@@ -109,6 +110,9 @@ signRelease()
             fi
             chmod --reference="${dir}/unsigned_${file}" "$f"
             rm -rf "${dir}/unsigned_${file}"
+           else
+            echo "Eclipse signing for JDK version ${VERSION} does not externally sign Windows executables post-build"
+           fi
           else
             STAMPED=false
             for SERVER in $TIMESTAMPSERVERS; do
@@ -145,7 +149,12 @@ signRelease()
 
       # Sign all files with the executable permission bit set.
 
-      FILES=$(find "${TMP_DIR}" -perm +111 -type f -not -name '.*' -o -name '*.dylib' || find "${TMP_DIR}" -perm /111 -type f -not -name '.*' -o -name '*.dylib')
+      if [ "$SIGN_TOOL" = "eclipse" ] && [ "${VERSION}" != "8" ]; then
+        # Eclipse jdk-11+ post-build signing should only sign the libjli.dylib bundle executable, as there rest are already internally signed in the build
+        FILES=$(find . -name 'libjli.dylib' | grep 'Contents/MacOS')
+      else
+        FILES=$(find "${TMP_DIR}" -perm +111 -type f -not -name '.*' -o -name '*.dylib' || find "${TMP_DIR}" -perm /111 -type f -not -name '.*' -o -name '*.dylib')
+      fi
       if [ "$FILES" == "" ]; then
         echo "No files to sign"
       elif [ "$SIGN_TOOL" = "eclipse" ]; then
