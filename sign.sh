@@ -150,7 +150,11 @@ signRelease()
       # Sign all files with the executable permission bit set.
 
       if [ "$SIGN_TOOL" = "eclipse" ] && [ "${VERSION}" != "8" ]; then
-        # Eclipse jdk-11+ post-build signing should only sign the libjli.dylib bundle executable, as there rest are already internally signed in the build
+        # On MacOSX, libjli.dylib is copied in two places. Once in Contents/home/lib/libjli.dylib and once in
+        # Contents/MacOS/libjli.dylib. The latter is the bundle executable entry-point and hasn't been signed by
+        # by the build in contrast to content in Contents/home. Therefore,  Eclipse jdk-11+ post-build signing should
+        # only sign the libjli.dylib bundle executable in Contents/MacOS, as there rest are already internally signed
+        # in the build
         FILES=$(find . -name 'libjli.dylib' | grep 'Contents/MacOS' || true)
       else
         FILES=$(find "${TMP_DIR}" -perm +111 -type f -not -name '.*' -o -name '*.dylib' || find "${TMP_DIR}" -perm /111 -type f -not -name '.*' -o -name '*.dylib')
