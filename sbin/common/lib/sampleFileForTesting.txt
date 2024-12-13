@@ -1,0 +1,3 @@
+# A sample file which does not change. Used for download and sha256 testing.
+
+Sample file contents.
