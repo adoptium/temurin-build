@@ -3,9 +3,9 @@
 
 source functionLibrary.sh
 
-sampleFileURL=https://github.com/adamfarley/temurin-build
-sampleFileName=sampleFileForTesting.txt
-sampleFileSha="12345"
+sampleFileURL="https://github.com/adamfarley/temurin-build/tree/build_scripts_secure_mode/sbin/common/lib"
+sampleFileName="sampleFileForTesting.txt"
+sampleFileSha="539446c23c650f24bb4061dc3ee50ee4a8ba68456c3fe19b86f8630f1df74465"
 
 successTotal=0
 failureTotal=0
@@ -28,14 +28,24 @@ function infoTests(){
   testResults "infoTest 1" "$?"
   
   # Does it work when it should?
-  info "enable"
+  info "enable" "logging"
   [[ "$(info 123)" == "123" ]]
   testResults "infoTest 2" "$?"
+  
+  # Clean up
+  info "disable" "logging"
 }
 
 # checkFileSha
 function checkFileShaTests(){
-  return 0
+  # Does it work when it should?
+  checkFileSha "${sampleFileSha}" "$(pwd)/${sampleFileName}"
+  testResults "checkFileShaTest 1" "$?"
+
+  # Does it fail when we have the wrong sha?
+  checkFileSha "12345" "$(pwd)/${sampleFileName}" &> /dev/null
+  [[ "$?" != "0" ]]
+  testResults "checkFileShaTest 2" "$?"
 }
 
 # doesThisURLExist

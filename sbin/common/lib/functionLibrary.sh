@@ -7,14 +7,29 @@
 # doesThisURLExist - Checks if a given URL exists.
 
 # This simple function takes a string, and echoes it if info-level logging is enabled.
-# Info-level logging can be enabled by simply passing the word "enable" to it as the sole argument.
+# Info-level logging can be enabled/disabled simply passing "enable/disable" "logging" to it as 2 arguments.
 # This is handy for debug messages, as it can simply not be enabled for quiet runs.
 enableInfoLoggingBool=1
 
 function info() {
-  [ $# == 0 ] && echo "Warning: The library function \"info\" was called without an argument." && return 1
-  [[ $enableInfoLoggingBool == 0 ]] && echo $1 && return 0
-  [[ "${1}" == "enable" ]] && enableInfoLoggingBool=0 && return 0
+  if [ $# == 0 ]; then
+    echo "Warning: The library function \"info\" was called without an argument."
+    return 1
+  elif [[ $# == 1 ]]; then
+    if [[ $enableInfoLoggingBool == 0 ]]; then
+      echo $1
+      return 0
+    fi
+  else
+    if [[ "${2}" == "logging" ]]; then
+      if [[ "${1}" == "enable" ]]; then
+        enableInfoLoggingBool=0
+      elif [[ "${1}" == "disable" ]]; then
+        enableInfoLoggingBool=1
+      fi
+      return 0
+    fi
+  fi
 }
 
 # This function takes the supplied sha and compares it against the supplied file.
