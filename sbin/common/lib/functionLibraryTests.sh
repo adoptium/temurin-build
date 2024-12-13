@@ -50,7 +50,19 @@ function checkFileShaTests(){
 
 # doesThisURLExist
 function doesThisURLExistTests(){
-  return 0
+  # Does it pass when it should?
+  doesThisURLExist "https://adoptium.net/index.html"
+  testResults "doesThisURLExistTest 1" "$?"
+
+  # Does it fail when it should?
+  doesThisURLExist "https://thisurlshouldneverexist123456gibberish.com" &> /dev/null
+  [[ "$?" != "0" ]]
+  testResults "doesThisURLExistTest 2" "$?"
+
+  # And does it fail when it's not even a URL?
+  doesThisURLExist "thisnonurlshouldneverexist123456gibberish" &> /dev/null
+  [[ "$?" != "0" ]]
+  testResults "doesThisURLExistTest 3" "$?"
 }
 
 # downloadFile

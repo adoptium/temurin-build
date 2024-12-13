@@ -85,10 +85,12 @@ function doesThisURLExist() {
   
   spiderOutput=1
   if command -v wget &> /dev/null; then
-    wget --spider -q ${source} 2> /dev/null
+    info "Using wget to verify URL exists."
+    wget --spider -q ${1} 2> /dev/null
     spiderOutput=$?
   elif command -v curl &> /dev/null; then
-    curl -I ${source} -s | grep "200 OK" -q
+    info "Using curl to verify URL exists."
+    curl -I ${1} -s | grep "200 OK" -q
     spiderOutput=$?
   else
     echo "Error: Neither wget nor curl could be found when downloading this file: ${source}"
