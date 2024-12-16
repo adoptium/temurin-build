@@ -78,16 +78,62 @@ function doesThisURLExistTests(){
   testResults "doesThisURLExistTest 3" "$?"
 }
 
+
+sampleFileURL="https://raw.githubusercontent.com/adamfarley/temurin-build/refs/heads/build_scripts_secure_mode/sbin/common/lib"
+sampleFileName="sampleFileForTesting.txt"
+sampleFileSha="7eb664568090f0ac7f573b25e4ac7929a48f3fb39fb34e6b21421959acdf94b4"
+
+
 # downloadFile
 function downloadFileTests() {
   workdir="$(pwd)/tmp_test_work_dir"
   # Setup
-  [[ -x "${workdir}" ]] && echo "Error: Temporary test work directory exists and shouldn't." && exit 1
+  [[ -x "${workdir}" ]] && echo "Error: Temporary test work directory exists and shouldn't: ${workdir}" && exit 1
   mkdir "${workdir}"
-  [[ ! -x "${workdir}" ]] && echo "Error: Temporary test work directory could not be created." && exit 1
-  
+  [[ ! -x "${workdir}" ]] && echo "Error: Temporary test work directory could not be created: ${workdir}" && exit 1
+
+  # Does it pass when it should (no sha)?
+  downloadFile -s "${sampleFileURL}/${sampleFileName}" -d "${workdir}"
+  [[ $? == 0 && -x "${workdir}/${sampleFileName}" ]]
+  testResults "downloadFileTest 1" "$?"
+  rm -rf "${workdir}/*"
+
+  # Does it pass when it should (sha)?
+  downloadFile -s "${sampleFileURL}/${sampleFileName}" -d "${workdir}" -sha "${sampleFileSha}"
+  [[ $? == 0 && -x "${workdir}/${sampleFileName}" ]]
+  testResults "downloadFileTest 2" "$?"
+  exit 1
+  rm -rf "${workdir}/*"
+
+  # Does it correctly rename the downloaded file?
+  downloadFile -s "${sampleFileURL}/${sampleFileName}" -d "${workdir}" -sha "${sampleFileSha}" -f "newfilename"
+  [[ $? == 0 && -x "${workdir}/newfilename" ]]
+  testResults "downloadFileTest 3" "$?"
+  rm -rf "${workdir}/*"
+
+  # Does it fail when it should (no sha, source does not exist)?
+  downloadFile -s "${sampleFileURL}/thisFileDoesNotExist" -d "${workdir}" &> /dev/null
+  [[ $? != 0 && ! -x "${workdir}/${sampleFileName}" ]]
+  testResults "downloadFileTest 4" "$?"
+
+  # Does it fail when it should (with sha, source does not exist)?
+  downloadFile -s "${sampleFileURL}/thisFileDoesNotExist" -d "${workdir}" -sha "${sampleFileSha}" &> /dev/null
+  [[ $? != 0 && ! -x "${workdir}/${sampleFileName}" ]]
+  testResults "downloadFileTest 5" "$?"
+
+  # Does it fail when it should (with invalid sha, source exists)?
+  downloadFile -s "${sampleFileURL}/${sampleFileName}" -d "${workdir}" -sha "thisisaninvalidsha12345" -f "newfilename" &> /dev/null
+  [[ $? != 0 && ! -x "${workdir}/newfilename" ]]
+  testResults "downloadFileTest 6" "$?"
+
+  # Does it fail when it should (secure mode)?
+  downloadFile -s "${sampleFileURL}/${sampleFileName}" -d "${workdir}" -secure "true" &> /dev/null
+  [[ $? != 0 && ! -x "${workdir}/newfilename" ]]
+  testResults "downloadFileTest 7" "$?"
+
   # Clean up
-  [[ ! (rm -rf "${workdir}") ]] && echo "Error: Temporary test work directory could not be deleted." && exit 1
+  rm -rf "${workdir}"
+  [[ $? != 0 ]] && echo "Error: Temporary test work directory could not be deleted." && exit 1
 }
 
 echo "Test script start."
