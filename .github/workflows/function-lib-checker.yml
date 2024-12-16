@@ -13,7 +13,8 @@
 
 # If a PR includes a change to any lib file, we run the function library tests.
 
-name: Check function library functions all work
+name: Build Function Library Checker
+
 on:
   pull_request:
     branches: [ master ]
