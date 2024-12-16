@@ -14,9 +14,9 @@
 
 # A set of tests for the functionLibrary script
 
-source functionLibrary.sh
+source ../functionLibrary.sh
 
-sampleFileURL="https://github.com/adamfarley/temurin-build/tree/build_scripts_secure_mode/sbin/common/lib"
+sampleFileURL="https://github.com/adamfarley/temurin-build/tree/build_scripts_secure_mode/lib"
 sampleFileName="sampleFileForTesting.txt"
 sampleFileSha="7eb664568090f0ac7f573b25e4ac7929a48f3fb39fb34e6b21421959acdf94b4"
 
