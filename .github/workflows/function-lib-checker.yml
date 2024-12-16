@@ -17,8 +17,8 @@ name: Build Function Library Checker
 on:
   pull_request:
     branches: [ master ]
-  paths:
-    - 'lib/**'
+    paths:
+      - 'lib/**'
 
 env:
   TEST_SCRIPT: "lib/tests/functionLibraryTests.sh"
