@@ -18,7 +18,7 @@ source functionLibrary.sh
 
 sampleFileURL="https://github.com/adamfarley/temurin-build/tree/build_scripts_secure_mode/sbin/common/lib"
 sampleFileName="sampleFileForTesting.txt"
-sampleFileSha="539446c23c650f24bb4061dc3ee50ee4a8ba68456c3fe19b86f8630f1df74465"
+sampleFileSha="7eb664568090f0ac7f573b25e4ac7929a48f3fb39fb34e6b21421959acdf94b4"
 
 successTotal=0
 failureTotal=0
