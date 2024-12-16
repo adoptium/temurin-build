@@ -341,7 +341,7 @@ else
   fi
 fi
 
-if [ "$JAVA_FEATURE_VERSION" -ge 20 ] && [ "${VARIANT}" == "${BUILD_VARIANT_TEMURIN}" ]; then
+if [ "$JAVA_FEATURE_VERSION" -ge 24 ] && [ "${VARIANT}" == "${BUILD_VARIANT_TEMURIN}" ]; then
   # hsdis+capstone only supported on these two in openjdk
   if [ "${ARCHITECTURE}" = "x64" ] || [ "${ARCHITECTURE}" = "aarch64" ]; then
     if [ -r /usr/local/lib/libcapstone.so.4 ]; then
