@@ -10,7 +10,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
-
 # If a PR includes a change to any lib file, we run the function library tests.
 
 ----
