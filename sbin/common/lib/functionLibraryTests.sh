@@ -81,7 +81,7 @@ function doesThisURLExistTests(){
 
 sampleFileURL="https://raw.githubusercontent.com/adamfarley/temurin-build/refs/heads/build_scripts_secure_mode/sbin/common/lib"
 sampleFileName="sampleFileForTesting.txt"
-sampleFileSha="7eb664568090f0ac7f573b25e4ac7929a48f3fb39fb34e6b21421959acdf94b4"
+sampleFileSha="041bef0ff1e6d44a0464a06131d20ea21e47da9359f485f3f59c9bdb92255379"
 
 
 # downloadFile
@@ -102,7 +102,6 @@ function downloadFileTests() {
   downloadFile -s "${sampleFileURL}/${sampleFileName}" -d "${workdir}" -sha "${sampleFileSha}"
   [[ $? == 0 && -x "${workdir}/${sampleFileName}" ]]
   testResults "downloadFileTest 2" "$?"
-  exit 1
   rm -rf "${workdir}/*"
 
   # Does it correctly rename the downloaded file?
