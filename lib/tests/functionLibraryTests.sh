@@ -16,8 +16,8 @@
 
 scriptLocation=$0
 scriptDir="${scriptLocation%/*}"
-[[ ! -x "${scriptDir}" || ! "${scriptDir}" =~ .*tests$ ]] && scriptDir="."
-[[ ! `ls "${scriptDir}/.." | grep functionLibrary.sh` ]] && echo "Error: Please launch this script with a full path, or from within the test directory." && exit 1
+[[ ! -r "${scriptDir}" || ! "${scriptDir}" =~ .*tests$ ]] && scriptDir="."
+[[ ! -r "${scriptDir}/../functionLibrary.sh" ]] && echo "Error: Please launch this script with a full path, or from within the test directory." && exit 1
 
 source "${scriptDir}/../functionLibrary.sh"
 
@@ -87,46 +87,46 @@ function doesThisURLExistTests(){
 function downloadFileTests() {
   workdir="${scriptDir}/tmp_test_work_dir"
   # Setup
-  [[ -x "${workdir}" ]] && echo "Error: Temporary test work directory exists and shouldn't: ${workdir}" && exit 1
+  [[ -r "${workdir}" ]] && echo "Error: Temporary test work directory exists and shouldn't: ${workdir}" && exit 1
   mkdir "${workdir}"
-  [[ ! -x "${workdir}" ]] && echo "Error: Temporary test work directory could not be created: ${workdir}" && exit 1
+  [[ ! -r "${workdir}" ]] && echo "Error: Temporary test work directory could not be created: ${workdir}" && exit 1
 
   # Does it pass when it should (no sha)?
   downloadFile -s "${sampleFileURL}/${sampleFileName}" -d "${workdir}"
-  [[ $? == 0 && -x "${workdir}/${sampleFileName}" ]]
+  [[ $? == 0 && -r "${workdir}/${sampleFileName}" ]]
   testResults "downloadFileTest 1" "$?"
   rm -rf "${workdir}/*"
 
   # Does it pass when it should (sha)?
   downloadFile -s "${sampleFileURL}/${sampleFileName}" -d "${workdir}" -sha "${sampleFileSha}"
-  [[ $? == 0 && -x "${workdir}/${sampleFileName}" ]]
+  [[ $? == 0 && -r "${workdir}/${sampleFileName}" ]]
   testResults "downloadFileTest 2" "$?"
   rm -rf "${workdir}/*"
 
   # Does it correctly rename the downloaded file?
   downloadFile -s "${sampleFileURL}/${sampleFileName}" -d "${workdir}" -sha "${sampleFileSha}" -f "newfilename"
-  [[ $? == 0 && -x "${workdir}/newfilename" ]]
+  [[ $? == 0 && -r "${workdir}/newfilename" ]]
   testResults "downloadFileTest 3" "$?"
   rm -rf "${workdir}/*"
 
   # Does it fail when it should (no sha, source does not exist)?
   downloadFile -s "${sampleFileURL}/thisFileDoesNotExist" -d "${workdir}" &> /dev/null
-  [[ $? != 0 && ! -x "${workdir}/${sampleFileName}" ]]
+  [[ $? != 0 && ! -r "${workdir}/${sampleFileName}" ]]
   testResults "downloadFileTest 4" "$?"
 
   # Does it fail when it should (with sha, source does not exist)?
   downloadFile -s "${sampleFileURL}/thisFileDoesNotExist" -d "${workdir}" -sha "${sampleFileSha}" &> /dev/null
-  [[ $? != 0 && ! -x "${workdir}/${sampleFileName}" ]]
+  [[ $? != 0 && ! -r "${workdir}/${sampleFileName}" ]]
   testResults "downloadFileTest 5" "$?"
 
   # Does it fail when it should (with invalid sha, source exists)?
   downloadFile -s "${sampleFileURL}/${sampleFileName}" -d "${workdir}" -sha "thisisaninvalidsha12345" -f "newfilename" &> /dev/null
-  [[ $? != 0 && ! -x "${workdir}/newfilename" ]]
+  [[ $? != 0 && ! -r "${workdir}/newfilename" ]]
   testResults "downloadFileTest 6" "$?"
 
   # Does it fail when it should (secure mode)?
   downloadFile -s "${sampleFileURL}/${sampleFileName}" -d "${workdir}" -secure "true" &> /dev/null
-  [[ $? != 0 && ! -x "${workdir}/newfilename" ]]
+  [[ $? != 0 && ! -r "${workdir}/newfilename" ]]
   testResults "downloadFileTest 7" "$?"
 
   # Clean up

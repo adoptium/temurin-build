@@ -61,7 +61,7 @@ function checkFileSha() {
     return 1
   fi
   
-  if [[ ! `ls "${2}" &> /dev/null` ]]; then
+  if [[ ! -r "${2}" ]]; then
     info "The file we're trying to check does not exist: ${2}"
     return 1
   fi
@@ -187,10 +187,10 @@ function downloadFile() {
   info "Source exists."
 
   info "Checking if destination folder exists."
-  [ ! -x ${destination} ] && echo "Error: Destination folder could not be found." && return 1
+  [ ! -r "${destination}" ] && echo "Error: Destination folder could not be found." && return 1
 
   info "Destination folder exists. Checking if file is already present."
-  if [ -x "${destination}/${filename}" ]; then
+  if [ -r "${destination}/${filename}" ]; then
     info "Warning: File already exists."
     checkFileSha "${sha}" "${destination}/${filename}"
     if [[ $? != 0 ]]; then
@@ -205,7 +205,7 @@ function downloadFile() {
       return 0
     fi
   fi
-  if [ -x "${destination}/${source##*/}" ]; then
+  if [ -r "${destination}/${source##*/}" ]; then
     info "Warning: File already exists with the default file name: ${source##*/}"
     checkFileSha "${sha}" "${destination}/${source##*/}"
     if [[ $? != 0 ]]; then
@@ -230,7 +230,7 @@ function downloadFile() {
     info "Found curl. Using curl to download the file."
     curl -s "${source}" -o "${destination}"
   fi
-  if [ ! -x "${destination}/${filename}" ]; then
+  if [ ! -r "${destination}/${filename}" ]; then
     mv "${destination}/${source##*/}" "${destination}/${filename}"
   fi
   
