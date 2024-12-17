@@ -17,7 +17,7 @@
 scriptLocation=$0
 scriptDir=${scriptLocation%/*}
 echo "scriptdir = ${scriptDir}"
-[[ ! -x "${scriptDir}" || ! "${scriptDir}" =~ */$ ]] && scriptDir="./"
+[[ ! -x "${scriptDir}" || ! "${scriptDir}" =~ *tests.?$ ]] && scriptDir="./"
 echo "scriptdir = ${scriptDir}"
 [[ ! -x "${scriptDir}../functionLibrary.sh" ]] && echo "Error: Please launch this script with a full path, or from within the test directory." && exit 1
 
