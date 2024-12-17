@@ -51,7 +51,7 @@ function infoTests(){
   testResults "infoTest 2" "$?"
   
   # Clean up
-  # info "disable" "logging"
+  info "disable" "logging"
 }
 
 # checkFileSha
@@ -59,8 +59,10 @@ function checkFileShaTests(){
   # Does it work when it should?
   checkFileSha "${sampleFileSha}" "${scriptDir}/${sampleFileName}"
   testResults "checkFileShaTest 1" "$?"
-  [[ -x ${scriptDir}/${sampleFileName} ]] && echo "D1: $(ls ${scriptDir})"
+  echo "D1: $(ls ${scriptDir})"
+  info "enable" "logging"
   echo "checkFileSha ${sampleFileSha} ${scriptDir}/${sampleFileName}"
+  info "disable" "logging"
 
   # Does it fail when we have the wrong sha?
   checkFileSha "12345" "${scriptDir}/${sampleFileName}" &> /dev/null
