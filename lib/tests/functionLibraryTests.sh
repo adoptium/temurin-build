@@ -57,10 +57,10 @@ function infoTests(){
 # checkFileSha
 function checkFileShaTests(){
   # Does it work when it should?
+  info "enable" "logging"
   checkFileSha "${sampleFileSha}" "${scriptDir}/${sampleFileName}"
   testResults "checkFileShaTest 1" "$?"
   echo "D1: $(ls ${scriptDir})"
-  info "enable" "logging"
   echo "checkFileSha ${sampleFileSha} ${scriptDir}/${sampleFileName}"
   info "disable" "logging"
 

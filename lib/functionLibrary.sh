@@ -61,7 +61,7 @@ function checkFileSha() {
     return 1
   fi
   
-  if [[ ! -x $2 ]]; then
+  if [[ ! -x "${2}" ]]; then
     info "The file we're trying to check does not exist: ${2}"
     return 1
   fi
