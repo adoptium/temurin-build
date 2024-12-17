@@ -17,7 +17,7 @@
 scriptLocation=$0
 scriptDir="${scriptLocation%/*}/"
 [[ ! -x "${scriptDir}" || ! "${scriptDir}" =~ .*tests/$ ]] && scriptDir="./"
-[[ ! `ls "${scriptDir}/.." | grep functionLibraryx.sh` ]] && echo "Error: Please launch this script with a full path, or from within the test directory." && exit 1
+[[ ! `ls "${scriptDir}/.." | grep functionLibrary.sh` ]] && echo "Error: Please launch this script with a full path, or from within the test directory." && exit 1
 
 source "${scriptDir}/../functionLibrary.sh"
 
