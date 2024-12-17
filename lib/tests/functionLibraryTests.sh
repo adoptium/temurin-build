@@ -14,11 +14,15 @@
 
 # A set of tests for the functionLibrary script
 
-source ../functionLibrary.sh
+scriptLocation=$0
+scriptDir=${scriptLocation%/*}
+[[ ! -x "${scriptDir}" || ! "${scriptDir}" =~ */$ ]] && scriptDir="./"
+[[ ! -x "${scriptDir}../functionLibrary.sh" ]] && echo "Error: Please launch this script with a full path, or from within the test directory." && exit 1
 
-sampleFileURL="https://github.com/adamfarley/temurin-build/tree/build_scripts_secure_mode/lib"
+source "${scriptDir}/../functionLibrary.sh"
+sampleFileURL="https://raw.githubusercontent.com/adamfarley/temurin-build/refs/heads/build_scripts_secure_mode/lib/tests"
 sampleFileName="sampleFileForTesting.txt"
-sampleFileSha="7eb664568090f0ac7f573b25e4ac7929a48f3fb39fb34e6b21421959acdf94b4"
+sampleFileSha="041bef0ff1e6d44a0464a06131d20ea21e47da9359f485f3f59c9bdb92255379"
 
 successTotal=0
 failureTotal=0
@@ -77,12 +81,6 @@ function doesThisURLExistTests(){
   [[ "$?" != "0" ]]
   testResults "doesThisURLExistTest 3" "$?"
 }
-
-
-sampleFileURL="https://raw.githubusercontent.com/adamfarley/temurin-build/refs/heads/build_scripts_secure_mode/sbin/common/lib"
-sampleFileName="sampleFileForTesting.txt"
-sampleFileSha="041bef0ff1e6d44a0464a06131d20ea21e47da9359f485f3f59c9bdb92255379"
-
 
 # downloadFile
 function downloadFileTests() {
