@@ -15,8 +15,8 @@
 # A set of tests for the functionLibrary script
 
 scriptLocation=$0
-scriptDir="${scriptLocation%/*}/"
-[[ ! -x "${scriptDir}" || ! "${scriptDir}" =~ .*tests/$ ]] && scriptDir="./"
+scriptDir="${scriptLocation%/*}"
+[[ ! -x "${scriptDir}" || ! "${scriptDir}" =~ .*tests$ ]] && scriptDir="."
 [[ ! `ls "${scriptDir}/.." | grep functionLibrary.sh` ]] && echo "Error: Please launch this script with a full path, or from within the test directory." && exit 1
 
 source "${scriptDir}/../functionLibrary.sh"
@@ -59,6 +59,7 @@ function checkFileShaTests(){
   # Does it work when it should?
   checkFileSha "${sampleFileSha}" "${scriptDir}/${sampleFileName}"
   testResults "checkFileShaTest 1" "$?"
+  echo "checkFileSha ${sampleFileSha} ${scriptDir}/${sampleFileName}"
 
   # Does it fail when we have the wrong sha?
   checkFileSha "12345" "${scriptDir}/${sampleFileName}" &> /dev/null
