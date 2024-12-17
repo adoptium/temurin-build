@@ -59,6 +59,7 @@ function checkFileShaTests(){
   # Does it work when it should?
   checkFileSha "${sampleFileSha}" "${scriptDir}/${sampleFileName}"
   testResults "checkFileShaTest 1" "$?"
+  [[ -x ${scriptDir}/${sampleFileName} ]] && echo "D1: $(ls ${scriptDir})"
   echo "checkFileSha ${sampleFileSha} ${scriptDir}/${sampleFileName}"
 
   # Does it fail when we have the wrong sha?
