@@ -43,7 +43,8 @@ REPORT_DIR="$3"
 # The Defaults Below Are Suitable For An Adoptium Windows Build Environment
 # Which Has Been Created Via The Ansible Infrastructure Playbooks
 WORK_DIR="/cygdrive/c/comp-jdk-build"
-ANT_VERSION="1.10.5"
+ANT_VERSION_ALLOWED="1.10"
+ANT_VERSION_REQUIRED="1.10.15"
 ANT_CONTRIB_VERSION="1.0b3"
 ANT_BASE_PATH="/cygdrive/c/apache-ant"
 CW_VS_BASE_DRV="c"
@@ -466,30 +467,36 @@ Check_UCRT_Location() {
 
 Check_And_Install_Ant() {
   # Check For Existence Of Required Version Of Ant
-  echo "Checking For Installation Of Ant Version $ANT_VERSION "
-  if [ ! -r ${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/bin/ant ]; then
-    echo "Ant Doesnt Exist At The Correct Version - Installing"
-    # Ant Version Not Found... Check And Create Paths
-    echo Downloading ant for SBOM creation:
-    curl https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.zip > /tmp/apache-ant-${ANT_VERSION}-bin.zip
-    (cd /usr/local && unzip -qn /tmp/apache-ant-${ANT_VERSION}-bin.zip)
-    rm /tmp/apache-ant-${ANT_VERSION}-bin.zip
-    echo Downloading ant-contrib-${ANT_CONTRIB_VERSION}:
-    curl -L https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip > /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
-    (unzip -qnj /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar -d /usr/local/apache-ant-${ANT_VERSION}/lib)
-    rm /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
+  ant_found=false
+  for ant_path in "${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}"*/bin/ant; do
+      if [ -r "$ant_path" ]; then
+          ant_found=true
+          break
+      fi
+  done
+  if [ "${ant_found}" != true ]; then
+      echo "Ant Doesn't Exist At The Correct Version - Installing"
+      # Ant Version Not Found... Check And Create Paths
+      echo "Downloading ant for SBOM creation:"
+      curl -o "/tmp/apache-ant-${ANT_VERSION}-bin.zip" "https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION_REQUIRED}-bin.zip"
+      (cd /usr/local && unzip -qn "/tmp/apache-ant-${ANT_VERSION_REQUIRED}-bin.zip")
+      rm "/tmp/apache-ant-${ANT_VERSION_REQUIRED}-bin.zip"
+      echo "Downloading ant-contrib-${ANT_CONTRIB_VERSION}:"
+      curl -L -o "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" "https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip"
+      (unzip -qnj "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" "ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar" -d "/usr/local/apache-ant-${ANT_VERSION}/lib")
+      rm "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip"
   else
-    echo "Ant Version: $ANT_VERSION Is Already Installed"
+      echo "Ant Version: ${ANT_VERSION_ALLOWED}.X Already Installed"
   fi
   echo ""
   # Check For Existence Of Required Version Of Ant-Contrib For Existing Ant
   echo "Checking For Installation Of Ant Contrib Version $ANT_CONTRIB_VERSION "
-  if [ -r ${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/bin/ant ] && [ ! -r $ANT_BASE_PATH/apache-ant-${ANT_VERSION}/lib/ant-contrib.jar ]; then
+  if [ -r "${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/bin/ant" ] && [ ! -r "${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/lib/ant-contrib.jar" ]; then
     echo "But Ant-Contrib Is Missing - Installing"
     # Ant Version Not Found... Check And Create Paths
     echo Downloading ant-contrib-${ANT_CONTRIB_VERSION}:
     curl -L https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip > /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
-    (unzip -qnj /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar -d ${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/lib)
+    (unzip -qnj "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" "ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar" -d "${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/lib")
     rm /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
   else
     echo "Ant Contrib Version: $ANT_CONTRIB_VERSION Is Already Installed"
@@ -543,7 +550,7 @@ Prepare_Env_For_Build() {
 
   # set --build-reproducible-date if not yet
   if [[ "${buildArgs}" != *"--build-reproducible-date"* ]]; then
-    buildArgs="--build-reproducible-date \"${buildStamp}\" ${buildArgs}" 
+    buildArgs="--build-reproducible-date \"${buildStamp}\" ${buildArgs}"
   fi
   # reset --jdk-boot-dir
   # shellcheck disable=SC2001
