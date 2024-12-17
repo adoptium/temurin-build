@@ -57,12 +57,8 @@ function infoTests(){
 # checkFileSha
 function checkFileShaTests(){
   # Does it work when it should?
-  info "enable" "logging"
   checkFileSha "${sampleFileSha}" "${scriptDir}/${sampleFileName}"
   testResults "checkFileShaTest 1" "$?"
-  echo "D1: $(ls ${scriptDir})"
-  echo "checkFileSha ${sampleFileSha} ${scriptDir}/${sampleFileName}"
-  info "disable" "logging"
 
   # Does it fail when we have the wrong sha?
   checkFileSha "12345" "${scriptDir}/${sampleFileName}" &> /dev/null

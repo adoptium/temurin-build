@@ -61,10 +61,8 @@ function checkFileSha() {
     return 1
   fi
   
-  if [[ ! -x "${2}" ]]; then
+  if [[ ! `ls "${2}" &> /dev/null` ]]; then
     info "The file we're trying to check does not exist: ${2}"
-    scriptLocation="${2}"
-    echo "D2: $(ls ${scriptLocation%/*})"
     return 1
   fi
 
