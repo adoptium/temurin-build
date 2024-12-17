@@ -57,11 +57,11 @@ function infoTests(){
 # checkFileSha
 function checkFileShaTests(){
   # Does it work when it should?
-  checkFileSha "${sampleFileSha}" "$(pwd)/${sampleFileName}"
+  checkFileSha "${sampleFileSha}" "${scriptDir}/${sampleFileName}"
   testResults "checkFileShaTest 1" "$?"
 
   # Does it fail when we have the wrong sha?
-  checkFileSha "12345" "$(pwd)/${sampleFileName}" &> /dev/null
+  checkFileSha "12345" "${scriptDir}/${sampleFileName}" &> /dev/null
   [[ "$?" != "0" ]]
   testResults "checkFileShaTest 2" "$?"
 }
@@ -85,7 +85,7 @@ function doesThisURLExistTests(){
 
 # downloadFile
 function downloadFileTests() {
-  workdir="$(pwd)/tmp_test_work_dir"
+  workdir="${scriptDir}/tmp_test_work_dir"
   # Setup
   [[ -x "${workdir}" ]] && echo "Error: Temporary test work directory exists and shouldn't: ${workdir}" && exit 1
   mkdir "${workdir}"
