@@ -586,7 +586,6 @@ configureCommandParameters() {
   configureBootJDKConfigureParameter
   configureDevKitConfigureParameter
   configureLinkableRuntimeParameter
-  configureCapstoneBuildParameter
   configureShenandoahBuildParameter
   configureMacOSCodesignParameter
   configureDebugParameters
