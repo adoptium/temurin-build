@@ -51,7 +51,7 @@ function infoTests(){
   testResults "infoTest 2" "$?"
   
   # Clean up
-  info "disable" "logging"
+  # info "disable" "logging"
 }
 
 # checkFileSha
