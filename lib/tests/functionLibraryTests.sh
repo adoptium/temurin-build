@@ -20,6 +20,7 @@ scriptDir=${scriptLocation%/*}
 [[ ! -x "${scriptDir}../functionLibrary.sh" ]] && echo "Error: Please launch this script with a full path, or from within the test directory." && exit 1
 
 source "${scriptDir}/../functionLibrary.sh"
+
 sampleFileURL="https://raw.githubusercontent.com/adamfarley/temurin-build/refs/heads/build_scripts_secure_mode/lib/tests"
 sampleFileName="sampleFileForTesting.txt"
 sampleFileSha="041bef0ff1e6d44a0464a06131d20ea21e47da9359f485f3f59c9bdb92255379"
