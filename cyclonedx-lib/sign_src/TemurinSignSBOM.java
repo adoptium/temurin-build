@@ -31,6 +31,9 @@ import org.webpki.json.JSONOutputFormats;
 import org.webpki.json.JSONParser;
 import org.webpki.util.PEMDecoder;
 
+import java.util.stream.Collectors;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.io.IOException;
 import java.io.FileReader;
@@ -65,12 +68,18 @@ public final class TemurinSignSBOM {
         String publicKeyFile = null;
         String fileName = null;
         boolean success = false; // add a new boolean success, default to false
+        boolean privateStdIn = false; // TRUE if private key contents are passed in STDIN with --privateKeyFileSTDIN
 
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--jsonFile")) {
                 fileName = args[++i];
             } else if (args[i].equals("--privateKeyFile")) {
                 privateKeyFile = args[++i];
+            } else if (args[i].equals("--privateKeyFileSTDIN")) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                String privateKeyInput = reader.lines().collect(Collectors.joining("\n"));
+                privateKeyFile = privateKeyInput;
+                privateStdIn = true;
             } else if (args[i].equals("--publicKeyFile")) {
                 publicKeyFile = args[++i];
             } else if (args[i].equals("--signSBOM")) {
@@ -83,7 +92,7 @@ public final class TemurinSignSBOM {
         }
 
         if (cmd.equals("signSBOM")) {
-            Bom bom = signSBOM(fileName, privateKeyFile);
+            Bom bom = signSBOM(fileName, privateKeyFile, privateStdIn);
             if (bom != null) {
                 if (!writeJSONfile(bom, fileName)) {
                     success = false;
@@ -108,7 +117,7 @@ public final class TemurinSignSBOM {
         }
     }
 
-    static Bom signSBOM(final String jsonFile, final String pemFile) {
+    static Bom signSBOM(final String jsonFile, final String pemFile, final boolean privateStdIn) {
         try {
             // Read the JSON file to be signed
             Bom bom = readJSONfile(jsonFile);
@@ -124,7 +133,14 @@ public final class TemurinSignSBOM {
             }
 
             // Read the private key
-            KeyPair signingKey = PEMDecoder.getKeyPair(Files.readAllBytes(Paths.get(pemFile)));
+            KeyPair signingKey = null;
+            if (privateStdIn) {
+                // If private key is passed in STDIN
+                signingKey = PEMDecoder.getKeyPair(pemFile.getBytes());
+            } else {
+                // If private key is a file
+                signingKey = PEMDecoder.getKeyPair(Files.readAllBytes(Paths.get(pemFile)));
+            }
 
             // Sign the JSON data
             String signedData = new JSONObjectWriter(JSONParser.parse(sbomDataToSign))
