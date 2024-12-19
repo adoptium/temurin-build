@@ -37,8 +37,8 @@ ALSA_LIB_CHECKSUM=${ALSA_LIB_CHECKSUM:-5f2cd274b272cae0d0d111e8a9e363f0878332915
 ALSA_LIB_GPGKEYID=${ALSA_LIB_GPGKEYID:-A6E59C91}
 FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 
-# sha256 of https://github.com/adoptium/devkit-binaries/releases/tag/vs2022_redist_14.40.33807_10.0.26100.0
-WINDOWS_REDIST_CHECKSUM="a29ada15d941a7b2065e9a4273fd6b97df44d089ed2b9f860ded442f7fe69767"
+# sha256 of https://github.com/adoptium/devkit-binaries/releases/tag/vs2022_redist_14.40.33807_10.0.26100.1742
+WINDOWS_REDIST_CHECKSUM="ac6060f5f8a952f59faef20e53d124c2c267264109f3f6fabeb2b7aefb3e3c62"
 
 copyFromDir() {
   echo "Copying OpenJDK source from  ${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
