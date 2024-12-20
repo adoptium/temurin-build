@@ -160,8 +160,8 @@ download_release_files() {
 
   cd "${WORKSPACE}/staging/${TAG}" || exit 1
 
-  # Early access versions are currently in a different format
-  if echo "${TAG}" | grep ea-beta; then
+  # Check for old format ea-beta whose browser_download_url was a different format
+  if echo "${TAG}" | grep "^jdk${MAJOR_VERSION}u-.*-beta" > /dev/null; then
     filter="ea_${MAJOR_VERSION}"
   else
     # shellcheck disable=SC2001
