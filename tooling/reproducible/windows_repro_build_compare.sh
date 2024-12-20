@@ -174,7 +174,7 @@ Get_SBOM_Values() {
   fi
 
   # Check if the SBOM has the expected structure
-  if [ -z "$sbomContent" ] || [ "$(echo "$sbomContent" | jq -r '.metadata.tools')" == "null" ]; then
+  if [ -z "$sbomContent" ] || [ "$(echo "$sbomContent" | jq -r '.metadata.tools.components')" == "null" ]; then
     echo "Invalid SBOM format. Unable to extract Data."
     exit 1
   else
@@ -183,11 +183,11 @@ Get_SBOM_Values() {
   fi
 
   # Extract All Required Fields From The SBOM Content
-  msvsWindowsCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MSVS Windows Compiler Version").version')
-  msvsCCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MSVS C Compiler Version").version')
-  msvsCppCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MSVS C++ Compiler Version").version')
-  msvsSDKver=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "MS Windows SDK Version").version')
-  bootJDK=$(echo "$sbomContent" | jq -r '.metadata.tools[] | select(.name == "BOOTJDK").version' | sed -e 's#-LTS$##')
+  msvsWindowsCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "MSVS Windows Compiler Version").version')
+  msvsCCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "MSVS C Compiler Version").version')
+  msvsCppCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "MSVS C++ Compiler Version").version')
+  msvsSDKver=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "MS Windows SDK Version").version')
+  bootJDK=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "BOOTJDK").version' | sed -e 's#-LTS$##')
   buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
   buildSHA=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value' | awk -F'/' '{print $NF}')
   buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')

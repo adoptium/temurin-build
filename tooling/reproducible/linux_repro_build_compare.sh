@@ -141,8 +141,8 @@ else
   SBOM=$SBOM_PARAM
 fi
 
-BOOTJDK_VERSION=$(jq -r '.metadata.tools[] | select(.name == "BOOTJDK") | .version' "$SBOM" | sed -e 's#-LTS$##')
-GCCVERSION=$(jq -r '.metadata.tools[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
+BOOTJDK_VERSION=$(jq -r '.metadata.tools.components[] | select(.name == "BOOTJDK") | .version' "$SBOM" | sed -e 's#-LTS$##')
+GCCVERSION=$(jq -r '.metadata.tools.components[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
 LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
 TEMURIN_BUILD_SHA=$(jq -r '.components[0] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
 TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
