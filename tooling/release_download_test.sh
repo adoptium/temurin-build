@@ -425,12 +425,12 @@ download_cyclonedx_tool() {
   esac
 
   case "${cyclonedx_os}-${cyclonedx_arch}" in
-      linux-x64)   cyclonedx_checksum="bd26ccba454cc9f12b6860136e1b14117b829a5f27e993607ff526262c5a7ff0";;
-      linux-arm64) cyclonedx_checksum="eaac307ca4d7f3ee2a10e5fe898d7ff16c4b8054b10cc210abe6f6d703d17852";;
-      osx-x64)     cyclonedx_checksum="83ba4871298db3123dbea23f425cf23316827abcdaded16824b925f1bc69446d";;
-      osx-arm64)   cyclonedx_checksum="826c21a2ad146e0542c22fa3bf31f4a744890d89052d597c4461ec6e2302ff2d";;
-      win-x64)     cyclonedx_checksum="52d2f00545a5b380b7268ab917ba5eb31a99bcc43dbe25763e4042a9bb44a2b8";;
-      win-arm64)   cyclonedx_checksum="0a506f9e734ae3096ad41bbfd5afc0f11583db33b6f1db6dd1f6db7660d2e44e";;
+      linux-x64)   cyclonedx_checksum="5e1595542a6367378a3944bbd3008caab3de65d572345361d3b9597b1dbbaaa0";;
+      linux-arm64) cyclonedx_checksum="5b4181f6fd4d8fbe54e55c1b3983d9af66ce2910a263814b290cbd5e351e68a4";;
+      osx-x64)     cyclonedx_checksum="331c2245ef7dadf09fa3d2710a2aaab071ff6bea2ba3e5df8f95a4f3f6e825e9";;
+      osx-arm64)   cyclonedx_checksum="2d24c331c2ccc5e4061722bd4780c8b295041b2569d130bbe80cf7da95b97171";;
+      win-x64)     cyclonedx_checksum="bb26bb56293ebe6f08fa63d2bf50653fc6b180174fded975c81ac96ac192a7db";;
+      win-arm64)   cyclonedx_checksum="35762d3e1979576f474ffc1c5b2273e19c33cdca44e5f1994c3de5d9cd0e9c1d";;
       *)           cyclonedx_checksum="";;
   esac
 
@@ -442,7 +442,7 @@ download_cyclonedx_tool() {
 
     cyclonedx_tool="cyclonedx-${cyclonedx_os}-${cyclonedx_arch}${cyclonedx_suffix}"
 
-    [ ! -r "${cyclonedx_tool}" ] && curl -LOsS https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.25.0/"${cyclonedx_tool}"
+    [ ! -r "${cyclonedx_tool}" ] && curl -LOsS https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.27.2/"${cyclonedx_tool}"
     if [ "$(sha256sum "${cyclonedx_tool}" | cut -d' ' -f1)" != "${cyclonedx_checksum}" ]; then
        print_error "IVT : Cannot verify checksum of CycloneDX CLI binary"
        exit 1
