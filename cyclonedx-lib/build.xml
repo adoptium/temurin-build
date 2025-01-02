@@ -793,18 +793,16 @@
                  <arg value="${testSBOMFile_xml}"/>
                 </java>
 
-<!-- This fails for XML until upstream issue is fixed: https://github.com/CycloneDX/cyclonedx-core-java/issues/562
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
-                  <arg value="verbose"/>
-                  <arg value="addMetadataTools"/>
-                  <arg value="tool"/>
+                  <arg value="--verbose"/>
+                  <arg value="--addMetadataTools"/>
+                  <arg value="--tool"/>
                   <arg value="GCC"/>
-                  <arg value="version"/>
+                  <arg value="--version"/>
                   <arg value="10.1"/>
-                  <arg value="xmlFile"/>
+                  <arg value="--xmlFile"/>
                  <arg value="${testSBOMFile_xml}"/>
                 </java>
--->
 
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
