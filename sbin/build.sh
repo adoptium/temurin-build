@@ -1387,8 +1387,8 @@ addCompilerWindows() {
   local inputSdkFile="${BUILD_CONFIG[TARGET_FILE_NAME]}"
 
   # Derive Windows SDK Version From Built JDK
-  mkdir "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}temp"
-  unzip -j -o -q "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}$inputSdkFile" -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/temp"
+  mkdir "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/temp"
+  unzip -j -o -q "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/$inputSdkFile" -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/temp"
   local ucrt_file=$(cygpath -m ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/temp/ucrtbase.dll)
   local ucrt_version=$(powershell.exe "(Get-Command $ucrt_file).FileVersionInfo.FileVersion")
   rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/temp"
