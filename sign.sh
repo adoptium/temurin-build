@@ -78,38 +78,43 @@ signRelease()
           echo "Signing ${f}"
           if [ "$SIGN_TOOL" = "eclipse" ]; then
            if [ "${VERSION}" = "8" ]; then
-            echo "Signing $f using Eclipse Foundation codesign service"
             dir=$(dirname "$f")
             file=$(basename "$f")
-            mv "$f" "${dir}/unsigned_${file}"
-            if ! curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign; then
-              echo "curl command failed, sign of $f failed"
+            # Check if file is a Microsoft supplied file that is already signed
+            if [[ "$file" =~ api-ms-win.* ]] || [[ "$file" =~ API-MS-Win.* ]] || [[ "$file" =~ msvcp.* ]] || [[ "$file" =~ ucrtbase.* ]] || [[ "$file" =~ vcruntime.* ]]; then
+              echo "Skipping Microsoft file $file"
+            else
+              echo "Signing $f using Eclipse Foundation codesign service"
+              mv "$f" "${dir}/unsigned_${file}"
+              if ! curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign; then
+                echo "curl command failed, sign of $f failed"
 
-              # Retry up to 20 times
-              max_iterations=20
-              iteration=1
-              success=false 
-              echo "Code Not Signed For File $f"
-              while [ $iteration -le $max_iterations ] && [ $success = false ]; do
-                echo $iteration Of $max_iterations
-                sleep 1
-                if ! curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign; then
-                  echo "curl command failed, $f Failed Signing On Attempt $iteration"
-                  success=false
-                  iteration=$((iteration+1))
-                  if [ $iteration -gt $max_iterations ]
-                  then
-                    echo "Errors Encountered During Signing"
-                    exit 1
+                # Retry up to 20 times
+                max_iterations=20
+                iteration=1
+                success=false 
+                echo "Code Not Signed For File $f"
+                while [ $iteration -le $max_iterations ] && [ $success = false ]; do
+                  echo $iteration Of $max_iterations
+                  sleep 1
+                  if ! curl --fail --silent --show-error -o "$f" -F file="@${dir}/unsigned_${file}" https://cbi.eclipse.org/authenticode/sign; then
+                    echo "curl command failed, $f Failed Signing On Attempt $iteration"
+                    success=false
+                    iteration=$((iteration+1))
+                    if [ $iteration -gt $max_iterations ]
+                    then
+                      echo "Errors Encountered During Signing"
+                      exit 1
+                    fi
+                  else
+                    echo "$f Signed OK On Attempt $iteration"
+                    success=true
                   fi
-                else
-                  echo "$f Signed OK On Attempt $iteration"
-                  success=true
-                fi
-              done
+                done
+              fi
+              chmod --reference="${dir}/unsigned_${file}" "$f"
+              rm -rf "${dir}/unsigned_${file}"
             fi
-            chmod --reference="${dir}/unsigned_${file}" "$f"
-            rm -rf "${dir}/unsigned_${file}"
            else
             echo "Eclipse signing for JDK version ${VERSION} does not externally sign Windows executables post-build"
            fi
