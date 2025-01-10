@@ -224,6 +224,7 @@ git push --tags origin master
 ```
 
 Note: If you make a mistake with a tag you have already pushed you can undo it with:
+
 ```bash
 git tag --delete jdk-1.2.3-wrongname
 git git push origin :jdk-1.2.3-wrongname
