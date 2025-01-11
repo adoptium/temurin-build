@@ -223,6 +223,13 @@ git tag -a "jdk-17.0.12-dryrun-ga" jdk-17.0.12+7^{} -m"YYYY.MM release dry run t
 git push --tags origin master
 ```
 
+Note: If you make a mistake with a tag you have already pushed you can undo it with:
+
+```bash
+git tag --delete jdk-1.2.3-wrongname
+git git push origin :jdk-1.2.3-wrongname
+```
+
 **For the new release versions in the OpenJDK HEAD repository adoptium/jdk:**
 
 ```bash
