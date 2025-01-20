@@ -227,7 +227,7 @@ Note: If you make a mistake with a tag you have already pushed you can undo it w
 
 ```bash
 git tag --delete jdk-1.2.3-wrongname
-git git push origin :jdk-1.2.3-wrongname
+git push origin :jdk-1.2.3-wrongname
 ```
 
 **For the new release versions in the OpenJDK HEAD repository adoptium/jdk:**
