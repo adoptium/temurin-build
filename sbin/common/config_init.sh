@@ -282,12 +282,12 @@ function parseConfigurationArguments() {
 
         "--docker" )
         BUILD_CONFIG[CONTAINER_COMMAND]="docker";
-        if setCustomImage "${1-}"; then shift ; fi 
+        if setCustomImage "${1-}"; then shift ; fi
         ;;
 
         "--podman" )
         BUILD_CONFIG[CONTAINER_COMMAND]="podman";
-        if setCustomImage "${1-}"; then shift ; fi 
+        if setCustomImage "${1-}"; then shift ; fi
         ;;
 
         "--debug-docker" )
@@ -407,6 +407,9 @@ function parseConfigurationArguments() {
         "--jvm-variant"  | "-V" )
         BUILD_CONFIG[JVM_VARIANT]="$1"; shift;;
 
+        "--wsl" )
+         BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]+="--build=x86_64-unknown-linux-gnu --openjdk-target=x86_64-unknown-linux-gnu ";;
+
         *) echo >&2 "Invalid build.sh option: ${opt}"; exit 1;;
       esac
     done
@@ -434,22 +437,22 @@ function setCustomImage() {
   local imageCandidate="${1}"
   # is next param empty?
   if [[ -z ${imageCandidate} ]] ; then
-    echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+    echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}"
     return 1
   fi
   # is the next parameter a switch?
   if [[ ${imageCandidate} == -* ]] ; then
-    echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+    echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}"
     return 1
   fi
   # is the next param a main arg?
   if checkOpenJdkVersion "${imageCandidate}" ; then
-   echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+   echo "default image will be used: ${BUILD_CONFIG[CONTAINER_IMAGE]}"
    return 1
   fi
   # not empty, not switch, not main arg - therefore it must be an image, use it
   BUILD_CONFIG[CONTAINER_IMAGE]="${imageCandidate}"
-  echo "base image will be set to: ${BUILD_CONFIG[CONTAINER_IMAGE]}" 
+  echo "base image will be set to: ${BUILD_CONFIG[CONTAINER_IMAGE]}"
   return 0
 }
 
