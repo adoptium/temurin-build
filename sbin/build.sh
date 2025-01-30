@@ -105,7 +105,7 @@ configureDevKitConfigureParameter() {
       addConfigureArg "--with-devkit=" "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}"
     fi
   fi
-} 
+}
 
 # Configure the boot JDK
 configureBootJDKConfigureParameter() {
@@ -1121,6 +1121,8 @@ generateSBoM() {
     addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "makejdk_any_platform_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
     # Add make_command_args JDK Component Property
     addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
+    # Add CONFIGURE_ARGS property
+    # addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Configure Args" "${CONFIGURE_ARGS}"
   done
 
 
@@ -1137,7 +1139,7 @@ generateSBoM() {
     local openjdkSrcDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
 
     # strace analysis needs to know the bootJDK and optional local DevKit/Toolchain, as these versions will
-    # be present in the analysis and not necessarily installed as packages 
+    # be present in the analysis and not necessarily installed as packages
     local devkit_path=$(getConfigureArgPath "--with-devkit")
     local cc_path=$(getCCFromSpecGmk)
     if [[ -n "${cc_path}" ]]; then
