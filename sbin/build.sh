@@ -1122,7 +1122,10 @@ generateSBoM() {
     # Add make_command_args JDK Component Property
     addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
     # Add CONFIGURE_ARGS property
-    # addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Configure Args" "${CONFIGURE_ARGS}"
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Configure Args" "${CONFIGURE_ARGS}"
+    # Add configure.txt JDK Component Property
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "configure.txt" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
+
   done
 
 
