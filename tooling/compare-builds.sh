@@ -60,6 +60,8 @@ function processArgs() {
       echo "Pass the files/dirs as absolute values, it should not be that hard"
       echo "It is usefull to have JAVA_HOME pointing to some other JDK used to compile and runn supporting files"
       echo "otherwise one of the provided jdks will be duplicated, and used"
+      echo "There are two types of compare - IDENTICAL and COMPARABLE. if COMP_TYPE is not set, ID is used."
+      echo "  Use COMP_TYPE=ID or COMP_TYPE=COMP to determine between them"
       echo "# for your own safety, do not run it as root"
       exit 1
     fi
@@ -95,6 +97,18 @@ function processArgs() {
          echo "We recommend to to set JAVA_HOME for next time."
       fi
     fi
+  if [ -z "${COMP_TYPE:-}" ] ; then
+    COMP_TYPE="ID"
+  fi
+  echo "COMP_TYPE is $COMP_TYPE"
+  if [ "${COMP_TYPE}" = "ID" ] ; then
+    echo "  jdks are comapred as IDENTICAL"
+  elif [ "${COMP_TYPE}" = "COMP" ] ; then
+    echo "  jdks are comapred as COMPARABLE"
+  else
+    echo "  unknown value. ID or COMP is accepted only. Exiting"
+    exit 1
+  fi
   set -x
 }
 
@@ -126,7 +140,6 @@ function initialInfo() {
   fi
   return 0
 }
-
 
 function getReleases() {
   local mver="${1}"
@@ -529,32 +542,38 @@ fi
 
 # comapre build can not run if not run from its pwd
 pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
-  for jdkName in ${JDK_INFO["first_name"]} ${JDK_INFO["second_name"]} ; do
-    # better to try them asap
-    "${WORKDIR}/${jdkName}/bin/java" --version 
-    "${WORKDIR}/${jdkName}/bin/javac" --version
-    ftureDir="$(mktemp -d)/classes"
-    if uname | grep CYGWIN ; then
-      ftureDir=$(cygpath -m "${ftureDir}")
-    fi
-    # the java in java_home will be used later, try it
-    "$JAVA_HOME/bin/java" --version
-    "$JAVA_HOME/bin/javac" -d "${ftureDir}" "../../tooling/src/java/temurin/tools/BinRepl.java"
-    CLASSPATH="${ftureDir}"
-    export CLASSPATH
-    if uname | grep CYGWIN ; then
-      CLASSPATH=$(cygpath -m "${CLASSPATH}")
-      export CLASSPATH="${CLASSPATH}"
-    fi
-    getKeysForComparablePatch "${WORKDIR}/${jdkName}"
-    # we cannot use the JDK we are currently processing. It is broken by the patching
-    PATH="${JAVA_HOME}/bin:${PATH}" bash ./comparable_patch.sh --jdk-dir "${WORKDIR}/${jdkName}" --version-string "$JAVA_VENDOR_VERSION" --vendor-name "$JAVA_VENDOR" --vendor_url "$JAVA_VENDOR_URL" --vendor-bug-url "$JAVA_VENDOR_URL_BUG" --vendor-vm-bug-url "$JAVA_VENDOR_URL_BUG"  2>&1 | tee -a "$LOG"
-  done
+  if [ "${COMP_TYPE}" = "COMP" ] ; then
+    for jdkName in ${JDK_INFO["first_name"]} ${JDK_INFO["second_name"]} ; do
+      # better to try them asap
+      "${WORKDIR}/${jdkName}/bin/java" --version 
+      "${WORKDIR}/${jdkName}/bin/javac" --version
+      ftureDir="$(mktemp -d)/classes"
+      if uname | grep CYGWIN ; then
+        ftureDir=$(cygpath -m "${ftureDir}")
+      fi
+      # the java in java_home will be used later, try it
+      "$JAVA_HOME/bin/java" --version
+      "$JAVA_HOME/bin/javac" -d "${ftureDir}" "../../tooling/src/java/temurin/tools/BinRepl.java"
+      CLASSPATH="${ftureDir}"
+      export CLASSPATH
+      if uname | grep CYGWIN ; then
+        CLASSPATH=$(cygpath -m "${CLASSPATH}")
+        export CLASSPATH="${CLASSPATH}"
+      fi
+      getKeysForComparablePatch "${WORKDIR}/${jdkName}"
+      # we cannot use the JDK we are currently processing. It is broken by the patching
+      PATH="${JAVA_HOME}/bin:${PATH}" bash ./comparable_patch.sh --jdk-dir "${WORKDIR}/${jdkName}" --version-string "$JAVA_VENDOR_VERSION" --vendor-name "$JAVA_VENDOR" --vendor_url "$JAVA_VENDOR_URL" --vendor-bug-url "$JAVA_VENDOR_URL_BUG" --vendor-vm-bug-url "$JAVA_VENDOR_URL_BUG"  2>&1 | tee -a "$LOG"
+    done
+  fi
   if [ "${DO_BREAK:-}" == "true" ] ; then
     echo "dead" > "${WORKDIR}/${JDK_INFO["first_name"]}/bin/java"
     echo "dead" > "${WORKDIR}/${JDK_INFO["first_name"]}/lib/server/libjvm.so"
   fi
   GLOABL_RESULT=0
+  if [ "${COMP_TYPE}" = "COMP" ] ; then
+    # this tells repro_compare to skipp all the preprocessing. If not set, the repro_compare.sh on top of comparable_patch.sh  brings false negatives
+    export PREPROCESS="no"
+  fi
   bash ./repro_compare.sh openjdk "${WORKDIR}/${JDK_INFO["first_name"]}" openjdk "${WORKDIR}/${JDK_INFO["second_name"]}" 2>&1 | tee -a "${LOG}" || GLOABL_RESULT=$?
   diflog="${WORKDIR}/differences.log"
   totlog="${WORKDIR}/totalfiles.log"
