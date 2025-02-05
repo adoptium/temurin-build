@@ -971,46 +971,46 @@ generateSBoM() {
   local sbomTargetName=$(getTargetFileNameForComponent "sbom")
   # Remove the tarball / zip extension from the name to be used for the SBOM
   if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    sbomTargetName=$(echo "${sbomTargetName}.json" | sed "s/\.zip//")
+    sbomTargetName=$(echo "${sbomTargetName}.xml" | sed "s/\.zip//")
   else
-    sbomTargetName=$(echo "${sbomTargetName}.json" | sed "s/\.tar\.gz//")
+    sbomTargetName=$(echo "${sbomTargetName}.xml" | sed "s/\.tar\.gz//")
   fi
 
-  local sbomJson="$(joinPathOS ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${sbomTargetName})"
-  echo "OpenJDK SBOM will be ${sbomJson}."
+  local sbomXml="$(joinPathOS ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} ${sbomTargetName})"
+  echo "OpenJDK SBOM will be ${sbomXml}."
 
-  # Clean any old json
-  rm -f "${sbomJson}"
+  # Clean any old xml
+  rm -f "${sbomXml}"
 
   local fullVer=$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/productVersion.txt")
   local fullVerOutput=$(cat "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/productVersionOutput.txt")
 
-  # Create initial SBOM json
-  createSBOMFile "${javaHome}" "${classpath}" "${sbomJson}"
+  # Create initial SBOM xml
+  createSBOMFile "${javaHome}" "${classpath}" "${sbomXml}"
   # Set default SBOM metadata
-  addSBOMMetadata "${javaHome}" "${classpath}" "${sbomJson}"
+  addSBOMMetadata "${javaHome}" "${classpath}" "${sbomXml}"
 
   # Create component to metadata in SBOM
-  addSBOMMetadataComponent "${javaHome}" "${classpath}" "${sbomJson}" "Eclipse Temurin" "framework" "${fullVer}" "Eclipse Temurin components"
+  addSBOMMetadataComponent "${javaHome}" "${classpath}" "${sbomXml}" "Eclipse Temurin" "framework" "${fullVer}" "Eclipse Temurin components"
 
   # Below add property to metadata
   # Add OS full version (Kernel is covered in the first field)
-  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS version" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
+  addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomXml}" "OS version" "${BUILD_CONFIG[OS_FULL_VERSION]^}"
   # TODO: Replace this "if" with its predecessor (commented out below) once
   # OS_ARCHITECTURE has been replaced by the new target architecture variable.
   # This is because OS_ARCHITECTURE is currently the build arch, not the target arch,
   # and that confuses things when cross-compiling an x64 mac build on arm mac.
-  #   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
+  #   addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomXml}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
   if [[ "${BUILD_CONFIG[TARGET_FILE_NAME]}" =~ .*_x64_.* ]]; then
-    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "x86_64"
+    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomXml}" "OS architecture" "x86_64"
   else
-    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
+    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomXml}" "OS architecture" "${BUILD_CONFIG[OS_ARCHITECTURE]^}"
   fi
 
   # Set default SBOM formulation
-  addSBOMFormulation "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX"
-  addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs"
-  addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions"
+  addSBOMFormulation "${javaHome}" "${classpath}" "${sbomXml}" "CycloneDX"
+  addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomXml}" "CycloneDX" "CycloneDX jar SHAs"
+  addSBOMFormulationComp "${javaHome}" "${classpath}" "${sbomXml}" "CycloneDX" "CycloneDX jar versions"
 
   # Below add build tools into metadata tools
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]; then
@@ -1037,7 +1037,7 @@ generateSBoM() {
   # Add FreeMarker 3rd party (openj9)
   local freemarker_version="$(joinPathOS ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]} 'metadata/dependency_version_freemarker.txt')"
   if [ -f "${freemarker_version}" ]; then
-      addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${freemarker_version})"
+      addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "FreeMarker" "$(cat ${freemarker_version})"
   fi
   # Add CycloneDX versions
   addCycloneDXVersions
@@ -1046,10 +1046,10 @@ generateSBoM() {
   local buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
   # ${BUILD_CONFIG[CONTAINER_COMMAND]^} always set to false cannot rely on it.
   if [ -n "${buildimagesha}" ] && [ "${buildimagesha}" != "N.A" ]; then
-    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "true"
-    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "Docker image SHA1" "${buildimagesha}"
+    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomXml}" "Use Docker for build" "true"
+    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "Docker image SHA1" "${buildimagesha}"
   else
-    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "false"
+    addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomXml}" "Use Docker for build" "false"
   fi
 
   checkingToolSummary
@@ -1086,41 +1086,41 @@ generateSBoM() {
     local sha=$(sha256File "${archiveFile}")
 
     # Create JDK Component
-    addSBOMComponent "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} ${component} Component"
+    addSBOMComponent "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "${fullVer}" "${BUILD_CONFIG[BUILD_VARIANT]^} ${component} Component"
 
     # Add SHA256 hash for the component
-    addSBOMComponentHash "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "${sha}"
+    addSBOMComponentHash "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "${sha}"
 
     # Below add different properties to JDK component
     # Add target archive name as JDK Component Property
-    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Filename" "${archiveName}"
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "Filename" "${archiveName}"
     # Add variant as JDK Component Property
-    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "JDK Variant" "${BUILD_CONFIG[BUILD_VARIANT]^}"
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "JDK Variant" "${BUILD_CONFIG[BUILD_VARIANT]^}"
     # Add scmRef as JDK Component Property
-    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "SCM Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "SCM Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/scmref.txt"
     # Add OpenJDK source ref commit as JDK Component Property
-    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "OpenJDK Source Commit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "OpenJDK Source Commit" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/openjdkSource.txt"
     # Add buildRef as JDK Component Property
-    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Temurin Build Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "Temurin Build Ref" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
     # Add jenkins job ID as JDK Component Property
-    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Builder Job Reference" "${BUILD_URL:-N.A}"
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "Builder Job Reference" "${BUILD_URL:-N.A}"
     # Add jenkins builder (agent/machine name) as JDK Component Property
-    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Builder Name" "${NODE_NAME:-N.A}"
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "Builder Name" "${NODE_NAME:-N.A}"
 
     # Add build timestamp
-    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Timestamp" "${BUILD_CONFIG[BUILD_TIMESTAMP]}"
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "Build Timestamp" "${BUILD_CONFIG[BUILD_TIMESTAMP]}"
 
     # Add Tool Summary section from configure.txt
-    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Tools Summary" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
-    # Add builtConfig JDK Component Property, load as Json string
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "Build Tools Summary" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
+    # Add builtConfig JDK Component Property, load as Xml string
     built_config=$(createConfigToJsonString)
-    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Config" "${built_config}"
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "Build Config" "${built_config}"
     # Add full_version_output JDK Component Property
-    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "full_version_output" "${fullVerOutput}"
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "full_version_output" "${fullVerOutput}"
     # Add makejdk_any_platform_args JDK Component Property
-    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "makejdk_any_platform_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "makejdk_any_platform_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
     # Add make_command_args JDK Component Property
-    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
+    addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomXml}" "${componentName}" "make_command_args" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/makeCommandArg.txt"
   done
 
 
@@ -1165,11 +1165,11 @@ generateSBoM() {
     devkit_path=$(echo ${devkit_path} | sed 's,\./,,' | sed 's,//,/,')
     bootjdk_path=$(echo ${bootjdk_path} | sed 's,\./,,' | sed 's,//,/,')
 
-    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${straceOutputDir}" "${temurinBuildDir}" "${bootjdk_path}" "${classpath}" "${sbomJson}" "${buildOutputDir}" "${openjdkSrcDir}" "${javaHome}" "${toolchain_path}"
+    bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${straceOutputDir}" "${temurinBuildDir}" "${bootjdk_path}" "${classpath}" "${sbomXml}" "${buildOutputDir}" "${openjdkSrcDir}" "${javaHome}" "${toolchain_path}"
   fi
 
   # Print SBOM location
-  echo "CycloneDX SBOM has been created in ${sbomJson}"
+  echo "CycloneDX SBOM has been created in ${sbomXml}"
 }
 
 # Generate build tools info into dependency file
@@ -1240,7 +1240,7 @@ addFreeTypeVersionInfo() {
       version="${ver_major}.${ver_minor}.${ver_patch}"
    fi
 
-   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "${version}"
+   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "FreeType" "${version}"
 }
 
 # Determine and store CycloneDX SHAs that have been used to provide the SBOMs
@@ -1256,12 +1256,12 @@ addCycloneDXVersions() {
          else
             JarSha=$(sha256sum "$JAR" | cut -d' ' -f1)
          fi
-         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}.jar" "${JarSha}"
+         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomXml}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}.jar" "${JarSha}"
          # Now the jar's SHA has been added, we add the version string.
          JarDepsFile="$(joinPath ${CYCLONEDB_DIR} dependency_data/dependency_data.properties)"
          JarVersionString=$(grep "${JarName}\.version=" "${JarDepsFile}" | cut -d'=' -f2)
          if [ -n "${JarVersionString}" ]; then
-           addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions" "${JarName}.jar" "${JarVersionString}"
+           addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomXml}" "CycloneDX" "CycloneDX jar versions" "${JarName}.jar" "${JarVersionString}"
          elif [ "${JarName}" != "temurin-gen-sbom" ] && [ "${JarName}" != "temurin-gen-cdxa" ]; then
            echo "ERROR: Cannot determine jar version from ${JarDepsFile} for SBOM creation dependency ${JarName}.jar."
          fi
@@ -1302,7 +1302,7 @@ addALSAVersion() {
        fi
 
        echo "Adding ALSA version to SBOM: ${ALSA_VERSION}"
-       addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "ALSA" "${ALSA_VERSION}"
+       addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "ALSA" "${ALSA_VERSION}"
      fi
 }
 
@@ -1361,7 +1361,7 @@ addGLIBCforLinux() {
      # Get musl build ldd version
      local MUSL_VERSION="$(ldd --version 2>&1 | grep "Version" | tr -s " " | cut -d" " -f2)"
      echo "Adding MUSL version to SBOM: ${MUSL_VERSION}"
-     addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MUSL" "${MUSL_VERSION}"
+     addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "MUSL" "${MUSL_VERSION}"
    else
      # Get GLIBC from configured build spec.gmk sysroot and features.h definitions
      local GLIBC_MAJOR=$(getHeaderPropertyUsingCompiler "features.h" "#define[ ]+__GLIBC__")
@@ -1369,7 +1369,7 @@ addGLIBCforLinux() {
      local GLIBC_VERSION="${GLIBC_MAJOR}.${GLIBC_MINOR}"
 
      echo "Adding GLIBC version to SBOM: ${GLIBC_VERSION}"
-     addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GLIBC" "${GLIBC_VERSION}"
+     addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "GLIBC" "${GLIBC_VERSION}"
    fi
 }
 
@@ -1379,7 +1379,7 @@ addGCC() {
    local gcc_version="$(sed -n '/^Tools summary:$/,$p' "${inputConfigFile}" | tr -s " " | grep "C Compiler: Version" | cut -d" " -f5)"
 
    echo "Adding GCC version to SBOM: ${gcc_version}"
-   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "GCC" "${gcc_version}"
+   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "GCC" "${gcc_version}"
 }
 
 addCompilerWindows() {
@@ -1399,13 +1399,13 @@ addCompilerWindows() {
   local msvs_cpp_version="$(grep -o -P '\* C\+\+ Compiler:\s+\K[^"]+' "${inputConfigFile}" | awk '{print $2}')"
 
   echo "Adding Windows Compiler versions to SBOM: ${msvs_version}"
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS Windows Compiler Version" "${msvs_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "MSVS Windows Compiler Version" "${msvs_version}"
   echo "Adding Windows C Compiler version to SBOM: ${msvs_c_version}"
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C Compiler Version" "${msvs_c_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "MSVS C Compiler Version" "${msvs_c_version}"
   echo "Adding Windows C++ Compiler version to SBOM: ${msvs_cpp_version}"
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MSVS C++ Compiler Version" "${msvs_cpp_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "MSVS C++ Compiler Version" "${msvs_cpp_version}"
   echo "Adding Windows SDK version to SBOM: ${ucrt_version}"
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MS Windows SDK Version" "${ucrt_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "MS Windows SDK Version" "${ucrt_version}"
 }
 
 addCompilerMacOS() {
@@ -1415,7 +1415,7 @@ addCompilerMacOS() {
   local macx_version="$(grep ".* Toolchain:" "${inputConfigFile}" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
 
   echo "Adding MacOS compiler version to SBOM: ${macx_version}"
-  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MacOS Compiler" "${macx_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "MacOS Compiler" "${macx_version}"
 }
 
 addBootJDK() {
@@ -1430,7 +1430,7 @@ addBootJDK() {
    local bootjdk="$("${bootjava}" -XshowSettings 2>&1 | grep "java\.runtime\.version" | tr -s " " | cut -d" " -f4 | sed "s/\"//g")"
 
    echo "Adding BOOTJDK to SBOM: ${bootjdk}"
-   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "BOOTJDK" "${bootjdk}"
+   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomXml}" "BOOTJDK" "${bootjdk}"
 }
 
 getGradleJavaHome() {
