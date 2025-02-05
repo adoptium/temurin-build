@@ -21,6 +21,18 @@ BLD_TYPE2="$3"
 JDK_DIR2="$4"
 OS="$5"
 
+checkJdkDir() {
+  JDK_DIR="${1}"
+  if [[ ! -d "${JDK_DIR}" ]] || [[ ! -d "${JDK_DIR}/bin"  ]]; then
+    echo "$JDK_DIR does not exist or does not point at a JDK"
+    echo "repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 OS"
+    exit 1
+  fi
+}
+
+checkJdkDir "${JDK_DIR1}"
+checkJdkDir "${JDK_DIR2}"
+
 # if PREPROCESS flag is set to 'no', then preprocessing is not run
 # this is usefull, if yo want to compare two identical copies of JDK
 #  or if you want to run repro_compare.sh only as result generator after you
@@ -37,12 +49,6 @@ JDK_DIR_Arr=("${JDK_DIR1}" "${JDK_DIR2}")
 if [ "$PREPROCESS" != "no" ] ; then
 for  JDK_DIR in "${JDK_DIR_Arr[@]}"
 do
-  if [[ ! -d "${JDK_DIR}" ]] || [[ ! -d "${JDK_DIR}/bin"  ]]; then
-    echo "$JDK_DIR does not exist or does not point at a JDK"
-    echo "repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 OS"
-    exit 1
-  fi
-
   echo "$(date +%T) : Pre-processing ${JDK_DIR}"
   rc=0
   source "$(dirname "$0")"/repro_process.sh "${JDK_DIR}" "${OS}" || rc=$?
