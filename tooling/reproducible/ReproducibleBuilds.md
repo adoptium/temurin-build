@@ -50,6 +50,8 @@ The patching process involves:
 - Remove any non-deterministic build process artifact strings, like Manifest Created-By stamps.
 - Zero out CRC in .gnu_debuglink ELF sections to eliminate .debuginfo-induced differences.
 
+**warning:** If you run `comparable_patch.sh`, do not use `repro_compare.sh` for final comparison. You would get false negatives. Run plain `diff jdk1 jdk2` with any switches you need.
+
 ### How to setup and run comparable_patch.sh on Windows
 
 #### Tooling setup:
