@@ -580,6 +580,12 @@ configureZlibLocation() {
   fi
 }
 
+configureGtestLocation() {
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 15 ]; then
+      addConfigureArg "--with-gtest=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedgtest"
+  fi
+}
+
 # Configure the command parameters
 configureCommandParameters() {
   configureVersionStringParameter
@@ -624,6 +630,7 @@ configureCommandParameters() {
 
   configureFreetypeLocation
   configureZlibLocation
+  configureGtestLocation
 
   echo "Completed configuring the version string parameter, config args are now: ${CONFIGURE_ARGS}"
 }
