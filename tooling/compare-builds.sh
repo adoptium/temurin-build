@@ -398,7 +398,7 @@ function tapsAndJunits() {
     local total=4
     local passed=0
     local failed=0
-    if [ $GLOABL_RESULT -eq 0 ] ; then
+    if [ $GLOBAL_RESULT -eq 0 ] ; then
       passed=$(("${passed}"+1))
     else
        failed=$(("${failed}"+1))
@@ -467,7 +467,7 @@ function tapsAndJunits() {
       tapFromWholeFile "${differencesFile}" "${differencesFile}" >> "${resultsTapFile}"
       tapTestEnd >> "${resultsTapFile}"
     set -e
-    if [ $GLOABL_RESULT -eq 0 ] ; then
+    if [ $GLOBAL_RESULT -eq 0 ] ; then
       printXmlTest "compare" "comparable-builds" "4" "" "../artifact/$(basename "${diffFileParam}")" >> "${unitFile}"
       tapTestStart "ok" "4" "comparable-builds" >> "${resultsTapFile}"
       echo "-- COMPARABLE --"
@@ -569,12 +569,12 @@ pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
     echo "dead" > "${WORKDIR}/${JDK_INFO["first_name"]}/bin/java"
     echo "dead" > "${WORKDIR}/${JDK_INFO["first_name"]}/lib/server/libjvm.so"
   fi
-  GLOABL_RESULT=0
+  GLOBAL_RESULT=0
   if [ "${COMP_TYPE}" = "COMP" ] ; then
     # this tells repro_compare to skipp all the preprocessing. If not set, the repro_compare.sh on top of comparable_patch.sh  brings false negatives
     export PREPROCESS="no"
   fi
-  bash ./repro_compare.sh openjdk "${WORKDIR}/${JDK_INFO["first_name"]}" openjdk "${WORKDIR}/${JDK_INFO["second_name"]}" 2>&1 | tee -a "${LOG}" || GLOABL_RESULT=$?
+  bash ./repro_compare.sh openjdk "${WORKDIR}/${JDK_INFO["first_name"]}" openjdk "${WORKDIR}/${JDK_INFO["second_name"]}" 2>&1 | tee -a "${LOG}" || GLOBAL_RESULT=$?
   diflog="${WORKDIR}/differences.log"
   totlog="${WORKDIR}/totalfiles.log"
   set +e
@@ -600,5 +600,5 @@ if [ "${DO_RESULTS:-}" == "true" ] ; then
   # the result will be changed via tap plugin or jtreg plugin
   exit 0
 else
-  exit ${GLOABL_RESULT}
+  exit ${GLOBAL_RESULT}
 fi
