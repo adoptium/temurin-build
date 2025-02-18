@@ -581,7 +581,7 @@ configureZlibLocation() {
 }
 
 configureGtestLocation() {
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 15 ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 15 ] && [ "${BUILD_CONFIG[GTEST]}" = "true" ]; then
       addConfigureArg "--with-gtest=" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedgtest"
   fi
 }

@@ -68,6 +68,7 @@ FREETYPE_DIRECTORY
 FREETYPE_FONT_BUILD_TYPE_PARAM
 FREETYPE_FONT_VERSION
 GRADLE_USER_HOME_DIR
+GTEST
 KEEP_CONTAINER
 JDK_BOOT_DIR
 JDK_PATH
@@ -317,6 +318,9 @@ function parseConfigurationArguments() {
 
         "--skip-alsa" | "-A" )
         BUILD_CONFIG[ALSA]=false;;
+
+        "--skip-gtest" )
+        BUILD_CONFIG[GTEST]=false;;
 
         "--help" | "-h" )
         man ./makejdk-any-platform.1 && exit 0;;
@@ -676,6 +680,9 @@ function configDefaults() {
 
   # Used in 'release' file for jdk8u
   BUILD_CONFIG[VENDOR]=${BUILD_CONFIG[VENDOR]:-"Undefined Vendor"}
+
+  # By default, build test-image with gtest support
+  BUILD_CONFIG[GTEST]=true
 }
 
 # Declare the map of build configuration that we're going to use

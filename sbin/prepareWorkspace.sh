@@ -833,6 +833,7 @@ downloadGtest() {
     downloadFile "${gtestArchive}" "https://github.com/google/googletest/releases/download/v${GTEST_VERSION}/googletest-${GTEST_VERSION}.tar.gz" "${GTEST_CHECKSUM}"
     mkdir -p "${gtestUnpacked}"
     tar -xzf "${gtestArchive}" --strip-components=1  -C "${gtestUnpacked}"
+    rm -f "${gtestArchive}"
   fi
 }
 
@@ -842,6 +843,7 @@ downloadingRequiredDependencies() {
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" || true
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype" || true
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedgtest" || true
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/downloaded-boot-jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" || true
   fi
 
@@ -881,7 +883,7 @@ downloadingRequiredDependencies() {
     echo "Skipping Freetype"
   fi
 
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 15 ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 15 ] && [ "${BUILD_CONFIG[GTEST]}" = "true" ]; then
       downloadGtest
   fi
 }
