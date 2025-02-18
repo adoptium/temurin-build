@@ -29,20 +29,20 @@ function tapsAndJunits() {
     fi
     RFAT="$(pwd)/run-folder-as-tests"
   fi
-  generateSummUp ${diffFileParam} ${differencesFile} ${totalFile}
-  printPlain ${diffFileParam} ${differencesFile} ${totalFile}
+  generateSummUp "${diffFileParam}" "${differencesFile}" "${totalFile}"
+  printPlain "${diffFileParam}" "${differencesFile}" "${totalFile}"
   if [ "${DO_TAPS:-}" == "true" ] ; then
-    generateTaps ${diffFileParam} ${differencesFile} ${totalFile}
+    generateTaps "${diffFileParam}" "${differencesFile}" "${totalFile}"
   fi
   if [ "${DO_JUNIT:-}" == "true" ] ; then
-    generateJunits ${diffFileParam} ${differencesFile} ${totalFile}
+    generateJunits "${diffFileParam}" "${differencesFile}" "${totalFile}"
   fi
   set -x
 }
 
 function generateSummUp() {
     set +x
-    if [ ${GLOBAL_RESULT} -eq 0 ] ; then
+    if [ "${GLOBAL_RESULT}" -eq 0 ] ; then
       passed=$(("${passed}"+1))
     else
       failed=$(("${failed}"+1))
@@ -94,7 +94,7 @@ function totalOnlyInToPlain() {
 }
 
 function globalResultToPlain() {
-    if [ ${GLOBAL_RESULT} -eq 0 ] ; then
+    if [ "${GLOBAL_RESULT}" -eq 0 ] ; then
       echo "-- COMPARABLE --"
     else
       echo "-- MISMATCH --"
@@ -138,7 +138,7 @@ function totalOnlyInToXml() {
 }
 
 function globalResultToXml() {
-    if [ ${GLOBAL_RESULT} -eq 0 ] ; then
+    if [ "${GLOBAL_RESULT}" -eq 0 ] ; then
       printXmlTest "compare" "comparable-builds" "4" "" "../artifact/$(basename "${diffFileParam}")" >> "${unitFile}"
     else
       printXmlTest "compare" "comparable-builds" "4" "${diffFileParam}" "../artifact/$(basename "${diffFileParam}")" >> "${unitFile}"
@@ -204,7 +204,7 @@ function totalOnlyInToTap() {
 }
 
 function globalResultToTap() {
-    if [ ${GLOBAL_RESULT} -eq 0 ] ; then
+    if [ "${GLOBAL_RESULT}" -eq 0 ] ; then
       tapTestStart "ok" "4" "comparable-builds" >> "${resultsTapFile}"
     else
       tapTestStart "not ok" "4" "comparable-builds" >> "${resultsTapFile}"
