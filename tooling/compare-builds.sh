@@ -12,11 +12,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
-#
-# useful variables: DO_BREAK DO_RESULTS
-#                   DO_DEPS RFAT
-#                   JAVA_HOME               
-
 #######################################################################################################################
 # This is top level script for comparing two jdks.  It 
 # This script expects exactly two args - tag:os.arch/dir/archive, two times
@@ -32,6 +27,14 @@
 #
 # The JDK you are comparing is launched to get various info about itself
 # If you need to compare jdks on different platform then they are for, you need to go manually.
+#######################################################################################################################
+# useful variables: DO_BREAK         if true, one of the jdks will be crippled on purpose
+#                   DO_TAPS DO_JUNIT if true, one/both tap/jtreg results will be generated
+#                   RFAT             if you generate tap/jtreg results, library is downloaded.
+#                                    RFAT may contain path to already cloned library
+#                   DO_DEPS          will dnf install crucial dependencies
+#                   JAVA_HOME        points to third JDK used to run java binaries. If not set
+#                                    one of the JDKs is copied again and used
 #######################################################################################################################
 
 ## resolve folder of this script, following all symlinks,
@@ -58,8 +61,8 @@ function processArgs() {
       echo " yo can omit the :os.arch part, then it will be guessed... but you may know better"
       echo "It copies and creates all in CWD!!!! $(pwd)"
       echo "Pass the files/dirs as absolute values, it should not be that hard"
-      echo "It is usefull to have JAVA_HOME pointing to some other JDK used to compile and runn supporting files"
-      echo "otherwise one of the provided jdks will be duplicated, and used"
+      echo "It is useful to have JAVA_HOME pointing to some other JDK used to compile and run supporting files"
+      echo "otherwise one of the provided JDKs will be duplicated, and used"
       echo "There are two types of compare - IDENTICAL and COMPARABLE. if COMP_TYPE is not set, ID is used."
       echo "  Use COMP_TYPE=ID or COMP_TYPE=COMP to determine between them"
       echo "# for your own safety, do not run it as root"
@@ -80,14 +83,14 @@ function processArgs() {
       echo "Using autodetected: $JDK2_STRING"
     fi
     if [ -n "${JAVA_HOME:-}" ] ; then
-      echo "JAVA_HOME is set to ${JAVA_HOME} and will be used as independnet jdk"
+      echo "JAVA_HOME is set to ${JAVA_HOME} and will be used as independent jdk"
     else
       if [ -d "${1}"  ] ; then
          export JAVA_HOME="${1}"
-         echo "JAVA_HOME was set to ${JAVA_HOME} and will be used as independnet jdk"
+         echo "JAVA_HOME was set to ${JAVA_HOME} and will be used as independent jdk"
       elif [ -d "${2}"  ] ; then
          export JAVA_HOME="${2}"
-         echo "JAVA_HOME was set to ${JAVA_HOME} and will be used as independnet jdk"
+         echo "JAVA_HOME was set to ${JAVA_HOME} and will be used as independent jdk"
       else
         if [ -f "${1}"  ] ; then
           echo "${1} will be unpacked second times and used as JAVA_HOME."
@@ -102,9 +105,9 @@ function processArgs() {
   fi
   echo "COMP_TYPE is $COMP_TYPE"
   if [ "${COMP_TYPE}" = "ID" ] ; then
-    echo "  jdks are comapred as IDENTICAL"
+    echo "  jdks are compared as IDENTICAL"
   elif [ "${COMP_TYPE}" = "COMP" ] ; then
-    echo "  jdks are comapred as COMPARABLE"
+    echo "  jdks are compared as COMPARABLE"
   else
     echo "  unknown value. ID or COMP is accepted only. Exiting"
     exit 1
@@ -205,7 +208,7 @@ function compileAndSetToFuturePath() {
     chmod 755 setupEnvAndCompile.bat
     ./setupEnvAndCompile.bat
     # copy it to any dir on path or add this dir to path
-    mv WindowsUpdateVsVersionInfo.exe  "$FUTURE_PATH_ADDITIONS"
+    mv WindowsUpdateVsVersionInfo.exe "$FUTURE_PATH_ADDITIONS"
     rm WindowsUpdateVsVersionInfo.obj setupEnvAndCompile.bat
   popd
 }
@@ -236,8 +239,8 @@ function deps() {
       echo "The detection of MS tools is fragile, consider setting up following variables:"
       echo "MSBASE_PATH  WINKIT  MSVSCBUILDTOOLS and MSVSC"
     else
-      echo "warning, Cygwin on NOT x86_64 - $(uname -m) - the MSVSC tools are arch dependent. You unless you improve this script, you should set:"
-      echo "MSBADONOT_DEPSSE_PATH  WINKIT  MSVSCBUILDTOOLS and *especially* the  MSVSC variables"
+      echo "warning, Cygwin on NOT x86_64 - $(uname -m) - the MSVSC tools are arch dependent. Unless you improve this script, you should set:"
+      echo "MSBASE_PATH  WINKIT  MSVSCBUILDTOOLS and *especially* the  MSVSC variables"
     fi
   else
     if [ "${DO_DEPS:-}" == "true" ] ; then
@@ -301,9 +304,9 @@ function downloadAdoptiumReleases() {
     -H 'accept: application/json' > $ADOPTIUM_JSON
   if [ ! -s $ADOPTIUM_JSON ]; then
     set +x
-	  echo "AQA api returned nothing! See avaialble versions below"
+	  echo "AQA api returned nothing! See available versions below"
       getSurroundingReleases "${ADOPTIUM_ARCH}" "${OS}" '"release_name"' "${TAG_NON_URL}" "${TAG_NON_URL}"
-	  echo "AQA api returned nothing! See avaialble versions above"
+	  echo "AQA api returned nothing! See available versions above"
     set -x
     exit 1
   fi
@@ -318,9 +321,9 @@ function downloadAdoptiumReleases() {
   mv "${ORIG_LAST_DOWNLOADED_FILE}" "${LAST_DOWNLOADED_FILE}"
   if [ ! -e "${LAST_DOWNLOADED_FILE}" ]; then
     set +x
-	  echo "AQA api downloaded nothing! See avaialble versions below"
+	  echo "AQA api downloaded nothing! See available versions below"
       getSurroundingReleases "${ADOPTIUM_ARCH}" "${OS}" '"link"' "${TAG_NON_URL}" "${TAG_NON_URL}"
-	  echo "AQA api downloaded nothing! See avaialble versions above"
+	  echo "AQA api downloaded nothing! See available versions above"
     set -x
     exit 1
   fi
@@ -373,122 +376,6 @@ function prepareAlternateJavaHome() {
   fi
   JAVA_HOME=$(readlink -f "${futur_java_home}");
   export JAVA_HOME="${JAVA_HOME}"
-}
-
-function tapsAndJunits() {
-  local diffFileParam="${1}"
-  local differencesFile="${2}"
-  local totalFile="${3}"
-  if [ "${DO_RESULTS:-}" == "true" ] ; then
-    if [ -z "${RFAT:-}" ] ; then
-      if [ ! -e run-folder-as-tests ] ; then
-        git clone "https://github.com/rh-openjdk/run-folder-as-tests.git"
-      fi
-      RFAT="$(pwd)/run-folder-as-tests"
-    fi
-    # shellcheck disable=SC1091
-    source "${RFAT}/jtreg-shell-xml.sh"
-    # shellcheck disable=SC1091
-    source "${RFAT}/tap-shell-tap.sh"
-    resultsTapFile="${WORKDIR}/compare-comparable-builds.tap"
-    unitFile="compare-comparable-builds.jtr.xml"
-    unitFileArchive="$unitFile.tar.xz"
-    set +x
-    echo "writing $unitFileArchive"
-    local total=4
-    local passed=0
-    local failed=0
-    if [ $GLOBAL_RESULT -eq 0 ] ; then
-      passed=$(("${passed}"+1))
-    else
-       failed=$(("${failed}"+1))
-    fi
-    local totalDiffs
-    # warning, this do not work without pipefail
-    totalDiffs=$(grep "Number of" "${differencesFile}" | sed "s/[^0-9]\+//" || echo "999999999") # if there is no record we need to fail
-    local totalFiles
-    totalFiles=$(grep "Number of" "${totalFile}" | sed "s/[^0-9]\+//" || echo "0") # if there is no record we need to fail
-    local totalOnlyIn
-    totalOnlyIn=$(grep "Only in:" "${differencesFile}"| sed "s/[^0-9]\+//" || echo "0") #if there is non, we eant to pass
-    if [ "${totalDiffs}" -eq 0 ] ; then
-      passed=$(("${passed}"+1))
-    else
-      failed=$(("${failed}"+1))
-    fi
-    if [ "${totalFiles}" -ne 0 ] ; then
-      passed=$(("${passed}"+1))
-    else
-      failed=$(("${failed}"+1))
-    fi
-    if [ "${totalOnlyIn}" -eq 0 ] ; then
-      passed=$(("${passed}"+1))
-    else
-      failed=$(("${failed}"+1))
-    fi
-    total=$(("${passed}"+"${failed}"))
-    printXmlHeader "${passed}" "${failed}" "${total}" 0 "compare-comparable-builds" > "${unitFile}"
-    tapHeader "${total}"  "$(date)" > "${resultsTapFile}"
-    if [ "${totalDiffs}" -eq 0 ] ; then
-      printXmlTest "compare" "differences-count" "1" "" "../artifact/$(basename "${differencesFile}")" >> "${unitFile}"
-      tapTestStart "ok" "1" "differences-count" >> "${resultsTapFile}"
-      echo "-- no differences --"
-    else
-      printXmlTest "compare" "differences-count" "1" "${differencesFile}" "../artifact/$(basename "${differencesFile}")" >> "${unitFile}"
-      tapTestStart "not ok" "1" "differences-count" >> "${resultsTapFile}"
-      echo "-- differences count: $totalDiffs --"
-    fi
-    set +e
-      tapFromWholeFile "${differencesFile}" "${differencesFile}" >> "${resultsTapFile}"
-      tapTestEnd >> "${resultsTapFile}"
-    set -e
-    if [ "${totalFiles}" -ne 0 ] ; then
-      printXmlTest "compare" "compared-files-count" "2" "" "../artifact/$(basename "${totalFile}")" >> "${unitFile}"
-      tapTestStart "ok" "2" "compared-files-count" >> "${resultsTapFile}"
-      echo "-- files compared: $totalFiles --"
-    else
-      printXmlTest "compare" "compared-files-count" "2" "${totalFile}" "../artifact/$(basename "${totalFile}")" >> "${unitFile}"
-      tapTestStart "not ok" "2" "compared-files-count" >> "${resultsTapFile}"
-      echo "-- no files compared --"
-    fi
-    set +e
-      tapFromWholeFile "${totalFile}" "${totalFile}" >> "${resultsTapFile}"
-      tapTestEnd >> "${resultsTapFile}"
-    set -e
-    if [ "${totalOnlyIn}" -eq 0 ] ; then
-      printXmlTest "compare" "onlyin-count" "3" "" "../artifact/$(basename "${differencesFile}")" >> "${unitFile}"
-      tapTestStart "ok" "3" "onlyin-count" >> "${resultsTapFile}"
-      echo "-- no onlyin files --"
-    else
-      printXmlTest "compare" "onlyin-count" "3" "${differencesFile}" "../artifact/$(basename "${differencesFile}")" >> "${unitFile}"
-      tapTestStart "not ok" "3" "onlyin-count" >> "${resultsTapFile}"
-      echo "-- onlyin files count: $totalOnlyIn --"
-    fi
-    set +e
-      tapFromWholeFile "${differencesFile}" "${differencesFile}" >> "${resultsTapFile}"
-      tapTestEnd >> "${resultsTapFile}"
-    set -e
-    if [ $GLOBAL_RESULT -eq 0 ] ; then
-      printXmlTest "compare" "comparable-builds" "4" "" "../artifact/$(basename "${diffFileParam}")" >> "${unitFile}"
-      tapTestStart "ok" "4" "comparable-builds" >> "${resultsTapFile}"
-      echo "-- COMPARABLE --"
-    else
-      printXmlTest "compare" "comparable-builds" "4" "${diffFileParam}" "../artifact/$(basename "${diffFileParam}")" >> "${unitFile}"
-      tapTestStart "not ok" "4" "comparable-builds" >> "${resultsTapFile}"
-      echo "-- MISMATCH --"
-    fi
-    set +e
-      # shellcheck disable=SC2002
-      cat "${diffFileParam}" | sed "s|${WORKDIR}||g" > diffFileCopy || true
-      tapFromWholeFile "diffFileCopy" "reprotest.diff" >> "${resultsTapFile}"
-      tapTestEnd >> "${resultsTapFile}"
-    set -e
-    printXmlFooter >> "${unitFile}"
-    set -x
-    tar -cJf "${WORKDIR}/${unitFileArchive}"  "${unitFile}"
-  else
-    ls "${diffFileParam}"
-    cat "${diffFileParam}"
-  fi
 }
 
 ###################### run ######################
@@ -591,12 +478,18 @@ pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
 popd
 
 diffFile="${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/reprotest.diff"
-tapsAndJunits "${diffFile}" "${diflog}" "${totlog}"
+if [ "${DO_TAPS:-}" == "true" ] || [ "${DO_JUNIT:-}" == "true" ] ; then
+  source ${COMPARE_WAPPER_SCRIPT_DIR}/compare-builds-postfunctions.sh
+  tapsAndJunits "${diffFile}" "${diflog}" "${totlog}"
+else
+  ls "${diffFileParam}"
+  cat "${diffFileParam}"
+fi
 cp "${diffFile}" "${WORKDIR}"
 pwd
 ls -l "$(pwd)"
 
-if [ "${DO_RESULTS:-}" == "true" ] ; then
+if [ "${DO_TAPS:-}" == "true" ] || [ "${DO_JUNIT:-}" == "true" ] ; then
   # the result will be changed via tap plugin or jtreg plugin
   exit 0
 else
