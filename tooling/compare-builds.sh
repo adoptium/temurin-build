@@ -379,7 +379,7 @@ function tapsAndJunits() {
   local diffFileParam="${1}"
   local differencesFile="${2}"
   local totalFile="${3}"
-  if [ ! "${DO_RESULTS:-}" == "false" ] ; then
+  if [ "${DO_RESULTS:-}" == "true" ] ; then
     if [ -z "${RFAT:-}" ] ; then
       if [ ! -e run-folder-as-tests ] ; then
         git clone "https://github.com/rh-openjdk/run-folder-as-tests.git"
@@ -596,7 +596,7 @@ cp "${diffFile}" "${WORKDIR}"
 pwd
 ls -l "$(pwd)"
 
-if [ ! "${DO_RESULTS:-}" == "false" ] ; then
+if [ "${DO_RESULTS:-}" == "true" ] ; then
   # the result will be changed via tap plugin or jtreg plugin
   exit 0
 else
