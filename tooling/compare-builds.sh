@@ -479,6 +479,7 @@ popd
 
 diffFile="${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/reprotest.diff"
 if [ "${DO_TAPS:-}" == "true" ] || [ "${DO_JUNIT:-}" == "true" ] ; then
+  # shellcheck source=tooling/compare-builds-postfunctions.sh
   source "${COMPARE_WAPPER_SCRIPT_DIR}/compare-builds-postfunctions.sh"
   tapsAndJunits "${diffFile}" "${diflog}" "${totlog}"
 else
