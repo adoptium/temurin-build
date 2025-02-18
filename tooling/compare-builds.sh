@@ -482,8 +482,8 @@ if [ "${DO_TAPS:-}" == "true" ] || [ "${DO_JUNIT:-}" == "true" ] ; then
   source ${COMPARE_WAPPER_SCRIPT_DIR}/compare-builds-postfunctions.sh
   tapsAndJunits "${diffFile}" "${diflog}" "${totlog}"
 else
-  ls "${diffFileParam}"
-  cat "${diffFileParam}"
+  ls "${diffFile}"
+  cat "${diffFile}"
 fi
 cp "${diffFile}" "${WORKDIR}"
 pwd
