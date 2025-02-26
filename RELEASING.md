@@ -263,7 +263,7 @@ To github.com:adoptium/jdk23u
 error: failed to push some refs to 'github.com:adoptium/jdk23u'
 hint: Updates were rejected because the tag already exists in the remote.
 ```
-This may be due to an **incorrect** manual tag having been pushed rather than letting the mirror job push the tag. To resolve:
+This may be due to an **incorrect** manual tag having been pushed via [step 6](https://github.com/adoptium/temurin-build/blob/master/RELEASING.md#dry-run-tests-do-this-at-least-1-week-before-release-in-the-same-calendar-month) rather than letting the mirror job push the tag. To resolve:
 
 1. On the Jenkins worker node, delete the local cache:
 ```
@@ -274,7 +274,7 @@ rm -rf /home/jenkins/workspace/git-mirrors/adoptium/git-skara-jdkXXu/workspace/j
 3. Rerun the appropriate mirror job in https://ci.adoptium.net/view/git-mirrors/job/git-mirrors/job/adoptium/
 
 
-Below is an example of how the releaseTrigger job may get confused if you have pushed an incorrect tag, or multiple tags.
+Below is an example of how the releaseTrigger job may get confused if you have pushed an incorrect tag, or multiple tags via [step 6](https://github.com/adoptium/temurin-build/blob/master/RELEASING.md#dry-run-tests-do-this-at-least-1-week-before-release-in-the-same-calendar-month).
 
 ![Screenshot 2025-02-26 at 17 31 31](https://github.com/user-attachments/assets/96b5b80e-2e03-480f-84bc-de1662df2693)
 
