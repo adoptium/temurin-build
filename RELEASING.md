@@ -276,7 +276,7 @@ rm -rf /home/jenkins/workspace/git-mirrors/adoptium/git-skara-jdkXXu/workspace/j
 
 Below is an example of how the releaseTrigger job may get confused if you push an incorrect tag, or multiple tags.
 
-![alt text](<Screenshot 2025-02-26 at 17.31.31.png>)
+![Screenshot 2025-02-26 at 17 31 31](https://github.com/user-attachments/assets/96b5b80e-2e03-480f-84bc-de1662df2693)
 
 - Suppose our objective here is to use `jdk-23.0.2+00` as our dryrun tag. Then the top 3 tags is what the ideal scenario should look like:
    - The `jdk-23.0.2+00` tag is present and there is a corresponding `_adopt` tag present also.
