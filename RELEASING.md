@@ -263,7 +263,7 @@ To github.com:adoptium/jdk23u
 error: failed to push some refs to 'github.com:adoptium/jdk23u'
 hint: Updates were rejected because the tag already exists in the remote.
 ```
-This may be due to an **incorrect** manual tag being pushed rather than letting the mirror job push the tag. To resolve:
+This may be due to an **incorrect** manual tag having been pushed rather than letting the mirror job push the tag. To resolve:
 
 1. On the Jenkins worker node, delete the local cache:
 ```
@@ -274,13 +274,13 @@ rm -rf /home/jenkins/workspace/git-mirrors/adoptium/git-skara-jdkXXu/workspace/j
 3. Rerun the appropriate mirror job in https://ci.adoptium.net/view/git-mirrors/job/git-mirrors/job/adoptium/
 
 
-Below is an example of how the releaseTrigger job may get confused if you push an incorrect tag, or multiple tags.
+Below is an example of how the releaseTrigger job may get confused if you have pushed an incorrect tag, or multiple tags.
 
 ![Screenshot 2025-02-26 at 17 31 31](https://github.com/user-attachments/assets/96b5b80e-2e03-480f-84bc-de1662df2693)
 
 - Suppose our objective here is to use `jdk-23.0.2+00` as our dryrun tag. Then the top 3 tags is what the ideal scenario should look like:
    - The `jdk-23.0.2+00` tag is present and there is a corresponding `_adopt` tag present also.
-   - The `jdk-23.0.2-dryrun-ga` tag has been pushed manually, using [step 6](https://github.com/adoptium/temurin-build/blob/master/RELEASING.md#dry-run-tests-do-this-at-least-1-week-before-release-in-the-same-calendar-month), and this tag has the same commit sha as `jdk-23.0.2+00`, `9101cc1`. All is well
+   - The `jdk-23.0.2-dryrun-ga` tag has been pushed manually, using [step 6](https://github.com/adoptium/temurin-build/blob/master/RELEASING.md#dry-run-tests-do-this-at-least-1-week-before-release-in-the-same-calendar-month), and this tag has the same commit sha as `jdk-23.0.2+00`, `9101cc1`. All is well, the releaseTrigger job should have no problem.
 - **However**, the presence of the 4th tag, `jdk-23.0.1-dryrun-ga` will confuse the releaseTrigger job because it shares the same commit sha as `jdk-23.0.2+00`. `jdk-23.0.1-dryrun-ga` is an example of a tag that was pushed **incorrectly** so it needs to be deleted to avoid confusion in the releaseTrigger job.
 
 <details>
