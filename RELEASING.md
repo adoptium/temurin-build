@@ -269,6 +269,7 @@ hint: Updates were rejected because the tag already exists in the remote.
 This may be due to an **incorrect** manual tag having been pushed via [step 6](https://github.com/adoptium/temurin-build/blob/master/RELEASING.md#dry-run-tests-do-this-at-least-1-week-before-release-in-the-same-calendar-month) rather than letting the mirror job push the tag. To resolve:
 
 1. On the Jenkins worker node, delete the local cache:
+
 ```
 rm -rf /home/jenkins/workspace/git-mirrors/adoptium/git-skara-jdkXXu/workspace/jdkXXu
 ```
