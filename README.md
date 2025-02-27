@@ -221,6 +221,9 @@ if your ssh key has a passphrase, add it to ssh-agent (e.g.: ssh-add ~/.ssh/id_r
 --sign
 sign the OpenJDK binary that you build.
 
+--skip-gtest
+Skips automatic download and configuration of gtest support.
+
 --sudo
 run the docker container as root.
 
