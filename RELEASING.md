@@ -270,7 +270,7 @@ This may be due to an **incorrect** manual tag having been pushed via [step 6](h
 
 1. On the Jenkins worker node, delete the local cache:
 
-```
+```shell
 
 rm -rf /home/jenkins/workspace/git-mirrors/adoptium/git-skara-jdkXXu/workspace/jdkXXu
 
