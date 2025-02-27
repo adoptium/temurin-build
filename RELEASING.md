@@ -273,6 +273,7 @@ This may be due to an **incorrect** manual tag having been pushed via [step 6](h
 ```
 rm -rf /home/jenkins/workspace/git-mirrors/adoptium/git-skara-jdkXXu/workspace/jdkXXu
 ```
+
 2. Delete the **incorrect** manually pushed tag in https://github.com/adoptium/temurinXX-binaries/tags
 
 3. Rerun the appropriate mirror job in https://ci.adoptium.net/view/git-mirrors/job/git-mirrors/job/adoptium/
