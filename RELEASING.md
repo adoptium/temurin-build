@@ -256,7 +256,7 @@ Deleting the tag will not fix the problem as it will have been cached on the jen
 
 If the git-skara-jdkXXu job in https://ci.adoptium.net/view/git-mirrors/job/git-mirrors/job/adoptium/ gets confused with the dryrun tag, for example
 
-```
+```shell
 git push origin master --tags
 To github.com:adoptium/jdk23u
  ! [rejected]                jdk-23.0.2-dryrun-ga -> jdk-23.0.2-dryrun-ga (already exists)
