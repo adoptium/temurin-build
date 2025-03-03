@@ -452,9 +452,10 @@ Build_JDK() {
 
   # Trigger Build
   cd "$WORK_DIR"
-  echo "cd temurin-build && ./makejdk-any-platform.sh $buildArgs 2>&1 | tee build.$$.log" | sh
+  echo "cd temurin-build && ./makejdk-any-platform.sh $buildArgs > build.log 2>&1" | sh
   # Copy The Built JDK To The Working Directory
   cp "$WORK_DIR"/temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz "$WORK_DIR"/reproJDK.tar.gz
+  cp "$WORK_DIR"/temurin-build/build.log "$WORK_DIR"/build.log
 }
 
 Compare_JDK() {
@@ -498,6 +499,8 @@ Compare_JDK() {
     echo "Copying Output To $REPORT_DIR"
     cp "$WORK_DIR"/compare/reprotest.diff "$REPORT_DIR"
     cp "$WORK_DIR"/reproJDK.tar.gz "$REPORT_DIR"
+    cp "$WORK_DIR"/build.log "$REPORT_DIR"
+    cp "$WORK_DIR"/src_sbom.json "$REPORT_DIR"
   fi
   Clean_Up_Everything
   exit $rc 
