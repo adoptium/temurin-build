@@ -366,7 +366,7 @@ updateOpenj9Sources() {
   if [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" || return
     # NOTE: fetched openssl will NOT be used in the RISC-V cross-compile situation
-    bash get_source.sh -openssl-branch=openssl-3.0.15
+    bash get_source.sh -openssl-branch=openssl-3.0.16
     cd "${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 }
