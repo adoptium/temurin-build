@@ -192,13 +192,14 @@ else
 fi
 
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
-echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS 2>&1 | tee build.$$.log" | sh
+echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh
 
 echo Comparing ...
 mkdir tarJDK
 tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C tarJDK
 cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
 cp "$SBOM" SBOM.json
+cp temurin-build/build.log build.log
 
 cp "$ScriptPath"/repro_*.sh "$PWD"
 chmod +x "$PWD"/repro_*.sh

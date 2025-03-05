@@ -24,6 +24,7 @@
 	docker cp reproducibleCompare:/home/jenkins/reprotest.diff ./; \
 	docker cp reproducibleCompare:/home/jenkins/reproJDK.tar.gz ./; \
 	docker cp reproducibleCompare:/home/jenkins/SBOM.json ./; \
+	docker cp reproducibleCompare:/home/jenkins/build.log ./; \
 	docker container rm -f reproducibleCompare
 	</command>
 		<levels>
