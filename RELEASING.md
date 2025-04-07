@@ -399,7 +399,7 @@ Once the PRs to change those files have been merged, the [adoptium-packages-linu
 
 5. **[Docker Hub]** The information on updating the Adoptium official dockerhub repository is at <https://github.com/adoptium/containers#maintenance-of-dockerfiles> at the moment you cannot do this until all Linux architectures and windows64 are published for the appropriate version
 
-6. Once everything has been published to GitHub, use the [EclipseMirror](https://ci.eclipse.org/temurin-compliance/job/EclipseMirror/) job to mirror the artifacts to our Eclipse server for backup purposes. Note that this will need to be done by a team member in the temurin-compliance project (Run once for each of the releases)
+6. Once everything has been published to GitHub, use (a) the [EclipseMirror](https://ci.eclipse.org/temurin-compliance/job/EclipseMirror/) job to mirror the artifacts to our Eclipse server for backup purposes. Note that this will need to be done by a team member in the temurin-compliance project (Run once for each of the releases) and also run the [download_and_sbom_validator](https://ci.adoptium.net/job/build-scripts/job/release/job/download_and_sbom_validation) job to check the downloads and corresponding SBOMs are ok.
 
 7. Publicise the Temurin release:
 
