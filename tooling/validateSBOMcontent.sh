@@ -22,11 +22,11 @@ SBOMFILE="$1"
 MAJORVERSION="$2"
 #FULLVERSION="$3"
 
-GLIBC=$(jq '.metadata.tools.components[] | select(.name|test("GLIBC")) | .version'           "$1" | tr -d \")
-GCC=$(jq '.metadata.tools.components[] | select(.name|test("GCC")) | .version'               "$1" | tr -d \")
-BOOTJDK=$(jq '.metadata.tools.components[] | select(.name|test("BOOTJDK")) | .version'       "$1"  | tr -d \")
-ALSA=$(jq '.metadata.tools.components[] | select(.name|test("ALSA")) | .version'             "$1" | tr -d \" | sed -e 's/^.*alsa-lib-//' -e 's/\.tar.bz2//')
-FREETYPE=$(jq '.metadata.tools.components[] | select(.name|test("FreeType")) | .version'     "$1"  | tr -d \")
+GLIBC=$(   jq '.metadata.tools.components[] | select(.name|test("GLIBC"))    | .version' "$1" | tr -d \")
+GCC=$(     jq '.metadata.tools.components[] | select(.name|test("GCC"))      | .version' "$1" | tr -d \")
+BOOTJDK=$( jq '.metadata.tools.components[] | select(.name|test("BOOTJDK"))  | .version' "$1" | tr -d \")
+ALSA=$(    jq '.metadata.tools.components[] | select(.name|test("ALSA"))     | .version' "$1" | tr -d \" | sed -e 's/^.*alsa-lib-//' -e 's/\.tar.bz2//')
+FREETYPE=$(jq '.metadata.tools.components[] | select(.name|test("FreeType")) | .version' "$1" | tr -d \")
 COMPILER=$(jq '.components[0].properties[] | select(.name|test("Build Tools Summary")).value' "$SBOMFILE" | sed -e 's/^.*Toolchain: //g' -e 's/\ *\*.*//g')
 
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
@@ -113,7 +113,7 @@ if echo "$SBOMFILE" | grep 'linux_'; then
 fi
 echo "BOOTJDK is ${BOOTJDK}"
 [ "${COMPILER}"   != "$EXPECTED_COMPILER" ] && echo "ERROR: Compiler version not ${EXPECTED_COMPILER} (SBOM has ${COMPILER})"   && RC=1
-[ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "ERROR: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA})"   && RC=1
+[ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "NOTE: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA}) - ignoring because ALSA version is determined by devkit now"  # && RC=1
 # Freetype versions are inconsistent at present - see build#3484
 #[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
