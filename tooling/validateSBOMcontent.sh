@@ -113,10 +113,7 @@ if echo "$SBOMFILE" | grep 'linux_'; then
 fi
 echo "BOOTJDK is ${BOOTJDK}"
 [ "${COMPILER}"   != "$EXPECTED_COMPILER" ] && echo "ERROR: Compiler version not ${EXPECTED_COMPILER} (SBOM has ${COMPILER})"   && RC=1
-# JDK21+ uses ALSA from devkit which has no SBOM so skip the check
-if [ "$MAJORVERSION" -lt 20 ];  then
-  [ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "ERROR: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA}) - ignoring because ALSA version is determined by devkit now"  # && RC=1
-fi
+[ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "NOTE: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA}) - ignoring because ALSA version is determined by devkit now"  # && RC=1
 # Freetype versions are inconsistent at present - see build#3484
 #[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
