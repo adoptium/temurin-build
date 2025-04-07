@@ -33,7 +33,7 @@ EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
 EXPECTED_GLIBC=""
 EXPECTED_GCC=""
 # [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
-EXPECTED_ALSA=N.A
+EXPECTED_ALSA="N.A"
 #EXPECTED_FREETYPE=N.A # https://github.com/adoptium/temurin-build/issues/3493
 #EXPECTED_FREETYPE=https://github.com/freetype/freetype/commit/86bc8a95056c97a810986434a3f268cbe67f2902
 if echo "$SBOMFILE" | grep _solaris_; then
@@ -113,7 +113,10 @@ if echo "$SBOMFILE" | grep 'linux_'; then
 fi
 echo "BOOTJDK is ${BOOTJDK}"
 [ "${COMPILER}"   != "$EXPECTED_COMPILER" ] && echo "ERROR: Compiler version not ${EXPECTED_COMPILER} (SBOM has ${COMPILER})"   && RC=1
-[ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "NOTE: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA}) - ignoring because ALSA version is determined by devkit now"  # && RC=1
+# JDK21+ uses ALSA from devkit which has no SBOM so skip the check
+if [ "$MAJORVERSION" -lt 20 ];  then
+  [ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "ERROR: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA}) - ignoring because ALSA version is determined by devkit now"  # && RC=1
+fi
 # Freetype versions are inconsistent at present - see build#3484
 #[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
