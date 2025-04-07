@@ -25,6 +25,8 @@ the "boot JDK" which should generally be one major version prior to the one
 you are building (although one of the same major version will also work).
 Note that the build variant defaults to HotSpot if omitted which builds from the same repositories as Temurin.
 
+If you're using wsl, use the `--wsl` flag (ie: `./makejdk-any-platform.sh -J /usr/lib/jvm/java-21-openjdk-amd64 --wsl --create-sbom jdk21`).
+
 ```bash
 ./makejdk-any-platform.sh (-J /usr/lib/jvm/jdk-xx) (--build-variant <hotspot|openj9|corretto|SapMachine|dragonwell|bisheng>) <jdk8u|jdk11u|jdk16u|jdk>
 ```
@@ -124,7 +126,7 @@ removes the existing docker container and persistent volume before starting
 a new docker based build.
 
 -C, --configure-args <args>
-specify any custom user configuration arguments, using 
+specify any custom user configuration arguments, using
 temporary_speech_mark_placeholder in the place of any speech marks.
 
 --clean-git-repo
@@ -196,7 +198,7 @@ Unix: /usr/local/dependency_cache
 creates an exploded image (useful for codesigning jmods). Use --assemble-exploded-image once you have signed the jmods to complete the packaging steps.
 
 --custom-cacerts <true|false>
-If true (default), a custom cacerts file will be generated based on the Mozilla list of CA certificates (see folder security/). If false, the file shipped by OpenJDK will be used. 
+If true (default), a custom cacerts file will be generated based on the Mozilla list of CA certificates (see folder security/). If false, the file shipped by OpenJDK will be used.
 
 -n, --no-colour
 disable colour output.
@@ -400,7 +402,7 @@ Example values: [`0`, `1`]
 Example values: [`22`, `23`, `24`]
 
 - `security:`
-Example values: [`0`, `1`]  
+Example values: [`0`, `1`]
 
 - `tags:`
 Example values: [`m1`, `m2`]
@@ -423,7 +425,7 @@ Example Values: [`0`, `9`, `252` `272`]
 Example values: [`null`]
 
 - `adopt_build_number:`
-Example values: [`0`]  
+Example values: [`0`]
 If the `ADOPT_BUILD_NUMBER` parameter is used to build te JDK that value will appear here, otherwise a default value of 0 appears.
 
 - `major:`
@@ -433,11 +435,11 @@ Example values: [`8`, `11`, `15`, `16`]
 Example values: [`1.8.0_272-202010111709-b09`, `11.0.9+10-202010122348`, `14.0.2+11-202007272039`, `16+19-202010120348`]
 
 - `semver:`
-Example values: [`8.0.202+8.0.202008210941`, `11.0.9+10.0.202010122348`, `14.0.2+11.0.202007272039`, `16.0.0+19.0.202010120339`]  
+Example values: [`8.0.202+8.0.202008210941`, `11.0.9+10.0.202010122348`, `14.0.2+11.0.202007272039`, `16.0.0+19.0.202010120339`]
 Formed from the major, minor, security, and build number by the [formSemver()](https://github.com/adoptium/temurin-build/blob/805e76acbb8a994abc1fb4b7d582486d48117ee8/pipelines/library/src/common/VersionInfo.groovy#L123) function.
 
 - `build:`
-Example values: [`6`, `9`, `18`]  
+Example values: [`6`, `9`, `18`]
 The OpenJDK build number for the JDK being built.
 
 - `opt:`
@@ -446,7 +448,7 @@ Example values: [`202008210941`, `202010120348`, `202007272039`]
 ----
 
 - `scmRef:`
-Example values: [`dragonwell-8.4.4_jdk8u262-b10`, `jdk-16+19_adopt-61198-g59e3baa94ac`, `jdk-11.0.9+10_adopt-197-g11f44f68c5`, `23f997ca1`]  
+Example values: [`dragonwell-8.4.4_jdk8u262-b10`, `jdk-16+19_adopt-61198-g59e3baa94ac`, `jdk-11.0.9+10_adopt-197-g11f44f68c5`, `23f997ca1`]
 
 A reference the the base JDK repository being build, usually including a GitHub commit reference, i.e. `jdk-16+19_adopt-61198-g59e3baa94ac` links to `https://github.com/adoptium/openjdk-jdk/commit/59e3baa94ac` via the commit SHA **59e3baa94ac**.
 
@@ -455,7 +457,7 @@ Values that only contain a commit reference such as `23f997ca1` are OpenJ9 commi
 ----
 
 - `buildRef:`
-Example values: [`openjdk-build/fe0f2dba`, `openjdk-build/f412a523`]  
+Example values: [`openjdk-build/fe0f2dba`, `openjdk-build/f412a523`]
 A reference to the build tools repository used to create the JDK, uses the format **repository-name**/**commit-SHA**.
 
 ----
@@ -471,7 +473,7 @@ Example values: [`jdk`, `jre`, `debugimage`, `testimage`]
 ----
 
 - `sha256:`
-Example values: [`20278aa9459e7636f6237e85fcd68deec1f42fa90c6c541a2dfa127f4156d3e2`, `2f9700bd75a807614d6d525fbd8d016c609a9ea71bf1ffd5d4839f3c1c8e4b8e`]  
+Example values: [`20278aa9459e7636f6237e85fcd68deec1f42fa90c6c541a2dfa127f4156d3e2`, `2f9700bd75a807614d6d525fbd8d016c609a9ea71bf1ffd5d4839f3c1c8e4b8e`]
 A SHA to verify the contents of the JDK.
 
 ----

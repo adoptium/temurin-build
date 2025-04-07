@@ -21,19 +21,34 @@ BLD_TYPE2="$3"
 JDK_DIR2="$4"
 OS="$5"
 
-mkdir "${JDK_DIR}_BK"
-cp -R "${JDK_DIR1}"/* "${JDK_DIR}"_BK
-BK_JDK_DIR=$(realpath "${JDK_DIR}"_BK/)
-
-JDK_DIR_Arr=("${JDK_DIR1}" "${JDK_DIR2}")
-for  JDK_DIR in "${JDK_DIR_Arr[@]}"
-do
+checkJdkDir() {
+  JDK_DIR="${1}"
   if [[ ! -d "${JDK_DIR}" ]] || [[ ! -d "${JDK_DIR}/bin"  ]]; then
     echo "$JDK_DIR does not exist or does not point at a JDK"
     echo "repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 OS"
     exit 1
   fi
+}
 
+checkJdkDir "${JDK_DIR1}"
+checkJdkDir "${JDK_DIR2}"
+
+# if PREPROCESS flag is set to 'no', then preprocessing is not run
+# this is usefull, if yo want to compare two identical copies of JDK
+#  or if you want to run repro_compare.sh only as result generator after you
+#  run comparable_patch.sh. This helps to keep diff in unified output
+if [ -z "${PREPROCESS:-}" ] ; then
+  PREPROCESS="yes"
+fi
+
+mkdir "${JDK_DIR}_BK"
+cp -R "${JDK_DIR1}"/* "${JDK_DIR}"_BK
+BK_JDK_DIR=$(realpath "${JDK_DIR}"_BK/)
+
+JDK_DIR_Arr=("${JDK_DIR1}" "${JDK_DIR2}")
+if [ "$PREPROCESS" != "no" ] ; then
+for  JDK_DIR in "${JDK_DIR_Arr[@]}"
+do
   echo "$(date +%T) : Pre-processing ${JDK_DIR}"
   rc=0
   source "$(dirname "$0")"/repro_process.sh "${JDK_DIR}" "${OS}" || rc=$?
@@ -54,6 +69,9 @@ do
     processModuleInfo "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"
   fi
 done
+else
+  echo "Preprocessing skipped on user request. Generating just diff."
+fi
 
 files1=$(find "${JDK_DIR1}" -type f | wc -l)
 echo "Number of files: ${files1}"

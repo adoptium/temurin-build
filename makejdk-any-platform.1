@@ -201,7 +201,7 @@ Use certs defined in JEP319 in Java 8/9. Deprecated, has no effect.
 .BR \-\-custom-cacerts " " \fI<true|false>\fR
 If true (default), a custom cacerts file will be generated based on Mozilla's
 list of CA certificates (see folder security/). If false, the file shipped by
-OpenJDK will be used. 
+OpenJDK will be used.
 .TP
 .BR \-\-vendor " " \fI<vendor>\fR
 specify the vendor name
@@ -222,6 +222,9 @@ to tell the build that you are effectively building a jdk8u binary.
 .TP
 .BR \-V ", " \-\-jvm-variant " " \fI<jvm_variant>\fR
 specify the JVM variant (server or client), defaults to server.
+.TP
+.BR \-\-wsl
+configure the build to run natively on WSL (Windows Subsystem for Linux)
 
 .SH EXAMPLE USAGE
 
