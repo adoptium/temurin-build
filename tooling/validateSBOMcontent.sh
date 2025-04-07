@@ -73,7 +73,7 @@ elif echo "$SBOMFILE" | grep _linux_; then
   fi
 #elif echo $SBOMFILE | grep _mac_; then
 #  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 10.3)"
-elif echo "$SBOMFILE" | grep _x64_windows_; then
+elif echo "$SBOMFILE" | grep 64_windows_; then
   EXPECTED_FREETYPE=2.8.1
   if [ "${MAJORVERSION}" = "8" ]; then
     EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2017 - CURRENTLY NOT WORKING)"
