@@ -75,23 +75,15 @@ elif echo "$SBOMFILE" | grep _linux_; then
 #  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 10.3)"
 elif echo "$SBOMFILE" | grep 64_windows_; then
   EXPECTED_FREETYPE=2.8.1
-  if [ "${MAJORVERSION}" = "8" ]; then
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2017 - CURRENTLY NOT WORKING)"
-  elif [ "${MAJORVERSION}" -ge 20 ]; then
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
-  else # JDK11 and 17
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2019)"
+  EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
+  if [ "${MAJORVERSION}" = "11" -o "${MAJORVERSION}" = "17" ]; then
     EXPECTED_FREETYPE=2.13.2 # Bundled version
   fi
 elif echo "$SBOMFILE" | grep _x86-32_windows_; then
   EXPECTED_FREETYPE=2.13.2 # Bundled version
+  EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
   if [ "${MAJORVERSION}" = "8"  ]; then
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2013)"
     EXPECTED_FREETYPE=2.5.3
-  elif [ "${MAJORVERSION}" = "11" ]; then
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2017)"
-  else # JDK 11 and 17
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2019)"
   fi
 elif echo "$SBOMFILE" | grep _mac_; then
   # NOTE: mac/x64 native builds >=11 were using "clang (clang/LLVM from Xcode 10.3)"
