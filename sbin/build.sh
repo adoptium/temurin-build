@@ -1287,12 +1287,14 @@ addALSAVersion() {
 
      # Get ALSA include dir from the built build spec.gmk for ALSA_CFLAGS.
      local ALSA_INCLUDE="$(grep "^ALSA_CFLAGS[ ]*:=" ${specFile} | sed "s/^ALSA_CFLAGS[ ]*:=[ ]*//" | sed "s/^-I//")"
-     if [ -z "${ALSA_INCLUDE}" ]; then
-       echo "No ALSA_CFLAGS, ALSA not used"
+     # Get ALSA lib from the built build spec.gmk for ALSA_LIBS.
+     local ALSA_LIBS="$(grep "^ALSA_LIBS[ ]*:=" ${specFile} | sed "s/^ALSA_LIBS[ ]*:=[ ]*//")"
+     if [ -z "${ALSA_INCLUDE}" ] && [ -z "${ALSA_LIBS}" ]; then
+       echo "No ALSA_CFLAGS or ALSA_LIBS, ALSA not used"
      else
        local ALSA_VERSION
-       if [ "${ALSA_INCLUDE}" == "ignoreme" ]; then
-         # Value will be "ignoreme" if default/sysroot/devkit include path ALSA is being used, ask compiler for version
+       if [ "${ALSA_INCLUDE}" == "ignoreme" ] || [ -z "${ALSA_INCLUDE}" ]; then
+         # Value will be "ignoreme" or empty if system/sysroot/devkit ALSA is being used, ask compiler for version
          ALSA_VERSION=$(getHeaderPropertyUsingCompiler "alsa/version.h" "#define[ ]+SND_LIB_VERSION_STR")
        else
          local ALSA_VERSION_H="${ALSA_INCLUDE}/version.h"
