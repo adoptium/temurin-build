@@ -22,18 +22,18 @@ SBOMFILE="$1"
 MAJORVERSION="$2"
 #FULLVERSION="$3"
 
-GLIBC=$(jq '.metadata.tools.components[] | select(.name|test("GLIBC")) | .version'           "$1" | tr -d \")
-GCC=$(jq '.metadata.tools.components[] | select(.name|test("GCC")) | .version'               "$1" | tr -d \")
-BOOTJDK=$(jq '.metadata.tools.components[] | select(.name|test("BOOTJDK")) | .version'       "$1"  | tr -d \")
-ALSA=$(jq '.metadata.tools.components[] | select(.name|test("ALSA")) | .version'             "$1" | tr -d \" | sed -e 's/^.*alsa-lib-//' -e 's/\.tar.bz2//')
-FREETYPE=$(jq '.metadata.tools.components[] | select(.name|test("FreeType")) | .version'     "$1"  | tr -d \")
+GLIBC=$(   jq '.metadata.tools.components[] | select(.name|test("GLIBC"))    | .version' "$1" | tr -d \")
+GCC=$(     jq '.metadata.tools.components[] | select(.name|test("GCC"))      | .version' "$1" | tr -d \")
+BOOTJDK=$( jq '.metadata.tools.components[] | select(.name|test("BOOTJDK"))  | .version' "$1" | tr -d \")
+ALSA=$(    jq '.metadata.tools.components[] | select(.name|test("ALSA"))     | .version' "$1" | tr -d \" | sed -e 's/^.*alsa-lib-//' -e 's/\.tar.bz2//')
+FREETYPE=$(jq '.metadata.tools.components[] | select(.name|test("FreeType")) | .version' "$1" | tr -d \")
 COMPILER=$(jq '.components[0].properties[] | select(.name|test("Build Tools Summary")).value' "$SBOMFILE" | sed -e 's/^.*Toolchain: //g' -e 's/\ *\*.*//g')
 
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
 EXPECTED_GLIBC=""
 EXPECTED_GCC=""
 # [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
-EXPECTED_ALSA=N.A
+EXPECTED_ALSA="N.A"
 #EXPECTED_FREETYPE=N.A # https://github.com/adoptium/temurin-build/issues/3493
 #EXPECTED_FREETYPE=https://github.com/freetype/freetype/commit/86bc8a95056c97a810986434a3f268cbe67f2902
 if echo "$SBOMFILE" | grep _solaris_; then
@@ -70,28 +70,21 @@ elif echo "$SBOMFILE" | grep _linux_; then
   if echo "$SBOMFILE" | grep _riscv64_ > /dev/null; then
     EXPECTED_GCC=10.5.0 # No devkit yet so default in Ubuntu 20.04
     EXPECTED_GLIBC=2.31
+    [ "${MAJORVERSION}" -lt 20 ] && EXPECTED_FREETYPE=2.10.1
   fi
 #elif echo $SBOMFILE | grep _mac_; then
 #  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 10.3)"
-elif echo "$SBOMFILE" | grep _x64_windows_; then
+elif echo "$SBOMFILE" | grep 64_windows_; then
   EXPECTED_FREETYPE=2.8.1
-  if [ "${MAJORVERSION}" = "8" ]; then
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2017 - CURRENTLY NOT WORKING)"
-  elif [ "${MAJORVERSION}" -ge 20 ]; then
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
-  else # JDK11 and 17
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2019)"
+  EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
+  if [ "${MAJORVERSION}" = "11" ] || [ "${MAJORVERSION}" = "17" ]; then
     EXPECTED_FREETYPE=2.13.2 # Bundled version
   fi
 elif echo "$SBOMFILE" | grep _x86-32_windows_; then
   EXPECTED_FREETYPE=2.13.2 # Bundled version
+  EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
   if [ "${MAJORVERSION}" = "8"  ]; then
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2013)"
     EXPECTED_FREETYPE=2.5.3
-  elif [ "${MAJORVERSION}" = "11" ]; then
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2017)"
-  else # JDK 11 and 17
-    EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2019)"
   fi
 elif echo "$SBOMFILE" | grep _mac_; then
   # NOTE: mac/x64 native builds >=11 were using "clang (clang/LLVM from Xcode 10.3)"
@@ -113,7 +106,7 @@ if echo "$SBOMFILE" | grep 'linux_'; then
 fi
 echo "BOOTJDK is ${BOOTJDK}"
 [ "${COMPILER}"   != "$EXPECTED_COMPILER" ] && echo "ERROR: Compiler version not ${EXPECTED_COMPILER} (SBOM has ${COMPILER})"   && RC=1
-[ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "ERROR: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA})"   && RC=1
+[ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "NOTE: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA}) - ignoring because ALSA version is determined by devkit now"  # && RC=1
 # Freetype versions are inconsistent at present - see build#3484
 #[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 

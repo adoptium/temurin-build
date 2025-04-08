@@ -171,6 +171,8 @@ download_release_files() {
   # Parse the releases list for the one we want and download everything in it
   # shellcheck disable=SC2013
   echo "$(date +%T) : Starting downloads ..."
+  # This line with the extra addition to filter should be an option for quick testing
+  # grep "${filter}.*aarch64_linux" "${jdk_releases}" | awk -F'"' '/browser_download_url/{print$4}' | while read -r url; do
   grep "${filter}" "${jdk_releases}" | awk -F'"' '/browser_download_url/{print$4}' | while read -r url; do
     # shellcheck disable=SC2046
     print_verbose "IVT : Downloading $(basename "$url")"
@@ -472,7 +474,7 @@ verify_sboms() {
 
   # shellcheck disable=SC2010
   for sbom in $(ls -1 OpenJDK*-sbom*json | grep -v metadata); do
-    print_verbose "IVT : Validating ${sbom} ..."
+    print_verbose "IVT : Validating ${sbom} with ${cyclonedx_tool} ..."
 
     if [ -n "${cyclonedx_tool}" ]; then
       if ! ./"${cyclonedx_tool}" validate --input-file "${sbom}"; then
