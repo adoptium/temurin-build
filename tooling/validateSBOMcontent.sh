@@ -76,7 +76,7 @@ elif echo "$SBOMFILE" | grep _linux_; then
 elif echo "$SBOMFILE" | grep 64_windows_; then
   EXPECTED_FREETYPE=2.8.1
   EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
-  if [ "${MAJORVERSION}" = "11" -o "${MAJORVERSION}" = "17" ]; then
+  if [ "${MAJORVERSION}" = "11" ] || [ "${MAJORVERSION}" = "17" ]; then
     EXPECTED_FREETYPE=2.13.2 # Bundled version
   fi
 elif echo "$SBOMFILE" | grep _x86-32_windows_; then
