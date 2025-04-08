@@ -70,6 +70,7 @@ elif echo "$SBOMFILE" | grep _linux_; then
   if echo "$SBOMFILE" | grep _riscv64_ > /dev/null; then
     EXPECTED_GCC=10.5.0 # No devkit yet so default in Ubuntu 20.04
     EXPECTED_GLIBC=2.31
+    [ "${MAJORVERSION}" -lt 20 ] && EXPECTED_FREETYPE=2.10.1
   fi
 #elif echo $SBOMFILE | grep _mac_; then
 #  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 10.3)"
