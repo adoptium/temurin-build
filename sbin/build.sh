@@ -1571,6 +1571,11 @@ getStaticLibsArchivePath() {
   echo "${jdkArchivePath}-static-libs"
 }
 
+getJmodsArchivePath() {
+  local jdkArchivePath=$(getJdkArchivePath)
+  echo "${jdkArchivePath}-jmods"
+}
+
 getSbomArchivePath(){
   local jdkArchivePath=$(getJdkArchivePath)
   echo "${jdkArchivePath}-sbom"
@@ -1584,6 +1589,7 @@ cleanAndMoveArchiveFiles() {
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
   local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
+  local jmodsImageTargetPath=$(getJmodsArchivePath)
 
   echo "Moving archive content to target archive paths and cleaning unnecessary files..."
 
@@ -1623,6 +1629,14 @@ cleanAndMoveArchiveFiles() {
     echo "moving ${testImagePath} to ${testImageTargetPath}"
     rm -rf "${testImageTargetPath}" || true
     mv "${testImagePath}" "${testImageTargetPath}"
+  fi
+
+  # JMODs image - check if the directory exists. Only for JDK 24+
+  local jmodsImagePath="${BUILD_CONFIG[JMODS_IMAGE_PATH]}"
+  if [ -n "${jmodsImagePath}" ] && [ -d "${jmodsImagePath}" ]; then
+    echo "moving ${jmodsImagePath} to ${jmodsImageTargetPath}"
+    rm -rf "${jmodsImageTargetPath}" || true
+    mv "${jmodsImagePath}" "${jmodsImageTargetPath}"
   fi
 
   # Static libs image - check if the directory exists
@@ -2134,6 +2148,7 @@ createOpenJDKTarArchive() {
   local testImageTargetPath=$(getTestImageArchivePath)
   local debugImageTargetPath=$(getDebugImageArchivePath)
   local staticLibsImageTargetPath=$(getStaticLibsArchivePath)
+  local jmodsImageTargetPath=$(getJmodsArchivePath)
 
   echo "OpenJDK JDK path will be ${jdkTargetPath}. JRE path will be ${jreTargetPath}"
 
@@ -2177,6 +2192,11 @@ createOpenJDKTarArchive() {
   # for macOS system, code sign directory before creating tar.gz file
   if [ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ] && [ -n "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" ]; then
     codesign --options runtime --timestamp --sign "${BUILD_CONFIG[MACOSX_CODESIGN_IDENTITY]}" "${jdkTargetPath}"
+  fi
+  if [ -d "${jmodsImageTargetPath}" ]; then
+    local jmodsImageName=$(getTargetFileNameForComponent "jmods")
+    echo "OpenJDK jmods image archive file name will be ${jmodsImageName}."
+    createArchive "${jmodsImageTargetPath}" "${jmodsImageName}"
   fi
   createArchive "${jdkTargetPath}" "${BUILD_CONFIG[TARGET_FILE_NAME]}"
 }
