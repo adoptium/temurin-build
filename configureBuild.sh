@@ -131,6 +131,15 @@ setVariablesForConfigure() {
   local openjdk_test_image_path="test"
   local openjdk_debug_image_path="debug-image"
 
+  # JDK 24+ uses --enable-linkable-runtime which doesn't include JMODs
+  # as part of the JDK itself. Package JMODs separately to allow for
+  # cross-link scenarios. Do this only for those JDKs
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 24 ]; then
+    local jmods_image_path="jmods"
+  else
+    local jmods_image_path="" # not needed in JDK builds < 24
+  fi
+
   # JDK 22+ uses static-libs-graal-image target, using static-libs-graal
   # folder.
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 22 ]; then
@@ -163,6 +172,7 @@ setVariablesForConfigure() {
   BUILD_CONFIG[TEST_IMAGE_PATH]=$openjdk_test_image_path
   BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
   BUILD_CONFIG[STATIC_LIBS_IMAGE_PATH]=$static_libs_path
+  BUILD_CONFIG[JMODS_IMAGE_PATH]=$jmods_image_path
 }
 
 # Set the repository to build from, defaults to adoptium if not set by the user
