@@ -242,11 +242,7 @@ public class VendorPropertiesTest {
 
         @Override
         public void javaVendorUrlBug(final String value) {
-            if (JDK_VERSION.isNewerOrEqual(11)) {
-                assertEquals(value, "https://github.com/ibmruntimes/Semeru-Runtimes/issues");
-            } else {
-                assertEquals(value, null);
-            }
+            assertEquals(value, "https://github.com/ibmruntimes/Semeru-Runtimes/issues");
         }
 
         @Override
