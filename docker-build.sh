@@ -115,6 +115,16 @@ buildOpenJDKViaDocker()
     local openjdk_debug_image_path="debug-image"
     local jdk_directory=""
     local jre_directory=""
+
+    # JDK 24+ uses --enable-linkable-runtime which doesn't include JMODs
+    # in the JDK itself. Package JMODs separately to allow for certain
+    # cross-link scenarios.
+    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 24 ]; then
+      local jmods_dir="jmods"
+    else
+      local jmods_dir="" # not needed in JDK builds < 24
+    fi
+
     # JDK 22+ uses static-libs-graal-image target, using static-libs-graal
     # folder.
     if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 22 ]; then
@@ -152,6 +162,7 @@ buildOpenJDKViaDocker()
     BUILD_CONFIG[TEST_IMAGE_PATH]=$openjdk_test_image_path
     BUILD_CONFIG[DEBUG_IMAGE_PATH]=$openjdk_debug_image_path
     BUILD_CONFIG[STATIC_LIBS_IMAGE_PATH]=$static_libs_dir
+    BUILD_CONFIG[JMODS_IMAGE_PATH]=$jmods_dir
 
   if [ -z "$(command -v "${BUILD_CONFIG[CONTAINER_COMMAND]}")" ]; then
     # shellcheck disable=SC2154
