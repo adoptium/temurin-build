@@ -22,6 +22,7 @@ which performs the build and then initiates the test jobs.
 ### New top level pipeline
 
 For the new world on Solaris, we use:
+
 - [jdk8u-solaris-x64-temurin-simplepipe](https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-x64-temurin-simplepipe/) which calls:
   - [jdk8u-solaris-x64-temurin-simple](https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-x64-temurin-simple) to perform the build
   - [jdk8u-solaris-x64-temurin-simpletest](https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-x64-temurin-simpletest/) to run all of the tests (all suites in one job)
@@ -33,7 +34,7 @@ version control and has stages similer to the main platform specific
 pipelines:
 
 - build (Invokes the `-simple` build job)
-- sign_sbom_jsf 
+- sign_sbom_jsf
 - sign_temurin_gpg (Same job used in the traditional pipelines)
 - test (Invokes the `-simpletest` job
 - release (Same job used in the traditional pipelines)
@@ -115,18 +116,19 @@ against the console output for the job e.g.
 `curl -s https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-x64-temurin-simpletest/91/consoleText | awk '/FAILED test targets:/,/TOTAL:/'`
 
 which should give output similar to this:
+
 ```
 12:42:00  PASSED test targets:
-12:42:00  	jdk_lang_0 - Test results: passed: 474 
+12:42:00        jdk_lang_0 - Test results: passed: 474 
 12:42:00  
 12:42:00  FAILED test targets:
-12:42:00  	jdk_security3_0 - Test results: passed: 606; failed: 1 
-12:42:00  		Failed test cases: 
-12:42:00  			TEST: sun/security/ssl/X509TrustManagerImpl/Entrust/Distrust.java
-12:42:00          
-12:42:00  	jdk_util_0 - Test results: passed: 675; failed: 2 
-12:42:00  		Failed test cases: 
-12:42:00  			TEST: java/util/Currency/ValidateISO4217.java
+12:42:00        jdk_security3_0 - Test results: passed: 606; failed: 1 
+12:42:00                Failed test cases: 
+12:42:00                        TEST: sun/security/ssl/X509TrustManagerImpl/Entrust/Distrust.java
+12:42:00
+12:42:00        jdk_util_0 - Test results: passed: 675; failed: 2 
+12:42:00                Failed test cases: 
+12:42:00                        TEST: java/util/Currency/ValidateISO4217.java
 12:42:00          TEST: java/util/TimeZone/AssureTzdataVersion.java
 ```
 
