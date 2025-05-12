@@ -159,6 +159,12 @@ p="1"
 s="0"
 storeInArrays "${r}" "${m}" "${p}" "${s}"
 
+r="ERROR\:\sTest_Job_Auto_Gen\s\#[0-9]+ was deleted"
+m="The test job generator job was deleted."
+p="1"
+s="0"
+storeInArrays "${r}" "${m}" "${p}" "${s}"
+
 r="(Error\:\s|Exception\:\s)"
 m="Error/exception found."
 p="1"
