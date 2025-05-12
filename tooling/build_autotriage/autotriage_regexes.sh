@@ -39,7 +39,7 @@ storeInArrays() {
 
 echo "Generating regex arrays to match against failures."
 
-r="SIGSEGV"
+r="(SIGSEGV|Segmentation\sfault)"
 m="Segmentation error."
 p="1"
 s="0"
@@ -142,7 +142,25 @@ s="0"
 storeInArrays "${r}" "${m}" "${p}" "${s}"
 
 r="return\scode\s[1-9]+"
-m="."
+m="Process return code indicates error."
+p="1"
+s="0"
+storeInArrays "${r}" "${m}" "${p}" "${s}"
+
+r="ERROR\:\s[a-z]+\.jck[a-z\.,]*\snot\ssuccessful,\ssetting\sstage\sresult\sto\:\s(FAILURE|ABORTED)"
+m="JCK tests failed."
+p="1"
+s="1"
+storeInArrays "${r}" "${m}" "${p}" "${s}"
+
+r="Failed\sto\scopy\sartifacts"
+m="Artifacts could not be transferred between jobs. May require a jenkins restart if other causes are not apparent."
+p="1"
+s="0"
+storeInArrays "${r}" "${m}" "${p}" "${s}"
+
+r="ERROR\:\sTest_Job_Auto_Gen\s\#[0-9]+ was deleted"
+m="The test job generator job was deleted."
 p="1"
 s="0"
 storeInArrays "${r}" "${m}" "${p}" "${s}"
