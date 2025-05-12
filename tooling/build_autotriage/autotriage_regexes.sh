@@ -147,7 +147,7 @@ p="1"
 s="0"
 storeInArrays "${r}" "${m}" "${p}" "${s}"
 
-r="ERROR\:\s[a-z]+\.jck[a-z\.,]*\snot\ssuccessful,\ssetting\sstage\sresult\sto\:\sFAILURE"
+r="ERROR\:\s[a-z]+\.jck[a-z\.,]*\snot\ssuccessful,\ssetting\sstage\sresult\sto\:\s(FAILURE|ABORTED)"
 m="JCK tests failed."
 p="1"
 s="1"
