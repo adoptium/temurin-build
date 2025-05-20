@@ -269,7 +269,7 @@ Example usage:
 
 ### Script Relationships
 
-![Build Variant Workflow](docs/images/AdoptOpenJDK_Build_Script_Relationships.png)
+![Build Variant Workflow](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/docs/images/AdoptOpenJDK_Build_Script_Relationships.png)
 
 The main script to build OpenJDK is `makejdk-any-platform.sh`, which itself uses
 and/or calls `configureBuild.sh`, `docker-build.sh` and/or `native-build.sh`.
