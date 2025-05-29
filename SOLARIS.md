@@ -117,7 +117,7 @@ against the console output for the job e.g.
 
 which should give output similar to this:
 
-```
+```text
 12:42:00  PASSED test targets:
 12:42:00        jdk_lang_0 - Test results: passed: 474 
 12:42:00  
