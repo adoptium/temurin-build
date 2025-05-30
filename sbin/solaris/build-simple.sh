@@ -1,4 +1,18 @@
 #!/bin/bash
+# shellcheck disable=SC2155,SC2153,SC2038,SC1091,SC2116,SC2086
+# ********************************************************************************
+# Copyright (c) 2017, 2024 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made
+# available under the terms of the Apache Software License 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************
+
 createMetadataFile() {
     metadata_file="$1"
     arch="$2"
