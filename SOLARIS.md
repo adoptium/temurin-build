@@ -22,14 +22,7 @@ which performs the build and then initiates the test jobs.
 ### New top level pipeline
 
 For the new world on Solaris, we use:
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-=======
->>>>>>> 915f0887 (Add documentation on the Solaris 'proxy' jobs)
-=======
-
->>>>>>> 13a703c7 (Placate whingey linter)
 - [jdk8u-solaris-x64-temurin-simplepipe](https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-x64-temurin-simplepipe/) which calls:
   - [jdk8u-solaris-x64-temurin-simple](https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-x64-temurin-simple) to perform the build
   - [jdk8u-solaris-x64-temurin-simpletest](https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-x64-temurin-simpletest/) to run all of the tests (all suites in one job)
@@ -41,15 +34,7 @@ version control and has stages similer to the main platform specific
 pipelines:
 
 - build (Invokes the `-simple` build job)
-<<<<<<< HEAD
-<<<<<<< HEAD
 - sign_sbom_jsf
-=======
-- sign_sbom_jsf 
->>>>>>> 915f0887 (Add documentation on the Solaris 'proxy' jobs)
-=======
-- sign_sbom_jsf
->>>>>>> 13a703c7 (Placate whingey linter)
 - sign_temurin_gpg (Same job used in the traditional pipelines)
 - test (Invokes the `-simpletest` job
 - release (Same job used in the traditional pipelines)
