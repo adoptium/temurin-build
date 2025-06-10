@@ -199,31 +199,33 @@ identifyFailedBuildsInTimerPipelines() {
       # Skip pipelines that are still running.
       if [[ $jsonEntry =~ ^\"startBy\" ]]; then
         if [[ ! $pipelineStatus == "Done" ]]; then
-          pipelineStatus="unknown"
-          continue
+          if [[ ! $pipelineStatus == "CurrentBuildDone" ]]; then
+            pipelineStatus="unknown"
+            continue
+          fi
         fi
       fi
 
       # Expecting 3 pipelines for jdk8, but only 1 for other versions.
       if [[ ${arrayOfAllJDKVersions[v]} -eq 8 ]]; then
         if [[ $jsonEntry =~ ^\"startBy\".*betaTrigger.8ea ]]; then
-          if [[ $jsonEntry =~ betaTrigger\_8ea.x64AlpineLinux && ${latestJdk8Pipelines[1]} == "none" ]]; then
+          if [[ $jsonEntry =~ betaTrigger\_8ea.x64AlpineLinux && "${latestJdk8Pipelines[1]}" == "none" ]]; then
             if wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"; then
               latestJdk8Pipelines[1]=$latestTimerPipeline
               echo "Found Alpine Linux JDK8 pipeline here: https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/${latestTimerJenkinsJobID}/"
             fi
-          elif [[ $jsonEntry =~ betaTrigger\_8ea\_arm32Linux && ${latestJdk8Pipelines[2]} == "none" ]]; then
+          elif [[ $jsonEntry =~ betaTrigger\_8ea\_arm32Linux && "${latestJdk8Pipelines[2]}" == "none" ]]; then
             if wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"; then
               latestJdk8Pipelines[2]=$latestTimerPipeline
               echo "Found Arm32 Linux JDK8 pipeline here: https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/${latestTimerJenkinsJobID}"
             fi
-          elif [[ $jsonEntry =~ betaTrigger\_8ea\\\" && ${latestJdk8Pipelines[0]} == "none" ]]; then
+          elif [[ $jsonEntry =~ betaTrigger\_8ea\\\" && "${latestJdk8Pipelines[0]}" == "none" ]]; then
             if wasPipelineStartedByUser "$latestTimerPipeline" "${jdkJenkinsJobVersion}"; then
               latestJdk8Pipelines[0]=$latestTimerPipeline
               echo "Found core JDK8 pipeline here: https://ci.adoptium.net/job/build-scripts/job/openjdk8-pipeline/${latestTimerJenkinsJobID}"
             fi
           fi
-          if [[ ${latestJdk8Pipelines[0]} != "none" && ${latestJdk8Pipelines[1]} != "none" && ${latestJdk8Pipelines[2]} != "none" ]]; then
+          if [[ "${latestJdk8Pipelines[0]}" != "none" && "${latestJdk8Pipelines[1]}" != "none" && "${latestJdk8Pipelines[2]}" != "none" ]]; then
             echo "Found all 3 pipelines for JDK8."
             break
           fi
