@@ -245,8 +245,6 @@ jobs:
          variant: [temurin]
 
      env:
-      #VS2017_URL: "https://download.visualstudio.microsoft.com/download/pr/c5c75dfa-1b29-4419-80f8-bd39aed6bcd9/7ed8fa27575648163e07548ff5667b55b95663a2323e2b2a5f87b16284e481e6/vs_Community.exe"
-      #VS2019_URL: "https://download.visualstudio.microsoft.com/download/pr/6b655578-de8c-4862-ad77-65044ca714cf/f29399a618bd3a8d1dcc96d349453f686b6176590d904308402a6402543e310b/vs_Community.exe"
       VS2022_URL: "https://download.visualstudio.microsoft.com/download/pr/1d66edfe-3c83-476b-bf05-e8901c62ba7f/bac71effb5a23d7cd1a81e5f628a0c8dcb7e8a07e0aa7077c853ed84a862dceb/vs_BuildTools.exe"
 
      steps:
@@ -293,22 +291,6 @@ jobs:
          distribution: 'temurin'
          java-version: 11
 
-     # - name: Restore Visual Studio 2017 from cache
-     #   id: vs2017
-     #   if: matrix.version == 'jdk8u'
-     #   uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
-     #   with:
-     #     path: ~/vs2017.exe
-     #     key: vs2017
-
-     # - name: Restore Visual Studio 2019 from cache
-     #   id: vs2019
-     #   if: matrix.version == 'jdk11u' || matrix.version == 'jdk17u'
-     #   uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
-     #   with:
-     #     path: ~/vs2019.exe
-     #     key: vs2019
-
      - name: Restore Visual Studio 2022 from cache
        id: vs2022
        if: matrix.version == 'jdk11u' || matrix.version == 'jdk17u'
@@ -328,34 +310,6 @@ jobs:
          --remove Microsoft.VisualStudio.Component.Windows10SDK.22000
          --remove Microsoft.VisualStudio.Component.Windows10SDK.22621
          --quiet'
-
-     # - name: Download Visual Studio 2017
-     #   run: |
-     #     curl -L "$env:VS2017_URL" -o "$HOME/vs2017.exe"
-     #   if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
-     #
-     # - name: Verify Download Of Visual Studio 2017
-     #   shell: powershell
-     #   run: |
-     #     $expected_checksum="7ED8FA27575648163E07548FF5667B55B95663A2323E2B2A5F87B16284E481E6"
-     #     $actual_checksum=(Get-FileHash -Algorithm SHA256 -Path $HOME/vs2017.exe | Select-Object -ExpandProperty Hash)
-     #     echo "Expect : $expected_checksum"
-     #     echo "Actual : $actual_checksum"
-     #     if ($expected_checksum -ne $actual_checksum) {
-     #       Write-Output "Error - Checksum Verification Failed - Exiting"
-     #       exit 1
-     #     }
-     #   if: steps.vs2017.outputs.cache-hit != 'true' && matrix.version == 'jdk8u'
-     #
-     # - name: Install Visual Studio 2017
-     #   if: matrix.version == 'jdk8u'
-     #   run: >
-     #     Start-Process -FilePath "$HOME\vs2017.exe" -Wait -NoNewWindow -ArgumentList
-     #     'install --productId Microsoft.VisualStudio.Product.Community --channelId VisualStudio.15.Release
-     #     --add Microsoft.VisualStudio.Workload.NativeDesktop
-     #     --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
-     #     --add Microsoft.VisualStudio.Component.Windows10SDK.17763
-     #     --quiet --wait'
 
      - name: Download Visual Studio 2022
        run: |
