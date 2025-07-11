@@ -1,0 +1,220 @@
+# name: Fetch and Upload Temurin SBOMs to DependencyTrack
+
+# on:
+#   workflow_dispatch: # manual trigger
+
+# env:
+#   API_URL_BASE: https://api.adoptium.net/v3/assets/feature_releases/21/ga
+#   IMAGE_TYPE: sbom
+#   VENDOR: eclipse
+#   HEAP_SIZE: normal
+#   PAGE_SIZE: 20 # number of results per page
+#   DEPENDENCY_TRACK_URL: https://sbom.eclipse.org
+#   PROJECT_ROOT: Temurin # Root project name for DependencyTrack
+#   JAVA_VERSION: JDK 21
+
+# jobs:
+#   fetch-upload:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Install jq
+#         run: sudo apt-get install -y jq # install jq for JSON parsing 
+
+#       - name: generate-sbom
+#         # env:
+#         #   API_KEY: ${{ secrets.DEPENDENCY_TRACK_API_KEY }} # uses API key from Github secrets 
+#         run: | # we loop through paginated results 
+#           before=""
+#           page=1
+
+#           while true; do
+#             echo "Fetching page $page..."
+#             URL="${API_URL_BASE}?image_type=${IMAGE_TYPE}&vendor=${VENDOR}&heap_size=${HEAP_SIZE}&page_size=${PAGE_SIZE}"
+#             if [ -n "$before" ]; then
+#               URL="${URL}&before=${before}"
+#             fi
+
+#             curl -s "$URL" -o page.json       # fetch current page of results
+#             count=$(jq 'length' page.json)    # count number of results in the page
+
+#             if [ "$count" -eq 0 ]; then
+#               echo "No more results. Done."
+#               break
+#             fi
+
+#             # iterate over each asset in the page
+#             for i in $(seq 0 $((count - 1))); do
+#               version=$(jq -r ".[$i].version_data.semver" page.json)
+#               release_date=$(jq -r ".[$i].timestamp" page.json | cut -d'T' -f1)
+            
+#               # get number of binaries for this asset
+#               bin_count=$(jq ".[$i].binaries | length" page.json)
+            
+#               # iterate over each binary for this asset
+#               for j in $(seq 0 $((bin_count - 1))); do
+#                 os=$(jq -r ".[$i].binaries[$j].os" page.json)
+#                 arch=$(jq -r ".[$i].binaries[$j].architecture" page.json)
+#                 sbomUrl=$(jq -r ".[$i].binaries[$j].package.link" page.json)
+            
+#                 if [ "$sbomUrl" = "null" ]; then
+#                   echo "No SBOM for $version ($os $arch). Skipping."
+#                   continue
+#                 fi
+            
+#                 # project name for DependencyTrack
+#                 projectName="${PROJECT_ROOT} / ${JAVA_VERSION} / ${os} ${arch} / jdk-${version}"
+
+#                 echo "Downloading SBOM for ${projectName}"
+#                 curl -s -o sbom.json "$sbomUrl"
+            
+#                 # store the SBOM as an artifact to upload to DependencyTrack
+#                 mkdir -p "sboms/${os}_${arch}_${version}"
+#                 mv sbom.json "sboms/${os}_${arch}_${version}/sbom.json"
+#                 echo "Stored SBOM for ${projectName}"
+            
+#               done
+#             done            
+            
+#             before=$(jq -r '.[-1].release_date' page.json)
+#             page=$((page + 1)) 
+#             sleep 1 # to avoid rate limits
+#           done
+#       - name: Upload SBOM artifacts
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: all-sboms
+#           path: sboms/
+
+# store-sbom-data: 
+#     needs: ['generate-sbom']
+#     uses: eclipse-csi/workflows/.github/workflows/store-sbom-data.yml@main
+#     with:
+#       projectName: '<product_name>' # display name
+#       projectVersion: ${{ needs.generate-sbom.outputs.project-version }}
+#       bomArtifact: '<artifact_name>' # name from upload in generate-sbom job
+#       bomFilename: 'bom.json'
+#       parentProject: '<parentProject_ID>' # provisioned by us
+
+
+name: Fetch and Upload Temurin SBOMs to DependencyTrack
+
+on:
+  workflow_dispatch:
+
+env:
+  API_URL_BASE: https://api.adoptium.net/v3/assets/feature_releases/21/ga
+  IMAGE_TYPE: sbom
+  VENDOR: eclipse
+  HEAP_SIZE: normal
+  PAGE_SIZE: 20
+  DEPENDENCY_TRACK_URL: https://sbom.eclipse.org
+  PROJECT_ROOT: Temurin
+  JAVA_VERSION: JDK 21
+
+jobs:
+  fetch-sboms:
+    runs-on: ubuntu-latest
+
+    outputs:
+      sbom-metadata: ${{ steps.export.outputs.matrix }}
+
+    steps:
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Fetch and store SBOMs
+        run: |
+          mkdir -p sboms/
+          echo "[" > metadata.json
+          before=""
+          page=1
+          first=true
+
+          while true; do
+            echo "Fetching page $page..."
+            URL="${API_URL_BASE}?image_type=${IMAGE_TYPE}&vendor=${VENDOR}&heap_size=${HEAP_SIZE}&page_size=${PAGE_SIZE}"
+            if [ -n "$before" ]; then
+              URL="${URL}&before=${before}"
+            fi
+
+            curl -s "$URL" -o page.json
+            count=$(jq 'length' page.json)
+
+            if [ "$count" -eq 0 ]; then
+              echo "No more results."
+              break
+            fi
+
+            for i in $(seq 0 $((count - 1))); do
+              version=$(jq -r ".[$i].version_data.semver" page.json)
+              bin_count=$(jq ".[$i].binaries | length" page.json)
+
+              for j in $(seq 0 $((bin_count - 1))); do
+                os=$(jq -r ".[$i].binaries[$j].os" page.json)
+                arch=$(jq -r ".[$i].binaries[$j].architecture" page.json)
+                sbomUrl=$(jq -r ".[$i].binaries[$j].package.link" page.json)
+
+                if [ "$sbomUrl" = "null" ]; then
+                  continue
+                fi
+
+                dir="sboms/${os}_${arch}_${version}"
+                mkdir -p "$dir"
+                curl -s -o "$dir/sbom.json" "$sbomUrl"
+
+                projectName="${PROJECT_ROOT} / ${JAVA_VERSION} / ${os} ${arch} / jdk-${version}"
+
+                if [ "$first" = true ]; then
+                  first=false
+                else
+                  echo "," >> metadata.json
+                fi
+
+                echo "  {\"path\": \"$dir/sbom.json\", \"projectName\": \"$projectName\", \"projectVersion\": \"$version\"}" >> metadata.json
+              done
+            done
+
+            before=$(jq -r '.[-1].release_date' page.json)
+            page=$((page + 1))
+            sleep 1
+          done
+
+          echo "]" >> metadata.json
+
+      - name: Upload SBOMs and metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: sboms
+          path: |
+            sboms/
+            metadata.json
+
+      - id: export
+        run: |
+          matrix=$(jq -c '.' metadata.json)
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
+  store-each-sbom:
+    needs: fetch-sboms
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include: ${{ fromJson(needs.fetch-sboms.outputs.sbom-metadata) }}
+
+    steps:
+      - name: Download SBOMs
+        uses: actions/download-artifact@v4
+        with:
+          name: sboms
+          path: ./workspace
+
+      - name: Call store-sbom reusable workflow
+        uses: eclipse-csi/workflows/.github/workflows/store-sbom-data.yml@main
+        with:
+          projectName: ${{ matrix.projectName }}
+          projectVersion: ${{ matrix.projectVersion }}
+          bomArtifact: sboms
+          bomFilename: ${{ matrix.path }}
+          parentProject: '<parentProject_ID>'
