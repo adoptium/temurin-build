@@ -33,7 +33,7 @@ jobs:
         run: pip install requests
 
       - name: Run SBOM fetcher script
-        run: python fetch_sboms.py
+        run: python scripts/fetch_sboms.py
 
       - name: Upload SBOMs and metadata
         uses: actions/upload-artifact@v4
@@ -70,4 +70,4 @@ jobs:
           projectVersion: ${{ matrix.projectVersion }}
           bomArtifact: sboms
           bomFilename: workspace/${{ matrix.path }}
-          parentProject: '<parentProject_ID>' # must replace with real UUID
+          parentProject: '<parentProject_ID>' # must be replaced with real UUID
