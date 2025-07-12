@@ -3,6 +3,8 @@ import requests
 import json
 import time
 from pathlib import Path
+from datetime import datetime
+
 
 API_URL_BASE = os.environ.get("API_URL_BASE", "https://api.adoptium.net/v3/assets/feature_releases/21/ga")
 IMAGE_TYPE = os.environ.get("IMAGE_TYPE", "sbom")
