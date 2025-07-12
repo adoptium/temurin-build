@@ -39,7 +39,17 @@ def fetch_sboms():
             print("No more results.")
             break
 
+        stop = False 
+
         for asset in data:
+            # we stop if the last asset is before the cutoff date
+            release_date_str = asset["timestamp"]
+            release_date = datetime.fromisoformat(release_date_str.replace("Z", "")).date()
+
+            if release_date < cutoff_date:
+                stop = True
+                break   
+
             version = asset["version_data"]["semver"]
             for binary in asset.get("binaries", []):
                 os_name = binary["os"]
@@ -63,8 +73,12 @@ def fetch_sboms():
                     "projectName": project_name,
                     "projectVersion": version
                 })
+            
+            if stop: 
+                print(f"Stopping fetch as the last asset is before the cutoff date: {cutoff_date}")
+                break
 
-        before = data[-1]["release_date"]
+        before = data[-1]["timestamp"].split("T")[0]
         page += 1
         time.sleep(1)
 
