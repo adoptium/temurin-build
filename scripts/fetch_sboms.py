@@ -11,6 +11,19 @@ HEAP_SIZE = os.environ.get("HEAP_SIZE", "normal")
 PAGE_SIZE = int(os.environ.get("PAGE_SIZE", "20"))
 PROJECT_ROOT = os.environ.get("PROJECT_ROOT", "Temurin")
 JAVA_VERSION = os.environ.get("JAVA_VERSION", "JDK 21")
+cutoff_date = datetime(2023, 1, 1).date()
+
+def fetch_with_retry(url, retries=3, delay=2):
+    for attempt in range(retries):
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            return response
+        except requests.RequestException as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            if attempt < retries - 1:
+                time.sleep(delay)
+    raise Exception(f"Failed to fetch {url} after {retries} attempts.")
 
 def fetch_sboms():
     sbom_dir = Path("sboms")
@@ -60,10 +73,15 @@ def fetch_sboms():
                     print(f"Skipping {version} ({os_name} {arch}) - no SBOM")
                     continue
 
-                path = sbom_dir / f"{os_name}_{arch}_{version}" / "sbom.json"
+                os_arch = f"{os_name} {arch}"
+                # save path 
+                folder = sbom_dir / os_arch / f"jdk-{version}"
+                folder.mkdir(parents=True, exist_ok=True)
+                path = folder / "sbom.json"
+                
                 path.parent.mkdir(parents=True, exist_ok=True)
                 print(f"Downloading SBOM for {os_name} {arch} {version}")
-                sbom_resp = requests.get(sbom_url)
+                sbom_resp = fetch_with_retry(sbom_url)
                 sbom_resp.raise_for_status()
                 path.write_text(sbom_resp.text)
 
