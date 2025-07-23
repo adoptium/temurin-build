@@ -722,6 +722,7 @@ buildTemplatedFile() {
   #  # This is required so that make will only touch the jmods and not re-compile them after signing
   #  FULL_MAKE_COMMAND="make -t \&\& ${FULL_MAKE_COMMAND}"
   #fi
+  echo "NOT using make -t !!"
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
     # Check if strace is available
