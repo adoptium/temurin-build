@@ -720,7 +720,7 @@ buildTemplatedFile() {
 
   if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
     # This is required so that make will only touch the jmods and not re-compile them after signing
-    FULL_MAKE_COMMAND="PATH=/opt/homebrew/opt/make/libexec/gnubin:\$PATH make -t  \&\& ${FULL_MAKE_COMMAND}"
+    FULL_MAKE_COMMAND="which make \&\& make --version \&\& make -t  \&\& ${FULL_MAKE_COMMAND}"
   fi
   echo "using make -t !!"
 
