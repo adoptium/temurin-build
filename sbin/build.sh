@@ -724,7 +724,7 @@ buildTemplatedFile() {
     # To work around jdk-25+ bug https://bugs.openjdk.org/browse/JDK-8363942,
     # GNU make version 4.4+ is required, along with removal of make artifact create-main-targets-include,
     # to force target regeneration.
-    FULL_MAKE_COMMAND="which make \&\& make --version \&\& make -t \&\& rm -f create-main-targets-include \&\& ${FULL_MAKE_COMMAND}"
+    FULL_MAKE_COMMAND="make -t \&\& rm -f create-main-targets-include \&\& ${FULL_MAKE_COMMAND}"
   fi
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
