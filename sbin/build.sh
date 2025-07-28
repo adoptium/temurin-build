@@ -726,7 +726,6 @@ buildTemplatedFile() {
     # to force target regeneration.
     FULL_MAKE_COMMAND="make -t \&\& rm -f create-main-targets-include \&\& ${FULL_MAKE_COMMAND}"
   fi
-  echo "using make -t !!"
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
     # Check if strace is available
