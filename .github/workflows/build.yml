@@ -241,7 +241,7 @@ jobs:
        fail-fast: false
        matrix:
          os: [windows-2022]
-         version: [jdk11u, jdk17u, jdk21u, jdk]
+         version: [jdk17u, jdk21u, jdk]
          variant: [temurin]
 
      env:
@@ -253,10 +253,10 @@ jobs:
        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
        with:
         path: C:\cygwin64
-        key: cygwin-packages-${{ runner.os }}-v2
+        key: cygwin-packages-${{ runner.os }}-v1
 
      - name: Install Cygwin and packages
-       uses: cygwin/cygwin-install-action@f2009323764960f80959895c7bc3bb30210afe4d
+       uses: cygwin/cygwin-install-action@006ad0b0946ca6d0a3ea2d4437677fa767392401
        with:
          install-dir: C:\cygwin64
          packages: >-
