@@ -2079,7 +2079,7 @@ getFirstTagFromOpenJDKGitRepo() {
     firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
   else
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    firstMatchingNameFromRepo=$(git tag --list "$TAG_SEARCH" | "$get_tag_cmd")
+    firstMatchingNameFromRepo=$(git tag --merged HEAD "$TAG_SEARCH" | "$get_tag_cmd")
   fi
 
   if [ -z "$firstMatchingNameFromRepo" ]; then
