@@ -290,7 +290,7 @@ getOpenJdkVersion() {
         version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
       fi
     else
-      version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+      version=$(getOpenJDKTag)
       version=$(echo "$version" | cut -d'_' -f 2)
     fi
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
@@ -307,11 +307,11 @@ getOpenJdkVersion() {
         version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
       fi
     else
-      version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+      version=$(getOpenJDKTag)
       version=$(echo "$version" | cut -d'-' -f 2 | cut -d'_' -f 1)
     fi
   else
-    version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+    version=$(getOpenJDKTag)
     # TODO remove pending #1016
     version=${version%_adopt}
     version=${version#aarch64-shenandoah-}
@@ -2036,6 +2036,19 @@ createDefaultTag() {
   fi
 }
 
+# Get the build "tag" being built, either specified via TAG or BRANCH, otherwise get latest from the git repo
+getOpenJDKTag() {
+  if [ -n "BUILD_CONFIG[TAG]" ]; then
+    # Checked out TAG specified
+    echo "BUILD_CONFIG[TAG]"
+  elif cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
+    # Checked out BRANCH is a tag
+    echo "${BUILD_CONFIG[BRANCH]}"
+  else
+    getFirstTagFromOpenJDKGitRepo
+  fi
+}
+
 # Get the tags from the git repo and choose the latest numerically ordered tag for the given JDK version.
 #
 getFirstTagFromOpenJDKGitRepo() {
@@ -2079,7 +2092,7 @@ getFirstTagFromOpenJDKGitRepo() {
     firstMatchingNameFromRepo=$(grep OPENJDK_TAG ${openj9_openjdk_tag_file} | awk 'BEGIN {FS = "[ :=]+"} {print $2}')
   else
     git fetch --tags "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    firstMatchingNameFromRepo=$(git tag --merged HEAD "$TAG_SEARCH" | "$get_tag_cmd")
+    firstMatchingNameFromRepo=$(git tag --list "$TAG_SEARCH" | "$get_tag_cmd")
   fi
 
   if [ -z "$firstMatchingNameFromRepo" ]; then
