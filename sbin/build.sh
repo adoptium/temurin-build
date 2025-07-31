@@ -2038,9 +2038,9 @@ createDefaultTag() {
 
 # Get the build "tag" being built, either specified via TAG or BRANCH, otherwise get latest from the git repo
 getOpenJDKTag() {
-  if [ -n "BUILD_CONFIG[TAG]" ]; then
+  if [ -n "${BUILD_CONFIG[TAG]}" ]; then
     # Checked out TAG specified
-    echo "BUILD_CONFIG[TAG]"
+    echo "${BUILD_CONFIG[TAG]}"
   elif cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
     # Checked out BRANCH is a tag
     echo "${BUILD_CONFIG[BRANCH]}"
