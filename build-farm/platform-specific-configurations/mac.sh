@@ -32,6 +32,12 @@ if [[ "${MACHINEARCHITECTURE}" == "arm64" ]] && [[ "${ARCHITECTURE}" == "x64" ]]
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=x86_64-apple-darwin"
 fi
 
+# For Temurin jdk8u->jdk24u the OSX system default GNU make 3.8.1 must be used to correctly make_exploded/sign/assemble
+if [[ "${VARIANT}" == "${BUILD_VARIANT_TEMURIN}" ]] && [[ "$JAVA_FEATURE_VERSION" -lt 25 ]] && [[ -f "/usr/bin/make" ]]; then
+  # Use OSX default GNU make 3.81
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} MAKE=/usr/bin/make"
+fi
+
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
