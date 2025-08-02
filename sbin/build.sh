@@ -290,7 +290,7 @@ getOpenJdkVersion() {
         version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
       fi
     else
-      version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+      version=$(getOpenJDKTag)
       version=$(echo "$version" | cut -d'_' -f 2)
     fi
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
@@ -307,11 +307,11 @@ getOpenJdkVersion() {
         version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
       fi
     else
-      version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+      version=$(getOpenJDKTag)
       version=$(echo "$version" | cut -d'-' -f 2 | cut -d'_' -f 1)
     fi
   else
-    version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+    version=$(getOpenJDKTag)
     # TODO remove pending #1016
     version=${version%_adopt}
     version=${version#aarch64-shenandoah-}
@@ -2037,6 +2037,19 @@ createDefaultTag() {
   else
     echo "WARNING: Could not identify the latest tag, but the ADOPT_BRANCH_SAFETY flag is off, so defaulting to jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0" 1>&2
     echo "jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0"
+  fi
+}
+
+# Get the build "tag" being built, either specified via TAG or BRANCH, otherwise get latest from the git repo
+getOpenJDKTag() {
+  if [ -n "${BUILD_CONFIG[TAG]}" ]; then
+    # Checked out TAG specified
+    echo "${BUILD_CONFIG[TAG]}"
+  elif cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
+    # Checked out BRANCH is a tag
+    echo "${BUILD_CONFIG[BRANCH]}"
+  else
+    getFirstTagFromOpenJDKGitRepo
   fi
 }
 
