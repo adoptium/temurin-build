@@ -726,6 +726,8 @@ buildTemplatedFile() {
     # to force target regeneration.
     #FULL_MAKE_COMMAND="make -t \&\& rm -f create-main-targets-include \&\& ${FULL_MAKE_COMMAND}"
     echo "NO MAKE -t !!"
+echo "JCMD 1"
+codesign -dv --verbose=4 workspace/build/src/build/macosx-aarch64-server-release/support/modules_cmds/jdk.jcmd/jcmd
   fi
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
@@ -803,9 +805,15 @@ executeTemplatedFile() {
   # We need the exitcode from the configure-and-build.sh script
   set +eu
 
+echo "JCMD 2"
+codesign -dv --verbose=4 workspace/build/src/build/macosx-aarch64-server-release/support/modules_cmds/jdk.jcmd/jcmd
+
   # Execute the build passing the workspace dir and target dir as params for configure.txt
   bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh" ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]}
   exitCode=$?
+
+echo "JCMD 3"
+codesign -dv --verbose=4 workspace/build/src/build/macosx-aarch64-server-release/support/modules_cmds/jdk.jcmd/jcmd
 
   if [ "${exitCode}" -eq 3 ]; then
     createOpenJDKFailureLogsArchive
