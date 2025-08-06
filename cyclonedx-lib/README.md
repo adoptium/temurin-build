@@ -14,8 +14,8 @@ The reference information for the underlying format is available at https://cycl
 
 ## Process description
 
-Assuming `--create-sbom` was added the `BUILD_ARGS`, at the end of each
-build the build will call `generateSBoM` in
+Assuming `--create-sbom` was added to the `BUILD_ARGS`, at the end of each
+build `generateSBoM` will be called in
 [build.sh](https://github.com/adoptium/temurin-build/blob/master/sbin/build.sh).
 This will locate all of the required information, and add it to the SBoM via
 helper methods in
@@ -44,3 +44,17 @@ recently)
     - Add a new function to [sbin/common/sbom.sh](https://github.com/adoptium/temurin-build/blob/master/sbin/common/sbom.sh) to add the fields you need
     - Updates to [sbin/build.sh](https://github.com/adoptium/temurin-build/blob/master/sbin/build.sh) to invoke the new function(s) in sbom.sh
 3. Run the build with `--create-sbom` in the `BUILD_ARGS` and check that it produces the desired output.
+
+## Initial Plan for Formulation Support
+
+We want to expand 'TemurinGenSBOM' with documentation that explains how to build OpenJDK with Temurin, not just what it's built from, using CycloneDX formulation.
+A future `--formulation` option will output a CycloneDX compliant description of the build process including:
+
+- The Docker image used
+- Host/container workspace setup
+- Environment variables
+- Source retrieval using Git
+- Execution of the build script
+- Additional flags and configurations
+
+This will follow this [CycloneDX spec](https://cyclonedx.org/docs/1.6/json/#formulation). This section will be updated and expanded throughout implementation.
