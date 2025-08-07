@@ -725,7 +725,8 @@ buildTemplatedFile() {
     # GNU make version 4.4+ is required, along with removal of make artifact create-main-targets-include,
     # to force target regeneration.
     #FULL_MAKE_COMMAND="make -t \&\& rm -f create-main-targets-include \&\& ${FULL_MAKE_COMMAND}"
-    echo "NO MAKE -t !!"
+    FULL_MAKE_COMMAND="${BUILD_CONFIG[MAKE_COMMAND_NAME]} LOG=trace ${BUILD_CONFIG[MAKE_ARGS_FOR_ANY_PLATFORM]} ${BUILD_CONFIG[USER_SUPPLIED_MAKE_ARGS]} ${ADDITIONAL_MAKE_TARGETS}"
+    echo "NO MAKE -t with LOG=trace!!"
   fi
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
