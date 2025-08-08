@@ -241,7 +241,7 @@ jobs:
        fail-fast: false
        matrix:
          os: [windows-2022]
-         version: [jdk11u, jdk17u, jdk21u, jdk]
+         version: [jdk17u, jdk21u, jdk]
          variant: [temurin]
 
      env:
