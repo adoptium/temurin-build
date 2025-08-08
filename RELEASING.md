@@ -376,11 +376,12 @@ Once all supported platform binaries have been released it's time to publish AQA
 and all but the first one is in the `hombrew-cask-versions` repository. If you're doing a point release, the format of the version string is 11.0.20.1,1 so the version is always the same as "our" one but with the `+` replaced with a `,`
 
 - [`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin.rb) which always serves the latest release version
-- [`temurin8`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin8.rb)
-- [`temurin11`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin11.rb)
-- [`temurin17`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin17.rb)
+- [`temurin8`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin@8.rb)
+- [`temurin11`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin@11.rb)
+- [`temurin17`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin@17.rb)
+- [`temurin21`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin@21.rb)
 
-An example PR can be found [here](https://github.com/Homebrew/homebrew-cask-versions/pull/17582/files). The required SHA sums can be updated by `brew bump-cask-pr temurinXX --version 11.0.XX,Y` command if you're on a macos system, or manually if not . The separate pull request is required for each version you update. If in doubt reach out to @gdams as he's a maintainer.
+Sample PRs can be found [here](https://github.com/Homebrew/homebrew-cask-versions/pull/17582/files). The required SHA sums can be updated by `brew bump-cask-pr temurinXX --version 11.0.XX,Y` command if you're on a macos system, or manually if not . The separate pull request is required for each version you update. If in doubt reach out to @gdams as he's a maintainer.
 
   4.2. **[Linux only]** Once the binaries are available on the website you can begin updating the specfiles for the RPM/DEB/APK files. There are 4 different types of linux installer
 
