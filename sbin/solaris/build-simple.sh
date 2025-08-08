@@ -13,6 +13,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
+# Note that this script expects SCM_REF and TARGET_ARCH variables to be provided
+# by the calling jenkins job
+
 createMetadataFile() {
     metadata_file="$1"
     arch="$2"
@@ -87,7 +90,7 @@ createMetadataFile() {
     echo '",'>> $metadata_file 
     echo '"version_data": "jdk8u",' >> $metadata_file
     echo '"binary_type": "'$bin_type'",' >> $metadata_file
-    echo '"sha256": "'$sha256',' >> $metadata_file
+    echo '"sha256": "'$sha256'",' >> $metadata_file
     echo '"full_version_output": "'$ver_txt'",' >> $metadata_file
     echo '"makejdk_any_platform_args": "",' >> $metadata_file 
     echo '"configure_arguments": "",' >> $metadata_file
@@ -154,7 +157,7 @@ for FILE in OpenJDK*; do
     else
         metadata_file=$FILE.json
     fi
-    createMetadataFile $metadata_file ${TARGET_ARCH} $SCM_REF metadata/buildSource.txt metadata/version.txt $bin_type $sha256
+    createMetadataFile "$metadata_file" "${TARGET_ARCH}" "$SCM_REF" metadata/buildSource.txt metadata/version.txt "$sha256"
 done
 # Simple test job uses filenames.txt to determine the correct filenames to pull down
 ls -1 > filenames.txt
