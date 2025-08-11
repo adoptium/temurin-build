@@ -372,14 +372,13 @@ Once all supported platform binaries have been released it's time to publish AQA
 
 4. Publish packages for different OS
 
-  4.1. **[Mac only]** Once the binaries are available on the website you need to update the Homebrew casks. There are 4 casks in total
-and all but the first one is in the `hombrew-cask-versions` repository. If you're doing a point release, the format of the version string is 11.0.20.1,1 so the version is always the same as "our" one but with the `+` replaced with a `,`
+  4.1. **[Mac only]** Once the binaries are available on the website there is now [automation upstream](https://github.com/Homebrew/homebrew-cask/commits/main/.github/workflows/autobump.yml) which updates the Homebrew casks under the `BrewTestBot` ID - this automation should be checked to ensure it has run. Noting that for point releases (not tested with the automated PRs), the format of the version string should be 11.0.20.1,1 so the version is always the same as "our" one but with the `+` replaced with a `,`
 
 - [`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin.rb) which always serves the latest release version
-- [`temurin8`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin@8.rb)
-- [`temurin11`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin@11.rb)
-- [`temurin17`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin@17.rb)
-- [`temurin21`](https://github.com/Homebrew/homebrew-cask-versions/blob/master/Casks/temurin@21.rb)
+- [`temurin8`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@8.rb)
+- [`temurin11`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@11.rb)
+- [`temurin17`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@17.rb)
+- [`temurin21`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@21.rb)
 
 Sample PRs can be found [here](https://github.com/Homebrew/homebrew-cask-versions/pull/17582/files). The required SHA sums can be updated by `brew bump-cask-pr temurinXX --version 11.0.XX,Y` command if you're on a macos system, or manually if not . The separate pull request is required for each version you update. If in doubt reach out to @gdams as he's a maintainer.
 
