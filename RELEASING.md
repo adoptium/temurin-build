@@ -380,7 +380,7 @@ Once all supported platform binaries have been released it's time to publish AQA
 - [`temurin17`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@17.rb)
 - [`temurin21`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@21.rb)
 
-Sample PRs can be found [here](https://github.com/Homebrew/homebrew-cask-versions/pull/17582/files). The required SHA sums can be updated by `brew bump-cask-pr temurinXX --version 11.0.XX,Y` command if you're on a macos system, or manually if not . The separate pull request is required for each version you update. If in doubt reach out to @gdams as he's a maintainer.
+A Sample PR from doing this manually in the past can be seen [here](https://github.com/Homebrew/homebrew-cask-versions/pull/17582/files). The required SHA sums can be updated by `brew bump-cask-pr temurinXX --version 11.0.XX,Y` command if you're on a macos system, or manually if not . The separate pull request is required for each version you update. If in doubt reach out to @gdams as he's a maintainer.
 
   4.2. **[Linux only]** Once the binaries are available on the website you can begin updating the specfiles for the RPM/DEB/APK files. There are 4 different types of linux installer
 
