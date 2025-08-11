@@ -372,7 +372,7 @@ Once all supported platform binaries have been released it's time to publish AQA
 
 4. Publish packages for different OS
 
-  4.1. **[Mac only]** Once the binaries are available on the website there is now [automation upstream](https://github.com/Homebrew/homebrew-cask/commits/main/.github/workflows/autobump.yml) which updates the Homebrew casks under the `BrewTestBot` ID - this automation should be checked to ensure it has run. Noting that for point releases (not tested with the automated PRs), the format of the version string should be 11.0.20.1,1 so the version is always the same as "our" one but with the `+` replaced with a `,`
+  4.1. **[Mac only]** Once the binaries are available on the website there is now [automation upstream](https://github.com/Homebrew/homebrew-cask/commits/main/.github/workflows/autobump.yml) as of [June 2025](https://github.com/Homebrew/brew/pull/20117) which updates the Homebrew casks under the `BrewTestBot` ID - this automation should be checked to ensure it has run. Noting that for point releases (not tested with the automated PRs), the format of the version string should be 11.0.20.1,1 so the version is always the same as "our" one but with the `+` replaced with a `,`
 
 - [`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin.rb) which always serves the latest release version
 - [`temurin8`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@8.rb)
