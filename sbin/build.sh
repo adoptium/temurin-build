@@ -720,11 +720,7 @@ buildTemplatedFile() {
 
   if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
     # This is required so that make will only touch the jmods and not re-compile them after signing
-
-    # To work around jdk-25+ bug https://bugs.openjdk.org/browse/JDK-8363942,
-    # GNU make version 4.4+ is required, along with removal of make artifact create-main-targets-include,
-    # to force target regeneration.
-    FULL_MAKE_COMMAND="make -t \&\& rm -f create-main-targets-include \&\& ${FULL_MAKE_COMMAND}"
+    touchSignedBuildOutputFolders
   fi
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
@@ -746,6 +742,30 @@ buildTemplatedFile() {
   cat "$SCRIPT_DIR/build.template" |
     sed -e "s|{configureArg}|${FULL_CONFIGURE}|" \
       -e "s|{makeCommandArg}|${FULL_MAKE_COMMAND}|" >"${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
+}
+
+# Touch the exploded build image output folders so that the executables do not get re-built
+# by make when assembling the images
+touchSignedBuildOutputFolders() {
+  local buildOutputFolder="."
+  if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+    buildOutputFolder="build/*/."
+  fi
+
+  local buildOutputFolderName=$(ls -d ${PWD}/${buildOutputFolder})
+
+  local signedFolderTimestamp=$(date -u +"%Y%m%d%H%M.%S")
+  echo "Touching signed build folders within build output directory: ${buildOutputFolderName} using timestamp: ${signedFolderTimestamp}"
+
+  # The following build exploded image output folders contain the signed executables
+  local signedFolders=("hotspot/variant-server" "jdk/modules/jdk.jpackage/jdk/jpackage/internal/resources" "support")
+  for signedFolder in "${signedFolders[@]}"
+  do
+    if [[ -d "${buildOutputFolderName}/${signedFolder}" ]]; then
+      echo "Touching signed build output folder: ${buildOutputFolderName}/${signedFolder}"
+      find ${buildOutputFolderName}/${signedFolder} -exec touch -t ${signedFolderTimestamp} {} +
+    fi
+  done
 }
 
 createSourceArchive() {
