@@ -453,15 +453,17 @@ For the api.adoptium.net repository:
   5. Update the view for the [build and test pipeline calendar](https://ci.adoptium.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version.
 
   6. Various other updates:
-    - If you are ADDING a JDK version:
-      - Add the feature (LTS) or tip (STS) release to the job config for [nightlyBuildAndTestStats_temurin](https://ci.adoptium.net/job/nightlyBuildAndTestStats_temurin).
-      - Add the JDK major version to the [build triage git workflow](https://github.com/adoptium/temurin-build/blob/f701dc3e14ee91f0c2539ee13a4ed0394e422123/.github/workflows/build-autotriage.yml#L40).
-    - If you are REMOVING a JDK version:
-      - jdkxx.groovy: Remove/comment-out any lines that begin with "triggerSchedule"
-      - jdkxx.groovy: add this code to the bottom, before the "return this" line: disableJob = true
-      - nightly_build_and_test_stats: Add the JDK major version to the retiredVersions array
-      - Update the [nightlyBuildAndTestStats_temurin](https://ci.adoptium.net/job/nightlyBuildAndTestStats_temurin) job configuration to remove the feature (LTS) or tip (STS) release.
-      - Update the [build triage git workflow](https://github.com/adoptium/temurin-build/blob/f701dc3e14ee91f0c2539ee13a4ed0394e422123/.github/workflows/build-autotriage.yml#L40) to remove the JDK version.
+
+  - If you are ADDING a JDK version:
+    - Add the feature (LTS) or tip (STS) release to the job config for [nightlyBuildAndTestStats_temurin](https://ci.adoptium.net/job/nightlyBuildAndTestStats_temurin).
+    - Add the JDK major version to the [build triage git workflow](https://github.com/adoptium/temurin-build/blob/f701dc3e14ee91f0c2539ee13a4ed0394e422123/.github/workflows/build-autotriage.yml#L40).
+  - If you are REMOVING a JDK version:
+    - jdkxx.groovy: Remove/comment-out any lines that begin with "triggerSchedule"
+    - jdkxx.groovy: add this code to the bottom, before the "return this" line: disableJob = true
+    - nightly_build_and_test_stats: Add the JDK major version to the retiredVersions array
+    - Update the [nightlyBuildAndTestStats_temurin](https://ci.adoptium.net/job/nightlyBuildAndTestStats_temurin) job configuration to remove the feature (LTS) or tip (STS) release.
+    - Update the [build triage git workflow](https://github.com/adoptium/temurin-build/blob/f701dc3e14ee91f0c2539ee13a4ed0394e422123/.github/workflows/build-autotriage.yml#L40) to remove the JDK version.
+
 ### Update Repository (jdkXXu)
 
 At some point in a java version's lifecycle, the JDK version will be maintained in an update repository. The first notification of this will be via mail list in one of two places:
