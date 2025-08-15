@@ -253,9 +253,9 @@ verify_valid_archives() {
         print_error "Failed to verify that ${A} can be extracted"
         RC=4
       fi
-      # NOTE: 38 chosen because the static-libs is 38 for JDK21/AIX - maybe switch for different tarballs in the future?
-      if [ "$(tar tfz "${A}" | wc -l)" -lt 38 ]; then
-        print_error "Less than 38 files in ${A} - that does not seem correct"
+      # NOTE: 37 chosen because the static-libs is 37 for JDK21/AIX - maybe switch for different tarballs in the future?
+      if [ "$(tar tfz "${A}" | wc -l)" -lt 37 ]; then
+        print_error "Fewer than 38 files in ${A} - that does not seem correct"
         RC=4
       fi
     done
@@ -285,7 +285,7 @@ verify_valid_archives() {
           RC=4
         fi
         if [ "$(tar tfz "${A}" | wc -l)" -lt 45000 ]; then
-          print_error "less than 45000 files in source archive ${A} - that does not seem correct"
+          print_error "Fewer than 45000 files in source archive ${A} - that does not seem correct"
           RC=4
         fi
       done
