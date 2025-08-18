@@ -40,7 +40,11 @@ if echo "$SBOMFILE" | grep _solaris_; then
   EXPECTED_FREETYPE=2.4.9
   EXPECTED_COMPILER="solstudio (Oracle Solaris Studio)"
 elif echo "$SBOMFILE" | grep _aix_; then
-  EXPECTED_COMPILER="xlc (IBM XL C/C++)"
+  if [ "$MAJORVERSION" -lt 21 ]; then
+    EXPECTED_COMPILER="xlc (IBM XL C/C++)"
+  else
+    EXPECTED_COMPILER="clang (clang/LLVM)"
+  fi
   if [ "$MAJORVERSION" -lt 17 ]; then
     EXPECTED_FREETYPE=2.8.0
   else
