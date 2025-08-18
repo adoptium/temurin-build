@@ -290,7 +290,7 @@ getOpenJdkVersion() {
         version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
       fi
     else
-      version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+      version=$(getOpenJDKTag)
       version=$(echo "$version" | cut -d'_' -f 2)
     fi
   elif [ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_BISHENG}" ]; then
@@ -307,11 +307,11 @@ getOpenJdkVersion() {
         version="jdk-11.${minorNum}.${updateNum}+${buildNum}"
       fi
     else
-      version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+      version=$(getOpenJDKTag)
       version=$(echo "$version" | cut -d'-' -f 2 | cut -d'_' -f 1)
     fi
   else
-    version=${BUILD_CONFIG[TAG]:-$(getFirstTagFromOpenJDKGitRepo)}
+    version=$(getOpenJDKTag)
     # TODO remove pending #1016
     version=${version%_adopt}
     version=${version#aarch64-shenandoah-}
@@ -720,7 +720,7 @@ buildTemplatedFile() {
 
   if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" == "true" ]]; then
     # This is required so that make will only touch the jmods and not re-compile them after signing
-    FULL_MAKE_COMMAND="make -t \&\& ${FULL_MAKE_COMMAND}"
+    touchSignedBuildOutputFolders
   fi
 
   if [[ "${BUILD_CONFIG[ENABLE_SBOM_STRACE]}" == "true" ]]; then
@@ -742,6 +742,30 @@ buildTemplatedFile() {
   cat "$SCRIPT_DIR/build.template" |
     sed -e "s|{configureArg}|${FULL_CONFIGURE}|" \
       -e "s|{makeCommandArg}|${FULL_MAKE_COMMAND}|" >"${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh"
+}
+
+# Touch the exploded build image output folders so that the executables do not get re-built
+# by make when assembling the images
+touchSignedBuildOutputFolders() {
+  local buildOutputFolder="."
+  if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+    buildOutputFolder="build/*/."
+  fi
+
+  local buildOutputFolderName=$(ls -d ${PWD}/${buildOutputFolder})
+
+  local signedFolderTimestamp=$(date -u +"%Y%m%d%H%M.%S")
+  echo "Touching signed build folders within build output directory: ${buildOutputFolderName} using timestamp: ${signedFolderTimestamp}"
+
+  # The following build exploded image output folders contain the signed executables
+  local signedFolders=("hotspot/variant-server" "jdk/modules/jdk.jpackage/jdk/jpackage/internal/resources" "support")
+  for signedFolder in "${signedFolders[@]}"
+  do
+    if [[ -d "${buildOutputFolderName}/${signedFolder}" ]]; then
+      echo "Touching signed build output folder: ${buildOutputFolderName}/${signedFolder}"
+      find ${buildOutputFolderName}/${signedFolder} -exec touch -t ${signedFolderTimestamp} {} +
+    fi
+  done
 }
 
 createSourceArchive() {
@@ -2033,6 +2057,19 @@ createDefaultTag() {
   else
     echo "WARNING: Could not identify the latest tag, but the ADOPT_BRANCH_SAFETY flag is off, so defaulting to jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0" 1>&2
     echo "jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0"
+  fi
+}
+
+# Get the build "tag" being built, either specified via TAG or BRANCH, otherwise get latest from the git repo
+getOpenJDKTag() {
+  if [ -n "${BUILD_CONFIG[TAG]}" ]; then
+    # Checked out TAG specified
+    echo "${BUILD_CONFIG[TAG]}"
+  elif cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
+    # Checked out BRANCH is a tag
+    echo "${BUILD_CONFIG[BRANCH]}"
+  else
+    getFirstTagFromOpenJDKGitRepo
   fi
 }
 
