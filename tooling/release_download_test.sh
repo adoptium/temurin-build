@@ -255,7 +255,7 @@ verify_valid_archives() {
       fi
       # NOTE: 37 chosen because the static-libs is 37 for JDK21/AIX - maybe switch for different tarballs in the future?
       if [ "$(tar tfz "${A}" | wc -l)" -lt 37 ]; then
-        print_error "Fewer than 38 files in ${A} - that does not seem correct"
+        print_error "Fewer than 37 files in ${A} - that does not seem correct"
         RC=4
       fi
     done
