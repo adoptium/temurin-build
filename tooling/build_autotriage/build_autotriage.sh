@@ -282,6 +282,7 @@ identifyFailedBuildsInTimerPipelines() {
         if [[ ${latestJdk8Pipelines[jp]} != "none" ]]; then
           echo "wgetting https://trss.adoptium.net/api/getAllChildBuilds?parentId=${latestJdk8Pipelines[jp]}&buildNameRegex=^jdk8u\-.*temurin$"
           listOfPipelineBuilds+=$(wget -q -O - "https://trss.adoptium.net/api/getAllChildBuilds?parentId=${latestJdk8Pipelines[jp]}&buildNameRegex=^jdk8u\-.*temurin$")
+          echo "debug 2: ${#listOfPipelineBuilds}"
         fi
       done
     else
