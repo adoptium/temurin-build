@@ -312,7 +312,7 @@ identifyFailedBuildsInTimerPipelines() {
         listOfBuildNames+=("${sbTuple[0]}")
         listOfBuildNums+=("${sbTuple[1]}")
         // Fetch build result.
-        jobName="$(echo ${${sbTuple[0]}}cut -d- -f1)/job/${sbTuple[0]}/${sbTuple[1]}"
+        jobName="$(echo ${${sbTuple[0]}} | cut -d- -f1)/job/${sbTuple[0]}/${sbTuple[1]}"
         buildData=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/jobs/job/${jobName}/api/xml")
         if [[ "${buildData}" =~ \<result\>[A-Z]+\<\/result\> ]]; then
           resultString="${buildData#*<result>}"
