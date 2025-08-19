@@ -293,7 +293,7 @@ identifyFailedBuildsInTimerPipelines() {
     declare -a listOfBuildNums
     declare -a listOfBuildResults
 
-    shorterListOfBuilds=""
+    shorterListOfBuilds=","
 
     # Using this single-build tuple to ensure all of the build data lines up in the three arrays.
     sbTuple=("none" "none" "none")
@@ -302,18 +302,19 @@ identifyFailedBuildsInTimerPipelines() {
     for jsonEntry in $listOfPipelineBuilds
     do
       if [[ $jsonEntry =~ ^\"buildName\"\:.* ]]; then
-        sbTuple[0]=${jsonEntry}
-      elif [[ $jsonEntry =~ .*\"buildNum\"\.* ]]; then
-        sbTuple[1]=${jsonEntry}
+        sbTuple[0]="${jsonEntry:13:-1}"
+        echo "debug 1: ${sbTuple[0]}"
+      elif [[ $jsonEntry =~ .*\"buildNum\".* ]]; then
+        sbTuple[1]="${jsonEntry:11}"
       elif [[ $jsonEntry =~ .*\"buildResult\".* ]]; then
-        sbTuple[2]=${jsonEntry}
+        sbTuple[2]="${jsonEntry:15:-1}"
       elif [[ $jsonEntry =~ \"_id\" ]]; then
         sbTuple=("none" "none" "none")
       fi
       if [[ ! "${sbTuple[0]},${sbTuple[1]},${sbTuple[2]}" =~ none ]]; then
-        listOfBuildNames+=("${sbTuple[0]:13:-1}")
-        listOfBuildNums+=("${sbTuple[1]:11}")
-        listOfBuildResults+=("${sbTuple[2]:15:-1}")
+        listOfBuildNames+=("${sbTuple[0]}")
+        listOfBuildNums+=("${sbTuple[1]}")
+        listOfBuildResults+=("${sbTuple[2]}")
         shorterListOfBuilds+="${sbTuple[0]},"
         sbTuple=("none" "none" "none")
       fi
@@ -328,7 +329,7 @@ identifyFailedBuildsInTimerPipelines() {
     triageThesePlatforms=","
     for p in "${!temurinPlatforms[@]}"
     do
-      if [[ $shorterListOfBuilds =~ .*\"buildName\"\:\"${jdkJenkinsJobVersion}\-${temurinPlatforms[p]}\-temurin\".* ]]; then
+      if [[ $shorterListOfBuilds =~ .*,${jdkJenkinsJobVersion}\-${temurinPlatforms[p]}\-temurin,.* ]]; then
         if [[ ${arrayOfAllJDKVersions[v]} -lt ${platformStart[p]} ]]; then
           errorLog "Error: Platform ${temurinPlatforms[p]} should not be built for ${jdkJenkinsJobVersion}. Will not triage."
           continue
