@@ -296,7 +296,7 @@ identifyFailedBuildsInTimerPipelines() {
     shorterListOfBuilds=","
 
     # Using this single-build tuple to ensure all of the build data lines up in the three arrays.
-    sbTuple=("none" "none")
+    sbTuple=("none" "none" "none")
 
     # Now we identify each build in the pipeline.
     for jsonEntry in $listOfPipelineBuilds
@@ -305,22 +305,29 @@ identifyFailedBuildsInTimerPipelines() {
         sbTuple[0]="${jsonEntry:13:-1}"
       elif [[ $jsonEntry =~ .*\"buildNum\".* ]]; then
         sbTuple[1]="${jsonEntry:11}"
+      elif [[ $jsonEntry =~ .*\"buildResult\".* ]]; then
+        sbTuple[2]="${jsonEntry:15:-1}"
       elif [[ $jsonEntry =~ \"_id\" ]]; then
-        sbTuple=("none" "none")
+        sbTuple=("none" "none" "none")
       fi
       if [[ ! "${sbTuple[0]},${sbTuple[1]}" =~ none ]]; then
         listOfBuildNames+=("${sbTuple[0]}")
         listOfBuildNums+=("${sbTuple[1]}")
-        # Fetch build result.
-        jobName="$(echo ${sbTuple[0]} | cut -d- -f1)/job/${sbTuple[0]}/${sbTuple[1]}"
-        buildData=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/jobs/job/${jobName}/api/xml")
-        if [[ "${buildData}" =~ \<result\>[A-Z]+\<\/result\> ]]; then
-          resultString="${buildData#*<result>}"
-          resultString="${resultString%</result>*}"
-          listOfBuildResults+=("${resultString}")
+        if [[ "${sbTuple[2]}" == "none" ]]; then
+          # Fetch the build result from jenkins because trss doesn't have it yet.
+          jobName="$(echo ${sbTuple[0]} | cut -d- -f1)/job/${sbTuple[0]}/${sbTuple[1]}"
+          buildData=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/jobs/job/${jobName}/api/xml")
+          if [[ "${buildData}" =~ \<result\>[A-Z]+\<\/result\> ]]; then
+            resultString="${buildData#*<result>}"
+            resultString="${resultString%</result>*}"
+            listOfBuildResults+=("${resultString}")
+          else
+            listOfBuildResults+=("UNKNOWN")
+          fi
         else
-          listOfBuildResults+=("UNKNOWN")
+          listOfBuildResults+=("${sbTuple[2]}")
         fi
+        
         shorterListOfBuilds+="${sbTuple[0]},"
         sbTuple=("none" "none")
       fi
