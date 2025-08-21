@@ -40,11 +40,15 @@ if echo "$SBOMFILE" | grep _solaris_; then
   EXPECTED_FREETYPE=2.4.9
   EXPECTED_COMPILER="solstudio (Oracle Solaris Studio)"
 elif echo "$SBOMFILE" | grep _aix_; then
-  EXPECTED_COMPILER="xlc (IBM XL C/C++)"
+  if [ "$MAJORVERSION" -lt 21 ]; then
+    EXPECTED_COMPILER="xlc (IBM XL C/C++)"
+  else
+    EXPECTED_COMPILER="clang (clang/LLVM)"
+  fi
   if [ "$MAJORVERSION" -lt 17 ]; then
     EXPECTED_FREETYPE=2.8.0
   else
-    EXPECTED_FREETYPE=2.13.2 # Bundled version
+    EXPECTED_FREETYPE=2.13.3 # Bundled version
   fi
 elif echo "$SBOMFILE" | grep _alpine-linux_ > /dev/null; then
   EXPECTED_FREETYPE=2.11.1
@@ -78,17 +82,17 @@ elif echo "$SBOMFILE" | grep 64_windows_; then
   EXPECTED_FREETYPE=2.8.1
   EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
   if [ "${MAJORVERSION}" = "11" ] || [ "${MAJORVERSION}" = "17" ]; then
-    EXPECTED_FREETYPE=2.13.2 # Bundled version
+    EXPECTED_FREETYPE=2.13.3 # Bundled version
   fi
 elif echo "$SBOMFILE" | grep _x86-32_windows_; then
-  EXPECTED_FREETYPE=2.13.2 # Bundled version
+  EXPECTED_FREETYPE=2.13.3 # Bundled version
   EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
   if [ "${MAJORVERSION}" = "8"  ]; then
     EXPECTED_FREETYPE=2.5.3
   fi
 elif echo "$SBOMFILE" | grep _mac_; then
   # NOTE: mac/x64 native builds >=11 were using "clang (clang/LLVM from Xcode 10.3)"
-  EXPECTED_FREETYPE=2.13.2 # Bundled version
+  EXPECTED_FREETYPE=2.13.3 # Bundled version
   EXPECTED_COMPILER="clang (clang/LLVM from Xcode 15.2)"
   # shellcheck disable=SC2166
   if [ "${MAJORVERSION}" = "8" ] && echo "$SBOMFILE" | grep _x64_; then
@@ -97,7 +101,7 @@ elif echo "$SBOMFILE" | grep _mac_; then
   fi
 fi
 
-[ "${MAJORVERSION}" -ge 20 ] && EXPECTED_FREETYPE=2.13.2 # Bundled version
+[ "${MAJORVERSION}" -ge 20 ] && EXPECTED_FREETYPE=2.13.3 # Bundled version
 
 RC=0
 if echo "$SBOMFILE" | grep 'linux_'; then

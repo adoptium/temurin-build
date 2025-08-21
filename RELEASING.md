@@ -413,10 +413,12 @@ Once all supported platform binaries have been released it's time to publish AQA
 
   4.1. **[Mac only]** Once the binaries are available on the website there is now [automation upstream](https://github.com/Homebrew/homebrew-cask/commits/main/.github/workflows/autobump.yml) as of [June 2025](https://github.com/Homebrew/brew/pull/20117) which updates the Homebrew casks under the `BrewTestBot` ID - this automation should be checked to ensure it has run. Noting that for point releases (not tested with the automated PRs), the format of the version string should be 11.0.20.1,1 so the version is always the same as "our" one but with the `+` replaced with a `,`
 
+- [`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin.rb) which always serves the latest release version
 - [`temurin8`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@8.rb)
 - [`temurin11`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@11.rb)
 - [`temurin17`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@17.rb)
 - [`temurin21`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@21.rb)
+
 - [`temurin25`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@25.rb)
 
   4.2. **[Linux only]** Once the binaries are available on the website the
@@ -472,7 +474,7 @@ For the api.adoptium.net repository:
   - If you are ADDING a JDK version:
     - Ensure that JDK N-1 is available as build JDK on the builders. For example in order to build JDK 15, JDK 14 needs to be installed on the build machines. As a temporary measure, [code](./build-farm/platform-specific-configurations/linux.sh#L110) so as to download the JDK to the builder via the API has been added. NOTE: For the transition period shortly after a new JDK has been branched, there might not yet exist a generally available release of JDK N-1.
     - Ensure that JDK sources are being mirrored. Example [infrastructure request](https://github.com/AdoptOpenJDK/openjdk-infrastructure/issues/1096)
-    - Ensure that a repository which contains the binary releases exists. Example [temurin23-binaries](https://github.com/adoptium/temurin23-binaries), if not then create using OtterDog <https://github.com/adoptium/.eclipsefdn/blob/68e1a3c84a7f51e538ab0cbc8a6b5d3428028c37/otterdog/adoptium.jsonnet#L753>:
+    - Ensure that a repository which contains the binary releases exists. Example [temurin23-binaries](https://github.com/adoptium/temurin23-binaries), if not then create using [OtterDog](https://github.com/adoptium/.eclipsefdn/blob/68e1a3c84a7f51e538ab0cbc8a6b5d3428028c37/otterdog/adoptium.jsonnet#L753).
     - Regenerate build jobs:
       - Create a New Item in the folder linked above that copies the `pipeline_jobs_generator_jdk` job. Call it `pipeline_jobs_generator_jdk<new-version-number>`.
       - Change the `Script Path` setting of the new job to `pipelines/build/regeneration/jdk<new-version-number>_regeneration_pipeline.groovy`. Don't worry if this currently doesn't exist in this repository, you'll add it in step 3.
@@ -490,6 +492,18 @@ For the api.adoptium.net repository:
   4. Build the `pipeline_jobs_generator` that you just made. Ensure the equivalent `openjdkxx_pipeline` to the generator exists or this will fail. If the job fails or is unstable, search the console log for `WARNING` or `ERROR` messages for why. Once it has completed successfully, the [pipeline](https://ci.adoptium.net/job/build-scripts/) is ready to go!
 
   5. Update the view for the [build and test pipeline calendar](https://ci.adoptium.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version.
+
+  6. Various other updates:
+
+  - If you are ADDING a JDK version:
+    - Add the feature (LTS) or tip (STS) release to the job config for [nightlyBuildAndTestStats_temurin](https://ci.adoptium.net/job/nightlyBuildAndTestStats_temurin).
+    - Add the JDK major version to the [build triage git workflow](https://github.com/adoptium/temurin-build/blob/f701dc3e14ee91f0c2539ee13a4ed0394e422123/.github/workflows/build-autotriage.yml#L40).
+  - If you are REMOVING a JDK version:
+    - jdkxx.groovy: Remove/comment-out any lines that begin with "triggerSchedule"
+    - jdkxx.groovy: add this code to the bottom, before the "return this" line: disableJob = true
+    - nightly_build_and_test_stats: Add the JDK major version to the retiredVersions array
+    - Update the [nightlyBuildAndTestStats_temurin](https://ci.adoptium.net/job/nightlyBuildAndTestStats_temurin) job configuration to remove the feature (LTS) or tip (STS) release.
+    - Update the [build triage git workflow](https://github.com/adoptium/temurin-build/blob/f701dc3e14ee91f0c2539ee13a4ed0394e422123/.github/workflows/build-autotriage.yml#L40) to remove the JDK version.
 
 ### Update Repository (jdkXXu)
 
