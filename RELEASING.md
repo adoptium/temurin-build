@@ -242,6 +242,7 @@ git checkout jdk23   # Checkout version branch
 git tag -a "jdk-23-dryrun-ga" jdk-23+37^{} -m"YYYY.MM release dry run test"
 git push --tags origin jdk23
 ```
+
 </details>
 
 7. Wait for the release trigger job to detect the tag (wait up to 10mins), e.g. [releaseTrigger_jdk17u](https://ci.adoptium.net/job/build-scripts/job/utils/job/releaseTrigger_jdk17u) (Note that the schedule for that job is only run on the release months, so may not work if you are keen and try to do this in the month before)
@@ -353,7 +354,7 @@ in the repository since the build repositories were branched. Check for the
 PRs in temurin-build</a> and if required cherry pick across to the temurin-build release
 branch so that
 <a href="https://github.com/adoptium/temurin-build/issues/4141">the latest
-ones at GA time are used for the release. Make sure this gets merged before 
+ones at GA time are used for the release. Make sure this gets merged before
 the GA builds trigger.
 
 ### At GA time
@@ -367,7 +368,7 @@ and triaged as per step 1 in the previous section. Then:
 - If "good to publish", get permission to publish the release from the Adoptium PMC members, discussion is via the Adoptium [#release](https://adoptium.slack.com/messages/CLCFNV2JG) Slack channel.
 - Once permission has been obtained, you will be able to find a link to the
   [release tool job](https://ci.adoptium.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) to publish the releases to GitHub (restricted access - if you can't see this link,
-  you don't have access) in the release-openjdkXX-pipeline job for your release. 
+  you don't have access) in the release-openjdkXX-pipeline job for your release.
   You will see links to release jobs with `DRY_RUN` checked for each platorm.
   They can be rebuilt with the `DRY_RUN` checkbox disabled when you are ready
   to ship
@@ -378,21 +379,22 @@ and triaged as per step 1 in the previous section. Then:
 Since we now provide the dry-run links, doing it manually is typically not
 required, but this information on the parameters is here if you need it:
 
-  - `TAG`: (GitHub binaries published name)  e.g. `jdk-11.0.5+9`. If doing a point release, add that into the name e.g. for a `.3` release use something like this: `jdk8u232-b09.3`
-  - `VERSION`: (select version e.g. `jdk11`)
-  - `UPSTREAM_JOB_NAME`: e.g "build-scripts/release-openjdkXX-pipeline" for new way and "build-scripts/openjdkXX-pipeline" for old way
-  - `UPSTREAM_JOB_NUMBER`: the build number of above upstream job, e.g. 86
-  - `RELEASE`: "ticked"
-  - If you need to restrict the platforms or only ship jdks or jres, either use `ARTIFACTS_TO_COPY` e.g. `**/*jdk*mac*` or add an explicit exclusion in `ARTIFACTS_TO_SKIP` e.g. `**/*mac*`. These may be required if you had to re-run some of the platforms under a different pipeline earlier in the process. If you're unsure what the possible names are, look at the artifacts of the appropriate `openjdkNN-pipeline` job. If you are shipping x64_linux ensure that you include the `sources` tar.gz files with the corresponding checksum and json file.
-  - `ARTIFACTS_TO_SKIP`: `**/*testimage*`
-  - If you need to restrict the platforms, fill in `ARTIFACTS_TO_COPY` and if needed add to `ARTIFACTS_TO_SKIP`. This may also be required if you had to re-run some of the platforms under a different pipeline earlier in the process. I personally tend to find it cleaner to release Linux in one pipeline, Windows+Mac in another, then the others together to keep the patterns simpler. Sample values for `ARTIFACTS_TO_COPY` are as follows (use e.g. `_x64_linux_` to restrict by architecture if required):
-    - `**/*_linux_*.tar.gz,**/*_linux_*.sha256.txt,**/*_linux_*.json,**/*_linux_*.sig` (Exclude `**/*alpine_linux*` if you don't really want that to be picked up too)
-    - Alternative that wouldn't pick up Alpine: `target/linux/x64/hotspot/**.tar.gz,target/linux/x64/hotspot/target/linux/x64/hotspot/*.sha256.txt`
-    - `**/*_mac_*.tar.gz,**/*_mac_*.sha256.txt,**/*_mac_*.json,**/*_mac_*.pkg,**/*_mac_*.sig`
-    - `**/*_windows_*.zip,**/*_windows_*.sha256.txt,**/*_windows_*.json,**/*_windows_*.msi,**/*_windows_*.sig`
-    - `**/*_aix_*.tar.gz,**/*_aix_*.sha256.txt,**/*_aix_*.json,**/*_aix_*.sig`
-    - `**/*_solaris_*.tar.gz,**/*_solaris_*.sha256.txt,**/*_solaris_*.json,**/*_solaris_*.sig`
-  -  Click "Build" button !!!
+- `TAG`: (GitHub binaries published name)  e.g. `jdk-11.0.5+9`. If doing a point release, add that into the name e.g. for a `.3` release use something like this: `jdk8u232-b09.3`
+- `VERSION`: (select version e.g. `jdk11`)
+- `UPSTREAM_JOB_NAME`: e.g "build-scripts/release-openjdkXX-pipeline" for new way and "build-scripts/openjdkXX-pipeline" for old way
+- `UPSTREAM_JOB_NUMBER`: the build number of above upstream job, e.g. 86
+- `RELEASE`: "ticked"
+- If you need to restrict the platforms or only ship jdks or jres, either use `ARTIFACTS_TO_COPY` e.g. `**/*jdk*mac*` or add an explicit exclusion in `ARTIFACTS_TO_SKIP` e.g. `**/*mac*`. These may be required if you had to re-run some of the platforms under a different pipeline earlier in the process. If you're unsure what the possible names are, look at the artifacts of the appropriate `openjdkNN-pipeline` job. If you are shipping x64_linux ensure that you include the `sources` tar.gz files with the corresponding checksum and json file.
+- `ARTIFACTS_TO_SKIP`: `**/*testimage*`
+- If you need to restrict the platforms, fill in `ARTIFACTS_TO_COPY` and if needed add to `ARTIFACTS_TO_SKIP`. This may also be required if you had to re-run some of the platforms under a different pipeline earlier in the process. I personally tend to find it cleaner to release Linux in one pipeline, Windows+Mac in another, then the others together to keep the patterns simpler. Sample values for `ARTIFACTS_TO_COPY` are as follows (use e.g. `_x64_linux_` to restrict by architecture if required):
+  - `**/*_linux_*.tar.gz,**/*_linux_*.sha256.txt,**/*_linux_*.json,**/*_linux_*.sig` (Exclude `**/*alpine_linux*` if you don't really want that to be picked up too)
+  - Alternative that wouldn't pick up Alpine: `target/linux/x64/hotspot/**.tar.gz,target/linux/x64/hotspot/target/linux/x64/hotspot/*.sha256.txt`
+  - `**/*_mac_*.tar.gz,**/*_mac_*.sha256.txt,**/*_mac_*.json,**/*_mac_*.pkg,**/*_mac_*.sig`
+  - `**/*_windows_*.zip,**/*_windows_*.sha256.txt,**/*_windows_*.json,**/*_windows_*.msi,**/*_windows_*.sig`
+  - `**/*_aix_*.tar.gz,**/*_aix_*.sha256.txt,**/*_aix_*.json,**/*_aix_*.sig`
+  - `**/*_solaris_*.tar.gz,**/*_solaris_*.sha256.txt,**/*_solaris_*.json,**/*_solaris_*.sig`
+-  Click "Build" button !!!
+
 </details>
 
 - Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like <https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08>
