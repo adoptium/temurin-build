@@ -19,13 +19,13 @@ node('worker') {
     echo "Running pipeline using SCM_REF ${env.SCM_REF}"
 
     def jobBaseName
-    def jobLink
+    def jobBaseLink
     if (env.RELEASE) {
       jobBaseName = "build-scripts/jobs/release/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
-      jobLink = "https://ci.adoptium.net/job/build-scripts/job/jobs/job/release/job/jobs/job/jdk8u/job/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
+      jobBaseLink = "https://ci.adoptium.net/job/build-scripts/job/jobs/job/release/job/jobs/job/jdk8u/job/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
     } else {
       jobBaseName = "build-scripts/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
-      jobLink = "https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
+      jobBaseLink = "https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
     }
     def jobTest = "build-scripts/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simpletest"
     
@@ -83,7 +83,7 @@ node('worker') {
             warnError("The command failed") {
                 testJob = build job: "${jobTest}",
                 parameters: [
-                    string( name: 'UPSTREAM_JOBLINK', value: "${jobLink}pipe/${env.BUILD_ID}")
+                    string( name: 'UPSTREAM_JOBLINK', value: "${jobBaseLink}pipe/${env.BUILD_ID}")
                 ]
             }
         }
