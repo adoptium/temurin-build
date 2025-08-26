@@ -17,16 +17,27 @@ node('worker') {
     cleanWs notFailBuild: false
     def buildJob
     echo "Running pipeline using SCM_REF ${env.SCM_REF}"
+
+    def jobBaseName
+    def jobLink
+    if (env.RELEASE) {
+      jobBaseName = "build-scripts/jobs/release/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
+      jobLink = "https://ci.adoptium.net/job/build-scripts/job/jobs/job/release/job/jobs/job/jdk8u/job/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
+    } else {
+      jobBaseName = "build-scripts/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
+      jobLink = "https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
+    }
+    def jobTest = "build-scripts/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simpletest"
     
     stage('build') { // for display purposes
-        buildJob = build job: "build-scripts/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple",
+        buildJob = build job: "${jobBaseName}",
             parameters: [
                  string(name: 'SCM_REF', value: "${env.SCM_REF}"),
                  booleanParam( name: 'RELEASE', value: "${env.RELEASE}" )
             ]
             
         copyArtifacts(
-            projectName:"build-scripts/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple",
+            projectName:"${jobBaseName}",
             selector:specific("${buildJob.getNumber()}"),
             target: ''
         )
@@ -54,7 +65,7 @@ node('worker') {
     stage('sign_temurin_gpg') {
         def signJob=build job: 'build-scripts/release/sign_temurin_gpg',
         parameters: [
-            string( name: 'UPSTREAM_JOB_NAME', value: "build-scripts/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simplepipe"),
+            string( name: 'UPSTREAM_JOB_NAME', value: "${jobBaseName}pipe"),
             string( name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_ID}"),
             string( name: 'UPSTREAM_DIR', value: 'workspace/target')
         ]
@@ -70,9 +81,9 @@ node('worker') {
     stage('test') {
         if ( params.ENABLE_TESTS == true ) {
             warnError("The command failed") {
-                testJob = build job: "build-scripts/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simpletest",
+                testJob = build job: "${jobTest}",
                 parameters: [
-                    string( name: 'UPSTREAM_JOBLINK', value: "https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simplepipe/${env.BUILD_ID}")
+                    string( name: 'UPSTREAM_JOBLINK', value: "${jobLink}pipe/${env.BUILD_ID}")
                 ]
             }
         }
@@ -88,7 +99,7 @@ node('worker') {
         build job: 'build-scripts/release/refactor_openjdk_release_tool',
         parameters: [
             string( name: 'VERSION', value: 'jdk8'),
-            string( name: 'UPSTREAM_JOB_NAME', value: "build-scripts/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simplepipe"),
+            string( name: 'UPSTREAM_JOB_NAME', value: "${jobBaseName}pipe"),
             string( name: 'UPSTREAM_JOB_NUMBER', value: "$env.BUILD_ID"),
             string( name: 'TAG', value: "$releaseTag"),
             // string( name: 'TIMESTAMP', value: "${env.TIMESTAMP}"),
