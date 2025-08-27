@@ -758,7 +758,8 @@ touchSignedBuildOutputFolders() {
   echo "Touching signed build folders within build output directory: ${buildOutputFolderName} using timestamp: ${signedFolderTimestamp}"
 
   # The following build exploded image output folders contain the signed executables
-  local signedFolders=("hotspot/variant-server" "jdk/modules/jdk.jpackage/jdk/jpackage/internal/resources" "support")
+  # Note: hotspot/variant-client must also be touched, otherwise the output client/jvm.dll from there that gets copied to support/modules_libs/java.base/client/jvm.dll will get re-built
+  local signedFolders=("hotspot/variant-server" "hotspot/variant-client" "jdk/modules/jdk.jpackage/jdk/jpackage/internal/resources" "support")
   for signedFolder in "${signedFolders[@]}"
   do
     if [[ -d "${buildOutputFolderName}/${signedFolder}" ]]; then
