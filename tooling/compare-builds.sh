@@ -458,7 +458,7 @@ pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
   fi
   GLOBAL_RESULT=0
   if [ "${COMP_TYPE}" = "COMP" ] ; then
-    # this tells repro_compare to skipp all the preprocessing. If not set, the repro_compare.sh on top of comparable_patch.sh  brings false negatives
+    # this tells repro_compare to skip all the preprocessing. If not set, the repro_compare.sh on top of comparable_patch.sh  brings false negatives
     export PREPROCESS="no"
   fi
   bash ./repro_compare.sh openjdk "${WORKDIR}/${JDK_INFO["first_name"]}" openjdk "${WORKDIR}/${JDK_INFO["second_name"]}" 2>&1 | tee -a "${LOG}" || GLOBAL_RESULT=$?
