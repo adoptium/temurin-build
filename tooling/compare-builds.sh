@@ -35,6 +35,7 @@
 #                   DO_DEPS          will dnf install crucial dependencies
 #                   JAVA_HOME        points to third JDK used to run java binaries. If not set
 #                                    one of the JDKs is copied again and used
+#                   DEBUG            if true, few additional listings are provided
 #######################################################################################################################
 
 ## resolve folder of this script, following all symlinks,
@@ -336,7 +337,7 @@ function copyJdk () {
   local jdk_source="${1}"
   local jdk_name="${2}"
   echo "${jdk_source} is directory, will be copied AS ${jdk_name}"
-  readlink -f "${jdk_source}"
+  [ "${DEBUG:-}" = "true" ] && readlink -f "${jdk_source}"
   rm -rf "${jdk_name}"
   cp -rL "${jdk_source}" "${jdk_name}"
 }
@@ -345,7 +346,7 @@ function unpackJdk() {
   local jdk_source="${1}"
   local jdk_name="${2}"
   echo "${jdk_source} is file, will be unpacked and moved *as* ${jdk_name}"
-  readlink -f "${jdk_source}"
+  [ "${DEBUG:-}" = "true" ] && readlink -f "${jdk_source}"
   ls > before
   if echo "${jdk_source}" | grep "\.zip" ; then
     unzip "${jdk_source}"
@@ -417,7 +418,7 @@ for id in "first" "second" ; do
     mv "${LAST_ADOPTIUM_JSON}" "${JDK_JSON}"
     unpackJdk "${LAST_DOWNLOADED_FILE}" "${JDK_NAME}"
   fi
-  ls -l "$(pwd)"
+   [ "${DEBUG:-}" = "true" ] && ls -l "$(pwd)"
 
   if [ -z "${JAVA_HOME:-}" ] && [ "${id}" = "first" ] ; then
     prepareAlternateJavaHome "${JDK_ID}" "${LAST_DOWNLOADED_FILE}"
@@ -491,7 +492,7 @@ else
 fi
 cp "${diffFile}" "${WORKDIR}"
 pwd
-ls -l "$(pwd)"
+[ "${DEBUG:-}" = "true" ] && ls -l "$(pwd)"
 
 if [ "${DO_TAPS:-}" == "true" ] || [ "${DO_JUNIT:-}" == "true" ] ; then
   # the result will be changed via tap plugin or jtreg plugin
