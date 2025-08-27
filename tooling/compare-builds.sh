@@ -427,22 +427,22 @@ function unpackJdk() {
 function prepareAlternateJavaHome() {
   local tag_os_arch="${1}"
   local existing_archive="${2}"
-  futur_java_home="future_boot_jdk"
-  if [ -e "${futur_java_home}" ] ; then
-    rm -rf "${futur_java_home}"
+  future_java_home="future_boot_jdk"
+  if [ -e "${future_java_home}" ] ; then
+    rm -rf "${future_java_home}"
   fi
   if [ -f "${existing_archive}" ] ; then
     echo "${tag_os_arch} is there as ${existing_archive}, will be reused"
-    unpackJdk "${existing_archive}" "${futur_java_home}"
+    unpackJdk "${existing_archive}" "${future_java_home}"
   else
     echo "${tag_os_arch} is tag:os.arch, will be downloaded and unpacked"
     downloadAdoptiumReleases "${tag_os_arch}"
-    unpackJdk "${LAST_DOWNLOADED_FILE}" "${futur_java_home}"
+    unpackJdk "${LAST_DOWNLOADED_FILE}" "${future_java_home}"
   fi
   if uname | grep CYGWIN ; then
-    chmodJavaDirTo777 "${futur_java_home}"
+    chmodJavaDirTo777 "${future_java_home}"
   fi
-  JAVA_HOME=$(readlink -f "${futur_java_home}");
+  JAVA_HOME=$(readlink -f "${future_java_home}");
   export JAVA_HOME="${JAVA_HOME}"
 }
 
