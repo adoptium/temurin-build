@@ -248,7 +248,7 @@ function compileAndSetToFuturePath() {
 # on windows/cygwin it is weird
 # should be needed only on that "third" jdk if copied/extracted
 #######################################################################################################################
-function chmod777() {
+function chmodJavaDirTo777() {
   local JDK_DIR="${1}"
   test -f "${JDK_DIR}/bin/java"
   chmod -R 777 "${JDK_DIR}"
@@ -440,7 +440,7 @@ function prepareAlternateJavaHome() {
     unpackJdk "${LAST_DOWNLOADED_FILE}" "${futur_java_home}"
   fi
   if uname | grep CYGWIN ; then
-    chmod777 "${futur_java_home}"
+    chmodJavaDirTo777 "${futur_java_home}"
   fi
   JAVA_HOME=$(readlink -f "${futur_java_home}");
   export JAVA_HOME="${JAVA_HOME}"
