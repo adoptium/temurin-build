@@ -58,7 +58,7 @@ function processArgs() {
       echo "eg: compare_builds.sh  /usr/lib/jvm/java-21-openjdk /my/home/my_custom_tarball.tar.xz"
       echo "eg: compare_builds.sh  /my/custom/dir/with_jdk jdk-21.0.4+7"
       echo "if the parameter is tag, the temurin jdk of given tag:os.arch is downloaded"
-      echo " yo can omit the :os.arch part, then it will be guessed... but you may know better"
+      echo " You can omit the :os.arch part, then it will be guessed... but you may know better"
       echo "It copies and creates all in CWD!!!! $(pwd)"
       echo "Pass the files/dirs as absolute values, it should not be that hard"
       echo "It is useful to have JAVA_HOME pointing to some other JDK used to compile and run supporting files"
