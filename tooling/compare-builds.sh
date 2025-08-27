@@ -406,7 +406,7 @@ function copyJdk () {
 function unpackJdk() {
   local jdk_source="${1}"
   local jdk_name="${2}"
-  echo "${jdk_source} is file, will be unpacked and moved *as* ${jdk_name}"
+  echo "${jdk_source} is file, will be unpacked to directory ${jdk_name}"
   [ "${DEBUG:-}" = "true" ] && readlink -f "${jdk_source}"
   ls > before
   if echo "${jdk_source}" | grep "\.zip" ; then
