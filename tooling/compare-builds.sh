@@ -394,7 +394,7 @@ function downloadAdoptiumReleases() {
 function copyJdk () {
   local jdk_source="${1}"
   local jdk_name="${2}"
-  echo "${jdk_source} is directory, will be copied to directory ${jdk_name}"
+  echo "${jdk_source} is directory, will be copied and renamed to directory ${jdk_name}"
   [ "${DEBUG:-}" = "true" ] && readlink -f "${jdk_source}"
   rm -rf "${jdk_name}"
   cp -rL "${jdk_source}" "${jdk_name}"
@@ -406,7 +406,7 @@ function copyJdk () {
 function unpackJdk() {
   local jdk_source="${1}"
   local jdk_name="${2}"
-  echo "${jdk_source} is file, will be unpacked to directory ${jdk_name}"
+  echo "${jdk_source} is file, will be unpacked and renamed to directory ${jdk_name}"
   [ "${DEBUG:-}" = "true" ] && readlink -f "${jdk_source}"
   ls > before
   if echo "${jdk_source}" | grep "\.zip" ; then
