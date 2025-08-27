@@ -394,7 +394,7 @@ function downloadAdoptiumReleases() {
 function copyJdk () {
   local jdk_source="${1}"
   local jdk_name="${2}"
-  echo "${jdk_source} is directory, will be copied AS ${jdk_name}"
+  echo "${jdk_source} is directory, will be copied to directory ${jdk_name}"
   [ "${DEBUG:-}" = "true" ] && readlink -f "${jdk_source}"
   rm -rf "${jdk_name}"
   cp -rL "${jdk_source}" "${jdk_name}"
