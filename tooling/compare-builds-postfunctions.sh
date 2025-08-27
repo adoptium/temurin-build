@@ -14,6 +14,14 @@
 # This file is used if junit results are requested when running compare_builds.sh
 # It makes use of the repository at https://github.com/rh-openjdk/run-folder-as-tests.git
 
+
+##################################################################################
+# This is top level function.
+# The only one which should be called by anybody sourcing this script
+# $1: reprotest.diff file path
+# $2: differences.log file path
+# $3: totalfiles.log  file path
+##################################################################################
 function tapsAndJunits() {
   local diffFileParam="${1}"
   local differencesFile="${2}"
@@ -42,6 +50,10 @@ function tapsAndJunits() {
   set -x
 }
 
+##################################################################################
+# internal function without parameters. It inherits variables from tapsAndJunits
+# fills shared variables
+##################################################################################
 function generateSummUp() {
     set +x
     if [ "${GLOBAL_RESULT}" -eq 0 ] ; then
@@ -71,6 +83,7 @@ function generateSummUp() {
     total=$(("${passed}"+"${failed}"))
 }
 
+# utility function for printPlain
 function totalDiffsToPlain() {
     if [ "${totalDiffs}" -eq 0 ] ; then
       echo "-- no differences --"
@@ -79,6 +92,7 @@ function totalDiffsToPlain() {
     fi
 }
 
+# utility function for printPlain
 function totalFilesToPlain() {
     if [ "${totalFiles}" -ne 0 ] ; then
       echo "-- files compared: ${totalFiles} --"
@@ -87,6 +101,7 @@ function totalFilesToPlain() {
     fi
 }
 
+# utility function for printPlain
 function totalOnlyInToPlain() {
     if [ "${totalOnlyIn}" -eq 0 ] ; then
       echo "-- no onlyin files --"
@@ -95,6 +110,7 @@ function totalOnlyInToPlain() {
     fi
 }
 
+# utility function for printPlain
 function globalResultToPlain() {
     if [ "${GLOBAL_RESULT}" -eq 0 ] ; then
       echo "-- COMPARABLE --"
@@ -103,6 +119,11 @@ function globalResultToPlain() {
     fi
 }
 
+##################################################################################
+# internal function without parameters. It inherits variables from tapsAndJunits
+# The accepted parameters are for future refactoring
+# generates plain text results
+##################################################################################
 function printPlain() {
     local diffFileParam="${1}"
     local differencesFile="${2}"
@@ -115,6 +136,7 @@ function printPlain() {
     globalResultToPlain
 }
 
+# utility function for generateJunits
 function totalDiffsToXml() {
     if [ "${totalDiffs}" -eq 0 ] ; then
       printXmlTest "compare" "differences-count" "1" "" "../artifact/$(basename "${differencesFile}")" >> "${unitFile}"
@@ -123,6 +145,7 @@ function totalDiffsToXml() {
     fi
 }
 
+# utility function for generateJunits
 function totalFilesToXml() {
     if [ "${totalFiles}" -ne 0 ] ; then
       printXmlTest "compare" "compared-files-count" "2" "" "../artifact/$(basename "${totalFile}")" >> "${unitFile}"
@@ -131,6 +154,7 @@ function totalFilesToXml() {
     fi
 }
 
+# utility function for generateJunits
 function totalOnlyInToXml() {
     if [ "${totalOnlyIn}" -eq 0 ] ; then
       printXmlTest "compare" "onlyin-count" "3" "" "../artifact/$(basename "${differencesFile}")" >> "${unitFile}"
@@ -139,6 +163,7 @@ function totalOnlyInToXml() {
     fi
 }
 
+# utility function for generateJunits
 function globalResultToXml() {
     if [ "${GLOBAL_RESULT}" -eq 0 ] ; then
       printXmlTest "compare" "comparable-builds" "4" "" "../artifact/$(basename "${diffFileParam}")" >> "${unitFile}"
@@ -147,6 +172,11 @@ function globalResultToXml() {
     fi
 }
 
+##################################################################################
+# internal function without parameters. It inherits variables from tapsAndJunits
+# The accepted parameters are for future refactoring
+# generates jnit-like xml results
+##################################################################################
 function generateJunits() {
     local diffFileParam="${1}"
     local differencesFile="${2}"
@@ -169,6 +199,7 @@ function generateJunits() {
     tar -cJf "${unitFileArchive}"  "${unitFile}"
 }
 
+# utility function for generateTaps
 function totalDiffsToTap() {
     if [ "${totalDiffs}" -eq 0 ] ; then
       tapTestStart "ok" "1" "differences-count" >> "${resultsTapFile}"
@@ -181,6 +212,7 @@ function totalDiffsToTap() {
     set -e
 }
 
+# utility function for generateTaps
 function totalFilesToTap() {
     if [ "${totalFiles}" -ne 0 ] ; then
       tapTestStart "ok" "2" "compared-files-count" >> "${resultsTapFile}"
@@ -193,6 +225,7 @@ function totalFilesToTap() {
     set -e
 }
 
+# utility function for generateTaps
 function totalOnlyInToTap() {
     if [ "${totalOnlyIn}" -eq 0 ] ; then
       tapTestStart "ok" "3" "onlyin-count" >> "${resultsTapFile}"
@@ -205,6 +238,7 @@ function totalOnlyInToTap() {
     set -e
 }
 
+# utility function for generateTaps
 function globalResultToTap() {
     if [ "${GLOBAL_RESULT}" -eq 0 ] ; then
       tapTestStart "ok" "4" "comparable-builds" >> "${resultsTapFile}"
@@ -219,6 +253,11 @@ function globalResultToTap() {
     set -e
 }
 
+##################################################################################
+# internal function without parameters. It inherits variables from tapsAndJunits
+# The accepted parameters are for future refactoring
+# generates tap text results
+##################################################################################
 function generateTaps() {
     local diffFileParam="${1}"
     local differencesFile="${2}"
