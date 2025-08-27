@@ -111,7 +111,12 @@ rm -rf workspace
 # This comes from a variable definition on the agent
 SSH_OPTS="$SSH_PROXY_OPTS"
 # "-o LogLevel=FATAL -o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -o HostKeyAlgorithms=+ssh-rsa -i /home/solaris/test-azure-solaris10-x64-1/.vagrant/machines/adoptopenjdkSol10/virtualbox/private_key"
-PUBLISH_NAME=$(echo $SCM_REF | sed 's/_adopt/-ea/')
+
+if [ "$RELEASE" = true ]; then
+    PUBLISH_NAME=$(echo $SCM_REF | sed 's/_adopt//')
+else
+    PUBLISH_NAME=$(echo $SCM_REF | sed 's/_adopt/-ea/')
+fi
 
 if [ -n "$PUBLISH_NAME" ]; then
     # Use correct published filename format
