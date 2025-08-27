@@ -11,6 +11,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
+# This file is used if junit results are requested when running compare_builds.sh
+# It makes use of the repository at https://github.com/rh-openjdk/run-folder-as-tests.git
 
 function tapsAndJunits() {
   local diffFileParam="${1}"
