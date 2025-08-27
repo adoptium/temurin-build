@@ -65,6 +65,9 @@ function processArgs() {
       echo "otherwise one of the provided JDKs will be duplicated, and used"
       echo "There are two types of compare - IDENTICAL and COMPARABLE. if COMP_TYPE is not set, ID is used."
       echo "  Use COMP_TYPE=ID or COMP_TYPE=COMP to determine between them"
+      echo "  IDENTICAL - the JDKs must be same. Only few parts, which are supposed to be regenerated in runtime or in user space are omitted"
+      echo "  COMPARABLE - The JDKs should be binary same from point of execution, but various parts like vendor string or similar, " 
+      echo "               which do not affect execution, are omitted. Note that removal of those will destroy the JDK image" 
       echo "# for your own safety, do not run it as root"
       exit 1
     fi
