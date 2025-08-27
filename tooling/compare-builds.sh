@@ -427,7 +427,7 @@ if uname | grep CYGWIN ; then
   compileAndSetToFuturePath
 fi
 
-# comapre build can not run if not run from its pwd
+# compare build cannot run, if it is not run from its pwd
 pushd "${COMPARE_WAPPER_SCRIPT_DIR}/reproducible/"
   if [ "${COMP_TYPE}" = "COMP" ] ; then
     for jdkName in ${JDK_INFO["first_name"]} ${JDK_INFO["second_name"]} ; do
