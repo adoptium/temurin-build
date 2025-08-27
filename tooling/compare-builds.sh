@@ -52,6 +52,9 @@ readonly COMPARE_WAPPER_SCRIPT_DIR
 
 set -euxo pipefail
 
+#######################################################################################################################
+# Checking the user's input, including variables
+#######################################################################################################################
 function processArgs() {
   set +x
     if [ ! "$#" -eq 2 ] ; then
@@ -119,6 +122,9 @@ function processArgs() {
   set -x
 }
 
+#######################################################################################################################
+# detecting os and arch
+#######################################################################################################################
 function detectOsAndArch() {
   DECTED_OS=linux
   DECTED_ARCH=$(uname -m)
@@ -131,6 +137,9 @@ function detectOsAndArch() {
   echo "${DECTED_OS}.${DECTED_ARCH}"
 }
 
+#######################################################################################################################
+# Summary-up what is going to happen before the comparison even starts
+#######################################################################################################################
 function initialInfo() {
   if [ -d "${1}" ] ; then
     echo "${1} is directory, will be copied"
@@ -148,6 +157,9 @@ function initialInfo() {
   return 0
 }
 
+#######################################################################################################################
+# List the adoptium temurin releases for major jdk version hotspot/ea x ga/arch/os
+#######################################################################################################################
 function getReleases() {
   local mver="${1}"
   local eaga="${2}"
@@ -158,6 +170,10 @@ function getReleases() {
   -H 'accept: application/json' |  grep "$5"
 }
 
+#######################################################################################################################
+# List the adoptium temurin releases for major jdk version hotspot/ea x ga/arch/os
+# which surrounds specific pattern
+#######################################################################################################################
 function getSurroundingReleases() {
   local arch="${1}"
   local ooss="${2}"
@@ -172,6 +188,9 @@ function getSurroundingReleases() {
   done
 }
 
+#######################################################################################################################
+# Initialize windows specific toolchains
+#######################################################################################################################
 function initWindowsTools() {
   set +u
     if [ -z "${MSBASE_PATH}" ] ; then
@@ -193,6 +212,9 @@ function initWindowsTools() {
   set -u
 }
 
+#######################################################################################################################
+# Add Microsoft visual studio code to PATH
+#######################################################################################################################
 function setMsvscToPath() {
   # should add cl.exe and dumpbin.exe which are necessary to patch binaries
   export PATH="$MSVSC:$PATH_BACKUP_MSVC"
@@ -201,6 +223,9 @@ function setMsvscToPath() {
   export PATH="$FUTURE_PATH_ADDITIONS:$PATH"
 }
 
+#######################################################################################################################
+# Compile windows specific binary which is later used by windows specific tools
+#######################################################################################################################
 function compileAndSetToFuturePath() {
   pushd "$MSVSCBUILDTOOLS"
     rm -f WindowsUpdateVsVersionInfo.obj
@@ -217,15 +242,21 @@ function compileAndSetToFuturePath() {
   popd
 }
 
+
+#######################################################################################################################
+# "fixes" the permission in given JDK on cygwin systems
 # on windows/cygwin it is weird
-# shoudl eb needed only on that "third" jdk if copied/extracted
+# should be needed only on that "third" jdk if copied/extracted
+#######################################################################################################################
 function chmod777() {
   local JDK_DIR="${1}"
   test -f "${JDK_DIR}/bin/java"
   chmod -R 777 "${JDK_DIR}"
 }
 
-
+#######################################################################################################################
+# Set the values of main keys, which are later removed for comparable comparison
+#######################################################################################################################
 function getKeysForComparablePatch() {
   local JDK_DIR="${1}"
   set +e
@@ -236,6 +267,10 @@ function getKeysForComparablePatch() {
   set -e
 }
 
+#######################################################################################################################
+# on cygwin systems warns about fragile detection of arch-dependent tools
+# On dnf based systems installs some uncommon depndencies. Requires sudo
+#######################################################################################################################
 function deps() {
   if uname | grep "CYGWIN" ; then
     if uname -m | grep "x86_64" ; then
@@ -254,6 +289,10 @@ function deps() {
   fi
 }
 
+
+#######################################################################################################################
+# Sets global variables necessary for the application to work
+#######################################################################################################################
 function setMainVariables() {
   PATH_BACKUP_MSVC="$PATH"
   FUTURE_PATH_ADDITIONS=$(mktemp -d)
@@ -263,35 +302,50 @@ function setMainVariables() {
 }
 
 
-# tag:os.arch
+#######################################################################################################################
+# get tag from string of tag:os.arch
+#######################################################################################################################
 function getTag() {
   echo "${1%%:*}"
 }
 
-# tag:os.arch
+#######################################################################################################################
+# get os.arch from string of tag:os.arch
+#######################################################################################################################
 function getOsArch() {
   echo "${1##*:}"
 }
 
-# tag:os.arch
+#######################################################################################################################
+# get os from string of tag:os.arch
+#######################################################################################################################
 function getOs() {
   osArch=$(getOsArch "${1}")
   local osArch="$osArch"
   echo "${osArch%%.*}"
 }
 
-# tag:os.arch
+#######################################################################################################################
+# get arch from string of tag:os.arch
+#######################################################################################################################
 function getArch() {
   osArch=$(getOsArch "${1}")
   local osArch="$osArch"
   echo "${osArch##*.}"
 }
 
+#######################################################################################################################
+# unified call to main diff
+#######################################################################################################################
 function getDiff() {
   diff -u3 before  after  | grep -v after | grep "^+" | sed "s/^.//" || echo "always $?"  1>&2
   rm before after
 }
 
+#######################################################################################################################
+# downloads the eclipse temurin of given tag
+# This takes one argument, the 'tag:os.arch' identifier
+#######################################################################################################################
 function downloadAdoptiumReleases() {
   TAG_NON_URL=$(getTag "${1}")
   TAG=${TAG_NON_URL/+/%2B}
@@ -333,6 +387,10 @@ function downloadAdoptiumReleases() {
   fi
 }
 
+#######################################################################################################################
+# copy JDK in dir $1 under the new location of $2
+# It intentionally resolves all symlinks inside
+#######################################################################################################################
 function copyJdk () {
   local jdk_source="${1}"
   local jdk_name="${2}"
@@ -342,6 +400,9 @@ function copyJdk () {
   cp -rL "${jdk_source}" "${jdk_name}"
 }
 
+#######################################################################################################################
+# unpack JDK in archive $1 under the new location of $2
+#######################################################################################################################
 function unpackJdk() {
   local jdk_source="${1}"
   local jdk_name="${2}"
@@ -360,6 +421,9 @@ function unpackJdk() {
   mv "${unpacked}" "${jdk_name}"
 }
 
+#######################################################################################################################
+# If JAVA_HOME is not set, it will take one of the given JDKs and copy it and use as JAVA_HOME (before it is broken)
+#######################################################################################################################
 function prepareAlternateJavaHome() {
   local tag_os_arch="${1}"
   local existing_archive="${2}"
@@ -382,7 +446,11 @@ function prepareAlternateJavaHome() {
   export JAVA_HOME="${JAVA_HOME}"
 }
 
-###################### run ######################
+######################################################################
+######################################################################
+#                              main run                             ##
+######################################################################
+######################################################################
 
 processArgs "$@"
 setMainVariables
