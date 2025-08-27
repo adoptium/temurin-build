@@ -111,7 +111,7 @@ function processArgs() {
   if [ "${COMP_TYPE}" = "ID" ] ; then
     echo "  jdks will be compared expecting them to be IDENTICAL"
   elif [ "${COMP_TYPE}" = "COMP" ] ; then
-    echo "  jdks are compared as COMPARABLE"
+    echo "  jdks will be compared expecting them to be COMPARABLE"
   else
     echo "  unknown value. ID or COMP is accepted only. Exiting"
     exit 1
