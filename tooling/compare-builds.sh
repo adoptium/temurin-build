@@ -13,7 +13,7 @@
 # ********************************************************************************
 
 #######################################################################################################################
-# This is top level script for comparing two jdks.  It 
+# This is top level script for comparing two jdks, potentially from different providers.
 # This script expects exactly two args - tag:os.arch/dir/archive, two times
 # eg: compare_builds.sh  /usr/lib/jvm/java-21-openjdk /my/home/my_custom_tarball.tar.xz
 # eg: compare_builds.sh  /my/custom/dir/with_jdk jdk-21.0.4+7:windows.x64
