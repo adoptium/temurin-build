@@ -62,7 +62,7 @@ stored as tarballs at https://ci.adoptium.net/userContent/gcc/ .  For JDK21+
 we [build Temurin with a
 devkit](https://github.com/adoptium/temurin-build/issues/3468)
 (GCC+binutils+sysroot) based on GCC 11.3.0 for jdk21-24, and GCC 14.2 for
-jdk25+.  The exception is RISC-V where we use a GCC14.2 devkit for JDK17+. 
+jdk25+.  The exception is RISC-V where we use a GCC14.2 devkit for JDK17+.
 The devkits are stored in
 https://github.com/adoptium/devkit-binaries/releases and both the devkits
 and standalone GCCs are installed by our playbooks
