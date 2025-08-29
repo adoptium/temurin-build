@@ -8,7 +8,7 @@ release can be identically reproduced including the VS Redistributable DLLs.
 
 To extract the required Redist DLLs, the safest and easiest way is to locally install an "all architecture" installation of Visual Studio and the Windows SDK as follows:
 
-### Install required version of VIsual Studio and WIndows SDK
+### Install required version of Visual Studio and WIndows SDK
 
 1. Determine the "Build Tools" version install bootstrapper required and download from here: https://learn.microsoft.com/en-us/visualstudio/releases/2022/release-history#fixed-version-bootstrappers
 
@@ -22,9 +22,9 @@ To extract the required Redist DLLs, the safest and easiest way is to locally in
 
   - Note the point version, eg."10.0.26100.1742"
 
-  - Download the "Installer" from this page
+  - Download the Windows SDK "Installer" from this page
 
-4. Run the Windows SDK Installer locally to install the required Windows SDK Redist UCRT DLLs 
+4. Run the Windows SDK "Installer" locally to install the required Windows SDK Redist UCRT DLLs 
 
 ### Now extract the required "Redist" DLLs as follows
 
@@ -92,10 +92,20 @@ cp -r "Program Files (x86)/Windows Kits/10/Redist/10.0.26100.0/ucrt" win_devkit
 
 6. Create the required devkit.info metadata file with the following content:
 
-The ADOPTIUM_DEVKIT_RELEASE must match the published https://github.com/adoptium/devkit-binaries/releases/tag tag. The chosen format for a release tag is vs2022_redist_<VS version>_<SDK version>, eg.
+The ADOPTIUM_DEVKIT_RELEASE must match the desired published https://github.com/adoptium/devkit-binaries/releases/tag tag. The chosen format for a release tag is vs2022_redist_\<VS version\>_\<SDK version\>, eg.
 
 ```sh
 ADOPTIUM_DEVKIT_RELEASE=vs2022_redist_14.40.33807_10.0.26100.0
 ```
 
+7. Zip the contents
+
+```sh
+cd win_devkit
+zip -r vs2022_redist_<VS version>_<SDK version>.zip *
+```
+
+8. Publish to https://github.com/adoptium/devkit-binaries/releases
+
+Publish the vs2022_redist_\<VS version\>_\<SDK version\>.zip as a new tag with the name "vs2022_redist_\<VS version\>_\<SDK version\>"
 
