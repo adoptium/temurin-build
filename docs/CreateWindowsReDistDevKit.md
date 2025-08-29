@@ -107,5 +107,5 @@ zip -r vs2022_redist_<VS version>_<SDK version>.zip *
 
 8. Publish to https://github.com/adoptium/devkit-binaries/releases
 
-Publish the vs2022_redist_&lt;VS version&gt;_&lt;SDK version&gt;.zip as a new tag with the name "vs2022_redist_&lt;VS version&gt;_&lt;SDK version&gt;"
+Publish the vs2022_redist_&lt;VS version&gt;_&lt;SDK version&gt;.zip as a new tag with the name ```vs2022_redist_<VS version>_<SDK version>```
 
