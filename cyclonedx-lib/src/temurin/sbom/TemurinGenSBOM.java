@@ -27,6 +27,9 @@ import org.cyclonedx.model.metadata.ToolInformation;
 import org.cyclonedx.model.OrganizationalContact;
 import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Property;
+import org.cyclonedx.model.formulation.Workflow;
+import org.cyclonedx.model.formulation.task.*; //Command, Step and Task
+import org.cyclonedx.model.formulation.FormulationCommon.TaskType;
 import org.cyclonedx.parsers.JsonParser;
 import org.cyclonedx.parsers.XmlParser;
 import org.cyclonedx.Version;
@@ -66,6 +69,13 @@ public final class TemurinGenSBOM {
         String url = null;
         String value = null;
         String version = null;
+        String workflowRef = null;
+        String workflowName = null;
+        String workflowStepName = null;
+        String formulaPropName = null;
+        String workflowUid = null;
+        String executed = null;
+        String rawTaskTypes = null;
 
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--jsonFile")) {
@@ -98,21 +108,21 @@ public final class TemurinGenSBOM {
                 tool =  args[++i];
             } else if (args[i].equals("--createNewSBOM")) {
                 cmd = "createNewSBOM";
-            } else if (args[i].equals("--addMetadata")) {            // Metadata Component. We can set "name" for Metadata.
+            } else if (args[i].equals("--addMetadata")) {               // Metadata Component. We can set "name" for Metadata.
                 cmd = "addMetadata";
-            } else if (args[i].equals("--addMetadataComponent")) {   // Metadata Component. We can set "name" for Metadata->Component.
+            } else if (args[i].equals("--addMetadataComponent")) {      // Metadata Component. We can set "name" for Metadata->Component.
                 cmd = "addMetadataComponent";
-            } else if (args[i].equals("--addMetadataProp")) {        // MetaData Component --> Property -> name-value
+            } else if (args[i].equals("--addMetadataProp")) {           // MetaData Component --> Property -> name-value
                 cmd = "addMetadataProperty";
             } else if (args[i].equals("--addComponent")) {
                 cmd = "addComponent";
             } else if (args[i].equals("--addComponentHash")) {
                 cmd = "addComponentHash";
-            } else if (args[i].equals("--addComponentProp")) {       // Components --> Property: will add name-value.
+            } else if (args[i].equals("--addComponentProp")) {          // Components --> Property: will add name-value.
                 cmd = "addComponentProp";
             } else if (args[i].equals("--addMetadataTools")) {
                 cmd = "addMetadataTools";
-            } else if (args[i].equals("--addFormulation")) {        // Formulation Component. We can set "name" for Formulation.
+            } else if (args[i].equals("--addFormulation")) {            // Formulation Component. We can set "name" for Formulation.
                 cmd = "addFormulation";
             } else if (args[i].equals("--addFormulationComp")) {        // Formulation Component. We can set "name" for Formulation.
                 cmd = "addFormulationComp";
@@ -120,6 +130,28 @@ public final class TemurinGenSBOM {
                 cmd = "addFormulationCompProp";
             } else if (args[i].equals("--verbose")) {
                 verbose = true;
+            } else if (args[i].equals("--addFormulaProp")) {            // formulation --> properties
+                cmd = "addFormulaProp";
+            } else if (args[i].equals("--formulaPropName")) {           // formulation --> properties --> name
+                formulaPropName = args[++i];
+            } else if (args[i].equals("--addWorkflow")) {               // formulation --> workflows
+                cmd = "addWorkflow";
+            } else if (args[i].equals("--workflowRef")) {               // formulation --> workflows --> bom-ref
+                workflowRef = args[++i];
+            } else if (args[i].equals("--workflowName")) {              // formulation --> workflows --> name
+                workflowName = args[++i];
+            } else if (args[i].equals("--workflowUid")) {               // formulation --> workflows --> uid
+                workflowUid = args[++i];
+            } else if (args[i].equals("--taskTypes")) {                 // formulation --> workflows --> taskTypes
+                rawTaskTypes = args[++i];
+            } else if (args[i].equals("--addWorkflowStep")) {           // formulation --> workflows --> steps
+                cmd = "addWorkflowStep";
+            } else if (args[i].equals("--workflowStepName")) {          // formulation --> workflows --> steps --> name
+                workflowStepName = args[++i];
+            } else if (args[i].equals("--addWorkflowStepCmd")) {        // formulation --> workflows --> steps --> commands
+                cmd = "addWorkflowStepCmd";
+            } else if (args[i].equals("--executed")) {                  // formulation --> workflows --> steps --> commands --> executed
+                executed = args[++i];
             }
         }
         try {
@@ -175,6 +207,30 @@ public final class TemurinGenSBOM {
 
             case "addComponentProp":                                 // Adds Components --> Component --> name-value pairs
                 bom = addComponentProperty(fileName, compName, name, value);
+                writeFile(bom, fileName);
+                break;
+
+            case "addFormulaProp":
+                String realFormulaPropName = formulaPropName != null ? formulaPropName : name;
+                bom = addFormulaProperty(fileName, formulaName, realFormulaPropName, value);
+                writeFile(bom, fileName);
+                break;
+
+            case "addWorkflow":
+                String realWorkflowName = workflowName != null ? workflowName : name;
+                bom = addWorkflow(fileName, formulaName, workflowRef, workflowUid, realWorkflowName, rawTaskTypes);
+                writeFile(bom, fileName);
+                break;
+
+            case "addWorkflowStep":
+                String realWorkflowStepName = workflowStepName != null ? workflowStepName : name;
+                bom = addWorkflowStep(fileName, formulaName, workflowRef, realWorkflowStepName, description);
+                writeFile(bom, fileName);
+                break;
+
+            case "addWorkflowStepCmd":
+                String realWorkflowStepNameForCmd = workflowStepName != null ? workflowStepName : name;
+                bom = addWorkflowStepCmd(fileName, formulaName, workflowRef, realWorkflowStepNameForCmd, executed);
                 writeFile(bom, fileName);
                 break;
 
@@ -414,6 +470,168 @@ public final class TemurinGenSBOM {
         } else if (!foundComponent) {
           System.out.println("addFormulationCompProp could not add add property as it couldn't find an entry for component " + componentName);
         }
+        return bom;
+    }
+
+    private static Formula getOrCreateFormula(final Bom bom, final String formulaRef) {
+        List<Formula> formulas = bom.getFormulation();
+        if (formulas == null) {
+            formulas = new LinkedList<>();
+            bom.setFormulation(formulas);
+        }
+        for (Formula f : formulas) {
+            if (formulaRef != null && formulaRef.equals(f.getBomRef())) {
+                return f;
+            }
+        }
+        Formula f = new Formula();
+        f.setBomRef(formulaRef);
+        formulas.add(f);
+        return f;
+    }
+
+    private static Workflow getOrCreateWorkflow(final Formula f, final String workflowRef) {
+        List<Workflow> wfs = f.getWorkflows();
+        if (wfs == null) {
+            wfs = new LinkedList<>();
+            f.setWorkflows(wfs);
+        }
+        for (Workflow w : wfs) {
+            if (workflowRef != null && workflowRef.equals(w.getBomRef())) {
+                return w;
+            }
+        }
+        Workflow w = new Workflow();
+        w.setBomRef(workflowRef);
+        wfs.add(w);
+        return w;
+    }
+
+    private static Step findStepByName(final Workflow wf, final String stepName) {
+        List<Step> steps = wf.getSteps();
+        if (steps == null) {
+            return null;
+        }
+        if (stepName != null) {
+            for (Step s : steps) if (stepName.equals(s.getName())) return s;
+        }
+        return null;
+    }
+
+    static Bom addFormulaProperty(final String fileName, final String formulaRef, final String propName, final String propValue) {
+        Bom bom = readFile(fileName);
+        Formula f = getOrCreateFormula(bom, formulaRef);
+
+        Property p = new Property();
+        p.setName(propName);
+        p.setValue(propValue);
+
+        List<Property> props = f.getProperties();
+        if (props == null)  {
+            props = new LinkedList<>();
+        }
+        props.add(p);
+        f.setProperties(props);
+
+        return bom;
+    }
+
+    private static TaskType stringToTaskType(final String raw) {
+        if (raw == null) {
+            System.out.println("No TaskType specified. Choosing \"other\". Specify TaskTypes using \"--taskTypes\"");
+            return TaskType.OTHER;
+        }
+        String trimmed = raw.trim().toLowerCase();
+        switch (trimmed) {
+            case "build": return TaskType.BUILD;
+            case "clean": return TaskType.CLEAN;
+            case "clone": return TaskType.CLONE;
+            case "copy": return TaskType.COPY;
+            case "deliver": return TaskType.DELIVER;
+            case "deploy": return TaskType.DEPLOY;
+            case "lint": return TaskType.LINT;
+            case "merge": return TaskType.MERGE;
+            case "other": return TaskType.OTHER;
+            case "release": return TaskType.RELEASE;
+            case "scan": return TaskType.SCAN;
+            case "test": return TaskType.TEST;
+        }
+        System.out.println(trimmed + " is not a valid TaskType. Picking \"other\" instead.");
+        return TaskType.OTHER;
+    }
+
+    private static List<TaskType> parseTaskTypes(final String raw) {
+        List<TaskType> out = new LinkedList<>();
+        if (raw == null || raw.isEmpty()) {
+            return out;}
+        for (String s : raw.split(",")) {
+            String t = s.trim();
+            if (!t.isEmpty()) {
+                out.add(stringToTaskType(t));
+            }
+        }
+        return out;
+    }
+
+    static Bom addWorkflow(final String fileName, final String formulaRef, final String workflowRef, final String uid, final String wfName, final String rawTaskTypes) {
+        Bom bom = readFile(fileName);
+        Formula f = getOrCreateFormula(bom, formulaRef);
+        Workflow wf = getOrCreateWorkflow(f, workflowRef);
+
+        if (uid != null) {
+            wf.setUid(uid);
+        }
+        if (wfName != null) {
+            wf.setName(wfName);
+        }
+
+        List<TaskType> types = parseTaskTypes(rawTaskTypes);
+        if (types != null && !types.isEmpty()) {
+            wf.setTaskTypes(types);
+        }
+        return bom;
+    }
+
+    static Bom addWorkflowStep(final String fileName, final String formulaRef, final String workflowRef, final String stepName, final String stepDesc) {
+        Bom bom = readFile(fileName);
+        Formula f = getOrCreateFormula(bom, formulaRef);
+        Workflow wf = getOrCreateWorkflow(f, workflowRef);
+
+        List<Step> steps = wf.getSteps();
+        if (steps == null) {
+            steps = new LinkedList<>();
+        }
+
+        Step s = findStepByName(wf, stepName);
+        if (s == null) {
+            s = new Step();
+            s.setName(stepName);
+            s.setDescription(stepDesc);
+            steps.add(s);
+        }
+        wf.setSteps(steps);
+        return bom;
+    }
+
+    static Bom addWorkflowStepCmd(final String fileName, final String formulaRef, final String workflowRef, final String stepName, final String cmdExecuted) {
+        Bom bom = readFile(fileName);
+        Formula f = getOrCreateFormula(bom, formulaRef);
+        Workflow wf = getOrCreateWorkflow(f, workflowRef);
+
+        Step target = findStepByName(wf, stepName);
+        if (target == null) {
+            throw new IllegalArgumentException("Step not found. (name): " + stepName);
+        }
+
+        List<Command> cmds = target.getCommands();
+        if (cmds == null) {
+            cmds = new LinkedList<>();
+        }
+        Command c = new Command();
+        c.setExecuted(cmdExecuted);
+        cmds.add(c);
+        target.setCommands(cmds);
+
         return bom;
     }
 
