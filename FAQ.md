@@ -43,13 +43,9 @@ JDK | Platform | Build env | Compiler | Other info
 20+ | Linux/x64 | CentOS 7 | GCC [1] | glibc 2.17
 All | Linux/arm32 | Ubuntu 16.04 | GCC [1] | glibc 2.23
 All | Linux/s390x | RHEL 7 | GCC [1] | glibc 2.17
+17+ | Linux/riscv64 | Ubuntu 24.04 | GCC [1] | glibc 2.27
 All | Linux (others) | CentOS 7 | GCC [1] | glibc 2.17
-8 | Windows/x64 | Server 2022 | VS2017 - CL  19.16.27049 |
-11,17 | Windows/x64 | Server 2022 | VS2019 - CL 19.29.30146 |
-21+ | Windows/x64 | Server 2022 | VS2022 - CL 19.37.32822 |
-8 | Win32 | Server 2022 | VS2013 - CL 18.00.40629 |
-11 | Win32 | Server 2022 | VS2017 - CL 19.16.27049 |
-17 | Win32 | Server 2022 | VS2019 - CL 19.29.30146 |
+All | Windows (all) | x86 Server 2022 | VS2022 - CL 19.37.32822 |
 All | Macos/x64 | 10.14 (18.7.0) | clang-1001.0.46.4 |
 All | Macos/aarch64 | 11 (20.1.0) | clang-1200.0.32.29 | There is no build for JDK8
 All | Alpine/x64 | 3.15.6 | GCC 10.3.1 | Default compiler Alpine 10.3.1_git20211027
@@ -58,11 +54,24 @@ All | Alpine/aarch64 | 3.15.4 | GCC 10.3.1 | Default compiler Alpine 10.3.1_git2
 11+ | AIX | 7.2 (7200-02) | xlc 16.1.0 (16.01.0000.0011) |
 8 | Solaris (Both) | 10 1/13 | Studio 12.3 (C 5.12) |
 
-[1] - Linux gcc levels are 7.5 for JDK8 and 11, 10.3.0 for JDK17 and 11.2.0 for
-JDK20+. At present these are all built from us from the
-[upstream GCC sources](https://gcc.gnu.org/releases.html)
-on our machines as a one off and stored in https://ci.adoptium.net/userContent/gcc/
-where they are consumed [by our playbooks](https://github.com/adoptium/infrastructure/blob/master/ansible/playbooks/AdoptOpenJDK_Unix_Playbook/roles/gcc_11/tasks/main.yml)
+[1] - On Linux we use GCC 7.5 for jdk8-11 and GCC 10.3.0 for JDK17.  Those
+are all [built by
+us](https://github.com/adoptium/infrastructure/issues/2538#issuecomment-1141397665)
+from the [upstream GCC sources](https://gcc.gnu.org/releases.html) and
+stored as tarballs at https://ci.adoptium.net/userContent/gcc/ .  For JDK21+
+we [build Temurin with a
+devkit](https://github.com/adoptium/temurin-build/issues/3468)
+(GCC+binutils+sysroot) based on GCC 11.3.0 for jdk21-24, and GCC 14.2 for
+jdk25+.  The exception is RISC-V where we use a GCC14.2 devkit for JDK17+. 
+The devkits are stored in
+https://github.com/adoptium/devkit-binaries/releases and both the devkits
+and standalone GCCs are installed by our playbooks
+([gcc_xx](https://github.com/adoptium/infrastructure/tree/master/ansible/playbooks/AdoptOpenJDK_Unix_Playbook/roles/gcc_10)
+and
+[devkit](https://github.com/adoptium/infrastructure/tree/master/ansible/playbooks/AdoptOpenJDK_Unix_Playbook/roles/devkit)
+roles) so they are always available on our machines.  We have done [some
+investigation](https://github.com/adoptium/temurin-build/issues/4209)
+relating to using the GCC11/14 devkits for earlier Temurin versions.
 
 All of our machines used for building Temurin are set up using the ansible
 playbooks from the
