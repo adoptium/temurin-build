@@ -92,7 +92,7 @@ cp -r "Program Files (x86)/Windows Kits/10/Redist/10.0.26100.0/ucrt" win_devkit
 
 6. Create the required devkit.info metadata file with the following content:
 
-The ADOPTIUM_DEVKIT_RELEASE must match the desired published https://github.com/adoptium/devkit-binaries/releases/tag tag. The chosen format for a release tag is vs2022_redist_\<VS version\>_\<SDK version\>, eg.
+The ADOPTIUM_DEVKIT_RELEASE must match the desired published https://github.com/adoptium/devkit-binaries/releases/tag tag. The chosen format for a release tag is vs2022_redist_&lt;VS version&gt;_&lt;SDK version&gt;, eg.
 
 ```sh
 ADOPTIUM_DEVKIT_RELEASE=vs2022_redist_14.40.33807_10.0.26100.0
@@ -107,5 +107,5 @@ zip -r vs2022_redist_<VS version>_<SDK version>.zip *
 
 8. Publish to https://github.com/adoptium/devkit-binaries/releases
 
-Publish the vs2022_redist_\<VS version\>_\<SDK version\>.zip as a new tag with the name "vs2022_redist_\<VS version\>_\<SDK version\>"
+Publish the vs2022_redist_&lt;VS version&gt;_&lt;SDK version&gt;.zip as a new tag with the name "vs2022_redist_&lt;VS version&gt;_&lt;SDK version&gt;"
 
