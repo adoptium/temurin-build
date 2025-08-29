@@ -84,7 +84,7 @@ cp C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\MSVC
 C:\Program Files (x86)\Windows Kits\10\Redist\10.0.xxxxx.0\ucrt
 ```
 
-5. Copy the entire "ucrt" sub-folder containing the DLLs/(arm64, x64, x86), eg:
+5. Copy the entire "ucrt" sub-folder containing the DLLs/(arm64, x64, x86), eg.
 
 ```sh
 cp -r "Program Files (x86)/Windows Kits/10/Redist/10.0.26100.0/ucrt" win_devkit
