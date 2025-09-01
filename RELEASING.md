@@ -44,7 +44,17 @@ During the week before release, the Release Champion makes changes in preparatio
 
 Post the below message to the #build & #release channels in Slack:
 
-`In Preparation for next weeks release, I'm proposing to branch the following repositories, in order that this branch becomes the baseline for the release. Shout now if you need to get any PRs merged for the release, as today is the last day, the following repositories will be branched: ( temurin-build, ci-jenkins-pipelines, jenkins-helper).`
+```
+I'm proposing to branch the following repositories tomorrow:
+- temurin-build
+- ci-jenkins-pipelines
+- jenkins-helper
+
+These branches will be the baseline for the approaching release.
+
+Shout now if you need to get any PRs merged for the release.
+```
+
 
 #### Create release branch on below repositories:
 
