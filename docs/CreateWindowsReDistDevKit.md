@@ -20,11 +20,11 @@ To extract the required Redist DLLs, the safest and easiest way is to locally in
 
 3. Determine the required version of the "Windows SDK" from here: https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/
 
-  - Note the point version, eg."10.0.26100.1742"
+- Note the point version, eg."10.0.26100.1742"
 
-  - Download the Windows SDK "Installer" from this page
+- Download the Windows SDK "Installer" from this page
 
-4. Run the Windows SDK "Installer" locally to install the required Windows SDK Redist UCRT DLLs 
+4. Run the Windows SDK "Installer" locally to install the required Windows SDK Redist UCRT DLLs
 
 ### Now extract the required "Redist" DLLs as follows
 
@@ -108,4 +108,3 @@ zip -r vs2022_redist_<VS version>_<SDK version>.zip *
 8. Publish to https://github.com/adoptium/devkit-binaries/releases
 
 Publish the vs2022_redist_&lt;VS version&gt;_&lt;SDK version&gt;.zip as a new tag with the name ```vs2022_redist_<VS version>_<SDK version>```
-
