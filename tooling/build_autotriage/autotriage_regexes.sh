@@ -117,7 +117,7 @@ p="1"
 s="0"
 storeInArrays "${r}" "${m}" "${p}" "${s}"
 
-r="Build.*\#[0-9].completed\:.(FAILURE|ABORTED)"
+r="Build.*\#[0-9]+.completed\:.(FAILURE|ABORTED)"
 m="Subjob failed. It was not a test, installer, or signing job."
 p="1"
 s="0"

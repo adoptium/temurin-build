@@ -57,8 +57,6 @@ temurinPlatforms+=("linux-s390x");          platformStart+=(11); platformEnd+=(9
 temurinPlatforms+=("linux-x64");            platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("mac-aarch64");          platformStart+=(11); platformEnd+=(99)
 temurinPlatforms+=("mac-x64");              platformStart+=(8);  platformEnd+=(99)
-temurinPlatforms+=("solaris-sparcv9");      platformStart+=(8);  platformEnd+=(8)
-temurinPlatforms+=("solaris-x64");          platformStart+=(8);  platformEnd+=(8)
 temurinPlatforms+=("windows-aarch64");      platformStart+=(21); platformEnd+=(99)
 temurinPlatforms+=("windows-x64");          platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("windows-x86-32");       platformStart+=(8);  platformEnd+=(17)
@@ -390,6 +388,30 @@ identifyFailedBuildsInTimerPipelines() {
   done
 }
 
+# Inspects the unique solaris build jobs
+# and performs triage independant of 
+# identifyFailedBuildsInTimerPipelines
+solarisFailureFinder() {
+    # First we get the ID of the latest build of the solaris trigger job.
+    solarisTriggerXML=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/utils/job/betaTrigger_8ea_x64Solaris/lastBuild/api/xml")
+    solarisTriggerOutput=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/utils/job/betaTrigger_8ea_x64Solaris/lastBuild/consoleText")
+    solarisTriggerId="${solarisTriggerXML#*<id>}"
+    solarisTriggerId="${solarisTriggerId%</id>*}"
+    # Then we iterate over the builds until we find one with a child build job.
+    while [[ ! "${solarisTriggerOutput}" =~ jdk8u\-solaris\-x64\-temurin\-simplepipe ]]; do
+      solarisTriggerId=$(( solarisTriggerId - 1 ))
+      solarisTriggerOutput=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/utils/job/betaTrigger_8ea_x64Solaris/${solarisTriggerId}/consoleText")
+    done
+    # If that child build failed/aborted, we add it to the list of jobs to be triaged.
+    if [[ "${solarisTriggerXML}" =~ jdk8u\-solaris\-x64\-temurin\-simplepipe.\#[0-9]+.completed\:.(FAILURE|ABORTED) ]]; then
+      solarisBuildId="${solarisTriggerOutput#*Build build-scripts » jobs » jdk8u » jdk8u-solaris-x64-temurin-simplepipe #}"
+      solarisTriggerId="${solarisBuildId% completed:*}"
+      echo "SID = ${solarisTriggerId}"
+      solarisBuildOutput=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-x64-temurin-simplepipe/${solarisTriggerId}/consoleText")
+      # Add to list of jobs to triage
+    fi
+}
+
 # Takes a single failed jenkins build job URL as a string, and identifies the source of
 # the failure if possible.
 # Uses: arrayOfRegexes, arrayOfRegexMetadata, arrayOfRegexPreventability
@@ -514,6 +536,8 @@ echo "Build AutoTriage is starting."
 argumentParser "$@"
 
 identifyFailedBuildsInTimerPipelines
+
+solarisFailureFinder
 
 buildFailureTriager 
 
