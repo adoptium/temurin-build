@@ -588,11 +588,11 @@ checkingAndDownloadingFreeType() {
     eval "${freetypeEnv}" && bash ./autogen.sh || exit 1
 
     local pngArg=""
-    if ./configure --help | grep "with-png"; then
+    if bash ./configure --help | grep "with-png"; then
       pngArg="--with-png=no"
     fi
     local harfbuzzArg=""
-    if ./configure --help | grep "with-harfbuzz"; then
+    if bash ./configure --help | grep "with-harfbuzz"; then
       harfbuzzArg="--with-harfbuzz=no"
     fi
 
