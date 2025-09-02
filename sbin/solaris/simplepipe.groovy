@@ -16,24 +16,24 @@
 node('worker') {
     cleanWs notFailBuild: false
     def buildJob
-    echo "Running pipeline using SCM_REF ${env.SCM_REF}"
+    echo "Running pipeline using SCM_REF ${params.SCM_REF}"
 
     def jobBaseName
     def jobBaseLink
-    if (env.RELEASE) {
-      jobBaseName = "build-scripts/jobs/release/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
-      jobBaseLink = "https://ci.adoptium.net/job/build-scripts/job/jobs/job/release/job/jobs/job/jdk8u/job/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
+    if ( params.RELEASE == true ) {
+      jobBaseName = "build-scripts/jobs/release/jobs/jdk8u/jdk8u-solaris-${params.ARCHITECTURE}-temurin-simple"
+      jobBaseLink = "https://ci.adoptium.net/job/build-scripts/job/jobs/job/release/job/jobs/job/jdk8u/job/jdk8u-solaris-${params.ARCHITECTURE}-temurin-simple"
     } else {
-      jobBaseName = "build-scripts/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
-      jobBaseLink = "https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simple"
+      jobBaseName = "build-scripts/jobs/jdk8u/jdk8u-solaris-${params.ARCHITECTURE}-temurin-simple"
+      jobBaseLink = "https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-${params.ARCHITECTURE}-temurin-simple"
     }
-    def jobTest = "build-scripts/jobs/jdk8u/jdk8u-solaris-${env.ARCHITECTURE}-temurin-simpletest"
+    def jobTest = "build-scripts/jobs/jdk8u/jdk8u-solaris-${params.ARCHITECTURE}-temurin-simpletest"
     
     stage('build') { // for display purposes
         buildJob = build job: "${jobBaseName}",
             parameters: [
-                 string(name: 'SCM_REF', value: "${env.SCM_REF}"),
-                 booleanParam( name: 'RELEASE', value: "${env.RELEASE}" )
+                 string(name: 'SCM_REF', value: "${params.SCM_REF}"),
+                 booleanParam( name: 'RELEASE', value: "${params.RELEASE}" )
             ]
             
         copyArtifacts(
@@ -92,7 +92,7 @@ node('worker') {
     
     stage('release') {
         // Release name under temurin8-binaries does not have _adopt suffix
-        def releaseTag = env.SCM_REF.replaceAll('_adopt','-ea')
+        def releaseTag = params.SCM_REF.replaceAll('_adopt','-ea')
         // Line below copied from build_base_file.groovy
         def timestamp = new Date().format('yyyy-MM-dd-HH-mm', TimeZone.getTimeZone('UTC'))
 
