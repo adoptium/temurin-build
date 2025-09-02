@@ -92,7 +92,12 @@ node('worker') {
     
     stage('release') {
         // Release name under temurin8-binaries does not have _adopt suffix
-        def releaseTag = params.SCM_REF.replaceAll('_adopt','-ea')
+        def releaseTag
+        if ( params.RELEASE == true ) {
+            releaseTag = params.SCM_REF.replaceAll('_adopt','')
+        } else {
+            releaseTag = params.SCM_REF.replaceAll('_adopt','-ea')
+        }
         // Line below copied from build_base_file.groovy
         def timestamp = new Date().format('yyyy-MM-dd-HH-mm', TimeZone.getTimeZone('UTC'))
 
