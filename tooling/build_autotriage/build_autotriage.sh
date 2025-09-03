@@ -52,13 +52,11 @@ temurinPlatforms+=("alpine-linux-x64");     platformStart+=(8);  platformEnd+=(9
 temurinPlatforms+=("linux-aarch64");        platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("linux-arm");            platformStart+=(8);  platformEnd+=(20)
 temurinPlatforms+=("linux-ppc64le");        platformStart+=(8);  platformEnd+=(99)
-temurinPlatforms+=("linux-riscv64");        platformStart+=(21); platformEnd+=(99)
+temurinPlatforms+=("linux-riscv64");        platformStart+=(17); platformEnd+=(99)
 temurinPlatforms+=("linux-s390x");          platformStart+=(11); platformEnd+=(99)
 temurinPlatforms+=("linux-x64");            platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("mac-aarch64");          platformStart+=(11); platformEnd+=(99)
 temurinPlatforms+=("mac-x64");              platformStart+=(8);  platformEnd+=(99)
-temurinPlatforms+=("solaris-sparcv9");      platformStart+=(8);  platformEnd+=(8)
-temurinPlatforms+=("solaris-x64");          platformStart+=(8);  platformEnd+=(8)
 temurinPlatforms+=("windows-aarch64");      platformStart+=(21); platformEnd+=(99)
 temurinPlatforms+=("windows-x64");          platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("windows-x86-32");       platformStart+=(8);  platformEnd+=(17)
@@ -293,7 +291,7 @@ identifyFailedBuildsInTimerPipelines() {
     declare -a listOfBuildNums
     declare -a listOfBuildResults
 
-    shorterListOfBuilds=""
+    shorterListOfBuilds=","
 
     # Using this single-build tuple to ensure all of the build data lines up in the three arrays.
     sbTuple=("none" "none" "none")
@@ -302,20 +300,34 @@ identifyFailedBuildsInTimerPipelines() {
     for jsonEntry in $listOfPipelineBuilds
     do
       if [[ $jsonEntry =~ ^\"buildName\"\:.* ]]; then
-        sbTuple[0]=${jsonEntry}
-      elif [[ $jsonEntry =~ .*\"buildNum\"\.* ]]; then
-        sbTuple[1]=${jsonEntry}
+        sbTuple[0]="${jsonEntry:13:-1}"
+      elif [[ $jsonEntry =~ .*\"buildNum\".* ]]; then
+        sbTuple[1]="${jsonEntry:11}"
       elif [[ $jsonEntry =~ .*\"buildResult\".* ]]; then
-        sbTuple[2]=${jsonEntry}
+        sbTuple[2]="${jsonEntry:15:-1}"
       elif [[ $jsonEntry =~ \"_id\" ]]; then
         sbTuple=("none" "none" "none")
       fi
-      if [[ ! "${sbTuple[0]},${sbTuple[1]},${sbTuple[2]}" =~ none ]]; then
-        listOfBuildNames+=("${sbTuple[0]:13:-1}")
-        listOfBuildNums+=("${sbTuple[1]:11}")
-        listOfBuildResults+=("${sbTuple[2]:15:-1}")
+      if [[ ! "${sbTuple[0]},${sbTuple[1]}" =~ none ]]; then
+        listOfBuildNames+=("${sbTuple[0]}")
+        listOfBuildNums+=("${sbTuple[1]}")
+        if [[ "${sbTuple[2]}" == "none" ]]; then
+          # Fetch the build result from jenkins because trss doesn't have it yet.
+          jobName="$(echo ${sbTuple[0]} | cut -d- -f1)/job/${sbTuple[0]}/${sbTuple[1]}"
+          buildData=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/jobs/job/${jobName}/api/xml")
+          if [[ "${buildData}" =~ \<result\>[A-Z]+\<\/result\> ]]; then
+            resultString="${buildData#*<result>}"
+            resultString="${resultString%</result>*}"
+            listOfBuildResults+=("${resultString}")
+          else
+            listOfBuildResults+=("UNKNOWN")
+          fi
+        else
+          listOfBuildResults+=("${sbTuple[2]}")
+        fi
+        
         shorterListOfBuilds+="${sbTuple[0]},"
-        sbTuple=("none" "none" "none")
+        sbTuple=("none" "none")
       fi
     done
 
@@ -328,7 +340,7 @@ identifyFailedBuildsInTimerPipelines() {
     triageThesePlatforms=","
     for p in "${!temurinPlatforms[@]}"
     do
-      if [[ $shorterListOfBuilds =~ .*\"buildName\"\:\"${jdkJenkinsJobVersion}\-${temurinPlatforms[p]}\-temurin\".* ]]; then
+      if [[ $shorterListOfBuilds =~ .*,${jdkJenkinsJobVersion}\-${temurinPlatforms[p]}\-temurin,.* ]]; then
         if [[ ${arrayOfAllJDKVersions[v]} -lt ${platformStart[p]} ]]; then
           errorLog "Error: Platform ${temurinPlatforms[p]} should not be built for ${jdkJenkinsJobVersion}. Will not triage."
           continue
@@ -374,6 +386,30 @@ identifyFailedBuildsInTimerPipelines() {
     done
     echo "Build numbers found, and failures will be added to the array of builds to be triaged."
   done
+}
+
+# Inspects the unique solaris build jobs
+# and performs triage independant of 
+# identifyFailedBuildsInTimerPipelines
+solarisFailureFinder() {
+    # First we get the ID of the latest build of the solaris trigger job.
+    solarisTriggerXML=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/utils/job/betaTrigger_8ea_x64Solaris/lastBuild/api/xml")
+    solarisTriggerOutput=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/utils/job/betaTrigger_8ea_x64Solaris/lastBuild/consoleText")
+    solarisTriggerId="${solarisTriggerXML#*<id>}"
+    solarisTriggerId="${solarisTriggerId%</id>*}"
+    # Then we iterate over the builds until we find one with a child build job.
+    while [[ ! "${solarisTriggerOutput}" =~ jdk8u\-solaris\-x64\-temurin\-simplepipe ]]; do
+      solarisTriggerId=$(( solarisTriggerId - 1 ))
+      solarisTriggerOutput=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/utils/job/betaTrigger_8ea_x64Solaris/${solarisTriggerId}/consoleText")
+    done
+    # If that child build failed/aborted, we add it to the list of jobs to be triaged.
+    if [[ "${solarisTriggerXML}" =~ jdk8u\-solaris\-x64\-temurin\-simplepipe.\#[0-9]+.completed\:.(FAILURE|ABORTED) ]]; then
+      solarisBuildId="${solarisTriggerOutput#*Build build-scripts » jobs » jdk8u » jdk8u-solaris-x64-temurin-simplepipe #}"
+      solarisTriggerId="${solarisBuildId% completed:*}"
+      echo "SID = ${solarisTriggerId}"
+      solarisBuildOutput=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-x64-temurin-simplepipe/${solarisTriggerId}/consoleText")
+      # Add to list of jobs to triage
+    fi
 }
 
 # Takes a single failed jenkins build job URL as a string, and identifies the source of
@@ -500,6 +536,8 @@ echo "Build AutoTriage is starting."
 argumentParser "$@"
 
 identifyFailedBuildsInTimerPipelines
+
+solarisFailureFinder
 
 buildFailureTriager 
 
