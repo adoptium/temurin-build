@@ -71,6 +71,9 @@ elif echo "$SBOMFILE" | grep _linux_; then
   [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
   [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_GCC=11.3.0 && EXPECTED_FREETYPE=Unknown
   EXPECTED_ALSA=1.1.8
+  if echo "$SBOMFILE" | grep _aarch64_ > /dev/null; then
+     EXPECTED_ALSA=1.1.6 # Linux/aarch64 uses CentOS7.6 devkit, not 7.9
+  fi
   if echo "$SBOMFILE" | grep _riscv64_ > /dev/null; then
     EXPECTED_GCC=14.2.0
     EXPECTED_GLIBC=2.27 # Fedora 28
