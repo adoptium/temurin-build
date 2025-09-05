@@ -33,7 +33,7 @@ EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
 EXPECTED_GLIBC=""
 EXPECTED_GCC=""
 # [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
-EXPECTED_ALSA="N.A"
+EXPECTED_ALSA=""
 #EXPECTED_FREETYPE=N.A # https://github.com/adoptium/temurin-build/issues/3493
 #EXPECTED_FREETYPE=https://github.com/freetype/freetype/commit/86bc8a95056c97a810986434a3f268cbe67f2902
 if echo "$SBOMFILE" | grep _solaris_; then
@@ -70,10 +70,11 @@ elif echo "$SBOMFILE" | grep _linux_; then
   [ "${MAJORVERSION}" = "11" ] && EXPECTED_GCC=7.5.0
   [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
   [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_GCC=11.3.0 && EXPECTED_FREETYPE=Unknown
-  EXPECTED_ALSA=1.1.6
+  EXPECTED_ALSA=1.1.8
   if echo "$SBOMFILE" | grep _riscv64_ > /dev/null; then
-    EXPECTED_GCC=10.5.0 # No devkit yet so default in Ubuntu 20.04
-    EXPECTED_GLIBC=2.31
+    EXPECTED_GCC=14.2.0
+    EXPECTED_GLIBC=2.27 # Fedora 28
+    EXPECTED_ALSA=1.1.1
     [ "${MAJORVERSION}" -lt 20 ] && EXPECTED_FREETYPE=2.10.1
   fi
 #elif echo $SBOMFILE | grep _mac_; then
