@@ -83,7 +83,8 @@ node('worker') {
             warnError("The command failed") {
                 testJob = build job: "${jobTest}",
                 parameters: [
-                    string( name: 'UPSTREAM_JOBLINK', value: "${jobBaseLink}pipe/${env.BUILD_ID}")
+                    string( name: 'UPSTREAM_JOB_NAME', value: "${jobBaseName}pipe"),
+                    string( name: 'UPSTREAM_JOB_NUMBER', value: "${env.BUILD_ID}"),
                 ]
             }
         }
