@@ -93,6 +93,6 @@ export TEST_JDK_HOME BUILD_LIST PATH JRE_IMAGE
 cd TKG
 (echo VENDOR OPTIONS = $VENDOR_TEST_REPOS / $VENDOR_TEST_DIRS / $VENDOR_TEST_BRANCHES)
 gmake compile
-#echo SXAEC: Running gmake _$1.$2 from `pwd`
-#DISPLAY=:5; export DISPLAY
-#gmake _$1.$2 2>&1 | tee $1.$2.$$.log
+echo SXAEC: Running gmake _$1.$2 from `pwd`
+DISPLAY=:5; export DISPLAY
+gmake _$1.$2 2>&1 | tee $1.$2.$$.log
