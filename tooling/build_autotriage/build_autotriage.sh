@@ -390,21 +390,37 @@ identifyFailedBuildsInTimerPipelines() {
       # Solaris x64
       solarisJobURL="https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-x64-temurin-simplepipe/lastCompletedBuild/"
       solarisJobData=$(wget -q -O - "${solarisJobURL}api/xml")
-      if [[ "${solarisJobData}" =~ \<result\>(FAILURE|ABORTED)\<\/result\> ]]; then
+      if [[ "${solarisJobData}" =~ \<result\>[A-Z]+\<\/result\> ]]; then
         solarisJobURL=$(wget -q -O - "${solarisJobURL}api/xml?xpath=/workflowRun/url")
         solarisJobURL=${solarisJobURL:5:-7}
-        echo "Identified a failed build for triage: ${solarisJobURL}"
-        arrayOfFailedJobs+=("${solarisJobURL}")
+        echo "Identified a Solaris x64 job. Checking status now. URL: ${solarisJobURL}"
+        if [[ "${solarisJobData}" =~ \<result\>(FAILURE|ABORTED)\<\/result\> ]]; then
+          solarisJobURL=$(wget -q -O - "${solarisJobURL}api/xml?xpath=/workflowRun/url")
+          solarisJobURL=${solarisJobURL:5:-7}
+          echo "Identified a failed build for triage: ${solarisJobURL}"
+          arrayOfFailedJobs+=("${solarisJobURL}")
+        else
+          echo "Solaris sparcv9 job did not fail."
+        fi
+      else
+        errorLog "Could not find a valid job for Solaris x64. URL: ${solarisJobURL}"
       fi
       
       # Solaris sparcv9
       solarisJobURL="https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-sparcv9-temurin-simplepipe/lastCompletedBuild/"
       solarisJobData=$(wget -q -O - "${solarisJobURL}api/xml")
-      if [[ "${solarisJobData}" =~ \<result\>(FAILURE|ABORTED)\<\/result\> ]]; then
+      if [[ "${solarisJobData}" =~ \<result\>[A-Z]+\<\/result\> ]]; then
         solarisJobURL=$(wget -q -O - "${solarisJobURL}api/xml?xpath=/workflowRun/url")
         solarisJobURL=${solarisJobURL:5:-7}
-        echo "Identified a failed build for triage: ${solarisJobURL}"
-        arrayOfFailedJobs+=("${solarisJobURL}")
+        echo "Identified a Solaris sparcv9 job. Checking status now. URL: ${solarisJobURL}"
+        if [[ ! "${solarisJobData}" =~ \<result\>(SUCCESS|UNSTABLE)\<\/result\> ]]; then
+          echo "Identified a failed build for triage: ${solarisJobURL}"
+          arrayOfFailedJobs+=("${solarisJobURL}")
+        else
+          echo "Solaris sparcv9 job did not fail."
+        fi
+      else
+        errorLog "Could not find a valid job for Solaris sparcv9. URL: ${solarisJobURL}"
       fi
     fi
     echo "Build numbers found, and failures will be added to the array of builds to be triaged."
