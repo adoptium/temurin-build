@@ -313,7 +313,8 @@ identifyFailedBuildsInTimerPipelines() {
         listOfBuildNums+=("${sbTuple[1]}")
         if [[ "${sbTuple[2]}" == "none" ]]; then
           # Fetch the build result from jenkins because trss doesn't have it yet.
-          jobName="$(echo ${sbTuple[0]} | cut -d- -f1)/job/${sbTuple[0]}/${sbTuple[1]}"
+          jobNamePrefix=$(echo "${sbTuple[0]}" | cut -d- -f1)
+          jobName="${jobNamePrefix}/job/${sbTuple[0]}/${sbTuple[1]}"
           buildData=$(wget -q -O - "https://ci.adoptium.net/job/build-scripts/job/jobs/job/${jobName}/api/xml")
           if [[ "${buildData}" =~ \<result\>[A-Z]+\<\/result\> ]]; then
             resultString="${buildData#*<result>}"
