@@ -400,7 +400,7 @@ identifyFailedBuildsInTimerPipelines() {
           echo "Identified a failed build for triage: ${solarisJobURL}"
           arrayOfFailedJobs+=("${solarisJobURL}")
         else
-          echo "Solaris sparcv9 job did not fail."
+          echo "Solaris x64 job did not fail."
         fi
       else
         errorLog "Could not find a valid job for Solaris x64. URL: ${solarisJobURL}"
