@@ -394,7 +394,7 @@ identifyFailedBuildsInTimerPipelines() {
         solarisJobURL=$(wget -q -O - "${solarisJobURL}api/xml?xpath=/workflowRun/url")
         solarisJobURL=${solarisJobURL:5:-7}
         echo "Identified a Solaris x64 job. Checking status now. URL: ${solarisJobURL}"
-        if [[ "${solarisJobData}" =~ \<result\>(FAILURE|ABORTED)\<\/result\> ]]; then
+        if [[ ! "${solarisJobData}" =~ \<result\>(SUCCESS|UNSTABLE)\<\/result\> ]]; then
           solarisJobURL=$(wget -q -O - "${solarisJobURL}api/xml?xpath=/workflowRun/url")
           solarisJobURL=${solarisJobURL:5:-7}
           echo "Identified a failed build for triage: ${solarisJobURL}"
