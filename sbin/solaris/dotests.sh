@@ -12,7 +12,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
-
+# shellcheck disable=SC2006
 #
 # dotests.sh
 # Designed for running via a proxy machine for the Temurin Solaris tests
@@ -52,7 +52,7 @@ else
     fi
     JDK_TARBALL_NAME=$PWD/build_artifacts/`cat $PWD/build_artifacts/filenames.txt | grep "OpenJDK8U-jdk_.*tar.gz$"`
   else
-    # Linter can go do one if it objects to the backticks - "$(" is not understood by Solaris' bourne shell
+    # Linter can go do one if it objects to the backticks - "$(" is not understood by Solaris' bourne shell (SC2006)
     JDK_TARBALL_NAME=`curl -s "${UPSTREAM_JOBLINK}/artifact/workspace/target/filenames.txt" | grep "OpenJDK8U-jdk_.*tar.gz$"`
     [ -z "$JDK_TARBALL_NAME" ] && echo "Could not retrieve filenames.txt from $UPSTREAM_JOBLINK" && exit 1
     echo Downloading and extracting JDK tarball ...
