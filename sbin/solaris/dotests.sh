@@ -59,7 +59,7 @@ else
   gzip -cd "$JDK_TARBALL_NAME" | tar xpf -
   echo Downloading and extracting JRE tarball ... Required for special.openjdk jdk_math_jre_0 target
   JRE_TARBALL_NAME="`echo $JDK_TARBALL_NAME | sed s/jdk/jre/`"
-  if [ "$1" = "special"]; then
+  if [ "$1" = "special" ]; then
     if [ "$2" = "openjdk" ]; then
       if [ ! -z "${UPSTREAM_JOBLINK}" ]; then
         curl -O "${UPSTREAM_JOBLINK}/artifact/workspace/target/$JRE_TARBALL_NAME" || exit 1
