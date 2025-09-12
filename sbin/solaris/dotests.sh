@@ -24,8 +24,21 @@
 #
 
 # Check for Xvfb on display :5
-XVFB5=`ps -fu vagrant | grep 'Xvfb :5' | grep -v grep | wc -l`
-   echo XVFB5 = $XVFB5
+XVFB5=`ps -fu vagrant | awk '/Xvfb :5/ && !/awk/ {c=c+1} END {print c+0}'`
+echo "XVFB5 = $XVFB5"
+ 
+
+XVFB5=0
+for PSOUT in `ps -fu vagrant`; do
+  if [[ "$PSOUT" =~ .*Xvfb\s\:5.* ]]; then
+    if [[ ! "$PSOUT" =~ .*grep.* ]]; then
+      XVFB5=`expr "$XVFB5" +1`
+    fi
+  fi
+done
+
+echo XVFB5 = $XVFB5
+
 if [ $XVFB5 != 1 ]; then
    echo WARNING: Xvfb was not started - attempting to start ...
    nohup /usr/X11/bin/Xvfb :5 -screen 0 1024x768x24 &
