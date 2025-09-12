@@ -22,6 +22,7 @@ on:
       - "sbin/**"
       - "**.sh"
       - "!tooling/build_autotriage/**"
+      - "!sbin/solaris/**"
       - ".github/workflows/build.yml"
       - "security/**"
       - "cyclonedx-lib/**"
