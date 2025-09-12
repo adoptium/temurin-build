@@ -73,8 +73,8 @@ PWD=`pwd`
 TEST_JDK_HOME=""
 JRE_IMAGE=""
 for FILE in $PWD/jdk8u*; do
-  [ `echo "$FILE" | grep -v jre` ] && TEST_JDK_HOME="$FILE"
-  [ `echo "$FILE" | grep jre` ] && JRE_IMAGE="$FILE"
+  [ "`echo "$FILE" | grep -v jre`" ] && TEST_JDK_HOME="$FILE"
+  [ "`echo "$FILE" | grep jre`" ] && JRE_IMAGE="$FILE"
 done
 env
 # TODO: Check if this actually exists
