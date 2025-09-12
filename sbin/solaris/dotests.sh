@@ -31,7 +31,7 @@ if [ $XVFB5 != 1 ]; then
    echo WARNING: Xvfb was not started - attempting to start ...
    nohup /usr/X11/bin/Xvfb :5 -screen 0 1024x768x24 &
    sleep 2
-   XVFB5=`ps -fu vagrant | grep 'Xvfb :5' | grep -v grep | wc -l`
+   XVFB5=`ps -fu vagrant | awk '/Xvfb :5/ && !/awk/ {c=c+1} END {print c+0}'`
    echo XVFB5 = $XVFB5
    [ $XVFB5 != 1 ] && echo Still failed to start Xvfb - manual intervention required && exit 1
 fi
@@ -72,7 +72,7 @@ fi
 PWD=`pwd`
 TEST_JDK_HOME=""
 JRE_IMAGE=""
-for FILE in $PWD/jdk8u*; do
+for FILE in "$PWD/jdk8u*"; do
   [ "`echo "$FILE" | grep -v jre`" ] && TEST_JDK_HOME="$FILE"
   [ "`echo "$FILE" | grep jre`" ] && JRE_IMAGE="$FILE"
 done
