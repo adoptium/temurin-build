@@ -28,7 +28,8 @@ import org.cyclonedx.model.OrganizationalContact;
 import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.Property;
 import org.cyclonedx.model.formulation.Workflow;
-import org.cyclonedx.model.formulation.task.*; //Command, Step and Task
+import org.cyclonedx.model.formulation.task.Command;
+import org.cyclonedx.model.formulation.task.Step;
 import org.cyclonedx.model.formulation.FormulationCommon.TaskType;
 import org.cyclonedx.parsers.JsonParser;
 import org.cyclonedx.parsers.XmlParser;
@@ -51,206 +52,249 @@ public final class TemurinGenSBOM {
     private TemurinGenSBOM() {
     }
 
-    /**
-     * Main entry.
-     * @param args Arguments for sbom operation.
-     */
-    public static void main(final String[] args) {
-        String cmd = "";
-        String comment = null;
-        String compName = null;
-        String formulaName = null;
-        String description = null;
-        String fileName = null;
-        String hash = null;
-        String name = null;
-        String tool = null;
-        String type = null;
-        String url = null;
-        String value = null;
-        String version = null;
-        String workflowRef = null;
-        String workflowName = null;
-        String workflowStepName = null;
-        String formulaPropName = null;
-        String workflowUid = null;
-        String executed = null;
-        String rawTaskTypes = null;
+    private record ParsedArgs(
+            String cmd,
+            String comment,
+            String compName,
+            String formulaName,
+            String description,
+            String fileName,
+            String hash,
+            String name,
+            String tool,
+            String type,
+            String url,
+            String value,
+            String version,
+            String workflowRef,
+            String workflowName,
+            String workflowStepName,
+            String formulaPropName,
+            String workflowUid,
+            String executed,
+            String rawTaskTypes
+    ) {
 
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("--jsonFile")) {
-                fileName = args[++i];
-                useJson = true;
-            } else if (args[i].equals("--xmlFile")) {
-                fileName = args[++i];
-                useJson = false;
-            } else if (args[i].equals("--version")) {
-                version = args[++i];
-            } else if (args[i].equals("--name")) {
-                name = args[++i];
-            } else if (args[i].equals("--value")) {
-                value = args[++i];
-            } else if (args[i].equals("--url")) {
-                url = args[++i];
-            } else if (args[i].equals("--comment")) {
-                comment = args[++i];
-            } else if (args[i].equals("--hash")) {
-                hash = args[++i];
-            } else if (args[i].equals("--compName")) {
-                compName = args[++i];
-            } else if (args[i].equals("--formulaName")) {
-                formulaName = args[++i];
-            } else if (args[i].equals("--description")) {
-                description = args[++i];
-            } else if (args[i].equals("--type")) {
-                type = args[++i];
-            } else if (args[i].equals("--tool")) {
-                tool =  args[++i];
-            } else if (args[i].equals("--createNewSBOM")) {
-                cmd = "createNewSBOM";
-            } else if (args[i].equals("--addMetadata")) {               // Metadata Component. We can set "name" for Metadata.
-                cmd = "addMetadata";
-            } else if (args[i].equals("--addMetadataComponent")) {      // Metadata Component. We can set "name" for Metadata->Component.
-                cmd = "addMetadataComponent";
-            } else if (args[i].equals("--addMetadataProp")) {           // MetaData Component --> Property -> name-value
-                cmd = "addMetadataProperty";
-            } else if (args[i].equals("--addComponent")) {
-                cmd = "addComponent";
-            } else if (args[i].equals("--addComponentHash")) {
-                cmd = "addComponentHash";
-            } else if (args[i].equals("--addComponentProp")) {          // Components --> Property: will add name-value.
-                cmd = "addComponentProp";
-            } else if (args[i].equals("--addMetadataTools")) {
-                cmd = "addMetadataTools";
-            } else if (args[i].equals("--addFormulation")) {            // Formulation Component. We can set "name" for Formulation.
-                cmd = "addFormulation";
-            } else if (args[i].equals("--addFormulationComp")) {        // Formulation Component. We can set "name" for Formulation.
-                cmd = "addFormulationComp";
-            } else if (args[i].equals("--addFormulationCompProp")) {    // Formulation --> Component --> Property --> name-value
-                cmd = "addFormulationCompProp";
-            } else if (args[i].equals("--verbose")) {
-                verbose = true;
-            } else if (args[i].equals("--addFormulaProp")) {            // formulation --> properties
-                cmd = "addFormulaProp";
-            } else if (args[i].equals("--formulaPropName")) {           // formulation --> properties --> name
-                formulaPropName = args[++i];
-            } else if (args[i].equals("--addWorkflow")) {               // formulation --> workflows
-                cmd = "addWorkflow";
-            } else if (args[i].equals("--workflowRef")) {               // formulation --> workflows --> bom-ref
-                workflowRef = args[++i];
-            } else if (args[i].equals("--workflowName")) {              // formulation --> workflows --> name
-                workflowName = args[++i];
-            } else if (args[i].equals("--workflowUid")) {               // formulation --> workflows --> uid
-                workflowUid = args[++i];
-            } else if (args[i].equals("--taskTypes")) {                 // formulation --> workflows --> taskTypes
-                rawTaskTypes = args[++i];
-            } else if (args[i].equals("--addWorkflowStep")) {           // formulation --> workflows --> steps
-                cmd = "addWorkflowStep";
-            } else if (args[i].equals("--workflowStepName")) {          // formulation --> workflows --> steps --> name
-                workflowStepName = args[++i];
-            } else if (args[i].equals("--addWorkflowStepCmd")) {        // formulation --> workflows --> steps --> commands
-                cmd = "addWorkflowStepCmd";
-            } else if (args[i].equals("--executed")) {                  // formulation --> workflows --> steps --> commands --> executed
-                executed = args[++i];
-            }
-        }
-        try {
-          switch (cmd) {
-            case "createNewSBOM":                                    // Creates new SBOM
-                Bom bom = createBom();
-                writeFile(bom, fileName);
-                break;
-
-            case "addMetadata":                                      // Adds Metadata --> name
-                bom = addMetadata(fileName);
-                writeFile(bom, fileName);
-                break;
-
-            case "addMetadataComponent":                             // Adds Metadata --> Component --> name
-                bom = addMetadataComponent(fileName, name, type, version, description);
-                writeFile(bom, fileName);
-                break;
-
-            case "addMetadataProperty":                              // Adds MetaData --> Property --> name-value:
-                bom = addMetadataProperty(fileName, name, value);
-                writeFile(bom, fileName);
-                break;
-
-            case "addFormulation":                                   // Adds Formulation --> name
-                bom = addFormulation(fileName, formulaName);
-                writeFile(bom, fileName);
-                break;
-
-            case "addFormulationComp":                               // Adds Formulation --> Component--> name
-                bom = addFormulationComp(fileName, formulaName, name, type);
-                writeFile(bom, fileName);
-                break;
-            case "addFormulationCompProp":                           // Adds Formulation --> Component -> name-value:
-                bom = addFormulationCompProp(fileName, formulaName, compName, name, value);
-                writeFile(bom, fileName);
-                break;
-
-            case "addMetadataTools":
-                bom = addMetadataTools(fileName, tool, version);
-                writeFile(bom, fileName);
-                break;
-
-            case "addComponent":                                     // Adds Components --> Component --> name
-                bom = addComponent(fileName, compName, version, description);
-                writeFile(bom, fileName);
-                break;
-
-            case "addComponentHash":                                 // Adds Components --> Component --> hash
-                bom = addComponentHash(fileName, compName, hash);
-                writeFile(bom, fileName);
-                break;
-
-            case "addComponentProp":                                 // Adds Components --> Component --> name-value pairs
-                bom = addComponentProperty(fileName, compName, name, value);
-                writeFile(bom, fileName);
-                break;
-
-            case "addFormulaProp":
-                String realFormulaPropName = formulaPropName != null ? formulaPropName : name;
-                bom = addFormulaProperty(fileName, formulaName, realFormulaPropName, value);
-                writeFile(bom, fileName);
-                break;
-
-            case "addWorkflow":
-                String realWorkflowName = workflowName != null ? workflowName : name;
-                bom = addWorkflow(fileName, formulaName, workflowRef, workflowUid, realWorkflowName, rawTaskTypes);
-                writeFile(bom, fileName);
-                break;
-
-            case "addWorkflowStep":
-                String realWorkflowStepName = workflowStepName != null ? workflowStepName : name;
-                bom = addWorkflowStep(fileName, formulaName, workflowRef, realWorkflowStepName, description);
-                writeFile(bom, fileName);
-                break;
-
-            case "addWorkflowStepCmd":
-                String realWorkflowStepNameForCmd = workflowStepName != null ? workflowStepName : name;
-                bom = addWorkflowStepCmd(fileName, formulaName, workflowRef, realWorkflowStepNameForCmd, executed);
-                writeFile(bom, fileName);
-                break;
-
-            default:
-                // Echo input command:
-                for (int i = 0; i < args.length; i++) {
-                    System.out.print(args[i] + " ");
-                }
-                System.out.println("\nPlease enter a valid command.");
-                System.exit(1);
-          }
-        } catch (Exception e) {
-            // Echo input command:
-            for (int i = 0; i < args.length; i++) {
-                System.out.print(args[i] + " ");
-            }
-            System.out.println("\nException: " + e);
-            System.exit(1);
-        }
     }
+
+        /**
+        * Main entry.
+        * @param args Arguments for sbom operation.
+        */
+        public static void main(final String[] args) {
+            final ParsedArgs parsedArgs = parseArgs(args);
+            try {
+                final Bom bom = dispatch(parsedArgs, args);
+                writeFile(bom, parsedArgs.fileName);
+            } catch (Exception e) {
+                echoArgs(args);
+                System.out.println("\nException: " + e);
+                System.exit(1);
+            }
+        }
+
+        private static void echoArgs(final String[] raw) {
+        for (int i = 0; i < raw.length; i++) {
+            System.out.print(raw[i] + " ");
+            }
+        }
+
+        private static ParsedArgs parseArgs(final String[] args) {
+            String cmd = "";
+            String comment = null;
+            String compName = null;
+            String formulaName = null;
+            String description = null;
+            String fileName = null;
+            String hash = null;
+            String name = null;
+            String tool = null;
+            String type = null;
+            String url = null;
+            String value = null;
+            String version = null;
+            String workflowRef = null;
+            String workflowName = null;
+            String workflowStepName = null;
+            String formulaPropName = null;
+            String workflowUid = null;
+            String executed = null;
+            String rawTaskTypes = null;
+
+            for (int i = 0; i < args.length; i++) {
+                final String a = args[i];
+                if (a.equals("--jsonFile")) {
+                    fileName = args[++i];
+                    useJson = true;
+                } else if (a.equals("--xmlFile")) {
+                    fileName = args[++i];
+                    useJson = false;
+                } else if (a.equals("--version")) {
+                    version = args[++i];
+                } else if (a.equals("--name")) {
+                    name = args[++i];
+                } else if (a.equals("--value")) {
+                    value = args[++i];
+                } else if (a.equals("--url")) {
+                    url = args[++i];
+                } else if (a.equals("--comment")) {
+                    comment = args[++i];
+                } else if (a.equals("--hash")) {
+                    hash = args[++i];
+                } else if (a.equals("--compName")) {
+                    compName = args[++i];
+                } else if (a.equals("--formulaName")) {
+                    formulaName = args[++i];
+                } else if (a.equals("--description")) {
+                    description = args[++i];
+                } else if (a.equals("--type")) {
+                    type = args[++i];
+                } else if (a.equals("--tool")) {
+                    tool = args[++i];
+                } else if (a.equals("--createNewSBOM")) {
+                    cmd = "createNewSBOM";
+                } else if (a.equals("--addMetadata")) {
+                    cmd = "addMetadata";
+                } else if (a.equals("--addMetadataComponent")) {
+                    cmd = "addMetadataComponent";
+                } else if (a.equals("--addMetadataProp")) {
+                    cmd = "addMetadataProperty";
+                } else if (a.equals("--addComponent")) {
+                    cmd = "addComponent";
+                } else if (a.equals("--addComponentHash")) {
+                    cmd = "addComponentHash";
+                } else if (a.equals("--addComponentProp")) {
+                    cmd = "addComponentProp";
+                } else if (a.equals("--addMetadataTools")) {
+                    cmd = "addMetadataTools";
+                } else if (a.equals("--addFormulation")) {
+                    cmd = "addFormulation";
+                } else if (a.equals("--addFormulationComp")) {
+                    cmd = "addFormulationComp";
+                } else if (a.equals("--addFormulationCompProp")) {
+                    cmd = "addFormulationCompProp";
+                } else if (a.equals("--verbose")) {
+                    verbose = true;
+                } else if (a.equals("--addFormulaProp")) {
+                    cmd = "addFormulaProp";
+                } else if (a.equals("--formulaPropName")) {
+                    formulaPropName = args[++i];
+                } else if (a.equals("--addWorkflow")) {
+                    cmd = "addWorkflow";
+                } else if (a.equals("--workflowRef")) {
+                    workflowRef = args[++i];
+                } else if (a.equals("--workflowName")) {
+                    workflowName = args[++i];
+                } else if (a.equals("--workflowUid")) {
+                    workflowUid = args[++i];
+                } else if (a.equals("--taskTypes")) {
+                    rawTaskTypes = args[++i];
+                } else if (a.equals("--addWorkflowStep")) {
+                    cmd = "addWorkflowStep";
+                } else if (a.equals("--workflowStepName")) {
+                    workflowStepName = args[++i];
+                } else if (a.equals("--addWorkflowStepCmd")) {
+                    cmd = "addWorkflowStepCmd";
+                } else if (a.equals("--executed")) {
+                    executed = args[++i];
+                }
+            }
+
+            return new ParsedArgs(
+                    cmd, comment, compName, formulaName, description, fileName, hash, name, tool, type, url,
+                    value, version, workflowRef, workflowName, workflowStepName, formulaPropName, workflowUid,
+                    executed, rawTaskTypes
+            );
+        }
+
+        private static Bom dispatch(final ParsedArgs a, final String[] raw) throws Exception {
+            switch (a.cmd) {
+                case "createNewSBOM":           return execCreateNewSBOM();
+                case "addMetadata":             return execAddMetadata(a);
+                case "addMetadataComponent":    return execAddMetadataComponent(a);
+                case "addMetadataProperty":     return execAddMetadataProperty(a);
+                case "addFormulation":          return execAddFormulation(a);
+                case "addFormulationComp":      return execAddFormulationComp(a);
+                case "addFormulationCompProp":  return execAddFormulationCompProp(a);
+                case "addMetadataTools":        return execAddMetadataTools(a);
+                case "addComponent":            return execAddComponent(a);
+                case "addComponentHash":        return execAddComponentHash(a);
+                case "addComponentProp":        return execAddComponentProp(a);
+                case "addFormulaProp":          return execAddFormulaProp(a);
+                case "addWorkflow":             return execAddWorkflow(a);
+                case "addWorkflowStep":         return execAddWorkflowStep(a);
+                case "addWorkflowStepCmd":      return execAddWorkflowStepCmd(a);
+                default:
+                    echoArgs(raw);
+                    System.out.println("\nPlease enter a valid command.");
+                    System.exit(1);
+                    return null;
+            }
+        }
+
+        private static Bom execCreateNewSBOM() throws Exception {
+            return createBom();
+        }
+
+        private static Bom execAddMetadata(final ParsedArgs a) throws Exception {
+            return addMetadata(a.fileName);
+        }
+
+        private static Bom execAddMetadataComponent(final ParsedArgs a) throws Exception {
+            return addMetadataComponent(a.fileName, a.name, a.type, a.version, a.description);
+        }
+
+        private static Bom execAddMetadataProperty(final ParsedArgs a) throws Exception {
+            return addMetadataProperty(a.fileName, a.name, a.value);
+        }
+
+        private static Bom execAddFormulation(final ParsedArgs a) throws Exception {
+            return addFormulation(a.fileName, a.formulaName);
+        }
+
+        private static Bom execAddFormulationComp(final ParsedArgs a) throws Exception {
+            return addFormulationComp(a.fileName, a.formulaName, a.name, a.type);
+        }
+
+        private static Bom execAddFormulationCompProp(final ParsedArgs a) throws Exception {
+            return addFormulationCompProp(a.fileName, a.formulaName, a.compName, a.name, a.value);
+        }
+
+        private static Bom execAddMetadataTools(final ParsedArgs a) throws Exception {
+            return addMetadataTools(a.fileName, a.tool, a.version);
+        }
+
+        private static Bom execAddComponent(final ParsedArgs a) throws Exception {
+            return addComponent(a.fileName, a.compName, a.version, a.description);
+        }
+
+        private static Bom execAddComponentHash(final ParsedArgs a) throws Exception {
+            return addComponentHash(a.fileName, a.compName, a.hash);
+        }
+
+        private static Bom execAddComponentProp(final ParsedArgs a) throws Exception {
+            return addComponentProperty(a.fileName, a.compName, a.name, a.value);
+        }
+
+        private static Bom execAddFormulaProp(final ParsedArgs a) throws Exception {
+            final String realFormulaPropName = a.formulaPropName != null ? a.formulaPropName : a.name;
+            return addFormulaProperty(a.fileName, a.formulaName, realFormulaPropName, a.value);
+        }
+
+        private static Bom execAddWorkflow(final ParsedArgs a) throws Exception {
+            final String realWorkflowName = a.workflowName != null ? a.workflowName : a.name;
+            return addWorkflow(a.fileName, a.formulaName, a.workflowRef, a.workflowUid, realWorkflowName, a.rawTaskTypes);
+        }
+
+        private static Bom execAddWorkflowStep(final ParsedArgs a) throws Exception {
+            final String realWorkflowStepName = a.workflowStepName != null ? a.workflowStepName : a.name;
+            return addWorkflowStep(a.fileName, a.formulaName, a.workflowRef, realWorkflowStepName, a.description);
+        }
+
+        private static Bom execAddWorkflowStepCmd(final ParsedArgs a) throws Exception {
+            final String realWorkflowStepNameForCmd = a.workflowStepName != null ? a.workflowStepName : a.name;
+            return addWorkflowStepCmd(a.fileName, a.formulaName, a.workflowRef, realWorkflowStepNameForCmd, a.executed);
+        }
 
     /*
      * Create SBOM file in json format with default "bomFormat" "specVersion" and "version"
@@ -513,7 +557,11 @@ public final class TemurinGenSBOM {
             return null;
         }
         if (stepName != null) {
-            for (Step s : steps) if (stepName.equals(s.getName())) return s;
+            for (Step s : steps) {
+                if (stepName.equals(s.getName())) {
+                    return s;
+                }
+            }
         }
         return null;
     }
@@ -538,7 +586,9 @@ public final class TemurinGenSBOM {
 
     private static TaskType stringToTaskType(final String raw) {
         if (raw == null) {
-            System.out.println("No TaskType specified. Choosing \"other\". Specify TaskTypes using \"--taskTypes\"");
+            if (verbose) {
+                System.out.println("No TaskType specified. Choosing \"other\". Specify TaskTypes using \"--taskTypes\"");
+            }
             return TaskType.OTHER;
         }
         String trimmed = raw.trim().toLowerCase();
@@ -555,15 +605,19 @@ public final class TemurinGenSBOM {
             case "release": return TaskType.RELEASE;
             case "scan": return TaskType.SCAN;
             case "test": return TaskType.TEST;
+            default:
+            if (verbose) {
+                System.out.println("\"" + trimmed + "\" is not a valid TaskType. Using \"other\" instead.");
+            }
+            return TaskType.OTHER;
         }
-        System.out.println(trimmed + " is not a valid TaskType. Picking \"other\" instead.");
-        return TaskType.OTHER;
     }
 
     private static List<TaskType> parseTaskTypes(final String raw) {
         List<TaskType> out = new LinkedList<>();
         if (raw == null || raw.isEmpty()) {
-            return out;}
+            return out;
+        }
         for (String s : raw.split(",")) {
             String t = s.trim();
             if (!t.isEmpty()) {
