@@ -588,13 +588,17 @@ checkingAndDownloadingFreeType() {
     eval "${freetypeEnv}" && bash ./autogen.sh || exit 1
 
     local pngArg=""
-    if ./configure --help | grep "with-png"; then
+    if bash ./configure --help | grep "with-png"; then
       pngArg="--with-png=no"
+    fi
+    local harfbuzzArg=""
+    if bash ./configure --help | grep "with-harfbuzz"; then
+      harfbuzzArg="--with-harfbuzz=no"
     fi
 
     # We get the files we need at $WORKING_DIR/installedfreetype
     # shellcheck disable=SC2046
-    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${pngArg}" "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
+    if ! (bash ./configure --prefix="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}"/installedfreetype "${pngArg}" "${harfbuzzArg}" "${BUILD_CONFIG[FREETYPE_FONT_BUILD_TYPE_PARAM]}" && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} all && ${BUILD_CONFIG[MAKE_COMMAND_NAME]} install); then
       # shellcheck disable=SC2154
       echo "Failed to configure and build libfreetype, exiting"
       exit
