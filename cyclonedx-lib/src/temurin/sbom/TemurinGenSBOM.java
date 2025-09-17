@@ -52,29 +52,71 @@ public final class TemurinGenSBOM {
     private TemurinGenSBOM() {
     }
 
-    private record ParsedArgs(
-            String cmd,
-            String comment,
-            String compName,
-            String formulaName,
-            String description,
-            String fileName,
-            String hash,
-            String name,
-            String tool,
-            String type,
-            String url,
-            String value,
-            String version,
-            String workflowRef,
-            String workflowName,
-            String workflowStepName,
-            String formulaPropName,
-            String workflowUid,
-            String executed,
-            String rawTaskTypes
-    ) {
+private static final class ParsedArgs {
+    private final String cmd;
+    private final String comment;
+    private final String compName;
+    private final String formulaName;
+    private final String description;
+    private final String fileName;
+    private final String hash;
+    private final String name;
+    private final String tool;
+    private final String type;
+    private final String url;
+    private final String value;
+    private final String version;
+    private final String workflowRef;
+    private final String workflowName;
+    private final String workflowStepName;
+    private final String formulaPropName;
+    private final String workflowUid;
+    private final String executed;
+    private final String rawTaskTypes;
 
+    ParsedArgs(
+        final String cmdParam,
+        final String commentParam,
+        final String compNameParam,
+        final String formulaNameParam,
+        final String descriptionParam,
+        final String fileNameParam,
+        final String hashParam,
+        final String nameParam,
+        final String toolParam,
+        final String typeParam,
+        final String urlParam,
+        final String valueParam,
+        final String versionParam,
+        final String workflowRefParam,
+        final String workflowNameParam,
+        final String workflowStepNameParam,
+        final String formulaPropNameParam,
+        final String workflowUidParam,
+        final String executedParam,
+        final String rawTaskTypesParam
+    ) {
+        this.cmd = cmdParam;
+        this.comment = commentParam;
+        this.compName = compNameParam;
+        this.formulaName = formulaNameParam;
+        this.description = descriptionParam;
+        this.fileName = fileNameParam;
+        this.hash = hashParam;
+        this.name = nameParam;
+        this.tool = toolParam;
+        this.type = typeParam;
+        this.url = urlParam;
+        this.value = valueParam;
+        this.version = versionParam;
+        this.workflowRef = workflowRefParam;
+        this.workflowName = workflowNameParam;
+        this.workflowStepName = workflowStepNameParam;
+        this.formulaPropName = formulaPropNameParam;
+        this.workflowUid = workflowUidParam;
+        this.executed = executedParam;
+        this.rawTaskTypes = rawTaskTypesParam;
+        }
     }
 
         /**
