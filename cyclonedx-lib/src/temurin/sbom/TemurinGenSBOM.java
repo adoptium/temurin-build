@@ -319,18 +319,15 @@ private static final class ParsedArgs {
         }
 
         private static Bom execAddFormulaProp(final ParsedArgs a) throws Exception {
-            final String realFormulaPropName = a.formulaPropName != null ? a.formulaPropName : a.name;
-            return addFormulaProperty(a.fileName, a.formulaName, realFormulaPropName, a.value);
+            return addFormulaProperty(a.fileName, a.formulaName, a.formulaPropName, a.value);
         }
 
         private static Bom execAddWorkflow(final ParsedArgs a) throws Exception {
-            final String realWorkflowName = a.workflowName != null ? a.workflowName : a.name;
-            return addWorkflow(a.fileName, a.formulaName, a.workflowRef, a.workflowUid, realWorkflowName, a.rawTaskTypes);
+            return addWorkflow(a.fileName, a.formulaName, a.workflowRef, a.workflowUid, a.workflowName, a.rawTaskTypes);
         }
 
         private static Bom execAddWorkflowStep(final ParsedArgs a) throws Exception {
-            final String realWorkflowStepName = a.workflowStepName != null ? a.workflowStepName : a.name;
-            return addWorkflowStep(a.fileName, a.formulaName, a.workflowRef, realWorkflowStepName, a.description);
+            return addWorkflowStep(a.fileName, a.formulaName, a.workflowRef, a.workflowStepName, a.description);
         }
 
         private static Bom execAddWorkflowStepCmd(final ParsedArgs a) throws Exception {
@@ -609,6 +606,13 @@ private static final class ParsedArgs {
     }
 
     static Bom addFormulaProperty(final String fileName, final String formulaRef, final String propName, final String propValue) {
+
+        System.out.println("addFormlaProp is deactivated, property \"" + propName + "\" not created.");
+
+        Bom bom = readFile(fileName);
+        return bom;
+
+        /*
         Bom bom = readFile(fileName);
         Formula f = getOrCreateFormula(bom, formulaRef);
 
@@ -624,6 +628,7 @@ private static final class ParsedArgs {
         f.setProperties(props);
 
         return bom;
+        */
     }
 
     private static TaskType stringToTaskType(final String raw) {
