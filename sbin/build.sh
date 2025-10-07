@@ -2053,10 +2053,10 @@ getLatestTagJDK11plus() {
 
 createDefaultTag() {
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" == "8" ]; then
-    echo "WARNING: Could not identify latest tag but the ADOPT_BRANCH_SAFETY flag is off so defaulting to 8u000-b00" 1>&2
+    echo "WARNING: Could not identify latest tag, defaulting to 8u000-b00" 1>&2
     echo "8u000-b00"
   else
-    echo "WARNING: Could not identify the latest tag, but the ADOPT_BRANCH_SAFETY flag is off, so defaulting to jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0" 1>&2
+    echo "WARNING: Could not identify the latest tag, defaulting to jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0" 1>&2
     echo "jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}.0.0+0"
   fi
 }
@@ -2068,18 +2068,13 @@ getOpenJDKTag() {
     # Checked out TAG specified
     echo "  getOpenJDKTag(): Using specified BUILD_CONFIG[TAG] (${BUILD_CONFIG[TAG]})" 1>&2
     echo "${BUILD_CONFIG[TAG]}"
-  elif [ -n "${BUILD_CONFIG[BRANCH]}" ]; then
-    echo "  getOpenJDKTag(): Using specified BUILD_CONFIG[BRANCH] (${BUILD_CONFIG[BRANCH]})" 1>&2
-    # Checked out BRANCH is a tag or branch
+  elif cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
+    # Checked out BRANCH is a tag
+    echo "  getOpenJDKTag(): Using tag specified by BUILD_CONFIG[BRANCH] (${BUILD_CONFIG[BRANCH]})" 1>&2
     echo "${BUILD_CONFIG[BRANCH]}"
   else
-    tag=$(getFirstTagFromOpenJDKGitRepo)
-    if [ "${tag}" == "" ]; then
-      echo "  getOpenJDKTag(): Unable to determine tag from checked out git repository, creating a 'default tag'" 1>&2
-      createDefaultTag
-    else
-      echo "${tag}"
-    fi
+    echo "  getOpenJDKTag(): Determining tag from checked out repository.." 1>&2
+    getFirstTagFromOpenJDKGitRepo
   fi
 }
 
@@ -2131,14 +2126,8 @@ getFirstTagFromOpenJDKGitRepo() {
 
   if [ -z "$firstMatchingNameFromRepo" ]; then
     echo "WARNING: Failed to identify latest tag in the repository" 1>&2
-    # If the ADOPT_BRANCH_SAFETY flag is set, we may be building from an alternate
-    # repository that doesn't have the same tags, so allow defaults. For a better
-    # options see https://github.com/adoptium/temurin-build/issues/2671
-    if [ "${BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]}" == "true" ]; then
-      createDefaultTag
-    else
-      echo "WARNING: Failed to identify latest tag in the repository" 1>&2
-    fi
+    # We may be building from an alternate non-adoptium repository, or from a personal branch with no tags, so use a default tag name
+    createDefaultTag
   else
     echo "$firstMatchingNameFromRepo"
   fi
