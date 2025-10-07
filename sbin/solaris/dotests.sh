@@ -47,7 +47,7 @@ else
   if [ -z "${UPSTREAM_JOBLINK}" ]; then
     # Jenkins simpletest job will copy the artifacts to this location
     if [ ! -r "build_artifacts/filenames.txt" ]; then
-       echo "dotests.sh : UPSTREAM_JOBLINK not defined and build_artifacts/filenames.txt does not exist" - cannot progress
+       echo "ERROR: dotests.sh : UPSTREAM_JOBLINK not defined and build_artifacts/filenames.txt does not exist" - cannot progress
        exit 1
     fi
     JDK_TARBALL_NAME=`pwd`/build_artifacts/`cat build_artifacts/filenames.txt | grep "OpenJDK8U-jdk_.*tar.gz$"`
