@@ -225,12 +225,12 @@ checkoutRequiredCodeToBuild() {
     git fetch --tags || rc=$?
     if [ $rc -eq 0 ]; then
       if git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
-        echo "looks like the scm ref given is a valid tag, so treat it as a tag"
+        echo "looks like the BUILD_CONFIG[BRANCH] (${BUILD_CONFIG[BRANCH]}) scm ref given is a valid tag, so treat it as a tag"
         tag="${BUILD_CONFIG[BRANCH]}"
         BUILD_CONFIG[TAG]="${tag}"
         BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""
       elif git cat-file commit "${BUILD_CONFIG[BRANCH]}"; then
-        echo "look like the scm ref given is a valid sha, so treat it as a sha"
+        echo "look like the BUILD_CONFIG[BRANCH] (${BUILD_CONFIG[BRANCH]}) scm ref given is a valid sha, so treat it as a sha"
         sha="${BUILD_CONFIG[BRANCH]}"
         BUILD_CONFIG[SHALLOW_CLONE_OPTION]=""
       fi
@@ -274,6 +274,7 @@ checkoutRequiredCodeToBuild() {
     else
       git remote set-branches --add origin "${BUILD_CONFIG[BRANCH]}" || rc=$?
       if [ $rc -eq 0 ]; then
+        echo "BUILD_CONFIG[BRANCH] (${BUILD_CONFIG[BRANCH]}) is a valid branch, fetching and resetting to branch"
         # shellcheck disable=SC2086
         git fetch --all ${BUILD_CONFIG[SHALLOW_CLONE_OPTION]} || rc=$?
         if [ $rc -eq 0 ]; then

@@ -2063,22 +2063,20 @@ createDefaultTag() {
 
 # Get the build "tag" being built, either specified via TAG or BRANCH, otherwise get latest from the git repo, or default to BRANCH name if set
 getOpenJDKTag() {
+  echo "getOpenJDKTag(): Determining OpenJDK tag to use for 'version'" 1>&2
   if [ -n "${BUILD_CONFIG[TAG]}" ]; then
     # Checked out TAG specified
+    echo "  getOpenJDKTag(): Using specified BUILD_CONFIG[TAG] (${BUILD_CONFIG[TAG]})" 1>&2
     echo "${BUILD_CONFIG[TAG]}"
-  elif cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
-    # Checked out BRANCH is a tag
+  elif [ -n "${BUILD_CONFIG[BRANCH]}" ]; then
+    echo "  getOpenJDKTag(): Using specified BUILD_CONFIG[BRANCH] (${BUILD_CONFIG[BRANCH]})" 1>&2
+    # Checked out BRANCH is a tag or branch
     echo "${BUILD_CONFIG[BRANCH]}"
   else
     tag=$(getFirstTagFromOpenJDKGitRepo)
-    if [ "${tag}" == "" ] && [ -n "${BUILD_CONFIG[BRANCH]}" ] ; then
-      if cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/heads/${BUILD_CONFIG[BRANCH]}"; then
-        echo "Checked out source repo has no tags, defaulting version to specified name of BRANCH=${BUILD_CONFIG[BRANCH]}" 1>&2
-        echo "${BUILD_CONFIG[BRANCH]}"
-      else
-        echo "Cannot determine source repo tag version to use in getOpenJDKTag(), specify either TAG, BRANCH or DISABLE_ADOPT_BRANCH_SAFETY" 1>&2
-        echo ""
-      fi
+    if [ "${tag}" == "" ]; then
+      echo "  getOpenJDKTag(): Unable to determine tag from checked out git repository, creating a 'default tag'" 1>&2
+      createDefaultTag
     else
       echo "${tag}"
     fi
