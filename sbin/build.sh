@@ -2061,7 +2061,7 @@ createDefaultTag() {
   fi
 }
 
-# Get the build "tag" being built, either specified via TAG or BRANCH, otherwise get latest from the git repo
+# Get the build "tag" being built, either specified via TAG or BRANCH, otherwise get latest from the git repo, or default to BRANCH name if set
 getOpenJDKTag() {
   if [ -n "${BUILD_CONFIG[TAG]}" ]; then
     # Checked out TAG specified
@@ -2070,7 +2070,18 @@ getOpenJDKTag() {
     # Checked out BRANCH is a tag
     echo "${BUILD_CONFIG[BRANCH]}"
   else
-    getFirstTagFromOpenJDKGitRepo
+    tag=$(getFirstTagFromOpenJDKGitRepo)
+    if [ "${tag}" == "" ] && [ -n "${BUILD_CONFIG[BRANCH]}" ] ; then
+      if cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/heads/${BUILD_CONFIG[BRANCH]}"; then
+        echo "Checked out source repo has no tags, defaulting version to specified name of BRANCH=${BUILD_CONFIG[BRANCH]}" 1>&2
+        echo "${BUILD_CONFIG[BRANCH]}"
+      else
+        echo "Cannot determine source repo tag version to use in getOpenJDKTag(), specify either TAG, BRANCH or DISABLE_ADOPT_BRANCH_SAFETY" 1>&2
+        echo ""
+      fi
+    else
+      echo "${tag}"
+    fi
   fi
 }
 
