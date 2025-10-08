@@ -38,19 +38,19 @@ if [ $XVFB5 != 1 ]; then
 fi
 set -x
 rm -rf $HOME/workspace && mkdir $HOME/workspace && WORKSPACE=$HOME/workspace && export WORKSPACE
+pwd
 if [ "$3" = "usecache" ]; then
   cd aqa-tests || exit 1
 else
   rm -rf aqa-tests
   git clone https://github.com/adoptium/aqa-tests
-  cd aqa-tests
   if [ -z "${UPSTREAM_JOBLINK}" ]; then
     # Jenkins simpletest job will copy the artifacts to this location
-    if [ ! -r "$PWD/build_artifacts/filenames.txt" ]; then
-       echo "dotests.sh : UPSTREAM_JOBLINK not defined and $PWD/build_artifacts/filenames.txt does not exist" - cannot progress
+    if [ ! -r "build_artifacts/filenames.txt" ]; then
+       echo "ERROR: dotests.sh : UPSTREAM_JOBLINK not defined and build_artifacts/filenames.txt does not exist" - cannot progress
        exit 1
     fi
-    JDK_TARBALL_NAME=$PWD/build_artifacts/`cat $PWD/build_artifacts/filenames.txt | grep "OpenJDK8U-jdk_.*tar.gz$"`
+    JDK_TARBALL_NAME=`pwd`/build_artifacts/`cat build_artifacts/filenames.txt | grep "OpenJDK8U-jdk_.*tar.gz$"`
   else
     # Linter can go do one if it objects to the backticks - "$(" is not understood by Solaris' bourne shell (SC2006)
     JDK_TARBALL_NAME=`curl -s "${UPSTREAM_JOBLINK}/artifact/workspace/target/filenames.txt" | grep "OpenJDK8U-jdk_.*tar.gz$"`
@@ -58,11 +58,14 @@ else
     echo Downloading and extracting JDK tarball ...
     curl -O "${UPSTREAM_JOBLINK}/artifact/workspace/target/$JDK_TARBALL_NAME" || exit 1
   fi
+  cd aqa-tests
   gzip -cd "$JDK_TARBALL_NAME" | tar xpf -
   echo Downloading and extracting JRE tarball ... Required for special.openjdk jdk_math_jre_0 target
   JRE_TARBALL_NAME="`echo $JDK_TARBALL_NAME | sed s/jdk/jre/`"
   if [ "$1" = "special" -a "$2" = "openjdk" ]; then
-    [ ! -z "${UPSTREAM_JOBLINK}" ] && curl -O "${UPSTREAM_JOBLINK}/artifact/workspace/target/$JRE_TARBALL_NAME" || exit 1
+    if [ ! -z "${UPSTREAM_JOBLINK}" ]; then
+      curl -O "${UPSTREAM_JOBLINK}/artifact/workspace/target/$JRE_TARBALL_NAME" || exit 1
+    fi
     gzip -cd "$JRE_TARBALL_NAME" | tar xpf -
   fi
 fi
