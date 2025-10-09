@@ -552,6 +552,114 @@
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addFormulation"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflow"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowUid"/>
+                  <arg value="f1"/>
+                  <arg value="--workflowName"/>
+                  <arg value="temurin build script 1.0 for jdk21u"/>
+                  <arg value="--taskTypes"/>
+                  <arg value="clone,build"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStep"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="clone repo"/>
+                  <arg value="--description"/>
+                  <arg value="clone repository"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStepCmd"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="clone repo"/>
+                  <arg value="--executed"/>
+                  <arg value="git clone git@github.com:adoptium/temurin-build"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStep"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="cd into repository"/>
+                  <arg value="--description"/>
+                  <arg value="cd into temurin-build"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStepCmd"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="cd into repository"/>
+                  <arg value="--executed"/>
+                  <arg value="cd temurin-build"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStep"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="makejdk"/>
+                  <arg value="--description"/>
+                  <arg value="execute makejdk-anyplatform.sh"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStepCmd"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="makejdk"/>
+                  <arg value="--executed"/>
+                  <arg value="bash ./makejdk-any-platform.sh jdk21u --with-version-string=21.0.2+13-202312052047 --with-vendor-version-string=202312052047"/>
+                  <arg value="--jsonFile"/>
+                  <arg value="${testSBOMFile}"/>
+                </java>
 
                 <!-- XML tests -->
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
@@ -833,6 +941,114 @@
                   <arg value="CycloneDX core lib"/>
                   <arg value="--value"/>
                   <arg value="sha123"/>
+                  <arg value="--xmlFile"/>
+                  <arg value="${testSBOMFile_xml}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addFormulation"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--xmlFile"/>
+                  <arg value="${testSBOMFile_xml}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflow"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowUid"/>
+                  <arg value="f1"/>
+                  <arg value="--workflowName"/>
+                  <arg value="temurin build script 1.0 for jdk21u"/>
+                  <arg value="--taskTypes"/>
+                  <arg value="clone,build"/>
+                  <arg value="--xmlFile"/>
+                  <arg value="${testSBOMFile_xml}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStep"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="clone repo"/>
+                  <arg value="--description"/>
+                  <arg value="clone repository"/>
+                  <arg value="--xmlFile"/>
+                  <arg value="${testSBOMFile_xml}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStepCmd"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="clone repo"/>
+                  <arg value="--executed"/>
+                  <arg value="git clone git@github.com:adoptium/temurin-build"/>
+                  <arg value="--xmlFile"/>
+                  <arg value="${testSBOMFile_xml}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStep"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="cd into repository"/>
+                  <arg value="--description"/>
+                  <arg value="cd into temurin-build"/>
+                  <arg value="--xmlFile"/>
+                  <arg value="${testSBOMFile_xml}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStepCmd"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="cd into repository"/>
+                  <arg value="--executed"/>
+                  <arg value="cd temurin-build"/>
+                  <arg value="--xmlFile"/>
+                  <arg value="${testSBOMFile_xml}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStep"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="makejdk"/>
+                  <arg value="--description"/>
+                  <arg value="execute makejdk-anyplatform.sh"/>
+                  <arg value="--xmlFile"/>
+                  <arg value="${testSBOMFile_xml}"/>
+                </java>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenSBOM" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--addWorkflowStepCmd"/>
+                  <arg value="--formulaName"/>
+                  <arg value="formula_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowRef"/>
+                  <arg value="workflow_temurin_build_script_1.0_jdk21u"/>
+                  <arg value="--workflowStepName"/>
+                  <arg value="makejdk"/>
+                  <arg value="--executed"/>
+                  <arg value="bash ./makejdk-any-platform.sh jdk21u --with-version-string=21.0.2+13-202312052047 --with-vendor-version-string=202312052047"/>
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
