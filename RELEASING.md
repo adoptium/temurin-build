@@ -415,7 +415,7 @@ required, but this information on the parameters is here if you need it:
 - Within 15 minutes the binaries should be available on the website too. e.g. <https://adoptium.net/?variant=openjdk11&jvmVariant=hotspot> (NOTE: If it doesn't show up, check whether the API is returning the right thing (e.g. with a link such as [this](https://api.adoptium.net/v3/assets/feature_releases/17/ga?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&page=0&page_size=10&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse), and that the `.json` metadata files are uploaded correctly)
 - During the waiting time, good to update:
   - [support.adoc](https://github.com/adoptium/website-v2/blob/main/src/asciidoc-pages/support.adoc), which is the source of [https://adoptium.net/support] ([example](https://github.com/adoptium/website-v2/pull/1105)).
-  - </wbr id="supported_platforms_table"> The supported platforms table ([source](https://github.com/adoptium/adoptium.net/blob/main/src/data/supported-platforms.json)), which is the source of [https://adoptium.net/supported-platforms].
+  - The supported platforms table ([source](https://github.com/adoptium/adoptium.net/blob/main/src/data/supported-platforms.json)), which is the source of [https://adoptium.net/supported-platforms].
     - Note: If this involves adding a new JDK version, alter the relevant JDK major versions (e.g. 23 to 24) in the following files:
       - https://github.com/adoptium/adoptium.net/blob/main/src/app/%5Blocale%5D/temurin/nightly/__tests__/page.test.tsx
       - https://github.com/adoptium/adoptium.net/blob/main/src/app/%5Blocale%5D/supported-platforms/__tests__/__snapshots__/page.test.tsx.snap
