@@ -44,7 +44,7 @@ During the week before release, the Release Champion makes changes in preparatio
 
 Post the below message to the #build & #release channels in Slack:
 
-```
+```text
 I'm proposing to branch the following repositories tomorrow:
 - temurin-build
 - ci-jenkins-pipelines
@@ -54,7 +54,6 @@ These branches will be the baseline for the approaching release.
 
 Shout now if you need to get any PRs merged for the release.
 ```
-
 
 #### Create release branch on below repositories:
 
@@ -417,9 +416,9 @@ required, but this information on the parameters is here if you need it:
   - [support.adoc](https://github.com/adoptium/website-v2/blob/main/src/asciidoc-pages/support.adoc), which is the source of [https://adoptium.net/support] ([example](https://github.com/adoptium/website-v2/pull/1105)).
   - The supported platforms table ([source](https://github.com/adoptium/adoptium.net/blob/main/src/data/supported-platforms.json)), which is the source of [https://adoptium.net/supported-platforms].
     - Note: If this involves adding a new JDK version, alter the relevant JDK major versions (e.g. 23 to 24) in the following files:
-      - https://github.com/adoptium/adoptium.net/blob/main/src/app/%5Blocale%5D/temurin/nightly/__tests__/page.test.tsx
-      - https://github.com/adoptium/adoptium.net/blob/main/src/app/%5Blocale%5D/supported-platforms/__tests__/__snapshots__/page.test.tsx.snap
-      - https://github.com/adoptium/adoptium.net/blob/main/src/app/%5Blocale%5D/temurin/nightly/__tests__/__snapshots__/page.test.tsx.snap
+      - [page.test.tsx](https://github.com/adoptium/adoptium.net/blob/main/src/app/%5Blocale%5D/temurin/nightly/__tests__/page.test.tsx)
+      - [page.test.tsx.snap](https://github.com/adoptium/adoptium.net/blob/main/src/app/%5Blocale%5D/supported-platforms/__tests__/__snapshots__/page.test.tsx.snap)
+      - [page.test.tsx.snap (different file, same name)](https://github.com/adoptium/adoptium.net/blob/main/src/app/%5Blocale%5D/temurin/nightly/__tests__/__snapshots__/page.test.tsx.snap)
 
 3. Publish AQA test results:
 
@@ -430,13 +429,13 @@ Once all supported platform binaries have been released it's time to publish AQA
 
 4. Publish packages for different OS
 
-  4.1. **[Mac only]** 
+  4.1. **[Mac only]**
 
-  **Homebrew - Summary**
-  - Homebrew casks should be automatically generated and uploaded
-    - They will be located here: https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@XX.rb (where XX is the jdk major version)
+  4.1.1. **Homebrew - Summary**
+  Homebrew casks should be automatically generated and uploaded here (where XX is the jdk major version):
+  https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@XX.rb
 
-  **Homebrew - Details**
+  4.1.2. **Homebrew - Details**
   Once the binaries are available on the website there is now [automation upstream](https://github.com/Homebrew/homebrew-cask/commits/main/.github/workflows/autobump.yml) as of [June 2025](https://github.com/Homebrew/brew/pull/20117) which updates the Homebrew casks under the `BrewTestBot` ID - this automation should be checked to ensure it has run. Noting that for point releases (not tested with the automated PRs), the format of the version string should be 11.0.20.1,1 so the version is always the same as "our" one but with the `+` replaced with a `,`
 
 - [`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin.rb) which always serves the latest release version
