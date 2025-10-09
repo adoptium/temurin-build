@@ -329,9 +329,9 @@ Here are the old manual steps:
 
 </details>
 
-### After build pipeline finished
+### After the build pipeline is finished
 
-Once the openjdk pipeline has completed:
+Once the OpenJDK pipeline has completed:
 
 1. Triage TRSS result:
 
@@ -350,12 +350,12 @@ Once the openjdk pipeline has completed:
 
 A further check should be performed to see if the cacerts have been updated
 in the repository since the build repositories were branched. Check for the
-<a href="https://github.com/adoptium/temurin-build/pulls?q=is%3Apr+%22update+ca+certs%22">automated
-PRs in temurin-build</a> and if required cherry pick across to the temurin-build release
-branch so that
-<a href="https://github.com/adoptium/temurin-build/issues/4141">the latest
-ones at GA time are used for the release. Make sure this gets merged before
-the GA builds trigger.
+[automated PRs in temurin-build]. If required; cherry pick across to the
+temurin-build release branch so that [the latest ones at GA time] are used
+for the release. Make sure this gets merged before the GA builds trigger.
+
+[automated PRs in temurin-build]: https://github.com/adoptium/temurin-build/pulls?q=is%3Apr+%22update+ca+certs%22
+[the latest ones at GA time]: https://github.com/adoptium/temurin-build/issues/4141
 
 ### At GA time
 
@@ -365,13 +365,17 @@ and triaged as per step 1 in the previous section. Then:
 
 2. Publish build results:
 
-- If "good to publish", get permission to publish the release from the Adoptium PMC members, discussion is via the Adoptium [#release](https://adoptium.slack.com/messages/CLCFNV2JG) Slack channel.
-- Once permission has been obtained, you will be able to find a link to the
-  [release tool job](https://ci.adoptium.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/) to publish the releases to GitHub (restricted access - if you can't see this link,
-  you don't have access) in the release-openjdkXX-pipeline job for your release.
-  You will see links to release jobs with `DRY_RUN` checked for each platorm.
-  They can be rebuilt with the `DRY_RUN` checkbox disabled when you are ready
-  to ship
+- If "good to publish", complete these steps in order:
+  - Step 1) **Get publish approval from the PMC** once no blocking failures exist.
+    - Example: Post this in [#release] and wait for 2 \"+1\" emotes from the PMC:
+    - \@pmc - Permission to publish \<architecture\> \<OS\>
+  - Step 2) **Publish the release** by following the RELEASE links in the pipeline url.
+    - Note: If you cannot see/follow said links (which launch [refactor_openjdk_release_tool]), you don't have access.
+  - Step 3) **Notify the community** by copying the link into the thread from Step 1.
+  - Step 4) **Confirm that the job passed.**
+
+[#release]: https://adoptium.slack.com/messages/CLCFNV2JG
+[refactor_openjdk_release_tool]: https://ci.adoptium.net/job/build-scripts/job/release/job/refactor_openjdk_release_tool/
 
 <details>
 <summary>Manual instructions for running the release tool</summary>
@@ -400,9 +404,12 @@ required, but this information on the parameters is here if you need it:
 - Once the job completes successfully, check the binaries have uploaded to GitHub at somewhere like <https://github.com/adoptium/temurin8-binaries/releases/tag/jdk8u302-b08>
 - Within 15 minutes the binaries should be available on the website too. e.g. <https://adoptium.net/?variant=openjdk11&jvmVariant=hotspot> (NOTE: If it doesn't show up, check whether the API is returning the right thing (e.g. with a link such as [this](https://api.adoptium.net/v3/assets/feature_releases/17/ga?architecture=x64&heap_size=normal&image_type=jre&jvm_impl=hotspot&os=linux&page=0&page_size=10&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=eclipse), and that the `.json` metadata files are uploaded correctly)
 - During the waiting time, good to update:
-
-  -- <https://github.com/adoptium/website-v2/blob/main/src/asciidoc-pages/support.adoc> which is the source of <https://adoptium.net/support> ([Sample change](https://github.com/adoptium/website-v2/pull/1105))
-  -- (if required) the supported platforms table at <https://github.com/adoptium/website-v2/edit/main/src/asciidoc-pages/supported-platforms.adoc> which is the source of <https://adoptium.net/supported-platforms>
+  - [support.adoc](https://github.com/adoptium/website-v2/blob/main/src/asciidoc-pages/support.adoc), which is the source of [https://adoptium.net/support] ([example](https://github.com/adoptium/website-v2/pull/1105)).
+  - </wbr id="supported_platforms_table"> The supported platforms table ([source](https://github.com/adoptium/adoptium.net/blob/main/src/data/supported-platforms.json)), which is the source of [https://adoptium.net/supported-platforms].
+    - Note: If this involves adding a new JDK version, alter the relevant JDK major versions (e.g. 23 to 24) in the following files:
+      - https://github.com/adoptium/adoptium.net/blob/main/src/app/%5Blocale%5D/temurin/nightly/__tests__/page.test.tsx
+      - https://github.com/adoptium/adoptium.net/blob/main/src/app/%5Blocale%5D/supported-platforms/__tests__/__snapshots__/page.test.tsx.snap
+      - https://github.com/adoptium/adoptium.net/blob/main/src/app/%5Blocale%5D/temurin/nightly/__tests__/__snapshots__/page.test.tsx.snap
 
 3. Publish AQA test results:
 
@@ -413,15 +420,21 @@ Once all supported platform binaries have been released it's time to publish AQA
 
 4. Publish packages for different OS
 
-  4.1. **[Mac only]** Once the binaries are available on the website there is now [automation upstream](https://github.com/Homebrew/homebrew-cask/commits/main/.github/workflows/autobump.yml) as of [June 2025](https://github.com/Homebrew/brew/pull/20117) which updates the Homebrew casks under the `BrewTestBot` ID - this automation should be checked to ensure it has run. Noting that for point releases (not tested with the automated PRs), the format of the version string should be 11.0.20.1,1 so the version is always the same as "our" one but with the `+` replaced with a `,`
+  4.1. **[Mac only]** 
+
+  **Homebrew - Summary**
+  - Homebrew casks should be automatically generated and uploaded
+    - They will be located here: https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@XX.rb (where XX is the jdk major version)
+
+  **Homebrew - Details**
+  Once the binaries are available on the website there is now [automation upstream](https://github.com/Homebrew/homebrew-cask/commits/main/.github/workflows/autobump.yml) as of [June 2025](https://github.com/Homebrew/brew/pull/20117) which updates the Homebrew casks under the `BrewTestBot` ID - this automation should be checked to ensure it has run. Noting that for point releases (not tested with the automated PRs), the format of the version string should be 11.0.20.1,1 so the version is always the same as "our" one but with the `+` replaced with a `,`
 
 - [`temurin`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin.rb) which always serves the latest release version
 - [`temurin8`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@8.rb)
 - [`temurin11`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@11.rb)
 - [`temurin17`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@17.rb)
 - [`temurin21`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@21.rb)
-
-- [`temurin25`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@25.rb)
+- [`temurin25`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@25.rb) - Note: This link will only work after April release.
 
   4.2. **[Linux only]** Once the binaries are available on the website the
      building and publishing of the Linux rpm/deb/apk files will occur to the
