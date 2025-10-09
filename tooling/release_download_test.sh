@@ -385,7 +385,8 @@ verify_gcc_version() {
   # shellcheck disable=SC2166
   [ "${MAJOR_VERSION}" = "8" -o "${MAJOR_VERSION}" = "11" ] && expected_gcc=7.5.0
   [ "${MAJOR_VERSION}" = "17" ] && expected_gcc=10.3.0
-  [ "${MAJOR_VERSION}" -ge 20 ] && expected_gcc=11.3.0
+  [ "${MAJOR_VERSION}" = "21" ] && expected_gcc=11.3.0
+  [ "${MAJOR_VERSION}" -ge 25 ] && expected_gcc=14.2.0
 
   if ! ls OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz > /dev/null 2>&1; then
     print_verbose "IVT: Release does not contain a JRE for $OS/$ARCH so not running local checks"
