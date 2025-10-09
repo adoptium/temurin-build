@@ -50,8 +50,7 @@ else
        echo "ERROR: dotests.sh : UPSTREAM_JOBLINK not defined and build_artifacts/filenames.txt does not exist" - cannot progress
        exit 1
     fi
-    CAT_OUTPUT=`cat build_artifacts/filenames.txt | grep "OpenJDK8U-jdk_.*tar.gz$"`
-    JDK_TARBALL_NAME=`pwd`/build_artifacts/${CAT_OUTPUT}
+    JDK_TARBALL_NAME=`pwd`/build_artifacts/`grep "OpenJDK8U-jdk_.*tar.gz$" ./build_artifacts/filenames.txt`
   else
     # Linter can go do one if it objects to the backticks - "$(" is not understood by Solaris' bourne shell (SC2006)
     JDK_TARBALL_NAME=`curl -s "${UPSTREAM_JOBLINK}/artifact/workspace/target/filenames.txt" | grep "OpenJDK8U-jdk_.*tar.gz$"`
