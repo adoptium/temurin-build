@@ -443,7 +443,7 @@ Once all supported platform binaries have been released it's time to publish AQA
 - [`temurin11`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@11.rb)
 - [`temurin17`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@17.rb)
 - [`temurin21`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@21.rb)
-- [`temurin25`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@25.rb) - Note: This link will only work after April release.
+- [`temurin25`](https://github.com/Homebrew/homebrew-cask/blob/master/Casks/t/temurin@25.rb) - Note: This link will only work after April 2026 release.
 
   4.2. **[Linux only]** Once the binaries are available on the website the
      building and publishing of the Linux rpm/deb/apk files will occur to the
