@@ -83,7 +83,7 @@ echo "$(date +%T) : diff complete - rc=$rc. Output written to file: ${output}"
 
 cat "${output}"
 
-grep "Files .*" "${output}" | while read -r line; do
+grep "Files .*/classlist" "${output}" | while read -r line; do
   FILE1=$(echo "$line" | awk '{print $2}')
   FILE2=$(echo "$line" | awk '{print $4}')
   echo "diff -c on $FILE1 and $FILE2"
