@@ -21,7 +21,7 @@ on:
       - "build-farm/**"
       - "sbin/**"
       - "**.sh"
-      - "!tooling/build_autotriage/**"
+      - "!tooling/**"
       - "!sbin/solaris/**"
       - ".github/workflows/build.yml"
       - "security/**"
