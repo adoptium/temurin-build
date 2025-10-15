@@ -83,6 +83,10 @@ echo "$(date +%T) : diff complete - rc=$rc. Output written to file: ${output}"
 
 cat "${output}"
 
+# Restricting detailed output to classlist files only.
+# This is because grepping every file overloads the test
+# job with too much output, but the class list contents
+# are especially useful when debugging a failure.
 grep "Files .*/classlist" "${output}" | while read -r line; do
   FILE1=$(echo "$line" | awk '{print $2}')
   FILE2=$(echo "$line" | awk '{print $4}')
