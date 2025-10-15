@@ -43,7 +43,6 @@ if [ "$3" = "usecache" ]; then
 else
   rm -rf aqa-tests
   git clone https://github.com/adoptium/aqa-tests
-  cd aqa-tests || exit 1
   if [ -z "${UPSTREAM_JOBLINK}" ]; then
     # Jenkins simpletest job will copy the artifacts to this location
     if [ ! -r "build_artifacts/filenames.txt" ]; then
