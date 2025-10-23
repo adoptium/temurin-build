@@ -19,6 +19,7 @@
 JDK_MAJOR_VERSION=""
 SOURCE_TAG=""
 SBOM_LOCATION=""
+WORKSPACE_DIR=""
 CYCLONEDX_TOOL=""
 
 ########################################################################################################################
@@ -32,39 +33,61 @@ CYCLONEDX_TOOL=""
 #
 ########################################################################################################################
 arg_parser() {
-  if [[ $# -ne 3 ]]; then
+  if [ $# -ne 3 ]; then
     echo "ERROR: validateSBOM.sh did not receive 3 arguments."
     echo "Arguments should be: JDK_MAJOR_VERSION SOURCE_TAG SBOM_LOCATION"
     exit 1
+  fi
+
+  if [ -z $WORKSPACE ]; then
+    WORKSPACE_DIR="${0%/*}/workspace_temp"
+    echo "validateSBOM.sh: WORKSPACE variable not detected."
+    if [ -d "${WORKSPACE_DIR}" ]; then
+      echo "validateSBOM.sh: ERROR: New temporary workspace already exists. Aborting to avoid conflict."
+      exit 1
+    else
+      mkdir "${WORKSPACE_DIR}"
+      cd ${WORKSPACE_DIR}
+      echo "validateSBOM.sh: Using this directory as the workspace instead: ${WORKSPACE_DIR}"
+    fi
+  else
+    WORKSPACE_DIR="${WORKSPACE}"
+    cd "${WORKSPACE}"
   fi
 
   JDK_MAJOR_VERSION="$1"
   SOURCE_TAG="$2"
   SBOM_LOCATION="$3"
 
-  if [[ ! "$JDK_MAJOR_VERSION" =~ ^[1-9][0-9]*\$ ]]; then
-    echo "ERROR: SBOMValidationFramework.sh: first argument must be a positive integer greater than 0."
+  echo "$JDK_MAJOR_VERSION" | grep ^[1-9][0-9]*\$
+  if [ $? -ne 0 ]; then
+    echo "ERROR: validateSBOM.sh: first argument must be a positive integer greater than 0."
     exit 1
   fi
 
-  if [[ -z "$SOURCE_TAG" ]]; then
-    echo "ERROR: SBOMValidationFramework.sh: second argument must not be empty."
+  if [ -z "$SOURCE_TAG" ]; then
+    echo "ERROR: validateSBOM.sh: second argument must not be empty."
     exit 1
   fi
 
-  if [[ -z "$SBOM_LOCATION" ]]; then
-    echo "ERROR: SBOMValidationFramework.sh: third argument must not be empty."
+  if [ -z "$SBOM_LOCATION" ]; then
+    echo "ERROR: validateSBOM.sh: third argument must not be empty."
     exit 1
   fi
 
   # Now we check that the third argument is a valid link.
-  if [[ "$SBOM_LOCATION" =~ ^https.* && $(wget --spider "$SBOM_LOCATION") ]]; then
-    wget --quiet -O "$WORKSPACE/sbom_text.txt" "$SBOM_LOCATION"
-    [[ $? != 0 ]] && echo "ERROR: SBOM_LOCATION exists but could not be downloaded." && exit 1
-    SBOM_LOCATION="$WORKSPACE/sbom_text.txt"
-  elif [[ "$SBOM_LOCATION" =~ ^([a-zA-Z]\:|/).* && -r "$SBOM_LOCATION" ]]; then
-    // Do nothing.
-  else
+  echo "$SBOM_LOCATION" | grep -q ^https.*
+  if [ $? -eq 0 ]; then
+    wget --spider "$SBOM_LOCATION"
+    if [ $? -eq 0 ]; then
+      wget --quiet -O "${WORKSPACE_DIR}/sbom_text.txt" "$SBOM_LOCATION"
+      [ $? -ne 0 ] && echo "ERROR: SBOM_LOCATION exists but could not be downloaded." && exit 1
+      SBOM_LOCATION="${WORKSPACE_DIR}/sbom_text.txt"
+    else
+      echo "ERROR: SBOM_LOCATION was identified as a URL but could not be found." 
+      exit 1
+    fi
+  elif [ ! -r "$SBOM_LOCATION" ]; then
     echo "ERROR: SBOM_LOCATION could not be found/accessed." 
     exit 1
   fi
@@ -114,6 +137,7 @@ download_cyclonedx_tool() {
 
     CYCLONEDX_TOOL="cyclonedx-${cyclonedx_os}-${cyclonedx_arch}${cyclonedx_suffix}"
 
+    cd "${WORKSPACE_DIR}"
     [ ! -r "${CYCLONEDX_TOOL}" ] && curl -LOsS https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.27.2/"${CYCLONEDX_TOOL}"
     if [ "$(sha256sum "${CYCLONEDX_TOOL}" | cut -d' ' -f1)" != "${cyclonedx_checksum}" ]; then
        echo "validateSBOM.sh: Error: Cannot verify checksum of CycloneDX CLI binary"
@@ -140,18 +164,16 @@ validate_sbom() {
   # shellcheck disable=SC2010
   echo "validateSBOM.sh: Running ${CYCLONEDX_TOOL} ..."
 
-  if [ -n "${CYCLONEDX_TOOL}" ]; then
-    if ! ./"${CYCLONEDX_TOOL}" validate --input-file "${SBOM_LOCATION}"; then
-      echo "validateSBOM.sh: Error: Failed CycloneDX validation check."
-      exit 5
-    else
-      echo "validateSBOM.sh: Passed CycloneDX validation check."
-    fi
+  if ! "${WORKSPACE_DIR}/${CYCLONEDX_TOOL}" validate --input-file "${SBOM_LOCATION}"; then
+    echo "validateSBOM.sh: Error: Failed CycloneDX validation check."
+    exit 5
+  else
+    echo "validateSBOM.sh: Passed CycloneDX validation check."
   fi
 
   # shellcheck disable=SC2086
   echo "validateSBOM.sh: Running validateTemurinSBOM.sh"
-  if bash "$GIT_CHECKOUT_DIR/tooling/validateTemurinSBOM.sh" "$SBOM_LOCATION" "$JDK_MAJOR_VERSION" "$SOURCE_TAG"; then
+  if bash "${WORKSPACE_DIR}/tooling/validateTemurinSBOM.sh" "$SBOM_LOCATION" "$JDK_MAJOR_VERSION" "$SOURCE_TAG"; then
     echo "validateTemurinSBOM.sh: PASSED"
   else
     echo "validateTemurinSBOM.sh: ERROR: FAILED"
