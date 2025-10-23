@@ -31,7 +31,7 @@ CYCLONEDX_TOOL=""
 #                      - This can be a file location or a web URL, but must be an absolute path.
 #
 ########################################################################################################################
-function arg_parser() {
+arg_parser() {
   if [[ $# -ne 3 ]]; then
     echo "ERROR: validateSBOM.sh did not receive 3 arguments."
     echo "Arguments should be: JDK_MAJOR_VERSION SOURCE_TAG SBOM_LOCATION"
@@ -76,7 +76,7 @@ function arg_parser() {
 # return : cyclonedx cli tool command
 #
 ########################################################################################################################
-function download_cyclonedx_tool() {
+download_cyclonedx_tool() {
   local kernel machine
   local cyclonedx_os cyclonedx_arch cyclonedx_suffix
   local cyclonedx_checksum
@@ -133,7 +133,7 @@ function download_cyclonedx_tool() {
 # Verifies the SBOM using cyclonedx-cli and validateTemurinSBOM.sh
 #
 ########################################################################################################################
-function validate_sbom() {
+validate_sbom() {
   echo "validateSBOM.sh: SBOM validation start."
   echo "validateSBOM.sh: Running general SBOM validation from https://github.com/CycloneDX/cyclonedx-cli"
 
