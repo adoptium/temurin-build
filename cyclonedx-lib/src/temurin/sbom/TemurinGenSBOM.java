@@ -52,70 +52,183 @@ public final class TemurinGenSBOM {
     private TemurinGenSBOM() {
     }
 
-private static final class ParsedArgs {
-    private final String cmd;
-    private final String comment;
-    private final String compName;
-    private final String formulaName;
-    private final String description;
-    private final String fileName;
-    private final String hash;
-    private final String name;
-    private final String tool;
-    private final String type;
-    private final String url;
-    private final String value;
-    private final String version;
-    private final String workflowRef;
-    private final String workflowName;
-    private final String workflowStepName;
-    private final String formulaPropName;
-    private final String workflowUid;
-    private final String executed;
-    private final String rawTaskTypes;
+    private static final class ParsedArgs {
+        private String cmd = "";
+        private String comment;
+        private String compName;
+        private String description;
+        private String executed;
+        private String formulaName;
+        private String formulaPropName;
+        private String fileName;
+        private String hash;
+        private String name;
+        private String rawTaskTypes;
+        private String tool;
+        private String type;
+        private String url;
+        private String value;
+        private String version;
+        private String workflowRef;
+        private String workflowName;
+        private String workflowStepName;
+        private String workflowUid;
+        private boolean verbose;
+        private boolean useJson;
 
-    ParsedArgs(
-        final String cmdParam,
-        final String commentParam,
-        final String compNameParam,
-        final String formulaNameParam,
-        final String descriptionParam,
-        final String fileNameParam,
-        final String hashParam,
-        final String nameParam,
-        final String toolParam,
-        final String typeParam,
-        final String urlParam,
-        final String valueParam,
-        final String versionParam,
-        final String workflowRefParam,
-        final String workflowNameParam,
-        final String workflowStepNameParam,
-        final String formulaPropNameParam,
-        final String workflowUidParam,
-        final String executedParam,
-        final String rawTaskTypesParam
-    ) {
-        this.cmd = cmdParam;
-        this.comment = commentParam;
-        this.compName = compNameParam;
-        this.formulaName = formulaNameParam;
-        this.description = descriptionParam;
-        this.fileName = fileNameParam;
-        this.hash = hashParam;
-        this.name = nameParam;
-        this.tool = toolParam;
-        this.type = typeParam;
-        this.url = urlParam;
-        this.value = valueParam;
-        this.version = versionParam;
-        this.workflowRef = workflowRefParam;
-        this.workflowName = workflowNameParam;
-        this.workflowStepName = workflowStepNameParam;
-        this.formulaPropName = formulaPropNameParam;
-        this.workflowUid = workflowUidParam;
-        this.executed = executedParam;
-        this.rawTaskTypes = rawTaskTypesParam;
+        //Getters and Setters
+        public String getCmd() {
+            return cmd;
+        }
+        public void setCmd(final String cmdParam) {
+            this.cmd = cmdParam;
+        }
+
+        public String getFileName() {
+            return fileName;
+        }
+        public void setFileName(final String fileNameParam) {
+            this.fileName = fileNameParam;
+        }
+
+        public boolean isUseJson() {
+            return useJson;
+        }
+        public void setUseJson(final boolean useJsonFlag) {
+            this.useJson = useJsonFlag;
+        }
+
+        public boolean isVerbose() {
+            return verbose;
+        }
+        public void setVerbose(final boolean verboseFlag) {
+            this.verbose = verboseFlag;
+        }
+
+        public String getWorkflowRef() {
+            return workflowRef;
+        }
+        public void setWorkflowRef(final String workflowRefParam) {
+            this.workflowRef = workflowRefParam;
+        }
+
+        public String getWorkflowName() {
+            return workflowName;
+        }
+        public void setWorkflowName(final String workflowNameParam) {
+            this.workflowName = workflowNameParam;
+        }
+
+        public String getWorkflowStepName() {
+            return workflowStepName;
+        }
+        public void setWorkflowStepName(final String workflowStepNameParam) {
+            this.workflowStepName = workflowStepNameParam;
+        }
+
+        public String getWorkflowUid() {
+            return workflowUid;
+        }
+        public void setWorkflowUid(final String workflowUidParam) {
+            this.workflowUid = workflowUidParam;
+        }
+
+        public String getRawTaskTypes() {
+            return rawTaskTypes;
+        }
+        public void setRawTaskTypes(final String rawTaskTypesParam) {
+            this.rawTaskTypes = rawTaskTypesParam;
+        }
+
+        public String getFormulaName() {
+            return formulaName;
+        }
+        public void setFormulaName(final String formulaNameParam) {
+            this.formulaName = formulaNameParam;
+        }
+
+        public String getName() {
+            return name;
+        }
+        public void setName(final String nameParam) {
+            this.name = nameParam;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+        public void setDescription(final String descriptionParam) {
+            this.description = descriptionParam;
+        }
+
+        public String getExecuted() {
+            return executed;
+        }
+        public void setExecuted(final String executedParam) {
+            this.executed = executedParam;
+        }
+
+        public String getType() {
+            return type;
+        }
+        public void setType(final String typeParam) {
+            this.type = typeParam;
+        }
+
+        public String getTool() {
+            return tool;
+        }
+        public void setTool(final String toolParam) {
+            this.tool = toolParam;
+        }
+
+        public String getCompName() {
+            return compName;
+        }
+        public void setCompName(final String compNameParam) {
+            this.compName = compNameParam;
+        }
+
+        public String getVersion() {
+            return version;
+        }
+        public void setVersion(final String versionParam) {
+            this.version = versionParam;
+        }
+
+        public String getHash() {
+            return hash;
+        }
+        public void setHash(final String hashParam) {
+            this.hash = hashParam;
+        }
+
+        public String getValue() {
+            return value;
+        }
+        public void setValue(final String valueParam) {
+            this.value = valueParam;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+        public void setUrl(final String urlParam) {
+            this.url = urlParam;
+        }
+
+        public String getComment() {
+            return comment;
+        }
+        public void setComment(final String commentParam) {
+            this.comment = commentParam;
+        }
+
+        public String getFormulaPropName() {
+            return formulaPropName;
+        }
+        public void setFormulaPropName(final String formulaPropNameParam) {
+            this.formulaPropName = formulaPropNameParam;
         }
     }
 
@@ -125,9 +238,14 @@ private static final class ParsedArgs {
         */
         public static void main(final String[] args) {
             final ParsedArgs parsedArgs = parseArgs(args);
+
+            //Mirror into the class variables
+            useJson = parsedArgs.isUseJson();
+            verbose = parsedArgs.isVerbose();
+
             try {
                 final Bom bom = dispatch(parsedArgs, args);
-                writeFile(bom, parsedArgs.fileName);
+                writeFile(bom, parsedArgs.getFileName());
             } catch (Exception e) {
                 echoArgs(args);
                 System.out.println("\nException: " + e);
@@ -142,115 +260,92 @@ private static final class ParsedArgs {
         }
 
         private static ParsedArgs parseArgs(final String[] args) {
-            String cmd = "";
-            String comment = null;
-            String compName = null;
-            String formulaName = null;
-            String description = null;
-            String fileName = null;
-            String hash = null;
-            String name = null;
-            String tool = null;
-            String type = null;
-            String url = null;
-            String value = null;
-            String version = null;
-            String workflowRef = null;
-            String workflowName = null;
-            String workflowStepName = null;
-            String formulaPropName = null;
-            String workflowUid = null;
-            String executed = null;
-            String rawTaskTypes = null;
+
+            final ParsedArgs pa = new ParsedArgs();
 
             for (int i = 0; i < args.length; i++) {
                 final String a = args[i];
                 if (a.equals("--jsonFile")) {
-                    fileName = args[++i];
-                    useJson = true;
+                    pa.setFileName(args[++i]);
+                    pa.setUseJson(true);
                 } else if (a.equals("--xmlFile")) {
-                    fileName = args[++i];
-                    useJson = false;
+                    pa.setFileName(args[++i]);
+                    pa.setUseJson(false);
                 } else if (a.equals("--version")) {
-                    version = args[++i];
+                    pa.setVersion(args[++i]);
                 } else if (a.equals("--name")) {
-                    name = args[++i];
+                    pa.setName(args[++i]);
                 } else if (a.equals("--value")) {
-                    value = args[++i];
+                    pa.setValue(args[++i]);
                 } else if (a.equals("--url")) {
-                    url = args[++i];
+                    pa.setUrl(args[++i]);
                 } else if (a.equals("--comment")) {
-                    comment = args[++i];
+                    pa.setComment(args[++i]);
                 } else if (a.equals("--hash")) {
-                    hash = args[++i];
+                    pa.setHash(args[++i]);
                 } else if (a.equals("--compName")) {
-                    compName = args[++i];
+                    pa.setCompName(args[++i]);
                 } else if (a.equals("--formulaName")) {
-                    formulaName = args[++i];
+                    pa.setFormulaName(args[++i]);
                 } else if (a.equals("--description")) {
-                    description = args[++i];
+                    pa.setDescription(args[++i]);
                 } else if (a.equals("--type")) {
-                    type = args[++i];
+                    pa.setType(args[++i]);
                 } else if (a.equals("--tool")) {
-                    tool = args[++i];
+                    pa.setTool(args[++i]);
                 } else if (a.equals("--createNewSBOM")) {
-                    cmd = "createNewSBOM";
+                    pa.setCmd("createNewSBOM");
                 } else if (a.equals("--addMetadata")) {
-                    cmd = "addMetadata";
+                    pa.setCmd("addMetadata");
                 } else if (a.equals("--addMetadataComponent")) {
-                    cmd = "addMetadataComponent";
+                    pa.setCmd("addMetadataComponent");
                 } else if (a.equals("--addMetadataProp")) {
-                    cmd = "addMetadataProperty";
+                    pa.setCmd("addMetadataProperty");
                 } else if (a.equals("--addComponent")) {
-                    cmd = "addComponent";
+                    pa.setCmd("addComponent");
                 } else if (a.equals("--addComponentHash")) {
-                    cmd = "addComponentHash";
+                    pa.setCmd("addComponentHash");
                 } else if (a.equals("--addComponentProp")) {
-                    cmd = "addComponentProp";
+                    pa.setCmd("addComponentProp");
                 } else if (a.equals("--addMetadataTools")) {
-                    cmd = "addMetadataTools";
+                    pa.setCmd("addMetadataTools");
                 } else if (a.equals("--addFormulation")) {
-                    cmd = "addFormulation";
+                    pa.setCmd("addFormulation");
                 } else if (a.equals("--addFormulationComp")) {
-                    cmd = "addFormulationComp";
+                    pa.setCmd("addFormulationComp");
                 } else if (a.equals("--addFormulationCompProp")) {
-                    cmd = "addFormulationCompProp";
+                    pa.setCmd("addFormulationCompProp");
                 } else if (a.equals("--verbose")) {
-                    verbose = true;
+                    pa.setVerbose(true);
                 } else if (a.equals("--addFormulaProp")) {
-                    cmd = "addFormulaProp";
+                    pa.setCmd("addFormulaProp");
                 } else if (a.equals("--formulaPropName")) {
-                    formulaPropName = args[++i];
+                    pa.setFormulaPropName(args[++i]);
                 } else if (a.equals("--addWorkflow")) {
-                    cmd = "addWorkflow";
+                    pa.setCmd("addWorkflow");
                 } else if (a.equals("--workflowRef")) {
-                    workflowRef = args[++i];
+                    pa.setWorkflowRef(args[++i]);
                 } else if (a.equals("--workflowName")) {
-                    workflowName = args[++i];
+                    pa.setWorkflowName(args[++i]);
                 } else if (a.equals("--workflowUid")) {
-                    workflowUid = args[++i];
+                    pa.setWorkflowUid(args[++i]);
                 } else if (a.equals("--taskTypes")) {
-                    rawTaskTypes = args[++i];
+                    pa.setRawTaskTypes(args[++i]);
                 } else if (a.equals("--addWorkflowStep")) {
-                    cmd = "addWorkflowStep";
+                    pa.setCmd("addWorkflowStep");
                 } else if (a.equals("--workflowStepName")) {
-                    workflowStepName = args[++i];
+                    pa.setWorkflowStepName(args[++i]);
                 } else if (a.equals("--addWorkflowStepCmd")) {
-                    cmd = "addWorkflowStepCmd";
+                    pa.setCmd("addWorkflowStepCmd");
                 } else if (a.equals("--executed")) {
-                    executed = args[++i];
+                    pa.setExecuted(args[++i]);
                 }
             }
-
-            return new ParsedArgs(
-                    cmd, comment, compName, formulaName, description, fileName, hash, name, tool, type, url,
-                    value, version, workflowRef, workflowName, workflowStepName, formulaPropName, workflowUid,
-                    executed, rawTaskTypes
-            );
+            return pa;
         }
 
         private static Bom dispatch(final ParsedArgs a, final String[] raw) throws Exception {
-            switch (a.cmd) {
+            switch (a.getCmd()) {
                 case "createNewSBOM":           return execCreateNewSBOM();
                 case "addMetadata":             return execAddMetadata(a);
                 case "addMetadataComponent":    return execAddMetadataComponent(a);
@@ -279,60 +374,59 @@ private static final class ParsedArgs {
         }
 
         private static Bom execAddMetadata(final ParsedArgs a) throws Exception {
-            return addMetadata(a.fileName);
+            return addMetadata(a.getFileName());
         }
 
         private static Bom execAddMetadataComponent(final ParsedArgs a) throws Exception {
-            return addMetadataComponent(a.fileName, a.name, a.type, a.version, a.description);
+            return addMetadataComponent(a.getFileName(), a.getName(), a.getType(), a.getVersion(), a.getDescription());
         }
 
         private static Bom execAddMetadataProperty(final ParsedArgs a) throws Exception {
-            return addMetadataProperty(a.fileName, a.name, a.value);
+            return addMetadataProperty(a.getFileName(), a.getName(), a.getValue());
         }
 
         private static Bom execAddFormulation(final ParsedArgs a) throws Exception {
-            return addFormulation(a.fileName, a.formulaName);
+            return addFormulation(a.getFileName(), a.getFormulaName());
         }
 
         private static Bom execAddFormulationComp(final ParsedArgs a) throws Exception {
-            return addFormulationComp(a.fileName, a.formulaName, a.name, a.type);
+            return addFormulationComp(a.getFileName(), a.getFormulaName(), a.getName(), a.getType());
         }
 
         private static Bom execAddFormulationCompProp(final ParsedArgs a) throws Exception {
-            return addFormulationCompProp(a.fileName, a.formulaName, a.compName, a.name, a.value);
+            return addFormulationCompProp(a.getFileName(), a.getFormulaName(), a.getCompName(), a.getName(), a.getValue());
         }
 
         private static Bom execAddMetadataTools(final ParsedArgs a) throws Exception {
-            return addMetadataTools(a.fileName, a.tool, a.version);
+            return addMetadataTools(a.getFileName(), a.getTool(), a.getVersion());
         }
 
         private static Bom execAddComponent(final ParsedArgs a) throws Exception {
-            return addComponent(a.fileName, a.compName, a.version, a.description);
+            return addComponent(a.getFileName(), a.getCompName(), a.getVersion(), a.getDescription());
         }
 
         private static Bom execAddComponentHash(final ParsedArgs a) throws Exception {
-            return addComponentHash(a.fileName, a.compName, a.hash);
+            return addComponentHash(a.getFileName(), a.getCompName(), a.getHash());
         }
 
         private static Bom execAddComponentProp(final ParsedArgs a) throws Exception {
-            return addComponentProperty(a.fileName, a.compName, a.name, a.value);
+            return addComponentProperty(a.getFileName(), a.getCompName(), a.getName(), a.getValue());
         }
 
         private static Bom execAddFormulaProp(final ParsedArgs a) throws Exception {
-            return addFormulaProperty(a.fileName, a.formulaName, a.formulaPropName, a.value);
+            return addFormulaProperty(a.getFileName(), a.getFormulaName(), a.getFormulaPropName(), a.getValue());
         }
 
         private static Bom execAddWorkflow(final ParsedArgs a) throws Exception {
-            return addWorkflow(a.fileName, a.formulaName, a.workflowRef, a.workflowUid, a.workflowName, a.rawTaskTypes);
+            return addWorkflow(a.getFileName(), a.getFormulaName(), a.getWorkflowRef(), a.getWorkflowUid(), a.getWorkflowName(), a.getRawTaskTypes());
         }
 
         private static Bom execAddWorkflowStep(final ParsedArgs a) throws Exception {
-            return addWorkflowStep(a.fileName, a.formulaName, a.workflowRef, a.workflowStepName, a.description);
+            return addWorkflowStep(a.getFileName(), a.getFormulaName(), a.getWorkflowRef(), a.getWorkflowStepName(), a.getDescription());
         }
 
         private static Bom execAddWorkflowStepCmd(final ParsedArgs a) throws Exception {
-            final String realWorkflowStepNameForCmd = a.workflowStepName != null ? a.workflowStepName : a.name;
-            return addWorkflowStepCmd(a.fileName, a.formulaName, a.workflowRef, realWorkflowStepNameForCmd, a.executed);
+            return addWorkflowStepCmd(a.getFileName(), a.getFormulaName(), a.getWorkflowRef(), a.getWorkflowStepName(), a.getExecuted());
         }
 
     /*
