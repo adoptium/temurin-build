@@ -176,7 +176,7 @@ validate_sbom() {
 
   # shellcheck disable=SC2086
   echo "validateSBOM.sh: Running validateTemurinSBOM.sh"
-  if bash "${WORKSPACE_DIR}/tooling/validateTemurinSBOM.sh" "$SBOM_LOCATION" "$JDK_MAJOR_VERSION" "$SOURCE_TAG"; then
+  if bash "${SCRIPT_DIR}/tooling/validateTemurinSBOM.sh" "$SBOM_LOCATION" "$JDK_MAJOR_VERSION" "$SOURCE_TAG"; then
     echo "validateTemurinSBOM.sh: PASSED"
   else
     echo "validateTemurinSBOM.sh: ERROR: FAILED"
