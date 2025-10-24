@@ -404,7 +404,7 @@ verify_gcc_version() {
 #
 ##########################################################################################################################
 verify_sboms() {
-  ./validateSBOM.sh "${sbom}" "${MAJOR_VERSION}" "${TAG}" 
+  "${SCRIPT_DIR}/validateSBOM.sh" "${sbom}" "${MAJOR_VERSION}" "${TAG}" 
 }
 
 

@@ -19,6 +19,7 @@
 JDK_MAJOR_VERSION=""
 SOURCE_TAG=""
 SBOM_LOCATION=""
+SCRIPT_DIR="$( cd "$( dirname "${0}" )" && pwd )"
 WORKSPACE_DIR=""
 CYCLONEDX_TOOL=""
 
@@ -40,10 +41,11 @@ arg_parser() {
   fi
 
   if [ -z $WORKSPACE ]; then
-    WORKSPACE_DIR="${0%/*}/workspace_temp"
-    echo "validateSBOM.sh: WORKSPACE variable not detected."
+    WORKSPACE_DIR=~/workspace_temp
+    echo "validateSBOM.sh: WORKSPACE environment variable not detected."
     if [ -d "${WORKSPACE_DIR}" ]; then
-      echo "validateSBOM.sh: ERROR: New temporary workspace already exists. Aborting to avoid conflict."
+      echo "validateSBOM.sh: ERROR: New temporary workspace already exists in ${WORKSPACE_DIR}"
+      echo "Aborting to avoid conflict."
       exit 1
     else
       mkdir "${WORKSPACE_DIR}"
@@ -78,7 +80,7 @@ arg_parser() {
   # Now we check that the third argument is a valid link.
   echo "$SBOM_LOCATION" | grep -q ^https.*
   if [ $? -eq 0 ]; then
-    wget --spider "$SBOM_LOCATION"
+    wget --spider --quiet "$SBOM_LOCATION"
     if [ $? -eq 0 ]; then
       wget --quiet -O "${WORKSPACE_DIR}/sbom_text.txt" "$SBOM_LOCATION"
       [ $? -ne 0 ] && echo "ERROR: SBOM_LOCATION exists but could not be downloaded." && exit 1
@@ -164,7 +166,8 @@ validate_sbom() {
   # shellcheck disable=SC2010
   echo "validateSBOM.sh: Running ${CYCLONEDX_TOOL} ..."
 
-  if ! "${WORKSPACE_DIR}/${CYCLONEDX_TOOL}" validate --input-file "${SBOM_LOCATION}"; then
+  echo "Command: \"${WORKSPACE_DIR}/${CYCLONEDX_TOOL}\" validate --input-file \"${SBOM_LOCATION} --input-format json"
+  if ! "${WORKSPACE_DIR}/${CYCLONEDX_TOOL}" validate --input-file "${SBOM_LOCATION}" --input-format json; then
     echo "validateSBOM.sh: Error: Failed CycloneDX validation check."
     exit 5
   else
