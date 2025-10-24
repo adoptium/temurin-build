@@ -140,17 +140,17 @@ GITSHA=$(echo  "$GITSHA" | cut -d/ -f7)
 echo "Checking for temurin-build SHA $GITSHA in ${GITREPO}"
 
 if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
-   echo "WARNING: temurin-build SHA check failed. This can happen if it was not a tagged level"
+   echo "WARNING: temurin-build SHA check failed. This can happen if it was not a tagged level."
    if echo "$1" | grep '[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]' 2>/dev/null; then
      echo "Ignoring return code as filename looks like a nightly"
    else
-     echo "This can also happen with a branch being used and not a tag as we do for GAs so not failing"
-     echo "Note: As this is a warning message this will not cause a non-zero return code by itself"
+     echo "This can also happen with a branch being used and not a tag as we do for GAs so not failing."
+     echo "Note: As this is a warning message this will not cause a non-zero return code by itself."
      # RC=1
    fi
 fi
 
 if [ "$RC" != "0" ]; then
-   echo "ERROR: Overall return code from validateSBOMcontent.sh is non-zero - something failed validation"
+   echo "ERROR: Overall return code from validateSBOMcontent.sh is non-zero - something failed validation."
 fi
 exit $RC
