@@ -70,6 +70,7 @@ elif echo "$SBOMFILE" | grep _linux_; then
   [ "${MAJORVERSION}" = "11" ] && EXPECTED_GCC=7.5.0
   [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
   [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_GCC=11.3.0 && EXPECTED_FREETYPE=Unknown
+  [ "${MAJORVERSION}" -ge 25 ] && EXPECTED_GCC=14.2.0
   EXPECTED_ALSA=1.1.8
   if echo "$SBOMFILE" | grep _aarch64_ > /dev/null; then
      EXPECTED_ALSA=1.1.6 # Linux/aarch64 uses CentOS7.6 devkit, not 7.9
