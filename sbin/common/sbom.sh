@@ -205,3 +205,42 @@ addSBOMComponentPropertyFromFile() {
   fi
 }
 
+# Ref: https://cyclonedx.org/docs/1.6/json/#formulation_items_workflows
+# Create or update a workflow entry under a given formula
+addSBOMWorkflow() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local formulaName="${4}"
+  local workflowRef="${5}"
+  local workflowUid="${6}"
+  local workflowName="${7}"
+  local taskTypes="${8}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addWorkflow --jsonFile "${jsonFile}" --formulaName "${formulaName}" --workflowRef "${workflowRef}" --workflowUid "${workflowUid}" --workflowName "${workflowName}" --taskTypes "${taskTypes}"
+}
+
+# Ref: https://cyclonedx.org/docs/1.6/json/#formulation_items_workflows_items_steps
+# Create a step inside of a workflow
+addSBOMWorkflowStep() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local formulaName="${4}"
+  local workflowRef="${5}"
+  local workflowStepName="${6}"
+  local description="${7}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addWorkflowStep --jsonFile "${jsonFile}" --formulaName "${formulaName}" --workflowRef "${workflowRef}" --workflowStepName "${workflowStepName}" --description "${description}"
+}
+
+# Ref: https://cyclonedx.org/docs/1.6/json/#formulation_items_workflows_items_steps_items_commands
+# Add a executed command to a specific workflow step
+addSBOMWorkflowStepCmd() {
+  local javaHome="${1}"
+  local classpath="${2}"
+  local jsonFile="${3}"
+  local formulaName="${4}"
+  local workflowRef="${5}"
+  local workflowStepName="${6}"
+  local executed="${7}"
+  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addWorkflowStepCmd --jsonFile "${jsonFile}" --formulaName "${formulaName}" --workflowRef "${workflowRef}" --workflowStepName "${workflowStepName}" --executed "${executed}"
+}
