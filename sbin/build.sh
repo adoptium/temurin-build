@@ -548,22 +548,75 @@ configureAlsaLocation() {
   fi
 }
 
+setFreeTypePerJdk8Tag() {
+  if [ -n "${BUILD_CONFIG[TAG]}" ]; then
+    local majorBuildVersion=$(echo "${BUILD_CONFIG[TAG]}" | sed "s/jdk8u//" | sed "s/-.*//")
+	if [ 0${majorBuildVersion} -lt 482 ] ; then
+      if [ "${1}" == "srcs" ] ; then
+        setFreeTypeFromSrcs
+      elif [ "${1}" == "installed" ] ; then
+        setFreeTypeFromInstalled
+      else
+        echo "invalid parameter $1"
+        exit 1
+      fi
+    elif [ 0${majorBuildVersion} -gt 482 ] ; then
+      setDefaultFreeType
+    else
+      # the change was introduces in 482, lets determine the build promotion, and decide
+      local minorBuildNumber=$(echo "${BUILD_CONFIG[TAG]}" | sed "s/.*-//" | sed "s/[^0-9]//g")
+      # if the number is empty, is probably ga, so ok to use newest
+      if [ "x${minorBuildNumber}" = "x" ] || [ 0${minorBuildNumber} -ge 01 ] ; then #FIXME, replace by real b's number once merged
+        setDefaultFreeType
+      else
+        if [ "${1}" == "srcs" ] ; then
+          setFreeTypeFromSrcs
+        elif [ "${1}" == "installed" ] ; then
+          setFreeTypeFromInstalled
+        else
+          echo "invalid parameter $1"
+          exit 1
+        fi
+      fi
+    fi
+  else
+    # no tag, treating as newest, so bundled
+    setDefaultFreeType
+  fi
+}
+
+setDefaultFreeType() {
+  echo "Freetype set from bundled in jdk"
+  freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled}
+}
+
+setFreeTypeFromSrcs() {
+  echo "Freetype set from local sources"
+  addConfigureArg "--with-freetype-src=" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype"
+}
+
+setFreeTypeFromInstalled() {
+  echo "Freetype set from installed binary"
+  freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-"${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype"}
+}
+
 configureFreetypeLocation() {
   if [[ ! "${CONFIGURE_ARGS}" =~ "--with-freetype" ]]; then
     if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
       local freetypeDir="${BUILD_CONFIG[FREETYPE_DIRECTORY]}"
       if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
         case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
-          jdk9* | jdk10*) addConfigureArg "--with-freetype-src=" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" ;;
-          *) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled} ;;
+          jdk9* | jdk10*)  setFreeTypeFromSrcs;;
+          jdk8*) setFreeTypePerJdk8Tag srcs;;
+          *) setDefaultFreeType ;;
         esac
       else
         case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
-          jdk9* | jdk10*) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-"${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype"} ;;
-          *) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled} ;;
+          jdk9* | jdk10*)  setFreeTypeFromInstalled;;
+          jdk8*) setFreeTypePerJdk8Tag installed;;
+          *) setDefaultFreeType ;;
         esac
       fi
-
       if [[ -n "$freetypeDir" ]]; then
         echo "setting freetype dir to ${freetypeDir}"
         addConfigureArg "--with-freetype=" "${freetypeDir}"
