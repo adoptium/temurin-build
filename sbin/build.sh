@@ -548,39 +548,41 @@ configureAlsaLocation() {
   fi
 }
 
-setFreeTypePerJdk8Tag() {
+getFreeTypePerJdk8Tag() {
   if [ -n "${BUILD_CONFIG[TAG]}" ]; then
     local majorBuildVersion=$(echo "${BUILD_CONFIG[TAG]}" | sed "s/jdk8u//" | sed "s/-.*//")
-	if [ 0${majorBuildVersion} -lt 482 ] ; then
-      if [ "${1}" == "srcs" ] ; then
+    if [ 0${majorBuildVersion} -lt 482 ] ; then
+      echo "old"
+    elif [ 0${majorBuildVersion} -gt 482 ] ; then
+      echo "new"
+    else
+      # the change was introduces in 482, lets determine the build promotion, and decide
+      local minorBuildNumber=$(echo "${BUILD_CONFIG[TAG]}" | sed "s/.*-//" | sed "s/[^0-9]//g")
+      # if the number is empty, is probably ga, so ok to use newest
+      if [ -z "${minorBuildNumber}" ] || [ 0${minorBuildNumber} -ge 01 ] ; then #FIXME, replace by real b's number once merged
+        echo "new"
+      else
+        echo "old"
+      fi
+    fi
+  else
+    # no tag, treating as newest
+    echo "new"
+  fi
+}
+
+setFreeTypePerJdk8Tag() {
+  local jdk8Type="$(getFreeTypePerJdk8Tag)"
+  if [ "${jdk8Type}" =  "old" ] ; then
+    if [ "${1}" = "srcs" ] ; then
         setFreeTypeFromSrcs
-      elif [ "${1}" == "installed" ] ; then
+      elif [ "${1}" = "installed" ] ; then
         setFreeTypeFromInstalled
       else
         echo "invalid parameter $1"
         exit 1
       fi
-    elif [ 0${majorBuildVersion} -gt 482 ] ; then
-      setDefaultFreeType
-    else
-      # the change was introduces in 482, lets determine the build promotion, and decide
-      local minorBuildNumber=$(echo "${BUILD_CONFIG[TAG]}" | sed "s/.*-//" | sed "s/[^0-9]//g")
-      # if the number is empty, is probably ga, so ok to use newest
-      if [ "x${minorBuildNumber}" = "x" ] || [ 0${minorBuildNumber} -ge 01 ] ; then #FIXME, replace by real b's number once merged
-        setDefaultFreeType
-      else
-        if [ "${1}" == "srcs" ] ; then
-          setFreeTypeFromSrcs
-        elif [ "${1}" == "installed" ] ; then
-          setFreeTypeFromInstalled
-        else
-          echo "invalid parameter $1"
-          exit 1
-        fi
-      fi
-    fi
-  else
-    # no tag, treating as newest, so bundled
+   else
     setDefaultFreeType
   fi
 }
