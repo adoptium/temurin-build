@@ -14,20 +14,21 @@
 
 [ "$VERBOSE" = "true" ] && set -x
 if [ $# -lt 3 ]; then
-  echo "Usage: $0 file.json majorversion fullversion"
-  echo "e.g. $0 OpenJDK17_sbom.json 17 17.0.8"
+  echo "Usage: $0 file.json majorversion scm_ref"
+  echo "e.g. $0 OpenJDK17_sbom.json 17 jdk-17.0.10+1_adopt"
   exit 1
 fi
 SBOMFILE="$1"
 MAJORVERSION="$2"
-#FULLVERSION="$3"
+EXPECTED_SCM_REF="$3"
 
-GLIBC=$(   jq '.metadata.tools.components[] | select(.name|test("GLIBC"))    | .version' "$1" | tr -d \")
-GCC=$(     jq '.metadata.tools.components[] | select(.name|test("GCC"))      | .version' "$1" | tr -d \")
-BOOTJDK=$( jq '.metadata.tools.components[] | select(.name|test("BOOTJDK"))  | .version' "$1" | tr -d \")
-ALSA=$(    jq '.metadata.tools.components[] | select(.name|test("ALSA"))     | .version' "$1" | tr -d \" | sed -e 's/^.*alsa-lib-//' -e 's/\.tar.bz2//')
-FREETYPE=$(jq '.metadata.tools.components[] | select(.name|test("FreeType")) | .version' "$1" | tr -d \")
+GLIBC=$(   jq '.metadata.tools.components[] | select(.name|test("GLIBC"))    | .version' "$SBOMFILE" | tr -d \")
+GCC=$(     jq '.metadata.tools.components[] | select(.name|test("GCC"))      | .version' "$SBOMFILE" | tr -d \")
+BOOTJDK=$( jq '.metadata.tools.components[] | select(.name|test("BOOTJDK"))  | .version' "$SBOMFILE" | tr -d \")
+ALSA=$(    jq '.metadata.tools.components[] | select(.name|test("ALSA"))     | .version' "$SBOMFILE" | tr -d \" | sed -e 's/^.*alsa-lib-//' -e 's/\.tar.bz2//')
+FREETYPE=$(jq '.metadata.tools.components[] | select(.name|test("FreeType")) | .version' "$SBOMFILE" | tr -d \")
 COMPILER=$(jq '.components[0].properties[] | select(.name|test("Build Tools Summary")).value' "$SBOMFILE" | sed -e 's/^.*Toolchain: //g' -e 's/\ *\*.*//g')
+SCM_REF=$( jq '.components[0].properties[]  | select(.name|test("SCM Ref"))  | .value'   "$SBOMFILE" | tr -d \")
 
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
 EXPECTED_GLIBC=""
@@ -109,6 +110,11 @@ fi
 [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_FREETYPE=2.13.3 # Bundled version
 
 RC=0
+
+# Skip SCM check if EXPECTED_SCM_REF parameter is null
+if [ "${EXPECTED_SCM_REF}" != "null" ]; then
+  [ "${EXPECTED_SCM_REF}" != "${SCM_REF}" ] && echo "ERROR: SCM_REF not ${EXPECTED_SCM_REF} (SBOM has ${SCM_REF})" && RC=1 
+fi
 if echo "$SBOMFILE" | grep 'linux_'; then
 	[ "${GLIBC}"      != "$EXPECTED_GLIBC"   ] && echo "ERROR: GLIBC version not ${EXPECTED_GLIBC} (SBOM has ${GLIBC})" && RC=1
 	[ "${GCC}"        != "$EXPECTED_GCC"     ] && echo "ERROR: GCC version not ${EXPECTED_GCC} (SBOM has ${GCC})"     && RC=1
@@ -130,25 +136,31 @@ GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$( echo "$GITSHA" | cut -d/ -f7)
 if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
   echo "ERROR: git sha of source repo not found"
+  echo "GITREPO: ${GITREPO}"
+  echo "GITSHA: ${GITSHA}"
   RC=1
 fi
 
 # shellcheck disable=SC3037
-echo -n "Checking for temurin-build SHA validity: "
-GITSHA=$(jq '.components[].properties[] | select(.name|test("Temurin Build Ref")) | .value' "$1" | tr -d \" | uniq)
-GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
-GITSHA=$(echo  "$GITSHA" | cut -d/ -f7)
-echo "Checking for temurin-build SHA $GITSHA in ${GITREPO}"
+if [ "${EXPECTED_SCM_REF}" != "null" ]; then
+  echo -n "Checking for temurin-build SHA validity: "
+  GITSHA=$(jq '.components[].properties[] | select(.name|test("Temurin Build Ref")) | .value' "$1" | tr -d \" | uniq)
+  GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
+  GITSHA=$(echo  "$GITSHA" | cut -d/ -f7)
+  echo "Checking for temurin-build SHA $GITSHA in ${GITREPO}"
 
-if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
-   echo "WARNING: temurin-build SHA check failed. This can happen if it was not a tagged level."
-   if echo "$1" | grep '[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]' 2>/dev/null; then
-     echo "Ignoring return code as filename looks like a nightly"
-   else
-     echo "This can also happen with a branch being used and not a tag as we do for GAs so not failing."
-     echo "Note: As this is a warning message this will not cause a non-zero return code by itself."
-     # RC=1
-   fi
+  if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
+     echo "WARNING: temurin-build SHA check failed. This can happen if it was not a tagged level."
+     if echo "$1" | grep '[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]' 2>/dev/null; then
+       echo "Ignoring return code as filename looks like a nightly"
+     else
+       echo "This can also happen with a branch being used and not a tag as we do for GAs so not failing."
+       echo "Note: As this is a warning message this will not cause a non-zero return code by itself."
+       # RC=1
+     fi
+  fi
+else
+  echo "The SCM_REF argument was set to null; skipping SHA check."
 fi
 
 if [ "$RC" != "0" ]; then
