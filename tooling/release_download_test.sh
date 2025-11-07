@@ -404,7 +404,14 @@ verify_gcc_version() {
 #
 ##########################################################################################################################
 verify_sboms() {
-  "${SCRIPT_DIR}/validateSBOM.sh" "${sbom}" "${MAJOR_VERSION}" "${TAG}" 
+  local sbom
+
+  cd "${WORKSPACE}/staging/${TAG}" || exit 1
+
+  # shellcheck disable=SC2010
+  for sbom in $(ls -1 OpenJDK*-sbom*json | grep -v metadata); do
+    "${SCRIPT_DIR}/validateSBOM.sh" "${sbom}" "${MAJOR_VERSION}" "${TAG}" 
+  done
 }
 
 
