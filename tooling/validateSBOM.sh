@@ -118,7 +118,6 @@ arg_parser() {
       exit 1
     fi
     SBOM_NAME=$(echo "${SBOM_LOCATION}" | sed 's:.*/::')
-    echo "debug 123: ${SBOM_NAME}"
     SBOM_LOCATION="${WORKSPACE_DIR}/${SBOM_NAME}"
   elif [ ! -r "$SBOM_LOCATION" ]; then
     echo "ERROR: SBOM_LOCATION could not be found/accessed: $SBOM_LOCATION" 
@@ -133,9 +132,10 @@ arg_parser() {
 #
 ########################################################################################################################
 download_cyclonedx_tool() {
-  kernel machine
-  cyclonedx_os cyclonedx_arch cyclonedx_suffix
-  cyclonedx_checksum
+  cyclonedx_os=""
+  cyclonedx_arch=""
+  cyclonedx_suffix=""
+  cyclonedx_checksum=""
 
   cyclonedx_suffix=""
 
