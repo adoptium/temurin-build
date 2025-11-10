@@ -112,7 +112,7 @@ arg_parser() {
   fi
 
   # Now we check that the third argument is a valid link.
-  if echo "$SBOM_LOCATION" | grep -q ^https.*; then
+  if echo "$SBOM_LOCATION" | grep -q "^https.*"; then
     if ! curl -L "$SBOM_LOCATION" -O; then
       echo "ERROR: SBOM_LOCATION could not be downloaded." 
       exit 1
