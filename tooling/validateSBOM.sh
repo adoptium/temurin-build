@@ -41,7 +41,7 @@ arg_parser() {
     exit 1
   fi
 
-  if [ -z $WORKSPACE ]; then
+  if [ -z "$WORKSPACE" ]; then
     echo "validateSBOM.sh: ERROR: WORKSPACE environment variable not detected."
     exit 1
   fi
@@ -51,20 +51,18 @@ arg_parser() {
   if [ -d "${WORKSPACE_DIR}" ]; then
     echo "validateSBOM.sh: New temporary workspace already exists in ${WORKSPACE_DIR}"
     echo "Refreshing directory to avoid conflict."
-    rm -rf "${WORKSPACE_DIR}/*"
-  else
-    echo "validateSBOM.sh: Setting up workspace directory ${WORKSPACE_DIR}"
-    mkdir "${WORKSPACE_DIR}"
+    rm -rf "${WORKSPACE_DIR}"
   fi
+  echo "validateSBOM.sh: Setting up workspace directory ${WORKSPACE_DIR}"
+  mkdir "${WORKSPACE_DIR}"
 
-  cd "${WORKSPACE_DIR}"
+  cd "${WORKSPACE_DIR}" || exit 1
 
   JDK_MAJOR_VERSION="$1"
   SOURCE_TAG="$2"
   SBOM_LOCATION="$3"
 
-  echo "$JDK_MAJOR_VERSION" | grep -q ^[1-9][0-9]*\$
-  if [ $? -ne 0 ]; then
+  if ! $(echo "$JDK_MAJOR_VERSION" | grep -q "^[1-9][0-9]*\$"); then
     echo "ERROR: validateSBOM.sh: first argument must be a positive integer greater than 0."
     exit 1
   fi
@@ -76,34 +74,32 @@ arg_parser() {
   
   TAG_CHECK=""
   if [ "$JDK_MAJOR_VERSION" -eq "8" ]; then
-    echo "$SOURCE_TAG" | grep -q ^jdk8u[0-9][0-9]*-b[0-9][0-9]*_adopt\$
+    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-b[0-9][0-9]*_adopt\$"
     TAG_CHECK="$?"
-    echo "$SOURCE_TAG" | grep -q ^jdk8u[0-9][0-9]*-b[0-9][0-9]*\$
+    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-b[0-9][0-9]*\$"
     TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q ^jdk8u[0-9][0-9]*-ga\$
+    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-ga\$"
     TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q ^jdk8u[0-9][0-9]*-dryrun-ga\$
+    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-dryrun-ga\$"
     TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q ^jdk8u[0-9][0-9]*-aarch32-[0-9][0-9]*\$
+    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-aarch32-[0-9][0-9]*\$"
     TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q ^jdk8u[0-9][0-9]*-ga-aarch32-[0-9][0-9]*\$
+    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-ga-aarch32-[0-9][0-9]*\$"
     TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q ^jdk8u[0-9][0-9]*-dryrun-ga-aarch32-[0-9][0-9]*\$
+    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-dryrun-ga-aarch32-[0-9][0-9]*\$"
     TAG_CHECK="${TAG_CHECK}$?"
   else
-    echo "$SOURCE_TAG" | grep -q ^jdk-[0-9][0-9\.\+]*_adopt\$
+    echo "$SOURCE_TAG" | grep -q "^jdk-[0-9][0-9\.\+]*_adopt\$"
     TAG_CHECK="$?"
-    echo "$SOURCE_TAG" | grep -q ^jdk-[0-9][0-9\.\+]*\$
+    echo "$SOURCE_TAG" | grep -q "^jdk-[0-9][0-9\.\+]*\$"
     TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q ^jdk-[0-9][0-9\.\+]*-dryrun-ga\$
+    echo "$SOURCE_TAG" | grep -q "^jdk-[0-9][0-9\.\+]*-dryrun-ga\$"
     TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q ^jdk-[0-9][0-9\.\+]*-ga\$
+    echo "$SOURCE_TAG" | grep -q "^jdk-[0-9][0-9\.\+]*-ga\$"
     TAG_CHECK="${TAG_CHECK}$?"
   fi
-  echo "${TAG_CHECK}" | grep -q "0"
   
-  
-  if [ $? -ne 0 ]; then
+  if ! $(echo "${TAG_CHECK}" | grep -q "0"); then
     echo "WARNING: validateSBOM.sh: SOURCE_TAG does not use a valid upstream tag structure."
     echo "INFO: validateSBOM.sh: Build is presumed to be a personal or dev build."
     echo "INFO: validateSBOM.sh: SCM and SHA checks will be skipped."
@@ -116,13 +112,16 @@ arg_parser() {
   fi
 
   # Now we check that the third argument is a valid link.
-  echo "$SBOM_LOCATION" | grep -q ^https.*
-  if [ $? -eq 0 ]; then
-    curl -L "$SBOM_LOCATION" -O
-    [ $? -ne 0 ] && echo "ERROR: SBOM_LOCATION exists but could not be downloaded." && exit 1
-    SBOM_LOCATION="${WORKSPACE_DIR}/$(echo ${SBOM_LOCATION} | sed 's:.*/::')"
+  if $(echo "$SBOM_LOCATION" | grep -q ^https.*); then
+    if ! curl -L "$SBOM_LOCATION" -O; then
+      echo "ERROR: SBOM_LOCATION could not be downloaded." 
+      exit 1
+    fi
+    SBOM_NAME=$(echo "${SBOM_LOCATION}" | sed 's:.*/::')
+    echo "debug 123: ${SBOM_NAME}"
+    SBOM_LOCATION="${WORKSPACE_DIR}/${SBOM_NAME}"
   elif [ ! -r "$SBOM_LOCATION" ]; then
-    echo "ERROR: SBOM_LOCATION could not be found/accessed." 
+    echo "ERROR: SBOM_LOCATION could not be found/accessed: $SBOM_LOCATION" 
     exit 1
   fi
 }
@@ -134,9 +133,9 @@ arg_parser() {
 #
 ########################################################################################################################
 download_cyclonedx_tool() {
-  local kernel machine
-  local cyclonedx_os cyclonedx_arch cyclonedx_suffix
-  local cyclonedx_checksum
+  kernel machine
+  cyclonedx_os cyclonedx_arch cyclonedx_suffix
+  cyclonedx_checksum
 
   cyclonedx_suffix=""
 
@@ -171,7 +170,7 @@ download_cyclonedx_tool() {
 
     CYCLONEDX_TOOL="cyclonedx-${cyclonedx_os}-${cyclonedx_arch}${cyclonedx_suffix}"
 
-    cd "${WORKSPACE_DIR}"
+    cd "${WORKSPACE_DIR}" || exit 1
     [ ! -r "${CYCLONEDX_TOOL}" ] && curl -LOsS https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.27.2/"${CYCLONEDX_TOOL}"
     if [ "$(sha256sum "${CYCLONEDX_TOOL}" | cut -d' ' -f1)" != "${cyclonedx_checksum}" ]; then
        echo "validateSBOM.sh: Error: Cannot verify checksum of CycloneDX CLI binary"
@@ -226,6 +225,6 @@ download_cyclonedx_tool
 
 validate_sbom
 
-cd "${ORIGIN}"
+cd "${ORIGIN}" || exit 1
 
 exit 0 # Success
