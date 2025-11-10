@@ -42,11 +42,12 @@ arg_parser() {
   fi
 
   if [ -z "$WORKSPACE" ]; then
-    echo "validateSBOM.sh: ERROR: WORKSPACE environment variable not detected."
-    exit 1
+    echo "validateSBOM.sh: WARNING: WORKSPACE environment variable not detected."
+    echo "validateSBOM.sh: Using ${ORIGIN}/sbom_validation"
+    WORKSPACE_DIR="${ORIGIN}/sbom_validation"
+  else
+    WORKSPACE_DIR="${WORKSPACE}/sbom_validation"
   fi
-
-  WORKSPACE_DIR="${WORKSPACE}/sbom_validation"
 
   if [ -d "${WORKSPACE_DIR}" ]; then
     echo "validateSBOM.sh: New temporary workspace already exists in ${WORKSPACE_DIR}"
