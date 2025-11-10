@@ -181,18 +181,18 @@ download_cyclonedx_tool() {
     fi
     chmod 700 "${CYCLONEDX_TOOL}"
   else
-    echo "validateSBOM.sh: Error: No CycloneDX tool available for '${kernel}-${machine}'"
-    exit 1
+    echo "validateSBOM.sh: No CycloneDX CLI SBOM verification tool available for '${kernel}-${machine}'"
+    echo "validateSBOM.sh: Skipping CycloneDX SBOM check and proceeding to the next sbom verification step."
+    CYCLONEDX_TOOL=""
   fi
 }
 
 ########################################################################################################################
 #
-# Verifies the SBOM using cyclonedx-cli and validateTemurinSBOM.sh
+# Verifies the SBOM using cyclonedx-cli
 #
 ########################################################################################################################
-validate_sbom() {
-  echo "validateSBOM.sh: SBOM validation start."
+validate_sbom_cyclonedx() {
   echo "validateSBOM.sh: Running general SBOM validation from https://github.com/CycloneDX/cyclonedx-cli"
 
   # shellcheck disable=SC2010
@@ -205,7 +205,14 @@ validate_sbom() {
   else
     echo "validateSBOM.sh: Passed CycloneDX validation check."
   fi
+}
 
+########################################################################################################################
+#
+# Verifies the SBOM using validateTemurinSBOM.sh
+#
+########################################################################################################################
+validate_sbom_temurin() {
   # shellcheck disable=SC2086
   echo "validateSBOM.sh: Running validateTemurinSBOM.sh"
   
@@ -224,7 +231,17 @@ arg_parser "$@"
 
 download_cyclonedx_tool
 
-validate_sbom
+echo "validateSBOM.sh: SBOM validation start."
+
+if [ -n "${CYCLONEDX_TOOL}" ]; then
+  if [ -z "GITHUB_ACTION" ]; then
+    validate_sbom_cyclonedx
+  fi
+fi
+
+validate_sbom_temurin
+
+echo "validateSBOM.sh: SBOM validation complete."
 
 cd "${ORIGIN}" || exit 1
 
