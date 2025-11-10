@@ -62,7 +62,7 @@ arg_parser() {
   SOURCE_TAG="$2"
   SBOM_LOCATION="$3"
 
-  if ! $(echo "$JDK_MAJOR_VERSION" | grep -q "^[1-9][0-9]*\$"); then
+  if ! echo "$JDK_MAJOR_VERSION" | grep -q "^[1-9][0-9]*\$"; then
     echo "ERROR: validateSBOM.sh: first argument must be a positive integer greater than 0."
     exit 1
   fi
@@ -99,7 +99,7 @@ arg_parser() {
     TAG_CHECK="${TAG_CHECK}$?"
   fi
   
-  if ! $(echo "${TAG_CHECK}" | grep -q "0"); then
+  if ! echo "${TAG_CHECK}" | grep -q "0"; then
     echo "WARNING: validateSBOM.sh: SOURCE_TAG does not use a valid upstream tag structure."
     echo "INFO: validateSBOM.sh: Build is presumed to be a personal or dev build."
     echo "INFO: validateSBOM.sh: SCM and SHA checks will be skipped."
@@ -112,7 +112,7 @@ arg_parser() {
   fi
 
   # Now we check that the third argument is a valid link.
-  if $(echo "$SBOM_LOCATION" | grep -q ^https.*); then
+  if echo "$SBOM_LOCATION" | grep -q ^https.*; then
     if ! curl -L "$SBOM_LOCATION" -O; then
       echo "ERROR: SBOM_LOCATION could not be downloaded." 
       exit 1
