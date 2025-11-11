@@ -198,7 +198,7 @@ validate_sbom_cyclonedx() {
   # shellcheck disable=SC2010
   echo "validateSBOM.sh: Running ${CYCLONEDX_TOOL} ..."
 
-  echo "Command: \"${WORKSPACE_DIR}/${CYCLONEDX_TOOL}\" validate --input-file \"${SBOM_LOCATION} --input-format json"
+  echo "Command: \"${WORKSPACE_DIR}/${CYCLONEDX_TOOL}\" validate --input-file \"${SBOM_LOCATION}\" --input-format json"
   if ! "${WORKSPACE_DIR}/${CYCLONEDX_TOOL}" validate --input-file "${SBOM_LOCATION}" --input-format json; then
     echo "validateSBOM.sh: Error: Failed CycloneDX validation check."
     exit 5
@@ -234,9 +234,7 @@ download_cyclonedx_tool
 echo "validateSBOM.sh: SBOM validation start."
 
 if [ -n "${CYCLONEDX_TOOL}" ]; then
-  if [ -z "GITHUB_ACTION" ]; then
     validate_sbom_cyclonedx
-  fi
 fi
 
 validate_sbom_temurin
