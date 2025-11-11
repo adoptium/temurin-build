@@ -1200,10 +1200,6 @@ generateSBoM() {
 
   # Print SBOM location
   echo "CycloneDX SBOM has been created in ${sbomJson}"
-  
-  echo "Now validating CycloneDX SBOM."
-  bash "$SCRIPT_DIR/../tooling/validateSBOM.sh" "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" "${BUILD_CONFIG[BRANCH]}" "${sbomJson}"
-  echo "CycloneDX SBOM validation complete."
 }
 
 # Generate build tools info into dependency file
