@@ -80,7 +80,7 @@ elif echo "$SBOMFILE" | grep _linux_; then
     EXPECTED_GCC=14.2.0
     EXPECTED_GLIBC=2.27 # Fedora 28
     EXPECTED_ALSA=1.1.1
-    [ "${MAJORVERSION}" -lt 20 ] && EXPECTED_FREETYPE=0 # Skip check as freetype version is umpredictable.
+    [ "${MAJORVERSION}" -lt 20 ] && EXPECTED_FREETYPE=2.6.5
   fi
 #elif echo $SBOMFILE | grep _mac_; then
 #  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 10.3)"
@@ -126,11 +126,7 @@ echo "BOOTJDK is ${BOOTJDK}"
 #[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
 # shellcheck disable=SC2086
-if [ "$EXPECTED_FREETYPE" != "0" ]; then
-  [ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
-else
-  echo "Skipping Freetype check as the Freetype version is not predictable for this platform/version."
-fi
+[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
 echo "FREETYPE is ${FREETYPE}"
 # shellcheck disable=SC3037
