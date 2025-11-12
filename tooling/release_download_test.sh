@@ -400,7 +400,7 @@ verify_gcc_version() {
 
 ##########################################################################################################################
 #
-# Verify SBOM content using validateSBOM.sh (which uses validateTemurin.sh and the cyclonedx cli tool).
+# Verify SBOM content using validateSBOM.sh (which uses validateSBOMcontent.sh and the cyclonedx cli tool).
 #
 ##########################################################################################################################
 verify_sboms() {
