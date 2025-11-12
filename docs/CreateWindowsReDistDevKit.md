@@ -11,6 +11,7 @@ To extract the required Redist DLLs, the safest and easiest way is to locally in
 ### Install required version of Visual Studio and Windows SDK
 
 1. Determine the "Build Tools" version install bootstrapper required and download from here: https://learn.microsoft.com/en-us/visualstudio/releases/2022/release-history#fixed-version-bootstrappers
+
   - If re-building an existing ReDist devkit, for the required VS Toolset version check the versions for the release: https://github.com/adoptium/devkit-binaries/releases
   - eg. "vs2022_redist_14.40.33807_10.0.26100.1742", is VS2022 version 17.10.3, containing MS Toolset version "14.40.33807"
 
@@ -23,6 +24,7 @@ To extract the required Redist DLLs, the safest and easiest way is to locally in
 3. Install the required version of the "Windows SDK"
 
 - If re-building an existing ReDist devkit, for the required "Windows SDK" version check the versions for the release: https://github.com/adoptium/devkit-binaries/releases
+
   - eg. "vs2022_redist_14.40.33807_10.0.26100.1742", is SDK version "10.0.26100.1742".
 
 - Download the Windows SDK "Installer" from the SDK download (https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/), or archives (https://developer.microsoft.com/en-us/windows/downloads/sdk-archive/index-legacy).
