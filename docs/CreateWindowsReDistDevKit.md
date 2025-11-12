@@ -81,7 +81,7 @@ copy "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\M
 copy "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\MSVC\xx.yy.zzzzz\x86\Microsoft.VC143.CRT\msvcp140.dll" win_devkit/x86
 ```
 
-4. Find the correct Windows Kit UCRT folder, it should be located under below folder, note if the SDK is installed from a specific SDK installer, then the Redist folder it installed into will likely be ".0", not necessarily the eg.".1742" SDK installer version:
+4. Find the correct Windows Kit UCRT Redist folder with the files installed by the SDK Installer. Note, if the SDK is installed from a specific SDK installer, then the Redist folder it installed into will likely be ".0", not necessarily the eg.".1742" SDK installer version:
 
 ```sh
 C:\Program Files (x86)\Windows Kits\10\Redist\10.0.xxxxx.0\ucrt
