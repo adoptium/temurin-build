@@ -13,8 +13,8 @@
 # ********************************************************************************
 
 # This script executes the following SBOM validation mechanisms.
-# - For all OpenJDK sboms: https://github.com/CycloneDX/cyclonedx-cli
-# - For Eclipse Temurin SBOMs only: ./validateTemurinSBOM.sh
+# - https://github.com/CycloneDX/cyclonedx-cli
+# - ./validateSBOMcontent.sh
 
 JDK_MAJOR_VERSION=""
 SOURCE_TAG=""
@@ -37,7 +37,8 @@ CYCLONEDX_TOOL=""
 arg_parser() {
   if [ $# -ne 3 ]; then
     echo "ERROR: validateSBOM.sh did not receive 3 arguments."
-    echo "Arguments should be: JDK_MAJOR_VERSION SOURCE_TAG SBOM_LOCATION"
+    echo "Usage: $0 JDK_MAJOR_VERSION SOURCE_TAG SBOM_LOCATION"
+    echo "e.g. $0 21 jdk-21+35 /home/jenkins/sbom_file.json"
     exit 1
   fi
 
@@ -75,29 +76,20 @@ arg_parser() {
   
   TAG_CHECK=""
   if [ "$JDK_MAJOR_VERSION" -eq "8" ]; then
-    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-b[0-9][0-9]*_adopt\$"
+    echo "$SOURCE_TAG" | grep -q -e "^jdk8u[0-9][0-9]*-b[0-9][0-9]*_adopt\$" \
+                                 -e "^jdk8u[0-9][0-9]*-b[0-9][0-9]*\$" \
+                                 -e "^jdk8u[0-9][0-9]*-ga\$" \
+                                 -e "^jdk8u[0-9][0-9]*-dryrun-ga\$" \
+                                 -e "^jdk8u[0-9][0-9]*-aarch32-[0-9][0-9]*\$" \
+                                 -e "^jdk8u[0-9][0-9]*-ga-aarch32-[0-9][0-9]*\$" \
+                                 -e "^jdk8u[0-9][0-9]*-dryrun-ga-aarch32-[0-9][0-9]*\$"
     TAG_CHECK="$?"
-    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-b[0-9][0-9]*\$"
-    TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-ga\$"
-    TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-dryrun-ga\$"
-    TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-aarch32-[0-9][0-9]*\$"
-    TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-ga-aarch32-[0-9][0-9]*\$"
-    TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q "^jdk8u[0-9][0-9]*-dryrun-ga-aarch32-[0-9][0-9]*\$"
-    TAG_CHECK="${TAG_CHECK}$?"
   else
-    echo "$SOURCE_TAG" | grep -q "^jdk-[0-9][0-9\.\+]*_adopt\$"
+    echo "$SOURCE_TAG" | grep -q "^jdk-[0-9][0-9\.\+]*_adopt\$" \
+                              -e "^jdk-[0-9][0-9\.\+]*\$" \
+                              -e "^jdk-[0-9][0-9\.\+]*-dryrun-ga\$" \
+                              -e "^jdk-[0-9][0-9\.\+]*-ga\$"
     TAG_CHECK="$?"
-    echo "$SOURCE_TAG" | grep -q "^jdk-[0-9][0-9\.\+]*\$"
-    TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q "^jdk-[0-9][0-9\.\+]*-dryrun-ga\$"
-    TAG_CHECK="${TAG_CHECK}$?"
-    echo "$SOURCE_TAG" | grep -q "^jdk-[0-9][0-9\.\+]*-ga\$"
-    TAG_CHECK="${TAG_CHECK}$?"
   fi
   
   if ! echo "${TAG_CHECK}" | grep -q "0"; then
@@ -209,17 +201,17 @@ validate_sbom_cyclonedx() {
 
 ########################################################################################################################
 #
-# Verifies the SBOM using validateTemurinSBOM.sh
+# Verifies the SBOM using validateSBOMcontent.sh
 #
 ########################################################################################################################
-validate_sbom_temurin() {
+validate_sbom_content() {
   # shellcheck disable=SC2086
-  echo "validateSBOM.sh: Running validateTemurinSBOM.sh"
+  echo "validateSBOM.sh: Running validateSBOMcontent.sh"
   
-  if sh "${SCRIPT_DIR}/validateTemurinSBOM.sh" "$SBOM_LOCATION" "$JDK_MAJOR_VERSION" "$SOURCE_TAG"; then
-    echo "validateTemurinSBOM.sh: PASSED"
+  if sh "${SCRIPT_DIR}/validateSBOMcontent.sh" "$SBOM_LOCATION" "$JDK_MAJOR_VERSION" "$SOURCE_TAG"; then
+    echo "validateSBOMcontent.sh: PASSED"
   else
-    echo "validateTemurinSBOM.sh: ERROR: FAILED with return code $?"
+    echo "validateSBOMcontent.sh: ERROR: FAILED with return code $?"
     exit 1
   fi
 
@@ -237,7 +229,7 @@ if [ -n "${CYCLONEDX_TOOL}" ]; then
     validate_sbom_cyclonedx
 fi
 
-validate_sbom_temurin
+validate_sbom_content
 
 echo "validateSBOM.sh: SBOM validation complete."
 
