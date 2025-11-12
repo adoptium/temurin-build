@@ -91,7 +91,7 @@ C:\Program Files (x86)\Windows Kits\10\Redist\10.0.xxxxx.0\ucrt
 
 ```sh
 mkdir win_devkit\ucrt
-xcopy /s "c:\Program Files (x86)\Windows Kits\10\Redist\10.0.xxxxx.y\ucrt\*" win_devkit\ucrt
+xcopy /s "c:\Program Files (x86)\Windows Kits\10\Redist\10.0.xxxxx.0\ucrt\*" win_devkit\ucrt
 ```
 
 6. Create the required devkit.info metadata file with the following content:
