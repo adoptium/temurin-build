@@ -85,10 +85,10 @@ arg_parser() {
                                  -e "^jdk8u[0-9][0-9]*-dryrun-ga-aarch32-[0-9][0-9]*\$"
     TAG_CHECK="$?"
   else
-    echo "$SOURCE_TAG" | grep -q "^jdk-[0-9][0-9\.\+]*_adopt\$" \
-                              -e "^jdk-[0-9][0-9\.\+]*\$" \
-                              -e "^jdk-[0-9][0-9\.\+]*-dryrun-ga\$" \
-                              -e "^jdk-[0-9][0-9\.\+]*-ga\$"
+    echo "$SOURCE_TAG" | grep -q -e "^jdk-[0-9][0-9\.\+]*_adopt\$" \
+                                 -e "^jdk-[0-9][0-9\.\+]*\$" \
+                                 -e "^jdk-[0-9][0-9\.\+]*-dryrun-ga\$" \
+                                 -e "^jdk-[0-9][0-9\.\+]*-ga\$"
     TAG_CHECK="$?"
   fi
   
