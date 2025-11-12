@@ -110,10 +110,10 @@ arg_parser() {
       echo "ERROR: SBOM_LOCATION could not be downloaded." 
       exit 1
     fi
-    SBOM_NAME="${SBOM_LOCATION ##*/}"
+    SBOM_NAME=${SBOM_LOCATION##*/}
     SBOM_LOCATION="${WORKSPACE_DIR}/${SBOM_NAME}"
   elif [ ! -r "$SBOM_LOCATION" ]; then
-    echo "ERROR: SBOM_LOCATION could not be found/accessed: $SBOM_LOCATION" 
+    echo "ERROR: SBOM_LOCATION could not be found/accessed: $SBOM_LOCATION"
     exit 1
   fi
 }
