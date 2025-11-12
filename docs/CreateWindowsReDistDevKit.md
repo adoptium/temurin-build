@@ -20,7 +20,7 @@ To extract the required Redist DLLs, the safest and easiest way is to locally in
 ./vs_BuildTools.exe --passive --norestart --wait --arch all --add "Microsoft.VisualStudio.Workload.NativeDesktop;includeRecommended;includeOptional" --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.VC.Tools.ARM64 --add Microsoft.VisualStudio.Component.VC.ATL.ARM64 --add Microsoft.VisualStudio.Component.VC.MFC.ARM64
 ```
 
-3. Install the required version of the "Windows SDK" from here: https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/
+3. Install the required version of the "Windows SDK"
 
 - If re-building an existing ReDist devkit, for the required "Windows SDK" version check the versions for the release: https://github.com/adoptium/devkit-binaries/releases
   - eg. "vs2022_redist_14.40.33807_10.0.26100.1742", is SDK version "10.0.26100.1742".
