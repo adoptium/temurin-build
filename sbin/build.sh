@@ -559,7 +559,7 @@ getFreeTypePerJdk8Tag() {
       # the change was introduces in 482, lets determine the build promotion, and decide
       local minorBuildNumber=$(echo "${BUILD_CONFIG[TAG]}" | sed "s/.*-//" | sed "s/[^0-9]//g")
       # if the number is empty, is probably ga, so ok to use newest
-      if [ -z "${minorBuildNumber}" ] || [ 0${minorBuildNumber} -ge 01 ] ; then #FIXME, replace by real b's number once merged
+      if [ -z "${minorBuildNumber}" ] || [ 0${minorBuildNumber} -ge 02 ] ; then
         echo "new"
       else
         echo "old"
