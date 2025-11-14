@@ -334,8 +334,8 @@ compareToOpenJDKFileVersion(){
     fi
   fi
   argArray=()
-  for i in "$spaceSeperatedArg"; do
-    argArray+=($i)
+  for i in ${spaceSeperatedArg}; do
+    argArray+=("$i")
   done
 
   # Then we turn the list of numbers into consistent version number arrays.
@@ -400,10 +400,10 @@ compareToOpenJDKFileVersion(){
     fi
   else
     # jdk8 uses this format: jdk8u482-b01
-    versionString="jdk8u${versionArray[3]}-b${versionArray[4]}"
+    versionString="jdk8u${fileVersionArray[3]}-b${fileVersionArray[4]}"
 
     # Check to ensure that we've produced a valid version string.
-    if [[ ! "${versionString}" =~ ^8u[0-9]+\-b[0-9][0-9]$ ]]; then
+    if [[ ! "${versionString}" =~ ^8u[0-9]+\-b[0-9][0-9]+$ ]]; then
       echo "$1"
       exit 1
     fi
