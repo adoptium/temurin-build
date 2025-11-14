@@ -479,7 +479,14 @@ getOpenJdkVersion() {
     # If SCM_REF is specified, we don't do this check as SCM_REF gets priority.
 
     tag_ref="SCM_REF"
-    if [ -z "${BUILD_CONFIG[$tag_ref]+x}" ]; then
+    has_key=false
+    for k in "${!BUILD_CONFIG[@]}"; do
+      if [ "$k" = "$tag_ref" ]; then
+        has_key=true
+        break
+      fi
+    done
+    if ! $has_key; then
       version=$(compareToOpenJDKFileVersion "$version")
     fi
   fi
