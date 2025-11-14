@@ -79,8 +79,33 @@ function expandJDK() {
   rm -rf "${JDK_ROOT}_CP"
 }
 
+# Windows & Mac: jdk-25+ Jlink runtimelink files contain signed binary "hash" lines in fs_* runtimelink files
+function removeJlinkRuntimelinkHashes() {
+  local JDK_DIR="$1"
+  local OS="$2"
+
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
+    extractedDir="${JDK_DIR}/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink"
+    if [[ "$OS" =~ CYGWIN* ]]; then
+      extractedDir=$(cygpath -w $extractedDir)
+    fi
+
+    FILES=$(find "${extractedDir}" -type f -name "fs_*files")
+    for f in $FILES
+      do
+          if [[ "$OS" =~ Darwin* ]]; then
+            sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([\/[:alnum:]]+\.dylib$)/\1|\2||\3/g' $f
+            sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(bin\/[[:alnum:]]+$)/\1|\2||\3/g' $f
+          else
+            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([\/[:alnum:]]+\.dll$)/\1|\2||\3/g' $f
+            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([\/[:alnum:]]+\.exe$)/\1|\2||\3/g' $f
+          fi
+      done
+  fi
+}
+
 # Process SystemModules classes to remove ModuleHashes$Builder differences due to Signatures
-#   1. javap
+#   1. java's/^[[:space:]]+[0-9]+:(.*)/\1/'p
 #   2. search for line: // Method jdk/internal/module/ModuleHashes$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes$Builder;
 #   3. followed 3 lines later by: // String <module>
 #   4. then remove all lines until next: invokevirtual
