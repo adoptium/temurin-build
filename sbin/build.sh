@@ -477,7 +477,7 @@ getOpenJdkVersion() {
     # Now we check if the version in the code is later than the version we have so far.
     # This prevents an issue where the git repo tags are not updated to match the hard-coded version string.
     # If SCM_REF is specified, we don't do this check as SCM_REF gets priority.
-    if [[ -z "${BUILD_CONFIG[SCM_REF]+x}" ]]; then
+    if [ -z "${BUILD_CONFIG[SCM_REF]+x}" ]; then
       version=$(compareToOpenJDKFileVersion "$version")
     fi
   fi
