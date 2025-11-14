@@ -478,7 +478,7 @@ getOpenJdkVersion() {
     # This prevents an issue where the git repo tags are not updated to match the hard-coded version string.
     # If SCM_REF is specified, we don't do this check as SCM_REF gets priority.
     tag_ref="SCM_REF"
-    if [ -z "${BUILD_CONFIG[$tag_ref]+x}" ]; then
+    if [ -z "${BUILD_CONFIG[tag_ref]+x}" ]; then
       version=$(compareToOpenJDKFileVersion "$version")
     fi
   fi
