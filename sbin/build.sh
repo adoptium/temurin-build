@@ -253,105 +253,163 @@ patchFreetypeWindows() {
   fi
 }
 
-# This attempts to derive the jdk version from version-numbers.conf or the equivalent.
-# Optional: If you pass in a valid version string, we will return whichever version is bigger/later.
+# This attempts to compare the jdk version from version-numbers.conf with arg 1.
+# We will then return whichever version is bigger/later.
 # e.g. 17.0.1+32 > 17.0.0+64
+# If any errors or unusual circumstances are detected, we simply return arg1 to avoid destabilising the build.
 compareToOpenJDKFileVersion(){
-    build_src="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    versionArray=("0" "0" "0" "0" "0")
-    error="false"
-    numbersFile=""
+  # First, sanity checking on the arg.
+  if [ $# -eq 0 ]; then
+    echo "compareToOpenJDKFileVersion_was_called_with_no_args"
+    exit 1
+  fi
+  if [[ ! "$1" =~ ^jdk\-[0-9]+[0-9\.]*\+[0-9]+$ ]]; then
+    if [[ ! "$1" =~ ^8u[0-9]+\-b[0-9][0-9]$ ]]; then
+      echo "$1"
+      exit 1
+    fi
+  fi
 
-    # Parse the version-numbers.conf or the equivalent.
-    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8]; then
-      numbersFile="${build_src}/make/conf/version-numbers.conf"
-      if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 11]; then
-        numbersFile="${build_src}/make/autoconf/version-numbers"
-      fi
-      
-      # Parsing file logic goes here.
-      versionArray[0]=$(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-      versionArray[1]=$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-      versionArray[2]=$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-      versionArray[3]=$(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-      versionArray[4]="0"
-    else
-      numbersFile="${build_src}/common/autoconf/version-numbers"
-      versionArray[0]=$(grep "JDK_MINOR_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-      versionArray[3]=$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-      versionArray[4]="00"
+  build_src="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  fileVersionArray=("0" "0" "0" "0" "0")
+  error="false"
+  numbersFile=""
+
+  # Parse the version-numbers.conf or the equivalent.
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
+    numbersFile="${build_src}/make/conf/version-numbers.conf"
+    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 11 ]; then
+      numbersFile="${build_src}/make/autoconf/version-numbers"
     fi
 
-    # If argument then compare and set versionArray to the biggest one.
-    # If file version is bigger, then set build number to 0 (or 00 for jdk8).
-    if [ $# -eq 1 ]; then
-      # If a full version string could not be found, return the arg version and exit 1. This allows us to handle or ignore the issue.
-      [error="true"] && echo "$1" && exit 1
-      # If there were no errors, then compare the two versions and set versionArray to the biggest/latest one.
-      argVersionArray=("0" "0" "0" "0" "0")
-      # Now we turn arg 1 into an array of numbers.
-      spaceSeperatedArg=$(echo "$1" | sed -e 's/jdk//' -e 's/-//' -e 's/[^0-9]/ /g')
-      argArray=()
-      for i in "$spaceSeperatedArg"; do
-        argArray+=($i)
-      done
-
-      # Then we turn the list of numbers into consistent version number arrays.
-      if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8]; then
-        argVersionArray[0]="${argArray[0]}"
-        [ "${#argArray[@]}" -gt 1 ] && argVersionArray[4]="${argArray[1]}"
-        [ "${#argArray[@]}" -gt 2 ] && argVersionArray[1]="${argArray[1]}" && argVersionArray[4]="${argArray[2]}"
-        [ "${#argArray[@]}" -gt 3 ] && argVersionArray[2]="${argArray[1]}" && argVersionArray[4]="${argArray[3]}"
-        [ "${#argArray[@]}" -gt 4 ] && argVersionArray[3]="${argArray[1]}" && argVersionArray[4]="${argArray[4]}"
-      else
-        argVersionArray[0]="${argArray[0]}"
-        argVersionArray[3]="${argArray[1]}"
-        [ "${#argArray[@]}" -gt 2 ] && argVersionArray[4]="${argArray[2]}"
-      fi
-
-      # First some sanity checking.
-      [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != "${argVersionArray[0]}" ] \
-          && echo "Error: OPENJDK_FEATURE_NUMBER does not match the version passed to build.sh:compareToOpenJDKFileVersion." \
-          && exit 1
-      [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != "${versionArray[0]}" ] \
-          && echo "Error: OPENJDK_FEATURE_NUMBER does not match the version found in this file: ${numbersFile}" \
-          && exit 1
-
-      # And then we compare the version numbers:
-      returnArgVersion="true"
-      [ "${versionArray[1]}" -gt "${argVersionArray[1]}" ] && returnArgVersion="false"
-      [ "${versionArray[2]}" -gt "${argVersionArray[2]}" ] && returnArgVersion="false"
-      [ "${versionArray[3]}" -gt "${argVersionArray[3]}" ] && returnArgVersion="false"
-      [ "${versionArray[4]}" -gt "${argVersionArray[4]}" ] && returnArgVersion="false"
-      
-      if [ "${returnArgVersion}" == "true" ]; then
-        versionArray=()
-        for i in "$argVersionArray"; do
-          versionArray+=($i)
-        done
-      fi
-    else
-      # If a full version string could not be found, echo an error message and exit.
-      [ "${error}" == "true" ] && echo "Error: could not parse jdk version from file: ${numbersFile}" && exit 1
+    # Check the file exists.
+    if [ ! -r "${numbersFile}" ]; then
+      echo "$1"
+      exit 1
     fi
-    
-    versionString=""
-    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
-      # jdk-21.0.10+2
-      versionString="jdk-${versionArray[0]}"
-      if [ "${versionArray[3]}" -gt 0 ]; then
-        versionString="${versionString}.${versionArray[1]}.${versionArray[2]}.${versionArray[3]}"
-      elif [ "${versionArray[2]}" -gt 0 ]; then
-        versionString="${versionString}.${versionArray[1]}.${versionArray[2]}"
-      elif [ "${versionArray[1]}" -gt 0 ]; then
-        versionString="${versionString}.${versionArray[1]}"
-      fi
-      versionString="${versionString}+${versionArray[4]}"
-    else
-      # jdk8u482-b01
-      versionString="jdk8u${versionArray[3]}-b${versionArray[4]}"
+
+    # File parsing logic for jdk11+
+    fileVersionArray[0]=$(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
+    fileVersionArray[1]=$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
+    fileVersionArray[2]=$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
+    fileVersionArray[3]=$(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
+    fileVersionArray[4]="0"
+  else
+    # File location for jdk8.
+    numbersFile="${build_src}/common/autoconf/version-numbers"
+    # Check the file exists.
+    if [ ! -r "${numbersFile}" ]; then
+      echo "$1"
+      exit 1
     fi
-    echo "${versionString}"
+
+    # File parsing logic for jdk8.
+    fileVersionArray[0]=$(grep "JDK_MINOR_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
+    fileVersionArray[3]=$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
+    fileVersionArray[4]="00"
+  fi
+
+  # Compare and set fileVersionArray to the biggest one.
+  # If file version is bigger, then set build number to 0 (or 00 for jdk8).
+  if [ "${error}" == "true" ]; then
+    echo "$1"
+    exit 1
+  fi
+
+  # If there were no errors, then compare the two versions and set fileVersionArray to the biggest/latest one.
+  argFullVersionArray=("0" "0" "0" "0" "0")
+
+  # Now we turn arg 1 into an array of numbers.
+  spaceSeperatedArg=$(echo "$1" | sed -e 's/jdk//' -e 's/-//' -e 's/[^0-9]/ /g')
+  # If we somehow produced anything other than a space-seperated list of integers,
+  # quit and return the function arg.
+  if [[ ! "${spaceSeperatedArg}" =~ ^[0-9\ ]+$ ]]; then
+    echo "$1"
+    exit 1
+  fi
+  # If the function arg has no build number, append build number 0.
+  if [[ ! "$1" =~ \+[0-9]+$ ]]; then
+    if [[ ! "$1" =~ b[0-9]+$ ]]; then
+      spaceSeperatedArg="${spaceSeperatedArg} 00"
+    fi
+  fi
+  argArray=()
+  for i in "$spaceSeperatedArg"; do
+    argArray+=($i)
+  done
+
+  # Then we turn the list of numbers into consistent version number arrays.
+  # So 17.0.1+23 becomes 17.0.1.0+23, to allow for equal comparisons.
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
+    argFullVersionArray[0]="${argArray[0]}"
+    [ "${#argArray[@]}" -gt 1 ] && argFullVersionArray[4]="${argArray[1]}"
+    [ "${#argArray[@]}" -gt 2 ] && argFullVersionArray[1]="${argArray[1]}" && argFullVersionArray[4]="${argArray[2]}"
+    [ "${#argArray[@]}" -gt 3 ] && argFullVersionArray[2]="${argArray[2]}" && argFullVersionArray[4]="${argArray[3]}"
+    [ "${#argArray[@]}" -gt 4 ] && argFullVersionArray[3]="${argArray[3]}" && argFullVersionArray[4]="${argArray[4]}"
+  else
+    argFullVersionArray[0]="${argArray[0]}"
+    argFullVersionArray[3]="${argArray[1]}"
+    [ "${#argArray[@]}" -gt 2 ] && argFullVersionArray[4]="${argArray[2]}"
+  fi
+
+  # If the JDK major versions don't match up, then something is wrong.'
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != "${argFullVersionArray[0]}" ]; then
+    echo "$1"
+    exit 1
+  fi
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != "${fileVersionArray[0]}" ]; then
+    echo "$1"
+    exit 1
+  fi
+
+  # And then we compare the other version numbers:
+  for i in {1..4}; do
+    if [ "${fileVersionArray[$i]}" -gt "${argFullVersionArray[$i]}" ]; then 
+      break
+    elif [ "${argFullVersionArray[$i]}" -gt "${fileVersionArray[$i]}" ]; then
+      echo "$1"
+      return
+    elif [ "$i" -eq "4" ]; then
+      # We've reached the end of the version comparison and both versions are the same.
+      echo "$1"
+      return
+    fi
+  done
+
+  # If we reach this point, then the file version was determined to be greater/later
+  # than the version passed in as a function argument.
+
+  # Now we arrange the file version array into a standard format for that feature number.
+  versionString=""
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
+    # JDK11 and above uses this format: jdk-21.0.10+2
+    versionString="jdk-${fileVersionArray[0]}"
+    if [ "${fileVersionArray[3]}" -gt 0 ]; then
+      versionString="${versionString}.${fileVersionArray[1]}.${fileVersionArray[2]}.${fileVersionArray[3]}"
+    elif [ "${fileVersionArray[2]}" -gt 0 ]; then
+      versionString="${versionString}.${fileVersionArray[1]}.${fileVersionArray[2]}"
+    elif [ "${fileVersionArray[1]}" -gt 0 ]; then
+      versionString="${versionString}.${fileVersionArray[1]}"
+    fi
+    versionString="${versionString}+${fileVersionArray[4]}"
+
+    # Check to ensure that we've produced a valid version string.
+    if [[ ! "${versionString}" =~ ^jdk\-[0-9]+[0-9\.]*\+[0-9]+$ ]]; then
+      echo "$1"
+      exit 1
+    fi
+  else
+    # jdk8 uses this format: jdk8u482-b01
+    versionString="jdk8u${versionArray[3]}-b${versionArray[4]}"
+
+    # Check to ensure that we've produced a valid version string.
+    if [[ ! "${versionString}" =~ ^8u[0-9]+\-b[0-9][0-9]$ ]]; then
+      echo "$1"
+      exit 1
+    fi
+  fi
+
+  echo "${versionString}"
 }
 
 getOpenJdkVersion() {
@@ -420,7 +478,7 @@ getOpenJdkVersion() {
     # This prevents an issue where the git repo tags are not updated to match the hard-coded version string.
     # If SCM_REF is specified, we don't do this check as SCM_REF gets priority.
     if [ -z "${BUILD_CONFIG[SCM_REF]}" ]; then
-      version=$(compareToOpenJDKFileVersion "$version") || echo "${version}" || exit 1
+      version=$(compareToOpenJDKFileVersion "$version")
     fi
   fi
 
