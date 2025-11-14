@@ -350,6 +350,11 @@ function processModuleInfo() {
   done
 }
 
+10/22/2025  12:01 PM        15,990,784 classes.jsa
+10/22/2025  12:01 PM        16,580,608 classes_coh.jsa
+10/22/2025  12:01 PM        16,384,000 classes_nocoops.jsa
+10/22/2025  12:01 PM        16,973,824 classes_nocoops_coh.jsa
+
 # Remove windowns generate classes jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa 
 function removeGeneratedClasses() {
   local JDK_DIR="$1"
@@ -358,6 +363,8 @@ function removeGeneratedClasses() {
   if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
     rm -rf "$JDK_DIR/bin/server/classes.jsa"
     rm -rf "$JDK_DIR/bin/server/classes_nocoops.jsa"
+    rm -rf "$JDK_DIR/bin/server/classes_coh.jsa"
+    rm -rf "$JDK_DIR/bin/server/classes_nocoops_coh.jsa"
   fi
 }
 
