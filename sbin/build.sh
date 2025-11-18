@@ -271,7 +271,7 @@ compareToOpenJDKFileVersion(){
   fi
 
   build_src="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-  fileVersionArray=("0" "0" "0" "0" "0")
+  fileVersionArray=("0" "0" "0" "0" "1")
   error="false"
   numbersFile=""
 
@@ -293,7 +293,7 @@ compareToOpenJDKFileVersion(){
     fileVersionArray[1]=$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
     fileVersionArray[2]=$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
     fileVersionArray[3]=$(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-    fileVersionArray[4]="0"
+    fileVersionArray[4]="1"
   else
     # File location for jdk8.
     numbersFile="${build_src}/common/autoconf/version-numbers"
@@ -306,7 +306,7 @@ compareToOpenJDKFileVersion(){
     # File parsing logic for jdk8.
     fileVersionArray[0]=$(grep "JDK_MINOR_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
     fileVersionArray[3]=$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-    fileVersionArray[4]="00"
+    fileVersionArray[4]="01"
   fi
 
   # Compare and set fileVersionArray to the biggest one.
@@ -317,7 +317,7 @@ compareToOpenJDKFileVersion(){
   fi
 
   # If there were no errors, then compare the two versions and set fileVersionArray to the biggest/latest one.
-  argFullVersionArray=("0" "0" "0" "0" "0")
+  argFullVersionArray=("0" "0" "0" "0" "1")
 
   # Now we turn arg 1 into an array of numbers.
   spaceSeperatedArg=$(echo "$1" | sed -e 's/jdk//' -e 's/-//' -e 's/[^0-9]/ /g')
@@ -327,10 +327,14 @@ compareToOpenJDKFileVersion(){
     echo "$1"
     exit 1
   fi
-  # If the function arg has no build number, append build number 0.
+  # If the function arg has no build number, append build number 1.
   if [[ ! "$1" =~ \+[0-9]+$ ]]; then
     if [[ ! "$1" =~ b[0-9]+$ ]]; then
-      spaceSeperatedArg="${spaceSeperatedArg} 00"
+      if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
+        spaceSeperatedArg="${spaceSeperatedArg} 1"
+      else
+        spaceSeperatedArg="${spaceSeperatedArg} 01"
+      fi
     fi
   fi
   argArray=()
