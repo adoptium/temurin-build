@@ -80,6 +80,8 @@ function expandJDK() {
 }
 
 # Windows & Mac: jdk-25+ Jlink runtimelink files contain signed binary "hash" lines in fs_* runtimelink files
+#  - remove hash of lib/security/cacerts
+#  - sort files as they are not sorted
 function removeJlinkRuntimelinkHashes() {
   local JDK_DIR="$1"
   local OS="$2"
@@ -93,13 +95,20 @@ function removeJlinkRuntimelinkHashes() {
     FILES=$(find "${extractedDir}" -type f -name "fs_*files")
     for f in $FILES
       do
+          # Remove the binary hashes
           if [[ "$OS" =~ Darwin* ]]; then
-            sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([\/[:alnum:]]+\.dylib$)/\1|\2||\3/g' $f
-            sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(bin\/[[:alnum:]]+$)/\1|\2||\3/g' $f
+            sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([\/[:alnum:]]+\.dylib$)/\1|\2||\3/g' "$f"
+            sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(bin\/[[:alnum:]]+$)/\1|\2||\3/g' "$f"
+            sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
           else
-            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([\/[:alnum:]]+\.dll$)/\1|\2||\3/g' $f
-            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([\/[:alnum:]]+\.exe$)/\1|\2||\3/g' $f
+            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([\/[:alnum:]]+\.dll$)/\1|\2||\3/g' "$f"
+            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([\/[:alnum:]]+\.exe$)/\1|\2||\3/g' "$f"
+            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
           fi
+
+          # Sort file content
+          sort "$f" > "$f.sorted"
+          rm "$f"
       done
   fi
 }
