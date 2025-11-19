@@ -311,7 +311,7 @@ compareToOpenJDKFileVersion() {
     fileVersionArray[3]=$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
     fileVersionArray[4]="01"
   else
-    # File parsing logic for jdk11+
+    # File parsing logic for jdk11+.
     fileVersionArray[0]=$(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
     fileVersionArray[1]=$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
     fileVersionArray[2]=$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
@@ -353,16 +353,18 @@ compareToOpenJDKFileVersion() {
 
   # Then we turn the list of numbers into consistent version number arrays.
   # So 17.0.1+23 becomes 17.0.1.0+23, to allow for equal comparisons.
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ]; then
+    # Logic for jdk8.
+    argFullVersionArray[0]="${argArray[0]}"
+    argFullVersionArray[3]="${argArray[1]}"
+    [ "${#argArray[@]}" -gt 2 ] && argFullVersionArray[4]="${argArray[2]}"
+  else
+    # Logic for jdk11+.
     argFullVersionArray[0]="${argArray[0]}"
     [ "${#argArray[@]}" -gt 1 ] && argFullVersionArray[4]="${argArray[1]}"
     [ "${#argArray[@]}" -gt 2 ] && argFullVersionArray[1]="${argArray[1]}" && argFullVersionArray[4]="${argArray[2]}"
     [ "${#argArray[@]}" -gt 3 ] && argFullVersionArray[2]="${argArray[2]}" && argFullVersionArray[4]="${argArray[3]}"
     [ "${#argArray[@]}" -gt 4 ] && argFullVersionArray[3]="${argArray[3]}" && argFullVersionArray[4]="${argArray[4]}"
-  else
-    argFullVersionArray[0]="${argArray[0]}"
-    argFullVersionArray[3]="${argArray[1]}"
-    [ "${#argArray[@]}" -gt 2 ] && argFullVersionArray[4]="${argArray[2]}"
   fi
 
   # If the JDK major versions don't match up, then something is wrong.
