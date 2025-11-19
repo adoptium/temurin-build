@@ -253,7 +253,7 @@ patchFreetypeWindows() {
   fi
 }
 
-# This attempts to compare the jdk version from version-numbers.conf with arg 1.
+# This function attempts to compare the jdk version from version-numbers.conf with arg 1.
 # We will then return whichever version is bigger/later.
 # e.g. 17.0.1+32 > 17.0.0+64
 # If any errors or unusual circumstances are detected, we simply return arg1 to avoid destabilising the build.
@@ -261,6 +261,9 @@ compareToOpenJDKFileVersion(){
   # First, sanity checking on the arg.
   if [ $# -eq 0 ]; then
     echo "compareToOpenJDKFileVersion_was_called_with_no_args"
+    exit 1
+  elif [ $# -gt 1 ]; then
+    echo "$1"
     exit 1
   fi
   if [[ ! "$1" =~ ^jdk\-[0-9]+[0-9\.]*\+[0-9]+$ ]]; then
