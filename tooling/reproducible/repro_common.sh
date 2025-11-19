@@ -124,7 +124,7 @@ function removeSystemModulesHashBuilderParams() {
   moduleHashesFunction="// Method jdk/internal/module/ModuleHashes\$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes\$Builder;"
   moduleString="// String "
   virtualFunction="invokevirtual"
-  systemModules="SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class"
+  systemModules="SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class SystemModules\$1.class SystemModules\$2.class SystemModules\$3.class SystemModules\$4.class SystemModules\$5.class"
   local JDK_DIR="$1"
   local OS="$2"
   local work_JDK="$3"
