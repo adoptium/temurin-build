@@ -278,16 +278,16 @@ compareToOpenJDKFileVersion(){
     fi
   fi
 
-  build_src="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  buildSrc="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
   fileVersionArray=("0" "0" "0" "0" "1")
   error="false"
   numbersFile=""
 
   # Parse the version-numbers.conf or the equivalent.
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
-    numbersFile="${build_src}/make/conf/version-numbers.conf"
+    numbersFile="${buildSrc}/make/conf/version-numbers.conf"
     if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 11 ]; then
-      numbersFile="${build_src}/make/autoconf/version-numbers"
+      numbersFile="${buildSrc}/make/autoconf/version-numbers"
     fi
 
     # Check the file exists.
@@ -304,7 +304,7 @@ compareToOpenJDKFileVersion(){
     fileVersionArray[4]="1"
   else
     # File location for jdk8.
-    numbersFile="${build_src}/common/autoconf/version-numbers"
+    numbersFile="${buildSrc}/common/autoconf/version-numbers"
     # Check the file exists.
     if [ ! -r "${numbersFile}" ]; then
       echo "$1"
