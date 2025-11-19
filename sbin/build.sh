@@ -1067,6 +1067,25 @@ generateSBoM() {
   # Add CycloneDX versions
   addCycloneDXVersions
 
+  local formulaName="formula_temurin_build_script_1.0_jdk21u"
+  local workflowRef="workflow_temurin_build_script_1.0_jdk21u"
+  local workflowUid="workflow_temurin_build_script_1.0_jdk21u"
+  local workflowName="temurin build script 1.0 for jdk21u"
+  local taskTypes="clone,build"
+
+  # Create workflow under the formula (formula/workflow are created if missing)
+  addSBOMWorkflow "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "${workflowUid}" "${workflowName}" "${taskTypes}"
+
+  # Steps
+  addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "clone repo" "clone repository"
+  addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "cd into repository" "cd into temurin-build"
+  addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "makejdk" "execute makejdk-anyplatform.sh"
+
+  # Commands
+  addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "clone repo" "git clone git@github.com:adoptium/temurin-build"
+  addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "cd into repository" "cd temurin-build"
+  addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "makejdk" "bash ./makejdk-any-platform.sh jdk21u --with-version-string=21.0.2+13-202312052047 --with-vendor-version-string=202312052047"
+
   # Add Build Docker image SHA1
   local buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
   # ${BUILD_CONFIG[CONTAINER_COMMAND]^} always set to false cannot rely on it.
