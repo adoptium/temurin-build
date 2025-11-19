@@ -285,8 +285,10 @@ compareToOpenJDKFileVersion(){
 
   # Parse the version-numbers.conf or the equivalent.
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
+    # This is the version numbers file location for JDK17 and up.
     numbersFile="${buildSrc}/make/conf/version-numbers.conf"
     if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 11 ]; then
+      # This is the version numbers file location for JDK11 only.
       numbersFile="${buildSrc}/make/autoconf/version-numbers"
     fi
 
