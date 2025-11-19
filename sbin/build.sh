@@ -426,6 +426,9 @@ compareToOpenJDKFileVersion() {
     fi
   fi
 
+  # If we reach this, then the jdk version in the version numbers file was identified as greater/later
+  # than the version passed into this function as an argument.
+  # Returning the file's version data as a string.
   echo "${versionString}"
 }
 
