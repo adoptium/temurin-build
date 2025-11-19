@@ -266,8 +266,13 @@ compareToOpenJDKFileVersion(){
     echo "$1"
     exit 1
   fi
-  if [[ ! "$1" =~ ^jdk\-[0-9]+[0-9\.]*\+[0-9]+$ ]]; then
-    if [[ ! "$1" =~ ^8u[0-9]+\-b[0-9][0-9]$ ]]; then
+
+  # This verifies that arg1 was in an expected format for a jdk version string.
+  # This provides some assurance that we can parse that string in this function.
+  # JDK11 and above uses this format: jdk-21.0.10+2
+  # jdk8 uses this format: jdk8u482-b01
+  if [[ ! "$1" =~ ^jdk\-[0-9]+[0-9\.]*(\+[0-9]+)?$ ]]; then
+    if [[ ! "$1" =~ ^jdk8u[0-9]+(\-b[0-9][0-9]+)?$ ]]; then
       echo "$1"
       exit 1
     fi
