@@ -382,8 +382,10 @@ compareToOpenJDKFileVersion() {
   # And then we compare the other version numbers:
   for i in {1..4}; do
     if [ "${fileVersionArray[$i]}" -gt "${argFullVersionArray[$i]}" ]; then 
+      # Function argument is greater/later than the file version.
       break
     elif [ "${argFullVersionArray[$i]}" -gt "${fileVersionArray[$i]}" ]; then
+      # Function argument is greater/later than the file version.
       echo "$1"
       return
     elif [ "$i" -eq "4" ]; then
