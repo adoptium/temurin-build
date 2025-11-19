@@ -80,7 +80,7 @@ function expandJDK() {
 }
 
 # Windows & Mac: jdk-25+ Jlink runtimelink files contain signed binary "hash" lines in fs_* runtimelink files
-#  - remove hash of lib/security/cacerts
+#  - remove hashes of binaries and of lib/security/cacerts
 #  - sort files as they are not sorted
 function removeJlinkRuntimelinkHashes() {
   local JDK_DIR="$1"
@@ -114,7 +114,7 @@ function removeJlinkRuntimelinkHashes() {
 }
 
 # Process SystemModules classes to remove ModuleHashes$Builder differences due to Signatures
-#   1. java's/^[[:space:]]+[0-9]+:(.*)/\1/'p
+#   1. javap
 #   2. search for line: // Method jdk/internal/module/ModuleHashes$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes$Builder;
 #   3. followed 3 lines later by: // String <module>
 #   4. then remove all lines until next: invokevirtual
