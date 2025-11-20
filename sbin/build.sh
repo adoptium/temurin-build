@@ -275,7 +275,6 @@ versionNumbersFileParser() {
   if [ ! -r "${numbersFile}" ]; then
     echo "ERROR: build.sh: ${funcName}: The file expected to contain the JDK version numbers could not be found and/or read." >&2
     echo "ERROR: build.sh: ${funcName}: The expected location was: ${numbersFile}" >&2
-    echo "$1"
     exit 1
   fi
 
