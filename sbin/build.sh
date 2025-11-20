@@ -253,6 +253,58 @@ patchFreetypeWindows() {
   fi
 }
 
+# Returns the version numbers in version-numbers.conf as a space-seperated list of integers.
+# e.g. 17 0 1 5
+# or 8 0 0 432
+# Build number will not be included, as that is not stored in this file.
+versionNumbersFileParser() {
+  funcName="versionNumbersFileParser"
+  # Find version-numbers.conf or the equivalent and confirm we can read it.
+  buildSrc="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  # File location for jdk8.
+  numbersFile="${buildSrc}/common/autoconf/version-numbers"
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 11 ]; then
+    # File location for JDK11.
+    numbersFile="${buildSrc}/make/autoconf/version-numbers"
+  elif [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 17 ]; then
+    # File location for JDK17 and up.
+    numbersFile="${buildSrc}/make/conf/version-numbers.conf"
+  fi
+
+  # Check the version numbers file exists.
+  if [ ! -r "${numbersFile}" ]; then
+    echo "ERROR: build.sh: ${funcName}: The file expected to contain the JDK version numbers could not be found and/or read." >&2
+    echo "ERROR: build.sh: ${funcName}: The expected location was: ${numbersFile}" >&2
+    echo "$1"
+    exit 1
+  fi
+
+  error="false"
+  fileVersionString=""
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ]; then
+    # File parsing logic for jdk8.
+    fileVersionString=$(grep "JDK_MINOR_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
+    fileVersionString+=" 0 0 "
+    fileVersionString+=$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
+  else
+    # File parsing logic for jdk11+.
+    fileVersionString=$(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+' | awk '{print $1" "}') || error="true"
+    fileVersionString+=$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+' | awk '{print $1" "}') || error="true"
+    fileVersionString+=$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+' | awk '{print $1" "}') || error="true"
+    fileVersionString+=$(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
+  fi
+
+  # Check for errors in the file parsing process.
+  if [ "${error}" == "true" ]; then
+    echo "ERROR: build.sh: ${funcName}: ${numbersFile##*/} was found but could not be parsed." >&2
+    exit 1
+  fi
+
+  # The parsing is complete and the output is formatted.
+  # Returning the version string.
+  echo "${fileVersionString}"
+}
+
 # This function attempts to compare the jdk version from version-numbers.conf with arg 1.
 # We will then return whichever version is bigger/later.
 # e.g. 17.0.1+32 > 17.0.0+64
@@ -282,48 +334,21 @@ compareToOpenJDKFileVersion() {
     fi
   fi
 
-  # Find version-numbers.conf or the equivalent and confirm we can read it.
-  buildSrc="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-  # File location for jdk8.
-  numbersFile="${buildSrc}/common/autoconf/version-numbers"
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 11 ]; then
-    # File location for JDK11.
-    numbersFile="${buildSrc}/make/autoconf/version-numbers"
-  elif [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 17 ]; then
-    # File location for JDK17 and up.
-    numbersFile="${buildSrc}/make/conf/version-numbers.conf"
-  fi
-
-  # Check the version numbers file exists.
-  if [ ! -r "${numbersFile}" ]; then
-    echo "ERROR: build.sh: ${funcName}: The file expected to contain the JDK version numbers could not be found and/or read." >&2
-    echo "ERROR: build.sh: ${funcName}: The expected location was: ${numbersFile}" >&2
+  # Retrieve the jdk version from version-numbers.conf as a space-seperated list
+  fileVersionArray=()
+  if ! fileVersionString="$(versionNumbersFileParser)"; then
+    # This is to catch versionNumbersFileParser failures.
+    echo "ERROR: build.sh: ${funcName}: versionNumbersFileParser has failed." >&2 
     echo "$1"
     exit 1
   fi
-
-  fileVersionArray=("0" "0" "0" "0" "1")
-  error="false"
-
+  for i in ${fileVersionString}; do
+    fileVersionArray+=("$i")
+  done
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ]; then
-    # File parsing logic for jdk8.
-    fileVersionArray[0]=$(grep "JDK_MINOR_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-    fileVersionArray[3]=$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-    fileVersionArray[4]="01"
+    fileVersionArray+=("01")
   else
-    # File parsing logic for jdk11+.
-    fileVersionArray[0]=$(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-    fileVersionArray[1]=$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-    fileVersionArray[2]=$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-    fileVersionArray[3]=$(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-    fileVersionArray[4]="1"
-  fi
-
-  # Check for errors in the file parsing process.
-  if [ "${error}" == "true" ]; then
-    echo "ERROR: build.sh: ${funcName}: ${numbersFile##*/} was found but could not be parsed." >&2
-    echo "$1"
-    exit 1
+    fileVersionArray+=("1")
   fi
 
   # Now we turn arg 1 into an array of numbers.
@@ -336,6 +361,7 @@ compareToOpenJDKFileVersion() {
     echo "$1"
     exit 1
   fi
+
   # If the function arg has no build number, append build number 1.
   if [[ ! "$1" =~ \+[0-9]+$ ]]; then
     if [[ ! "$1" =~ b[0-9]+$ ]]; then
@@ -374,7 +400,7 @@ compareToOpenJDKFileVersion() {
     exit 1
   fi
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != "${fileVersionArray[0]}" ]; then
-    echo "ERROR: build.sh: ${funcName}: The JDK feature number in the ${numbersFile##*/} file does not match the feature number for this build." >&2
+    echo "ERROR: build.sh: ${funcName}: The JDK feature number in the version numbers file does not match the feature number for this build." >&2
     echo "$1"
     exit 1
   fi
@@ -417,9 +443,9 @@ compareToOpenJDKFileVersion() {
   fi
 
   # Check to ensure that we've produced a valid version string.
-  if [[ ! "${versionString}" =~ ^8u[0-9]+\-b[0-9][0-9]+$ ]]; then
+  if [[ ! "${versionString}" =~ ^jdk8u[0-9]+\-b[0-9][0-9]+$ ]]; then
     if [[ ! "${versionString}" =~ ^jdk\-[0-9]+[0-9\.]*\+[0-9]+$ ]]; then
-      echo "ERROR: build.sh: ${funcName}: The version string parsed from the ${numbersFile##*/} file does not appear to use a valid format." >&2
+      echo "ERROR: build.sh: ${funcName}: The version string parsed from the version numbers file does not appear to use a valid format." >&2
       echo "ERROR: build.sh: ${funcName}: Returning the argument passed to this function instead: ${1}" >&2
       echo "$1"
       exit 1
