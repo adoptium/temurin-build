@@ -83,6 +83,27 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # --- Disk usage before cleanup ---
+    - name: Check disk usage before cleanup
+      if: runner.os == 'Linux'
+      run: df -h
+
+    # --- Cleanup step ---
+    - name: node-cleanup
+      if: runner.os == 'Linux'
+      run: |
+        sudo rm -rf /usr/share/dotnet \
+                    /usr/local/lib/android \
+                    /opt/ghc \
+                    /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+        sudo docker builder prune -a --force
+
+    # --- Disk usage after cleanup ---
+    - name: Check disk usage after cleanup
+      if: runner.os == 'Linux'
+      run: df -h
+
     - name: Build Linux within container image "${{ matrix.image }}"
       run: |
           docker run --rm -w /home/jenkins -v "$PWD":"/home/jenkins" \
