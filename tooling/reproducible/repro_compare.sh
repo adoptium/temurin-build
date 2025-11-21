@@ -64,7 +64,8 @@ do
   # release file build machine OS level and builds-scripts SHA can/will be different
   cleanTemurinBuildInfo "${JDK_DIR}"
 
-  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then 
+  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
+    removeJlinkRuntimelinkHashes "${JDK_DIR}" "${OS}"
     removeSystemModulesHashBuilderParams "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"
     processModuleInfo "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"
   fi

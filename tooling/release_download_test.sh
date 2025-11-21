@@ -398,97 +398,19 @@ verify_gcc_version() {
   fi
 }
 
-########################################################################################################################
-#
-# Downloads the cyclonedx tool for the current os/arch.
-# return : cyclonedx cli tool command
-#
-########################################################################################################################
-download_cyclonedx_tool() {
-  local kernel machine
-  local cyclonedx_os cyclonedx_arch cyclonedx_suffix
-  local cyclonedx_checksum cyclonedx_tool
-
-  cyclonedx_suffix=""
-
-  kernel="$(uname -s)"
-  case "${kernel}" in
-      Linux*)     cyclonedx_os=linux;;
-      Darwin*)    cyclonedx_os=osx;;
-      CYGWIN*)    cyclonedx_os=win
-                  cyclonedx_suffix=".exe";;
-      *)          cyclonedx_os="unknown";;
-  esac
-
-  machine="$(uname -m)"
-  case "${machine}" in
-      x86_64)     cyclonedx_arch=x64;;
-      aarch64)    cyclonedx_arch=arm64;;
-      *)          cyclonedx_arch="unknown";;
-  esac
-
-  case "${cyclonedx_os}-${cyclonedx_arch}" in
-      linux-x64)   cyclonedx_checksum="5e1595542a6367378a3944bbd3008caab3de65d572345361d3b9597b1dbbaaa0";;
-      linux-arm64) cyclonedx_checksum="5b4181f6fd4d8fbe54e55c1b3983d9af66ce2910a263814b290cbd5e351e68a4";;
-      osx-x64)     cyclonedx_checksum="331c2245ef7dadf09fa3d2710a2aaab071ff6bea2ba3e5df8f95a4f3f6e825e9";;
-      osx-arm64)   cyclonedx_checksum="2d24c331c2ccc5e4061722bd4780c8b295041b2569d130bbe80cf7da95b97171";;
-      win-x64)     cyclonedx_checksum="bb26bb56293ebe6f08fa63d2bf50653fc6b180174fded975c81ac96ac192a7db";;
-      win-arm64)   cyclonedx_checksum="35762d3e1979576f474ffc1c5b2273e19c33cdca44e5f1994c3de5d9cd0e9c1d";;
-      *)           cyclonedx_checksum="";;
-  esac
-
-  cd "${WORKSPACE}/staging/${TAG}" || exit 1
-
-  cyclonedx_tool=""
-  if [ -n "${cyclonedx_checksum}" ]; then
-    print_verbose "IVT : Downloading CycloneDX CLI binary ..."
-
-    cyclonedx_tool="cyclonedx-${cyclonedx_os}-${cyclonedx_arch}${cyclonedx_suffix}"
-
-    [ ! -r "${cyclonedx_tool}" ] && curl -LOsS https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.27.2/"${cyclonedx_tool}"
-    if [ "$(sha256sum "${cyclonedx_tool}" | cut -d' ' -f1)" != "${cyclonedx_checksum}" ]; then
-       print_error "IVT : Cannot verify checksum of CycloneDX CLI binary"
-       exit 1
-    else
-       print_verbose "IVT : Downloaded CycloneDX CLI binary to '${cyclonedx_tool}'"
-    fi
-    chmod 700 "${cyclonedx_tool}"
-  else
-    print_warning "No CycloneDX tool available for '${kernel}-${machine}', skipping sbom validation with cyclonedx tool"
-  fi
-
-  echo "${cyclonedx_tool}"
-}
-
 ##########################################################################################################################
 #
-# Verify SBOM content using cyclonedx cli tool / validateSBOMcontent.sh script.
+# Verify SBOM content using validateSBOM.sh (which uses validateSBOMcontent.sh and the cyclonedx cli tool).
 #
 ##########################################################################################################################
 verify_sboms() {
-  local cyclonedx_tool
   local sbom
-
-  cyclonedx_tool=$(download_cyclonedx_tool)
 
   cd "${WORKSPACE}/staging/${TAG}" || exit 1
 
   # shellcheck disable=SC2010
   for sbom in $(ls -1 OpenJDK*-sbom*json | grep -v metadata); do
-    print_verbose "IVT : Validating ${sbom} with ${cyclonedx_tool} ..."
-
-    if [ -n "${cyclonedx_tool}" ]; then
-      if ! ./"${cyclonedx_tool}" validate --input-file "${sbom}"; then
-        print_error "Failed CycloneDX validation check"
-        RC=5
-      fi
-    fi
-
-    # shellcheck disable=SC2086
-    if ! bash "${SCRIPT_DIR}/validateSBOMcontent.sh" "${sbom}" "${MAJOR_VERSION}" "${TAG}"; then
-      print_error "Failed checks on ${sbom}"
-      RC=6
-    fi
+    sh "${SCRIPT_DIR}/validateSBOM.sh" "${MAJOR_VERSION}" "${TAG}" "${sbom}"
   done
 }
 
