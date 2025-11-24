@@ -279,24 +279,50 @@ versionNumbersFileParser() {
   fi
 
   error="false"
-  fileVersionString=""
+
+  fileVersionArray=()
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ]; then
     # File parsing logic for jdk8.
-    fileVersionString=$(grep "JDK_MINOR_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
-    fileVersionString+=" 0 0 "
-    fileVersionString+=$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
+    fileVersionArray+=($(grep "JDK_MINOR_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
+    fileVersionArray+=($(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
   else
     # File parsing logic for jdk11+.
-    fileVersionString=$(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+' | awk '{print $1" "}') || error="true"
-    fileVersionString+=$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+' | awk '{print $1" "}') || error="true"
-    fileVersionString+=$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+' | awk '{print $1" "}') || error="true"
-    fileVersionString+=$(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+') || error="true"
+    fileVersionArray+=($(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
+    fileVersionArray+=($(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
+    fileVersionArray+=($(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
+    fileVersionArray+=($(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
   fi
 
   # Check for errors in the file parsing process.
   if [ "${error}" == "true" ]; then
     echo "ERROR: build.sh: ${funcName}: ${numbersFile##*/} was found but could not be parsed." >&2
     exit 1
+  fi
+
+  # Now we arrange the file version array into a standard format for that feature number.
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
+    # JDK11 and above uses this format: jdk-21.0.10.1+2
+    fileVersionString="jdk-${fileVersionArray[0]}"
+    if [ "${fileVersionArray[3]}" -gt 0 ]; then
+      fileVersionString="${fileVersionString}.${fileVersionArray[1]}.${fileVersionArray[2]}.${fileVersionArray[3]}"
+    elif [ "${fileVersionArray[2]}" -gt 0 ]; then
+      fileVersionString="${fileVersionString}.${fileVersionArray[1]}.${fileVersionArray[2]}"
+    elif [ "${fileVersionArray[1]}" -gt 0 ]; then
+      fileVersionString="${fileVersionString}.${fileVersionArray[1]}"
+    fi
+  else
+    # jdk8 uses this format: jdk8u482-b01
+    fileVersionString="jdk8u${fileVersionArray[1]}"
+  fi
+
+  # Check to ensure that we've produced a valid version string.
+  if [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$ ]]; then
+    if [[ ! "${fileVersionString}" =~ ^jdk\-[0-9]+[0-9\.]*$ ]]; then
+      echo "ERROR: build.sh: ${funcName}: The version string parsed from the version numbers file does not appear to use a valid format." >&2
+      echo "ERROR: build.sh: ${funcName}: Returning the argument passed to this function instead: ${1}" >&2
+      echo "$1"
+      exit 1
+    fi
   fi
 
   # The parsing is complete and the output is formatted.
@@ -333,128 +359,28 @@ compareToOpenJDKFileVersion() {
     fi
   fi
 
-  # Retrieve the jdk version from version-numbers.conf as a space-seperated list
-  fileVersionArray=()
+  # Retrieve the jdk version from version-numbers.conf (minus the build number).
   if ! fileVersionString="$(versionNumbersFileParser)"; then
     # This is to catch versionNumbersFileParser failures.
     echo "ERROR: build.sh: ${funcName}: versionNumbersFileParser has failed." >&2 
     echo "$1"
     exit 1
   fi
-  for i in ${fileVersionString}; do
-    fileVersionArray+=("$i")
-  done
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ]; then
-    fileVersionArray+=("01")
-  else
-    fileVersionArray+=("1")
-  fi
 
-  # Now we turn arg 1 into an array of numbers.
-  argFullVersionArray=("0" "0" "0" "0" "1")
-  spaceSeperatedArg=$(echo "$1" | sed -e 's/jdk//' -e 's/-//' -e 's/[^0-9]/ /g')
-  # If we somehow produced anything other than a space-seperated list of integers,
-  # quit and return the function arg.
-  if [[ ! "${spaceSeperatedArg}" =~ ^[0-9\ ]+$ ]]; then
-    echo "ERROR: build.sh: ${funcName}: The function argument could not be split into a space-seperated list of integers." >&2
+  if [[ "$1" =~ ^${fileVersionString}.*$ ]]; then
+    # The file version matches the function argument.
     echo "$1"
-    exit 1
-  fi
-
-  # If the function arg has no build number, append build number 1.
-  if [[ ! "$1" =~ \+[0-9]+$ ]]; then
-    if [[ ! "$1" =~ b[0-9]+$ ]]; then
-      if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
-        spaceSeperatedArg="${spaceSeperatedArg} 1"
-      else
-        spaceSeperatedArg="${spaceSeperatedArg} 01"
-      fi
-    fi
-  fi
-  argArray=()
-  for i in ${spaceSeperatedArg}; do
-    argArray+=("$i")
-  done
-
-  # Then we turn the list of numbers into consistent version number arrays.
-  # So 17.0.1+23 becomes 17.0.1.0+23, to allow for equal comparisons.
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ]; then
-    # Logic for jdk8.
-    argFullVersionArray[0]="${argArray[0]}"
-    argFullVersionArray[3]="${argArray[1]}"
-    [ "${#argArray[@]}" -gt 2 ] && argFullVersionArray[4]="${argArray[2]}"
+    return
   else
-    # Logic for jdk11+.
-    argFullVersionArray[0]="${argArray[0]}"
-    [ "${#argArray[@]}" -gt 1 ] && argFullVersionArray[4]="${argArray[1]}"
-    [ "${#argArray[@]}" -gt 2 ] && argFullVersionArray[1]="${argArray[1]}" && argFullVersionArray[4]="${argArray[2]}"
-    [ "${#argArray[@]}" -gt 3 ] && argFullVersionArray[2]="${argArray[2]}" && argFullVersionArray[4]="${argArray[3]}"
-    [ "${#argArray[@]}" -gt 4 ] && argFullVersionArray[3]="${argArray[3]}" && argFullVersionArray[4]="${argArray[4]}"
-  fi
-
-  # If the JDK major versions don't match up, then something is wrong.
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != "${argFullVersionArray[0]}" ]; then
-    echo "ERROR: build.sh: ${funcName}: The JDK feature number in the argument does not match the feature number for this build." >&2
-    echo "$1"
-    exit 1
-  fi
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" != "${fileVersionArray[0]}" ]; then
-    echo "ERROR: build.sh: ${funcName}: The JDK feature number in the version numbers file does not match the feature number for this build." >&2
-    echo "$1"
-    exit 1
-  fi
-
-  # And then we compare the other version numbers:
-  for i in {1..4}; do
-    if [ "${fileVersionArray[$i]}" -gt "${argFullVersionArray[$i]}" ]; then 
-      # Function argument is greater/later than the file version.
-      break
-    elif [ "${argFullVersionArray[$i]}" -gt "${fileVersionArray[$i]}" ]; then
-      # Function argument is greater/later than the file version.
-      echo "$1"
-      return
-    elif [ "$i" -eq "4" ]; then
-      # We've reached the end of the version comparison and both versions are the same.
-      echo "$1"
-      return
+    # The file version does not match the function argument.
+    # Returning the file version.
+    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ]; then
+      fileVersionString+="-b00"
+    else
+      fileVersionString+="+0"
     fi
-  done
-
-  # If we reach this point, then the file version was determined to be greater/later
-  # than the version passed in as a function argument.
-
-  # Now we arrange the file version array into a standard format for that feature number.
-  versionString=""
-  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ]; then
-    # JDK11 and above uses this format: jdk-21.0.10+2
-    versionString="jdk-${fileVersionArray[0]}"
-    if [ "${fileVersionArray[3]}" -gt 0 ]; then
-      versionString="${versionString}.${fileVersionArray[1]}.${fileVersionArray[2]}.${fileVersionArray[3]}"
-    elif [ "${fileVersionArray[2]}" -gt 0 ]; then
-      versionString="${versionString}.${fileVersionArray[1]}.${fileVersionArray[2]}"
-    elif [ "${fileVersionArray[1]}" -gt 0 ]; then
-      versionString="${versionString}.${fileVersionArray[1]}"
-    fi
-    versionString="${versionString}+${fileVersionArray[4]}"
-  else
-    # jdk8 uses this format: jdk8u482-b01
-    versionString="jdk8u${fileVersionArray[3]}-b${fileVersionArray[4]}"
+    echo "${fileVersionString}"
   fi
-
-  # Check to ensure that we've produced a valid version string.
-  if [[ ! "${versionString}" =~ ^jdk8u[0-9]+\-b[0-9][0-9]+$ ]]; then
-    if [[ ! "${versionString}" =~ ^jdk\-[0-9]+[0-9\.]*\+[0-9]+$ ]]; then
-      echo "ERROR: build.sh: ${funcName}: The version string parsed from the version numbers file does not appear to use a valid format." >&2
-      echo "ERROR: build.sh: ${funcName}: Returning the argument passed to this function instead: ${1}" >&2
-      echo "$1"
-      exit 1
-    fi
-  fi
-
-  # If we reach this, then the jdk version in the version numbers file was identified as greater/later
-  # than the version passed into this function as an argument.
-  # Returning the file's version data as a string.
-  echo "${versionString}"
 }
 
 getOpenJdkVersion() {
@@ -519,13 +445,6 @@ getOpenJdkVersion() {
     # TODO remove pending #1016
     version=${version%_adopt}
     version=${version#aarch64-shenandoah-}
-
-    # Now we check if the version in the code is later than the version we have so far.
-    # This prevents an issue where the git repo tags are not updated to match the hard-coded version string.
-    # If SCM_REF is specified, we don't do this check as SCM_REF gets priority.
-    if [ -n "${BUILD_CONFIG[TAG]}" ]; then
-      version=$(compareToOpenJDKFileVersion "$version")
-    fi
   fi
 
   echo "${version}"
@@ -2279,13 +2198,20 @@ getOpenJDKTag() {
     # Checked out TAG specified
     echo "  getOpenJDKTag(): Using specified BUILD_CONFIG[TAG] (${BUILD_CONFIG[TAG]})" 1>&2
     echo "${BUILD_CONFIG[TAG]}"
-  elif cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
+  if cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
     # Checked out BRANCH is a tag
     echo "  getOpenJDKTag(): Using tag specified by BUILD_CONFIG[BRANCH] (${BUILD_CONFIG[BRANCH]})" 1>&2
-    echo "${BUILD_CONFIG[BRANCH]}"
+    tagString="${BUILD_CONFIG[BRANCH]}"
   else
     echo "  getOpenJDKTag(): Determining tag from checked out repository.." 1>&2
-    getFirstTagFromOpenJDKGitRepo
+    tagString=$(getFirstTagFromOpenJDKGitRepo)
+    # Now we check if the version in the code is later than the version we have so far.
+    # This prevents an issue where the git repo tags do not match the version string in the source.
+    # Without this code, we can create builds where half of the version strings do not match.
+    # This results in nonsensical -version output, incorrect folder names, and lots of failures
+    # relating to those two factors.
+    tagString=$(compareToOpenJDKFileVersion "$tagString")
+    echo "${tagString}"
   fi
 }
 
