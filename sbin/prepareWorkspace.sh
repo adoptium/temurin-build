@@ -867,18 +867,18 @@ downloadingRequiredDependencies() {
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
-     if ! isFreeTypeInSources  ; then
-        if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
-          echo "Checking and download FreeType Font dependency"
-          checkingAndDownloadingFreeType
-        else
-          echo ""
-          echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
-          echo ""
-        fi
-     else
-       echo "Using bundled Freetype"
-     fi
+    if ! isFreeTypeInSources ; then
+      if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
+        echo "Checking and download FreeType Font dependency"
+        checkingAndDownloadingFreeType
+      else
+        echo ""
+        echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
+        echo ""
+      fi
+    else
+      echo "Using bundled Freetype"
+    fi
   else
     echo "Skipping Freetype"
   fi
