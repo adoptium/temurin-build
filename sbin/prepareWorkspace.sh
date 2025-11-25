@@ -40,6 +40,23 @@ FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 # sha256 of https://github.com/adoptium/devkit-binaries/releases/tag/vs2022_redist_14.40.33807_10.0.26100.1742
 WINDOWS_REDIST_CHECKSUM="ac6060f5f8a952f59faef20e53d124c2c267264109f3f6fabeb2b7aefb3e3c62"
 
+isFreeTypeInSources() {
+  local libfreetypeid="libfreetype/src"
+  local location="$1/build/src"
+  if [ ! -e "$location" ] ; then
+    echo "No jdk found to determine $libfreetypeid presence"
+    exit 1
+  fi
+  find "$location" | grep  -q "$libfreetypeid"
+  local found=$?
+  if [ $found -eq 0 ] ; then
+    echo "$libfreetypeid found in $(pwd): $location"
+  else
+    echo "$libfreetypeid not found in $(pwd): $location"
+  fi
+  return $found
+}
+
 copyFromDir() {
   echo "Copying OpenJDK source from  ${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
   # We really do not want to use .git for dirs, as we expect user have them set up, ignoring them
@@ -850,8 +867,7 @@ downloadingRequiredDependencies() {
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
-    case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
-      jdk8* | jdk9* | jdk10*)
+     if ! isFreeTypeInSources ".." ; then
         if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
           echo "Checking and download FreeType Font dependency"
           checkingAndDownloadingFreeType
@@ -860,9 +876,9 @@ downloadingRequiredDependencies() {
           echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
           echo ""
         fi
-      ;;
-      *) echo "Using bundled Freetype" ;;
-    esac
+     else
+       echo "Using bundled Freetype"
+     fi
   else
     echo "Skipping Freetype"
   fi
@@ -947,10 +963,10 @@ createSourceTagFile(){
 function configureWorkspace() {
   if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" != "true" ]]; then
     createWorkspace
+    checkoutAndCloneOpenJDKGitRepo
     downloadingRequiredDependencies
     downloadDevkit
     relocateToTmpIfNeeded
-    checkoutAndCloneOpenJDKGitRepo
     applyPatches
     if [ "${BUILD_CONFIG[CUSTOM_CACERTS]}" = "true" ] ; then
       prepareMozillaCacerts
