@@ -42,17 +42,17 @@ WINDOWS_REDIST_CHECKSUM="ac6060f5f8a952f59faef20e53d124c2c267264109f3f6fabeb2b7a
 
 isFreeTypeInSources() {
   local libfreetypeid="libfreetype/src"
-  local location="$1/build/src"
+  local location="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
   if [ ! -e "$location" ] ; then
-    echo "No jdk found to determine $libfreetypeid presence"
+    echo "No jdk sources exists to to determine $libfreetypeid presence"
     exit 1
   fi
   find "$location" | grep  -q "$libfreetypeid"
   local found=$?
   if [ $found -eq 0 ] ; then
-    echo "$libfreetypeid found in $(pwd): $location"
+    echo "$libfreetypeid found in $location"
   else
-    echo "$libfreetypeid not found in $(pwd): $location"
+    echo "$libfreetypeid not found in $location"
   fi
   return $found
 }
@@ -867,7 +867,7 @@ downloadingRequiredDependencies() {
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
-     if ! isFreeTypeInSources ".." ; then
+     if ! isFreeTypeInSources  ; then
         if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
           echo "Checking and download FreeType Font dependency"
           checkingAndDownloadingFreeType
