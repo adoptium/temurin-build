@@ -2198,10 +2198,10 @@ getOpenJDKTag() {
     # Checked out TAG specified
     echo "  getOpenJDKTag(): Using specified BUILD_CONFIG[TAG] (${BUILD_CONFIG[TAG]})" 1>&2
     echo "${BUILD_CONFIG[TAG]}"
-  if cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
+  elif cd "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" && git show-ref -q --verify "refs/tags/${BUILD_CONFIG[BRANCH]}"; then
     # Checked out BRANCH is a tag
     echo "  getOpenJDKTag(): Using tag specified by BUILD_CONFIG[BRANCH] (${BUILD_CONFIG[BRANCH]})" 1>&2
-    tagString="${BUILD_CONFIG[BRANCH]}"
+    echo "${BUILD_CONFIG[BRANCH]}"
   else
     echo "  getOpenJDKTag(): Determining tag from checked out repository.." 1>&2
     tagString=$(getFirstTagFromOpenJDKGitRepo)
