@@ -283,14 +283,14 @@ versionNumbersFileParser() {
   fileVersionArray=()
   if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ]; then
     # File parsing logic for jdk8.
-    fileVersionArray+=($(grep "JDK_MINOR_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
-    fileVersionArray+=($(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
+    fileVersionArray+=("$(grep "JDK_MINOR_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
+    fileVersionArray+=("$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
   else
     # File parsing logic for jdk11+.
-    fileVersionArray+=($(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
-    fileVersionArray+=($(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
-    fileVersionArray+=($(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
-    fileVersionArray+=($(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')) || error="true"
+    fileVersionArray+=("$(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
+    fileVersionArray+=("$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
+    fileVersionArray+=("$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
+    fileVersionArray+=("$(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
   fi
 
   # Check for errors in the file parsing process.
@@ -319,8 +319,6 @@ versionNumbersFileParser() {
   if [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$ ]]; then
     if [[ ! "${fileVersionString}" =~ ^jdk\-[0-9]+[0-9\.]*$ ]]; then
       echo "ERROR: build.sh: ${funcName}: The version string parsed from the version numbers file does not appear to use a valid format." >&2
-      echo "ERROR: build.sh: ${funcName}: Returning the argument passed to this function instead: ${1}" >&2
-      echo "$1"
       exit 1
     fi
   fi
