@@ -105,7 +105,7 @@ configureDevKitConfigureParameter() {
       addConfigureArg "--with-devkit=" "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}"
     fi
   fi
-} 
+}
 
 # Configure the boot JDK
 configureBootJDKConfigureParameter() {
