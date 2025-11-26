@@ -360,7 +360,7 @@ compareToOpenJDKFileVersion() {
   # Retrieve the jdk version from version-numbers.conf (minus the build number).
   if ! fileVersionString="$(versionNumbersFileParser)"; then
     # This is to catch versionNumbersFileParser failures.
-    echo "ERROR: build.sh: ${funcName}: versionNumbersFileParser has failed." >&2 
+    echo "ERROR: build.sh: ${funcName}: versionNumbersFileParser has failed." >&2
     echo "$1"
     exit 1
   fi
@@ -377,6 +377,9 @@ compareToOpenJDKFileVersion() {
     else
       fileVersionString+="+0"
     fi
+
+    echo "WARNING: build.sh: ${funcName}: JDK version in source does not match the supplied version (likely the latest git tag)." >&2
+    echo "WARNING: The JDK version in source will be used instead." >&2
     echo "${fileVersionString}"
   fi
 }
