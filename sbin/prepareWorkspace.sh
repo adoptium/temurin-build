@@ -40,6 +40,29 @@ FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 # sha256 of https://github.com/adoptium/devkit-binaries/releases/tag/vs2022_redist_14.40.33807_10.0.26100.1742
 WINDOWS_REDIST_CHECKSUM="ac6060f5f8a952f59faef20e53d124c2c267264109f3f6fabeb2b7aefb3e3c62"
 
+
+checkBundledFreetypeJdkConfig() {
+  if [ "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" = "bundled" ] ; then
+    if [ "${BUILD_CONFIG[FREETYPE]}" = "false" ] ; then
+      echo "--freetype-dir bundled is in contradiction with -skip-freetype"
+      exit 1
+    fi
+    echo "--freetype-dir is set to bundled that is weird, but accepted. It should be default."
+  elif [ "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" = "system" ] ; then
+   echo "--freetype-dir is set to system that is weird, but accepted. Try to use --skip-freetype"
+  elif [ -n "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ] ; then
+    echo "--freetype-dir is not accepted for JDK with bundled freetype."
+    exit 1
+  fi
+}
+
+checkNoBundledFreetypeJdkConfig() {
+  if [ "${BUILD_CONFIG[FREETYPE]}" = "false" ] && [ -n "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ] ; then
+    echo "--freetype-dir is declared together with --skip-freetype, that is invalid, and would build against system freetype"
+    exit 1
+  fi
+}
+
 isFreeTypeInSources() {
   local libfreetypeid="libfreetype/src"
   local location="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
@@ -47,12 +70,14 @@ isFreeTypeInSources() {
     echo "No jdk sources exists to to determine $libfreetypeid presence"
     exit 1
   fi
-  find "$location" | grep  -q "$libfreetypeid"
-  local found=$?
+  local found=0
+  find "$location" | grep  -q "$libfreetypeid" || found=$?
   if [ $found -eq 0 ] ; then
     echo "$libfreetypeid found in $location"
+    checkBundledFreetypeJdkConfig
   else
     echo "$libfreetypeid not found in $location"
+    checkNoBundledFreetypeJdkConfig
   fi
   return $found
 }
@@ -841,6 +866,8 @@ downloadBootJdkIfNeeded () {
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, boot-jdk etc.)
 downloadingRequiredDependencies() {
+  local freeTypeInSources=0
+  isFreeTypeInSources || freeTypeInSources="$?"
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" || true
@@ -867,7 +894,7 @@ downloadingRequiredDependencies() {
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
-    if ! isFreeTypeInSources ; then
+    if [ "0${freeTypeInSources}" -ne 0 ]  ; then
       if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
         echo "Checking and download FreeType Font dependency"
         checkingAndDownloadingFreeType
