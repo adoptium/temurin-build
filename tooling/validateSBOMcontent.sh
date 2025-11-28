@@ -22,6 +22,8 @@ SBOMFILE="$1"
 MAJORVERSION="$2"
 EXPECTED_SCM_REF="$3"
 
+[ "${EXPECTED_SCM_REF}" == "scm_not_specified" ] && EXPECTED_SCM_REF="null"
+
 GLIBC=$(   jq '.metadata.tools.components[] | select(.name|test("GLIBC"))    | .version' "$SBOMFILE" | tr -d \")
 GCC=$(     jq '.metadata.tools.components[] | select(.name|test("GCC"))      | .version' "$SBOMFILE" | tr -d \")
 BOOTJDK=$( jq '.metadata.tools.components[] | select(.name|test("BOOTJDK"))  | .version' "$SBOMFILE" | tr -d \")
@@ -135,10 +137,20 @@ GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Comm
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$( echo "$GITSHA" | cut -d/ -f7)
 if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
-  echo "ERROR: git sha of source repo not found"
-  echo "GITREPO: ${GITREPO}"
-  echo "GITSHA: ${GITSHA}"
-  RC=1
+  if [ "${EXPECTED_SCM_REF}" == "null" ]; then
+    commitData=$(curl --silent https://api.github.com/repos/adoptium/jdk25u/commits/ee82672be00b1e01bb4f065857dfacc5ad3f4e2p)
+    if echo "${commitData}" | grep "No commit found for SHA" > /dev/null; then
+      echo "ERROR: git sha of source commit not found"
+      echo "GITREPO: ${GITREPO}"
+      echo "GITSHA: ${GITSHA}"
+    RC=1
+    fi
+  else
+    echo "ERROR: git sha of source repo not found"
+    echo "GITREPO: ${GITREPO}"
+    echo "GITSHA: ${GITSHA}"
+    RC=1
+  fi
 fi
 
 # shellcheck disable=SC3037

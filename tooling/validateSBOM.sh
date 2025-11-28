@@ -206,7 +206,7 @@ validate_sbom_cyclonedx() {
 ########################################################################################################################
 validate_sbom_content() {
   # shellcheck disable=SC2086
-  echo "validateSBOM.sh: Running validateSBOMcontent.sh"
+  echo "validateSBOM.sh: Running command: sh validateSBOMcontent.sh \"$SBOM_LOCATION\" \"$JDK_MAJOR_VERSION\" \"$SOURCE_TAG\""
   
   if sh "${SCRIPT_DIR}/validateSBOMcontent.sh" "$SBOM_LOCATION" "$JDK_MAJOR_VERSION" "$SOURCE_TAG"; then
     echo "validateSBOMcontent.sh: PASSED"
