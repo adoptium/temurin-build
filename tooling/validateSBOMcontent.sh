@@ -22,8 +22,6 @@ SBOMFILE="$1"
 MAJORVERSION="$2"
 EXPECTED_SCM_REF="$3"
 
-[ "${EXPECTED_SCM_REF}" = "scm_not_specified" ] && EXPECTED_SCM_REF="null"
-
 GLIBC=$(   jq '.metadata.tools.components[] | select(.name|test("GLIBC"))    | .version' "$SBOMFILE" | tr -d \")
 GCC=$(     jq '.metadata.tools.components[] | select(.name|test("GCC"))      | .version' "$SBOMFILE" | tr -d \")
 BOOTJDK=$( jq '.metadata.tools.components[] | select(.name|test("BOOTJDK"))  | .version' "$SBOMFILE" | tr -d \")
@@ -113,8 +111,8 @@ fi
 
 RC=0
 
-# Skip SCM check if EXPECTED_SCM_REF parameter is null
-if [ "${EXPECTED_SCM_REF}" != "null" ]; then
+# Skip SCM check if EXPECTED_SCM_REF parameter is empty
+if [ -n "${EXPECTED_SCM_REF}" ]; then
   [ "${EXPECTED_SCM_REF}" != "${SCM_REF}" ] && echo "ERROR: SCM_REF not ${EXPECTED_SCM_REF} (SBOM has ${SCM_REF})" && RC=1 
 fi
 if echo "$SBOMFILE" | grep 'linux_'; then
@@ -136,7 +134,7 @@ echo -n "Checking for JDK source SHA validity: "
 GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \" | uniq)
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$( echo "$GITSHA" | cut -d/ -f7)
-if [ "${EXPECTED_SCM_REF}" = "null" ]; then
+if [ -z "${EXPECTED_SCM_REF}" ]; then
   commitData=$(curl --silent "https://api.github.com/repos/adoptium/jdk25u/commits/${GITSHA}")
   if echo "${commitData}" | grep "No commit found for SHA" > /dev/null; then
     echo "ERROR: git sha of source commit not found"
@@ -154,7 +152,7 @@ else
 fi
 
 # shellcheck disable=SC3037
-if [ "${EXPECTED_SCM_REF}" != "null" ]; then
+if [ -n "${EXPECTED_SCM_REF}" ]; then
   echo -n "Checking for temurin-build SHA validity: "
   GITSHA=$(jq '.components[].properties[] | select(.name|test("Temurin Build Ref")) | .value' "$1" | tr -d \" | uniq)
   GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
@@ -172,7 +170,7 @@ if [ "${EXPECTED_SCM_REF}" != "null" ]; then
      fi
   fi
 else
-  echo "The SCM_REF argument was set to null; skipping SHA check."
+  echo "The SCM_REF argument was set to an empty string; skipping SHA check."
 fi
 
 if [ "$RC" != "0" ]; then

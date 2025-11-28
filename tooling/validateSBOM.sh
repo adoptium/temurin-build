@@ -96,7 +96,7 @@ arg_parser() {
     echo "WARNING: validateSBOM.sh: SOURCE_TAG does not use a valid upstream tag structure."
     echo "INFO: validateSBOM.sh: Build is presumed to be a personal or dev build."
     echo "INFO: validateSBOM.sh: SCM and SHA checks will be skipped."
-    SOURCE_TAG="null"
+    SOURCE_TAG=""
   fi
 
   if [ -z "$SBOM_LOCATION" ]; then
