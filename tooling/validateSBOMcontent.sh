@@ -131,12 +131,11 @@ echo "BOOTJDK is ${BOOTJDK}"
 echo "FREETYPE is ${FREETYPE}"
 # shellcheck disable=SC3037
 echo -n "Checking for JDK source SHA validity: "
-GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \" | uniq)
-GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
-GITSHA=$( echo "$GITSHA" | cut -d/ -f7)
+GITURL=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \" | uniq)
+GITREPO=$(echo "$GITURL" | cut -d/ -f1-5)
+GITSHA=$( echo "$GITURL" | cut -d/ -f7)
 if [ -z "${EXPECTED_SCM_REF}" ]; then
-  commitURL=$(echo "${GITREPO}" | sed s,github.com,api.github.com/repos,)
-  if ! curl --silent --fail -I "${commitURL}/commits/${GITSHA}" > /dev/null; then
+  if ! curl --silent --fail -I "$GITURL" > /dev/null; then
     echo "ERROR: git sha of source commit not found"
     echo "GITREPO: ${GITREPO}"
     echo "GITSHA: ${GITSHA}"
