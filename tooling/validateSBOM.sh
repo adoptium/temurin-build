@@ -112,8 +112,6 @@ arg_parser() {
     fi
     SBOM_NAME=${SBOM_LOCATION##*/}
     SBOM_LOCATION="${WORKSPACE_DIR}/${SBOM_NAME}"
-    echo SXAEC - $SBOM_NAME
-    ls -l $SBOM_LOCATION
   elif [ ! -r "$SBOM_LOCATION" ]; then
     echo "ERROR: SBOM_LOCATION could not be found/accessed: $SBOM_LOCATION"
     exit 1
