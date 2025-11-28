@@ -135,8 +135,8 @@ GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Comm
 GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
 GITSHA=$( echo "$GITSHA" | cut -d/ -f7)
 if [ -z "${EXPECTED_SCM_REF}" ]; then
-  commitData=$(curl --silent "https://api.github.com/repos/adoptium/jdk25u/commits/${GITSHA}")
-  if echo "${commitData}" | grep "No commit found for SHA" > /dev/null; then
+  commitURL=$(echo "${GITREPO}" | sed s,github.com,api.github.com/repos,)
+  if ! curl --silent --fail -I "${commitURL}/commits/${GITSHA}" > /dev/null; then
     echo "ERROR: git sha of source commit not found"
     echo "GITREPO: ${GITREPO}"
     echo "GITSHA: ${GITSHA}"
