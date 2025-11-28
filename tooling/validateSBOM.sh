@@ -69,11 +69,6 @@ arg_parser() {
     exit 1
   fi
 
-  if [ -z "$SOURCE_TAG" ]; then
-    echo "ERROR: validateSBOM.sh: second argument must not be empty."
-    exit 1
-  fi
-  
   TAG_CHECK=""
   if [ "$JDK_MAJOR_VERSION" -eq "8" ]; then
     echo "$SOURCE_TAG" | grep -q -e "^jdk8u[0-9][0-9]*-b[0-9][0-9]*_adopt\$" \
