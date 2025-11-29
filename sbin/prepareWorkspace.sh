@@ -40,6 +40,9 @@ FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 # sha256 of https://github.com/adoptium/devkit-binaries/releases/tag/vs2022_redist_14.40.33807_10.0.26100.1742
 WINDOWS_REDIST_CHECKSUM="ac6060f5f8a952f59faef20e53d124c2c267264109f3f6fabeb2b7aefb3e3c62"
 
+GTEST_VERSION=1.16.0
+GTEST_CHECKSUM="78c676fc63881529bf97bf9d45948d905a66833fbfa5318ea2cd7478cb98f399"
+
 copyFromDir() {
   echo "Copying OpenJDK source from  ${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
   # We really do not want to use .git for dirs, as we expect user have them set up, ignoring them
@@ -822,12 +825,26 @@ downloadBootJdkIfNeeded () {
   fi
 }
 
+downloadGtest() {
+  local gtestUnpacked="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedgtest"
+  if [ -e "${gtestUnpacked}" ]; then
+    echo "Reusing $gtestUnpacked"
+  else
+    local gtestArchive="${BUILD_CONFIG[WORKSPACE_DIR]}/libs/googletest-${GTEST_VERSION}.tar.gz"
+    downloadFile "${gtestArchive}" "https://github.com/google/googletest/releases/download/v${GTEST_VERSION}/googletest-${GTEST_VERSION}.tar.gz" "${GTEST_CHECKSUM}"
+    mkdir -p "${gtestUnpacked}"
+    tar -xzf "${gtestArchive}" --strip-components=1  -C "${gtestUnpacked}"
+    rm -f "${gtestArchive}"
+  fi
+}
+
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, boot-jdk etc.)
 downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" || true
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype" || true
+    rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedgtest" || true
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/downloaded-boot-jdk-${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" || true
   fi
 
@@ -865,6 +882,10 @@ downloadingRequiredDependencies() {
     esac
   else
     echo "Skipping Freetype"
+  fi
+
+  if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 15 ] && [ "${BUILD_CONFIG[GTEST]}" = "true" ]; then
+      downloadGtest
   fi
 }
 
