@@ -155,12 +155,20 @@ scp -prP "${SSH_PORT}" $SSH_OPTS "${SSH_TARGET}:temurin-build/build-farm/workspa
 cd workspace/target || exit 1
 for FILE in OpenJDK*; do
     echo Creating metadata for ${FILE}
-    sha256sum $FILE > $FILE.sha256.txt
-    sha256=$(cat $FILE.sha256.txt | cut -d' ' -f1)
-    if [[ "$FILE" =~ .*sbom.*\.json ]]; then
-        metadata_file=${FILE%.*}-metadata.json
+    # Skip checksum generation for SBOM files
+    if [[ "$FILE" == *sbom.json ]]; then
+        echo "Skipping checksum generation for SBOM: $FILE"
+        sha256=""
     else
-        metadata_file=$FILE.json
+        sha256sum "$FILE" > "$FILE.sha256.txt"
+        sha256=$(cut -d' ' -f1 "$FILE.sha256.txt")
+    fi
+
+    # Metadata filename: SBOM files get <name>-metadata.json (consistent with naming)
+    if [[ "$FILE" == *sbom.json ]]; then
+        metadata_file="${FILE%.*}-metadata.json"
+    else
+        metadata_file="$FILE.json"
     fi
     createMetadataFile "$metadata_file" "${TARGET_ARCH}" "$SCM_REF" metadata/buildSource.txt metadata/version.txt "$sha256"
 done
