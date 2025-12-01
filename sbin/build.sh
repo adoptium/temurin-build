@@ -268,48 +268,25 @@ versionNumbersFileParser() {
   [ "$jdkVersion" -ge 17 ] && numbersFile="${buildSrc}/make/conf/version-numbers.conf"
   [ ! -r "${numbersFile}" ] && echo "ERROR: build.sh: ${funcName}: JDK version file not found: ${numbersFile}" >&2 && exit 1
 
-  # File parsing logic
-  error="false"
-  fileVersionArray=()
+  fileVersionString=""
+  error=""
   if [ "$jdkVersion" -eq 8 ]; then
-    fileVersionArray+=("$(grep "JDK_MINOR_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
-    fileVersionArray+=("$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
+    # jdk8 uses this format: jdk8u482-b01
+    fileVersionString="jdk8u$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
+   [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$  || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
   else
     # File parsing logic for jdk11+.
-    fileVersionArray+=("$(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
-    fileVersionArray+=("$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
-    fileVersionArray+=("$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
-    fileVersionArray+=("$(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')") || error="true"
-  fi
+    patchNo="$(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
+    updateNo="$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
+    interimNo="$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
+    featureNo="$(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
 
-  # Check for file parsing errors.
-  if [ "${error}" == "true" ]; then
-    echo "ERROR: build.sh: ${funcName}: ${numbersFile##*/} was found but could not be parsed." >&2
-    exit 1
-  fi
+    [[ ! "${patchNo}" =~ ^0$ ]] && fileVersionString=".${patchNo}"
+    [[ ! "${updateNo}.${fileVersionString}" =~ ^[0\.]+$ ]] && fileVersionString=".${updateNo}${fileVersionString}"
+    [[ ! "${interimNo}.${fileVersionString}" =~ ^[0\.]+$ ]] && fileVersionString=".${interimNo}${fileVersionString}"
+    fileVersionString="jdk-${featureNo}${fileVersionString}"
 
-  # Turn version numbers array into a valid version string.
-  if [ "$jdkVersion" -gt 8 ]; then
-    # JDK11 and above uses this format: jdk-21.0.10.1+2
-    fileVersionString="jdk-${fileVersionArray[0]}"
-    if [ "${fileVersionArray[3]}" -gt 0 ]; then
-      fileVersionString="${fileVersionString}.${fileVersionArray[1]}.${fileVersionArray[2]}.${fileVersionArray[3]}"
-    elif [ "${fileVersionArray[2]}" -gt 0 ]; then
-      fileVersionString="${fileVersionString}.${fileVersionArray[1]}.${fileVersionArray[2]}"
-    elif [ "${fileVersionArray[1]}" -gt 0 ]; then
-      fileVersionString="${fileVersionString}.${fileVersionArray[1]}"
-    fi
-  else
-    # jdk8 uses this format: jdk8u482-b01
-    fileVersionString="jdk8u${fileVersionArray[1]}"
-  fi
-
-  # Check the version string is valid.
-  if [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$ ]]; then
-    if [[ ! "${fileVersionString}" =~ ^jdk\-[0-9]+[0-9\.]*$ ]]; then
-      echo "ERROR: build.sh: ${funcName}: The version string parsed from the version numbers file does not use a valid format." >&2
-      exit 1
-    fi
+    [[ ! "${fileVersionString}" =~ ^jdk\-[0-9]+[0-9\.]*$ || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
   fi
 
   # Returning the formatted jdk version string.
@@ -333,10 +310,9 @@ compareToOpenJDKFileVersion() {
     exit 1
   fi
 
-  # This verifies that arg1 was in an expected format for a jdk version string.
-  # This provides some assurance that we can parse that string in this function.
-  # JDK11 and above uses this format: jdk-21.0.10+2
-  # jdk8 uses this format: jdk8u482-b01
+  # Check if arg 1 looks like a jdk version string.
+  # Example: JDK11+: jdk-21.0.10+2
+  # Example: JDK8  : jdk8u482-b01
   if [[ ! "$1" =~ ^jdk\-[0-9]+[0-9\.]*(\+[0-9]+)?$ ]]; then
     if [[ ! "$1" =~ ^jdk8u[0-9]+(\-b[0-9][0-9]+)?$ ]]; then
       echo "ERROR: build.sh: ${funcName}: The JDK version passed to this function did not match the expected format." >&2
@@ -357,19 +333,16 @@ compareToOpenJDKFileVersion() {
     # The file version matches the function argument.
     echo "$1"
     return
-  else
-    # The file version does not match the function argument.
-    # Returning the file version.
-    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ]; then
-      fileVersionString+="-b00"
-    else
-      fileVersionString+="+0"
-    fi
-
-    echo "WARNING: build.sh: ${funcName}: JDK version in source does not match the supplied version (likely the latest git tag)." >&2
-    echo "WARNING: The JDK version in source will be used instead." >&2
-    echo "${fileVersionString}"
   fi
+
+  # The file version does not match the function argument.
+  # Returning the file version.
+  [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ] && fileVersionString+="-b00"
+  [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ] && fileVersionString+="+0"
+
+  echo "WARNING: build.sh: ${funcName}: JDK version in source does not match the supplied version (likely the latest git tag)." >&2
+  echo "WARNING: The JDK version in source will be used instead." >&2
+  echo "${fileVersionString}"
 }
 
 getOpenJdkVersion() {
