@@ -896,7 +896,7 @@ downloadingRequiredDependencies() {
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
     if [ "0${freeTypeInSources}" -ne 0 ]  ; then
       if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
-        echo "Checking and download FreeType Font dependency"
+        echo "Checking and downloading FreeType Font dependency"
         checkingAndDownloadingFreeType
       else
         echo ""
