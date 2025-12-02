@@ -49,7 +49,7 @@ checkBundledFreetypeJdkConfig() {
     fi
     echo "--freetype-dir is set to bundled that is weird, but accepted. It should be default."
   elif [ "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" = "system" ] ; then
-   echo "--freetype-dir is set to system that is weird, but accepted. Try to use --skip-freetype"
+   echo "--freetype-dir is set to system which is unusual, but accepted. Try to use --skip-freetype"
   elif [ -n "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ] ; then
     echo "--freetype-dir is not accepted for JDK with bundled freetype."
     exit 1
