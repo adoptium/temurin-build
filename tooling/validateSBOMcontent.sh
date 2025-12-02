@@ -111,8 +111,8 @@ fi
 
 RC=0
 
-# Skip SCM check if EXPECTED_SCM_REF parameter is null
-if [ "${EXPECTED_SCM_REF}" != "null" ]; then
+# Skip SCM check if EXPECTED_SCM_REF parameter is empty
+if [ -n "${EXPECTED_SCM_REF}" ]; then
   [ "${EXPECTED_SCM_REF}" != "${SCM_REF}" ] && echo "ERROR: SCM_REF not ${EXPECTED_SCM_REF} (SBOM has ${SCM_REF})" && RC=1 
 fi
 if echo "$SBOMFILE" | grep 'linux_'; then
@@ -131,18 +131,27 @@ echo "BOOTJDK is ${BOOTJDK}"
 echo "FREETYPE is ${FREETYPE}"
 # shellcheck disable=SC3037
 echo -n "Checking for JDK source SHA validity: "
-GITSHA=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \" | uniq)
-GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
-GITSHA=$( echo "$GITSHA" | cut -d/ -f7)
-if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
-  echo "ERROR: git sha of source repo not found"
-  echo "GITREPO: ${GITREPO}"
-  echo "GITSHA: ${GITSHA}"
-  RC=1
+GITURL=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \" | uniq)
+GITREPO=$(echo "$GITURL" | cut -d/ -f1-5)
+GITSHA=$( echo "$GITURL" | cut -d/ -f7)
+if [ -z "${EXPECTED_SCM_REF}" ]; then
+  if ! curl --silent --fail -I "$GITURL" > /dev/null; then
+    echo "ERROR: git sha of source commit not found"
+    echo "GITREPO: ${GITREPO}"
+    echo "GITSHA: ${GITSHA}"
+    RC=1
+  fi
+else
+  if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
+    echo "ERROR: git sha of source repo not found"
+    echo "GITREPO: ${GITREPO}"
+    echo "GITSHA: ${GITSHA}"
+    RC=1
+  fi
 fi
 
 # shellcheck disable=SC3037
-if [ "${EXPECTED_SCM_REF}" != "null" ]; then
+if [ -n "${EXPECTED_SCM_REF}" ]; then
   echo -n "Checking for temurin-build SHA validity: "
   GITSHA=$(jq '.components[].properties[] | select(.name|test("Temurin Build Ref")) | .value' "$1" | tr -d \" | uniq)
   GITREPO=$(echo "$GITSHA" | cut -d/ -f1-5)
@@ -160,7 +169,7 @@ if [ "${EXPECTED_SCM_REF}" != "null" ]; then
      fi
   fi
 else
-  echo "The SCM_REF argument was set to null; skipping SHA check."
+  echo "The SCM_REF argument was set to an empty string; skipping SHA check."
 fi
 
 if [ "$RC" != "0" ]; then
