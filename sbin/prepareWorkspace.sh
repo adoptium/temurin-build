@@ -44,12 +44,12 @@ WINDOWS_REDIST_CHECKSUM="ac6060f5f8a952f59faef20e53d124c2c267264109f3f6fabeb2b7a
 checkBundledFreetypeJdkConfig() {
   if [ "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" = "bundled" ] ; then
     if [ "${BUILD_CONFIG[FREETYPE]}" = "false" ] ; then
-      echo "--freetype-dir bundled is in contradiction with -skip-freetype"
+      echo "--freetype-dir 'bundled' is in contradiction with -skip-freetype"
       exit 1
     fi
-    echo "--freetype-dir is set to bundled that is weird, but accepted. It should be default."
+    echo "--freetype-dir is set to 'bundled' which is unusual, but accepted. It should be default."
   elif [ "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" = "system" ] ; then
-   echo "--freetype-dir is set to system which is unusual, but accepted. Try to use --skip-freetype"
+   echo "--freetype-dir is set to 'system' which is unusual, but accepted. Use --skip-freetype instead."
   elif [ -n "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ] ; then
     echo "--freetype-dir is not accepted for JDK with bundled freetype."
     exit 1
@@ -58,7 +58,7 @@ checkBundledFreetypeJdkConfig() {
 
 checkNoBundledFreetypeJdkConfig() {
   if [ "${BUILD_CONFIG[FREETYPE]}" = "false" ] && [ -n "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ] ; then
-    echo "--freetype-dir is declared together with --skip-freetype, that is invalid, and would build against system freetype"
+    echo "--freetype-dir is declared together with --skip-freetype, that is invalid, as JDK would build against system freetype anyway."
     exit 1
   fi
 }
