@@ -900,7 +900,7 @@ downloadingRequiredDependencies() {
         checkingAndDownloadingFreeType
       else
         echo ""
-        echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
+        echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version is provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
         echo ""
       fi
     else
