@@ -69,11 +69,6 @@ arg_parser() {
     exit 1
   fi
 
-  if [ -z "$SOURCE_TAG" ]; then
-    echo "ERROR: validateSBOM.sh: second argument must not be empty."
-    exit 1
-  fi
-  
   TAG_CHECK=""
   if [ "$JDK_MAJOR_VERSION" -eq "8" ]; then
     echo "$SOURCE_TAG" | grep -q -e "^jdk8u[0-9][0-9]*-b[0-9][0-9]*_adopt\$" \
@@ -96,7 +91,7 @@ arg_parser() {
     echo "WARNING: validateSBOM.sh: SOURCE_TAG does not use a valid upstream tag structure."
     echo "INFO: validateSBOM.sh: Build is presumed to be a personal or dev build."
     echo "INFO: validateSBOM.sh: SCM and SHA checks will be skipped."
-    SOURCE_TAG="null"
+    SOURCE_TAG=""
   fi
 
   if [ -z "$SBOM_LOCATION" ]; then
@@ -206,7 +201,7 @@ validate_sbom_cyclonedx() {
 ########################################################################################################################
 validate_sbom_content() {
   # shellcheck disable=SC2086
-  echo "validateSBOM.sh: Running validateSBOMcontent.sh"
+  echo "validateSBOM.sh: Running command: sh validateSBOMcontent.sh \"$SBOM_LOCATION\" \"$JDK_MAJOR_VERSION\" \"$SOURCE_TAG\""
   
   if sh "${SCRIPT_DIR}/validateSBOMcontent.sh" "$SBOM_LOCATION" "$JDK_MAJOR_VERSION" "$SOURCE_TAG"; then
     echo "validateSBOMcontent.sh: PASSED"

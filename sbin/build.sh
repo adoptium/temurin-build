@@ -105,7 +105,7 @@ configureDevKitConfigureParameter() {
       addConfigureArg "--with-devkit=" "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}"
     fi
   fi
-} 
+}
 
 # Configure the boot JDK
 configureBootJDKConfigureParameter() {
@@ -251,6 +251,98 @@ patchFreetypeWindows() {
       echo "No include/freetype/freetype.h found, Freetype source not version 2.8.1, no updated required."
     fi
   fi
+}
+
+# Returns the version numbers in version-numbers.conf as a space-seperated list of integers.
+# e.g. 17 0 1 5
+# or 8 0 0 432
+# Build number will not be included, as that is not stored in this file.
+versionNumbersFileParser() {
+  funcName="versionNumbersFileParser"
+  buildSrc="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  jdkVersion="${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
+
+  # Find version-numbers.conf (or equivalent) and confirm we can read it.
+  numbersFile="${buildSrc}/common/autoconf/version-numbers"
+  [ "$jdkVersion" -eq 11 ] && numbersFile="${buildSrc}/make/autoconf/version-numbers"
+  [ "$jdkVersion" -ge 17 ] && numbersFile="${buildSrc}/make/conf/version-numbers.conf"
+  [ ! -r "${numbersFile}" ] && echo "ERROR: build.sh: ${funcName}: JDK version file not found: ${numbersFile}" >&2 && exit 1
+
+  fileVersionString=""
+  error=""
+  if [ "$jdkVersion" -eq 8 ]; then
+    # jdk8 uses this format: jdk8u482-b01
+    fileVersionString="jdk8u$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
+   [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$  || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
+  else
+    # File parsing logic for jdk11+.
+    patchNo="$(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
+    updateNo="$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
+    interimNo="$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
+    featureNo="$(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
+
+    [[ ! "${patchNo}" =~ ^0$ ]] && fileVersionString=".${patchNo}"
+    [[ ! "${updateNo}.${fileVersionString}" =~ ^[0\.]+$ ]] && fileVersionString=".${updateNo}${fileVersionString}"
+    [[ ! "${interimNo}.${fileVersionString}" =~ ^[0\.]+$ ]] && fileVersionString=".${interimNo}${fileVersionString}"
+    fileVersionString="jdk-${featureNo}${fileVersionString}"
+
+    [[ ! "${fileVersionString}" =~ ^jdk\-[0-9]+[0-9\.]*$ || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
+  fi
+
+  # Returning the formatted jdk version string.
+  echo "${fileVersionString}"
+}
+
+# This function attempts to compare the jdk version from version-numbers.conf with arg 1.
+# We will then return whichever version is bigger/later.
+# e.g. 17.0.1+32 > 17.0.0+64
+# If any errors or unusual circumstances are detected, we simply return arg1 to avoid destabilising the build.
+# Note: For error messages, use 'echo message >&2' to ensure the error isn't intercepted by the subshell.
+compareToOpenJDKFileVersion() {
+  funcName="compareToOpenJDKFileVersion"
+  # First, sanity checking on the arg.
+  if [ $# -eq 0 ]; then
+    echo "compareToOpenJDKFileVersion_was_called_with_no_args"
+    exit 1
+  elif [ $# -gt 1 ]; then
+    echo "ERROR: build.sh: ${funcName}: Too many arguments (>1) were passed to this function." >&2
+    echo "$1"
+    exit 1
+  fi
+
+  # Check if arg 1 looks like a jdk version string.
+  # Example: JDK11+: jdk-21.0.10+2
+  # Example: JDK8  : jdk8u482-b01
+  if [[ ! "$1" =~ ^jdk\-[0-9]+[0-9\.]*(\+[0-9]+)?$ ]]; then
+    if [[ ! "$1" =~ ^jdk8u[0-9]+(\-b[0-9][0-9]+)?$ ]]; then
+      echo "ERROR: build.sh: ${funcName}: The JDK version passed to this function did not match the expected format." >&2
+      echo "$1"
+      exit 1
+    fi
+  fi
+
+  # Retrieve the jdk version from version-numbers.conf (minus the build number).
+  if ! fileVersionString="$(versionNumbersFileParser)"; then
+    # This is to catch versionNumbersFileParser failures.
+    echo "ERROR: build.sh: ${funcName}: versionNumbersFileParser has failed." >&2
+    echo "$1"
+    exit 1
+  fi
+
+  if [[ "$1" =~ ^${fileVersionString}.*$ ]]; then
+    # The file version matches the function argument.
+    echo "$1"
+    return
+  fi
+
+  # The file version does not match the function argument.
+  # Returning the file version.
+  [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ] && fileVersionString+="-b00"
+  [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ] && fileVersionString+="+0"
+
+  echo "WARNING: build.sh: ${funcName}: JDK version in source does not match the supplied version (likely the latest git tag)." >&2
+  echo "WARNING: The JDK version in source will be used instead." >&2
+  echo "${fileVersionString}"
 }
 
 getOpenJdkVersion() {
@@ -2074,7 +2166,14 @@ getOpenJDKTag() {
     echo "${BUILD_CONFIG[BRANCH]}"
   else
     echo "  getOpenJDKTag(): Determining tag from checked out repository.." 1>&2
-    getFirstTagFromOpenJDKGitRepo
+    tagString=$(getFirstTagFromOpenJDKGitRepo)
+    # Now we check if the version in the code is later than the version we have so far.
+    # This prevents an issue where the git repo tags do not match the version string in the source.
+    # Without this code, we can create builds where half of the version strings do not match.
+    # This results in nonsensical -version output, incorrect folder names, and lots of failures
+    # relating to those two factors.
+    tagString=$(compareToOpenJDKFileVersion "$tagString")
+    echo "${tagString}"
   fi
 }
 
