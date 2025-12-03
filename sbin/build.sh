@@ -548,12 +548,12 @@ configureAlsaLocation() {
   fi
 }
 
-setDefaultFreeType() {
+setBundledFreeType() {
   echo "Freetype set from bundled in jdk"
   freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled}
 }
 
-setFreeTypeFromSrcs() {
+setFreeTypeFromExternalSrcs() {
   echo "Freetype set from local sources"
   addConfigureArg "--with-freetype-src=" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype"
 }
@@ -568,10 +568,10 @@ configureFreetypeLocation() {
     if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
       local freetypeDir="${BUILD_CONFIG[FREETYPE_DIRECTORY]}"
       if isFreeTypeInSources ; then
-        setDefaultFreeType
+        setBundledFreeType
       else
         if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-          setFreeTypeFromSrcs
+          setFreeTypeFromExternalSrcs
         else
           setFreeTypeFromInstalled
         fi
