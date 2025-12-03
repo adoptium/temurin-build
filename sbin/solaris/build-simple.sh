@@ -50,59 +50,62 @@ createMetadataFile() {
       ver_opt=""
       semver_adopt_build_num=""
       semver_opt=""
-      build_trim=$(echo "$build" | sed 's/^0*//')
+      build_trim="${build##0}"
     elif [[ "$ver" =~ $beta_pattern ]]; then
       update=${BASH_REMATCH[1]}
-      pre="\"${BASH_REMATCH[2]}\""
-      opt="\"${BASH_REMATCH[3]}\""
+      pre=$(printf '"%s"' "${BASH_REMATCH[2]}")
+      opt=$(printf '"%s"' "${BASH_REMATCH[3]}")
       build=${BASH_REMATCH[4]}
       adopt_build_num="0"
       ver_pre="-${BASH_REMATCH[2]}"
       ver_opt="-${BASH_REMATCH[3]}"
       semver_adopt_build_num=".$adopt_build_num"
       semver_opt=".${BASH_REMATCH[3]}"
-      build_trim=$(echo $build | sed 's/^0*//')
+      build_trim="${build##0}"
     else
       echo "ERROR: Unable to determine metadata parameters"
       exit 1
     fi
 
-    echo '{' > $metadata_file
-    echo '"vendor": "Eclipse Adoptium",' >> $metadata_file
-    echo '"os": "solaris",' >> $metadata_file
-    echo '"arch": "'$arch'",' >> $metadata_file
-    echo '"variant": "temurin",' >> $metadata_file
-    echo '"version": {' >> $metadata_file
-    echo '    "minor": 0,' >> $metadata_file
-    echo '    "patch": null,' >> $metadata_file
-    echo '    "msi_product_version": "8.0.'$update'.'$build_trim'",' >> $metadata_file
-    echo '    "security": '$update',' >> $metadata_file
-    echo '    "pre": '$pre',' >> $metadata_file
-    echo '    "adopt_build_number": '$adopt_build_num',' >> $metadata_file
-    echo '    "major": 8,' >> $metadata_file
-    echo '    "version": "1.8.0_'$update$ver_pre$ver_opt'-b'$build'",' >> $metadata_file
-    echo '    "semver": "8.0.'$update$ver_pre'+'$build_trim$semver_adopt_build_num$semver_opt'",' >> $metadata_file
-    echo '    "build": '$build_trim',' >> $metadata_file
-    echo '    "opt": '$opt >> $metadata_file
-    echo '},' >> $metadata_file
-    echo '"scmRef": "'$scm_ref'",' >> $metadata_file
-    cat $build_src_file | sed 's/^/"buildRef": "/' >> $metadata_file
-    echo '",'>> $metadata_file 
-    echo '"version_data": "jdk8u",' >> $metadata_file
-    echo '"binary_type": "'$bin_type'",' >> $metadata_file
-    echo '"sha256": "'$sha256'",' >> $metadata_file
-    echo '"full_version_output": "'$ver_txt'",' >> $metadata_file
-    echo '"makejdk_any_platform_args": "",' >> $metadata_file 
-    echo '"configure_arguments": "",' >> $metadata_file
-    echo '"make_command_args": "",' >> $metadata_file
-    echo '"BUILD_CONFIGURATION_param": "",' >> $metadata_file
-    echo '"openjdk_built_config": "",' >> $metadata_file
-    echo '"openjdk_source": "",' >> $metadata_file
-    echo '"build_env_docker_image_digest": "",' >> $metadata_file
-    echo '"dependency_version_alsa": "",' >> $metadata_file
-    echo '"dependency_version_freetype": "",' >> $metadata_file
-    echo '"dependency_version_freemarker": ""' >> $metadata_file
-    echo '}' >> $metadata_file
+    # Write metadata in one grouped redirect to avoid repeated >> operations
+{
+  echo '{'
+  echo '"vendor": "Eclipse Adoptium",'
+  echo '"os": "solaris",'
+  echo "\"arch\": \"${arch}\","
+  echo '"variant": "temurin",'
+  echo '"version": {'
+  echo '    "minor": 0,'
+  echo '    "patch": null,'
+  echo "    \"msi_product_version\": \"8.0.${update}.${build_trim}\","
+  echo "    \"security\": ${update},"
+  echo "    \"pre\": ${pre},"
+  echo "    \"adopt_build_number\": ${adopt_build_num},"
+  echo '    "major": 8,'
+  echo "    \"version\": \"1.8.0_${update}${ver_pre}${ver_opt}-b${build}\","
+  echo "    \"semver\": \"8.0.${update}${ver_pre}+${build_trim}${semver_adopt_build_num}${semver_opt}\","
+  echo "    \"build\": ${build_trim},"
+  echo "    \"opt\": ${opt}"
+  echo '},'
+  echo "\"scmRef\": \"${scm_ref}\","
+  sed 's/^/"buildRef": "/' "$build_src_file"
+  echo '",'
+  echo '"version_data": "jdk8u",'
+  echo "\"binary_type\": \"${bin_type}\","
+  echo "\"sha256\": \"${sha256}\","
+  echo "\"full_version_output\": \"${ver_txt}\","
+  echo '"makejdk_any_platform_args": "",'
+  echo '"configure_arguments": "",'
+  echo '"make_command_args": "",'
+  echo '"BUILD_CONFIGURATION_param": "",'
+  echo '"openjdk_built_config": "",'
+  echo '"openjdk_source": "",'
+  echo '"build_env_docker_image_digest": "",'
+  echo '"dependency_version_alsa": "",'
+  echo '"dependency_version_freetype": "",'
+  echo '"dependency_version_freemarker": ""'
+  echo '}'
+} >> "$metadata_file"
 }
 
 # Clear out proxy workspace to avoid archiving old artifacts if job is aborted
@@ -113,9 +116,9 @@ SSH_OPTS="$SSH_PROXY_OPTS"
 # "-o LogLevel=FATAL -o StrictHostKeyChecking=no -o PubkeyAcceptedKeyTypes=+ssh-rsa -o HostKeyAlgorithms=+ssh-rsa -i /home/solaris/test-azure-solaris10-x64-1/.vagrant/machines/adoptopenjdkSol10/virtualbox/private_key"
 
 if [ "$RELEASE" = true ]; then
-    PUBLISH_NAME=$(echo $SCM_REF | sed 's/_adopt//')
+    PUBLISH_NAME="${SCM_REF//_adopt/}"
 else
-    PUBLISH_NAME=$(echo $SCM_REF | sed 's/_adopt/-ea/')
+    PUBLISH_NAME="${SCM_REF//_adopt/-ea}"
 fi
 
 if [ -n "$PUBLISH_NAME" ]; then
