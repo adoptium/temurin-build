@@ -50,11 +50,11 @@ createMetadataFile() {
       ver_opt=""
       semver_adopt_build_num=""
       semver_opt=""
-      build_trim=$(echo $build | sed 's/^0*//')
+      build_trim=$(echo "$build" | sed 's/^0*//')
     elif [[ "$ver" =~ $beta_pattern ]]; then
       update=${BASH_REMATCH[1]}
-      pre='"'${BASH_REMATCH[2]}'"'
-      opt='"'${BASH_REMATCH[3]}'"'
+      pre="\"${BASH_REMATCH[2]}\""
+      opt="\"${BASH_REMATCH[3]}\""
       build=${BASH_REMATCH[4]}
       adopt_build_num="0"
       ver_pre="-${BASH_REMATCH[2]}"
@@ -134,17 +134,17 @@ ssh -p ${SSH_PORT} ${SSH_TARGET} $SSH_OPTS \
 	"rm -rf temurin-build && \
 	 git clone https://github.com/adoptium/temurin-build && \
 	 cd temurin-build/build-farm && \
-     export FILENAME="$FILENAME" && \
-     export BUILD_ARGS="$BUILD_ARGS" && \
-     export CONFIGURE_ARGS="$CONFIGURE_ARGS" && \
-     export JDK7_BOOT_DIR="$JDK7_BOOT_DIR" && \
-     export SCM_REF="$SCM_REF" && \
-     export VARIANT="$VARIANT" && \
-     export PUBLISH_NAME="$PUBLISH_NAME" && \
-     export WORKSPACE=$HOME/temurin-build && \
+     export FILENAME=\"${FILENAME}\" && \
+     export BUILD_ARGS=\"${BUILD_ARGS}\" && \
+     export CONFIGURE_ARGS=\"${CONFIGURE_ARGS}\" && \
+     export JDK7_BOOT_DIR=\"${JDK7_BOOT_DIR}\" && \
+     export SCM_REF=\"${SCM_REF}\" && \
+     export VARIANT=\"${VARIANT}\" && \
+     export PUBLISH_NAME=\"${PUBLISH_NAME}\" && \
+     export WORKSPACE=\$HOME/temurin-build && \
      export JAVA_HOME=/usr/lib/jvm/jdk8 && \
-     export RELEASE="$RELEASE" && \
-     export PATH="/usr/local/bin:$PATH" && java -version && \
+     export RELEASE=\"${RELEASE}\" && \
+     export PATH=\"/usr/local/bin:\$PATH\" && \ java -version && \
      ./make-adopt-build-farm.sh jdk8u"
 # /usr/local/bin needed at start of path to avoid picking up /usr/sfw/bin/ant
 # JAVA_HOME needed to avoid ant giving org/apache/tools/ant/launch/Launcher : Unsupported major.minor version 52.0
@@ -165,7 +165,7 @@ for FILE in OpenJDK*; do
     fi
 
     # Metadata filename: SBOM files get <name>-metadata.json (consistent with naming)
-    if [[ "$FILE" == *sbom.json ]]; then
+    if [[ "${FILE}" == *sbom.json ]]; then
         metadata_file="${FILE%.*}-metadata.json"
     else
         metadata_file="${FILE}.json"
