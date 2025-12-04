@@ -153,6 +153,12 @@ p="1"
 s="1"
 storeInArrays "${r}" "${m}" "${p}" "${s}"
 
+r="Failed.in.branch.(extended|sanity|special|dev).jck"
+m="JCK tests could not be triggered."
+p="1"
+s="1"
+storeInArrays "${r}" "${m}" "${p}" "${s}"
+
 r="Failed\sto\scopy\sartifacts"
 m="Artifacts could not be transferred between jobs. May require a jenkins restart if other causes are not apparent."
 p="1"
