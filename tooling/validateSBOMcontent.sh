@@ -31,6 +31,7 @@ COMPILER=$(jq '.components[0].properties[] | select(.name|test("Build Tools Summ
 SCM_REF=$( jq '.components[0].properties[]  | select(.name|test("SCM Ref"))  | .value'   "$SBOMFILE" | tr -d \")
 
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
+EXPECTED_FREETYPE=2.13.3 # Bundled version
 EXPECTED_GLIBC=""
 EXPECTED_GCC=""
 # [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
@@ -83,8 +84,6 @@ elif echo "$SBOMFILE" | grep _mac_; then
     EXPECTED_COMPILER="clang (clang/LLVM)"
   fi
 fi
-
-[ "${MAJORVERSION}" -ge 8 ] && EXPECTED_FREETYPE=2.13.3 # Bundled version
 
 RC=0
 
