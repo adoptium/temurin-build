@@ -45,7 +45,6 @@ then
   fi
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
-    export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
   fi
 else
   if [[ "$JAVA_FEATURE_VERSION" -ge 11 ]]; then
@@ -76,10 +75,6 @@ else
   fi
 fi
 
-if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
-  # jdk-21+ uses "bundled" FreeType
-  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
-fi
 
 # The configure option '--with-macosx-codesign-identity' is supported in JDK8 OpenJ9 and JDK11 and JDK14+
 if [[ ( "$JAVA_FEATURE_VERSION" -eq 11 ) || ( "$JAVA_FEATURE_VERSION" -ge 14 ) ]]
