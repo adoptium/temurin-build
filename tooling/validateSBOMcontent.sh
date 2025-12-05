@@ -31,14 +31,12 @@ COMPILER=$(jq '.components[0].properties[] | select(.name|test("Build Tools Summ
 SCM_REF=$( jq '.components[0].properties[]  | select(.name|test("SCM Ref"))  | .value'   "$SBOMFILE" | tr -d \")
 
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
+EXPECTED_FREETYPE=2.13.3 # Bundled version
 EXPECTED_GLIBC=""
 EXPECTED_GCC=""
 # [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
 EXPECTED_ALSA=""
-#EXPECTED_FREETYPE=N.A # https://github.com/adoptium/temurin-build/issues/3493
-#EXPECTED_FREETYPE=https://github.com/freetype/freetype/commit/86bc8a95056c97a810986434a3f268cbe67f2902
 if echo "$SBOMFILE" | grep _solaris_; then
-  EXPECTED_FREETYPE=2.4.9
   EXPECTED_COMPILER="solstudio (Oracle Solaris Studio)"
 elif echo "$SBOMFILE" | grep _aix_; then
   if [ "$MAJORVERSION" -le 21 ]; then
@@ -46,31 +44,22 @@ elif echo "$SBOMFILE" | grep _aix_; then
   else
     EXPECTED_COMPILER="clang (clang/LLVM)"
   fi
-  if [ "$MAJORVERSION" -lt 17 ]; then
-    EXPECTED_FREETYPE=2.8.0
-  else
-    EXPECTED_FREETYPE=2.13.3 # Bundled version
-  fi
 elif echo "$SBOMFILE" | grep _alpine-linux_ > /dev/null; then
-  EXPECTED_FREETYPE=2.11.1
   EXPECTED_ALSA=1.1.6
   EXPECTED_GCC=10.3.1
 elif echo "$SBOMFILE" | grep _linux_; then
   
   if [ "$MAJORVERSION" -lt 20 ] && echo "$SBOMFILE" | grep x64 > /dev/null; then # CentOS6
     EXPECTED_GLIBC=2.12
-    EXPECTED_FREETYPE=2.3.11
   elif echo "$SBOMFILE" | grep _arm_ > /dev/null; then # Ubuntu 16.04
     EXPECTED_GLIBC=2.23
-    EXPECTED_FREETYPE=2.6.1
   else # CentOS7
     EXPECTED_GLIBC=2.17
-    EXPECTED_FREETYPE=2.8.0
   fi
   [ "${MAJORVERSION}" = "8" ] && EXPECTED_GCC=7.5.0
   [ "${MAJORVERSION}" = "11" ] && EXPECTED_GCC=7.5.0
   [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
-  [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_GCC=11.3.0 && EXPECTED_FREETYPE=Unknown
+  [ "${MAJORVERSION}" -ge 20 ] && EXPECTED_GCC=11.3.0
   [ "${MAJORVERSION}" -ge 25 ] && EXPECTED_GCC=14.2.0
   EXPECTED_ALSA=1.1.8
   if echo "$SBOMFILE" | grep _aarch64_ > /dev/null; then
@@ -80,34 +69,21 @@ elif echo "$SBOMFILE" | grep _linux_; then
     EXPECTED_GCC=14.2.0
     EXPECTED_GLIBC=2.27 # Fedora 28
     EXPECTED_ALSA=1.1.1
-    [ "${MAJORVERSION}" -lt 20 ] && EXPECTED_FREETYPE=2.6.5
   fi
 #elif echo $SBOMFILE | grep _mac_; then
 #  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 10.3)"
 elif echo "$SBOMFILE" | grep 64_windows_; then
-  EXPECTED_FREETYPE=2.8.1
   EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
-  if [ "${MAJORVERSION}" = "11" ] || [ "${MAJORVERSION}" = "17" ]; then
-    EXPECTED_FREETYPE=2.13.3 # Bundled version
-  fi
 elif echo "$SBOMFILE" | grep _x86-32_windows_; then
-  EXPECTED_FREETYPE=2.13.3 # Bundled version
   EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
-  if [ "${MAJORVERSION}" = "8"  ]; then
-    EXPECTED_FREETYPE=2.5.3
-  fi
 elif echo "$SBOMFILE" | grep _mac_; then
   # NOTE: mac/x64 native builds >=11 were using "clang (clang/LLVM from Xcode 10.3)"
-  EXPECTED_FREETYPE=2.13.3 # Bundled version
   EXPECTED_COMPILER="clang (clang/LLVM from Xcode 15.2)"
   # shellcheck disable=SC2166
   if [ "${MAJORVERSION}" = "8" ] && echo "$SBOMFILE" | grep _x64_; then
     EXPECTED_COMPILER="clang (clang/LLVM)"
-    EXPECTED_FREETYPE=2.9.1
   fi
 fi
-
-[ "${MAJORVERSION}" -ge 20 ] && EXPECTED_FREETYPE=2.13.3 # Bundled version
 
 RC=0
 
