@@ -115,17 +115,20 @@ disable the default \fB--depth=1\fR shallow cloning of git repo(s).
 .TP
 .BR \-f ", " \-\-freetype-dir " " \fI<path>\fR
 specify the location of an existing FreeType library.
-This is typically used in conjunction with \fB<-F>\fR.
+Do not use with \fB<-F>\fR, as it would invalidate this switch.
+DEPRECATED: Only makes sense for JDKs without a bundled freetype
 .TP
 .BR \-\-freetype-build-param " " \fI<parameter>\fR
 specify any special freetype build parameters (required for some OS's).
+DEPRECATED: Only makes sense for JDKs without a bundled freetype
 .TP
 .BR \-\-freetype-version " " \fI<version>\fR
 specify the version of freetype you are building.
+DEPRECATED: Only makes sense for JDKs without a bundled freetype
 .TP
 .BR \-F ", " \-\-skip-freetype
-skip building Freetype automatically.
-This is typically used in conjunction with \fB<-f>\fR.
+set JDK to link against system freetype,
+instead of building the bundled version
 .TP
 .BR \-h ", " \-\-help
 print this help.
