@@ -40,6 +40,48 @@ FREETYPE_FONT_SHARED_OBJECT_FILENAME="libfreetype.so*"
 # sha256 of https://github.com/adoptium/devkit-binaries/releases/tag/vs2022_redist_14.40.33807_10.0.26100.1742
 WINDOWS_REDIST_CHECKSUM="ac6060f5f8a952f59faef20e53d124c2c267264109f3f6fabeb2b7aefb3e3c62"
 
+
+checkBundledFreetypeJdkConfig() {
+  if [ "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" = "bundled" ] ; then
+    if [ "${BUILD_CONFIG[FREETYPE]}" = "false" ] ; then
+      echo "--freetype-dir 'bundled' is in contradiction with -skip-freetype"
+      exit 1
+    fi
+    echo "--freetype-dir is set to 'bundled' which is unusual, but accepted. It should be default."
+  elif [ "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" = "system" ] ; then
+   echo "--freetype-dir is set to 'system' which is unusual, but accepted. Use --skip-freetype instead."
+  elif [ -n "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ] ; then
+    echo "--freetype-dir is not accepted for JDK with bundled freetype."
+    exit 1
+  fi
+}
+
+checkNoBundledFreetypeJdkConfig() {
+  if [ "${BUILD_CONFIG[FREETYPE]}" = "false" ] && [ -n "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ] ; then
+    echo "--freetype-dir is declared together with --skip-freetype, that is invalid, as JDK would build against system freetype anyway."
+    exit 1
+  fi
+}
+
+isFreeTypeInSources() {
+  local libfreetypeid="libfreetype/src"
+  local location="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  if [ ! -e "$location" ] ; then
+    echo "No jdk sources exists to to determine $libfreetypeid presence"
+    exit 1
+  fi
+  local found=0
+  find "$location" | grep  -q "$libfreetypeid" || found=$?
+  if [ $found -eq 0 ] ; then
+    echo "$libfreetypeid found in $location"
+    checkBundledFreetypeJdkConfig
+  else
+    echo "$libfreetypeid not found in $location"
+    checkNoBundledFreetypeJdkConfig
+  fi
+  return $found
+}
+
 copyFromDir() {
   echo "Copying OpenJDK source from  ${BUILD_CONFIG[OPENJDK_LOCAL_SOURCE_ARCHIVE_ABSPATH]} to $(pwd)/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]} to be built"
   # We really do not want to use .git for dirs, as we expect user have them set up, ignoring them
@@ -824,6 +866,8 @@ downloadBootJdkIfNeeded () {
 
 # Download all of the dependencies for OpenJDK (Alsa, FreeType, boot-jdk etc.)
 downloadingRequiredDependencies() {
+  local freeTypeInSources=0
+  isFreeTypeInSources || freeTypeInSources="$?"
   if [[ "${BUILD_CONFIG[CLEAN_LIBS]}" == "true" ]]; then
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" || true
     rm -rf "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa" || true
@@ -850,19 +894,18 @@ downloadingRequiredDependencies() {
   fi
 
   if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
-    case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
-      jdk8* | jdk9* | jdk10*)
-        if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
-          echo "Checking and download FreeType Font dependency"
-          checkingAndDownloadingFreeType
-        else
-          echo ""
-          echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
-          echo ""
-        fi
-      ;;
-      *) echo "Using bundled Freetype" ;;
-    esac
+    if [ "0${freeTypeInSources}" -ne 0 ]  ; then
+      if [ -z "${BUILD_CONFIG[FREETYPE_DIRECTORY]}" ]; then
+        echo "Checking and downloading FreeType Font dependency"
+        checkingAndDownloadingFreeType
+      else
+        echo ""
+        echo "---> Skipping the process of checking and downloading the FreeType Font dependency, a pre-built version is provided at ${BUILD_CONFIG[FREETYPE_DIRECTORY]} <---"
+        echo ""
+      fi
+    else
+      echo "Using bundled Freetype"
+    fi
   else
     echo "Skipping Freetype"
   fi
@@ -947,10 +990,10 @@ createSourceTagFile(){
 function configureWorkspace() {
   if [[ "${BUILD_CONFIG[ASSEMBLE_EXPLODED_IMAGE]}" != "true" ]]; then
     createWorkspace
+    checkoutAndCloneOpenJDKGitRepo
     downloadingRequiredDependencies
     downloadDevkit
     relocateToTmpIfNeeded
-    checkoutAndCloneOpenJDKGitRepo
     applyPatches
     if [ "${BUILD_CONFIG[CUSTOM_CACERTS]}" = "true" ] ; then
       prepareMozillaCacerts
