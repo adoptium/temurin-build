@@ -160,17 +160,20 @@ disable the default fB--depth=1 shallow cloning of git repo(s).
 
 -f, --freetype-dir
 specify the location of an existing FreeType library.
-This is typically used in conjunction with -F.
+Do not use with -F, as it would invalidate this switch.
+DEPRECATED: Only makes sense for JDKs without a bundled freetype
 
 --freetype-build-param <parameter>
 specify any special freetype build parameters (required for some Operating Systems).
+DEPRECATED: Only makes sense for JDKs without a bundled freetype
 
 --freetype-version <version>
 specify the version of freetype you are building.
+DEPRECATED: Only makes sense for JDKs without a bundled freetype
 
 -F, --skip-freetype
-skip building Freetype automatically.
-This is typically used in conjunction with -f.
+set JDK to link against system freetype,
+instead of building bundled version
 
 -h, --help
 print the man page.
