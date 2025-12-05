@@ -380,7 +380,7 @@
                   <arg value="--name"/>
                   <arg value="makejdk_any_platform_args"/>
                   <arg value="--value"/>
-                  <arg value="--clean-git-repo --jdk-boot-dir /usr/lib/jvm/jdk-16 --configure-args  --disable-warnings-as-errors --enable-ccache --enable-dtrace --target-file-name OpenJDK17-jdk_x64_linux_hotspot_17_35.tar.gz --release --clean-libs --tag jdk-17+35_adopt --skip-freetype --use-jep319-certs --create-debug-image --build-variant hotspot jdk17"/>
+                  <arg value="--clean-git-repo --jdk-boot-dir /usr/lib/jvm/jdk-16 --configure-args  --disable-warnings-as-errors --enable-ccache --enable-dtrace --target-file-name OpenJDK17-jdk_x64_linux_hotspot_17_35.tar.gz --release --clean-libs --tag jdk-17+35_adopt --use-jep319-certs --create-debug-image --build-variant hotspot jdk17"/>
                   <arg value="--jsonFile"/>
                   <arg value="${testSBOMFile}"/>
                 </java>
@@ -768,7 +768,7 @@
                   <arg value="--name"/>
                   <arg value="makejdk_any_platform_args"/>
                   <arg value="--value"/>
-                  <arg value="--clean-git-repo --jdk-boot-dir /usr/lib/jvm/jdk-16 --configure-args  --disable-warnings-as-errors --enable-ccache --enable-dtrace --target-file-name OpenJDK17-jdk_x64_linux_hotspot_17_35.tar.gz --release --clean-libs --tag jdk-17+35_adopt --skip-freetype --use-jep319-certs --create-debug-image --build-variant hotspot jdk17"/>
+                  <arg value="--clean-git-repo --jdk-boot-dir /usr/lib/jvm/jdk-16 --configure-args  --disable-warnings-as-errors --enable-ccache --enable-dtrace --target-file-name OpenJDK17-jdk_x64_linux_hotspot_17_35.tar.gz --release --clean-libs --tag jdk-17+35_adopt --use-jep319-certs --create-debug-image --build-variant hotspot jdk17"/>
                   <arg value="--xmlFile"/>
                   <arg value="${testSBOMFile_xml}"/>
                 </java>
