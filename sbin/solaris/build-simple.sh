@@ -157,24 +157,24 @@ scp -prP "${SSH_PORT}" $SSH_OPTS "${SSH_TARGET}:temurin-build/build-farm/workspa
 
 cd workspace/target || exit 1
 for FILE in OpenJDK*; do
-    echo Creating metadata for ${FILE}
-    # Skip checksum generation for SBOM files
-    if [[ "${FILE}" == *sbom.json ]]; then
-        echo "Skipping checksum generation for SBOM: $FILE"
-        sha256=""
-    else
-        sha256sum "${FILE}" > "${FILE}.sha256.txt"
-        sha256=$(cut -d' ' -f1 "${FILE}.sha256.txt")
-    fi
+    echo "Creating metadata for ${FILE}"
 
-    # Metadata filename: SBOM files get <name>-metadata.json (consistent with naming)
+    sha_file="${FILE}.sha256.txt"
+    sha256sum "${FILE}" > "${sha_file}"
+    sha256=$(cut -d' ' -f1 "${sha_file}")
+
+    # Remove checksum file for SBOM artifacts after capturing SHA256
     if [[ "${FILE}" == *sbom.json ]]; then
+        rm -f "${sha_file}"
         metadata_file="${FILE%.*}-metadata.json"
     else
         metadata_file="${FILE}.json"
     fi
-    createMetadataFile "$metadata_file" "${TARGET_ARCH}" "$SCM_REF" metadata/buildSource.txt metadata/version.txt "$sha256"
+
+    createMetadataFile "$metadata_file" "${TARGET_ARCH}" "$SCM_REF" \
+        metadata/buildSource.txt metadata/version.txt "$sha256"
 done
+
 # Simple test job uses filenames.txt to determine the correct filenames to pull down
 ls -1 > filenames.txt
 cd ../../..
