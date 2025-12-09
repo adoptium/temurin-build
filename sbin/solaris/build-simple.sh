@@ -156,20 +156,21 @@ cd workspace/target || exit 1
 for FILE in OpenJDK*; do
     echo Creating metadata for ${FILE}
 
-    # Skip checksum generation for SBOM files
-    if [[ "$FILE" == *sbom.json ]]; then
-        echo "Skipping checksum generation for SBOM: $FILE"
-        sha256=""
-    else
-        sha256sum "$FILE" > "$FILE.sha256.txt"
-        sha256=$(cut -d' ' -f1 "$FILE.sha256.txt")
+    # Generate checksum for all files, but do not leave sbom.sha256.txt behind
+    sha_file="${FILE}.sha256.txt"
+    sha256sum "${FILE}" > "${sha_file}"
+    sha256=$(cut -d' ' -f1 "${sha_file}")
+
+    # If SBOM, remove checksum file after capturing hash
+     if [[ "$FILE" =~ .*sbom.*\.json ]]; then
+        rm -f "${sha_file}"
     fi
 
-    # Metadata filename: SBOM files get <name>-metadata.json (consistent with naming)
-    if [[ "$FILE" == *sbom.json ]]; then
+    # Metadata filename: SBOM files get <name>-metadata.json
+     if [[ "$FILE" =~ .*sbom.*\.json ]]; then
         metadata_file="${FILE%.*}-metadata.json"
     else
-        metadata_file="$FILE.json"
+        metadata_file="${FILE}.json"
     fi
 
     createMetadataFile "$metadata_file" "${TARGET_ARCH}" "$SCM_REF" metadata/buildSource.txt metadata/version.txt "$sha256"
