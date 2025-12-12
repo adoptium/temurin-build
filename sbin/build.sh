@@ -1325,10 +1325,8 @@ addFreeTypeVersionInfo() {
 
    # Default to "system"
    local FREETYPE_TO_USE="system"
-   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
-       # For jdk-11+ get FreeType used from build spec.gmk, which can be "bundled" or "system"
-       FREETYPE_TO_USE="$(grep "^FREETYPE_TO_USE[ ]*:=" ${specFile} | sed "s/^FREETYPE_TO_USE[ ]*:=[ ]*//")"
-   fi
+   # Get FreeType used from build spec.gmk, which can be "bundled" or "system"
+   FREETYPE_TO_USE="$(grep "^FREETYPE_TO_USE[ ]*:=" ${specFile} | sed "s/^FREETYPE_TO_USE[ ]*:=[ ]*//")"
 
    echo "FREETYPE_TO_USE=${FREETYPE_TO_USE}"
 
@@ -1356,9 +1354,14 @@ addFreeTypeVersionInfo() {
           fi
       done
    elif [ "${FREETYPE_TO_USE}" == "bundled" ]; then
-      # jdk-11+ supports "bundled"
-      # freetype.h location for jdk-11+
-      local include="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/src/java.desktop/share/native/libfreetype/include/freetype/freetype.h"
+      local include
+      if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+          # freetype.h location for jdk-8
+          include="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/jdk/src/share/native/sun/awt/libfreetype/include/freetype/freetype.h"
+      else
+          # freetype.h location for jdk-11+
+          include="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/src/java.desktop/share/native/libfreetype/include/freetype/freetype.h"
+      fi
       echo "Checking for FreeType include ${include}"
       if [[ -f "${include}" ]]; then
           echo "Found ${include}"
