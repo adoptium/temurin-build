@@ -71,7 +71,7 @@ isFreeTypeInSources() {
     exit 1
   fi
   local found=0
-  find "$location" | grep  -q "$libfreetypeid" || found=$?
+  find "$location" | grep  "$libfreetypeid"  > /dev/null || found=$?
   if [ $found -eq 0 ] ; then
     echo "$libfreetypeid found in $location"
     checkBundledFreetypeJdkConfig
