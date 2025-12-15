@@ -115,20 +115,20 @@ if [ -z "${EXPECTED_SCM_REF}" ]; then
     echo "WARNING: curl check failed to validate the sha against this URL: $GITURL"
     echo "Double-checking against the github api."
     gitApiUrl="https://api.github.com/repos/$(echo "$GITURL" | cut -d/ -f4)"
-    gitApiUrl="${gitApiUrl}/$(echo $GITURL | cut -d/ -f5)/commits/${GITSHA}"
+    gitApiUrl="${gitApiUrl}/$(echo "$GITURL" | cut -d/ -f5)/commits/${GITSHA}"
     loopCounter=""
     while [ "${loopCounter}" != "III" ]; do
       loopCounter="${loopCounter}I"
-      if urlOutput="$(curl --silent --fail -I ${gitApiUrl})"; then
+      if urlOutput="$(curl --silent --fail -I "${gitApiUrl}")"; then
         # Success; valid commit found'.
         echo "SBOM SHA is a valid repository commit: ${gitApiUrl}"
         break
-      elif $( echo ${urlOutput} | grep 'HTTP/2 403' > /dev/null ); then
+      elif echo "${urlOutput}" | grep 'HTTP/2 403' > /dev/null; then
         # Too many calls to the github api in a short period. Pause, then try again.
         echo "Info: API rate limit exceeded for github api call. Pausing execution for 30 minutes. Iteration ${loopCounter}"
         sleep 1800
       else
-        if $( echo ${urlOutput} | grep 'HTTP/2 422' > /dev/null ); then
+        if echo "${urlOutput}" | grep 'HTTP/2 422' > /dev/null; then
           # Output explicitly indicates failure.
           echo "ERROR: git sha of source commit not found."
         else
@@ -150,7 +150,6 @@ if [ -z "${EXPECTED_SCM_REF}" ]; then
       echo "ERROR: API rate limit exceeded for github api, and remained 'exceeded' beyond the timeout."
       echo "gitApiUrl: ${gitApiUrl}"
       RC=1
-      break
     fi
   else
     echo "SBOM SHA is a valid repository commit: ${GITURL}"
