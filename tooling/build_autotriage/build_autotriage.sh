@@ -470,9 +470,15 @@ generateOutputFile() {
             preventable="no"
           fi
           jobTriageOutput+="Preventable: ${preventable}\n"
-          jobTriageOutput+="\`\`\`\n"
-          jobTriageOutput+="${arrayOfErrorLinesForFailedJobs[failedJobIndex]}\n"
-          jobTriageOutput+="\`\`\`\n"
+          # Do not show output for suspected test failures.
+          # Test jobs sometimes fail in groups, so we block the output
+          # to prevent the triager mistakenly assuming there is only
+          # one test failure.
+          if [[ ${arrayOfFailureSources[regexID]} -ne 1 ]]; then
+            jobTriageOutput+="\`\`\`\n"
+            jobTriageOutput+="${arrayOfErrorLinesForFailedJobs[failedJobIndex]}\n"
+            jobTriageOutput+="\`\`\`\n"
+          fi
         fi
         jobTriageOutput+="\n"
         if [[ ${arrayOfFailureSources[regexID]} -eq 1 ]]; then
