@@ -17,17 +17,19 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
-export BUILD_ARGS="${BUILD_ARGS} --make-args SHELL=/bin/bash"
+export BUILD_ARGS="${BUILD_ARGS} --skip-freetype --make-args SHELL=/bin/bash"
 
 if [ "${ARCHITECTURE}" == "x64" ]; then
   export CUPS="--with-cups=/opt/sfw/cups"
+  export FREETYPE="--with-freetype-include=/usr/sfw/include --with-freetype-lib=/usr/sfw/lib/amd64"
   export MEMORY=4000
 elif [ "${ARCHITECTURE}" == "sparcv9" ]; then
   export CUPS="--with-cups=/opt/csw/lib/ --with-cups-include=/usr/local/cups-1.5.4-src"
+  export FREETYPE="--with-freetype-include=/usr/sfw/include --with-freetype-lib=/usr/sfw/lib/sparcv9"
   export MEMORY=16000
 fi
 
-export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} ${CUPS} --with-memory-size=${MEMORY}"
+export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} ${CUPS} ${FREETYPE} --with-memory-size=${MEMORY}"
 # /usr/sfw/bin required for OpenSSL (build#2265)
 export PATH=/opt/solarisstudio12.3/bin/:/opt/csw/bin/:/usr/ccs/bin:$PATH:/usr/sfw/bin
 
