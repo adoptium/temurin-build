@@ -272,14 +272,14 @@ versionNumbersFileParser() {
   error=""
   if [ "$jdkVersion" -eq 8 ]; then
     # jdk8 uses this format: jdk8u482-b01
-    fileVersionString="jdk8u$(grep "JDK_UPDATE_VERSION" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
-   [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$  || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
+    fileVersionString="jdk8u$(awk -F= '/^JDK_UPDATE_VERSION/{print$2}' "${numbersFile}")" || error="true"
+    [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$  || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
   else
     # File parsing logic for jdk11+.
-    patchNo="$(grep "DEFAULT_VERSION_PATCH" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
-    updateNo="$(grep "DEFAULT_VERSION_UPDATE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
-    interimNo="$(grep "DEFAULT_VERSION_INTERIM" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
-    featureNo="$(grep "DEFAULT_VERSION_FEATURE" "${numbersFile}" | head -1 | grep -Eo '[0-9]+')" || error="true"
+    patchNo="$(  awk -F= '/^DEFAULT_VERSION_PATCH/  {print$2}' "${numbersFile}")" || error="true"
+    updateNo="$( awk -F= '/^DEFAULT_VERSION_UPDATE/ {print$2}' "${numbersFile}")" || error="true"
+    interimNo="$(awk -F= '/^DEFAULT_VERSION_INTERIM/{print$2}' "${numbersFile}")" || error="true"
+    featureNo="$(awk -F= '/^DEFAULT_VERSION_FEATURE/{print$2}' "${numbersFile}")" || error="true"
 
     [[ ! "${patchNo}" =~ ^0$ ]] && fileVersionString=".${patchNo}"
     [[ ! "${updateNo}.${fileVersionString}" =~ ^[0\.]+$ ]] && fileVersionString=".${updateNo}${fileVersionString}"
