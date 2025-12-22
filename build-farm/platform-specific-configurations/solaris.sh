@@ -19,6 +19,10 @@ source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype --make-args SHELL=/bin/bash"
 
+# FREETYPE options here are needed to override the default use of in-tree freetype
+# as we're getting build failures using the in-tree one due to it not finding libc
+# Ref: https://github.com/adoptium/temurin-build/pull/4345
+
 if [ "${ARCHITECTURE}" == "x64" ]; then
   export CUPS="--with-cups=/opt/sfw/cups"
   export FREETYPE="--with-freetype-include=/usr/sfw/include --with-freetype-lib=/usr/sfw/lib/amd64"
