@@ -273,7 +273,7 @@ versionNumbersFileParser() {
   if [ "$jdkVersion" -eq 8 ]; then
     # jdk8 uses this format: jdk8u482-b01
     fileVersionString="jdk8u$(awk -F= '/^JDK_UPDATE_VERSION/{print$2}' "${numbersFile}")" || error="true"
-    [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$  || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
+    [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$ || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
   else
     # File parsing logic for jdk11+.
     patchNo="$(  awk -F= '/^DEFAULT_VERSION_PATCH/  {print$2}' "${numbersFile}")" || error="true"
