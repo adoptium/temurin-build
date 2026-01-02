@@ -739,29 +739,37 @@ downloadLinuxDevkit() {
       fi
     fi
 
-    # Download from adoptium/devkit-runtimes if we have not found a matching one locally
+    # Download from adoptium/devkit-runtimes or user location if we have not found a matching one locally
     if [[ -z "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}" ]]; then
       local devkit_tar="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.tar.xz"
 
-      setupGpg
+      if [[ -z "${BUILD_CONFIG[USER_DEVKIT_LOCATION]}" ]]; then
+        setupGpg
 
-      # Determine DevKit tarball to download for this arch and release
-      local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
-      local devkit="devkit-${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}-${devkit_target}"
+        # Determine DevKit tarball to download for this arch and release
+        local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+        local devkit="devkit-${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}-${devkit_target}"
 
-      # Download tarball and GPG sig
-      echo "Downloading DevKit : ${devkitUrl}/${devkit}.tar.xz"
-      curl -L --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
-      curl -L --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
+        # Download tarball and GPG sig
+        echo "Downloading DevKit : ${devkitUrl}/${devkit}.tar.xz"
+        curl -L --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
+        curl -L --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
 
-      # GPG verify
-      gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
-      echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
-      gpg --verify "${devkit_tar}.sig" "${devkit_tar}" || exit 1
+        # GPG verify
+        gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
+        echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key 3B04D753C9050D9A5D343F39843C48A565F8F04B trust;
+        gpg --verify "${devkit_tar}.sig" "${devkit_tar}" || exit 1
 
+        rm "${devkit_tar}.sig"
+      else
+        # Download from user location
+        echo "Downloading User devkit from : ${BUILD_CONFIG[USER_DEVKIT_LOCATION]}"
+        curl -L --fail --silent --show-error -o "${devkit_tar}" "${BUILD_CONFIG[USER_DEVKIT_LOCATION]}"
+      fi
+
+      # Unpack
       tar xpJf "${devkit_tar}" -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
       rm "${devkit_tar}"
-      rm "${devkit_tar}.sig"
 
       # Validate devkit.info matches value passed in and current architecture
       local devkitInfo="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.info"
@@ -800,22 +808,28 @@ downloadWindowsDevkit() {
     if [[ -z "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}" ]]; then
       local devkit_zip="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit/devkit.zip"
 
-      # Determine DevKit zip to download for this release
-      local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
-      local devkit="${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}.zip"
+      if [[ -z "${BUILD_CONFIG[USER_DEVKIT_LOCATION]}" ]]; then
+        # Determine DevKit zip to download for this release
+        local devkitUrl="https://github.com/adoptium/devkit-binaries/releases/download/${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}"
+        local devkit="${BUILD_CONFIG[USE_ADOPTIUM_DEVKIT]}.zip"
 
-      # Download zip
-      echo "Downloading DevKit : ${devkitUrl}/${devkit}"
-      curl -L --fail --silent --show-error -o "${devkit_zip}" "${devkitUrl}/${devkit}"
+        # Download zip
+        echo "Downloading DevKit : ${devkitUrl}/${devkit}"
+        curl -L --fail --silent --show-error -o "${devkit_zip}" "${devkitUrl}/${devkit}"
 
-      # Verify checksum
-      local expectedChecksum="${WINDOWS_REDIST_CHECKSUM}"
-      local actualChecksum=$(sha256File "${devkit_zip}")
-      if [ "${actualChecksum}" != "${expectedChecksum}" ]; then
-        echo "Failed to verify checksum on ${devkit_zip}"
+        # Verify checksum
+        local expectedChecksum="${WINDOWS_REDIST_CHECKSUM}"
+        local actualChecksum=$(sha256File "${devkit_zip}")
+        if [ "${actualChecksum}" != "${expectedChecksum}" ]; then
+          echo "Failed to verify checksum on ${devkit_zip}"
 
-        echo "Expected ${expectedChecksum} got ${actualChecksum}"
-        exit 1
+          echo "Expected ${expectedChecksum} got ${actualChecksum}"
+          exit 1
+        fi
+      else
+        # Download from user location
+        echo "Downloading User devkit from : ${BUILD_CONFIG[USER_DEVKIT_LOCATION]}"
+        curl -L --fail --silent --show-error -o "${devkit_zip}" "${BUILD_CONFIG[USER_DEVKIT_LOCATION]}"
       fi
 
       unzip "${devkit_zip}" -d "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/devkit"
