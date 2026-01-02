@@ -30,7 +30,7 @@ if [ "$#" -lt 3 ]; then
   echo ""
   echo "3. REPORT_DIR - should be the FULL path OR a URL to the output directory for the comparison report"
   echo ""
-  echo "4. USER_DEVKIT_LOCATION - [Optional] URL location of user built Windows Redist DLL Devkit"
+  echo "4. USER_DEVKIT_LOCATION - [Optional] URL location of user built Windows Redist DLL DevKit"
   echo ""
   exit 1
 fi
