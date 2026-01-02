@@ -17,9 +17,10 @@
 
 set -e
 
-[ $# -lt 1 ] && echo "Usage: $0 SBOM_PARAM JDK_PARAM" && exit 1
+[ $# -lt 1 ] && echo "Usage: $0 SBOM_PARAM JDK_PARAM <USER_DEVKIT_LOCATION>" && exit 1
 SBOM_PARAM=$1
 JDK_PARAM=$2
+USER_DEVKIT_LOCATION=$3
 ANT_VERSION=1.10.5
 ANT_SHA=9028e2fc64491cca0f991acc09b06ee7fe644afe41d1d6caf72702ca25c4613c
 ANT_CONTRIB_VERSION=1.0b3
@@ -93,6 +94,8 @@ setTemurinBuildArgs() {
   local buildArgs="$1"
   local bootJdk="$2"
   local timeStamp="$3"
+  local using_DEVKIT="$4"
+  local userDevkitLocation="$5"
   local ignoreOptions=("--enable-sbom-strace ")
   for ignoreOption in "${ignoreOptions[@]}"; do
     buildArgs="${buildArgs/${ignoreOption}/}"
@@ -104,6 +107,11 @@ setTemurinBuildArgs() {
   #reset --jdk-boot-dir
   # shellcheck disable=SC2001
   buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir /usr/lib/jvm/jdk-${bootJdk}|")"
+
+  if [[ "${using_DEVKIT}" == "true" ]] && [[ -n "${userDevkitLocation}" ]]; then
+    buildArgs="${buildArgs} --user-devkit-location ${userDevkitLocation}"
+  fi
+
   echo "${buildArgs}"
 }
 
@@ -174,7 +182,7 @@ if [[ "${USING_DEVKIT}" == "false" ]]; then
 fi
 setAntEnvironment
 echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
-TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION" "$BUILDSTAMP")
+TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION")
 
 if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
     JDK_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
