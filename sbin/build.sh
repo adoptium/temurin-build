@@ -276,7 +276,8 @@ versionNumbersFileParser() {
     [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$ || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
   else
     # File parsing logic for jdk11+.
-    patchNo="$(  awk -F= '/^DEFAULT_VERSION_PATCH/  {print$2}' "${numbersFile}")" || error="true"
+    # We use awk as a POSIX std (to be consistent with platforms like Solaris)
+    patchNo="$(  awk -F= '/^DEFAULT_VERSION_PATCH/{print$2}' "${numbersFile}")" || error="true"
     updateNo="$( awk -F= '/^DEFAULT_VERSION_UPDATE/ {print$2}' "${numbersFile}")" || error="true"
     interimNo="$(awk -F= '/^DEFAULT_VERSION_INTERIM/{print$2}' "${numbersFile}")" || error="true"
     featureNo="$(awk -F= '/^DEFAULT_VERSION_FEATURE/{print$2}' "${numbersFile}")" || error="true"
