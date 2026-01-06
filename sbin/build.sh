@@ -1872,8 +1872,8 @@ ls -l
 ls symbols
       rm -rf "debug_symbols/${jdkTargetPath}" || true
       mkdir -p "debug_symbols/${jdkTargetPath}"
-      mv "symbols/*" "debug_symbols/${jdkTargetPath}"
-      rm -rf "symbols"
+      mv symbols/* "debug_symbols/${jdkTargetPath}"
+      rm -rf symbols
       symbolsLocation="debug_symbols"
     else
       symbolsLocation="${jdkTargetPath}"
