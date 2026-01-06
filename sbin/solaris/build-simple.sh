@@ -159,21 +159,21 @@ cd workspace/target || exit 1
 for FILE in OpenJDK*; do
     echo "Creating metadata for ${FILE}"
 
-    sha_file="${FILE}.sha256.txt"
-    sha256sum "${FILE}" > "${sha_file}"
-    sha256=$(cut -d' ' -f1 "${sha_file}")
-
-    # Remove checksum file for SBOM artifacts after capturing SHA256
-    if [[ "${FILE}" == *sbom.json ]]; then
-        rm -f "${sha_file}"
+    if [[ "${FILE}" == *-sbom_* ]]; then
+        echo "SBOM detected – removing upstream checksum if present"
+        rm -f "${FILE}.sha256.txt"
+        sha256=""
         metadata_file="${FILE%.*}-metadata.json"
     else
+        sha256sum "${FILE}" > "${FILE}.sha256.txt"
+        sha256=$(cut -d' ' -f1 "${FILE}.sha256.txt")
         metadata_file="${FILE}.json"
     fi
 
     createMetadataFile "$metadata_file" "${TARGET_ARCH}" "$SCM_REF" \
         metadata/buildSource.txt metadata/version.txt "$sha256"
 done
+
 
 # Simple test job uses filenames.txt to determine the correct filenames to pull down
 ls -1 > filenames.txt
