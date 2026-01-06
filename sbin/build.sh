@@ -1861,18 +1861,27 @@ cleanAndMoveArchiveFiles() {
   fi
 
   if [ ${BUILD_CONFIG[CREATE_DEBUG_IMAGE]} == true ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
+    local symbolsLocation
+    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 26 ]]; then
+      # jdk-26+ debug symbols are no longer within the JDK, see https://github.com/adoptium/temurin-build/issues/4351
+      # obtain from the "symbols" image instead
+      symbolsLocation="symbols"
+    else
+      symbolsLocation="${jdkTargetPath}"
+    fi
+
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
     *cygwin*)
       # on Windows, we want to take .pdb and .map files
-      debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.pdb" -o -name "*.map")
+      debugSymbols=$(find "${symbolsLocation}" -type f -name "*.pdb" -o -name "*.map")
       ;;
     darwin)
       # on MacOSX, we want to take the files within the .dSYM folders
-      debugSymbols=$(find "${jdkTargetPath}" -type d -name "*.dSYM" | xargs -I {} find "{}" -type f)
+      debugSymbols=$(find "${symbolsLocation}" -type d -name "*.dSYM" | xargs -I {} find "{}" -type f)
       ;;
     *)
       # on other platforms, we want to take .debuginfo files
-      debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.debuginfo")
+      debugSymbols=$(find "${symbolsLocation}" -type f -name "*.debuginfo")
       ;;
     esac
 
