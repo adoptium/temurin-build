@@ -1869,6 +1869,7 @@ cleanAndMoveArchiveFiles() {
       # Retain previous jdkPath sub-folder by moving symbols into sub-folder
       echo "moving symbols to symbols/${jdkTargetPath}"
 ls -l
+ls symbols
       rm -rf "debug_symbols/${jdkTargetPath}" || true
       mkdir -p "debug_symbols/${jdkTargetPath}"
       mv "symbols/*" "debug_symbols/${jdkTargetPath}"
