@@ -1891,6 +1891,9 @@ cleanAndMoveArchiveFiles() {
       if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 26 ]]; then
         mkdir -p "${debugImageTargetPath}/${jdkTargetPath}"
         echo "${debugSymbols}" | cpio -pdm "${debugImageTargetPath}/${jdkTargetPath}"
+        # Remove the symbols sub-folder to be compatible with earlier version format
+        mv ${debugImageTargetPath}/${jdkTargetPath}/symbols/* ${debugImageTargetPath}/${jdkTargetPath}
+        rm -rf ${debugImageTargetPath}/${jdkTargetPath}/symbols
       else
         mkdir -p "${debugImageTargetPath}"
         echo "${debugSymbols}" | cpio -pdm "${debugImageTargetPath}"
