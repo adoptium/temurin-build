@@ -1865,16 +1865,7 @@ cleanAndMoveArchiveFiles() {
     if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 26 ]]; then
       # jdk-26+ debug symbols are no longer within the JDK, see https://github.com/adoptium/temurin-build/issues/4351
       # obtain from the "symbols" image instead
-
-      # Retain previous jdkPath sub-folder by moving symbols into sub-folder
-      echo "moving symbols to symbols/${jdkTargetPath}"
-ls -l
-ls symbols
-      rm -rf "debug_symbols/${jdkTargetPath}" || true
-      mkdir -p "debug_symbols/${jdkTargetPath}"
-      mv symbols/* "debug_symbols/${jdkTargetPath}"
-      rm -rf symbols
-      symbolsLocation="debug_symbols"
+      symbolsLocation="symbols"
     else
       symbolsLocation="${jdkTargetPath}"
     fi
@@ -1897,8 +1888,13 @@ ls symbols
     # if debug symbols were found, copy them to a different folder
     if [ -n "${debugSymbols}" ]; then
       echo "Copying found debug symbols to ${debugImageTargetPath}"
-      mkdir -p "${debugImageTargetPath}"
-      echo "${debugSymbols}" | cpio -pdm "${debugImageTargetPath}"
+      if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 26 ]]; then
+        mkdir -p "${debugImageTargetPath}/${jdkTargetPath}"
+        echo "${debugSymbols}" | cpio -pdm "${debugImageTargetPath}/${jdkTargetPath}"
+      else
+        mkdir -p "${debugImageTargetPath}"
+        echo "${debugSymbols}" | cpio -pdm "${debugImageTargetPath}"
+      fi
     fi
 
     deleteDebugSymbols
