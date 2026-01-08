@@ -1873,15 +1873,15 @@ cleanAndMoveArchiveFiles() {
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
     *cygwin*)
       # on Windows, we want to take .pdb and .map files
-      debugSymbols=$(find "${symbolsLocation}" -type f -name "*.pdb" -o -name "*.map")
+      debugSymbols=$(find "${symbolsLocation}" -type f -name "*.pdb" -o -name "*.map" || true)
       ;;
     darwin)
       # on MacOSX, we want to take the files within the .dSYM folders
-      debugSymbols=$(find "${symbolsLocation}" -type d -name "*.dSYM" | xargs -I {} find "{}" -type f)
+      debugSymbols=$(find "${symbolsLocation}" -type d -name "*.dSYM" | xargs -I {} find "{}" -type f || true)
       ;;
     *)
       # on other platforms, we want to take .debuginfo files
-      debugSymbols=$(find "${symbolsLocation}" -type f -name "*.debuginfo")
+      debugSymbols=$(find "${symbolsLocation}" -type f -name "*.debuginfo" || true)
       ;;
     esac
 
