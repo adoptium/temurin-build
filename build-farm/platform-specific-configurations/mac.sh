@@ -32,6 +32,11 @@ if [[ "${MACHINEARCHITECTURE}" == "arm64" ]] && [[ "${ARCHITECTURE}" == "x64" ]]
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --openjdk-target=x86_64-apple-darwin"
 fi
 
+# JDK17 requires metal (included in full xcode) as does JDK11 on aarch64
+# JDK11 on x64 is matched for consistency
+# JDK8 uses the same Xcode as of 2026.
+XCODE_SWITCH_PATH="/Applications/Xcode.app"
+
 if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-toolchain-type=clang"
@@ -39,18 +44,12 @@ then
     # Cross compilation config needed only for jdk8
     export MAC_ROSETTA_PREFIX="arch -x86_64"
     export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
-    XCODE_SWITCH_PATH="/Applications/Xcode-11.7.app"
-  else
-    XCODE_SWITCH_PATH="/Applications/Xcode.app"
   fi
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
   fi
 else
   if [[ "$JAVA_FEATURE_VERSION" -ge 11 ]]; then
-    # JDK17 requires metal (included in full xcode) as does JDK11 on aarch64
-    # JDK11 on x64 is matched for consistency
-    XCODE_SWITCH_PATH="/Applications/Xcode.app"
     # JDK11 (x86 and aarch) has excessive warnings.
     # This is due to a harfbuzz fix which is pending backport.
     # Suppressing the warnings for now to aid triage.
@@ -76,7 +75,11 @@ else
 fi
 
 
-# The configure option '--with-macosx-codesign-identity' is supported in JDK8 OpenJ9 and JDK11 and JDK14+
+#if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
+#then
+#  export SDKNAME="${XCODE_SWITCH_PATH}/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk"
+#  # The configure option '--with-macosx-codesign-identity' is supported in JDK8 OpenJ9 and JDK11 and JDK14+
+#elif [[ ( "$JAVA_FEATURE_VERSION" -eq 11 ) || ( "$JAVA_FEATURE_VERSION" -ge 14 ) ]]
 if [[ ( "$JAVA_FEATURE_VERSION" -eq 11 ) || ( "$JAVA_FEATURE_VERSION" -ge 14 ) ]]
 then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/"
