@@ -1870,6 +1870,7 @@ cleanAndMoveArchiveFiles() {
       symbolsLocation="${jdkTargetPath}"
     fi
 
+    # Find debug symbols if they were built (ie.--with-native-debug-symbols=external)
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
     *cygwin*)
       # on Windows, we want to take .pdb and .map files
