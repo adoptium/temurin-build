@@ -34,6 +34,10 @@ installPrereqs() {
       # Replace mirrorlist to vault as centos7 reached EOL.
       sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Base.repo
       sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Base.repo
+    elif
+      # Replace mirrorlist to vault as centos8 reached EOL.
+      sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
+      sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
     fi
     yum install -y gcc gcc-c++ make autoconf unzip zip alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
     yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel epel-release # Not included above ...
