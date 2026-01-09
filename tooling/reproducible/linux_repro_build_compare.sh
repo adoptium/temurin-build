@@ -31,14 +31,23 @@ ScriptPath=$(dirname "$(realpath "$0")")
 installPrereqs() {
   if test -r /etc/redhat-release; then
     if grep -i release.7 /etc/redhat-release; then
+echo "REPLACE 7"
       # Replace mirrorlist to vault as centos7 reached EOL.
       sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Base.repo
       sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Base.repo
     elif grep -i release.8 /etc/redhat-release; then
       # Replace mirrorlist to vault as centos8 reached EOL.
+echo "REPLACE 8"
       sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
       sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
+
+
+mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=BaseOS&infra=$infra
+#baseurl=http://mirror.centos.org/$contentdir/$releasever/BaseOS/$basearch/os/
+
     fi
+echo "DONE"
+cat /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
     yum install -y gcc gcc-c++ make autoconf unzip zip alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
     yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel epel-release # Not included above ...
     yum install -y git bzip2 xz openssl pigz which jq # pigz/which not strictly needed but help in final compression
