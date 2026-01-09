@@ -30,6 +30,7 @@ ScriptPath=$(dirname "$(realpath "$0")")
 
 installPrereqs() {
   if test -r /etc/redhat-release; then
+   if grep -i release.7 /etc/redhat-release; then
     # Replace mirrorlist to vault as centos7 reached EOL.
     sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Base.repo
     sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Base.repo
@@ -51,6 +52,7 @@ installPrereqs() {
         fi
       fi
     fi
+   fi
   fi
 }
 
