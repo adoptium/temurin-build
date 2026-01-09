@@ -34,7 +34,7 @@ installPrereqs() {
       # Replace mirrorlist to vault as centos7 reached EOL.
       sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Base.repo
       sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Base.repo
-    elif
+    elif grep -i release.8 /etc/redhat-release; then
       # Replace mirrorlist to vault as centos8 reached EOL.
       sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
       sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Linux-BaseOS.repo
