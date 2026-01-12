@@ -19,7 +19,8 @@
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test</testCaseName>
 		<command>docker container rm -f reproducibleCompare; \
-        rm -rf $(TEST_RESROOT)/repro_tmp && mkdir -p $(TEST_RESROOT)/repro_tmp \
+	rm -rf "$(TEST_RESROOT)/repro_tmp"; \
+	mkdir -p "$(TEST_RESROOT)/repro_tmp"; \
 	docker run --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv6.conf.default.disable_ipv6=0 -v "$(TEST_RESROOT):/home/jenkins/test" -w "/home/jenkins/test/repro_tmp" -v "$(TEST_JDK_HOME):/home/jenkins/jdkbinary/" --name reproducibleCompare centos:8 /bin/bash /home/jenkins/test/linux_repro_build_compare.sh $(SBOM_FILE) /home/jenkins/jdkbinary; \
 	$(TEST_STATUS); \
 	docker cp reproducibleCompare:/home/jenkins/reprotest.diff ./; \
