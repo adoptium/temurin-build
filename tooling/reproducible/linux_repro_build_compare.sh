@@ -164,16 +164,9 @@ TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' 
 BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
 TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
 
-# Using old method to escape configure-args in SBOM (build PR 3835)", can be removed later.
-if echo "$TEMURIN_BUILD_ARGS" | grep -v configure-args\ \\\"; then
-  TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | \
-        cut -d\" -f4 | \
-        sed -e "s/--with-jobs=[0-9]*//g" \
-         -e "s/--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt/'--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt'/" \
-         -e "s/--disable-warnings-as-errors --enable-dtrace *--with-version-opt=ea/'--disable-warnings-as-errors --enable-dtrace --with-version-opt=ea'/" \
-         -e "s/ --disable-warnings-as-errors --enable-dtrace/ '--disable-warnings-as-errors --enable-dtrace'/" \
-         -e 's/\\n//g')
-fi
+TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g")
+
+echo "===> ${TEMURIN_BUILD_ARGS}"
 
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
@@ -198,7 +191,7 @@ fi
 sourceJDK="jdk-${TEMURIN_VERSION}"
 mkdir "${sourceJDK}"
 if [[ $JDK_PARAM =~ ^https?:// ]]; then
-  echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
+  echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" 
 elif [[ $JDK_PARAM =~ tar.gz ]]; then
   tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
 else
