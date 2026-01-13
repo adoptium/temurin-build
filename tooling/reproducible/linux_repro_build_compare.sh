@@ -134,9 +134,11 @@ downloadTooling() {
     fi
   fi
   if [ ! -r temurin-build ]; then
-    git clone https://github.com/adoptium/temurin-build || exit 1
+    # Shallow clone
+    git clone --depth 1 https://github.com/adoptium/temurin-build || exit 1
   fi
-  (cd temurin-build && git checkout "$TEMURIN_BUILD_SHA")
+  # Checkout required SHA only
+  (cd temurin-build && git fetch --depth 1 origin "$TEMURIN_BUILD_SHA" && git checkout "$TEMURIN_BUILD_SHA")
 }
 
 checkAllVariablesSet() {
