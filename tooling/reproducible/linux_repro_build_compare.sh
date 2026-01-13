@@ -40,9 +40,9 @@ installPrereqs() {
       sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Linux-*.repo
       yum install -y diffutils
     fi
-    yum install -y make autoconf unzip zip
-    yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel epel-release # Not included above ...
-    yum install -y git bzip2 xz openssl pigz which jq # pigz/which not strictly needed but help in final compression
+    yum install -y make autoconf unzip zip file systemtap-sdt-devel
+    #yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel epel-release # Not included above ...
+    yum install -y git bzip2 xz pigz openssl which jq # pigz/which not strictly needed but help in final compression
     if grep -i release.6 /etc/redhat-release; then
       if [ ! -r /usr/local/bin/autoconf ]; then
         curl --output ./autoconf-2.69.tar.gz https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
