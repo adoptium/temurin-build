@@ -198,10 +198,8 @@ else
   cp -R "${JDK_PARAM}"/* "${sourceJDK}"
 fi
 
-df -h temurin-build
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
-#echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh
-echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS" | sh
+echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh
 
 echo Comparing ...
 mkdir tarJDK
