@@ -60,6 +60,13 @@ installPrereqs() {
   fi
 }
 
+installNonDevKitPrereqs() {
+  if test -r /etc/redhat-release; then
+    yum install -y gcc gcc-c++ alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
+    yum install -y fontconfig fontconfig-devel epel-release
+  fi
+}
+
 # ant required for --create-sbom
 downloadAnt() {
   if [ ! -r "/usr/local/apache-ant-${ANT_VERSION}/bin/ant" ]; then
@@ -174,6 +181,8 @@ if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
 if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
 if [[ "$TEMURIN_BUILD_ARGS" =~ .*"--use-adoptium-devkit".* ]]; then
   USING_DEVKIT="true"
+else
+  installNonDevKitPrereqs
 fi
 
 checkAllVariablesSet
