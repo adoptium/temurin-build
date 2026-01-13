@@ -40,7 +40,7 @@ installPrereqs() {
       sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Linux-*.repo
       yum install -y diffutils
     fi
-    yum install -y gcc gcc-c++ make autoconf unzip zip alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
+    yum install -y make autoconf unzip zip
     yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel epel-release # Not included above ...
     yum install -y git bzip2 xz openssl pigz which jq # pigz/which not strictly needed but help in final compression
     if grep -i release.6 /etc/redhat-release; then
@@ -165,7 +165,7 @@ BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timesta
 TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
 
 # Remove any --with-jobs, let local user system determine
-TEMURIN_BUILD_ARGS="${TEMURIN_BUILD_ARGS//--with-jobs=*/}"
+TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g")
 
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
@@ -189,14 +189,14 @@ fi
 
 sourceJDK="jdk-${TEMURIN_VERSION}"
 mkdir "${sourceJDK}"
-#if [[ $JDK_PARAM =~ ^https?:// ]]; then
-#  echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" 
-#elif [[ $JDK_PARAM =~ tar.gz ]]; then
-#  tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
-#else
-#  # Local jdk dir
-#  cp -R "${JDK_PARAM}"/* "${sourceJDK}"
-#fi
+if [[ $JDK_PARAM =~ ^https?:// ]]; then
+  echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" 
+elif [[ $JDK_PARAM =~ tar.gz ]]; then
+  tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
+else
+  # Local jdk dir
+  cp -R "${JDK_PARAM}"/* "${sourceJDK}"
+fi
 
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
 echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh
