@@ -189,14 +189,14 @@ fi
 
 sourceJDK="jdk-${TEMURIN_VERSION}"
 mkdir "${sourceJDK}"
-if [[ $JDK_PARAM =~ ^https?:// ]]; then
-  echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" 
-elif [[ $JDK_PARAM =~ tar.gz ]]; then
-  tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
-else
-  # Local jdk dir
-  cp -R "${JDK_PARAM}"/* "${sourceJDK}"
-fi
+#if [[ $JDK_PARAM =~ ^https?:// ]]; then
+#  echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" 
+#elif [[ $JDK_PARAM =~ tar.gz ]]; then
+#  tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
+#else
+#  # Local jdk dir
+#  cp -R "${JDK_PARAM}"/* "${sourceJDK}"
+#fi
 
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
 echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh
