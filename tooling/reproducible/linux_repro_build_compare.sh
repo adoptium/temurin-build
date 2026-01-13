@@ -181,13 +181,12 @@ if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
 if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
 if [[ "$TEMURIN_BUILD_ARGS" =~ .*"--use-adoptium-devkit".* ]]; then
   USING_DEVKIT="true"
-else
-  installNonDevKitPrereqs
 fi
 
 checkAllVariablesSet
 downloadTooling "$USING_DEVKIT"
 if [[ "${USING_DEVKIT}" == "false" ]]; then
+  installNonDevKitPrereqs
   setNonDevkitGccEnvironment
 fi
 setAntEnvironment
