@@ -165,6 +165,7 @@ BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timesta
 TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
 
 # Remove any --with-jobs, let local user system determine
+# shellcheck disable=SC2001
 TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g")
 
 NATIVE_API_ARCH=$(uname -m)
