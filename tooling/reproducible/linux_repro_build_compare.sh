@@ -165,7 +165,7 @@ BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timesta
 TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
 
 # Remove any --with-jobs, let local user system determine
-TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g")
+TEMURIN_BUILD_ARGS="${TEMURIN_BUILD_ARGS//--with-jobs=*/}"
 
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
