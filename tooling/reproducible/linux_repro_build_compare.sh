@@ -145,6 +145,7 @@ downloadTooling() {
   fi
   # Checkout required SHA only
   (cd temurin-build && git fetch --depth 1 origin "$TEMURIN_BUILD_SHA" && git checkout "$TEMURIN_BUILD_SHA")
+  du -sh temurin-build
 }
 
 checkAllVariablesSet() {
