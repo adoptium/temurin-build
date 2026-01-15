@@ -327,7 +327,7 @@ Check_VS_Versions() {
   fi
 
   if [[ $visualStudioVersion =~ "2022" ]]; then
-    MSVS_SEARCH_PATH="$CW_VS_BASE_PATH64/2022"
+    MSVS_SEARCH_PATH="$CW_VS_BASE_PATH32/2022"
   elif [[ $visualStudioVersion =~ "2019" ]]; then
     MSVS_SEARCH_PATH=$CW_VS_BASE_PATH32/2019
   elif [[ $visualStudioVersion =~ "2017" ]]; then
