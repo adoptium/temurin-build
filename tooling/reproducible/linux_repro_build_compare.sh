@@ -138,16 +138,16 @@ downloadTooling() {
   if [ ! -r "/usr/lib/jvm/jdk-${BOOTJDK_VERSION}/bin/javac" ]; then
     local api_query="https://api.adoptium.net/v3/binary/version/jdk-${BOOTJDK_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
     echo "Trying to get BootJDK jdk-${BOOTJDK_VERSION} from ${api_query}"
-    if curl -L -o bootjdk.tar.gz "${api_query}"; then
+    if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
       echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
       local major_version=$(echo "${BOOTJDK_VERSION}" | cut -d'.' -f1)
       api_query="https://api.adoptium.net/v3/binary/latest/${major_version}/ga/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse"
       echo "Trying to get latest GA for version ${major_version} from ${api_query}"
-      if curl -L -o bootjdk.tar.gz "${api_query}"; then
+      if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
         echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
         api_query="https://api.adoptium.net/v3/binary/latest/${major_version}/ea/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/adoptium"
         echo "Trying to get latest EA for version ${major_version} from ${api_query}"
-        if curl -L -o bootjdk.tar.gz "${api_query}"; then
+        if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
           echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
           exit 2
         fi
