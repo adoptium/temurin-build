@@ -32,12 +32,16 @@ installPrereqs() {
   if test -r /etc/redhat-release; then
     if grep -i release.7 /etc/redhat-release; then
       # Replace mirrorlist to vault as centos7 reached EOL.
-      sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Base.repo
-      sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Base.repo
+      if [ -f /etc/yum.repos.d/CentOS-Base.repo ]; then
+        sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Base.repo
+        sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Base.repo
+      fi
     elif grep -i release.8 /etc/redhat-release; then
       # Replace mirrorlist to vault as centos8 reached EOL.
-      sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Linux-*.repo
-      sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Linux-*.repo
+      if ls /etc/yum.repos.d/CentOS-Linux-*.repo >/dev/null 2>&1; then
+        sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Linux-*.repo
+        sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Linux-*.repo
+      fi
       yum install -y diffutils
     fi
     yum install -y make autoconf unzip zip file systemtap-sdt-devel
