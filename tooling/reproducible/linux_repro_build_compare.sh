@@ -136,6 +136,7 @@ downloadTooling() {
   local using_DEVKIT=$1
 
   if [ ! -r "/usr/lib/jvm/jdk-${BOOTJDK_VERSION}/bin/javac" ]; then
+    set +e
     local api_query="https://api.adoptium.net/v3/binary/version/jdk-${BOOTJDK_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
     echo "Trying to get BootJDK jdk-${BOOTJDK_VERSION} from ${api_query}"
     if ! curl -L -o bootjdk.tar.gz "${api_query}"; then
@@ -153,6 +154,7 @@ downloadTooling() {
         fi
       fi
     fi
+    set -e
     mkdir -p /usr/lib/jvm && tar -xzf bootjdk.tar.gz -C /usr/lib/jvm
   fi
   if [[ "${using_DEVKIT}" == "false" ]]; then
