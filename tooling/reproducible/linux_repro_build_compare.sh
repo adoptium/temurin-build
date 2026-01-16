@@ -155,7 +155,7 @@ downloadTooling() {
       fi
     fi
     # Update BOOTJDK_VERSION with actual one downloaded
-    BOOTJDK_VERSION=$(tar -tf bootjdk.tar.gz | cut -d/ -f1 | head -n 1)
+    BOOTJDK_VERSION=$(tar -tf bootjdk.tar.gz | cut -d/ -f1 | head -n 1 | sed 's/^jdk-//')
     echo "Using downloaded BOOTJDK_VERSION=${BOOTJDK_VERSION}"
     mkdir -p /usr/lib/jvm && tar -xzf bootjdk.tar.gz -C /usr/lib/jvm
   fi
@@ -216,7 +216,6 @@ if [[ "${USING_DEVKIT}" == "false" ]]; then
 fi
 setAntEnvironment
 echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
-echo "BOOTJDK_VERSION=${BOOTJDK_VERSION}"
 TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION")
 
 if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
