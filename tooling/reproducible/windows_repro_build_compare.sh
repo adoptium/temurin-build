@@ -51,7 +51,7 @@ ANT_VERSION_REQUIRED="1.10.15"
 ANT_CONTRIB_VERSION="1.0b3"
 ANT_BASE_PATH="/cygdrive/c/apache-ant"
 CW_VS_BASE_DRV="c"
-CW_VS_BASE_PATH64="/cygdrive/$CW_VS_BASE_DRV/Program Files/Microsoft Visual Studio"
+#CW_VS_BASE_PATH64="/cygdrive/$CW_VS_BASE_DRV/Program Files/Microsoft Visual Studio"
 CW_VS_BASE_PATH32="/cygdrive/$CW_VS_BASE_DRV/Program Files (x86)/Microsoft Visual Studio"
 C_COMPILER_EXE="cl.exe"
 CPP_COMPILER_EXE="cl.exe"
@@ -327,7 +327,7 @@ Check_VS_Versions() {
   fi
 
   if [[ $visualStudioVersion =~ "2022" ]]; then
-    MSVS_SEARCH_PATH="$CW_VS_BASE_PATH64/2022"
+    MSVS_SEARCH_PATH="$CW_VS_BASE_PATH32/2022"
   elif [[ $visualStudioVersion =~ "2019" ]]; then
     MSVS_SEARCH_PATH=$CW_VS_BASE_PATH32/2019
   elif [[ $visualStudioVersion =~ "2017" ]]; then
