@@ -216,6 +216,7 @@ if [[ "${USING_DEVKIT}" == "false" ]]; then
 fi
 setAntEnvironment
 echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
+echo "BOOTJDK_VERSION=${BOOTJDK_VERSION}"
 TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION")
 
 if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
