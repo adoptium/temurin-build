@@ -44,7 +44,7 @@ installPrereqs() {
       fi
       yum install -y diffutils
     fi
-    yum install -y procps-ng binutils
+    yum install -y procps-ng binutils cpio
     yum install -y make autoconf unzip zip file systemtap-sdt-devel
     yum install -y git bzip2 xz openssl pigz which jq # pigz/which not strictly needed but help in final compression
     if grep -i release.6 /etc/redhat-release; then
