@@ -141,7 +141,8 @@ downloadTooling() {
     echo "Trying to get BootJDK jdk-${BOOTJDK_VERSION} from ${api_query}"
     if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
       echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
-      local major_version=$(echo "${BOOTJDK_VERSION}" | cut -d'.' -f1)
+      local major_version
+      major_version=$(echo "${BOOTJDK_VERSION}" | cut -d'.' -f1)
       api_query="https://api.adoptium.net/v3/binary/latest/${major_version}/ga/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse"
       echo "Trying to get latest GA for version ${major_version} from ${api_query}"
       if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
