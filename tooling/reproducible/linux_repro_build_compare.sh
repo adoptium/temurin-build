@@ -154,6 +154,9 @@ downloadTooling() {
         fi
       fi
     fi
+    # Update BOOTJDK_VERSION with actual one downloaded
+    BOOTJDK_VERSION=$(tar -tf bootjdk.tar.gz | cut -d/ -f1 | head -n 1)
+    echo "Using downloaded BOOTJDK_VERSION=${BOOTJDK_VERSION}"
     mkdir -p /usr/lib/jvm && tar -xzf bootjdk.tar.gz -C /usr/lib/jvm
   fi
   if [[ "${using_DEVKIT}" == "false" ]]; then
