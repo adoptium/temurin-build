@@ -235,7 +235,12 @@ else
 fi
 
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
-echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh
+if ! echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
+  # Echo build.log
+  cat temurin-build/build.log || true
+  echo "makejdk-any-platform.sh build failure, exiting"
+  exit 1
+fi
 
 # Echo build.log
 cat temurin-build/build.log
