@@ -1085,13 +1085,19 @@ generateSBoM() {
     local makejdk_args
     makejdk_args="$(< "${makejdk_args_file}")"
 
-    # If the original args already contain "--build-reproducible-date" with double quotes,
-    # normalise them to use single quotes in the recipe. We need this to happen because double
-    # quotation marks need escaping and end up as \" in the SBoM, which confuses bash when running the recipe.
+    # If there is one, replace the relative boot-jdk path with "download", since
+    # the bootjdk is probably in another directory or not even existent when running
+    # a reproducible build with this recipe.
+    # i.e. from --jdk-boot-dir <path> to --jdk-boot-dir download
+    makejdk_args="$(printf '%s\n' "${makejdk_args}" | sed -E 's/--jdk-boot-dir[[:space:]]+[^[:space:]]+/--jdk-boot-dir download/g')"
+
+    # Replace all <\"> and <"> with <'>.
+    # We need this to happen because double quotation marks need escaping
+    # and end up as \" in the SBoM, which bash confuses as a new line when
+    # running the recipe by copy pasting it in.
     # i.e. from --build-reproducible-date "<date>" to --build-reproducible-date '<date>'
-    if [[ "${makejdk_args}" == *"--build-reproducible-date"* ]]; then
-      makejdk_args="$(printf '%s\n' "${makejdk_args}" | sed -E "s/--build-reproducible-date \"([^\"]*)\"/--build-reproducible-date '\1'/")"
-    fi
+    # and from --configure-args \" <args> \" to --configure-args '<args>'
+    makejdk_args="$(printf '%s\n' "${makejdk_args}" | sed -E 's/\\?"/'\''/g')"
 
     # Git-Metadata i.e. buildSource.txt (Repo + Commit)
     local build_src_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
