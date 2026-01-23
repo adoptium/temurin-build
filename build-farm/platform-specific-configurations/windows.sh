@@ -68,7 +68,6 @@ then
     export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
-      export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
       # https://github.com/adoptium/temurin-build/issues/243
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="/c/cygwin64/bin:/usr/bin:$PATH"
@@ -85,7 +84,6 @@ then
   else
     if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
     then
-      export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
       export PATH="/cygdrive/c/openjdk/make-3.82/:$PATH"
     elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
     then 
@@ -112,19 +110,6 @@ then
     then
       export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
       export PATH="$PATH:/c/cygwin64/bin"
-      export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK9_VERSION}" ]
-    then
-      export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK10_VERSION}" ]
-    then
-      export BUILD_ARGS="${BUILD_ARGS} --freetype-version 2.5.3"
-    elif [ "$JAVA_FEATURE_VERSION" -lt 19 ]
-    then
-      export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
-    elif [ "$JAVA_FEATURE_VERSION" -ge 19 ]
-    then
-      export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
     fi
 
     CUDA_VERSION=9.1

@@ -17,14 +17,19 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # shellcheck source=sbin/common/constants.sh
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 
+# FREETYPE options here are needed to override the default use of in-tree freetype
+# as we're getting build failures using the in-tree one due to it not finding libc
+# Ref: https://github.com/adoptium/temurin-build/pull/4345
+
 export BUILD_ARGS="${BUILD_ARGS} --skip-freetype --make-args SHELL=/bin/bash"
 
 if [ "${ARCHITECTURE}" == "x64" ]; then
   export CUPS="--with-cups=/opt/sfw/cups"
+  export FREETYPE="--with-freetype-include=/usr/sfw/include --with-freetype-lib=/usr/sfw/lib/amd64"
   export MEMORY=4000
 elif [ "${ARCHITECTURE}" == "sparcv9" ]; then
   export CUPS="--with-cups=/opt/csw/lib/ --with-cups-include=/usr/local/cups-1.5.4-src"
-  export FREETYPE="--with-freetype=/usr/local/"
+  export FREETYPE="--with-freetype-include=/usr/sfw/include --with-freetype-lib=/usr/sfw/lib/sparcv9"
   export MEMORY=16000
 fi
 

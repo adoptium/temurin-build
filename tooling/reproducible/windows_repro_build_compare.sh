@@ -20,7 +20,7 @@ set -e
 
 # Check All 3 Params Are Supplied
 if [ "$#" -lt 3 ]; then
-  echo "Usage: $0 SBOM_URL/SBOM_PATH JDKZIP_URL/JDKZIP_PATH REPORT_DIR"
+  echo "Usage: $0 SBOM_URL/SBOM_PATH JDKZIP_URL/JDKZIP_PATH REPORT_DIR <USER_DEVKIT_LOCATION>"
   echo ""
   echo "1. SBOM_URL/SBOM_PATH - should be the FULL path OR a URL to a Temurin JDK SBOM JSON file in CycloneDX Format"
   echo "    eg. https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.2%2B13/OpenJDK21U-sbom_x64_windows_hotspot_21.0.2_13.json"
@@ -30,6 +30,8 @@ if [ "$#" -lt 3 ]; then
   echo ""
   echo "3. REPORT_DIR - should be the FULL path OR a URL to the output directory for the comparison report"
   echo ""
+  echo "4. USER_DEVKIT_LOCATION - [Optional] URL location of user built Windows Redist DLL DevKit"
+  echo ""
   exit 1
 fi
 
@@ -37,6 +39,7 @@ fi
 SBOM_URL="$1"
 TARBALL_URL="$2"
 REPORT_DIR="$3"
+USER_DEVKIT_LOCATION="$4"
 
 # Constants Required By This Script
 # These Values Should Be Updated To Reflect The Build Environment
@@ -564,6 +567,10 @@ Prepare_Env_For_Build() {
   # remove ingored options
   buildArgs=${buildArgs/--assemble-exploded-image /}
   buildArgs=${buildArgs/--enable-sbom-strace /}
+
+  if [[ "${buildArgs}" == *"--use-adoptium-devkit"* ]] && [[ -n "${USER_DEVKIT_LOCATION}" ]]; then
+    buildArgs="${buildArgs} --user-devkit-location ${USER_DEVKIT_LOCATION}"
+  fi
 
   echo ""
   echo "Make JDK Any Platform Argument List = "

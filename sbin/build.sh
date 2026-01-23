@@ -105,7 +105,7 @@ configureDevKitConfigureParameter() {
       addConfigureArg "--with-devkit=" "${BUILD_CONFIG[ADOPTIUM_DEVKIT_LOCATION]}"
     fi
   fi
-} 
+}
 
 # Configure the boot JDK
 configureBootJDKConfigureParameter() {
@@ -251,6 +251,99 @@ patchFreetypeWindows() {
       echo "No include/freetype/freetype.h found, Freetype source not version 2.8.1, no updated required."
     fi
   fi
+}
+
+# Returns the version numbers in version-numbers.conf as a space-seperated list of integers.
+# e.g. 17 0 1 5
+# or 8 0 0 432
+# Build number will not be included, as that is not stored in this file.
+versionNumbersFileParser() {
+  funcName="versionNumbersFileParser"
+  buildSrc="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+  jdkVersion="${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}"
+
+  # Find version-numbers.conf (or equivalent) and confirm we can read it.
+  numbersFile="${buildSrc}/common/autoconf/version-numbers"
+  [ "$jdkVersion" -eq 11 ] && numbersFile="${buildSrc}/make/autoconf/version-numbers"
+  [ "$jdkVersion" -ge 17 ] && numbersFile="${buildSrc}/make/conf/version-numbers.conf"
+  [ ! -r "${numbersFile}" ] && echo "ERROR: build.sh: ${funcName}: JDK version file not found: ${numbersFile}" >&2 && exit 1
+
+  fileVersionString=""
+  error=""
+  if [ "$jdkVersion" -eq 8 ]; then
+    # jdk8 uses this format: jdk8u482-b01
+    fileVersionString="jdk8u$(awk -F= '/^JDK_UPDATE_VERSION/{print$2}' "${numbersFile}")" || error="true"
+    [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$ || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
+  else
+    # File parsing logic for jdk11+.
+    # We use awk as a POSIX std (to be consistent with platforms like Solaris)
+    patchNo="$(  awk -F= '/^DEFAULT_VERSION_PATCH/{print$2}' "${numbersFile}")" || error="true"
+    updateNo="$( awk -F= '/^DEFAULT_VERSION_UPDATE/ {print$2}' "${numbersFile}")" || error="true"
+    interimNo="$(awk -F= '/^DEFAULT_VERSION_INTERIM/{print$2}' "${numbersFile}")" || error="true"
+    featureNo="$(awk -F= '/^DEFAULT_VERSION_FEATURE/{print$2}' "${numbersFile}")" || error="true"
+
+    [[ ! "${patchNo}" =~ ^0$ ]] && fileVersionString=".${patchNo}"
+    [[ ! "${updateNo}.${fileVersionString}" =~ ^[0\.]+$ ]] && fileVersionString=".${updateNo}${fileVersionString}"
+    [[ ! "${interimNo}.${fileVersionString}" =~ ^[0\.]+$ ]] && fileVersionString=".${interimNo}${fileVersionString}"
+    fileVersionString="jdk-${featureNo}${fileVersionString}"
+
+    [[ ! "${fileVersionString}" =~ ^jdk\-[0-9]+[0-9\.]*$ || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
+  fi
+
+  # Returning the formatted jdk version string.
+  echo "${fileVersionString}"
+}
+
+# This function attempts to compare the jdk version from version-numbers.conf with arg 1.
+# We will then return whichever version is bigger/later.
+# e.g. 17.0.1+32 > 17.0.0+64
+# If any errors or unusual circumstances are detected, we simply return arg1 to avoid destabilising the build.
+# Note: For error messages, use 'echo message >&2' to ensure the error isn't intercepted by the subshell.
+compareToOpenJDKFileVersion() {
+  funcName="compareToOpenJDKFileVersion"
+  # First, sanity checking on the arg.
+  if [ $# -eq 0 ]; then
+    echo "compareToOpenJDKFileVersion_was_called_with_no_args"
+    exit 1
+  elif [ $# -gt 1 ]; then
+    echo "ERROR: build.sh: ${funcName}: Too many arguments (>1) were passed to this function." >&2
+    echo "$1"
+    exit 1
+  fi
+
+  # Check if arg 1 looks like a jdk version string.
+  # Example: JDK11+: jdk-21.0.10+2
+  # Example: JDK8  : jdk8u482-b01
+  if [[ ! "$1" =~ ^jdk\-[0-9]+[0-9\.]*(\+[0-9]+)?$ ]]; then
+    if [[ ! "$1" =~ ^jdk8u[0-9]+(\-b[0-9][0-9]+)?$ ]]; then
+      echo "ERROR: build.sh: ${funcName}: The JDK version passed to this function did not match the expected format." >&2
+      echo "$1"
+      exit 1
+    fi
+  fi
+
+  # Retrieve the jdk version from version-numbers.conf (minus the build number).
+  if ! fileVersionString="$(versionNumbersFileParser)"; then
+    # This is to catch versionNumbersFileParser failures.
+    echo "ERROR: build.sh: ${funcName}: versionNumbersFileParser has failed." >&2
+    echo "$1"
+    exit 1
+  fi
+
+  if [[ "$1" =~ ^${fileVersionString}.*$ ]]; then
+    # The file version matches the function argument.
+    echo "$1"
+    return
+  fi
+
+  # The file version does not match the function argument.
+  # Returning the file version.
+  [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -eq 8 ] && fileVersionString+="-b00"
+  [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -gt 8 ] && fileVersionString+="+0"
+
+  echo "WARNING: build.sh: ${funcName}: JDK version in source does not match the supplied version (likely the latest git tag)." >&2
+  echo "WARNING: The JDK version in source will be used instead." >&2
+  echo "${fileVersionString}"
 }
 
 getOpenJdkVersion() {
@@ -548,22 +641,34 @@ configureAlsaLocation() {
   fi
 }
 
+setBundledFreeType() {
+  echo "Freetype set from bundled in jdk"
+  freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled}
+}
+
+setFreeTypeFromExternalSrcs() {
+  echo "Freetype set from local sources"
+  addConfigureArg "--with-freetype-src=" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype"
+}
+
+setFreeTypeFromInstalled() {
+  echo "Freetype set from installed binary"
+  freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-"${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype"}
+}
+
 configureFreetypeLocation() {
   if [[ ! "${CONFIGURE_ARGS}" =~ "--with-freetype" ]]; then
     if [[ "${BUILD_CONFIG[FREETYPE]}" == "true" ]]; then
       local freetypeDir="${BUILD_CONFIG[FREETYPE_DIRECTORY]}"
-      if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-        case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
-          jdk8* | jdk9* | jdk10*) addConfigureArg "--with-freetype-src=" "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/freetype" ;;
-          *) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled} ;;
-        esac
+      if isFreeTypeInSources ; then
+        setBundledFreeType
       else
-        case "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" in
-          jdk8* | jdk9* | jdk10*) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-"${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedfreetype"} ;;
-          *) freetypeDir=${BUILD_CONFIG[FREETYPE_DIRECTORY]:-bundled} ;;
-        esac
+        if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+          setFreeTypeFromExternalSrcs
+        else
+          setFreeTypeFromInstalled
+        fi
       fi
-
       if [[ -n "$freetypeDir" ]]; then
         echo "setting freetype dir to ${freetypeDir}"
         addConfigureArg "--with-freetype=" "${freetypeDir}"
@@ -774,7 +879,7 @@ createSourceArchive() {
   local sourceArchiveTargetPath="$(getSourceArchivePath)"
   local tmpSourceVCS="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/tmp-openjdk-git"
   local srcArchiveName
-  if echo ${BUILD_CONFIG[TARGET_FILE_NAME]} | grep -q x64_linux_hotspot -; then
+  if echo ${BUILD_CONFIG[TARGET_FILE_NAME]} | grep  x64_linux_hotspot -  > /dev/null; then
     # Transform 'OpenJDK11U-jdk_aarch64_linux_hotspot_11.0.12_7.tar.gz' to 'OpenJDK11U-sources_11.0.12_7.tar.gz'
     # shellcheck disable=SC2001
     srcArchiveName="$(echo "${BUILD_CONFIG[TARGET_FILE_NAME]}" | sed 's/_x64_linux_hotspot_/-sources_/g')"
@@ -784,7 +889,7 @@ createSourceArchive() {
 
   local oldPwd="${PWD}"
   echo "Source archive name is going to be: ${srcArchiveName}"
-  if ! echo "${srcArchiveName}" | grep -q '-sources' -; then
+  if ! echo "${srcArchiveName}" | grep '-sources' -  > /dev/null; then
      echo "Error: Unexpected source archive name! Expected '-sources' in name."
      echo "       Source archive name was: ${srcArchiveName}"
      exit 1
@@ -1328,10 +1433,8 @@ addFreeTypeVersionInfo() {
 
    # Default to "system"
    local FREETYPE_TO_USE="system"
-   if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" != "${JDK8_CORE_VERSION}" ]; then
-       # For jdk-11+ get FreeType used from build spec.gmk, which can be "bundled" or "system"
-       FREETYPE_TO_USE="$(grep "^FREETYPE_TO_USE[ ]*:=" ${specFile} | sed "s/^FREETYPE_TO_USE[ ]*:=[ ]*//")"
-   fi
+   # Get FreeType used from build spec.gmk, which can be "bundled" or "system"
+   FREETYPE_TO_USE="$(grep "^FREETYPE_TO_USE[ ]*:=" ${specFile} | sed "s/^FREETYPE_TO_USE[ ]*:=[ ]*//")"
 
    echo "FREETYPE_TO_USE=${FREETYPE_TO_USE}"
 
@@ -1359,9 +1462,14 @@ addFreeTypeVersionInfo() {
           fi
       done
    elif [ "${FREETYPE_TO_USE}" == "bundled" ]; then
-      # jdk-11+ supports "bundled"
-      # freetype.h location for jdk-11+
-      local include="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/src/java.desktop/share/native/libfreetype/include/freetype/freetype.h"
+      local include
+      if [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDK8_CORE_VERSION}" ]; then
+          # freetype.h location for jdk-8
+          include="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/jdk/src/share/native/sun/awt/libfreetype/include/freetype/freetype.h"
+      else
+          # freetype.h location for jdk-11+
+          include="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/src/java.desktop/share/native/libfreetype/include/freetype/freetype.h"
+      fi
       echo "Checking for FreeType include ${include}"
       if [[ -f "${include}" ]]; then
           echo "Found ${include}"
@@ -1861,26 +1969,44 @@ cleanAndMoveArchiveFiles() {
   fi
 
   if [ ${BUILD_CONFIG[CREATE_DEBUG_IMAGE]} == true ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
+    local symbolsLocation
+    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 26 ]]; then
+      # jdk-26+ debug symbols are no longer within the JDK, see https://github.com/adoptium/temurin-build/issues/4351
+      # obtain from the "symbols" image instead
+      symbolsLocation="symbols"
+    else
+      symbolsLocation="${jdkTargetPath}"
+    fi
+
+    # Find debug symbols if they were built (ie.--with-native-debug-symbols=external)
     case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
     *cygwin*)
       # on Windows, we want to take .pdb and .map files
-      debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.pdb" -o -name "*.map")
+      debugSymbols=$(find "${symbolsLocation}" -type f -name "*.pdb" -o -name "*.map" || true)
       ;;
     darwin)
       # on MacOSX, we want to take the files within the .dSYM folders
-      debugSymbols=$(find "${jdkTargetPath}" -type d -name "*.dSYM" | xargs -I {} find "{}" -type f)
+      debugSymbols=$(find "${symbolsLocation}" -type d -name "*.dSYM" | xargs -I {} find "{}" -type f || true)
       ;;
     *)
       # on other platforms, we want to take .debuginfo files
-      debugSymbols=$(find "${jdkTargetPath}" -type f -name "*.debuginfo")
+      debugSymbols=$(find "${symbolsLocation}" -type f -name "*.debuginfo" || true)
       ;;
     esac
 
     # if debug symbols were found, copy them to a different folder
     if [ -n "${debugSymbols}" ]; then
       echo "Copying found debug symbols to ${debugImageTargetPath}"
-      mkdir -p "${debugImageTargetPath}"
-      echo "${debugSymbols}" | cpio -pdm "${debugImageTargetPath}"
+      if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 26 ]]; then
+        mkdir -p "${debugImageTargetPath}/${jdkTargetPath}"
+        echo "${debugSymbols}" | cpio -pdm "${debugImageTargetPath}/${jdkTargetPath}"
+        # Remove the symbols sub-folder to be compatible with earlier version format
+        mv ${debugImageTargetPath}/${jdkTargetPath}/symbols/* ${debugImageTargetPath}/${jdkTargetPath}
+        rm -rf ${debugImageTargetPath}/${jdkTargetPath}/symbols
+      else
+        mkdir -p "${debugImageTargetPath}"
+        echo "${debugSymbols}" | cpio -pdm "${debugImageTargetPath}"
+      fi
     fi
 
     deleteDebugSymbols
@@ -2181,7 +2307,14 @@ getOpenJDKTag() {
     echo "${BUILD_CONFIG[BRANCH]}"
   else
     echo "  getOpenJDKTag(): Determining tag from checked out repository.." 1>&2
-    getFirstTagFromOpenJDKGitRepo
+    tagString=$(getFirstTagFromOpenJDKGitRepo)
+    # Now we check if the version in the code is later than the version we have so far.
+    # This prevents an issue where the git repo tags do not match the version string in the source.
+    # Without this code, we can create builds where half of the version strings do not match.
+    # This results in nonsensical -version output, incorrect folder names, and lots of failures
+    # relating to those two factors.
+    tagString=$(compareToOpenJDKFileVersion "$tagString")
+    echo "${tagString}"
   fi
 }
 

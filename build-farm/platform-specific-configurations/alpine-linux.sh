@@ -26,14 +26,6 @@ fi
 # ccache seems flaky on alpine
 export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
 
-if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
-  # jdk-21+ uses "bundled" FreeType
-  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
-else
-  # We don't bundle freetype on alpine anymore, and expect the user to have it.
-  export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
-fi
-
 ## This affects Alpine docker images and also evaluation pipelines
 if [ "$(pwd | wc -c)" -gt 83 ]; then
   # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
