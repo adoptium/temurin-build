@@ -1172,6 +1172,113 @@ generateSBoM() {
   # Add CycloneDX versions
   addCycloneDXVersions
 
+  # Generate the Workflow part containing the Build Recipe
+  addTemurinBuildRecipeToSBOM() {
+    local formulaName="formula_temurin_build_script_${fullVer}"
+    local workflowRef="workflow_temurin_build_script_${fullVer}"
+    local workflowUid="${workflowRef}"
+    local workflowName="temurin build script ${fullVer}"
+    local taskTypes="clone,build"
+
+    # Read makejdk-any-platform args
+    local makejdk_args_file="${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
+    if [[ ! -s "${makejdk_args_file}" ]]; then
+      echo "INFO: makejdk-any-platform args file '${makejdk_args_file}' missing or empty, skipping build recipe generation." 1>&2
+      return 0
+    fi
+
+    local makejdk_args
+    makejdk_args="$(< "${makejdk_args_file}")"
+
+    # If there is one, replace the relative boot-jdk path with "download", since
+    # the bootjdk is probably in another directory or not even existent when running
+    # a reproducible build with this recipe.
+    # i.e. from --jdk-boot-dir <path> to --jdk-boot-dir download
+    makejdk_args="$(printf '%s\n' "${makejdk_args}" | sed -E 's/--jdk-boot-dir[[:space:]]+[^[:space:]]+/--jdk-boot-dir download/g')"
+
+    # Replace all <\"> and <"> with <'>.
+    # We need this to happen because double quotation marks need escaping
+    # and end up as \" in the SBoM, which bash confuses as a new line when
+    # running the recipe by copy pasting it in.
+    # i.e. from --build-reproducible-date "<date>" to --build-reproducible-date '<date>'
+    # and from --configure-args \" <args> \" to --configure-args '<args>'
+    makejdk_args="$(printf '%s\n' "${makejdk_args}" | sed -E 's/\\?"/'\''/g')"
+
+    # Git-Metadata i.e. buildSource.txt (Repo + Commit)
+    local build_src_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
+    if [[ ! -s "${build_src_file}" ]]; then
+      echo "INFO: buildSource metadata file '${build_src_file}' missing or empty, skipping build recipe generation." 1>&2
+      return 0
+    fi
+
+    local build_src_url
+    build_src_url="$(< "${build_src_file}")"
+
+    # Get repo + commit-id from URL
+    local repo_path sha repo_name
+    repo_path="${build_src_url#https://github.com/}"
+    repo_path="${repo_path%%/commit/*}"
+    repo_name="${repo_path##*/}"
+    sha="${build_src_url##*/}"
+
+    local clone_url="https://github.com/${repo_path}.git"
+
+    # Build Timestamp
+    local buildStamp
+    buildStamp="${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]:-${BUILD_CONFIG[BUILD_TIMESTAMP]:-}}"
+
+    # Normalise buildStamp: remove any surrounding " or ' to add single quotation marks later
+    buildStamp="${buildStamp%\"}"
+    buildStamp="${buildStamp#\"}"
+    buildStamp="${buildStamp%\'}"
+    buildStamp="${buildStamp#\'}"
+
+    # Get DevKit-Tag
+    local metadata_build_args_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/BUILD_ARGS"
+    local devkit_tag=""
+    if [[ -s "${metadata_build_args_file}" ]]; then
+      local build_args
+      build_args="$(< "${metadata_build_args_file}")"
+      # Search for --use-adoptium-devkit in build args
+      if [[ "${build_args}" =~ --use-adoptium-devkit[[:space:]]+([^[:space:]]+) ]]; then
+        devkit_tag="${BASH_REMATCH[1]}"
+      fi
+    fi
+    
+    # Build makejdk-any-platform command:
+    # Base: bash ./makejdk-any-platform.sh
+    # Add --build-reproducible-date <buildStamp> only if not in args already
+    # Add -C --use-adoptium-devkit <devkit_tag> only if not in args already
+    # Then concatenate the rest
+    local makejdk_cmd="bash ./makejdk-any-platform.sh"
+
+    if [[ -n "${buildStamp}" && ${makejdk_args} != *"--build-reproducible-date"* ]]; then
+      makejdk_cmd+=" --build-reproducible-date '${buildStamp}'"
+    fi
+
+    if [[ -n "${devkit_tag}" && ${makejdk_args} != *"--use-adoptium-devkit"* ]]; then
+      makejdk_cmd+=" -C --use-adoptium-devkit ${devkit_tag}"
+    fi
+
+    makejdk_cmd+=" ${makejdk_args}"
+
+    # Workflow
+    addSBOMWorkflow "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "${workflowUid}" "${workflowName}" "${taskTypes}"
+
+    # Steps
+    addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "clone repo" "clone repository"
+    addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "cd into repository" "cd into temurin-build and checkout commit"
+    addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "makejdk" "execute makejdk-any-platform.sh"
+
+    # Commands
+    addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "clone repo" "git clone ${clone_url}"
+    addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "cd into repository" "cd ${repo_name}"
+    addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "cd into repository" "git checkout ${sha}"
+    addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "makejdk" "${makejdk_cmd}"
+  }
+
+  addTemurinBuildRecipeToSBOM
+
   # Add Build Docker image SHA1
   local buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
   # ${BUILD_CONFIG[CONTAINER_COMMAND]^} always set to false cannot rely on it.
