@@ -569,7 +569,7 @@ Prepare_Env_For_Build() {
   buildArgs=${buildArgs/--enable-sbom-strace /}
 
   if [[ "${buildArgs}" == *"--use-adoptium-devkit"* ]] && [[ -n "${USER_DEVKIT_LOCATION}" ]]; then
-    buildArgs="${buildArgs} --user-devkit-location ${USER_DEVKIT_LOCATION}"
+    buildArgs="--user-devkit-location ${USER_DEVKIT_LOCATION} ${buildArgs}"
   fi
 
   echo ""
@@ -584,7 +584,18 @@ Build_JDK() {
 
   # Trigger Build
   cd "$WORK_DIR"
-  echo "cd temurin-build && ./makejdk-any-platform.sh $buildArgs > build.log 2>&1" | sh
+
+  if ! echo "cd temurin-build && ./makejdk-any-platform.sh $buildArgs > build.log 2>&1" | sh; then
+    # Echo build.log
+    cat temurin-build/build.log || true
+    echo "makejdk-any-platform.sh build failure, exiting"
+    exit 1
+  fi
+
+  # Echo build.log
+  cat temurin-build/build.log
+
+
   # Copy The Built JDK To The Working Directory
   cp "${WORK_DIR}"/temurin-build/workspace/target/OpenJDK*-jdk_*.zip "$WORK_DIR/reproJDK.zip"
   cp "${WORK_DIR}"/temurin-build/build.log "$WORK_DIR/build.log"

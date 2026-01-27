@@ -127,7 +127,7 @@ setTemurinBuildArgs() {
   buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir /usr/lib/jvm/jdk-${bootJdk}|")"
 
   if [[ "${using_DEVKIT}" == "true" ]] && [[ -n "${userDevkitLocation}" ]]; then
-    buildArgs="${buildArgs} --user-devkit-location ${userDevkitLocation}"
+    buildArgs="--user-devkit-location ${userDevkitLocation} ${buildArgs}"
   fi
 
   echo "${buildArgs}"
@@ -235,7 +235,7 @@ else
 fi
 
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
-if ! echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
+if ! echo "cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
   # Echo build.log
   cat temurin-build/build.log || true
   echo "makejdk-any-platform.sh build failure, exiting"
