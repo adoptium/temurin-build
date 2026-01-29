@@ -127,8 +127,8 @@ if [ "$JAVA_FEATURE_VERSION" -le 21 ] && [ "$JAVA_FEATURE_VERSION" -ge 11 ]; the
   export CXX=xlclang++
 fi
 if [ "$JAVA_FEATURE_VERSION" -ge 22 ]; then
-  export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/openxlC/17.1.1/bin:$PATH
-  export EXTRA_PATH=/opt/IBM/openxlC/17.1.1/tools
+  export PATH=/opt/freeware/bin:$JAVA_HOME/bin:/usr/local/bin:/opt/IBM/openxlC/17/bin:$PATH
+  export EXTRA_PATH=/opt/IBM/openxlC/17/tools
   export TOOLCHAIN_TYPE="clang"
   export CC=ibm-clang_r
   export CXX=ibm-clang++_r
