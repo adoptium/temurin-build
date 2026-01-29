@@ -30,11 +30,22 @@ ScriptPath=$(dirname "$(realpath "$0")")
 
 installPrereqs() {
   if test -r /etc/redhat-release; then
-    # Replace mirrorlist to vault as centos7 reached EOL.
-    sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Base.repo
-    sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Base.repo
-    yum install -y gcc gcc-c++ make autoconf unzip zip alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
-    yum install -y file fontconfig fontconfig-devel systemtap-sdt-devel epel-release # Not included above ...
+    if grep -i release.7 /etc/redhat-release; then
+      # Replace mirrorlist to vault as centos7 reached EOL.
+      if [ -f /etc/yum.repos.d/CentOS-Base.repo ]; then
+        sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Base.repo
+        sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Base.repo
+      fi
+    elif grep -i release.8 /etc/redhat-release; then
+      # Replace mirrorlist to vault as centos8 reached EOL.
+      if ls /etc/yum.repos.d/CentOS-Linux-*.repo >/dev/null 2>&1; then
+        sed -i -e 's!mirrorlist!#mirrorlist!g' /etc/yum.repos.d/CentOS-Linux-*.repo
+        sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-Linux-*.repo
+      fi
+      yum install -y diffutils
+    fi
+    yum install -y procps-ng binutils cpio
+    yum install -y make autoconf unzip zip file systemtap-sdt-devel
     yum install -y git bzip2 xz openssl pigz which jq # pigz/which not strictly needed but help in final compression
     if grep -i release.6 /etc/redhat-release; then
       if [ ! -r /usr/local/bin/autoconf ]; then
@@ -51,6 +62,13 @@ installPrereqs() {
         fi
       fi
     fi
+  fi
+}
+
+installNonDevKitPrereqs() {
+  if test -r /etc/redhat-release; then
+    yum install -y gcc gcc-c++ alsa-lib-devel cups-devel libXtst-devel libXt-devel libXrender-devel libXrandr-devel libXi-devel
+    yum install -y fontconfig fontconfig-devel epel-release
   fi
 }
 
@@ -109,7 +127,7 @@ setTemurinBuildArgs() {
   buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir /usr/lib/jvm/jdk-${bootJdk}|")"
 
   if [[ "${using_DEVKIT}" == "true" ]] && [[ -n "${userDevkitLocation}" ]]; then
-    buildArgs="${buildArgs} --user-devkit-location ${userDevkitLocation}"
+    buildArgs="--user-devkit-location ${userDevkitLocation} ${buildArgs}"
   fi
 
   echo "${buildArgs}"
@@ -119,7 +137,28 @@ downloadTooling() {
   local using_DEVKIT=$1
 
   if [ ! -r "/usr/lib/jvm/jdk-${BOOTJDK_VERSION}/bin/javac" ]; then
-    echo "Retrieving boot JDK $BOOTJDK_VERSION" && mkdir -p /usr/lib/jvm && curl -L "https://api.adoptium.net/v3/binary/version/jdk-${BOOTJDK_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" | (cd /usr/lib/jvm && tar xpzf -)
+    local api_query="https://api.adoptium.net/v3/binary/version/jdk-${BOOTJDK_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
+    echo "Trying to get BootJDK jdk-${BOOTJDK_VERSION} from ${api_query}"
+    if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
+      echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
+      local major_version
+      major_version=$(echo "${BOOTJDK_VERSION}" | cut -d'.' -f1)
+      api_query="https://api.adoptium.net/v3/binary/latest/${major_version}/ga/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse"
+      echo "Trying to get latest GA for version ${major_version} from ${api_query}"
+      if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
+        echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
+        api_query="https://api.adoptium.net/v3/binary/latest/${major_version}/ea/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/adoptium"
+        echo "Trying to get latest EA for version ${major_version} from ${api_query}"
+        if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
+          echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
+          exit 2
+        fi
+      fi
+    fi
+    # Update BOOTJDK_VERSION with actual one downloaded
+    BOOTJDK_VERSION=$(tar -tf bootjdk.tar.gz | cut -d/ -f1 | head -n 1 | sed 's/^jdk-//')
+    echo "Using downloaded BOOTJDK_VERSION=${BOOTJDK_VERSION}"
+    mkdir -p /usr/lib/jvm && tar -xzf bootjdk.tar.gz -C /usr/lib/jvm
   fi
   if [[ "${using_DEVKIT}" == "false" ]]; then
     if [ ! -r "${LOCALGCCDIR}/bin/g++-${GCCVERSION}" ]; then
@@ -127,9 +166,11 @@ downloadTooling() {
     fi
   fi
   if [ ! -r temurin-build ]; then
-    git clone https://github.com/adoptium/temurin-build || exit 1
+    # Shallow clone
+    git clone --depth 1 https://github.com/adoptium/temurin-build || exit 1
   fi
-  (cd temurin-build && git checkout "$TEMURIN_BUILD_SHA")
+  # Checkout required SHA only
+  (cd temurin-build && git fetch --depth 1 origin "$TEMURIN_BUILD_SHA" && git checkout "$TEMURIN_BUILD_SHA")
 }
 
 checkAllVariablesSet() {
@@ -157,16 +198,9 @@ TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' 
 BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
 TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
 
-# Using old method to escape configure-args in SBOM (build PR 3835)", can be removed later.
-if echo "$TEMURIN_BUILD_ARGS" | grep -v configure-args\ \\\"; then
-  TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | \
-        cut -d\" -f4 | \
-        sed -e "s/--with-jobs=[0-9]*//g" \
-         -e "s/--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt/'--disable-warnings-as-errors --enable-dtrace --without-version-pre --without-version-opt'/" \
-         -e "s/--disable-warnings-as-errors --enable-dtrace *--with-version-opt=ea/'--disable-warnings-as-errors --enable-dtrace --with-version-opt=ea'/" \
-         -e "s/ --disable-warnings-as-errors --enable-dtrace/ '--disable-warnings-as-errors --enable-dtrace'/" \
-         -e 's/\\n//g')
-fi
+# Remove any --with-jobs, let local user system determine
+# shellcheck disable=SC2001
+TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g")
 
 NATIVE_API_ARCH=$(uname -m)
 if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
@@ -178,6 +212,7 @@ fi
 checkAllVariablesSet
 downloadTooling "$USING_DEVKIT"
 if [[ "${USING_DEVKIT}" == "false" ]]; then
+  installNonDevKitPrereqs
   setNonDevkitGccEnvironment
 fi
 setAntEnvironment
@@ -200,7 +235,15 @@ else
 fi
 
 echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
-echo " cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh
+if ! echo "cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
+  # Echo build.log
+  cat temurin-build/build.log || true
+  echo "makejdk-any-platform.sh build failure, exiting"
+  exit 1
+fi
+
+# Echo build.log
+cat temurin-build/build.log
 
 echo Comparing ...
 mkdir tarJDK
