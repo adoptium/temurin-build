@@ -1069,6 +1069,12 @@ generateSBoM() {
 
   # Generate the Workflow part containing the Build Recipe
   addTemurinBuildRecipeToSBOM() {
+
+    if [[ -z "${fullVer}" || -z "${sbomJson}" ]]; then
+      echo "WARNING: 'fullVer' or 'sbomJson' file missing, cannot generate build recipe."
+      return 0
+    fi
+
     local formulaName="formula_temurin_build_script_${fullVer}"
     local workflowRef="workflow_temurin_build_script_${fullVer}"
     local workflowUid="${workflowRef}"
@@ -1078,7 +1084,7 @@ generateSBoM() {
     # Read makejdk-any-platform args
     local makejdk_args_file="${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
     if [[ ! -s "${makejdk_args_file}" ]]; then
-      echo "INFO: makejdk-any-platform args file '${makejdk_args_file}' missing or empty, skipping build recipe generation." 1>&2
+      echo "WARNING: makejdk-any-platform args file '${makejdk_args_file}' missing or empty, skipping build recipe generation." 1>&2
       return 0
     fi
 
@@ -1102,21 +1108,21 @@ generateSBoM() {
     # Git-Metadata i.e. buildSource.txt (Repo + Commit)
     local build_src_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
     if [[ ! -s "${build_src_file}" ]]; then
-      echo "INFO: buildSource metadata file '${build_src_file}' missing or empty, skipping build recipe generation." 1>&2
+      echo "WARNING: buildSource metadata file '${build_src_file}' missing or empty, skipping build recipe generation." 1>&2
       return 0
     fi
 
     local build_src_url
     build_src_url="$(< "${build_src_file}")"
 
-    # Get repo + commit-id from URL
-    local repo_path sha repo_name
-    repo_path="${build_src_url#https://github.com/}"
-    repo_path="${repo_path%%/commit/*}"
-    repo_name="${repo_path##*/}"
-    sha="${build_src_url##*/}"
+    # Parse URL and account for different formats
+    local sha="${build_src_url##*/}"
+    local base_url="${build_src_url%%/commit/*}"
+    local repo_name="${base_url##*/}"
+    local removed_repo="${base_url%/*}"
+    local org_name="${removed_repo##*[/:]}"
 
-    local clone_url="https://github.com/${repo_path}.git"
+    local clone_url="https://github.com/${org_name}/${repo_name}.git"
 
     # Build Timestamp
     local buildStamp
