@@ -59,7 +59,6 @@ temurinPlatforms+=("mac-aarch64");          platformStart+=(11); platformEnd+=(9
 temurinPlatforms+=("mac-x64");              platformStart+=(8);  platformEnd+=(99)
 temurinPlatforms+=("windows-aarch64");      platformStart+=(21); platformEnd+=(99)
 temurinPlatforms+=("windows-x64");          platformStart+=(8);  platformEnd+=(99)
-temurinPlatforms+=("windows-x86-32");       platformStart+=(8);  platformEnd+=(17)
 
 # This stores any error messages that did not terminate the triage script altogether.
 errorLog() {
@@ -385,45 +384,6 @@ identifyFailedBuildsInTimerPipelines() {
         fi
       fi
     done
-    
-    # Finally, if this is jdk8, we handle the latest Solaris builds seperately because their URL is unique to them.
-    if [[ "${jdkJenkinsJobVersion}" == "jdk8u" ]]; then
-      # Solaris x64
-      solarisJobURL="https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-x64-temurin-simplepipe/lastCompletedBuild/"
-      solarisJobData=$(wget -q -O - "${solarisJobURL}api/xml")
-      if [[ "${solarisJobData}" =~ \<result\>[A-Z]+\<\/result\> ]]; then
-        solarisJobURL=$(wget -q -O - "${solarisJobURL}api/xml?xpath=/workflowRun/url")
-        solarisJobURL=${solarisJobURL:5:-7}
-        echo "Identified a Solaris x64 job. Checking status now. URL: ${solarisJobURL}"
-        if [[ ! "${solarisJobData}" =~ \<result\>(SUCCESS|UNSTABLE)\<\/result\> ]]; then
-          solarisJobURL=$(wget -q -O - "${solarisJobURL}api/xml?xpath=/workflowRun/url")
-          solarisJobURL=${solarisJobURL:5:-7}
-          echo "Identified a failed build for triage: ${solarisJobURL}"
-          arrayOfFailedJobs+=("${solarisJobURL}")
-        else
-          echo "Solaris x64 job did not fail."
-        fi
-      else
-        errorLog "Could not find a valid job for Solaris x64. URL: ${solarisJobURL}"
-      fi
-      
-      # Solaris sparcv9
-      solarisJobURL="https://ci.adoptium.net/job/build-scripts/job/jobs/job/jdk8u/job/jdk8u-solaris-sparcv9-temurin-simplepipe/lastCompletedBuild/"
-      solarisJobData=$(wget -q -O - "${solarisJobURL}api/xml")
-      if [[ "${solarisJobData}" =~ \<result\>[A-Z]+\<\/result\> ]]; then
-        solarisJobURL=$(wget -q -O - "${solarisJobURL}api/xml?xpath=/workflowRun/url")
-        solarisJobURL=${solarisJobURL:5:-7}
-        echo "Identified a Solaris sparcv9 job. Checking status now. URL: ${solarisJobURL}"
-        if [[ ! "${solarisJobData}" =~ \<result\>(SUCCESS|UNSTABLE)\<\/result\> ]]; then
-          echo "Identified a failed build for triage: ${solarisJobURL}"
-          arrayOfFailedJobs+=("${solarisJobURL}")
-        else
-          echo "Solaris sparcv9 job did not fail."
-        fi
-      else
-        errorLog "Could not find a valid job for Solaris sparcv9. URL: ${solarisJobURL}"
-      fi
-    fi
     echo "Build numbers found, and failures will be added to the array of builds to be triaged."
   done
 }
@@ -450,6 +410,9 @@ buildFailureTriager() {
       for regexIndex in "${!arrayOfRegexes[@]}"; do
         # When a regex matches, store the id of the regex we matched against, and also the line of output that matched the regex.
         if [[ "$jobOutputLine" =~ ${arrayOfRegexes[regexIndex]} ]]; then
+          # If regex matched a Test_Job_Auto_Gen failure; ignore it. 
+          # These are rerun when they fail, and rarely cause build job failure.
+          [[ "$jobOutputLine" =~ Test_Job_Auto_Gen.#[0-9]+.completed\:.FAILURE ]] && continue 2
           arrayOfRegexsForFailedJobs+=("$regexIndex")
           arrayOfErrorLinesForFailedJobs+=("$jobOutputLine")
           if [[ ${arrayOfFailureSources[regexIndex]} = 0 ]]; then
@@ -507,9 +470,15 @@ generateOutputFile() {
             preventable="no"
           fi
           jobTriageOutput+="Preventable: ${preventable}\n"
-          jobTriageOutput+="\`\`\`\n"
-          jobTriageOutput+="${arrayOfErrorLinesForFailedJobs[failedJobIndex]}\n"
-          jobTriageOutput+="\`\`\`\n"
+          # Do not show output for suspected test failures.
+          # Test jobs sometimes fail in groups, so we block the output
+          # to prevent the triager mistakenly assuming there is only
+          # one test failure.
+          if [[ ${arrayOfFailureSources[regexID]} -ne 1 ]]; then
+            jobTriageOutput+="\`\`\`\n"
+            jobTriageOutput+="${arrayOfErrorLinesForFailedJobs[failedJobIndex]}\n"
+            jobTriageOutput+="\`\`\`\n"
+          fi
         fi
         jobTriageOutput+="\n"
         if [[ ${arrayOfFailureSources[regexID]} -eq 1 ]]; then

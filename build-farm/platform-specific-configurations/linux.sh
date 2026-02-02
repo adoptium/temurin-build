@@ -18,14 +18,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/../../sbin/common/constants.sh"
 source "$SCRIPT_DIR/../../sbin/common/downloaders.sh"
 
-if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
-  # jdk-21+ uses "bundled" FreeType
-  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
-else
-  # Bundling our own freetype can cause problems, so we skip that on linux.
-  export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
-fi
-
 ## This affects Alpine docker images and also evaluation pipelines
 if [ "$(pwd | wc -c)" -gt 83 ]; then
   # Use /tmp for alpine in preference to $HOME as Alpine fails gpg operation if PWD > 83 characters
