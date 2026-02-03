@@ -60,7 +60,7 @@ if [ -z "$SBOM_URL" ] || [ -z "$TARBALL_URL" ] || [ -z "$REPORT_DIR" ]; then
   echo "    --jdk-url [JDKZIP_URL/JDKZIP_PATH] : should be the FULL path OR a URL to a Temurin Windows JDK Zip file"
   echo "    --report-dir [REPORT_DIR] : should be the FULL path OR a URL to the output directory for the comparison report"
   echo "  Optional:"
-  echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : URL location of user built Windows Redist DLL DevKit"
+  echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of user built Windows Redist DLL DevKit"
   echo "    --attestation-verify : Enables Attestation Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
   exit 1
 fi
