@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2001,SC2086
 # ********************************************************************************
 # Copyright (c) 2024 Contributors to the Eclipse Foundation
 #
@@ -620,7 +621,6 @@ Prepare_Env_For_OpenJDK_Build() {
   export BOOTJDK_HOME=$WORK_DIR/jdk-${bootJDK}
 
   # reset --jdk-boot-dir
-  # shellcheck disable=SC2001
   adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-boot-jdk=[^ ]*|--with-boot-jdk=${BOOTJDK_HOME}|")"
   adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-cacerts-src=[^ ]*||")"
 
@@ -655,13 +655,9 @@ Prepare_Env_For_Temurin_Build() {
     buildArgs="--build-reproducible-date \"${buildStamp}\" ${buildArgs}"
   fi
   # reset --jdk-boot-dir
-  # shellcheck disable=SC2001
   buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir ${BOOTJDK_HOME}|")"
-  # shellcheck disable=SC2001
   buildArgs="$(echo "$buildArgs" | sed -e "s|--with-toolchain-version [^ ]*|with-toolchain-version ${visualStudioVersion}|")"
-  # shellcheck disable=SC2001
   buildArgs="$(echo "$buildArgs" | sed -e "s|--with-ucrt-dll-dir=[^ ]*|--with-ucrt-dll-dir=temporary_speech_mark_placeholder${UCRT_PARAM_PATH}temporary_speech_mark_placeholder|")"
-  # shellcheck disable=SC2001
   buildArgs="$(echo "$buildArgs" | sed -e "s|--user-openjdk-build-root-directory [^ ]*|--user-openjdk-build-root-directory ${WORK_DIR}/temurin-build/workspace/build/openjdkbuild/|")"
   # remove ingored options
   buildArgs=${buildArgs/--assemble-exploded-image /}
