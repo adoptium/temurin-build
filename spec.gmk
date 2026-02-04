@@ -1,5 +1,0 @@
-dsfgdsfg
-dfgdfg
-CONFIGURE_COMMAND_LINE := --with-vendor-name='Eclipse Adoptium' --with-vendor-url=https://adoptium.net/ --with-vendor-bug-url=https://github.com/adoptium/adoptium-support/issues --with-vendor-vm-bug-url=https://github.com/adoptium/adoptium-support/issues --with-version-opt=LTS --without-version-pre --with-version-build=10 --with-vendor-version-string=Temurin-25.0.2+10 --with-boot-jdk=/cygdrive/c/comp-jdk-build/jdk-24.0.2+12 --with-ucrt-dll-dir=/cygdrive/c/comp-jdk-build/devkit/ucrt/DLLs/x64 --with-msvcr-dll=/cygdrive/c/comp-jdk-build/devkit/x64/vcruntime140.dll --with-vcruntime-1-dll=/cygdrive/c/comp-jdk-build/devkit/x64/vcruntime140_1.dll --with-msvcp-dll=/cygdrive/c/comp-jdk-build/devkit/x64/msvcp140.dll --enable-linkable-runtime --with-debug-level=release --with-native-debug-symbols=external --with-source-date=version --with-build-user=admin --with-jvm-variants=server --disable-warnings-as-errors --disable-ccache --with-toolchain-version=2022 --with-freetype=bundled --with-zlib=bundled
-dfgdfg
-
