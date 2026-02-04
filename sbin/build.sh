@@ -809,8 +809,7 @@ buildTemplatedFile() {
       specFile="build/*/spec.gmk"
     fi
     # For reproducible builds get openjdk timestamp used in the spec.gmk file
-    cat ${specFile}
-    CONFIGURE_ARGS=$(grep CONFIGURE_COMMAND_LINE ${specFile} | tr -s ' ' | cut -d' ' -f3-)
+    CONFIGURE_ARGS="$(grep "^CONFIGURE_COMMAND_LINE[ ]*:=" ${specFile} | sed "s/^CONFIGURE_COMMAND_LINE[ ]*:=[ ]*//")"
 
     echo "CONFIGURE_ARGS set to actual make exploded phase value used for the build: ${CONFIGURE_ARGS}"
   fi
