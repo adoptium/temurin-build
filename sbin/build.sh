@@ -802,6 +802,16 @@ buildTemplatedFile() {
   else
     FULL_CONFIGURE="echo \"Skipping configure because we're assembling an exploded image\""
     echo "Skipping configure because we're assembling an exploded image"
+
+    # Get the "actual" configure args used in making the exploded openjdk
+    local specFile="./spec.gmk"
+    if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+      specFile="build/*/spec.gmk"
+    fi
+    # For reproducible builds get openjdk timestamp used in the spec.gmk file
+    CONFIGURE_ARGS="$(grep "^CONFIGURE_COMMAND_LINE[ ]*:=" ${specFile} | sed "s/^CONFIGURE_COMMAND_LINE[ ]*:=[ ]*//")"
+
+    echo "CONFIGURE_ARGS set to actual make exploded phase value used for the build: ${CONFIGURE_ARGS}"
   fi
 
   # If it's Java 9+ then we also make test-image to build the native test libraries,
