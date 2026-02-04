@@ -197,6 +197,12 @@ Get_SBOM_Values() {
   buildVersion=$(echo "$sbomContent" | jq -r '.metadata.component.version')
   buildArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
 
+  if [[ "$buildVersion" != *"+"* ]]; then
+    echo "Temurin version '${buildVersion}' is not a complete tag with a build number, adding +0 default"
+    buildVersion="${buildVersion}+0"
+    echo "  buildVersion="${buildVersion}"
+  fi
+
   # Check if the tool was found
   if [ -n "$msvsWindowsCompiler" ]; then
       echo "MSVS Windows Compiler Version: $msvsWindowsCompiler"

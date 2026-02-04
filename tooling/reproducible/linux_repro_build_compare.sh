@@ -198,6 +198,12 @@ TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' 
 BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
 TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
 
+if [[ "$TEMURIN_VERSION" != *"+"* ]]; then
+  echo "Temurin version '${TEMURIN_VERSION}' is not a complete tag with a build number, adding +0 default"
+  TEMURIN_VERSION="${TEMURIN_VERSION}+0"
+  echo "  TEMURIN_VERSION="${TEMURIN_VERSION}"
+fi
+
 # Remove any --with-jobs, let local user system determine
 # shellcheck disable=SC2001
 TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g")
