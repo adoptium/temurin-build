@@ -201,7 +201,7 @@ TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "m
 if [[ "$TEMURIN_VERSION" != *"+"* ]]; then
   echo "Temurin version '${TEMURIN_VERSION}' is not a complete tag with a build number, adding +0 default"
   TEMURIN_VERSION="${TEMURIN_VERSION}+0"
-  echo "  TEMURIN_VERSION="${TEMURIN_VERSION}"
+  echo "  TEMURIN_VERSION=${TEMURIN_VERSION}"
 fi
 
 # Remove any --with-jobs, let local user system determine

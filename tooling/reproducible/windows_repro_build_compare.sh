@@ -200,7 +200,7 @@ Get_SBOM_Values() {
   if [[ "$buildVersion" != *"+"* ]]; then
     echo "Temurin version '${buildVersion}' is not a complete tag with a build number, adding +0 default"
     buildVersion="${buildVersion}+0"
-    echo "  buildVersion="${buildVersion}"
+    echo "  buildVersion=${buildVersion}"
   fi
 
   # Check if the tool was found
