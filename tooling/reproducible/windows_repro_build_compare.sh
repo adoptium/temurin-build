@@ -17,6 +17,8 @@
 # and then compares with the Temurin JDK for the same build version, or the optionally supplied TARBALL_URL.
 # Requires Cygwin & Powershell Installed On Windows To Run
 
+# Shellcheck SC2001 & SC2006 disable added as suggested anti-glob quoting does not work on Windows cygwin
+
 set -e
 
 # Read Parameters

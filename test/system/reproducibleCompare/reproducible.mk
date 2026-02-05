@@ -11,6 +11,8 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
+WINDOWS_ADOPTIUM_DEVKIT := https://github.com/adoptium/devkit-binaries/releases/download/vs2022_redist_14.40.33807_10.0.26100.1742/vs2022_redist_14.40.33807_10.0.26100.1742.zip
+
 ifndef SBOM_FILE
     SBOM_FILE := $(shell ls $(TEST_ROOT)/../jdkbinary/ | grep "sbom" | grep -v "metadata")
     ifeq ($(strip $(SBOM_FILE)),)
