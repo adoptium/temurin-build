@@ -21,6 +21,9 @@
 
 set -e
 
+# Adoptium's public GPG key used for GPG signatures
+ADOPTIUM_PUBLIC_GPG_KEY="0x3B04D753C9050D9A5D343F39843C48A565F8F04B"
+
 # Read Parameters
 SBOM_URL=""
 TARBALL_URL=""
@@ -593,10 +596,23 @@ Check_And_Install_BootJDK() {
     if [ $msvsArch = "x86" ] ; then NATIVE_API_ARCH="x86" ; fi
 
     echo "https://api.adoptium.net/v3/binary/version/jdk-${bootJDK}/windows/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
-    echo "Downloading & Extracting.. Boot JDK Version : $bootJDK"
+    echo "Downloading Boot JDK Version : $bootJDK"
     curl -s -L "https://api.adoptium.net/v3/binary/version/jdk-${bootJDK}/windows/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" --output "$WORK_DIR/bootjdk.zip"
+    echo "Downloading gpg signature.."
+    curl -s -L "https://api.adoptium.net/v3/signature/version/jdk-${bootJDK}/windows/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" --output "$WORK_DIR/bootjdk.zip.sig"
+
+    echo "Obtaining Adoptium's public GPG key.."
+    curl -sSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=${ADOPTIUM_PUBLIC_GPG_KEY}" --output "$WORK_DIR/adoptium.gpg.key"
+    gpg --import "$WORK_DIR/adoptium.gpg.key"
+    rm "$WORK_DIR/adoptium.gpg.key"
+    if ! gpg --verify "$WORK_DIR/bootjdk.zip.sig" "$WORK_DIR/bootjdk.zip"; then
+      echo "GPG Verify of $WORK_DIR/bootjdk.zip failed"
+      exit 1
+    fi
+
     unzip -q "$WORK_DIR/bootjdk.zip" -d "$WORK_DIR"
-    rm -rf "$WORK_DIR/bootjdk.zip"
+    rm "$WORK_DIR/bootjdk.zip"
+    rm "$WORK_DIR/bootjdk.zip.sig"
   fi
 }
 
