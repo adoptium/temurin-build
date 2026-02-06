@@ -196,7 +196,7 @@ setTemurinBuildArgs() {
   fi
   #reset --jdk-boot-dir
   # shellcheck disable=SC2001
-  buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir /usr/lib/jvm/jdk-${bootJdk}|")"
+  buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir ${BOOTJDK_HOME}|")"
 
   if [[ "${using_DEVKIT}" == "true" ]] && [[ -n "${userDevkitLocation}" ]]; then
     buildArgs="--user-devkit-location ${userDevkitLocation} ${buildArgs}"
