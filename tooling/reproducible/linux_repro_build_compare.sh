@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2001
 # ********************************************************************************
 # Copyright (c) 2024 Contributors to the Eclipse Foundation
 #
@@ -14,6 +15,8 @@
 
 # This script examines the given SBOM metadata file, and then builds the exact same binary
 # and then compares with the supplied TARBALL_PARAM.
+
+# Shellcheck SC2001 disable added as suggested anti-glob quoting does not work as required
 
 set -e
 
@@ -164,10 +167,10 @@ setOpenJDKConfigureArgs() {
   echo "Unpacking ${USER_DEVKIT_LOCATION} into $PWD/devkit"
   if is_url "${USER_DEVKIT_LOCATION}" ; then
     curl -L "${USER_DEVKIT_LOCATION}" --output "devkit.tar.gz"
-    tar -xzf devkit.tar.gz -C $PWD/devkit
+    tar -xzf devkit.tar.gz -C "$PWD/devkit"
     rm "devkit.tar.gz"
   else
-    tar -xzf "${USER_DEVKIT_LOCATION}" -C $PWD/devkit
+    tar -xzf "${USER_DEVKIT_LOCATION}" -C "$PWD/devkit"
   fi  
   adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-devkit=[^ ]*|--with-devkit=${PWD}/devkit|")"
       
@@ -244,7 +247,7 @@ downloadTooling() {
     fi
 
     echo "Using downloaded BOOTJDK_VERSION=${BOOTJDK_VERSION}"
-    mkdir -p $PWD/bootjdk && tar -xzf bootjdk.tar.gz -C $PWD/bootjdk
+    mkdir -p "$PWD/bootjdk" && tar -xzf bootjdk.tar.gz -C $PWD/bootjdk
     export PATH=$PWD/bootjdk/jdk-${BOOTJDK_VERSION}/bin:$PATH
     export BOOTJDK_HOME=$PWD/bootjdk/jdk-${BOOTJDK_VERSION}
     rm bootjdk.tar.gz
