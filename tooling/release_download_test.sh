@@ -410,7 +410,7 @@ verify_sboms() {
 
   # shellcheck disable=SC2010
   for sbom in $(ls -1 OpenJDK*-sbom*json | grep -v metadata); do
-    sh "${SCRIPT_DIR}/validateSBOM.sh" "${MAJOR_VERSION}" "${TAG}" "${sbom}"
+    sh "${SCRIPT_DIR}/validateSBOM.sh" "${MAJOR_VERSION}" "${TAG}" "${WORKSPACE}/staging/${TAG}/${sbom}"
   done
 }
 
