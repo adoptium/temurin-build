@@ -451,9 +451,9 @@ chmod +x "$PWD"/repro_*.sh
 rc=0
 set +e
 if [ "$ATTESTATION_VERIFY" == true ]; then
-  ./repro_compare.sh temurin "$sourceJDK" openjdk tarJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+  ./repro_compare.sh temurin "$sourceJDK" openjdk reproJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
 else
-  ./repro_compare.sh temurin "$sourceJDK" temurin tarJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+  ./repro_compare.sh temurin "$sourceJDK" temurin reproJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
 fi
 set -e
 
