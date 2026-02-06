@@ -17,16 +17,62 @@
 
 set -e
 
-[ $# -lt 1 ] && echo "Usage: $0 SBOM_PARAM JDK_PARAM <USER_DEVKIT_LOCATION>" && exit 1
-SBOM_PARAM=$1
-JDK_PARAM=$2
-USER_DEVKIT_LOCATION=$3
+# Adoptium's public GPG key used for GPG signatures
+ADOPTIUM_PUBLIC_GPG_KEY="0x3B04D753C9050D9A5D343F39843C48A565F8F04B"
+
 ANT_VERSION=1.10.5
 ANT_SHA=9028e2fc64491cca0f991acc09b06ee7fe644afe41d1d6caf72702ca25c4613c
 ANT_CONTRIB_VERSION=1.0b3
 ANT_CONTRIB_SHA=4d93e07ae6479049bb28071b069b7107322adaee5b70016674a0bffd4aac47f9
 USING_DEVKIT="false"
 ScriptPath=$(dirname "$(realpath "$0")")
+
+# Read Parameters
+SBOM_PARAM=""
+JDK_PARAM=""
+USER_DEVKIT_LOCATION=""
+ATTESTATION_VERIFY=false
+
+while [[ $# -gt 0 ]] ; do
+  opt="$1";
+  shift;
+
+  echo "Parsing opt: ${opt}"
+  case "$opt" in
+    "--sbom-url" )
+    SBOM_PARAM="$1"; shift;;
+
+    "--jdk-url" )
+    JDK_PARAM="$1"; shift;;
+
+    "--user-devkit-location" )
+    USER_DEVKIT_LOCATION="$1"; shift;;
+
+    "--attestation-verify" )
+    ATTESTATION_VERIFY=true;;
+
+    *) echo >&2 "Invalid option: ${opt}"; exit 1;;
+  esac
+done
+
+# Check All Required Params Are Supplied
+if [ -z "$SBOM_PARAM" ] || [ -z "$JDK_PARAM" ]; then
+  echo "Usage: linux_repro_build_compare.sh [Params]"
+  echo "Parameters:"
+  echo "  Required:"
+  echo "    --sbom-url [SBOM_URL/SBOM_PATH] : should be the FULL path OR a URL to a Temurin JDK SBOM JSON file in CycloneDX Format"
+  echo "    --jdk-url [JDKZIP_URL/JDKZIP_PATH] : should be the FULL path OR a URL to a Temurin Linux JDK tarball file"
+  echo "  Optional:"
+  echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of user built Linux gcc DevKit"
+  echo "    --attestation-verify : Enables Attestation Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
+  exit 1
+fi
+
+# For an Attestation verification build a local secure build of the devkit must be used
+if [ "$ATTESTATION_VERIFY" == true ] && [ -z "$USER_DEVKIT_LOCATION" ]; then
+  echo "--user-devkit-location [USER_DEVKIT_LOCATION] must be specified when using --attestation-verify"
+  exit 1
+fi
 
 installPrereqs() {
   if test -r /etc/redhat-release; then
@@ -108,6 +154,29 @@ setAntEnvironment() {
   export PATH="${LOCALGCCDIR}/bin:/usr/local/bin:/usr/bin:$PATH:/usr/local/apache-ant-${ANT_VERSION}/bin"
 }
 
+setOpenJDKConfigureArgs() {
+  # reset --jdk-boot-dir and remove --with-cacerts-src
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-boot-jdk=[^ ]*|--with-boot-jdk=${BOOTJDK_HOME}|")"
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-cacerts-src=[^ ]*||")"
+
+  # Extract user devkit
+  mkdir -p "devkit"
+  echo "Unpacking ${USER_DEVKIT_LOCATION} into $PWD/devkit"
+  if is_url "${USER_DEVKIT_LOCATION}" ; then
+    curl -L "${USER_DEVKIT_LOCATION}" --output "devkit.tar.gz"
+    tar -xzf devkit.tar.gz -C $PWD/devkit
+    rm "devkit.tar.gz"
+  else
+    tar -xzf "${USER_DEVKIT_LOCATION}" -C $PWD/devkit
+  fi  
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-devkit=[^ ]*|--with-devkit=${PWD}/devkit|")"
+      
+  echo ""
+  echo "OpenJDK Configure Argument List = "
+  echo "$adoptiumConfigureArgs"
+  echo ""
+}
+
 setTemurinBuildArgs() {
   local buildArgs="$1"
   local bootJdk="$2"
@@ -157,30 +226,172 @@ downloadTooling() {
     fi
     # Update BOOTJDK_VERSION with actual one downloaded
     BOOTJDK_VERSION=$(tar -tf bootjdk.tar.gz | cut -d/ -f1 | head -n 1 | sed 's/^jdk-//')
-    echo "Using downloaded BOOTJDK_VERSION=${BOOTJDK_VERSION}"
-    mkdir -p /usr/lib/jvm && tar -xzf bootjdk.tar.gz -C /usr/lib/jvm
-  fi
-  if [[ "${using_DEVKIT}" == "false" ]]; then
-    if [ ! -r "${LOCALGCCDIR}/bin/g++-${GCCVERSION}" ]; then
-      echo "Retrieving gcc $GCCVERSION" && curl "https://ci.adoptium.net/userContent/gcc/gcc$(echo "$GCCVERSION" | tr -d .).$(uname -m).tar.xz" | (cd /usr/local && tar xJpf -) || exit 1
+
+    echo "Downloading gpg signature for ${BOOTJDK_VERSION}.."
+    local sig_query="https://api.adoptium.net/v3/signature/version/jdk-${BOOTJDK_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
+    if ! curl --fail -L -o bootjdk.tar.gz.sig "${sig_query}"; then
+      echo "Unable to download BootJDK gpg signature for jdk-${BOOTJDK_VERSION} from ${sig_query}"
+      exit 2
     fi
+
+    echo "Obtaining Adoptium's public GPG key.."
+    curl -sSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=${ADOPTIUM_PUBLIC_GPG_KEY}" --output "adoptium.gpg.key"
+    gpg --import "adoptium.gpg.key"
+    rm "adoptium.gpg.key"
+    if ! gpg --verify "bootjdk.tar.gz.sig" "bootjdk.tar.gz"; then
+      echo "GPG Verify of bootjdk.tar.gz failed"
+      exit 1
+    fi
+
+    echo "Using downloaded BOOTJDK_VERSION=${BOOTJDK_VERSION}"
+    mkdir -p $PWD/bootjdk && tar -xzf bootjdk.tar.gz -C $PWD/bootjdk
+    export PATH=$PWD/bootjdk/jdk-${BOOTJDK_VERSION}/bin:$PATH
+    export BOOTJDK_HOME=$PWD/bootjdk/jdk-${BOOTJDK_VERSION}
+    rm bootjdk.tar.gz
+    rm bootjdk.tar.gz.sig
+  else
+    export BOOTJDK_HOME=/usr/lib/jvm/jdk-${BOOTJDK_VERSION}
   fi
-  if [ ! -r temurin-build ]; then
-    # Shallow clone
-    git clone --depth 1 https://github.com/adoptium/temurin-build || exit 1
+
+  if [ "$ATTESTATION_VERIFY" == false ]; then
+    if [[ "${using_DEVKIT}" == "false" ]]; then
+      if [ ! -r "${LOCALGCCDIR}/bin/g++-${GCCVERSION}" ]; then
+        echo "Retrieving gcc $GCCVERSION" && curl "https://ci.adoptium.net/userContent/gcc/gcc$(echo "$GCCVERSION" | tr -d .).$(uname -m).tar.xz" | (cd /usr/local && tar xJpf -) || exit 1
+      fi
+    fi
+    if [ ! -r temurin-build ]; then
+      # Shallow clone
+      git clone --depth 1 https://github.com/adoptium/temurin-build || exit 1
+    fi
+    # Checkout required SHA only
+    (cd temurin-build && git fetch --depth 1 origin "$TEMURIN_BUILD_SHA" && git checkout "$TEMURIN_BUILD_SHA")
   fi
-  # Checkout required SHA only
-  (cd temurin-build && git fetch --depth 1 origin "$TEMURIN_BUILD_SHA" && git checkout "$TEMURIN_BUILD_SHA")
 }
 
 checkAllVariablesSet() {
-  if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${TEMURIN_BUILD_SHA}" ] || [ -z "${TEMURIN_BUILD_ARGS}" ] || [ -z "${TEMURIN_VERSION}" ]; then
+  if [ "$ATTESTATION_VERIFY" == true ]; then
+    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${adoptiumConfigureArgs}" ] || [ -z "${TEMURIN_VERSION}" ] || [ -z "${buildScmRef}" ] || [ -z "${openjdkSourceRepo}" ] || [ -z "${openjdkSourceTag}" ]; then
       echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
+    fi
+  else
+    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${TEMURIN_BUILD_SHA}" ] || [ -z "${TEMURIN_BUILD_ARGS}" ] || [ -z "${TEMURIN_VERSION}" ]; then
+      echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
+    fi
   fi
 }
 
-installPrereqs
-downloadAnt
+getBuildParams() {
+  BOOTJDK_VERSION=$(jq -r '.metadata.tools.components[] | select(.name == "BOOTJDK") | .version' "$SBOM" | sed -e 's#-LTS$##')
+  GCCVERSION=$(jq -r '.metadata.tools.components[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
+  LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
+  TEMURIN_BUILD_SHA=$(jq -r '.components[0] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
+  TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
+  BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
+  TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
+
+  if [ "$ATTESTATION_VERIFY" == true ]; then
+    adoptiumSrcCommitUrl=$(jq -r '.components[0].properties[] | select(.name == "OpenJDK Source Commit") | .value' "$SBOM")
+    buildScmRef=$(jq -r '.components[0].properties[] | select(.name == "SCM Ref") | .value' "$SBOM")
+    adoptiumConfigureArgs=$(jq -r '.components[0].properties[] | select(.name == "configure_args") | .value' "$SBOM")
+
+    # Check if the adoptiumSrcCommitUrl, buildScmRef and configure_args were found
+    if [ -n "$adoptiumSrcCommitUrl" ] && [ -n "$buildScmRef" ] && [ -n "$adoptiumConfigureArgs" ]; then
+      adoptiumRepo="${adoptiumSrcCommitUrl%/commit/*}"
+      openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
+      openjdkSourceTag="${buildScmRef%_adopt}"
+
+      echo "Performing an Attestation Verification Build from $openjdkSourceRepo with tag $openjdkSourceTag"
+      echo "Adoptium OpenJDK configure argmuents from original Temurin build:"
+      echo "    $adoptiumConfigureArgs"
+      echo ""
+      export openjdkSourceRepo
+      export openjdkSourceTag
+      export adoptiumConfigureArgs
+    else
+      echo "ERROR: Adoptium OpenJDK Source Commit, SCM Ref and configure_args must be specified in the SBOM."
+      echo "These Are Mandatory Elements"
+      exit 1
+    fi
+  fi
+
+  # Remove any --with-jobs, let local user system determine
+  # shellcheck disable=SC2001
+  TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g")
+
+  NATIVE_API_ARCH=$(uname -m)
+  if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
+  if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
+  if [[ "$TEMURIN_BUILD_ARGS" =~ .*"--use-adoptium-devkit".* ]]; then
+    USING_DEVKIT="true"
+  elif [ "$ATTESTATION_VERIFY" == true ]; then
+    echo "The original JDK must be built using a DevKit when using --attestation-verify"
+    exit 1
+  fi
+}
+
+buildUsingTemurinBuild() {
+  echo "Building JDK using temurin-build scripts..."
+
+  echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
+  if ! echo "cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
+    # Echo build.log
+    cat temurin-build/build.log || true
+    echo "makejdk-any-platform.sh build failure, exiting"
+    exit 1
+  fi
+
+  # Echo build.log
+  cat temurin-build/build.log
+
+  mkdir reproJDK
+  tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C reproJDK
+  cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
+  cp "$SBOM" SBOM.json
+  cp temurin-build/build.log build.log
+}
+
+attestationBuildUsingOpenJDK() {
+  echo "Building JDK using OpenJDK configure and make..."
+
+  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo into openjdk"
+  git clone -q "$openjdkSourceRepo" "openjdk" || exit 1
+  echo "Switching To OpenJDK tag : $openjdkSourceTag"
+  (cd "openjdk" && git checkout -q "$openjdkSourceTag")
+
+  echo "Executing: bash ./configure $adoptiumConfigureArgs"
+  if ! echo "cd openjdk && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
+    cat openjdk/repro_configure.log || true
+    echo "OpenJDK configure failure, exiting"
+    exit 1
+  fi
+
+  cat openjdk/repro_configure.log
+
+  echo "Executing: make images"
+  if ! echo "cd openjdk/build/* && make images > ../../repro_build.log 2>&1" | sh; then
+    cat openjdk/repro_build.log || true
+    echo "OpenJDK make images failure, exiting"
+    exit 1
+  fi
+
+  cat openjdk/repro_build.log
+
+  mv openjdk/build/*/images/jdk openjdk/build/$openjdkSourceTag
+  (cd openjdk/build && tar -czf ../../reproJDK.tar.gz $openjdkSourceTag)
+  mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
+  cp  openjdk/repro_configure.log build.log
+  cat openjdk/repro_build.log  >> build.log
+  cp "$SBOM" SBOM.json
+}
+
+######################################
+############## MAIN ##################
+######################################
+
+if [ "$ATTESTATION_VERIFY" == false ]; then
+  installPrereqs
+  downloadAnt
+fi
 
 if [[ $SBOM_PARAM =~ ^https?:// ]]; then
   echo "Retrieving and parsing SBOM from $SBOM_PARAM"
@@ -190,37 +401,28 @@ else
   SBOM=$SBOM_PARAM
 fi
 
-BOOTJDK_VERSION=$(jq -r '.metadata.tools.components[] | select(.name == "BOOTJDK") | .version' "$SBOM" | sed -e 's#-LTS$##')
-GCCVERSION=$(jq -r '.metadata.tools.components[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
-LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
-TEMURIN_BUILD_SHA=$(jq -r '.components[0] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
-TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
-BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
-TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
-
-# Remove any --with-jobs, let local user system determine
-# shellcheck disable=SC2001
-TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g")
-
-NATIVE_API_ARCH=$(uname -m)
-if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
-if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
-if [[ "$TEMURIN_BUILD_ARGS" =~ .*"--use-adoptium-devkit".* ]]; then
-  USING_DEVKIT="true"
-fi
-
+getBuildParams
 checkAllVariablesSet
+
 downloadTooling "$USING_DEVKIT"
 if [[ "${USING_DEVKIT}" == "false" ]]; then
   installNonDevKitPrereqs
   setNonDevkitGccEnvironment
 fi
-setAntEnvironment
-echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
-TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION")
+
+if [ "$ATTESTATION_VERIFY" == false ]; then
+  setAntEnvironment
+fi
+
+if [ "$ATTESTATION_VERIFY" == true ]; then
+  setOpenJDKConfigureArgs
+else
+  echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
+  TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION")
+fi
 
 if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
-    JDK_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
+  JDK_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
 fi
 
 sourceJDK="jdk-${TEMURIN_VERSION}"
@@ -234,29 +436,22 @@ else
   cp -R "${JDK_PARAM}"/* "${sourceJDK}"
 fi
 
-echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
-if ! echo "cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
-  # Echo build.log
-  cat temurin-build/build.log || true
-  echo "makejdk-any-platform.sh build failure, exiting"
-  exit 1
+if [ "$ATTESTATION_VERIFY" == true ]; then
+  attestationBuildUsingOpenJDK  
+else
+  buildUsingTemurinBuild
 fi
 
-# Echo build.log
-cat temurin-build/build.log
-
 echo Comparing ...
-mkdir tarJDK
-tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C tarJDK
-cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
-cp "$SBOM" SBOM.json
-cp temurin-build/build.log build.log
-
 cp "$ScriptPath"/repro_*.sh "$PWD"
 chmod +x "$PWD"/repro_*.sh
 rc=0
 set +e
-./repro_compare.sh temurin "$sourceJDK" temurin tarJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+if [ "$ATTESTATION_VERIFY" == true ]; then
+  ./repro_compare.sh temurin "$sourceJDK" openjdk tarJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+else
+  ./repro_compare.sh temurin "$sourceJDK" temurin tarJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+fi
 set -e
 
 if [ $rc -eq 0 ]; then
