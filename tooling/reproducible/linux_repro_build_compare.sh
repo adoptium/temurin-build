@@ -247,7 +247,7 @@ downloadTooling() {
     fi
 
     echo "Using downloaded BOOTJDK_VERSION=${BOOTJDK_VERSION}"
-    mkdir -p "$PWD/bootjdk" && tar -xzf bootjdk.tar.gz -C $PWD/bootjdk
+    mkdir -p "$PWD/bootjdk" && tar -xzf bootjdk.tar.gz -C "$PWD/bootjdk"
     export PATH=$PWD/bootjdk/jdk-${BOOTJDK_VERSION}/bin:$PATH
     export BOOTJDK_HOME=$PWD/bootjdk/jdk-${BOOTJDK_VERSION}
     rm bootjdk.tar.gz
@@ -379,8 +379,8 @@ attestationBuildUsingOpenJDK() {
 
   cat openjdk/repro_build.log
 
-  mv openjdk/build/*/images/jdk openjdk/build/$openjdkSourceTag
-  (cd openjdk/build && tar -czf ../../reproJDK.tar.gz $openjdkSourceTag)
+  mv openjdk/build/*/images/jdk "openjdk/build/$openjdkSourceTag"
+  (cd openjdk/build && tar -czf ../../reproJDK.tar.gz "$openjdkSourceTag")
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
   cp  openjdk/repro_configure.log build.log
   cat openjdk/repro_build.log  >> build.log
