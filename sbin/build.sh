@@ -1183,7 +1183,7 @@ generateSBoM() {
     local formulaName="formula_temurin_build_script_${fullVer}"
     local workflowRef="workflow_temurin_build_script_${fullVer}"
     local workflowUid="${workflowRef}"
-    local workflowName="temurin build script ${fullVer}"
+    local workflowName="Temurin Build Script"
     local taskTypes="clone,build"
 
     # Read makejdk-any-platform args
