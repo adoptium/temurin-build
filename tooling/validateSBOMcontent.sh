@@ -89,7 +89,7 @@ RC=0
 
 # Skip SCM check if EXPECTED_SCM_REF parameter is empty
 if [ -n "${EXPECTED_SCM_REF}" ]; then
-  [ "${EXPECTED_SCM_REF}" != "${SCM_REF}" ] && echo "ERROR: SCM_REF not ${EXPECTED_SCM_REF} (SBOM has ${SCM_REF})" && RC=1
+  [ "${EXPECTED_SCM_REF}" != "${SCM_REF}" ] && echo "ERROR: SCM_REF not ${EXPECTED_SCM_REF} (SBOM has ${SCM_REF})" && RC=1 
 fi
 if echo "$SBOMFILE" | grep 'linux_'; then
 	[ "${GLIBC}"      != "$EXPECTED_GLIBC"   ] && echo "ERROR: GLIBC version not ${EXPECTED_GLIBC} (SBOM has ${GLIBC})" && RC=1
