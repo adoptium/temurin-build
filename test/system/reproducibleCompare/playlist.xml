@@ -18,14 +18,9 @@
 	<include>reproducible.mk</include>
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test</testCaseName>
-		<command>docker container rm -f reproducibleCompare; \
-	docker run --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv6.conf.default.disable_ipv6=0 -v "$(TEST_RESROOT):/home/jenkins/test" -w "/home/jenkins/" -v "$(TEST_JDK_HOME):/home/jenkins/jdkbinary/" --name reproducibleCompare registry.access.redhat.com/ubi8/ubi /bin/bash /home/jenkins/test/linux_repro_build_compare.sh --sbom-url $(SBOM_FILE) --jdk-url /home/jenkins/jdkbinary --user-devkit-location https://github.com/adoptium/devkit-binaries/releases/download/gcc-14.2.0-Centos7.9.2009-b01/devkit-gcc-14.2.0-Centos7.9.2009-b01-x86_64-linux-gnu.tar.xz --attestation-verify; \
-	$(TEST_STATUS); \
-	docker cp reproducibleCompare:/home/jenkins/reprotest.diff ./; \
-	docker cp reproducibleCompare:/home/jenkins/reproJDK.tar.gz ./; \
-	docker cp reproducibleCompare:/home/jenkins/SBOM.json ./; \
-	docker cp reproducibleCompare:/home/jenkins/build.log ./; \
-	docker container rm -f reproducibleCompare
+                <command>unset SPEC;\
+                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)linux_repro_build_compare.sh --sbom-url $(SBOM_FILE) --jdk-url $(JDK_FILE) --user-devkit-location https://github.com/adoptium/devkit-binaries/releases/download/gcc-14.2.0-Centos7.9.2009-b01/devkit-gcc-14.2.0-Centos7.9.2009-b01-x86_64-linux-gnu.tar.xz --attestation-verify; \
+        $(TEST_STATUS)
 		</command>
 		<levels>
 			<level>special</level>
