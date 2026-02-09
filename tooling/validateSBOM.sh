@@ -100,7 +100,7 @@ arg_parser() {
   fi
 
   # If SOURCE_TAG is not the expected full jdk8u aarch32 port date format, then skip expected source tag check
-  if [ -n "$SOURCE_TAG" ] && [ "$JDK_MAJOR_VERSION" -eq "8" ] && echo $SBOM_LOCATION | grep _arm_linux_; then
+  if [ -n "$SOURCE_TAG" ] && [ "$JDK_MAJOR_VERSION" -eq "8" ] && echo "$SBOM_LOCATION" | grep _arm_linux_; then
     if ! echo "$SOURCE_TAG" | grep -q 'aarch32\-[0-9]\{8\}'; then
       echo "jdk8u aarch32 linux source tag format will contain an arbitrary date, and the input source tag is a straight jdk8u tag: $SOURCE_TAG, skipping expected source tag check"
       SOURCE_TAG=""
