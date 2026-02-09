@@ -89,7 +89,12 @@ RC=0
 
 # Skip SCM check if EXPECTED_SCM_REF parameter is empty
 if [ -n "${EXPECTED_SCM_REF}" ]; then
-  [ "${EXPECTED_SCM_REF}" != "${SCM_REF}" ] && echo "ERROR: SCM_REF not ${EXPECTED_SCM_REF} (SBOM has ${SCM_REF})" && RC=1 
+  if [ "${MAJORVERSION}" = "8" ] && echo "$SBOMFILE" | grep arm_linux_; then
+    SCM_REF_REMOVE_AARCH32=$(echo "$SCM_REF" | sed 's/-aarch32-[0-9]\{8\}//g')
+    [ "${EXPECTED_SCM_REF}" != "${SCM_REF_REMOVE_AARCH32}" ] && echo "ERROR: SCM_REF not aarch32-YYYYMMDD format of ${EXPECTED_SCM_REF} (SBOM has ${SCM_REF})" && RC=1
+  else
+    [ "${EXPECTED_SCM_REF}" != "${SCM_REF}" ] && echo "ERROR: SCM_REF not ${EXPECTED_SCM_REF} (SBOM has ${SCM_REF})" && RC=1 
+  fi
 fi
 if echo "$SBOMFILE" | grep 'linux_'; then
 	[ "${GLIBC}"      != "$EXPECTED_GLIBC"   ] && echo "ERROR: GLIBC version not ${EXPECTED_GLIBC} (SBOM has ${GLIBC})" && RC=1
