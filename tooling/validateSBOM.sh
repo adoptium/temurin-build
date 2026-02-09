@@ -64,6 +64,10 @@ arg_parser() {
   SOURCE_TAG="$2"
   SBOM_LOCATION="$3"
 
+  echo "JDK_MAJOR_VERSION='$JDK_MAJOR_VERSION'"
+  echo "SOURCE_TAG='$SOURCE_TAG'"
+  echo "SBOM_LOCATION='$SBOM_LOCATION'"
+
   if ! echo "$JDK_MAJOR_VERSION" | grep -q "^[1-9][0-9]*\$"; then
     echo "ERROR: validateSBOM.sh: first argument must be a positive integer greater than 0."
     exit 1
