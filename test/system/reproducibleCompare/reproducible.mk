@@ -11,6 +11,30 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
+ifneq (,$(findstring $(JDK_VERSION),21))
+  # jdk-21 devkit
+  ifneq ($(filter linux_x86-64, $(SPEC)),)
+    LINUX_ADOPTIUM_DEVKIT := https://github.com/adoptium/devkit-binaries/releases/download/gcc-11.3.0-Centos7.9.2009-b04/devkit-gcc-11.3.0-Centos7.9.2009-b04-x86_64-linux-gnu.tar.xz
+  else ifneq ($(filter linux_aarch64, $(SPEC)),)
+    LINUX_ADOPTIUM_DEVKIT := https://github.com/adoptium/devkit-binaries/releases/download/gcc-11.3.0-Centos7.6.1810-b04/devkit-gcc-11.3.0-Centos7.6.1810-b04-aarch64-linux-gnu.tar.xz
+  else ifneq ($(filter linux_ppc-64_le, $(SPEC)),)
+    LINUX_ADOPTIUM_DEVKIT := https://github.com/adoptium/devkit-binaries/releases/download/gcc-11.3.0-Centos7.9.2009-b04/devkit-gcc-11.3.0-Centos7.9.2009-b04-ppc64le-linux-gnu.tar.xz
+  else ifneq ($(filter linux_390-64, $(SPEC)),)
+    LINUX_ADOPTIUM_DEVKIT := https://github.com/adoptium/devkit-binaries/releases/download/gcc-11.3.0-Centos7.9.2009-b04/devkit-gcc-11.3.0-Centos7.9.2009-b04-s390x-linux-gnu.tar.xz
+  endif
+else
+  # jdk-25+ devkit
+  ifneq ($(filter linux_x86-64, $(SPEC)),)
+    LINUX_ADOPTIUM_DEVKIT := https://github.com/adoptium/devkit-binaries/releases/download/gcc-14.2.0-Centos7.9.2009-b01/devkit-gcc-14.2.0-Centos7.9.2009-b01-x86_64-linux-gnu.tar.xz
+  else ifneq ($(filter linux_aarch64, $(SPEC)),)
+    LINUX_ADOPTIUM_DEVKIT := https://github.com/adoptium/devkit-binaries/releases/download/gcc-14.2.0-Centos7.6.1810-b01/devkit-gcc-14.2.0-Centos7.6.1810-b01-aarch64-linux-gnu.tar.xz
+  else ifneq ($(filter linux_ppc-64_le, $(SPEC)),)
+    LINUX_ADOPTIUM_DEVKIT := https://github.com/adoptium/devkit-binaries/releases/download/gcc-14.2.0-Centos7.9.2009-b01/devkit-gcc-14.2.0-Centos7.9.2009-b01-ppc64le-linux-gnu.tar.xz
+  else ifneq ($(filter linux_390-64, $(SPEC)),)
+    LINUX_ADOPTIUM_DEVKIT := https://github.com/adoptium/devkit-binaries/releases/download/gcc-14.2.0-Centos7.9.2009-b01/devkit-gcc-14.2.0-Centos7.9.2009-b01-s390x-linux-gnu.tar.xz
+  endif
+endif
+
 WINDOWS_ADOPTIUM_DEVKIT := https://github.com/adoptium/devkit-binaries/releases/download/vs2022_redist_14.40.33807_10.0.26100.1742/vs2022_redist_14.40.33807_10.0.26100.1742.zip
 
 ifndef SBOM_FILE

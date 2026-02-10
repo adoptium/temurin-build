@@ -19,7 +19,7 @@
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test</testCaseName>
                 <command>unset SPEC;\
-                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)linux_repro_build_compare.sh --sbom-url $(SBOM_FILE) --jdk-url $(JDK_FILE) --user-devkit-location https://github.com/adoptium/devkit-binaries/releases/download/gcc-14.2.0-Centos7.9.2009-b01/devkit-gcc-14.2.0-Centos7.9.2009-b01-x86_64-linux-gnu.tar.xz --attestation-verify; \
+                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)linux_repro_build_compare.sh --sbom-url $(SBOM_FILE) --jdk-url $(JDK_FILE) --user-devkit-location $(LINUX_ADOPTIUM_DEVKIT) --attestation-verify; \
         $(TEST_STATUS)
 		</command>
 		<levels>

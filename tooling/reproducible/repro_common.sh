@@ -495,9 +495,10 @@ function cleanTemurinFiles() {
   echo "Removing cacerts file, as Temurin builds with different Mozilla cacerts"
   find "${DIR}" -type f -name "cacerts" -delete
 
-  echo "Removing any JDK image files not shipped by Temurin(*.pdb, *.pdb, demo) in $DIR"
+  echo "Removing any JDK image files not shipped by Temurin(*.pdb, *.pdb, *.debuginfo, demo) in $DIR"
   find "${DIR}" -type f -name "*.pdb" -delete
   find "${DIR}" -type f -name "*.map" -delete
+  find "${DIR}" -type f -name "*.debuginfo" -delete
   rm -rf "${DIR}/demo"
 }
 
