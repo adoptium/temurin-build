@@ -66,7 +66,7 @@ if [ -z "$SBOM_PARAM" ] || [ -z "$JDK_PARAM" ]; then
   echo "    --sbom-url [SBOM_URL/SBOM_PATH] : should be the FULL path OR a URL to a Temurin JDK SBOM JSON file in CycloneDX Format"
   echo "    --jdk-url [JDKZIP_URL/JDKZIP_PATH] : should be the FULL path OR a URL to a Temurin Linux JDK tarball file"
   echo "  Optional:"
-  echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of user built Linux gcc DevKit"
+  echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of tarball of a user built Linux gcc DevKit"
   echo "    --attestation-verify : Enables Attestation Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
   exit 1
 fi
@@ -176,9 +176,10 @@ setOpenJDKConfigureArgs() {
   mkdir -p "devkit"
   echo "Unpacking ${USER_DEVKIT_LOCATION} into $PWD/devkit"
   if is_url "${USER_DEVKIT_LOCATION}" ; then
-    curl -L "${USER_DEVKIT_LOCATION}" --output "devkit.tar.gz"
-    tar -xzf devkit.tar.gz -C "$PWD/devkit"
-    rm "devkit.tar.gz"
+    local tmp_devkit_tarball="$(basename "${USER_DEVKIT_LOCATION}")"
+    curl -L "${USER_DEVKIT_LOCATION}" --output "$tmp_devkit_tarball"
+    tar -xf "$tmp_devkit_tarball" -C "$PWD/devkit"
+    rm "$tmp_devkit_tarball"
   else
     tar -xzf "${USER_DEVKIT_LOCATION}" -C "$PWD/devkit"
   fi  
