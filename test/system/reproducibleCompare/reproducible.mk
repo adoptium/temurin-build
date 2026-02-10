@@ -33,7 +33,7 @@ ifndef JDK_FILE
     endif
 endif
 
-ifneq (,$(findstring linux,$(SPEC)))
+ifneq (,$(findstring linux_390,$(SPEC)))
     ifneq ($(strip $(SBOM_FILE)),)
         SBOM_FILE := $(subst $(TEST_ROOT)/../jdkbinary,/home/jenkins/test,$(SBOM_FILE))
     endif
