@@ -77,6 +77,16 @@ if [ "$ATTESTATION_VERIFY" == true ] && [ -z "$USER_DEVKIT_LOCATION" ]; then
   exit 1
 fi
 
+# Function to check if a string is a valid URL
+is_url() {
+  local url=$1
+  if [[ $url =~ ^https?:// ]]; then
+    return 0  # URL
+  else
+    return 1  # Not a URL
+  fi
+} 
+
 installPrereqs() {
   if test -r /etc/redhat-release; then
     if grep -i release.7 /etc/redhat-release; then
