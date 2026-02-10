@@ -181,7 +181,7 @@ setOpenJDKConfigureArgs() {
     tar -xf "$tmp_devkit_tarball" -C "$PWD/devkit"
     rm "$tmp_devkit_tarball"
   else
-    tar -xzf "${USER_DEVKIT_LOCATION}" -C "$PWD/devkit"
+    tar -xf "${USER_DEVKIT_LOCATION}" -C "$PWD/devkit"
   fi  
   adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-devkit=[^ ]*|--with-devkit=${PWD}/devkit|")"
       
