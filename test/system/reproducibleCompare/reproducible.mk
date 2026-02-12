@@ -45,6 +45,7 @@ ifndef SBOM_FILE
     else
         SBOM_FILE := $(TEST_ROOT)/../jdkbinary/$(SBOM_FILE)
     endif
+$(info sbom $(SBOM_FILE))
 endif
 
 ifndef JDK_FILE
@@ -57,6 +58,8 @@ ifndef JDK_FILE
     endif
 endif
 
+$(info spec $(SPEC))
+$(info sbom $(SBOM_FILE))
 ifneq (,$(findstring linux,$(SPEC)))
     ifneq ($(strip $(SBOM_FILE)),)
         SBOM_FILE := $(subst $(TEST_ROOT)/../jdkbinary,/home/jenkins/test,$(SBOM_FILE))
