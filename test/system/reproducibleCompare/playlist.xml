@@ -34,7 +34,7 @@
 		<versions>
 			<version>21+</version>
 		</versions>
-		<platformRequirements>os.linux,^os.linux_390</platformRequirements>
+		<platformRequirements>os.linux</platformRequirements>
 	</test>
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test_s390x</testCaseName>
@@ -57,7 +57,7 @@
 			<vendor>eclipse</vendor>
 		</vendors>
 		<versions>
-			<version>21+</version>
+			<version>25+</version>
 		</versions>
 		<platformRequirements>os.linux_390</platformRequirements>
 	</test>
