@@ -221,6 +221,7 @@ downloadTooling() {
 
   if [ ! -r "/usr/lib/jvm/jdk-${BOOTJDK_VERSION}/bin/javac" ]; then
     local api_query="https://api.adoptium.net/v3/binary/version/jdk-${BOOTJDK_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
+    local sig_query=""
     echo "Trying to get BootJDK jdk-${BOOTJDK_VERSION} from ${api_query}"
     if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
       echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
@@ -230,19 +231,29 @@ downloadTooling() {
       echo "Trying to get latest GA for version ${major_version} from ${api_query}"
       if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
         echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
-        api_query="https://api.adoptium.net/v3/binary/latest/${major_version}/ea/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/adoptium"
-        echo "Trying to get latest EA for version ${major_version} from ${api_query}"
-        if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
-          echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
+        api_query="https://api.adoptium.net/v3/assets/feature_releases/${major_version}/ea?architecture=${NATIVE_API_ARCH}&image_type=jdk&jvm_impl=hotspot&os=linux&page=0&page_size=10&project=jdk&sort_method=DATE&sort_order=DESC&vendor=eclipse' 
+        rm -f ea_assets.json
+        if curl --fail -L -o ea_assets.json "${api_query}"; then
+          api_query=$(jq -r '.[0] | .binaries[0] | .package | .link' "ea_assets.json")
+          sig_query=$(jq -r '.[0] | .binaries[0] | .package | .signature_link' "ea_assets.json")
+          echo "Trying to get latest EA for version ${major_version} from ${api_query}"
+          if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
+            echo "Unable to download BootJDK from ${api_query}"
+            exit 2
+          fi
+        else
+          echo "Unable to query BootJDK from ${api_query}"
           exit 2
         fi
       fi
     fi
     # Update BOOTJDK_VERSION with actual one downloaded
     BOOTJDK_VERSION=$(tar -tf bootjdk.tar.gz | cut -d/ -f1 | head -n 1 | sed 's/^jdk-//')
+    if [ -z "$sig_query" ]; then
+      sig_query="https://api.adoptium.net/v3/signature/version/jdk-${BOOTJDK_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
+    fi
 
     echo "Downloading gpg signature for ${BOOTJDK_VERSION}.."
-    local sig_query="https://api.adoptium.net/v3/signature/version/jdk-${BOOTJDK_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
     if ! curl --fail -L -o bootjdk.tar.gz.sig "${sig_query}"; then
       echo "Unable to download BootJDK gpg signature for jdk-${BOOTJDK_VERSION} from ${sig_query}"
       exit 2
