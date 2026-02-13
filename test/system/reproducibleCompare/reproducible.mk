@@ -58,12 +58,12 @@ ifndef JDK_FILE
     endif
 endif
 
-$(info spec $(SPEC))
-$(info sbom $(SBOM_FILE))
-ifneq (,$(findstring linux,$(SPEC)))
-    ifneq ($(strip $(SBOM_FILE)),)
-        SBOM_FILE := $(subst $(TEST_ROOT)/../jdkbinary,/home/jenkins/test,$(SBOM_FILE))
-    endif
-endif
+#$(info spec $(SPEC))
+#$(info sbom $(SBOM_FILE))
+#ifneq (,$(findstring linux,$(SPEC)))
+#    ifneq ($(strip $(SBOM_FILE)),)
+#        SBOM_FILE := $(subst $(TEST_ROOT)/../jdkbinary,/home/jenkins/test,$(SBOM_FILE))
+#    endif
+#endif
 
 RM_DEBUGINFO := $(shell find $(TEST_JDK_HOME) -type f -name "*.debuginfo" -delete)
