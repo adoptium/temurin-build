@@ -176,7 +176,8 @@ setOpenJDKConfigureArgs() {
   mkdir -p "devkit"
   echo "Unpacking ${USER_DEVKIT_LOCATION} into $PWD/devkit"
   if is_url "${USER_DEVKIT_LOCATION}" ; then
-    local tmp_devkit_tarball="$(basename "${USER_DEVKIT_LOCATION}")"
+    local tmp_devkit_tarball
+    tmp_devkit_tarball="$(basename "${USER_DEVKIT_LOCATION}")"
     curl -L "${USER_DEVKIT_LOCATION}" --output "$tmp_devkit_tarball"
     tar -xf "$tmp_devkit_tarball" -C "$PWD/devkit"
     rm "$tmp_devkit_tarball"
@@ -193,10 +194,9 @@ setOpenJDKConfigureArgs() {
 
 setTemurinBuildArgs() {
   local buildArgs="$1"
-  local bootJdk="$2"
-  local timeStamp="$3"
-  local using_DEVKIT="$4"
-  local userDevkitLocation="$5"
+  local timeStamp="$2"
+  local using_DEVKIT="$3"
+  local userDevkitLocation="$4"
   local ignoreOptions=("--enable-sbom-strace ")
   for ignoreOption in "${ignoreOptions[@]}"; do
     buildArgs="${buildArgs/${ignoreOption}/}"
@@ -443,7 +443,7 @@ if [ "$ATTESTATION_VERIFY" == true ]; then
   setOpenJDKConfigureArgs
 else
   echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
-  TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BOOTJDK_VERSION" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION")
+  TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION")
 fi
 
 if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
