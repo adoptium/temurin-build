@@ -371,7 +371,7 @@ function removeGeneratedClasses() {
     rm -rf "$JDK_DIR/bin/server/classes_nocoops_coh.jsa"
   elif  [[ $(uname -m) =~ s390x ]]; then
     # Linux s390x classes.jsa is not deterministic
-    rm -rf "$JDK_DIR/bin/server/classes.jsa"
+    rm -rf "$JDK_DIR/lib/server/classes.jsa"
   fi
 }
 
