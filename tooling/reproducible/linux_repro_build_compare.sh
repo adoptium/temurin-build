@@ -295,7 +295,7 @@ downloadTooling() {
 
 checkAllVariablesSet() {
   if [ "$ATTESTATION_VERIFY" == true ]; then
-    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${adoptiumConfigureArgs}" ] || [ -z "${TEMURIN_VERSION}" ] || [ -z "${buildScmRef}" ] || [ -z "${openjdkSourceRepo}" ] || [ -z "${openjdkSourceTag}" ]; then
+    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${adoptiumConfigureArgs}" ] || [ -z "${TEMURIN_VERSION}" ] || [ -z "${buildScmRef}" ] || [ -z "${openjdkSourceRepo}" ] || [ -z "${openjdkSourceCommitSHA}" ]; then
       echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
     fi
   else
@@ -303,6 +303,24 @@ checkAllVariablesSet() {
       echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
     fi
   fi
+}
+
+getUpstreamOpenJDKCommitSHA() {
+  local adoptiumMirrorRepo="$1"
+  local openjdkSourceRepo="$2"
+  local adoptiumBuildCommitSHA="$3"
+
+  rm -rf tmp_clone && mkdir tmp_clone && cd tmp_clone
+
+  # Shallow clone commit history only
+  git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_repo
+
+  # Find upstream OpenJDK commit SHA, which is the first non-merge commit from the adoptiumBuildCommitSHA
+  openjdkCommitSHA=$(git log --no-merges -1 "$adoptiumBuildCommitSHA" --format=%H)
+
+  cd .. && rm -rf tmp_clone
+
+  echo "$openjdkCommitSHA"
 }
 
 getBuildParams() {
@@ -322,15 +340,16 @@ getBuildParams() {
     # Check if the adoptiumSrcCommitUrl, buildScmRef and configure_args were found
     if [ -n "$adoptiumSrcCommitUrl" ] && [ -n "$buildScmRef" ] && [ -n "$adoptiumConfigureArgs" ]; then
       adoptiumRepo="${adoptiumSrcCommitUrl%/commit/*}"
+      adoptiumBuildCommitSHA=$(basename "$adoptiumSrcCommitUrl")
       openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
-      openjdkSourceTag="${buildScmRef%_adopt}"
+      openjdkSourceCommitSHA=$(getUpstreamOpenJDKCommitSHA "$adoptiumRepo" "$openjdkSourceRepo" "$adoptiumBuildCommitSHA")
 
-      echo "Performing an Attestation Verification Build from $openjdkSourceRepo with tag $openjdkSourceTag"
+      echo "Performing an Attestation Verification Build from $openjdkSourceRepo with commit SHA $openjdkSourceCommitSHA"
       echo "Adoptium OpenJDK configure argmuents from original Temurin build:"
       echo "    $adoptiumConfigureArgs"
       echo ""
       export openjdkSourceRepo
-      export openjdkSourceTag
+      export openjdkSourceCommitSHA
       export adoptiumConfigureArgs
     else
       echo "ERROR: Adoptium OpenJDK Source Commit, SCM Ref and configure_args must be specified in the SBOM."
@@ -378,10 +397,8 @@ buildUsingTemurinBuild() {
 attestationBuildUsingOpenJDK() {
   echo "Building JDK using OpenJDK configure and make..."
 
-  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo into openjdk"
-  git clone -q "$openjdkSourceRepo" "openjdk" || exit 1
-  echo "Switching To OpenJDK tag : $openjdkSourceTag"
-  (cd "openjdk" && git checkout -q "$openjdkSourceTag")
+  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into openjdk"
+  git init openjdk && cd openjdk && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD && cd .. || exit 1
 
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
   if ! echo "cd openjdk && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
@@ -401,8 +418,8 @@ attestationBuildUsingOpenJDK() {
 
   cat openjdk/repro_build.log
 
-  mv openjdk/build/*/images/jdk "openjdk/build/$openjdkSourceTag"
-  (cd openjdk/build && tar -czf ../../reproJDK.tar.gz "$openjdkSourceTag")
+  mv openjdk/build/*/images/jdk "openjdk/build/$TEMURIN_VERSION"
+  (cd openjdk/build && tar -czf ../../reproJDK.tar.gz "$TEMURIN_VERSION")
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
   cp  openjdk/repro_configure.log build.log
   cat openjdk/repro_build.log  >> build.log
