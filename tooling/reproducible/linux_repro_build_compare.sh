@@ -416,8 +416,8 @@ attestationBuildUsingOpenJDK() {
 
   cat openjdk/repro_build.log
 
-  mv openjdk/build/*/images/jdk "openjdk/build/$TEMURIN_VERSION"
-  (cd openjdk/build && tar -czf ../../reproJDK.tar.gz "$TEMURIN_VERSION")
+  mv openjdk/build/*/images/jdk "openjdk/build/jdk-$TEMURIN_VERSION"
+  (cd openjdk/build && tar -czf ../../reproJDK.tar.gz "jdk-$TEMURIN_VERSION")
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
   cp  openjdk/repro_configure.log build.log
   cat openjdk/repro_build.log  >> build.log
