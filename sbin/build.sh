@@ -61,7 +61,7 @@ function parseArguments() {
 addConfigureArg() {
   # Only add an arg if it is not overridden by a user-specified arg.
   if [[ ${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]} != *"$1"* ]]; then
-    CONFIGURE_ARGS="${CONFIGURE_ARGS} ${1}${2}"
+        CONFIGURE_ARGS="${CONFIGURE_ARGS} ${1}${2}"
   fi
 }
 
