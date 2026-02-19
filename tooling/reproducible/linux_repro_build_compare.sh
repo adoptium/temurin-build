@@ -310,15 +310,13 @@ getUpstreamOpenJDKCommitSHA() {
   local openjdkSourceRepo="$2"
   local adoptiumBuildCommitSHA="$3"
 
-  rm -rf tmp_clone && mkdir tmp_clone && cd tmp_clone
-
   # Shallow clone commit history only
-  git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_repo
+  git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_mirror_repo
 
   # Find upstream OpenJDK commit SHA, which is the first non-merge commit from the adoptiumBuildCommitSHA
-  openjdkCommitSHA=$(git log --no-merges -1 "$adoptiumBuildCommitSHA" --format=%H)
+  openjdkCommitSHA=$(cd adoptium_mirror_repo && git log --no-merges -1 "$adoptiumBuildCommitSHA" --format=%H)
 
-  cd .. && rm -rf tmp_clone
+  rm -rf adoptium_mirror_repo
 
   echo "$openjdkCommitSHA"
 }
