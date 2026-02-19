@@ -367,8 +367,8 @@ verify_glibc_version() {
     print_verbose "IVT: Release does not contain a JRE for $OS/$ARCH so not running glibc version checks"
   else  
     print_verbose "IVT : Detected GLIBC version '$(strings tarballtest/bin/java | grep ^GLIBC)'"
-    if ! strings tarballtest/bin/java | grep ^GLIBC_2.17 > /dev/null; then
-      print_error "GLIBC version detected in the JDK java executable is not the expected 2.17"
+    if ! strings tarballtest/bin/java | grep ^GLIBC_2.2.5 > /dev/null; then
+      print_error "GLIBC version detected in the JDK java executable is not the expected 2.2.5"
       RC=4
     fi
   fi
@@ -410,7 +410,7 @@ verify_sboms() {
 
   # shellcheck disable=SC2010
   for sbom in $(ls -1 OpenJDK*-sbom*json | grep -v metadata); do
-    sh "${SCRIPT_DIR}/validateSBOM.sh" "${MAJOR_VERSION}" "${TAG}" "${sbom}"
+    sh "${SCRIPT_DIR}/validateSBOM.sh" "${MAJOR_VERSION}" "${TAG}_adopt" "${WORKSPACE}/staging/${TAG}/${sbom}"
   done
 }
 
