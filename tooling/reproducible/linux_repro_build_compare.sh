@@ -35,6 +35,7 @@ SBOM_PARAM=""
 JDK_PARAM=""
 USER_DEVKIT_LOCATION=""
 ATTESTATION_VERIFY=false
+BUILD_WORKSPACE=""
 
 while [[ $# -gt 0 ]] ; do
   opt="$1";
@@ -53,6 +54,9 @@ while [[ $# -gt 0 ]] ; do
 
     "--attestation-verify" )
     ATTESTATION_VERIFY=true;;
+
+    "--build-workspace" )
+    BUILD_WORKSPACE="$1"; shift;;
 
     *) echo >&2 "Invalid option: ${opt}"; exit 1;;
   esac
@@ -374,6 +378,12 @@ getBuildParams() {
 buildUsingTemurinBuild() {
   echo "Building JDK using temurin-build scripts..."
 
+  local CURRENT_PWD="$PWD"
+  if [[ -n "$BUILD_WORKSPACE" ]]; then
+    cd "$BUILD_WORKSPACE"
+  fi
+  local BUILD_DIR="$PWD"
+
   echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
   if ! echo "cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
     # Echo build.log
@@ -385,15 +395,25 @@ buildUsingTemurinBuild() {
   # Echo build.log
   cat temurin-build/build.log
 
-  mkdir reproJDK
-  tar xpfz temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz -C reproJDK
-  cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
+  cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz ${CURRENT_PWD}/reproJDK.tar.gz
+
+  if [[ -n "$BUILD_WORKSPACE" ]]; then
+    cd "$CURRENT_PWD"
+  fi
+
+  mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
+  cp "${BUILD_DIR}/temurin-build/build.log" build.log
   cp "$SBOM" SBOM.json
-  cp temurin-build/build.log build.log
 }
 
 attestationBuildUsingOpenJDK() {
   echo "Building JDK using OpenJDK configure and make..."
+
+  local CURRENT_PWD="$PWD"
+  if [[ -n "$BUILD_WORKSPACE" ]]; then
+    cd "$BUILD_WORKSPACE"
+  fi
+  local BUILD_DIR="$PWD"
 
   echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into openjdk"
   git init openjdk && cd openjdk && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD && cd .. || exit 1
@@ -417,10 +437,15 @@ attestationBuildUsingOpenJDK() {
   cat openjdk/repro_build.log
 
   mv openjdk/build/*/images/jdk "openjdk/build/jdk-$TEMURIN_VERSION"
-  (cd openjdk/build && tar -czf ../../reproJDK.tar.gz "jdk-$TEMURIN_VERSION")
+  (cd openjdk/build && tar -czf ${CURRENT_PWD}/reproJDK.tar.gz "jdk-$TEMURIN_VERSION")
+
+  if [[ -n "$BUILD_WORKSPACE" ]]; then
+    cd "$CURRENT_PWD"
+  fi
+
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
-  cp  openjdk/repro_configure.log build.log
-  cat openjdk/repro_build.log  >> build.log
+  cp  "${BUILD_DIR}/openjdk/repro_configure.log" build.log
+  cat "${BUILD_DIR}/openjdk/repro_build.log"  >> build.log
   cp "$SBOM" SBOM.json
 }
 
