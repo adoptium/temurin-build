@@ -19,8 +19,8 @@
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test</testCaseName>
                 <command>unset SPEC;\
-                mkdir -p "$(TEST_ROOT)/REPRO_BLD";\ 
-                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)linux_repro_build_compare.sh --sbom-url "$(SBOM_FILE)" --jdk-url "$(JDK_FILE)" --user-devkit-location "$(LINUX_ADOPTIUM_DEVKIT)" --attestation-verify --build-workspace "$(TEST_ROOT)/REPRO_BLD"; \
+                mkdir -p "$(TEST_ROOT)$(D)REPRO_WS";\
+                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)linux_repro_build_compare.sh --sbom-url "$(SBOM_FILE)" --jdk-url "$(JDK_FILE)" --user-devkit-location "$(LINUX_ADOPTIUM_DEVKIT)" --attestation-verify --build-workspace "$(TEST_ROOT)$(D)REPRO_WS"; \
         $(TEST_STATUS)
 		</command>
 		<levels>
