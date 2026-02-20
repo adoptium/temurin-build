@@ -288,12 +288,6 @@ downloadTooling() {
         echo "Retrieving gcc $GCCVERSION" && curl "https://ci.adoptium.net/userContent/gcc/gcc$(echo "$GCCVERSION" | tr -d .).$(uname -m).tar.xz" | (cd /usr/local && tar xJpf -) || exit 1
       fi
     fi
-    if [ ! -r temurin-build ]; then
-      # Shallow clone
-      git clone --depth 1 https://github.com/adoptium/temurin-build || exit 1
-    fi
-    # Checkout required SHA only
-    (cd temurin-build && git fetch --depth 1 origin "$TEMURIN_BUILD_SHA" && git checkout "$TEMURIN_BUILD_SHA")
   fi
 }
 
@@ -383,6 +377,11 @@ buildUsingTemurinBuild() {
     cd "$BUILD_WORKSPACE"
   fi
   local BUILD_DIR="$PWD"
+
+  # Shallow clone
+  git clone --depth 1 https://github.com/adoptium/temurin-build || exit 1
+  # Checkout required SHA only
+  (cd temurin-build && git fetch --depth 1 origin "$TEMURIN_BUILD_SHA" && git checkout "$TEMURIN_BUILD_SHA")
 
   echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
   if ! echo "cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
