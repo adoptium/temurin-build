@@ -160,17 +160,20 @@ disable the default fB--depth=1 shallow cloning of git repo(s).
 
 -f, --freetype-dir
 specify the location of an existing FreeType library.
-This is typically used in conjunction with -F.
+Do not use with -F, as it would invalidate this switch.
+DEPRECATED: Only makes sense for JDKs without a bundled freetype
 
 --freetype-build-param <parameter>
 specify any special freetype build parameters (required for some Operating Systems).
+DEPRECATED: Only makes sense for JDKs without a bundled freetype
 
 --freetype-version <version>
 specify the version of freetype you are building.
+DEPRECATED: Only makes sense for JDKs without a bundled freetype
 
 -F, --skip-freetype
-skip building Freetype automatically.
-This is typically used in conjunction with -f.
+set JDK to link against system freetype,
+instead of building bundled version
 
 -h, --help
 print the man page.
@@ -242,7 +245,7 @@ For reference, OpenJDK version numbers look like 1.8.0_162-b12 (for Java 8) or
 (162) or the 3rd position in the semVer version string (4).
 This is typically used in conjunction with -b.
 
---use-adoptium-devkit <Adoptium DevKit release tag>
+--use-adoptium-devkit <Adoptium_DevKit_release_tag>
 Download and use the given DevKit from https://github.com/adoptium/devkit-binaries/releases.
 The DevKit is downloaded and unpacked to WORKSPACE_DIR/WORKING_DIR/devkit
 and will add the configure arg --with-devkit=WORKSPACE_DIR/WORKING_DIR/devkit.

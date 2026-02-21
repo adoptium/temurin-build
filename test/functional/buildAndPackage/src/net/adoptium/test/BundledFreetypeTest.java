@@ -26,8 +26,6 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static net.adoptium.test.JdkPlatform.OperatingSystem;
-import static net.adoptium.test.JdkVersion.VM;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -75,25 +73,12 @@ public class BundledFreetypeTest {
                 .filter(name -> freetypePattern.matcher(name).matches())
                 .collect(Collectors.toSet());
 
-        if (jdkVersion.isNewerOrEqual(21)) {
-            // jdk-21+ uses "bundled" FreeType
-            assertTrue(freetypeFiles.size() > 0,
-              "Expected libfreetype.dylib to be bundled but it is not.");
-        } else if (jdkPlatform.runsOn(OperatingSystem.MACOS)) {
-            assertTrue(freetypeFiles.size() > 0,
-              "Expected libfreetype.dylib to be bundled but it is not.");
-        } else if (jdkPlatform.runsOn(OperatingSystem.WINDOWS)) {
-            assertTrue(freetypeFiles.size() > 0,
-              "Expected freetype.dll to be bundled, but it is not.");
-        } else if (jdkPlatform.runsOn(OperatingSystem.AIX)
-                && (jdkVersion.isNewerOrEqual(13) || (jdkVersion.usesVM(VM.OPENJ9) && jdkVersion.isNewerOrEqual(8)))) {
-            assertTrue(freetypeFiles.size() > 0,
-              "Expected libfreetype.so to be bundled, but it is not.");
+        if (jdkVersion.isNewerOrEqual(8)) {
+            // all JDKs now uses bundled freetype
+            assertTrue(freetypeFiles.size() > 0, "Expected libfreetype.(dll|dylib|so) to be bundled but it is not.");
         } else {
-            LOGGER.info("Found freetype-related files: "
-                        + freetypeFiles.toString());
-            assertEquals(freetypeFiles.size(), 0,
-              "Expected libfreetype not to be bundled but it is.");
+            LOGGER.info("Found freetype-related files: " + freetypeFiles.toString());
+            assertEquals(freetypeFiles.size(), 0, "Expected libfreetype not to be bundled but it is.");
         }
     }
 }

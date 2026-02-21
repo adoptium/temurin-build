@@ -57,13 +57,6 @@ then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-lpthread --with-extra-cflags=-lpthread --with-extra-cxxflags=-lpthread"
 fi
 
-if [[ "$JAVA_FEATURE_VERSION" -ge 21 ]]; then
-  # jdk-21+ uses "bundled" FreeType
-  export BUILD_ARGS="${BUILD_ARGS} --freetype-dir bundled"
-else
-  export BUILD_ARGS="${BUILD_ARGS} --skip-freetype"
-fi
-
 if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]; then
   export LDR_CNTRL=MAXDATA=0x80000000
 fi

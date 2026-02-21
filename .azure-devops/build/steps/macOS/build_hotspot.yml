@@ -33,7 +33,7 @@ steps:
       ./makejdk-any-platform.sh \
         ${EXTRA_MAKEJDK_ANY_PLATFORM_OPTIONS} \
         --jdk-boot-dir "${JDK_BOOT_DIR}" \
-        --configure-args "${CONFIG_ARGS} --disable-warnings-as-errors --with-extra-cxxflags='-mmacosx-version-min=10.9'" \
+        --configure-args "${CONFIG_ARGS} --disable-warnings-as-errors" \
         --destination artifacts \
         --target-file-name "${FILENAME}.tar.gz" \
         --use-jep319-certs \
