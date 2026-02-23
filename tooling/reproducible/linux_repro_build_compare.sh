@@ -370,25 +370,30 @@ getBuildParams() {
   fi
 }
 
-buildUsingTemurinBuild() {
-  echo "Building JDK using temurin-build scripts..."
-
-  local CURRENT_PWD="$PWD"
+setupBuildDir() {
   if [[ -n "$BUILD_WORKSPACE" ]]; then
     cd "$BUILD_WORKSPACE"
   fi
-  local BUILD_DIR="$PWD"
+  BUILD_DIR="$PWD"
 
   # If we have the original build workspace folder, create padded sub-folder to match to help
   # ensure deterministic classes.jsa
   if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
-    local PADDED_BUILD_DIR=$(padCurrentDirectoryToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR")
+    local PADDED_BUILD_DIR
+    PADDED_BUILD_DIR=$(padCurrentDirectoryToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR")
     if [[ -n "$PADDED_BUILD_DIR" ]]; then
       cd "$PADDED_BUILD_DIR"
       BUILD_DIR="$PWD"
     fi
   fi
+}
 
+buildUsingTemurinBuild() {
+  echo "Building JDK using temurin-build scripts..."
+
+  local CURRENT_PWD="$PWD"
+
+  setupBuildDir
   echo "  building within workspace folder: ${BUILD_DIR}"
 
   # Shallow clone
@@ -396,7 +401,11 @@ buildUsingTemurinBuild() {
   # Checkout required SHA only
   (cd temurin-build && git fetch --depth 1 origin "$TEMURIN_BUILD_SHA" && git checkout "$TEMURIN_BUILD_SHA")
 
-  local BUILD_ARGS="$TEMURIN_BUILD_ARGS --user-openjdk-build-root-directory ${BUILD_DIR}"
+  # Split TEMURIN_BUILD_ARGS to add --user-openjdk-build-root-directory arg as last option before version
+  local ARGS_START="${TEMURIN_BUILD_ARGS% *}"
+  local ARGS_END="${TEMURIN_BUILD_ARGS##* }"
+  local BUILD_ARGS="$ARGS_START --user-openjdk-build-root-directory ${BUILD_DIR} $ARGS_END"
+
   echo "Rebuild args for makejdk_any_platform.sh are: $BUILD_ARGS"
   if ! echo "cd temurin-build && ./makejdk-any-platform.sh $BUILD_ARGS > build.log 2>&1" | sh; then
     # Echo build.log
@@ -408,7 +417,7 @@ buildUsingTemurinBuild() {
   # Echo build.log
   cat temurin-build/build.log
 
-  cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz ${CURRENT_PWD}/reproJDK.tar.gz
+  cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz "${CURRENT_PWD}/reproJDK.tar.gz"
 
   cd "$CURRENT_PWD"
 
@@ -432,7 +441,8 @@ padCurrentDirectoryToSameLength() {
     echo ""
   else
     padding_length=$((padding_length - 1))
-    local padding=$(printf "P%.0s" $(seq 1 $padding_length))
+    local padding
+    padding=$(printf "P%.0s" $(seq 1 $padding_length))
     local padded="${CURRENT_DIR}/${padding}"
     mkdir -p "${padded}"
     echo "Padded $CURRENT_DIR with sub-folder to $padded" 1>&2
@@ -444,21 +454,8 @@ attestationBuildUsingOpenJDK() {
   echo "Building JDK using OpenJDK configure and make..."
 
   local CURRENT_PWD="$PWD"
-  if [[ -n "$BUILD_WORKSPACE" ]]; then
-    cd "$BUILD_WORKSPACE"
-  fi
-  local BUILD_DIR="$PWD"
 
-  # If we have the original build workspace folder, create padded sub-folder to match to help
-  # ensure deterministic classes.jsa
-  if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
-    local PADDED_BUILD_DIR=$(padCurrentDirectoryToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR")
-    if [[ -n "$PADDED_BUILD_DIR" ]]; then
-      cd "$PADDED_BUILD_DIR"
-      BUILD_DIR="$PWD"
-    fi
-  fi
-
+  setupBuildDir
   echo "  building within workspace folder: ${BUILD_DIR}"
 
   echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into openjdk"
@@ -483,7 +480,7 @@ attestationBuildUsingOpenJDK() {
   cat openjdk/repro_build.log
 
   mv openjdk/build/*/images/jdk "openjdk/build/jdk-$TEMURIN_VERSION"
-  (cd openjdk/build && tar -czf ${CURRENT_PWD}/reproJDK.tar.gz "jdk-$TEMURIN_VERSION")
+  (cd openjdk/build && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "jdk-$TEMURIN_VERSION")
 
   cd "$CURRENT_PWD"
 
