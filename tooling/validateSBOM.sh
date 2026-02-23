@@ -64,6 +64,10 @@ arg_parser() {
   SOURCE_TAG="$2"
   SBOM_LOCATION="$3"
 
+  echo "JDK_MAJOR_VERSION='$JDK_MAJOR_VERSION'"
+  echo "SOURCE_TAG='$SOURCE_TAG'"
+  echo "SBOM_LOCATION='$SBOM_LOCATION'"
+
   if ! echo "$JDK_MAJOR_VERSION" | grep -q "^[1-9][0-9]*\$"; then
     echo "ERROR: validateSBOM.sh: first argument must be a positive integer greater than 0."
     exit 1
@@ -75,7 +79,8 @@ arg_parser() {
                                  -e "^jdk8u[0-9][0-9]*-b[0-9][0-9]*\$" \
                                  -e "^jdk8u[0-9][0-9]*-ga\$" \
                                  -e "^jdk8u[0-9][0-9]*-dryrun-ga\$" \
-                                 -e "^jdk8u[0-9][0-9]*-aarch32-[0-9][0-9]*\$" \
+                                 -e "^jdk8u[0-9][0-9]*-b[0-9][0-9]*-aarch32-[0-9][0-9]*_adopt\$" \
+                                 -e "^jdk8u[0-9][0-9]*-b[0-9][0-9]*-aarch32-[0-9][0-9]*\$" \
                                  -e "^jdk8u[0-9][0-9]*-ga-aarch32-[0-9][0-9]*\$" \
                                  -e "^jdk8u[0-9][0-9]*-dryrun-ga-aarch32-[0-9][0-9]*\$"
     TAG_CHECK="$?"
@@ -89,9 +94,17 @@ arg_parser() {
   
   if ! echo "${TAG_CHECK}" | grep -q "0"; then
     echo "WARNING: validateSBOM.sh: SOURCE_TAG does not use a valid upstream tag structure."
-    echo "INFO: validateSBOM.sh: Build is presumed to be a personal or dev build."
-    echo "INFO: validateSBOM.sh: SCM and SHA checks will be skipped."
+    echo "INFO: validateSBOM.sh: Build is presumed to be a personal, dev or HEAD build."
+    echo "INFO: validateSBOM.sh: Expected SCM_REF checks will be skipped."
     SOURCE_TAG=""
+  fi
+
+  # If SOURCE_TAG is not the expected full jdk8u aarch32 port date format, then skip expected source tag check
+  if [ -n "$SOURCE_TAG" ] && [ "$JDK_MAJOR_VERSION" -eq "8" ] && echo "$SBOM_LOCATION" | grep _arm_linux_; then
+    if ! echo "$SOURCE_TAG" | grep -q 'aarch32\-[0-9]\{8\}'; then
+      echo "jdk8u aarch32 linux source tag format will contain an arbitrary date, and the input source tag is a straight jdk8u tag: $SOURCE_TAG, skipping expected source tag check"
+      SOURCE_TAG=""
+    fi
   fi
 
   if [ -z "$SBOM_LOCATION" ]; then

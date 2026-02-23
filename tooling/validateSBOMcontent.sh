@@ -22,6 +22,10 @@ SBOMFILE="$1"
 MAJORVERSION="$2"
 EXPECTED_SCM_REF="$3"
 
+echo "SBOMFILE='$SBOMFILE'"
+echo "MAJORVERSION='$MAJORVERSION'"
+echo "EXPECTED_SCM_REF='$EXPECTED_SCM_REF'"
+
 GLIBC=$(   jq '.metadata.tools.components[] | select(.name|test("GLIBC"))    | .version' "$SBOMFILE" | tr -d \")
 GCC=$(     jq '.metadata.tools.components[] | select(.name|test("GCC"))      | .version' "$SBOMFILE" | tr -d \")
 BOOTJDK=$( jq '.metadata.tools.components[] | select(.name|test("BOOTJDK"))  | .version' "$SBOMFILE" | tr -d \")
