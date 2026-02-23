@@ -327,6 +327,7 @@ getBuildParams() {
   TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
   BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
   TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
+  BUILD_WORKSPACE_DIRECTORY=$(jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value' "$SBOM")
 
   if [ "$ATTESTATION_VERIFY" == true ]; then
     adoptiumSrcCommitUrl=$(jq -r '.components[0].properties[] | select(.name == "OpenJDK Source Commit") | .value' "$SBOM")
@@ -405,6 +406,29 @@ buildUsingTemurinBuild() {
   cp "$SBOM" SBOM.json
 }
 
+# Pad the CURRENT_DIR with a sub-folder to the same length as TARGET_BUILD_DIR_TO_MATCH
+# Necessary to avoid potential non-determinstic classes.jsa on Linux and binary differences on Mac
+padCurrentDirectoryToSameLength() {
+  local TARGET_BUILD_DIR_TO_MATCH="$1"
+  local CURRENT_DIR="$2"
+
+  local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#CURRENT_DIR}))
+  if [[ "$padding_length" -eq 0 ]]; then
+    echo "Warning: $TARGET_BUILD_DIR_TO_MATCH and $CURRENT_DIR are already same length" 1>&2
+    echo ""
+  elif [[ "$padding_length" -lt 0 ]] || [[ "$padding_length" -eq 1 ]]; then
+    echo "Warning: Unable to pad $CURRENT_DIR to necessary length of $TARGET_BUILD_DIR_TO_MATCH, padding required: $padding_length" 1>&2
+    echo ""
+  else
+    padding_length=$((padding_length - 1))
+    local padding=$(printf "P%.0s" $(seq 1 $padding_length))
+    local padded="${CURRENT_DIR}/${padding}"
+    mkdir -p "${padded}"
+    echo "Padded $CURRENT_DIR with sub-folder to $padded" 1>&2
+    echo "${padded}"
+  fi
+}
+
 attestationBuildUsingOpenJDK() {
   echo "Building JDK using OpenJDK configure and make..."
 
@@ -413,6 +437,16 @@ attestationBuildUsingOpenJDK() {
     cd "$BUILD_WORKSPACE"
   fi
   local BUILD_DIR="$PWD"
+
+  # If we have the original build workspace folder, create padded sub-folder to match to help
+  # ensure deterministic classes.jsa
+  if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
+    local PADDED_BUILD_DIR=$(padCurrentDirectoryToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR")
+    if [[ -n "$PADDED_BUILD_DIR" ]]; then
+      cd "$PADDED_BUILD_DIR"
+      BUILD_DIR="$PWD"
+    fi
+  fi
 
   echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into openjdk"
   git init openjdk && cd openjdk && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD && cd .. || exit 1
