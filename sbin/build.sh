@@ -1194,9 +1194,9 @@ generateSBoM() {
 
   local buildDirectory
   if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
-    buildDirectory="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    buildDirectory=$(echo "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" | sed 's,\./,,' | sed 's,//,/,')
   else 
-    buildDirectory="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}"
+    buildDirectory=$(echo "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" | sed 's,\./,,' | sed 's,//,/,')
   fi
 
   checkingToolSummary
