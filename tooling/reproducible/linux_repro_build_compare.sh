@@ -379,13 +379,26 @@ buildUsingTemurinBuild() {
   fi
   local BUILD_DIR="$PWD"
 
+  # If we have the original build workspace folder, create padded sub-folder to match to help
+  # ensure deterministic classes.jsa
+  if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
+    local PADDED_BUILD_DIR=$(padCurrentDirectoryToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR")
+    if [[ -n "$PADDED_BUILD_DIR" ]]; then
+      cd "$PADDED_BUILD_DIR"
+      BUILD_DIR="$PWD"
+    fi
+  fi
+
+  echo "  building within workspace folder: ${BUILD_DIR}"
+
   # Shallow clone
   git clone --depth 1 https://github.com/adoptium/temurin-build || exit 1
   # Checkout required SHA only
   (cd temurin-build && git fetch --depth 1 origin "$TEMURIN_BUILD_SHA" && git checkout "$TEMURIN_BUILD_SHA")
 
-  echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
-  if ! echo "cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
+  local BUILD_ARGS="$TEMURIN_BUILD_ARGS --user-openjdk-build-root-directory ${BUILD_DIR}"
+  echo "Rebuild args for makejdk_any_platform.sh are: $BUILD_ARGS"
+  if ! echo "cd temurin-build && ./makejdk-any-platform.sh $BUILD_ARGS > build.log 2>&1" | sh; then
     # Echo build.log
     cat temurin-build/build.log || true
     echo "makejdk-any-platform.sh build failure, exiting"
@@ -397,9 +410,7 @@ buildUsingTemurinBuild() {
 
   cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz ${CURRENT_PWD}/reproJDK.tar.gz
 
-  if [[ -n "$BUILD_WORKSPACE" ]]; then
-    cd "$CURRENT_PWD"
-  fi
+  cd "$CURRENT_PWD"
 
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
   cp "${BUILD_DIR}/temurin-build/build.log" build.log
@@ -448,6 +459,8 @@ attestationBuildUsingOpenJDK() {
     fi
   fi
 
+  echo "  building within workspace folder: ${BUILD_DIR}"
+
   echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into openjdk"
   git init openjdk && cd openjdk && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD && cd .. || exit 1
 
@@ -472,9 +485,7 @@ attestationBuildUsingOpenJDK() {
   mv openjdk/build/*/images/jdk "openjdk/build/jdk-$TEMURIN_VERSION"
   (cd openjdk/build && tar -czf ${CURRENT_PWD}/reproJDK.tar.gz "jdk-$TEMURIN_VERSION")
 
-  if [[ -n "$BUILD_WORKSPACE" ]]; then
-    cd "$CURRENT_PWD"
-  fi
+  cd "$CURRENT_PWD"
 
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
   cp  "${BUILD_DIR}/openjdk/repro_configure.log" build.log
