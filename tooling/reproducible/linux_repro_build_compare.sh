@@ -370,36 +370,40 @@ getBuildParams() {
   fi
 }
 
+# Construct "build dir" from current directory plus BUILD_FOLDER
+# Optionally padding to BUILD_WORKSPACE_DIRECTORY length
 setupBuildDir() {
   if [[ -n "$BUILD_WORKSPACE" ]]; then
-    cd "$BUILD_WORKSPACE"
+    BUILD_DIR="$BUILD_WORKSPACE/$BUILD_FOLDER"
+  else
+    BUILD_DIR="$PWD/$BUILD_FOLDER"
   fi
-  BUILD_DIR="$PWD"
 
   # If we have the original build workspace folder, create padded sub-folder to match to help
   # ensure deterministic classes.jsa
   if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
     local PADDED_BUILD_DIR
-    PADDED_BUILD_DIR=$(padCurrentDirectoryToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR")
+    PADDED_BUILD_DIR=$(padDirectoryToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR")
     if [[ -n "$PADDED_BUILD_DIR" ]]; then
-      cd "$PADDED_BUILD_DIR"
-      BUILD_DIR="$PWD"
+      BUILD_DIR="$PADDED_BUILD_DIR"
     fi
   fi
+
+  # Create folder
+  mkdir -p "$BUILD_DIR" || exit 1 
 }
 
 buildUsingTemurinBuild() {
   echo "Building JDK using temurin-build scripts..."
 
-  local CURRENT_PWD="$PWD"
-
-  setupBuildDir
-  echo "  building within workspace folder: ${BUILD_DIR}"
-
   # Shallow clone
   git clone --depth 1 https://github.com/adoptium/temurin-build || exit 1
   # Checkout required SHA only
   (cd temurin-build && git fetch --depth 1 origin "$TEMURIN_BUILD_SHA" && git checkout "$TEMURIN_BUILD_SHA")
+
+  BUILD_FOLDER="bld"
+  setupBuildDir
+  echo "  building within workspace folder: ${BUILD_DIR}"
 
   # Split TEMURIN_BUILD_ARGS to add --user-openjdk-build-root-directory arg as last option before version
   local ARGS_START="${TEMURIN_BUILD_ARGS% *}"
@@ -417,18 +421,16 @@ buildUsingTemurinBuild() {
   # Echo build.log
   cat temurin-build/build.log
 
-  cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz "${CURRENT_PWD}/reproJDK.tar.gz"
-
-  cd "$CURRENT_PWD"
+  cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
 
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
-  cp "${BUILD_DIR}/temurin-build/build.log" build.log
+  cp "temurin-build/build.log" build.log
   cp "$SBOM" SBOM.json
 }
 
-# Pad the CURRENT_DIR with a sub-folder to the same length as TARGET_BUILD_DIR_TO_MATCH
+# Pad the CURRENT_DIR with a sub-folder to the same length as TARGET_BUILD_DIR_TO_MATCH.
 # Necessary to avoid potential non-determinstic classes.jsa on Linux and binary differences on Mac
-padCurrentDirectoryToSameLength() {
+padDirectoryToSameLength() {
   local TARGET_BUILD_DIR_TO_MATCH="$1"
   local CURRENT_DIR="$2"
 
@@ -444,7 +446,6 @@ padCurrentDirectoryToSameLength() {
     local padding
     padding=$(printf "P%.0s" $(seq 1 $padding_length))
     local padded="${CURRENT_DIR}/${padding}"
-    mkdir -p "${padded}"
     echo "Padded $CURRENT_DIR with sub-folder to $padded" 1>&2
     echo "${padded}"
   fi
@@ -455,38 +456,37 @@ attestationBuildUsingOpenJDK() {
 
   local CURRENT_PWD="$PWD"
 
+  BUILD_FOLDER="bld"
   setupBuildDir
   echo "  building within workspace folder: ${BUILD_DIR}"
 
-  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into openjdk"
-  git init openjdk && cd openjdk && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD && cd .. || exit 1
+  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR"
+  (cd "$BUILD_DIR" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
 
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
-  if ! echo "cd openjdk && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
-    cat openjdk/repro_configure.log || true
+  if ! echo "cd $BUILD_DIR && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
+    cat "$BUILD_DIR/repro_configure.log" || true
     echo "OpenJDK configure failure, exiting"
     exit 1
   fi
 
-  cat openjdk/repro_configure.log
+  cat "$BUILD_DIR/repro_configure.log"
 
   echo "Executing: make images"
-  if ! echo "cd openjdk/build/* && make images > ../../repro_build.log 2>&1" | sh; then
-    cat openjdk/repro_build.log || true
+  if ! echo "cd $BUILD_DIR/build/* && make images > ../../repro_build.log 2>&1" | sh; then
+    cat "$BUILD_DIR/repro_build.log" || true
     echo "OpenJDK make images failure, exiting"
     exit 1
   fi
 
-  cat openjdk/repro_build.log
+  cat "$BUILD_DIR/repro_build.log"
 
-  mv openjdk/build/*/images/jdk "openjdk/build/jdk-$TEMURIN_VERSION"
-  (cd openjdk/build && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "jdk-$TEMURIN_VERSION")
-
-  cd "$CURRENT_PWD"
+  mv "$BUILD_DIR"/build/*/images/jdk "$BUILD_DIR/build/jdk-$TEMURIN_VERSION"
+  (cd "$BUILD_DIR/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "jdk-$TEMURIN_VERSION")
 
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
-  cp  "${BUILD_DIR}/openjdk/repro_configure.log" build.log
-  cat "${BUILD_DIR}/openjdk/repro_build.log"  >> build.log
+  cp  "${BUILD_DIR}/repro_configure.log" build.log
+  cat "${BUILD_DIR}/repro_build.log"  >> build.log
   cp "$SBOM" SBOM.json
 }
 
