@@ -564,9 +564,6 @@ if [ $rc -eq 0 ]; then
   echo "Compare identical !"
 else
   echo "Differences found..., logged in: reprotest.diff"
-  xxd jdk-21.0.11+3/lib/server/classes.jsa > jdk1.out
-  xxd reproJDK/jdk-21.0.11+3/lib/server/classes.jsa > jdk2.out
-  diff jdk1.out jdk2.out
 fi
 
 exit $rc
