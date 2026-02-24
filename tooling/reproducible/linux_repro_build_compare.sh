@@ -466,8 +466,11 @@ attestationBuildUsingOpenJDK() {
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
   mkdir "$PWD/repro_tooling"
   echo "locale \$@ | grep -v C.utf8" > "$PWD/repro_tooling/locale"
+  chmod +x "$PWD/repro_tooling/locale"
   local PATH_SAVE="$PATH"
   export PATH="$PWD/repro_tooling:$PATH"
+  echo "$PATH"
+  ls -l "$PWD/repro_tooling/locale"
   which locale
   if ! echo "cd $BUILD_DIR && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
     cat "$BUILD_DIR/repro_configure.log" || true
