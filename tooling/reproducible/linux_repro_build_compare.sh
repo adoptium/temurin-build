@@ -465,7 +465,7 @@ attestationBuildUsingOpenJDK() {
 
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
   mkdir "$PWD/repro_tooling"
-  echo "locale \$@ | grep -v C.utf8" > "$PWD/repro_tooling/locale"
+  echo "NEW_PATH=\"\${PATH#*:}\"; PATH="\$NEW_PATH" locale \$@ | grep -v C.utf8" > "$PWD/repro_tooling/locale"
   chmod +x "$PWD/repro_tooling/locale"
   local PATH_SAVE="$PATH"
   export PATH="$PWD/repro_tooling:$PATH"
