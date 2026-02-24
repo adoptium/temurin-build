@@ -410,13 +410,18 @@ buildUsingTemurinBuild() {
   local ARGS_END="${TEMURIN_BUILD_ARGS##* }"
   local BUILD_ARGS="$ARGS_START --user-openjdk-build-root-directory ${BUILD_DIR} $ARGS_END"
 
+  # Alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
+  createLocaleAliasCmdOnPath
+
   echo "Rebuild args for makejdk_any_platform.sh are: $BUILD_ARGS"
   if ! echo "cd temurin-build && ./makejdk-any-platform.sh $BUILD_ARGS > build.log 2>&1" | sh; then
     # Echo build.log
     cat temurin-build/build.log || true
     echo "makejdk-any-platform.sh build failure, exiting"
+    export PATH="$PATH_SAVE"
     exit 1
   fi
+  export PATH="$PATH_SAVE"
 
   # Echo build.log
   cat temurin-build/build.log
@@ -431,8 +436,10 @@ buildUsingTemurinBuild() {
 # Pad the WS_DIR with a sub-folder to the same length as TARGET_BUILD_DIR_TO_MATCH.
 # Necessary to avoid potential non-determinstic classes.jsa on Linux and binary differences on Mac
 padDirectoryToSameLength() {
-  local TARGET_BUILD_DIR_TO_MATCH=$(realpath -m "$1")
-  local WS_DIR=$(realpath -m "$2")
+  local TARGET_BUILD_DIR_TO_MATCH
+  TARGET_BUILD_DIR_TO_MATCH=$(realpath -m "$1")
+  local WS_DIR
+  WS_DIR=$(realpath -m "$2")
 
   local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#WS_DIR}))
   if [[ "$padding_length" -eq 0 ]]; then
@@ -451,6 +458,24 @@ padDirectoryToSameLength() {
   fi
 }
 
+# Alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
+createLocaleAliasCmdOnPath() {
+  # Ensure no local shell setting of LC_ALL gets used
+  unset LC_ALL
+
+  # Create directory and add to front of PATH
+  mkdir "$PWD/repro_tooling"
+  PATH_SAVE="$PATH"
+  export PATH="$PWD/repro_locale:$PATH"
+
+  # Create script to remove front of PATH and call 'real' 'locale' hiding C.utf8 flavours from output
+  echo "NEW_PATH=\"\${PATH#*:}\"; PATH=\"\$NEW_PATH\" locale \$@ | grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8" > "$PWD/repro_locale/locale"
+
+  chmod +x "$PWD/repro_locale/locale"
+
+  echo "Created 'locale' command alias to hide C.utf8, and force LC_ALL=C necessary for identical Temurin classlist"
+}
+
 attestationBuildUsingOpenJDK() {
   echo "Building JDK using OpenJDK configure and make..."
 
@@ -463,15 +488,10 @@ attestationBuildUsingOpenJDK() {
   echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR"
   (cd "$BUILD_DIR" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
 
+  # Alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
+  createLocaleAliasCmdOnPath
+
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
-  mkdir "$PWD/repro_tooling"
-  echo "NEW_PATH=\"\${PATH#*:}\"; PATH="\$NEW_PATH" locale \$@ | grep -v C.utf8" > "$PWD/repro_tooling/locale"
-  chmod +x "$PWD/repro_tooling/locale"
-  local PATH_SAVE="$PATH"
-  export PATH="$PWD/repro_tooling:$PATH"
-  echo "$PATH"
-  ls -l "$PWD/repro_tooling/locale"
-  which locale
   if ! echo "cd $BUILD_DIR && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
     cat "$BUILD_DIR/repro_configure.log" || true
     echo "OpenJDK configure failure, exiting"
