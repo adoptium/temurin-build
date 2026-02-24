@@ -464,7 +464,7 @@ createLocaleAliasCmdOnPath() {
   unset LC_ALL
 
   # Create directory and add to front of PATH
-  mkdir "$PWD/repro_tooling"
+  mkdir "$PWD/repro_locale"
   PATH_SAVE="$PATH"
   export PATH="$PWD/repro_locale:$PATH"
 
