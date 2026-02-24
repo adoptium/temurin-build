@@ -80,7 +80,9 @@ function expandJDK() {
 }
 
 # jdk-25+ Jlink runtimelink files contain signed binary "hash" lines in fs_* runtimelink files
-#  - remove hashes of binaries and of lib/security/cacerts
+#  - remove hashes of binaries on Windows & Mac due to Signatures
+#  - remove hashes of lib/security/cacerts as will differ because reproducible build time Mozilla certs might differ
+#    or using OpenJDK build certs
 #  - sort files as they are not sorted
 function removeJlinkRuntimelinkHashes() {
   local JDK_DIR="$1"
@@ -360,7 +362,7 @@ function processModuleInfo() {
   done
 }
 
-# Remove windowns generate classes jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa 
+# Remove windows and mac generated CDS jdk/bin/server/classes.jsa & jdk/bin/server/classes_nocoops.jsa as will differ due to Signatures
 function removeGeneratedClasses() {
   local JDK_DIR="$1"
   local OS="$2"
