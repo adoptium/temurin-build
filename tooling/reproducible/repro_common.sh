@@ -79,38 +79,39 @@ function expandJDK() {
   rm -rf "${JDK_ROOT}_CP"
 }
 
-# Windows & Mac: jdk-25+ Jlink runtimelink files contain signed binary "hash" lines in fs_* runtimelink files
+# jdk-25+ Jlink runtimelink files contain signed binary "hash" lines in fs_* runtimelink files
 #  - remove hashes of binaries and of lib/security/cacerts
 #  - sort files as they are not sorted
 function removeJlinkRuntimelinkHashes() {
   local JDK_DIR="$1"
   local OS="$2"
 
-  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
-    extractedDir="${JDK_DIR}/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink"
-    if [[ "$OS" =~ CYGWIN* ]]; then
-      extractedDir=$(cygpath -w $extractedDir)
-    fi
+  extractedDir="${JDK_DIR}/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink"
+  if [[ "$OS" =~ CYGWIN* ]]; then
+    extractedDir=$(cygpath -w $extractedDir)
+  fi
 
-    FILES=$(find "${extractedDir}" -type f -name "fs_*files")
-    for f in $FILES
-      do
+  FILES=$(find "${extractedDir}" -type f -name "fs_*files")
+  for f in $FILES
+    do
           # Remove the binary hashes
           if [[ "$OS" =~ Darwin* ]]; then
             sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dylib$)/\1|\2||\3/g' "$f"
             sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(bin\/.*$)/\1|\2||\3/g' "$f"
             sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
-          else
+          elif [[ "$OS" =~ CYGWIN* ]]; then
             sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dll$)/\1|\2||\3/g' "$f"
             sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.exe$)/\1|\2||\3/g' "$f"
+            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
+          else
+            # Linux binaries are identical, only cacerts will differ
             sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
           fi
 
           # Sort file content
           sort "$f" > "$f.sorted"
           rm "$f"
-      done
-  fi
+    done
 }
 
 # Process SystemModules classes to remove ModuleHashes$Builder differences due to Signatures
