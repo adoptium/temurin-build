@@ -464,11 +464,18 @@ attestationBuildUsingOpenJDK() {
   (cd "$BUILD_DIR" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
 
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
+  mkdir "$PWD/repro_tooling"
+  echo "locale \$@ | grep -v C.utf8" > "$PWD/repro_tooling/locale"
+  local PATH_SAVE="$PATH"
+  export PATH="$PWD/repro_tooling:$PATH"
+  which locale
   if ! echo "cd $BUILD_DIR && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
     cat "$BUILD_DIR/repro_configure.log" || true
     echo "OpenJDK configure failure, exiting"
+    export PATH="$PATH_SAVE"
     exit 1
   fi
+  export PATH="$PATH_SAVE"
 
   cat "$BUILD_DIR/repro_configure.log"
 
