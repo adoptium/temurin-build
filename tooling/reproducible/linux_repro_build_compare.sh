@@ -428,25 +428,25 @@ buildUsingTemurinBuild() {
   cp "$SBOM" SBOM.json
 }
 
-# Pad the CURRENT_DIR with a sub-folder to the same length as TARGET_BUILD_DIR_TO_MATCH.
+# Pad the WS_DIR with a sub-folder to the same length as TARGET_BUILD_DIR_TO_MATCH.
 # Necessary to avoid potential non-determinstic classes.jsa on Linux and binary differences on Mac
 padDirectoryToSameLength() {
-  local TARGET_BUILD_DIR_TO_MATCH="$1"
-  local CURRENT_DIR="$2"
+  local TARGET_BUILD_DIR_TO_MATCH=$(realpath -m "$1")
+  local WS_DIR=$(realpath -m "$2")
 
-  local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#CURRENT_DIR}))
+  local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#WS_DIR}))
   if [[ "$padding_length" -eq 0 ]]; then
-    echo "Warning: $TARGET_BUILD_DIR_TO_MATCH and $CURRENT_DIR are already same length" 1>&2
+    echo "Warning: $TARGET_BUILD_DIR_TO_MATCH and $WS_DIR are already same length" 1>&2
     echo ""
   elif [[ "$padding_length" -lt 0 ]] || [[ "$padding_length" -eq 1 ]]; then
-    echo "Warning: Unable to pad $CURRENT_DIR to necessary length of $TARGET_BUILD_DIR_TO_MATCH, padding required: $padding_length" 1>&2
+    echo "Warning: Unable to pad $WS_DIR to necessary length of $TARGET_BUILD_DIR_TO_MATCH, padding required: $padding_length" 1>&2
     echo ""
   else
     padding_length=$((padding_length - 1))
     local padding
     padding=$(printf "P%.0s" $(seq 1 $padding_length))
-    local padded="${CURRENT_DIR}/${padding}"
-    echo "Padded $CURRENT_DIR with sub-folder to $padded" 1>&2
+    local padded="${WS_DIR}/${padding}"
+    echo "Padded $WS_DIR with sub-folder to $padded" 1>&2
     echo "${padded}"
   fi
 }
