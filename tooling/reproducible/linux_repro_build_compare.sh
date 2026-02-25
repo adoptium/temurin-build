@@ -377,7 +377,7 @@ setupBuildDir() {
   if [[ -n "$BUILD_WORKSPACE" ]]; then
     BUILD_DIR="$BUILD_WORKSPACE"
   else
-    BUILD_DIR="$PWD"
+    BUILD_DIR="$PWD/build"
   fi
 
   # If we have the original build workspace folder, create padded sub-folder to match to help
@@ -409,9 +409,9 @@ buildUsingTemurinBuild() {
   createLocaleAliasCmdOnPath
 
   echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
-  if ! echo "cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
+  if ! echo "cd $BUILD_DIR && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
     # Echo build.log
-    cat temurin-build/build.log || true
+    cat "$BUILD_DIR/build.log" || true
     echo "makejdk-any-platform.sh build failure, exiting"
     export PATH="$PATH_SAVE"
     exit 1
@@ -419,12 +419,12 @@ buildUsingTemurinBuild() {
   export PATH="$PATH_SAVE"
 
   # Echo build.log
-  cat temurin-build/build.log
+  cat "$BUILD_DIR/build.log"
 
-  cp temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
+  cp "$BUILD_DIR"/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
 
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
-  cp "temurin-build/build.log" build.log
+  cp "$BUILD_DIR/build.log" build.log
   cp "$SBOM" SBOM.json
 }
 
