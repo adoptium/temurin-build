@@ -45,7 +45,7 @@ ifndef SBOM_FILE
     else
         SBOM_FILE := $(TEST_ROOT)/../jdkbinary/$(SBOM_FILE)
     endif
-$(info sbom $(SBOM_FILE))
+    $(info sbom $(SBOM_FILE))
 endif
 
 ifndef JDK_FILE
