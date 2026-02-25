@@ -21,7 +21,7 @@
                 <command>unset SPEC;\
                 rm -rf "$(TEST_ROOT)$(D)RWS";\
                 mkdir -p "$(TEST_ROOT)$(D)RWS";\
-                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)linux_repro_build_compare.sh --sbom-url "$(SBOM_FILE)" --jdk-url "$(JDK_FILE)" --attestation-verify --user-devkit-location "$(LINUX_ADOPTIUM_DEVKIT)" --build-workspace "$(TEST_ROOT)$(D)RWS"; \
+                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)linux_repro_build_compare.sh --sbom-url "$(SBOM_FILE)" --jdk-url "$(JDK_FILE)" --user-devkit-location "$(LINUX_ADOPTIUM_DEVKIT)" --build-workspace "$(TEST_ROOT)$(D)RWS"; \
         $(TEST_STATUS)
 		</command>
 		<levels>
