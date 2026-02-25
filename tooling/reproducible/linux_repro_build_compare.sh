@@ -402,8 +402,6 @@ buildUsingTemurinBuild() {
   setupBuildDir
   echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
 
-  # Shallow clone
-  git clone --depth 1 https://github.com/adoptium/temurin-build || exit 1
   # Checkout required temurin-build SHA into BUILD_DIR
   (cd "$BUILD_DIR" && git init . && git remote add origin "https://github.com/adoptium/temurin-build" && git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" && git checkout FETCH_HEAD)
 
