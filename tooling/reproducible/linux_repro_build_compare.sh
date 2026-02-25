@@ -358,7 +358,7 @@ getBuildParams() {
   # Remove any --with-jobs, let local user system determine
   # Remove any --user-openjdk-build-root-directory as that will be local to original system
   # shellcheck disable=SC2001
-  TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g | sed -e "s/--user-openjdk-build-root-directory[ ]*[^ ]*//g")
+  TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g" | sed -e "s/--user-openjdk-build-root-directory[ ]*[^ ]*//g")
 
   NATIVE_API_ARCH=$(uname -m)
   if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
