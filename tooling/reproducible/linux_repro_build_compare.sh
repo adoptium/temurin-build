@@ -219,7 +219,11 @@ setTemurinBuildArgs() {
     buildArgs="--user-devkit-location ${userDevkitLocation} ${buildArgs}"
   fi
 
+  # Specific commit sha to clone
   buildArgs="--branch ${buildScmRef} $buildArgs"
+
+  # Must do full clone to be able to build from commit sha
+  buildArgs="--disable-shallow-git-clone $buildArgs"
 
   echo "${buildArgs}"
 }
