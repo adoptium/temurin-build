@@ -201,6 +201,8 @@ setTemurinBuildArgs() {
   local timeStamp="$2"
   local using_DEVKIT="$3"
   local userDevkitLocation="$4"
+  local buildScmRef="$5"
+
   local ignoreOptions=("--enable-sbom-strace ")
   for ignoreOption in "${ignoreOptions[@]}"; do
     buildArgs="${buildArgs/${ignoreOption}/}"
@@ -216,6 +218,8 @@ setTemurinBuildArgs() {
   if [[ "${using_DEVKIT}" == "true" ]] && [[ -n "${userDevkitLocation}" ]]; then
     buildArgs="--user-devkit-location ${userDevkitLocation} ${buildArgs}"
   fi
+
+  buildArgs="$buildArgs --branch ${buildScmRef}"
 
   echo "${buildArgs}"
 }
@@ -293,11 +297,11 @@ downloadTooling() {
 
 checkAllVariablesSet() {
   if [ "$ATTESTATION_VERIFY" == true ]; then
-    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${adoptiumConfigureArgs}" ] || [ -z "${TEMURIN_VERSION}" ] || [ -z "${buildScmRef}" ] || [ -z "${openjdkSourceRepo}" ] || [ -z "${openjdkSourceCommitSHA}" ]; then
+    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${adoptiumConfigureArgs}" ] || [ -z "${TEMURIN_VERSION}" ] || [ -z "${openjdkSourceRepo}" ] || [ -z "${openjdkSourceCommitSHA}" ]; then
       echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
     fi
   else
-    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${TEMURIN_BUILD_SHA}" ] || [ -z "${TEMURIN_BUILD_ARGS}" ] || [ -z "${TEMURIN_VERSION}" ]; then
+    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${TEMURIN_BUILD_SHA}" ] || [ -z "${TEMURIN_BUILD_ARGS}" ] || [ -z "${TEMURIN_VERSION}" ] || [ -z "${BUILD_SCM_REF}" ]; then
       echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
     fi
   fi
@@ -328,14 +332,14 @@ getBuildParams() {
   BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
   TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
   BUILD_WORKSPACE_DIRECTORY=$(jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value' "$SBOM")
+  BUILD_SCM_REF=$(jq -r '.components[0].properties[] | select(.name == "SCM Ref") | .value' "$SBOM")
 
   if [ "$ATTESTATION_VERIFY" == true ]; then
     adoptiumSrcCommitUrl=$(jq -r '.components[0].properties[] | select(.name == "OpenJDK Source Commit") | .value' "$SBOM")
-    buildScmRef=$(jq -r '.components[0].properties[] | select(.name == "SCM Ref") | .value' "$SBOM")
     adoptiumConfigureArgs=$(jq -r '.components[0].properties[] | select(.name == "configure_args") | .value' "$SBOM")
 
-    # Check if the adoptiumSrcCommitUrl, buildScmRef and configure_args were found
-    if [ -n "$adoptiumSrcCommitUrl" ] && [ -n "$buildScmRef" ] && [ -n "$adoptiumConfigureArgs" ]; then
+    # Check if the adoptiumSrcCommitUrl and configure_args were found
+    if [ -n "$adoptiumSrcCommitUrl" ] && [ -n "$adoptiumConfigureArgs" ]; then
       adoptiumRepo="${adoptiumSrcCommitUrl%/commit/*}"
       adoptiumBuildCommitSHA=$(basename "$adoptiumSrcCommitUrl")
       openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
@@ -553,7 +557,7 @@ if [ "$ATTESTATION_VERIFY" == true ]; then
   setOpenJDKConfigureArgs
 else
   echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
-  TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION")
+  TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION" "$BUILD_SCM_REF")
 fi
 
 if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
