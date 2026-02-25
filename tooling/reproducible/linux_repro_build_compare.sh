@@ -356,8 +356,9 @@ getBuildParams() {
   fi
 
   # Remove any --with-jobs, let local user system determine
+  # Remove any --user-openjdk-build-root-directory as that will be local to original system
   # shellcheck disable=SC2001
-  TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g")
+  TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g | sed -e "s/--user-openjdk-build-root-directory[ ]*[^ ]*//g")
 
   NATIVE_API_ARCH=$(uname -m)
   if [ "${NATIVE_API_ARCH}" = "x86_64" ]; then NATIVE_API_ARCH=x64; fi
@@ -370,51 +371,47 @@ getBuildParams() {
   fi
 }
 
-# Construct "build dir" from current directory plus BUILD_FOLDER
-# Optionally padding to BUILD_WORKSPACE_DIRECTORY length
+# Construct "build dir" from current/workspace directory plus BUILD_FOLDER
+# Padding to BUILD_WORKSPACE_DIRECTORY length if known
 setupBuildDir() {
   if [[ -n "$BUILD_WORKSPACE" ]]; then
-    BUILD_DIR="$BUILD_WORKSPACE/$BUILD_FOLDER"
+    BUILD_DIR="$BUILD_WORKSPACE"
   else
-    BUILD_DIR="$PWD/$BUILD_FOLDER"
+    BUILD_DIR="$PWD"
   fi
 
   # If we have the original build workspace folder, create padded sub-folder to match to help
   # ensure deterministic classes.jsa
   if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
     local PADDED_BUILD_DIR
-    PADDED_BUILD_DIR=$(padDirectoryToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR")
+    PADDED_BUILD_DIR=$(padBuildDirToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR" "$BUILD_FOLDER")
     if [[ -n "$PADDED_BUILD_DIR" ]]; then
       BUILD_DIR="$PADDED_BUILD_DIR"
     fi
   fi
 
-  # Create folder
+  # Create build dir
   mkdir -p "$BUILD_DIR" || exit 1 
 }
 
 buildUsingTemurinBuild() {
   echo "Building JDK using temurin-build scripts..."
 
+  # Build folder must match temurin-build "workspace/build/src"
+  BUILD_FOLDER="workspace/build/src"
+  setupBuildDir
+  echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
+
   # Shallow clone
   git clone --depth 1 https://github.com/adoptium/temurin-build || exit 1
-  # Checkout required SHA only
-  (cd temurin-build && git fetch --depth 1 origin "$TEMURIN_BUILD_SHA" && git checkout "$TEMURIN_BUILD_SHA")
-
-  BUILD_FOLDER="bld"
-  setupBuildDir
-  echo "  building within workspace folder: ${BUILD_DIR}"
-
-  # Split TEMURIN_BUILD_ARGS to add --user-openjdk-build-root-directory arg as last option before version
-  local ARGS_START="${TEMURIN_BUILD_ARGS% *}"
-  local ARGS_END="${TEMURIN_BUILD_ARGS##* }"
-  local BUILD_ARGS="$ARGS_START --user-openjdk-build-root-directory ${BUILD_DIR} $ARGS_END"
+  # Checkout required temurin-build SHA into BUILD_DIR
+  (cd "$BUILD_DIR" && git init . && git remote add origin "https://github.com/adoptium/temurin-build" && git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" && git checkout FETCH_HEAD)
 
   # Alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
   createLocaleAliasCmdOnPath
 
-  echo "Rebuild args for makejdk_any_platform.sh are: $BUILD_ARGS"
-  if ! echo "cd temurin-build && ./makejdk-any-platform.sh $BUILD_ARGS > build.log 2>&1" | sh; then
+  echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
+  if ! echo "cd temurin-build && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
     # Echo build.log
     cat temurin-build/build.log || true
     echo "makejdk-any-platform.sh build failure, exiting"
@@ -433,13 +430,17 @@ buildUsingTemurinBuild() {
   cp "$SBOM" SBOM.json
 }
 
-# Pad the WS_DIR with a sub-folder to the same length as TARGET_BUILD_DIR_TO_MATCH.
+# Pad the BUILD_DIR/BUILD_FOLDER to the same length as TARGET_BUILD_DIR_TO_MATCH.
 # Necessary to avoid potential non-determinstic classes.jsa on Linux and binary differences on Mac
-padDirectoryToSameLength() {
+padBuildDirToSameLength() {
   local TARGET_BUILD_DIR_TO_MATCH
   TARGET_BUILD_DIR_TO_MATCH=$(realpath -m "$1")
-  local WS_DIR
-  WS_DIR=$(realpath -m "$2")
+  local WS_BUILD_DIR
+  WS_BUILD_DIR=$(realpath -m "$2")
+  local WS_BUILD_FOLDER
+  WS_BUILD_FOLDER=$(realpath -m "$3")
+
+  local WS_DIR="${WS_BUILD_DIR}/${WS_BUILD_FOLDER}"
 
   local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#WS_DIR}))
   if [[ "$padding_length" -eq 0 ]]; then
@@ -452,8 +453,8 @@ padDirectoryToSameLength() {
     padding_length=$((padding_length - 1))
     local padding
     padding=$(printf "P%.0s" $(seq 1 $padding_length))
-    local padded="${WS_DIR}/${padding}"
-    echo "Padded $WS_DIR with sub-folder to $padded" 1>&2
+    local padded="${WS_BUILD_DIR}/${padding}"
+    echo "Padded $WS_BUILD_DIR with sub-folder to $padded" 1>&2
     echo "${padded}"
   fi
 }
@@ -483,40 +484,41 @@ attestationBuildUsingOpenJDK() {
 
   BUILD_FOLDER="bld"
   setupBuildDir
-  echo "  building within workspace folder: ${BUILD_DIR}"
+  mkdir -p "$BUILD_DIR/$BUILD_FOLDER"
+  echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
 
-  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR"
-  (cd "$BUILD_DIR" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
+  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR/$BUILD_FOLDER"
+  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
 
   # Alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
   createLocaleAliasCmdOnPath
 
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
-  if ! echo "cd $BUILD_DIR && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
-    cat "$BUILD_DIR/repro_configure.log" || true
+  if ! echo "cd $BUILD_DIR/$BUILD_FOLDER && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
+    cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" || true
     echo "OpenJDK configure failure, exiting"
     export PATH="$PATH_SAVE"
     exit 1
   fi
   export PATH="$PATH_SAVE"
 
-  cat "$BUILD_DIR/repro_configure.log"
+  cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log"
 
   echo "Executing: make images"
-  if ! echo "cd $BUILD_DIR/build/* && make images > ../../repro_build.log 2>&1" | sh; then
-    cat "$BUILD_DIR/repro_build.log" || true
+  if ! echo "cd $BUILD_DIR/$BUILD_FOLDER/build/* && make images > ../../repro_build.log 2>&1" | sh; then
+    cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log" || true
     echo "OpenJDK make images failure, exiting"
     exit 1
   fi
 
-  cat "$BUILD_DIR/repro_build.log"
+  cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"
 
-  mv "$BUILD_DIR"/build/*/images/jdk "$BUILD_DIR/build/jdk-$TEMURIN_VERSION"
-  (cd "$BUILD_DIR/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "jdk-$TEMURIN_VERSION")
+  mv "$BUILD_DIR/$BUILD_FOLDER"/build/*/images/jdk "$BUILD_DIR/$BUILD_FOLDER/build/jdk-$TEMURIN_VERSION"
+  (cd "$BUILD_DIR/$BUILD_FOLDER/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "jdk-$TEMURIN_VERSION")
 
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
-  cp  "${BUILD_DIR}/repro_configure.log" build.log
-  cat "${BUILD_DIR}/repro_build.log"  >> build.log
+  cp  "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" build.log
+  cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"  >> build.log
   cp "$SBOM" SBOM.json
 }
 
