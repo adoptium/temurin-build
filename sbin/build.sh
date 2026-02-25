@@ -1195,7 +1195,7 @@ generateSBoM() {
   # Get the build directory to store in SBOM, needed for full deterministic reproducible builds
   local buildDirectory
   if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
-    buildDirectory=$(echo "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" | sed 's,\./,,' | sed 's,//,/,')
+    buildDirectory=$(echo "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" | sed 's,/\./,/,g' | sed 's,//*,/,g')
   else 
     buildDirectory=$(echo "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" | sed 's,/\./,/,g' | sed 's,//*,/,g')
   fi
