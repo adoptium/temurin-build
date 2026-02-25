@@ -440,11 +440,11 @@ padBuildDirToSameLength() {
   local WS_BUILD_FOLDER
   WS_BUILD_FOLDER=$(realpath -m "$3")
 
-echo "1=$1"
-echo "2=$2"
-echo "3=$3"
+echo "WS_BUILD_DIR=${WS_BUILD_DIR}" 1>&2
+echo "WS_BUILD_FOLDER=${WS_BUILD_FOLDER}" 1>&2
 
   local WS_DIR="${WS_BUILD_DIR}/${WS_BUILD_FOLDER}"
+echo "WS_DIR=${WS_DIR}" 1>&2
 
   local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#WS_DIR}))
   if [[ "$padding_length" -eq 0 ]]; then
