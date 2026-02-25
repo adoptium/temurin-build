@@ -219,7 +219,7 @@ setTemurinBuildArgs() {
     buildArgs="--user-devkit-location ${userDevkitLocation} ${buildArgs}"
   fi
 
-  buildArgs="$buildArgs --branch ${buildScmRef}"
+  buildArgs="--branch ${buildScmRef} $buildArgs"
 
   echo "${buildArgs}"
 }
