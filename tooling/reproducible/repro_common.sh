@@ -81,8 +81,7 @@ function expandJDK() {
 
 # jdk-25+ Jlink runtimelink files contain signed binary "hash" lines in fs_* runtimelink files
 #  - remove hashes of binaries on Windows & Mac due to Signatures
-#  - remove hashes of lib/security/cacerts as will differ because reproducible build time Mozilla certs might differ
-#    or using OpenJDK build certs
+#  - remove hashes of lib/security/cacerts as Temurin uses Mozilla cacerts and at re-build time Mozilla certs will likely differ
 #  - sort files as they are not sorted
 function removeJlinkRuntimelinkHashes() {
   local JDK_DIR="$1"
@@ -96,23 +95,23 @@ function removeJlinkRuntimelinkHashes() {
   FILES=$(find "${extractedDir}" -type f -name "fs_*files")
   for f in $FILES
     do
-          # Remove the binary hashes
-          if [[ "$OS" =~ Darwin* ]]; then
-            sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dylib$)/\1|\2||\3/g' "$f"
-            sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(bin\/.*$)/\1|\2||\3/g' "$f"
-            sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
-          elif [[ "$OS" =~ CYGWIN* ]]; then
-            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dll$)/\1|\2||\3/g' "$f"
-            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.exe$)/\1|\2||\3/g' "$f"
-            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
-          else
-            # Linux binaries are identical, only cacerts will differ
-            sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
-          fi
+      # Remove the binary hashes
+      if [[ "$OS" =~ Darwin* ]]; then
+        sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dylib$)/\1|\2||\3/g' "$f"
+        sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(bin\/.*$)/\1|\2||\3/g' "$f"
+        sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
+      elif [[ "$OS" =~ CYGWIN* ]]; then
+        sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dll$)/\1|\2||\3/g' "$f"
+        sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.exe$)/\1|\2||\3/g' "$f"
+        sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
+      else
+        # Linux binaries are identical, only cacerts will differ
+        sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
+      fi
 
-          # Sort file content
-          sort "$f" > "$f.sorted"
-          rm "$f"
+      # Sort file content
+      sort "$f" > "$f.sorted"
+      rm "$f"
     done
 }
 
