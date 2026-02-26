@@ -553,13 +553,10 @@ if [[ "${USING_DEVKIT}" == "false" ]]; then
   setNonDevkitGccEnvironment
 fi
 
-if [ "$ATTESTATION_VERIFY" == false ]; then
-  setAntEnvironment
-fi
-
 if [ "$ATTESTATION_VERIFY" == true ]; then
   setOpenJDKConfigureArgs
 else
+  setAntEnvironment
   echo "original temurin build args is ${TEMURIN_BUILD_ARGS}"
   TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION" "$BUILD_SCM_REF")
 fi
