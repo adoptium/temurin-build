@@ -580,7 +580,7 @@ else
 fi
 
 if [ "$ATTESTATION_VERIFY" == true ]; then
-  attestationBuildUsingOpenJDK  
+  attestationBuildUsingOpenJDK
 else
   buildUsingTemurinBuild
 fi
