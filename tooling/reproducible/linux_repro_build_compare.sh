@@ -338,6 +338,8 @@ getBuildParams() {
   TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
   BUILD_WORKSPACE_DIRECTORY=$(jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value' "$SBOM")
   BUILD_SCM_REF=$(jq -r '.components[0].properties[] | select(.name == "SCM Ref") | .value' "$SBOM")
+  BUILD_MAJOR_VERSION=$(echo "${TEMURIN_VERSION}" | cut -d'.' -f1)
+  BUILD_LC_ALL=$(jq -r '.components[0] | .properties[] | select (.name == "Build LC_ALL") | .value' "$SBOM")
 
   if [ "$ATTESTATION_VERIFY" == true ]; then
     adoptiumSrcCommitUrl=$(jq -r '.components[0].properties[] | select(.name == "OpenJDK Source Commit") | .value' "$SBOM")
@@ -414,20 +416,22 @@ buildUsingTemurinBuild() {
   # Checkout required temurin-build SHA into BUILD_DIR
   (cd "$BUILD_DIR" && git init . && git remote add origin "https://github.com/adoptium/temurin-build" && git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" && git checkout FETCH_HEAD)
 
-  if [[ "$NATIVE_API_ARCH" == "aarch64" ]]; then
-    # On aarch64 alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
-    createLocaleAliasCmdOnPath
-  fi
+  # Try and enforce correct build LC_ALL
+  createLocaleAliasCmdOnPath
 
   echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
   if ! echo "cd $BUILD_DIR && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
     # Echo build.log
     cat "$BUILD_DIR/build.log" || true
     echo "makejdk-any-platform.sh build failure, exiting"
-    export PATH="$PATH_SAVE"
+    if [[ -n "$PATH_SAVE" ]]; then
+      export PATH="$PATH_SAVE"
+    fi
     exit 1
   fi
-  export PATH="$PATH_SAVE"
+  if [[ -n "$PATH_SAVE" ]]; then
+    export PATH="$PATH_SAVE"
+  fi
 
   # Echo build.log
   cat "$BUILD_DIR/build.log"
@@ -467,22 +471,53 @@ padBuildDirToSameLength() {
   fi
 }
 
-# Alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
+# Alias 'locale' to try and force required LC_ALL due to issue: https://github.com/adoptium/infrastructure/issues/3576
 createLocaleAliasCmdOnPath() {
   # Ensure no local shell setting of LC_ALL gets used
   unset LC_ALL
 
-  # Create directory and add to front of PATH
-  mkdir "$PWD/repro_locale"
-  PATH_SAVE="$PATH"
-  export PATH="$PWD/repro_locale:$PATH"
+  local LC_TO_USE
+  if [[ -z "$BUILD_LC_ALL" ]]; then
+    # We don't have an SBOM value for Build LC_ALL. We assume the Temurin default build values.
+    if [[ "$BUILD_MAJOR_VERSION" -lt 23 ]]; then
+      LC_TO_USE="C"
+    else
+      # jdk-23+ Temurin build images prior to SBOM Build LC ALL addition are c.utf8, except for aarch64
+      if [[ "$NATIVE_API_ARCH" == "aarch64" ]]; then
+        LC_TO_USE="C"
+      else
+        LC_TO_USE="C.utf8"
+      fi
+    fi
+  else
+    LC_TO_USE="$BUILD_LC_ALL"
+  fi
 
-  # Create script to remove front of PATH and call 'real' 'locale' hiding C.utf8 flavours from output
-  echo "NEW_PATH=\"\${PATH#*:}\"; PATH=\"\$NEW_PATH\" locale \$@ | grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8" > "$PWD/repro_locale/locale"
+  # Hide ones we don't want the default OpenJDK logic to use (https://github.com/adoptium/jdk25u/blob/30a962c1ab3ef19159c3ea2179602289e7e6f3ac/make/autoconf/basic.m4#L139)
+  local LC_TO_HIDE
+  if [[ "$LC_TO_USE" == "C" ]]; then
+    # Hide C.utf8 and en_US.utf8 flavours, as OpenJDK logic will find those over C
+    LC_TO_HIDE="grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8"
+  elif [[ "$LC_TO_USE" == "en_US.utf8" ]] || [[ "$LC_TO_USE" == "en_US.UTF-8" ]]; then
+    # Hide C.utf flavours as OpenJDK logic will find those over en_US.utf8
+    LC_TO_HIDE="grep -v C.utf8 | grep -v C.UTF-8"
+  fi
 
-  chmod +x "$PWD/repro_locale/locale"
+  if [[ -n "$LC_TO_HIDE" ]]; then
+    # Create directory and add to front of PATH
+    mkdir "$PWD/repro_locale"
+    PATH_SAVE="$PATH"
+    export PATH="$PWD/repro_locale:$PATH"
 
-  echo "Created 'locale' command alias to hide C.utf8, and force LC_ALL=C necessary for identical Temurin classlist"
+    # Create script to remove front of PATH and call 'real' 'locale' hiding C.utf8 flavours from output
+    echo "NEW_PATH=\"\${PATH#*:}\"; PATH=\"\$NEW_PATH\" locale \$@ | grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8" > "$PWD/repro_locale/locale"
+
+    chmod +x "$PWD/repro_locale/locale"
+
+    echo "Created 'locale' command alias to hide C.utf8, and force LC_ALL=C necessary for identical Temurin classlist"
+  else
+    PATH_SAVE=""
+  fi
 }
 
 attestationBuildUsingOpenJDK() {
@@ -498,17 +533,21 @@ attestationBuildUsingOpenJDK() {
   echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR/$BUILD_FOLDER"
   (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
 
-  # Alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
+  # Try and enforce correct build LC_ALL
   createLocaleAliasCmdOnPath
 
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
   if ! echo "cd $BUILD_DIR/$BUILD_FOLDER && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
     cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" || true
     echo "OpenJDK configure failure, exiting"
-    export PATH="$PATH_SAVE"
+    if [[ -n "$PATH_SAVE" ]]; then
+      export PATH="$PATH_SAVE"
+    fi
     exit 1
   fi
-  export PATH="$PATH_SAVE"
+  if [[ -n "$PATH_SAVE" ]]; then
+    export PATH="$PATH_SAVE"
+  fi
 
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log"
 

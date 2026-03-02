@@ -1200,6 +1200,23 @@ generateSBoM() {
     buildDirectory=$(echo "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" | sed 's,/\./,/,g' | sed 's,//*,/,g')
   fi
 
+  # Get the build LC_ALL used to store in SBOM, needed for full deterministic reproducible builds jdk-21+
+  local BUILD_LC_ALL=""
+  if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 21 ]]; then
+    local specFile
+    if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+      specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
+    else
+      specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
+    fi
+
+    # Get "export LC_ALL" value used from build spec.gmk
+    BUILD_LC_ALL="$(grep "^export LC_ALL[ ]*:=" ${specFile} | sed "s/^export LC_ALL[ ]*:=[ ]*//")"
+    if [[ -z "$BUILD_LC_ALL" ]]; then
+      echo "Warning: Unable to find export LC_ALL from spec file: ${specFile}"
+    fi
+  fi
+
   checkingToolSummary
 
   # add individual components that have been generated in this build
@@ -1260,6 +1277,11 @@ generateSBoM() {
 
     # Add build workspace directory
     addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Workspace Directory" "${buildDirectory}"
+
+    if [[ -n "$BUILD_LC_ALL" ]]; then
+      # Add build LC_ALL
+      addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build LC_ALL" "${BUILD_LC_ALL}"
+    fi
 
     # Add Tool Summary section from configure.txt
     addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Tools Summary" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
