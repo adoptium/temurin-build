@@ -581,9 +581,9 @@ Compare_JDK() {
 
   set +e
   if [ "$ATTESTATION_VERIFY" == true ]; then
-    ./repro_compare.sh temurin "$sourceJDK/Contents/Home" openjdk "reproJDK/jdk-$TEMURIN_VERSION/Contents/Home" Darwin 2>&1 || rc=$?
+    ./repro_compare.sh temurin "$sourceJDK" openjdk "reproJDK/jdk-$TEMURIN_VERSION" Darwin 2>&1 || rc=$?
   else
-    ./repro_compare.sh temurin "$sourceJDK/Contents/Home" temurin "reproJDK/jdk-$TEMURIN_VERSION/Contents/Home" Darwin 2>&1 || rc=$?
+    ./repro_compare.sh temurin "$sourceJDK" temurin "reproJDK/jdk-$TEMURIN_VERSION" Darwin 2>&1 || rc=$?
   fi
   set -e
 
