@@ -72,6 +72,7 @@ if [ -z "$SBOM_PARAM" ] || [ -z "$JDK_PARAM" ]; then
   echo "  Optional:"
   echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of tarball of a user built Linux gcc DevKit"
   echo "    --attestation-verify : Enables Attestation Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
+  echo "    --build-workspace : FULL path to the location to perform the reproducible build within"
   exit 1
 fi
 
@@ -413,8 +414,10 @@ buildUsingTemurinBuild() {
   # Checkout required temurin-build SHA into BUILD_DIR
   (cd "$BUILD_DIR" && git init . && git remote add origin "https://github.com/adoptium/temurin-build" && git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" && git checkout FETCH_HEAD)
 
-  # Alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
-  createLocaleAliasCmdOnPath
+  if [[ "$NATIVE_API_ARCH" == "aarch64" ]]; then
+    # On aarch64 alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
+    createLocaleAliasCmdOnPath
+  fi
 
   echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
   if ! echo "cd $BUILD_DIR && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
