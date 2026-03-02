@@ -72,6 +72,7 @@ if [ -z "$SBOM_PARAM" ] || [ -z "$JDK_PARAM" ]; then
   echo "  Optional:"
   echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of tarball of a user built Linux gcc DevKit"
   echo "    --attestation-verify : Enables Attestation Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
+  echo "    --build-workspace : FULL path to the location to perform the reproducible build within"
   exit 1
 fi
 
