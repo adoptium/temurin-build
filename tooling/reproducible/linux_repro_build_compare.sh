@@ -534,7 +534,7 @@ attestationBuildUsingOpenJDK() {
   (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
 
   # Try and enforce correct build LC_ALL
-  createLocaleAliasCmdOnPath
+  #createLocaleAliasCmdOnPath
 
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
   if ! echo "cd $BUILD_DIR/$BUILD_FOLDER && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
@@ -545,9 +545,9 @@ attestationBuildUsingOpenJDK() {
     fi
     exit 1
   fi
-  if [[ -n "$PATH_SAVE" ]]; then
-    export PATH="$PATH_SAVE"
-  fi
+  #if [[ -n "$PATH_SAVE" ]]; then
+  #  export PATH="$PATH_SAVE"
+  #fi
 
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log"
 
