@@ -535,6 +535,7 @@ attestationBuildUsingOpenJDK() {
 
   # Try and enforce correct build LC_ALL
   #createLocaleAliasCmdOnPath
+  echo "LC_ALL=$LC_ALL"
 
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
   if ! echo "cd $BUILD_DIR/$BUILD_FOLDER && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
