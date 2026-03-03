@@ -12,7 +12,8 @@
 # ********************************************************************************
 
 # Reproducible build root must be shortest path possible to allow room for padding to same folder length as original build
-REPRO_BLD_WS := $(TEST_ROOT)/../R
+#REPRO_BLD_WS := $(TEST_ROOT)/../R
+REPRO_BLD_WS := /tmp/RBLD
 
 ADOPTIUM_DEVKIT_URL := https://github.com/adoptium/devkit-binaries/releases/download
 
