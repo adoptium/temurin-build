@@ -443,8 +443,9 @@ buildUsingTemurinBuild() {
   cp "$SBOM" SBOM.json
 }
 
-# Pad the BUILD_DIR/BUILD_FOLDER to the "longer" length than TARGET_BUILD_DIR_TO_MATCH.
-# Necessary to avoid potential non-determinstic classes.jsa on Linux and binary differences on Mac
+# Pad the BUILD_DIR/BUILD_FOLDER to the same length as TARGET_BUILD_DIR_TO_MATCH.
+# Necessary to avoid potential non-determinstic classes.jsa on some Linux due to https://github.com/adoptium/temurin-build/issues/4403
+# and binary differences on Mac
 padBuildDirToRequiredLength() {
   local TARGET_BUILD_DIR_TO_MATCH
   TARGET_BUILD_DIR_TO_MATCH=$(realpath -m "$1")
@@ -455,10 +456,6 @@ padBuildDirToRequiredLength() {
   local WS_DIR="${WS_BUILD_DIR}/${WS_BUILD_FOLDER}"
 
   local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#WS_DIR}))
-
-  # We need to padd to "longer" than the original for workaround to issue: https://github.com/adoptium/temurin-build/issues/4403
-  #   Try padding to original + 10 (May work on Linux!!)
-  padding_length=$((padding_length + 10))
 
   if [[ "$padding_length" -eq 0 ]]; then
     echo "Warning: $TARGET_BUILD_DIR_TO_MATCH and $WS_DIR are already same length" 1>&2
@@ -551,9 +548,9 @@ attestationBuildUsingOpenJDK() {
     fi
     exit 1
   fi
-  #if [[ -n "$PATH_SAVE" ]]; then
-  #  export PATH="$PATH_SAVE"
-  #fi
+  if [[ -n "$PATH_SAVE" ]]; then
+    export PATH="$PATH_SAVE"
+  fi
 
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log"
 
