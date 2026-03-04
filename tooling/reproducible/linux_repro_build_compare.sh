@@ -456,7 +456,7 @@ padBuildDirToRequiredLength() {
 
   local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#WS_DIR}))
 
-  // We need to padd to "longer" than the original for workaround to issue: xxx
+  # We need to padd to "longer" than the original for workaround to issue: xxx
   padding_length=$((padding_length + 1))
 
   if [[ "$padding_length" -eq 0 ]]; then
@@ -466,7 +466,7 @@ padBuildDirToRequiredLength() {
     echo "Warning: Unable to pad $WS_DIR to necessary length of $TARGET_BUILD_DIR_TO_MATCH, padding required: $padding_length" 1>&2
     echo ""
   else
-    // Take off 1 for "/"
+    # Take off 1 for "/"
     padding_length=$((padding_length - 1))
     local padding
     padding=$(printf "P%.0s" $(seq 1 $padding_length))
@@ -491,7 +491,7 @@ createLocaleAliasCmdOnPath() {
       if [[ "$NATIVE_API_ARCH" == "aarch64" ]]; then
         LC_TO_USE="C"
       else
-        LC_TO_USE="C.utf8"
+        LC_TO_USE="en_US.UTF-8"
       fi
     fi
   else
