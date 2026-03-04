@@ -456,8 +456,9 @@ padBuildDirToRequiredLength() {
 
   local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#WS_DIR}))
 
-  # We need to padd to "longer" than the original for workaround to issue: xxx
-  padding_length=$((padding_length + 1))
+  # We need to padd to "longer" than the original for workaround to issue: https://github.com/adoptium/temurin-build/issues/4403
+  #   Try padding to original + 10 (May work on Linux!!)
+  padding_length=$((padding_length + 10))
 
   if [[ "$padding_length" -eq 0 ]]; then
     echo "Warning: $TARGET_BUILD_DIR_TO_MATCH and $WS_DIR are already same length" 1>&2
