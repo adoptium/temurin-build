@@ -395,7 +395,7 @@ setupBuildDir() {
   # ensure deterministic classes.jsa
   if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
     local PADDED_BUILD_DIR
-    PADDED_BUILD_DIR=$(padBuildDirToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR" "$BUILD_FOLDER")
+    PADDED_BUILD_DIR=$(padBuildDirToRequiredLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR" "$BUILD_FOLDER")
     if [[ -n "$PADDED_BUILD_DIR" ]]; then
       BUILD_DIR="$PADDED_BUILD_DIR"
     fi
@@ -443,9 +443,9 @@ buildUsingTemurinBuild() {
   cp "$SBOM" SBOM.json
 }
 
-# Pad the BUILD_DIR/BUILD_FOLDER to the same length as TARGET_BUILD_DIR_TO_MATCH.
+# Pad the BUILD_DIR/BUILD_FOLDER to the "longer" length than TARGET_BUILD_DIR_TO_MATCH.
 # Necessary to avoid potential non-determinstic classes.jsa on Linux and binary differences on Mac
-padBuildDirToSameLength() {
+padBuildDirToRequiredLength() {
   local TARGET_BUILD_DIR_TO_MATCH
   TARGET_BUILD_DIR_TO_MATCH=$(realpath -m "$1")
   local WS_BUILD_DIR
@@ -455,6 +455,10 @@ padBuildDirToSameLength() {
   local WS_DIR="${WS_BUILD_DIR}/${WS_BUILD_FOLDER}"
 
   local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#WS_DIR}))
+
+  // We need to padd to "longer" than the original for workaround to issue: xxx
+  padding_length=$((padding_length + 1))
+
   if [[ "$padding_length" -eq 0 ]]; then
     echo "Warning: $TARGET_BUILD_DIR_TO_MATCH and $WS_DIR are already same length" 1>&2
     echo ""
@@ -462,6 +466,7 @@ padBuildDirToSameLength() {
     echo "Warning: Unable to pad $WS_DIR to necessary length of $TARGET_BUILD_DIR_TO_MATCH, padding required: $padding_length" 1>&2
     echo ""
   else
+    // Take off 1 for "/"
     padding_length=$((padding_length - 1))
     local padding
     padding=$(printf "P%.0s" $(seq 1 $padding_length))
