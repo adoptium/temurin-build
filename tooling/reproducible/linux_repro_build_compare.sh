@@ -513,11 +513,11 @@ createLocaleAliasCmdOnPath() {
     export PATH="$PWD/repro_locale:$PATH"
 
     # Create script to remove front of PATH and call 'real' 'locale' hiding C.utf8 flavours from output
-    echo "NEW_PATH=\"\${PATH#*:}\"; PATH=\"\$NEW_PATH\" locale \$@ | grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8" > "$PWD/repro_locale/locale"
+    echo "NEW_PATH=\"\${PATH#*:}\"; PATH=\"\$NEW_PATH\" locale \$@ | ${LC_TO_HIDE}" > "$PWD/repro_locale/locale"
 
     chmod +x "$PWD/repro_locale/locale"
 
-    echo "Created 'locale' command alias to hide C.utf8, and force LC_ALL=C necessary for identical Temurin classlist"
+    echo "Created 'locale' command alias to hide ${LC_TO_HIDE}, and force LC_ALL=C necessary for identical Temurin classlist"
   else
     PATH_SAVE=""
   fi
