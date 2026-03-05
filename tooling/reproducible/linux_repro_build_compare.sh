@@ -506,8 +506,24 @@ createLocaleAliasCmdOnPath() {
   # Check if desired locale is available
   local LC_TO_USE_EXISTS="true"
   if ! locale -a | grep "^$LC_TO_USE\$"; then
-    LC_TO_USE_EXISTS="false"
     echo "Warning: Desired locale to use $LC_TO_USE, is not available on this system."
+    local LC_TO_USE_ALT=""
+    if [[ "$LC_TO_USE" =~ .*\.utf8$ ]]; then
+      LC_TO_USE_ALT="${LC_TO_USE/utf8/UTF-8}"
+    elif [[ "$LC_TO_USE" =~ .*\.UTF-8$ ]]; then
+      LC_TO_USE_ALT="${LC_TO_USE/UTF-8/utf8}"
+    fi
+    if [[ -n "$LC_TO_USE_ALT" ]]; then
+      echo "  checking for alternate locale $LC_TO_USE_ALT"
+      if ! locale -a | grep "^$LC_TO_USE_ALT\$"; then
+        echo "Warning: Desired alternate locale to use $LC_TO_USE_ALT, is not available on this system."
+        LC_TO_USE_EXISTS="false"
+      else
+        LC_TO_USE="$LC_TO_USE_ALT"
+      fi
+    else
+      LC_TO_USE_EXISTS="false"
+    fi
   fi
 
   # Hide ones we don't want the default OpenJDK logic to use (https://github.com/adoptium/jdk25u/blob/30a962c1ab3ef19159c3ea2179602289e7e6f3ac/make/autoconf/basic.m4#L139)
