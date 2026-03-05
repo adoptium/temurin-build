@@ -497,13 +497,20 @@ createLocaleAliasCmdOnPath() {
     LC_TO_USE="$BUILD_LC_ALL"
   fi
 
+  # Check if desired locale is available
+  local LC_TO_USE_EXISTS="true"
+  if ! locale -a | grep "^$LC_TO_USE\$"; then
+    LC_TO_USE_EXISTS="false"
+    echo "Warning: Desired locale to use $LC_TO_USE, is not available on this system."
+  fi
+
   # Hide ones we don't want the default OpenJDK logic to use (https://github.com/adoptium/jdk25u/blob/30a962c1ab3ef19159c3ea2179602289e7e6f3ac/make/autoconf/basic.m4#L139)
-  local LC_TO_HIDE
+  local LC_TO_HIDE=""
   if [[ "$LC_TO_USE" == "C" ]]; then
-    # Hide C.utf8 and en_US.utf8 flavours, as OpenJDK logic will find those over C
+    # Hide C.utf8 and en_US.utf8 flavours, as jdk-23+ OpenJDK logic will find those over C
     LC_TO_HIDE="grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8"
-  elif [[ "$LC_TO_USE" == "en_US.utf8" ]] || [[ "$LC_TO_USE" == "en_US.UTF-8" ]]; then
-    # Hide C.utf flavours as OpenJDK logic will find those over en_US.utf8
+  elif [[ "$LC_TO_USE" == "en_US.utf8" ]] || [[ "$LC_TO_USE" == "en_US.UTF-8" ]] && [[ "LC_TO_USE_EXISTS" == "true" ]]; then
+    # As the desired locale exists, hide C.utf flavours as jdk-23+ OpenJDK logic will find those over en_US.utf8
     LC_TO_HIDE="grep -v C.utf8 | grep -v C.UTF-8"
   fi
 
