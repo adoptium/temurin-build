@@ -318,10 +318,7 @@ getUpstreamOpenJDKCommitSHA() {
   local adoptiumBuildCommitSHA="$3"
 
   # Shallow clone commit history only
-  if ! git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_mirror_repo; then
-    echo "git clone --filter=tree:0 failure, maybe older version of git, try a full clone instead"
-    git clone "$adoptiumMirrorRepo" adoptium_mirror_repo
-  fi
+  git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_mirror_repo || git clone "$adoptiumMirrorRepo" adoptium_mirror_repo
 
   # Find upstream OpenJDK commit SHA, which is the first non-merge commit from the adoptiumBuildCommitSHA
   openjdkCommitSHA=$(cd adoptium_mirror_repo && git log --no-merges -1 "$adoptiumBuildCommitSHA" --format=%H)
@@ -417,7 +414,8 @@ buildUsingTemurinBuild() {
   echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
 
   # Checkout required temurin-build SHA into BUILD_DIR
-  (cd "$BUILD_DIR" && git init . && git remote add origin "https://github.com/adoptium/temurin-build" && git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" && git checkout FETCH_HEAD)
+  local repo="https://github.com/adoptium/temurin-build"
+  (cd "$BUILD_DIR" && git init . && git remote add origin "$repo" && { git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" || git fetch --depth 1 origin "$TEMURIN_BUILD_SHA"; } && git checkout FETCH_HEAD)
 
   # Try and enforce correct build LC_ALL
   createLocaleAliasCmdOnPath
@@ -537,7 +535,7 @@ attestationBuildUsingOpenJDK() {
   echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
 
   echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR/$BUILD_FOLDER"
-  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
+  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && { git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" || git fetch --depth 1 origin "$openjdkSourceCommitSHA"; } && git checkout FETCH_HEAD)
 
   # Try and enforce correct build LC_ALL
   createLocaleAliasCmdOnPath
