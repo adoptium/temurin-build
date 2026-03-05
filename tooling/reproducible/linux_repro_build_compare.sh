@@ -497,6 +497,12 @@ createLocaleAliasCmdOnPath() {
     LC_TO_USE="$BUILD_LC_ALL"
   fi
 
+  echo "Desired locale from original JDK build: $LC_TO_USE"
+  echo "Available locales on this system:"
+  echo "================================="
+  locale -a
+  echo "================================="
+
   # Check if desired locale is available
   local LC_TO_USE_EXISTS="true"
   if ! locale -a | grep "^$LC_TO_USE\$"; then
