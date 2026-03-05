@@ -531,7 +531,7 @@ createLocaleAliasCmdOnPath() {
   if [[ "$LC_TO_USE" == "C" ]]; then
     # Hide C.utf8 and en_US.utf8 flavours, as jdk-23+ OpenJDK logic will find those over C
     LC_TO_HIDE="grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8"
-  elif [[ "$LC_TO_USE" == "en_US.utf8" ]] || [[ "$LC_TO_USE" == "en_US.UTF-8" ]] && [[ "LC_TO_USE_EXISTS" == "true" ]]; then
+  elif [[ "$LC_TO_USE" == "en_US.utf8" ]] || [[ "$LC_TO_USE" == "en_US.UTF-8" ]] && [[ "$LC_TO_USE_EXISTS" == "true" ]]; then
     # As the desired locale exists, hide C.utf flavours as jdk-23+ OpenJDK logic will find those over en_US.utf8
     LC_TO_HIDE="grep -v C.utf8 | grep -v C.UTF-8"
   fi
