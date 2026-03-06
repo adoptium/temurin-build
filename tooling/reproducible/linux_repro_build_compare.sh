@@ -581,9 +581,6 @@ attestationBuildUsingOpenJDK() {
     fi
     exit 1
   fi
-  if [[ -n "$PATH_SAVE" ]]; then
-    export PATH="$PATH_SAVE"
-  fi
 
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log"
 
@@ -591,7 +588,13 @@ attestationBuildUsingOpenJDK() {
   if ! echo "cd $BUILD_DIR/$BUILD_FOLDER/build/* && make images > ../../repro_build.log 2>&1" | sh; then
     cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log" || true
     echo "OpenJDK make images failure, exiting"
+    if [[ -n "$PATH_SAVE" ]]; then
+      export PATH="$PATH_SAVE"
+    fi
     exit 1
+  fi
+  if [[ -n "$PATH_SAVE" ]]; then
+    export PATH="$PATH_SAVE"
   fi
 
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"
