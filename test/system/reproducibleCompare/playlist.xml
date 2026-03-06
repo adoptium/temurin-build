@@ -18,14 +18,11 @@
 	<include>reproducible.mk</include>
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test</testCaseName>
-		<command>docker container rm -f reproducibleCompare; \
-	docker run --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv6.conf.default.disable_ipv6=0 -v "$(TEST_RESROOT):/home/jenkins/test" -w "/home/jenkins/" -v "$(TEST_JDK_HOME):/home/jenkins/jdkbinary/" --name reproducibleCompare registry.access.redhat.com/ubi8/ubi /bin/bash /home/jenkins/test/linux_repro_build_compare.sh $(SBOM_FILE) /home/jenkins/jdkbinary; \
-	$(TEST_STATUS); \
-	docker cp reproducibleCompare:/home/jenkins/reprotest.diff ./; \
-	docker cp reproducibleCompare:/home/jenkins/reproJDK.tar.gz ./; \
-	docker cp reproducibleCompare:/home/jenkins/SBOM.json ./; \
-	docker cp reproducibleCompare:/home/jenkins/build.log ./; \
-	docker container rm -f reproducibleCompare
+                <command>unset SPEC;\
+                rm -rf "$(TEST_ROOT)$(D)RWS";\
+                mkdir -p "$(TEST_ROOT)$(D)RWS";\
+                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)linux_repro_build_compare.sh --sbom-url "$(SBOM_FILE)" --jdk-url "$(JDK_FILE)" --attestation-verify --user-devkit-location "$(LINUX_ADOPTIUM_DEVKIT)" --build-workspace "$(TEST_ROOT)$(D)RWS"; \
+        $(TEST_STATUS)
 		</command>
 		<levels>
 			<level>special</level>
@@ -39,32 +36,7 @@
 		<versions>
 			<version>21+</version>
 		</versions>
-		<platformRequirements>os.linux,^os.linux_390</platformRequirements>
-	</test>
-	<test>
-		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test_s390x</testCaseName>
-		<command>docker container rm -f reproducibleCompare; \
-	docker run --sysctl net.ipv6.conf.all.disable_ipv6=0 --sysctl net.ipv6.conf.default.disable_ipv6=0 -v "$(TEST_RESROOT):/home/jenkins/test" -w "/home/jenkins/" -v "$(TEST_JDK_HOME):/home/jenkins/jdkbinary/" --name reproducibleCompare --platform=linux/s390x registry.access.redhat.com/ubi8/ubi /bin/bash /home/jenkins/test/linux_repro_build_compare.sh $(SBOM_FILE) /home/jenkins/jdkbinary; \
-	$(TEST_STATUS); \
-	docker cp reproducibleCompare:/home/jenkins/reprotest.diff ./; \
-	docker cp reproducibleCompare:/home/jenkins/reproJDK.tar.gz ./; \
-	docker cp reproducibleCompare:/home/jenkins/SBOM.json ./; \
-	docker cp reproducibleCompare:/home/jenkins/build.log ./; \
-	docker container rm -f reproducibleCompare
-		</command>
-		<levels>
-			<level>special</level>
-		</levels>
-		<groups>
-			<group>system</group>
-		</groups>
-		<vendors>
-			<vendor>eclipse</vendor>
-		</vendors>
-		<versions>
-			<version>21+</version>
-		</versions>
-		<platformRequirements>os.linux_390</platformRequirements>
+		<platformRequirements>os.linux</platformRequirements>
 	</test>
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test_win</testCaseName>

@@ -1192,6 +1192,14 @@ generateSBoM() {
     addSBOMMetadataProperty "${javaHome}" "${classpath}" "${sbomJson}" "Use Docker for build" "false"
   fi
 
+  # Get the build directory to store in SBOM, needed for full deterministic reproducible builds
+  local buildDirectory
+  if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+    buildDirectory=$(echo "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}" | sed 's,/\./,/,g' | sed 's,//*,/,g')
+  else 
+    buildDirectory=$(echo "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" | sed 's,/\./,/,g' | sed 's,//*,/,g')
+  fi
+
   checkingToolSummary
 
   # add individual components that have been generated in this build
@@ -1249,6 +1257,9 @@ generateSBoM() {
 
     # Add build timestamp
     addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Timestamp" "${BUILD_CONFIG[BUILD_TIMESTAMP]}"
+
+    # Add build workspace directory
+    addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Workspace Directory" "${buildDirectory}"
 
     # Add Tool Summary section from configure.txt
     addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Tools Summary" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
