@@ -572,10 +572,8 @@ attestationBuildUsingOpenJDK() {
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
   if ! echo "cd $BUILD_DIR/$BUILD_FOLDER && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
     cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" || true
+    cat "$BUILD_DIR/$BUILD_FOLDER/config.log" || true
     echo "OpenJDK configure failure, exiting"
-(cd $BUILD_DIR/$BUILD_FOLDER && find . -name config.log && cat ./config.log)
-
-cat /home/jenkins/workspace/Grinder/R/PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP/src/build/*/config.log
     if [[ -n "$PATH_SAVE" ]]; then
       export PATH="$PATH_SAVE"
     fi
