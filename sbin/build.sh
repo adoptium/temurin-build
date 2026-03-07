@@ -938,9 +938,29 @@ executeTemplatedFile() {
   # We need the exitcode from the configure-and-build.sh script
   set +eu
 
+  local PATH_SAVE=""
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 25 ]] && [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]]; then
+    # Hide C.utf8 and en_US.utf8 flavours, as jdk-23+ OpenJDK logic will find those over C and Temurin linux jdk-25+ is currently built with C
+    LC_TO_HIDE="grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8"
+
+    PATH_SAVE="$PATH"
+    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/repro_locale"
+    # Create script to remove front of PATH and call 'real' 'locale' hiding C.utf8 flavours from output so as to trick configure to use C
+    echo "NEW_PATH=\"\${PATH#*:}\"; PATH=\"\$NEW_PATH\" locale \$@ | ${LC_TO_HIDE}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/repro_locale/locale"
+    chmod +x "$PWD/repro_locale/locale"
+    export PATH="$PWD/repro_locale:$PATH"
+
+    echo "Created 'locale' command alias to hide ${LC_TO_HIDE}, and force LC_ALL=C necessary for identical Temurin linux reproducible builds"
+  fi
+
   # Execute the build passing the workspace dir and target dir as params for configure.txt
   bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh" ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]}
   exitCode=$?
+
+  # Restore PATH if saved for locale alias
+  if [[ -n "$PATH_SAVE" ]]; then
+    export PATH="$PATH_SAVE"
+  fi
 
   if [ "${exitCode}" -eq 3 ]; then
     createOpenJDKFailureLogsArchive
