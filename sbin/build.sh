@@ -947,8 +947,8 @@ executeTemplatedFile() {
     mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/repro_locale"
     # Create script to remove front of PATH and call 'real' 'locale' hiding C.utf8 flavours from output so as to trick configure to use C
     echo "NEW_PATH=\"\${PATH#*:}\"; PATH=\"\$NEW_PATH\" locale \$@ | ${LC_TO_HIDE}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/repro_locale/locale"
-    chmod +x "$PWD/repro_locale/locale"
-    export PATH="$PWD/repro_locale:$PATH"
+    chmod +x "${BUILD_CONFIG[WORKSPACE_DIR]}/repro_locale/locale"
+    export PATH="${BUILD_CONFIG[WORKSPACE_DIR]}/repro_locale/locale:$PATH"
 
     echo "Created 'locale' command alias to hide ${LC_TO_HIDE}, and force LC_ALL=C necessary for identical Temurin linux reproducible builds"
   fi
