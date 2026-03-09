@@ -421,9 +421,6 @@ buildUsingTemurinBuild() {
     # Echo build.log
     cat "$BUILD_DIR/build.log" || true
     echo "makejdk-any-platform.sh build failure, exiting"
-    if [[ -n "$PATH_SAVE" ]]; then
-      export PATH="$PATH_SAVE"
-    fi
     exit 1
   fi
 
