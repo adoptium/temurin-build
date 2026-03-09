@@ -447,7 +447,9 @@ padBuildDirToRequiredLength() {
   local WS_DIR="${WS_BUILD_DIR}/${WS_BUILD_FOLDER}"
 
   local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#WS_DIR}))
+
   # jdk-21 classes.jsa difference somehow related to build folder length, but not clear... making longer than original seems to workaround!
+  # Ref: https://github.com/adoptium/temurin-build/issues/4403
   padding_length=$((padding_length + 50))
 
   if [[ "$padding_length" -eq 0 ]]; then
