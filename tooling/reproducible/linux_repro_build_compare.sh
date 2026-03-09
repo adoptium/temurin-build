@@ -338,7 +338,6 @@ getBuildParams() {
   TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
   BUILD_WORKSPACE_DIRECTORY=$(jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value' "$SBOM")
   BUILD_SCM_REF=$(jq -r '.components[0].properties[] | select(.name == "SCM Ref") | .value' "$SBOM")
-  BUILD_MAJOR_VERSION=$(echo "${TEMURIN_VERSION}" | cut -d'.' -f1)
   BUILD_LC_ALL=$(jq -r '.components[0] | .properties[] | select (.name == "Build LC_ALL") | .value' "$SBOM")
 
   if [ "$ATTESTATION_VERIFY" == true ]; then
