@@ -417,9 +417,6 @@ buildUsingTemurinBuild() {
   local repo="https://github.com/adoptium/temurin-build"
   (cd "$BUILD_DIR" && git init . && git remote add origin "$repo" && { git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" || git fetch --depth 1 origin "$TEMURIN_BUILD_SHA"; } && git checkout FETCH_HEAD)
 
-  # Try and enforce correct build LC_ALL
-  createLocaleAliasCmdOnPath
-
   echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
   if ! echo "cd $BUILD_DIR && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
     # Echo build.log
@@ -429,9 +426,6 @@ buildUsingTemurinBuild() {
       export PATH="$PATH_SAVE"
     fi
     exit 1
-  fi
-  if [[ -n "$PATH_SAVE" ]]; then
-    export PATH="$PATH_SAVE"
   fi
 
   # Echo build.log
@@ -484,17 +478,8 @@ createLocaleAliasCmdOnPath() {
 
   local LC_TO_USE
   if [[ -z "$BUILD_LC_ALL" ]]; then
-    # We don't have an SBOM value for Build LC_ALL. We assume the Temurin default build values.
-    if [[ "$BUILD_MAJOR_VERSION" -lt 23 ]]; then
-      LC_TO_USE="C"
-    else
-      # jdk-23+ Temurin build images prior to SBOM Build LC ALL addition are c.utf8, except for aarch64
-      if [[ "$NATIVE_API_ARCH" == "aarch64" ]]; then
-        LC_TO_USE="C"
-      else
-        LC_TO_USE="en_US.UTF-8"
-      fi
-    fi
+    # We don't have an SBOM value for Build LC_ALL. We assume Temurin default of "C" 
+    LC_TO_USE="C"
   else
     LC_TO_USE="$BUILD_LC_ALL"
   fi
@@ -505,7 +490,7 @@ createLocaleAliasCmdOnPath() {
   locale -a
   echo "================================="
 
-  # Check if desired locale is available
+  # Check if desired locale is available or its "alternate"
   local LC_TO_USE_EXISTS="true"
   if ! locale -a | grep "^$LC_TO_USE\$"; then
     echo "Warning: Desired locale to use $LC_TO_USE, is not available on this system."
