@@ -938,8 +938,12 @@ executeTemplatedFile() {
   # We need the exitcode from the configure-and-build.sh script
   set +eu
 
+  # For current jdk-25+ Temurin builds we need to force LC_ALL locale of "C" to avoid OpenJDK make choosing en_US.UTF-8 due to lack of C.UTF-8 on Centos7/RHEL7
+  # en_US.UTF-8 is not language neutral causing sort order differences on differing linux OS distributions.
+  # See ref: https://github.com/adoptium/infrastructure/issues/4289
+  # Note: Leave Alpine as-is since "locale" is not valid in BusyBox and so C.UTF-8 is being selected by OpenJDK make as a default choice.
   local PATH_SAVE=""
-  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 25 ]] && [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]]; then
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 25 ]] && [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]] && [[ "${BUILD_CONFIG[OS_FULL_VERSION]}" != *"Alpine"* ]]; then
     # Hide C.utf8 and en_US.utf8 flavours, as jdk-23+ OpenJDK logic will find those over C and Temurin linux jdk-25+ is currently built with C
     LC_TO_HIDE="grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8"
 
