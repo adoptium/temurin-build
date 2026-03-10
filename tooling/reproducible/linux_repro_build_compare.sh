@@ -72,6 +72,7 @@ if [ -z "$SBOM_PARAM" ] || [ -z "$JDK_PARAM" ]; then
   echo "  Optional:"
   echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of tarball of a user built Linux gcc DevKit"
   echo "    --attestation-verify : Enables Attestation Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
+  echo "    --build-workspace : FULL path to the location to perform the reproducible build within"
   exit 1
 fi
 
@@ -317,7 +318,7 @@ getUpstreamOpenJDKCommitSHA() {
   local adoptiumBuildCommitSHA="$3"
 
   # Shallow clone commit history only
-  git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_mirror_repo
+  git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_mirror_repo || git clone "$adoptiumMirrorRepo" adoptium_mirror_repo
 
   # Find upstream OpenJDK commit SHA, which is the first non-merge commit from the adoptiumBuildCommitSHA
   openjdkCommitSHA=$(cd adoptium_mirror_repo && git log --no-merges -1 "$adoptiumBuildCommitSHA" --format=%H)
@@ -337,6 +338,7 @@ getBuildParams() {
   TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
   BUILD_WORKSPACE_DIRECTORY=$(jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value' "$SBOM")
   BUILD_SCM_REF=$(jq -r '.components[0].properties[] | select(.name == "SCM Ref") | .value' "$SBOM")
+  BUILD_LC_ALL=$(jq -r '.components[0] | .properties[] | select (.name == "Build LC_ALL") | .value' "$SBOM")
 
   if [ "$ATTESTATION_VERIFY" == true ]; then
     adoptiumSrcCommitUrl=$(jq -r '.components[0].properties[] | select(.name == "OpenJDK Source Commit") | .value' "$SBOM")
@@ -392,7 +394,7 @@ setupBuildDir() {
   # ensure deterministic classes.jsa
   if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
     local PADDED_BUILD_DIR
-    PADDED_BUILD_DIR=$(padBuildDirToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR" "$BUILD_FOLDER")
+    PADDED_BUILD_DIR=$(padBuildDirToRequiredLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR" "$BUILD_FOLDER")
     if [[ -n "$PADDED_BUILD_DIR" ]]; then
       BUILD_DIR="$PADDED_BUILD_DIR"
     fi
@@ -411,20 +413,16 @@ buildUsingTemurinBuild() {
   echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
 
   # Checkout required temurin-build SHA into BUILD_DIR
-  (cd "$BUILD_DIR" && git init . && git remote add origin "https://github.com/adoptium/temurin-build" && git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" && git checkout FETCH_HEAD)
-
-  # Alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
-  createLocaleAliasCmdOnPath
+  local repo="https://github.com/adoptium/temurin-build"
+  (cd "$BUILD_DIR" && git init . && git remote add origin "$repo" && { git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" || git fetch --depth 1 origin "$TEMURIN_BUILD_SHA"; } && git checkout FETCH_HEAD)
 
   echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
   if ! echo "cd $BUILD_DIR && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
     # Echo build.log
     cat "$BUILD_DIR/build.log" || true
     echo "makejdk-any-platform.sh build failure, exiting"
-    export PATH="$PATH_SAVE"
     exit 1
   fi
-  export PATH="$PATH_SAVE"
 
   # Echo build.log
   cat "$BUILD_DIR/build.log"
@@ -437,8 +435,9 @@ buildUsingTemurinBuild() {
 }
 
 # Pad the BUILD_DIR/BUILD_FOLDER to the same length as TARGET_BUILD_DIR_TO_MATCH.
-# Necessary to avoid potential non-determinstic classes.jsa on Linux and binary differences on Mac
-padBuildDirToSameLength() {
+# Necessary to avoid potential non-determinstic classes.jsa on some Linux due to https://github.com/adoptium/temurin-build/issues/4403
+# and binary differences on Mac
+padBuildDirToRequiredLength() {
   local TARGET_BUILD_DIR_TO_MATCH
   TARGET_BUILD_DIR_TO_MATCH=$(realpath -m "$1")
   local WS_BUILD_DIR
@@ -448,6 +447,11 @@ padBuildDirToSameLength() {
   local WS_DIR="${WS_BUILD_DIR}/${WS_BUILD_FOLDER}"
 
   local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#WS_DIR}))
+
+  # jdk-21 classes.jsa difference somehow related to build folder length, but not clear... making longer than original seems to workaround!
+  # Ref: https://github.com/adoptium/temurin-build/issues/4403
+  padding_length=$((padding_length + 50))
+
   if [[ "$padding_length" -eq 0 ]]; then
     echo "Warning: $TARGET_BUILD_DIR_TO_MATCH and $WS_DIR are already same length" 1>&2
     echo ""
@@ -455,6 +459,7 @@ padBuildDirToSameLength() {
     echo "Warning: Unable to pad $WS_DIR to necessary length of $TARGET_BUILD_DIR_TO_MATCH, padding required: $padding_length" 1>&2
     echo ""
   else
+    # Take off 1 for "/"
     padding_length=$((padding_length - 1))
     local padding
     padding=$(printf "P%.0s" $(seq 1 $padding_length))
@@ -464,22 +469,73 @@ padBuildDirToSameLength() {
   fi
 }
 
-# Alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
+# Alias 'locale' to try and force required LC_ALL due to issue: https://github.com/adoptium/infrastructure/issues/3576
 createLocaleAliasCmdOnPath() {
   # Ensure no local shell setting of LC_ALL gets used
   unset LC_ALL
 
-  # Create directory and add to front of PATH
-  mkdir "$PWD/repro_locale"
-  PATH_SAVE="$PATH"
-  export PATH="$PWD/repro_locale:$PATH"
+  local LC_TO_USE
+  if [[ -z "$BUILD_LC_ALL" ]]; then
+    # We don't have an SBOM value for Build LC_ALL. We assume Temurin default of "C" 
+    LC_TO_USE="C"
+  else
+    LC_TO_USE="$BUILD_LC_ALL"
+  fi
 
-  # Create script to remove front of PATH and call 'real' 'locale' hiding C.utf8 flavours from output
-  echo "NEW_PATH=\"\${PATH#*:}\"; PATH=\"\$NEW_PATH\" locale \$@ | grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8" > "$PWD/repro_locale/locale"
+  echo "Desired locale from original JDK build: $LC_TO_USE"
+  echo "Available locales on this system:"
+  echo "================================="
+  locale -a
+  echo "================================="
 
-  chmod +x "$PWD/repro_locale/locale"
+  # Check if desired locale is available or its "alternate"
+  local LC_TO_USE_EXISTS="true"
+  if ! locale -a | grep "^$LC_TO_USE\$"; then
+    echo "Warning: Desired locale to use $LC_TO_USE, is not available on this system."
+    local LC_TO_USE_ALT=""
+    if [[ "$LC_TO_USE" =~ .*\.utf8$ ]]; then
+      LC_TO_USE_ALT="${LC_TO_USE/utf8/UTF-8}"
+    elif [[ "$LC_TO_USE" =~ .*\.UTF-8$ ]]; then
+      LC_TO_USE_ALT="${LC_TO_USE/UTF-8/utf8}"
+    fi
+    if [[ -n "$LC_TO_USE_ALT" ]]; then
+      echo "  checking for alternate locale $LC_TO_USE_ALT"
+      if ! locale -a | grep "^$LC_TO_USE_ALT\$"; then
+        echo "Warning: Desired alternate locale to use $LC_TO_USE_ALT, is not available on this system."
+        LC_TO_USE_EXISTS="false"
+      else
+        LC_TO_USE="$LC_TO_USE_ALT"
+      fi
+    else
+      LC_TO_USE_EXISTS="false"
+    fi
+  fi
 
-  echo "Created 'locale' command alias to hide C.utf8, and force LC_ALL=C necessary for identical Temurin classlist"
+  # Hide ones we don't want the default OpenJDK logic to use (https://github.com/adoptium/jdk25u/blob/30a962c1ab3ef19159c3ea2179602289e7e6f3ac/make/autoconf/basic.m4#L139)
+  local LC_TO_HIDE=""
+  if [[ "$LC_TO_USE" == "C" ]]; then
+    # Hide C.utf8 and en_US.utf8 flavours, as jdk-23+ OpenJDK logic will find those over C
+    LC_TO_HIDE="grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8"
+  elif [[ "$LC_TO_USE" == "en_US.utf8" ]] || [[ "$LC_TO_USE" == "en_US.UTF-8" ]] && [[ "$LC_TO_USE_EXISTS" == "true" ]]; then
+    # As the desired locale exists, hide C.utf flavours as jdk-23+ OpenJDK logic will find those over en_US.utf8
+    LC_TO_HIDE="grep -v C.utf8 | grep -v C.UTF-8"
+  fi
+
+  if [[ -n "$LC_TO_HIDE" ]]; then
+    # Create directory and add to front of PATH
+    mkdir "$PWD/repro_locale"
+    PATH_SAVE="$PATH"
+    export PATH="$PWD/repro_locale:$PATH"
+
+    # Create script to remove front of PATH and call 'real' 'locale' hiding C.utf8 flavours from output
+    echo "NEW_PATH=\"\${PATH#*:}\"; PATH=\"\$NEW_PATH\" locale \$@ | ${LC_TO_HIDE}" > "$PWD/repro_locale/locale"
+
+    chmod +x "$PWD/repro_locale/locale"
+
+    echo "Created 'locale' command alias to hide ${LC_TO_HIDE}, and force LC_ALL=C necessary for identical Temurin classlist"
+  else
+    PATH_SAVE=""
+  fi
 }
 
 attestationBuildUsingOpenJDK() {
@@ -493,19 +549,21 @@ attestationBuildUsingOpenJDK() {
   echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
 
   echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR/$BUILD_FOLDER"
-  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
+  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && { git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" || git fetch --depth 1 origin "$openjdkSourceCommitSHA"; } && git checkout FETCH_HEAD)
 
-  # Alias 'locale' to force LC_ALL=C due to issue: https://github.com/adoptium/infrastructure/issues/3576
+  # Try and enforce correct build LC_ALL
   createLocaleAliasCmdOnPath
 
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
   if ! echo "cd $BUILD_DIR/$BUILD_FOLDER && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
     cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" || true
+    cat "$BUILD_DIR/$BUILD_FOLDER/config.log" || true
     echo "OpenJDK configure failure, exiting"
-    export PATH="$PATH_SAVE"
+    if [[ -n "$PATH_SAVE" ]]; then
+      export PATH="$PATH_SAVE"
+    fi
     exit 1
   fi
-  export PATH="$PATH_SAVE"
 
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log"
 
@@ -513,7 +571,13 @@ attestationBuildUsingOpenJDK() {
   if ! echo "cd $BUILD_DIR/$BUILD_FOLDER/build/* && make images > ../../repro_build.log 2>&1" | sh; then
     cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log" || true
     echo "OpenJDK make images failure, exiting"
+    if [[ -n "$PATH_SAVE" ]]; then
+      export PATH="$PATH_SAVE"
+    fi
     exit 1
+  fi
+  if [[ -n "$PATH_SAVE" ]]; then
+    export PATH="$PATH_SAVE"
   fi
 
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"

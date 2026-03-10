@@ -11,6 +11,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
+# Reproducible build root must be shortest path possible to allow room for padding to same folder length as original build
+REPRO_BLD_WS := $(TEST_ROOT)/../R
+
 ADOPTIUM_DEVKIT_URL := https://github.com/adoptium/devkit-binaries/releases/download
 
 ifneq (,$(findstring $(JDK_VERSION),21))
