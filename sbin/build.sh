@@ -938,9 +938,33 @@ executeTemplatedFile() {
   # We need the exitcode from the configure-and-build.sh script
   set +eu
 
+  # For current jdk-25+ Temurin builds we need to force LC_ALL locale of "C" to avoid OpenJDK make choosing en_US.UTF-8 due to lack of C.UTF-8 on Centos7/RHEL7
+  # en_US.UTF-8 is not language neutral causing sort order differences on differing linux OS distributions.
+  # See ref: https://github.com/adoptium/infrastructure/issues/4289
+  # Note: Leave Alpine and Riscv64 as-is since "locale" is not valid in BusyBox and so C.UTF-8 is being selected by OpenJDK make as a default choice, and Riscv64 does have C.UTF-8.
+  local PATH_SAVE=""
+  if [[ "${BUILD_CONFIG[BUILD_VARIANT]}" == "${BUILD_VARIANT_TEMURIN}" ]] && [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 25 ]] && [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "linux" ]] && [[ "${BUILD_CONFIG[OS_FULL_VERSION]}" != *"Alpine"* ]] && [[ "${BUILD_CONFIG[OS_ARCHITECTURE]}" != "riscv64" ]]; then
+    # Hide C.utf8 and en_US.utf8 flavours, as jdk-23+ OpenJDK logic will find those over C and Temurin linux jdk-25+ is currently built with C
+    LC_TO_HIDE="grep -v C.utf8 | grep -v C.UTF-8 | grep -v en_US.utf8 | grep -v en_US.UTF-8"
+
+    PATH_SAVE="$PATH"
+    mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/repro_locale"
+    # Create script to remove front of PATH and call 'real' 'locale' hiding C.utf8 flavours from output so as to trick configure to use C
+    echo "NEW_PATH=\"\${PATH#*:}\"; PATH=\"\$NEW_PATH\" locale \$@ | ${LC_TO_HIDE}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/repro_locale/locale"
+    chmod +x "${BUILD_CONFIG[WORKSPACE_DIR]}/repro_locale/locale"
+    export PATH="${BUILD_CONFIG[WORKSPACE_DIR]}/repro_locale:$PATH"
+
+    echo "Created 'locale' command alias to hide ${LC_TO_HIDE}, and force LC_ALL=C necessary for identical Temurin linux reproducible builds"
+  fi
+
   # Execute the build passing the workspace dir and target dir as params for configure.txt
   bash "${BUILD_CONFIG[WORKSPACE_DIR]}/config/configure-and-build.sh" ${BUILD_CONFIG[WORKSPACE_DIR]} ${BUILD_CONFIG[TARGET_DIR]}
   exitCode=$?
+
+  # Restore PATH if saved for locale alias
+  if [[ -n "$PATH_SAVE" ]]; then
+    export PATH="$PATH_SAVE"
+  fi
 
   if [ "${exitCode}" -eq 3 ]; then
     createOpenJDKFailureLogsArchive
@@ -1203,6 +1227,23 @@ generateSBoM() {
     buildDirectory=$(echo "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" | sed 's,/\./,/,g' | sed 's,//*,/,g')
   fi
 
+  # Get the build LC_ALL used to store in SBOM, needed for full deterministic reproducible builds jdk-21+
+  local BUILD_LC_ALL=""
+  if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 21 ]]; then
+    local specFile
+    if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+      specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
+    else
+      specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
+    fi
+
+    # Get "export LC_ALL" value used from build spec.gmk
+    BUILD_LC_ALL="$(grep "^export LC_ALL[ ]*:=" ${specFile} | sed "s/^export LC_ALL[ ]*:=[ ]*//")"
+    if [[ -z "$BUILD_LC_ALL" ]]; then
+      echo "Warning: Unable to find export LC_ALL from spec file: ${specFile}"
+    fi
+  fi
+
   checkingToolSummary
 
   # add individual components that have been generated in this build
@@ -1263,6 +1304,11 @@ generateSBoM() {
 
     # Add build workspace directory
     addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Workspace Directory" "${buildDirectory}"
+
+    if [[ -n "$BUILD_LC_ALL" ]]; then
+      # Add build LC_ALL
+      addSBOMComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build LC_ALL" "${BUILD_LC_ALL}"
+    fi
 
     # Add Tool Summary section from configure.txt
     addSBOMComponentPropertyFromFile "${javaHome}" "${classpath}" "${sbomJson}" "${componentName}" "Build Tools Summary" "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/dependency_tool_sum.txt"
