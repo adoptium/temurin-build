@@ -115,6 +115,25 @@ function removeJlinkRuntimelinkHashes() {
     done
 }
 
+# Use of -fno-schedule-insns -fno-schedule-insns2” can sometimes cause debuginfo differences, then
+# resulting in the gcc "Build ID" hash differing, purely due to the debuginfo differing.
+# Ref: https://github.com/adoptium/temurin-build/issues/4410
+#
+# Remove the "Build ID" hash from libjvm.so on linux to avoid non-determinism.
+function removeLibJVMBuildID() {
+  local JDK_DIR="$1"
+  local OS="$2"
+
+  if [[ "$OS" =~ Linux* ]]; then
+    FILES=$(find "${JDK_DIR}" -type f -name "libjvm.so")
+    for f in $FILES
+      do
+        echo "Stripping 'Build ID' section from $f"
+        objcopy --remove-section=.note.gnu.build-id "$f"
+      done
+  fi
+}
+
 # Process SystemModules classes to remove ModuleHashes$Builder differences due to Signatures
 #   1. javap
 #   2. search for line: // Method jdk/internal/module/ModuleHashes$Builder.hashForModule:(Ljava/lang/String;[B)Ljdk/internal/module/ModuleHashes$Builder;
