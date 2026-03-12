@@ -105,8 +105,10 @@ function removeJlinkRuntimelinkHashes() {
         sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.exe$)/\1|\2||\3/g' "$f"
         sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
       else
-        # Linux binaries are identical, only cacerts will differ
+        # Linux only libjvm.so and cacerts might differ
         sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
+        # lib/server/libjvm.so can differ in hash due to differing "Build ID" based on debuginfo differing due to compile time optimizations
+        sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/server\/libjvm\.so$)/\1|\2||\3/g' "$f"
       fi
 
       # Sort file content
