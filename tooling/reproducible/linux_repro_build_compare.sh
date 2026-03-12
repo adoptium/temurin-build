@@ -477,7 +477,7 @@ createLocaleAliasCmdOnPath() {
   local LC_TO_USE
   if [[ -z "$BUILD_LC_ALL" ]]; then
     # We don't have an SBOM value for Build LC_ALL. We assume Temurin default of "C" 
-    LC_TO_USE="en_US.UTF-8"
+    LC_TO_USE="C"
   else
     LC_TO_USE="$BUILD_LC_ALL"
   fi
