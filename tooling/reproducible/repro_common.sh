@@ -117,7 +117,7 @@ function removeJlinkRuntimelinkHashes() {
     done
 }
 
-# Use of -fno-schedule-insns -fno-schedule-insns2” can sometimes cause debuginfo differences, then
+# Use of "-fno-schedule-insns -fno-schedule-insns2” can sometimes cause debuginfo differences, then
 # resulting in the gcc "Build ID" hash differing, purely due to the debuginfo differing.
 # Ref: https://github.com/adoptium/temurin-build/issues/4410
 #
