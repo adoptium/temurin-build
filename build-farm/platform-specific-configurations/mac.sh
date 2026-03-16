@@ -74,7 +74,7 @@ fi
 # The configure option '--with-macosx-codesign-identity' is supported in JDK8 OpenJ9 and JDK11 and JDK14+
 if [[ ( "$JAVA_FEATURE_VERSION" -eq 11 ) || ( "$JAVA_FEATURE_VERSION" -ge 14 ) ]]
 then
-  local sysrootSDK="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+  sysrootSDK="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
 
   # Always use the selected Xcode default SDK to match the Xcode version being used if possible, this ensures "reproducible builds"
   if [[ -d "${XCODE_SWITCH_PATH}/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" ]]; then
