@@ -37,6 +37,7 @@ SCM_REF=$( jq '.components[0].properties[]  | select(.name|test("SCM Ref"))  | .
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
 EXPECTED_FREETYPE=2.14.2 # Bundled version for jdk11+
 [ "${MAJORVERSION}" = "8" ] && EXPECTED_FREETYPE=2.13.3 # Bundled version for jdk8
+[ "${MAJORVERSION}" = "26" ] && EXPECTED_FREETYPE=2.13.3 # Bundled version for jdk26 ga
 EXPECTED_GLIBC=""
 EXPECTED_GCC=""
 # [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
@@ -105,11 +106,7 @@ echo "BOOTJDK is ${BOOTJDK}"
 [ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "NOTE: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA}) - ignoring because ALSA version is determined by devkit now"  # && RC=1
 
 # shellcheck disable=SC2086
-[ "${MAJORVERSION}" != "26" ] && [ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ]  && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
-
-# Temporary entry. This one line of code is to be removed after the jdk26 ga release.
-# At the same time, remove this part of the line of code above: [ "${MAJORVERSION}" != "26" ] &&
-[ "${MAJORVERSION}" = "26" ] && [ "${FREETYPE}" != "$EXPECTED_FREETYPE" ] && [[ "$FREETYPE" != "2.13.3" ]] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} or 2.13.3 (SBOM has ${FREETYPE})" && RC=1
+[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ]  && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
 echo "FREETYPE is ${FREETYPE}"
 
