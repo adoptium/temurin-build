@@ -106,7 +106,7 @@ echo "BOOTJDK is ${BOOTJDK}"
 [ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "NOTE: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA}) - ignoring because ALSA version is determined by devkit now"  # && RC=1
 
 # shellcheck disable=SC2086
-[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ]  && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
+[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
 echo "FREETYPE is ${FREETYPE}"
 
