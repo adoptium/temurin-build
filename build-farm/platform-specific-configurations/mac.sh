@@ -89,7 +89,7 @@ echo "[WARNING] You may be asked for your su user password, attempting to switch
 sudo xcode-select --switch "${XCODE_SWITCH_PATH}"
 
 # If using Xcode >= 15 for jdk-21+, then Apple have introduced linker option -deterministic, to enable reproducible dylib's
-if [ "$JAVA_FEATURE_VERSION" -ge 21 ] && [ $(xcodebuild -version | grep "Xcode" | awk '{print $2}' | cut -d. -f1) -ge 15 ]; then
+if [ "$JAVA_FEATURE_VERSION" -ge 21 ] && [ "$(xcodebuild -version | grep 'Xcode' | awk '{print $2}' | cut -d. -f1)" -ge 15 ]; then
   export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-extra-ldflags=-Wl,-deterministic"
 fi
 
