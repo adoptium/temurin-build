@@ -17,7 +17,7 @@
 # Usage Notes:
 # 1. For MacOS, jq must be installed, and the architecture to be built must match the system this script is being executed on.
 # 2. This script will only work with xcode, and the executing user must have sudo permissions to run xcode-select -s
-# 3. This script requires that the correct versions of the sdk are installed and in the loaction defined in the MAC_SDK_LOCATION below.
+# 3. This script requires that the correct versions of the sdk are installed and in the location defined in the MAC_SDK_LOCATION below.
 
 set -e
 
