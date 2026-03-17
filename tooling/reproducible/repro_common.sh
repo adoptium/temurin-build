@@ -393,11 +393,16 @@ function removeGeneratedClasses() {
     JDK_HOME_DIR="$JDK_DIR/Contents/Home"
   fi
 
-  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
+  if [[ "$OS" =~ CYGWIN* ]]; then
     rm -rf "$JDK_HOME_DIR/bin/server/classes.jsa"
     rm -rf "$JDK_HOME_DIR/bin/server/classes_nocoops.jsa"
     rm -rf "$JDK_HOME_DIR/bin/server/classes_coh.jsa"
     rm -rf "$JDK_HOME_DIR/bin/server/classes_nocoops_coh.jsa"
+  elif [[ "$OS" =~ Darwin* ]]; then
+    rm -rf "$JDK_HOME_DIR/lib/server/classes.jsa"
+    rm -rf "$JDK_HOME_DIR/lib/server/classes_nocoops.jsa"
+    rm -rf "$JDK_HOME_DIR/lib/server/classes_coh.jsa"
+    rm -rf "$JDK_HOME_DIR/lib/server/classes_nocoops_coh.jsa"
   fi
 }
 

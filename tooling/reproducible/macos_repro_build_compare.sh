@@ -17,7 +17,6 @@
 # Usage Notes:
 # 1. For MacOS, jq must be installed, and the architecture to be built must match the system this script is being executed on.
 # 2. This script will only work with xcode, and the executing user must have sudo permissions to run xcode-select -s
-# 3. This script requires that the correct versions of the sdk are installed and in the location defined in the MAC_SDK_LOCATION below.
 
 set -e
 
@@ -74,7 +73,6 @@ fi
 
 MAC_COMPILER_BASE=/Applications
 MAC_COMPILER_APP_PREFIX=Xcode
-MAC_SDK_LOCATION=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
 
 # These variables relate to the pre-requisite ant installation
 ANT_VERSION="1.10.5"
@@ -173,7 +171,9 @@ Get_SBOM_Values() {
   macOSCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "MacOS Compiler").version')
   BOOTJDK_VERSION=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "BOOTJDK").version' | sed -e 's/-LTS$//')
   buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
-  buildSHA=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value' | awk -F'/' '{print $NF}')
+  TEMURIN_BUILD_REF=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value')
+  TEMURIN_BUILD_REPO="${TEMURIN_BUILD_REF%/commit/*}"
+  TEMURIN_BUILD_SHA=$(basename "$TEMURIN_BUILD_REF")
   TEMURIN_VERSION=$(echo "$sbomContent" | jq -r '.metadata.component.version' | sed 's/-beta//' | cut -f1 -d"-")
   buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
   TEMURIN_BUILD_ARGS=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
@@ -195,15 +195,6 @@ Get_SBOM_Values() {
       exit 1
   fi
 
-  # Ensure The SDK Path Is Correct
-  if [ -d "$MAC_SDK_LOCATION" ]; then
-      echo "Defined SDK Directory Exists"
-      export MAC_SDK_LOCATION
-  else
-      echo "ERROR: The Defined MacOS SDK Could Not Be Found."
-      exit 1
-  fi
-
   if [ -n "$BOOTJDK_VERSION" ]; then
       echo "SBOM Boot JDK Version: $BOOTJDK_VERSION"
       export BOOTJDK_VERSION
@@ -220,11 +211,19 @@ Get_SBOM_Values() {
       echo "This Is A Mandatory Element"
       exit 1
   fi
-  if [ -n "$buildSHA" ]; then
-      echo "Temurin Build SHA: $buildSHA"
-      export buildSHA
+  if [ -n "$TEMURIN_BUILD_REPO" ]; then
+      echo "TEMURIN_BUILD_REPO: $TEMURIN_BUILD_REPO"
+      export TEMURIN_BUILD_REPO
   else
-      echo "ERROR: Temurin Build SHA not found in the SBOM."
+      echo "ERROR: Temurin Build Ref not found in the SBOM."
+      echo "This Is A Mandatory Element"
+      exit 1
+  fi
+  if [ -n "$TEMURIN_BUILD_SHA" ]; then
+      echo "TEMURIN_BUILD_SHA: $TEMURIN_BUILD_SHA"
+      export TEMURIN_BUILD_SHA
+  else
+      echo "ERROR: Temurin Build Ref not found in the SBOM."
       echo "This Is A Mandatory Element"
       exit 1
   fi
@@ -497,13 +496,13 @@ setupBuildDir() {
 
   # If we have the original build workspace folder, create padded sub-folder to match to help
   # ensure deterministic classes.jsa
-  if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
-    local PADDED_BUILD_DIR
-    PADDED_BUILD_DIR=$(padBuildDirToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR" "$BUILD_FOLDER")
-    if [[ -n "$PADDED_BUILD_DIR" ]]; then
-      BUILD_DIR="$PADDED_BUILD_DIR"
-    fi
-  fi
+  #if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
+  #  local PADDED_BUILD_DIR
+  #  PADDED_BUILD_DIR=$(padBuildDirToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR" "$BUILD_FOLDER")
+  #  if [[ -n "$PADDED_BUILD_DIR" ]]; then
+  #    BUILD_DIR="$PADDED_BUILD_DIR"
+  #  fi
+  #fi
 
   # Create build dir
   mkdir -p "$BUILD_DIR" || exit 1
@@ -519,8 +518,6 @@ setTemurinBuildArgs() {
   # reset --jdk-boot-dir
   # shellcheck disable=SC2001
   TEMURIN_BUILD_ARGS="$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir ${BOOTJDK_HOME}|")"
-  # shellcheck disable=SC2001
-  TEMURIN_BUILD_ARGS="$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s|--with-sysroot=[^ ]*|--with-sysroot=${MAC_SDK_LOCATION}|")"
   # remove ingored options
   TEMURIN_BUILD_ARGS=${TEMURIN_BUILD_ARGS/--assemble-exploded-image /}
   TEMURIN_BUILD_ARGS=${TEMURIN_BUILD_ARGS/--enable-sbom-strace /}
@@ -547,7 +544,7 @@ buildUsingTemurinBuild() {
   echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
 
   # Checkout required temurin-build SHA into BUILD_DIR
-  (cd "$BUILD_DIR" && git init . && git remote add origin "https://github.com/adoptium/temurin-build" && git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" && git checkout FETCH_HEAD)
+  (cd "$BUILD_DIR" && git init . && git remote add origin "$TEMURIN_BUILD_REPO" && git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" && git checkout FETCH_HEAD)
   
   echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
   if ! echo "cd $BUILD_DIR && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
