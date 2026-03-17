@@ -35,7 +35,9 @@ COMPILER=$(jq '.components[0].properties[] | select(.name|test("Build Tools Summ
 SCM_REF=$( jq '.components[0].properties[]  | select(.name|test("SCM Ref"))  | .value'   "$SBOMFILE" | tr -d \")
 
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
-EXPECTED_FREETYPE=2.13.3 # Bundled version
+EXPECTED_FREETYPE=2.14.2 # Bundled version for jdk11+
+[ "${MAJORVERSION}" = "8" ] && EXPECTED_FREETYPE=2.13.3 # Bundled version for jdk8
+[ "${MAJORVERSION}" = "26" ] && EXPECTED_FREETYPE=2.13.3 # Bundled version for jdk26 ga
 EXPECTED_GLIBC=""
 EXPECTED_GCC=""
 # [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
@@ -102,13 +104,12 @@ fi
 echo "BOOTJDK is ${BOOTJDK}"
 [ "${COMPILER}"   != "$EXPECTED_COMPILER" ] && echo "ERROR: Compiler version not ${EXPECTED_COMPILER} (SBOM has ${COMPILER})"   && RC=1
 [ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "NOTE: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA}) - ignoring because ALSA version is determined by devkit now"  # && RC=1
-# Freetype versions are inconsistent at present - see build#3484
-#[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
 # shellcheck disable=SC2086
 [ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
 
 echo "FREETYPE is ${FREETYPE}"
+
 # shellcheck disable=SC3037
 echo "Checking for JDK source SHA validity..."
 GITURL=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \" | uniq)
