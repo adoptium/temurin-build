@@ -1739,7 +1739,7 @@ addCompilerMacOS() {
   # Get MacOSSDK version
   echo "Getting MacOS SDK version from sysroot: ${macx_sysroot}"
   local sdk_version="$(plutil -p "${macx_sysroot}/SDKSettings.plist" | grep '"Version"')"
-  local macx_sdk_version="$(echo '${sdk_version}' | awk -F'"' '{print $4}')"
+  local macx_sdk_version="$(echo "${sdk_version}" | awk -F'"' '{print $4}')"
 
   echo "Adding MacOS compiler version to SBOM: ${macx_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MacOS Compiler" "${macx_version}"
