@@ -71,6 +71,8 @@ do
 
   removeJlinkRuntimelinkHashes "${JDK_DIR}" "${OS}"
 
+  removeLibJVMBuildID "${JDK_DIR}" "${OS}"
+
   if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
     removeSystemModulesHashBuilderParams "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"
     processModuleInfo "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}"

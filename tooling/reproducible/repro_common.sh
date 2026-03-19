@@ -115,13 +115,34 @@ function removeJlinkRuntimelinkHashes() {
           sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.exe$)/\1|\2||\3/g' "$f"
           sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
         else
-          # Linux binaries are identical, only cacerts will differ
+          # Linux only libjvm.so and cacerts might differ
           sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
+          # lib/server/libjvm.so can differ in hash due to differing "Build ID" based on debuginfo differing due to compile time optimizations
+          sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/server\/libjvm\.so$)/\1|\2||\3/g' "$f"
         fi
-  
+
         # Sort file content
         sort "$f" > "$f.sorted"
         rm "$f"
+      done
+  fi
+}
+
+# Use of "-fno-schedule-insns -fno-schedule-insns2” can sometimes cause debuginfo differences, then
+# resulting in the gcc "Build ID" hash differing, purely due to the debuginfo differing.
+# Ref: https://github.com/adoptium/temurin-build/issues/4410
+#
+# Remove the "Build ID" hash from libjvm.so on linux to avoid non-determinism.
+function removeLibJVMBuildID() {
+  local JDK_DIR="$1"
+  local OS="$2"
+
+  if [[ "$OS" =~ Linux* ]]; then
+    FILES=$(find "${JDK_DIR}" -type f -name "libjvm.so")
+    for f in $FILES
+      do
+        echo "Stripping 'Build ID' section from $f"
+        objcopy --remove-section=.note.gnu.build-id "$f"
       done
   fi
 }
