@@ -1732,11 +1732,20 @@ addCompilerWindows() {
 addCompilerMacOS() {
   local inputConfigFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/configure.txt"
 
-  ## local macx_version="$(cat "${inputConfigFile}" | grep "* Toolchain:" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
   local macx_version="$(grep ".* Toolchain:" "${inputConfigFile}" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
+
+  local macx_sysroot="$(grep ".* Sysroot:" "${inputConfigFile}" | awk -F ':' '{print $2}' | sed -e 's/^[ \t]*//')"
+
+  # Get MacOSSDK version
+  echo "Getting MacOS SDK version from sysroot: ${macx_sysroot}"
+  local sdk_version="$(plutil -p "${macx_sysroot}/SDKSettings.plist" | grep '"Version"')"
+  local macx_sdk_version="$(echo '${sdk_version}' | awk -F'"' '{print $4}')"
 
   echo "Adding MacOS compiler version to SBOM: ${macx_version}"
   addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MacOS Compiler" "${macx_version}"
+
+  echo "Adding MacOS SDK version to SBOM: ${macx_sdk_version}"
+  addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "MacOS SDK Version" "${macx_sdk_version}"
 }
 
 addBootJDK() {

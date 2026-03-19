@@ -74,6 +74,7 @@ fi
 MAC_COMPILER_BASE=/Applications
 MAC_COMPILER_APP_PREFIX=Xcode
 XCODE_PATH_FOUND=""
+XCODE_SYSROOT=""
 
 # These variables relate to the pre-requisite ant installation
 ANT_VERSION="1.10.5"
@@ -170,6 +171,7 @@ Get_SBOM_Values() {
 
   # Extract All Required Fields From The SBOM Content
   macOSCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "MacOS Compiler").version')
+  macOSSDK=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "MacOS SDK Version").version')
   BOOTJDK_VERSION=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "BOOTJDK").version' | sed -e 's/-LTS$//')
   buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
   TEMURIN_BUILD_REF=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value')
@@ -219,6 +221,16 @@ Get_SBOM_Values() {
       echo "ERROR: MACOS Compiler Version not found in the SBOM."
       echo "This Is A Mandatory Element"
       exit 1
+  fi
+
+  # Check if the SDK was found
+  if [ -n "$macOSSDK" ]; then
+      echo "MacOS SDK Version: $macOSSDK"
+      export macOSSDK
+  else
+      echo "WARNING: MACOS SDK Version not found in the SBOM."
+      macOSSDK=""
+      export macOSSDK
   fi
 
   if [ -n "$BOOTJDK_VERSION" ]; then
@@ -350,7 +362,7 @@ Check_Compiler_Versions() {
   # Lines 47 & 48
 
   echo "Checking For Xcode Compilers In : $MAC_COMPILER_BASE/"
-  XCODE_PATH=()
+  XCODE_PATHS=()
   while IFS= read -r line; do
     XCODE_PATHS+=("$line")
   done < <(find "$MAC_COMPILER_BASE" -maxdepth 1 -type d -name "$MAC_COMPILER_APP_PREFIX*")
@@ -393,6 +405,33 @@ Check_Compiler_Versions() {
   # Switch To Found Xcode Version
   sudo xcode-select -s "$found_xcode_path"
   XCODE_PATH_FOUND="$found_xcode_path"
+
+  if [ -n "$macOSSDK" ]; then
+    SDK_PATHS=()
+    while IFS= read -r line; do
+      SDK_PATHS+=("$line")
+    done < <(find "$XCODE_PATH_FOUND/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs" -maxdepth 1 -type d -name "*")
+    SDK_COUNT=${#SDK_PATHS[@]}
+
+    # Check Each Version Of Xcode SDKs against The SBOM
+    for SDK_PATH in "${SDK_PATHS[@]}"; do
+      echo "Checking SDK version for : $SDK_PATH"
+      local sdk_version="$(plutil -p "${SDK_PATH}/SDKSettings.plist" | grep '"Version"')"
+      local macx_sdk_version="$(echo '${SDK_PATH}' | awk -F'"' '{print $4}')"
+
+      if [ -n "$macx_sdk_version" ] && [ "$macx_sdk_version" == "macOSSDK" ]; then
+        XCODE_SYSROOT="$SDK_PATH"
+        echo "Found required MacOS SDK version '${macOSSDK}' in path '${SDK_PATH}'"
+        break
+      fi
+    done
+
+    if [ -z "$XCODE_SYSROOT" ]; then
+      echo "WARNING: No matching MacOS SDK version (${macOSSDK}) available in ${XCODE_PATH_FOUND}/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs, OpenJDK configure will find most suitable, which may not necessarily match for reproducibility."
+    fi
+  else
+    echo "WARNING: No SBOM MacOS SDK version available, OpenJDK configure will find most suitable, which may not necessarily match for reproducibility."
+  fi
 
   # Check if clang is installed
   if ! command -v clang &> /dev/null; then
@@ -590,7 +629,7 @@ buildUsingTemurinBuild() {
   (cd "$BUILD_DIR" && git init . && git remote add origin "$TEMURIN_BUILD_REPO" && git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" && git checkout FETCH_HEAD)
   
   echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
-  if ! echo "cd $BUILD_DIR && ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
+  if ! echo "cd $BUILD_DIR && TZ=UTC ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
    SBOMLocalPath # Echo build.log
     cat "$BUILD_DIR/build.log" || true
     echo "makejdk-any-platform.sh build failure, exiting"
@@ -612,9 +651,13 @@ setOpenJDKConfigureArgs() {
   adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-boot-jdk=[^ ]*|--with-boot-jdk=${BOOTJDK_HOME}|")"
   adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-cacerts-src=[^ ]*||")"
 
-  # remove --with-sysroot from original
-  # XCODE_PATH_FOUND
-  
+  # replace --with-sysrootwith found local one, or remove if one not found
+  if [ -n "$XCODE_SYSROOT" ]; then
+    adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-sysroot=[^ ]*|--with-sysroot=${XCODE_SYSROOT}|")"
+  else
+    adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-sysroot=[^ ]*||")"
+  fi
+
   echo ""
   echo "OpenJDK Configure Argument List = "
   echo "$adoptiumConfigureArgs"
@@ -635,7 +678,7 @@ attestationBuildUsingOpenJDK() {
   (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
 
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
-  if ! echo "cd $BUILD_DIR/$BUILD_FOLDER && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
+  if ! echo "cd $BUILD_DIR/$BUILD_FOLDER && TZ=UTC bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
     cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" || true
     echo "OpenJDK configure failure, exiting"
     exit 1
@@ -644,7 +687,7 @@ attestationBuildUsingOpenJDK() {
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log"
 
   echo "Executing: make images"
-  if ! echo "cd $BUILD_DIR/$BUILD_FOLDER/build/* && make images > ../../repro_build.log 2>&1" | sh; then
+  if ! echo "cd $BUILD_DIR/$BUILD_FOLDER/build/* && TZ=UTC make images > ../../repro_build.log 2>&1" | sh; then
     cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log" || true
     echo "OpenJDK make images failure, exiting"
     exit 1
@@ -652,7 +695,7 @@ attestationBuildUsingOpenJDK() {
 
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"
 
-  mv "$BUILD_DIR/$BUILD_FOLDER"/build/*/images/jdk "$BUILD_DIR/$BUILD_FOLDER/build/jdk-$TEMURIN_VERSION"
+  mv "$BUILD_DIR/$BUILD_FOLDER"/build/*/images/jdk-bundle/jdk-*.jdk "$BUILD_DIR/$BUILD_FOLDER/build/jdk-$TEMURIN_VERSION"
   (cd "$BUILD_DIR/$BUILD_FOLDER/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "jdk-$TEMURIN_VERSION")
 
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
