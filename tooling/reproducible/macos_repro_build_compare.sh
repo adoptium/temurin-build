@@ -73,6 +73,7 @@ fi
 
 MAC_COMPILER_BASE=/Applications
 MAC_COMPILER_APP_PREFIX=Xcode
+XCODE_PATH_FOUND=""
 
 # These variables relate to the pre-requisite ant installation
 ANT_VERSION="1.10.5"
@@ -180,6 +181,31 @@ Get_SBOM_Values() {
   BUILD_WORKSPACE_DIRECTORY=$(echo "$sbomContent" | jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value')
   BUILD_SCM_REF=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "SCM Ref") | .value')
 
+  if [ "$ATTESTATION_VERIFY" == true ]; then
+    adoptiumSrcCommitUrl=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "OpenJDK Source Commit") | .value')
+    adoptiumConfigureArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "configure_args") | .value')
+  
+    # Check if the adoptiumSrcCommitUrl and configure_args were found
+    if [ -n "$adoptiumSrcCommitUrl" ] && [ -n "$adoptiumConfigureArgs" ]; then
+      adoptiumRepo="${adoptiumSrcCommitUrl%/commit/*}"
+      adoptiumBuildCommitSHA=$(basename "$adoptiumSrcCommitUrl")
+      openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
+      openjdkSourceCommitSHA=$(getUpstreamOpenJDKCommitSHA "$adoptiumRepo" "$openjdkSourceRepo" "$adoptiumBuildCommitSHA")
+  
+      echo "Performing an Attestation Verification Build from $openjdkSourceRepo with commit SHA $openjdkSourceCommitSHA"
+      echo "Adoptium OpenJDK configure argmuents from original Temurin build:"
+      echo "    $adoptiumConfigureArgs"
+      echo ""
+      export openjdkSourceRepo
+      export openjdkSourceCommitSHA
+      export adoptiumConfigureArgs
+    else
+      echo "ERROR: Adoptium OpenJDK Source Commit, SCM Ref and configure_args must be specified in the SBOM."
+      echo "These Are Mandatory Elements"
+      exit 1
+    fi
+  fi
+
   # Remove any --with-jobs, let local user system determine
   # Remove any --user-openjdk-build-root-directory as that will be local to original system
   # shellcheck disable=SC2001
@@ -252,6 +278,22 @@ Get_SBOM_Values() {
       exit 1
   fi
   echo ""
+}
+
+getUpstreamOpenJDKCommitSHA() {
+  local adoptiumMirrorRepo="$1"
+  local openjdkSourceRepo="$2"
+  local adoptiumBuildCommitSHA="$3"
+
+  # Shallow clone commit history only
+  git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_mirror_repo
+
+  # Find upstream OpenJDK commit SHA, which is the first non-merge commit from the adoptiumBuildCommitSHA
+  openjdkCommitSHA=$(cd adoptium_mirror_repo && git log --no-merges -1 "$adoptiumBuildCommitSHA" --format=%H)
+
+  rm -rf adoptium_mirror_repo
+
+  echo "$openjdkCommitSHA"
 }
 
 Check_Architecture() {
@@ -350,6 +392,7 @@ Check_Compiler_Versions() {
 
   # Switch To Found Xcode Version
   sudo xcode-select -s "$found_xcode_path"
+  XCODE_PATH_FOUND="$found_xcode_path"
 
   # Check if clang is installed
   if ! command -v clang &> /dev/null; then
@@ -564,6 +607,60 @@ buildUsingTemurinBuild() {
   cp "$SBOMLocalPath" SBOM.json
 } 
 
+setOpenJDKConfigureArgs() {
+  # reset --jdk-boot-dir and remove --with-cacerts-src
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-boot-jdk=[^ ]*|--with-boot-jdk=${BOOTJDK_HOME}|")"
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-cacerts-src=[^ ]*||")"
+
+  # remove --with-sysroot from original
+  # XCODE_PATH_FOUND
+  
+  echo ""
+  echo "OpenJDK Configure Argument List = "
+  echo "$adoptiumConfigureArgs"
+  echo ""
+}
+
+attestationBuildUsingOpenJDK() {
+  echo "Building JDK using OpenJDK configure and make..."
+  
+  local CURRENT_PWD="$PWD"
+  
+  BUILD_FOLDER="src"
+  setupBuildDir
+  mkdir -p "$BUILD_DIR/$BUILD_FOLDER"
+  echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
+  
+  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR/$BUILD_FOLDER"
+  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
+
+  echo "Executing: bash ./configure $adoptiumConfigureArgs"
+  if ! echo "cd $BUILD_DIR/$BUILD_FOLDER && bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
+    cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" || true
+    echo "OpenJDK configure failure, exiting"
+    exit 1
+  fi
+
+  cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log"
+
+  echo "Executing: make images"
+  if ! echo "cd $BUILD_DIR/$BUILD_FOLDER/build/* && make images > ../../repro_build.log 2>&1" | sh; then
+    cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log" || true
+    echo "OpenJDK make images failure, exiting"
+    exit 1
+  fi 
+
+  cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"
+
+  mv "$BUILD_DIR/$BUILD_FOLDER"/build/*/images/jdk "$BUILD_DIR/$BUILD_FOLDER/build/jdk-$TEMURIN_VERSION"
+  (cd "$BUILD_DIR/$BUILD_FOLDER/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "jdk-$TEMURIN_VERSION")
+
+  mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
+  cp  "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" build.log
+  cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"  >> build.log
+  cp "$SBOMLocalPath" SBOM.json
+}
+
 Compare_JDK() {
   echo Comparing ...
   cp "$ScriptPath"/repro_*.sh "$PWD"
@@ -612,16 +709,17 @@ echo "---------------------------------------------"
 Install_BootJDK
 echo "---------------------------------------------"
 if [ "$ATTESTATION_VERIFY" == true ]; then
-  echo "ATTEST"
+  setOpenJDKConfigureArgs
 else
   Check_And_Install_Ant
   setTemurinBuildArgs
 fi
 echo "---------------------------------------------"
 if [ "$ATTESTATION_VERIFY" == true ]; then
-  echo "attestationBuildUsingOpenJDK"
+  attestationBuildUsingOpenJDK
 else
   buildUsingTemurinBuild
 fi
 echo "---------------------------------------------"
 Compare_JDK
+
