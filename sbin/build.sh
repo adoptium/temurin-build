@@ -1209,6 +1209,9 @@ generateSBoM() {
   # Generate the Workflow part containing the Build Recipe
   addTemurinBuildRecipeToSBOM
 
+  # Generate the Workflow part containing the Attestation Verify Recipe
+  addAttestationVerifyRecipeToSBOM
+
   # Add Build Docker image SHA1
   local buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
   # ${BUILD_CONFIG[CONTAINER_COMMAND]^} always set to false cannot rely on it.
@@ -1588,6 +1591,37 @@ addTemurinBuildRecipeToSBOM() {
   addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "cd into repository" "cd ${repo_name}"
   addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "cd into repository" "git checkout ${sha}"
   addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "makejdk" "${makejdk_cmd}"
+}
+
+# Generate the workflow part containing the Attestation Verify Recipe
+addAttestationVerifyRecipeToSBOM() {
+
+  if [[ -z "${fullVer}" || -z "${sbomJson}" ]]; then
+    echo "WARNING: 'fullVer' or 'sbomJson' variable/s are empty. Cannot generate attestation verify recipe." 1>&2
+    return 0
+  fi
+
+  local formulaName="formula_temurin_attestation_verify_${fullVer}"
+  local workflowRef="workflow_temurin_attestation_verify_${fullVer}"
+  local workflowUid="${workflowRef}"
+  local workflowName="Temurin Attestation Verify"
+  local taskTypes="clone,test"
+
+  local clone_url="git clone https://github.com/adoptium/temurin-build.git"
+
+  # The full command to use for the verification, using placeholders for the paths/urls of the SBOM, JDK and Devkit
+  local verify_cmd="temurin-build/tooling/reproducible/linux_repro_build_compare.sh --sbom-url 'SBOM_FILE_OR_URL' --jdk-url 'JDK_FILE_OR_URL' --user-devkit-location 'LINUX_ADOPTIUM_DEVKIT_FILE_OR_URL' --attestation-verify --build-workspace 'temurin-build/tooling/reproducible/build'"
+
+  # Create workflow
+  addSBOMWorkflow "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "${workflowUid}" "${workflowName}" "${taskTypes}"
+
+  # Steps
+  addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "clone repository" "clone temurin-build repository"
+  addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "execute verification" "run reproducible build compare script"
+
+  # Commands
+  addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "clone repository" "${clone_url}"
+  addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "execute verification" "${verify_cmd}"
 }
 
 addALSAVersion() {
