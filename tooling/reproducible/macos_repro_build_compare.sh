@@ -407,22 +407,26 @@ Check_Compiler_Versions() {
   XCODE_PATH_FOUND="$found_xcode_path"
 
   if [ -n "$macOSSDK" ]; then
+    echo "Searching for installed MacOS SDK of required version to match original build: ${macOSSDK}"
+
     SDK_PATHS=()
     while IFS= read -r line; do
       SDK_PATHS+=("$line")
-    done < <(find "$XCODE_PATH_FOUND/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs" -maxdepth 1 -type d -name "*")
+    done < <(find "$XCODE_PATH_FOUND/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs" -mindepth 1 -maxdepth 1 -type d -name "*")
     SDK_COUNT=${#SDK_PATHS[@]}
 
     # Check Each Version Of Xcode SDKs against The SBOM
     for SDK_PATH in "${SDK_PATHS[@]}"; do
       echo "Checking SDK version for : $SDK_PATH"
       local sdk_version="$(plutil -p "${SDK_PATH}/SDKSettings.plist" | grep '"Version"')"
-      local macx_sdk_version="$(echo '${SDK_PATH}' | awk -F'"' '{print $4}')"
+      local macx_sdk_version="$(echo "${sdk_version}" | awk -F'"' '{print $4}')"
 
-      if [ -n "$macx_sdk_version" ] && [ "$macx_sdk_version" == "macOSSDK" ]; then
+      if [ -n "$macx_sdk_version" ] && [ "$macx_sdk_version" == "$macOSSDK" ]; then
         XCODE_SYSROOT="$SDK_PATH"
         echo "Found required MacOS SDK version '${macOSSDK}' in path '${SDK_PATH}'"
         break
+      else
+        echo "${SDK_PATH} SDK version ${macx_sdk_version} does not match required: ${macOSSDK}"
       fi
     done
 
@@ -578,13 +582,13 @@ setupBuildDir() {
 
   # If we have the original build workspace folder, create padded sub-folder to match to help
   # ensure deterministic classes.jsa
-  #if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
-  #  local PADDED_BUILD_DIR
-  #  PADDED_BUILD_DIR=$(padBuildDirToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR" "$BUILD_FOLDER")
-  #  if [[ -n "$PADDED_BUILD_DIR" ]]; then
-  #    BUILD_DIR="$PADDED_BUILD_DIR"
-  #  fi
-  #fi
+  if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
+    local PADDED_BUILD_DIR
+    PADDED_BUILD_DIR=$(padBuildDirToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR" "$BUILD_FOLDER")
+    if [[ -n "$PADDED_BUILD_DIR" ]]; then
+      BUILD_DIR="$PADDED_BUILD_DIR"
+    fi
+  fi
 
   # Create build dir
   mkdir -p "$BUILD_DIR" || exit 1

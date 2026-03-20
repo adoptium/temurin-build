@@ -553,10 +553,11 @@ function cleanTemurinFiles() {
   echo "Removing cacerts file, as Temurin builds with different Mozilla cacerts"
   find "${JDK_HOME}" -type f -name "cacerts" -delete
 
-  echo "Removing any JDK image files not shipped by Temurin(*.pdb, *.pdb, *.debuginfo, demo) in $JDK_HOME"
+  echo "Removing any JDK image files not shipped by Temurin(*.pdb, *.pdb, *.debuginfo, *.dSYM(directory), demo) in $JDK_HOME"
   find "${JDK_HOME}" -type f -name "*.pdb" -delete
   find "${JDK_HOME}" -type f -name "*.map" -delete
   find "${JDK_HOME}" -type f -name "*.debuginfo" -delete
+  find "${JDK_HOME}" -type d -name "*.dSYM" -delete
   rm -rf "${JDK_HOME}/demo"
 }
 
