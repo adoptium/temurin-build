@@ -413,13 +413,14 @@ Check_Compiler_Versions() {
     while IFS= read -r line; do
       SDK_PATHS+=("$line")
     done < <(find "$XCODE_PATH_FOUND/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs" -mindepth 1 -maxdepth 1 -type d -name "*")
-    SDK_COUNT=${#SDK_PATHS[@]}
 
     # Check Each Version Of Xcode SDKs against The SBOM
     for SDK_PATH in "${SDK_PATHS[@]}"; do
       echo "Checking SDK version for : $SDK_PATH"
-      local sdk_version="$(plutil -p "${SDK_PATH}/SDKSettings.plist" | grep '"Version"')"
-      local macx_sdk_version="$(echo "${sdk_version}" | awk -F'"' '{print $4}')"
+      local sdk_version
+      sdk_version="$(plutil -p "${SDK_PATH}/SDKSettings.plist" | grep '"Version"')"
+      local macx_sdk_version
+      macx_sdk_version="$(echo "${sdk_version}" | awk -F'"' '{print $4}')"
 
       if [ -n "$macx_sdk_version" ] && [ "$macx_sdk_version" == "$macOSSDK" ]; then
         XCODE_SYSROOT="$SDK_PATH"
@@ -652,13 +653,17 @@ buildUsingTemurinBuild() {
 
 setOpenJDKConfigureArgs() {
   # reset --jdk-boot-dir and remove --with-cacerts-src
+  # shellcheck disable=SC2001
   adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-boot-jdk=[^ ]*|--with-boot-jdk=${BOOTJDK_HOME}|")"
+  # shellcheck disable=SC2001
   adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-cacerts-src=[^ ]*||")"
 
   # replace --with-sysrootwith found local one, or remove if one not found
   if [ -n "$XCODE_SYSROOT" ]; then
+    # shellcheck disable=SC2001
     adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-sysroot=[^ ]*|--with-sysroot=${XCODE_SYSROOT}|")"
   else
+    # shellcheck disable=SC2001
     adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-sysroot=[^ ]*||")"
   fi
 

@@ -557,7 +557,7 @@ function cleanTemurinFiles() {
   find "${JDK_HOME}" -type f -name "*.pdb" -delete
   find "${JDK_HOME}" -type f -name "*.map" -delete
   find "${JDK_HOME}" -type f -name "*.debuginfo" -delete
-  find "${JDK_HOME}" -type d -name "*.dSYM" -delete
+  find "${JDK_HOME}" -type d -name "*.dSYM" -exec rm -rf {} +
   rm -rf "${JDK_HOME}/demo"
 }
 
