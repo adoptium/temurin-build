@@ -544,7 +544,7 @@ Install_BootJDK() {
   rm bootjdk.tar.gz.sig
 }
 
-# Made by IBM Bob
+# Generated-by: IBM Bob
 # resolve_path() - Canonicalize a file path by resolving . and .. components
 #
 # This function performs logical path resolution (string manipulation) without
