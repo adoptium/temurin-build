@@ -1,4 +1,6 @@
 #!/bin/bash
+# shellcheck disable=SC2129
+#  disable SC2129, as it's easier to view cmds on separate lines, rather than one long line...
 # ********************************************************************************
 # Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
