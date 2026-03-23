@@ -3,7 +3,7 @@
 ################################################################################
 # DYLIB COMPARISON TOOL FOR MACOS
 ################################################################################
-#
+# aa
 # PURPOSE:
 #   Performs comprehensive comparison of two macOS dynamic library (.dylib) files
 #   to identify differences in code, metadata, dependencies, and structure.
