@@ -550,31 +550,19 @@ Install_BootJDK() {
 # This function performs logical path resolution (string manipulation) without
 # checking if the path exists in the filesystem. It mimics the behavior of
 # GNU coreutils 'realpath -m' command, which is not available on macOS.
-#      
-# Features: 
+#
+# Features:
 #   - Converts relative paths to absolute paths
 #   - Resolves '.' (current directory) references
 #   - Resolves '..' (parent directory) references
 #   - Works with non-existent paths
-#   - Pure bash implementation (only uses sed for final cleanup)
-#   
+#   - Compatible with bash 3.2+ (macOS default)
+#
 # Usage:
 #   canonical_path=$(resolve_path "$path")
-#   
-# Examples:
-#   resolve_path "../../file.txt"           -> /Users/user/file.txt
-#   resolve_path "/a/b/../c/./d"            -> /a/c/d
-#   resolve_path "./foo/../bar/file.txt"    -> /current/dir/bar/file.txt
-#   resolve_path "/nonexistent/../etc"      -> /etc
-#   
-# Arguments:
-#   $1 - Path to canonicalize (relative or absolute, existing or non-existing)
-#   
-# Returns:
-#   Prints the canonicalized absolute path to stdout
 #
 resolve_path() {
-    local path="$1" 
+    local path="$1"
     
     # Make absolute
     [[ "$path" != /* ]] && path="$PWD/$path"
@@ -582,15 +570,20 @@ resolve_path() {
     # Process path components
     local -a parts resolved=()
     IFS='/' read -ra parts <<< "$path"
-
+    
     for part in "${parts[@]}"; do
         case "$part" in
             ""|".") continue ;;
-            "..") [[ ${#resolved[@]} -gt 0 ]] && unset 'resolved[-1]' ;;
+            "..") 
+                # Remove last element (bash 3.2+ compatible)
+                if [[ ${#resolved[@]} -gt 0 ]]; then
+                    unset "resolved[${#resolved[@]}-1]"
+                fi
+                ;;
             *) resolved+=("$part") ;;
         esac
     done
-
+    
     # Reconstruct path
     printf "/%s" "${resolved[@]}" | sed 's|/$||; s|^$|/|'
 }
