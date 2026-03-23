@@ -1,0 +1,704 @@
+#!/bin/bash
+# Generated-by: IBM Bob
+################################################################################
+# DYLIB COMPARISON TOOL FOR MACOS
+################################################################################
+#
+# PURPOSE:
+#   Performs comprehensive comparison of two macOS dynamic library (.dylib) files
+#   to identify differences in code, metadata, dependencies, and structure.
+#   Useful for reproducible build verification and debugging build differences.
+#
+# USAGE:
+#   ./compare_dylibs.sh <dylib1> <dylib2>
+#
+# OUTPUT:
+#   Creates a timestamped directory containing:
+#   - Detailed comparison files for each aspect (headers, symbols, etc.)
+#   - Diff files showing exact differences
+#   - Summary report highlighting key findings
+#
+# WHAT IT COMPARES:
+#   1. File metadata (size, checksums)
+#   2. Mach-O headers and load commands
+#   3. Symbol tables (all symbols and exported symbols)
+#   4. Library dependencies
+#   5. String tables
+#   6. Code signatures
+#   7. Disassembled code
+#   8. Binary content
+#
+# REPRODUCIBILITY CONTEXT:
+#   Even "identical" builds may differ due to:
+#   - Timestamps (__DATE__, __TIME__ macros, build timestamps)
+#   - UUIDs (random unless using -reproducible flag)
+#   - Code signatures (include signing timestamps)
+#   - SDK versions (depend on build environment)
+#   - Build paths embedded in debug info
+#
+################################################################################
+
+# Exit on any error to catch issues early
+set -e
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <dylib1> <dylib2>"
+    exit 1
+fi
+
+DYLIB1="$1"
+DYLIB2="$2"
+
+if [ ! -f "$DYLIB1" ]; then
+    echo "Error: $DYLIB1 not found"
+    exit 1
+fi
+
+if [ ! -f "$DYLIB2" ]; then
+    echo "Error: $DYLIB2 not found"
+    exit 1
+fi
+
+# OUTPUT DIRECTORY SETUP
+################################################################################
+
+# Create timestamped output directory to store all comparison results
+# Format: dylib_comparison_YYYYMMDD_HHMMSS
+OUTPUT_DIR="dylib_comparison_$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$OUTPUT_DIR"
+
+echo "==================================="
+echo "Comparing dylib files:"
+echo "  File 1: $DYLIB1"
+echo "  File 2: $DYLIB2"
+echo "  Output: $OUTPUT_DIR/"
+echo "==================================="
+echo
+
+################################################################################
+# COMPARISON 1: BASIC FILE INFORMATION
+################################################################################
+# Captures: file size, type, permissions, and checksums (MD5, SHA256)
+# Purpose: Quick high-level comparison to see if files are byte-identical
+# Note: Different checksums don't necessarily mean different code - could be
+#       just metadata differences (timestamps, UUIDs, signatures)
+################################################################################
+
+echo "[1/10] Comparing basic file information..."
+echo "File 1:" > "$OUTPUT_DIR/01_file_info.txt"
+ls -lh "$DYLIB1" >> "$OUTPUT_DIR/01_file_info.txt"
+file "$DYLIB1" >> "$OUTPUT_DIR/01_file_info.txt"
+md5 "$DYLIB1" >> "$OUTPUT_DIR/01_file_info.txt"
+shasum -a 256 "$DYLIB1" >> "$OUTPUT_DIR/01_file_info.txt"
+
+echo "" >> "$OUTPUT_DIR/01_file_info.txt"
+echo "File 2:" >> "$OUTPUT_DIR/01_file_info.txt"
+ls -lh "$DYLIB2" >> "$OUTPUT_DIR/01_file_info.txt"
+file "$DYLIB2" >> "$OUTPUT_DIR/01_file_info.txt"
+md5 "$DYLIB2" >> "$OUTPUT_DIR/01_file_info.txt"
+shasum -a 256 "$DYLIB2" >> "$OUTPUT_DIR/01_file_info.txt"
+
+################################################################################
+# COMPARISON 2: MACH-O HEADERS AND LOAD COMMANDS
+################################################################################
+# Mach-O is the executable format used by macOS (like ELF on Linux, PE on Windows)
+#
+# MACH-O HEADER contains:
+#   - Magic number (identifies file type: 32/64-bit, architecture)
+#   - CPU type and subtype (x86_64, arm64, etc.)
+#   - File type (executable, dylib, bundle, etc.)
+#   - Number of load commands
+#   - Flags (position independent, two-level namespace, etc.)
+#
+# LOAD COMMANDS are instructions for the dynamic linker (dyld) including:
+#   - LC_LOAD_DYLIB: Dependencies on other libraries
+#   - LC_UUID: Unique identifier for this binary (random unless -reproducible)
+#   - LC_BUILD_VERSION: SDK version, minimum OS version
+#   - LC_CODE_SIGNATURE: Location of code signature blob
+#   - LC_ID_DYLIB: This dylib's own name and version
+#   - LC_SEGMENT_64: Memory segments (__TEXT, __DATA, __LINKEDIT)
+#
+# FILTERING STRATEGY:
+#   We filter out LC_ID_DYLIB because it contains the dylib's filename,
+#   which may differ between builds (e.g., different paths) but doesn't
+#   indicate actual code differences. This prevents false positives when
+#   comparing dylibs from different build directories.
+################################################################################
+
+echo "[2/10] Comparing Mach-O headers and load commands..."
+
+# Extract Mach-O headers (remove filename line with tail -n +2)
+otool -hv "$DYLIB1" | tail -n +2 > "$OUTPUT_DIR/02_header_1.txt" 2>&1 || true
+otool -hv "$DYLIB2" | tail -n +2 > "$OUTPUT_DIR/02_header_2.txt" 2>&1 || true
+
+# Extract all load commands (raw, unfiltered)
+otool -l "$DYLIB1" > "$OUTPUT_DIR/02_load_commands_1_raw.txt" 2>&1 || true
+otool -l "$DYLIB2" > "$OUTPUT_DIR/02_load_commands_2_raw.txt" 2>&1 || true
+
+# Filter load commands to remove false positives:
+# 1. Remove first line (filename - differs if dylibs are in different paths)
+# 2. Remove entire LC_ID_DYLIB section (contains dylib's own name/path)
+#
+# AWK logic:
+#   - NR==1: Skip first line (filename)
+#   - /cmd LC_ID_DYLIB/: When we see LC_ID_DYLIB, set skip flag
+#   - skip && /^Load command/: When skipping and we hit next load command, stop skipping
+#   - !skip: Print all lines when not skipping
+awk '
+    NR==1 { next }
+    /cmd LC_ID_DYLIB/ { skip=1; next }
+    skip && /^Load command/ { skip=0 }
+    !skip { print }
+' "$OUTPUT_DIR/02_load_commands_1_raw.txt" > "$OUTPUT_DIR/02_load_commands_1.txt"
+
+awk '
+    NR==1 { next }
+    /cmd LC_ID_DYLIB/ { skip=1; next }
+    skip && /^Load command/ { skip=0 }
+    !skip { print }
+' "$OUTPUT_DIR/02_load_commands_2_raw.txt" > "$OUTPUT_DIR/02_load_commands_2.txt"
+
+# Generate unified diffs (shows what changed between files)
+diff -u "$OUTPUT_DIR/02_header_1.txt" "$OUTPUT_DIR/02_header_2.txt" > "$OUTPUT_DIR/02_header_diff.txt" || true
+diff -u "$OUTPUT_DIR/02_load_commands_1.txt" "$OUTPUT_DIR/02_load_commands_2.txt" > "$OUTPUT_DIR/02_load_commands_diff.txt" || true
+
+################################################################################
+# COMPARISON 3: SYMBOL TABLES
+################################################################################
+# Symbol tables contain all symbols (functions, variables, etc.) in the binary
+#
+# SYMBOL TYPES (shown by nm):
+#   T/t = Text section symbol (code) - T=external, t=local
+#   D/d = Data section symbol (initialized data)
+#   B/b = BSS section symbol (uninitialized data)
+#   U = Undefined symbol (imported from other libraries)
+#   A = Absolute symbol
+#   S = Section symbol
+#
+# WHY THIS MATTERS:
+#   - Different symbols = different code or data
+#   - Same symbols in different order = potentially non-deterministic build
+#   - Missing/extra symbols = API changes or linking differences
+#
+# FLAGS:
+#   -a = Show all symbols (including debug symbols)
+#   sort = Alphabetical order for consistent comparison
+################################################################################
+
+echo "[3/10] Comparing symbol tables..."
+nm -a "$DYLIB1" | sort > "$OUTPUT_DIR/03_symbols_1.txt" 2>&1 || true
+nm -a "$DYLIB2" | sort > "$OUTPUT_DIR/03_symbols_2.txt" 2>&1 || true
+diff -u "$OUTPUT_DIR/03_symbols_1.txt" "$OUTPUT_DIR/03_symbols_2.txt" > "$OUTPUT_DIR/03_symbols_diff.txt" || true
+
+################################################################################
+# COMPARISON 4: EXPORTED SYMBOLS
+################################################################################
+# Exported symbols are the PUBLIC API of the dylib - functions/variables
+# that other code can use when linking against this library.
+#
+# This is a subset of all symbols (comparison 3) - only the externally visible ones.
+#
+# WHY THIS MATTERS:
+#   - Changes here = API changes (breaking for clients)
+#   - Same exports but different internal symbols = implementation changes only
+#   - This is what matters for ABI (Application Binary Interface) compatibility
+#
+# FLAGS:
+#   -g = Show only global (external) symbols
+#   -U = Show only defined symbols (not undefined/imported ones)
+################################################################################
+
+echo "[4/10] Comparing exported symbols..."
+nm -gU "$DYLIB1" | sort > "$OUTPUT_DIR/04_exports_1.txt" 2>&1 || true
+nm -gU "$DYLIB2" | sort > "$OUTPUT_DIR/04_exports_2.txt" 2>&1 || true
+diff -u "$OUTPUT_DIR/04_exports_1.txt" "$OUTPUT_DIR/04_exports_2.txt" > "$OUTPUT_DIR/04_exports_diff.txt" || true
+
+################################################################################
+# COMPARISON 5: LIBRARY DEPENDENCIES
+################################################################################
+# Shows which other dylibs this library depends on (links against).
+#
+# FORMAT: Each line shows:
+#   - Library path (e.g., /usr/lib/libSystem.B.dylib)
+#   - Compatibility version (minimum version required)
+#   - Current version (version of library when this was built)
+#
+# COMMON REPRODUCIBILITY ISSUES:
+#   - Current version changes between builds (informational only, not checked at runtime)
+#   - Compatibility version should stay stable (this IS checked at runtime)
+#   - Absolute paths may differ between build environments
+#   - System library versions differ by macOS version
+#
+# WHY THIS MATTERS:
+#   - Different dependencies = different runtime behavior
+#   - Version changes may indicate different build environment
+#   - Can reveal SDK version differences
+################################################################################
+
+echo "[5/10] Comparing library dependencies..."
+otool -L "$DYLIB1" | tail -n +2 > "$OUTPUT_DIR/05_dependencies_1.txt" 2>&1 || true
+otool -L "$DYLIB2" | tail -n +2 > "$OUTPUT_DIR/05_dependencies_2.txt" 2>&1 || true
+diff -u "$OUTPUT_DIR/05_dependencies_1.txt" "$OUTPUT_DIR/05_dependencies_2.txt" > "$OUTPUT_DIR/05_dependencies_diff.txt" || true
+
+################################################################################
+# COMPARISON 6: STRING TABLES
+################################################################################
+# Extracts all printable strings from the binary (minimum 4 characters).
+#
+# WHAT'S IN HERE:
+#   - String literals from source code ("Hello, World!")
+#   - Error messages
+#   - File paths (source files, build paths)
+#   - Compiler version strings
+#   - __DATE__ and __TIME__ macro expansions
+#   - Debug information
+#   - Library names and paths
+#
+# COMMON REPRODUCIBILITY ISSUES:
+#   - Build timestamps from __DATE__/__TIME__ macros
+#   - Absolute build paths embedded by compiler
+#   - Compiler version strings
+#   - Random padding or alignment bytes interpreted as strings
+#
+# WHY THIS MATTERS:
+#   - Different strings = different code or build environment
+#   - Timestamp strings are a common source of non-reproducibility
+#   - Can reveal what changed between builds
+################################################################################
+
+echo "[6/10] Comparing string tables..."
+strings "$DYLIB1" | sort > "$OUTPUT_DIR/06_strings_1.txt" 2>&1 || true
+strings "$DYLIB2" | sort > "$OUTPUT_DIR/06_strings_2.txt" 2>&1 || true
+diff -u "$OUTPUT_DIR/06_strings_1.txt" "$OUTPUT_DIR/06_strings_2.txt" > "$OUTPUT_DIR/06_strings_diff.txt" || true
+
+################################################################################
+# COMPARISON 7: CODE SIGNATURES
+################################################################################
+# Code signatures are cryptographic signatures that verify:
+#   1. The code hasn't been tampered with
+#   2. Who signed the code (developer identity)
+#   3. When the code was signed
+#
+# SIGNATURE COMPONENTS:
+#   - Code Directory Hash (CDHash): Hash of the code
+#   - Certificate chain: Developer identity
+#   - Signing time: When signature was created
+#   - Entitlements: Special permissions
+#   - Sealed resources: Additional signed files
+#
+# REPRODUCIBILITY IMPACT:
+#   - Signatures ALWAYS differ between builds (contain signing timestamp)
+#   - Even with identical code, signatures will differ
+#   - Ad-hoc signatures (codesign -s -) still include timestamps
+#   - For reproducibility, compare BEFORE signing or strip signatures
+#
+# UNSIGNED HANDLING:
+#   If both dylibs are unsigned, we create an empty diff to avoid
+#   false positive "differences" from the "unsigned" marker.
+################################################################################
+
+echo "[7/10] Comparing code signatures..."
+# Extract signature info (filter out "not signed" message for cleaner output)
+codesign -dvvv "$DYLIB1" 2>&1 | grep -v "code object is not signed at all" > "$OUTPUT_DIR/07_codesign_1.txt" || echo "unsigned" > "$OUTPUT_DIR/07_codesign_1.txt"
+codesign -dvvv "$DYLIB2" 2>&1 | grep -v "code object is not signed at all" > "$OUTPUT_DIR/07_codesign_2.txt" || echo "unsigned" > "$OUTPUT_DIR/07_codesign_2.txt"
+
+# Special handling: If both are unsigned, create empty diff to avoid false positive
+# (Otherwise diff would show "unsigned" vs "unsigned" as different due to file metadata)
+if [ "$(cat "$OUTPUT_DIR/07_codesign_1.txt")" = "unsigned" ] && [ "$(cat "$OUTPUT_DIR/07_codesign_2.txt")" = "unsigned" ]; then
+    touch "$OUTPUT_DIR/07_codesign_diff.txt"
+else
+    diff -u "$OUTPUT_DIR/07_codesign_1.txt" "$OUTPUT_DIR/07_codesign_2.txt" > "$OUTPUT_DIR/07_codesign_diff.txt" || true
+fi
+
+################################################################################
+# COMPARISON 8: DISASSEMBLY (SAMPLE)
+################################################################################
+# Disassembles the __TEXT __text section (executable code) into assembly language.
+#
+# WHAT THIS SHOWS:
+#   - Actual machine instructions (assembly code)
+#   - Function addresses and labels
+#   - Jump targets and call instructions
+#   - Immediate values and constants
+#
+# WHY SAMPLE ONLY (first 1000 lines):
+#   - Full disassembly can be huge (millions of lines for large dylibs)
+#   - Sample is sufficient to detect code differences
+#   - If sample differs, full disassembly will too
+#   - Keeps output files manageable
+#
+# WHAT DIFFERENCES MEAN:
+#   - Different instructions = different compiled code
+#   - Same instructions, different addresses = position changes (could be benign)
+#   - Different immediate values = different constants or data
+#
+# FLAGS:
+#   -tV = Disassemble text section with verbose output
+#   tail -n +2 = Skip filename header
+#   head -1000 = Take only first 1000 lines
+################################################################################
+
+echo "[8/10] Comparing disassembly (sample)..."
+otool -tV "$DYLIB1" | tail -n +2 | head -1000 > "$OUTPUT_DIR/08_disasm_1.txt" 2>&1 || true
+otool -tV "$DYLIB2" | tail -n +2 | head -1000 > "$OUTPUT_DIR/08_disasm_2.txt" 2>&1 || true
+diff -u "$OUTPUT_DIR/08_disasm_1.txt" "$OUTPUT_DIR/08_disasm_2.txt" > "$OUTPUT_DIR/08_disasm_diff.txt" || true
+
+################################################################################
+# COMPARISON 9: SEGMENT INFORMATION (__TEXT __text)
+################################################################################
+# Examines the __TEXT __text segment in detail - this is the main code section.
+#
+# MACH-O SEGMENTS:
+#   __TEXT: Read-only code and constants
+#     __text: Executable code (functions)
+#     __const: Read-only constants
+#     __cstring: C string literals
+#   __DATA: Read-write data
+#     __data: Initialized variables
+#     __bss: Uninitialized variables
+#   __LINKEDIT: Linking and debugging info
+#     Symbol tables, string tables, relocations
+#
+# WHAT THIS SHOWS:
+#   - Raw bytes of the code section
+#   - Hexadecimal representation
+#   - ASCII interpretation (if printable)
+#
+# WHY THIS MATTERS:
+#   - Byte-level view of actual code
+#   - Can reveal subtle differences not visible in disassembly
+#   - Shows padding and alignment
+#
+# FLAGS:
+#   -v = Verbose output (shows hex and ASCII)
+#   -s __TEXT __text = Specific segment and section
+################################################################################
+
+echo "[9/10] Comparing segment information..."
+otool -v -s __TEXT __text "$DYLIB1" | tail -n +2 > "$OUTPUT_DIR/09_text_segment_1.txt" 2>&1 || true
+otool -v -s __TEXT __text "$DYLIB2" | tail -n +2 > "$OUTPUT_DIR/09_text_segment_2.txt" 2>&1 || true
+diff -u "$OUTPUT_DIR/09_text_segment_1.txt" "$OUTPUT_DIR/09_text_segment_2.txt" > "$OUTPUT_DIR/09_text_segment_diff.txt" || true
+
+################################################################################
+# COMPARISON 10: BINARY DIFF
+################################################################################
+# Performs byte-by-byte comparison of the entire binary files.
+#
+# OUTPUT FORMAT (from cmp -l):
+#   Each line shows: byte_offset byte_value_file1 byte_value_file2
+#   Example: "1234 101 102" means at offset 1234, file1 has 0x65, file2 has 0x66
+#
+# WHY LIMIT TO 100 LINES:
+#   - If files differ significantly, output can be huge
+#   - First 100 differences are usually enough to understand the pattern
+#   - Full binary diff can be run separately if needed
+#
+# WHAT THIS REVEALS:
+#   - Exact byte positions where files differ
+#   - How many bytes differ (count of lines)
+#   - Pattern of differences (scattered vs. localized)
+#
+# INTERPRETATION:
+#   - No output = Files are byte-for-byte identical
+#   - Few differences = Likely metadata (UUID, timestamp, signature)
+#   - Many differences = Significant code or data changes
+#   - Differences at end of file = Often signature-related
+################################################################################
+
+echo "[10/10] Performing binary comparison..."
+cmp -l "$DYLIB1" "$DYLIB2" | head -100 > "$OUTPUT_DIR/10_binary_diff.txt" 2>&1 || echo "Files are identical" > "$OUTPUT_DIR/10_binary_diff.txt"
+
+################################################################################
+# SUMMARY REPORT GENERATION
+################################################################################
+# Aggregates all comparison results into a human-readable summary report.
+# This is the main output that users should read first.
+################################################################################
+
+echo ""
+echo "==================================="
+echo "Generating summary report..."
+echo "==================================="
+
+{
+    echo "################################################################################"
+    echo "# DYLIB COMPARISON SUMMARY REPORT"
+    echo "################################################################################"
+    echo ""
+    echo "Files compared:"
+    echo "  File 1: $DYLIB1"
+    echo "  File 2: $DYLIB2"
+    echo "  Date: $(date)"
+    echo ""
+    echo "################################################################################"
+    echo ""
+    
+    echo "1. FILE SIZE COMPARISON"
+    echo "-----------------------"
+    echo "Quick check: Do the files have the same size?"
+    echo ""
+    SIZE1=$(stat -f%z "$DYLIB1")
+    SIZE2=$(stat -f%z "$DYLIB2")
+    echo "File 1 size: $SIZE1 bytes"
+    echo "File 2 size: $SIZE2 bytes"
+    if [ "$SIZE1" -eq "$SIZE2" ]; then
+        echo "✓ Sizes are identical"
+    else
+        echo "✗ Sizes differ by $((SIZE1 - SIZE2)) bytes"
+    fi
+    echo ""
+    
+    echo "2. CHECKSUM COMPARISON"
+    echo "----------------------"
+    echo "Binary-level comparison: Are the files byte-for-byte identical?"
+    echo ""
+    if cmp -s "$DYLIB1" "$DYLIB2"; then
+        echo "✓ Files are binary identical"
+        echo "  → No further analysis needed - files are exactly the same"
+    else
+        echo "✗ Files differ at binary level"
+        DIFF_COUNT=$(cmp -l "$DYLIB1" "$DYLIB2" 2>/dev/null | wc -l | tr -d ' ')
+        echo "  Number of differing bytes: $DIFF_COUNT"
+        echo "  → See detailed comparisons below to understand what differs"
+    fi
+    echo ""
+    
+    echo "3. MACH-O HEADER DIFFERENCES"
+    echo "----------------------------"
+    echo "Mach-O header contains: magic number, CPU type, file type, flags"
+    echo ""
+    if [ -s "$OUTPUT_DIR/02_header_diff.txt" ]; then
+        echo "✗ Headers differ (showing first 20 lines):"
+        head -20 "$OUTPUT_DIR/02_header_diff.txt"
+        echo "  → This is unusual - may indicate different architectures or file types"
+    else
+        echo "✓ Headers are identical"
+    fi
+    echo ""
+    
+    echo "4. LOAD COMMANDS DIFFERENCES"
+    echo "----------------------------"
+    echo "Load commands include: dependencies, UUID, code signature, segments, versions"
+    echo "Note: LC_ID_DYLIB (dylib's own name) is filtered out to avoid false positives"
+    echo ""
+    if [ -s "$OUTPUT_DIR/02_load_commands_diff.txt" ]; then
+        echo "✗ Load commands differ (showing first 30 lines):"
+        head -30 "$OUTPUT_DIR/02_load_commands_diff.txt"
+        echo ""
+        echo "  Common causes:"
+        echo "  - LC_UUID: Random unless built with -reproducible flag"
+        echo "  - LC_BUILD_VERSION: SDK version differs between build environments"
+        echo "  - LC_CODE_SIGNATURE: Signature timestamps always differ"
+        echo "  - Dependency versions: Current versions change, compatibility versions stable"
+    else
+        echo "✓ Load commands are identical"
+    fi
+    echo ""
+    
+    echo "5. SYMBOL TABLE DIFFERENCES"
+    echo "---------------------------"
+    echo "All symbols (functions, variables, etc.) in the binary"
+    echo ""
+    if [ -s "$OUTPUT_DIR/03_symbols_diff.txt" ]; then
+        echo "✗ Symbol tables differ (showing first 30 lines):"
+        head -30 "$OUTPUT_DIR/03_symbols_diff.txt"
+        echo ""
+        echo "  → Different symbols = different code or data"
+        echo "  → Same symbols, different order = non-deterministic build process"
+    else
+        echo "✓ Symbol tables are identical"
+    fi
+    echo ""
+    
+    echo "6. EXPORTED SYMBOLS DIFFERENCES"
+    echo "-------------------------------"
+    echo "Public API - symbols visible to code linking against this dylib"
+    echo ""
+    if [ -s "$OUTPUT_DIR/04_exports_diff.txt" ]; then
+        echo "✗ Exported symbols differ:"
+        head -30 "$OUTPUT_DIR/04_exports_diff.txt"
+        echo ""
+        echo "  → This is an API change - may break binary compatibility"
+    else
+        echo "✓ Exported symbols are identical"
+        echo "  → Public API is unchanged"
+    fi
+    echo ""
+    
+    echo "7. DEPENDENCIES DIFFERENCES"
+    echo "---------------------------"
+    echo "Other dylibs this library links against"
+    echo ""
+    if [ -s "$OUTPUT_DIR/05_dependencies_diff.txt" ]; then
+        echo "✗ Dependencies differ:"
+        cat "$OUTPUT_DIR/05_dependencies_diff.txt"
+        echo ""
+        echo "  Common causes:"
+        echo "  - Current version changes (informational, not checked at runtime)"
+        echo "  - Compatibility version changes (checked at runtime - important!)"
+        echo "  - Different system library versions (different macOS versions)"
+        echo "  - SDK version differences"
+    else
+        echo "✓ Dependencies are identical"
+    fi
+    echo ""
+    
+    echo "8. STRING TABLE DIFFERENCES"
+    echo "---------------------------"
+    echo "All printable strings found in the binary"
+    echo ""
+    if [ -s "$OUTPUT_DIR/06_strings_diff.txt" ]; then
+        echo "✗ String tables differ (showing first 30 lines):"
+        head -30 "$OUTPUT_DIR/06_strings_diff.txt"
+        echo ""
+        echo "  Checking for common reproducibility issues:"
+        grep -E "(timestamp|date|time|__DATE__|__TIME__|build)" "$OUTPUT_DIR/06_strings_diff.txt" | head -20 || echo "  No obvious timestamp/date strings found"
+        echo ""
+        echo "  → String differences often indicate:"
+        echo "     - __DATE__/__TIME__ macros in source code"
+        echo "     - Build paths embedded by compiler"
+        echo "     - Compiler version strings"
+    else
+        echo "✓ String tables are identical"
+    fi
+    echo ""
+    
+    echo "9. CODE SIGNATURE DIFFERENCES"
+    echo "-----------------------------"
+    echo "Cryptographic signatures verifying code integrity and identity"
+    echo ""
+    if [ -s "$OUTPUT_DIR/07_codesign_diff.txt" ]; then
+        echo "✗ Code signatures differ:"
+        cat "$OUTPUT_DIR/07_codesign_diff.txt"
+        echo ""
+        echo "  NOTE: Signatures ALWAYS differ between builds (contain signing timestamp)"
+        echo "  → This is expected and does NOT indicate code differences"
+        echo "  → To compare code, either:"
+        echo "     1. Compare before signing, or"
+        echo "     2. Strip signatures with: codesign --remove-signature"
+    else
+        echo "✓ Code signatures are identical (or both unsigned)"
+    fi
+    echo ""
+    
+    echo "10. DISASSEMBLY DIFFERENCES (SAMPLE)"
+    echo "------------------------------------"
+    echo "Assembly code (first 1000 lines of __TEXT __text section)"
+    echo ""
+    if [ -s "$OUTPUT_DIR/08_disasm_diff.txt" ]; then
+        echo "✗ Disassembly differs (showing first 20 lines):"
+        head -20 "$OUTPUT_DIR/08_disasm_diff.txt"
+        echo ""
+        echo "  → Different assembly = different compiled code"
+        echo "  → This indicates actual functional differences"
+    else
+        echo "✓ Disassembly sample is identical"
+        echo "  → Compiled code appears to be the same"
+    fi
+    echo ""
+    
+    echo "################################################################################"
+    echo "# REPRODUCIBILITY GUIDE"
+    echo "################################################################################"
+    echo ""
+    echo "COMMON CAUSES OF NON-REPRODUCIBLE BUILDS:"
+    echo ""
+    echo "1. TIMESTAMPS"
+    echo "   - __DATE__ and __TIME__ macros in source code"
+    echo "   - Build timestamps in load commands"
+    echo "   - Code signature timestamps"
+    echo "   Solution: Avoid __DATE__/__TIME__, use -reproducible flag, compare before signing"
+    echo ""
+    echo "2. UUIDs (LC_UUID load command)"
+    echo "   - Random by default (identifies this specific binary)"
+    echo "   - Changes on every build unless using -reproducible flag"
+    echo "   Solution: Build with: clang -Wl,-reproducible"
+    echo "   Available since: Xcode 13.3 (ld64-819.6)"
+    echo ""
+    echo "3. CODE SIGNATURES"
+    echo "   - Always include signing timestamp"
+    echo "   - Even ad-hoc signatures (codesign -s -) differ"
+    echo "   Solution: Compare before signing or strip signatures"
+    echo ""
+    echo "4. SDK VERSIONS (LC_BUILD_VERSION)"
+    echo "   - SDK version comes from macOS system, not Xcode version"
+    echo "   - Different macOS versions = different SDK versions"
+    echo "   Solution: Build on same macOS version or normalize with zero_dependency_versions.py"
+    echo ""
+    echo "5. DEPENDENCY VERSIONS"
+    echo "   - Current versions are informational (not checked at runtime)"
+    echo "   - Compatibility versions are functional (checked at runtime)"
+    echo "   Solution: Normalize current versions or ensure same build environment"
+    echo ""
+    echo "6. BUILD PATHS"
+    echo "   - Absolute paths embedded in debug info"
+    echo "   - Source file paths in error messages"
+    echo "   Solution: Use relative paths, strip debug info, or build from same location"
+    echo ""
+    echo "TOOLS FOR REPRODUCIBLE COMPARISON:"
+    echo "  - compare_normalized.sh: Normalizes then compares (handles all above issues)"
+    echo "  - zero_dependency_versions.py: Normalizes metadata for comparison"
+    echo "  - Build with: clang -Wl,-reproducible (Xcode 13.3+)"
+    echo ""
+    echo "All detailed outputs saved to: $OUTPUT_DIR/"
+    echo ""
+    
+} > "$OUTPUT_DIR/00_SUMMARY_REPORT.txt"
+
+cat "$OUTPUT_DIR/00_SUMMARY_REPORT.txt"
+
+################################################################################
+# FINAL STATUS AND EXIT CODE
+################################################################################
+# Determine if files are identical or different and set appropriate exit code
+# Exit 0 = identical, Exit 1 = differences found
+################################################################################
+
+echo ""
+echo "################################################################################"
+echo "# FINAL RESULT"
+echo "################################################################################"
+echo ""
+
+# Check if files are binary identical
+if cmp -s "$DYLIB1" "$DYLIB2"; then
+    echo "✓✓✓ SUCCESS: FILES ARE IDENTICAL ✓✓✓"
+    echo ""
+    echo "The two dylib files are byte-for-byte identical."
+    echo "No differences found."
+    echo ""
+    echo "All results saved to: $OUTPUT_DIR/"
+    echo ""
+    echo "################################################################################"
+    exit 0
+else
+    echo "✗✗✗ ERROR: FILES HAVE DIFFERENCES ✗✗✗"
+    echo ""
+    echo "The two dylib files differ."
+    echo ""
+    
+    # Provide helpful summary of what differs
+    DIFF_COUNT=$(cmp -l "$DYLIB1" "$DYLIB2" 2>/dev/null | wc -l | tr -d ' ')
+    echo "Number of differing bytes: $DIFF_COUNT"
+    echo ""
+    echo "Key differences found:"
+    
+    # Check each type of difference
+    [ -s "$OUTPUT_DIR/02_header_diff.txt" ] && echo "  - Mach-O headers differ"
+    [ -s "$OUTPUT_DIR/02_load_commands_diff.txt" ] && echo "  - Load commands differ (UUID, versions, signatures, etc.)"
+    [ -s "$OUTPUT_DIR/03_symbols_diff.txt" ] && echo "  - Symbol tables differ"
+    [ -s "$OUTPUT_DIR/04_exports_diff.txt" ] && echo "  - Exported symbols differ (API changes)"
+    [ -s "$OUTPUT_DIR/05_dependencies_diff.txt" ] && echo "  - Dependencies differ"
+    [ -s "$OUTPUT_DIR/06_strings_diff.txt" ] && echo "  - String tables differ"
+    [ -s "$OUTPUT_DIR/07_codesign_diff.txt" ] && echo "  - Code signatures differ"
+    [ -s "$OUTPUT_DIR/08_disasm_diff.txt" ] && echo "  - Disassembly differs (code changes)"
+    
+    echo ""
+    echo "See detailed analysis in: $OUTPUT_DIR/00_SUMMARY_REPORT.txt"
+    echo "All comparison files saved to: $OUTPUT_DIR/"
+    echo ""
+    echo "################################################################################"
+    exit 1
+fi
+
+# Made with Bob
