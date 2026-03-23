@@ -544,13 +544,64 @@ Install_BootJDK() {
   rm bootjdk.tar.gz.sig
 }
 
+# Made by IBM Bob
+# resolve_path() - Canonicalize a file path by resolving . and .. components
+#
+# This function performs logical path resolution (string manipulation) without
+# checking if the path exists in the filesystem. It mimics the behavior of
+# GNU coreutils 'realpath -m' command, which is not available on macOS.
+#      
+# Features: 
+#   - Converts relative paths to absolute paths
+#   - Resolves '.' (current directory) references
+#   - Resolves '..' (parent directory) references
+#   - Works with non-existent paths
+#   - Pure bash implementation (only uses sed for final cleanup)
+#   
+# Usage:
+#   canonical_path=$(resolve_path "$path")
+#   
+# Examples:
+#   resolve_path "../../file.txt"           -> /Users/user/file.txt
+#   resolve_path "/a/b/../c/./d"            -> /a/c/d
+#   resolve_path "./foo/../bar/file.txt"    -> /current/dir/bar/file.txt
+#   resolve_path "/nonexistent/../etc"      -> /etc
+#   
+# Arguments:
+#   $1 - Path to canonicalize (relative or absolute, existing or non-existing)
+#   
+# Returns:
+#   Prints the canonicalized absolute path to stdout
+#
+resolve_path() {
+    local path="$1" 
+    
+    # Make absolute
+    [[ "$path" != /* ]] && path="$PWD/$path"
+    
+    # Process path components
+    local -a parts resolved=()
+    IFS='/' read -ra parts <<< "$path"
+
+    for part in "${parts[@]}"; do
+        case "$part" in
+            ""|".") continue ;;
+            "..") [[ ${#resolved[@]} -gt 0 ]] && unset 'resolved[-1]' ;;
+            *) resolved+=("$part") ;;
+        esac
+    done
+
+    # Reconstruct path
+    printf "/%s" "${resolved[@]}" | sed 's|/$||; s|^$|/|'
+}
+
 # Pad the BUILD_DIR/BUILD_FOLDER to the same length as TARGET_BUILD_DIR_TO_MATCH.
 # Necessary to avoid potential non-determinstic classes.jsa on Linux and binary differences on Mac
 padBuildDirToSameLength() {
   local TARGET_BUILD_DIR_TO_MATCH
-  TARGET_BUILD_DIR_TO_MATCH=$(realpath -m "$1")
+  TARGET_BUILD_DIR_TO_MATCH=$(resolve_path "$1")
   local WS_BUILD_DIR
-  WS_BUILD_DIR=$(realpath -m "$2")
+  WS_BUILD_DIR=$(resolve_path "$2")
   local WS_BUILD_FOLDER="$3"
 
   local WS_DIR="${WS_BUILD_DIR}/${WS_BUILD_FOLDER}"
