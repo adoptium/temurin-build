@@ -314,7 +314,6 @@ elif [[ "$OS" =~ Linux* ]]; then
   echo "On Linux"
 elif [[ "$OS" =~ Darwin* ]]; then
   echo "On MacOS"
-  JDK_DIR="${JDK_DIR}/Contents/Home"
 else
   echo "Do not recognise OS: $OS"
   exit 1
@@ -353,11 +352,11 @@ if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
 fi
 
 if [[ "$OS" =~ CYGWIN* ]]; then
-  removeWindowsNonComparableData
+  removeWindowsNonComparableData "${JDK_DIR}"
 fi
 
 if [[ "$OS" =~ Darwin* ]]; then
-  removeMacOSNonComparableData
+  removeMacOSNonComparableData "${JDK_DIR}"
 fi
 
 removeVendorName

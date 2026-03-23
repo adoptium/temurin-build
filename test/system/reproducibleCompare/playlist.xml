@@ -61,9 +61,10 @@
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test_Mac</testCaseName>
 		<command>unset SPEC;\
-		ls -l $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D);\
-		$(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)macos_repro_build_compare.sh $(SBOM_FILE) $(JDK_FILE) $(REPORTDIR); \
-	$(TEST_STATUS)
+                rm -rf "$(REPRO_BLD_WS)";\
+                mkdir -p "$(REPRO_BLD_WS)";\
+                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)macos_repro_build_compare.sh --sbom-url "$(SBOM_FILE)" --jdk-url "$(JDK_FILE)" --attestation-verify --build-workspace "$(REPRO_BLD_WS)"; \
+        $(TEST_STATUS)
 		</command>
 		<levels>
 			<level>special</level>

@@ -23,7 +23,12 @@ OS="$5"
 
 checkJdkDir() {
   JDK_DIR="${1}"
-  if [[ ! -d "${JDK_DIR}" ]] || [[ ! -d "${JDK_DIR}/bin"  ]]; then
+  JDK_HOME_DIR="$JDK_DIR"
+  if [[ "$OS" =~ Darwin* ]]; then
+    JDK_HOME_DIR="$JDK_DIR/Contents/Home"
+  fi
+
+  if [[ ! -d "${JDK_DIR}" ]] || [[ ! -d "${JDK_HOME_DIR}/bin"  ]]; then
     echo "$JDK_DIR does not exist or does not point at a JDK"
     echo "repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 OS"
     exit 1

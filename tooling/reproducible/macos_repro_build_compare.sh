@@ -17,39 +17,64 @@
 # Usage Notes:
 # 1. For MacOS, jq must be installed, and the architecture to be built must match the system this script is being executed on.
 # 2. This script will only work with xcode, and the executing user must have sudo permissions to run xcode-select -s
-# 3. This script requires that the correct versions of the sdk are installed and in the loaction defined in the MAC_SDK_LOCATION below.
 
 set -e
 
-# Check All 3 Params Are Supplied
-if [ "$#" -lt 3 ]; then
-  echo "Usage: $0 SBOM_URL/SBOM_PATH JDKZIP_URL/JDKZIP_PATH REPORT_DIR"
-  echo ""
-  echo "1. SBOM_URL/SBOM_PATH - should be the FULL path OR a URL to a Temurin JDK SBOM JSON file in CycloneDX Format"
-  echo "    eg. https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%2B9/OpenJDK21U-sbom_x64_mac_hotspot_21.0.3_9.json"
-  echo ""
-  echo "2. JDKZIP_URL/JDKZIP_PATH - should be the FULL path OR a URL to a Temurin Windows JDK Zip file"
-  echo "    eg. https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%2B9/OpenJDK21U-jdk_x64_mac_hotspot_21.0.3_9.tar.gz"
-  echo ""
-  echo "3. REPORT_DIR - should be the FULL path OR a URL to the output directory for the comparison report"
-  echo ""
-  exit 1
-fi
+# Adoptium's public GPG key used for GPG signatures
+ADOPTIUM_PUBLIC_GPG_KEY="0x3B04D753C9050D9A5D343F39843C48A565F8F04B"
 
 # Read Parameters
-SBOM_URL="$1"
-TARBALL_URL="$2"
-REPORT_DIR="$3"
+SBOM_URL=""
+TARBALL_URL=""
+ATTESTATION_VERIFY=false
+BUILD_WORKSPACE=""
+
+ScriptPath=$(dirname "$(realpath "$0")")
+      
+while [[ $# -gt 0 ]] ; do
+  opt="$1";
+  shift; 
+        
+  echo "Parsing opt: ${opt}"
+  case "$opt" in
+    "--sbom-url" )
+    SBOM_URL="$1"; shift;;
+    
+    "--jdk-url" )
+    TARBALL_URL="$1"; shift;;
+
+    "--attestation-verify" ) 
+    ATTESTATION_VERIFY=true;;
+          
+    "--build-workspace" )
+    BUILD_WORKSPACE="$1"; shift;;
+        
+    *) echo >&2 "Invalid option: ${opt}"; exit 1;;
+  esac    
+done    
+      
+# Check All Required Params Are Supplied
+if [ -z "$SBOM_URL" ] || [ -z "$TARBALL_URL" ]; then
+  echo "Usage: macos_repro_build_compare.sh [Params]"
+  echo "Parameters:"
+  echo "  Required:"
+  echo "    --sbom-url [SBOM_URL/SBOM_PATH] : should be the FULL path OR a URL to a Temurin JDK SBOM JSON file in CycloneDX Format"
+  echo "    --jdk-url [JDK_URL/JDK_PATH] : should be the FULL path OR a URL to a Temurin MacOS JDK tarball file"
+  echo "  Optional:"
+  echo "    --attestation-verify : Enables Attestation Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
+  echo "    --build-workspace : FULL path to the location to perform the reproducible build within"
+  exit 1
+fi
 
 # Constants Required By This Script
 # These Values Should Be Updated To Reflect The Build Environment
 # The Defaults Below Are Suitable For An Adoptium Mac OS X Build Environment
 # Which Has Been Created Via The Ansible Infrastructure Playbooks
 
-WORK_DIR=$(realpath "$(dirname "$0")")/comp-jdk-build
 MAC_COMPILER_BASE=/Applications
 MAC_COMPILER_APP_PREFIX=Xcode
-MAC_SDK_LOCATION=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+XCODE_PATH_FOUND=""
+XCODE_SYSROOT=""
 
 # These variables relate to the pre-requisite ant installation
 ANT_VERSION="1.10.5"
@@ -57,8 +82,8 @@ ANT_CONTRIB_VERSION="1.0b3"
 ANT_BASE_PATH="/usr/local/bin"
 
 # Addiitonal Working Variables Defined For Use By This Script
-SBOMLocalPath="$WORK_DIR/src_sbom.json"
-DISTLocalPath="$WORK_DIR/src_jdk_dist.tar.gz"
+SBOMLocalPath="$PWD/src_sbom.json"
+DISTLocalPath="$PWD/src_jdk_dist.tar.gz"
 rc=0
 
 # Function to check if a string is a valid URL
@@ -69,18 +94,6 @@ is_url() {
   else
     return 1  # Not a URL
   fi
-}
-
-Create_WorkDir() {
-  # Check if the folder exists & remove if it does
-  echo "Checking If Working Directory: $WORK_DIR Exists"
-  if [ -d "$WORK_DIR" ]; then
-    # Folder exists, delete it
-    rm -rf "$WORK_DIR"
-    echo "Folder Exists - Removing '$WORK_DIR'"
-  fi
-  echo "Creating $WORK_DIR"
-  mkdir -p "$WORK_DIR"
 }
 
 # Function To Check The SBOM
@@ -106,9 +119,9 @@ Check_Parameters() {
   fi
 
   if is_url "$TARBALL_URL" ; then
-    echo "JDK ZIP Is URL - Downloading"
+    echo "JDK TARBALL Is URL - Downloading"
     if wget --spider --server-response "$TARBALL_URL" 2>&1 | grep -q "404 Not Found"; then
-      echo "Error: JDK ZIPFILE URL Not Found"
+      echo "Error: JDK URL Not Found"
       exit 1
     else
       # Download File As It Exists
@@ -125,7 +138,7 @@ Check_Parameters() {
   fi
 }
 
-Install_PreReqs() {
+Check_PreReqs() {
   # Check if jq is installed
   if ! command -v jq &> /dev/null; then
     echo "Error: jq is not installed. Please install jq before running this script."
@@ -156,14 +169,49 @@ Get_SBOM_Values() {
     echo ""
   fi
 
-    # Extract All Required Fields From The SBOM Content
-    macOSCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "MacOS Compiler").version')
-    bootJDK=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "BOOTJDK").version' | sed -e 's/-LTS$//')
-    buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
-    buildSHA=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value' | awk -F'/' '{print $NF}')
-    buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
-    buildVersion=$(echo "$sbomContent" | jq -r '.metadata.component.version')
-    buildArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
+  # Extract All Required Fields From The SBOM Content
+  macOSCompiler=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "MacOS Compiler").version')
+  macOSSDK=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "MacOS SDK Version").version')
+  BOOTJDK_VERSION=$(echo "$sbomContent" | jq -r '.metadata.tools.components[] | select(.name == "BOOTJDK").version' | sed -e 's/-LTS$//')
+  buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
+  TEMURIN_BUILD_REF=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value')
+  TEMURIN_BUILD_REPO="${TEMURIN_BUILD_REF%/commit/*}"
+  TEMURIN_BUILD_SHA=$(basename "$TEMURIN_BUILD_REF")
+  TEMURIN_VERSION=$(echo "$sbomContent" | jq -r '.metadata.component.version' | sed 's/-beta//' | cut -f1 -d"-")
+  buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
+  TEMURIN_BUILD_ARGS=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
+  BUILD_WORKSPACE_DIRECTORY=$(echo "$sbomContent" | jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value')
+  BUILD_SCM_REF=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "SCM Ref") | .value')
+
+  if [ "$ATTESTATION_VERIFY" == true ]; then
+    adoptiumSrcCommitUrl=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "OpenJDK Source Commit") | .value')
+    adoptiumConfigureArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "configure_args") | .value')
+  
+    # Check if the adoptiumSrcCommitUrl and configure_args were found
+    if [ -n "$adoptiumSrcCommitUrl" ] && [ -n "$adoptiumConfigureArgs" ]; then
+      adoptiumRepo="${adoptiumSrcCommitUrl%/commit/*}"
+      adoptiumBuildCommitSHA=$(basename "$adoptiumSrcCommitUrl")
+      openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
+      openjdkSourceCommitSHA=$(getUpstreamOpenJDKCommitSHA "$adoptiumRepo" "$openjdkSourceRepo" "$adoptiumBuildCommitSHA")
+  
+      echo "Performing an Attestation Verification Build from $openjdkSourceRepo with commit SHA $openjdkSourceCommitSHA"
+      echo "Adoptium OpenJDK configure argmuents from original Temurin build:"
+      echo "    $adoptiumConfigureArgs"
+      echo ""
+      export openjdkSourceRepo
+      export openjdkSourceCommitSHA
+      export adoptiumConfigureArgs
+    else
+      echo "ERROR: Adoptium OpenJDK Source Commit, SCM Ref and configure_args must be specified in the SBOM."
+      echo "These Are Mandatory Elements"
+      exit 1
+    fi
+  fi
+
+  # Remove any --with-jobs, let local user system determine
+  # Remove any --user-openjdk-build-root-directory as that will be local to original system
+  # shellcheck disable=SC2001
+  TEMURIN_BUILD_ARGS=$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s/--with-jobs=[0-9]*//g" | sed -e "s/--user-openjdk-build-root-directory[ ]*[^ ]*//g")
 
   # Check if the tool was found
   if [ -n "$macOSCompiler" ]; then
@@ -175,18 +223,19 @@ Get_SBOM_Values() {
       exit 1
   fi
 
-  # Ensure The SDK Path Is Correct
-  if [ -d "$MAC_SDK_LOCATION" ]; then
-      echo "Defined SDK Directory Exists"
-      export MAC_SDK_LOCATION
+  # Check if the SDK was found
+  if [ -n "$macOSSDK" ]; then
+      echo "MacOS SDK Version: $macOSSDK"
+      export macOSSDK
   else
-      echo "ERROR: The Defined MacOS SDK Could Not Be Found."
-      exit 1
+      echo "WARNING: MACOS SDK Version not found in the SBOM."
+      macOSSDK=""
+      export macOSSDK
   fi
 
-  if [ -n "$bootJDK" ]; then
-      echo "Boot JDK Version: $bootJDK"
-      export bootJDK
+  if [ -n "$BOOTJDK_VERSION" ]; then
+      echo "SBOM Boot JDK Version: $BOOTJDK_VERSION"
+      export BOOTJDK_VERSION
   else
       echo "ERROR: BOOTJDK Version not found in the SBOM."
       echo "This Is A Mandatory Element"
@@ -200,11 +249,19 @@ Get_SBOM_Values() {
       echo "This Is A Mandatory Element"
       exit 1
   fi
-  if [ -n "$buildSHA" ]; then
-      echo "Temurin Build SHA: $buildSHA"
-      export buildSHA
+  if [ -n "$TEMURIN_BUILD_REPO" ]; then
+      echo "TEMURIN_BUILD_REPO: $TEMURIN_BUILD_REPO"
+      export TEMURIN_BUILD_REPO
   else
-      echo "ERROR: Temurin Build SHA not found in the SBOM."
+      echo "ERROR: Temurin Build Ref not found in the SBOM."
+      echo "This Is A Mandatory Element"
+      exit 1
+  fi
+  if [ -n "$TEMURIN_BUILD_SHA" ]; then
+      echo "TEMURIN_BUILD_SHA: $TEMURIN_BUILD_SHA"
+      export TEMURIN_BUILD_SHA
+  else
+      echo "ERROR: Temurin Build Ref not found in the SBOM."
       echo "This Is A Mandatory Element"
       exit 1
   fi
@@ -216,23 +273,39 @@ Get_SBOM_Values() {
       echo "This Is A Mandatory Element"
       exit 1
   fi
-  if [ -n "$buildVersion" ]; then
-      echo "Temurin Build Version: $buildVersion"
-      export buildVersion
+  if [ -n "$TEMURIN_VERSION" ]; then
+      echo "Temurin Build Version: $TEMURIN_VERSION"
+      export TEMURIN_VERSION
   else
       echo "ERROR: Temurin Build Version not found in the SBOM."
       echo "This Is A Mandatory Element"
       exit 1
   fi
-  if [ -n "$buildArgs" ]; then
-      echo "Temurin Build Arguments: $buildArgs"
-      export buildArgs
+  if [ -n "$TEMURIN_BUILD_ARGS" ]; then
+      echo "SBOM Temurin Build Arguments: $TEMURIN_BUILD_ARGS"
+      export TEMURIN_BUILD_ARGS
   else
       echo "ERROR: Temurin Build Arguments not found in the SBOM."
       echo "This Is A Mandatory Element"
       exit 1
   fi
   echo ""
+}
+
+getUpstreamOpenJDKCommitSHA() {
+  local adoptiumMirrorRepo="$1"
+  local openjdkSourceRepo="$2"
+  local adoptiumBuildCommitSHA="$3"
+
+  # Shallow clone commit history only
+  git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_mirror_repo
+
+  # Find upstream OpenJDK commit SHA, which is the first non-merge commit from the adoptiumBuildCommitSHA
+  openjdkCommitSHA=$(cd adoptium_mirror_repo && git log --no-merges -1 "$adoptiumBuildCommitSHA" --format=%H)
+
+  rm -rf adoptium_mirror_repo
+
+  echo "$openjdkCommitSHA"
 }
 
 Check_Architecture() {
@@ -289,7 +362,7 @@ Check_Compiler_Versions() {
   # Lines 47 & 48
 
   echo "Checking For Xcode Compilers In : $MAC_COMPILER_BASE/"
-  XCODE_PATH=()
+  XCODE_PATHS=()
   while IFS= read -r line; do
     XCODE_PATHS+=("$line")
   done < <(find "$MAC_COMPILER_BASE" -maxdepth 1 -type d -name "$MAC_COMPILER_APP_PREFIX*")
@@ -300,13 +373,6 @@ Check_Compiler_Versions() {
     exit 1
   else
     echo "At Least One Xcode Installation Was Found ... Checking Versions"
-    # Check If The Running User Can Sudo To Run Xcode Select
-    if sudo -n xcode-select -v &>/dev/null; then
-      echo "Current User Can Use Xcode Select... Continuing"
-    else
-      echo "Error - Current User Does Not Have Sufficient Permissions"
-      exit 1
-    fi
     # Check Each Version Of Xcode Against The SBOM error if not found
     for XCODE_PATH in "${XCODE_PATHS[@]}"; do
       echo "Checking Path ... $XCODE_PATH"
@@ -324,6 +390,7 @@ Check_Compiler_Versions() {
         if [ "$XCODE_VER" = "$sbom_xcode_version" ]; then
           found_xcode_ver="$XCODE_VER"
           found_xcode_path="$XCODE_PATH"
+          break
         fi
       fi
     done
@@ -333,8 +400,43 @@ Check_Compiler_Versions() {
     exit 1
   fi
 
+  echo "Found required XCode version $found_xcode_ver, at $found_xcode_path"
+
   # Switch To Found Xcode Version
   sudo xcode-select -s "$found_xcode_path"
+  XCODE_PATH_FOUND="$found_xcode_path"
+
+  if [ -n "$macOSSDK" ]; then
+    echo "Searching for installed MacOS SDK of required version to match original build: ${macOSSDK}"
+
+    SDK_PATHS=()
+    while IFS= read -r line; do
+      SDK_PATHS+=("$line")
+    done < <(find "$XCODE_PATH_FOUND/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs" -mindepth 1 -maxdepth 1 -type d -name "*")
+
+    # Check Each Version Of Xcode SDKs against The SBOM
+    for SDK_PATH in "${SDK_PATHS[@]}"; do
+      echo "Checking SDK version for : $SDK_PATH"
+      local sdk_version
+      sdk_version="$(plutil -p "${SDK_PATH}/SDKSettings.plist" | grep '"Version"')"
+      local macx_sdk_version
+      macx_sdk_version="$(echo "${sdk_version}" | awk -F'"' '{print $4}')"
+
+      if [ -n "$macx_sdk_version" ] && [ "$macx_sdk_version" == "$macOSSDK" ]; then
+        XCODE_SYSROOT="$SDK_PATH"
+        echo "Found required MacOS SDK version '${macOSSDK}' in path '${SDK_PATH}'"
+        break
+      else
+        echo "${SDK_PATH} SDK version ${macx_sdk_version} does not match required: ${macOSSDK}"
+      fi
+    done
+
+    if [ -z "$XCODE_SYSROOT" ]; then
+      echo "WARNING: No matching MacOS SDK version (${macOSSDK}) available in ${XCODE_PATH_FOUND}/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs, OpenJDK configure will find most suitable, which may not necessarily match for reproducibility."
+    fi
+  else
+    echo "WARNING: No SBOM MacOS SDK version available, OpenJDK configure will find most suitable, which may not necessarily match for reproducibility."
+  fi
 
   # Check if clang is installed
   if ! command -v clang &> /dev/null; then
@@ -355,13 +457,13 @@ Check_And_Install_Ant() {
     echo "Ant Doesnt Exist At The Correct Version - Installing"
     # Ant Version Not Found... Check And Create Paths
     echo Downloading ant for SBOM creation:
-    curl https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.zip > "${WORK_DIR}"/apache-ant-${ANT_VERSION}-bin.zip
-    (cd "$WORK_DIR" && unzip -qn ./apache-ant-${ANT_VERSION}-bin.zip)
-    rm "$WORK_DIR"/apache-ant-${ANT_VERSION}-bin.zip
+    curl https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.zip > apache-ant-${ANT_VERSION}-bin.zip
+    (unzip -qn ./apache-ant-${ANT_VERSION}-bin.zip)
+    rm apache-ant-${ANT_VERSION}-bin.zip
     echo Downloading ant-contrib-${ANT_CONTRIB_VERSION}:
-    curl -L https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip > "$WORK_DIR"/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
-    (unzip -qnj "$WORK_DIR"/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar -d "$WORK_DIR"/apache-ant-${ANT_VERSION}/lib)
-    rm "$WORK_DIR"/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
+    curl -L https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip > ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
+    (unzip -qnj ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar -d apache-ant-${ANT_VERSION}/lib)
+    rm ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
   else
     echo "Ant Version: $ANT_VERSION Is Already Installed"
   fi
@@ -380,114 +482,300 @@ Check_And_Install_Ant() {
   fi
 }
 
-Check_And_Install_BootJDK() {
-  # Regardless Of Whats On The Machine, Install The Boot JDK Into A Working Directory
-  echo "Checking The Boot JDK Version From The SBOM Exists : $bootJDK"
-  if [ -d "${WORK_DIR}/jdk-${bootJDK}" ] ; then
-    echo "Error - ${WORK_DIR}/jdk-${bootJDK} Exists - When It Shouldnt...Exiting"
-    exit 1
-  else
-    echo "${WORK_DIR}/jdk-${bootJDK} Doesnt Exist - Installing"
-    echo "Retrieving boot JDK $bootJDK"
+Install_BootJDK() {
+  # Adjust Sys Arch For API
+  if [ $msvsArch = "arm64" ] ; then NATIVE_API_ARCH="aarch64" ; fi
+  if [ $msvsArch = "x64" ] ; then NATIVE_API_ARCH="x64" ; fi
+  if [ $msvsArch = "x86" ] ; then NATIVE_API_ARCH="x86" ; fi
 
-    # Adjust Sys Arch For API
-    if [ $msvsArch = "arm64" ] ; then NATIVE_API_ARCH="aarch64" ; fi
-    if [ $msvsArch = "x64" ] ; then NATIVE_API_ARCH="x64" ; fi
-    if [ $msvsArch = "x86" ] ; then NATIVE_API_ARCH="x86" ; fi
-
-    echo "https://api.adoptium.net/v3/binary/version/jdk-${bootJDK}/mac/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse\?project=jdk"
-    echo "Downloading & Extracting.. Boot JDK Version : $bootJDK"
-    curl -s -L "https://api.adoptium.net/v3/binary/version/jdk-${bootJDK}/mac/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk" --output "$WORK_DIR/bootjdk.tar.gz"
-    tar -xzf "$WORK_DIR/bootjdk.tar.gz" -C "$WORK_DIR"
-    rm -rf "$WORK_DIR/bootjdk.tar.gz"
+  local api_query="https://api.adoptium.net/v3/binary/version/jdk-${BOOTJDK_VERSION}/mac/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
+  local sig_query=""
+  echo "Trying to get BootJDK jdk-${BOOTJDK_VERSION} from ${api_query}"
+  if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
+    echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
+    local major_version
+    major_version=$(echo "${BOOTJDK_VERSION}" | cut -d'.' -f1)
+    api_query="https://api.adoptium.net/v3/binary/latest/${major_version}/ga/mac/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse"
+    echo "Trying to get latest GA for version ${major_version} from ${api_query}"
+    if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
+      echo "Unable to download BootJDK version jdk-${BOOTJDK_VERSION} from ${api_query}"
+      api_query="https://api.adoptium.net/v3/assets/feature_releases/${major_version}/ea?architecture=${NATIVE_API_ARCH}&image_type=jdk&jvm_impl=hotspot&os=mac&page=0&page_size=10&project=jdk&sort_method=DATE&sort_order=DESC&vendor=eclipse"
+      rm -f ea_assets.json
+      if curl --fail -L -o ea_assets.json "${api_query}"; then
+        api_query=$(jq -r '.[0] | .binaries[0] | .package | .link' "ea_assets.json")
+        sig_query=$(jq -r '.[0] | .binaries[0] | .package | .signature_link' "ea_assets.json")
+        echo "Trying to get latest EA for version ${major_version} from ${api_query}"
+        if ! curl --fail -L -o bootjdk.tar.gz "${api_query}"; then
+          echo "Unable to download BootJDK from ${api_query}"
+          exit 2
+        fi
+      else
+        echo "Unable to query BootJDK from ${api_query}"
+        exit 2
+      fi
+    fi 
   fi
+  # Update BOOTJDK_VERSION with actual one downloaded
+  BOOTJDK_VERSION=$(tar -tf bootjdk.tar.gz | cut -d/ -f1 | head -n 1 | sed 's/^jdk-//')
+  if [ -z "$sig_query" ]; then
+    sig_query="https://api.adoptium.net/v3/signature/version/jdk-${BOOTJDK_VERSION}/mac/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
+  fi
+  
+  echo "Downloading gpg signature for ${BOOTJDK_VERSION}.."
+  if ! curl --fail -L -o bootjdk.tar.gz.sig "${sig_query}"; then
+    echo "Unable to download BootJDK gpg signature for jdk-${BOOTJDK_VERSION} from ${sig_query}"
+    exit 2
+  fi
+  
+  echo "Obtaining Adoptium's public GPG key.."
+  curl -sSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=${ADOPTIUM_PUBLIC_GPG_KEY}" --output "adoptium.gpg.key"
+  gpg --import "adoptium.gpg.key" 
+  rm "adoptium.gpg.key"
+  if ! gpg --verify "bootjdk.tar.gz.sig" "bootjdk.tar.gz"; then
+    echo "GPG Verify of bootjdk.tar.gz failed"
+    exit 1
+  fi
+  
+  echo "Using downloaded BOOTJDK_VERSION=${BOOTJDK_VERSION}"
+  mkdir -p "$PWD/bootjdk" && tar -xzf bootjdk.tar.gz -C "$PWD/bootjdk"
+  export PATH=$PWD/bootjdk/jdk-${BOOTJDK_VERSION}/bin:$PATH
+  export BOOTJDK_HOME=$PWD/bootjdk/jdk-${BOOTJDK_VERSION}/Contents/Home
+  rm bootjdk.tar.gz
+  rm bootjdk.tar.gz.sig
 }
 
-Clone_Build_Repo() {
-  # Check if git is installed
-  if ! command -v git &> /dev/null; then
-    echo "Error: Git is not installed. Please install Git before proceeding."
-    exit 1
-  fi
+# Generated-by: IBM Bob
+# resolve_path() - Canonicalize a file path by resolving . and .. components
+#
+# This function performs logical path resolution (string manipulation) without
+# checking if the path exists in the filesystem. It mimics the behavior of
+# GNU coreutils 'realpath -m' command, which is not available on macOS.
+#
+# Features:
+#   - Converts relative paths to absolute paths
+#   - Resolves '.' (current directory) references
+#   - Resolves '..' (parent directory) references
+#   - Works with non-existent paths
+#   - Compatible with bash 3.2+ (macOS default)
+#
+# Usage:
+#   canonical_path=$(resolve_path "$path")
+#
+resolve_path() {
+    local path="$1"
+    
+    # Make absolute
+    [[ "$path" != /* ]] && path="$PWD/$path"
+    
+    # Process path components
+    local -a parts resolved=()
+    IFS='/' read -ra parts <<< "$path"
+    
+    for part in "${parts[@]}"; do
+        case "$part" in
+            ""|".") continue ;;
+            "..") 
+                # Remove last element (bash 3.2+ compatible)
+                if [[ ${#resolved[@]} -gt 0 ]]; then
+                    unset "resolved[${#resolved[@]}-1]"
+                fi
+                ;;
+            *) resolved+=("$part") ;;
+        esac
+    done
+    
+    # Reconstruct path
+    printf "/%s" "${resolved[@]}" | sed 's|/$||; s|^$|/|'
+}
 
-  echo "Git is installed. Proceeding with the script."
-  if [ ! -r "$WORK_DIR/temurin-build" ] ; then
-    echo "Cloning Temurin Build Repository"
+# Pad the BUILD_DIR/BUILD_FOLDER to the same length as TARGET_BUILD_DIR_TO_MATCH.
+# Necessary to avoid potential non-determinstic classes.jsa on Linux and binary differences on Mac
+padBuildDirToSameLength() {
+  local TARGET_BUILD_DIR_TO_MATCH
+  TARGET_BUILD_DIR_TO_MATCH=$(resolve_path "$1")
+  local WS_BUILD_DIR
+  WS_BUILD_DIR=$(resolve_path "$2")
+  local WS_BUILD_FOLDER="$3"
+
+  local WS_DIR="${WS_BUILD_DIR}/${WS_BUILD_FOLDER}"
+
+  local padding_length=$((${#TARGET_BUILD_DIR_TO_MATCH} - ${#WS_DIR}))
+  if [[ "$padding_length" -eq 0 ]]; then
+    echo "Warning: $TARGET_BUILD_DIR_TO_MATCH and $WS_DIR are already same length" 1>&2
     echo ""
-    git clone -q https://github.com/adoptium/temurin-build "$WORK_DIR/temurin-build" || exit 1
-    echo "Switching To Build SHA From SBOM : $buildSHA"
-    (cd "$WORK_DIR/temurin-build" && git checkout -q "$buildSHA")
-    echo "Completed"
+  elif [[ "$padding_length" -lt 0 ]] || [[ "$padding_length" -eq 1 ]]; then
+    echo "Warning: Unable to pad $WS_DIR to necessary length of $TARGET_BUILD_DIR_TO_MATCH, padding required: $padding_length" 1>&2
+    echo ""
+  else
+    padding_length=$((padding_length - 1))
+    local padding
+    padding=$(printf "P%.0s" $(seq 1 $padding_length))
+    local padded="${WS_BUILD_DIR}/${padding}"
+    echo "Padded $WS_BUILD_DIR with sub-folder to $padded" 1>&2
+    echo "${padded}"
   fi
 }
 
-Prepare_Env_For_Build() {
+# Construct "build dir" from current/workspace directory plus BUILD_FOLDER
+# Padding to BUILD_WORKSPACE_DIRECTORY length if known
+setupBuildDir() {
+  if [[ -n "$BUILD_WORKSPACE" ]]; then
+    BUILD_DIR="$BUILD_WORKSPACE"
+  else
+    BUILD_DIR="$PWD/build"
+  fi
+
+  # If we have the original build workspace folder, create padded sub-folder to match to help
+  # ensure deterministic classes.jsa
+  if [[ -n "$BUILD_WORKSPACE_DIRECTORY" ]]; then
+    local PADDED_BUILD_DIR
+    PADDED_BUILD_DIR=$(padBuildDirToSameLength "$BUILD_WORKSPACE_DIRECTORY" "$BUILD_DIR" "$BUILD_FOLDER")
+    if [[ -n "$PADDED_BUILD_DIR" ]]; then
+      BUILD_DIR="$PADDED_BUILD_DIR"
+    fi
+  fi
+
+  # Create build dir
+  mkdir -p "$BUILD_DIR" || exit 1
+}
+
+setTemurinBuildArgs() {
   echo "Setting Variables"
-  export BOOTJDK_HOME=$WORK_DIR/jdk-${bootJDK}/Contents/Home
 
   # set --build-reproducible-date if not yet
-  if [[ "${buildArgs}" != *"--build-reproducible-date"* ]]; then
-    buildArgs="--build-reproducible-date \"${buildStamp}\" ${buildArgs}" 
+  if [[ "${TEMURIN_BUILD_ARGS}" != *"--build-reproducible-date"* ]]; then
+    TEMURIN_BUILD_ARGS="--build-reproducible-date \"${buildStamp}\" ${TEMURIN_BUILD_ARGS}" 
   fi
   # reset --jdk-boot-dir
   # shellcheck disable=SC2001
-  buildArgs="$(echo "$buildArgs" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir ${BOOTJDK_HOME}|")"
-  # shellcheck disable=SC2001
-  buildArgs="$(echo "$buildArgs" | sed -e "s|--with-sysroot=[^ ]*|--with-sysroot=${MAC_SDK_LOCATION}|")"
-  # shellcheck disable=SC2001
-  buildArgs="$(echo "$buildArgs" | sed -e "s|--user-openjdk-build-root-directory [^ ]*|--user-openjdk-build-root-directory ${WORK_DIR}/temurin-build/workspace/build/openjdkbuild/|")"
+  TEMURIN_BUILD_ARGS="$(echo "$TEMURIN_BUILD_ARGS" | sed -e "s|--jdk-boot-dir [^ ]*|--jdk-boot-dir ${BOOTJDK_HOME}|")"
   # remove ingored options
-  buildArgs=${buildArgs/--assemble-exploded-image /}
-  buildArgs=${buildArgs/--enable-sbom-strace /}
+  TEMURIN_BUILD_ARGS=${TEMURIN_BUILD_ARGS/--assemble-exploded-image /}
+  TEMURIN_BUILD_ARGS=${TEMURIN_BUILD_ARGS/--enable-sbom-strace /}
+
+  # Specific commit sha to clone
+  TEMURIN_BUILD_ARGS="--branch ${BUILD_SCM_REF} $TEMURIN_BUILD_ARGS"
+
+  # Must do full clone to be able to build from commit sha
+  TEMURIN_BUILD_ARGS="--disable-shallow-git-clone $TEMURIN_BUILD_ARGS"
 
   echo ""
   echo "Make JDK Any Platform Argument List = "
-  echo "$buildArgs"
+  echo "$TEMURIN_BUILD_ARGS"
   echo ""
   echo "Parameters Parsed Successfully"
 }
 
-Build_JDK() {
-  echo "Building JDK..."
+buildUsingTemurinBuild() {
+  echo "Building JDK using temurin-build scripts..."
+  
+  # Build folder must match temurin-build "workspace/build/src"
+  BUILD_FOLDER="workspace/build/src"
+  setupBuildDir
+  echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
 
-  # Trigger Build
-  cd "$WORK_DIR"
-  echo "cd temurin-build && ./makejdk-any-platform.sh $buildArgs > build.log 2>&1" | sh
-  # Copy The Built JDK To The Working Directory
-  cp "$WORK_DIR"/temurin-build/workspace/target/OpenJDK*-jdk_*tar.gz "$WORK_DIR"/reproJDK.tar.gz
-  cp "$WORK_DIR"/temurin-build/build.log "$WORK_DIR"/build.log
+  # Checkout required temurin-build SHA into BUILD_DIR
+  (cd "$BUILD_DIR" && git init . && git remote add origin "$TEMURIN_BUILD_REPO" && git fetch --depth 1 --filter=blob:none origin "$TEMURIN_BUILD_SHA" && git checkout FETCH_HEAD)
+  
+  echo "Rebuild args for makejdk_any_platform.sh are: $TEMURIN_BUILD_ARGS"
+  if ! echo "cd $BUILD_DIR && TZ=UTC ./makejdk-any-platform.sh $TEMURIN_BUILD_ARGS > build.log 2>&1" | sh; then
+   SBOMLocalPath # Echo build.log
+    cat "$BUILD_DIR/build.log" || true
+    echo "makejdk-any-platform.sh build failure, exiting"
+    exit 1
+  fi
+  
+  # Echo build.log
+  cat "$BUILD_DIR/build.log"
+
+  cp "$BUILD_DIR"/workspace/target/OpenJDK*-jdk_*tar.gz reproJDK.tar.gz
+
+  mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
+  cp "$BUILD_DIR/build.log" build.log
+  cp "$SBOMLocalPath" SBOM.json
+} 
+
+setOpenJDKConfigureArgs() {
+  # reset --jdk-boot-dir and remove --with-cacerts-src
+  # shellcheck disable=SC2001
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-boot-jdk=[^ ]*|--with-boot-jdk=${BOOTJDK_HOME}|")"
+  # shellcheck disable=SC2001
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-cacerts-src=[^ ]*||")"
+
+  # replace --with-sysrootwith found local one, or remove if one not found
+  if [ -n "$XCODE_SYSROOT" ]; then
+    # shellcheck disable=SC2001
+    adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-sysroot=[^ ]*|--with-sysroot=${XCODE_SYSROOT}|")"
+  else
+    # shellcheck disable=SC2001
+    adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-sysroot=[^ ]*||")"
+  fi
+
+  echo ""
+  echo "OpenJDK Configure Argument List = "
+  echo "$adoptiumConfigureArgs"
+  echo ""
+}
+
+attestationBuildUsingOpenJDK() {
+  echo "Building JDK using OpenJDK configure and make..."
+  
+  local CURRENT_PWD="$PWD"
+  
+  BUILD_FOLDER="src"
+  setupBuildDir
+  mkdir -p "$BUILD_DIR/$BUILD_FOLDER"
+  echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
+  
+  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR/$BUILD_FOLDER"
+  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
+
+  echo "Executing: bash ./configure $adoptiumConfigureArgs"
+  if ! echo "cd $BUILD_DIR/$BUILD_FOLDER && TZ=UTC bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
+    cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" || true
+    echo "OpenJDK configure failure, exiting"
+    exit 1
+  fi
+
+  cat "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log"
+
+  echo "Executing: make images"
+  if ! echo "cd $BUILD_DIR/$BUILD_FOLDER/build/* && TZ=UTC make images > ../../repro_build.log 2>&1" | sh; then
+    cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log" || true
+    echo "OpenJDK make images failure, exiting"
+    exit 1
+  fi 
+
+  cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"
+
+  mv "$BUILD_DIR/$BUILD_FOLDER"/build/*/images/jdk-bundle/jdk-*.jdk "$BUILD_DIR/$BUILD_FOLDER/build/jdk-$TEMURIN_VERSION"
+  (cd "$BUILD_DIR/$BUILD_FOLDER/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "jdk-$TEMURIN_VERSION")
+
+  mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
+  cp  "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" build.log
+  cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"  >> build.log
+  cp "$SBOMLocalPath" SBOM.json
 }
 
 Compare_JDK() {
-  echo "Comparing JDKs"
-  echo ""
-  mkdir "$WORK_DIR/compare"
-  cp "$WORK_DIR"/src_jdk_dist.tar.gz "$WORK_DIR"/compare
-  cp "$WORK_DIR"/reproJDK.tar.gz "$WORK_DIR"/compare
-  cp "$(dirname "$0")"/repro_*.sh "$WORK_DIR"/compare/
+  echo Comparing ...
+  cp "$ScriptPath"/repro_*.sh "$PWD"
+  chmod +x "$PWD"/repro_*.sh
 
-  # Set Permissions
-  chmod +x "$WORK_DIR/compare/"*sh
-  cd "$WORK_DIR/compare"
+  sourceJDK="jdk-${TEMURIN_VERSION}"
+  mkdir "${sourceJDK}"
+  tar xpfz "$DISTLocalPath" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
 
-  # Unzip And Rename The Source JDK
-  echo "Unzip Source"
-  tar xfz src_jdk_dist.tar.gz
-  original_directory_name=$(find . -maxdepth 1 -type d | tail -1)
-  mv "$original_directory_name" src_jdk
-
-  #Unzip And Rename The Target JDK
-  echo "Unzip Target"
-  tar xfz reproJDK.tar.gz
-  original_directory_name=$(find . -maxdepth 1 -type d | grep -v src_jdk | tail -1)
-  mv "$original_directory_name" tar_jdk
-
-  # Ensure Java Home Is Set
   export JAVA_HOME=$BOOTJDK_HOME
   export PATH=$JAVA_HOME/bin:$PATH
-  rc=0
-  ./repro_compare.sh temurin src_jdk/Contents/Home temurin tar_jdk/Contents/Home Darwin 2>&1 || rc=$?
-  cd "$WORK_DIR"
+
+  set +e
+  if [ "$ATTESTATION_VERIFY" == true ]; then
+    ./repro_compare.sh temurin "$sourceJDK" openjdk "reproJDK/jdk-$TEMURIN_VERSION" Darwin 2>&1 || rc=$?
+  else
+    ./repro_compare.sh temurin "$sourceJDK" temurin "reproJDK/jdk-$TEMURIN_VERSION" Darwin 2>&1 || rc=$?
+  fi
+  set -e
 
   if [ $rc -eq 0 ]; then
     echo "Compare identical !"
@@ -495,23 +783,7 @@ Compare_JDK() {
     echo "Differences found..., logged in: reprotest.diff"
   fi
 
-  if [ -n "$REPORT_DIR" ]; then
-    echo "Copying Output To $REPORT_DIR"
-    cp "$WORK_DIR"/compare/reprotest.diff "$REPORT_DIR"
-    cp "$WORK_DIR"/reproJDK.tar.gz "$REPORT_DIR"
-    cp "$WORK_DIR"/build.log "$REPORT_DIR"
-    cp "$WORK_DIR"/src_sbom.json "$REPORT_DIR"
-  fi
-  Clean_Up_Everything
   exit $rc 
-}
-
-#
-Clean_Up_Everything() {
-  # Remove Working Directorys
-  rm -rf "$WORK_DIR/compare"
-  rm -rf "$WORK_DIR/temurin-build"
-  rm -rf "$BOOTJDK_HOME"
 }
 
 # Begin Main Script Here
@@ -520,11 +792,9 @@ echo "Begining Reproducible Mac Build From SBOM"
 echo "---------------------------------------------"
 echo "Checking Environment And Parameters"
 echo "---------------------------------------------"
-Create_WorkDir
-echo "---------------------------------------------"
 Check_Parameters
 echo "---------------------------------------------"
-Install_PreReqs
+Check_PreReqs
 echo "---------------------------------------------"
 Get_SBOM_Values
 echo "---------------------------------------------"
@@ -532,16 +802,20 @@ Check_Architecture
 echo "---------------------------------------------"
 Check_Compiler_Versions
 echo "---------------------------------------------"
-echo "All Validation Checks Passed - Proceeding To Build"
+Install_BootJDK
 echo "---------------------------------------------"
-Check_And_Install_Ant
+if [ "$ATTESTATION_VERIFY" == true ]; then
+  setOpenJDKConfigureArgs
+else
+  Check_And_Install_Ant
+  setTemurinBuildArgs
+fi
 echo "---------------------------------------------"
-Check_And_Install_BootJDK
-echo "---------------------------------------------"
-Clone_Build_Repo
-echo "---------------------------------------------"
-Prepare_Env_For_Build
-echo "---------------------------------------------"
-Build_JDK
+if [ "$ATTESTATION_VERIFY" == true ]; then
+  attestationBuildUsingOpenJDK
+else
+  buildUsingTemurinBuild
+fi
 echo "---------------------------------------------"
 Compare_JDK
+

@@ -19,32 +19,36 @@ TEMURIN_TOOLS_BINREPL="temurin.tools.BinRepl"
 function expandJDK() {
   local JDK_DIR="$1"
   local OS="$2"
-  local JDK_ROOT="$1"
-  local JDK_BIN_DIR="${JDK_ROOT}_CP/bin"
+
+  local JDK_HOME_DIR="$JDK_DIR"
+  local JDK_COPY="${1}_CP"
+  local JDK_COPY_BIN="${JDK_COPY}/bin"
+
   if [[ "$OS" =~ Darwin* ]]; then
-    JDK_ROOT=$(realpath ${JDK_DIR}/../../)
-    JDK_BIN_DIR="${JDK_ROOT}_CP/Contents/Home/bin"
+    JDK_HOME_DIR="$JDK_DIR/Contents/Home"
+    JDK_COPY_BIN="$JDK_COPY/Contents/Home/bin"
   fi
+
   echo "$(date +%T) : Expanding various components to enable comparisons ${JDK_DIR} (original files will be removed):"
-  mkdir "${JDK_ROOT}_CP"
-  cp -R ${JDK_ROOT}/* ${JDK_ROOT}_CP
+  mkdir "${JDK_COPY}"
+  cp -R ${JDK_DIR}/* ${JDK_COPY}
 
   echo "$(date +%T) :   Using 'jimage extract' to expand lib/modules image into lib/modules_extracted"
-  modulesFile="${JDK_DIR}/lib/modules"
-  mkdir "${JDK_DIR}/lib/modules_extracted"
-  extractedDir="${JDK_DIR}/lib/modules_extracted"
+  modulesFile="${JDK_HOME_DIR}/lib/modules"
+  mkdir "${JDK_HOME_DIR}/lib/modules_extracted"
+  extractedDir="${JDK_HOME_DIR}/lib/modules_extracted"
   if [[ "$OS" =~ CYGWIN* ]]; then
     modulesFile=$(cygpath -w $modulesFile)
     extractedDir=$(cygpath -w $extractedDir)
   fi
-  "${JDK_BIN_DIR}/jimage" extract --dir "${extractedDir}" "${modulesFile}"
-  rm "${JDK_DIR}/lib/modules"
+  "${JDK_COPY_BIN}/jimage" extract --dir "${extractedDir}" "${modulesFile}"
+  rm "${JDK_HOME_DIR}/lib/modules"
   echo "$(date +%T) :   Unzipping lib/src.zip to normalize file permissions, then removing src.zip"
-  unzip -q "${JDK_DIR}/lib/src.zip" -d "${JDK_DIR}/lib/src_zip_expanded"
-  rm "${JDK_DIR}/lib/src.zip"
+  unzip -q "${JDK_HOME_DIR}/lib/src.zip" -d "${JDK_HOME_DIR}/lib/src_zip_expanded"
+  rm "${JDK_HOME_DIR}/lib/src.zip"
 
   echo "$(date +%T) :   Using 'jmod extract' to expand all jmods to jmods/expanded_ directories"
-  FILES=$(find "${JDK_DIR}" -type f -path '*.jmod')
+  FILES=$(find "${JDK_HOME_DIR}" -type f -path '*.jmod')
   for f in $FILES
     do
       base=$(basename "$f")
@@ -55,28 +59,28 @@ function expandJDK() {
         f=$(cygpath -w $f)
         expand_dir=$(cygpath -w $expand_dir)
       fi
-      "${JDK_BIN_DIR}/jmod" extract --dir "${expand_dir}" "$f"
+      "${JDK_COPY_BIN}/jmod" extract --dir "${expand_dir}" "$f"
       rm "$f"
     done
 
   echo "$(date +%T) :   Expanding lib/jrt-fs.jar to lib/jrt-fs-exanded to remove signatures from within.."
-  mkdir "${JDK_DIR}/lib/jrt-fs-expanded"
-  unzip -qd "${JDK_DIR}/lib/jrt-fs-expanded" "${JDK_DIR}/lib/jrt-fs.jar"
-  rm "${JDK_DIR}/lib/jrt-fs.jar"
+  mkdir "${JDK_HOME_DIR}/lib/jrt-fs-expanded"
+  unzip -qd "${JDK_HOME_DIR}/lib/jrt-fs-expanded" "${JDK_HOME_DIR}/lib/jrt-fs.jar"
+  rm "${JDK_HOME_DIR}/lib/jrt-fs.jar"
 
-  mkdir -p "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded"
-  unzip -qd "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded" "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
-  rm "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
+  mkdir -p "${JDK_HOME_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded"
+  unzip -qd "${JDK_HOME_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded" "${JDK_HOME_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
+  rm "${JDK_HOME_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs.jar"
 
   echo "$(date +%T) :   Expanding lib/ct.sym to workaround zip timestamp differences (https://bugs.openjdk.org/browse/JDK-8327466)"
-  mkdir "${JDK_DIR}/lib/ct-sym-expanded"
-  unzip -qd "${JDK_DIR}/lib/ct-sym-expanded" "${JDK_DIR}/lib/ct.sym"
-  rm "${JDK_DIR}/lib/ct.sym"
-  mkdir -p "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct-sym-expanded"
-  unzip -qd "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct-sym-expanded" "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct.sym"
-  rm "${JDK_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct.sym"
+  mkdir "${JDK_HOME_DIR}/lib/ct-sym-expanded"
+  unzip -qd "${JDK_HOME_DIR}/lib/ct-sym-expanded" "${JDK_HOME_DIR}/lib/ct.sym"
+  rm "${JDK_HOME_DIR}/lib/ct.sym"
+  mkdir -p "${JDK_HOME_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct-sym-expanded"
+  unzip -qd "${JDK_HOME_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct-sym-expanded" "${JDK_HOME_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct.sym"
+  rm "${JDK_HOME_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct.sym"
 
-  rm -rf "${JDK_ROOT}_CP"
+  rm -rf "${JDK_COPY}"
 }
 
 # jdk-25+ Jlink runtimelink files contain signed binary "hash" lines in fs_* runtimelink files
@@ -87,34 +91,41 @@ function removeJlinkRuntimelinkHashes() {
   local JDK_DIR="$1"
   local OS="$2"
 
-  extractedDir="${JDK_DIR}/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink"
+  local JDK_HOME_DIR="$JDK_DIR"
+  if [[ "$OS" =~ Darwin* ]]; then
+    JDK_HOME_DIR="$JDK_DIR/Contents/Home"
+  fi
+
+  extractedDir="${JDK_HOME_DIR}/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink"
   if [[ "$OS" =~ CYGWIN* ]]; then
     extractedDir=$(cygpath -w $extractedDir)
   fi
 
-  FILES=$(find "${extractedDir}" -type f -name "fs_*files")
-  for f in $FILES
-    do
-      # Remove the binary hashes
-      if [[ "$OS" =~ Darwin* ]]; then
-        sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dylib$)/\1|\2||\3/g' "$f"
-        sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(bin\/.*$)/\1|\2||\3/g' "$f"
-        sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
-      elif [[ "$OS" =~ CYGWIN* ]]; then
-        sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dll$)/\1|\2||\3/g' "$f"
-        sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.exe$)/\1|\2||\3/g' "$f"
-        sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
-      else
-        # Linux only libjvm.so and cacerts might differ
-        sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
-        # lib/server/libjvm.so can differ in hash due to differing "Build ID" based on debuginfo differing due to compile time optimizations
-        sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/server\/libjvm\.so$)/\1|\2||\3/g' "$f"
-      fi
+  if [[ -d "${extractedDir}" ]]; then
+    FILES=$(find "${extractedDir}" -type f -name "fs_*files")
+    for f in $FILES
+      do
+        # Remove the binary hashes
+        if [[ "$OS" =~ Darwin* ]]; then
+          sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dylib$)/\1|\2||\3/g' "$f"
+          sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(bin\/.*$)/\1|\2||\3/g' "$f"
+          sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
+        elif [[ "$OS" =~ CYGWIN* ]]; then
+          sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dll$)/\1|\2||\3/g' "$f"
+          sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.exe$)/\1|\2||\3/g' "$f"
+          sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
+        else
+          # Linux only libjvm.so and cacerts might differ
+          sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
+          # lib/server/libjvm.so can differ in hash due to differing "Build ID" based on debuginfo differing due to compile time optimizations
+          sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/server\/libjvm\.so$)/\1|\2||\3/g' "$f"
+        fi
 
-      # Sort file content
-      sort "$f" > "$f.sorted"
-      rm "$f"
-    done
+        # Sort file content
+        sort "$f" > "$f.sorted"
+        rm "$f"
+      done
+  fi
 }
 
 # Use of "-fno-schedule-insns -fno-schedule-insns2” can sometimes cause debuginfo differences, then
@@ -151,6 +162,11 @@ function removeSystemModulesHashBuilderParams() {
   local JDK_DIR="$1"
   local OS="$2"
   local work_JDK="$3"
+
+  if [[ "$OS" =~ Darwin* ]]; then
+    work_JDK="$3/Contents/Home"
+  fi
+
   for systemModule in $systemModules
     do
       FILES=$(find "${JDK_DIR}" -type f -name "$systemModule")
@@ -211,6 +227,7 @@ function removeSystemModulesHashBuilderParams() {
 #   checksum  - A checksum value of the binary
 #   reprohex  - A hex UUID to identify the binary version, again generated from binary content
 function removeWindowsNonComparableData() {
+ local JDK_DIR="$1"
  echo "$(date +%T) : Removing EXE/DLL timestamps, CRC and debug repro hex from ${JDK_DIR}"
  # We need to do this for all executables if patching VS_VERSION_INFO
  if [[ "$PATCH_VS_VERSION_INFO" = true ]]; then
@@ -280,9 +297,9 @@ function removeWindowsNonComparableData() {
 #   the some length part of the user's build folder.
 # See https://github.com/adoptium/temurin-build/issues/2899#issuecomment-1153757419
 function removeMacOSNonComparableData() {
+  local JDK_DIR="$1"
   echo "Removing MacOS dylib non-comparable UUID from ${JDK_DIR}"
-  MAC_JDK_ROOT="${JDK_DIR}/../../Contents"
-  FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
+  FILES=$(find "${JDK_DIR}/Contents" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
   for f in $FILES
   do
     uuid=$(otool -l "$f" | grep "uuid" | tr -s " " | tr -d "-" | cut -d" " -f3)
@@ -312,6 +329,11 @@ function processModuleInfo() {
   local JDK_DIR="$1"
   local OS="$2"
   local work_JDK="$3"
+
+  if [[ "$OS" =~ Darwin* ]]; then
+    work_JDK="$3/Contents/Home"
+  fi
+
   echo "$(date +%T) : Process Module Info from ${JDK_DIR}" 
   echo "$(date +%T) : Normalizing ModuleAttributes order in module-info.class, converting to javap"
   moduleAttr="ModuleResolution ModuleTarget"
@@ -387,11 +409,21 @@ function removeGeneratedClasses() {
   local JDK_DIR="$1"
   local OS="$2"
 
-  if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
-    rm -rf "$JDK_DIR/bin/server/classes.jsa"
-    rm -rf "$JDK_DIR/bin/server/classes_nocoops.jsa"
-    rm -rf "$JDK_DIR/bin/server/classes_coh.jsa"
-    rm -rf "$JDK_DIR/bin/server/classes_nocoops_coh.jsa"
+  local JDK_HOME_DIR="$JDK_DIR"
+  if [[ "$OS" =~ Darwin* ]]; then
+    JDK_HOME_DIR="$JDK_DIR/Contents/Home"
+  fi
+
+  if [[ "$OS" =~ CYGWIN* ]]; then
+    rm -rf "$JDK_HOME_DIR/bin/server/classes.jsa"
+    rm -rf "$JDK_HOME_DIR/bin/server/classes_nocoops.jsa"
+    rm -rf "$JDK_HOME_DIR/bin/server/classes_coh.jsa"
+    rm -rf "$JDK_HOME_DIR/bin/server/classes_nocoops_coh.jsa"
+  elif [[ "$OS" =~ Darwin* ]]; then
+    rm -rf "$JDK_HOME_DIR/lib/server/classes.jsa"
+    rm -rf "$JDK_HOME_DIR/lib/server/classes_nocoops.jsa"
+    rm -rf "$JDK_HOME_DIR/lib/server/classes_coh.jsa"
+    rm -rf "$JDK_HOME_DIR/lib/server/classes_nocoops_coh.jsa"
   fi
 }
 
@@ -416,18 +448,17 @@ function removeSignatures() {
       # fi
      done
   elif [[ "$OS" =~ Darwin* ]]; then
-    MAC_JDK_ROOT="${JDK_DIR}/../.."
-    echo "Removing all Signatures from ${MAC_JDK_ROOT}"
+    echo "Removing all Signatures from ${JDK_DIR}"
 
-    if [ ! -d "${MAC_JDK_ROOT}/Contents" ]; then
-        echo "Error: ${MAC_JDK_ROOT} does not contain the MacOS JDK Contents directory"
+    if [ ! -d "${JDK_DIR}/Contents" ]; then
+        echo "Error: ${JDK_DIR} does not contain the MacOS JDK Contents directory"
         exit 1
     fi
 
     # Remove any extended app attr
-    xattr -cr "${MAC_JDK_ROOT}"
+    xattr -cr "${JDK_DIR}"
 
-    FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
+    FILES=$(find "${JDK_DIR}/Contents" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
     for f in $FILES
     do
         echo "Removing signature from $f"
@@ -465,9 +496,8 @@ function tempSign() {
       fi
      done
   elif [[ "$OS" =~ Darwin* ]]; then
-    MAC_JDK_ROOT="${JDK_DIR}/../../Contents"
-    echo "Adding temp Signatures for ${MAC_JDK_ROOT}"
-    FILES=$(find "${MAC_JDK_ROOT}" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
+    echo "Adding temp Signatures for ${JDK_DIR}"
+    FILES=$(find "${JDK_DIR}/Contents" \( -type f -and -path '*.dylib' -or -path '*/bin/*' -or -path '*/lib/jspawnhelper' -not -path '*/modules_extracted/*' -or -path '*/jpackageapplauncher*' \))
     for f in $FILES
     do
         echo "Signing $f with ad-hoc signing"
@@ -482,63 +512,74 @@ function tempSign() {
 function cleanTemurinFiles() {
   local DIR="$1"
 
-  echo "$(date +%T): Cleaning Temurin NOTICE file and build-scripts specific files and metadata from ${DIR}"
-  rm "${DIR}"/NOTICE
+  local JDK_HOME="$DIR"
+  if [[ $(uname) =~ Darwin* ]]; then
+    JDK_HOME="$DIR/Contents/Home"
+  fi
+
+  echo "$(date +%T): Cleaning Temurin NOTICE file and build-scripts specific files and metadata from ${JDK_HOME}"
+  rm "${JDK_HOME}"/NOTICE
 
   if [[ $(uname) =~ Darwin* ]]; then
-    echo "Removing Temurin specific lines from release file in $DIR"
-    sed -i "" '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
-    sed -i "" '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
-    sed -i "" '/^SOURCE_REPO=.*$/d' "${DIR}/release"
-    sed -i "" '/^FULL_VERSION=.*$/d' "${DIR}/release"
-    sed -i "" '/^SEMANTIC_VERSION=.*$/d' "${DIR}/release"
-    sed -i "" '/^BUILD_INFO=.*$/d' "${DIR}/release"
-    sed -i "" '/^JVM_VARIANT=.*$/d' "${DIR}/release"
-    sed -i "" '/^JVM_VERSION=.*$/d' "${DIR}/release"
-    sed -i "" '/^IMAGE_TYPE=.*$/d' "${DIR}/release"
+    echo "Removing Temurin specific lines from release file in $JDK_HOME"
+    sed -i "" '/^BUILD_SOURCE=.*$/d' "${JDK_HOME}/release"
+    sed -i "" '/^BUILD_SOURCE_REPO=.*$/d' "${JDK_HOME}/release"
+    sed -i "" '/^SOURCE_REPO=.*$/d' "${JDK_HOME}/release"
+    sed -i "" '/^FULL_VERSION=.*$/d' "${JDK_HOME}/release"
+    sed -i "" '/^SEMANTIC_VERSION=.*$/d' "${JDK_HOME}/release"
+    sed -i "" '/^BUILD_INFO=.*$/d' "${JDK_HOME}/release"
+    sed -i "" '/^JVM_VARIANT=.*$/d' "${JDK_HOME}/release"
+    sed -i "" '/^JVM_VERSION=.*$/d' "${JDK_HOME}/release"
+    sed -i "" '/^IMAGE_TYPE=.*$/d' "${JDK_HOME}/release"
 
-    echo "Removing SOURCE= from ${DIR}/release file, as Temurin builds from Adoptium mirror repo _adopt tag"
-    sed -i "" '/^SOURCE=.*$/d' "${DIR}/release"
+    echo "Removing SOURCE= from ${JDK_HOME}/release file, as Temurin builds from Adoptium mirror repo _adopt tag"
+    sed -i "" '/^SOURCE=.*$/d' "${JDK_HOME}/release"
   else
-    echo "Removing Temurin specific lines from release file in $DIR"
-    sed -i '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
-    sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
-    sed -i '/^SOURCE_REPO=.*$/d' "${DIR}/release"
-    sed -i '/^FULL_VERSION=.*$/d' "${DIR}/release"
-    sed -i '/^SEMANTIC_VERSION=.*$/d' "${DIR}/release"
-    sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
-    sed -i '/^JVM_VARIANT=.*$/d' "${DIR}/release"
-    sed -i '/^JVM_VERSION=.*$/d' "${DIR}/release"
-    sed -i '/^IMAGE_TYPE=.*$/d' "${DIR}/release"
+    echo "Removing Temurin specific lines from release file in $JDK_HOME"
+    sed -i '/^BUILD_SOURCE=.*$/d' "${JDK_HOME}/release"
+    sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${JDK_HOME}/release"
+    sed -i '/^SOURCE_REPO=.*$/d' "${JDK_HOME}/release"
+    sed -i '/^FULL_VERSION=.*$/d' "${JDK_HOME}/release"
+    sed -i '/^SEMANTIC_VERSION=.*$/d' "${JDK_HOME}/release"
+    sed -i '/^BUILD_INFO=.*$/d' "${JDK_HOME}/release"
+    sed -i '/^JVM_VARIANT=.*$/d' "${JDK_HOME}/release"
+    sed -i '/^JVM_VERSION=.*$/d' "${JDK_HOME}/release"
+    sed -i '/^IMAGE_TYPE=.*$/d' "${JDK_HOME}/release"
 
-    echo "Removing SOURCE= from ${DIR}/release file, as Temurin builds from Adoptium mirror repo _adopt tag"
-    sed -i '/^SOURCE=.*$/d' "${DIR}/release"
+    echo "Removing SOURCE= from ${JDK_HOME}/release file, as Temurin builds from Adoptium mirror repo _adopt tag"
+    sed -i '/^SOURCE=.*$/d' "${JDK_HOME}/release"
   fi
   
   echo "Removing cacerts file, as Temurin builds with different Mozilla cacerts"
-  find "${DIR}" -type f -name "cacerts" -delete
+  find "${JDK_HOME}" -type f -name "cacerts" -delete
 
-  echo "Removing any JDK image files not shipped by Temurin(*.pdb, *.pdb, *.debuginfo, demo) in $DIR"
-  find "${DIR}" -type f -name "*.pdb" -delete
-  find "${DIR}" -type f -name "*.map" -delete
-  find "${DIR}" -type f -name "*.debuginfo" -delete
-  rm -rf "${DIR}/demo"
+  echo "Removing any JDK image files not shipped by Temurin(*.pdb, *.pdb, *.debuginfo, *.dSYM(directory), demo) in $JDK_HOME"
+  find "${JDK_HOME}" -type f -name "*.pdb" -delete
+  find "${JDK_HOME}" -type f -name "*.map" -delete
+  find "${JDK_HOME}" -type f -name "*.debuginfo" -delete
+  find "${JDK_HOME}" -type d -name "*.dSYM" -exec rm -rf {} +
+  rm -rf "${JDK_HOME}/demo"
 }
 
 # Temurin release file metadata BUILD_INFO/SOURCE can/will be different
 function cleanTemurinBuildInfo() {
   local DIR="$1"
 
-  echo "Cleaning any Temurin build-scripts release file BUILD_INFO from ${DIR}"
+  local JDK_HOME="$DIR"
+  if [[ $(uname) =~ Darwin* ]]; then
+    JDK_HOME="$DIR/Contents/Home"
+  fi
+
+  echo "Cleaning any Temurin build-scripts release file BUILD_INFO from ${JDK_HOME}"
 
   if [[ $(uname) =~ Darwin* ]]; then
-    sed -i "" '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
-    sed -i "" '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
-    sed -i "" '/^BUILD_INFO=.*$/d' "${DIR}/release"
+    sed -i "" '/^BUILD_SOURCE=.*$/d' "${JDK_HOME}/release"
+    sed -i "" '/^BUILD_SOURCE_REPO=.*$/d' "${JDK_HOME}/release"
+    sed -i "" '/^BUILD_INFO=.*$/d' "${JDK_HOME}/release"
   else
-    sed -i '/^BUILD_SOURCE=.*$/d' "${DIR}/release"
-    sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${DIR}/release"
-    sed -i '/^BUILD_INFO=.*$/d' "${DIR}/release"
+    sed -i '/^BUILD_SOURCE=.*$/d' "${JDK_HOME}/release"
+    sed -i '/^BUILD_SOURCE_REPO=.*$/d' "${JDK_HOME}/release"
+    sed -i '/^BUILD_INFO=.*$/d' "${JDK_HOME}/release"
   fi
 }
 
@@ -546,17 +587,22 @@ function cleanTemurinBuildInfo() {
 function patchManifests() {
   local JDK_DIR="$1"
 
+  local JDK_HOME="$JDK_DIR"
+  if [[ $(uname) =~ Darwin* ]]; then
+    JDK_HOME="$JDK_DIR/Contents/Home"
+  fi
+
   if [[ $(uname) =~ Darwin* ]]; then
     echo "Removing jrt-fs.jar MANIFEST.MF BootJDK vendor string lines"
-    sed -i "" '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-    sed -i "" '/^Created-By:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-    sed -i "" '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-    sed -i "" '/^Created-By:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i "" '/^Implementation-Vendor:.*$/d' "${JDK_HOME}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i "" '/^Created-By:.*$/d' "${JDK_HOME}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i "" '/^Implementation-Vendor:.*$/d' "${JDK_HOME}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i "" '/^Created-By:.*$/d' "${JDK_HOME}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
   else
     echo "Removing jrt-fs.jar MANIFEST.MF BootJDK vendor string lines"
-    sed -i '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-    sed -i '/^Created-By:.*$/d' "${JDK_DIR}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-    sed -i '/^Implementation-Vendor:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
-    sed -i '/^Created-By:.*$/d' "${JDK_DIR}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i '/^Implementation-Vendor:.*$/d' "${JDK_HOME}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i '/^Created-By:.*$/d' "${JDK_HOME}/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i '/^Implementation-Vendor:.*$/d' "${JDK_HOME}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
+    sed -i '/^Created-By:.*$/d' "${JDK_HOME}/jmods/expanded_java.base.jmod/lib/jrt-fs-expanded/META-INF/MANIFEST.MF"
   fi
 }
