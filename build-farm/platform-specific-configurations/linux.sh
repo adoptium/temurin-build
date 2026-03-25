@@ -259,6 +259,14 @@ then
   echo "=== END OF ARM32 STATUS CHECK ==="
 fi
 
+# Disable PCH (precompiled-headers) for jdk-21+ Temurin builds, to ensure deterministic reproducible builds
+# ref: https://github.com/adoptium/temurin-build/issues/4401
+if [ "${VARIANT}" == "${BUILD_VARIANT_TEMURIN}" ] && [ "$JAVA_FEATURE_VERSION" -ge 21 ];
+then
+  echo "Disabling precompiled headers as this may introduce non-deterministic PCH gch binaries, see: https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html
+  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-precompiled-headers"
+fi
+
 BOOT_JDK_VARIABLE="JDK${JDK_BOOT_VERSION}_BOOT_DIR"
 if [ "${VARIANT}" == "${BUILD_VARIANT_DRAGONWELL}" ] && [ "$JAVA_FEATURE_VERSION" -eq 8 ]; then
   locateDragonwell8BootJDK
