@@ -1609,8 +1609,22 @@ addAttestationVerifyRecipeToSBOM() {
 
   local clone_url="git clone https://github.com/adoptium/temurin-build.git"
 
+  # Get OS
+  local os_prefix
+  case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+    darwin)
+      os_prefix="macos"
+      ;;
+    *cygwin*)
+      os_prefix="windows"
+      ;;
+    *)
+      os_prefix="linux"
+      ;;
+  esac
+
   # The full command to use for the verification, using placeholders for the paths/urls of the SBOM, JDK and Devkit
-  local verify_cmd="temurin-build/tooling/reproducible/linux_repro_build_compare.sh --sbom-url 'SBOM_FILE_OR_URL' --jdk-url 'JDK_FILE_OR_URL' --user-devkit-location 'LINUX_ADOPTIUM_DEVKIT_FILE_OR_URL' --attestation-verify --build-workspace 'temurin-build/tooling/reproducible/build'"
+  local verify_cmd="temurin-build/tooling/reproducible/${os_prefix}_repro_build_compare.sh --sbom-url 'SBOM_FILE_OR_URL' --jdk-url 'JDK_FILE_OR_URL' --user-devkit-location 'ADOPTIUM_DEVKIT_FILE_OR_URL' --attestation-verify --build-workspace 'FULL_PATH_TO_AN_EXISTING_BUILD_FOLDER'"
 
   # Create workflow
   addSBOMWorkflow "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "${workflowUid}" "${workflowName}" "${taskTypes}"
