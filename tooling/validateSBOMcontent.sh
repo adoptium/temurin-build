@@ -36,7 +36,6 @@ SCM_REF=$( jq '.components[0].properties[]  | select(.name|test("SCM Ref"))  | .
 
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
 EXPECTED_FREETYPE=2.14.2 # Bundled version for jdk11+
-[ "${MAJORVERSION}" = "8" ] && EXPECTED_FREETYPE=2.13.3 # Bundled version for jdk8
 [ "${MAJORVERSION}" = "26" ] && EXPECTED_FREETYPE=2.13.3 # Bundled version for jdk26 ga
 EXPECTED_GLIBC=""
 EXPECTED_GCC=""
