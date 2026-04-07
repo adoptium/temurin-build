@@ -1,6 +1,6 @@
 /*
  n********************************************************************************
- * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024, 2026 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) with this work for additional
  * information regarding copyright ownership.
