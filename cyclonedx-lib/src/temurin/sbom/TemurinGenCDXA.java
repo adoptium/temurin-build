@@ -35,7 +35,6 @@ import org.cyclonedx.model.attestation.Attestation;
 import org.cyclonedx.model.attestation.AttestationMap;
 import org.cyclonedx.model.attestation.Claim;
 import org.cyclonedx.model.attestation.affirmation.Affirmation;
-import org.cyclonedx.model.attestation.affirmation.Signatory;
 import org.cyclonedx.model.attestation.evidence.Contents;
 import org.cyclonedx.model.attestation.evidence.Data;
 import org.cyclonedx.model.attestation.evidence.Evidence;
