@@ -185,7 +185,79 @@ public final class TemurinGenCDXA {
                           final String targetRelease, final String targetOs, final String targetArch,
                           final String verifiedJdkFile, final String affirmationStmt, final String affirmationWebsite,
                           final String evidenceText, final boolean thirdParty) {
-        // Validate inputs
+        // Validate all inputs
+        if (!validateCdxaInputs(attestingOrgName, predicate, targetRelease, targetOs, targetArch,
+                                verifiedJdkFile, affirmationStmt, evidenceText)) {
+            printUsage();
+            return null;
+        }
+
+        // Compute SHA-256 hash from the verified JDK file
+        String targetHash = computeTargetHash(verifiedJdkFile);
+        if (targetHash == null) {
+            return null;
+        }
+
+        // Derive CDXA values from parameters
+        String targetName = deriveTargetName(targetRelease, targetArch, targetOs);
+        String targetVersion = targetRelease;
+        String targetUrl = deriveTargetUrl(targetRelease, targetOs, targetArch);
+
+        // Create BOM reference IDs
+        final String targetJdkBomRef  = "target-jdk-1";
+        final String assessorBomRef   = "assessor-1";
+        final String claimBomRef      = "claim-1";
+        final String evidenceBomRef   = "evidence-1";
+
+        // Build CDXA components
+        Declarations declarations = new Declarations();
+        Component targetJDK = createTargetComponent(targetName, targetVersion, targetUrl, targetHash,
+                                                     targetJdkBomRef, targetArch, targetOs);
+        Targets targets = new Targets();
+        List<Component> components = new LinkedList<Component>();
+        components.add(targetJDK);
+        targets.setComponents(components);
+        declarations.setTargets(targets);
+
+        Assessor assessor = createAssessor(attestingOrgName, assessorBomRef, thirdParty);
+        List<Assessor> assessors = new LinkedList<Assessor>();
+        assessors.add(assessor);
+        declarations.setAssessors(assessors);
+
+        Claim claim = createClaim(predicate, targetJDK.getBomRef(), claimBomRef, evidenceBomRef);
+        List<Claim> claims = new LinkedList<Claim>();
+        claims.add(claim);
+        declarations.setClaims(claims);
+
+        Affirmation affirmation = new Affirmation();
+        affirmation.setStatement(affirmationStmt);
+        declarations.setAffirmation(affirmation);
+
+        Evidence evidence = createEvidence(evidenceText, evidenceBomRef);
+        List<Evidence> evidenceList = new LinkedList<Evidence>();
+        evidenceList.add(evidence);
+        declarations.setEvidence(evidenceList);
+
+        Attestation attestation = createAttestation(assessor.getBomRef(), claim.getBomRef());
+        List<Attestation> attestations = new LinkedList<Attestation>();
+        attestations.add(attestation);
+        declarations.setAttestations(attestations);
+
+        // Create CDXA Bom
+        Bom cdxa = new Bom();
+        cdxa.setSerialNumber("urn:uuid:" + UUID.randomUUID());
+        cdxa.setDeclarations(declarations);
+
+        return cdxa;
+    }
+
+    /**
+     * Validates all CDXA input parameters.
+     */
+    private static boolean validateCdxaInputs(final String attestingOrgName, final String predicate,
+                                              final String targetRelease, final String targetOs,
+                                              final String targetArch, final String verifiedJdkFile,
+                                              final String affirmationStmt, final String evidenceText) {
         boolean validInput = true;
 
         if (attestingOrgName == null) {
@@ -253,43 +325,33 @@ public final class TemurinGenCDXA {
             validInput = validateInputParameters(targetRelease, targetOs, targetArch, attestingOrgName);
         }
 
-        if (!validInput) {
-            printUsage();
-            return null;
-        }
+        return validInput;
+    }
 
-        // Compute SHA-256 hash from the verified JDK file
-        String targetHash = null;
+    /**
+     * Computes SHA-256 hash from the verified JDK file.
+     */
+    private static String computeTargetHash(final String verifiedJdkFile) {
         try {
-            targetHash = computeSHA256(verifiedJdkFile);
+            String targetHash = computeSHA256(verifiedJdkFile);
             if (verbose) {
                 System.out.println("Computed SHA-256: " + targetHash);
             }
+            return targetHash;
         } catch (IOException | NoSuchAlgorithmException e) {
-            System.out.println("ERROR: Failed to compute SHA-256 hash from file '" + verifiedJdkFile + "': " + e.getMessage());
+            System.out.println("ERROR: Failed to compute SHA-256 hash from file '"
+                             + verifiedJdkFile + "': " + e.getMessage());
             return null;
         }
+    }
 
-        // Derive CDXA values from parameters
-        String targetName = deriveTargetName(targetRelease, targetArch, targetOs);
-        String targetVersion = targetRelease;
-        String targetUrl = deriveTargetUrl(targetRelease, targetOs, targetArch);
-
-        Declarations   declarations = new Declarations();
-        Assessor       assessor     = new Assessor();
-        Claim          claim        = new Claim();
-        Targets        targets      = new Targets();
-        Affirmation    affirmation  = new Affirmation();
-        Signatory      signatory    = new Signatory();
-        Attestation    attestation  = new Attestation();
-        AttestationMap attestationMap = new AttestationMap();
-        Property       property     = new Property();
-
-        final String targetJdkBomRef  = "target-jdk-1";
-        final String assessorBomRef   = "assessor-1";
-        final String claimBomRef      = "claim-1";
-        final String evidenceBomRef   = "evidence-1";
-
+    /**
+     * Creates the target JDK component with all properties.
+     */
+    private static Component createTargetComponent(final String targetName, final String targetVersion,
+                                                   final String targetUrl, final String targetHash,
+                                                   final String bomRef, final String targetArch,
+                                                   final String targetOs) {
         // External reference to the target JDK
         ExternalReference extRef = new ExternalReference();
         Hash hash1 = new Hash(Hash.Algorithm.SHA_256, targetHash);
@@ -303,15 +365,12 @@ public final class TemurinGenCDXA {
         targetJDK.setName(targetName);
         targetJDK.setVersion(targetVersion);
         targetJDK.addExternalReference(extRef);
-        targetJDK.setBomRef(targetJdkBomRef);
-        List<Component> components = new LinkedList<Component>();
-        components.add(targetJDK);
-        targets.setComponents(components);
-        declarations.setTargets(targets);
+        targetJDK.setBomRef(bomRef);
 
         // Property for "platform" = {arch}_{os}
+        Property property = new Property();
         property.setName("platform");
-        property.setValue(targetArch+"_"+targetOs);
+        property.setValue(targetArch + "_" + targetOs);
         targetJDK.addProperty(property);
 
         // Property for "imageType"
@@ -326,19 +385,31 @@ public final class TemurinGenCDXA {
         jvmImplProperty.setValue(COMPONENT_JVM_IMPL);
         targetJDK.addProperty(jvmImplProperty);
 
-        // Assessor
+        return targetJDK;
+    }
+
+    /**
+     * Creates the assessor component.
+     */
+    private static Assessor createAssessor(final String attestingOrgName, final String bomRef,
+                                          final boolean thirdParty) {
+        Assessor assessor = new Assessor();
         assessor.setThirdParty(thirdParty);
         OrganizationalEntity org = new OrganizationalEntity();
         org.setName(attestingOrgName);
         assessor.setOrganization(org);
-        assessor.setBomRef(assessorBomRef);
-        List<Assessor> assessors = new LinkedList<Assessor>();
-        assessors.add(assessor);
-        declarations.setAssessors(assessors);
+        assessor.setBomRef(bomRef);
+        return assessor;
+    }
 
-        // Claim
+    /**
+     * Creates the claim component.
+     */
+    private static Claim createClaim(final String predicate, final String targetBomRef,
+                                    final String claimBomRef, final String evidenceBomRef) {
+        Claim claim = new Claim();
         claim.setPredicate(predicate);
-        claim.setTarget(targetJDK.getBomRef());
+        claim.setTarget(targetBomRef);
         claim.setBomRef(claimBomRef);
 
         // Add evidence reference to claim
@@ -346,27 +417,15 @@ public final class TemurinGenCDXA {
         evidenceRefs.add(evidenceBomRef);
         claim.setEvidence(evidenceRefs);
 
-        List<Claim> claims = new LinkedList<Claim>();
-        claims.add(claim);
-        declarations.setClaims(claims);
+        return claim;
+    }
 
-        // Affirmation
-        affirmation.setStatement(affirmationStmt);
-
-        // Signatories not serializing in XML due to bug https://github.com/CycloneDX/cyclonedx-core-java/issues/812
-        //ExternalReference orgExtRef = new ExternalReference();
-        //orgExtRef.setUrl(affirmationWebsite);
-        //orgExtRef.setType(ExternalReference.Type.WEBSITE);
-        //signatory.setExternalReferenceAndOrganization(orgExtRef, org);
-        //List<Signatory> signatories = new LinkedList<Signatory>();
-        //signatories.add(signatory);
-        //affirmation.setSignatories(signatories);
-
-        declarations.setAffirmation(affirmation);
-
-        // Evidence (required)
+    /**
+     * Creates the evidence component.
+     */
+    private static Evidence createEvidence(final String evidenceText, final String bomRef) {
         Evidence evidence = new Evidence();
-        evidence.setBomRef(evidenceBomRef);
+        evidence.setBomRef(bomRef);
         evidence.setPropertyName(EVIDENCE_PROPERTY_NAME);
 
         // Create Data object
@@ -386,30 +445,27 @@ public final class TemurinGenCDXA {
         dataList.add(data);
         evidence.setData(dataList);
 
-        // Add evidence to declarations
-        List<Evidence> evidenceList = new LinkedList<Evidence>();
-        evidenceList.add(evidence);
-        declarations.setEvidence(evidenceList);
+        return evidence;
+    }
 
-        // Construct the Attestation
+    /**
+     * Creates the attestation component.
+     */
+    private static Attestation createAttestation(final String assessorBomRef, final String claimBomRef) {
+        Attestation attestation = new Attestation();
         attestation.setSummary("Eclipse Temurin CycloneDX Attestation");
-        attestation.setAssessor(assessor.getBomRef());
+        attestation.setAssessor(assessorBomRef);
+
+        AttestationMap attestationMap = new AttestationMap();
         List<String> claimsList = new LinkedList<String>();
-        claimsList.add(claim.getBomRef());
+        claimsList.add(claimBomRef);
         attestationMap.setClaims(claimsList);
+
         List<AttestationMap> attestationMaps = new LinkedList<AttestationMap>();
         attestationMaps.add(attestationMap);
         attestation.setMap(attestationMaps);
-        List<Attestation> attestations = new LinkedList<Attestation>();
-        attestations.add(attestation);
-        declarations.setAttestations(attestations);
 
-        // Create CDXA Bom
-        Bom cdxa = new Bom();
-        cdxa.setSerialNumber("urn:uuid:" + UUID.randomUUID());
-        cdxa.setDeclarations(declarations);
-
-        return cdxa;
+        return attestation;
     }
 
     /**
@@ -478,8 +534,8 @@ public final class TemurinGenCDXA {
         }
 
         // Validate targetArch
-        if (!targetArch.equals("x64") && !targetArch.equals("aarch64") &&
-            !targetArch.equals("s390x") && !targetArch.equals("ppc64le")) {
+        if (!targetArch.equals("x64") && !targetArch.equals("aarch64")
+            && !targetArch.equals("s390x") && !targetArch.equals("ppc64le")) {
             System.out.println("ERROR: --target-arch '" + targetArch + "' must be one of: x64, aarch64, s390x, ppc64le");
             valid = false;
         }
