@@ -200,49 +200,58 @@
         </target>
 
         <target name="runCDXA">
-                <property name="testCDXA_XMLFile" location="build/testCDXA.xml"/>
-                <property name="testCDXA_JSONFile" location="build/testCDXA.json"/>
-                <delete file="${testCDXA_XMLFile}"/>
-                <delete file="${testCDXA_JSONFile}"/>
+                <download-file checksum="3c654d98404c073b8a7e66bffb27f4ae3e7ede47d13284c132d40a83144bfd8c"
+                               destdir="build"
+                               destfile="x64_jdk.tar.gz"
+                               srcurl="https://api.adoptium.net/v3/binary/version/jdk-21.0.5+11/linux/x64/jdk/hotspot/normal/eclipse"/>
+                <download-file checksum="6482639ed9fd22aa2e704cc366848b1b3e1586d2bf1213869c43e80bca58fe5c"
+                               destdir="build"
+                               destfile="aarch64_jdk.tar.gz"
+                               srcurl="https://api.adoptium.net/v3/binary/version/jdk-21.0.5+11/linux/aarch64/jdk/hotspot/normal/eclipse"/>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenCDXA" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--createNewCDXA"/>
+                  <arg value="--cdxa-output-folder"/>
+                  <arg value="build"/>
                   <arg value="--attesting-org-name"/>
                   <arg value="Acme Inc"/>
                   <arg value="--predicate"/>
                   <arg value="VERIFIED_REPRODUCIBLE_BUILD"/>
-                  <arg value="--target-name"/>
-                  <arg value="Temurin jdk-21.0.5+11 x64 Linux"/>
-                  <arg value="--target-url"/>
-                  <arg value="https://api.adoptium.net/v3/binary/version/jdk-21.0.5+11/linux/x64/jdk/hotspot/normal/eclipse"/>
-                  <arg value="--target-sha256-hash"/>
-                  <arg value="1234567890123456789012345678901234567890123456789012345678901234"/>
+                  <arg value="--target-arch"/>
+                  <arg value="x64"/>
+                  <arg value="--target-os"/>
+                  <arg value="linux"/>
+                  <arg value="--target-release"/>
+                  <arg value="jdk-21.0.5+11"/>
+                  <arg value="--verified-jdk-file"/>
+                  <arg value="build/x64_jdk.tar.gz"/>
                   <arg value="--affirmation-stmt"/>
                   <arg value="Acme confirms a verified reproducible build"/>
-                  <arg value="--affirmation-website"/>
-                  <arg value="https://acme-inc.com"/>
-                  <arg value="--xmlFile"/>
-                  <arg value="${testCDXA_XMLFile}"/>
+                  <arg value="--evidence"/>
+                  <arg value="100% identical!"/>
                 </java>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenCDXA" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--createNewCDXA"/>
+                  <arg value="--cdxa-output-folder"/>
+                  <arg value="build"/>
                   <arg value="--attesting-org-name"/>
                   <arg value="Acme Inc"/>
                   <arg value="--predicate"/>
                   <arg value="VERIFIED_REPRODUCIBLE_BUILD"/>
-                  <arg value="--target-name"/>
-                  <arg value="Temurin jdk-21.0.5+11 x64 Linux"/>
-                  <arg value="--target-url"/>
-                  <arg value="https://api.adoptium.net/v3/binary/version/jdk-21.0.5+11/linux/x64/jdk/hotspot/normal/eclipse"/>
-                  <arg value="--target-sha256-hash"/>
-                  <arg value="1234567890123456789012345678901234567890123456789012345678901234"/>
+                  <arg value="--target-arch"/>
+                  <arg value="aarch64"/>
+                  <arg value="--target-os"/>
+                  <arg value="linux"/>
+                  <arg value="--target-release"/>
+                  <arg value="jdk-21.0.5+11"/>
+                  <arg value="--verified-jdk-file"/>
+                  <arg value="build/aarch64_jdk.tar.gz"/>
                   <arg value="--affirmation-stmt"/>
                   <arg value="Acme confirms a verified reproducible build"/>
-                  <arg value="--affirmation-website"/>
-                  <arg value="https://acme-inc.com"/>
-                  <arg value="--jsonFile"/>
-                  <arg value="${testCDXA_JSONFile}"/>
+                  <arg value="--evidence"/>
+                  <arg value="100% identical!"/>
+                  <arg value="--json"/>
                 </java>
         </target>
 

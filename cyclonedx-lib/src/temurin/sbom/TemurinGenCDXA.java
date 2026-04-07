@@ -1,6 +1,6 @@
 /*
- * ********************************************************************************
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ n********************************************************************************
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  * See the NOTICE file(s) with this work for additional
  * information regarding copyright ownership.
@@ -15,13 +15,17 @@
 
 package temurin.sbom;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.cyclonedx.exception.GeneratorException;
 import org.cyclonedx.generators.json.BomJsonGenerator;
 import org.cyclonedx.generators.xml.BomXmlGenerator;
+import org.cyclonedx.model.AttachmentText;
 import org.cyclonedx.model.Bom;
 import org.cyclonedx.model.Component;
 import org.cyclonedx.model.ExternalReference;
 import org.cyclonedx.model.Hash;
+import org.cyclonedx.model.Property;
 import org.cyclonedx.model.OrganizationalEntity;
 import org.cyclonedx.model.attestation.Declarations;
 import org.cyclonedx.model.attestation.Assessor;
@@ -30,12 +34,20 @@ import org.cyclonedx.model.attestation.AttestationMap;
 import org.cyclonedx.model.attestation.Claim;
 import org.cyclonedx.model.attestation.affirmation.Affirmation;
 import org.cyclonedx.model.attestation.affirmation.Signatory;
+import org.cyclonedx.model.attestation.evidence.Contents;
+import org.cyclonedx.model.attestation.evidence.Data;
+import org.cyclonedx.model.attestation.evidence.Evidence;
 import org.cyclonedx.model.attestation.Targets;
 import org.cyclonedx.parsers.JsonParser;
 import org.cyclonedx.parsers.XmlParser;
 import org.cyclonedx.Version;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.UUID;
@@ -47,6 +59,15 @@ public final class TemurinGenCDXA {
 
     private static boolean verbose = false;
     private static boolean useJson = false;
+
+    // Constants for evidence fields
+    private static final String EVIDENCE_PROPERTY_NAME = "VERIFICATION_LOG";
+    private static final String EVIDENCE_DATA_NAME = "log";
+    private static final String EVIDENCE_CONTENT_TYPE = "text/plain";
+
+    // Constants for component properties
+    private static final String COMPONENT_IMAGE_TYPE = "jdk";
+    private static final String COMPONENT_JVM_IMPL = "hotspot";
 
     // Valid predicates
     enum CDXAPredicate {
@@ -62,37 +83,44 @@ public final class TemurinGenCDXA {
      */
     public static void main(final String[] args) {
         String cmd = "";
-        String fileName = null;
         String attestingOrgName = null;
         String predicate = null;
-        String targetName = null;
-        String targetUrl = null;
-        String targetHash = null;
+        String targetRelease = null;
+        String targetOs = null;
+        String targetArch = null;
+        String verifiedJdkFile = null;
         String affirmationStmt = null;
         String affirmationWebsite = null;
+        String evidenceText = null;
+        String cdxaOutputFolder = "."; // Default to current directory
         boolean thirdParty = true;
+        useJson = false; // Default to XML
 
         for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("--jsonFile")) {
-                fileName = args[++i];
+            if (args[i].equals("--json")) {
                 useJson = true;
-            } else if (args[i].equals("--xmlFile")) {
-                fileName = args[++i];
+            } else if (args[i].equals("--xml")) {
                 useJson = false;
             } else if (args[i].equals("--attesting-org-name")) {
-                attestingOrgName = args[++i];
+                attestingOrgName = args[++i].trim();
             } else if (args[i].equals("--predicate")) {
-                predicate = args[++i];
-            } else if (args[i].equals("--target-name")) {
-                targetName = args[++i];
-            } else if (args[i].equals("--target-url")) {
-                targetUrl = args[++i];
-            } else if (args[i].equals("--target-sha256-hash")) {
-                targetHash = args[++i];
+                predicate = args[++i].trim();
+            } else if (args[i].equals("--target-release")) {
+                targetRelease = args[++i].trim();
+            } else if (args[i].equals("--target-os")) {
+                targetOs = args[++i].trim();
+            } else if (args[i].equals("--target-arch")) {
+                targetArch = args[++i].trim();
+            } else if (args[i].equals("--verified-jdk-file")) {
+                verifiedJdkFile = args[++i].trim();
             } else if (args[i].equals("--affirmation-stmt")) {
-                affirmationStmt = args[++i];
-            } else if (args[i].equals("--affirmation-website")) {
-                affirmationWebsite = args[++i];
+                affirmationStmt = args[++i].trim();
+            } else if (args[i].equals("--evidence")) {
+                evidenceText = args[++i].trim();
+            } else if (args[i].equals("--cdxa-output-folder")) {
+                cdxaOutputFolder = args[++i].trim();
+            //} else if (args[i].equals("--affirmation-website")) {
+            //    affirmationWebsite = args[++i].trim();
             } else if (args[i].equals("--not-third-party")) {
                 thirdParty = false;
             } else if (args[i].equals("--createNewCDXA")) {
@@ -104,10 +132,32 @@ public final class TemurinGenCDXA {
 
         try {
           switch (cmd) {
-            case "createCDXA":  // Create a new CDXA json file
-                Bom bom = createCdxa(fileName, attestingOrgName, predicate, targetName, targetUrl, targetHash, affirmationStmt, affirmationWebsite, thirdParty);
+            case "createCDXA":  // Create a new CDXA json/xml file
+                // Validate output folder
+                File outputFolder = new File(cdxaOutputFolder);
+                if (!outputFolder.exists()) {
+                    System.out.println("ERROR: --cdxa-output-folder '" + cdxaOutputFolder + "' does not exist");
+                    System.exit(1);
+                }
+                if (!outputFolder.isDirectory()) {
+                    System.out.println("ERROR: --cdxa-output-folder '" + cdxaOutputFolder + "' is not a directory");
+                    System.exit(1);
+                }
+                if (!outputFolder.canWrite()) {
+                    System.out.println("ERROR: --cdxa-output-folder '" + cdxaOutputFolder + "' is not writable");
+                    System.exit(1);
+                }
+
+                Bom bom = createCdxa(attestingOrgName, predicate, targetRelease, targetOs, targetArch, verifiedJdkFile, affirmationStmt, affirmationWebsite, evidenceText, thirdParty);
                 if (bom != null) {
-                    writeFile(bom, fileName);
+                    // Derive fileName from new parameters
+                    String fileName = deriveFileName(targetRelease, targetArch, targetOs, attestingOrgName);
+                    // Prepend output folder to filename
+                    String fullPath = cdxaOutputFolder + File.separator + fileName;
+                    writeFile(bom, fullPath);
+                    if (verbose) {
+                        System.out.println("CDXA file written to: " + fullPath);
+                    }
                 } else {
                     System.exit(1);
                 }
@@ -118,7 +168,7 @@ public final class TemurinGenCDXA {
                 for (int i = 0; i < args.length; i++) {
                     System.out.print(args[i] + " ");
                 }
-                System.out.println("\nPlease enter a valid command.");
+                System.out.println("\nERROR: Please enter a valid command.");
                 System.exit(1);
           }
         } catch (Exception e) {
@@ -126,26 +176,25 @@ public final class TemurinGenCDXA {
             for (int i = 0; i < args.length; i++) {
                 System.out.print(args[i] + " ");
             }
-            System.out.println("\nException: " + e);
+            System.out.println("\nERROR: Exception: " + e);
             System.exit(1);
         }
     }
 
-    static Bom createCdxa(final String fileName, final String attestingOrgName, final String predicate,
-                          final String targetName, final String targetUrl, final String targetHash,
-                          final String affirmationStmt, final String affirmationWebsite, final boolean thirdParty) {
+    static Bom createCdxa(final String attestingOrgName, final String predicate,
+                          final String targetRelease, final String targetOs, final String targetArch,
+                          final String verifiedJdkFile, final String affirmationStmt, final String affirmationWebsite,
+                          final String evidenceText, final boolean thirdParty) {
         // Validate inputs
         boolean validInput = true;
-        if (fileName == null) {
-            System.out.println("--xmlFile|--jsonFile not specified");
-            validInput = false;
-         }
+
         if (attestingOrgName == null) {
-            System.out.println("--attesting-org-name not specified");
+            System.out.println("ERROR: --attesting-org-name not specified");
             validInput = false;
         }
         if (predicate == null) {
-            System.out.println("--predicate not specified"); validInput = false;
+            System.out.println("ERROR: --predicate not specified");
+            validInput = false;
         } else {
             boolean validPred = false;
             for (CDXAPredicate validPredicate : CDXAPredicate.values()) {
@@ -155,33 +204,76 @@ public final class TemurinGenCDXA {
                 }
             }
             if (!validPred) {
-                System.out.println("--predicate " + predicate + " not a valid value");
+                System.out.println("ERROR: --predicate " + predicate + " not a valid value");
                 validInput = false;
             }
         }
-        if (targetName == null) {
-            System.out.println("--target-name not specified");
+        if (targetRelease == null) {
+            System.out.println("ERROR: --target-release not specified");
             validInput = false;
         }
-        if (targetUrl == null) {
-            System.out.println("--target-url not specified");
+        if (targetOs == null) {
+            System.out.println("ERROR: --target-os not specified");
             validInput = false;
         }
-        if (targetHash == null) {
-            System.out.println("--target-sha256-hash not specified");
+        if (targetArch == null) {
+            System.out.println("ERROR: --target-arch not specified");
             validInput = false;
+        }
+        if (verifiedJdkFile == null) {
+            System.out.println("ERROR: --verified-jdk-file not specified");
+            validInput = false;
+        } else {
+            File jdkFile = new File(verifiedJdkFile);
+            if (!jdkFile.exists()) {
+                System.out.println("ERROR: --verified-jdk-file '" + verifiedJdkFile + "' does not exist");
+                validInput = false;
+            } else if (!jdkFile.isFile()) {
+                System.out.println("ERROR: --verified-jdk-file '" + verifiedJdkFile + "' is not a file");
+                validInput = false;
+            } else if (!jdkFile.canRead()) {
+                System.out.println("ERROR: --verified-jdk-file '" + verifiedJdkFile + "' is not readable");
+                validInput = false;
+            }
         }
         if (affirmationStmt == null) {
-            System.out.println("--affirmation-stmt not specified");
+            System.out.println("ERROR: --affirmation-stmt not specified");
             validInput = false;
         }
-        if (affirmationWebsite == null) {
-            System.out.println("--affirmation-website not specified");
+        if (evidenceText == null) {
+            System.out.println("ERROR: --evidence not specified");
+            validInput = false;
+        } else if (evidenceText.trim().isEmpty()) {
+            System.out.println("ERROR: --evidence cannot be empty");
             validInput = false;
         }
+
+        // Perform extra validation steps on values to ensure meets Temurin CDXA format syntax
+        if (validInput) {
+            validInput = validateInputParameters(targetRelease, targetOs, targetArch, attestingOrgName);
+        }
+
         if (!validInput) {
+            printUsage();
             return null;
         }
+
+        // Compute SHA-256 hash from the verified JDK file
+        String targetHash = null;
+        try {
+            targetHash = computeSHA256(verifiedJdkFile);
+            if (verbose) {
+                System.out.println("Computed SHA-256: " + targetHash);
+            }
+        } catch (IOException | NoSuchAlgorithmException e) {
+            System.out.println("ERROR: Failed to compute SHA-256 hash from file '" + verifiedJdkFile + "': " + e.getMessage());
+            return null;
+        }
+
+        // Derive CDXA values from parameters
+        String targetName = deriveTargetName(targetRelease, targetArch, targetOs);
+        String targetVersion = targetRelease;
+        String targetUrl = deriveTargetUrl(targetRelease, targetOs, targetArch);
 
         Declarations   declarations = new Declarations();
         Assessor       assessor     = new Assessor();
@@ -191,10 +283,12 @@ public final class TemurinGenCDXA {
         Signatory      signatory    = new Signatory();
         Attestation    attestation  = new Attestation();
         AttestationMap attestationMap = new AttestationMap();
+        Property       property     = new Property();
 
         final String targetJdkBomRef  = "target-jdk-1";
         final String assessorBomRef   = "assessor-1";
         final String claimBomRef      = "claim-1";
+        final String evidenceBomRef   = "evidence-1";
 
         // External reference to the target JDK
         ExternalReference extRef = new ExternalReference();
@@ -207,12 +301,30 @@ public final class TemurinGenCDXA {
         Component targetJDK = new Component();
         targetJDK.setType(Component.Type.APPLICATION);
         targetJDK.setName(targetName);
+        targetJDK.setVersion(targetVersion);
         targetJDK.addExternalReference(extRef);
         targetJDK.setBomRef(targetJdkBomRef);
         List<Component> components = new LinkedList<Component>();
         components.add(targetJDK);
         targets.setComponents(components);
         declarations.setTargets(targets);
+
+        // Property for "platform" = {arch}_{os}
+        property.setName("platform");
+        property.setValue(targetArch+"_"+targetOs);
+        targetJDK.addProperty(property);
+
+        // Property for "imageType"
+        Property imageTypeProperty = new Property();
+        imageTypeProperty.setName("imageType");
+        imageTypeProperty.setValue(COMPONENT_IMAGE_TYPE);
+        targetJDK.addProperty(imageTypeProperty);
+
+        // Property for "jvmImpl"
+        Property jvmImplProperty = new Property();
+        jvmImplProperty.setName("jvmImpl");
+        jvmImplProperty.setValue(COMPONENT_JVM_IMPL);
+        targetJDK.addProperty(jvmImplProperty);
 
         // Assessor
         assessor.setThirdParty(thirdParty);
@@ -228,24 +340,59 @@ public final class TemurinGenCDXA {
         claim.setPredicate(predicate);
         claim.setTarget(targetJDK.getBomRef());
         claim.setBomRef(claimBomRef);
+
+        // Add evidence reference to claim
+        List<String> evidenceRefs = new LinkedList<String>();
+        evidenceRefs.add(evidenceBomRef);
+        claim.setEvidence(evidenceRefs);
+
         List<Claim> claims = new LinkedList<Claim>();
         claims.add(claim);
         declarations.setClaims(claims);
 
         // Affirmation
         affirmation.setStatement(affirmationStmt);
-        signatory.setOrganization(org);
-        ExternalReference orgExtRef = new ExternalReference();
-        orgExtRef.setUrl(affirmationWebsite);
-        orgExtRef.setType(ExternalReference.Type.WEBSITE);
-        signatory.setExternalReference(orgExtRef);
-        List<Signatory> signatories = new LinkedList<Signatory>();
-        signatories.add(signatory);
-        affirmation.setSignatories(signatories);
+
+        // Signatories not serializing in XML due to bug https://github.com/CycloneDX/cyclonedx-core-java/issues/812
+        //ExternalReference orgExtRef = new ExternalReference();
+        //orgExtRef.setUrl(affirmationWebsite);
+        //orgExtRef.setType(ExternalReference.Type.WEBSITE);
+        //signatory.setExternalReferenceAndOrganization(orgExtRef, org);
+        //List<Signatory> signatories = new LinkedList<Signatory>();
+        //signatories.add(signatory);
+        //affirmation.setSignatories(signatories);
+
         declarations.setAffirmation(affirmation);
 
+        // Evidence (required)
+        Evidence evidence = new Evidence();
+        evidence.setBomRef(evidenceBomRef);
+        evidence.setPropertyName(EVIDENCE_PROPERTY_NAME);
+
+        // Create Data object
+        Data data = new Data();
+        data.setName(EVIDENCE_DATA_NAME);
+
+        // Create Contents with AttachmentText
+        Contents contents = new Contents();
+        AttachmentText attachment = new AttachmentText();
+        attachment.setContentType(EVIDENCE_CONTENT_TYPE);
+        attachment.setText(evidenceText);
+        contents.setAttachment(attachment);
+        data.setContents(contents);
+
+        // Add data to evidence
+        List<Data> dataList = new LinkedList<Data>();
+        dataList.add(data);
+        evidence.setData(dataList);
+
+        // Add evidence to declarations
+        List<Evidence> evidenceList = new LinkedList<Evidence>();
+        evidenceList.add(evidence);
+        declarations.setEvidence(evidenceList);
+
         // Construct the Attestation
-        attestation.setSummary("Eclipse Temurin Attestation");
+        attestation.setSummary("Eclipse Temurin CycloneDX Attestation");
         attestation.setAssessor(assessor.getBomRef());
         List<String> claimsList = new LinkedList<String>();
         claimsList.add(claim.getBomRef());
@@ -263,6 +410,133 @@ public final class TemurinGenCDXA {
         cdxa.setDeclarations(declarations);
 
         return cdxa;
+    }
+
+    /**
+     * Prints usage information for the command-line tool.
+     */
+    static void printUsage() {
+        System.out.println("\nUsage: TemurinGenCDXA --createNewCDXA [OPTIONS]");
+        System.out.println("\nRequired Options:");
+        System.out.println("  --attesting-org-name <name>    Organization name making the attestation");
+        System.out.println("  --predicate <predicate>        Predicate type (e.g., VERIFIED_REPRODUCIBLE_BUILD)");
+        System.out.println("  --target-release <release>     JDK release (format: jdk-M+B or jdk-M.0.U+B)");
+        System.out.println("  --target-os <os>               Target OS (linux, windows, mac)");
+        System.out.println("  --target-arch <arch>           Target architecture (x64, aarch64, s390x, ppc64le)");
+        System.out.println("  --verified-jdk-file <path>     Path to JDK tar.gz or zip file (SHA-256 will be computed)");
+        System.out.println("  --affirmation-stmt <stmt>      Affirmation statement");
+        System.out.println("  --evidence <text>              Verification log text (e.g., reproducible build comparison output)");
+        System.out.println("\nOptional Options:");
+        System.out.println("  --cdxa-output-folder <path>    Output folder for CDXA file (default: current directory)");
+        //System.out.println("  --affirmation-website <url>    Organization website");
+        System.out.println("  --json                         Generate JSON output (default: XML)");
+        System.out.println("  --xml                          Generate XML output");
+        System.out.println("  --not-third-party              Mark assessor as not third-party");
+        System.out.println("  --verbose                      Enable verbose output");
+        System.out.println("\nExamples:");
+        System.out.println("  TemurinGenCDXA --createNewCDXA --target-release jdk-21.0.1+12 \\");
+        System.out.println("    --target-os linux --target-arch x64 \\");
+        System.out.println("    --attesting-org-name \"Acme Inc\" \\");
+        System.out.println("    --predicate VERIFIED_REPRODUCIBLE_BUILD \\");
+        System.out.println("    --verified-jdk-file /path/to/OpenJDK21U-jdk_x64_linux_hotspot_21.0.1_12.tar.gz \\");
+        System.out.println("    --affirmation-stmt \"Build verified as reproducible\" \\");
+        System.out.println("    --evidence \"Comparing expanded JDKs...Compare identical!\" \\");
+        System.out.println("    --cdxa-output-folder /output/cdxa \\");
+        //System.out.println("    --affirmation-website \"https://acme.inc.com\"");
+        System.out.println("    --xml");
+        System.out.println("\nOutput:");
+        System.out.println("  Generated filename format: {release}_{arch}_{os}_{org}.{xml|json}");
+        System.out.println("  Example: jdk_21_0_1_12_x64_linux_eclipse.xml");
+        System.out.println("\nNote: SHA-256 hash will be automatically computed from the verified-jdk-file");
+    }
+
+    /**
+     * Validates input parameters according to Temurin CDXA requirements.
+     *
+     * @param targetRelease The target release (jdk-M+B or jdk-M.0.U+B format)
+     * @param targetOs The target OS (linux, windows, mac)
+     * @param targetArch The target architecture (x64, aarch64, s390x, ppc64le)
+     * @param attestingOrgName The attesting organization name
+     * @return true if valid, false otherwise
+     */
+    static boolean validateInputParameters(final String targetRelease, final String targetOs,
+                                           final String targetArch, final String attestingOrgName) {
+        boolean valid = true;
+
+        // Validate targetRelease format: jdk-M+B or jdk-M.0.U+B
+        Pattern releasePattern = Pattern.compile("^jdk-([0-9]+)(\\.[0-9]+\\.[0-9]+)?\\+([0-9]+)$");
+        Matcher releaseMatcher = releasePattern.matcher(targetRelease);
+        if (!releaseMatcher.matches()) {
+            System.out.println("ERROR: --target-release '" + targetRelease + "' is not in valid format: jdk-M+B or jdk-M.0.U+B");
+            valid = false;
+        }
+
+        // Validate targetOs
+        if (!targetOs.equals("linux") && !targetOs.equals("windows") && !targetOs.equals("mac")) {
+            System.out.println("ERROR: --target-os '" + targetOs + "' must be one of: linux, windows, mac");
+            valid = false;
+        }
+
+        // Validate targetArch
+        if (!targetArch.equals("x64") && !targetArch.equals("aarch64") &&
+            !targetArch.equals("s390x") && !targetArch.equals("ppc64le")) {
+            System.out.println("ERROR: --target-arch '" + targetArch + "' must be one of: x64, aarch64, s390x, ppc64le");
+            valid = false;
+        }
+
+        // Validate attestingOrgName is not empty
+        if (attestingOrgName.trim().isEmpty()) {
+            System.out.println("ERROR: --attesting-org-name cannot be empty");
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    /**
+     * Derives the target name from release, arch, and OS.
+     * Format: "Temurin {targetRelease} {targetArch}_{targetOs}"
+     *
+     * @param targetRelease The target release
+     * @param targetArch The target architecture
+     * @param targetOs The target OS
+     * @return The derived target name
+     */
+    static String deriveTargetName(final String targetRelease, final String targetArch, final String targetOs) {
+        return "Temurin " + targetRelease + " " + targetArch + "_" + targetOs;
+    }
+
+    /**
+     * Derives the target URL from release, OS, and arch.
+     * Format: "https://api.adoptium.net/v3/binary/version/{targetRelease}/{targetOs}/{targetArch}/jdk/hotspot/normal/eclipse"
+     *
+     * @param targetRelease The target release
+     * @param targetOs The target OS
+     * @param targetArch The target architecture
+     * @return The derived target URL
+     */
+    static String deriveTargetUrl(final String targetRelease, final String targetOs, final String targetArch) {
+        return "https://api.adoptium.net/v3/binary/version/" + targetRelease + "/" + targetOs + "/" + targetArch + "/jdk/hotspot/normal/eclipse";
+    }
+
+    /**
+     * Derives the file name from release, arch, OS, and attesting org.
+     * Format: "{targetRelease with [-\.\+] converted to [_]}_{targetArch}_{targetOs}_{attestingOrgName}.{xml|json}"
+     *
+     * @param targetRelease The target release
+     * @param targetArch The target architecture
+     * @param targetOs The target OS
+     * @param attestingOrgName The attesting organization name
+     * @return The derived file name
+     */
+    static String deriveFileName(final String targetRelease, final String targetArch,
+                                 final String targetOs, final String attestingOrgName) {
+        // Convert all [-\.\+] to [_] in targetRelease
+        String releaseFormatted = targetRelease.replaceAll("[-\\.\\+]", "_");
+        // Remove all non-alphanumeric characters from attestingOrgName for valid filename
+        String orgFormatted = attestingOrgName.replaceAll("[^a-zA-Z0-9]", "");
+        String extension = useJson ? "json" : "xml";
+        return releaseFormatted + "_" + targetArch + "_" + targetOs + "_" + orgFormatted + "." + extension;
     }
 
     static String generateBomJson(final Bom bom) throws GeneratorException {
@@ -345,5 +619,40 @@ public final class TemurinGenCDXA {
         } finally {
            return bom;
         }
+    }
+
+    /**
+     * Computes the SHA-256 hash of a file.
+     *
+     * @param filePath The path to the file
+     * @return The SHA-256 hash as a hexadecimal string
+     * @throws IOException If an I/O error occurs
+     * @throws NoSuchAlgorithmException If SHA-256 algorithm is not available
+     */
+    static String computeSHA256(final String filePath) throws IOException, NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+        try (FileInputStream fis = new FileInputStream(filePath)) {
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                digest.update(buffer, 0, bytesRead);
+            }
+        }
+
+        byte[] hashBytes = digest.digest();
+
+        // Convert byte array to hexadecimal string
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : hashBytes) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+
+        return hexString.toString();
     }
 }
