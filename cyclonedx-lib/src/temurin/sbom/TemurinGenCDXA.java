@@ -254,6 +254,16 @@ public final class TemurinGenCDXA {
 
     /**
      * Validates all CDXA input parameters.
+     *
+     * @param attestingOrgName The name of the organization making the attestation
+     * @param predicate The predicate type for the claim
+     * @param targetRelease The JDK release version
+     * @param targetOs The target operating system
+     * @param targetArch The target architecture
+     * @param verifiedJdkFile The path to the JDK file to verify
+     * @param affirmationStmt The affirmation statement
+     * @param evidenceText The evidence text content
+     * @return true if all inputs are valid, false otherwise
      */
     private static boolean validateCdxaInputs(final String attestingOrgName, final String predicate,
                                               final String targetRelease, final String targetOs,
@@ -331,6 +341,9 @@ public final class TemurinGenCDXA {
 
     /**
      * Computes SHA-256 hash from the verified JDK file.
+     *
+     * @param verifiedJdkFile The path to the JDK file
+     * @return The SHA-256 hash as a hexadecimal string, or null if computation fails
      */
     private static String computeTargetHash(final String verifiedJdkFile) {
         try {
@@ -348,6 +361,15 @@ public final class TemurinGenCDXA {
 
     /**
      * Creates the target JDK component with all properties.
+     *
+     * @param targetName The name of the target JDK
+     * @param targetVersion The version of the target JDK
+     * @param targetUrl The URL to download the target JDK
+     * @param targetHash The SHA-256 hash of the target JDK
+     * @param bomRef The BOM reference identifier
+     * @param targetArch The target architecture
+     * @param targetOs The target operating system
+     * @return The configured Component object representing the target JDK
      */
     private static Component createTargetComponent(final String targetName, final String targetVersion,
                                                    final String targetUrl, final String targetHash,
@@ -391,6 +413,11 @@ public final class TemurinGenCDXA {
 
     /**
      * Creates the assessor component.
+     *
+     * @param attestingOrgName The name of the attesting organization
+     * @param bomRef The BOM reference identifier
+     * @param thirdParty Whether the assessor is a third party
+     * @return The configured Assessor object
      */
     private static Assessor createAssessor(final String attestingOrgName, final String bomRef,
                                           final boolean thirdParty) {
@@ -405,6 +432,12 @@ public final class TemurinGenCDXA {
 
     /**
      * Creates the claim component.
+     *
+     * @param predicate The predicate type for the claim
+     * @param targetBomRef The BOM reference of the target component
+     * @param claimBomRef The BOM reference for this claim
+     * @param evidenceBomRef The BOM reference of the supporting evidence
+     * @return The configured Claim object
      */
     private static Claim createClaim(final String predicate, final String targetBomRef,
                                     final String claimBomRef, final String evidenceBomRef) {
@@ -423,6 +456,10 @@ public final class TemurinGenCDXA {
 
     /**
      * Creates the evidence component.
+     *
+     * @param evidenceText The text content of the evidence
+     * @param bomRef The BOM reference identifier
+     * @return The configured Evidence object
      */
     private static Evidence createEvidence(final String evidenceText, final String bomRef) {
         Evidence evidence = new Evidence();
@@ -451,6 +488,10 @@ public final class TemurinGenCDXA {
 
     /**
      * Creates the attestation component.
+     *
+     * @param assessorBomRef The BOM reference of the assessor
+     * @param claimBomRef The BOM reference of the claim
+     * @return The configured Attestation object
      */
     private static Attestation createAttestation(final String assessorBomRef, final String claimBomRef) {
         Attestation attestation = new Attestation();
