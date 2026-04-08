@@ -824,7 +824,7 @@ Compare_JDK() {
       echo "Successful 100% Reproducible Verification" >> "${EVIDENCE_LOG}"
       echo "Eclipse Temurin version: jdk-${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
       echo "                   arch: ${NATIVE_API_ARCH}" >> "${EVIDENCE_LOG}"
-      echo "                     os: linux" >> "${EVIDENCE_LOG}"
+      echo "                     os: windows" >> "${EVIDENCE_LOG}"
       echo "                 sha256: ${JDK_TAR_HASH}" >> "${EVIDENCE_LOG}"
     else
       echo "Reproducible Verification not identical" >> "${EVIDENCE_LOG}"
