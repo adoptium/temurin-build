@@ -42,13 +42,14 @@ import org.cyclonedx.model.attestation.Targets;
 import org.cyclonedx.parsers.JsonParser;
 import org.cyclonedx.parsers.XmlParser;
 import org.cyclonedx.Version;
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.UUID;
@@ -89,7 +90,6 @@ public final class TemurinGenCDXA {
         String targetRelease = null;
         String targetOs = null;
         String targetArch = null;
-        String verifiedJdkFile = null;
         String affirmationStmt = null;
         String affirmationWebsite = null;
         String evidenceText = null;
@@ -117,14 +117,12 @@ public final class TemurinGenCDXA {
             } else if (args[i].equals("--target-arch")) {
                 targetArch = getOptionValue(args, i, "--target-arch");
                 i++;
-            } else if (args[i].equals("--verified-jdk-file")) {
-                verifiedJdkFile = getOptionValue(args, i, "--verified-jdk-file");
-                i++;
             } else if (args[i].equals("--affirmation-stmt")) {
                 affirmationStmt = getOptionValue(args, i, "--affirmation-stmt");
                 i++;
             } else if (args[i].equals("--evidence")) {
-                evidenceText = getOptionValue(args, i, "--evidence");
+                String evidenceFilePath = getOptionValue(args, i, "--evidence");
+                evidenceText = readEvidenceFile(evidenceFilePath);
                 i++;
             } else if (args[i].equals("--cdxa-output-folder")) {
                 cdxaOutputFolder = getOptionValue(args, i, "--cdxa-output-folder");
@@ -162,7 +160,7 @@ public final class TemurinGenCDXA {
                     System.exit(1);
                 }
 
-                Bom bom = createCdxa(attestingOrgName, predicate, targetRelease, targetOs, targetArch, verifiedJdkFile, affirmationStmt, affirmationWebsite, evidenceText, thirdParty);
+                Bom bom = createCdxa(attestingOrgName, predicate, targetRelease, targetOs, targetArch, affirmationStmt, affirmationWebsite, evidenceText, thirdParty);
                 if (bom != null) {
                     // Derive fileName from new parameters
                     String fileName = deriveFileName(targetRelease, targetArch, targetOs, attestingOrgName);
@@ -198,7 +196,251 @@ public final class TemurinGenCDXA {
     }
 
     /**
+     * Validates and reads the contents of an evidence file.
+     * Checks that the file exists, is a file, and is readable.
+     * Prints error message and usage, then exits on failure.
+     *
+     * @param evidenceFilePath The path to the evidence file
+     * @return The contents of the evidence file as a string
+     */
+    private static String readEvidenceFile(final String evidenceFilePath) {
+        File evFile = new File(evidenceFilePath);
+
+        if (!evFile.exists()) {
+            System.out.println("ERROR: --evidence file '" + evidenceFilePath + "' does not exist");
+            printUsage();
+            System.exit(1);
+        }
+        if (!evFile.isFile()) {
+            System.out.println("ERROR: --evidence '" + evidenceFilePath + "' is not a file");
+            printUsage();
+            System.exit(1);
+        }
+        if (!evFile.canRead()) {
+            System.out.println("ERROR: --evidence file '" + evidenceFilePath + "' is not readable");
+            printUsage();
+            System.exit(1);
+        }
+
+        try {
+            String contents = readFileContents(evidenceFilePath);
+            if (verbose) {
+                System.out.println("Read evidence from file: " + evidenceFilePath
+                                 + " (" + contents.length() + " characters)");
+            }
+            return contents;
+        } catch (IOException e) {
+            System.out.println("ERROR: Failed to read evidence file '" + evidenceFilePath
+                             + "': " + e.getMessage());
+            printUsage();
+            System.exit(1);
+            return null; // Never reached, but needed for compilation
+        }
+    }
+    /**
+     * Parses evidence text to extract and validate build information.
+     * Expected format includes lines like:
+     * Eclipse Temurin version: jdk-21.0.11+9
+     *                    arch: aarch64
+     *                      os: linux
+     *                  sha256: 51111aa918a1b3e4f59e1ce3179f1a17345a7024825ce98d634820c38d9a46a2
+     *
+     * @param evidenceText The evidence text content
+     * @param expectedVersion The expected JDK version from --target-release
+     * @param expectedArch The expected architecture from --target-arch
+     * @param expectedOs The expected OS from --target-os
+     * @return The extracted SHA-256 hash, or null if parsing/validation fails
+     */
+    private static String parseAndValidateEvidence(final String evidenceText,
+                                                    final String expectedVersion,
+                                                    final String expectedArch,
+                                                    final String expectedOs) {
+        if (evidenceText == null || evidenceText.trim().isEmpty()) {
+            System.out.println("ERROR: Evidence text is empty");
+            printUsage();
+            return null;
+        }
+
+        // Patterns to extract values from evidence text
+        Pattern versionPattern = Pattern.compile("Eclipse Temurin version:\\s*([^\\s]+)");
+        Pattern archPattern = Pattern.compile("arch:\\s*([^\\s]+)");
+        Pattern osPattern = Pattern.compile("os:\\s*([^\\s]+)");
+        Pattern sha256Pattern = Pattern.compile("sha256:\\s*([0-9a-fA-F]{64})");
+
+        Matcher versionMatcher = versionPattern.matcher(evidenceText);
+        Matcher archMatcher = archPattern.matcher(evidenceText);
+        Matcher osMatcher = osPattern.matcher(evidenceText);
+        Matcher sha256Matcher = sha256Pattern.matcher(evidenceText);
+
+        // Extract values
+        String extractedVersion = versionMatcher.find() ? versionMatcher.group(1) : null;
+        String extractedArch = archMatcher.find() ? archMatcher.group(1) : null;
+        String extractedOs = osMatcher.find() ? osMatcher.group(1) : null;
+        String extractedSha256 = sha256Matcher.find() ? sha256Matcher.group(1) : null;
+
+        // Validate extracted values exist
+        boolean hasErrors = false;
+        if (extractedVersion == null) {
+            System.out.println("ERROR: Could not find 'Eclipse Temurin version:' in evidence text");
+            hasErrors = true;
+        }
+        if (extractedArch == null) {
+            System.out.println("ERROR: Could not find 'arch:' in evidence text");
+            hasErrors = true;
+        }
+        if (extractedOs == null) {
+            System.out.println("ERROR: Could not find 'os:' in evidence text");
+            hasErrors = true;
+        }
+        if (extractedSha256 == null) {
+            System.out.println("ERROR: Could not find 'sha256:' (64-character hex string) in evidence text");
+            hasErrors = true;
+        }
+
+        if (hasErrors) {
+            printUsage();
+            return null;
+        }
+
+        // Validate extracted values match expected values
+        if (!extractedVersion.equals(expectedVersion)) {
+            System.out.println("ERROR: Evidence version '" + extractedVersion
+                             + "' does not match --target-release '" + expectedVersion + "'");
+            hasErrors = true;
+        }
+        if (!extractedArch.equals(expectedArch)) {
+            System.out.println("ERROR: Evidence arch '" + extractedArch
+                             + "' does not match --target-arch '" + expectedArch + "'");
+            hasErrors = true;
+        }
+        if (!extractedOs.equals(expectedOs)) {
+            System.out.println("ERROR: Evidence os '" + extractedOs
+                             + "' does not match --target-os '" + expectedOs + "'");
+            hasErrors = true;
+        }
+
+        if (hasErrors) {
+            printUsage();
+            return null;
+        }
+
+        if (verbose) {
+            System.out.println("Extracted from evidence:");
+            System.out.println("  Version: " + extractedVersion);
+            System.out.println("  Arch: " + extractedArch);
+            System.out.println("  OS: " + extractedOs);
+            System.out.println("  SHA-256: " + extractedSha256);
+        }
+
+        // Validate hash against Adoptium API
+        if (!validateHashWithAdoptium(extractedSha256, expectedVersion, expectedOs, expectedArch)) {
+            return null;
+        }
+
+        return extractedSha256;
+    }
+
+
+    /**
      * Safely retrieves the value for a command-line option.
+    /**
+     * Queries the Adoptium API to get the official SHA-256 hash for a JDK build.
+     * API URL format: https://api.adoptium.net/v3/checksum/version/{version}/{os}/{arch}/jdk/hotspot/normal/eclipse
+     *
+     * @param version The JDK version (e.g., jdk-21.0.5+11)
+     * @param os The operating system (linux, windows, mac)
+     * @param arch The architecture (x64, aarch64, s390x, ppc64le)
+     * @return The SHA-256 hash from Adoptium API, or null if query fails
+     */
+    private static String queryAdoptiumHash(final String version, final String os, final String arch) {
+        String apiUrl = String.format(
+            "https://api.adoptium.net/v3/checksum/version/%s/%s/%s/jdk/hotspot/normal/eclipse",
+            version, os, arch
+        );
+
+        if (verbose) {
+            System.out.println("Querying Adoptium API: " + apiUrl);
+        }
+
+        try {
+            URL url = new URL(apiUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(10000); // 10 seconds
+            conn.setReadTimeout(10000);
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode != 200) {
+                System.out.println("ERROR: Adoptium API returned status code " + responseCode + " for URL: " + apiUrl);
+                return null;
+            }
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            // Response format is: "hash  filename"
+            // Extract just the hash (first field before space)
+            String responseText = response.toString().trim();
+            String[] parts = responseText.split("\\s+");
+            if (parts.length > 0) {
+                String adoptiumHash = parts[0].trim();
+                if (verbose) {
+                    System.out.println("Adoptium API hash: " + adoptiumHash);
+                }
+                return adoptiumHash;
+            }
+
+            System.out.println("ERROR: Could not parse Adoptium API response: " + responseText);
+            return null;
+
+        } catch (IOException e) {
+            System.out.println("ERROR: Failed to query Adoptium API: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Validates that the SHA-256 hash from evidence matches the official Adoptium API hash.
+     *
+     * @param evidenceHash The SHA-256 hash extracted from evidence
+     * @param version The JDK version
+     * @param os The operating system
+     * @param arch The architecture
+     * @return true if validation passes, false if hashes don't match or API query fails
+     */
+    private static boolean validateHashWithAdoptium(final String evidenceHash,
+                                                     final String version,
+                                                     final String os,
+                                                     final String arch) {
+        String adoptiumHash = queryAdoptiumHash(version, os, arch);
+
+        if (adoptiumHash == null) {
+            System.out.println("ERROR: Could not verify evidence hash against Adoptium API");
+            printUsage();
+            return false;
+        }
+
+        if (!evidenceHash.equalsIgnoreCase(adoptiumHash)) {
+            System.out.println("ERROR: Evidence SHA-256 '" + evidenceHash
+                             + "' does not match Adoptium API hash '" + adoptiumHash + "'");
+            printUsage();
+            return false;
+        }
+
+        if (verbose) {
+            System.out.println("✓ Evidence SHA-256 matches Adoptium API hash");
+        }
+
+        return true;
+    }
+
+    /**
      * Validates that the next argument exists, is not another option (doesn't start with "--"),
      * and returns the trimmed value. Prints error message and usage, then exits on failure.
      *
@@ -229,17 +471,17 @@ public final class TemurinGenCDXA {
 
     static Bom createCdxa(final String attestingOrgName, final String predicate,
                           final String targetRelease, final String targetOs, final String targetArch,
-                          final String verifiedJdkFile, final String affirmationStmt, final String affirmationWebsite,
+                          final String affirmationStmt, final String affirmationWebsite,
                           final String evidenceText, final boolean thirdParty) {
         // Validate all inputs
         if (!validateCdxaInputs(attestingOrgName, predicate, targetRelease, targetOs, targetArch,
-                                verifiedJdkFile, affirmationStmt, evidenceText)) {
+                                affirmationStmt, evidenceText)) {
             printUsage();
             return null;
         }
 
-        // Compute SHA-256 hash from the verified JDK file
-        String targetHash = computeTargetHash(verifiedJdkFile);
+        // Parse evidence text to extract and validate SHA-256 hash
+        String targetHash = parseAndValidateEvidence(evidenceText, targetRelease, targetArch, targetOs);
         if (targetHash == null) {
             return null;
         }
@@ -305,14 +547,13 @@ public final class TemurinGenCDXA {
      * @param targetRelease The JDK release version
      * @param targetOs The target operating system
      * @param targetArch The target architecture
-     * @param verifiedJdkFile The path to the JDK file to verify
      * @param affirmationStmt The affirmation statement
      * @param evidenceText The evidence text content
      * @return true if all inputs are valid, false otherwise
      */
     private static boolean validateCdxaInputs(final String attestingOrgName, final String predicate,
                                               final String targetRelease, final String targetOs,
-                                              final String targetArch, final String verifiedJdkFile,
+                                              final String targetArch,
                                               final String affirmationStmt, final String evidenceText) {
         boolean validInput = true;
 
@@ -348,22 +589,6 @@ public final class TemurinGenCDXA {
             System.out.println("ERROR: --target-arch not specified");
             validInput = false;
         }
-        if (verifiedJdkFile == null) {
-            System.out.println("ERROR: --verified-jdk-file not specified");
-            validInput = false;
-        } else {
-            File jdkFile = new File(verifiedJdkFile);
-            if (!jdkFile.exists()) {
-                System.out.println("ERROR: --verified-jdk-file '" + verifiedJdkFile + "' does not exist");
-                validInput = false;
-            } else if (!jdkFile.isFile()) {
-                System.out.println("ERROR: --verified-jdk-file '" + verifiedJdkFile + "' is not a file");
-                validInput = false;
-            } else if (!jdkFile.canRead()) {
-                System.out.println("ERROR: --verified-jdk-file '" + verifiedJdkFile + "' is not readable");
-                validInput = false;
-            }
-        }
         if (affirmationStmt == null) {
             System.out.println("ERROR: --affirmation-stmt not specified");
             validInput = false;
@@ -382,26 +607,6 @@ public final class TemurinGenCDXA {
         }
 
         return validInput;
-    }
-
-    /**
-     * Computes SHA-256 hash from the verified JDK file.
-     *
-     * @param verifiedJdkFile The path to the JDK file
-     * @return The SHA-256 hash as a hexadecimal string, or null if computation fails
-     */
-    private static String computeTargetHash(final String verifiedJdkFile) {
-        try {
-            String targetHash = computeSHA256(verifiedJdkFile);
-            if (verbose) {
-                System.out.println("Computed SHA-256: " + targetHash);
-            }
-            return targetHash;
-        } catch (IOException | NoSuchAlgorithmException e) {
-            System.out.println("ERROR: Failed to compute SHA-256 hash from file '"
-                             + verifiedJdkFile + "': " + e.getMessage());
-            return null;
-        }
     }
 
     /**
@@ -566,9 +771,9 @@ public final class TemurinGenCDXA {
         System.out.println("  --target-release <release>     JDK release (format: jdk-M+B or jdk-M.0.U+B)");
         System.out.println("  --target-os <os>               Target OS (linux, windows, mac)");
         System.out.println("  --target-arch <arch>           Target architecture (x64, aarch64, s390x, ppc64le)");
-        System.out.println("  --verified-jdk-file <path>     Path to JDK tar.gz or zip file (SHA-256 will be computed)");
         System.out.println("  --affirmation-stmt <stmt>      Affirmation statement");
-        System.out.println("  --evidence <text>              Verification log text (e.g., reproducible build comparison output)");
+        System.out.println("  --evidence <file>              Path to file containing verification evidence log text");
+        System.out.println("                                 (must include version, arch, os, and sha256 fields)");
         System.out.println("\nOptional Options:");
         System.out.println("  --cdxa-output-folder <path>    Output folder for CDXA file (default: current directory)");
         //System.out.println("  --affirmation-website <url>    Organization website");
@@ -581,9 +786,8 @@ public final class TemurinGenCDXA {
         System.out.println("    --target-os linux --target-arch x64 \\");
         System.out.println("    --attesting-org-name \"Acme Inc\" \\");
         System.out.println("    --predicate VERIFIED_REPRODUCIBLE_BUILD \\");
-        System.out.println("    --verified-jdk-file /path/to/OpenJDK21U-jdk_x64_linux_hotspot_21.0.1_12.tar.gz \\");
         System.out.println("    --affirmation-stmt \"Build verified as reproducible\" \\");
-        System.out.println("    --evidence \"Comparing expanded JDKs...Compare identical!\" \\");
+        System.out.println("    --evidence /path/to/evidence.txt \\");
         System.out.println("    --cdxa-output-folder /output/cdxa \\");
         //System.out.println("    --affirmation-website \"https://acme.inc.com\"");
         System.out.println("    --xml");
@@ -765,37 +969,22 @@ public final class TemurinGenCDXA {
     }
 
     /**
-     * Computes the SHA-256 hash of a file.
+     * Reads the entire contents of a text file.
      *
-     * @param filePath The path to the file
-     * @return The SHA-256 hash as a hexadecimal string
+     * @param filePath The path to the file to read
+     * @return The contents of the file as a string
      * @throws IOException If an I/O error occurs
-     * @throws NoSuchAlgorithmException If SHA-256 algorithm is not available
      */
-    static String computeSHA256(final String filePath) throws IOException, NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-
-        try (FileInputStream fis = new FileInputStream(filePath)) {
-            byte[] buffer = new byte[8192];
-            int bytesRead;
-
-            while ((bytesRead = fis.read(buffer)) != -1) {
-                digest.update(buffer, 0, bytesRead);
+    static String readFileContents(final String filePath) throws IOException {
+        StringBuilder content = new StringBuilder();
+        try (FileReader reader = new FileReader(filePath)) {
+            char[] buffer = new char[8192];
+            int charsRead;
+            while ((charsRead = reader.read(buffer)) != -1) {
+                content.append(buffer, 0, charsRead);
             }
         }
-
-        byte[] hashBytes = digest.digest();
-
-        // Convert byte array to hexadecimal string
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : hashBytes) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
-            hexString.append(hex);
-        }
-
-        return hexString.toString();
+        return content.toString();
     }
+
 }
