@@ -98,9 +98,9 @@ files1=$(find "${JDK_DIR1}" -type f | wc -l)
 evidenceLog "Number of files: ${files1}"
 rc=0
 output="reprotest.diff"
-evidenceLog "$(date -Iseconds) : Comparing expanded JDKs from ${JDK_DIR1} with ${JDK_DIR2} ..."
+evidenceLog "$(date "+%Y-%m-%dT%H:%M:%S%z") : Comparing expanded JDKs from ${JDK_DIR1} with ${JDK_DIR2} ..."
 diff -r -q "${JDK_DIR1}" "${JDK_DIR2}" > "${output}" || rc=$?
-evidenceLog "$(date -Iseconds) : diff complete - rc=$rc."
+evidenceLog "$(date "+%Y-%m-%dT%H:%M:%S%z") : diff complete - rc=$rc."
 echo "Output written to file: ${output}"
 
 cat "${output}"
