@@ -109,6 +109,7 @@ function removeJlinkRuntimelinkHashes() {
         if [[ "$OS" =~ Darwin* ]]; then
           sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dylib$)/\1|\2||\3/g' "$f"
           sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(bin\/.*$)/\1|\2||\3/g' "$f"
+          sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/.*$)/\1|\2||\3/g' "$f"
           sed -i "" -E 's/^([^|]+)\|([^|]+)\|[^|]+\|(lib\/security\/cacerts$)/\1|\2||\3/g' "$f"
         elif [[ "$OS" =~ CYGWIN* ]]; then
           sed -i -E 's/^([^|]+)\|([^|]+)\|[^|]+\|([^\.]+\.dll$)/\1|\2||\3/g' "$f"
