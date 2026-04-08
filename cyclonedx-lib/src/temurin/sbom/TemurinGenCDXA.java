@@ -148,14 +148,17 @@ public final class TemurinGenCDXA {
                 File outputFolder = new File(cdxaOutputFolder);
                 if (!outputFolder.exists()) {
                     System.out.println("ERROR: --cdxa-output-folder '" + cdxaOutputFolder + "' does not exist");
+                    printUsage();
                     System.exit(1);
                 }
                 if (!outputFolder.isDirectory()) {
                     System.out.println("ERROR: --cdxa-output-folder '" + cdxaOutputFolder + "' is not a directory");
+                    printUsage();
                     System.exit(1);
                 }
                 if (!outputFolder.canWrite()) {
                     System.out.println("ERROR: --cdxa-output-folder '" + cdxaOutputFolder + "' is not writable");
+                    printUsage();
                     System.exit(1);
                 }
 
@@ -180,6 +183,7 @@ public final class TemurinGenCDXA {
                     System.out.print(args[i] + " ");
                 }
                 System.out.println("\nERROR: Please enter a valid command.");
+                printUsage();
                 System.exit(1);
           }
         } catch (Exception e) {
@@ -188,6 +192,7 @@ public final class TemurinGenCDXA {
                 System.out.print(args[i] + " ");
             }
             System.out.println("\nERROR: Exception: " + e);
+            printUsage();
             System.exit(1);
         }
     }
