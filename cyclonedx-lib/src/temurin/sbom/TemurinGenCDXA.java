@@ -80,16 +80,32 @@ public final class TemurinGenCDXA {
      * Helper class to return multiple values from evidence parsing.
      */
     static class EvidenceData {
-        String version;
-        String arch;
-        String os;
-        String hash;
+        private final String version;
+        private final String arch;
+        private final String os;
+        private final String hash;
 
-        EvidenceData(final String version, final String arch, final String os, final String hash) {
-            this.version = version;
-            this.arch = arch;
-            this.os = os;
-            this.hash = hash;
+        EvidenceData(final String versionParam, final String archParam, final String osParam, final String hashParam) {
+            this.version = versionParam;
+            this.arch = archParam;
+            this.os = osParam;
+            this.hash = hashParam;
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        public String getArch() {
+            return arch;
+        }
+
+        public String getOs() {
+            return os;
+        }
+
+        public String getHash() {
+            return hash;
         }
     }
 
@@ -97,16 +113,32 @@ public final class TemurinGenCDXA {
      * Helper class to return CDXA creation result with extracted metadata.
      */
     static class CdxaResult {
-        Bom bom;
-        String version;
-        String arch;
-        String os;
+        private final Bom bom;
+        private final String version;
+        private final String arch;
+        private final String os;
 
-        CdxaResult(final Bom bom, final String version, final String arch, final String os) {
-            this.bom = bom;
-            this.version = version;
-            this.arch = arch;
-            this.os = os;
+        CdxaResult(final Bom bomParam, final String versionParam, final String archParam, final String osParam) {
+            this.bom = bomParam;
+            this.version = versionParam;
+            this.arch = archParam;
+            this.os = osParam;
+        }
+
+        public Bom getBom() {
+            return bom;
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        public String getArch() {
+            return arch;
+        }
+
+        public String getOs() {
+            return os;
         }
     }
 
@@ -183,12 +215,12 @@ public final class TemurinGenCDXA {
                 }
 
                 CdxaResult result = createCdxa(attestingOrgName, predicate, affirmationStmt, affirmationWebsite, evidenceText, thirdParty);
-                if (result != null && result.bom != null) {
+                if (result != null && result.getBom() != null) {
                     // Derive fileName from extracted values
-                    String fileName = deriveFileName(result.version, result.arch, result.os, attestingOrgName);
+                    String fileName = deriveFileName(result.getVersion(), result.getArch(), result.getOs(), attestingOrgName);
                     // Prepend output folder to filename
                     String fullPath = cdxaOutputFolder + File.separator + fileName;
-                    writeFile(result.bom, fullPath);
+                    writeFile(result.getBom(), fullPath);
                     if (verbose) {
                         System.out.println("CDXA file written to: " + fullPath);
                     }
@@ -485,10 +517,10 @@ public final class TemurinGenCDXA {
         }
 
         // Extract values from evidence
-        String targetRelease = evidenceData.version;
-        String targetArch = evidenceData.arch;
-        String targetOs = evidenceData.os;
-        String targetHash = evidenceData.hash;
+        String targetRelease = evidenceData.getVersion();
+        String targetArch = evidenceData.getArch();
+        String targetOs = evidenceData.getOs();
+        String targetHash = evidenceData.getHash();
 
         // Derive CDXA values from extracted evidence
         String targetName = deriveTargetName(targetRelease, targetArch, targetOs);
