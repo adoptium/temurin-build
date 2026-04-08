@@ -374,8 +374,6 @@ public final class TemurinGenCDXA {
 
 
     /**
-     * Safely retrieves the value for a command-line option.
-    /**
      * Queries the Adoptium API to get the official SHA-256 hash for a JDK build.
      * API URL format: https://api.adoptium.net/v3/checksum/version/{version}/{os}/{arch}/jdk/hotspot/normal/eclipse
      *
