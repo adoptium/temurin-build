@@ -562,6 +562,11 @@ attestationBuildUsingOpenJDK() {
     if [[ -n "$PATH_SAVE" ]]; then
       export PATH="$PATH_SAVE"
     fi
+    echo "Check above logs for more info."
+    echo "Ensure the following packages are securely installed:"
+    echo "  diffutils procps-ng binutils cpio"
+    echo "  make autoconf unzip zip file systemtap-sdt-devel"
+    echo "  git bzip2 xz openssl pigz which jq"
     exit 1
   fi
 
@@ -632,12 +637,20 @@ fi
 sourceJDK="jdk-${TEMURIN_VERSION}"
 mkdir "${sourceJDK}"
 if [[ $JDK_PARAM =~ ^https?:// ]]; then
-  echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
+  echo "Retrieving tarball from $JDK_PARAM"
+  curl -L "$JDK_PARAM" -o source_jdk.tar.gz || exit 1
+  JDK_TAR_HASH=$(sha256sum "source_jdk.tar.gz" | cut -d' ' -f1)
+  tar xpfz "source_jdk.tar.gz" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
 elif [[ $JDK_PARAM =~ tar.gz ]]; then
+  JDK_TAR_HASH=$(sha256sum "$JDK_PARAM" | cut -d' ' -f1)
   tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
 else
   # Local jdk dir
   cp -R "${JDK_PARAM}"/* "${sourceJDK}"
+  if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
+    echo "Reproducible Verification builds must specify JDK_PARAM as the original tarball or URL to obtain the tarball"
+    exit 1
+  fi
 fi
 
 if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
@@ -653,6 +666,26 @@ rc=0
 set +e
 if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
   ./repro_compare.sh temurin "$sourceJDK" openjdk reproJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+  EVIDENCE_LOG="$PWD/reproducible_evidence.log"
+  if [ $rc -eq 0 ]; then
+    echo "Successful 100% Reproducible Verification" >> "${EVIDENCE_LOG}"
+    echo "Eclipse Temurin version: jdk-${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
+    echo "                   arch: ${NATIVE_API_ARCH}" >> "${EVIDENCE_LOG}"
+    echo "                     os: linux" >> "${EVIDENCE_LOG}"
+    echo "                 sha256: ${JDK_TAR_HASH}" >> "${EVIDENCE_LOG}"
+  else
+    echo "Reproducible Verification not identical" >> "${EVIDENCE_LOG}"
+    echo "Refer to guide for diagnosis and reporting: https://github.com/adoptium/temurin-build/wiki/Temurin-3rd-Party-Reproducible-Verification-Guides" >> "${EVIDENCE_LOG}"
+  fi
+  echo
+  echo "Reproducible Verification evidence written to file: ${EVIDENCE_LOG}"
+  echo "Contents:"
+  echo
+  cat  "${EVIDENCE_LOG}"
+  echo
+  echo "Provide contents of evidence file as the CDXA evidence: ${EVIDENCE_LOG}"
+  echo "For providing a 3rd party Reproducible Verification CDXA, see: https://github.com/adoptium/temurin-cdxa/blob/main/CONTRIBUTING.md"
+  echo
 else
   ./repro_compare.sh temurin "$sourceJDK" temurin reproJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
 fi

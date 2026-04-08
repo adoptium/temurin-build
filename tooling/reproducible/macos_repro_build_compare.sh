@@ -84,6 +84,7 @@ ANT_BASE_PATH="/usr/local/bin"
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$PWD/src_sbom.json"
 DISTLocalPath="$PWD/src_jdk_dist.tar.gz"
+JDK_TAR_HASH=""
 rc=0
 
 # Function to check if a string is a valid URL
@@ -136,6 +137,7 @@ Check_Parameters() {
       exit 1
     fi
   fi
+  JDK_TAR_HASH=$(shasum -a 256 "$DISTLocalPath" | cut -d' ' -f1)
 }
 
 Check_PreReqs() {
@@ -776,6 +778,29 @@ Compare_JDK() {
     ./repro_compare.sh temurin "$sourceJDK" temurin "reproJDK/jdk-$TEMURIN_VERSION" Darwin 2>&1 || rc=$?
   fi
   set -e
+
+  if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
+    EVIDENCE_LOG="$PWD/reproducible_evidence.log"
+    if [ $rc -eq 0 ]; then
+      echo "Successful 100% Reproducible Verification" >> "${EVIDENCE_LOG}"
+      echo "Eclipse Temurin version: jdk-${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
+      echo "                   arch: ${NATIVE_API_ARCH}" >> "${EVIDENCE_LOG}"
+      echo "                     os: linux" >> "${EVIDENCE_LOG}"
+      echo "                 sha256: ${JDK_TAR_HASH}" >> "${EVIDENCE_LOG}"
+    else
+      echo "Reproducible Verification not identical" >> "${EVIDENCE_LOG}"
+      echo "Refer to guide for diagnosis and reporting: https://github.com/adoptium/temurin-build/wiki/Temurin-3rd-Party-Reproducible-Verification-Guides" >> "${EVIDENCE_LOG}"
+    fi
+    echo
+    echo "Reproducible Verification evidence written to file: ${EVIDENCE_LOG}"
+    echo "Contents:"
+    echo
+    cat  "${EVIDENCE_LOG}"
+    echo
+    echo "Provide contents of evidence file as the CDXA evidence: ${EVIDENCE_LOG}"
+    echo "For providing a 3rd party Reproducible Verification CDXA, see: https://github.com/adoptium/temurin-cdxa/blob/main/CONTRIBUTING.md"
+    echo
+  fi 
 
   if [ $rc -eq 0 ]; then
     echo "Compare identical !"
