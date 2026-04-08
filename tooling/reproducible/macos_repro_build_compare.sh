@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2129
 # ********************************************************************************
 # Copyright (c) 2024 Contributors to the Eclipse Foundation
 #
@@ -11,6 +12,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
+
+# Shellcheck SC2129 disabled, as per line echo is more readable
 
 # This script examines the given sbom metadata file, and then builds the exact same binary
 # and then compares with the temurin jdk for the same build version, or the optionally supplied tarball_url.

@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2001
+# shellcheck disable=SC2001,SC2129
 # ********************************************************************************
 # Copyright (c) 2024 Contributors to the Eclipse Foundation
 #
@@ -17,6 +17,7 @@
 # and then compares with the supplied TARBALL_PARAM.
 
 # Shellcheck SC2001 disable added as suggested anti-glob quoting does not work as required
+# Shellcheck SC2129 disabled, as per line echo is more readable
 
 set -e
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2001,SC2086
+# shellcheck disable=SC2001,SC2086,SC2129
 # ********************************************************************************
 # Copyright (c) 2024 Contributors to the Eclipse Foundation
 #
@@ -18,6 +18,7 @@
 # Requires Cygwin & Powershell Installed On Windows To Run
 
 # Shellcheck SC2001 & SC2006 disable added as suggested anti-glob quoting does not work on Windows cygwin
+# Shellcheck SC2129 disabled, as per line echo is more readable
 
 set -e
 
