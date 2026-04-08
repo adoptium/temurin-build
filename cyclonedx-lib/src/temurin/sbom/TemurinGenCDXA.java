@@ -103,25 +103,35 @@ public final class TemurinGenCDXA {
             } else if (args[i].equals("--xml")) {
                 useJson = false;
             } else if (args[i].equals("--attesting-org-name")) {
-                attestingOrgName = args[++i].trim();
+                attestingOrgName = getOptionValue(args, i, "--attesting-org-name");
+                i++; // Skip the value we just consumed
             } else if (args[i].equals("--predicate")) {
-                predicate = args[++i].trim();
+                predicate = getOptionValue(args, i, "--predicate");
+                i++;
             } else if (args[i].equals("--target-release")) {
-                targetRelease = args[++i].trim();
+                targetRelease = getOptionValue(args, i, "--target-release");
+                i++;
             } else if (args[i].equals("--target-os")) {
-                targetOs = args[++i].trim();
+                targetOs = getOptionValue(args, i, "--target-os");
+                i++;
             } else if (args[i].equals("--target-arch")) {
-                targetArch = args[++i].trim();
+                targetArch = getOptionValue(args, i, "--target-arch");
+                i++;
             } else if (args[i].equals("--verified-jdk-file")) {
-                verifiedJdkFile = args[++i].trim();
+                verifiedJdkFile = getOptionValue(args, i, "--verified-jdk-file");
+                i++;
             } else if (args[i].equals("--affirmation-stmt")) {
-                affirmationStmt = args[++i].trim();
+                affirmationStmt = getOptionValue(args, i, "--affirmation-stmt");
+                i++;
             } else if (args[i].equals("--evidence")) {
-                evidenceText = args[++i].trim();
+                evidenceText = getOptionValue(args, i, "--evidence");
+                i++;
             } else if (args[i].equals("--cdxa-output-folder")) {
-                cdxaOutputFolder = args[++i].trim();
+                cdxaOutputFolder = getOptionValue(args, i, "--cdxa-output-folder");
+                i++;
             //} else if (args[i].equals("--affirmation-website")) {
-            //    affirmationWebsite = args[++i].trim();
+            //    affirmationWebsite = getOptionValue(args, i, "--affirmation-website");
+            //    i++;
             } else if (args[i].equals("--not-third-party")) {
                 thirdParty = false;
             } else if (args[i].equals("--createNewCDXA")) {
@@ -180,6 +190,36 @@ public final class TemurinGenCDXA {
             System.out.println("\nERROR: Exception: " + e);
             System.exit(1);
         }
+    }
+
+    /**
+     * Safely retrieves the value for a command-line option.
+     * Validates that the next argument exists, is not another option (doesn't start with "--"),
+     * and returns the trimmed value. Prints error message and usage, then exits on failure.
+     *
+     * @param args The command-line arguments array
+     * @param currentIndex The current index in the args array (the option itself)
+     * @param optionName The name of the option (for error messages)
+     * @return The trimmed option value, or exits the program if invalid
+     */
+    private static String getOptionValue(final String[] args, final int currentIndex, final String optionName) {
+        // Check if there's a next argument
+        if (currentIndex + 1 >= args.length) {
+            System.out.println("ERROR: Option " + optionName + " requires a value");
+            printUsage();
+            System.exit(1);
+        }
+
+        String value = args[currentIndex + 1];
+
+        // Check if the value is actually another option
+        if (value.startsWith("--")) {
+            System.out.println("ERROR: Option " + optionName + " requires a value, but found another option: " + value);
+            printUsage();
+            System.exit(1);
+        }
+
+        return value.trim();
     }
 
     static Bom createCdxa(final String attestingOrgName, final String predicate,
