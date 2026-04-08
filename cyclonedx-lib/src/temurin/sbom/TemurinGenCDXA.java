@@ -398,6 +398,7 @@ public final class TemurinGenCDXA {
             URL url = new URL(apiUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
+            conn.setRequestProperty("User-Agent", "TemurinGenCDXA/1.0");
             conn.setConnectTimeout(10000); // 10 seconds
             conn.setReadTimeout(10000);
 
