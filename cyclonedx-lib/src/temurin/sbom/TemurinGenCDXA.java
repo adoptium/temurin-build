@@ -76,6 +76,40 @@ public final class TemurinGenCDXA {
                            VERIFIED_REPRODUCIBLE_BUILD
                        };
 
+    /**
+     * Helper class to return multiple values from evidence parsing.
+     */
+    static class EvidenceData {
+        String version;
+        String arch;
+        String os;
+        String hash;
+
+        EvidenceData(final String version, final String arch, final String os, final String hash) {
+            this.version = version;
+            this.arch = arch;
+            this.os = os;
+            this.hash = hash;
+        }
+    }
+
+    /**
+     * Helper class to return CDXA creation result with extracted metadata.
+     */
+    static class CdxaResult {
+        Bom bom;
+        String version;
+        String arch;
+        String os;
+
+        CdxaResult(final Bom bom, final String version, final String arch, final String os) {
+            this.bom = bom;
+            this.version = version;
+            this.arch = arch;
+            this.os = os;
+        }
+    }
+
     private TemurinGenCDXA() {
     }
 
@@ -87,9 +121,6 @@ public final class TemurinGenCDXA {
         String cmd = "";
         String attestingOrgName = null;
         String predicate = null;
-        String targetRelease = null;
-        String targetOs = null;
-        String targetArch = null;
         String affirmationStmt = null;
         String affirmationWebsite = null;
         String evidenceText = null;
@@ -107,15 +138,6 @@ public final class TemurinGenCDXA {
                 i++; // Skip the value we just consumed
             } else if (args[i].equals("--predicate")) {
                 predicate = getOptionValue(args, i, "--predicate");
-                i++;
-            } else if (args[i].equals("--target-release")) {
-                targetRelease = getOptionValue(args, i, "--target-release");
-                i++;
-            } else if (args[i].equals("--target-os")) {
-                targetOs = getOptionValue(args, i, "--target-os");
-                i++;
-            } else if (args[i].equals("--target-arch")) {
-                targetArch = getOptionValue(args, i, "--target-arch");
                 i++;
             } else if (args[i].equals("--affirmation-stmt")) {
                 affirmationStmt = getOptionValue(args, i, "--affirmation-stmt");
@@ -160,13 +182,13 @@ public final class TemurinGenCDXA {
                     System.exit(1);
                 }
 
-                Bom bom = createCdxa(attestingOrgName, predicate, targetRelease, targetOs, targetArch, affirmationStmt, affirmationWebsite, evidenceText, thirdParty);
-                if (bom != null) {
-                    // Derive fileName from new parameters
-                    String fileName = deriveFileName(targetRelease, targetArch, targetOs, attestingOrgName);
+                CdxaResult result = createCdxa(attestingOrgName, predicate, affirmationStmt, affirmationWebsite, evidenceText, thirdParty);
+                if (result != null && result.bom != null) {
+                    // Derive fileName from extracted values
+                    String fileName = deriveFileName(result.version, result.arch, result.os, attestingOrgName);
                     // Prepend output folder to filename
                     String fullPath = cdxaOutputFolder + File.separator + fileName;
-                    writeFile(bom, fullPath);
+                    writeFile(result.bom, fullPath);
                     if (verbose) {
                         System.out.println("CDXA file written to: " + fullPath);
                     }
@@ -246,15 +268,9 @@ public final class TemurinGenCDXA {
      *                  sha256: 51111aa918a1b3e4f59e1ce3179f1a17345a7024825ce98d634820c38d9a46a2
      *
      * @param evidenceText The evidence text content
-     * @param expectedVersion The expected JDK version from --target-release
-     * @param expectedArch The expected architecture from --target-arch
-     * @param expectedOs The expected OS from --target-os
-     * @return The extracted SHA-256 hash, or null if parsing/validation fails
+     * @return EvidenceData containing version, arch, os, and hash, or null if parsing/validation fails
      */
-    private static String parseAndValidateEvidence(final String evidenceText,
-                                                    final String expectedVersion,
-                                                    final String expectedArch,
-                                                    final String expectedOs) {
+    private static EvidenceData parseAndValidateEvidence(final String evidenceText) {
         if (evidenceText == null || evidenceText.trim().isEmpty()) {
             System.out.println("ERROR: Evidence text is empty");
             printUsage();
@@ -302,28 +318,6 @@ public final class TemurinGenCDXA {
             return null;
         }
 
-        // Validate extracted values match expected values
-        if (!extractedVersion.equals(expectedVersion)) {
-            System.out.println("ERROR: Evidence version '" + extractedVersion
-                             + "' does not match --target-release '" + expectedVersion + "'");
-            hasErrors = true;
-        }
-        if (!extractedArch.equals(expectedArch)) {
-            System.out.println("ERROR: Evidence arch '" + extractedArch
-                             + "' does not match --target-arch '" + expectedArch + "'");
-            hasErrors = true;
-        }
-        if (!extractedOs.equals(expectedOs)) {
-            System.out.println("ERROR: Evidence os '" + extractedOs
-                             + "' does not match --target-os '" + expectedOs + "'");
-            hasErrors = true;
-        }
-
-        if (hasErrors) {
-            printUsage();
-            return null;
-        }
-
         if (verbose) {
             System.out.println("Extracted from evidence:");
             System.out.println("  Version: " + extractedVersion);
@@ -332,12 +326,18 @@ public final class TemurinGenCDXA {
             System.out.println("  SHA-256: " + extractedSha256);
         }
 
-        // Validate hash against Adoptium API
-        if (!validateHashWithAdoptium(extractedSha256, expectedVersion, expectedOs, expectedArch)) {
+        // Validate extracted values meet format requirements
+        if (!validateEvidenceParameters(extractedVersion, extractedOs, extractedArch)) {
+            printUsage();
             return null;
         }
 
-        return extractedSha256;
+        // Validate hash against Adoptium API
+        if (!validateHashWithAdoptium(extractedSha256, extractedVersion, extractedOs, extractedArch)) {
+            return null;
+        }
+
+        return new EvidenceData(extractedVersion, extractedArch, extractedOs, extractedSha256);
     }
 
 
@@ -469,24 +469,28 @@ public final class TemurinGenCDXA {
         return value.trim();
     }
 
-    static Bom createCdxa(final String attestingOrgName, final String predicate,
-                          final String targetRelease, final String targetOs, final String targetArch,
-                          final String affirmationStmt, final String affirmationWebsite,
-                          final String evidenceText, final boolean thirdParty) {
+    static CdxaResult createCdxa(final String attestingOrgName, final String predicate,
+                                 final String affirmationStmt, final String affirmationWebsite,
+                                 final String evidenceText, final boolean thirdParty) {
         // Validate all inputs
-        if (!validateCdxaInputs(attestingOrgName, predicate, targetRelease, targetOs, targetArch,
-                                affirmationStmt, evidenceText)) {
+        if (!validateCdxaInputs(attestingOrgName, predicate, affirmationStmt, evidenceText)) {
             printUsage();
             return null;
         }
 
-        // Parse evidence text to extract and validate SHA-256 hash
-        String targetHash = parseAndValidateEvidence(evidenceText, targetRelease, targetArch, targetOs);
-        if (targetHash == null) {
+        // Parse evidence text to extract version, arch, os, and SHA-256 hash
+        EvidenceData evidenceData = parseAndValidateEvidence(evidenceText);
+        if (evidenceData == null) {
             return null;
         }
 
-        // Derive CDXA values from parameters
+        // Extract values from evidence
+        String targetRelease = evidenceData.version;
+        String targetArch = evidenceData.arch;
+        String targetOs = evidenceData.os;
+        String targetHash = evidenceData.hash;
+
+        // Derive CDXA values from extracted evidence
         String targetName = deriveTargetName(targetRelease, targetArch, targetOs);
         String targetVersion = targetRelease;
         String targetUrl = deriveTargetUrl(targetRelease, targetOs, targetArch);
@@ -536,7 +540,7 @@ public final class TemurinGenCDXA {
         cdxa.setSerialNumber("urn:uuid:" + UUID.randomUUID());
         cdxa.setDeclarations(declarations);
 
-        return cdxa;
+        return new CdxaResult(cdxa, targetRelease, targetArch, targetOs);
     }
 
     /**
@@ -544,16 +548,11 @@ public final class TemurinGenCDXA {
      *
      * @param attestingOrgName The name of the organization making the attestation
      * @param predicate The predicate type for the claim
-     * @param targetRelease The JDK release version
-     * @param targetOs The target operating system
-     * @param targetArch The target architecture
      * @param affirmationStmt The affirmation statement
      * @param evidenceText The evidence text content
      * @return true if all inputs are valid, false otherwise
      */
     private static boolean validateCdxaInputs(final String attestingOrgName, final String predicate,
-                                              final String targetRelease, final String targetOs,
-                                              final String targetArch,
                                               final String affirmationStmt, final String evidenceText) {
         boolean validInput = true;
 
@@ -577,18 +576,6 @@ public final class TemurinGenCDXA {
                 validInput = false;
             }
         }
-        if (targetRelease == null) {
-            System.out.println("ERROR: --target-release not specified");
-            validInput = false;
-        }
-        if (targetOs == null) {
-            System.out.println("ERROR: --target-os not specified");
-            validInput = false;
-        }
-        if (targetArch == null) {
-            System.out.println("ERROR: --target-arch not specified");
-            validInput = false;
-        }
         if (affirmationStmt == null) {
             System.out.println("ERROR: --affirmation-stmt not specified");
             validInput = false;
@@ -599,11 +586,6 @@ public final class TemurinGenCDXA {
         } else if (evidenceText.trim().isEmpty()) {
             System.out.println("ERROR: --evidence cannot be empty");
             validInput = false;
-        }
-
-        // Perform extra validation steps on values to ensure meets Temurin CDXA format syntax
-        if (validInput) {
-            validInput = validateInputParameters(targetRelease, targetOs, targetArch, attestingOrgName);
         }
 
         return validInput;
@@ -768,9 +750,6 @@ public final class TemurinGenCDXA {
         System.out.println("\nRequired Options:");
         System.out.println("  --attesting-org-name <name>    Organization name making the attestation");
         System.out.println("  --predicate <predicate>        Predicate type (e.g., VERIFIED_REPRODUCIBLE_BUILD)");
-        System.out.println("  --target-release <release>     JDK release (format: jdk-M+B or jdk-M.0.U+B)");
-        System.out.println("  --target-os <os>               Target OS (linux, windows, mac)");
-        System.out.println("  --target-arch <arch>           Target architecture (x64, aarch64, s390x, ppc64le)");
         System.out.println("  --affirmation-stmt <stmt>      Affirmation statement");
         System.out.println("  --evidence <file>              Path to file containing verification evidence log text");
         System.out.println("                                 (must include version, arch, os, and sha256 fields)");
@@ -782,8 +761,7 @@ public final class TemurinGenCDXA {
         System.out.println("  --not-third-party              Mark assessor as not third-party");
         System.out.println("  --verbose                      Enable verbose output");
         System.out.println("\nExamples:");
-        System.out.println("  TemurinGenCDXA --createNewCDXA --target-release jdk-21.0.1+12 \\");
-        System.out.println("    --target-os linux --target-arch x64 \\");
+        System.out.println("  TemurinGenCDXA --createNewCDXA \\");
         System.out.println("    --attesting-org-name \"Acme Inc\" \\");
         System.out.println("    --predicate VERIFIED_REPRODUCIBLE_BUILD \\");
         System.out.println("    --affirmation-stmt \"Build verified as reproducible\" \\");
@@ -793,47 +771,41 @@ public final class TemurinGenCDXA {
         System.out.println("    --xml");
         System.out.println("\nOutput:");
         System.out.println("  Generated filename format: {release}_{arch}_{os}_{org}.{xml|json}");
-        System.out.println("  Example: jdk_21_0_1_12_x64_linux_eclipse.xml");
-        System.out.println("\nNote: SHA-256 hash will be automatically computed from the verified-jdk-file");
+        System.out.println("  Example: jdk_21_0_1_12_x64_linux_AcmeInc.xml");
+        System.out.println("\nNote:");
+        System.out.println("  - Version, arch, os, and SHA-256 hash are extracted from the evidence file");
+        System.out.println("  - SHA-256 hash is validated against the Adoptium API");
     }
 
     /**
-     * Validates input parameters according to Temurin CDXA requirements.
+     * Validates evidence parameters according to Temurin CDXA requirements.
      *
-     * @param targetRelease The target release (jdk-M+B or jdk-M.0.U+B format)
-     * @param targetOs The target OS (linux, windows, mac)
-     * @param targetArch The target architecture (x64, aarch64, s390x, ppc64le)
-     * @param attestingOrgName The attesting organization name
+     * @param version The JDK version extracted from evidence (jdk-M+B or jdk-M.0.U+B format)
+     * @param os The OS extracted from evidence (linux, windows, mac)
+     * @param arch The architecture extracted from evidence (x64, aarch64, s390x, ppc64le)
      * @return true if valid, false otherwise
      */
-    static boolean validateInputParameters(final String targetRelease, final String targetOs,
-                                           final String targetArch, final String attestingOrgName) {
+    static boolean validateEvidenceParameters(final String version, final String os, final String arch) {
         boolean valid = true;
 
-        // Validate targetRelease format: jdk-M+B or jdk-M.0.U+B
+        // Validate version format: jdk-M+B or jdk-M.0.U+B
         Pattern releasePattern = Pattern.compile("^jdk-([0-9]+)(\\.[0-9]+\\.[0-9]+)?\\+([0-9]+)$");
-        Matcher releaseMatcher = releasePattern.matcher(targetRelease);
+        Matcher releaseMatcher = releasePattern.matcher(version);
         if (!releaseMatcher.matches()) {
-            System.out.println("ERROR: --target-release '" + targetRelease + "' is not in valid format: jdk-M+B or jdk-M.0.U+B");
+            System.out.println("ERROR: Evidence version '" + version + "' is not in valid format: jdk-M+B or jdk-M.0.U+B");
             valid = false;
         }
 
-        // Validate targetOs
-        if (!targetOs.equals("linux") && !targetOs.equals("windows") && !targetOs.equals("mac")) {
-            System.out.println("ERROR: --target-os '" + targetOs + "' must be one of: linux, windows, mac");
+        // Validate os
+        if (!os.equals("linux") && !os.equals("windows") && !os.equals("mac")) {
+            System.out.println("ERROR: Evidence os '" + os + "' must be one of: linux, windows, mac");
             valid = false;
         }
 
-        // Validate targetArch
-        if (!targetArch.equals("x64") && !targetArch.equals("aarch64")
-            && !targetArch.equals("s390x") && !targetArch.equals("ppc64le")) {
-            System.out.println("ERROR: --target-arch '" + targetArch + "' must be one of: x64, aarch64, s390x, ppc64le");
-            valid = false;
-        }
-
-        // Validate attestingOrgName is not empty
-        if (attestingOrgName.trim().isEmpty()) {
-            System.out.println("ERROR: --attesting-org-name cannot be empty");
+        // Validate arch
+        if (!arch.equals("x64") && !arch.equals("aarch64")
+            && !arch.equals("s390x") && !arch.equals("ppc64le")) {
+            System.out.println("ERROR: Evidence arch '" + arch + "' must be one of: x64, aarch64, s390x, ppc64le");
             valid = false;
         }
 

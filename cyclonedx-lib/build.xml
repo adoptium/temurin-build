@@ -221,12 +221,6 @@ Eclipse Temurin version: jdk-21.0.5+11
                   <arg value="Acme Inc"/>
                   <arg value="--predicate"/>
                   <arg value="VERIFIED_REPRODUCIBLE_BUILD"/>
-                  <arg value="--target-arch"/>
-                  <arg value="x64"/>
-                  <arg value="--target-os"/>
-                  <arg value="linux"/>
-                  <arg value="--target-release"/>
-                  <arg value="jdk-21.0.5+11"/>
                   <arg value="--affirmation-stmt"/>
                   <arg value="Acme confirms a verified reproducible build"/>
                   <arg value="--evidence"/>
@@ -253,12 +247,6 @@ Eclipse Temurin version: jdk-21.0.5+11
                   <arg value="Acme Inc"/>
                   <arg value="--predicate"/>
                   <arg value="VERIFIED_REPRODUCIBLE_BUILD"/>
-                  <arg value="--target-arch"/>
-                  <arg value="aarch64"/>
-                  <arg value="--target-os"/>
-                  <arg value="linux"/>
-                  <arg value="--target-release"/>
-                  <arg value="jdk-21.0.5+11"/>
                   <arg value="--affirmation-stmt"/>
                   <arg value="Acme confirms a verified reproducible build"/>
                   <arg value="--evidence"/>
