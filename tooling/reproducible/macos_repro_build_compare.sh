@@ -26,7 +26,7 @@ ADOPTIUM_PUBLIC_GPG_KEY="0x3B04D753C9050D9A5D343F39843C48A565F8F04B"
 # Read Parameters
 SBOM_URL=""
 TARBALL_URL=""
-ATTESTATION_VERIFY=false
+REPRODUCIBLE_VERIFICATION=false
 BUILD_WORKSPACE=""
 
 ScriptPath=$(dirname "$(realpath "$0")")
@@ -43,8 +43,8 @@ while [[ $# -gt 0 ]] ; do
     "--jdk-url" )
     TARBALL_URL="$1"; shift;;
 
-    "--attestation-verify" ) 
-    ATTESTATION_VERIFY=true;;
+    "--reproducible-verification" ) 
+    REPRODUCIBLE_VERIFICATION=true;;
           
     "--build-workspace" )
     BUILD_WORKSPACE="$1"; shift;;
@@ -61,7 +61,7 @@ if [ -z "$SBOM_URL" ] || [ -z "$TARBALL_URL" ]; then
   echo "    --sbom-url [SBOM_URL/SBOM_PATH] : should be the FULL path OR a URL to a Temurin JDK SBOM JSON file in CycloneDX Format"
   echo "    --jdk-url [JDK_URL/JDK_PATH] : should be the FULL path OR a URL to a Temurin MacOS JDK tarball file"
   echo "  Optional:"
-  echo "    --attestation-verify : Enables Attestation Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
+  echo "    --reproducible-verification : Enables Reproducible Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
   echo "    --build-workspace : FULL path to the location to perform the reproducible build within"
   exit 1
 fi
@@ -183,7 +183,7 @@ Get_SBOM_Values() {
   BUILD_WORKSPACE_DIRECTORY=$(echo "$sbomContent" | jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value')
   BUILD_SCM_REF=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "SCM Ref") | .value')
 
-  if [ "$ATTESTATION_VERIFY" == true ]; then
+  if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
     adoptiumSrcCommitUrl=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "OpenJDK Source Commit") | .value')
     adoptiumConfigureArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "configure_args") | .value')
   
@@ -194,7 +194,7 @@ Get_SBOM_Values() {
       openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
       openjdkSourceCommitSHA=$(getUpstreamOpenJDKCommitSHA "$adoptiumRepo" "$openjdkSourceRepo" "$adoptiumBuildCommitSHA")
   
-      echo "Performing an Attestation Verification Build from $openjdkSourceRepo with commit SHA $openjdkSourceCommitSHA"
+      echo "Performing an Reproducible Verification Build from $openjdkSourceRepo with commit SHA $openjdkSourceCommitSHA"
       echo "Adoptium OpenJDK configure argmuents from original Temurin build:"
       echo "    $adoptiumConfigureArgs"
       echo ""
@@ -770,7 +770,7 @@ Compare_JDK() {
   export PATH=$JAVA_HOME/bin:$PATH
 
   set +e
-  if [ "$ATTESTATION_VERIFY" == true ]; then
+  if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
     ./repro_compare.sh temurin "$sourceJDK" openjdk "reproJDK/jdk-$TEMURIN_VERSION" Darwin 2>&1 || rc=$?
   else
     ./repro_compare.sh temurin "$sourceJDK" temurin "reproJDK/jdk-$TEMURIN_VERSION" Darwin 2>&1 || rc=$?
@@ -804,14 +804,14 @@ Check_Compiler_Versions
 echo "---------------------------------------------"
 Install_BootJDK
 echo "---------------------------------------------"
-if [ "$ATTESTATION_VERIFY" == true ]; then
+if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
   setOpenJDKConfigureArgs
 else
   Check_And_Install_Ant
   setTemurinBuildArgs
 fi
 echo "---------------------------------------------"
-if [ "$ATTESTATION_VERIFY" == true ]; then
+if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
   attestationBuildUsingOpenJDK
 else
   buildUsingTemurinBuild
