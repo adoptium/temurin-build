@@ -334,12 +334,18 @@ getBuildParams() {
   GCCVERSION=$(jq -r '.metadata.tools.components[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
   LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
   TEMURIN_BUILD_SHA=$(jq -r '.components[0] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
-  TEMURIN_VERSION="jdk-"$(jq -r '.metadata.component.version' "$SBOM")
+  TEMURIN_COMPONENT_VERSION=$(jq -r '.metadata.component.version' "$SBOM")
+  TEMURIN_VERSION="jdk-"$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
   BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
   TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
   BUILD_WORKSPACE_DIRECTORY=$(jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value' "$SBOM")
   BUILD_SCM_REF=$(jq -r '.components[0].properties[] | select(.name == "SCM Ref") | .value' "$SBOM")
   BUILD_LC_ALL=$(jq -r '.components[0] | .properties[] | select (.name == "Build LC_ALL") | .value' "$SBOM")
+
+  # Temurin beta-ea builds have release tags ending "-ea-beta"
+  if [[ "$TEMURIN_COMPONENT_VERSION" == *-beta*-ea ]]; then
+    TEMURIN_VERSION="${TEMURIN_VERSION}-ea-beta"
+  fi
 
   if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
     adoptiumSrcCommitUrl=$(jq -r '.components[0].properties[] | select(.name == "OpenJDK Source Commit") | .value' "$SBOM")

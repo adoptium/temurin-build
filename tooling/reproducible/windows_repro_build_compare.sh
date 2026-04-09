@@ -238,8 +238,14 @@ Get_SBOM_Values() {
   buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
   buildSHA=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value' | awk -F'/' '{print $NF}')
   buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
-  TEMURIN_VERSION="jdk-"$(echo "$sbomContent" | jq -r '.metadata.component.version')
+  TEMURIN_COMPONENT_VERSION=$(echo "$sbomContent" | jq -r '.metadata.component.version')
+  TEMURIN_VERSION="jdk-"$(echo "$sbomContent" | jq -r '.metadata.component.version' | sed 's/-beta//' | cut -f1 -d"-")
   buildArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
+
+  # Temurin beta-ea builds have release tags ending "-ea-beta"
+  if [[ "$TEMURIN_COMPONENT_VERSION" == *-beta*-ea ]]; then
+    TEMURIN_VERSION="${TEMURIN_VERSION}-ea-beta"
+  fi
 
   # Check if the tool was found
   if [ -n "$msvsWindowsCompiler" ]; then
