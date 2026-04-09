@@ -465,7 +465,7 @@ public final class TemurinGenCDXA {
         }
 
         if (verbose) {
-            System.out.println("✓ Evidence SHA-256 matches Adoptium API hash");
+            System.out.println("[OK] Evidence SHA-256 matches Adoptium API hash");
         }
 
         return true;
