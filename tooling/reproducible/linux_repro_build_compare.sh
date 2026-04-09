@@ -659,7 +659,7 @@ else
   # Local jdk dir
   cp -R "${JDK_PARAM}"/* "${sourceJDK}"
   if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
-    echo "Reproducible Verification builds must specify JDK_PARAM as the original tarball or URL to obtain the tarball"
+    echo "Reproducible Verification builds must specify --jdk-url as the original JDK tarball, either as a download URL or a local path to a .tar.gz archive"
     exit 1
   fi
 fi
