@@ -238,7 +238,7 @@ Get_SBOM_Values() {
   buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
   buildSHA=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value' | awk -F'/' '{print $NF}')
   buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
-  buildVersion=$(echo "$sbomContent" | jq -r '.metadata.component.version')
+  TEMURIN_VERSION=$(echo "$sbomContent" | jq -r '.metadata.component.version')
   buildArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
 
   # Check if the tool was found
@@ -306,9 +306,9 @@ Get_SBOM_Values() {
       echo "This Is A Mandatory Element"
       exit 1
   fi
-  if [ -n "$buildVersion" ]; then
-      echo "Temurin Build Version: $buildVersion"
-      export buildVersion
+  if [ -n "$TEMURIN_VERSION" ]; then
+      echo "Temurin Build Version: $TEMURIN_VERSION"
+      export TEMURIN_VERSION
   else
       echo "ERROR: Temurin Build Version not found in the SBOM."
       echo "This Is A Mandatory Element"
@@ -822,7 +822,7 @@ Compare_JDK() {
     EVIDENCE_LOG="$PWD/reproducible_evidence.log"
     if [ $rc -eq 0 ]; then
       echo "Successful 100% Reproducible Verification" >> "${EVIDENCE_LOG}"
-      echo "Eclipse Temurin version: jdk-${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
+      echo "Eclipse Temurin version: ${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
       echo "                   arch: ${NATIVE_API_ARCH}" >> "${EVIDENCE_LOG}"
       echo "                     os: windows" >> "${EVIDENCE_LOG}"
       echo "                 sha256: ${JDK_TAR_HASH}" >> "${EVIDENCE_LOG}"

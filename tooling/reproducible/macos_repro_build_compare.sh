@@ -182,7 +182,7 @@ Get_SBOM_Values() {
   TEMURIN_BUILD_REF=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value')
   TEMURIN_BUILD_REPO="${TEMURIN_BUILD_REF%/commit/*}"
   TEMURIN_BUILD_SHA=$(basename "$TEMURIN_BUILD_REF")
-  TEMURIN_VERSION=$(echo "$sbomContent" | jq -r '.metadata.component.version' | sed 's/-beta//' | cut -f1 -d"-")
+  TEMURIN_VERSION=$(echo "$sbomContent" | jq -r '.metadata.component.version')
   buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
   TEMURIN_BUILD_ARGS=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
   BUILD_WORKSPACE_DIRECTORY=$(echo "$sbomContent" | jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value')
@@ -753,8 +753,8 @@ attestationBuildUsingOpenJDK() {
 
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"
 
-  mv "$BUILD_DIR/$BUILD_FOLDER"/build/*/images/jdk-bundle/jdk-*.jdk "$BUILD_DIR/$BUILD_FOLDER/build/jdk-$TEMURIN_VERSION"
-  (cd "$BUILD_DIR/$BUILD_FOLDER/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "jdk-$TEMURIN_VERSION")
+  mv "$BUILD_DIR/$BUILD_FOLDER"/build/*/images/jdk-bundle/jdk-*.jdk "$BUILD_DIR/$BUILD_FOLDER/build/$TEMURIN_VERSION"
+  (cd "$BUILD_DIR/$BUILD_FOLDER/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "$TEMURIN_VERSION")
 
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
   cp  "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" build.log
@@ -767,18 +767,18 @@ Compare_JDK() {
   cp "$ScriptPath"/repro_*.sh "$PWD"
   chmod +x "$PWD"/repro_*.sh
 
-  sourceJDK="jdk-${TEMURIN_VERSION}"
+  sourceJDK="${TEMURIN_VERSION}"
   mkdir "${sourceJDK}"
-  tar xpfz "$DISTLocalPath" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
+  tar xpfz "$DISTLocalPath" --strip-components=1 -C "$PWD/${TEMURIN_VERSION}"
 
   export JAVA_HOME=$BOOTJDK_HOME
   export PATH=$JAVA_HOME/bin:$PATH
 
   set +e
   if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
-    ./repro_compare.sh temurin "$sourceJDK" openjdk "reproJDK/jdk-$TEMURIN_VERSION" Darwin 2>&1 || rc=$?
+    ./repro_compare.sh temurin "$sourceJDK" openjdk "reproJDK/$TEMURIN_VERSION" Darwin 2>&1 || rc=$?
   else
-    ./repro_compare.sh temurin "$sourceJDK" temurin "reproJDK/jdk-$TEMURIN_VERSION" Darwin 2>&1 || rc=$?
+    ./repro_compare.sh temurin "$sourceJDK" temurin "reproJDK/$TEMURIN_VERSION" Darwin 2>&1 || rc=$?
   fi
   set -e
 
@@ -786,7 +786,7 @@ Compare_JDK() {
     EVIDENCE_LOG="$PWD/reproducible_evidence.log"
     if [ $rc -eq 0 ]; then
       echo "Successful 100% Reproducible Verification" >> "${EVIDENCE_LOG}"
-      echo "Eclipse Temurin version: jdk-${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
+      echo "Eclipse Temurin version: ${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
       echo "                   arch: ${NATIVE_API_ARCH}" >> "${EVIDENCE_LOG}"
       echo "                     os: mac" >> "${EVIDENCE_LOG}"
       echo "                 sha256: ${JDK_TAR_HASH}" >> "${EVIDENCE_LOG}"

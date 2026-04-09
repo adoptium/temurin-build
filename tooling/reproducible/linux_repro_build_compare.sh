@@ -334,7 +334,7 @@ getBuildParams() {
   GCCVERSION=$(jq -r '.metadata.tools.components[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
   LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
   TEMURIN_BUILD_SHA=$(jq -r '.components[0] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
-  TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
+  TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM")
   BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
   TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
   BUILD_WORKSPACE_DIRECTORY=$(jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value' "$SBOM")
@@ -588,8 +588,8 @@ attestationBuildUsingOpenJDK() {
 
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"
 
-  mv "$BUILD_DIR/$BUILD_FOLDER"/build/*/images/jdk "$BUILD_DIR/$BUILD_FOLDER/build/jdk-$TEMURIN_VERSION"
-  (cd "$BUILD_DIR/$BUILD_FOLDER/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "jdk-$TEMURIN_VERSION")
+  mv "$BUILD_DIR/$BUILD_FOLDER"/build/*/images/jdk "$BUILD_DIR/$BUILD_FOLDER/build/$TEMURIN_VERSION"
+  (cd "$BUILD_DIR/$BUILD_FOLDER/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "$TEMURIN_VERSION")
 
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
   cp  "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" build.log
@@ -631,20 +631,20 @@ else
   TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION" "$BUILD_SCM_REF")
 fi
 
-if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
-  JDK_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
+if [ -z "$JDK_PARAM" ] && [ ! -d "${TEMURIN_VERSION}" ] ; then
+  JDK_PARAM="https://api.adoptium.net/v3/binary/version/${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
 fi
 
-sourceJDK="jdk-${TEMURIN_VERSION}"
+sourceJDK="${TEMURIN_VERSION}"
 mkdir "${sourceJDK}"
 if [[ $JDK_PARAM =~ ^https?:// ]]; then
   echo "Retrieving tarball from $JDK_PARAM"
   curl -L "$JDK_PARAM" -o source_jdk.tar.gz || exit 1
   JDK_TAR_HASH=$(sha256sum "source_jdk.tar.gz" | cut -d' ' -f1)
-  tar xpfz "source_jdk.tar.gz" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
+  tar xpfz "source_jdk.tar.gz" --strip-components=1 -C "$PWD/${TEMURIN_VERSION}"
 elif [[ $JDK_PARAM =~ tar.gz ]]; then
   JDK_TAR_HASH=$(sha256sum "$JDK_PARAM" | cut -d' ' -f1)
-  tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
+  tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/${TEMURIN_VERSION}"
 else
   # Local jdk dir
   cp -R "${JDK_PARAM}"/* "${sourceJDK}"
@@ -666,11 +666,11 @@ chmod +x "$PWD"/repro_*.sh
 rc=0
 set +e
 if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
-  ./repro_compare.sh temurin "$sourceJDK" openjdk reproJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+  ./repro_compare.sh temurin "$sourceJDK" openjdk reproJDK/"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
   EVIDENCE_LOG="$PWD/reproducible_evidence.log"
   if [ $rc -eq 0 ]; then
     echo "Successful 100% Reproducible Verification" >> "${EVIDENCE_LOG}"
-    echo "Eclipse Temurin version: jdk-${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
+    echo "Eclipse Temurin version: ${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
     echo "                   arch: ${NATIVE_API_ARCH}" >> "${EVIDENCE_LOG}"
     echo "                     os: linux" >> "${EVIDENCE_LOG}"
     echo "                 sha256: ${JDK_TAR_HASH}" >> "${EVIDENCE_LOG}"
@@ -688,7 +688,7 @@ if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
   echo "For providing a 3rd party Reproducible Verification CDXA, see: https://github.com/adoptium/temurin-cdxa/blob/main/CONTRIBUTING.md"
   echo
 else
-  ./repro_compare.sh temurin "$sourceJDK" temurin reproJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+  ./repro_compare.sh temurin "$sourceJDK" temurin reproJDK/"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
 fi
 set -e
 
