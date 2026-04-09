@@ -645,7 +645,11 @@ sourceJDK="${TEMURIN_VERSION}"
 mkdir "${sourceJDK}"
 if [[ $JDK_PARAM =~ ^https?:// ]]; then
   echo "Retrieving tarball from $JDK_PARAM"
-  curl -L "$JDK_PARAM" -o source_jdk.tar.gz || exit 1
+  curl --fail --location --retry 3 "$JDK_PARAM" -o source_jdk.tar.gz || exit 1
+  if ! tar tzf "source_jdk.tar.gz" >/dev/null 2>&1; then
+    echo "Downloaded file source_jdk.tar.gz is not a valid tar.gz archive"
+    exit 1
+  fi
   JDK_TAR_HASH=$(sha256sum "source_jdk.tar.gz" | cut -d' ' -f1)
   tar xpfz "source_jdk.tar.gz" --strip-components=1 -C "$PWD/${TEMURIN_VERSION}"
 elif [[ $JDK_PARAM =~ tar.gz ]]; then
