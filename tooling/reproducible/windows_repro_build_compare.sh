@@ -238,7 +238,7 @@ Get_SBOM_Values() {
   buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
   buildSHA=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value' | awk -F'/' '{print $NF}')
   buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
-  TEMURIN_VERSION=$(echo "$sbomContent" | jq -r '.metadata.component.version')
+  TEMURIN_VERSION="jdk-"$(echo "$sbomContent" | jq -r '.metadata.component.version')
   buildArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
 
   # Check if the tool was found
