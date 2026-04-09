@@ -519,7 +519,7 @@ function cleanTemurinFiles() {
   fi
 
   echo "$(date +%T): Cleaning Temurin NOTICE file and build-scripts specific files and metadata from ${JDK_HOME}"
-  rm "${JDK_HOME}"/NOTICE
+  rm -f "${JDK_HOME}"/NOTICE
 
   if [[ $(uname) =~ Darwin* ]]; then
     echo "Removing Temurin specific lines from release file in $JDK_HOME"

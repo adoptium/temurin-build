@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2001
+# shellcheck disable=SC2001,SC2129
 # ********************************************************************************
 # Copyright (c) 2024 Contributors to the Eclipse Foundation
 #
@@ -17,6 +17,7 @@
 # and then compares with the supplied TARBALL_PARAM.
 
 # Shellcheck SC2001 disable added as suggested anti-glob quoting does not work as required
+# Shellcheck SC2129 disabled, as per line echo is more readable
 
 set -e
 
@@ -34,7 +35,7 @@ ScriptPath=$(dirname "$(realpath "$0")")
 SBOM_PARAM=""
 JDK_PARAM=""
 USER_DEVKIT_LOCATION=""
-ATTESTATION_VERIFY=false
+REPRODUCIBLE_VERIFICATION=false
 BUILD_WORKSPACE=""
 
 while [[ $# -gt 0 ]] ; do
@@ -52,8 +53,8 @@ while [[ $# -gt 0 ]] ; do
     "--user-devkit-location" )
     USER_DEVKIT_LOCATION="$1"; shift;;
 
-    "--attestation-verify" )
-    ATTESTATION_VERIFY=true;;
+    "--reproducible-verification" )
+    REPRODUCIBLE_VERIFICATION=true;;
 
     "--build-workspace" )
     BUILD_WORKSPACE="$1"; shift;;
@@ -71,14 +72,14 @@ if [ -z "$SBOM_PARAM" ] || [ -z "$JDK_PARAM" ]; then
   echo "    --jdk-url [JDKZIP_URL/JDKZIP_PATH] : should be the FULL path OR a URL to a Temurin Linux JDK tarball file"
   echo "  Optional:"
   echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of tarball of a user built Linux gcc DevKit"
-  echo "    --attestation-verify : Enables Attestation Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
+  echo "    --reproducible-verification : Enables Reproducible Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
   echo "    --build-workspace : FULL path to the location to perform the reproducible build within"
   exit 1
 fi
 
-# For an Attestation verification build a local secure build of the devkit must be used
-if [ "$ATTESTATION_VERIFY" == true ] && [ -z "$USER_DEVKIT_LOCATION" ]; then
-  echo "--user-devkit-location [USER_DEVKIT_LOCATION] must be specified when using --attestation-verify"
+# For a reproducible verification build a local secure build of the devkit must be used
+if [ "$REPRODUCIBLE_VERIFICATION" == true ] && [ -z "$USER_DEVKIT_LOCATION" ]; then
+  echo "--user-devkit-location [USER_DEVKIT_LOCATION] must be specified when using --reproducible-verification"
   exit 1
 fi
 
@@ -291,7 +292,7 @@ downloadTooling() {
     export BOOTJDK_HOME=/usr/lib/jvm/jdk-${BOOTJDK_VERSION}
   fi
 
-  if [ "$ATTESTATION_VERIFY" == false ]; then
+  if [ "$REPRODUCIBLE_VERIFICATION" == false ]; then
     if [[ "${using_DEVKIT}" == "false" ]]; then
       if [ ! -r "${LOCALGCCDIR}/bin/g++-${GCCVERSION}" ]; then
         echo "Retrieving gcc $GCCVERSION" && curl "https://ci.adoptium.net/userContent/gcc/gcc$(echo "$GCCVERSION" | tr -d .).$(uname -m).tar.xz" | (cd /usr/local && tar xJpf -) || exit 1
@@ -301,7 +302,7 @@ downloadTooling() {
 }
 
 checkAllVariablesSet() {
-  if [ "$ATTESTATION_VERIFY" == true ]; then
+  if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
     if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${adoptiumConfigureArgs}" ] || [ -z "${TEMURIN_VERSION}" ] || [ -z "${openjdkSourceRepo}" ] || [ -z "${openjdkSourceCommitSHA}" ]; then
       echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
     fi
@@ -333,14 +334,20 @@ getBuildParams() {
   GCCVERSION=$(jq -r '.metadata.tools.components[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
   LOCALGCCDIR=/usr/local/gcc$(echo "$GCCVERSION" | cut -d. -f1)
   TEMURIN_BUILD_SHA=$(jq -r '.components[0] | .properties[] | select (.name == "Temurin Build Ref") | .value' "$SBOM" | awk -F/ '{print $NF}')
-  TEMURIN_VERSION=$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
+  TEMURIN_COMPONENT_VERSION=$(jq -r '.metadata.component.version' "$SBOM")
+  TEMURIN_VERSION="jdk-"$(jq -r '.metadata.component.version' "$SBOM" | sed 's/-beta//' | cut -f1 -d"-")
   BUILDSTAMP=$(jq -r '.components[0].properties[] | select(.name == "Build Timestamp") | .value' "$SBOM")
   TEMURIN_BUILD_ARGS=$(jq -r '.components[0] | .properties[] | select (.name == "makejdk_any_platform_args") | .value' "$SBOM")
   BUILD_WORKSPACE_DIRECTORY=$(jq -r '.components[0] | .properties[] | select (.name == "Build Workspace Directory") | .value' "$SBOM")
   BUILD_SCM_REF=$(jq -r '.components[0].properties[] | select(.name == "SCM Ref") | .value' "$SBOM")
   BUILD_LC_ALL=$(jq -r '.components[0] | .properties[] | select (.name == "Build LC_ALL") | .value' "$SBOM")
 
-  if [ "$ATTESTATION_VERIFY" == true ]; then
+  # Temurin beta-ea builds have release tags ending "-ea-beta"
+  if [[ "$TEMURIN_COMPONENT_VERSION" == *-beta*-ea ]]; then
+    TEMURIN_VERSION="${TEMURIN_VERSION}-ea-beta"
+  fi
+
+  if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
     adoptiumSrcCommitUrl=$(jq -r '.components[0].properties[] | select(.name == "OpenJDK Source Commit") | .value' "$SBOM")
     adoptiumConfigureArgs=$(jq -r '.components[0].properties[] | select(.name == "configure_args") | .value' "$SBOM")
 
@@ -351,7 +358,7 @@ getBuildParams() {
       openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
       openjdkSourceCommitSHA=$(getUpstreamOpenJDKCommitSHA "$adoptiumRepo" "$openjdkSourceRepo" "$adoptiumBuildCommitSHA")
 
-      echo "Performing an Attestation Verification Build from $openjdkSourceRepo with commit SHA $openjdkSourceCommitSHA"
+      echo "Performing a Reproducible Verification Build from $openjdkSourceRepo with commit SHA $openjdkSourceCommitSHA"
       echo "Adoptium OpenJDK configure argmuents from original Temurin build:"
       echo "    $adoptiumConfigureArgs"
       echo ""
@@ -375,8 +382,8 @@ getBuildParams() {
   if [ "${NATIVE_API_ARCH}" = "armv7l" ]; then NATIVE_API_ARCH=arm; fi
   if [[ "$TEMURIN_BUILD_ARGS" =~ .*"--use-adoptium-devkit".* ]]; then
     USING_DEVKIT="true"
-  elif [ "$ATTESTATION_VERIFY" == true ]; then
-    echo "The original JDK must be built using a DevKit when using --attestation-verify"
+  elif [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
+    echo "The original JDK must be built using a DevKit when using --reproducible-verification"
     exit 1
   fi
 }
@@ -562,6 +569,11 @@ attestationBuildUsingOpenJDK() {
     if [[ -n "$PATH_SAVE" ]]; then
       export PATH="$PATH_SAVE"
     fi
+    echo "Check above logs for more info."
+    echo "Ensure the following packages are securely installed:"
+    echo "  diffutils procps-ng binutils cpio"
+    echo "  make autoconf unzip zip file systemtap-sdt-devel"
+    echo "  git bzip2 xz openssl pigz which jq"
     exit 1
   fi
 
@@ -582,8 +594,8 @@ attestationBuildUsingOpenJDK() {
 
   cat "$BUILD_DIR/$BUILD_FOLDER/repro_build.log"
 
-  mv "$BUILD_DIR/$BUILD_FOLDER"/build/*/images/jdk "$BUILD_DIR/$BUILD_FOLDER/build/jdk-$TEMURIN_VERSION"
-  (cd "$BUILD_DIR/$BUILD_FOLDER/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "jdk-$TEMURIN_VERSION")
+  mv "$BUILD_DIR/$BUILD_FOLDER"/build/*/images/jdk "$BUILD_DIR/$BUILD_FOLDER/build/$TEMURIN_VERSION"
+  (cd "$BUILD_DIR/$BUILD_FOLDER/build" && tar -czf "${CURRENT_PWD}/reproJDK.tar.gz" "$TEMURIN_VERSION")
 
   mkdir reproJDK && tar xpfz reproJDK.tar.gz -C reproJDK
   cp  "$BUILD_DIR/$BUILD_FOLDER/repro_configure.log" build.log
@@ -595,7 +607,7 @@ attestationBuildUsingOpenJDK() {
 ############## MAIN ##################
 ######################################
 
-if [ "$ATTESTATION_VERIFY" == false ]; then
+if [ "$REPRODUCIBLE_VERIFICATION" == false ]; then
   installPrereqs
   downloadAnt
 fi
@@ -617,7 +629,7 @@ if [[ "${USING_DEVKIT}" == "false" ]]; then
   setNonDevkitGccEnvironment
 fi
 
-if [ "$ATTESTATION_VERIFY" == true ]; then
+if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
   setOpenJDKConfigureArgs
 else
   setAntEnvironment
@@ -625,22 +637,34 @@ else
   TEMURIN_BUILD_ARGS=$(setTemurinBuildArgs "$TEMURIN_BUILD_ARGS" "$BUILDSTAMP" "$USING_DEVKIT" "$USER_DEVKIT_LOCATION" "$BUILD_SCM_REF")
 fi
 
-if [ -z "$JDK_PARAM" ] && [ ! -d "jdk-${TEMURIN_VERSION}" ] ; then
-  JDK_PARAM="https://api.adoptium.net/v3/binary/version/jdk-${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
+if [ -z "$JDK_PARAM" ] && [ ! -d "${TEMURIN_VERSION}" ] ; then
+  JDK_PARAM="https://api.adoptium.net/v3/binary/version/${TEMURIN_VERSION}/linux/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
 fi
 
-sourceJDK="jdk-${TEMURIN_VERSION}"
+sourceJDK="${TEMURIN_VERSION}"
 mkdir "${sourceJDK}"
 if [[ $JDK_PARAM =~ ^https?:// ]]; then
-  echo Retrieving original tarball from adoptium.net && curl -L "$JDK_PARAM" | tar xpfz - && ls -lart "$PWD/jdk-${TEMURIN_VERSION}" || exit 1
+  echo "Retrieving tarball from $JDK_PARAM"
+  curl --fail --location --retry 3 "$JDK_PARAM" -o source_jdk.tar.gz || exit 1
+  if ! tar tzf "source_jdk.tar.gz" >/dev/null 2>&1; then
+    echo "Downloaded file source_jdk.tar.gz is not a valid tar.gz archive"
+    exit 1
+  fi
+  JDK_TAR_HASH=$(sha256sum "source_jdk.tar.gz" | cut -d' ' -f1)
+  tar xpfz "source_jdk.tar.gz" --strip-components=1 -C "$PWD/${TEMURIN_VERSION}"
 elif [[ $JDK_PARAM =~ tar.gz ]]; then
-  tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/jdk-${TEMURIN_VERSION}"
+  JDK_TAR_HASH=$(sha256sum "$JDK_PARAM" | cut -d' ' -f1)
+  tar xpfz "$JDK_PARAM" --strip-components=1 -C "$PWD/${TEMURIN_VERSION}"
 else
   # Local jdk dir
   cp -R "${JDK_PARAM}"/* "${sourceJDK}"
+  if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
+    echo "Reproducible Verification builds must specify --jdk-url as the original JDK tarball, either as a download URL or a local path to a .tar.gz archive"
+    exit 1
+  fi
 fi
 
-if [ "$ATTESTATION_VERIFY" == true ]; then
+if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
   attestationBuildUsingOpenJDK
 else
   buildUsingTemurinBuild
@@ -651,10 +675,30 @@ cp "$ScriptPath"/repro_*.sh "$PWD"
 chmod +x "$PWD"/repro_*.sh
 rc=0
 set +e
-if [ "$ATTESTATION_VERIFY" == true ]; then
-  ./repro_compare.sh temurin "$sourceJDK" openjdk reproJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
+  ./repro_compare.sh temurin "$sourceJDK" openjdk reproJDK/"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+  EVIDENCE_LOG="$PWD/reproducible_evidence.log"
+  if [ $rc -eq 0 ]; then
+    echo "Successful 100% Reproducible Verification" >> "${EVIDENCE_LOG}"
+    echo "Eclipse Temurin version: ${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
+    echo "                   arch: ${NATIVE_API_ARCH}" >> "${EVIDENCE_LOG}"
+    echo "                     os: linux" >> "${EVIDENCE_LOG}"
+    echo "                 sha256: ${JDK_TAR_HASH}" >> "${EVIDENCE_LOG}"
+  else
+    echo "Reproducible Verification not identical" >> "${EVIDENCE_LOG}"
+    echo "Refer to guide for diagnosis and reporting: https://github.com/adoptium/temurin-build/wiki/Temurin-3rd-Party-Reproducible-Verification-Guides" >> "${EVIDENCE_LOG}"
+  fi
+  echo
+  echo "Reproducible Verification evidence written to file: ${EVIDENCE_LOG}"
+  echo "Contents:"
+  echo
+  cat  "${EVIDENCE_LOG}"
+  echo
+  echo "Provide contents of evidence file as the CDXA evidence: ${EVIDENCE_LOG}"
+  echo "For providing a 3rd party Reproducible Verification CDXA, see: https://github.com/adoptium/temurin-cdxa/blob/main/CONTRIBUTING.md"
+  echo
 else
-  ./repro_compare.sh temurin "$sourceJDK" temurin reproJDK/jdk-"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
+  ./repro_compare.sh temurin "$sourceJDK" temurin reproJDK/"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
 fi
 set -e
 

@@ -200,49 +200,56 @@
         </target>
 
         <target name="runCDXA">
-                <property name="testCDXA_XMLFile" location="build/testCDXA.xml"/>
-                <property name="testCDXA_JSONFile" location="build/testCDXA.json"/>
-                <delete file="${testCDXA_XMLFile}"/>
-                <delete file="${testCDXA_JSONFile}"/>
+                <!-- Create temporary evidence file for x64 test -->
+                <echo file="build/evidence_x64.txt">Number of files: 108721
+12:20:47 : Comparing expanded JDKs from jdk-21.0.5+11 with reproJDK/jdk-21.0.5+11 ...
+12:20:50 : diff complete - rc=0.
+Number of differences: 0
+ReproduciblePercent = 100 %
+Successful 100% Reproducible Verification
+Eclipse Temurin version: jdk-21.0.5+11
+                   arch: x64
+                     os: linux
+                 sha256: 3c654d98404c073b8a7e66bffb27f4ae3e7ede47d13284c132d40a83144bfd8c</echo>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenCDXA" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--createNewCDXA"/>
+                  <arg value="--cdxa-output-folder"/>
+                  <arg value="build"/>
                   <arg value="--attesting-org-name"/>
                   <arg value="Acme Inc"/>
                   <arg value="--predicate"/>
                   <arg value="VERIFIED_REPRODUCIBLE_BUILD"/>
-                  <arg value="--target-name"/>
-                  <arg value="Temurin jdk-21.0.5+11 x64 Linux"/>
-                  <arg value="--target-url"/>
-                  <arg value="https://api.adoptium.net/v3/binary/version/jdk-21.0.5+11/linux/x64/jdk/hotspot/normal/eclipse"/>
-                  <arg value="--target-sha256-hash"/>
-                  <arg value="1234567890123456789012345678901234567890123456789012345678901234"/>
                   <arg value="--affirmation-stmt"/>
                   <arg value="Acme confirms a verified reproducible build"/>
-                  <arg value="--affirmation-website"/>
-                  <arg value="https://acme-inc.com"/>
-                  <arg value="--xmlFile"/>
-                  <arg value="${testCDXA_XMLFile}"/>
+                  <arg value="--evidence"/>
+                  <arg value="build/evidence_x64.txt"/>
                 </java>
+                <!-- Create temporary evidence file for aarch64 test -->
+                <echo file="build/evidence_aarch64.txt">Number of files: 108721
+12:20:47 : Comparing expanded JDKs from jdk-21.0.5+11 with reproJDK/jdk-21.0.5+11 ...
+12:20:50 : diff complete - rc=0.
+Number of differences: 0
+ReproduciblePercent = 100 %
+Successful 100% Reproducible Verification
+Eclipse Temurin version: jdk-21.0.5+11
+                   arch: aarch64
+                     os: linux
+                 sha256: 6482639ed9fd22aa2e704cc366848b1b3e1586d2bf1213869c43e80bca58fe5c</echo>
                 <java classpath="${classpath}" classname="temurin.sbom.TemurinGenCDXA" fork="yes" failonerror="yes">
                   <arg value="--verbose"/>
                   <arg value="--createNewCDXA"/>
+                  <arg value="--cdxa-output-folder"/>
+                  <arg value="build"/>
                   <arg value="--attesting-org-name"/>
                   <arg value="Acme Inc"/>
                   <arg value="--predicate"/>
                   <arg value="VERIFIED_REPRODUCIBLE_BUILD"/>
-                  <arg value="--target-name"/>
-                  <arg value="Temurin jdk-21.0.5+11 x64 Linux"/>
-                  <arg value="--target-url"/>
-                  <arg value="https://api.adoptium.net/v3/binary/version/jdk-21.0.5+11/linux/x64/jdk/hotspot/normal/eclipse"/>
-                  <arg value="--target-sha256-hash"/>
-                  <arg value="1234567890123456789012345678901234567890123456789012345678901234"/>
                   <arg value="--affirmation-stmt"/>
                   <arg value="Acme confirms a verified reproducible build"/>
-                  <arg value="--affirmation-website"/>
-                  <arg value="https://acme-inc.com"/>
-                  <arg value="--jsonFile"/>
-                  <arg value="${testCDXA_JSONFile}"/>
+                  <arg value="--evidence"/>
+                  <arg value="build/evidence_aarch64.txt"/>
+                  <arg value="--json"/>
                 </java>
         </target>
 

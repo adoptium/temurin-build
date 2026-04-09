@@ -21,7 +21,7 @@
                 <command>unset SPEC;\
                 rm -rf "$(REPRO_BLD_WS)";\
                 mkdir -p "$(REPRO_BLD_WS)";\
-                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)linux_repro_build_compare.sh --sbom-url "$(SBOM_FILE)" --jdk-url "$(JDK_FILE)" --attestation-verify --user-devkit-location "$(LINUX_ADOPTIUM_DEVKIT)" --build-workspace "$(REPRO_BLD_WS)"; \
+                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)linux_repro_build_compare.sh --sbom-url "$(SBOM_FILE)" --jdk-url "$(JDK_FILE)" --reproducible-verification --user-devkit-location "$(LINUX_ADOPTIUM_DEVKIT)" --build-workspace "$(REPRO_BLD_WS)"; \
         $(TEST_STATUS)
 		</command>
 		<levels>
@@ -41,7 +41,7 @@
 	<test>
 		<testCaseName>Rebuild_Same_JDK_Reproducibility_Test_win</testCaseName>
 		<command>unset SPEC;\
-		$(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)windows_repro_build_compare.sh --sbom-url $(SBOM_FILE) --jdk-url $(JDK_FILE) --report-dir $(REPORTDIR) --user-devkit-location $(WINDOWS_ADOPTIUM_DEVKIT) --attestation-verify; \
+		$(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)windows_repro_build_compare.sh --sbom-url $(SBOM_FILE) --jdk-url $(JDK_FILE) --report-dir $(REPORTDIR) --user-devkit-location $(WINDOWS_ADOPTIUM_DEVKIT) --reproducible-verification; \
 	$(TEST_STATUS)
 		</command>
 		<levels>
@@ -63,7 +63,7 @@
 		<command>unset SPEC;\
                 rm -rf "$(REPRO_BLD_WS)";\
                 mkdir -p "$(REPRO_BLD_WS)";\
-                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)macos_repro_build_compare.sh --sbom-url "$(SBOM_FILE)" --jdk-url "$(JDK_FILE)" --attestation-verify --build-workspace "$(REPRO_BLD_WS)"; \
+                $(TEST_ROOT)$(D)system$(D)reproducibleCompare$(D)macos_repro_build_compare.sh --sbom-url "$(SBOM_FILE)" --jdk-url "$(JDK_FILE)" --reproducible-verification --build-workspace "$(REPRO_BLD_WS)"; \
         $(TEST_STATUS)
 		</command>
 		<levels>
