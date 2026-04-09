@@ -203,8 +203,7 @@
                 <!-- Create temporary evidence file for x64 test -->
                 <echo file="build/evidence_x64.txt">Number of files: 108721
 12:20:47 : Comparing expanded JDKs from jdk-21.0.5+11 with reproJDK/jdk-21.0.5+11 ...
-12:20:50 : diff complete - rc=0. Output written to file: reprotest.diff
-reprotest.diff
+12:20:50 : diff complete - rc=0.
 Number of differences: 0
 ReproduciblePercent = 100 %
 Successful 100% Reproducible Verification
@@ -229,8 +228,7 @@ Eclipse Temurin version: jdk-21.0.5+11
                 <!-- Create temporary evidence file for aarch64 test -->
                 <echo file="build/evidence_aarch64.txt">Number of files: 108721
 12:20:47 : Comparing expanded JDKs from jdk-21.0.5+11 with reproJDK/jdk-21.0.5+11 ...
-12:20:50 : diff complete - rc=0. Output written to file: reprotest.diff
-reprotest.diff
+12:20:50 : diff complete - rc=0.
 Number of differences: 0
 ReproduciblePercent = 100 %
 Successful 100% Reproducible Verification
