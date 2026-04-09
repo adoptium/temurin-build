@@ -314,17 +314,20 @@ public final class TemurinGenCDXA {
         Pattern archPattern = Pattern.compile("arch:\\s*([^\\s]+)");
         Pattern osPattern = Pattern.compile("os:\\s*([^\\s]+)");
         Pattern sha256Pattern = Pattern.compile("sha256:\\s*([0-9a-fA-F]{64})");
+        Pattern reproduciblePattern = Pattern.compile("ReproduciblePercent\\s*=\\s*100\\s*%");
 
         Matcher versionMatcher = versionPattern.matcher(evidenceText);
         Matcher archMatcher = archPattern.matcher(evidenceText);
         Matcher osMatcher = osPattern.matcher(evidenceText);
         Matcher sha256Matcher = sha256Pattern.matcher(evidenceText);
+        Matcher reproducibleMatcher = reproduciblePattern.matcher(evidenceText);
 
         // Extract values
         String extractedVersion = versionMatcher.find() ? versionMatcher.group(1) : null;
         String extractedArch = archMatcher.find() ? archMatcher.group(1) : null;
         String extractedOs = osMatcher.find() ? osMatcher.group(1) : null;
         String extractedSha256 = sha256Matcher.find() ? sha256Matcher.group(1) : null;
+        boolean hasReproducible100 = reproducibleMatcher.find();
 
         // Validate extracted values exist
         boolean hasErrors = false;
@@ -342,6 +345,11 @@ public final class TemurinGenCDXA {
         }
         if (extractedSha256 == null) {
             System.out.println("ERROR: Could not find 'sha256:' (64-character hex string) in evidence text");
+            hasErrors = true;
+        }
+        if (!hasReproducible100) {
+            System.out.println("ERROR: Evidence does not indicate a successful 100% reproducible verification");
+            System.out.println("       Expected to find 'ReproduciblePercent = 100 %' in evidence text");
             hasErrors = true;
         }
 
