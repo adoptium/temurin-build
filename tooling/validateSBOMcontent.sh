@@ -35,9 +35,6 @@ COMPILER=$(jq '.components[0].properties[] | select(.name|test("Build Tools Summ
 SCM_REF=$( jq '.components[0].properties[]  | select(.name|test("SCM Ref"))  | .value'   "$SBOMFILE" | tr -d \")
 
 EXPECTED_COMPILER="gcc (GNU Compiler Collection)"
-EXPECTED_FREETYPE=2.14.2 # Bundled version for jdk11+
-[ "${MAJORVERSION}" = "8" ] && EXPECTED_FREETYPE=2.13.3 # Bundled version for jdk8
-[ "${MAJORVERSION}" = "26" ] && EXPECTED_FREETYPE=2.13.3 # Bundled version for jdk26 ga
 EXPECTED_GLIBC=""
 EXPECTED_GCC=""
 # [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
@@ -105,11 +102,6 @@ echo "BOOTJDK is ${BOOTJDK}"
 [ "${COMPILER}"   != "$EXPECTED_COMPILER" ] && echo "ERROR: Compiler version not ${EXPECTED_COMPILER} (SBOM has ${COMPILER})"   && RC=1
 [ "${ALSA}"       != "$EXPECTED_ALSA"     ] && echo "NOTE: ALSA version not ${EXPECTED_ALSA} (SBOM has ${ALSA}) - ignoring because ALSA version is determined by devkit now"  # && RC=1
 
-# shellcheck disable=SC2086
-[ "${FREETYPE}"   != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
-
-echo "FREETYPE is ${FREETYPE}"
-
 # shellcheck disable=SC3037
 echo "Checking for JDK source SHA validity..."
 GITURL=$(jq '.components[].properties[] | select(.name|test("OpenJDK Source Commit")) | .value' "$1" | tr -d \" | uniq)
@@ -168,6 +160,19 @@ else
   else
     echo "SBOM SHA is a valid repository tag commit SHA: ${GITSHA}"
   fi
+fi
+
+# Fetch freetype version from source code and compare against freetype version in sbom.
+FREETYPE_VERSION_FILE="src/java.desktop/share/legal/freetype.md"
+[ "${MAJORVERSION}" = "8" ] && FREETYPE_VERSION_FILE="THIRD_PARTY_README"
+FREETYPE_VERSION_FILE="https://raw.githubusercontent.com/$(echo "$GITURL" | cut -d/ -f4)/$(echo "$GITURL" | cut -d/ -f5)/${GITSHA}/${FREETYPE_VERSION_FILE}"
+if ! EXPECTED_FREETYPE="$(wget -q -O - "${FREETYPE_VERSION_FILE}" | grep '## The FreeType Project:' | grep -o "[0-9\.]*")"; then
+  echo "ERROR: Freetype version could not be found at expected location here: ${FREETYPE_VERSION_FILE}"
+  RC=1
+else
+  # shellcheck disable=SC2086
+  [ "${FREETYPE}" != "$EXPECTED_FREETYPE" ] && echo "ERROR: FreeType version not ${EXPECTED_FREETYPE} (SBOM has ${FREETYPE})"   && RC=1
+  echo "FREETYPE is ${FREETYPE}"
 fi
 
 # shellcheck disable=SC3037
