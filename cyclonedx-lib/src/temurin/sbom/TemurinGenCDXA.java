@@ -181,6 +181,8 @@ public final class TemurinGenCDXA {
             } else if (args[i].equals("--cdxa-output-folder")) {
                 cdxaOutputFolder = getOptionValue(args, i, "--cdxa-output-folder");
                 i++;
+            // CycloneDX core java XML generation bug missing Signatories ExternalReference website: https://github.com/CycloneDX/cyclonedx-core-java/issues/812
+            // Add back in when resuled upstream
             //} else if (args[i].equals("--affirmation-website")) {
             //    affirmationWebsite = getOptionValue(args, i, "--affirmation-website");
             //    i++;
@@ -562,6 +564,23 @@ public final class TemurinGenCDXA {
 
         Affirmation affirmation = new Affirmation();
         affirmation.setStatement(affirmationStmt);
+
+        /*
+         * CycloneDX core java XML generation bug missing Signatories ExternalReference website: https://github.com/CycloneDX/cyclonedx-core-java/issues/812
+         * Add back in when resolved upstream
+        Signatory      signatory    = new Signatory();
+        OrganizationalEntity org = new OrganizationalEntity();
+        org.setName(attestingOrgName);
+        signatory.setOrganization(org);
+        ExternalReference orgExtRef = new ExternalReference();
+        orgExtRef.setUrl(affirmationWebsite);
+        orgExtRef.setType(ExternalReference.Type.WEBSITE);
+        signatory.setExternalReference(orgExtRef);
+        List<Signatory> signatories = new LinkedList<Signatory>();
+        signatories.add(signatory);
+        affirmation.setSignatories(signatories);
+        */
+
         declarations.setAffirmation(affirmation);
 
         Evidence evidence = createEvidence(evidenceText, evidenceBomRef);
@@ -794,7 +813,7 @@ public final class TemurinGenCDXA {
         System.out.println("                                 (must include version, arch, os, and sha256 fields)");
         System.out.println("\nOptional Options:");
         System.out.println("  --cdxa-output-folder <path>    Output folder for CDXA file (default: current directory)");
-        //System.out.println("  --affirmation-website <url>    Organization website");
+        //System.out.println("  --affirmation-website <url>    Organization website"); // Removed until bug fixed: https://github.com/CycloneDX/cyclonedx-core-java/issues/812
         System.out.println("  --json                         Generate JSON output (default: XML)");
         System.out.println("  --xml                          Generate XML output");
         System.out.println("  --not-third-party              Mark assessor as not third-party");
