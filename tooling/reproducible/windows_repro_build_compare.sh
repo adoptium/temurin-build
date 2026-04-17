@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2001,SC2086
+# shellcheck disable=SC2001,SC2086,SC2129
 # ********************************************************************************
 # Copyright (c) 2024 Contributors to the Eclipse Foundation
 #
@@ -18,6 +18,7 @@
 # Requires Cygwin & Powershell Installed On Windows To Run
 
 # Shellcheck SC2001 & SC2006 disable added as suggested anti-glob quoting does not work on Windows cygwin
+# Shellcheck SC2129 disabled, as per line echo is more readable
 
 set -e
 
@@ -29,7 +30,7 @@ SBOM_URL=""
 TARBALL_URL=""
 REPORT_DIR=""
 USER_DEVKIT_LOCATION=""
-ATTESTATION_VERIFY=false
+REPRODUCIBLE_VERIFICATION=false
 
 while [[ $# -gt 0 ]] ; do
   opt="$1";
@@ -49,8 +50,8 @@ while [[ $# -gt 0 ]] ; do
     "--user-devkit-location" )
     USER_DEVKIT_LOCATION="$1"; shift;;
 
-    "--attestation-verify" )
-    ATTESTATION_VERIFY=true;;
+    "--reproducible-verification" )
+    REPRODUCIBLE_VERIFICATION=true;;
 
     *) echo >&2 "Invalid option: ${opt}"; exit 1;;
   esac
@@ -66,13 +67,13 @@ if [ -z "$SBOM_URL" ] || [ -z "$TARBALL_URL" ] || [ -z "$REPORT_DIR" ]; then
   echo "    --report-dir [REPORT_DIR] : should be the FULL path OR a URL to the output directory for the comparison report"
   echo "  Optional:"
   echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of user built Windows Redist DLL DevKit"
-  echo "    --attestation-verify : Enables Attestation Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
+  echo "    --reproducible-verification : Enables Reproducible Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
   exit 1
 fi
 
-# For an Attestation verification build a local secure build of the devkit must be used
-if [ "$ATTESTATION_VERIFY" == true ] && [ -z "$USER_DEVKIT_LOCATION" ]; then
-  echo "--user-devkit-location [USER_DEVKIT_LOCATION] must be specified when using --attestation-verify"
+# For a reproducible verification build a local secure build of the devkit must be used
+if [ "$REPRODUCIBLE_VERIFICATION" == true ] && [ -z "$USER_DEVKIT_LOCATION" ]; then
+  echo "--user-devkit-location [USER_DEVKIT_LOCATION] must be specified when using --reproducible-verification"
   exit 1
 fi
 
@@ -99,6 +100,7 @@ SIGNTOOL_BASE="C:/Program Files (x86)/Windows Kits/10"
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$WORK_DIR/src_sbom.json"
 DISTLocalPath="$WORK_DIR/src_jdk_dist.zip"
+JDK_TAR_HASH=""
 ScriptPath=$(dirname "$(realpath "$0")")
 rc=0
 # Function to check if a string is a valid URL
@@ -163,13 +165,14 @@ Check_Parameters() {
       exit 1
     fi
   fi
+  JDK_TAR_HASH=$(sha256sum "$DISTLocalPath" | cut -d' ' -f1)
 }
 
 Install_PreReqs() {
   # Check For JQ & Install Apt-Cyg & JQ Where Not Available
   if ! command -v jq &> /dev/null; then
-      if [ "$ATTESTATION_VERIFY" == true ]; then
-        echo "For an Attestation Verify build 'jq' must already be installed, please install."
+      if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
+        echo "For a Reproducible Verification build 'jq' must already be installed, please install."
         exit 1
       fi
 
@@ -235,8 +238,14 @@ Get_SBOM_Values() {
   buildArch=$(echo "$sbomContent" | jq -r '.metadata.properties[] | select(.name == "OS architecture").value')
   buildSHA=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Temurin Build Ref").value' | awk -F'/' '{print $NF}')
   buildStamp=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "Build Timestamp").value')
-  buildVersion=$(echo "$sbomContent" | jq -r '.metadata.component.version')
+  TEMURIN_COMPONENT_VERSION=$(echo "$sbomContent" | jq -r '.metadata.component.version')
+  TEMURIN_VERSION="jdk-"$(echo "$sbomContent" | jq -r '.metadata.component.version' | sed 's/-beta//' | cut -f1 -d"-")
   buildArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
+
+  # Temurin beta-ea builds have release tags ending "-ea-beta"
+  if [[ "$TEMURIN_COMPONENT_VERSION" == *-beta*-ea ]]; then
+    TEMURIN_VERSION="${TEMURIN_VERSION}-ea-beta"
+  fi
 
   # Check if the tool was found
   if [ -n "$msvsWindowsCompiler" ]; then
@@ -303,9 +312,9 @@ Get_SBOM_Values() {
       echo "This Is A Mandatory Element"
       exit 1
   fi
-  if [ -n "$buildVersion" ]; then
-      echo "Temurin Build Version: $buildVersion"
-      export buildVersion
+  if [ -n "$TEMURIN_VERSION" ]; then
+      echo "Temurin Build Version: $TEMURIN_VERSION"
+      export TEMURIN_VERSION
   else
       echo "ERROR: Temurin Build Version not found in the SBOM."
       echo "This Is A Mandatory Element"
@@ -321,7 +330,7 @@ Get_SBOM_Values() {
   fi
   echo ""
 
-  if [ "$ATTESTATION_VERIFY" == true ]; then
+  if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
     adoptiumSrcCommitUrl=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "OpenJDK Source Commit").value')
     buildScmRef=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "SCM Ref").value')
     adoptiumConfigureArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "configure_args").value')
@@ -332,7 +341,7 @@ Get_SBOM_Values() {
       openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
       openjdkSourceTag="${buildScmRef%_adopt}"
 
-      echo "Performing an Attestation Verification Build from $openjdkSourceRepo with tag $openjdkSourceTag"
+      echo "Performing a Reproducible Verification Build from $openjdkSourceRepo with tag $openjdkSourceTag"
       echo "Adoptium OpenJDK configure argmuents from original Temurin build:"
       echo "    $adoptiumConfigureArgs"
       echo ""
@@ -544,8 +553,8 @@ Check_And_Install_Ant() {
       fi
   done
   if [ "${ant_found}" != true ]; then
-      if [ "$ATTESTATION_VERIFY" == true ]; then
-        echo "For an Attestation Verify build ant ${ANT_VERSION} must already be installed in location ${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}, please install."
+      if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
+        echo "For a Reproducible Verification build ant ${ANT_VERSION} must already be installed in location ${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}, please install."
         exit 1
       fi
       echo "Ant Doesn't Exist At The Correct Version - Installing"
@@ -565,8 +574,8 @@ Check_And_Install_Ant() {
   # Check For Existence Of Required Version Of Ant-Contrib For Existing Ant
   echo "Checking For Installation Of Ant Contrib Version $ANT_CONTRIB_VERSION "
   if [ -r "${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/bin/ant" ] && [ ! -r "${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/lib/ant-contrib.jar" ]; then
-    if [ "$ATTESTATION_VERIFY" == true ]; then
-        echo "For an Attestation Verify build Ant Contrib Version $ANT_CONTRIB_VERSION must already be installed in location ${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/lib/ant-contrib.jar, please install."
+    if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
+        echo "For a Reproducible Verification build Ant Contrib Version $ANT_CONTRIB_VERSION must already be installed in location ${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/lib/ant-contrib.jar, please install."
         exit 1
     fi
     echo "But Ant-Contrib Is Missing - Installing"
@@ -624,7 +633,7 @@ Clone_Build_Repo() {
   fi
 
   echo "Git is installed. Proceeding with the script."
-  if [ "$ATTESTATION_VERIFY" == false ] && [ ! -r "$WORK_DIR/temurin-build" ] ; then
+  if [ "$REPRODUCIBLE_VERIFICATION" == false ] && [ ! -r "$WORK_DIR/temurin-build" ] ; then
     echo "Cloning Temurin Build Repository"
     echo ""
     git clone -q https://github.com/adoptium/temurin-build "$WORK_DIR/temurin-build" || exit 1
@@ -804,7 +813,7 @@ Compare_JDK() {
   # Run Comparison Script
   set +e
   cd "$ScriptPath" || exit 1
-  if [ "$ATTESTATION_VERIFY" == true ]; then
+  if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
     ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk hotspot $WORK_DIR/compare/tar_jdk CYGWIN 2>&1 &
   else
     ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk CYGWIN 2>&1 &
@@ -814,6 +823,30 @@ Compare_JDK() {
 
   rc=$?
   set -e
+
+  if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
+    EVIDENCE_LOG="$PWD/reproducible_evidence.log"
+    if [ $rc -eq 0 ]; then
+      echo "Successful 100% Reproducible Verification" >> "${EVIDENCE_LOG}"
+      echo "Eclipse Temurin version: ${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
+      echo "                   arch: ${NATIVE_API_ARCH}" >> "${EVIDENCE_LOG}"
+      echo "                     os: windows" >> "${EVIDENCE_LOG}"
+      echo "                 sha256: ${JDK_TAR_HASH}" >> "${EVIDENCE_LOG}"
+    else
+      echo "Reproducible Verification not identical" >> "${EVIDENCE_LOG}"
+      echo "Refer to guide for diagnosis and reporting: https://github.com/adoptium/temurin-build/wiki/Temurin-3rd-Party-Reproducible-Verification-Guides" >> "${EVIDENCE_LOG}"
+    fi
+    echo
+    echo "Reproducible Verification evidence written to file: ${EVIDENCE_LOG}"
+    echo "Contents:"
+    echo
+    cat  "${EVIDENCE_LOG}"
+    echo
+    echo "Provide contents of evidence file as the CDXA evidence: ${EVIDENCE_LOG}"
+    echo "For providing a 3rd party Reproducible Verification CDXA, see: https://github.com/adoptium/temurin-cdxa/blob/main/CONTRIBUTING.md"
+    echo
+  fi
+
   cd "$WORK_DIR"
   # Display The Content Of reprotest.diff
   echo ""
@@ -826,13 +859,14 @@ Compare_JDK() {
 
   if [ -n "$REPORT_DIR" ]; then
     echo "Copying Output To $REPORT_DIR"
+    cp "$EVIDENCE_LOG" "$REPORT_DIR"
     cp "$ScriptPath/reprotest.diff" "$REPORT_DIR"
     cp "$WORK_DIR/reproJDK.zip" "$REPORT_DIR"
     cp "$WORK_DIR/src_sbom.json" "$REPORT_DIR"
     cp "$WORK_DIR/build.log" "$REPORT_DIR"
   fi
 
-  if [ "$ATTESTATION_VERIFY" == true ]; then
+  if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
     if [ "$rc" == "0" ]; then
       echo "Successfully reproducibly verified $TARBALL_URL build $openjdkSourceTag"
     else
@@ -889,13 +923,13 @@ Check_And_Install_BootJDK
 echo "---------------------------------------------"
 Clone_Build_Repo
 echo "---------------------------------------------"
-if [ "$ATTESTATION_VERIFY" == true ]; then
+if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
   Prepare_Env_For_OpenJDK_Build
 else
   Prepare_Env_For_Temurin_Build
 fi
 echo "---------------------------------------------"
-if [ "$ATTESTATION_VERIFY" == true ]; then
+if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
   Build_JDK_Using_OpenJDK_Build
 else
   Build_JDK_Using_Temurin_Build
