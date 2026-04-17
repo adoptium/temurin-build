@@ -1209,8 +1209,8 @@ generateSBoM() {
   # Generate the Workflow part containing the Build Recipe
   addTemurinBuildRecipeToSBOM
 
-  # Generate the Workflow part containing the Attestation Verify Recipe
-  addAttestationVerifyRecipeToSBOM
+  # Generate the Workflow part containing the Reproducible Verification Recipe
+  addReproducibleVerificationRecipeToSBOM
 
   # Add Build Docker image SHA1
   local buildimagesha=$(cat ${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/docker.txt)
@@ -1593,18 +1593,18 @@ addTemurinBuildRecipeToSBOM() {
   addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "makejdk" "${makejdk_cmd}"
 }
 
-# Generate the workflow part containing the Attestation Verify Recipe
-addAttestationVerifyRecipeToSBOM() {
+# Generate the workflow part containing the Reproducible Verification Recipe
+addReproducibleVerificationRecipeToSBOM() {
 
   if [[ -z "${fullVer}" || -z "${sbomJson}" ]]; then
-    echo "WARNING: 'fullVer' or 'sbomJson' variable/s are empty. Cannot generate attestation verify recipe." 1>&2
+    echo "WARNING: 'fullVer' or 'sbomJson' variable/s are empty. Cannot generate reproducible verification recipe." 1>&2
     return 0
   fi
 
-  local formulaName="formula_temurin_attestation_verify_${fullVer}"
-  local workflowRef="workflow_temurin_attestation_verify_${fullVer}"
+  local formulaName="formula_temurin_reproducible_verification_${fullVer}"
+  local workflowRef="workflow_temurin_reproducible_verification_${fullVer}"
   local workflowUid="${workflowRef}"
-  local workflowName="Temurin Attestation Verify"
+  local workflowName="Temurin Reproducible Verification"
   local taskTypes="clone,test"
 
   local clone_url="git clone https://github.com/adoptium/temurin-build.git"
@@ -1624,7 +1624,7 @@ addAttestationVerifyRecipeToSBOM() {
   esac
 
   # The full command to use for the verification, using placeholders for the paths/urls of the SBOM, JDK and Devkit
-  local verify_cmd="temurin-build/tooling/reproducible/${os_prefix}_repro_build_compare.sh --sbom-url 'SBOM_FILE_OR_URL' --jdk-url 'JDK_FILE_OR_URL' --user-devkit-location 'ADOPTIUM_DEVKIT_FILE_OR_URL' --attestation-verify --build-workspace 'FULL_PATH_TO_AN_EXISTING_BUILD_FOLDER'"
+  local verify_cmd="temurin-build/tooling/reproducible/${os_prefix}_repro_build_compare.sh --sbom-url 'SBOM_FILE_OR_URL' --jdk-url 'JDK_FILE_OR_URL' --user-devkit-location 'ADOPTIUM_DEVKIT_FILE_OR_URL' --reproducible-verification --build-workspace 'FULL_PATH_TO_AN_EXISTING_BUILD_FOLDER'"
 
   # Create workflow
   addSBOMWorkflow "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "${workflowUid}" "${workflowName}" "${taskTypes}"
