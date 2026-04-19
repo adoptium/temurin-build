@@ -12,12 +12,17 @@
 # SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************
 
+# SBOM_PYTHON must be set by the caller (build.sh) to the venv python3 binary path.
+# Fallback to system python3 if not set (e.g. when sourced by strace_analysis.sh
+# outside of the normal build flow).
+SBOM_PYTHON="${SBOM_PYTHON:-python3}"
+
 # Create a default SBOM json file: sbomJson
 createSBOMFile() {
   local javaHome="${1}"
   local classpath="${2}"
   local jsonFile="${3}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --createNewSBOM --jsonFile "${jsonFile}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --createNewSBOM --jsonFile "${jsonFile}"
 }
 
 signSBOMFile() {
@@ -41,7 +46,7 @@ addSBOMMetadata() {
   local javaHome="${1}"
   local classpath="${2}"
   local jsonFile="${3}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadata --jsonFile "${jsonFile}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addMetadata --jsonFile "${jsonFile}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#metadata
@@ -55,7 +60,7 @@ addSBOMMetadataProperty() {
   if [ -z "${value}" ]; then
     value="N.A"
   fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
 
 # Set basic SBoM formulation
@@ -64,7 +69,7 @@ addSBOMFormulation() {
   local classpath="${2}"
   local jsonFile="${3}"
   local formulaName="${4}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulation --formulaName "${formulaName}" --jsonFile "${jsonFile}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addFormulation --formulaName "${formulaName}" --jsonFile "${jsonFile}"
 }
 
 addSBOMFormulationComp() {
@@ -73,7 +78,7 @@ addSBOMFormulationComp() {
   local jsonFile="${3}"
   local formulaName="${4}"
   local name="${5}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationComp --jsonFile "${jsonFile}" --formulaName "${formulaName}" --name "${name}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addFormulationComp --jsonFile "${jsonFile}" --formulaName "${formulaName}" --name "${name}"
 }  
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#formulation
@@ -86,7 +91,7 @@ addSBOMFormulationComponentProperty() {
   local compName="${5}"
   local name="${6}"
   local value="${7}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addFormulationCompProp --jsonFile "${jsonFile}" --formulaName "${formulaName}" --compName "${compName}" --name "${name}" --value "${value}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addFormulationCompProp --jsonFile "${jsonFile}" --formulaName "${formulaName}" --compName "${compName}" --name "${name}" --value "${value}"
 }
 
 
@@ -104,7 +109,7 @@ addSBOMMetadataPropertyFromFile() {
         value=$(cat "${propFile}")
       fi
   fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addMetadataProp --jsonFile "${jsonFile}" --name "${name}" --value "${value}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#metadata_tools
@@ -118,7 +123,7 @@ addSBOMMetadataTools() {
   if [ -z "${version}" ]; then
     version="N.A"
   fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataTools --jsonFile "${jsonFile}" --tool "${tool}" --version "${version}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addMetadataTools --jsonFile "${jsonFile}" --tool "${tool}" --version "${version}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#metadata_component
@@ -131,7 +136,7 @@ addSBOMMetadataComponent() {
   local type="${5}"
   local version="${6}"
   local description="${7}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addMetadataComponent --jsonFile "${jsonFile}" --name "${name}"  --type "${type}" --version "${version}" --description "${description}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addMetadataComponent --jsonFile "${jsonFile}" --name "${name}"  --type "${type}" --version "${version}" --description "${description}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components
@@ -143,7 +148,7 @@ addSBOMComponent(){
   local compName="${4}"
   local version="${5}"
   local description="${6}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "${jsonFile}" --compName "${compName}" --version "${version}" --description "${description}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addComponent --jsonFile "${jsonFile}" --compName "${compName}" --version "${version}" --description "${description}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components
@@ -158,12 +163,12 @@ addSBOMComponentFromFile() {
   local name="${6}"
   local propFile="${7}"
   # always create component in sbom
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponent --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addComponent --jsonFile "${jsonFile}" --compName "${compName}" --description "${description}"
   local value="N.A" # default set to "N.A" as value for variant does not have $propFile generated in prepareWorkspace.sh
   if [ -e "${propFile}" ]; then
       value=$(cat "${propFile}")
   fi
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components_items_hashes
@@ -174,7 +179,7 @@ addSBOMComponentHash() {
   local jsonFile="${3}"
   local compName="${4}"
   local hash="${5}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentHash --jsonFile "${jsonFile}" --compName "${compName}" --hash "${hash}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addComponentHash --jsonFile "${jsonFile}" --compName "${compName}" --hash "${hash}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components_items_properties
@@ -186,7 +191,7 @@ addSBOMComponentProperty() {
   local compName="${4}"
   local name="${5}"
   local value="${6}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.4/json/#components_items_properties
@@ -201,7 +206,7 @@ addSBOMComponentPropertyFromFile() {
   local value="N.A"
   if [ -e "${propFile}" ]; then
       value=$(cat "${propFile}")
-      "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
+      "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addComponentProp --jsonFile "${jsonFile}" --compName "${compName}" --name "${name}" --value "${value}"
   fi
 }
 
@@ -216,7 +221,7 @@ addSBOMWorkflow() {
   local workflowUid="${6}"
   local workflowName="${7}"
   local taskTypes="${8}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addWorkflow --jsonFile "${jsonFile}" --formulaName "${formulaName}" --workflowRef "${workflowRef}" --workflowUid "${workflowUid}" --workflowName "${workflowName}" --taskTypes "${taskTypes}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addWorkflow --jsonFile "${jsonFile}" --formulaName "${formulaName}" --workflowRef "${workflowRef}" --workflowUid "${workflowUid}" --workflowName "${workflowName}" --taskTypes "${taskTypes}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.6/json/#formulation_items_workflows_items_steps
@@ -229,7 +234,7 @@ addSBOMWorkflowStep() {
   local workflowRef="${5}"
   local workflowStepName="${6}"
   local description="${7}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addWorkflowStep --jsonFile "${jsonFile}" --formulaName "${formulaName}" --workflowRef "${workflowRef}" --workflowStepName "${workflowStepName}" --description "${description}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addWorkflowStep --jsonFile "${jsonFile}" --formulaName "${formulaName}" --workflowRef "${workflowRef}" --workflowStepName "${workflowStepName}" --description "${description}"
 }
 
 # Ref: https://cyclonedx.org/docs/1.6/json/#formulation_items_workflows_items_steps_items_commands
@@ -242,5 +247,5 @@ addSBOMWorkflowStepCmd() {
   local workflowRef="${5}"
   local workflowStepName="${6}"
   local executed="${7}"
-  "${javaHome}"/bin/java -cp "${classpath}" temurin.sbom.TemurinGenSBOM --addWorkflowStepCmd --jsonFile "${jsonFile}" --formulaName "${formulaName}" --workflowRef "${workflowRef}" --workflowStepName "${workflowStepName}" --executed "${executed}"
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addWorkflowStepCmd --jsonFile "${jsonFile}" --formulaName "${formulaName}" --workflowRef "${workflowRef}" --workflowStepName "${workflowStepName}" --executed "${executed}"
 }

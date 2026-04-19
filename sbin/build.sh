@@ -1122,15 +1122,30 @@ generateSBoM() {
     return
   fi
 
-  # exit from local var=$(setupJavaEnv) is not propagated. We have to ensure that the exit propagates, and is fatal for the script
-  # So the declaration is split. In that case the bug does not occur and thus the `exit 2` from setupJavaEnv is correctly propagated
-  local javaHome
-  javaHome="$(setupJavaEnv)"
+  # Set up Python virtual environment for SBOM generation (avoids PEP 668 externally-managed-environment errors)
+  local sbomVenvDir="${BUILD_CONFIG[WORKSPACE_DIR]}/sbom_venv"
+  echo "build.sh : $(date +%T) : Creating Python venv for SBOM generation at ${sbomVenvDir} ..."
+  if ! python3 -m venv "${sbomVenvDir}"; then
+    echo "ERROR: Failed to create Python virtual environment at ${sbomVenvDir}. Cannot generate SBOM."
+    echo "Ensure python3 and the venv module are installed (e.g. apt install python3-venv or apt install python3.12-venv)."
+    exit 2
+  fi
+
+  # Use the venv's python directly
+  export SBOM_PYTHON="${sbomVenvDir}/bin/python3"
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    export SBOM_PYTHON="${sbomVenvDir}/Scripts/python.exe"
+  fi
+
+  echo "build.sh : $(date +%T) : Installing Python SBOM dependencies into venv ..."
+  "${SBOM_PYTHON}" -m pip install --quiet -r "${CYCLONEDB_DIR}/requirements.txt"
+
+  # javaHome and classpath are kept for backward-compatible function signatures
+  # (sbom.sh functions still accept them but no longer use them for TemurinGenSBOM)
+  local javaHome="N/A"
+  local classpath="N/A"
 
   echo "build.sh : $(date +%T) : Generating SBoM ..."
-  buildCyclonedxLib "${javaHome}"
-  # classpath to run java app TemurinGenSBOM
-  local classpath="$(getCyclonedxClasspath)"
 
   local sbomTargetName=$(getTargetFileNameForComponent "sbom")
   # Remove the tarball / zip extension from the name to be used for the SBOM
@@ -1203,8 +1218,9 @@ generateSBoM() {
   if [ -f "${freemarker_version}" ]; then
       addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeMarker" "$(cat ${freemarker_version})"
   fi
-  # Add CycloneDX versions
-  addCycloneDXVersions
+
+  # Record Python SBOM toolchain versions (replaces old addCycloneDXVersions jar iteration)
+  "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temurin_gen_sbom.py" --addSBOMDependencyVersions --jsonFile "${sbomJson}"
 
   # Generate the Workflow part containing the Build Recipe
   addTemurinBuildRecipeToSBOM
@@ -1376,6 +1392,92 @@ generateSBoM() {
     bash "$SCRIPT_DIR/../tooling/strace_analysis.sh" "${straceOutputDir}" "${temurinBuildDir}" "${bootjdk_path}" "${classpath}" "${sbomJson}" "${buildOutputDir}" "${openjdkSrcDir}" "${javaHome}" "${toolchain_path}"
   fi
 
+  # ----------------------------------------------------------------------------
+  # TEMPORARY: CycloneDX 1.6 formulation post-processing workaround.
+  # cyclonedx-python-lib does not yet support the formulation array natively.
+  # This block re-derives the necessary variables and calls a standalone Python
+  # script to inject both formulation workflows into the finished SBOM JSON.
+  #
+  # MIGRATION (once native formulation support arrives in cyclonedx-python-lib):
+  #   1. Delete cyclonedx-lib/temporary_sbom_post_processing.py
+  #   2. Update everything marked with TODO (CycloneDX 1.6) back to the correct state
+  #   3. Implement native formulation logic (--addWorkflow, --addWorkflowStep,
+  #      --addWorkflowStepCmd) in cyclonedx-lib/temurin_gen_sbom.py, replacing
+  #      the _skip_formulation() stubs with real CycloneDX lib calls.
+  #   4. The addSBOMWorkflow/Step/Cmd calls in addTemurinBuildRecipeToSBOM and
+  #      addReproducibleVerificationRecipeToSBOM will then work natively.
+  #   5. Delete this entire block (down to "END TEMPORARY")
+  # ----------------------------------------------------------------------------
+  echo "build.sh : $(date +%T) : Post-processing SBOM formulations into ${sbomJson} ..."
+
+  # Re-derive build recipe variables
+  local pp_makejdk_args_file="${BUILD_CONFIG[WORKSPACE_DIR]}/config/makejdk-any-platform.args"
+  local pp_build_src_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/buildSource.txt"
+
+  if [[ -s "${pp_makejdk_args_file}" ]] && [[ -s "${pp_build_src_file}" ]]; then
+    local pp_makejdk_args
+    pp_makejdk_args="$(< "${pp_makejdk_args_file}")"
+    pp_makejdk_args="$(printf '%s\n' "${pp_makejdk_args}" | sed -E -e 's/--jdk-boot-dir[[:space:]]+"[^"]+"/--jdk-boot-dir download/g' -e 's/--jdk-boot-dir[[:space:]]+[^[:space:]]+/--jdk-boot-dir download/g')"
+    pp_makejdk_args="$(printf '%s\n' "${pp_makejdk_args}" | sed -E 's/\\?"/'\''/g')"
+
+    local pp_build_src_url
+    pp_build_src_url="$(< "${pp_build_src_file}")"
+    local pp_sha="${pp_build_src_url##*/}"
+    local pp_base_url="${pp_build_src_url%%/commit/*}"
+    local pp_repo_name="${pp_base_url##*/}"
+    local pp_removed_repo="${pp_base_url%/*}"
+    local pp_org_name="${pp_removed_repo##*[/:]}"
+    local pp_clone_url="https://github.com/${pp_org_name}/${pp_repo_name}.git"
+
+    local pp_buildStamp="${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]:-${BUILD_CONFIG[BUILD_TIMESTAMP]:-}}"
+    pp_buildStamp="${pp_buildStamp%\"}"; pp_buildStamp="${pp_buildStamp#\"}"
+    pp_buildStamp="${pp_buildStamp%\'}"; pp_buildStamp="${pp_buildStamp#\'}"
+
+    local pp_metadata_build_args_file="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/BUILD_ARGS"
+    local pp_devkit_tag=""
+    if [[ -s "${pp_metadata_build_args_file}" ]]; then
+      local pp_build_args
+      pp_build_args="$(< "${pp_metadata_build_args_file}")"
+      if [[ "${pp_build_args}" =~ --use-adoptium-devkit[[:space:]]+([^[:space:]]+) ]]; then
+        pp_devkit_tag="${BASH_REMATCH[1]}"
+      fi
+    fi
+
+    local pp_makejdk_cmd="bash ./makejdk-any-platform.sh"
+    if [[ -n "${pp_buildStamp}" && ${pp_makejdk_args} != *"--build-reproducible-date"* ]]; then
+      pp_makejdk_cmd+=" --build-reproducible-date '${pp_buildStamp}'"
+    fi
+    if [[ -n "${pp_devkit_tag}" && ${pp_makejdk_args} != *"--use-adoptium-devkit"* ]]; then
+      pp_makejdk_cmd+=" -C --use-adoptium-devkit ${pp_devkit_tag}"
+    fi
+    pp_makejdk_cmd+=" ${pp_makejdk_args}"
+
+    # Derive OS prefix for the reproducible verification script
+    local pp_os_prefix
+    case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
+      darwin)   pp_os_prefix="macos"   ;;
+      *cygwin*) pp_os_prefix="windows" ;;
+      *)        pp_os_prefix="linux"   ;;
+    esac
+
+    local pp_verify_cmd="temurin-build/tooling/reproducible/${pp_os_prefix}_repro_build_compare.sh --sbom-url 'SBOM_FILE_OR_URL' --jdk-url 'JDK_FILE_OR_URL' --user-devkit-location 'ADOPTIUM_DEVKIT_FILE_OR_URL' --reproducible-verification --build-workspace 'FULL_PATH_TO_AN_EXISTING_BUILD_FOLDER'"
+
+    "${SBOM_PYTHON}" "${CYCLONEDB_DIR}/temporary_sbom_post_processing.py" \
+      --sbom-json "${sbomJson}" \
+      --full-ver "${fullVer}" \
+      --clone-url "${pp_clone_url}" \
+      --sha "${pp_sha}" \
+      --repo-name "${pp_repo_name}" \
+      --makejdk-cmd "${pp_makejdk_cmd}" \
+      --os-prefix "${pp_os_prefix}" \
+      --verify-cmd "${pp_verify_cmd}"
+  else
+    echo "WARNING: Cannot post-process SBOM formulations — makejdk args or buildSource metadata missing." 1>&2
+  fi
+  # ----------------------------------------------------------------------------
+  # END TEMPORARY formulation post-processing workaround
+  # ----------------------------------------------------------------------------
+
   # Print SBOM location
   echo "CycloneDX SBOM has been created in ${sbomJson}"
 }
@@ -1454,35 +1556,18 @@ addFreeTypeVersionInfo() {
    addSBOMMetadataTools "${javaHome}" "${classpath}" "${sbomJson}" "FreeType" "${version}"
 }
 
-# Determine and store CycloneDX SHAs that have been used to provide the SBOMs
+# Determine and store CycloneDX Python toolchain versions used to provide the SBOMs
+# (Legacy JAR-based version removed. Now handled natively by temurin_gen_sbom.py --addSBOMDependencyVersions)
 addCycloneDXVersions() {
-   if [ ! -d "${CYCLONEDB_DIR}/build/jar" ]; then
-      echo "ERROR: CycloneDX jar directory not found at ${CYCLONEDB_DIR}/build/jar - cannot store checksums in SBOM"
-   else
-       # Should we do something special if the sha256sum fails?
-       for JAR in "${CYCLONEDB_DIR}/build/jar"/*.jar; do
-         JarName=$(basename "$JAR" | cut -d'.' -f1)
-         if [ "$(uname)" = "Darwin" ]; then
-            JarSha=$(shasum -a 256 "$JAR" | cut -d' ' -f1)
-         else
-            JarSha=$(sha256sum "$JAR" | cut -d' ' -f1)
-         fi
-         addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar SHAs" "${JarName}.jar" "${JarSha}"
-         # Now the jar's SHA has been added, we add the version string.
-         JarDepsFile="$(joinPath ${CYCLONEDB_DIR} dependency_data/dependency_data.properties)"
-         JarVersionString=$(grep "${JarName}\.version=" "${JarDepsFile}" | cut -d'=' -f2)
-         if [ -n "${JarVersionString}" ]; then
-           addSBOMFormulationComponentProperty "${javaHome}" "${classpath}" "${sbomJson}" "CycloneDX" "CycloneDX jar versions" "${JarName}.jar" "${JarVersionString}"
-         elif [ "${JarName}" != "temurin-gen-sbom" ] && [ "${JarName}" != "temurin-gen-cdxa" ]; then
-           echo "ERROR: Cannot determine jar version from ${JarDepsFile} for SBOM creation dependency ${JarName}.jar."
-         fi
-       done
-   fi
+   echo "addCycloneDXVersions: Handled by Python SBOM toolchain — no action needed."
 }
 
 # Below add versions to sbom | Facilitate reproducible builds
 
 # Generate the Workflow part containing the Build Recipe
+# TODO (CycloneDX 1.6): The addSBOMWorkflow/Step/Cmd calls currently skip (cyclonedx-python-lib
+# does not yet support CycloneDX 1.6 formulations). The actual injection happens
+# via temporary_sbom_post_processing.py at the very end of generateSBoM().
 addTemurinBuildRecipeToSBOM() {
 
   if [[ -z "${fullVer}" || -z "${sbomJson}" ]]; then
@@ -1578,15 +1663,15 @@ addTemurinBuildRecipeToSBOM() {
 
   makejdk_cmd+=" ${makejdk_args}"
 
-  # Workflow
+  # Workflow (TODO (CycloneDX 1.6): currently skips — native lib support pending, see postProcessSBOMFormulations)
   addSBOMWorkflow "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "${workflowUid}" "${workflowName}" "${taskTypes}"
 
-  # Steps
+  # Steps (TODO (CycloneDX 1.6): currently skips)
   addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "clone repo" "clone repository"
   addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "cd into repository" "cd into temurin-build and checkout commit"
   addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "makejdk" "execute makejdk-any-platform.sh"
 
-  # Commands
+  # Commands (TODO (CycloneDX 1.6): currently skips)
   addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "clone repo" "git clone ${clone_url}"
   addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "cd into repository" "cd ${repo_name}"
   addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "cd into repository" "git checkout ${sha}"
@@ -1594,6 +1679,9 @@ addTemurinBuildRecipeToSBOM() {
 }
 
 # Generate the workflow part containing the Reproducible Verification Recipe
+# TODO (CycloneDX 1.6): The addSBOMWorkflow/Step/Cmd calls currently skip (cyclonedx-python-lib
+# does not yet support CycloneDX 1.6 formulations). The actual injection happens
+# via temporary_sbom_post_processing.py at the very end of generateSBoM().
 addReproducibleVerificationRecipeToSBOM() {
 
   if [[ -z "${fullVer}" || -z "${sbomJson}" ]]; then
@@ -1626,14 +1714,14 @@ addReproducibleVerificationRecipeToSBOM() {
   # The full command to use for the verification, using placeholders for the paths/urls of the SBOM, JDK and Devkit
   local verify_cmd="temurin-build/tooling/reproducible/${os_prefix}_repro_build_compare.sh --sbom-url 'SBOM_FILE_OR_URL' --jdk-url 'JDK_FILE_OR_URL' --user-devkit-location 'ADOPTIUM_DEVKIT_FILE_OR_URL' --reproducible-verification --build-workspace 'FULL_PATH_TO_AN_EXISTING_BUILD_FOLDER'"
 
-  # Create workflow
+  # Create workflow (TODO (CycloneDX 1.6): currently skips — native lib support pending, see postProcessSBOMFormulations)
   addSBOMWorkflow "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "${workflowUid}" "${workflowName}" "${taskTypes}"
 
-  # Steps
+  # Steps (TODO (CycloneDX 1.6): currently skips)
   addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "clone repo" "clone repository"
   addSBOMWorkflowStep "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "execute verification" "run reproducible build compare script"
 
-  # Commands
+  # Commands (TODO (CycloneDX 1.6): currently skips)
   addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "clone repo" "${clone_url}"
   addSBOMWorkflowStepCmd "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "execute verification" "${verify_cmd}"
 }
