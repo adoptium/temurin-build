@@ -166,7 +166,7 @@ fi
 FREETYPE_VERSION_FILE="src/java.desktop/share/legal/freetype.md"
 [ "${MAJORVERSION}" = "8" ] && FREETYPE_VERSION_FILE="THIRD_PARTY_README"
 FREETYPE_VERSION_FILE="https://raw.githubusercontent.com/$(echo "$GITURL" | cut -d/ -f4)/$(echo "$GITURL" | cut -d/ -f5)/${GITSHA}/${FREETYPE_VERSION_FILE}"
-if ! EXPECTED_FREETYPE="$(wget -q -O - "${FREETYPE_VERSION_FILE}" | grep '## The FreeType Project:' | grep -o "[0-9\.]*")"; then
+if ! EXPECTED_FREETYPE="$(curl -L "${FREETYPE_VERSION_FILE}" | grep '## The FreeType Project:' | grep -o "[0-9\.]*")"; then
   echo "ERROR: Freetype version could not be found at expected location here: ${FREETYPE_VERSION_FILE}"
   RC=1
 else
