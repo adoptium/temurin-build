@@ -1624,7 +1624,21 @@ addReproducibleVerificationRecipeToSBOM() {
   esac
 
   # The full command to use for the verification, using placeholders for the paths/urls of the SBOM, JDK and Devkit
-  local verify_cmd="temurin-build/tooling/reproducible/${os_prefix}_repro_build_compare.sh --sbom-url 'SBOM_FILE_OR_URL' --jdk-url 'JDK_FILE_OR_URL' --user-devkit-location 'ADOPTIUM_DEVKIT_FILE_OR_URL' --reproducible-verification --build-workspace 'FULL_PATH_TO_AN_EXISTING_BUILD_FOLDER'"
+  # Base command with shared arguments only
+  local verify_cmd="temurin-build/tooling/reproducible/${os_prefix}_repro_build_compare.sh --sbom-url 'SBOM_FILE_OR_URL' --jdk-url 'JDK_FILE_OR_URL' --reproducible-verification"
+
+  # Append OS-specific arguments
+  case "${os_prefix}" in
+    linux)
+      verify_cmd="${verify_cmd} --user-devkit-location 'ADOPTIUM_DEVKIT_FILE_OR_URL' --build-workspace 'FULL_PATH_TO_AN_EXISTING_BUILD_FOLDER'"
+      ;;
+    macos)
+      verify_cmd="${verify_cmd} --build-workspace 'FULL_PATH_TO_AN_EXISTING_BUILD_FOLDER'"
+      ;;
+    windows)
+      verify_cmd="${verify_cmd} --user-devkit-location 'ADOPTIUM_DEVKIT_FILE_OR_URL' --report-dir 'REPORT_DIR_PLACEHOLDER'"
+      ;;
+  esac
 
   # Create workflow
   addSBOMWorkflow "${javaHome}" "${classpath}" "${sbomJson}" "${formulaName}" "${workflowRef}" "${workflowUid}" "${workflowName}" "${taskTypes}"
