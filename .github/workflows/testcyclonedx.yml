@@ -64,13 +64,13 @@ jobs:
           ./cyclonedx-linux-x64 validate --input-file cyclonedx-lib/build/jdk_21_0_5_11_aarch64_linux_AcmeInc.json --fail-on-errors --input-version v1_6
           ./cyclonedx-linux-x64 validate --input-file cyclonedx-lib/build/jdk_21_0_5_11_x64_linux_AcmeInc.xml --fail-on-errors --input-version v1_6
 
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         name: Collect and Archive TemurinGenSBOM Artifacts
         with:
           name: testSBOM
           path: cyclonedx-lib/build/testSBOM.*
 
-      - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         name: Collect and Archive TemurinGenCDXA Artifacts
         with:
           name: testCDXA

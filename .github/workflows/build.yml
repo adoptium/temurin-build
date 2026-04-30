@@ -118,7 +118,7 @@ jobs:
                       "${{ matrix.image }}" \
                       ./build-farm/make-adopt-build-farm.sh
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       name: Collect and Archive Artifacts
       with:
         name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -157,7 +157,7 @@ jobs:
              make compile && \
              make _extended.functional"
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
@@ -226,7 +226,7 @@ jobs:
         TARGET_OS: mac
         FILENAME: OpenJDK.tar.gz
 
-    - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       name: Collect and Archive Artifacts
       with:
         name: ${{matrix.version.name}}-${{matrix.os}}-${{matrix.variant}}
@@ -249,7 +249,7 @@ jobs:
         vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
         vendor_testBranches: "${{ github.head_ref }}"
         vendor_testDirs: "/test/functional"
-    - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       name: Collect and Archive SmokeTest Results
       if: failure()
       with:
@@ -410,7 +410,7 @@ jobs:
          FILENAME: OpenJDK.zip
          BUILD_ARGS: --create-sbom
 
-     - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
        name: Collect and Archive Artifacts
        with:
          name: ${{matrix.version}}-${{matrix.os}}-${{matrix.variant}}
@@ -443,7 +443,7 @@ jobs:
          vendor_testRepos: "${{ github.event.pull_request.head.repo.html_url }}.git"
          vendor_testBranches: "${{ github.head_ref }}"
          vendor_testDirs: "/test/functional"
-     - uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 # v4.3.1
+     - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
        name: Collect and Archive SmokeTest Results
        if: failure()
        with:
