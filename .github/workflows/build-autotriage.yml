@@ -34,7 +34,7 @@ jobs:
     name: Run Build Triage
     if: ${{ (github.repository == 'adoptium/temurin-build') || (github.event_name == 'workflow_dispatch') }}
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: "Run Build Auto Triage"
         run: bash "${PWD}/${TRIAGE_SCRIPT}" jdk8u jdk11u jdk17u jdk21u jdk25u jdk26 jdk27head
