@@ -493,6 +493,8 @@ For the api.adoptium.net repository:
 - Eventually after rampdown and final phase testing the GA build is tagged and released, e.g. the `jdk-23-ga` code level is tagged along side the actual release build tag.
 - When a new release occurs, we must also update one of our job generators to match the new jdk versions and remove old versions that are no longer needed. The full details on what these are in the [regeneration README.md](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md) but for a quick run down on how to update them when we want to build a new release, follow the steps below:
 
+Important note: Every reference to pipeline_jobs_generator_jdkxx also applies to release_pipeline_jobs_generator_jdkxx
+
   1. Update the Job Folder - <https://ci.adoptium.net/job/build-scripts/job/utils/>: The jobs themselves you are looking for are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD). Firstly, ensure that the job description of each generator (and it's parameter's descriptions) are up to date. Then, follow these steps:
   
   - If you are ADDING a JDK version:
@@ -517,7 +519,9 @@ For the api.adoptium.net repository:
 
   5. Update the view for the [build and test pipeline calendar](https://ci.adoptium.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version.
 
-  6. Various other updates:
+  6. Create a new releaseTrigger job for the new jdk major version, using the existing jobs as a guide.
+
+  7. Various other updates:
 
   - If you are ADDING a JDK version:
     - Add the feature (LTS) or tip (STS) release to the job config for [nightlyBuildAndTestStats_temurin](https://ci.adoptium.net/job/nightlyBuildAndTestStats_temurin).
