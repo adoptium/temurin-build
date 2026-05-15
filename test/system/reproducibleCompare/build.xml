@@ -14,8 +14,9 @@
   ~ ********************************************************************************
 -->
 
-<project name="System Reproducible Comparison Tests" default="build" basedir=".">
-    <taskdef resource="net/sf/antcontrib/antlib.xml"/>
+<project name="System Reproducible Comparison Tests" default="build" basedir="."
+    xmlns:if="ant:if"
+    xmlns:unless="ant:unless">
     <description>
         Temurin Reproducible Comparison tests
     </description>
@@ -28,33 +29,31 @@
     </target>
 
 	<target name="stage">
-		<if>
+		<!-- Set buildRepoTemp from env or default -->
+		<condition property="buildRepoTemp" value="${env.VENDOR_TEST_REPOS}">
 			<isset property="env.VENDOR_TEST_REPOS"/>
-			<then>
-				<property name="buildRepoTemp" value="${env.VENDOR_TEST_REPOS}"/>
-			</then>
-			<else>
-				<property name="buildRepoTemp" value="https://github.com/adoptium/temurin-build.git"/>
-			</else>
-		</if>
-		<if>
+		</condition>
+		<property name="buildRepoTemp" value="https://github.com/adoptium/temurin-build.git"/>
+
+		<!-- For zos: convert https github URL to git SSH URL -->
+		<condition property="isZos">
 			<contains string="${SPEC}" substring="zos"/>
-			<then>
-				<propertyregex property="buildRepo" input="${buildRepoTemp}" regexp="https://github.com//" replace="git@github.com:" defaultValue="${buildRepoTemp}"/>
-			</then>
-			<else>
-				<property name="buildRepo" value="${buildRepoTemp}"/>
-			</else>
-		</if>
-		<if>
+		</condition>
+		<loadresource property="buildRepo" if:set="isZos">
+			<string value="${buildRepoTemp}"/>
+			<filterchain>
+				<tokenfilter>
+					<replaceregex pattern="https://github.com/" replace="git@github.com:" />
+				</tokenfilter>
+			</filterchain>
+		</loadresource>
+		<property name="buildRepo" value="${buildRepoTemp}" unless:set="isZos"/>
+
+		<!-- Set buildBranch from env or default -->
+		<condition property="buildBranch" value="${env.VENDOR_TEST_BRANCHES}">
 			<isset property="env.VENDOR_TEST_BRANCHES"/>
-			<then>
-				<property name="buildBranch" value="${env.VENDOR_TEST_BRANCHES}"/>
-			</then>
-			<else>
-				<property name="buildBranch" value="master"/>
-			</else>
-		</if>
+		</condition>
+		<property name="buildBranch" value="master"/>
 		<exec executable="git" failonerror="true">
 				<arg value="clone" />
 				<arg value="-b" />

@@ -26,8 +26,7 @@ ADOPTIUM_PUBLIC_GPG_KEY="0x3B04D753C9050D9A5D343F39843C48A565F8F04B"
 
 ANT_VERSION=1.10.5
 ANT_SHA=9028e2fc64491cca0f991acc09b06ee7fe644afe41d1d6caf72702ca25c4613c
-ANT_CONTRIB_VERSION=1.0b3
-ANT_CONTRIB_SHA=4d93e07ae6479049bb28071b069b7107322adaee5b70016674a0bffd4aac47f9
+
 USING_DEVKIT="false"
 ScriptPath=$(dirname "$(realpath "$0")")
 
@@ -148,16 +147,6 @@ downloadAnt() {
       rm "/tmp/apache-ant-${ANT_VERSION}-bin.zip"
     else
       echo "ERROR - Checksum for Ant download is incorrect"
-      exit 1
-    fi
-    echo "Downloading ant-contrib-${ANT_CONTRIB_VERSION}..."
-    curl -Lo "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" "https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip"
-    ANTCTRCHKSHA=$(sha256sum "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" | cut -d" " -f1)
-    if [ "$ANT_CONTRIB_SHA" = "$ANTCTRCHKSHA" ]; then
-      (unzip -qnj "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" "ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar" -d "/usr/local/apache-ant-${ANT_VERSION}/lib")
-      rm "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip"
-    else
-      echo "ERROR - Checksum for Ant Contrib download is incorrect"
       exit 1
     fi
   fi

@@ -20,7 +20,7 @@ steps:
     # Install macOS required dependencies
     - script: |
         set -e
-        brew install xmlstarlet ant ant-contrib tree gnu-sed
+        brew install xmlstarlet ant tree gnu-sed
       displayName: "macOS: install dependencies"
       condition: and(succeeded(), eq(variables['Agent.OS'], 'Darwin'))
 

@@ -85,7 +85,6 @@ fi
 WORK_DIR="/cygdrive/c/comp-jdk-build"
 ANT_VERSION_ALLOWED="1.10"
 ANT_VERSION_REQUIRED="1.10.15"
-ANT_CONTRIB_VERSION="1.0b3"
 ANT_BASE_PATH="/cygdrive/c/apache-ant"
 CW_VS_BASE_DRV="c"
 #CW_VS_BASE_PATH64="/cygdrive/$CW_VS_BASE_DRV/Program Files/Microsoft Visual Studio"
@@ -563,29 +562,8 @@ Check_And_Install_Ant() {
       curl -o "/tmp/apache-ant-${ANT_VERSION}-bin.zip" "https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION_REQUIRED}-bin.zip"
       (cd /usr/local && unzip -qn "/tmp/apache-ant-${ANT_VERSION_REQUIRED}-bin.zip")
       rm "/tmp/apache-ant-${ANT_VERSION_REQUIRED}-bin.zip"
-      echo "Downloading ant-contrib-${ANT_CONTRIB_VERSION}:"
-      curl -L -o "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" "https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip"
-      (unzip -qnj "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" "ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar" -d "/usr/local/apache-ant-${ANT_VERSION}/lib")
-      rm "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip"
   else
       echo "Ant Version: ${ANT_VERSION_ALLOWED}.X Already Installed"
-  fi
-  echo ""
-  # Check For Existence Of Required Version Of Ant-Contrib For Existing Ant
-  echo "Checking For Installation Of Ant Contrib Version $ANT_CONTRIB_VERSION "
-  if [ -r "${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/bin/ant" ] && [ ! -r "${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/lib/ant-contrib.jar" ]; then
-    if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
-        echo "For a Reproducible Verification build Ant Contrib Version $ANT_CONTRIB_VERSION must already be installed in location ${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/lib/ant-contrib.jar, please install."
-        exit 1
-    fi
-    echo "But Ant-Contrib Is Missing - Installing"
-    # Ant Version Not Found... Check And Create Paths
-    echo Downloading ant-contrib-${ANT_CONTRIB_VERSION}:
-    curl -L https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip > /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
-    (unzip -qnj "/tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip" "ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar" -d "${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/lib")
-    rm /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
-  else
-    echo "Ant Contrib Version: $ANT_CONTRIB_VERSION Is Already Installed"
   fi
 }
 

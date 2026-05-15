@@ -15,7 +15,6 @@
 -->
 
 <project name="Functional Build And Packaging Tests" default="build" basedir=".">
-    <taskdef resource="net/sf/antcontrib/antlib.xml"/>
     <description>
         Temurin Functional tests
     </description>
