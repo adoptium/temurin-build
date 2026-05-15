@@ -495,7 +495,7 @@ For the api.adoptium.net repository:
 
 Important note: Every reference to pipeline_jobs_generator_jdkxx also applies to release_pipeline_jobs_generator_jdkxx
 
-  1. Update the Job Folder - <https://ci.adoptium.net/job/build-scripts/job/utils/>: The jobs themselves you are looking for are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD). Firstly, ensure that the job description of each generator (and it's parameter's descriptions) are up to date. Then, follow these steps:
+1. Update the Job Folder - <https://ci.adoptium.net/job/build-scripts/job/utils/>: The jobs themselves you are looking for are called `pipeline_jobs_generator_jdkxx` (`pipeline_jobs_generator_jdk` for HEAD). Firstly, ensure that the job description of each generator (and it's parameter's descriptions) are up to date. Then, follow these steps:
   
 - If you are ADDING a JDK version:
   - Ensure that JDK N-1 is available as build JDK on the builders. For example in order to build JDK 15, JDK 14 needs to be installed on the build machines. As a temporary measure, [code](./build-farm/platform-specific-configurations/linux.sh#L110) so as to download the JDK to the builder via the API has been added. NOTE: For the transition period shortly after a new JDK has been branched, there might not yet exist a generally available release of JDK N-1.
@@ -508,30 +508,30 @@ Important note: Every reference to pipeline_jobs_generator_jdkxx also applies to
 - If you are REMOVING a JDK version:
   - Delete the job `pipeline_jobs_generator_jdk<version-you-want-to-delete>`
 
-  2. Create the new build configurations for the release - <https://github.com/adoptium/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations>:
+2. Create the new build configurations for the release - <https://github.com/adoptium/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations>:
 
-  - Create a new `jdk<new-version-number>_pipeline_config.groovy` file with the desired `buildConfigurations` for the new pipeline. 99% of the time, copy and pasting the configs from the previous version is acceptable. Ensure that the classname and instance of it is changed to `Config<new-version-number>`. Don't remove any old version configs.
-  - Furthermore, you will also need to create another config file to state what jobs will be run with any new versions. If it doesn't currently exist, add a `jdkxx.groovy` file to [configurations/](https://github.com/adoptium/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations). [Example on how to do this](https://github.com/adoptium/temurin-build/pull/1815/files). Note, some files will need to be named `jdkxxu.groovy` depending on whether the version is maintained in an update repository or not. These will be the ONLY os/archs/variants that are regenerated using the job regenerators as described in the [regeneration readme](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md).
+- Create a new `jdk<new-version-number>_pipeline_config.groovy` file with the desired `buildConfigurations` for the new pipeline. 99% of the time, copy and pasting the configs from the previous version is acceptable. Ensure that the classname and instance of it is changed to `Config<new-version-number>`. Don't remove any old version configs.
+- Furthermore, you will also need to create another config file to state what jobs will be run with any new versions. If it doesn't currently exist, add a `jdkxx.groovy` file to [configurations/](https://github.com/adoptium/ci-jenkins-pipelines/tree/master/pipelines/jobs/configurations). [Example on how to do this](https://github.com/adoptium/temurin-build/pull/1815/files). Note, some files will need to be named `jdkxxu.groovy` depending on whether the version is maintained in an update repository or not. These will be the ONLY os/archs/variants that are regenerated using the job regenerators as described in the [regeneration readme](https://github.com/adoptium/ci-jenkins-pipelines/blob/master/pipelines/build/regeneration/README.md).
+
+3. Add new versions to the releaseVersions: https://github.com/adoptium/ci-jenkins-pipelines/blob/d9429d510fecd3c5435c8b048eb899f5726afa85/pipelines/build/regeneration/release_pipeline_generator.groovy#L10
   
-  3. Add new versions to the releaseVersions: https://github.com/adoptium/ci-jenkins-pipelines/blob/d9429d510fecd3c5435c8b048eb899f5726afa85/pipelines/build/regeneration/release_pipeline_generator.groovy#L10
-  
-  4. Build the `pipeline_jobs_generator` that you just made. Ensure the equivalent `openjdkxx_pipeline` to the generator exists or this will fail. If the job fails or is unstable, search the console log for `WARNING` or `ERROR` messages for why. Once it has completed successfully, the [pipeline](https://ci.adoptium.net/job/build-scripts/) is ready to go!
+4. Build the `pipeline_jobs_generator` that you just made. Ensure the equivalent `openjdkxx_pipeline` to the generator exists or this will fail. If the job fails or is unstable, search the console log for `WARNING` or `ERROR` messages for why. Once it has completed successfully, the [pipeline](https://ci.adoptium.net/job/build-scripts/) is ready to go!
 
-  5. Update the view for the [build and test pipeline calendar](https://ci.adoptium.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version.
+5. Update the view for the [build and test pipeline calendar](https://ci.adoptium.net/view/Build%20and%20Test%20Pipeline%20Calendar) to include the new version.
 
-  6. Create a new releaseTrigger job for the new jdk major version, using the existing jobs as a guide.
+6. Create a new releaseTrigger job for the new jdk major version, using the existing jobs as a guide.
 
-  7. Various other updates:
+7. Various other updates:
 
-  - If you are ADDING a JDK version:
-    - Add the feature (LTS) or tip (STS) release to the job config for [nightlyBuildAndTestStats_temurin](https://ci.adoptium.net/job/nightlyBuildAndTestStats_temurin).
-    - Add the JDK major version to the [build triage git workflow](https://github.com/adoptium/temurin-build/blob/f701dc3e14ee91f0c2539ee13a4ed0394e422123/.github/workflows/build-autotriage.yml#L40).
-  - If you are REMOVING a JDK version:
-    - jdkxx.groovy: Remove/comment-out any lines that begin with "triggerSchedule"
-    - jdkxx.groovy: add this code to the bottom, before the "return this" line: disableJob = true
-    - nightly_build_and_test_stats: Add the JDK major version to the retiredVersions array
-    - Update the [nightlyBuildAndTestStats_temurin](https://ci.adoptium.net/job/nightlyBuildAndTestStats_temurin) job configuration to remove the feature (LTS) or tip (STS) release.
-    - Update the [build triage git workflow](https://github.com/adoptium/temurin-build/blob/f701dc3e14ee91f0c2539ee13a4ed0394e422123/.github/workflows/build-autotriage.yml#L40) to remove the JDK version.
+- If you are ADDING a JDK version:
+  - Add the feature (LTS) or tip (STS) release to the job config for [nightlyBuildAndTestStats_temurin](https://ci.adoptium.net/job/nightlyBuildAndTestStats_temurin).
+  - Add the JDK major version to the [build triage git workflow](https://github.com/adoptium/temurin-build/blob/f701dc3e14ee91f0c2539ee13a4ed0394e422123/.github/workflows/build-autotriage.yml#L40).
+- If you are REMOVING a JDK version:
+  - jdkxx.groovy: Remove/comment-out any lines that begin with "triggerSchedule"
+  - jdkxx.groovy: add this code to the bottom, before the "return this" line: disableJob = true
+  - nightly_build_and_test_stats: Add the JDK major version to the retiredVersions array
+  - Update the [nightlyBuildAndTestStats_temurin](https://ci.adoptium.net/job/nightlyBuildAndTestStats_temurin) job configuration to remove the feature (LTS) or tip (STS) release.
+  - Update the [build triage git workflow](https://github.com/adoptium/temurin-build/blob/f701dc3e14ee91f0c2539ee13a4ed0394e422123/.github/workflows/build-autotriage.yml#L40) to remove the JDK version.
 
 ### Update Repository (jdkXXu)
 
