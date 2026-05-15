@@ -272,7 +272,6 @@ printAptPackagesJdk() {
 RUN $UBUNTU_PREAMBLE
   && apt-get install -qq -y --no-install-recommends \\
     ant \\
-    ant-contrib \\
     autoconf \\
     ca-certificates \\
     cmake \\

@@ -81,7 +81,6 @@ XCODE_SYSROOT=""
 
 # These variables relate to the pre-requisite ant installation
 ANT_VERSION="1.10.5"
-ANT_CONTRIB_VERSION="1.0b3"
 ANT_BASE_PATH="/usr/local/bin"
 
 # Addiitonal Working Variables Defined For Use By This Script
@@ -471,25 +470,8 @@ Check_And_Install_Ant() {
     curl https://archive.apache.org/dist/ant/binaries/apache-ant-${ANT_VERSION}-bin.zip > apache-ant-${ANT_VERSION}-bin.zip
     (unzip -qn ./apache-ant-${ANT_VERSION}-bin.zip)
     rm apache-ant-${ANT_VERSION}-bin.zip
-    echo Downloading ant-contrib-${ANT_CONTRIB_VERSION}:
-    curl -L https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip > ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
-    (unzip -qnj ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar -d apache-ant-${ANT_VERSION}/lib)
-    rm ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
   else
     echo "Ant Version: $ANT_VERSION Is Already Installed"
-  fi
-  echo ""
-  # Check For Existence Of Required Version Of Ant-Contrib For Existing Ant
-  echo "Checking For Installation Of Ant Contrib Version $ANT_CONTRIB_VERSION "
-  if [ -r ${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/bin/ant ] && [ ! -r $ANT_BASE_PATH/apache-ant-${ANT_VERSION}/lib/ant-contrib.jar ]; then
-    echo "But Ant-Contrib Is Missing - Installing"
-    # Ant Version Not Found... Check And Create Paths
-    echo Downloading ant-contrib-${ANT_CONTRIB_VERSION}:
-    curl -L https://sourceforge.net/projects/ant-contrib/files/ant-contrib/${ANT_CONTRIB_VERSION}/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip > /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
-    (unzip -qnj /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip ant-contrib/ant-contrib-${ANT_CONTRIB_VERSION}.jar -d ${ANT_BASE_PATH}/apache-ant-${ANT_VERSION}/lib)
-    rm /tmp/ant-contrib-${ANT_CONTRIB_VERSION}-bin.zip
-  else
-    echo "Ant Contrib Version: $ANT_CONTRIB_VERSION Is Already Installed"
   fi
 }
 
