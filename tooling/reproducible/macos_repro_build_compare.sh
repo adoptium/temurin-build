@@ -328,10 +328,6 @@ Check_Architecture() {
     echo "System Architecture: 64-bit (Intel)"
     sysArch="x64"
     msvsArch="x64"
-  elif [[ $systemArchitecture == *86* ]]; then
-    echo "System Architecture: 32-bit (Intel)"
-    sysArch="x86"
-    msvsArch="x86"
   elif [[ $systemArchitecture == *arm64* ]]; then
     echo "System Architecture: 64-bit (ARM)"
     sysArch="arm64"
@@ -479,7 +475,6 @@ Install_BootJDK() {
   # Adjust Sys Arch For API
   if [ $msvsArch = "arm64" ] ; then NATIVE_API_ARCH="aarch64" ; fi
   if [ $msvsArch = "x64" ] ; then NATIVE_API_ARCH="x64" ; fi
-  if [ $msvsArch = "x86" ] ; then NATIVE_API_ARCH="x86" ; fi
 
   local api_query="https://api.adoptium.net/v3/binary/version/jdk-${BOOTJDK_VERSION}/mac/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
   local sig_query=""

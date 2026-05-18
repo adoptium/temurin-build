@@ -88,9 +88,7 @@ configureDevKitConfigureParameter() {
 
       # This is TARGET Architecture for the Redist DLLs to use
       local dll_arch
-      if [[ "${target_arch}" == "x86-32" ]]; then
-        dll_arch="x86"
-      elif [[ "${target_arch}" == "aarch64" ]]; then
+      if [[ "${target_arch}" == "aarch64" ]]; then
         dll_arch="arm64"
       else
         dll_arch="x64"
@@ -276,7 +274,7 @@ versionNumbersFileParser() {
     [[ ! "${fileVersionString}" =~ ^jdk8u[0-9]+$ || $error ]] && echo "ERROR: build.sh: ${funcName}: version file could not be parsed." >&2 && exit 1
   else
     # File parsing logic for jdk11+.
-    # We use awk as a POSIX std (to be consistent with platforms like Solaris)
+    # We use awk as a POSIX std
     patchNo="$(  awk -F= '/^DEFAULT_VERSION_PATCH/{print$2}' "${numbersFile}")" || error="true"
     updateNo="$( awk -F= '/^DEFAULT_VERSION_UPDATE/ {print$2}' "${numbersFile}")" || error="true"
     interimNo="$(awk -F= '/^DEFAULT_VERSION_INTERIM/{print$2}' "${numbersFile}")" || error="true"

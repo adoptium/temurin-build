@@ -350,9 +350,6 @@ setMakeCommandForOS() {
   "aix")
     make_command_name="gmake"
     ;;
-  "sunos")
-    make_command_name="gmake"
-    ;;
   esac
 
   BUILD_CONFIG[MAKE_COMMAND_NAME]=${BUILD_CONFIG[MAKE_COMMAND_NAME]:-$make_command_name}

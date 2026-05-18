@@ -43,11 +43,6 @@ steps:
           BUILD_ARGS="--freetype-version 2.5.3"
       fi
 
-      if [ "${ARCHITECTURE}" == "x86-32" ]
-      then
-          CONFIGURE_ARGS="--with-target-bits=32 --target=x86 ${CONFIGURE_ARGS}"
-      fi
-
       ./makejdk-any-platform.sh \
         ${EXTRA_MAKEJDK_ANY_PLATFORM_OPTIONS} \
         --jdk-boot-dir "${JDK_BOOT_DIR}" \

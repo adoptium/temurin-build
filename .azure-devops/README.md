@@ -4,13 +4,13 @@
 
 Supported Versions/Platforms:
 
-| JDK Version    | macOS x64 | Windows x64 | Windows x86-32 |
-| -------------- | --------- | ----------- | -------------- |
-| jdk8u hotspot  | ❌        | ✔️          | ✔️            |
-| jdk11u hotspot | ✔️        | ✔️          | ✔️            |
-| jdk14u hotspot | ✔️        | ✔️          | ✔️            |
-| jdk15 hotspot  | ✔️        | ✔️          | ❌            |
-| jdk-tip hotspot| ✔️        | ✔️          | ❌            |
+| JDK Version    | macOS x64 | Windows x64 |
+| -------------- | --------- | ----------- |
+| jdk8u hotspot  | ❌        | ✔️          |
+| jdk11u hotspot | ✔️        | ✔️          |
+| jdk14u hotspot | ✔️        | ✔️          |
+| jdk15 hotspot  | ✔️        | ✔️          |
+| jdk-tip hotspot| ✔️        | ✔️          |
 
 ## Requirements
 
@@ -48,7 +48,7 @@ If you don't have an Azure DevOps organization, you can start from
    More tasks, signing and testing, etc, will be added in the future.
 
 3. `build/build.yml` file contains all the stages.
-   Currently, it contains 3 stages: macOS x64, windows x64, and windows x86-32.
+   Currently, it contains 2 stages: macOS x64 and windows x64.
 
 4. Azure DevOps YAML step templates are used inside each steps folder (macOS, shared, windows)
    so the tasks can be **grouped together** and **reused**.

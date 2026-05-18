@@ -168,8 +168,6 @@ Add a banner to the website to indicate that the releases are coming in the near
 
 In order to reduce time to GA, we have automated triggers to ensure that the GA build pipelines are triggered as soon as the GA tags come out so it does not rely on one of the Adoptium team members watching it and kicking them off manually. These examples use JDK17 - adjust for the version you're interested in.
 
-Note that while the generated pipelines will include a configuration for `x32Windows` we should manually disable that before the triggers run to avoid those taking CPU time away from the x64 machines. The pipelines should be re-triggered with ONLY the `x32Windows` configuration approximately 48 hours after the initial triggers once most of the Windows 64-bit ones are complete for all versions.
-
 1. Jenkins "release trigger" job (e.g <https://ci.adoptium.net/job/build-scripts/job/utils/job/releaseTrigger_jdk17u/>) runs every hour in the release week to check if new GA tag has been detected in the adoptium's source code repo - the script run from the checks for the new release every 10 minutes five times (e.g <https://github.com/adoptium/jdk17u>) This excludes https://github.com/adoptium/aarch32-jdk8u
 2. If it finds new GA tag matches expected tag set in mirror-script repo, job triggers release-openjdk19-pipeline (e.g https://ci.adoptium.net/job/build-scripts/job/release-openjdk19-pipeline/) with parameters: `scmReference`.
 3. If it couldn't find the correct "_adopt" tag but GA tag has been applied in the upstream Skara source code repo. Several things can check:
@@ -405,7 +403,6 @@ required, but this information on the parameters is here if you need it:
   - `**/*_mac_*.tar.gz,**/*_mac_*.sha256.txt,**/*_mac_*.json,**/*_mac_*.pkg,**/*_mac_*.sig`
   - `**/*_windows_*.zip,**/*_windows_*.sha256.txt,**/*_windows_*.json,**/*_windows_*.msi,**/*_windows_*.sig`
   - `**/*_aix_*.tar.gz,**/*_aix_*.sha256.txt,**/*_aix_*.json,**/*_aix_*.sig`
-  - `**/*_solaris_*.tar.gz,**/*_solaris_*.sha256.txt,**/*_solaris_*.json,**/*_solaris_*.sig`
 - Click "Build" button !!!
 
 </details>
