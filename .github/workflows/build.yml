@@ -278,7 +278,7 @@ jobs:
         key: cygwin-packages-${{ runner.os }}-v1
 
      - name: Install Cygwin and packages
-       uses: cygwin/cygwin-install-action@006ad0b0946ca6d0a3ea2d4437677fa767392401
+       uses: cygwin/cygwin-install-action@711d29f3da23c9f4a1798e369a6f01198c13b11a # v6
        with:
          install-dir: C:\cygwin64
          packages: >-
