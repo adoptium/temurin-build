@@ -65,9 +65,9 @@ To add a task:
 2. To prevent merge conflicts when you pull the latest changes from the upstream sources.
    It is recommended to create another YAML step template, and save it in an appropriate folder.
 
-### Example: Overriding file name
+### Example: Overriding filename
 
-If you need to override the default output file name, you have two options:
+If you need to override the default output filename, you have two options:
 
 First, you can edit the task inside the `build/shared/before.yml` file directly.
 This may add a maintenance cost over time as upstream changes may conflicts with this.
