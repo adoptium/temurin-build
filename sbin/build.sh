@@ -442,9 +442,19 @@ configureVersionStringParameter() {
     local openJdkTag
     openJdkTag=$(getOpenJDKTag)
     local openJdkSourceDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
-    buildTimestamp=$(cd "${openJdkSourceDir}" && TZ=UTC git log -1 --date=format-local:'%Y-%m-%d %H:%M:%S' --format=%cd "${openJdkTag}" 2>/dev/null)
+    local buildTimestampLookupError
+    local buildTimestampOutput
+    if [ -d "${openJdkSourceDir}/.git" ]; then
+      if buildTimestampOutput=$(cd "${openJdkSourceDir}" && TZ=UTC git log -1 --date=format-local:'%Y-%m-%d %H:%M:%S' --format=%cd "${openJdkTag}" 2>&1); then
+        buildTimestamp="${buildTimestampOutput}"
+      else
+        buildTimestampLookupError="${buildTimestampOutput}"
+      fi
+    else
+      buildTimestampLookupError="OpenJDK source directory is not a git repository: ${openJdkSourceDir}"
+    fi
     if [ -z "${buildTimestamp}" ]; then
-      echo "WARNING: Unable to determine OpenJDK commit timestamp for tag ${openJdkTag}, defaulting to current time" 1>&2
+      echo "WARNING: Unable to determine OpenJDK commit timestamp for tag ${openJdkTag}, defaulting to current time. ${buildTimestampLookupError}" 1>&2
       buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S")
     fi
   else
