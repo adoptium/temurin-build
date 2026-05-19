@@ -443,16 +443,20 @@ configureVersionStringParameter() {
     openJdkTag=$(getOpenJDKTag)
     local openJdkSourceDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     local buildTimestampLookupError
-    local buildTimestampOutput
     local gitWorkTreeCheckOutput
+    local buildTimestampEpoch
     if [ -z "${openJdkTag}" ]; then
       buildTimestampLookupError="Unable to determine OpenJDK tag from current build configuration"
     elif [ -d "${openJdkSourceDir}" ]; then
       if gitWorkTreeCheckOutput=$(git -C "${openJdkSourceDir}" rev-parse --is-inside-work-tree 2>&1) && [ "${gitWorkTreeCheckOutput}" = "true" ]; then
-        if buildTimestampOutput=$(TZ=UTC git -C "${openJdkSourceDir}" log -1 --date=format-local:'%Y-%m-%d %H:%M:%S' --format=%cd "${openJdkTag}" 2>&1); then
-          buildTimestamp="${buildTimestampOutput}"
+        if buildTimestampEpoch=$(git -C "${openJdkSourceDir}" log -1 --format=%ct "${openJdkTag}" 2>/dev/null) && [ -n "${buildTimestampEpoch}" ]; then
+          if isGnuCompatDate; then
+            buildTimestamp=$(date --utc --date="@${buildTimestampEpoch}" +"%Y-%m-%d %H:%M:%S")
+          else
+            buildTimestamp=$(date -u -r "${buildTimestampEpoch}" +"%Y-%m-%d %H:%M:%S")
+          fi
         else
-          buildTimestampLookupError="${buildTimestampOutput}"
+          buildTimestampLookupError="Failed to resolve OpenJDK tag commit timestamp"
         fi
       else
         buildTimestampLookupError="OpenJDK source directory is not a git work tree: ${openJdkSourceDir}. ${gitWorkTreeCheckOutput}"
