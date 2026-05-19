@@ -438,6 +438,15 @@ configureVersionStringParameter() {
     # BusyBox doesn't use T Z iso8601 format
     buildTimestamp="${buildTimestamp//T/ }"
     buildTimestamp="${buildTimestamp//Z/}"
+  elif [ "${BUILD_CONFIG[RELEASE]}" == "false" ] && [[ "${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-}" == *"--with-version-opt=ea"* ]] && [ -n "${BUILD_CONFIG[BRANCH]:-}" ]; then
+    local openJdkTag
+    openJdkTag=$(getOpenJDKTag)
+    local openJdkSourceDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
+    buildTimestamp=$(cd "${openJdkSourceDir}" && TZ=UTC git log -1 --date=format-local:'%Y-%m-%d %H:%M:%S' --format=%cd "${openJdkTag}" 2>/dev/null)
+    if [ -z "${buildTimestamp}" ]; then
+      echo "WARNING: Unable to determine OpenJDK commit timestamp for tag ${openJdkTag}, defaulting to current time" 1>&2
+      buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S")
+    fi
   else
     # Get current ISO-8601 datetime
     buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S")
