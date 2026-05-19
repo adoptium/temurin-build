@@ -144,16 +144,22 @@ jobs:
         VENDOR_REPOS: ${{ github.event.pull_request.head.repo.html_url }}.git
         VENDOR_BRANCH: ${{ github.head_ref }}
       run: |
+        echo "Host PWD before smoke test: ${PWD}"
         WORK_DIR="${PWD//${HOME}//home/jenkins}"
+        echo "Container-mapped WORK_DIR: ${WORK_DIR}"
         docker run --rm -w /home/jenkins -v "$HOME":"/home/jenkins" \
             -e "TEST_JDK_HOME=${TEST_JDK_HOME}" \
             -e "BUILD_LIST=functional/buildAndPackage" \
             "${{ matrix.image }}" \
-            sh -c "cd ${WORK_DIR}/aqa-tests && \
+            sh -c "pwd && \
+             cd ${WORK_DIR}/aqa-tests && \
+             pwd && \
              ./get.sh --vendor_repos ${VENDOR_REPOS} \
                       --vendor_branches ${VENDOR_BRANCH} \
                       --vendor_dirs /test/functional && \
+             echo \"TKG commit SHA after get.sh: \$(git -C TKG rev-parse HEAD)\" && \
              cd TKG && \
+             pwd && \
              make compile && \
              make _extended.functional"
 
