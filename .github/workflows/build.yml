@@ -157,7 +157,9 @@ jobs:
              ./get.sh --vendor_repos ${VENDOR_REPOS} \
                       --vendor_branches ${VENDOR_BRANCH} \
                       --vendor_dirs /test/functional && \
-             echo \"TKG commit SHA after get.sh: \$(git -C TKG rev-parse HEAD)\" && \
+             (git -C TKG rev-parse HEAD >/tmp/tkg_sha 2>/dev/null && \
+              echo \"TKG commit SHA after get.sh: \$(cat /tmp/tkg_sha)\" || \
+              echo \"TKG commit SHA after get.sh: unavailable\") && \
              cd TKG && \
              pwd && \
              make compile && \
