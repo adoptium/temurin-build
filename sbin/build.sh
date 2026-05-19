@@ -431,7 +431,7 @@ configureVersionStringParameter() {
   fi
 
   # Determine build date timestamp to use
-  local buildTimestamp
+  local buildTimestamp=""
   if [[ -n "${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}" ]]; then
     # Use input reproducible build date supplied in ISO8601 format UTC time
     buildTimestamp="${BUILD_CONFIG[BUILD_REPRODUCIBLE_DATE]}"
@@ -444,17 +444,24 @@ configureVersionStringParameter() {
     local openJdkSourceDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
     local buildTimestampLookupError
     local buildTimestampOutput
-    if [ -d "${openJdkSourceDir}" ] && git -C "${openJdkSourceDir}" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-      if buildTimestampOutput=$(TZ=UTC git -C "${openJdkSourceDir}" log -1 --date=format-local:'%Y-%m-%d %H:%M:%S' --format=%cd "${openJdkTag}" 2>&1); then
-        buildTimestamp="${buildTimestampOutput}"
+    local gitWorkTreeCheckOutput
+    if [ -z "${openJdkTag}" ]; then
+      buildTimestampLookupError="Unable to determine OpenJDK tag from current build configuration"
+    elif [ -d "${openJdkSourceDir}" ]; then
+      if gitWorkTreeCheckOutput=$(git -C "${openJdkSourceDir}" rev-parse --is-inside-work-tree 2>&1) && [ "${gitWorkTreeCheckOutput}" == "true" ]; then
+        if buildTimestampOutput=$(TZ=UTC git -C "${openJdkSourceDir}" log -1 --date=format-local:'%Y-%m-%d %H:%M:%S' --format=%cd "${openJdkTag}" 2>&1); then
+          buildTimestamp="${buildTimestampOutput}"
+        else
+          buildTimestampLookupError="${buildTimestampOutput}"
+        fi
       else
-        buildTimestampLookupError="${buildTimestampOutput}"
+        buildTimestampLookupError="OpenJDK source directory is not a git work tree: ${openJdkSourceDir}. ${gitWorkTreeCheckOutput}"
       fi
     else
-      buildTimestampLookupError="OpenJDK source directory is not a git work tree: ${openJdkSourceDir}"
+      buildTimestampLookupError="OpenJDK source directory does not exist: ${openJdkSourceDir}"
     fi
     if [ -z "${buildTimestamp}" ]; then
-      echo "WARNING: Unable to determine OpenJDK commit timestamp for tag ${openJdkTag}, defaulting to current time. Error: ${buildTimestampLookupError}" 1>&2
+      echo "WARNING: Unable to determine OpenJDK commit timestamp for tag ${openJdkTag:-unknown}, defaulting to current time. Error: ${buildTimestampLookupError}" 1>&2
       buildTimestamp=$(date -u +"%Y-%m-%d %H:%M:%S")
     fi
   else
