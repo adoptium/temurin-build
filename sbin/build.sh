@@ -413,6 +413,8 @@ getOpenJdkVersion() {
   echo "${version}"
 }
 
+# Resolves BUILD_TIMESTAMP for EA beta tag builds from the OpenJDK tag commit time.
+# Falls back to the current UTC timestamp if the tag commit time cannot be resolved.
 resolveEaBetaTagBuildTimestamp() {
   local openJdkTag
   openJdkTag=$(getOpenJDKTag)
