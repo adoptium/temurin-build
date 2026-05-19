@@ -166,11 +166,16 @@ jobs:
              echo \"Debug after make compile (rc=\${compile_rc})\" && \
              echo \"TKG commit SHA after make compile: \$(git rev-parse HEAD 2>/dev/null || echo 'unavailable - TKG missing or not a git repo')\" && \
              (cat scripts/build_test.xml || echo 'Unable to read TKG/scripts/build_test.xml') && \
-             if [ \${compile_rc} -eq 0 ]; then make _extended.functional || functional_rc=\$?; else functional_rc=1; echo \"Skipping make _extended.functional because make compile failed\"; fi && \
+             if [ \${compile_rc} -eq 0 ]; then \
+               make _extended.functional || functional_rc=\$?; \
+             else \
+               functional_rc=1; \
+               echo \"Skipping make _extended.functional because make compile failed\"; \
+             fi && \
              echo \"Debug after make _extended.functional (rc=\${functional_rc})\" && \
              echo \"TKG commit SHA after make _extended.functional: \$(git rev-parse HEAD 2>/dev/null || echo 'unavailable - TKG missing or not a git repo')\" && \
              (cat scripts/build_test.xml || echo 'Unable to read TKG/scripts/build_test.xml') && \
-             test \${compile_rc} -eq 0 -a \${functional_rc} -eq 0"
+             [ \${compile_rc} -eq 0 ] && [ \${functional_rc} -eq 0 ]"
 
     - uses: actions/upload-artifact@v7
       name: Collect and Archive SmokeTest Results
