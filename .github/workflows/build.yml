@@ -156,7 +156,8 @@ jobs:
              pwd && \
              ./get.sh --vendor_repos ${VENDOR_REPOS} \
                       --vendor_branches ${VENDOR_BRANCH} \
-                      --vendor_dirs /test/functional && \
+                      --vendor_dirs /test/functional \
+                      --clone_openj9 false && \
              echo \"TKG commit SHA after get.sh: \$(git -C TKG rev-parse HEAD 2>/dev/null || echo 'unavailable - TKG missing or not a git repo')\" && \
              cd TKG && \
              pwd && \
