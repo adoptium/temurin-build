@@ -438,7 +438,7 @@ configureVersionStringParameter() {
     # BusyBox doesn't use T Z iso8601 format
     buildTimestamp="${buildTimestamp//T/ }"
     buildTimestamp="${buildTimestamp//Z/}"
-  elif [ "${BUILD_CONFIG[RELEASE]}" = "false" ] && [[ "${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-}" == *"--with-version-opt=ea"* ]] && [ -n "${BUILD_CONFIG[BRANCH]:-}" ]; then
+  elif [[ "${BUILD_CONFIG[RELEASE]}" = "false" && "${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-}" == *"--with-version-opt=ea"* && -n "${BUILD_CONFIG[BRANCH]:-}" ]]; then
     local openJdkTag
     openJdkTag=$(getOpenJDKTag)
     local openJdkSourceDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
@@ -459,7 +459,7 @@ configureVersionStringParameter() {
           buildTimestampLookupError="Failed to resolve OpenJDK tag commit timestamp"
         fi
       else
-        buildTimestampLookupError="OpenJDK source directory is not a git work tree: ${openJdkSourceDir}. ${gitWorkTreeCheckOutput}"
+        buildTimestampLookupError="OpenJDK source directory is not a git work tree: ${openJdkSourceDir}. Git output: ${gitWorkTreeCheckOutput}"
       fi
     else
       buildTimestampLookupError="OpenJDK source directory does not exist: ${openJdkSourceDir}"
