@@ -438,7 +438,7 @@ configureVersionStringParameter() {
     # BusyBox doesn't use T Z iso8601 format
     buildTimestamp="${buildTimestamp//T/ }"
     buildTimestamp="${buildTimestamp//Z/}"
-  elif [ "${BUILD_CONFIG[RELEASE]}" == "false" ] && [[ "${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-}" == *"--with-version-opt=ea"* ]] && [ -n "${BUILD_CONFIG[BRANCH]:-}" ]; then
+  elif [ "${BUILD_CONFIG[RELEASE]}" = "false" ] && [[ "${BUILD_CONFIG[USER_SUPPLIED_CONFIGURE_ARGS]:-}" == *"--with-version-opt=ea"* ]] && [ -n "${BUILD_CONFIG[BRANCH]:-}" ]; then
     local openJdkTag
     openJdkTag=$(getOpenJDKTag)
     local openJdkSourceDir="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}"
@@ -448,7 +448,7 @@ configureVersionStringParameter() {
     if [ -z "${openJdkTag}" ]; then
       buildTimestampLookupError="Unable to determine OpenJDK tag from current build configuration"
     elif [ -d "${openJdkSourceDir}" ]; then
-      if gitWorkTreeCheckOutput=$(git -C "${openJdkSourceDir}" rev-parse --is-inside-work-tree 2>&1) && [ "${gitWorkTreeCheckOutput}" == "true" ]; then
+      if gitWorkTreeCheckOutput=$(git -C "${openJdkSourceDir}" rev-parse --is-inside-work-tree 2>&1) && [ "${gitWorkTreeCheckOutput}" = "true" ]; then
         if buildTimestampOutput=$(TZ=UTC git -C "${openJdkSourceDir}" log -1 --date=format-local:'%Y-%m-%d %H:%M:%S' --format=%cd "${openJdkTag}" 2>&1); then
           buildTimestamp="${buildTimestampOutput}"
         else
