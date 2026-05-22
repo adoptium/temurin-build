@@ -327,6 +327,16 @@ Get_SBOM_Values() {
       echo "This Is A Mandatory Element"
       exit 1
   fi
+  
+  # Determine target architecture from buildArgs
+  if [[ "$buildArgs" == *"--openjdk-target=aarch64-unknown-cygwin"* ]]; then
+      targetArch="arm64"
+      echo "Target Architecture (from buildArgs): arm64 (cross-compile)"
+  else
+      targetArch="x64"
+      echo "Target Architecture (from buildArgs): x64"
+  fi
+  export targetArch
   echo ""
 
   if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
@@ -371,7 +381,7 @@ Check_Architecture() {
     msvsArch="x86"
   elif [[ $systemArchitecture == *arm64* ]]; then
     echo "System Architecture: 64-bit (ARM)"
-    sysArch="Arm64"
+    sysArch="arm64"
     msvsArch="arm64"
   else
     echo "System Architecture: Other - Not Supported"
@@ -415,9 +425,9 @@ Check_VS_Versions() {
   fi
   echo "Visual Studio Base Path = $MSVS_SEARCH_PATH"
 
-  # Add Host Architecture To Exe name
-  C_COMPILER_PATH="Host$msvsArch/$msvsArch"
-  CPP_COMPILER_PATH="Host$msvsArch/$msvsArch"
+  # Add Host Architecture and target To Exe name
+  C_COMPILER_PATH="Host$msvsArch/$targetArch"
+  CPP_COMPILER_PATH="Host$msvsArch/$targetArch"
 
   # Define Search Path For C Compilers
   echo ""
@@ -513,13 +523,13 @@ Check_UCRT_Location() {
   URCT_CYGPATH=$(cygpath -u "$WIN_URCT_BASE")
   WIN_URCT_PATH="$URCT_CYGPATH"
   # Only Search For DLLs for the correct architecture
-  UCRTCOUNT=$(find "$WIN_URCT_PATH" | grep $msvsArch | grep -ic ucrtbase.dll)
+  UCRTCOUNT=$(find "$WIN_URCT_PATH" | grep $targetArch | grep -ic ucrtbase.dll)
   if [ "$UCRTCOUNT" -eq 0 ] ; then
     echo "ERROR - NO ucrtbase.dll Could Be Found For The Base Path Specified - Exiting"
     exit 1
   else
     UCRT_FOUND=0
-    dll_paths=$(find "$WIN_URCT_PATH" -name 'ucrtbase.dll' | grep $msvsArch 2>/dev/null)
+    dll_paths=$(find "$WIN_URCT_PATH" -name 'ucrtbase.dll' | grep $targetArch 2>/dev/null)
     for dll in $dll_paths ; do
       dllpath=$(cygpath -s -m "$dll")
       # Check The Version Of Each
@@ -639,10 +649,10 @@ Prepare_Env_For_OpenJDK_Build() {
     unzip -q "${USER_DEVKIT_LOCATION}" -d "$WORK_DIR/devkit"
   fi
 
-  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-ucrt-dll-dir=[^ ]*|--with-ucrt-dll-dir=$WORK_DIR/devkit/ucrt/DLLs/$msvsArch|")"
-  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-msvcr-dll=[^ ]*|--with-msvcr-dll=$WORK_DIR/devkit/$msvsArch/vcruntime140.dll|")"
-  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-vcruntime-1-dll=[^ ]*|--with-vcruntime-1-dll=$WORK_DIR/devkit/$msvsArch/vcruntime140_1.dll|")"
-  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-msvcp-dll=[^ ]*|--with-msvcp-dll=$WORK_DIR/devkit/$msvsArch/msvcp140.dll|")"
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-ucrt-dll-dir=[^ ]*|--with-ucrt-dll-dir=$WORK_DIR/devkit/ucrt/DLLs/$targetArch|")"
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-msvcr-dll=[^ ]*|--with-msvcr-dll=$WORK_DIR/devkit/$targetArch/vcruntime140.dll|")"
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-vcruntime-1-dll=[^ ]*|--with-vcruntime-1-dll=$WORK_DIR/devkit/$targetArch/vcruntime140_1.dll|")"
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-msvcp-dll=[^ ]*|--with-msvcp-dll=$WORK_DIR/devkit/$targetArch/msvcp140.dll|")"
 
   echo ""
   echo "OpenJDK Configure Argument List = "
