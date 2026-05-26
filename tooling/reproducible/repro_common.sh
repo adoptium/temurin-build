@@ -19,19 +19,16 @@ TEMURIN_TOOLS_BINREPL="temurin.tools.BinRepl"
 function expandJDK() {
   local JDK_DIR="$1"
   local OS="$2"
+  local work_JDK="$3"
 
   local JDK_HOME_DIR="$JDK_DIR"
-  local JDK_COPY="${1}_CP"
-  local JDK_COPY_BIN="${JDK_COPY}/bin"
 
   if [[ "$OS" =~ Darwin* ]]; then
     JDK_HOME_DIR="$JDK_DIR/Contents/Home"
-    JDK_COPY_BIN="$JDK_COPY/Contents/Home/bin"
+    work_JDK="$3/Contents/Home"
   fi
 
   echo "$(date +%T) : Expanding various components to enable comparisons ${JDK_DIR} (original files will be removed):"
-  mkdir "${JDK_COPY}"
-  cp -R ${JDK_DIR}/* ${JDK_COPY}
 
   echo "$(date +%T) :   Using 'jimage extract' to expand lib/modules image into lib/modules_extracted"
   modulesFile="${JDK_HOME_DIR}/lib/modules"
@@ -41,7 +38,7 @@ function expandJDK() {
     modulesFile=$(cygpath -w $modulesFile)
     extractedDir=$(cygpath -w $extractedDir)
   fi
-  "${JDK_COPY_BIN}/jimage" extract --dir "${extractedDir}" "${modulesFile}"
+  "${work_JDK}/bin/jimage" extract --dir "${extractedDir}" "${modulesFile}"
   rm "${JDK_HOME_DIR}/lib/modules"
   echo "$(date +%T) :   Unzipping lib/src.zip to normalize file permissions, then removing src.zip"
   unzip -q "${JDK_HOME_DIR}/lib/src.zip" -d "${JDK_HOME_DIR}/lib/src_zip_expanded"
@@ -59,7 +56,7 @@ function expandJDK() {
         f=$(cygpath -w $f)
         expand_dir=$(cygpath -w $expand_dir)
       fi
-      "${JDK_COPY_BIN}/jmod" extract --dir "${expand_dir}" "$f"
+      "${work_JDK}/bin/jmod" extract --dir "${expand_dir}" "$f"
       rm "$f"
     done
 
@@ -80,7 +77,6 @@ function expandJDK() {
   unzip -qd "${JDK_HOME_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct-sym-expanded" "${JDK_HOME_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct.sym"
   rm "${JDK_HOME_DIR}/jmods/expanded_jdk.compiler.jmod/lib/ct.sym"
 
-  rm -rf "${JDK_COPY}"
 }
 
 # jdk-25+ Jlink runtimelink files contain signed binary "hash" lines in fs_* runtimelink files

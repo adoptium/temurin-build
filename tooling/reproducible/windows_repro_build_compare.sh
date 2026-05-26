@@ -30,6 +30,7 @@ SBOM_URL=""
 TARBALL_URL=""
 REPORT_DIR=""
 USER_DEVKIT_LOCATION=""
+WORK_JDK_DIR=""
 REPRODUCIBLE_VERIFICATION=false
 
 while [[ $# -gt 0 ]] ; do
@@ -50,6 +51,9 @@ while [[ $# -gt 0 ]] ; do
     "--user-devkit-location" )
     USER_DEVKIT_LOCATION="$1"; shift;;
 
+    "--work-jdk" )
+    WORK_JDK_DIR="$1"; shift;;
+
     "--reproducible-verification" )
     REPRODUCIBLE_VERIFICATION=true;;
 
@@ -67,6 +71,7 @@ if [ -z "$SBOM_URL" ] || [ -z "$TARBALL_URL" ] || [ -z "$REPORT_DIR" ]; then
   echo "    --report-dir [REPORT_DIR] : should be the FULL path OR a URL to the output directory for the comparison report"
   echo "  Optional:"
   echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of user built Windows Redist DLL DevKit"
+  echo "    --work-jdk [WORK_JDK_DIR] : FULL path to a suitable host JDK used by [`repro_compare.sh`](tooling/reproducible/repro_compare.sh:18) for preprocessing cross-compiled targets"
   echo "    --reproducible-verification : Enables Reproducible Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
   exit 1
 fi
@@ -802,9 +807,9 @@ Compare_JDK() {
   set +e
   cd "$ScriptPath" || exit 1
   if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
-    ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk hotspot $WORK_DIR/compare/tar_jdk CYGWIN 2>&1 &
+    ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk hotspot $WORK_DIR/compare/tar_jdk CYGWIN "${WORK_JDK_DIR}" 2>&1 &
   else
-    ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk CYGWIN 2>&1 &
+    ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk CYGWIN "${WORK_JDK_DIR}" 2>&1 &
   fi
   pid=$!
   wait $pid

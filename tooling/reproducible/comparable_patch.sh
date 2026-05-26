@@ -319,7 +319,8 @@ else
   exit 1
 fi
 
-expandJDK "$JDK_DIR" "$OS"
+cp -R "${JDK_DIR}" "${JDK_DIR}_CP"
+expandJDK "$JDK_DIR" "$OS" "${JDK_DIR}_CP"
 
 echo "Removing all Signatures from ${JDK_DIR} in a deterministic way"
 
