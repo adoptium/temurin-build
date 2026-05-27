@@ -246,11 +246,6 @@ Get_SBOM_Values() {
   TEMURIN_VERSION="jdk-"$(echo "$sbomContent" | jq -r '.metadata.component.version' | sed 's/-beta//' | cut -f1 -d"-")
   buildArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
 
-
-# temp hack!!!
-TEMURIN_COMPONENT_VERSION="21.0.11+10-LTS"
-TEMURIN_VERSION="jdk-21.0.11+10-LTS"
-
   # Temurin beta-ea builds have release tags ending "-ea-beta"
   if [[ "$TEMURIN_COMPONENT_VERSION" == *-beta*-ea ]]; then
     TEMURIN_VERSION="${TEMURIN_VERSION}-ea-beta"
