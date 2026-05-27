@@ -246,6 +246,11 @@ Get_SBOM_Values() {
   TEMURIN_VERSION="jdk-"$(echo "$sbomContent" | jq -r '.metadata.component.version' | sed 's/-beta//' | cut -f1 -d"-")
   buildArgs=$(echo "$sbomContent" | jq -r '.components[0].properties[] | select(.name == "makejdk_any_platform_args").value')
 
+
+# temp hack!!!
+TEMURIN_COMPONENT_VERSION="21.0.11+10-LTS"
+TEMURIN_VERSION="jdk-21.0.11+10-LTS"
+
   # Temurin beta-ea builds have release tags ending "-ea-beta"
   if [[ "$TEMURIN_COMPONENT_VERSION" == *-beta*-ea ]]; then
     TEMURIN_VERSION="${TEMURIN_VERSION}-ea-beta"
@@ -338,8 +343,8 @@ Get_SBOM_Values() {
       targetArch="arm64"
       echo "Target Architecture (from buildArgs): arm64 (cross-compile)"
   else
-      targetArch="x64"
-      echo "Target Architecture (from buildArgs): x64"
+      targetArch=""
+      echo "No Target Architecture (from buildArgs)"
   fi
   export targetArch
   echo ""
@@ -391,6 +396,11 @@ Check_Architecture() {
   else
     echo "System Architecture: Other - Not Supported"
     exit 1
+  fi
+
+  # If no target arch in BuildArgs then we are not cross-compiling, then default to system
+  if [[ -z "$targetArch" ]]; then
+    targetArch="$msvsArch"
   fi
 
   if [[ "$sysArch" == "$msvsArch" ]]; then
@@ -820,9 +830,15 @@ Compare_JDK() {
   if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
     EVIDENCE_LOG="$PWD/reproducible_evidence.log"
     if [ $rc -eq 0 ]; then
+      # Adjust Target Arch to standard Adoptium format
+      evidenceArch=""
+      if [ $targetArch = "arm64" ] ; then evidenceArch="aarch64" ; fi
+      if [ $targetArch = "x64" ] ; then evidenceArch="x64" ; fi
+      if [ $targetArch = "x86" ] ; then evidenceArch="x86" ; fi
+
       echo "Successful 100% Reproducible Verification" >> "${EVIDENCE_LOG}"
       echo "Eclipse Temurin version: ${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
-      echo "                   arch: ${NATIVE_API_ARCH}" >> "${EVIDENCE_LOG}"
+      echo "                   arch: ${evidenceArch}" >> "${EVIDENCE_LOG}"
       echo "                     os: windows" >> "${EVIDENCE_LOG}"
       echo "                 sha256: ${JDK_TAR_HASH}" >> "${EVIDENCE_LOG}"
     else
