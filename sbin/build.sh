@@ -1959,6 +1959,21 @@ printJavaVersionString() {
        # job is cross compiled, so we cannot run it on the build system
        # So we leave it for now and retrieve the version from a downstream job after the build
        echo "Warning: java version can't be run on cross compiled build system. Faking version for now..."
+
+       local specFile
+       if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+         specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
+       else
+         specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
+       fi
+
+cat $specFile
+      
+       # Get "export LC_ALL" value used from build spec.gmk
+       #BUILD_LC_ALL="$(grep "^export LC_ALL[ ]*:=" ${specFile} | sed "s/^export LC_ALL[ ]*:=[ ]*//")"
+       #  # We have a build tag, so set it to that, as this value will be put into the SBOM
+
+
      else
        # print version string around easy to find output
        # do not modify these strings as jenkins looks for them
