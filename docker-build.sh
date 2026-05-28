@@ -125,9 +125,9 @@ buildOpenJDKViaDocker()
       local jmods_dir="" # not needed in JDK builds < 24
     fi
 
-    # JDK 22+ uses static-libs-graal-image target, using static-libs-graal
+    # JDK 22->26 uses static-libs-graal-image target, using static-libs-graal
     # folder.
-    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 22 ]; then
+    if [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 22 ] && [ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -lt 27 ]; then
       local static_libs_dir="static-libs-graal"
     else
       local static_libs_dir="static-libs"
