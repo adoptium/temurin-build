@@ -1913,6 +1913,21 @@ getGradleUserHome() {
   echo $gradleUserHome
 }
 
+# Get VERSION_STRING from the openjdk configure spec.gmk
+getBuildConfigureVersionString() {
+  local specFile
+  if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
+    specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
+  else
+    specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
+  fi
+
+  # Get "VERSION_STRING" value used from build spec.gmk
+  local ver_string="$(grep "^VERSION_STRING[ ]*:=" ${specFile} | sed "s/^VERSION_STRING[ ]*:=[ ]*//")"
+
+  echo "${ver_string}"
+}
+
 parseJavaVersionString() {
   ADOPT_BUILD_NUMBER="${ADOPT_BUILD_NUMBER:-1}"
 
@@ -1958,22 +1973,13 @@ printJavaVersionString() {
      elif [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
        # job is cross compiled, so we cannot run it on the build system
        # So we leave it for now and retrieve the version from a downstream job after the build
-       echo "Warning: java version can't be run on cross compiled build system. Faking version for now..."
+       echo "Warning: java version can't be run on cross compiled build system. Obtaining version string from build spec.gmk instead."
 
-       local specFile
-       if [ -z "${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}" ] ; then
-         specFile="${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/${BUILD_CONFIG[OPENJDK_SOURCE_DIR]}/build/*/spec.gmk"
-       else
-         specFile="${BUILD_CONFIG[USER_OPENJDK_BUILD_ROOT_DIRECTORY]}/spec.gmk"
-       fi
+       # Get "VERSION_STRING" value used from build spec.gmk
+       local ver_string=$(getBuildConfigureVersionString)
+       echo "VERSION_STRING=${ver_string}"
 
-cat $specFile
-      
-       # Get "export LC_ALL" value used from build spec.gmk
-       #BUILD_LC_ALL="$(grep "^export LC_ALL[ ]*:=" ${specFile} | sed "s/^export LC_ALL[ ]*:=[ ]*//")"
-       #  # We have a build tag, so set it to that, as this value will be put into the SBOM
-
-
+       echo "${ver_string}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/version.txt"
      else
        # print version string around easy to find output
        # do not modify these strings as jenkins looks for them
@@ -2787,13 +2793,29 @@ addImplementor() {
 }
 
 addJVMVersion() { # Adds the JVM version i.e. openj9-0.21.0
-  local jvmVersion=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.vm.version' | sed 's/^.*= //' | tr -d '\r')
+  local jvmVersion
+
+  if [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
+    echo "Warning: addJVMVersion: java version can't be run on cross compiled build system. Obtaining version string from build spec.gmk instead."
+    jvmVersion=$(getBuildConfigureVersionString)
+  else
+    jvmVersion=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.vm.version' | sed 's/^.*= //' | tr -d '\r')
+  fi
+
   # shellcheck disable=SC2086
   echo -e JVM_VERSION=\"$jvmVersion\" >>release
 }
 
 addFullVersion() { # Adds the full version including build number i.e. 11.0.9+5-202009040847
-  local fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
+  local fullVer
+
+  if [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
+    echo "Warning: addFullVersion: java version can't be run on cross compiled build system. Obtaining version string from build spec.gmk instead."
+    fullVer=$(getBuildConfigureVersionString)
+  else
+    fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
+  fi
+
   # shellcheck disable=SC2086
   echo -e FULL_VERSION=\"$fullVer\" >>release
 }
@@ -2963,8 +2985,17 @@ addOpenJDKSourceToJson() { # name of git repo for which SOURCE sha is from
 
 addProductVersionToJson() {
   local JAVA_LOC="$PRODUCT_HOME/bin/java"
-  local fullVer=$(${JAVA_LOC} -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
-  local fullVerOutput=$(${JAVA_LOC} -version 2>&1)
+  local fullVer
+  local fullVerOutput
+
+  if [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
+    echo "Warning: addProductVersionToJson: java version can't be run on cross compiled build system. Obtaining version string from build spec.gmk instead."
+    fullVer=$(getBuildConfigureVersionString)
+    fullVerOutput="${fullVer}"
+  else
+    fullVer=$(${JAVA_LOC} -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
+    fullVerOutput=$(${JAVA_LOC} -version 2>&1)
+  fi
 
   echo "${fullVer}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/productVersion.txt" 2>&1
   echo "${fullVerOutput}" > "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[TARGET_DIR]}/metadata/productVersionOutput.txt" 2>&1
