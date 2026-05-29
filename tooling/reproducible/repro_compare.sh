@@ -20,6 +20,7 @@ JDK_DIR1="$2"
 BLD_TYPE2="$3"
 JDK_DIR2="$4"
 OS="$5"
+WORK_JDK="${6:-}"
 
 # Log file for evidence
 EVIDENCE_LOG="reproducible_evidence.log"
@@ -34,7 +35,7 @@ checkJdkDir() {
 
   if [[ ! -d "${JDK_DIR}" ]] || [[ ! -d "${JDK_HOME_DIR}/bin"  ]]; then
     echo "$JDK_DIR does not exist or does not point at a JDK"
-    echo "repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 OS"
+    echo "repro_compare.sh (temurin|openjdk) JDK_DIR1 (temurin|openjdk) JDK_DIR2 OS [WORK_JDK]"
     exit 1
   fi
 }
@@ -58,9 +59,13 @@ if [ -z "${PREPROCESS:-}" ] ; then
   PREPROCESS="yes"
 fi
 
-mkdir "${JDK_DIR}_BK"
-cp -R "${JDK_DIR1}"/* "${JDK_DIR}"_BK
-BK_JDK_DIR=$(realpath "${JDK_DIR}"_BK/)
+if [ -z "${WORK_JDK}" ] ; then
+  mkdir "${JDK_DIR}_BK"
+  cp -R "${JDK_DIR1}"/* "${JDK_DIR}"_BK
+  BK_JDK_DIR=$(realpath "${JDK_DIR}"_BK/)
+else
+  BK_JDK_DIR="${WORK_JDK}"
+fi
 
 JDK_DIR_Arr=("${JDK_DIR1}" "${JDK_DIR2}")
 if [ "$PREPROCESS" != "no" ] ; then
@@ -68,7 +73,7 @@ for  JDK_DIR in "${JDK_DIR_Arr[@]}"
 do
   echo "$(date +%T) : Pre-processing ${JDK_DIR}"
   rc=0
-  source "$(dirname "$0")"/repro_process.sh "${JDK_DIR}" "${OS}" || rc=$?
+  source "$(dirname "$0")"/repro_process.sh "${JDK_DIR}" "${OS}" "${BK_JDK_DIR}" || rc=$?
   if [ $rc != 0 ]; then
     echo "$(date +%T): Pre-processing of ${JDK_DIR} ${OS} failed"
     exit 1
