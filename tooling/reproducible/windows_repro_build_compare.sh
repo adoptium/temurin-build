@@ -71,7 +71,7 @@ if [ -z "$SBOM_URL" ] || [ -z "$TARBALL_URL" ] || [ -z "$REPORT_DIR" ]; then
   echo "    --report-dir [REPORT_DIR] : should be the FULL path OR a URL to the output directory for the comparison report"
   echo "  Optional:"
   echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of user built Windows Redist DLL DevKit"
-  echo "    --work-jdk [WORK_JDK_DIR] : FULL path to a suitable host JDK used by [`repro_compare.sh`](tooling/reproducible/repro_compare.sh:18) for preprocessing cross-compiled targets"
+  echo "    --work-jdk [WORK_JDK_DIR] : FULL path to a suitable host JDK used by [repro_compare.sh](tooling/reproducible/repro_compare.sh:18) for preprocessing cross-compiled targets"
   echo "    --reproducible-verification : Enables Reproducible Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
   exit 1
 fi

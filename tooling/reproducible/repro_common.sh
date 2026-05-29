@@ -19,13 +19,13 @@ TEMURIN_TOOLS_BINREPL="temurin.tools.BinRepl"
 function expandJDK() {
   local JDK_DIR="$1"
   local OS="$2"
-  local work_JDK="$3"
+  local WORK_JDK="$3"
 
   local JDK_HOME_DIR="$JDK_DIR"
 
   if [[ "$OS" =~ Darwin* ]]; then
     JDK_HOME_DIR="$JDK_DIR/Contents/Home"
-    work_JDK="$3/Contents/Home"
+    WORK_JDK="$3/Contents/Home"
   fi
 
   echo "$(date +%T) : Expanding various components to enable comparisons ${JDK_DIR} (original files will be removed):"
@@ -38,7 +38,7 @@ function expandJDK() {
     modulesFile=$(cygpath -w $modulesFile)
     extractedDir=$(cygpath -w $extractedDir)
   fi
-  "${work_JDK}/bin/jimage" extract --dir "${extractedDir}" "${modulesFile}"
+  "${WORK_JDK}/bin/jimage" extract --dir "${extractedDir}" "${modulesFile}"
   rm "${JDK_HOME_DIR}/lib/modules"
   echo "$(date +%T) :   Unzipping lib/src.zip to normalize file permissions, then removing src.zip"
   unzip -q "${JDK_HOME_DIR}/lib/src.zip" -d "${JDK_HOME_DIR}/lib/src_zip_expanded"
@@ -56,7 +56,7 @@ function expandJDK() {
         f=$(cygpath -w $f)
         expand_dir=$(cygpath -w $expand_dir)
       fi
-      "${work_JDK}/bin/jmod" extract --dir "${expand_dir}" "$f"
+      "${WORK_JDK}/bin/jmod" extract --dir "${expand_dir}" "$f"
       rm "$f"
     done
 
@@ -158,10 +158,10 @@ function removeSystemModulesHashBuilderParams() {
   systemModules="SystemModules\$0.class SystemModules\$all.class SystemModules\$default.class SystemModules\$1.class SystemModules\$2.class SystemModules\$3.class SystemModules\$4.class SystemModules\$5.class"
   local JDK_DIR="$1"
   local OS="$2"
-  local work_JDK="$3"
+  local WORK_JDK="$3"
 
   if [[ "$OS" =~ Darwin* ]]; then
-    work_JDK="$3/Contents/Home"
+    WORK_JDK="$3/Contents/Home"
   fi
 
   for systemModule in $systemModules
@@ -173,7 +173,7 @@ function removeSystemModulesHashBuilderParams() {
           if [[ "$OS" =~ CYGWIN* ]]; then
             ff=$(cygpath -w $f)
           fi
-          "${work_JDK}"/bin/javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
+          "${WORK_JDK}"/bin/javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
           
           # Remove "instruction number:" prefix, so we can just match code
           if [[ "$OS" =~ Darwin* ]]; then
@@ -325,10 +325,10 @@ function removeMacOSNonComparableData() {
 function processModuleInfo() {
   local JDK_DIR="$1"
   local OS="$2"
-  local work_JDK="$3"
+  local WORK_JDK="$3"
 
   if [[ "$OS" =~ Darwin* ]]; then
-    work_JDK="$3/Contents/Home"
+    WORK_JDK="$3/Contents/Home"
   fi
 
   echo "$(date +%T) : Process Module Info from ${JDK_DIR}" 
@@ -341,7 +341,7 @@ function processModuleInfo() {
     if [[ "$OS" =~ CYGWIN* ]]; then
       ff=$(cygpath -w $f)
     fi
-    "${work_JDK}"/bin/javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
+    "${WORK_JDK}"/bin/javap -v -sysinfo -l -p -c -s -constants "$ff" > "$f.javap.tmp"
     cc=99
     foundAttr=false
     attrName=""
