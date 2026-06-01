@@ -17,11 +17,12 @@ source "$(dirname "$0")"/repro_common.sh
 
 JDK_DIR="$1"
 OS="$2"
+WORK_JDK="$3"
 
 # This script unpacks the JDK_DIR and removes windows signing Signatures in a neutral way
 # ensuring identical output once Signature is removed.
 
-expandJDK "$JDK_DIR" "$OS"
+expandJDK "$JDK_DIR" "$OS" "$WORK_JDK"
 
 removeGeneratedClasses "$JDK_DIR" "$OS"
 if [[ "$OS" =~ CYGWIN* ]] || [[ "$OS" =~ Darwin* ]]; then
