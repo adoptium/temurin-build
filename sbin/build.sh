@@ -2357,7 +2357,7 @@ setPlistValueForMacOS() {
     if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]]; then
 
       local JAVA_LOC="${DIRECTORY}/Contents/Home/bin/java"
-      local FULL_VERSION=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
+      local FULL_VERSION=$(getJavaVersionProperty "$JAVA_LOC" "java.runtime.version")
 
       case "${BUILD_CONFIG[BUILD_VARIANT]}" in
         openj9)
@@ -2792,15 +2792,25 @@ addImplementor() {
   fi
 }
 
+getJavaVersionProperty() {
+  local javaLoc="$1"
+  local propName="$2"
+  local versionString
+
+  if [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
+    echo "Warning: java version cannot be run on cross compiled build system to obtain property ${propName}. Obtaining version string from build spec.gmk instead." 1>&2
+    versionString=$(getBuildConfigureVersionString)
+  else
+    versionString=$($javaLoc -XshowSettings:properties -version 2>&1 | grep "${propName}" | sed 's/^.*= //' | tr -d '\r')
+  fi
+
+  echo "${versionString}"
+}
+
 addJVMVersion() { # Adds the JVM version i.e. openj9-0.21.0
   local jvmVersion
 
-  if [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
-    echo "Warning: addJVMVersion: java version can't be run on cross compiled build system. Obtaining version string from build spec.gmk instead."
-    jvmVersion=$(getBuildConfigureVersionString)
-  else
-    jvmVersion=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.vm.version' | sed 's/^.*= //' | tr -d '\r')
-  fi
+  jvmVersion=$(getJavaVersionProperty "$JAVA_LOC" "java.vm.version")
 
   # shellcheck disable=SC2086
   echo -e JVM_VERSION=\"$jvmVersion\" >>release
@@ -2809,12 +2819,7 @@ addJVMVersion() { # Adds the JVM version i.e. openj9-0.21.0
 addFullVersion() { # Adds the full version including build number i.e. 11.0.9+5-202009040847
   local fullVer
 
-  if [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
-    echo "Warning: addFullVersion: java version can't be run on cross compiled build system. Obtaining version string from build spec.gmk instead."
-    fullVer=$(getBuildConfigureVersionString)
-  else
-    fullVer=$($JAVA_LOC -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
-  fi
+  fullVer=$(getJavaVersionProperty "$JAVA_LOC" "java.runtime.version")
 
   # shellcheck disable=SC2086
   echo -e FULL_VERSION=\"$fullVer\" >>release
@@ -2988,12 +2993,11 @@ addProductVersionToJson() {
   local fullVer
   local fullVerOutput
 
+  fullVer=$(getJavaVersionProperty "$JAVA_LOC" "java.runtime.version")
+
   if [ "${BUILD_CONFIG[CROSSCOMPILE]}" == "true" ]; then
-    echo "Warning: addProductVersionToJson: java version can't be run on cross compiled build system. Obtaining version string from build spec.gmk instead."
-    fullVer=$(getBuildConfigureVersionString)
     fullVerOutput="${fullVer}"
   else
-    fullVer=$(${JAVA_LOC} -XshowSettings:properties -version 2>&1 | grep 'java.runtime.version' | sed 's/^.*= //' | tr -d '\r')
     fullVerOutput=$(${JAVA_LOC} -version 2>&1)
   fi
 
