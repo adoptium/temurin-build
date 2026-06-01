@@ -2107,6 +2107,11 @@ cleanAndMoveArchiveFiles() {
       fi
     fi
 
+    if [ "$JDK_VERSION_NUMBER" -ge 27 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
+      # Remove server jvm static lib after Graal target removal, https://bugs.openjdk.org/browse/JDK-8382582
+      rm -f "${staticLibsImagePath}"/lib/server/*jvm*
+    fi
+
     pushd ${staticLibsImagePath}
       case "${BUILD_CONFIG[OS_KERNEL_NAME]}" in
       *cygwin*)
