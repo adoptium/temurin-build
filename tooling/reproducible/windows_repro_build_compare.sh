@@ -30,6 +30,7 @@ SBOM_URL=""
 TARBALL_URL=""
 REPORT_DIR=""
 USER_DEVKIT_LOCATION=""
+WORK_JDK_DIR=""
 REPRODUCIBLE_VERIFICATION=false
 
 while [[ $# -gt 0 ]] ; do
@@ -50,6 +51,9 @@ while [[ $# -gt 0 ]] ; do
     "--user-devkit-location" )
     USER_DEVKIT_LOCATION="$1"; shift;;
 
+    "--work-jdk" )
+    WORK_JDK_DIR="$1"; shift;;
+
     "--reproducible-verification" )
     REPRODUCIBLE_VERIFICATION=true;;
 
@@ -67,6 +71,7 @@ if [ -z "$SBOM_URL" ] || [ -z "$TARBALL_URL" ] || [ -z "$REPORT_DIR" ]; then
   echo "    --report-dir [REPORT_DIR] : should be the FULL path OR a URL to the output directory for the comparison report"
   echo "  Optional:"
   echo "    --user-devkit-location [USER_DEVKIT_LOCATION] : FULL path OR a URL location of user built Windows Redist DLL DevKit"
+  echo "    --work-jdk [WORK_JDK_DIR] : FULL path to a suitable host JDK used by [repro_compare.sh](tooling/reproducible/repro_compare.sh:18) for preprocessing cross-compiled targets"
   echo "    --reproducible-verification : Enables Reproducible Verification mode, where native OpenJDK source and make used rather than temurin-build scripts"
   exit 1
 fi
@@ -327,6 +332,16 @@ Get_SBOM_Values() {
       echo "This Is A Mandatory Element"
       exit 1
   fi
+  
+  # Determine target architecture from buildArgs
+  if [[ "$buildArgs" == *"--openjdk-target=aarch64-unknown-cygwin"* ]]; then
+      targetArch="arm64"
+      echo "Target Architecture (from buildArgs): arm64 (cross-compile)"
+  else
+      targetArch=""
+      echo "No Target Architecture (from buildArgs)"
+  fi
+  export targetArch
   echo ""
 
   if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
@@ -371,11 +386,16 @@ Check_Architecture() {
     msvsArch="x86"
   elif [[ $systemArchitecture == *arm64* ]]; then
     echo "System Architecture: 64-bit (ARM)"
-    sysArch="Arm64"
+    sysArch="arm64"
     msvsArch="arm64"
   else
     echo "System Architecture: Other - Not Supported"
     exit 1
+  fi
+
+  # If no target arch in BuildArgs then we are not cross-compiling, then default to system
+  if [[ -z "$targetArch" ]]; then
+    targetArch="$msvsArch"
   fi
 
   if [[ "$sysArch" == "$msvsArch" ]]; then
@@ -415,9 +435,9 @@ Check_VS_Versions() {
   fi
   echo "Visual Studio Base Path = $MSVS_SEARCH_PATH"
 
-  # Add Host Architecture To Exe name
-  C_COMPILER_PATH="Host$msvsArch/$msvsArch"
-  CPP_COMPILER_PATH="Host$msvsArch/$msvsArch"
+  # Add Host Architecture and target To Exe name
+  C_COMPILER_PATH="Host$msvsArch/$targetArch"
+  CPP_COMPILER_PATH="Host$msvsArch/$targetArch"
 
   # Define Search Path For C Compilers
   echo ""
@@ -513,13 +533,13 @@ Check_UCRT_Location() {
   URCT_CYGPATH=$(cygpath -u "$WIN_URCT_BASE")
   WIN_URCT_PATH="$URCT_CYGPATH"
   # Only Search For DLLs for the correct architecture
-  UCRTCOUNT=$(find "$WIN_URCT_PATH" | grep $msvsArch | grep -ic ucrtbase.dll)
+  UCRTCOUNT=$(find "$WIN_URCT_PATH" | grep $targetArch | grep -ic ucrtbase.dll)
   if [ "$UCRTCOUNT" -eq 0 ] ; then
     echo "ERROR - NO ucrtbase.dll Could Be Found For The Base Path Specified - Exiting"
     exit 1
   else
     UCRT_FOUND=0
-    dll_paths=$(find "$WIN_URCT_PATH" -name 'ucrtbase.dll' | grep $msvsArch 2>/dev/null)
+    dll_paths=$(find "$WIN_URCT_PATH" -name 'ucrtbase.dll' | grep $targetArch 2>/dev/null)
     for dll in $dll_paths ; do
       dllpath=$(cygpath -s -m "$dll")
       # Check The Version Of Each
@@ -639,10 +659,10 @@ Prepare_Env_For_OpenJDK_Build() {
     unzip -q "${USER_DEVKIT_LOCATION}" -d "$WORK_DIR/devkit"
   fi
 
-  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-ucrt-dll-dir=[^ ]*|--with-ucrt-dll-dir=$WORK_DIR/devkit/ucrt/DLLs/$msvsArch|")"
-  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-msvcr-dll=[^ ]*|--with-msvcr-dll=$WORK_DIR/devkit/$msvsArch/vcruntime140.dll|")"
-  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-vcruntime-1-dll=[^ ]*|--with-vcruntime-1-dll=$WORK_DIR/devkit/$msvsArch/vcruntime140_1.dll|")"
-  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-msvcp-dll=[^ ]*|--with-msvcp-dll=$WORK_DIR/devkit/$msvsArch/msvcp140.dll|")"
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-ucrt-dll-dir=[^ ]*|--with-ucrt-dll-dir=$WORK_DIR/devkit/ucrt/DLLs/$targetArch|")"
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-msvcr-dll=[^ ]*|--with-msvcr-dll=$WORK_DIR/devkit/$targetArch/vcruntime140.dll|")"
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-vcruntime-1-dll=[^ ]*|--with-vcruntime-1-dll=$WORK_DIR/devkit/$targetArch/vcruntime140_1.dll|")"
+  adoptiumConfigureArgs="$(echo "$adoptiumConfigureArgs" | sed -e "s|--with-msvcp-dll=[^ ]*|--with-msvcp-dll=$WORK_DIR/devkit/$targetArch/msvcp140.dll|")"
 
   echo ""
   echo "OpenJDK Configure Argument List = "
@@ -792,9 +812,9 @@ Compare_JDK() {
   set +e
   cd "$ScriptPath" || exit 1
   if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
-    ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk hotspot $WORK_DIR/compare/tar_jdk CYGWIN 2>&1 &
+    ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk hotspot $WORK_DIR/compare/tar_jdk CYGWIN "${WORK_JDK_DIR}" 2>&1 &
   else
-    ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk CYGWIN 2>&1 &
+    ./repro_compare.sh temurin $WORK_DIR/compare/src_jdk temurin $WORK_DIR/compare/tar_jdk CYGWIN "${WORK_JDK_DIR}" 2>&1 &
   fi
   pid=$!
   wait $pid
@@ -805,9 +825,15 @@ Compare_JDK() {
   if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
     EVIDENCE_LOG="$PWD/reproducible_evidence.log"
     if [ $rc -eq 0 ]; then
+      # Adjust Target Arch to standard Adoptium format
+      evidenceArch=""
+      if [ $targetArch = "arm64" ] ; then evidenceArch="aarch64" ; fi
+      if [ $targetArch = "x64" ] ; then evidenceArch="x64" ; fi
+      if [ $targetArch = "x86" ] ; then evidenceArch="x86" ; fi
+
       echo "Successful 100% Reproducible Verification" >> "${EVIDENCE_LOG}"
       echo "Eclipse Temurin version: ${TEMURIN_VERSION}" >> "${EVIDENCE_LOG}"
-      echo "                   arch: ${NATIVE_API_ARCH}" >> "${EVIDENCE_LOG}"
+      echo "                   arch: ${evidenceArch}" >> "${EVIDENCE_LOG}"
       echo "                     os: windows" >> "${EVIDENCE_LOG}"
       echo "                 sha256: ${JDK_TAR_HASH}" >> "${EVIDENCE_LOG}"
     else
