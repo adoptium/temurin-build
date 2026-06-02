@@ -874,8 +874,10 @@ buildTemplatedFile() {
     ADDITIONAL_MAKE_TARGETS=" test-image debug-image"
   elif [ "$JDK_VERSION_NUMBER" -gt 8 ] && [ "$JDK_VERSION_NUMBER" -lt 22 ]; then
     ADDITIONAL_MAKE_TARGETS=" test-image static-libs-image"
-  elif [ "$JDK_VERSION_NUMBER" -ge 22 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
+  elif [ "$JDK_VERSION_NUMBER" -ge 22 ] && [ "$JDK_VERSION_NUMBER" -lt 27 ]; then
     ADDITIONAL_MAKE_TARGETS=" test-image static-libs-graal-image"
+  elif [ "$JDK_VERSION_NUMBER" -ge 27 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
+    ADDITIONAL_MAKE_TARGETS=" test-image static-libs-image"
   fi
 
   if [[ "${BUILD_CONFIG[MAKE_EXPLODED]}" == "true" ]]; then
@@ -2103,6 +2105,11 @@ cleanAndMoveArchiveFiles() {
         # with linux and windows builds.
         osArch="aarch64"
       fi
+    fi
+
+    if [ "$JDK_VERSION_NUMBER" -ge 27 ] || [ "${BUILD_CONFIG[OPENJDK_CORE_VERSION]}" == "${JDKHEAD_VERSION}" ]; then
+      # Remove server jvm static lib after Graal target removal, https://bugs.openjdk.org/browse/JDK-8382582
+      rm -f "${staticLibsImagePath}"/lib/server/*jvm*
     fi
 
     pushd ${staticLibsImagePath}
