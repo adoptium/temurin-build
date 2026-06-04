@@ -81,7 +81,7 @@ jobs:
             variant: bisheng
             image: adoptopenjdk/centos7_build_image
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
     # --- Disk usage before cleanup ---
     - name: Check disk usage before cleanup
@@ -135,7 +135,7 @@ jobs:
         echo "TEST_JDK_HOME=$(dirname "${imageroot}")" | sed "s,${HOME},/home/jenkins," >> "$GITHUB_ENV"
 
     - name: Checkout aqa-tests repo
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       with:
         repository: adoptium/aqa-tests
         path: aqa-tests
@@ -179,7 +179,7 @@ jobs:
         variant: [temurin]
 
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
     # https://github.com/actions/runner-images/issues/6817
     - name: (Mac) Workaround for homebrew
@@ -373,7 +373,7 @@ jobs:
        shell: bash
        run: mkdir -p "$HOME" && git config --system core.autocrlf false && git config --global --add safe.directory '*'
 
-     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
        with:
          set-safe-directory: false
 
