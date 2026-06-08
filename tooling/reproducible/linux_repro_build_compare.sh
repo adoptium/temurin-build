@@ -695,6 +695,9 @@ if [ $rc -eq 0 ]; then
   echo "Compare identical !"
 else
   echo "Differences found..., logged in: reprotest.diff"
+diff jdk-25.0.3+9/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_java.base_files.sorted and reproJDK/jdk-25.0.3+9/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_java.base_files.sorted
+cat jdk-25.0.3+9/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_java.base_files.sorted
+cat reproJDK/jdk-25.0.3+9/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_java.base_files.sorted
 fi
 
 exit $rc
