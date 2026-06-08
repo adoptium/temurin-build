@@ -30,6 +30,8 @@ ANT_SHA=9028e2fc64491cca0f991acc09b06ee7fe644afe41d1d6caf72702ca25c4613c
 USING_DEVKIT="false"
 ScriptPath=$(dirname "$(realpath "$0")")
 
+source "$ScriptPath"/repro_common.sh
+
 # Read Parameters
 SBOM_PARAM=""
 JDK_PARAM=""
@@ -302,22 +304,6 @@ checkAllVariablesSet() {
   fi
 }
 
-getUpstreamOpenJDKCommitSHA() {
-  local adoptiumMirrorRepo="$1"
-  local openjdkSourceRepo="$2"
-  local adoptiumBuildCommitSHA="$3"
-
-  # Shallow clone commit history only
-  git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_mirror_repo || git clone "$adoptiumMirrorRepo" adoptium_mirror_repo
-
-  # Find upstream OpenJDK commit SHA, which is the first non-merge commit from the adoptiumBuildCommitSHA
-  openjdkCommitSHA=$(cd adoptium_mirror_repo && git log --no-merges -1 "$adoptiumBuildCommitSHA" --format=%H)
-
-  rm -rf adoptium_mirror_repo
-
-  echo "$openjdkCommitSHA"
-}
-
 getBuildParams() {
   BOOTJDK_VERSION=$(jq -r '.metadata.tools.components[] | select(.name == "BOOTJDK") | .version' "$SBOM" | sed -e 's#-LTS$##')
   GCCVERSION=$(jq -r '.metadata.tools.components[] | select(.name == "GCC") | .version' "$SBOM" | sed 's/.0$//')
@@ -345,7 +331,7 @@ getBuildParams() {
       adoptiumRepo="${adoptiumSrcCommitUrl%/commit/*}"
       adoptiumBuildCommitSHA=$(basename "$adoptiumSrcCommitUrl")
       openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
-      openjdkSourceCommitSHA=$(getUpstreamOpenJDKCommitSHA "$adoptiumRepo" "$openjdkSourceRepo" "$adoptiumBuildCommitSHA")
+      openjdkSourceCommitSHA=$(find_openjdk_tagged_parent "$adoptiumRepo" "$adoptiumBuildCommitSHA")
 
       echo "Performing a Reproducible Verification Build from $openjdkSourceRepo with commit SHA $openjdkSourceCommitSHA"
       echo "Adoptium OpenJDK configure argmuents from original Temurin build:"
