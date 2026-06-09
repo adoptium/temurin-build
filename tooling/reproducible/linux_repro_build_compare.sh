@@ -679,6 +679,12 @@ echo "###########################"
 echo "fs_jdk.jlink_files.sorted:"
 diff jdk-25.0.3+9/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_jdk.jlink_files.sorted reproJDK/jdk-25.0.3+9/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_jdk.jlink_files.sorted
 echo "###########################"
+echo "man/man1/jstat.1:"
+diff jdk-25.0.3+9/man/man1/jstat.1 reproJDK/jdk-25.0.3+9/man/man1/jstat.1
+echo "###########################"
+echo "man/man1/java.1:"
+diff jdk-25.0.3+9/man/man1/java.1 reproJDK/jdk-25.0.3+9/man/man1/java.1
+echo "###########################"
 set -e
 
 if [ $rc -eq 0 ]; then
