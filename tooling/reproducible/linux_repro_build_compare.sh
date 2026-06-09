@@ -329,16 +329,15 @@ getBuildParams() {
     # Check if the adoptiumSrcCommitUrl and configure_args were found
     if [ -n "$adoptiumSrcCommitUrl" ] && [ -n "$adoptiumConfigureArgs" ]; then
       adoptiumRepo="${adoptiumSrcCommitUrl%/commit/*}"
-      adoptiumBuildCommitSHA=$(basename "$adoptiumSrcCommitUrl")
       openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
-      openjdkSourceCommitSHA=$(find_openjdk_tagged_parent "$adoptiumRepo" "$adoptiumBuildCommitSHA")
+      openjdkSourceTag="${BUILD_SCM_REF%_adopt}" 
 
-      echo "Performing a Reproducible Verification Build from $openjdkSourceRepo with commit SHA $openjdkSourceCommitSHA"
+      echo "Performing a Reproducible Verification Build from $openjdkSourceRepo with tag $openjdkSourceTag"
       echo "Adoptium OpenJDK configure argmuents from original Temurin build:"
       echo "    $adoptiumConfigureArgs"
       echo ""
       export openjdkSourceRepo
-      export openjdkSourceCommitSHA
+      export openjdkSourceTag
       export adoptiumConfigureArgs
     else
       echo "ERROR: Adoptium OpenJDK Source Commit, SCM Ref and configure_args must be specified in the SBOM."
@@ -530,8 +529,8 @@ attestationBuildUsingOpenJDK() {
   mkdir -p "$BUILD_DIR/$BUILD_FOLDER"
   echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
 
-  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR/$BUILD_FOLDER"
-  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && { git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" || git fetch --depth 1 origin "$openjdkSourceCommitSHA"; } && git checkout FETCH_HEAD)
+  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo tag $openjdkSourceTag into $BUILD_DIR/$BUILD_FOLDER"
+  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && { git fetch --depth 1 --filter=blob:none origin "$openjdkSourceTag" || git fetch --depth 1 origin "$openjdkSourceTag"; } && git checkout FETCH_HEAD)
 
   # Try and enforce correct build LC_ALL
   createLocaleAliasCmdOnPath
