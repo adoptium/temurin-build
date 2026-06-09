@@ -377,6 +377,48 @@ getBuildParams() {
   fi
 }
 
+checkPandocVersionForJdk25Plus() {
+  local temurinMajorVersion
+  temurinMajorVersion=$(echo "$TEMURIN_VERSION" | sed -E 's/^jdk-([0-9]+).*/\1/')
+  if ! [[ "$temurinMajorVersion" =~ ^[0-9]+$ ]] || [ "$temurinMajorVersion" -lt 25 ]; then
+    return
+  fi
+
+  local sbomPandocValue
+  sbomPandocValue=$(jq -r '.formulation[]? | select(."bom-ref" == "Build Dependencies") | .components[]? | select(.name == "Build tool non-package dependencies") | .properties[]? | select(.name | startswith("pandoc")) | .value' "$SBOM" | head -n 1)
+  if [ -z "$sbomPandocValue" ] || [ "$sbomPandocValue" == "null" ]; then
+    echo "ERROR: Unable to determine pandoc version from SBOM Build Dependencies."
+    echo "This Is A Mandatory Element for jdk-25+ reproducible builds."
+    exit 1
+  fi
+
+  local sbomPandocVersion
+  sbomPandocVersion=$(echo "$sbomPandocValue" | sed -E 's/^pandoc[[:space:]]+([^[:space:]]+).*$/\1/')
+  if [ -z "$sbomPandocVersion" ] || [ "$sbomPandocVersion" == "$sbomPandocValue" ]; then
+    echo "ERROR: Unable to parse pandoc version from SBOM value: $sbomPandocValue"
+    exit 1
+  fi
+
+  if ! command -v pandoc >/dev/null 2>&1; then
+    echo "ERROR: pandoc is not available in PATH, required version is: $sbomPandocVersion"
+    exit 1
+  fi
+
+  local envPandocVersion
+  envPandocVersion=$(pandoc --version | head -n 1 | awk '{print $2}')
+  if [ -z "$envPandocVersion" ]; then
+    echo "ERROR: Unable to determine pandoc version from environment."
+    exit 1
+  fi
+
+  if [ "$envPandocVersion" != "$sbomPandocVersion" ]; then
+    echo "ERROR: pandoc version mismatch. SBOM requires $sbomPandocVersion but environment has $envPandocVersion"
+    exit 1
+  fi
+
+  echo "Validated pandoc version for jdk-25+: $envPandocVersion"
+}
+
 # Construct "build dir" from current/workspace directory plus BUILD_FOLDER
 # Padding to BUILD_WORKSPACE_DIRECTORY length if known
 setupBuildDir() {
@@ -611,6 +653,7 @@ fi
 
 getBuildParams
 checkAllVariablesSet
+checkPandocVersionForJdk25Plus
 
 downloadTooling "$USING_DEVKIT"
 if [[ "${USING_DEVKIT}" == "false" ]]; then
