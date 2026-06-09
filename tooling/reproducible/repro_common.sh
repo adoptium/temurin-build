@@ -19,10 +19,10 @@ TEMURIN_TOOLS_BINREPL="temurin.tools.BinRepl"
 # traverses the commit tree from the given commit backwards
 # through all direct parent paths until it finds a OpenJDK commit tagged with "jdk-*"
 #
-# For Adoptium mirror the merged openjdk commit being built is :
+# For Adoptium mirror the merged openjdk commit being built is for a:
 # - release branch : Direct descendent child should be the openjdk "jdk-" tag
 # - dev branch     : Direct descendent child or grandchild should be the openjdk "jdk-" tag
-# Fallback to choosing the direct child commit that is not a merge commit
+# - For a jdk(HEAD) repo dev branch : Openjdk commit will be the direct child commit that is not a merge commit
 find_openjdk_tagged_parent() {
     local adoptiumMirrorRepo="$1"
     local start_commit="$2"
