@@ -672,6 +672,13 @@ if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
 else
   ./repro_compare.sh temurin "$sourceJDK" temurin reproJDK/"$TEMURIN_VERSION" Linux 2>&1 || rc=$?
 fi
+
+echo "fs_java.base_files.sorted:"
+diff jdk-25.0.3+9/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_java.base_files.sorted reproJDK/jdk-25.0.3+9/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_java.base_files.sorted
+echo "###########################"
+echo "fs_jdk.jlink_files.sorted:"
+diff jdk-25.0.3+9/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_jdk.jlink_files.sorted reproJDK/jdk-25.0.3+9/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_jdk.jlink_files.sorted
+echo "###########################"
 set -e
 
 if [ $rc -eq 0 ]; then
