@@ -294,7 +294,7 @@ downloadTooling() {
 
 checkAllVariablesSet() {
   if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
-    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${adoptiumConfigureArgs}" ] || [ -z "${TEMURIN_VERSION}" ] || [ -z "${openjdkSourceRepo}" ] || [ -z "${openjdkSourceCommitSHA}" ]; then
+    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${adoptiumConfigureArgs}" ] || [ -z "${TEMURIN_VERSION}" ] || [ -z "${openjdkSourceRepo}" ] || [ -z "${openjdkSourceTag}" ]; then
       echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
     fi
   else
