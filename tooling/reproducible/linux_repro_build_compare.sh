@@ -30,8 +30,6 @@ ANT_SHA=9028e2fc64491cca0f991acc09b06ee7fe644afe41d1d6caf72702ca25c4613c
 USING_DEVKIT="false"
 ScriptPath=$(dirname "$(realpath "$0")")
 
-source "$ScriptPath"/repro_common.sh
-
 # Read Parameters
 SBOM_PARAM=""
 JDK_PARAM=""
@@ -680,18 +678,6 @@ if [ $rc -eq 0 ]; then
   echo "Compare identical !"
 else
   echo "Differences found..., logged in: reprotest.diff"
-
-diff jdk-26.0.1+8/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_jdk.jshell_files.sorted reproJDK/jdk-26.0.1+8/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_jdk.jshell_files.sorted
-echo "##################"
-cat jdk-26.0.1+8/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_jdk.jshell_files.sorted
-echo "##################"
-cat reproJDK/jdk-26.0.1+8/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_jdk.jshell_files.sorted
-echo "##################"
-diff jdk-26.0.1+8/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_java.base_files.sorted reproJDK/jdk-26.0.1+8/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_java.base_files.sorted
-echo "##################"
-cat jdk-26.0.1+8/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_java.base_files.sorted
-echo "##################"
-cat reproJDK/jdk-26.0.1+8/lib/modules_extracted/jdk.jlink/jdk/tools/jlink/internal/runtimelink/fs_java.base_files.sorted
 fi
 
 exit $rc
