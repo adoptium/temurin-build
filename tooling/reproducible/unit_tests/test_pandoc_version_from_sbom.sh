@@ -50,7 +50,7 @@ cat > "$workDir/example_sbom.json" <<'JSON'
           "name": "Build tool non-package dependencies",
           "properties": [
             {
-              "name": "pandoc",
+              "name": "pandoc 3.8.2",
               "value": "pandoc 3.8.2"
             }
           ]
