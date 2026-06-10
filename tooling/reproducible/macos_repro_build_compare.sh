@@ -200,16 +200,15 @@ Get_SBOM_Values() {
     # Check if the adoptiumSrcCommitUrl and configure_args were found
     if [ -n "$adoptiumSrcCommitUrl" ] && [ -n "$adoptiumConfigureArgs" ]; then
       adoptiumRepo="${adoptiumSrcCommitUrl%/commit/*}"
-      adoptiumBuildCommitSHA=$(basename "$adoptiumSrcCommitUrl")
       openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
-      openjdkSourceCommitSHA=$(getUpstreamOpenJDKCommitSHA "$adoptiumRepo" "$openjdkSourceRepo" "$adoptiumBuildCommitSHA")
-  
-      echo "Performing a Reproducible Verification Build from $openjdkSourceRepo with commit SHA $openjdkSourceCommitSHA"
+      openjdkSourceTag="${BUILD_SCM_REF%_adopt}"
+
+      echo "Performing a Reproducible Verification Build from $openjdkSourceRepo with tag $openjdkSourceTag"
       echo "Adoptium OpenJDK configure argmuents from original Temurin build:"
       echo "    $adoptiumConfigureArgs"
       echo ""
       export openjdkSourceRepo
-      export openjdkSourceCommitSHA
+      export openjdkSourceTag
       export adoptiumConfigureArgs
     else
       echo "ERROR: Adoptium OpenJDK Source Commit, SCM Ref and configure_args must be specified in the SBOM."
@@ -300,22 +299,6 @@ Get_SBOM_Values() {
       exit 1
   fi
   echo ""
-}
-
-getUpstreamOpenJDKCommitSHA() {
-  local adoptiumMirrorRepo="$1"
-  local openjdkSourceRepo="$2"
-  local adoptiumBuildCommitSHA="$3"
-
-  # Shallow clone commit history only
-  git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_mirror_repo
-
-  # Find upstream OpenJDK commit SHA, which is the first non-merge commit from the adoptiumBuildCommitSHA
-  openjdkCommitSHA=$(cd adoptium_mirror_repo && git log --no-merges -1 "$adoptiumBuildCommitSHA" --format=%H)
-
-  rm -rf adoptium_mirror_repo
-
-  echo "$openjdkCommitSHA"
 }
 
 Check_Architecture() {
@@ -720,8 +703,8 @@ attestationBuildUsingOpenJDK() {
   mkdir -p "$BUILD_DIR/$BUILD_FOLDER"
   echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
   
-  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR/$BUILD_FOLDER"
-  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" && git checkout FETCH_HEAD)
+  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo tag $openjdkSourceTag into $BUILD_DIR/$BUILD_FOLDER"
+  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && git fetch --depth 1 --filter=blob:none origin "$openjdkSourceTag" && git checkout FETCH_HEAD)
 
   echo "Executing: bash ./configure $adoptiumConfigureArgs"
   if ! echo "cd $BUILD_DIR/$BUILD_FOLDER && TZ=UTC bash ./configure $adoptiumConfigureArgs > repro_configure.log 2>&1" | sh; then
