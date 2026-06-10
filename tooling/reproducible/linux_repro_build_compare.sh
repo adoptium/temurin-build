@@ -292,7 +292,7 @@ downloadTooling() {
 
 checkAllVariablesSet() {
   if [ "$REPRODUCIBLE_VERIFICATION" == true ]; then
-    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${adoptiumConfigureArgs}" ] || [ -z "${TEMURIN_VERSION}" ] || [ -z "${openjdkSourceRepo}" ] || [ -z "${openjdkSourceCommitSHA}" ]; then
+    if [ -z "$SBOM" ] || [ -z "${BOOTJDK_VERSION}" ] || [ -z "${adoptiumConfigureArgs}" ] || [ -z "${TEMURIN_VERSION}" ] || [ -z "${openjdkSourceRepo}" ] || [ -z "${openjdkSourceTag}" ]; then
       echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
     fi
   else
@@ -300,22 +300,6 @@ checkAllVariablesSet() {
       echo "Could not determine one of the variables - run with sh -x to diagnose" && sleep 10 && exit 1
     fi
   fi
-}
-
-getUpstreamOpenJDKCommitSHA() {
-  local adoptiumMirrorRepo="$1"
-  local openjdkSourceRepo="$2"
-  local adoptiumBuildCommitSHA="$3"
-
-  # Shallow clone commit history only
-  git clone --filter=tree:0 "$adoptiumMirrorRepo" adoptium_mirror_repo || git clone "$adoptiumMirrorRepo" adoptium_mirror_repo
-
-  # Find upstream OpenJDK commit SHA, which is the first non-merge commit from the adoptiumBuildCommitSHA
-  openjdkCommitSHA=$(cd adoptium_mirror_repo && git log --no-merges -1 "$adoptiumBuildCommitSHA" --format=%H)
-
-  rm -rf adoptium_mirror_repo
-
-  echo "$openjdkCommitSHA"
 }
 
 getBuildParams() {
@@ -343,16 +327,15 @@ getBuildParams() {
     # Check if the adoptiumSrcCommitUrl and configure_args were found
     if [ -n "$adoptiumSrcCommitUrl" ] && [ -n "$adoptiumConfigureArgs" ]; then
       adoptiumRepo="${adoptiumSrcCommitUrl%/commit/*}"
-      adoptiumBuildCommitSHA=$(basename "$adoptiumSrcCommitUrl")
       openjdkSourceRepo="${adoptiumRepo/adoptium/openjdk}"
-      openjdkSourceCommitSHA=$(getUpstreamOpenJDKCommitSHA "$adoptiumRepo" "$openjdkSourceRepo" "$adoptiumBuildCommitSHA")
+      openjdkSourceTag="${BUILD_SCM_REF%_adopt}" 
 
-      echo "Performing a Reproducible Verification Build from $openjdkSourceRepo with commit SHA $openjdkSourceCommitSHA"
+      echo "Performing a Reproducible Verification Build from $openjdkSourceRepo with tag $openjdkSourceTag"
       echo "Adoptium OpenJDK configure argmuents from original Temurin build:"
       echo "    $adoptiumConfigureArgs"
       echo ""
       export openjdkSourceRepo
-      export openjdkSourceCommitSHA
+      export openjdkSourceTag
       export adoptiumConfigureArgs
     else
       echo "ERROR: Adoptium OpenJDK Source Commit, SCM Ref and configure_args must be specified in the SBOM."
@@ -544,8 +527,8 @@ attestationBuildUsingOpenJDK() {
   mkdir -p "$BUILD_DIR/$BUILD_FOLDER"
   echo "  building within workspace folder: $BUILD_DIR/$BUILD_FOLDER"
 
-  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo commit SHA $openjdkSourceCommitSHA into $BUILD_DIR/$BUILD_FOLDER"
-  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && { git fetch --depth 1 --filter=blob:none origin "$openjdkSourceCommitSHA" || git fetch --depth 1 origin "$openjdkSourceCommitSHA"; } && git checkout FETCH_HEAD)
+  echo "Cloning OpenJDK source Repository: $openjdkSourceRepo tag $openjdkSourceTag into $BUILD_DIR/$BUILD_FOLDER"
+  (cd "$BUILD_DIR/$BUILD_FOLDER" && git init . && git remote add origin "$openjdkSourceRepo" && { git fetch --depth 1 --filter=blob:none origin "$openjdkSourceTag" || git fetch --depth 1 origin "$openjdkSourceTag"; } && git checkout FETCH_HEAD)
 
   # Try and enforce correct build LC_ALL
   createLocaleAliasCmdOnPath
