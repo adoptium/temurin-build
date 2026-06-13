@@ -100,7 +100,6 @@ function downloadWindowsBootJDK() {
 
     # ── normalise architecture name for the API ──────────────────────────────
     case "${ARCHITECTURE}" in
-        "x86-32") downloadArch="x32" ;;
         "aarch64") downloadArch="x64" ;;
         *)         downloadArch="${ARCHITECTURE}" ;;
     esac

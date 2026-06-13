@@ -380,10 +380,6 @@ Check_Architecture() {
     echo "System Architecture: 64-bit (Intel)"
     sysArch="x64"
     msvsArch="x64"
-  elif [[ $systemArchitecture == *86* ]]; then
-    echo "System Architecture: 32-bit (Intel)"
-    sysArch="x86"
-    msvsArch="x86"
   elif [[ $systemArchitecture == *arm64* ]]; then
     echo "System Architecture: 64-bit (ARM)"
     sysArch="arm64"
@@ -600,7 +596,6 @@ Check_And_Install_BootJDK() {
     # Adjust Sys Arch For API
     if [ $msvsArch = "arm64" ] ; then NATIVE_API_ARCH="aarch64" ; fi
     if [ $msvsArch = "x64" ] ; then NATIVE_API_ARCH="x64" ; fi
-    if [ $msvsArch = "x86" ] ; then NATIVE_API_ARCH="x86" ; fi
 
     echo "https://api.adoptium.net/v3/binary/version/jdk-${bootJDK}/windows/${NATIVE_API_ARCH}/jdk/hotspot/normal/eclipse?project=jdk"
     echo "Downloading Boot JDK Version : $bootJDK"

@@ -22,7 +22,6 @@ on:
       - "sbin/**"
       - "**.sh"
       - "!tooling/**"
-      - "!sbin/solaris/**"
       - ".github/workflows/build.yml"
       - "security/**"
       - "cyclonedx-lib/**"

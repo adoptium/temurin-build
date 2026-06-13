@@ -541,7 +541,7 @@ function configDefaults() {
     aix )
       BUILD_CONFIG[MAKE_COMMAND_NAME]="/opt/freeware/bin/make_64"
       ;;
-    sunos | *bsd )
+    *bsd )
       BUILD_CONFIG[MAKE_COMMAND_NAME]="gmake"
       ;;
     * )
