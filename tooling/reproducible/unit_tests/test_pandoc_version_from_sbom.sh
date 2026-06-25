@@ -92,4 +92,23 @@ malformedValue=$(extractSbomPandocValue "$workDir/malformed_sbom.json")
 malformedVersion=$(extractSbomPandocVersion "$malformedValue")
 assertEquals "$malformedValue" "$malformedVersion" "Malformed SBOM pandoc value remains unparsed"
 
+cat > "$workDir/missing_pandoc_sbom.json" <<'JSON'
+{
+  "formulation": [
+    {
+      "bom-ref": "Build Dependencies",
+      "components": [
+        {
+          "name": "Build tool non-package dependencies",
+          "properties": []
+        }
+      ]
+    }
+  ]
+}
+JSON
+
+missingPandocValue=$(extractSbomPandocValue "$workDir/missing_pandoc_sbom.json")
+assertEquals "" "$missingPandocValue" "Missing pandoc SBOM property returns empty value"
+
 echo "PASS: standalone pandoc SBOM unit test"
