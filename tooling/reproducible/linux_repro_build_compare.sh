@@ -370,8 +370,8 @@ checkPandocVersionForJdk25Plus() {
   local sbomPandocValue
   sbomPandocValue=$(jq -r '.formulation[]? | select(."bom-ref" == "Build Dependencies") | .components[]? | select(.name == "Build tool non-package dependencies") | .properties[]? | select(.name | startswith("pandoc")) | .value' "$SBOM" | head -n 1)
   if [ -z "$sbomPandocValue" ] || [ "$sbomPandocValue" == "null" ]; then
-    echo "INFO: No pandoc build dependency found in SBOM Build Dependencies."
-    echo "Skipping pandoc version validation for this reproducible build."
+    echo "INFO: No pandoc build dependency found in SBOM Build Dependencies for jdk-25+."
+    echo "Skipping pandoc version validation because the original build did not record pandoc usage."
     return
   fi
 
