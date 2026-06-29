@@ -272,7 +272,7 @@ jobs:
      steps:
      - name: Restore cygwin packages from cache
        id: cygwin
-       uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
        with:
         path: C:\cygwin64
         key: cygwin-packages-${{ runner.os }}-v1
@@ -316,7 +316,7 @@ jobs:
      - name: Restore Visual Studio 2022 from cache
        id: vs2022
        if: matrix.version == 'jdk11u' || matrix.version == 'jdk17u'
-       uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
        with:
          path: ~/vs2022.exe
          key: vs2022
