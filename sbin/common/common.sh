@@ -181,6 +181,67 @@ function joinPath() {
   echo "${path}"
 }
 
+# Converts an absolute path to a path relative to a given base directory.
+# If the target path is not absolute, returns it unchanged.
+# Usage: makeRelativePath base_dir target_path
+function makeRelativePath() {
+  local base="$1"
+  local target="$2"
+
+  # If target is not absolute, return as-is
+  if [[ "$target" != /* ]]; then
+    echo "$target"
+    return
+  fi
+
+  # Normalize paths (remove trailing slashes)
+  base="${base%/}"
+  target="${target%/}"
+
+  # Split paths into arrays
+  IFS='/' read -ra base_parts <<< "$base"
+  IFS='/' read -ra target_parts <<< "$target"
+
+  # Find common prefix length
+  local common=0
+  local min_len=${#base_parts[@]}
+  if [[ ${#target_parts[@]} -lt $min_len ]]; then
+    min_len=${#target_parts[@]}
+  fi
+
+  for ((i=0; i<min_len; i++)); do
+    if [[ "${base_parts[$i]}" == "${target_parts[$i]}" ]]; then
+      common=$((common + 1))
+    else
+      break
+    fi
+  done
+
+  # Build relative path: go up from base to common prefix, then down to target
+  local rel=""
+  for ((i=common; i<${#base_parts[@]}; i++)); do
+    if [[ -n "${base_parts[$i]}" ]]; then
+      rel="${rel}../"
+    fi
+  done
+
+  for ((i=common; i<${#target_parts[@]}; i++)); do
+    if [[ -n "${target_parts[$i]}" ]]; then
+      rel="${rel}${target_parts[$i]}/"
+    fi
+  done
+
+  # Remove trailing slash
+  rel="${rel%/}"
+
+  # Handle empty result (same path)
+  if [[ -z "$rel" ]]; then
+    rel="."
+  fi
+
+  echo "$rel"
+}
+
 # Create a Tar ball
 getArchiveExtension()
 {
