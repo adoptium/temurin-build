@@ -564,16 +564,17 @@ downloadFile() {
 
   echo downloadFile: Saving "url" to "$targetFileName"
 
-  # Temporary fudge as curl on my windows boxes is exiting with RC=127
-  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
-    if ! wget -O "${targetFileName}" "${url}"; then
-       echo ERROR: Failed to download "${url}" - exiting
-       exit 2
+  local max_retries=3
+  local attempt=0
+  until curl --fail --silent --show-error -L -o "${targetFileName}" "${url}"; do
+    attempt=$((attempt + 1))
+    if [ "${attempt}" -ge "${max_retries}" ]; then
+      echo "ERROR: Failed to download ${url} after ${max_retries} attempts"
+      exit 2
     fi
-  elif ! curl --fail -L -o "${targetFileName}" "${url}"; then
-    echo ERROR: Failed to download "${url}" - exiting
-    exit 2
-  fi
+    echo "WARNING: Attempt ${attempt} failed downloading ${url}, retrying in 300s..."
+    sleep 300
+  done
 
   if [ $# -ge 3 ]; then
 
@@ -752,8 +753,8 @@ downloadLinuxDevkit() {
 
         # Download tarball and GPG sig
         echo "Downloading DevKit : ${devkitUrl}/${devkit}.tar.xz"
-        curl -L --fail --silent --show-error -o "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
-        curl -L --fail --silent --show-error -o "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
+        downloadFile "${devkit_tar}" "${devkitUrl}/${devkit}.tar.xz"
+        downloadFile "${devkit_tar}.sig" "${devkitUrl}/${devkit}.tar.xz.sig"
 
         # GPG verify
         gpg --keyserver keyserver.ubuntu.com --recv-keys 3B04D753C9050D9A5D343F39843C48A565F8F04B
