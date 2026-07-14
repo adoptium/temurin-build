@@ -198,43 +198,37 @@ function makeRelativePath() {
   base="${base%/}"
   target="${target%/}"
 
-  # Split paths into arrays
-  IFS='/' read -ra base_parts <<< "$base"
-  IFS='/' read -ra target_parts <<< "$target"
-
-  # Find common prefix length
-  local common=0
-  local min_len=${#base_parts[@]}
-  if [[ ${#target_parts[@]} -lt $min_len ]]; then
-    min_len=${#target_parts[@]}
-  fi
-
-  for ((i=0; i<min_len; i++)); do
-    if [[ "${base_parts[$i]}" == "${target_parts[$i]}" ]]; then
-      common=$((common + 1))
-    else
+  # Find the longest common prefix that ends on a directory boundary
+  local common="$base"
+  while [[ -n "$common" ]]; do
+    if [[ "$target" == "$common" ]] || [[ "$target" == "${common}/"* ]]; then
       break
     fi
+    common="${common%/*}"
   done
 
-  # Build relative path: go up from base to common prefix, then down to target
+  # Build the "go up" portion from base to common prefix
   local rel=""
-  for ((i=common; i<${#base_parts[@]}; i++)); do
-    if [[ -n "${base_parts[$i]}" ]]; then
-      rel="${rel}../"
+  local remaining="${base#"${common}"}"
+  remaining="${remaining#/}"
+  while [[ -n "$remaining" ]]; do
+    rel="${rel}../"
+    if [[ "$remaining" == */* ]]; then
+      remaining="${remaining#*/}"
+    else
+      remaining=""
     fi
   done
 
-  for ((i=common; i<${#target_parts[@]}; i++)); do
-    if [[ -n "${target_parts[$i]}" ]]; then
-      rel="${rel}${target_parts[$i]}/"
-    fi
-  done
+  # Append the "go down" portion from common prefix to target
+  local down="${target#"${common}"}"
+  down="${down#/}"
+  if [[ -n "$down" ]]; then
+    rel="${rel}${down}"
+  else
+    rel="${rel%/}"
+  fi
 
-  # Remove trailing slash
-  rel="${rel%/}"
-
-  # Handle empty result (same path)
   if [[ -z "$rel" ]]; then
     rel="."
   fi
