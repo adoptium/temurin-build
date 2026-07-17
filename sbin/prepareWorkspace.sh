@@ -572,7 +572,8 @@ downloadFile() {
       echo "ERROR: Failed to download ${url} after ${max_retries} attempts"
       exit 2
     fi
-    echo "WARNING: Attempt ${attempt} failed downloading ${url}, retrying in 300s..."
+    echo "WARNING: Attempt ${attempt} of ${max_retries}: Failed to download ${url}"
+    echo "Will retry the download in 5 minutes."
     sleep 300
   done
 
