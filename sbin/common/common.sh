@@ -181,6 +181,61 @@ function joinPath() {
   echo "${path}"
 }
 
+# Converts an absolute path to a path relative to a given base directory.
+# If the target path is not absolute, returns it unchanged.
+# Usage: makeRelativePath base_dir target_path
+function makeRelativePath() {
+  local base="$1"
+  local target="$2"
+
+  # If target is not absolute, return as-is
+  if [[ "$target" != /* ]]; then
+    echo "$target"
+    return
+  fi
+
+  # Normalize paths (remove trailing slashes)
+  base="${base%/}"
+  target="${target%/}"
+
+  # Find the longest common prefix that ends on a directory boundary
+  local common="$base"
+  while [[ -n "$common" ]]; do
+    if [[ "$target" == "$common" ]] || [[ "$target" == "${common}/"* ]]; then
+      break
+    fi
+    common="${common%/*}"
+  done
+
+  # Build the "go up" portion from base to common prefix
+  local rel=""
+  local remaining="${base#"${common}"}"
+  remaining="${remaining#/}"
+  while [[ -n "$remaining" ]]; do
+    rel="${rel}../"
+    if [[ "$remaining" == */* ]]; then
+      remaining="${remaining#*/}"
+    else
+      remaining=""
+    fi
+  done
+
+  # Append the "go down" portion from common prefix to target
+  local down="${target#"${common}"}"
+  down="${down#/}"
+  if [[ -n "$down" ]]; then
+    rel="${rel}${down}"
+  else
+    rel="${rel%/}"
+  fi
+
+  if [[ -z "$rel" ]]; then
+    rel="."
+  fi
+
+  echo "$rel"
+}
+
 # Create a Tar ball
 getArchiveExtension()
 {

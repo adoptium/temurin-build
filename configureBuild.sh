@@ -96,6 +96,17 @@ setWorkingDirectory() {
     echo "Workspace dir is ${BUILD_CONFIG[WORKSPACE_DIR]}"
   fi
 
+  # If WORKING_DIR or TARGET_DIR are absolute paths, convert them to paths
+  # relative to WORKSPACE_DIR so that path constructions like
+  # "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}" work correctly
+  if [[ "${BUILD_CONFIG[WORKING_DIR]}" == /* ]]; then
+    BUILD_CONFIG[WORKING_DIR]=$(makeRelativePath "${BUILD_CONFIG[WORKSPACE_DIR]}" "${BUILD_CONFIG[WORKING_DIR]}")
+  fi
+
+  if [[ "${BUILD_CONFIG[TARGET_DIR]}" == /* ]]; then
+    BUILD_CONFIG[TARGET_DIR]=$(makeRelativePath "${BUILD_CONFIG[WORKSPACE_DIR]}" "${BUILD_CONFIG[TARGET_DIR]}")
+  fi
+
   echo "Working dir is ${BUILD_CONFIG[WORKING_DIR]}"
 }
 
