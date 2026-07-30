@@ -38,9 +38,6 @@ alpine-linux:
 macos:
 - changed-files:
   - any-glob-to-any-file: [build-farm/platform-specific-configurations/mac.sh]
-solaris:
-- changed-files:
-  - any-glob-to-any-file: [build-farm/platform-specific-configurations/solaris.sh]
 windows:
 - changed-files:
   - any-glob-to-any-file: [build-farm/platform-specific-configurations/windows.sh]

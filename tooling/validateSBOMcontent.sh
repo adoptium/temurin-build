@@ -39,9 +39,7 @@ EXPECTED_GLIBC=""
 EXPECTED_GCC=""
 # [ "${MAJORVERSION}" = "17" ] && EXPECTED_GCC=10.3.0
 EXPECTED_ALSA=""
-if echo "$SBOMFILE" | grep _solaris_; then
-  EXPECTED_COMPILER="solstudio (Oracle Solaris Studio)"
-elif echo "$SBOMFILE" | grep _aix_; then
+if echo "$SBOMFILE" | grep _aix_; then
   if [ "$MAJORVERSION" -le 21 ]; then
     EXPECTED_COMPILER="xlc (IBM XL C/C++)"
   else
@@ -76,8 +74,6 @@ elif echo "$SBOMFILE" | grep _linux_; then
 #elif echo $SBOMFILE | grep _mac_; then
 #  EXPECTED_COMPILER="clang (clang/LLVM from Xcode 10.3)"
 elif echo "$SBOMFILE" | grep 64_windows_; then
-  EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
-elif echo "$SBOMFILE" | grep _x86-32_windows_; then
   EXPECTED_COMPILER="microsoft (Microsoft Visual Studio 2022)"
 elif echo "$SBOMFILE" | grep _mac_; then
   # NOTE: mac/x64 native builds >=11 were using "clang (clang/LLVM from Xcode 10.3)"

@@ -57,10 +57,6 @@ labels:
     matcher:
       title: "windows"
       body: "windows"
-  - label: "solaris"
-    matcher:
-      title: "solaris"
-      body: "solaris"
   - label: "x-linux"
     matcher:
       title: "linux"

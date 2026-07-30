@@ -41,15 +41,11 @@ arm64\
     <arm64 ReDist DLLS>
 x64\
     <x64 ReDist DLLS>
-x86\
-    <x86 ReDist DLLS>
 ucrt\DLLs\
     arm64\
          <arm64 UCRT DLLs>
     x64\
          <x64 UCRT DLLs>
-    x86\ 
-         <x86 UCRT DLLs>
 ```
 
 Create a suitable temporary directory to construct the zip contents:
@@ -59,7 +55,6 @@ mkdir win_devkit
 cd win_devkit
 mkdir arm64
 mkdir x64
-mkdir x86
 ```
 
 2. Find the correct MSVC Redist folders, they should be located under folder:
@@ -68,7 +63,7 @@ mkdir x86
 C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\MSVC\xx.yy.zzzzz\<arch>\Microsoft.VC143.CRT
 ```
 
-3. Copy the following MSVC Redist DLLs for each architecture (arm64, x64, x86) from the MSVC Redist folders into the temporary directory you created:
+3. Copy the following MSVC Redist DLLs for each architecture (arm64, x64) from the MSVC Redist folders into the temporary directory you created:
 
 ```sh
 copy "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\MSVC\xx.yy.zzzzz\arm64\Microsoft.VC143.CRT\vcruntime140.dll" win_devkit/arm64
@@ -78,9 +73,6 @@ copy "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\M
 copy "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\MSVC\xx.yy.zzzzz\x64\Microsoft.VC143.CRT\vcruntime140.dll" win_devkit/x64
 copy "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\MSVC\xx.yy.zzzzz\x64\Microsoft.VC143.CRT\vcruntime140_1.dll" win_devkit/x64
 copy "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\MSVC\xx.yy.zzzzz\x64\Microsoft.VC143.CRT\msvcp140.dll" win_devkit/x64
-
-copy "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\MSVC\xx.yy.zzzzz\x86\Microsoft.VC143.CRT\vcruntime140.dll" win_devkit/x86
-copy "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\MSVC\xx.yy.zzzzz\x86\Microsoft.VC143.CRT\msvcp140.dll" win_devkit/x86
 ```
 
 4. Find the correct Windows Kit UCRT Redist folder with the files installed by the SDK Installer. Note, if the SDK is installed from a specific SDK installer, then the Redist folder it installed into will likely be ".0", not necessarily the eg.".1742" SDK installer version:
@@ -89,7 +81,7 @@ copy "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Redist\M
 C:\Program Files (x86)\Windows Kits\10\Redist\10.0.xxxxx.0\ucrt
 ```
 
-5. Copy the entire "ucrt" sub-folder containing the DLLs/(arm64, x64, x86), eg.
+5. Copy the entire "ucrt" sub-folder containing the DLLs/(arm64, x64), eg.
 
 ```sh
 mkdir win_devkit\ucrt
