@@ -341,6 +341,15 @@ else
   fi
 fi
 
+if [ "$JAVA_FEATURE_VERSION" -ge 24 ] && [ "${VARIANT}" == "${BUILD_VARIANT_TEMURIN}" ]; then
+  # hsdis+capstone only supported on these two in openjdk
+  if [ "${ARCHITECTURE}" = "x64" ] || [ "${ARCHITECTURE}" = "aarch64" ]; then
+    if [ -r /usr/local/lib/libcapstone.so.4 ]; then
+      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --enable-hsdis-bundling --with-hsdis=capstone --with-capstone=/usr/local"
+    fi
+  fi
+fi
+
 if [ "${VARIANT}" == "${BUILD_VARIANT_BISHENG}" ]; then
   # BUILD_C/CXX required for native (non-cross) RISC-V builds of Bisheng
   if [ -n "$CXX" ]; then
