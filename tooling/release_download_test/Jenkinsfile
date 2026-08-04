@@ -1,0 +1,358 @@
+/*
+ * ********************************************************************************
+ * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ *
+ * See the NOTICE file(s) with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Apache Software License 2.0
+ * which is available at https://www.apache.org/licenses/LICENSE-2.0.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ * ********************************************************************************
+ *
+ * Multi-architecture release download and validation pipeline.
+ *
+ * Pipeline structure
+ * ─────────────────
+ * Stage 1 — "Download & GPG Verify" (single node with label 'worker')
+ *   Downloads the complete release once, imports the Temurin GPG key, verifies every
+ *   GPG signature and SHA256 checksum, and checks archive integrity.
+ *   GPG verification is architecture-agnostic; running it once on a reliable central
+ *   node avoids 13 agents independently hitting the keyserver and downloading the full
+ *   (~20 GB) asset set.  Uses -g (GPG-only) and -k (keep staging) flags.
+ *
+ * Stage 2 — "SBOM Validation" (single node with label 'worker')
+ *   Validates all SBOM JSON files for every arch/os against the staging area left by
+ *   Stage 1.  SBOM content checks (jq, git ls-remote, curl) are arch-agnostic and only
+ *   need jq, git, and curl — all available on the central x64/linux node.  Running
+ *   centrally avoids jq PATH issues on exotic nodes (s390x, AIX) and glibc/musl
+ *   incompatibility for the CycloneDX CLI binary on Alpine agents.
+ *   Uses -c (SBOM-only) and -k (keep staging) flags.
+ *
+ * Stage 3 — "Binary Checks: <arch>" (parallel, one named stage per arch/os)
+ *   Each stage runs on the native Jenkins agent for that architecture.  It downloads
+ *   only the binaries for its own arch/os (-G flag — skip-GPG + arch-filtered download),
+ *   then runs java -version natively and verifies GLIBC linkage and compiler toolchain
+ *   via strings.  SBOM validation is skipped (-C flag — done centrally in Stage 2).
+ *   Windows stages run java.exe -Xinternalversion to verify the MSVC toolset version
+ *   (VS 2022, toolset >= 1930) instead of POSIX strings checks.
+ *
+ *   Results consolidation: Stage 1 and Stage 2 write per-platform result files into
+ *   staging/${TAG}/.results/ (one file per check per platform).  Each arch-node stage
+ *   reads those files before printing its summary, producing one consolidated table per
+ *   platform that covers GPG/archive (central), SBOM (central), and binary checks (local).
+ *
+ * Node label convention: AQA-test standard (ci.role.test&&hw.arch.<arch>&&sw.os.<os>).
+ *
+ * Parameters:
+ *   TAG          — Required.  The release tag to validate, e.g. jdk-21.0.3+9
+ *   VERBOSE      — Optional (default false).  Pass -v for full per-file logging.
+ *   FILTER_ARCHS — Optional debugging aid.  Comma-separated list of arch-os stage
+ *                  names to run in Stage 3, e.g. "x64-linux,aarch64-linux".
+ *                  Leave blank to run all architectures (normal operation).
+ *                  NOTE: intended to be removed once the pipeline is stable.
+ */
+
+// ---------------------------------------------------------------------------
+// Platform/version support matrix — mirrors build_autotriage.sh.
+// Each entry: stageName -> [nodeLabel, extraFlags, firstJDK, lastJDK]
+// firstJDK: first major version on which this platform exists (inclusive)
+// lastJDK:  last major version on which this platform exists (inclusive, 999 = ongoing)
+// ---------------------------------------------------------------------------
+@groovy.transform.Field
+def ARCH_STAGE_DEFS = [
+    'x64-linux'            : [ 'ci.role.test&&hw.arch.x86&&sw.os.linux',                  '-A x64 -O linux',            8,  999 ],
+    'aarch64-linux'        : [ 'ci.role.test&&hw.arch.aarch64&&sw.os.linux',              '-A aarch64 -O linux',        8,  999 ],
+    'x64-alpine-linux'     : [ 'ci.role.test&&hw.arch.x86&&sw.os.alpine-linux',           '-A x64 -O alpine-linux',     8,  999 ],
+    'aarch64-alpine-linux' : [ 'ci.role.test&&hw.arch.aarch64&&sw.os.alpine-linux',       '-A aarch64 -O alpine-linux', 21, 999 ],
+    'x64-mac'              : [ 'ci.role.test&&hw.arch.x86&&(sw.os.osx||sw.os.mac)',       '-A x64 -O mac',              8,  999 ],
+    'aarch64-mac'          : [ 'ci.role.test&&hw.arch.aarch64&&(sw.os.osx||sw.os.mac)',   '-A aarch64 -O mac',          11, 999 ],
+    's390x-linux'          : [ 'ci.role.test&&hw.arch.s390x&&sw.os.linux',                '-A s390x -O linux',          11, 999 ],
+    'ppc64le-linux'        : [ 'ci.role.test&&hw.arch.ppc64le&&sw.os.linux',              '-A ppc64le -O linux',        8,  999 ],
+    'ppc64-aix'            : [ 'ci.role.test&&hw.arch.ppc64&&sw.os.aix',                  '-A ppc64 -O aix',            8,  999 ],
+    'riscv64-linux'        : [ 'ci.role.test&&hw.arch.riscv&&sw.os.linux',                '-A riscv64 -O linux',        17, 999 ],
+    'arm-linux'            : [ 'ci.role.test&&hw.arch.aarch32&&sw.os.linux',              '-A arm -O linux',            8,  20  ],
+    'x64-windows'          : [ 'ci.role.test&&hw.arch.x86&&sw.os.windows',                '-A x64 -O windows',          8,  999 ],
+    'aarch64-windows'      : [ 'ci.role.test&&hw.arch.aarch64&&sw.os.windows',            '-A aarch64 -O windows',      21, 999 ],
+]
+
+// Parse the JDK major version out of a release tag string.
+// Handles: jdk-21.0.3+9  jdk8u422-b05  jdk17u-YYYY-MM-DD-beta
+def extractMajorVersion(String tag) {
+    if (tag ==~ /jdk8u.*/) return 8
+    def m = tag =~ /^jdk-(\d+)\./
+    if (m) return m[0][1].toInteger()
+    m = tag =~ /^jdk(\d+)u/
+    if (m) return m[0][1].toInteger()
+    error "Cannot determine major JDK version from tag: ${tag}"
+}
+
+pipeline {
+    agent none
+
+    parameters {
+        string(
+            name: 'TAG',
+            defaultValue: '',
+            description: 'Release tag to validate, e.g. jdk-21.0.3+9 or jdk8u422-b05'
+        )
+        booleanParam(
+            name: 'VERBOSE',
+            defaultValue: false,
+            description: 'Enable full per-file validation logging (-v flag). Off by default; enable to diagnose failures.'
+        )
+        // TODO: remove FILTER_ARCHS once the pipeline is stable.
+        string(
+            name: 'FILTER_ARCHS',
+            defaultValue: '',
+            description: '''DEBUG: comma-separated list of arch-os stage names to run (Stage 3 only). Leave blank to run all architectures. \
+Available values: x64-linux, aarch64-linux, x64-alpine-linux, aarch64-alpine-linux, \
+x64-mac, aarch64-mac, s390x-linux, ppc64le-linux, ppc64-aix, riscv64-linux, arm-linux, \
+x64-windows, aarch64-windows'''
+        )
+    }
+
+    stages {
+
+        // ── Stage 1: single central node — download all files + GPG/SHA/archive verify ──
+        stage('Download & GPG Verify') {
+            agent { label 'worker' }
+            steps {
+                checkout scm
+                script {
+                    def verboseFlag = params.VERBOSE ? '-v' : ''
+                    sh """
+                        bash tooling/release_download_test/release_download_test_new.sh \
+                            -a ${verboseFlag} -g -k "${params.TAG}"
+                    """
+                    // Stash the per-platform GPG/archive result files written by the script.
+                    // Arch-node stages unstash these to populate their consolidated summaries.
+                    stash name: 'platform-gpg-results',
+                          includes: "staging/${params.TAG}/.results/**",
+                          allowEmpty: true
+                }
+            }
+            // Staging area is kept (-k) for the SBOM stage; cleaned up after that stage.
+        }
+
+        // ── Stage 2: single central node — SBOM validation for all arches ──
+        stage('SBOM Validation') {
+            agent { label 'worker' }
+            steps {
+                checkout scm
+                script {
+                    def verboseFlag = params.VERBOSE ? '-v' : ''
+                    sh """
+                        bash tooling/release_download_test/release_download_test_new.sh \
+                            -a ${verboseFlag} -c -k "${params.TAG}"
+                    """
+                    // Stash the per-platform SBOM result files written by the script.
+                    // Arch-node stages unstash these to populate their consolidated summaries.
+                    stash name: 'platform-sbom-results',
+                          includes: "staging/${params.TAG}/.results/**",
+                          allowEmpty: true
+                }
+            }
+            post {
+                always {
+                    // Now safe to remove the full staging directory and GPG keyring.
+                    sh 'rm -rf "${WORKSPACE}/staging" "${WORKSPACE}/.gpg-temp-"* || true'
+                }
+            }
+        }
+
+        // ── Stage 3: parallel per-arch binary checks on native agents ──
+        stage('Binary Checks') {
+            steps {
+                script {
+                    // -G: skip GPG (verified centrally in Stage 1)
+                    // -C: skip SBOM validation (done centrally in Stage 2)
+                    // Windows stages run java.exe -Xinternalversion to verify the MSVC
+                    // toolset version; no -b flag needed (PE strings handled natively).
+
+                    def jdkVersion = extractMajorVersion(params.TAG)
+                    def verboseFlag = params.VERBOSE ? '-v' : ''
+                    def parallelBranches = [failFast: false]
+
+                    // Mac stages use GHA-provisioned nodes which are dynamically allocated
+                    // and may report "offline" briefly while the runner is starting.
+                    // Jenkins' scheduler will wait for the node to come online; we also wrap
+                    // the entire node block in retry(2) so a transient provisioning or
+                    // network failure (e.g. 0-file download) gets one automatic retry.
+                    def macRetries = 2
+
+                    ARCH_STAGE_DEFS.each { stageName, config ->
+                        def nodeLabel  = config[0]
+                        def extraFlags = config[1]
+                        def firstJDK   = config[2]
+                        def lastJDK    = config[3]
+                        def tag        = params.TAG
+                        def vFlag      = verboseFlag
+                        def sName      = stageName
+                        def isMac      = sName.endsWith('-mac')
+                        def isWindows  = sName.endsWith('-windows')
+                        def retries    = isMac ? macRetries : 1
+                        // Skip ANSI on Windows: Git Bash / MSYS2 tput emits raw escape
+                        // bytes that Jenkins renders as literal noise in the console log.
+                        def aFlag      = isWindows ? '' : '-a'
+
+                        // Skip stages not applicable to this JDK version.
+                        if (jdkVersion < firstJDK || jdkVersion > lastJDK) {
+                            echo "Skipping stage '${sName}': not applicable for JDK ${jdkVersion} (supported: ${firstJDK}–${lastJDK == 999 ? '+' : lastJDK})"
+                            return
+                        }
+
+                        // TODO: remove FILTER_ARCHS block once the pipeline is stable.
+                        if (params.FILTER_ARCHS?.trim()) {
+                            def allowed = params.FILTER_ARCHS.tokenize(',').collect { it.trim() }
+                            if (!allowed.contains(sName)) {
+                                echo "Skipping stage '${sName}': not in FILTER_ARCHS (${params.FILTER_ARCHS})"
+                                return
+                            }
+                        }
+
+                        parallelBranches[sName] = {
+                            stage(sName) {
+                                warnError("Stage '${sName}' failed") {
+                                    retry(retries) {
+                                        node(nodeLabel) {
+                                            try {
+                                                checkout scm
+                                                // Restore per-platform result files from the central stages
+                                                // so the script can build a consolidated summary table.
+                                                unstash 'platform-gpg-results'
+                                                unstash 'platform-sbom-results'
+                                                sh """
+                                                    bash tooling/release_download_test/release_download_test_new.sh \
+                                                        ${aFlag} ${vFlag} -G -C ${extraFlags} "${tag}"
+                                                """
+                                                // Stash the binary result file written by the script so
+                                                // the Summary stage can include it in the aggregate table.
+                                                stash name: "binary-result-${sName}",
+                                                      includes: "staging/${tag}/.results/binary_*.result",
+                                                      allowEmpty: true
+                                            } finally {
+                                                deleteDir()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    parallel parallelBranches
+                }
+            }
+        }
+
+        // ── Stage 4: aggregate cross-platform summary table ──
+        stage('Summary') {
+            agent { label 'worker' }
+            steps {
+                script {
+                    def tag = params.TAG
+                    def jdkVersion = extractMajorVersion(tag)
+
+                    // Unstash GPG/archive/SBOM result files written by the central stages.
+                    unstash 'platform-gpg-results'
+                    unstash 'platform-sbom-results'
+
+                    // Unstash binary result files from each arch-node stage that ran.
+                    ARCH_STAGE_DEFS.each { stageName, config ->
+                        def firstJDK = config[2]
+                        def lastJDK  = config[3]
+                        if (jdkVersion >= firstJDK && jdkVersion <= lastJDK) {
+                            try {
+                                unstash "binary-result-${stageName}"
+                            } catch (e) {
+                                // Stage may have been unstable; result file may not exist — skip.
+                            }
+                        }
+                    }
+
+                    // Collect platforms from the result file names present on disk,
+                    // then read each file using sh to stay within the Jenkins sandbox.
+                    def resultsDir = "staging/${tag}/.results"
+
+                    // List all result filenames and extract platform keys.
+                    def fileList = sh(
+                        script: "ls '${resultsDir}'/*.result 2>/dev/null || true",
+                        returnStdout: true
+                    ).trim()
+
+                    def platforms = []
+                    if (fileList) {
+                        fileList.split('\n').each { path ->
+                            def fname = path.tokenize('/')[-1]
+                            def m = fname =~ /^(?:gpg|archive|sbom|binary)_(.+)\.result$/
+                            if (m) {
+                                def plat = m[0][1].replace('_', '/')
+                                if (!platforms.contains(plat)) platforms << plat
+                            }
+                        }
+                    }
+                    platforms.sort()
+
+                    // Helper: read a result file via sh, return trimmed value or 'N/A'.
+                    def readResult = { String path ->
+                        sh(script: "cat '${path}' 2>/dev/null || echo 'N/A'",
+                           returnStdout: true).trim()
+                    }
+
+                    // Column widths
+                    def COL_PLAT = 22
+                    def COL_RES  = 8
+                    def PHASES   = ['GPG', 'Archive', 'Binary', 'SBOM']
+
+                    def bar = '-' * (COL_PLAT + (COL_RES + 3) * PHASES.size() + 1)
+                    def hdr = String.format("%-${COL_PLAT}s", 'Platform') +
+                              PHASES.collect { String.format(" | %-${COL_RES}s", it) }.join('') + ' |'
+
+                    def lines = []
+                    lines << ''
+                    lines << '=' * bar.length()
+                    lines << " Validation Summary: ${tag}"
+                    lines << '=' * bar.length()
+                    lines << hdr
+                    lines << bar
+
+                    boolean anyFail = false
+                    platforms.each { plat ->
+                        def safe   = plat.replace('/', '_')
+                        def gpg    = readResult("${resultsDir}/gpg_${safe}.result")
+                        def arc    = readResult("${resultsDir}/archive_${safe}.result")
+                        def binary = readResult("${resultsDir}/binary_${safe}.result")
+                        def sbom   = readResult("${resultsDir}/sbom_${safe}.result")
+                        [gpg, arc, binary, sbom].each { if (it == 'FAIL') anyFail = true }
+                        lines << String.format("%-${COL_PLAT}s", plat) +
+                                 [gpg, arc, binary, sbom].collect { r ->
+                                     String.format(" | %-${COL_RES}s", r)
+                                 }.join('') + ' |'
+                    }
+
+                    lines << bar
+                    lines << (anyFail ? 'OVERALL: FAIL' : 'OVERALL: PASS')
+                    lines << '=' * bar.length()
+                    lines << ''
+
+                    echo lines.join('\n')
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "All stages passed for tag: ${params.TAG}"
+        }
+        unstable {
+            echo "One or more stages were unstable for tag: ${params.TAG} — check per-stage logs above"
+        }
+        failure {
+            echo "Pipeline failed for tag: ${params.TAG}"
+        }
+    }
+}
