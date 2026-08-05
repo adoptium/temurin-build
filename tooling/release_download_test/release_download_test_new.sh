@@ -44,6 +44,7 @@ SBOM_ONLY=false
 SKIP_SBOM=false
 OVERRIDE_ARCH=""
 OVERRIDE_OS=""
+ARCH_FILTER_LIST=""
 
 MAJOR_VERSION=""
 
@@ -92,8 +93,9 @@ Options:
   -a       enables ansi coloring of output
   -v       enable verbose mode
   -b       skip binary string checks (GCC/GLIBC via 'strings'); run GPG/SHA/archive/SBOM checks only
-  -g       GPG-only mode: download ALL files, import GPG key, verify all GPG/SHA256 sigs and
-           archive integrity, then exit. Use this on a central node before arch stages run.
+  -g       GPG-only mode: download ALL files (or filtered subset if -F is set), import GPG key,
+           verify all GPG/SHA256 sigs and archive integrity, then exit.
+           Use this on a central node before arch stages run.
   -G       Skip-GPG mode: download only files matching -A arch / -O os, skip GPG import/verify
            and archive checks (already done centrally by -g), then run binary + SBOM checks.
            Requires -A and -O to be set. Use this on each arch-specific node.
@@ -104,6 +106,9 @@ Options:
            Use this on each arch-specific node alongside -G.
   -A arch  override arch used for tarball matching and binary checks (bypasses uname detection)
   -O os    override OS used for tarball matching and binary checks (bypasses uname detection)
+  -F list  comma-separated list of arch_os tokens to download in GPG-only mode (-g), e.g.
+           x64_linux,aarch64_linux. Arch-agnostic files (sources, release-notes, AQAvit) are
+           always included. Leave unset to download the full release (default).
   -h       show this help
 "
   echo "$USAGE"
@@ -113,7 +118,7 @@ Options:
 parse_options() {
   local OPTIND opt
 
-  while getopts ":hvksabgGcCA:O:" opt; do
+  while getopts ":hvksabgGcCA:O:F:" opt; do
       case "${opt}" in
           h)   usage;;
           v)   VERBOSE=true;;
@@ -127,6 +132,7 @@ parse_options() {
           C)   SKIP_SBOM=true;;
           A)   OVERRIDE_ARCH="${OPTARG}";;
           O)   OVERRIDE_OS="${OPTARG}";;
+          F)   ARCH_FILTER_LIST="${OPTARG}";;
           "?") echo "Unknown option '-$OPTARG'"
                usage;;
           ":") echo "No argument value for option '-$OPTARG'"
@@ -156,10 +162,16 @@ parse_options() {
 #
 # Return the [ARCH/OS] log prefix used to identify this stage's output when
 # parallel stages are running concurrently in Jenkins.
+# Central modes (GPG-only, SBOM-only) show [worker] rather than the worker's
+# native arch/os, since they operate on all platforms rather than one specific one.
 # Falls back to [-/-] before ARCH/OS have been determined.
 #
 ########################################################################################################################
 _log_prefix() {
+  if [ "${GPG_ONLY}" = "true" ] || [ "${SBOM_ONLY}" = "true" ]; then
+    echo "[worker]"
+    return
+  fi
   local arch="${ARCH:-${OVERRIDE_ARCH:--}}"
   local os="${OS:-${OVERRIDE_OS:--}}"
   echo "[${arch}/${os}]"
@@ -248,7 +260,7 @@ download_jdk_releases() {
       exit 2
     fi
     # Wrap the single-release object in an array so download_release_files can use
-    # the same grep/awk pipeline as for the paginated list response.
+    # the same grep/sed pipeline as for the paginated list response.
     local tmp_file="${output_file}.tmp"
     echo "[" > "${tmp_file}"
     cat "${output_file}" >> "${tmp_file}"
@@ -293,30 +305,65 @@ download_release_files() {
     filter=$(echo "/${TAG}/" | sed 's/+/%2B/g')
   fi
 
-  # In arch-node mode (-G), narrow the download to only files that belong to this ARCH/OS.
-  # The filename convention is OpenJDK*_<arch>_<os>_*.  We also pull the arch-specific SBOM
-  # JSON (sbom_<arch>_<os>_*) so that SBOM validation can run on this node.
-  # AQAvitTapFiles.tar.gz has no arch component and is excluded (not needed for binary/SBOM checks).
+  # Determine per-file arch filtering:
+  #
+  # -G mode (arch-node):        download only files for the single ARCH/OS pair.
+  # -g mode + -F list (central): download files for each token in ARCH_FILTER_LIST, plus all
+  #                              arch-agnostic files (sources, release-notes, AQAvit, sig/sha/json
+  #                              metadata that belongs to no specific arch).
+  # -g mode without -F (central): download everything (no filter).
   if [ "${SKIP_GPG}" = "true" ]; then
+    # Arch-node: single arch/os
     arch_filter="${ARCH}_${OS}"
+  elif [ -n "${ARCH_FILTER_LIST}" ]; then
+    # Central with -F: comma-separated list, e.g. "x64_linux,aarch64_linux"
+    arch_filter="${ARCH_FILTER_LIST}"
   else
     arch_filter=""
   fi
 
-  print_info "Starting downloads for tag '${TAG}' (filter: ${filter}${arch_filter:+, arch: ${arch_filter}}) ..."
+  print_info "Starting downloads for tag '${TAG}' (filter: ${filter}${arch_filter:+, archs: ${arch_filter}}) ..."
   _DOWNLOAD_COUNT=0
   while IFS= read -r url; do
-    # In arch-node mode, skip files that do not belong to this arch/os.
+    # Apply arch filtering when active.
     if [ -n "${arch_filter}" ]; then
-      case "$(basename "${url}")" in
-        OpenJDK*_${arch_filter}_*|OpenJDK*-sbom_${arch_filter}_*) : ;;  # keep
-        *) continue;;  # skip everything else
-      esac
+      local _base _matched
+      _base="$(basename "${url}")"
+      _matched=false
+
+      if [ "${SKIP_GPG}" = "true" ]; then
+        # Arch-node mode: single token match (original behaviour).
+        case "${_base}" in
+          OpenJDK*_${arch_filter}_*|OpenJDK*-sbom_${arch_filter}_*) _matched=true;;
+        esac
+      else
+        # Central -g + -F mode: iterate over comma-separated token list.
+        # Arch-agnostic files (AQAvit, sources, release-notes) are always kept.
+        case "${_base}" in
+          AQAvitTapFiles*|OpenJDK*-jdk-sources_*|OpenJDK*-jdk-release-notes_*) _matched=true;;
+          *)
+            # Split on commas using IFS — save and restore around the for loop to avoid
+            # disrupting the outer while loop's IFS= read.  A nested process substitution
+            # inside the outer < <(...) feed does not work reliably in bash.
+            local _tok _saved_IFS="${IFS}"
+            IFS=","
+            for _tok in ${arch_filter}; do
+              IFS="${_saved_IFS}"
+              case "${_base}" in
+                OpenJDK*_${_tok}_*|OpenJDK*-sbom_${_tok}_*) _matched=true; break;;
+              esac
+            done
+            IFS="${_saved_IFS}"
+            ;;
+        esac
+      fi
+
+      [ "${_matched}" = "false" ] && continue
     fi
     print_verbose "IVT : Downloading $(basename "$url")"
     curl -LORsS -C - "$url"
     _DOWNLOAD_COUNT=$(( _DOWNLOAD_COUNT + 1 ))
-  done < <(grep "${filter}" "${jdk_releases}" | awk -F'"' '/browser_download_url/{print$4}')
+  done < <(grep "${filter}" "${jdk_releases}" | sed -n 's/.*"browser_download_url": *"\([^"]*\)".*/\1/p')
   print_info "Finished downloads — ${_DOWNLOAD_COUNT} files downloaded to staging"
   _PHASE_DOWNLOAD="PASS"
 }
@@ -708,7 +755,7 @@ verify_working_executables() {
 ########################################################################################################################
 verify_glibc_version() {
   if ! ls OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz > /dev/null 2>&1; then
-    print_verbose "IVT: Release does not contain a JRE for $OS/$ARCH so not running glibc version checks"
+    print_verbose "IVT: No .tar.gz JRE found for $OS/$ARCH — skipping GLIBC version check (expected for non-Linux platforms)"
     return
   fi
 
@@ -755,7 +802,7 @@ verify_glibc_version() {
 ########################################################################################################################
 verify_compiler_version() {
   if ! ls OpenJDK*-jre_"${ARCH}"_"${OS}"_hotspot_*.tar.gz > /dev/null 2>&1; then
-    print_verbose "IVT: Release does not contain a JRE for $OS/$ARCH so not running compiler version checks"
+    print_verbose "IVT: No .tar.gz JRE found for $OS/$ARCH — skipping compiler version check (expected for non-Linux platforms)"
     return
   fi
 
@@ -1069,7 +1116,12 @@ read_platform_results() {
 #
 ##########################################################################################################################
 print_summary() {
-  local label="${TAG} (${ARCH:-?}/${OS:-?})"
+  local label
+  if [ "${GPG_ONLY}" = "true" ] || [ "${SBOM_ONLY}" = "true" ]; then
+    label="${TAG} (worker)"
+  else
+    label="${TAG} (${ARCH:-?}/${OS:-?})"
+  fi
   local overall
 
   if [ "${RC}" -eq 0 ]; then
@@ -1184,7 +1236,7 @@ print_verbose "IVT: Checking https://github.com/adoptium/temurin${MAJOR_VERSION}
 
 JDK_RELEASES=$(download_jdk_releases)
 
-if [ "${SKIP_DOWNLOADING}" = "false" ]; then
+if [ "${SKIP_DOWNLOADING}" = "false" ] && [ "${SBOM_ONLY}" = "false" ]; then
   print_section "Downloading Release Artifacts"
 
   if [ "${KEEP_STAGING}" = "false" ] && [ "${SKIP_GPG}" = "false" ]; then
@@ -1198,7 +1250,11 @@ if [ "${SKIP_DOWNLOADING}" = "false" ]; then
 
   download_release_files "${JDK_RELEASES}"
 else
-  print_info "Skipping download (-s flag set)"
+  if [ "${SBOM_ONLY}" = "true" ]; then
+    print_info "Skipping download (-c flag set: using staging area from GPG stage)"
+  else
+    print_info "Skipping download (-s flag set)"
+  fi
   _PHASE_DOWNLOAD="SKIP"
 fi
 
@@ -1219,13 +1275,13 @@ if [ "${SKIP_DOWNLOADING}" = "false" ] && [ "${SKIP_GPG}" = "true" ] && [ "${_DO
 fi
 
 # -G (SKIP_GPG): arch-node mode — GPG/archive already verified by the central node.
-# Skip GPG import, signature verification, and archive integrity; go straight to
-# binary checks for this arch/os only.
+# -c (SBOM_ONLY): central SBOM-only mode — GPG/archive already done in the -g step.
+# Both skip GPG import, signature verification, and archive integrity.
 if [ "${SKIP_GPG}" = "true" ]; then
   # Arch-node mode: load per-platform GPG/archive/SBOM results written by central stages
   # so the final summary table is consolidated across all three pipeline stages.
   read_platform_results
-else
+elif [ "${SBOM_ONLY}" = "false" ]; then
   print_section "GPG Key Import"
   import_gpg_key
 
@@ -1256,6 +1312,7 @@ fi
 # Flush per-platform SBOM result files so arch-node stages can read them for their summaries.
 # Runs on the central node after the GPG stage; arch nodes run with -C to skip SBOM.
 if [ "${SBOM_ONLY}" = "true" ]; then
+  _PHASE_DOWNLOAD="SKIP"
   _PHASE_GPG_IMPORT="SKIP"
   _PHASE_SIGNATURES="SKIP"
   _PHASE_ARCHIVES="SKIP"

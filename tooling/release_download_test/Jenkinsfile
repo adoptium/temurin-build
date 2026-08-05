@@ -16,33 +16,36 @@
  *
  * Pipeline structure
  * ─────────────────
- * Stage 1 — "Download & GPG Verify" (single node with label 'worker')
+ * Stage 1 — "Download, GPG Verify & SBOM Validation" (single node with label 'worker')
  *   Downloads the complete release once, imports the Temurin GPG key, verifies every
- *   GPG signature and SHA256 checksum, and checks archive integrity.
- *   GPG verification is architecture-agnostic; running it once on a reliable central
- *   node avoids 13 agents independently hitting the keyserver and downloading the full
- *   (~20 GB) asset set.  Uses -g (GPG-only) and -k (keep staging) flags.
+ *   GPG signature and SHA256 checksum, checks archive integrity, then validates all
+ *   SBOM JSON files for every arch/os.
+ *   Both steps run on the same worker node so the staging directory written by the
+ *   download+GPG step is guaranteed to be available to the SBOM step.
+ *   GPG verification and SBOM validation are architecture-agnostic; running them once
+ *   on a reliable central node avoids 13 agents independently hitting the keyserver
+ *   and downloading the full (~20 GB) asset set, and avoids jq PATH issues on exotic
+ *   nodes (s390x, AIX) and glibc/musl incompatibility for the CycloneDX CLI binary
+ *   on Alpine agents.
+ *   Uses -g (GPG-only) and -k (keep staging) flags for the first step, then
+ *   -c (SBOM-only) for the second step (staging is cleaned up in post { always }).
  *
- * Stage 2 — "SBOM Validation" (single node with label 'worker')
- *   Validates all SBOM JSON files for every arch/os against the staging area left by
- *   Stage 1.  SBOM content checks (jq, git ls-remote, curl) are arch-agnostic and only
- *   need jq, git, and curl — all available on the central x64/linux node.  Running
- *   centrally avoids jq PATH issues on exotic nodes (s390x, AIX) and glibc/musl
- *   incompatibility for the CycloneDX CLI binary on Alpine agents.
- *   Uses -c (SBOM-only) and -k (keep staging) flags.
- *
- * Stage 3 — "Binary Checks: <arch>" (parallel, one named stage per arch/os)
+ * Stage 2 — "Binary Checks: <arch>" (parallel, one named stage per arch/os)
  *   Each stage runs on the native Jenkins agent for that architecture.  It downloads
  *   only the binaries for its own arch/os (-G flag — skip-GPG + arch-filtered download),
  *   then runs java -version natively and verifies GLIBC linkage and compiler toolchain
- *   via strings.  SBOM validation is skipped (-C flag — done centrally in Stage 2).
+ *   via strings.  SBOM validation is skipped (-C flag — done centrally in Stage 1).
  *   Windows stages run java.exe -Xinternalversion to verify the MSVC toolset version
  *   (VS 2022, toolset >= 1930) instead of POSIX strings checks.
+ *   Each arch-node stage cleans up its own workspace (deleteDir) in a finally block.
  *
- *   Results consolidation: Stage 1 and Stage 2 write per-platform result files into
- *   staging/${TAG}/.results/ (one file per check per platform).  Each arch-node stage
- *   reads those files before printing its summary, producing one consolidated table per
- *   platform that covers GPG/archive (central), SBOM (central), and binary checks (local).
+ *   Results consolidation: Stage 1 writes per-platform result files into
+ *   staging/${TAG}/.results/ (one file per check per platform) and stashes them.
+ *   Each arch-node stage unstashes those files before running, then writes its own
+ *   binary result file and stashes it for the Summary stage.
+ *
+ * Stage 3 — "Summary" (single node with label 'worker')
+ *   Unstashes all result files, prints a cross-platform table, then cleans the workspace.
  *
  * Node label convention: AQA-test standard (ci.role.test&&hw.arch.<arch>&&sw.os.<os>).
  *
@@ -50,7 +53,7 @@
  *   TAG          — Required.  The release tag to validate, e.g. jdk-21.0.3+9
  *   VERBOSE      — Optional (default false).  Pass -v for full per-file logging.
  *   FILTER_ARCHS — Optional debugging aid.  Comma-separated list of arch-os stage
- *                  names to run in Stage 3, e.g. "x64-linux,aarch64-linux".
+ *                  names to run in Stage 2, e.g. "x64-linux,aarch64-linux".
  *                  Leave blank to run all architectures (normal operation).
  *                  NOTE: intended to be removed once the pipeline is stable.
  */
@@ -107,7 +110,7 @@ pipeline {
         string(
             name: 'FILTER_ARCHS',
             defaultValue: '',
-            description: '''DEBUG: comma-separated list of arch-os stage names to run (Stage 3 only). Leave blank to run all architectures. \
+            description: '''DEBUG: comma-separated list of arch-os stage names to run (Stage 2 only). Leave blank to run all architectures. \
 Available values: x64-linux, aarch64-linux, x64-alpine-linux, aarch64-alpine-linux, \
 x64-mac, aarch64-mac, s390x-linux, ppc64le-linux, ppc64-aix, riscv64-linux, arm-linux, \
 x64-windows, aarch64-windows'''
@@ -116,64 +119,80 @@ x64-windows, aarch64-windows'''
 
     stages {
 
-        // ── Stage 1: single central node — download all files + GPG/SHA/archive verify ──
-        stage('Download & GPG Verify') {
+        // ── Stage 1: single central worker — download all files, GPG/SHA/archive verify,
+        //             then SBOM validation for all arches.
+        //             Both steps run inside the same node allocation so the staging
+        //             directory written by the GPG step is guaranteed to be on the same
+        //             filesystem when the SBOM step reads it.
+        // ──
+        stage('Download, GPG Verify & SBOM Validation') {
             agent { label 'worker' }
             steps {
                 checkout scm
                 script {
                     def verboseFlag = params.VERBOSE ? '-v' : ''
-                    sh """
-                        bash tooling/release_download_test/release_download_test_new.sh \
-                            -a ${verboseFlag} -g -k "${params.TAG}"
-                    """
-                    // Stash the per-platform GPG/archive result files written by the script.
-                    // Arch-node stages unstash these to populate their consolidated summaries.
-                    stash name: 'platform-gpg-results',
-                          includes: "staging/${params.TAG}/.results/**",
-                          allowEmpty: true
-                }
-            }
-            // Staging area is kept (-k) for the SBOM stage; cleaned up after that stage.
-        }
 
-        // ── Stage 2: single central node — SBOM validation for all arches ──
-        stage('SBOM Validation') {
-            agent { label 'worker' }
-            steps {
-                checkout scm
-                script {
-                    def verboseFlag = params.VERBOSE ? '-v' : ''
+                    // When FILTER_ARCHS is set, pass -F to limit the central download to only
+                    // the requested arch/os pairs (plus arch-agnostic files).  Stage-name tokens
+                    // use hyphens as separators (x64-linux, x64-alpine-linux) but filename tokens
+                    // replace only the FIRST hyphen with an underscore (x64_linux, x64_alpine-linux)
+                    // so that compound OS names like "alpine-linux" are preserved verbatim.
+                    def filterFlag = ''
+                    if (params.FILTER_ARCHS?.trim()) {
+                        def archTokens = params.FILTER_ARCHS.tokenize(',')
+                                             .collect { it.trim().replaceFirst('-', '_') }
+                                             .join(',')
+                        filterFlag = "-F ${archTokens}"
+                    }
+
+                    // Step 1a: download release artifacts (all, or filtered subset via -F),
+                    // verify GPG/SHA256 sigs and archive integrity.
+                    // -g = GPG-only mode; -k = keep staging for step 1b.
                     sh """
                         bash tooling/release_download_test/release_download_test_new.sh \
-                            -a ${verboseFlag} -c -k "${params.TAG}"
+                            -a ${verboseFlag} -g -k ${filterFlag} "${params.TAG}"
                     """
-                    // Stash the per-platform SBOM result files written by the script.
-                    // Arch-node stages unstash these to populate their consolidated summaries.
-                    stash name: 'platform-sbom-results',
+
+                    // Step 1b: validate all SBOM JSON files using the staging area from 1a.
+                    // -c = SBOM-only mode (skips download, GPG, archive — already done above).
+                    sh """
+                        bash tooling/release_download_test/release_download_test_new.sh \
+                            -a ${verboseFlag} -c "${params.TAG}"
+                    """
+
+                    // Stash the per-platform GPG/archive/SBOM result files written by both
+                    // steps above.  Arch-node stages unstash these to populate their
+                    // consolidated summary tables, and the Summary stage uses them too.
+                    stash name: 'platform-central-results',
                           includes: "staging/${params.TAG}/.results/**",
                           allowEmpty: true
                 }
             }
             post {
                 always {
-                    // Now safe to remove the full staging directory and GPG keyring.
+                    // Remove the full staging directory and GPG keyring now that the
+                    // result files have been stashed and arch-node stages will do their
+                    // own fresh downloads.
                     sh 'rm -rf "${WORKSPACE}/staging" "${WORKSPACE}/.gpg-temp-"* || true'
                 }
             }
         }
 
-        // ── Stage 3: parallel per-arch binary checks on native agents ──
+        // ── Stage 2: parallel per-arch binary checks on native agents ──
         stage('Binary Checks') {
+            agent none
             steps {
                 script {
                     // -G: skip GPG (verified centrally in Stage 1)
-                    // -C: skip SBOM validation (done centrally in Stage 2)
+                    // -C: skip SBOM validation (done centrally in Stage 1)
                     // Windows stages run java.exe -Xinternalversion to verify the MSVC
                     // toolset version; no -b flag needed (PE strings handled natively).
 
                     def jdkVersion = extractMajorVersion(params.TAG)
                     def verboseFlag = params.VERBOSE ? '-v' : ''
+                    def filterList = params.FILTER_ARCHS?.trim()
+                                   ? params.FILTER_ARCHS.tokenize(',').collect { it.trim() }
+                                   : []
                     def parallelBranches = [failFast: false]
 
                     // Mac stages use GHA-provisioned nodes which are dynamically allocated
@@ -205,12 +224,9 @@ x64-windows, aarch64-windows'''
                         }
 
                         // TODO: remove FILTER_ARCHS block once the pipeline is stable.
-                        if (params.FILTER_ARCHS?.trim()) {
-                            def allowed = params.FILTER_ARCHS.tokenize(',').collect { it.trim() }
-                            if (!allowed.contains(sName)) {
-                                echo "Skipping stage '${sName}': not in FILTER_ARCHS (${params.FILTER_ARCHS})"
-                                return
-                            }
+                        if (filterList && !filterList.contains(sName)) {
+                            echo "Skipping stage '${sName}': not in FILTER_ARCHS (${params.FILTER_ARCHS})"
+                            return
                         }
 
                         parallelBranches[sName] = {
@@ -220,10 +236,9 @@ x64-windows, aarch64-windows'''
                                         node(nodeLabel) {
                                             try {
                                                 checkout scm
-                                                // Restore per-platform result files from the central stages
+                                                // Restore per-platform result files from the central stage
                                                 // so the script can build a consolidated summary table.
-                                                unstash 'platform-gpg-results'
-                                                unstash 'platform-sbom-results'
+                                                unstash 'platform-central-results'
                                                 sh """
                                                     bash tooling/release_download_test/release_download_test_new.sh \
                                                         ${aFlag} ${vFlag} -G -C ${extraFlags} "${tag}"
@@ -234,6 +249,7 @@ x64-windows, aarch64-windows'''
                                                       includes: "staging/${tag}/.results/binary_*.result",
                                                       allowEmpty: true
                                             } finally {
+                                                // Clean up arch-node workspace regardless of pass/fail.
                                                 deleteDir()
                                             }
                                         }
@@ -248,19 +264,23 @@ x64-windows, aarch64-windows'''
             }
         }
 
-        // ── Stage 4: aggregate cross-platform summary table ──
+        // ── Stage 3: aggregate cross-platform summary table, then clean up ──
         stage('Summary') {
             agent { label 'worker' }
             steps {
                 script {
                     def tag = params.TAG
                     def jdkVersion = extractMajorVersion(tag)
+                    def filterList = params.FILTER_ARCHS?.trim()
+                                   ? params.FILTER_ARCHS.tokenize(',').collect { it.trim() }
+                                   : []
 
-                    // Unstash GPG/archive/SBOM result files written by the central stages.
-                    unstash 'platform-gpg-results'
-                    unstash 'platform-sbom-results'
+                    // Unstash GPG/archive/SBOM result files written by the central stage.
+                    unstash 'platform-central-results'
 
                     // Unstash binary result files from each arch-node stage that ran.
+                    // Stages skipped by FILTER_ARCHS or JDK version range will not have
+                    // a stash; the try/catch swallows the missing-stash error silently.
                     ARCH_STAGE_DEFS.each { stageName, config ->
                         def firstJDK = config[2]
                         def lastJDK  = config[3]
@@ -268,7 +288,7 @@ x64-windows, aarch64-windows'''
                             try {
                                 unstash "binary-result-${stageName}"
                             } catch (e) {
-                                // Stage may have been unstable; result file may not exist — skip.
+                                // Stage may have been unstable or skipped — result file absent.
                             }
                         }
                     }
@@ -305,7 +325,7 @@ x64-windows, aarch64-windows'''
                     // Column widths
                     def COL_PLAT = 22
                     def COL_RES  = 8
-                    def PHASES   = ['GPG', 'Archive', 'Binary', 'SBOM']
+                    def PHASES   = ['GPG', 'Archive', 'SBOM', 'Binary']
 
                     def bar = '-' * (COL_PLAT + (COL_RES + 3) * PHASES.size() + 1)
                     def hdr = String.format("%-${COL_PLAT}s", 'Platform') +
@@ -324,11 +344,19 @@ x64-windows, aarch64-windows'''
                         def safe   = plat.replace('/', '_')
                         def gpg    = readResult("${resultsDir}/gpg_${safe}.result")
                         def arc    = readResult("${resultsDir}/archive_${safe}.result")
-                        def binary = readResult("${resultsDir}/binary_${safe}.result")
                         def sbom   = readResult("${resultsDir}/sbom_${safe}.result")
-                        [gpg, arc, binary, sbom].each { if (it == 'FAIL') anyFail = true }
+                        // For arch stages skipped by FILTER_ARCHS, show SKIP rather than N/A.
+                        def binary = readResult("${resultsDir}/binary_${safe}.result")
+                        if (binary == 'N/A' && filterList) {
+                            // Determine the stage name from the platform key (arch/os -> arch-os).
+                            def stageName = plat.replace('/', '-')
+                            if (!filterList.contains(stageName)) {
+                                binary = 'SKIP'
+                            }
+                        }
+                        [gpg, arc, sbom, binary].each { if (it == 'FAIL') anyFail = true }
                         lines << String.format("%-${COL_PLAT}s", plat) +
-                                 [gpg, arc, binary, sbom].collect { r ->
+                                 [gpg, arc, sbom, binary].collect { r ->
                                      String.format(" | %-${COL_RES}s", r)
                                  }.join('') + ' |'
                     }
@@ -339,6 +367,12 @@ x64-windows, aarch64-windows'''
                     lines << ''
 
                     echo lines.join('\n')
+                }
+            }
+            post {
+                always {
+                    // Clean up the worker workspace after the summary has been printed.
+                    deleteDir()
                 }
             }
         }

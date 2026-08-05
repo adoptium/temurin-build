@@ -264,19 +264,22 @@ _PHASE_ARCHIVES="−"
 # by confirming that _PHASE_GPG_IMPORT is NOT modified (it is not part of the arch table).
 assertEquals "−" "${_PHASE_GPG_IMPORT}" "phase-state: SKIP_GPG=true leaves _PHASE_GPG_IMPORT unset (not shown in arch table)"
 
-# SBOM-only mode (-c): GPG, archive, and binary phases must be SKIP.
+# SBOM-only mode (-c): download, GPG, archive, and binary phases must be SKIP.
 reset_flags
 SBOM_ONLY=true
+_PHASE_DOWNLOAD="−"
 _PHASE_GPG_IMPORT="−"
 _PHASE_SIGNATURES="−"
 _PHASE_ARCHIVES="−"
 _PHASE_BINARIES="−"
 if [ "${SBOM_ONLY}" = "true" ]; then
+  _PHASE_DOWNLOAD="SKIP"
   _PHASE_GPG_IMPORT="SKIP"
   _PHASE_SIGNATURES="SKIP"
   _PHASE_ARCHIVES="SKIP"
   _PHASE_BINARIES="SKIP"
 fi
+assertEquals "SKIP" "${_PHASE_DOWNLOAD}"   "phase-state: SBOM_ONLY=true sets _PHASE_DOWNLOAD=SKIP"
 assertEquals "SKIP" "${_PHASE_GPG_IMPORT}" "phase-state: SBOM_ONLY=true sets _PHASE_GPG_IMPORT=SKIP"
 assertEquals "SKIP" "${_PHASE_SIGNATURES}" "phase-state: SBOM_ONLY=true sets _PHASE_SIGNATURES=SKIP"
 assertEquals "SKIP" "${_PHASE_ARCHIVES}"   "phase-state: SBOM_ONLY=true sets _PHASE_ARCHIVES=SKIP"
