@@ -1117,8 +1117,10 @@ read_platform_results() {
 ##########################################################################################################################
 print_summary() {
   local label
-  if [ "${GPG_ONLY}" = "true" ] || [ "${SBOM_ONLY}" = "true" ]; then
-    label="${TAG} (worker)"
+  if [ "${GPG_ONLY}" = "true" ]; then
+    label="${TAG}"
+  elif [ "${SBOM_ONLY}" = "true" ]; then
+    label="${TAG}"
   else
     label="${TAG} (${ARCH:-?}/${OS:-?})"
   fi
@@ -1147,21 +1149,20 @@ print_summary() {
   echo "${CYAN}${BOLD}$(_log_prefix) ============================================================${NORMAL}"
 
   if [ "${SKIP_GPG}" = "true" ]; then
-    # Arch-node mode: consolidated per-platform table (all three stages)
-    _phase_line "GPG & SHA256 sigs"  "${_PHASE_SIGNATURES}"
-    _phase_line "Archive integrity"  "${_PHASE_ARCHIVES}"
+    # Arch-node mode: show only what this node actually ran (binary checks).
+    # GPG/archive/SBOM results are surfaced in Stage 1 summaries and the
+    # Stage 3 cross-platform table — no need to repeat them here.
     if [ "${SKIP_BINARY_CHECKS}" = "true" ]; then
       _phase_line "Binary checks"    "SKIP (-b)"
     else
       _phase_line "Binary checks"    "${_PHASE_BINARIES}"
     fi
-    _phase_line "SBOM validation"    "${_PHASE_SBOM}"
-  else
-    # Central node modes: full phase breakdown
+  elif [ "${GPG_ONLY}" = "true" ]; then
+    # Central GPG stage: only show what this stage actually ran
     _phase_line "Download"           "${_PHASE_DOWNLOAD}"
     _phase_line "GPG key import"     "${_PHASE_GPG_IMPORT}"
     _phase_line "GPG & SHA256 sigs"  "${_PHASE_SIGNATURES}"
-    # Per-arch GPG breakdown — printed when the central GPG-only stage ran
+    # Per-arch GPG breakdown
     if [ -n "${_GPG_PER_ARCH}" ]; then
       while IFS= read -r _gpg_line; do
         [ -z "${_gpg_line}" ] && continue
@@ -1172,13 +1173,10 @@ print_summary() {
       done <<< "${_GPG_PER_ARCH}"
     fi
     _phase_line "Archive integrity"  "${_PHASE_ARCHIVES}"
-    if [ "${SKIP_BINARY_CHECKS}" = "true" ]; then
-      _phase_line "Binary checks"    "SKIP (-b)"
-    else
-      _phase_line "Binary checks"    "${_PHASE_BINARIES}"
-    fi
+  elif [ "${SBOM_ONLY}" = "true" ]; then
+    # Central SBOM stage: only show what this stage actually ran
     _phase_line "SBOM validation"    "${_PHASE_SBOM}"
-    # Per-arch SBOM breakdown — printed when the central SBOM-only stage ran
+    # Per-arch SBOM breakdown
     if [ -n "${_SBOM_PER_ARCH}" ]; then
       while IFS= read -r _sbom_line; do
         [ -z "${_sbom_line}" ] && continue
