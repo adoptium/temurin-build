@@ -56,6 +56,9 @@
  *                  names to run in Stage 2, e.g. "x64-linux,aarch64-linux".
  *                  Leave blank to run all architectures (normal operation).
  *                  NOTE: intended to be removed once the pipeline is stable.
+ *   FORK         — Optional (default adoptium).  GitHub organisation / fork that
+ *                  owns the temurin-build repository being tested.
+ *   BRANCH       — Optional (default master).  Branch in FORK to check out.
  */
 
 // ---------------------------------------------------------------------------
@@ -74,7 +77,7 @@ def ARCH_STAGE_DEFS = [
     'aarch64-mac'          : [ 'ci.role.test&&hw.arch.aarch64&&(sw.os.osx||sw.os.mac)',   '-A aarch64 -O mac',          11, 999 ],
     's390x-linux'          : [ 'ci.role.test&&hw.arch.s390x&&sw.os.linux',                '-A s390x -O linux',          11, 999 ],
     'ppc64le-linux'        : [ 'ci.role.test&&hw.arch.ppc64le&&sw.os.linux',              '-A ppc64le -O linux',        8,  999 ],
-    'ppc64-aix'            : [ 'ci.role.test&&hw.arch.ppc64&&sw.os.aix',                  '-A ppc64 -O aix',            8,  999 ],
+    'ppc64-aix'            : [ 'ci.role.test&&hw.arch.ppc64&&sw.os.aix&&sw.os.aix.7_2TL5', '-A ppc64 -O aix',            8,  999 ],
     'riscv64-linux'        : [ 'ci.role.test&&hw.arch.riscv&&sw.os.linux',                '-A riscv64 -O linux',        17, 999 ],
     'arm-linux'            : [ 'ci.role.test&&hw.arch.aarch32&&sw.os.linux',              '-A arm -O linux',            8,  20  ],
     'x64-windows'          : [ 'ci.role.test&&hw.arch.x86&&sw.os.windows',                '-A x64 -O windows',          8,  999 ],
@@ -82,10 +85,11 @@ def ARCH_STAGE_DEFS = [
 ]
 
 // Parse the JDK major version out of a release tag string.
-// Handles: jdk-21.0.3+9  jdk8u422-b05  jdk17u-YYYY-MM-DD-beta
+// Handles: jdk-21.0.3+9  jdk-27+9-ea-beta  jdk8u422-b05  jdk17u-YYYY-MM-DD-beta
 def extractMajorVersion(String tag) {
     if (tag ==~ /jdk8u.*/) return 8
-    def m = tag =~ /^jdk-(\d+)\./
+    // GA: jdk-21.0.3+9 or EA: jdk-27+9-ea-beta — major follows "jdk-", ends at "." or "+"
+    def m = tag =~ /^jdk-(\d+)[.+]/
     if (m) return m[0][1].toInteger()
     m = tag =~ /^jdk(\d+)u/
     if (m) return m[0][1].toInteger()
@@ -115,6 +119,16 @@ Available values: x64-linux, aarch64-linux, x64-alpine-linux, aarch64-alpine-lin
 x64-mac, aarch64-mac, s390x-linux, ppc64le-linux, ppc64-aix, riscv64-linux, arm-linux, \
 x64-windows, aarch64-windows'''
         )
+        string(
+            name: 'FORK',
+            defaultValue: 'adoptium',
+            description: 'GitHub organisation / fork that owns the temurin-build repository being tested.'
+        )
+        string(
+            name: 'BRANCH',
+            defaultValue: 'master',
+            description: 'Branch in FORK to check out.'
+        )
     }
 
     stages {
@@ -130,6 +144,7 @@ x64-windows, aarch64-windows'''
             steps {
                 checkout scm
                 script {
+                    currentBuild.displayName = "${params.TAG} (${params.BRANCH})"
                     def verboseFlag = params.VERBOSE ? '-v' : ''
 
                     // When FILTER_ARCHS is set, pass -F to limit the central download to only
@@ -194,6 +209,7 @@ x64-windows, aarch64-windows'''
                                    ? params.FILTER_ARCHS.tokenize(',').collect { it.trim() }
                                    : []
                     def parallelBranches = [failFast: false]
+                    def tag = params.TAG
 
                     // Mac stages use GHA-provisioned nodes which are dynamically allocated
                     // and may report "offline" briefly while the runner is starting.
@@ -207,7 +223,6 @@ x64-windows, aarch64-windows'''
                         def extraFlags = config[1]
                         def firstJDK   = config[2]
                         def lastJDK    = config[3]
-                        def tag        = params.TAG
                         def vFlag      = verboseFlag
                         def sName      = stageName
                         def isMac      = sName.endsWith('-mac')
@@ -217,7 +232,8 @@ x64-windows, aarch64-windows'''
                         // bytes that Jenkins renders as literal noise in the console log.
                         def aFlag      = isWindows ? '' : '-a'
 
-                        // Skip stages not applicable to this JDK version.
+                        // Platform not applicable for this JDK version — the Summary stage
+                        // renders a SKIP-VER row directly from ARCH_STAGE_DEFS; no file needed.
                         if (jdkVersion < firstJDK || jdkVersion > lastJDK) {
                             echo "Skipping stage '${sName}': not applicable for JDK ${jdkVersion} (supported: ${firstJDK}–${lastJDK == 999 ? '+' : lastJDK})"
                             return
@@ -243,13 +259,14 @@ x64-windows, aarch64-windows'''
                                                     bash tooling/release_download_test/release_download_test_new.sh \
                                                         ${aFlag} ${vFlag} -G -C ${extraFlags} "${tag}"
                                                 """
-                                                // Stash the binary result file written by the script so
-                                                // the Summary stage can include it in the aggregate table.
+                                            } finally {
+                                                // Stash the binary result file regardless of pass/fail so
+                                                // the Summary stage sees FAIL for platforms with no release
+                                                // artifacts (e.g. arm/linux not in a JDK 8 release).
                                                 stash name: "binary-result-${sName}",
                                                       includes: "staging/${tag}/.results/binary_*.result",
                                                       allowEmpty: true
-                                            } finally {
-                                                // Clean up arch-node workspace regardless of pass/fail.
+                                                // Clean up arch-node workspace after stashing.
                                                 deleteDir()
                                             }
                                         }
@@ -278,43 +295,19 @@ x64-windows, aarch64-windows'''
                     // Unstash GPG/archive/SBOM result files written by the central stage.
                     unstash 'platform-central-results'
 
-                    // Unstash binary result files from each arch-node stage that ran.
-                    // Stages skipped by FILTER_ARCHS or JDK version range will not have
-                    // a stash; the try/catch swallows the missing-stash error silently.
+                    // Unstash binary result files from every arch-node stage that ran.
+                    // Version-skipped stages wrote a SKIP-VER sentinel directly on the
+                    // worker (no stash); FILTER_ARCHS-skipped stages have no stash either
+                    // — the try/catch swallows missing-stash errors silently in both cases.
                     ARCH_STAGE_DEFS.each { stageName, config ->
-                        def firstJDK = config[2]
-                        def lastJDK  = config[3]
-                        if (jdkVersion >= firstJDK && jdkVersion <= lastJDK) {
-                            try {
-                                unstash "binary-result-${stageName}"
-                            } catch (e) {
-                                // Stage may have been unstable or skipped — result file absent.
-                            }
+                        try {
+                            unstash "binary-result-${stageName}"
+                        } catch (e) {
+                            // No stash present — stage was skipped or had no result file.
                         }
                     }
 
-                    // Collect platforms from the result file names present on disk,
-                    // then read each file using sh to stay within the Jenkins sandbox.
                     def resultsDir = "staging/${tag}/.results"
-
-                    // List all result filenames and extract platform keys.
-                    def fileList = sh(
-                        script: "ls '${resultsDir}'/*.result 2>/dev/null || true",
-                        returnStdout: true
-                    ).trim()
-
-                    def platforms = []
-                    if (fileList) {
-                        fileList.split('\n').each { path ->
-                            def fname = path.tokenize('/')[-1]
-                            def m = fname =~ /^(?:gpg|archive|sbom|binary)_(.+)\.result$/
-                            if (m) {
-                                def plat = m[0][1].replace('_', '/')
-                                if (!platforms.contains(plat)) platforms << plat
-                            }
-                        }
-                    }
-                    platforms.sort()
 
                     // Helper: read a result file via sh, return trimmed value or 'N/A'.
                     def readResult = { String path ->
@@ -340,25 +333,56 @@ x64-windows, aarch64-windows'''
                     lines << bar
 
                     boolean anyFail = false
-                    platforms.each { plat ->
-                        def safe   = plat.replace('/', '_')
+
+                    // Iterate ARCH_STAGE_DEFS so every known platform appears in the table
+                    // in a consistent order, regardless of whether result files exist.
+                    ARCH_STAGE_DEFS.each { stageName, config ->
+                        def extraFlags = config[1]
+                        def firstJDK   = config[2]
+                        def lastJDK    = config[3]
+
+                        // Derive the platform display key from the -A / -O flags.
+                        def platMatch = extraFlags =~ /-A (\S+) -O (\S+)/
+                        if (!platMatch) return
+                        def arch = platMatch[0][1]
+                        def os   = platMatch[0][2]
+                        def plat = "${arch}/${os}"
+                        def safe = "${arch}_${os}"
+
+                        // Platform not applicable for this JDK version.
+                        if (jdkVersion < firstJDK || jdkVersion > lastJDK) {
+                            def range = "${firstJDK}–${lastJDK == 999 ? '+' : lastJDK}"
+                            lines << String.format("%-${COL_PLAT}s", plat) +
+                                     " | ${'N/A'.padRight(COL_RES)} | ${'N/A'.padRight(COL_RES)} | ${'N/A'.padRight(COL_RES)} | ${'SKIP-VER'.padRight(COL_RES)} | (not released for JDK ${jdkVersion}, valid range: ${range})"
+                            return
+                        }
+
                         def gpg    = readResult("${resultsDir}/gpg_${safe}.result")
                         def arc    = readResult("${resultsDir}/archive_${safe}.result")
                         def sbom   = readResult("${resultsDir}/sbom_${safe}.result")
-                        // For arch stages skipped by FILTER_ARCHS, show SKIP rather than N/A.
                         def binary = readResult("${resultsDir}/binary_${safe}.result")
-                        if (binary == 'N/A' && filterList) {
-                            // Determine the stage name from the platform key (arch/os -> arch-os).
-                            def stageName = plat.replace('/', '-')
-                            if (!filterList.contains(stageName)) {
-                                binary = 'SKIP'
-                            }
+
+                        // FILTER_ARCHS debug mode: show SKIP for intentionally excluded stages.
+                        if (binary == 'N/A' && filterList && !filterList.contains(stageName)) {
+                            binary = 'SKIP'
                         }
+
+                        // binary==FAIL here means the arch-node downloaded zero files —
+                        // the platform exists in the version range but was absent from this
+                        // specific release (e.g. arm/linux missing from a JDK 8 release).
                         [gpg, arc, sbom, binary].each { if (it == 'FAIL') anyFail = true }
-                        lines << String.format("%-${COL_PLAT}s", plat) +
-                                 [gpg, arc, sbom, binary].collect { r ->
-                                     String.format(" | %-${COL_RES}s", r)
-                                 }.join('') + ' |'
+
+                        def row = String.format("%-${COL_PLAT}s", plat) +
+                                  [gpg, arc, sbom, binary].collect { r ->
+                                      String.format(" | %-${COL_RES}s", r)
+                                  }.join('') + ' |'
+
+                        // Append a prominent warning for platforms that should exist but don't.
+                        if (binary == 'FAIL' && gpg == 'N/A') {
+                            row += ' ** ERROR: platform absent from release **'
+                        }
+
+                        lines << row
                     }
 
                     lines << bar

@@ -445,10 +445,12 @@ verify_gpg_signatures() {
     # Files without that pattern (e.g. sources, release-notes) are skipped.
     local _base _arch_os
     _base="$(basename "${A}")"
-    # Match: OpenJDK<n>U-<type>_<arch>_<os>_...
-    # e.g.   OpenJDK21U-jdk_x64_linux_hotspot_... -> arch=x64 os=linux
-    #        OpenJDK21U-sbom_aarch64_mac_...       -> arch=aarch64 os=mac
-    if _arch_os="$(echo "${_base}" | sed -n 's/^OpenJDK[0-9]*U-[^_]*_\([^_]*\)_\([^_]*\)_.*/\1\/\2/p')"; then
+    # Match GA: OpenJDK<n>U-<type>_<arch>_<os>_...
+    #   e.g. OpenJDK21U-jdk_x64_linux_hotspot_... -> arch=x64 os=linux
+    # Match EA: OpenJDK-<type>_<arch>_<os>_...
+    #   e.g. OpenJDK-jdk_x64_linux_hotspot_27_9-ea.tar.gz -> arch=x64 os=linux
+    # [0-9]*[A-Z]* matches "21U" (GA) or "" (EA) between "OpenJDK" and "-".
+    if _arch_os="$(echo "${_base}" | sed -n 's/^OpenJDK[0-9]*[A-Z]*-[^_]*_\([^_]*\)_\([^_]*\)_.*/\1\/\2/p')"; then
       if [ -n "${_arch_os}" ]; then
         # Only mark FAIL if this file failed; never downgrade an existing PASS.
         if [ "${_file_ok}" = "false" ]; then
@@ -505,11 +507,17 @@ verify_valid_archives() {
         RC=4
         arc_failures=$(( arc_failures + 1 ))
       else
-        # NOTE: 37 chosen because the static-libs is 37 for JDK21/AIX - maybe switch for different tarballs in the future?
-        local file_count
+        local file_count min_count
         file_count=$(tar tfz "${A}" | wc -l)
-        if [ "${file_count}" -lt 37 ]; then
-          print_error "Fewer than 37 files in ${A} (found ${file_count}) - that does not seem correct"
+        # static-libs archives are legitimately small (10s of files); all other
+        # archives (jdk, jre, testimage, debugimage) contain hundreds of files.
+        # Use a per-type minimum so a small-but-valid static-libs does not fail.
+        case "${A}" in
+          *static-libs*) min_count=10 ;;
+          *)             min_count=37 ;;
+        esac
+        if [ "${file_count}" -lt "${min_count}" ]; then
+          print_error "Fewer than ${min_count} files in ${A} (found ${file_count}) - that does not seem correct"
           RC=4
           arc_failures=$(( arc_failures + 1 ))
         else
@@ -857,18 +865,28 @@ verify_compiler_version() {
 ########################################################################################################################
 #
 # Verify the MSVC compiler version embedded in Windows JDK/JRE binaries by running
-# java.exe -Xinternalversion and parsing the "MS VC++:XXXX" field from its output.
+# java.exe -Xinternalversion and parsing the MS VC++ field from its output.
 #
-# The output format is:
-#   OpenJDK 64-Bit Server VM (21.0.2+13-LTS) for windows-amd64 JRE (21.0.2+13-LTS),
-#   built on 2024-01-16T00:00:00Z by "admin" with unknown MS VC++:1937
+# Two output formats exist depending on JDK version:
+#
+#   New format (JDK 17+): colon-separated 4-digit toolset number
+#     built on 2024-01-16T00:00:00Z by "admin" with unknown MS VC++:1937
+#
+#   Old format (JDK 8/11): space-separated X.Y version with VS label
+#     built on 2020-10-15T00:00:00Z by "admin" with unknown MS VC++ 16.7 (VS2019)
+#     built on 2022-05-05T00:00:00Z by "admin" with unknown MS VC++ 17.7 (VS2022)
 #
 # The 4-digit toolset number maps to Visual Studio versions:
 #   1900–1919 = VS 2015/2017
 #   1920–1929 = VS 2019
 #   1930+     = VS 2022
 #
-# All current Temurin Windows releases are built with VS 2022 (toolset 1930+).
+# The X.Y major version maps to Visual Studio:
+#   14.x = VS 2015/2017
+#   16.x = VS 2019
+#   17.x = VS 2022
+#
+# All current Temurin Windows releases are expected to be built with VS 2022.
 # Both x64 and aarch64 Windows targets are checked.
 #
 # Only applicable when running natively on Windows (OS=windows).
@@ -914,26 +932,37 @@ verify_windows_compiler_version() {
   _internalversion="$(tarballtest/bin/java.exe -Xinternalversion 2>&1 || true)"
   print_verbose "IVT: java.exe -Xinternalversion output: ${_internalversion}"
 
-  # Extract the 4-digit MSVC toolset number from "MS VC++:NNNN"
-  # Use sed for portability across bash variants on Windows (Git Bash / MSYS2).
-  local _msvc_num
-  _msvc_num="$(echo "${_internalversion}" | grep 'MS VC++:' | sed 's/.*MS VC++:\([0-9]*\).*/\1/')"
-  if [ -z "${_msvc_num}" ]; then
-    print_error "MS VC++ toolset number not found in java.exe -Xinternalversion output (${ARCH}/windows/JDK${MAJOR_VERSION})"
-    RC=4
-    rm -rf tarballtest
-    return
-  fi
+  local _msvc_line
+  _msvc_line="$(echo "${_internalversion}" | grep 'MS VC++')"
 
-  print_verbose "IVT: Detected MS VC++ toolset number: ${_msvc_num}"
+  # New format (JDK 17+): "MS VC++:NNNN" — colon-separated 4-digit toolset number.
+  if echo "${_msvc_line}" | grep -q 'MS VC++:[0-9]'; then
+    local _msvc_num
+    _msvc_num="$(echo "${_msvc_line}" | sed 's/.*MS VC++:\([0-9]*\).*/\1/')"
+    print_verbose "IVT: Detected MS VC++ toolset number (new format): ${_msvc_num}"
+    if [ "${_msvc_num}" -lt 1930 ]; then
+      print_error "Windows binary built with MS VC++:${_msvc_num} — expected Visual Studio 2022 (toolset >= 1930) (${ARCH}/windows/JDK${MAJOR_VERSION})"
+      RC=4
+    else
+      print_pass "Windows compiler: MS VC++:${_msvc_num} (Visual Studio 2022) (${ARCH}/windows/JDK${MAJOR_VERSION})"
+    fi
 
-  # VS 2022 toolset numbers start at 1930 (19.30.x).
-  # Reject anything below 1930 (VS 2019 or older).
-  if [ "${_msvc_num}" -lt 1930 ]; then
-    print_error "Windows binary built with MS VC++:${_msvc_num} — expected Visual Studio 2022 (toolset >= 1930) (${ARCH}/windows/JDK${MAJOR_VERSION})"
-    RC=4
+  # Old format (JDK 8/11): "MS VC++ X.Y (VSLabel)" — space-separated X.Y version.
+  elif echo "${_msvc_line}" | grep -q 'MS VC++ [0-9]'; then
+    local _msvc_major
+    _msvc_major="$(echo "${_msvc_line}" | sed 's/.*MS VC++ \([0-9]*\)\.[0-9]*.*/\1/')"
+    print_verbose "IVT: Detected MS VC++ major version (old format): ${_msvc_major}"
+    # Major version 17 = VS 2022, 16 = VS 2019, 14 = VS 2015/2017
+    if [ "${_msvc_major}" -lt 17 ]; then
+      print_error "Windows binary built with MS VC++ ${_msvc_major}.x — expected Visual Studio 2022 (major version >= 17) (${ARCH}/windows/JDK${MAJOR_VERSION})"
+      RC=4
+    else
+      print_pass "Windows compiler: MS VC++ ${_msvc_major}.x (Visual Studio 2022) (${ARCH}/windows/JDK${MAJOR_VERSION})"
+    fi
+
   else
-    print_pass "Windows compiler: MS VC++:${_msvc_num} (Visual Studio 2022) (${ARCH}/windows/JDK${MAJOR_VERSION})"
+    print_error "MS VC++ version not found in java.exe -Xinternalversion output (${ARCH}/windows/JDK${MAJOR_VERSION})"
+    RC=4
   fi
 
   rm -rf tarballtest
@@ -990,7 +1019,7 @@ verify_sboms() {
     # Extract arch/os from the SBOM filename using the same pattern as GPG tracking.
     local _sbom_base _sbom_arch_os
     _sbom_base="$(basename "${sbom}")"
-    if _sbom_arch_os="$(echo "${_sbom_base}" | sed -n 's/^OpenJDK[0-9]*U-[^_]*_\([^_]*\)_\([^_]*\)_.*/\1\/\2/p')"; then
+    if _sbom_arch_os="$(echo "${_sbom_base}" | sed -n 's/^OpenJDK[0-9]*[A-Z]*-[^_]*_\([^_]*\)_\([^_]*\)_.*/\1\/\2/p')"; then
       if [ -n "${_sbom_arch_os}" ]; then
         if [ "${_sbom_ok}" = "false" ]; then
           _SBOM_PER_ARCH="$(echo "${_SBOM_PER_ARCH}" | grep -v "^${_sbom_arch_os} " || true)"
@@ -1266,8 +1295,11 @@ RC=0
 if [ "${SKIP_DOWNLOADING}" = "false" ] && [ "${SKIP_GPG}" = "true" ] && [ "${_DOWNLOAD_COUNT}" -eq 0 ]; then
   print_error "No files downloaded for ${ARCH}/${OS} — platform may not be in this release or download failed"
   _PHASE_DOWNLOAD="FAIL"
-  _PHASE_BINARIES="−"
+  _PHASE_BINARIES="FAIL"
   RC=1
+  # Write the result file now so the Summary stage sees FAIL for this platform
+  # even though we exit before the normal write_platform_results call at the end.
+  write_platform_results "binary" "${ARCH}/${OS}" "${_PHASE_BINARIES}"
   print_summary
   exit ${RC}
 fi

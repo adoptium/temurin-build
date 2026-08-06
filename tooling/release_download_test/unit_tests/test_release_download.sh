@@ -375,6 +375,38 @@ rm -rf "${_tmp_workspace}"
 echo "PASS: write_platform_results / flush_results_to_disk / read_platform_results"
 
 # ---------------------------------------------------------------------------
+# arch/os extraction regex — GA and EA filename formats
+# ---------------------------------------------------------------------------
+# Validate the sed pattern used in verify_gpg_signatures() and verify_sboms()
+# to extract arch/os from filenames.  Both GA (OpenJDK21U-) and EA (OpenJDK-)
+# formats must be handled.
+
+_extract_arch_os() {
+  local filename="$1"
+  echo "${filename}" | sed -n 's/^OpenJDK[0-9]*[A-Z]*-[^_]*_\([^_]*\)_\([^_]*\)_.*/\1\/\2/p'
+}
+
+# GA release filenames
+assertEquals "x64/linux"          "$(_extract_arch_os "OpenJDK21U-jdk_x64_linux_hotspot_21.0.3_9.tar.gz")"    "arch/os regex: GA jdk x64/linux"
+assertEquals "aarch64/mac"        "$(_extract_arch_os "OpenJDK21U-jre_aarch64_mac_hotspot_21.0.3_9.tar.gz")"  "arch/os regex: GA jre aarch64/mac"
+assertEquals "x64/alpine-linux"   "$(_extract_arch_os "OpenJDK21U-sbom_x64_alpine-linux_hotspot_21.0.3_9.json")" "arch/os regex: GA sbom x64/alpine-linux"
+assertEquals "ppc64/aix"          "$(_extract_arch_os "OpenJDK11U-jdk_ppc64_aix_hotspot_11.0.22_7.tar.gz")"   "arch/os regex: GA jdk ppc64/aix"
+assertEquals "x64/windows"        "$(_extract_arch_os "OpenJDK17U-jdk_x64_windows_hotspot_17.0.11_9.zip")"    "arch/os regex: GA jdk x64/windows"
+
+# EA release filenames (no version number, no U)
+assertEquals "x64/linux"          "$(_extract_arch_os "OpenJDK-jdk_x64_linux_hotspot_27_9-ea.tar.gz")"        "arch/os regex: EA jdk x64/linux"
+assertEquals "aarch64/linux"      "$(_extract_arch_os "OpenJDK-jre_aarch64_linux_hotspot_27_9-ea.tar.gz")"    "arch/os regex: EA jre aarch64/linux"
+assertEquals "x64/alpine-linux"   "$(_extract_arch_os "OpenJDK-sbom_x64_alpine-linux_hotspot_27_9-ea.json")"  "arch/os regex: EA sbom x64/alpine-linux"
+assertEquals "aarch64/windows"    "$(_extract_arch_os "OpenJDK-jdk_aarch64_windows_hotspot_27_9-ea.zip")"     "arch/os regex: EA jdk aarch64/windows"
+assertEquals "s390x/linux"        "$(_extract_arch_os "OpenJDK-debugimage_s390x_linux_hotspot_27_9-ea.tar.gz")" "arch/os regex: EA debugimage s390x/linux"
+
+# Arch-agnostic files (sources, release-notes) must return empty string
+assertEquals "" "$(_extract_arch_os "OpenJDK-jdk-sources_27_9-ea.tar.gz")"   "arch/os regex: sources file yields empty"
+assertEquals "" "$(_extract_arch_os "OpenJDK21U-jdk-sources_21.0.3_9.tar.gz")" "arch/os regex: GA sources file yields empty"
+
+echo "PASS: arch/os extraction regex (GA + EA filenames)"
+
+# ---------------------------------------------------------------------------
 # native_arch / native_os helpers — only validate they return a known value
 # ---------------------------------------------------------------------------
 
