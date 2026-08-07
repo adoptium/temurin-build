@@ -22,31 +22,35 @@ NORMAL=""
 BOLD=""
 RED=""
 YELLOW=""
+GREEN=""
+CYAN=""
 
 
 ########################################################################################################################
 #
 # Initializes logging with ansi coloring.
+# The caller has explicitly opted in with -a, so no TTY check is performed —
+# this ensures colours work correctly in Jenkins where stdout is not a TTY.
 #
 ########################################################################################################################
 init_ansi_logging() {
-  # check if stdout is a terminal...
-  if test -t 1; then
-    # see if it supports colors...
-    ncolors=$(tput colors)
+  ncolors=$(tput colors 2>/dev/null || echo 0)
 
-    if test -n "$ncolors" && test "$ncolors" -ge 8; then
-      NORMAL="$(tput sgr0)"
-      BOLD="$(tput bold)"
-      RED="$(tput setaf 1)"
-      YELLOW="$(tput setaf 3)"
-    fi
+  if test -n "$ncolors" && test "$ncolors" -ge 8; then
+    NORMAL="$(tput sgr0)"
+    BOLD="$(tput bold)"
+    RED="$(tput setaf 1)"
+    YELLOW="$(tput setaf 3)"
+    GREEN="$(tput setaf 2)"
+    CYAN="$(tput setaf 6)"
   fi
 
   export NORMAL
   export BOLD
   export RED
   export YELLOW
+  export GREEN
+  export CYAN
 }
 
 
