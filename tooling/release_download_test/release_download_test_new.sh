@@ -289,7 +289,7 @@ download_jdk_releases() {
 #
 ########################################################################################################################
 download_release_files() {
-  local jdk_releases filter arch_filter url download_count
+  local jdk_releases filter arch_filter url
 
   jdk_releases=$1
 
@@ -938,7 +938,8 @@ verify_windows_compiler_version() {
   # New format (JDK 17+): "MS VC++:NNNN" — colon-separated 4-digit toolset number.
   if echo "${_msvc_line}" | grep -q 'MS VC++:[0-9]'; then
     local _msvc_num
-    _msvc_num="$(echo "${_msvc_line}" | sed 's/.*MS VC++:\([0-9]*\).*/\1/')"
+    _msvc_num="${_msvc_line##*MS VC++:}"
+    _msvc_num="${_msvc_num%%[^0-9]*}"
     print_verbose "IVT: Detected MS VC++ toolset number (new format): ${_msvc_num}"
     if [ "${_msvc_num}" -lt 1930 ]; then
       print_error "Windows binary built with MS VC++:${_msvc_num} — expected Visual Studio 2022 (toolset >= 1930) (${ARCH}/windows/JDK${MAJOR_VERSION})"
@@ -950,7 +951,8 @@ verify_windows_compiler_version() {
   # Old format (JDK 8/11): "MS VC++ X.Y (VSLabel)" — space-separated X.Y version.
   elif echo "${_msvc_line}" | grep -q 'MS VC++ [0-9]'; then
     local _msvc_major
-    _msvc_major="$(echo "${_msvc_line}" | sed 's/.*MS VC++ \([0-9]*\)\.[0-9]*.*/\1/')"
+    _msvc_major="${_msvc_line##*MS VC++ }"
+    _msvc_major="${_msvc_major%%.*}"
     print_verbose "IVT: Detected MS VC++ major version (old format): ${_msvc_major}"
     # Major version 17 = VS 2022, 16 = VS 2019, 14 = VS 2015/2017
     if [ "${_msvc_major}" -lt 17 ]; then
@@ -1285,7 +1287,9 @@ else
   _PHASE_DOWNLOAD="SKIP"
 fi
 
-[ "$VERBOSE" = "true" ] && ls -l "${WORKSPACE}"/staging/"${TAG}"/OpenJDK* 2>/dev/null || true
+if [ "$VERBOSE" = "true" ]; then
+  ls -l "${WORKSPACE}"/staging/"${TAG}"/OpenJDK* 2>/dev/null || true
+fi
 
 # In arch-node mode, a download count of zero means the release has no files for this
 # arch/os (platform not in this release) or the agent failed to reach the download URL.

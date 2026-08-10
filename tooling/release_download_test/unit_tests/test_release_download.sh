@@ -33,6 +33,7 @@ export TEST_MODE=true
 export SCRIPT_DIR="${TOOLING_DIR}/release_download_test"
 export TOOLING_DIR="${TOOLING_DIR}"
 # Silence any ANSI colour escapes that common_logging may set
+# shellcheck disable=SC2034
 BOLD="" NORMAL=""
 # shellcheck source=tooling/release_download_test_new.sh
 source "${SCRIPT_UNDER_TEST}"
@@ -167,6 +168,7 @@ reset_flags() {
   KEEP_STAGING=false
   SKIP_DOWNLOADING=false
   USE_ANSI=false
+  # shellcheck disable=SC2034
   VERBOSE=false
   SKIP_BINARY_CHECKS=false
   GPG_ONLY=false
@@ -256,6 +258,7 @@ assertEquals "SKIP" "${_PHASE_SBOM}"     "phase-state: GPG_ONLY=true sets _PHASE
 # still not touched (remains at its initial "−") since it is not shown in the arch-node
 # consolidated summary — the table only shows SIGNATURES, ARCHIVES, BINARIES, SBOM.
 reset_flags
+# shellcheck disable=SC2034
 SKIP_GPG=true
 _PHASE_GPG_IMPORT="−"
 _PHASE_SIGNATURES="−"
@@ -301,6 +304,7 @@ echo "PASS: phase-state flags"
 # ---------------------------------------------------------------------------
 
 _tmp_workspace="$(mktemp -d)"
+# shellcheck disable=SC2034
 WORKSPACE="${_tmp_workspace}"
 TAG="jdk-21.0.3+9"
 ARCH="x64"

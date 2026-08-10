@@ -130,10 +130,8 @@ run_validation() {
 
   case "${checks}" in
     native)
-      # Only attempt java -version if we're actually on this native machine
-      if [ "${arch}" != "${NATIVE_ARCH}" ] || [ "${os}" != "${NATIVE_OS}" ]; then
-        flags="${flags}"   # -A/-O mismatch will auto-skip java -version
-      fi
+      # Only attempt java -version if we're actually on this native machine.
+      # If arch/os doesn't match this native machine, -A/-O mismatch will auto-skip java -version.
       ;;
     strings)
       ;;  # -A/-O set but no -b: strings checks run, java -version auto-skipped
