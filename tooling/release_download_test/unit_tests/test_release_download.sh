@@ -35,7 +35,7 @@ export TOOLING_DIR="${TOOLING_DIR}"
 # Silence any ANSI colour escapes that common_logging may set
 # shellcheck disable=SC2034
 BOLD="" NORMAL=""
-# shellcheck source=tooling/release_download_test_new.sh
+# shellcheck source=/dev/null
 source "${SCRIPT_UNDER_TEST}"
 
 FAILURES=0
@@ -89,6 +89,7 @@ echo "PASS: extract_major_version"
 # Override uname within this test scope
 run_determine_arch() {
   local mock_machine="$1"
+  # shellcheck disable=SC2317
   uname() { echo "${mock_machine}"; }
   ARCH=""
   determine_arch
@@ -113,6 +114,7 @@ echo "PASS: determine_arch"
 run_determine_os() {
   local mock_kernel="$1"
   local mock_alpine="${2:-false}"
+  # shellcheck disable=SC2317
   uname() { echo "${mock_kernel}"; }
   # Mock alpine-release presence using a temp file
   local _tmpdir
@@ -145,6 +147,7 @@ assertEquals "aix"     "$(run_determine_os AIX)"     "determine_os: AIX -> aix"
 # determine_os returns plain "linux". We verify the alpine branch by simulating
 # what happens when the file exists using a subshell with a mocked path.
 _alpine_result=$(
+  # shellcheck disable=SC2317
   uname() { echo "Linux"; }
   # Temporarily create the file in a location and redirect via a wrapper
   _td="$(mktemp -d)"
