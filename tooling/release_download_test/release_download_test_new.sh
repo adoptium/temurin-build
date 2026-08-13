@@ -1,6 +1,6 @@
 #!/bin/bash
 # ********************************************************************************
-# Copyright (c) 2023 Contributors to the Eclipse Foundation
+# Copyright (c) 2026 Contributors to the Eclipse Foundation
 #
 # See the NOTICE file(s) with this work for additional
 # information regarding copyright ownership.
@@ -492,7 +492,7 @@ ${_arch_os} PASS"
 #
 ########################################################################################################################
 verify_valid_archives() {
-  local A arc_failures=0 checked=0
+  local single_archive arc_failures=0 checked=0
 
   print_section "Archive Integrity Verification"
 
@@ -500,28 +500,28 @@ verify_valid_archives() {
 
   # Check to prevent script aborting if no such files exist
   if ls OpenJDK*.tar.gz > /dev/null 2>&1; then
-    for A in OpenJDK*.tar.gz; do
-      print_verbose "IVT : Counting files in tarball ${A}"
-      if ! tar tfz "${A}" > /dev/null; then
-        print_error "Failed to verify that ${A} can be extracted"
+    for single_archive in OpenJDK*.tar.gz; do
+      print_verbose "IVT : Counting files in tarball ${single_archive}"
+      if ! tar tfz "${single_archive}" > /dev/null; then
+        print_error "Failed to verify that ${single_archive} can be extracted"
         RC=4
         arc_failures=$(( arc_failures + 1 ))
       else
         local file_count min_count
-        file_count=$(tar tfz "${A}" | wc -l)
+        file_count=$(tar tfz "${single_archive}" | wc -l)
         # static-libs archives are legitimately small (10s of files); all other
         # archives (jdk, jre, testimage, debugimage) contain hundreds of files.
         # Use a per-type minimum so a small-but-valid static-libs does not fail.
-        case "${A}" in
+        case "${single_archive}" in
           *static-libs*) min_count=10 ;;
           *)             min_count=37 ;;
         esac
         if [ "${file_count}" -lt "${min_count}" ]; then
-          print_error "Fewer than ${min_count} files in ${A} (found ${file_count}) - that does not seem correct"
+          print_error "Fewer than ${min_count} files in ${single_archive} (found ${file_count}) - that does not seem correct"
           RC=4
           arc_failures=$(( arc_failures + 1 ))
         else
-          print_pass "Archive (${file_count} entries): $(basename "${A}")"
+          print_pass "Archive (${file_count} entries): $(basename "${single_archive}")"
         fi
       fi
       checked=$(( checked + 1 ))
@@ -529,21 +529,21 @@ verify_valid_archives() {
   fi
 
   if ls OpenJDK*.zip > /dev/null 2>&1; then
-    for A in OpenJDK*.zip; do
-      print_verbose "IVT : Counting files in archive ${A}"
-      if ! unzip -t "${A}" > /dev/null; then
-        print_error "Failed to verify that ${A} can be extracted"
+    for single_archive in OpenJDK*.zip; do
+      print_verbose "IVT : Counting files in archive ${single_archive}"
+      if ! unzip -t "${single_archive}" > /dev/null; then
+        print_error "Failed to verify that ${single_archive} can be extracted"
         RC=4
         arc_failures=$(( arc_failures + 1 ))
       else
         local file_count
-        file_count=$(unzip -l "${A}" | wc -l)
+        file_count=$(unzip -l "${single_archive}" | wc -l)
         if [ "${file_count}" -lt 44 ]; then
-          print_error "Less than 40 files in ${A} (found ${file_count}) - that does not seem correct"
+          print_error "Less than 40 files in ${single_archive} (found ${file_count}) - that does not seem correct"
           RC=4
           arc_failures=$(( arc_failures + 1 ))
         else
-          print_pass "Archive (${file_count} entries): $(basename "${A}")"
+          print_pass "Archive (${file_count} entries): $(basename "${single_archive}")"
         fi
       fi
       checked=$(( checked + 1 ))
@@ -553,21 +553,21 @@ verify_valid_archives() {
   # If there was an x64 linux version in the release, check for source archive
   if ls OpenJDK*-jdk_x64_linux_hotspot_*.tar.gz > /dev/null 2>&1; then
     if ls OpenJDK*-jdk-sources*.tar.gz > /dev/null 2>&1; then
-      for A in OpenJDK*-jdk-sources*.tar.gz; do
-        print_verbose "IVT : Counting files in source ${A}"
-        if ! tar tfz "${A}" > /dev/null; then
-          print_error "Failed to verify that ${A} can be extracted"
+      for single_archive in OpenJDK*-jdk-sources*.tar.gz; do
+        print_verbose "IVT : Counting files in source ${single_archive}"
+        if ! tar tfz "${single_archive}" > /dev/null; then
+          print_error "Failed to verify that ${single_archive} can be extracted"
           RC=4
           arc_failures=$(( arc_failures + 1 ))
         else
           local file_count
-          file_count=$(tar tfz "${A}" | wc -l)
+          file_count=$(tar tfz "${single_archive}" | wc -l)
           if [ "${file_count}" -lt 45000 ]; then
-            print_error "Fewer than 45000 files in source archive ${A} (found ${file_count}) - that does not seem correct"
+            print_error "Fewer than 45000 files in source archive ${single_archive} (found ${file_count}) - that does not seem correct"
             RC=4
             arc_failures=$(( arc_failures + 1 ))
           else
-            print_pass "Source archive (${file_count} entries): $(basename "${A}")"
+            print_pass "Source archive (${file_count} entries): $(basename "${single_archive}")"
           fi
         fi
         checked=$(( checked + 1 ))
