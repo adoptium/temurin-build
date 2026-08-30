@@ -154,6 +154,10 @@ then
   elif [ "${JAVA_FEATURE_VERSION}" == "19" ]; then
     JDK_BOOT_VERSION="19"
   fi
+  if [ "${JAVA_FEATURE_VERSION}" == "8" ]; then
+     # Reduce external dependencies and use Adoptium builds if present
+    JDK_BOOT_VERSION="8"
+  fi
 fi
 echo "Required boot JDK version: ${JDK_BOOT_VERSION}"
 
