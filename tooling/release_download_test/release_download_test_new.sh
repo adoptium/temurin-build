@@ -42,6 +42,7 @@ GPG_ONLY=false
 SKIP_GPG=false
 SBOM_ONLY=false
 SKIP_SBOM=false
+SOURCES_ONLY=false
 OVERRIDE_ARCH=""
 OVERRIDE_OS=""
 ARCH_FILTER_LIST=""
@@ -55,6 +56,7 @@ _PHASE_SIGNATURES="−"
 _PHASE_ARCHIVES="−"
 _PHASE_BINARIES="−"
 _PHASE_SBOM="−"
+_PHASE_SOURCES="−"
 
 # Count of files downloaded in the most recent download_release_files() call.
 _DOWNLOAD_COUNT=0
@@ -104,6 +106,10 @@ Options:
            the central node as a dedicated SBOM validation stage.
   -C       Skip-SBOM mode: skip SBOM validation on arch nodes (already done centrally by -c).
            Use this on each arch-specific node alongside -G.
+  -r       Sources-only mode: download the source tarball and its GPG/SHA256 sidecars,
+           verify the GPG signature and SHA256 checksum, check archive integrity, assert
+           file count (>=45000), and validate top-level directory structure. Then exit.
+           Use this on the central node as a dedicated source tarball validation stage.
   -A arch  override arch used for tarball matching and binary checks (bypasses uname detection)
   -O os    override OS used for tarball matching and binary checks (bypasses uname detection)
   -F list  comma-separated list of arch_os tokens to download in GPG-only mode (-g), e.g.
@@ -118,7 +124,7 @@ Options:
 parse_options() {
   local OPTIND opt
 
-  while getopts ":hvksabgGcCA:O:F:" opt; do
+  while getopts ":hvksabgGcCrA:O:F:" opt; do
       case "${opt}" in
           h)   usage;;
           v)   VERBOSE=true;;
@@ -130,6 +136,7 @@ parse_options() {
           G)   SKIP_GPG=true;;
           c)   SBOM_ONLY=true;;
           C)   SKIP_SBOM=true;;
+          r)   SOURCES_ONLY=true;;
           A)   OVERRIDE_ARCH="${OPTARG}";;
           O)   OVERRIDE_OS="${OPTARG}";;
           F)   ARCH_FILTER_LIST="${OPTARG}";;
@@ -168,7 +175,7 @@ parse_options() {
 #
 ########################################################################################################################
 _log_prefix() {
-  if [ "${GPG_ONLY}" = "true" ] || [ "${SBOM_ONLY}" = "true" ]; then
+  if [ "${GPG_ONLY}" = "true" ] || [ "${SBOM_ONLY}" = "true" ] || [ "${SOURCES_ONLY}" = "true" ]; then
     echo "[worker]"
     return
   fi
@@ -241,9 +248,10 @@ extract_major_version() {
 ########################################################################################################################
 #
 # Download release information from GitHub for the specified tag.
-# For EA beta tags (jdkXXu-DATE-beta) the release is fetched directly by tag name
-# rather than through the paginated list endpoint, which may not contain it.
-# For all other tags the paginated list is used.
+# Always fetches the specific release directly by tag name using the
+# /releases/tags/<tag> endpoint. This is reliable for all tag formats
+# (GA, CSPU, EA beta) and avoids pagination issues where CSPU or older
+# releases may not appear within the first page of the list endpoint.
 # return : file containing release information
 #
 ########################################################################################################################
@@ -251,27 +259,22 @@ download_jdk_releases() {
   local output_file
   output_file="${WORKSPACE}/jdk${MAJOR_VERSION}.txt"
 
-  if echo "${TAG}" | grep "^jdk${MAJOR_VERSION}u-.*-beta" > /dev/null; then
-    # Modern EA beta: fetch the specific release directly by tag to avoid pagination issues
-    # and because the list endpoint may not return it within the default page size.
-    print_verbose "IVT : EA beta tag detected - fetching release directly by tag name"
-    if ! curl -sS "https://api.github.com/repos/adoptium/temurin${MAJOR_VERSION}-binaries/releases/tags/${TAG}" > "${output_file}"; then
-      print_error "GitHub API call failed for EA beta tag ${TAG} - aborting"
-      exit 2
-    fi
-    # Wrap the single-release object in an array so download_release_files can use
-    # the same grep/sed pipeline as for the paginated list response.
-    local tmp_file="${output_file}.tmp"
-    echo "[" > "${tmp_file}"
-    cat "${output_file}" >> "${tmp_file}"
-    echo "]" >> "${tmp_file}"
-    mv "${tmp_file}" "${output_file}"
-  else
-    if ! curl -sS "https://api.github.com/repos/adoptium/temurin${MAJOR_VERSION}-binaries/releases?per_page=100" > "${output_file}"; then
-      print_error "GitHub API call failed - aborting"
-      exit 2
-    fi
+  print_verbose "IVT : Fetching release info for tag '${TAG}' directly from GitHub API"
+  # The + character in GA tags (e.g. jdk-11.0.32.1+1) must be percent-encoded as %2B in URLs.
+  local encoded_tag
+  encoded_tag="$(echo "${TAG}" | sed 's/+/%2B/g')"
+  if ! curl --path-as-is -sS "https://api.github.com/repos/adoptium/temurin${MAJOR_VERSION}-binaries/releases/tags/${encoded_tag}" > "${output_file}"; then
+    print_error "GitHub API call failed for tag ${TAG} - aborting"
+    exit 2
   fi
+
+  # Wrap the single-release object in an array so download_release_files can use
+  # the same grep/sed pipeline regardless of tag format.
+  local tmp_file="${output_file}.tmp"
+  echo "[" > "${tmp_file}"
+  cat "${output_file}" >> "${tmp_file}"
+  echo "]" >> "${tmp_file}"
+  mv "${tmp_file}" "${output_file}"
 
   echo "${output_file}"
 }
@@ -361,7 +364,7 @@ download_release_files() {
       [ "${_matched}" = "false" ] && continue
     fi
     print_verbose "IVT : Downloading $(basename "$url")"
-    curl -LORsS -C - "$url"
+    curl --path-as-is -LORsS -C - "$url"
     _DOWNLOAD_COUNT=$(( _DOWNLOAD_COUNT + 1 ))
   done < <(grep "${filter}" "${jdk_releases}" | sed -n 's/.*"browser_download_url": *"\([^"]*\)".*/\1/p')
   print_info "Finished downloads — ${_DOWNLOAD_COUNT} files downloaded to staging"
@@ -411,13 +414,18 @@ verify_gpg_signatures() {
 
   cd "${WORKSPACE}/staging/${TAG}" || exit 1
 
-  # Note: This SC disable is because the change has been made to
-  #       use ls instead of a straight glob to avoid problems when
-  #       there are no files of a particular type in the release
-  #       e.g. a point release for one platform e.g. 22.0.1.1+1
+  # Build the list of files to verify by probing each glob separately so that
+  # file types absent from this release (e.g. no .msi, no SBOM JSON for EA beta)
+  # do not produce "ls: cannot access" noise on stderr.
+  local _gpg_files=""
+  for _pat in "OpenJDK*.tar.gz" "OpenJDK*.zip" "./*.msi" "./*.pkg" "./*sbom*[0-9].json"; do
+    # shellcheck disable=SC2086
+    _hits="$(ls -1d ${_pat} 2>/dev/null)" || true
+    [ -n "${_hits}" ] && _gpg_files="${_gpg_files}${_hits}"$'\n'
+  done
 
   # shellcheck disable=SC2045
-  for A in $(ls -1d OpenJDK*.tar.gz OpenJDK*.zip ./*.msi ./*.pkg ./*sbom*[0-9].json); do
+  for A in $(printf '%s' "${_gpg_files}"); do
     print_verbose "IVT : Verifying signature of file ${A}"
 
     local _file_ok=true
@@ -550,35 +558,6 @@ verify_valid_archives() {
     done
   fi
 
-  # If there was an x64 linux version in the release, check for source archive
-  if ls OpenJDK*-jdk_x64_linux_hotspot_*.tar.gz > /dev/null 2>&1; then
-    if ls OpenJDK*-jdk-sources*.tar.gz > /dev/null 2>&1; then
-      for single_archive in OpenJDK*-jdk-sources*.tar.gz; do
-        print_verbose "IVT : Counting files in source ${single_archive}"
-        if ! tar tfz "${single_archive}" > /dev/null; then
-          print_error "Failed to verify that ${single_archive} can be extracted"
-          RC=4
-          arc_failures=$(( arc_failures + 1 ))
-        else
-          local file_count
-          file_count=$(tar tfz "${single_archive}" | wc -l)
-          if [ "${file_count}" -lt 45000 ]; then
-            print_error "Fewer than 45000 files in source archive ${single_archive} (found ${file_count}) - that does not seem correct"
-            RC=4
-            arc_failures=$(( arc_failures + 1 ))
-          else
-            print_pass "Source archive (${file_count} entries): $(basename "${single_archive}")"
-          fi
-        fi
-        checked=$(( checked + 1 ))
-      done
-    else
-      print_error "IVT: x64 linux tarballs present but no source archive - they should be published together"
-      RC=4
-      arc_failures=$(( arc_failures + 1 ))
-    fi
-  fi
-
   if [ "${arc_failures}" -eq 0 ]; then
     print_info "Archive integrity complete — ${checked} archive(s) checked, all passed"
     _PHASE_ARCHIVES="PASS"
@@ -587,6 +566,143 @@ verify_valid_archives() {
     _PHASE_ARCHIVES="FAIL"
   fi
 }
+
+########################################################################################################################
+#
+# Verify the source code tarball for this release.
+#
+# Downloads OpenJDK*-jdk-sources*.tar.gz and its .sig / .sha256.txt sidecars (unless
+# SKIP_DOWNLOADING=true), then:
+#   1. GPG signature verification
+#   2. SHA256 checksum verification
+#   3. Archive extractability check
+#   4. File count assertion (>=45000)
+#   5. Top-level directory structure check (version-configurable via case statement)
+#
+# Sets _PHASE_SOURCES to PASS or FAIL and writes source_global.result.
+# arch-agnostic: one result covers the entire release.
+#
+########################################################################################################################
+verify_source_tarball() {
+  local src_failures=0
+
+  print_section "Source Tarball Validation"
+
+  mkdir -p "${WORKSPACE}/staging/${TAG}"
+  cd "${WORKSPACE}/staging/${TAG}" || exit 1
+
+  # ── Step 1: download source tarball + sidecars ──────────────────────────────
+  if [ "${SKIP_DOWNLOADING}" = "false" ]; then
+    local _src_filter _src_url
+    # Build the same tag filter used by download_release_files()
+    if echo "${TAG}" | grep "^jdk${MAJOR_VERSION}u-.*-beta" > /dev/null; then
+      _src_filter="${TAG}"
+    else
+      # shellcheck disable=SC2001
+      _src_filter=$(echo "/${TAG}/" | sed 's/+/%2B/g')
+    fi
+    print_verbose "IVT : Downloading source tarball and sidecars for tag '${TAG}'"
+    while IFS= read -r _src_url; do
+      case "$(basename "${_src_url}")" in
+        OpenJDK*-jdk-sources*.tar.gz|OpenJDK*-jdk-sources*.tar.gz.sig|OpenJDK*-jdk-sources*.tar.gz.sha256.txt)
+          print_verbose "IVT : Downloading $(basename "${_src_url}")"
+          curl --path-as-is -LORsS -C - "${_src_url}"
+          ;;
+      esac
+    done < <(grep "${_src_filter}" "${JDK_RELEASES}" | sed -n 's/.*"browser_download_url": *"\([^"]*\)".*/\1/p')
+  fi
+
+  # ── Presence check ───────────────────────────────────────────────────────────
+  if ! ls OpenJDK*-jdk-sources*.tar.gz > /dev/null 2>&1; then
+    print_error "Source tarball not found in staging for tag ${TAG}"
+    _PHASE_SOURCES="FAIL"
+    write_platform_results "source" "global" "FAIL"
+    return
+  fi
+
+  local src_archive
+  src_archive="$(ls OpenJDK*-jdk-sources*.tar.gz | head -1)"
+
+  # ── Step 2: GPG signature ────────────────────────────────────────────────────
+  print_verbose "IVT : GPG-verifying ${src_archive}"
+  if ! gpg -q --verify "${src_archive}.sig" "${src_archive}" 2>/dev/null; then
+    print_error "GPG signature verification failed for ${src_archive}"
+    RC=2
+    src_failures=$(( src_failures + 1 ))
+  else
+    print_pass "GPG sig: $(basename "${src_archive}")"
+  fi
+
+  # ── Step 3: SHA256 checksum ──────────────────────────────────────────────────
+  if ! sha256sum -c --quiet "${src_archive}.sha256.txt" 2>/dev/null; then
+    print_error "SHA256 checksum failed for ${src_archive}"
+    RC=3
+    src_failures=$(( src_failures + 1 ))
+  else
+    print_pass "SHA256:  $(basename "${src_archive}")"
+  fi
+
+  # ── Step 4: archive extractability ──────────────────────────────────────────
+  print_verbose "IVT : Checking extractability of ${src_archive}"
+  if ! tar tfz "${src_archive}" > /dev/null 2>&1; then
+    print_error "Failed to verify that ${src_archive} can be extracted"
+    RC=4
+    src_failures=$(( src_failures + 1 ))
+  else
+    # ── Step 5: file count ───────────────────────────────────────────────────
+    local file_count
+    file_count=$(tar tfz "${src_archive}" | wc -l)
+    if [ "${file_count}" -lt 45000 ]; then
+      print_error "Fewer than 45000 files in source archive ${src_archive} (found ${file_count})"
+      RC=4
+      src_failures=$(( src_failures + 1 ))
+    else
+      print_pass "Source archive file count (${file_count} entries): $(basename "${src_archive}")"
+    fi
+
+    # ── Step 6: top-level directory structure ────────────────────────────────
+    # Required directories vary by JDK major version.
+    # Update this case statement when JDK layouts change.
+    # JDK 8 uses the old "forest" layout: top-level subrepos (hotspot/, jdk/,
+    # langtools/, etc.) with no top-level src/ directory.
+    # JDK 11+ consolidated into a single repo with src/ make/ test/ at the top level.
+    local _required_dirs
+    case "${MAJOR_VERSION}" in
+      8)    _required_dirs="hotspot/ jdk/ make/ test/" ;;
+      *)    _required_dirs="src/ make/ test/" ;;
+    esac
+
+    # Write the listing to a temp file to avoid shell variable size limits
+    # (the source tarball contains ~85k+ entries; loading into a variable
+    # and echo-ing through a pipe silently truncates on some systems).
+    local _listing_file _dir_failures=0
+    _listing_file="$(mktemp)"
+    tar tf "${src_archive}" > "${_listing_file}"
+    for _req_dir in ${_required_dirs}; do
+      if ! grep -q "^[^/]*/${_req_dir}" "${_listing_file}"; then
+        print_error "Expected top-level directory '${_req_dir}' not found in ${src_archive}"
+        RC=4
+        _dir_failures=$(( _dir_failures + 1 ))
+      else
+        print_pass "Directory '${_req_dir}' present in $(basename "${src_archive}")"
+      fi
+    done
+    rm -f "${_listing_file}"
+    src_failures=$(( src_failures + _dir_failures ))
+  fi
+
+  # ── Result ───────────────────────────────────────────────────────────────────
+  if [ "${src_failures}" -eq 0 ]; then
+    print_info "Source tarball validation complete — all checks passed"
+    _PHASE_SOURCES="PASS"
+  else
+    print_info "Source tarball validation complete — ${src_failures} failure(s)"
+    _PHASE_SOURCES="FAIL"
+  fi
+  write_platform_results "source" "global" "${_PHASE_SOURCES}"
+}
+
+
 
 ########################################################################################################################
 #
@@ -1152,6 +1268,8 @@ print_summary() {
     label="${TAG}"
   elif [ "${SBOM_ONLY}" = "true" ]; then
     label="${TAG}"
+  elif [ "${SOURCES_ONLY}" = "true" ]; then
+    label="${TAG}"
   else
     label="${TAG} (${ARCH:-?}/${OS:-?})"
   fi
@@ -1217,6 +1335,18 @@ print_summary() {
         _phase_line "  SBOM ${_sbom_plat}" "${_sbom_result}"
       done <<< "${_SBOM_PER_ARCH}"
     fi
+  elif [ "${SOURCES_ONLY}" = "true" ]; then
+    # Central sources stage: only show what this stage actually ran
+    _phase_line "Source validation"  "${_PHASE_SOURCES}"
+  else
+    # Default full-run (no mode flag): show all phases
+    _phase_line "Download"           "${_PHASE_DOWNLOAD}"
+    _phase_line "GPG key import"     "${_PHASE_GPG_IMPORT}"
+    _phase_line "GPG & SHA256 sigs"  "${_PHASE_SIGNATURES}"
+    _phase_line "Archive integrity"  "${_PHASE_ARCHIVES}"
+    _phase_line "Source tarball"     "${_PHASE_SOURCES}"
+    _phase_line "SBOM validation"    "${_PHASE_SBOM}"
+    _phase_line "Binary checks"      "${_PHASE_BINARIES}"
   fi
 
   echo "${CYAN}${BOLD}$(_log_prefix) ------------------------------------------------------------${NORMAL}"
@@ -1265,7 +1395,7 @@ print_verbose "IVT: Checking https://github.com/adoptium/temurin${MAJOR_VERSION}
 
 JDK_RELEASES=$(download_jdk_releases)
 
-if [ "${SKIP_DOWNLOADING}" = "false" ] && [ "${SBOM_ONLY}" = "false" ]; then
+if [ "${SKIP_DOWNLOADING}" = "false" ] && [ "${SBOM_ONLY}" = "false" ] && [ "${SOURCES_ONLY}" = "false" ]; then
   print_section "Downloading Release Artifacts"
 
   if [ "${KEEP_STAGING}" = "false" ] && [ "${SKIP_GPG}" = "false" ]; then
@@ -1281,6 +1411,8 @@ if [ "${SKIP_DOWNLOADING}" = "false" ] && [ "${SBOM_ONLY}" = "false" ]; then
 else
   if [ "${SBOM_ONLY}" = "true" ]; then
     print_info "Skipping download (-c flag set: using staging area from GPG stage)"
+  elif [ "${SOURCES_ONLY}" = "true" ]; then
+    print_info "Skipping full download (-r flag set: source tarball download handled by verify_source_tarball)"
   else
     print_info "Skipping download (-s flag set)"
   fi
@@ -1297,7 +1429,8 @@ fi
 # PASS on checks that never ran.
 RC=0
 if [ "${SKIP_DOWNLOADING}" = "false" ] && [ "${SKIP_GPG}" = "true" ] && [ "${_DOWNLOAD_COUNT}" -eq 0 ]; then
-  print_error "No files downloaded for ${ARCH}/${OS} — platform may not be in this release or download failed"
+  print_error "No files downloaded for ${ARCH}/${OS} — this is likely a transient download or network failure on the agent."
+  print_error "GPG/SBOM were verified centrally (files exist on GitHub); the stage will be retried automatically."
   _PHASE_DOWNLOAD="FAIL"
   _PHASE_BINARIES="FAIL"
   RC=1
@@ -1353,6 +1486,19 @@ if [ "${SBOM_ONLY}" = "true" ]; then
   _PHASE_BINARIES="SKIP"
   verify_sboms
   flush_results_to_disk "sbom" "${_SBOM_PER_ARCH}"
+  print_summary
+  exit ${RC}
+fi
+
+# -r: Sources-only mode — download source tarball + sidecars, run all source checks, then exit.
+# Runs on the central node as a dedicated source validation stage after -g and -c.
+if [ "${SOURCES_ONLY}" = "true" ]; then
+  _PHASE_GPG_IMPORT="SKIP"
+  _PHASE_SIGNATURES="SKIP"
+  _PHASE_ARCHIVES="SKIP"
+  _PHASE_BINARIES="SKIP"
+  _PHASE_SBOM="SKIP"
+  verify_source_tarball
   print_summary
   exit ${RC}
 fi

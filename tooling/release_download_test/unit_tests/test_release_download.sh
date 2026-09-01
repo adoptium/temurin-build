@@ -178,6 +178,7 @@ reset_flags() {
   SKIP_GPG=false
   SBOM_ONLY=false
   SKIP_SBOM=false
+  SOURCES_ONLY=false
   OVERRIDE_ARCH=""
   OVERRIDE_OS=""
   TAG=""
@@ -235,6 +236,11 @@ assertEquals "true" "${SBOM_ONLY}" "parse_options: -c sets SBOM_ONLY"
 reset_flags
 parse_options -C "jdk-21.0.3+9"
 assertEquals "true" "${SKIP_SBOM}" "parse_options: -C sets SKIP_SBOM"
+
+# -r sets SOURCES_ONLY
+reset_flags
+parse_options -r "jdk-21.0.3+9"
+assertEquals "true" "${SOURCES_ONLY}" "parse_options: -r sets SOURCES_ONLY"
 
 echo "PASS: parse_options"
 
@@ -377,6 +383,19 @@ assertEquals "FAIL" "${_PHASE_SIGNATURES}" "read_platform_results: FAIL from gpg
 assertEquals "PASS" "${_PHASE_ARCHIVES}"   "read_platform_results: PASS from archive file"
 assertEquals "FAIL" "${_PHASE_SBOM}"       "read_platform_results: FAIL from sbom file"
 
+# write_platform_results "source" "global" → source_global.result
+_tmp_src_ws="$(mktemp -d)"
+WORKSPACE="${_tmp_src_ws}" TAG="jdk-21.0.3+9" \
+  write_platform_results "source" "global" "PASS"
+_src_result_file="${_tmp_src_ws}/staging/jdk-21.0.3+9/.results/source_global.result"
+if [ ! -f "${_src_result_file}" ]; then
+  echo "FAIL: write_platform_results did not create ${_src_result_file}"
+  FAILURES=$(( FAILURES + 1 ))
+else
+  assertEquals "PASS" "$(cat "${_src_result_file}")" "write_platform_results: source/global writes source_global.result with PASS"
+fi
+rm -rf "${_tmp_src_ws}"
+
 rm -rf "${_tmp_workspace}"
 
 echo "PASS: write_platform_results / flush_results_to_disk / read_platform_results"
@@ -430,6 +449,60 @@ case "${_got_os}" in
 esac
 
 echo "PASS: native_arch / native_os"
+
+# ---------------------------------------------------------------------------
+# Source tarball directory structure checks
+# ---------------------------------------------------------------------------
+# Test the grep pattern used in verify_source_tarball() to detect top-level dirs.
+# Pattern: grep -q "^[^/]*/${_req_dir}"  against tar tf listing lines.
+#
+# JDK 8 uses the old "forest" layout: hotspot/ jdk/ make/ test/ (no src/)
+# JDK 11+ uses the consolidated layout: src/ make/ test/
+
+# JDK 21 mock listing (consolidated layout)
+_mock_listing_jdk21="$(mktemp)"
+printf 'jdk-21.0.3+9/src/share/classes/java/lang/Object.java\njdk-21.0.3+9/make/Makefile\njdk-21.0.3+9/test/jdk/README\n' \
+  > "${_mock_listing_jdk21}"
+
+# JDK 21: src/ make/ test/ all present → 0 failures
+MAJOR_VERSION=21
+_struct_fail=0
+for _req_dir in src/ make/ test/; do
+  grep -q "^[^/]*/${_req_dir}" "${_mock_listing_jdk21}" || _struct_fail=$(( _struct_fail + 1 ))
+done
+assertEquals "0" "${_struct_fail}" "dir-structure: JDK 21 full listing (src/make/test present) -> 0 failures"
+
+# JDK 21: test/ missing → 1 failure
+_mock_listing_no_test="$(mktemp)"
+printf 'jdk-21.0.3+9/src/share/classes/java/lang/Object.java\njdk-21.0.3+9/make/Makefile\n' \
+  > "${_mock_listing_no_test}"
+_struct_fail2=0
+for _req_dir in src/ make/ test/; do
+  grep -q "^[^/]*/${_req_dir}" "${_mock_listing_no_test}" || _struct_fail2=$(( _struct_fail2 + 1 ))
+done
+assertEquals "1" "${_struct_fail2}" "dir-structure: JDK 21 listing missing test/ -> 1 failure"
+
+# JDK 8 mock listing (forest layout: hotspot/ jdk/ make/ test/, no src/)
+_mock_listing_jdk8="$(mktemp)"
+printf 'jdk8u502-b07-src/hotspot/src/share/vm/oops/oop.hpp\njdk8u502-b07-src/jdk/src/share/classes/java/lang/Object.java\njdk8u502-b07-src/make/Makefile\njdk8u502-b07-src/test/Makefile\n' \
+  > "${_mock_listing_jdk8}"
+
+# JDK 8: hotspot/ jdk/ make/ test/ all present → 0 failures
+MAJOR_VERSION=8
+_struct_fail3=0
+for _req_dir in hotspot/ jdk/ make/ test/; do
+  grep -q "^[^/]*/${_req_dir}" "${_mock_listing_jdk8}" || _struct_fail3=$(( _struct_fail3 + 1 ))
+done
+assertEquals "0" "${_struct_fail3}" "dir-structure: JDK 8 full listing (hotspot/jdk/make/test present) -> 0 failures"
+
+# JDK 8: src/ should NOT be required (it doesn't exist in forest layout)
+_struct_fail4=0
+grep -q "^[^/]*/src/" "${_mock_listing_jdk8}" || _struct_fail4=$(( _struct_fail4 + 1 ))
+assertEquals "1" "${_struct_fail4}" "dir-structure: JDK 8 listing correctly has no src/ -> grep fails as expected"
+
+rm -f "${_mock_listing_jdk21}" "${_mock_listing_no_test}" "${_mock_listing_jdk8}"
+
+echo "PASS: source tarball directory structure checks"
 
 # ---------------------------------------------------------------------------
 # Final result

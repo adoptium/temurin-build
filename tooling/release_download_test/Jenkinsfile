@@ -175,7 +175,14 @@ x64-windows, aarch64-windows'''
                             -a ${verboseFlag} -c "${params.TAG}"
                     """
 
-                    // Stash the per-platform GPG/archive/SBOM result files written by both
+                    // Step 1c: validate the source tarball (GPG/SHA + file count + directory structure).
+                    // -r = sources-only mode (arch-agnostic; downloads sources tarball + sidecars independently).
+                    sh """
+                        bash tooling/release_download_test/release_download_test_new.sh \
+                            -a ${verboseFlag} -r "${params.TAG}"
+                    """
+
+                    // Stash the per-platform GPG/archive/SBOM/source result files written by all
                     // steps above.  Arch-node stages unstash these to populate their
                     // consolidated summary tables, and the Summary stage uses them too.
                     stash name: 'platform-central-results',
@@ -216,7 +223,10 @@ x64-windows, aarch64-windows'''
                     // Jenkins' scheduler will wait for the node to come online; we also wrap
                     // the entire node block in retry(2) so a transient provisioning or
                     // network failure (e.g. 0-file download) gets one automatic retry.
+                    // The AIX OSUOSL node has the same susceptibility to transient network
+                    // failures when reaching GitHub download URLs, so it also gets retry(2).
                     def macRetries = 2
+                    def aixRetries = 2
 
                     ARCH_STAGE_DEFS.each { stageName, config ->
                         def nodeLabel  = config[0]
@@ -226,8 +236,9 @@ x64-windows, aarch64-windows'''
                         def vFlag      = verboseFlag
                         def sName      = stageName
                         def isMac      = sName.endsWith('-mac')
+                        def isAix      = sName == 'ppc64-aix'
                         def isWindows  = sName.endsWith('-windows')
-                        def retries    = isMac ? macRetries : 1
+                        def retries    = isMac ? macRetries : (isAix ? aixRetries : 1)
                         // Skip ANSI on Windows: Git Bash / MSYS2 tput emits raw escape
                         // bytes that Jenkins renders as literal noise in the console log.
                         def aFlag      = isWindows ? '' : '-a'
@@ -251,6 +262,10 @@ x64-windows, aarch64-windows'''
                                     retry(retries) {
                                         node(nodeLabel) {
                                             try {
+                                                // Ensure a clean workspace before each attempt so stale
+                                                // result files from a prior build or failed retry cannot
+                                                // be included in the stash or read back by this run.
+                                                deleteDir()
                                                 checkout scm
                                                 // Restore per-platform result files from the central stage
                                                 // so the script can build a consolidated summary table.
@@ -283,14 +298,24 @@ x64-windows, aarch64-windows'''
 
         // ── Stage 3: aggregate cross-platform summary table, then clean up ──
         stage('Summary') {
-            agent { label 'worker' }
+            // agent none at the pipeline level; we allocate a lightweight node
+            // only for the unstash and readFile() calls that require an executor.
+            agent none
             steps {
+                node('worker') {
                 script {
                     def tag = params.TAG
                     def jdkVersion = extractMajorVersion(tag)
                     def filterList = params.FILTER_ARCHS?.trim()
                                    ? params.FILTER_ARCHS.tokenize(',').collect { it.trim() }
                                    : []
+
+                    // Remove any staging directory left by a prior build or rebuild of the
+                    // same tag.  The worker node reuses its workspace across builds, so a
+                    // stale binary_*.result file from a previous failed run would otherwise
+                    // survive and cause readResult() to return the old value even when the
+                    // current build's arch-nodes all succeeded.
+                    sh 'rm -rf staging || true'
 
                     // Unstash GPG/archive/SBOM result files written by the central stage.
                     unstash 'platform-central-results'
@@ -309,16 +334,19 @@ x64-windows, aarch64-windows'''
 
                     def resultsDir = "staging/${tag}/.results"
 
-                    // Helper: read a result file via sh, return trimmed value or 'N/A'.
+                    // Helper: read a result file using Groovy readFile() — no shell required.
                     def readResult = { String path ->
-                        sh(script: "cat '${path}' 2>/dev/null || echo 'N/A'",
-                           returnStdout: true).trim()
+                        try {
+                            readFile(path).trim()
+                        } catch (e) {
+                            'N/A'
+                        }
                     }
 
                     // Column widths
                     def COL_PLAT = 22
                     def COL_RES  = 8
-                    def PHASES   = ['GPG', 'Archive', 'SBOM', 'Binary']
+                    def PHASES   = ['GPG', 'Archive', 'SBOM', 'Source', 'Binary']
 
                     def bar = '-' * (COL_PLAT + (COL_RES + 3) * PHASES.size() + 1)
                     def hdr = String.format("%-${COL_PLAT}s", 'Platform') +
@@ -333,6 +361,9 @@ x64-windows, aarch64-windows'''
                     lines << bar
 
                     boolean anyFail = false
+
+                    // Source tarball result is arch-agnostic — read once, applied to every row.
+                    def sourceResult = readResult("${resultsDir}/source_global.result")
 
                     // Iterate ARCH_STAGE_DEFS so every known platform appears in the table
                     // in a consistent order, regardless of whether result files exist.
@@ -353,13 +384,14 @@ x64-windows, aarch64-windows'''
                         if (jdkVersion < firstJDK || jdkVersion > lastJDK) {
                             def range = "${firstJDK}–${lastJDK == 999 ? '+' : lastJDK}"
                             lines << String.format("%-${COL_PLAT}s", plat) +
-                                     " | ${'N/A'.padRight(COL_RES)} | ${'N/A'.padRight(COL_RES)} | ${'N/A'.padRight(COL_RES)} | ${'SKIP-VER'.padRight(COL_RES)} | (not released for JDK ${jdkVersion}, valid range: ${range})"
+                                     " | ${'N/A'.padRight(COL_RES)} | ${'N/A'.padRight(COL_RES)} | ${'N/A'.padRight(COL_RES)} | ${'N/A'.padRight(COL_RES)} | ${'SKIP-VER'.padRight(COL_RES)} | (not released for JDK ${jdkVersion}, valid range: ${range})"
                             return
                         }
 
                         def gpg    = readResult("${resultsDir}/gpg_${safe}.result")
                         def arc    = readResult("${resultsDir}/archive_${safe}.result")
                         def sbom   = readResult("${resultsDir}/sbom_${safe}.result")
+                        def source = sourceResult
                         def binary = readResult("${resultsDir}/binary_${safe}.result")
 
                         // FILTER_ARCHS debug mode: show SKIP for intentionally excluded stages.
@@ -370,10 +402,10 @@ x64-windows, aarch64-windows'''
                         // binary==FAIL here means the arch-node downloaded zero files —
                         // the platform exists in the version range but was absent from this
                         // specific release (e.g. arm/linux missing from a JDK 8 release).
-                        [gpg, arc, sbom, binary].each { if (it == 'FAIL') anyFail = true }
+                        [gpg, arc, sbom, source, binary].each { if (it == 'FAIL') anyFail = true }
 
                         def row = String.format("%-${COL_PLAT}s", plat) +
-                                  [gpg, arc, sbom, binary].collect { r ->
+                                  [gpg, arc, sbom, source, binary].collect { r ->
                                       String.format(" | %-${COL_RES}s", r)
                                   }.join('') + ' |'
 
@@ -392,11 +424,15 @@ x64-windows, aarch64-windows'''
 
                     echo lines.join('\n')
                 }
+                } // node('worker')
             }
             post {
                 always {
-                    // Clean up the worker workspace after the summary has been printed.
-                    deleteDir()
+                    // Clean up the staging directory after the Summary stage so the worker
+                    // workspace is ready for the next build without stale result files.
+                    node('worker') {
+                        sh 'rm -rf staging || true'
+                    }
                 }
             }
         }
