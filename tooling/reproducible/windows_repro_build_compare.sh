@@ -92,14 +92,9 @@ ANT_VERSION_ALLOWED="1.10"
 ANT_VERSION_REQUIRED="1.10.15"
 ANT_BASE_PATH="/cygdrive/c/apache-ant"
 CW_VS_BASE_DRV="c"
-#CW_VS_BASE_PATH64="/cygdrive/$CW_VS_BASE_DRV/Program Files/Microsoft Visual Studio"
-CW_VS_BASE_PATH32="/cygdrive/$CW_VS_BASE_DRV/Program Files (x86)/Microsoft Visual Studio"
 C_COMPILER_EXE="cl.exe"
 CPP_COMPILER_EXE="cl.exe"
-# The Below Path Is The Default & Should Be Updated
-# If the windows SDKs are not installed in default paths
-WIN_URCT_BASE="C:/Program Files (x86)/Windows Kits/10/Redist"
-SIGNTOOL_BASE="C:/Program Files (x86)/Windows Kits/10"
+# WIN_URCT_BASE and SIGNTOOL_BASE are set dynamically at runtime by Find_WinKits_Base
 
 # Addiitonal Working Variables Defined For Use By This Script
 SBOMLocalPath="$WORK_DIR/src_sbom.json"
@@ -408,6 +403,45 @@ Check_Architecture() {
   fi
 }
 
+# Find_VS_Base_Path <year>
+# Tries three locations in order to find the Visual Studio installation directory:
+#   1. Program Files (x86) - classic VS installer layout
+#   2. Program Files       - Microsoft-pinned BuildTools layout (VS 2022+)
+#   3. vswhere.exe         - last-resort dynamic discovery via the VS Installer tool
+# Exits with an error if none of the three checks succeed.
+Find_VS_Base_Path() {
+  local vs_year="$1"
+  local base_x86="/cygdrive/${CW_VS_BASE_DRV}/Program Files (x86)/Microsoft Visual Studio/${vs_year}"
+  local base_x64="/cygdrive/${CW_VS_BASE_DRV}/Program Files/Microsoft Visual Studio/${vs_year}"
+  local vswhere="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe"
+
+  if [ -d "$base_x86" ]; then
+    echo "$base_x86"
+    return 0
+  fi
+
+  if [ -d "$base_x64" ]; then
+    echo "$base_x64"
+    return 0
+  fi
+
+  if [ -f "$vswhere" ]; then
+    local next_year=$(( vs_year + 1 ))
+    local vs_install_path
+    vs_install_path=$("$vswhere" -version "[${vs_year},${next_year})" -property installationPath 2>/dev/null | tr -d '\r')
+    if [ -n "$vs_install_path" ]; then
+      cygpath -u "$vs_install_path"
+      return 0
+    fi
+  fi
+
+  echo "ERROR - Visual Studio ${vs_year} installation could not be found." >&2
+  echo "  Checked: $base_x86" >&2
+  echo "  Checked: $base_x64" >&2
+  echo "  vswhere also returned no result." >&2
+  exit 1
+}
+
 Check_VS_Versions() {
   echo "Checking Visual Studio Version Retrieved From SBOM : $msvsWindowsCompiler"
   if [[ $msvsWindowsCompiler =~ ([0-9]{4}) ]]; then
@@ -420,19 +454,15 @@ Check_VS_Versions() {
     exit 1
   fi
 
-  if [[ $visualStudioVersion =~ "2022" ]]; then
-    MSVS_SEARCH_PATH="$CW_VS_BASE_PATH32/2022"
-  elif [[ $visualStudioVersion =~ "2019" ]]; then
-    MSVS_SEARCH_PATH=$CW_VS_BASE_PATH32/2019
-  elif [[ $visualStudioVersion =~ "2017" ]]; then
-    MSVS_SEARCH_PATH=$CW_VS_BASE_PATH32/2017
-  else
+  if [[ ! $visualStudioVersion =~ ^(2017|2019|2022)$ ]]; then
     echo "ERROR - Unsupported Visual Studio Version"
     echo "This Script Only Supports versions 2017, 2019 & 2022"
     echo "Exiting"
     echo ""
     exit 1
   fi
+
+  MSVS_SEARCH_PATH=$(Find_VS_Base_Path "$visualStudioVersion")
   echo "Visual Studio Base Path = $MSVS_SEARCH_PATH"
 
   # Add Host Architecture and target To Exe name
@@ -492,12 +522,12 @@ Check_VS_Versions() {
 
   # Exit If Either Compiler Is At The Wrong Versions Or Multiple Compilers Are Detected As That Shouldnt Happen!
   if [ $c_comp_count -eq 0 ] || [ $cpp_comp_count -eq 0 ] ; then
-    "ERROR - A C or C++ Compiler Matching The Version In The SBOM Could Not Be Found - Exiting"
+    echo "ERROR - A C or C++ Compiler Matching The Version In The SBOM Could Not Be Found - Exiting"
     exit 1
   fi
 
   if [ $c_comp_count -gt 1 ] || [ $cpp_comp_count -gt 1 ] ; then
-    "ERROR - Multiple C or C++ Compilers Matching The Version In The SBOM Were Found - Exiting"
+    echo "ERROR - Multiple C or C++ Compilers Matching The Version In The SBOM Were Found - Exiting"
     exit 1
   fi
 }
@@ -510,6 +540,53 @@ unzip -j -o -q "$DISTLocalPath" -d "$WORK_DIR/temp"
 UCRT_FILE=$(cygpath -m "$WORK_DIR/temp/ucrtbase.dll")
 SRC_UCRT_VERSION=$(powershell.exe "(Get-Command $UCRT_FILE).FileVersionInfo.FileVersion")
 rm -rf "$WORK_DIR/temp"
+}
+
+# Find_WinKits_Base
+# Tries three locations in order to find the Windows 10 SDK installation root:
+#   1. Program Files (x86) - classic SDK installer layout
+#   2. Program Files       - non-default SDK installation layout
+#   3. PowerShell registry query for KitsRoot10
+# Sets WIN_URCT_BASE and SIGNTOOL_BASE. Exits with an error if none succeed.
+Find_WinKits_Base() {
+  local kits_x86="C:/Program Files (x86)/Windows Kits/10"
+  local kits_x64="C:/Program Files/Windows Kits/10"
+
+  if [ -d "$(cygpath -u "$kits_x86")" ]; then
+    WIN_URCT_BASE="${kits_x86}/Redist"
+    SIGNTOOL_BASE="${kits_x86}"
+    echo "Windows Kits found at: $SIGNTOOL_BASE"
+    return 0
+  fi
+
+  if [ -d "$(cygpath -u "$kits_x64")" ]; then
+    WIN_URCT_BASE="${kits_x64}/Redist"
+    SIGNTOOL_BASE="${kits_x64}"
+    echo "Windows Kits found at: $SIGNTOOL_BASE"
+    return 0
+  fi
+
+  local reg_root
+  reg_root=$(powershell.exe -Command "(Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows Kits\Installed Roots' -ErrorAction SilentlyContinue).KitsRoot10" 2>/dev/null | tr -d '\r' | sed 's|\\$||')
+  if [ -n "$reg_root" ]; then
+    local reg_root_cyg
+    reg_root_cyg=$(cygpath -u "$reg_root")
+    if [ -d "$reg_root_cyg" ]; then
+      WIN_URCT_BASE="${reg_root}Redist"
+      SIGNTOOL_BASE="${reg_root%\\}"
+      # Normalise to forward slashes
+      WIN_URCT_BASE=$(echo "$WIN_URCT_BASE" | sed 's|\\|/|g')
+      SIGNTOOL_BASE=$(echo "$SIGNTOOL_BASE" | sed 's|\\|/|g')
+      echo "Windows Kits found via registry at: $SIGNTOOL_BASE"
+      return 0
+    fi
+  fi
+
+  echo "ERROR - Windows Kits 10 SDK installation could not be found." >&2
+  echo "  Checked: $kits_x86" >&2
+  echo "  Checked: $kits_x64" >&2
+  echo "  Registry query (KitsRoot10) also returned no result." >&2
+  exit 1
 }
 
 Check_UCRT_Location() {
@@ -910,6 +987,8 @@ echo "---------------------------------------------"
 Get_SBOM_Values
 echo "---------------------------------------------"
 Check_Architecture
+echo "---------------------------------------------"
+Find_WinKits_Base
 echo "---------------------------------------------"
 Check_VS_Versions
 echo "---------------------------------------------"
