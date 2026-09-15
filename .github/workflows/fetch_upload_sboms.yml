@@ -1,0 +1,80 @@
+name: Fetch and Upload Temurin SBOMs to DependencyTrack
+
+on:
+  workflow_dispatch:
+
+env:
+  API_URL_BASE: https://api.adoptium.net/v3/assets/feature_releases/21/ga
+  IMAGE_TYPE: sbom
+  VENDOR: eclipse
+  HEAP_SIZE: normal
+  PAGE_SIZE: 20
+  DEPENDENCY_TRACK_URL: https://sbom.eclipse.org
+  PROJECT_ROOT: Temurin
+  JAVA_VERSION: JDK 21
+
+jobs:
+  fetch-sboms:
+    runs-on: ubuntu-latest
+
+    outputs:  # Expose matrix output for next job
+      sbom-metadata: ${{ steps.export.outputs.matrix }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install Python dependencies
+        run: |
+          pip install requests
+          pip install os
+          pip install json
+          pip install time
+          pip install pathlib
+          pip install datetime
+
+      - name: Run SBOM fetcher script
+        run: python scripts/fetch_sboms.py
+
+      - name: Upload SBOMs and metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: sboms
+          path: |
+            sboms/         # Folder with downloaded SBOMs
+            metadata.json  # JSON metadata for the next matrix job
+
+      - id: export         # Step to read metadata.json and output a JSON matrix
+        run: |
+          matrix=$(jq -c '.' metadata.json)   # Read the JSON file as a single-line JSON array
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
+  store-each-sbom:
+    needs: fetch-sboms
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include: ${{ fromJson(needs.fetch-sboms.outputs.sbom-metadata) }}
+        # This creates one matrix job per object in the metadata.json list
+
+    steps:
+      - name: Download SBOMs
+        uses: actions/download-artifact@v4
+        with:
+          name: sboms
+          path: workspace
+
+      - name: Store SBOM in DependencyTrack   # Reusable workflow that uploads to DependencyTrack
+        uses: eclipse-csi/workflows/.github/workflows/store-sbom-data.yml@main
+        with:
+          projectName: ${{ matrix.projectName }}
+          projectVersion: ${{ matrix.projectVersion }}
+          bomArtifact: sboms
+          bomFilename: workspace/${{ matrix.path }}
+          parentProject: '<parentProject_ID>' # must be replaced with real UUID
