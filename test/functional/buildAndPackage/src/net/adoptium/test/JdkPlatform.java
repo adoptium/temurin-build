@@ -113,20 +113,11 @@ public final class JdkPlatform {
         if (arch.equals("riscv64")) {
             return Architecture.RISCV64;
         }
-        if (arch.matches("^(sparc|sparc32)$")) {
-            return Architecture.SPARC32;
-        }
-        if (arch.matches("^(sparcv9|sparc64)$")) {
-            return Architecture.SPARC64;
-        }
         if (arch.equals("s390x")) {
             return Architecture.S390X;
         }
         if (arch.matches("^(amd64|em64t|x64|x86_64)$")) {
             return Architecture.X64;
-        }
-        if (arch.matches("^(x86|i[3-6]86|ia32|x32)$")) {
-            return Architecture.X86;
         }
 
         throw new AssertionError("Unrecognized architecture: " + arch);
@@ -152,9 +143,6 @@ public final class JdkPlatform {
         if (osName.contains("mac")) {
             return OperatingSystem.MACOS;
         }
-        if (osName.contains("solaris") || osName.contains("sunos")) {
-            return OperatingSystem.SOLARIS;
-        }
         if (osName.contains("win")) {
             return OperatingSystem.WINDOWS;
         }
@@ -175,10 +163,10 @@ public final class JdkPlatform {
     }
 
     enum Architecture {
-        ARM, AARCH64, PPC64, PPC64LE, RISCV, RISCV64, SPARC32, SPARC64, S390X, X64, X86
+        ARM, AARCH64, PPC64, PPC64LE, RISCV, RISCV64, S390X, X64
     }
 
     enum OperatingSystem {
-        AIX, BSD, LINUX, MACOS, SOLARIS, WINDOWS
+        AIX, BSD, LINUX, MACOS, WINDOWS
     }
 }
