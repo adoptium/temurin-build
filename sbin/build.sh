@@ -3043,8 +3043,8 @@ createTargetDir
 echo "build.sh : $(date +%T) : Configuring workspace inc. clone and cacerts generation ..."
 configureWorkspace
 
-echo "build.sh : $(date +%T) : Initiating build ..."
 getOpenJDKUpdateAndBuildVersion
+echo "build.sh : $(date +%T) : Initiating build ..."
 if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
   # Not required for VS2022 and later which we are defaulting to
   if [[ "${CONFIGURE_ARGS}" =~ "--with-toolchain-version=201" ]]; then
