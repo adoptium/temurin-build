@@ -2195,8 +2195,8 @@ cleanAndMoveArchiveFiles() {
 
   if [ ${BUILD_CONFIG[CREATE_DEBUG_IMAGE]} == true ] && [ "${BUILD_CONFIG[BUILD_VARIANT]}" != "${BUILD_VARIANT_OPENJ9}" ]; then
     local symbolsLocation
-    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 26 ]]; then
-      # jdk-26+ debug symbols are no longer within the JDK, see https://github.com/adoptium/temurin-build/issues/4351
+    if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 25 ]]; then
+      # jdk-25+ debug symbols are no longer within the JDK, see https://github.com/adoptium/temurin-build/issues/4351
       # obtain from the "symbols" image instead
       symbolsLocation="symbols"
     else
@@ -2222,7 +2222,7 @@ cleanAndMoveArchiveFiles() {
     # if debug symbols were found, copy them to a different folder
     if [ -n "${debugSymbols}" ]; then
       echo "Copying found debug symbols to ${debugImageTargetPath}"
-      if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 26 ]]; then
+      if [[ "${BUILD_CONFIG[OPENJDK_FEATURE_NUMBER]}" -ge 25 ]]; then
         mkdir -p "${debugImageTargetPath}/${jdkTargetPath}"
         echo "${debugSymbols}" | cpio -pdm "${debugImageTargetPath}/${jdkTargetPath}"
         # Remove the symbols sub-folder to be compatible with earlier version format

@@ -846,11 +846,11 @@ public final class TemurinGenCDXA {
     static boolean validateEvidenceParameters(final String version, final String os, final String arch) {
         boolean valid = true;
 
-        // Validate version format: jdk-M+B or jdk-M.0.U+B
-        Pattern releasePattern = Pattern.compile("^jdk-([0-9]+)(\\.[0-9]+\\.[0-9]+)?\\+([0-9]+)$");
+        // Validate version format: jdk-M+B or jdk-M.0.U+B or jdk-M.0.U.P+B
+        Pattern releasePattern = Pattern.compile("^jdk-([0-9]+)(\\.[0-9]+\\.[0-9]+(\\.[0-9]+)?)?\\+([0-9]+)$");
         Matcher releaseMatcher = releasePattern.matcher(version);
         if (!releaseMatcher.matches()) {
-            System.out.println("ERROR: Evidence version '" + version + "' is not in valid format: jdk-M+B or jdk-M.0.U+B");
+            System.out.println("ERROR: Evidence version '" + version + "' is not in valid format: jdk-M+B or jdk-M.0.U+B or jdk-M.0.U.P+B");
             valid = false;
         }
 

@@ -152,13 +152,30 @@ if [ -z "${EXPECTED_SCM_REF}" ]; then
     echo "SBOM SHA is a valid repository commit: ${GITURL}"
   fi
 else
-  if ! git ls-remote "${GITREPO}" | grep "${GITSHA}"; then
-    echo "ERROR: git sha of source repo not found"
-    echo "GITREPO: ${GITREPO}"
-    echo "GITSHA: ${GITSHA}"
+  # Use the GitHub API rather than git ls-remote so that unauthenticated Jenkins
+  # workers (no stored git credentials) can still verify the commit SHA.
+  gitApiUrl="https://api.github.com/repos/$(echo "$GITURL" | cut -d/ -f4)/$(echo "$GITURL" | cut -d/ -f5)/commits/${GITSHA}"
+  loopCounter=""
+  while [ "${loopCounter}" != "III" ]; do
+    loopCounter="${loopCounter}I"
+    if urlOutput="$(curl --silent --fail -I "${gitApiUrl}" 2>&1)"; then
+      echo "SBOM SHA is a valid repository commit: ${gitApiUrl}"
+      break
+    elif echo "${urlOutput}" | grep 'HTTP/2 403' > /dev/null; then
+      echo "Info: API rate limit exceeded for github api call. Pausing execution for 30 minutes. Iteration ${loopCounter}"
+      sleep 1800
+    else
+      echo "ERROR: git sha of source repo not found"
+      echo "GITREPO: ${GITREPO}"
+      echo "GITSHA: ${GITSHA}"
+      RC=1
+      break
+    fi
+  done
+  if [ "${loopCounter}" = "III" ]; then
+    echo "ERROR: API rate limit exceeded for github api, and remained 'exceeded' beyond the timeout."
+    echo "gitApiUrl: ${gitApiUrl}"
     RC=1
-  else
-    echo "SBOM SHA is a valid repository tag commit SHA: ${GITSHA}"
   fi
 fi
 
