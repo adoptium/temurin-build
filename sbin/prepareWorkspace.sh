@@ -484,7 +484,7 @@ checkingAndDownloadingAlsa() {
     echo -e "5\ny\n" |  gpg --batch --command-fd 0 --expert --edit-key "${ALSA_LIB_GPGKEYID}" trust;
     gpg --verify alsa-lib.tar.bz2.sig alsa-lib.tar.bz2 || exit 1
 
-    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]]; then
+    if [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]]; then
       bzip2 -d alsa-lib.tar.bz2
       tar -xf alsa-lib.tar --strip-components=1 -C "${BUILD_CONFIG[WORKSPACE_DIR]}/${BUILD_CONFIG[WORKING_DIR]}/installedalsa/"
       rm alsa-lib.tar
@@ -894,7 +894,7 @@ downloadingRequiredDependencies() {
   mkdir -p "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
   cd "${BUILD_CONFIG[WORKSPACE_DIR]}/libs/" || exit
 
-  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]] ||  [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ||  [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "sunos" ]] ; then
+  if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "" ]] || [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "darwin" ]] ||  [[ "${BUILD_CONFIG[OS_KERNEL_NAME]}" == "aix" ]] ; then
     echo "Non-Linux-based environment detected, skipping download of dependency Alsa."
   else
     echo "Checking and downloading Alsa dependency because OSTYPE=\"${OSTYPE}\""
