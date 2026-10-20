@@ -418,6 +418,10 @@ function removeGeneratedClasses() {
     rm -rf "$JDK_HOME_DIR/bin/server/classes_nocoops_nocoh.jsa"
     rm -rf "$JDK_HOME_DIR/bin/server/classes_coh.jsa"
     rm -rf "$JDK_HOME_DIR/bin/server/classes_nocoops_coh.jsa"
+    rm -rf "$JDK_HOME_DIR/bin/server/classes_preview.jsa"
+    rm -rf "$JDK_HOME_DIR/bin/server/classes_nocoops_preview.jsa"
+    rm -rf "$JDK_HOME_DIR/bin/server/classes_nocoh_preview.jsa"
+    rm -rf "$JDK_HOME_DIR/bin/server/classes_nocoops_nocoh_preview.jsa"
   elif [[ "$OS" =~ Darwin* ]]; then
     rm -rf "$JDK_HOME_DIR/lib/server/classes.jsa"
     rm -rf "$JDK_HOME_DIR/lib/server/classes_nocoops.jsa"
@@ -425,6 +429,10 @@ function removeGeneratedClasses() {
     rm -rf "$JDK_HOME_DIR/lib/server/classes_nocoops_nocoh.jsa"
     rm -rf "$JDK_HOME_DIR/lib/server/classes_coh.jsa"
     rm -rf "$JDK_HOME_DIR/lib/server/classes_nocoops_coh.jsa"
+    rm -rf "$JDK_HOME_DIR/lib/server/classes_preview.jsa"
+    rm -rf "$JDK_HOME_DIR/lib/server/classes_nocoops_preview.jsa"
+    rm -rf "$JDK_HOME_DIR/lib/server/classes_nocoh_preview.jsa"
+    rm -rf "$JDK_HOME_DIR/lib/server/classes_nocoops_nocoh_preview.jsa"
   fi
 }
 
