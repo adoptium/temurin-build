@@ -131,6 +131,7 @@ if($opt_d eq 'nss-latest-rtm') {
   die "No NSS RTM tag found in response from $tags_url\n" unless $tag;
   print STDERR "Resolved nss-latest-rtm to tag: $tag\n" unless $opt_q;
   $opt_d = "https://hg.mozilla.org/projects/nss/raw-file/${tag}/lib/ckfw/builtins/certdata.txt";
+  print STDERR "Downloading certdata.txt from: $opt_d\n" unless $opt_q;
 }
 
 # Use predefined URL or else custom URL specified on command line.
