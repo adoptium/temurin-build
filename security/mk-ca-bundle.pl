@@ -50,6 +50,8 @@ eval "require LWP::UserAgent";
 my %urls = (
   'nss' =>
     'https://hg.mozilla.org/projects/nss/raw-file/default/lib/ckfw/builtins/certdata.txt',
+  'nss-latest-rtm' =>
+    'resolve-nss-rtm-tag',
   'central' =>
     'https://hg.mozilla.org/mozilla-central/raw-file/default/security/nss/lib/ckfw/builtins/certdata.txt',
   'beta' =>
@@ -115,6 +117,21 @@ getopts('bd:fhiklmnp:qs:tuvw:');
 if(!defined($opt_d)) {
     # to make plain "-d" use not cause warnings, and actually still work
     $opt_d = 'release';
+}
+
+# Resolve nss-latest-rtm: fetch the latest *_RTM tag from the NSS hg repo and
+# rewrite $opt_d to the resolved raw-file URL so the standard URL selection
+# logic below picks it up as a literal URL.
+if($opt_d eq 'nss-latest-rtm') {
+  my $tags_url = 'https://hg.mozilla.org/projects/nss/json-tags';
+  my $json = `curl -fsSL "$tags_url"`;
+  die "Failed to fetch NSS tag list from $tags_url\n" if $?;
+  # json-tags is ordered newest-first; grab the first *_RTM tag (e.g. NSS_3_131_1_RTM or NSS_3_19_2_WITH_CKBI_1_98_RTM)
+  my ($tag) = ($json =~ /"tag"\s*:\s*"(NSS_\w+_RTM)"/g);
+  die "No NSS RTM tag found in response from $tags_url\n" unless $tag;
+  print STDERR "Resolved nss-latest-rtm to tag: $tag\n" unless $opt_q;
+  $opt_d = "https://hg.mozilla.org/projects/nss/raw-file/${tag}/lib/ckfw/builtins/certdata.txt";
+  print STDERR "Downloading certdata.txt from: $opt_d\n" unless $opt_q;
 }
 
 # Use predefined URL or else custom URL specified on command line.
