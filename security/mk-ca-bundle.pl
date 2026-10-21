@@ -126,8 +126,8 @@ if($opt_d eq 'nss-latest-rtm') {
   my $tags_url = 'https://hg.mozilla.org/projects/nss/json-tags';
   my $json = `curl -fsSL "$tags_url"`;
   die "Failed to fetch NSS tag list from $tags_url\n" if $?;
-  # json-tags is ordered newest-first; grab the first *_RTM that is not a BETA
-  my ($tag) = ($json =~ /"tag"\s*:\s*"(NSS_\d+_\d+(?:_\d+)?_RTM)"/g);
+  # json-tags is ordered newest-first; grab the first *_RTM tag (e.g. NSS_3_131_1_RTM or NSS_3_19_2_WITH_CKBI_1_98_RTM)
+  my ($tag) = ($json =~ /"tag"\s*:\s*"(NSS_\w+_RTM)"/g);
   die "No NSS RTM tag found in response from $tags_url\n" unless $tag;
   print STDERR "Resolved nss-latest-rtm to tag: $tag\n" unless $opt_q;
   $opt_d = "https://hg.mozilla.org/projects/nss/raw-file/${tag}/lib/ckfw/builtins/certdata.txt";
