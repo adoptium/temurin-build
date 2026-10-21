@@ -59,45 +59,6 @@ if [ $executedJavaVersion -ne 0 ]; then
 fi
 "$JDK_BOOT_DIR/bin/java" -version 2>&1 | sed 's/^/BOOT JDK: /'
 
-if [ "${ARCHITECTURE}" == "x86-32" ]
-then
-  export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache --with-target-bits=32 --target=x86"
-
-  if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
-  then
-    export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-openssl=fetched --enable-openssl-bundling"
-    if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
-    then
-      # https://github.com/adoptium/temurin-build/issues/243
-      export INCLUDE="C:\Program Files\Debugging Tools for Windows (x64)\sdk\inc;$INCLUDE"
-      export PATH="/c/cygwin64/bin:/usr/bin:$PATH"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
-    then
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --with-freemarker-jar=/cygdrive/c/openjdk/freemarker.jar"
-
-      # Next line a potentially tactical fix for https://github.com/adoptium/temurin-build/issues/267
-      export PATH="/usr/bin:$PATH"
-    fi
-    # LLVM needs to be before cygwin as at least one machine has 64-bit clang in cygwin #813
-    # NASM required for OpenSSL support as per #604
-    export PATH="/cygdrive/c/Program Files (x86)/LLVM/bin:/cygdrive/c/openjdk/nasm-$OPENJ9_NASM_VERSION:$PATH"
-  else
-    if [ "${JAVA_TO_BUILD}" == "${JDK8_VERSION}" ]
-    then
-      export PATH="/cygdrive/c/openjdk/make-3.82/:$PATH"
-    elif [ "${JAVA_TO_BUILD}" == "${JDK11_VERSION}" ]
-    then 
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
-    elif [ "$JAVA_FEATURE_VERSION" -gt 11 ] && [ "$JAVA_FEATURE_VERSION" -lt 21 ]
-    then
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
-    elif [ "$JAVA_FEATURE_VERSION" -ge 21 ]
-    then
-      export CONFIGURE_ARGS_FOR_ANY_PLATFORM="${CONFIGURE_ARGS_FOR_ANY_PLATFORM} --disable-ccache"
-    fi
-  fi
-fi
-
 if [ "${ARCHITECTURE}" == "x64" ]
 then
   if [ "${VARIANT}" == "${BUILD_VARIANT_OPENJ9}" ]
