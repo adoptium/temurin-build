@@ -275,7 +275,13 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[DISABLE_ADOPT_BRANCH_SAFETY]=true;;
 
         "--destination" | "-d" )
-        BUILD_CONFIG[TARGET_DIR]="$1"; shift;;
+        if [[ "$1" = /* ]]; then
+          BUILD_CONFIG[WORKSPACE_DIR]="$(dirname "$1")"
+          BUILD_CONFIG[TARGET_DIR]="$(basename "$1")"
+        else
+          BUILD_CONFIG[TARGET_DIR]="$1"
+        fi
+        shift;;
 
         "-D" )
         if which podman > /dev/null ; then BUILD_CONFIG[CONTAINER_COMMAND]="podman" ; else BUILD_CONFIG[CONTAINER_COMMAND]="docker" ; fi;
@@ -353,7 +359,12 @@ function parseConfigurationArguments() {
         BUILD_CONFIG[RELEASE]=true;;
 
         "--source" | "-s" )
-        BUILD_CONFIG[WORKING_DIR]="$1"; shift;;
+        if [[ "$1" = /* ]]; then
+          BUILD_CONFIG[WORKSPACE_DIR]="$1"
+        else
+          BUILD_CONFIG[WORKING_DIR]="$1"
+        fi
+        shift;;
 
         "--ssh" | "-S" )
         BUILD_CONFIG[USE_SSH]=true;;
