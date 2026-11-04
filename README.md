@@ -373,14 +373,14 @@ This tag is used to identify the vendor of the JDK being built, this value is se
 ----
 
 - `os:`
-Example values: [`windows`, `mac`, `linux`, `aix`, `solaris`]
+Example values: [`windows`, `mac`, `linux`, `aix`]
 
 This tag identifies the operating system the JDK has been built on (and should be used on).
 
 ----
 
 - `arch:`
-Example values: [`aarch64`, `ppc64`, `s390x`, `x64`, `x86-32`, `arm`]
+Example values: [`aarch64`, `ppc64`, `s390x`, `x64`, `arm`]
 
 This tag identifies the architecture the JDK has been built on and it intended to run on.
 

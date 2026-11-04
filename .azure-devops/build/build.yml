@@ -25,7 +25,7 @@
 #
 # required stage level variable(s):
 #    TARGET_OS: mac|windows
-#    ARCHITECTURE: x64|x86-32
+#    ARCHITECTURE: x64
 #
 # Azure DevOps Microsoft-Hosted agents can be found at:
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted
@@ -63,27 +63,6 @@ stages:
       - job: build_windows_x64
         timeoutInMinutes: 120
         displayName: "Build Windows x64 HotSpot"
-        pool:
-          vmImage: vs2017-win2016
-        steps:
-          - template: ./steps/shared/before.yml
-          - template: ./steps/windows/before.yml
-          - template: ./steps/windows/build_hotspot.yml
-          - template: ./steps/shared/after.yml
-
-  - stage: build_windows_x86_hotspot_binaries
-    variables:
-      skipComponentGovernanceDetection: true
-      TARGET_OS: "windows"
-      ARCHITECTURE: "x86-32"
-    displayName: "Build Windows x86 HotSpot Binaries"
-    dependsOn: []
-    # disable windows x86 build for jdk15 and jdk
-    condition: and(ne(variables.JAVA_TO_BUILD, 'jdk15'), ne(variables.JAVA_TO_BUILD, 'jdk'))
-    jobs:
-      - job: build_windows_x86
-        timeoutInMinutes: 120
-        displayName: "Build Windows x86 HotSpot"
         pool:
           vmImage: vs2017-win2016
         steps:
