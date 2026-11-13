@@ -251,6 +251,31 @@ Eclipse Temurin version: jdk-21.0.5+11
                   <arg value="build/evidence_aarch64.txt"/>
                   <arg value="--json"/>
                 </java>
+                <!-- Create temporary evidence file for 5 component version (jdk-M.0.U.P.E+B) test, see issue #4600 -->
+                <echo file="build/evidence_x64_5comp.txt">Number of files: 108721
+12:20:47 : Comparing expanded JDKs from jdk-27.0.1.0.2+1 with reproJDK/jdk-27.0.1.0.2+1 ...
+12:20:50 : diff complete - rc=0.
+Number of differences: 0
+ReproduciblePercent = 100 %
+Successful 100% Reproducible Verification
+Eclipse Temurin version: jdk-27.0.1.0.2+1
+                   arch: x64
+                     os: linux
+                 sha256: 30cb129f6cf299c852cec0feca9ea2a596d2ee9f26d8605d3a253951f6c8b20f</echo>
+                <java classpath="${classpath}" classname="temurin.sbom.TemurinGenCDXA" fork="yes" failonerror="yes">
+                  <arg value="--verbose"/>
+                  <arg value="--createNewCDXA"/>
+                  <arg value="--cdxa-output-folder"/>
+                  <arg value="build"/>
+                  <arg value="--attesting-org-name"/>
+                  <arg value="Acme Inc"/>
+                  <arg value="--predicate"/>
+                  <arg value="VERIFIED_REPRODUCIBLE_BUILD"/>
+                  <arg value="--affirmation-stmt"/>
+                  <arg value="Acme confirms a verified reproducible build"/>
+                  <arg value="--evidence"/>
+                  <arg value="build/evidence_x64_5comp.txt"/>
+                </java>
         </target>
 
         <target name="run">
