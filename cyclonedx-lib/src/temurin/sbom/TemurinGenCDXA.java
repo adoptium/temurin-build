@@ -838,7 +838,7 @@ public final class TemurinGenCDXA {
     /**
      * Validates evidence parameters according to Temurin CDXA requirements.
      *
-     * @param version The JDK version extracted from evidence (jdk-M+B or jdk-M.0.U+B format)
+     * @param version The JDK version extracted from evidence (jdk-M+B, jdk-M.0.U+B, jdk-M.0.U.P+B or jdk-M.0.U.P.E+B format)
      * @param os The OS extracted from evidence (linux, windows, mac)
      * @param arch The architecture extracted from evidence (x64, aarch64, s390x, ppc64le)
      * @return true if valid, false otherwise
@@ -846,11 +846,11 @@ public final class TemurinGenCDXA {
     static boolean validateEvidenceParameters(final String version, final String os, final String arch) {
         boolean valid = true;
 
-        // Validate version format: jdk-M+B or jdk-M.0.U+B or jdk-M.0.U.P+B
-        Pattern releasePattern = Pattern.compile("^jdk-([0-9]+)(\\.[0-9]+\\.[0-9]+(\\.[0-9]+)?)?\\+([0-9]+)$");
+        // Validate version format: jdk-M+B or jdk-M.0.U+B or jdk-M.0.U.P+B or jdk-M.0.U.P.E+B
+        Pattern releasePattern = Pattern.compile("^jdk-([0-9]+)(\\.[0-9]+\\.[0-9]+(\\.[0-9]+(\\.[0-9]+)?)?)?\\+([0-9]+)$");
         Matcher releaseMatcher = releasePattern.matcher(version);
         if (!releaseMatcher.matches()) {
-            System.out.println("ERROR: Evidence version '" + version + "' is not in valid format: jdk-M+B or jdk-M.0.U+B or jdk-M.0.U.P+B");
+            System.out.println("ERROR: Evidence version '" + version + "' is not in valid format: jdk-M+B or jdk-M.0.U+B or jdk-M.0.U.P+B or jdk-M.0.U.P.E+B");
             valid = false;
         }
 
