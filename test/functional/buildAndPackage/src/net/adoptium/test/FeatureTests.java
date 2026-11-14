@@ -194,11 +194,9 @@ public class FeatureTests {
         boolean shouldBePresent = false;
         if ((jdkVersion.isNewerOrEqual(15) || jdkVersion.isNewerOrEqualSameFeature(11, 0, 9))) {
             if (jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.AARCH64)
-                    || jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.X86)
                     || jdkPlatform.runsOn(OperatingSystem.LINUX, Architecture.X64)
                     || jdkPlatform.runsOn(OperatingSystem.MACOS, Architecture.X64)
                     || jdkPlatform.runsOn(OperatingSystem.MACOS, Architecture.AARCH64)
-                    || jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X86)
                     || jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.X64)
                     || jdkPlatform.runsOn(OperatingSystem.WINDOWS, Architecture.AARCH64)
             ) {
