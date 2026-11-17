@@ -48,6 +48,6 @@ jobs:
       - name: Verify EXPECTED_COUNT is up to date
         run: |
           if ! git diff --exit-code -- test/functional/buildAndPackage/src/net/adoptium/test/VerifyCACertsTest.java; then
-            echo "::error file=test/functional/buildAndPackage/src/net/adoptium/test/VerifyCACertsTest.java::EXPECTED_COUNT is out of date. Run 'cd security && ./mk-ca-bundle.pl -n' and commit the change."
+            echo "::error file=test/functional/buildAndPackage/src/net/adoptium/test/VerifyCACertsTest.java::EXPECTED_COUNT is out of date. Run 'cd security && ./mk-ca-bundle.pl -n -f ca-bundle.crt' and commit the change."
             exit 1
           fi
