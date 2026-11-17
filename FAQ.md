@@ -52,7 +52,6 @@ All | Alpine/x64 | 3.15.6 | GCC 10.3.1 | Default compiler Alpine 10.3.1_git20211
 All | Alpine/aarch64 | 3.15.4 | GCC 10.3.1 | Default compiler Alpine 10.3.1_git20211027
 8 | AIX | 7.2 (7200-02) | xlc 13.1.3 (13.01.0003.0007) |  
 11+ | AIX | 7.2 (7200-02) | xlc 16.1.0 (16.01.0000.0011) |
-8 | Solaris (Both) | 10 1/13 | Studio 12.3 (C 5.12) |
 
 [1] - On Linux we use GCC 7.5 for jdk8-11 and GCC 10.3.0 for JDK17.  Those
 are all [built by
