@@ -31,6 +31,15 @@ jobs:
         with:
           persist-credentials: false
 
+      # The PR action checks out the existing ca-certs-updater branch and cherry-picks
+      # the new commit on top of it, without rebasing onto the default branch. A stale
+      # branch would therefore revert newer changes from master. Reset the branch to the
+      # current HEAD (default branch) so the PR only contains the cert update.
+      - name: Reset ca-certs-updater branch to default branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
+        run: git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/ca-certs-updater
+
       - name: Run updater
         working-directory: ./security
         run: "./mk-ca-bundle.pl -d nss-latest-rtm"
