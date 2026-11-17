@@ -172,9 +172,9 @@ jobs:
       matrix:
         os: [macOS]
         version: [
-          { name: jdk11u, distro: macos-14 },
-          { name: jdk17u, distro: macos-14 },
-          { name: jdk21u, distro: macos-14 }
+          { name: jdk11u, distro: macos-15 },
+          { name: jdk17u, distro: macos-15 },
+          { name: jdk21u, distro: macos-15 }
         ]
         variant: [temurin]
 
@@ -209,7 +209,7 @@ jobs:
     - name: Select correct Xcode (JDK11+)
       run: |
         rm -rf /Applications/Xcode.app
-        ln -s /Applications/Xcode_15.2.app /Applications/Xcode.app
+        ln -s /Applications/Xcode_16.4.app /Applications/Xcode.app
 
     - name: Build macOS
       run: |
