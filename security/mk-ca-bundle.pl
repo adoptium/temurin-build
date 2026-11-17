@@ -456,7 +456,6 @@ while (<TXT>) {
   }
   elsif(/^# (Issuer|Serial Number|Subject|Not Valid Before|Not Valid After |Fingerprint \(MD5\)|Fingerprint \(SHA1\)):/) {
       push @precert, $_;
-      $valid = 1;
       next;
   }
   elsif(/^#|^\s*$/) {
@@ -510,7 +509,10 @@ while (<TXT>) {
 
   # this is a match for the start of a certificate
   if (/^CKA_CLASS CK_OBJECT_CLASS CKO_CERTIFICATE/) {
-    $start_of_cert = 1
+    $start_of_cert = 1;
+    # Reset per certificate, not on '# Issuer:' etc. comments, which also
+    # precede the trust object and would undo a distrust-after decision.
+    $valid = 1;
   }
   if ($start_of_cert && /^CKA_LABEL UTF8 \"(.*)\"/) {
     $caname = $1;
