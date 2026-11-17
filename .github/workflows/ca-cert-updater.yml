@@ -19,8 +19,8 @@ on:
     - cron: "0 0 * * *"
 
 permissions:
-  contents: write  # to push local changes (gr2m/create-or-update-pull-request-action)
-  pull-requests: write  # to create a PR (gr2m/create-or-update-pull-request-action)
+  contents: write  # to push the ca-certs-updater branch
+  pull-requests: write  # to create a PR
 
 jobs:
   update_ca_certs:
@@ -35,12 +35,41 @@ jobs:
         working-directory: ./security
         run: "./mk-ca-bundle.pl -d nss-latest-rtm"
 
-      - uses: gr2m/create-or-update-pull-request-action@b65137ca591da0b9f43bad7b24df13050ea45d1b # v1.10.1
+      # Build the cert-update commit directly on top of the checked-out default branch
+      # and publish only that final state. The branch is never pushed in an intermediate
+      # state identical to the default branch (an empty PR diff makes GitHub close the PR).
+      # Force-pushing the rebuilt branch keeps any open PR open and up to date, so it
+      # cannot drift from the default branch and revert newer changes.
+      - name: Commit and publish ca-certs-updater branch
+        id: publish
         env:
           GITHUB_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
-        with:
-          branch: ca-certs-updater
-          title: "Update CA Certs"
-          body: "See details in the Meta Bug linked from the *Root Cert Inclusions into Mozilla Product Releases* section of https://wiki.mozilla.org/NSS:Release_Versions"
-          commit-message: "cacerts: pull in updated certs from Mozilla"
-          author: "eclipse-temurin-bot <temurin-bot@eclipse.org>"
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No certificate changes"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git add .
+          git -c user.name="eclipse-temurin-bot" -c user.email="temurin-bot@eclipse.org" \
+            commit --author="eclipse-temurin-bot <temurin-bot@eclipse.org>" \
+            -m "cacerts: pull in updated certs from Mozilla"
+          git push --force \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            HEAD:refs/heads/ca-certs-updater
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create PR if none is open
+        if: steps.publish.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.ADOPTIUM_TEMURIN_BOT_TOKEN }}
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ -n "$(gh pr list --repo "$GITHUB_REPOSITORY" --head ca-certs-updater --state open --json number --jq '.[].number')" ]; then
+            echo "Open PR already exists; branch updated"
+            exit 0
+          fi
+          gh pr create --repo "$GITHUB_REPOSITORY" \
+            --head ca-certs-updater --base "$BASE_BRANCH" \
+            --title "Update CA Certs" \
+            --body "See details in the Meta Bug linked from the *Root Cert Inclusions into Mozilla Product Releases* section of https://wiki.mozilla.org/NSS:Release_Versions"
